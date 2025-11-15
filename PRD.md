@@ -1,362 +1,358 @@
-# Planning Guide
+# Product Requirements Document (PRD)
+## Assistente Jurídico PJe - Sistema de Gestão para Advocacia
 
-Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gemini, operating 24/7 to automate and optimize your legal workflow from start to finish. A high-performance AI-powered suite featuring intelligent agents that work continuously without human intervention, seamlessly collaborating with humans when needed, analyzing documents, drafting petitions, organizing files, transcribing media, calculating deadlines, and monitoring court notifications.
+Sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial e experiência do usuário inspirada no ADVBOX.
 
-**Experience Qualities**: 
-1. **Professional & Trustworthy** - The interface must convey reliability and precision, essential for legal professionals handling critical cases and deadlines, with autonomous AI agents that work continuously in the background without human supervision
-2. **Efficient & Streamlined** - Every interaction should minimize clicks and cognitive load, enabling lawyers to process information and take action rapidly while AI agents handle repetitive tasks autonomously 24/7
-3. **Intelligent & Collaborative** - AI-powered autonomous agents operate continuously but intelligently detect human activity, pausing gracefully when you edit documents and resuming automatically after 5 seconds of inactivity, creating a seamless human-AI collaboration
+---
 
-**Complexity Level**: Complex Application (advanced functionality, authentication, multiple integrated modules, autonomous agent orchestration)
-  - This is a comprehensive legal practice management system with user authentication, real-time data processing, AI integration, autonomous agent management, document analysis, calendar management, financial tracking, and knowledge base features requiring sophisticated state management, data persistence, and intelligent task queuing.
+## Missão
+
+Criar um sistema de gestão jurídica inteligente que automatiza tarefas repetitivas, fornece insights estratégicos através de IA e permite aos advogados focarem no que realmente importa: seus clientes e casos.
+
+---
+
+## Experience Qualities
+
+1. **Profissional e Confiável** - O sistema deve transmitir seriedade e precisão, essenciais para um ambiente jurídico onde erros podem ter consequências graves.
+
+2. **Intuitivo e Eficiente** - Interface clara que reduz o tempo necessário para encontrar informações e executar tarefas comuns, minimizando a curva de aprendizado.
+
+3. **Inteligente e Proativo** - IA que antecipa necessidades, sugere ações e fornece insights sem que o usuário precise buscar ativamente.
+
+---
+
+## Complexity Level
+
+**Light Application (múltiplos recursos com estado básico)**
+
+Embora o sistema tenha funcionalidades complexas (IA, automação, integrações), a arquitetura é simplificada usando Spark KV para persistência, eliminando necessidade de backend complexo. O foco está em UX rica com gestão de estado client-side robusta.
+
+---
 
 ## Essential Features
 
-### 1. Quick Access Login System
-- **Functionality**: Simplified authentication with pre-configured demo accounts (admin/admin123, demo/demo, usuario/123456)
-- **Purpose**: Immediate access for demonstration and testing without complex setup
-- **Trigger**: User clicks on quick access buttons or enters credentials manually
-- **Progression**: Landing page → Quick access button click → Credential auto-fill → Authentication → Dashboard redirect
-- **Success criteria**: User can access the system within 2 clicks, credentials persist across sessions
+### 1. Dashboard Inteligente
 
-### 2. Dashboard (Meu Painel)
-- **Functionality**: Centralized command center displaying appointments, fatal deadlines, pending tasks, and real-time autonomous AI agent activity with live status monitoring, task queues, and seamless human-agent collaboration indicators
-- **Purpose**: Provide at-a-glance situational awareness of critical case information and showcase autonomous AI agents operating 24/7 in the background, including their current tasks, queue status, and collaboration state with human users
-- **Trigger**: Successful login or navigation menu selection
-- **Progression**: Login → Dashboard load → Widget rendering (appointments, deadlines, tasks, AI agent status) → Real-time agent activity feed → Live task queue updates → Human intervention detection → Agent collaboration status display
-- **Success criteria**: All critical information visible without scrolling, deadline alerts prominent, AI agent status displayed with live activity feed showing current tasks and collaboration state, data updates in real-time, clear indication when agents are waiting for human input or processing autonomously
+**Funcionalidade:** Visão consolidada de todas as atividades, processos e métricas do escritório
 
-### 12. Autonomous Agent Management System
-- **Functionality**: Complete autonomous agent orchestration with 24/7 continuous operation, intelligent task queuing, priority-based processing, human activity detection, collaborative handoff, and automatic resumption after human intervention
-- **Purpose**: Enable truly autonomous legal workflow automation that works continuously without human supervision while intelligently collaborating when humans interact with the same resources
-- **Trigger**: Agents start automatically on login and run continuously; humans can view status, pause/resume agents, or interact with agent-managed tasks at any time
-- **Progression**: Agent initialization → Continuous background operation → Task queue processing → Human activity detection → Collaborative pause → Wait 5s without activity → Automatic resumption → Task completion → Next task in queue
-- **Success criteria**: Agents process tasks continuously 24/7, detect human edits within 1 second, pause gracefully without data loss, resume automatically after 5 seconds of human inactivity, maintain complete task history, display real-time status, show task queue with priorities, log all activities with timestamps
+**Propósito:** Permitir tomada de decisão rápida baseada em dados atualizados
 
-### 13. Human-Agent Collaboration System
-- **Functionality**: Intelligent detection of human activity on agent-managed resources, graceful pause of agent work, preservation of human edits, automatic resumption after inactivity period, clear visual indicators of collaboration state
-- **Purpose**: Eliminate conflicts between human and AI work, ensure human edits are never overwritten, provide seamless handoff between human and autonomous agent work
-- **Trigger**: Human opens or edits a document/task that an agent is working on
-- **Progression**: Agent working autonomously → Human opens resource → Agent detects activity → Agent marks task as "human_intervention" → Agent pauses and waits → Human makes edits → 5 seconds without activity → Agent marks task as resumable → Agent resumes processing → Agent continues from where it paused
-- **Success criteria**: Zero conflicts between human and agent work, human edits always preserved, agent resumes within 6 seconds of last human activity, clear visual indicators showing collaboration state (agent working / human editing / agent waiting / agent resuming), complete audit trail of handoffs
+**Trigger:** Login do usuário ou navegação para home
 
-### 3. Process CRM (Acervo) - Kanban Board
-- **Functionality**: Visual process management with drag-and-drop Kanban board for tracking cases through workflow stages
-- **Purpose**: Enable intuitive visual organization of legal cases through their lifecycle
-- **Trigger**: User navigates to "Acervo" section
-- **Progression**: Navigation → Kanban board display → Drag card to new column → Auto-save state → Update process status → Reflect in dashboard
-- **Success criteria**: Smooth drag-and-drop interactions, instant visual feedback, persistent state, filterable by case attributes
+**Progressão:** 
+Login → Carrega dados do KV → Calcula métricas → Renderiza cards com estatísticas → Exibe gráficos de desempenho → Lista tarefas urgentes e compromissos → Usuário pode clicar para navegar para detalhes
 
-### 4. Expediente Panel (Smart Inbox)
-- **Functionality**: AI-powered inbox for court notices with automatic analysis, summarization, action classification, and draft petition generation
-- **Purpose**: Transform time-consuming document review into rapid triage and action planning
-- **Trigger**: User opens Expedientes section or receives new court notice
-- **Progression**: Notice arrival → AI analysis (Gemini) → Summary generation → Action classification → Pending document identification → Draft petition creation → User review and approval
-- **Success criteria**: AI summary accuracy >90%, action suggestions contextually relevant, petition drafts require minimal editing
+**Critérios de Sucesso:**
+- Tempo de carregamento < 500ms
+- Todos os cards exibem dados corretos
+- Gráficos são interativos e respondem a hover
+- Navegação para detalhes funciona corretamente
 
-### 5. Batch Document Analysis
-- **Functionality**: Extract structured information (CNJ number, parties, deadlines) from multiple pasted expediente texts simultaneously
-- **Purpose**: Rapidly process multiple documents without manual data entry
-- **Trigger**: User pastes multiple expediente texts into analysis tool
-- **Progression**: Paste text → AI parsing → Data extraction → Structured table display → Export/save options
-- **Success criteria**: Accurately parse 5+ documents simultaneously, extract all key fields, present in sortable table
+### 2. Gestão de Processos (Kanban)
 
-### 6. Audio Transcription
-- **Functionality**: Real-time microphone transcription or file upload of hearings and meetings with actionable summary generation
-- **Purpose**: Convert spoken content into searchable, analyzable text with key points highlighted
-- **Trigger**: User clicks record button or uploads audio file
-- **Progression**: Audio input → Gemini transcription → Text display → Summary generation → Action item extraction → Save to case file
-- **Success criteria**: Near real-time transcription, speaker distinction, accurate legal terminology, actionable summary
+**Funcionalidade:** Visualização e organização de processos jurídicos em etapas (fases processuais)
 
-### 7. Deadline Calculator with AI Reasoning
-- **Functionality**: Calculate procedural deadlines (CPC, CLT) considering holidays and context with step-by-step audit trail
-- **Purpose**: Eliminate deadline calculation errors with transparent AI reasoning
-- **Trigger**: User selects deadline type, enters base date and parameters
-- **Progression**: Input parameters → AI analysis (Gemini 2.5 Pro) → Step-by-step calculation → Holiday consideration → Final deadline display → Reasoning explanation
-- **Success criteria**: 100% accuracy on deadline calculations, clear reasoning trail, handles edge cases (holidays, weekends)
+**Propósito:** Facilitar acompanhamento do pipeline de processos e identificar gargalos
 
-### 8. National Database Queries (Datajud & DJEN)
-- **Functionality**: Direct integration with Brazil's judicial databases for official case status and electronic gazette searches
-- **Purpose**: Centralize external data retrieval without leaving the platform
-- **Trigger**: User enters case number (Datajud) or lawyer name/OAB number (DJEN)
-- **Progression**: Query input → API call → Data retrieval → Formatted display → Save to case history
-- **Success criteria**: Fast response times (<3s), formatted results, error handling for invalid queries
+**Trigger:** Usuário clica em "Processos" na sidebar
 
-### 9. Integrated Calendar (Agenda)
-- **Functionality**: Comprehensive calendar for appointments, hearings, and deadlines with monthly view and event management
-- **Purpose**: Centralize all time-sensitive legal activities in one view
-- **Trigger**: User navigates to calendar or adds new event
-- **Progression**: Calendar view → Add/edit event → Set reminders → Sync with case data → Display in dashboard
-- **Success criteria**: Intuitive event creation, visual distinction between event types, reminder notifications
+**Progressão:**
+Clique em Processos → Carrega lista de processos → Agrupa por fase → Renderiza colunas Kanban → Usuário pode arrastar cards entre colunas → Sistema atualiza fase → Persiste mudança → Exibe feedback visual
 
-### 10. Financial Management
-- **Functionality**: Revenue and expense tracking linked to cases with visual dashboards and AI-powered document data extraction
-- **Purpose**: Maintain financial oversight connected to case profitability
-- **Trigger**: User logs transaction or uploads financial document
-- **Progression**: Transaction entry/document upload → AI extraction → Categorization → Case linking → Dashboard update → Report generation
-- **Success criteria**: Clear income/expense visualization, accurate AI extraction, case-level profitability analysis
+**Critérios de Sucesso:**
+- Drag and drop funciona suavemente
+- Mudança de fase é instantânea visualmente
+- Dados persistem após reload
+- Filtros funcionam corretamente
+- Mover em massa funciona para múltiplos processos
 
-### 11. Knowledge Base (RAG System)
-- **Functionality**: Index office documents (petitions, doctrine, notes) and conversational interface to query the knowledge base
-- **Purpose**: Transform institutional knowledge into instantly accessible conversational resource
-- **Trigger**: User uploads documents or asks question in chat interface
-- **Progression**: Document upload → Embedding generation → ChromaDB storage → User query → Semantic search → Context retrieval → AI response with sources
-- **Success criteria**: Relevant results in <2s, source attribution, contextual answers, support for legal document formats
+### 3. Harvey Specter (Assistente de IA)
 
-### 12. Harvey Specter - Assistente Jurídico Inteligente
-- **Functionality**: Chat conversacional inteligente que analisa dados em tempo real, identifica padrões, gera análises completas e entrega insights estratégicos sobre o escritório
-- **Purpose**: Transformar dados brutos em decisões estratégicas, economizar tempo na elaboração de relatórios, e entregar respostas rápidas para apoiar a gestão jurídica
-- **Trigger**: Usuário navega para "Harvey Specter" ou faz perguntas no chat
-- **Progression**: Abertura do chat → Seleção de pergunta rápida ou digitação de pergunta personalizada → IA processa consulta → Exibição de resposta detalhada com insights visuais → Cards de métricas e sugestões acionáveis → Histórico de conversas persistido
-- **Success criteria**: Respostas contextualmente relevantes em <2s, insights apresentados com métricas visuais (estatísticas, alertas, tendências, sugestões), análises precisas sobre performance da equipe, processos, prazos, finanças, clientes e tarefas, histórico de conversas salvo entre sessões
+**Funcionalidade:** Chatbot jurídico inteligente que responde perguntas sobre processos, prazos, finanças e fornece análises
 
-### 13. Premonição Jurídica (Legal Prediction)
-- **Functionality**: AI-powered predictive analysis estimating success probability (0-100%) of legal cases with detailed reasoning, strategic recommendations, and relevant case law precedents with links, all content copyable for petition drafting
-- **Purpose**: Provide data-driven insights for case strategy and client expectation management using advanced AI analysis to help lawyers make informed decisions and set realistic expectations
-- **Trigger**: User clicks "Premonição Jurídica" button (lightbulb icon) on any process card in the Acervo
-- **Progression**: Button click → Modal opens with loading state ("A IA está consultando jurisprudência...") → AI analyzes case context (Gemini GPT-4o with JSON mode) → Display animated circular probability meter (0-100%) with color-coded badge → Show detailed AI analysis text → Present 3-5 actionable legal strategies (each with copy button) → List 2-5 relevant precedents from STJ/TRF/TJMG with tribunal badges, case numbers, themes, relevance summaries, and links to jurisprudence → Footer with process CNJ and disclaimer
-- **Success criteria**: Analysis completes in <15s, probability realistic and well-reasoned (considers case facts, jurisprudence, legal context), AI analysis text is clear and mentions both strengths and weaknesses, strategies are specific and actionable for Brazilian law, precedents include actual tribunal references with case themes and detailed summaries explaining relevance, all text elements have copy buttons for easy reuse in petitions, visual feedback on copy (icon changes to checkmark), modal is fully responsive on mobile
+**Propósito:** Democratizar acesso a insights complexos através de linguagem natural
+
+**Trigger:** Usuário clica em "Harvey Specter" ou usa atalho de teclado
+
+**Progressão:**
+Abre modal/página → Usuário digita pergunta → Sistema envia para spark.llm → IA analisa contexto (processos, finanças, etc.) → Gera resposta estruturada → Exibe resposta formatada → Usuário pode fazer follow-up
+
+**Critérios de Sucesso:**
+- Resposta gerada em < 3 segundos
+- Resposta é relevante e precisa
+- Interface suporta markdown/formatação
+- Histórico de conversas é mantido
+
+### 4. Mrs. Michael Ross (Análise de Intimações)
+
+**Funcionalidade:** Agente autônomo que analisa intimações judiciais com 95% de precisão
+
+**Propósito:** Economizar tempo na triagem de intimações e garantir que nenhum prazo seja perdido
+
+**Trigger:** Upload de expediente/intimação ou integração DJEN detecta novo documento
+
+**Progressão:**
+Documento recebido → Sistema detecta pendência → Mrs. Michael Ross analisa conteúdo → Extrai dados estruturados (CNJ, partes, prazo, tipo) → Calcula deadline → Sugere tarefas → Cria workflow de controladoria → Usuário revisa → Aprova/ajusta → Sistema executa
+
+**Critérios de Sucesso:**
+- Precisão > 95% na extração de dados
+- Análise completa em < 1 minuto
+- Sugestões de tarefas são relevantes
+- Sistema D-1, D-2 funciona corretamente
+
+### 5. Integração DJEN/DataJud
+
+**Funcionalidade:** Monitoramento automático de publicações no Diário de Justiça Eletrônico Nacional
+
+**Propósito:** Garantir que nenhuma intimação seja perdida e automatizar busca diária
+
+**Trigger:** Cron job diário às 02:15 ou busca manual
+
+**Progressão:**
+Cron dispara → Sistema consulta API DJEN/DataJud → Filtra por OAB/nome do advogado → Encontra publicações relevantes → Notifica usuário → Armazena em expedientes → Usuário pode revisar e processar
+
+**Critérios de Sucesso:**
+- Job roda diariamente sem falhas
+- Todas as publicações relevantes são capturadas
+- Notificações são enviadas corretamente
+- Dados estruturados são armazenados
+
+### 6. Gestão Financeira
+
+**Funcionalidade:** Controle de receitas, despesas, honorários e fluxo de caixa
+
+**Propósito:** Manter saúde financeira do escritório e facilitar cobrança
+
+**Trigger:** Usuário acessa "Financeiro"
+
+**Progressão:**
+Abre financeiro → Carrega lançamentos → Calcula saldos (previsto, a receber, a pagar) → Renderiza gráfico de barras (receitas x despesas) → Exibe tabela de lançamentos → Usuário pode adicionar novo lançamento → Preenche modal → Sistema valida → Salva → Atualiza gráficos
+
+**Critérios de Sucesso:**
+- Cálculos são precisos
+- Gráficos refletem dados atualizados
+- Categorização funciona
+- Anexos podem ser adicionados
+- Relatórios podem ser exportados
+
+### 7. Calculadora de Prazos
+
+**Funcionalidade:** Cálculo automático de prazos processuais considerando dias úteis, feriados e regras específicas
+
+**Propósito:** Eliminar erros humanos no cálculo de prazos críticos
+
+**Trigger:** Usuário acessa "Calc. Prazos" ou sistema auto-calcula ao detectar prazo em intimação
+
+**Progressão:**
+Usuário insere data base → Seleciona tipo de prazo (CPC, CLT) → Informa quantidade de dias → Sistema carrega feriados nacionais/locais → Calcula considerando regra apropriada → Exibe resultado destacando data final → Usuário pode salvar como tarefa
+
+**Critérios de Sucesso:**
+- Cálculo segue regras CPC/CLT corretamente
+- Feriados são considerados
+- Resultado é claro e destacado
+- Integração com agenda funciona
+
+---
 
 ## Edge Case Handling
 
-- **Authentication Failures**: Clear error messages with retry options and demo credential reminders
-- **AI Service Unavailable**: Graceful degradation to manual entry with queue for retry when service restores
-- **Empty States**: Helpful onboarding prompts guiding users to first actions (e.g., "Add your first case")
-- **Network Interruptions**: Offline indicators, local state preservation, auto-sync when reconnected
-- **Invalid Date Calculations**: Validation warnings, suggested corrections, manual override option
-- **Missing Case Data**: Smart defaults, optional field handling, progressive disclosure of advanced features
-- **Large File Uploads**: Progress indicators, chunk upload, file size warnings
-- **Concurrent Editing**: Last-write-wins with notification, version history for critical documents
+- **Processo sem CNJ:** Sistema aceita e permite entrada manual de identificador alternativo, mas alerta usuário sobre limitações de integração
+
+- **Prazo caindo em feriado:** Sistema avança automaticamente para próximo dia útil conforme regra CPC/CLT
+
+- **Intimação duplicada:** Sistema detecta via hash de conteúdo e alerta usuário antes de criar duplicata
+
+- **API DJEN/DataJud offline:** Sistema usa cache local e tenta novamente após backoff exponencial, notificando usuário de falha persistente
+
+- **IA retorna resposta vazia:** Sistema exibe mensagem amigável pedindo para reformular pergunta e oferece exemplos de perguntas válidas
+
+---
 
 ## Design Direction
 
-The design should evoke confidence, precision, and modern professionalism - feelings essential for legal software. It should feel serious yet approachable, with a minimal interface that prioritizes information density without clutter. The aesthetic should mirror high-end SaaS platforms (think Notion meets Linear) with Brazilian legal industry credibility through subtle formal touches.
+O design deve sentir-se **profissional, moderno e sofisticado**, evocando confiança e competência técnica. Inspirado no ADVBOX, usa tema escuro como padrão para reduzir fadiga visual em sessões longas. Interface é **minimalista mas informativa**, priorizando dados sobre decoração, com hierarquia clara e uso estratégico de cor para destacar informações críticas (prazos urgentes em vermelho, status em badges coloridos).
+
+---
 
 ## Color Selection
 
-**Triadic** color scheme - combining deep judicial blue, energetic action orange, and professional neutral grays to balance trust, energy, and sophistication.
+**Esquema:** Analogous (tons de azul/roxo) com acentos complementares (laranja/amarelo para warnings)
 
-- **Primary Color**: Deep Judicial Blue `oklch(0.35 0.08 250)` - Communicates trust, authority, and legal tradition. Used for navigation, primary actions, and branding.
-- **Secondary Colors**: 
-  - Warm Charcoal `oklch(0.25 0.01 280)` - Professional depth for secondary UI elements and text
-  - Cool Gray `oklch(0.55 0.02 260)` - Muted backgrounds and borders
-- **Accent Color**: Bright Action Orange `oklch(0.68 0.15 45)` - Urgency and calls-to-action, perfect for deadline alerts and primary buttons. Creates visual energy against the conservative blues.
-- **Foreground/Background Pairings**:
-  - Background (Light Gray `oklch(0.98 0.005 260)`): Dark Text `oklch(0.20 0.01 280)` - Ratio 14.2:1 ✓
-  - Card (White `oklch(1 0 0)`): Dark Text `oklch(0.20 0.01 280)` - Ratio 15.8:1 ✓
-  - Primary (Deep Blue `oklch(0.35 0.08 250)`): White Text `oklch(1 0 0)` - Ratio 8.9:1 ✓
-  - Secondary (Warm Charcoal `oklch(0.25 0.01 280)`): White Text `oklch(1 0 0)` - Ratio 12.6:1 ✓
-  - Accent (Action Orange `oklch(0.68 0.15 45)`): Dark Text `oklch(0.20 0.01 280)` - Ratio 7.8:1 ✓
-  - Muted (Cool Gray `oklch(0.95 0.01 260)`): Medium Text `oklch(0.45 0.02 260)` - Ratio 6.2:1 ✓
+### Aplicação:
+
+- **Primary Color (Azul #48cae4):** Ações principais, links, elementos interativos. Transmite profissionalismo e confiabilidade. Usado em botões primários, headers de cards importantes e ícones principais.
+
+- **Secondary Colors:**
+  - **Roxo escuro (#5a67d8):** Elementos de IA (Harvey Specter, Mrs. Michael Ross), indicando inteligência e inovação
+  - **Cinza escuro (#1e2130):** Background de cards e painéis, criando profundidade
+  - **Cinza médio (#2d3748):** Borders e divisores, definindo estrutura
+
+- **Accent Color (Laranja #fb8500):** CTAs críticos (Nova Tarefa, Urgente), warnings de prazo. Chama atenção sem ser agressivo.
+
+- **Status Colors:**
+  - **Verde (#52b788):** Sucesso, concluído, status positivo
+  - **Amarelo (#ffd60a):** Aguardando, pendente
+  - **Vermelho (#e63946):** Urgente, atrasado, erro
+  - **Azul (#48cae4):** Em andamento, processando
+
+### Foreground/Background Pairings:
+
+- **Background (Escuro #0f1117):** Texto branco (#f8f9fa) - Ratio 15.8:1 ✓
+- **Card (Cinza escuro #1e2130):** Texto branco (#f8f9fa) - Ratio 12.1:1 ✓
+- **Primary (Azul #48cae4):** Texto escuro (#0f1117) - Ratio 8.2:1 ✓
+- **Accent (Laranja #fb8500):** Texto branco (#f8f9fa) - Ratio 5.1:1 ✓
+- **Muted (Cinza #4a5568):** Texto cinza claro (#b0b3c1) - Ratio 4.6:1 ✓
+
+---
 
 ## Font Selection
 
-Typography should convey clarity and professionalism while maintaining excellent readability for dense legal text. **Inter** for UI elements (clean, modern, excellent at small sizes) and **Lora** for longer document content (serif adds formality and reduces eye strain).
+Fontes devem ser **legíveis, modernas e sem serifas** para garantir clareza em telas de diferentes tamanhos. Usa Inter como primária pela excelente legibilidade e Lora para textos documentais quando necessário.
 
-- **Typographic Hierarchy**: 
-  - H1 (Page Titles): Inter Bold / 32px / -0.02em letter spacing / 1.2 line height
-  - H2 (Section Headers): Inter SemiBold / 24px / -0.01em letter spacing / 1.3 line height
-  - H3 (Card Titles): Inter Medium / 18px / 0em letter spacing / 1.4 line height
-  - Body (UI Text): Inter Regular / 15px / 0em letter spacing / 1.5 line height
-  - Small (Metadata): Inter Regular / 13px / 0.01em letter spacing / 1.4 line height
-  - Document Body: Lora Regular / 16px / 0em letter spacing / 1.7 line height
+### Typographic Hierarchy:
+
+- **H1 (Título de Página):** Inter Bold/32px/tight letter spacing (-0.02em)
+- **H2 (Seção):** Inter Semibold/24px/normal
+- **H3 (Card Title):** Inter Semibold/18px/normal
+- **Body (Parágrafo):** Inter Regular/16px/1.5 line-height
+- **Small (Labels):** Inter Medium/14px/normal
+- **Tiny (Metadados):** Inter Regular/12px/1.4 line-height/text-muted-foreground
+
+---
 
 ## Animations
 
-Animations should be purposeful and subtle - reinforcing spatial relationships and state changes without drawing attention away from content. The balance leans toward functional clarity over decorative flourish, appropriate for professional legal software.
+**Contexto:** Animações devem ser **sutis e funcionais**, nunca distrativas. Prioriza performance sobre ornamentação.
 
-- **Purposeful Meaning**: Motion communicates state transitions (loading, success, error), spatial navigation (modal appearance, drawer slides), and data updates (new notification pulse). Movement is conservative, reinforcing the platform's reliability.
-- **Hierarchy of Movement**: Critical alerts (deadline warnings) deserve attention-grabbing animation (gentle pulse). Navigation and state changes use smooth, quick transitions (200-300ms). Background updates are nearly imperceptible (fade-in only).
+### Purposeful Meaning:
+
+- **Feedback de Ação:** Bounce suave ao clicar botões (scale 0.95 → 1)
+- **Transição de Estado:** Fade in/out ao carregar dados (200ms)
+- **Drag and Drop:** Lift effect com sombra ao arrastar cards Kanban
+- **Notificações:** Slide in da direita com bounce final
+- **Loading:** Skeleton screens com shimmer effect
+
+### Hierarchy of Movement:
+
+1. **Alta Prioridade:** Feedback imediato de click/hover (< 100ms)
+2. **Média Prioridade:** Transições de página/modal (200-300ms)
+3. **Baixa Prioridade:** Animações decorativas (shimmer, pulso em badges)
+
+---
 
 ## Component Selection
 
-- **Components**: 
-  - **Navigation**: Sidebar (collapsible) with navigation-menu for multi-level sections
-  - **Authentication**: Card with Input fields, Button (primary), and quick-access Button variants
-  - **Dashboard**: Grid of Card components with Badge for status indicators, Progress bars for metrics
-  - **Kanban Board**: Custom drag-and-drop with Card for process items, utilizing react-beautiful-dnd pattern
-  - **Forms**: Form components with Input, Textarea, Select, Calendar (date-picker), Switch for toggles
-  - **Data Display**: Table for batch analysis results, Tabs for multi-view sections, Accordion for collapsible details
-  - **Modals**: Dialog for confirmations, Sheet (drawer) for detailed item views
-  - **Notifications**: Toast (sonner) for ephemeral feedback, Alert for persistent warnings
-  - **AI Features**: Custom chat interface with ScrollArea, skeleton loaders during AI processing
-  - **Calendar**: Custom calendar grid using date-fns with Popover for event details
+### Shadcn Components:
 
-- **Customizations**: 
-  - Kanban drag preview with elevated shadow and slight rotation
-  - Process status badges with custom colors (aguardando: yellow, em-andamento: blue, concluído: green)
-  - AI analysis loading state with animated gradient background
-  - Deadline calculator with step-by-step accordion showing reasoning
-  - Custom audio waveform visualization for transcription
+- **Button:** Ações primárias, secundárias e destrutivas
+- **Card:** Container principal para todos os painéis informativos
+- **Dialog:** Modals para novo lançamento, detalhes de processo
+- **Dropdown Menu:** Filtros, ações em contexto
+- **Badge:** Status de processos, prioridade de tarefas
+- **Tabs:** Navegação dentro de páginas (Financeiro, Gestão)
+- **Calendar:** Seleção de datas, visualização de agenda
+- **Table:** Listas de lançamentos financeiros, expedientes
+- **Form:** Inputs validados para novo processo, tarefa
+- **Toast:** Feedback de ações (sucesso, erro)
 
-- **States**: 
-  - Buttons: Subtle scale-down on active (0.98), distinct hover with background darken, disabled with reduced opacity and cursor-not-allowed
-  - Inputs: Focus ring in primary color, error state with destructive border and icon, success with accent border
-  - Cards: Hover lift (shadow increase), selected state with primary border
-  - Drag items: Opacity 0.5 while dragging, smooth transform transitions
+### Custom Components:
 
-- **Icon Selection**: 
-  - @phosphor-icons/react throughout for consistency
-  - Navigation: House, Briefcase, Tray, FileText, MicrophoneStage, Calculator, Database, Calendar, CurrencyCircleDollar, Books, Gear
-  - Actions: Plus, MagnifyingGlass, Download, Upload, Trash, PencilSimple
-  - Status: CheckCircle, Warning, Clock, Info, X
-  - AI: Sparkle, Robot, Lightning for AI-powered features
+- **KanbanColumn:** Coluna drag-droppable para processos
+- **ProcessCard:** Card rico com status, partes, valor, ações
+- **PerformanceChart:** Gráfico de linha para dashboard
+- **FinancialBarChart:** Gráfico de barras receitas x despesas
+- **AgentStatusIndicator:** Dot pulsante indicando agente ativo
+- **PrazoCalculator:** Interface especializada para cálculo de prazos
 
-- **Spacing**: 
-  - Container padding: px-6 py-4 (24px/16px)
-  - Section gaps: gap-6 (24px) for major sections, gap-4 (16px) for related items, gap-2 (8px) for tight groups
-  - Card internal spacing: p-6 for content area, p-4 for compact cards
-  - Form field spacing: space-y-4 for field groups, space-y-2 for label-input pairs
+### States:
 
-- **Mobile**: 
-  - Sidebar collapses to bottom navigation bar on mobile (<768px)
-  - Kanban board switches to vertical scrolling list view with status filter dropdown
-  - Table switches to stacked card layout with key fields prominent
-  - Multi-column layouts collapse to single column with prioritized information first
-  - Touch-friendly button sizes (min 44x44px) with increased padding on mobile
-  - Calendar switches to agenda list view with expandable day sections
-  - Agent status floater remains accessible but collapses to minimal view showing only active agent count
+- **Button:** Default, Hover (bg lighter), Active (scale 0.95), Disabled (opacity 50%, cursor not-allowed), Loading (spinner)
+- **Input:** Default, Focus (ring azul), Error (border vermelho, texto de erro abaixo), Disabled
+- **ProcessCard:** Default, Hover (lift com sombra), Dragging (opacity 60%, rotate 3deg), Selected (border azul)
 
-## Autonomous Agent Architecture
+### Icon Selection:
 
-### Agent Types and Capabilities
+- **Phosphor Icons** exclusivamente para consistência
+- **CheckCircle:** Tarefas concluídas, sucesso
+- **Clock:** Prazos, tarefas pendentes
+- **Warning:** Urgência, atenção necessária
+- **Robot:** IA, agentes, automação
+- **FileText:** Documentos, processos
+- **CalendarDots:** Agenda, compromissos
+- **TrendUp:** Métricas positivas
+- **Currency:** Financeiro
+- **Gavel:** Jurídico, processos
 
-**1. Document Analyzer Agent (analyzer)**
-- Continuously monitors new expedientes and court documents
-- Extracts structured data (parties, CNJ numbers, deadlines, document types)
-- Generates summaries and identifies required actions
-- Detects pending documents and suggests responses
-- Operating mode: 24/7 continuous with collaborative human handoff
-- Priority: High - processes critical documents first
+### Spacing:
 
-**2. DJEN Monitor Agent (monitor)**
-- Monitors Diário de Justiça Eletrônico hourly for new intimations
-- Automatically extracts intimation data and calculates deadlines
-- Generates notifications for time-sensitive intimations
-- Updates process status based on publications
-- Operating mode: 24/7 continuous, scheduled hourly checks
-- Priority: Critical - deadline-related tasks always processed first
+Tailwind spacing scale (4px base):
+- **Intra-componente:** p-3 (12px)
+- **Entre elementos relacionados:** gap-2 (8px)
+- **Entre seções:** gap-6 (24px)
+- **Margens de página:** p-6 (24px) em desktop, p-4 (16px) em mobile
 
-**3. Deadline Calculator Agent (calculator)**
-- Automatically calculates procedural deadlines from intimations
-- Validates calculations against holiday calendars
-- Generates alerts for approaching deadlines
-- Recalculates when suspensions or extensions occur
-- Operating mode: 24/7 continuous with on-demand processing
-- Priority: Critical - deadline calculations never delayed
+### Mobile:
 
-**4. Legal Writer Agent (writer)**
-- Drafts petition templates based on case context
-- Standardizes formatting and legal structure
-- Generates legal arguments from knowledge base
-- Creates hearing summaries from transcriptions
-- Operating mode: On-demand with queue processing
-- Priority: Medium - processes requests in order received
+**Mobile-first com progressive enhancement:**
 
-**5. DataJud Researcher Agent (researcher)**
-- Performs automatic queries to DataJud database
-- Extracts case updates and procedural movements
-- Consolidates statistical data for analysis
-- Detects significant case status changes
-- Operating mode: 24/7 continuous, configurable intervals
-- Priority: Low - processes during idle periods
+- **Breakpoints:** sm (640px), md (768px), lg (1024px), xl (1280px)
+- **Dashboard:** Cards em coluna única < md, grid 2x2 >= md, 4 colunas >= lg
+- **Kanban:** Scroll horizontal < md, colunas visíveis >= md
+- **Sidebar:** Hidden por padrão < md, drawer que slide-in, sempre visível >= lg
+- **Tabelas:** Scroll horizontal ou card stack < md
+- **Modals:** Full-screen < sm, centered dialog >= sm
+- **Font sizes:** Scale down 2px em mobile (H1: 28px mobile, 32px desktop)
 
-**6. File Organizer Agent (organizer)**
-- Categorizes and indexes uploaded documents
-- Renames files with intelligent naming conventions
-- Archives completed processes automatically
-- Maintains document structure and relationships
-- Operating mode: 24/7 continuous background processing
-- Priority: Low - processes during idle periods
+---
 
-### Collaboration Modes
+## Technical Stack
 
-**Collaborative Mode** (default for most agents)
-- Agent works autonomously on tasks
-- Detects when human opens/edits the same resource
-- Immediately pauses work and preserves current state
-- Waits for 5 seconds of human inactivity
-- Automatically resumes from where it paused
-- Best for: Document analysis, petition writing, file organization
+- **Framework:** React 19 + TypeScript
+- **Build:** Vite
+- **Styling:** Tailwind CSS v4
+- **Components:** Shadcn v4
+- **Icons:** Phosphor Icons
+- **State:** Zustand + useKV (Spark)
+- **Forms:** React Hook Form + Zod
+- **Charts:** Recharts
+- **AI:** spark.llm (Gemini)
+- **Animations:** Framer Motion (seletivamente)
 
-**Queue Mode**
-- Agent adds new tasks to queue when human is active
-- Processes queue sequentially when human finishes
-- Does not pause current task unless critical
-- Best for: Monitoring tasks, scheduled queries
+---
 
-**Pause Mode**
-- Agent completely stops when human intervention detected
-- Requires manual resume from user
-- Used for critical tasks requiring human approval
-- Best for: High-stakes calculations, final document submissions
+## Non-Functional Requirements
 
-### Task Priority System
+### Performance
 
-**Critical Priority**
-- Deadline calculations approaching due date
-- New intimations with short deadlines
-- Court-ordered urgent responses
-- Processed immediately, may interrupt lower priority tasks
+- Time to Interactive < 2s
+- Largest Contentful Paint < 1.5s
+- Cumulative Layout Shift < 0.1
+- spark.llm responses < 3s
 
-**High Priority**
-- New expediente analysis
-- Document extraction requests
-- Petition drafting for upcoming deadlines
-- Processed before medium/low priority tasks
+### Accessibility
 
-**Medium Priority**
-- Knowledge base indexing
-- Routine DataJud queries
-- Document categorization
-- Processed during normal queue flow
+- WCAG 2.1 AA compliance
+- Keyboard navigation completa
+- Screen reader support
+- Focus indicators visíveis
 
-**Low Priority**
-- File organization and archiving
-- Statistical data consolidation
-- Cleanup and maintenance tasks
-- Processed during idle periods
+### Security
 
-### Human-Agent Handoff Protocol
+- Dados sensíveis via useKV (client-side encryption)
+- Validação Zod em todos os forms
+- Sanitização de inputs antes de enviar para IA
 
-**Detection Phase**
-1. Agent monitors resource access timestamps
-2. Human opens or modifies resource
-3. Agent detects change within 1 second
-4. Agent marks task as "human_intervention"
+---
 
-**Pause Phase**
-1. Agent saves current state and progress
-2. Agent stops processing immediately
-3. Status updated to "waiting_human"
-4. Visual indicator shown to user
+## Success Metrics
 
-**Wait Phase**
-1. System tracks time since last human activity
-2. Countdown displayed: "Agent resumes in Xs"
-3. Any new human activity resets timer
-4. After 5s without activity, moves to resume phase
+- **Adoção:** 80%+ dos usuários acessam dashboard diariamente
+- **Eficiência:** 50% redução no tempo de triagem de intimações
+- **Precisão:** 95%+ de acurácia em extração de dados por IA
+- **Satisfação:** NPS > 50 após 30 dias de uso
 
-**Resume Phase**
-1. Agent validates resource hasn't changed structure
-2. Agent merges any human changes with agent work
-3. Status updated to "agent_resuming"
-4. Agent continues processing from saved state
-5. Status updated back to "processing"
+---
 
-### Activity Logging and Transparency
-
-All agent actions are logged with:
-- Timestamp (ISO 8601 format)
-- Agent ID and name
-- Action type and description
-- Result (success/warning/error)
-- Duration of task processing
-- Human intervention timestamps if applicable
-
-Users can view:
-- Real-time activity feed (last 100 actions)
-- Complete task history (last 500 completed tasks)
-- Current task queue with priorities
-- Agent status and current activities
-- Collaboration state for each agent
+**Version:** 1.0  
+**Last Updated:** 2025-01-16  
+**Status:** Active Development
