@@ -1,10 +1,55 @@
-Thanks for helping make GitHub safe for everyone.
+# Security Policy
 
-# Security
+## Credential Management
 
-GitHub takes the security of our software products and services seriously, including all of the open source code repositories managed through our GitHub organizations, such as [GitHub](https://github.com/GitHub).
+### OAuth Credentials
 
-Even though [open source repositories are outside of the scope of our bug bounty program](https://bounty.github.com/index.html#scope) and therefore not eligible for bounty rewards, we will ensure that your finding gets passed along to the appropriate maintainers for remediation. 
+This application uses Google OAuth 2.0 for authentication. **CRITICAL:** Never commit OAuth credentials to version control.
+
+**Required Security Practices:**
+
+1. ✅ **Store credentials in `.env` file** (already in `.gitignore`)
+2. ✅ **Use environment variables** via `src/lib/config.ts`
+3. ✅ **Use different credentials** for development and production
+4. ✅ **Rotate secrets periodically** (every 90 days recommended)
+5. ❌ **NEVER hardcode credentials** in source files
+6. ❌ **NEVER commit `.env` file** to Git
+7. ❌ **NEVER share credentials** in chat, email, or documentation
+
+See `OAUTH_SETUP.md` for detailed configuration instructions.
+
+### Environment Variables
+
+All sensitive configuration should use environment variables prefixed with `VITE_`:
+
+```env
+VITE_GOOGLE_CLIENT_ID=your-client-id-here
+VITE_REDIRECT_URI=https://your-domain.com
+```
+
+Access via the config module:
+```typescript
+import { config } from '@/lib/config'
+const clientId = config.google.clientId
+```
+
+## Data Protection
+
+### Client-Side Data
+
+This application uses Spark's `useKV` hook for client-side persistence. Data is stored locally in the browser and should not contain:
+
+- OAuth client secrets (use environment variables)
+- API keys or tokens
+- Passwords or sensitive credentials
+- Unencrypted personally identifiable information (PII)
+
+### User Data
+
+When handling user data from OAuth:
+- Only request minimum required scopes (`email`, `profile`, `openid`)
+- Do not store sensitive user data unnecessarily
+- Comply with GDPR, LGPD, and applicable data protection regulations 
 
 ## Reporting Security Issues
 
