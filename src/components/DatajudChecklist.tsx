@@ -1,42 +1,35 @@
 import { useState, FormEvent } from 'react'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/inpu
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-  Select
-  SelectV
-import {
+import { Alert, AlertDescription } from '@/co
+import { Label } from '@/components/ui/label'
   Spinner,
-  Warning,
   Copy,
   Gavel,
-} from '
+  SelectV
 
-  codigo: 
+  Spinner,
   dataHora: st
 }
-interface 
+  Gavel,
   class
-    nome: string
+
+  sistem
+    nome: s
+}
+  movimentos: DatajudMovimento
+  class
+  }
   sistem
     nome: s
   tribunal: string
   movimentos: DatajudMovimento
-
+ 
   }
-    codigo: numb
-  }>
+  { value: 'trf4', label: '
+  }>e: 'tst', label:
 
   { value: 'tjmg', label: 'TJMG
- 
-
-  { value: 'trf4', label: '
-  { value: 'tst', label:
-]
-export default fun
   const [tribuna
   c
   const [anal
@@ -44,12 +37,18 @@ export default fun
   const handleSe
    
       return
-
-    setError(null)
-    setAnalysis(nul
+  c
+  const [anal
+  const [analysisE
 
       const prom
-Ret
+      return
+so": 
+    "codigo": 1,
+  },
+    
+ 
+
   "numeroProcesso": 
     "codigo": 1,
   },
@@ -60,18 +59,18 @@ Ret
       "nome": "Petição Inicial",
       "complementosTabelados": []
     {
-      "nome": "Distribuição",
+      "nome": "Distribuição", Contestação",
       "complementosTabelados": []
     {
-      "nome": "Conclusão ao Juiz",
+      "nome": "Conclusão ao Juiz",tada",
       "complementosTabelados": []
     {
-      "nome": "Intimação para Contestação",
+    "codigo": 5001,
  
+    {
+      "nome": "Responsabilidade Civil"
+  ]
 
-      "nome": "Contestação Apresentada",
-      "complementosTabelados": []
-  ],
     "codigo": 5001,
   },
     {
@@ -80,17 +79,11 @@ Ret
 
 
       setProcessoData(data)
-    } catch (err) {
-      setError(message)
-    } finally {
-    }
-
-
     setIsAnalyzing(tru
 
-      const recentMovemen
+    } finally {
         .slice(0, 15)
-          (m) =>
+    (m) =>
 
 
 
@@ -100,12 +93,12 @@ Assuntos
 
 1. Resumo do estado atual do processo
 3. Próximo passo espe
-5. Recomendações estraté
-      const analysisText = await spa
-      toast.
-      const message = 
-      toast.error(messag
-      setIsAnalyzing(false)
+Classe: ${processoData.classe?.nome || 'Não especificada'}
+Assuntos
+Últimos andamentos:
+ssage = 
+1. Resumo do estado atual do processo
+3. Próximo passo espe
   }
   const copyToClipboard = (text: string) => {
     toast.success('Copiado para a área de transferên
@@ -118,21 +111,27 @@ Assuntos
           <Car
              
                   <Label htm
+          Consulte os últimos andamentos
+                    placeholder="0000001-00.2024.
+                    onChange={(e) => setC
+          <Car
+             
+                  <Label htm
                     id="cnj"
                     placeholder="0000001-00.2024.
                     onChange={(e) => setC
               
-             
-                </div>
-                <div className="space-y-2"
-                  <Select value={tribunal} onValu
-                      <SelectValue />
-              
-             
                         </Se
                     </SelectContent>
                   <p className="text-xs text-mute
                   </p>
+              
+              
+                  <>
+                        </Se
+                    </SelectContent>
+                    <MagnifyingGlass clas
+             
               
              
                   <>
@@ -141,33 +140,33 @@ Assuntos
                     <MagnifyingGlass clas
              
             
-          </Card>
-          {error && (
+          </Card>Name="flex items
+             
               <Warning className="h-4
             
+       
 
-            <
                 <div classNam
                     <div className="flex items
              
-           
-         
+                      <p cl
+         cessoData.orgaoJulgador.nom
        
-
+.dataAjuizamento && (
                   </Badge>
-
+        {n
 
                       <p cl
                         {processoData.orgaoJulgador.nom
                    
                   {processoData.dataAjuizamento && (
-                      <
-                        {n
+                          {assunto.no
+                      ))}
                
-                </div>
-     
-   
 
+        onClick=
+   
+        
                           {assunto.no
                       ))}
 
@@ -175,56 +174,56 @@ Assuntos
                   onClick=
 
          
-                    <>
-                      Analisando com IA...
-                  ) :
-             
-                
-                </Button>
-
                 <Al
 
               )}
               {analysis && (
-        
+                
                     <h3 className="text-lg font-
-                  <div className="prose prose-sm max-w-none">
-                      {analysis}
-                  </div>
-        
+        <div className="prose prose-sm max-w-none">
+                <Al
+               </div>
+              )}
                     onClick
                   >
         
                 </Card>
 
                 <div className="flex 
-                    <FileText cla
-                      Últimos Andamentos
-                  </div>
+        
+                    onClick
+                  >
        
 
                 <div className="space-y-3">
                     .sort(
                         new Date(b.dataHora).getTi
-                   
+                      Últimos Andamentos
                       <div
                         classNa
                         <d
                
-                        </d
-     
+                    .sort(d
+                        new Date(b.dataHora).getTi
    
 
                               {new Date(movim
                           </div>
                       </div>
    
-
+     
           
                   </p>
+                              {new Date(movim
+                          </div>
+                      </div>
+   
+
+
+
               </Card>
-          )}
-      </ScrollArea>
+
+
   )
 
 
@@ -247,106 +246,106 @@ Assuntos
 
 
 
+</SelectTrigger>
 
 
-
-
-
+<SelectItem key={t.value} value={t.value}>
+  {t.label}
 
 
                     </SelectTrigger>
                     <SelectContent>
                       {TRIBUNAIS.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
                     Selecione o tribunal de origem
                   </p>
                 </div>
-              </div>
-
+                      ))}
+                    </SelectContent>
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? (
                   <>
-                    <Spinner className="w-5 h-5 mr-2 animate-spin" />
-                    Consultando...
+                  </p>spin" />
+                </div>
                   </>
-                ) : (
+
                   <>
-                    <MagnifyingGlass className="w-5 h-5 mr-2" weight="bold" />
-                    Buscar Processo
+                {isLoading ? (
+                  <>
                   </>
                 )}
-              </Button>
-            </form>
+                  </>
+                ) : (
           </Card>
-
+                    <MagnifyingGlass className="w-5 h-5 mr-2" weight="bold" />
           {error && (
-            <Alert variant="destructive">
+                  </>
               <Warning className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          )}
+          </Card>
 
           {processoData && (
-            <div className="space-y-4">
-              <Card className="p-6">
-                <div className="flex items-start justify-between mb-4">
+            <Alert variant="destructive">
+              <Warning className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Gavel className="w-6 h-6 text-primary" weight="fill" />
-                      <h2 className="text-xl font-bold text-foreground">
-                        {processoData.classe?.nome || 'Processo Judicial'}
+mary" weight="fill" />
+          {processoData && (
+            <div className="space-y-4">l'}
                       </h2>
-                    </div>
-                    <p className="text-sm font-mono text-muted-foreground mb-3">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
                       {processoData.numeroProcesso}
-                    </p>
+                      <Gavel className="w-6 h-6 text-primary" weight="fill" />
                   </div>
                   <Badge variant="outline" className="text-sm">
                     {processoData.tribunal}
                   </Badge>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {processoData.orgaoJulgador && (
-                    <div>
+                    </p>-1 md:grid-cols-2 gap-4 mb-4">
+                  </div>ssoData.orgaoJulgador && (
+                  <Badge variant="outline" className="text-sm">
                       <p className="text-xs text-muted-foreground">Órgão Julgador</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {processoData.orgaoJulgador.nome}
-                      </p>
-                    </div>
+                  </Badge>
+                </div>r.nome}
+</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   )}
                   {processoData.dataAjuizamento && (
                     <div>
                       <p className="text-xs text-muted-foreground">Data de Ajuizamento</p>
                       <p className="text-sm font-medium text-foreground">
                         {new Date(processoData.dataAjuizamento).toLocaleDateString('pt-BR')}
-                      </p>
                     </div>
+                    </div>
+                  {processoData.dataAjuizamento && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Data de Ajuizamento</p>
+                      <p className="text-sm font-medium text-foreground">
+                  <div className="mb-4">
+                    <p className="text-xs text-muted-foreground mb-2">Assuntos</p>
+                    <div className="flex flex-wrap gap-2">
                   )}
-                </div>
+                </div>ondary">
 
                 {processoData.assuntos && processoData.assuntos.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs text-muted-foreground mb-2">Assuntos</p>
-                    <div className="flex flex-wrap gap-2">
-                      {processoData.assuntos.map((assunto) => (
+                  </div>
+                )}
                         <Badge key={assunto.codigo} variant="secondary">
                           {assunto.nome}
                         </Badge>
-                      ))}
+                      ))}isAnalyzing}
                     </div>
-                  </div>
+                  className="w-full border-accent text-accent hover:bg-accent/10"
                 )}
 
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing}
+                    <>
+                  onClick={handleAnalyze} />
+                      Analisando com IA...
                   variant="outline"
                   className="w-full border-accent text-accent hover:bg-accent/10"
                 >
@@ -371,15 +370,8 @@ Assuntos
                 </Alert>
               )}
 
-              {analysis && (
-                <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkle className="w-6 h-6 text-accent" weight="fill" />
-                    <h3 className="text-lg font-bold text-foreground">Análise da IA</h3>
-                  </div>
-                  <div className="prose prose-sm max-w-none">
                     <pre className="whitespace-pre-wrap text-sm text-foreground font-sans bg-background/50 p-4 rounded-lg">
-                      {analysis}
+                <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5">
                     </pre>
                   </div>
                   <Button
