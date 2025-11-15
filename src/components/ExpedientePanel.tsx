@@ -19,7 +19,7 @@ export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
-  const [showJustinEDialog, setShowJustinEDialog] = useState(false)
+  const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<string | null>(null)
 
   const handleAnalyze = async (exp: Expediente) => {
@@ -45,8 +45,8 @@ export default function ExpedientePanel() {
     }, 2000)
   }
 
-  const handleActivateJustinE = () => {
-    setShowJustinEDialog(true)
+  const handleActivateMichaelRoss = () => {
+    setShowMichaelRossDialog(true)
   }
 
   const handleSelectTask = (task: string) => {
@@ -58,10 +58,10 @@ export default function ExpedientePanel() {
         const analyzed: Expediente = {
           ...selectedExp,
           analyzed: true,
-          summary: `Mrs. Justin-e analisou a intimação e identificou: ${task}. Prazo de 15 dias corridos iniciando em D+1 da intimação.`,
+          summary: `Mrs. Michael Ross analisou a intimação e identificou: ${task}. Prazo de 15 dias corridos iniciando em D+1 da intimação.`,
           suggestedAction: `Executar tarefa: ${task}. Workflow de controladoria criado automaticamente.`,
           pendingDocs: ['Documento Principal', 'Comprovantes'],
-          draftPetition: 'EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO...\n\n[Minuta gerada por Mrs. Justin-e]'
+          draftPetition: 'EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO...\n\n[Minuta gerada por Mrs. Michael Ross]'
         }
 
         setExpedientes((current) =>
@@ -71,8 +71,8 @@ export default function ExpedientePanel() {
       }
       
       setAnalyzing(false)
-      setShowJustinEDialog(false)
-      toast.success('Mrs. Justin-e concluiu a análise e criou o workflow!')
+      setShowMichaelRossDialog(false)
+      toast.success('Mrs. Michael Ross concluiu a análise e criou o workflow!')
     }, 2500)
   }
 
@@ -151,9 +151,9 @@ export default function ExpedientePanel() {
                     </div>
                     {!selectedExp.analyzed && (
                       <div className="flex gap-2">
-                        <Button onClick={() => handleActivateJustinE()} disabled={analyzing} variant="default">
+                        <Button onClick={() => handleActivateMichaelRoss()} disabled={analyzing} variant="default">
                           <Brain className="w-4 h-4 mr-2" weight="fill" />
-                          {analyzing ? 'Analisando...' : 'Ativar Justin-e'}
+                          {analyzing ? 'Analisando...' : 'Ativar Michael Ross'}
                         </Button>
                         <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline">
                           <Sparkle className="w-4 h-4 mr-2" weight="fill" />
@@ -242,12 +242,12 @@ export default function ExpedientePanel() {
         </div>
       </div>
 
-      <Dialog open={showJustinEDialog} onOpenChange={setShowJustinEDialog}>
+      <Dialog open={showMichaelRossDialog} onOpenChange={setShowMichaelRossDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               <Brain className="w-7 h-7 text-primary" weight="fill" />
-              Mrs. Justin-e - Análise de Intimação
+              Mrs. Michael Ross - Análise de Intimação
             </DialogTitle>
             <DialogDescription>
               Resumo: {selectedExp?.summary || 'Intimação recebida aguardando análise detalhada'}
@@ -289,7 +289,7 @@ export default function ExpedientePanel() {
 
             <div className="bg-muted/50 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground">
-                💡 Após selecionar, Mrs. Justin-e irá:
+                💡 Após selecionar, Mrs. Michael Ross irá:
                 <br />• Calcular prazos automaticamente (D-1, D-2 ou D-n)
                 <br />• Criar workflow de controladoria
                 <br />• Preparar atendimento
