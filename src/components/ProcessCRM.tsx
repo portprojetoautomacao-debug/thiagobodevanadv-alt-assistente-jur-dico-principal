@@ -133,53 +133,53 @@ export default function ProcessCRM() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="cnj">Número CNJ *</Label>
+                <Label htmlFor="numeroCNJ">Número CNJ *</Label>
                 <Input
-                  id="cnj"
+                  id="numeroCNJ"
                   placeholder="0000000-00.0000.0.00.0000"
-                  value={newProcess.cnj}
-                  onChange={(e) => setNewProcess({ ...newProcess, cnj: e.target.value })}
+                  value={newProcess.numeroCNJ}
+                  onChange={(e) => setNewProcess({ ...newProcess, numeroCNJ: e.target.value })}
                 />
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="title">Título do Processo *</Label>
+                <Label htmlFor="titulo">Título do Processo *</Label>
                 <Input
-                  id="title"
+                  id="titulo"
                   placeholder="Ex: Ação Trabalhista - Horas Extras"
-                  value={newProcess.title}
-                  onChange={(e) => setNewProcess({ ...newProcess, title: e.target.value })}
+                  value={newProcess.titulo}
+                  onChange={(e) => setNewProcess({ ...newProcess, titulo: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="plaintiff">Autor</Label>
+                <Label htmlFor="autor">Autor</Label>
                 <Input
-                  id="plaintiff"
+                  id="autor"
                   placeholder="Nome do autor"
-                  value={newProcess.plaintiff}
-                  onChange={(e) => setNewProcess({ ...newProcess, plaintiff: e.target.value })}
+                  value={newProcess.autor}
+                  onChange={(e) => setNewProcess({ ...newProcess, autor: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="defendant">Réu</Label>
+                <Label htmlFor="reu">Réu</Label>
                 <Input
-                  id="defendant"
+                  id="reu"
                   placeholder="Nome do réu"
-                  value={newProcess.defendant}
-                  onChange={(e) => setNewProcess({ ...newProcess, defendant: e.target.value })}
+                  value={newProcess.reu}
+                  onChange={(e) => setNewProcess({ ...newProcess, reu: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lawyer">Advogado Responsável</Label>
+                <Label htmlFor="advogado">Advogado Responsável</Label>
                 <Input
-                  id="lawyer"
+                  id="advogado"
                   placeholder="Nome do advogado"
-                  value={newProcess.lawyer}
-                  onChange={(e) => setNewProcess({ ...newProcess, lawyer: e.target.value })}
+                  value={newProcess.advogado}
+                  onChange={(e) => setNewProcess({ ...newProcess, advogado: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stage">Fase Processual</Label>
-                <Select value={newProcess.stage} onValueChange={(value) => setNewProcess({ ...newProcess, stage: value })}>
+                <Label htmlFor="fase">Fase Processual</Label>
+                <Select value={newProcess.fase} onValueChange={(value) => setNewProcess({ ...newProcess, fase: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
