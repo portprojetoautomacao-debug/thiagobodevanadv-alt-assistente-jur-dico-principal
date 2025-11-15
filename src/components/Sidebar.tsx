@@ -28,6 +28,7 @@ interface SidebarProps {
 
 const NAVIGATION_ITEMS = [
   { id: 'dashboard', label: 'Meu Painel', icon: House },
+  { id: 'donna', label: 'Donn@ Assistente', icon: Robot, featured: true },
   { id: 'ai-agents', label: 'Agentes de IA', icon: Robot },
   { id: 'processes', label: 'Acervo (CRM)', icon: Briefcase },
   { id: 'expedientes', label: 'Expedientes', icon: Tray },
@@ -60,6 +61,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
           {NAVIGATION_ITEMS.map((item) => {
             const Icon = item.icon
             const isActive = currentView === item.id
+            const isFeatured = 'featured' in item && item.featured
 
             return (
               <Button
@@ -67,12 +69,18 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
                 variant={isActive ? 'secondary' : 'ghost'}
                 className={cn(
                   'w-full justify-start',
-                  isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground'
+                  isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
+                  isFeatured && !isActive && 'border border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5'
                 )}
                 onClick={() => onViewChange(item.id)}
               >
                 <Icon className="w-5 h-5 mr-3" weight={isActive ? 'fill' : 'regular'} />
                 {item.label}
+                {isFeatured && (
+                  <Badge variant="secondary" className="ml-auto text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+                    Novo
+                  </Badge>
+                )}
               </Button>
             )
           })}

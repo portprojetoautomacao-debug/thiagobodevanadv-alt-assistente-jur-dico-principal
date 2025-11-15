@@ -57,7 +57,47 @@ export default function Dashboard({ user }: DashboardProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Card className="border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <Robot className="w-6 h-6 text-white" weight="fill" />
+            </div>
+            <div className="flex-1">
+              <CardTitle className="flex items-center gap-2">
+                Conheça a Donn@
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+                  Novo
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                Assistente jurídica inteligente que transforma dados em decisões estratégicas
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-foreground">
+            Mais do que responder perguntas, a Donn@ analisa informações em tempo real e apresenta insights claros sobre:
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="p-2 bg-card rounded-lg border border-border">
+              <p className="text-xs font-medium">📊 Relatórios</p>
+            </div>
+            <div className="p-2 bg-card rounded-lg border border-border">
+              <p className="text-xs font-medium">⚖️ Processos</p>
+            </div>
+            <div className="p-2 bg-card rounded-lg border border-border">
+              <p className="text-xs font-medium">💰 Financeiro</p>
+            </div>
+            <div className="p-2 bg-card rounded-lg border border-border">
+              <p className="text-xs font-medium">📅 Prazos</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Processos em Andamento</CardTitle>

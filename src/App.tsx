@@ -14,6 +14,7 @@ import Calendar from '@/components/Calendar'
 import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import AIAgents from '@/components/AIAgents'
+import Donna from '@/components/Donna'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
 import { initializeSampleData } from '@/lib/sample-data'
 import type { User } from '@/types'
@@ -51,6 +52,8 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard user={currentUser} />
+      case 'donna':
+        return <Donna />
       case 'ai-agents':
         return <AIAgents />
       case 'processes':
