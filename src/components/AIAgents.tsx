@@ -599,7 +599,7 @@ export default function AIAgents() {
                           <p className="text-xs font-medium text-foreground">
                             Processando tarefa...
                           </p>
-                        </div>
+                  activityLog.map((log) => {
                       </div>
                     )}
 
