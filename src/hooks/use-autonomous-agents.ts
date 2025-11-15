@@ -264,11 +264,6 @@ export function useAutonomousAgents() {
         agentIds: enabledAgentIds
       })
 
-      generator.setTaskCallback((task) => {
-        addTask(task)
-        logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
-      })
-
       if (autoGenerateEnabled) {
         generator.start()
       }

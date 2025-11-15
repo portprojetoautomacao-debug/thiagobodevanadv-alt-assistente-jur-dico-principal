@@ -15,7 +15,8 @@ import {
   Books,
   SignOut,
   Robot,
-  Newspaper
+  Newspaper,
+  PencilLine
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types'
@@ -33,6 +34,7 @@ const NAVIGATION_ITEMS = [
   { id: 'ai-agents', label: 'Agentes de IA', icon: Robot },
   { id: 'processes', label: 'Acervo (CRM)', icon: Briefcase },
   { id: 'expedientes', label: 'Expedientes', icon: Tray },
+  { id: 'minutas', label: 'Minutas', icon: PencilLine },
   { id: 'batch', label: 'Análise em Lote', icon: FileText },
   { id: 'audio', label: 'Transcrição', icon: MicrophoneStage },
   { id: 'calculator', label: 'Calc. Prazos', icon: Calculator },

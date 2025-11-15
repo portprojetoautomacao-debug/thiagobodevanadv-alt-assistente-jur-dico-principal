@@ -17,6 +17,7 @@ import AIAgents from '@/components/AIAgents'
 import HarveySpecter from '@/components/Donna'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
 import DatajudChecklist from '@/components/DatajudChecklist'
+import MinutasManager from '@/components/MinutasManager'
 import { initializeSampleData } from '@/lib/sample-data'
 import type { User } from '@/types'
 
@@ -61,6 +62,8 @@ function App() {
         return <ProcessCRM />
       case 'expedientes':
         return <ExpedientePanel />
+      case 'minutas':
+        return <MinutasManager />
       case 'batch':
         return <BatchAnalysis />
       case 'audio':
