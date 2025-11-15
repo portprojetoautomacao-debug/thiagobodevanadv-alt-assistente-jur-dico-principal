@@ -1,26 +1,26 @@
 import { useState } from 'react'
-import { Card, CardContent } from '@/components
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { Copy, Check, Lightbulb, X, ArrowSqua
-import { toast } from 'sonner'
-interface PremonicaoModalProps {
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Copy, Check, Lightbulb, X, ArrowSquareOut, CaretRight } from '@phosphor-icons/react'
+import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 import type { PremonicaoJuridica, Precedente } from '@/types'
 
-}
+interface PremonicaoModalProps {
   isOpen: boolean
-  percentage: number
+  onClose: () => void
   data: PremonicaoJuridica | null
-function Probability
+  isLoading: boolean
   error: string | null
- 
+}
 
-
+interface ProbabilityMeterProps {
   percentage: number
- 
+}
 
 function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
   const radius = 70
@@ -34,7 +34,7 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
     if (pct >= 50) return 'oklch(0.75 0.15 85)'
     if (pct >= 25) return 'oklch(0.68 0.15 45)'
     return 'oklch(0.55 0.22 25)'
-   
+  }
 
   const getLabel = (pct: number) => {
     if (pct >= 75) return 'Alta Probabilidade'
@@ -43,7 +43,7 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
     return 'Probabilidade Muito Baixa'
   }
 
-
+  return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative" style={{ width: radius * 2, height: radius * 2 }}>
         <svg height={radius * 2} width={radius * 2}>
@@ -52,23 +52,23 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
             fill="transparent"
             strokeWidth={strokeWidth}
             r={normalizedRadius}
-      variant="ghost"
+            cx={radius}
             cy={radius}
-    >
+          />
           <motion.circle
-        <Copy className="h-4 w-4" />
+            stroke={getColor(percentage)}
             fill="transparent"
             strokeWidth={strokeWidth}
             strokeDasharray={`${circumference} ${circumference}`}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-}: PremonicaoModalProps) {
+            r={normalizedRadius}
             cx={radius}
-        <div className=
+            cy={radius}
             initial={{ strokeDashoffset: circumference }}
-                <Lightbulb className="h-6 
-            transition={{ duration: 1, ease: 'linear' }}
-                <p c
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1, ease: 'easeInOut' }}
+            style={{
               transform: 'rotate(-90deg)',
               transformOrigin: '50% 50%',
             }}
@@ -76,18 +76,18 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-3xl font-bold text-foreground">
-              <motion.div
+            {percentage}%
           </span>
-              
+        </div>
       </div>
-            
-                  </p>
+      <Badge
+        className="px-4 py-1.5 text-sm font-medium"
         style={{ backgroundColor: getColor(percentage), color: 'white' }}
       >
         {getLabel(percentage)}
       </Badge>
     </div>
-   
+  )
 }
 
 interface CopyButtonProps {
@@ -97,7 +97,7 @@ interface CopyButtonProps {
 function CopyButton({ text }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
-                        <CardConte
+  const handleCopy = async () => {
     await navigator.clipboard.writeText(text)
     setCopied(true)
     toast.success('Copiado para a área de transferência')
@@ -105,29 +105,29 @@ function CopyButton({ text }: CopyButtonProps) {
   }
 
   return (
-           
+    <Button
       variant="ghost"
-                 
+      size="icon"
       className="h-8 w-8"
       onClick={handleCopy}
     >
-                 
+      {copied ? (
         <Check className="h-4 w-4 text-green-500" />
-           
+      ) : (
         <Copy className="h-4 w-4" />
-        
+      )}
     </Button>
-   
+  )
 }
 
 export default function PremonicaoModal({
-         
+  isOpen,
   onClose,
   data,
-            
-        
+  isLoading,
+  error,
 }: PremonicaoModalProps) {
-          
+  return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0">
         <div className="sticky top-0 z-10 bg-card border-b px-6 py-4">
@@ -135,13 +135,13 @@ export default function PremonicaoModal({
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-accent">
                 <Lightbulb className="h-6 w-6 text-accent-foreground" weight="fill" />
-
+              </div>
               <div>
                 <DialogTitle className="text-xl font-semibold">Premonição Jurídica</DialogTitle>
                 <p className="text-sm text-muted-foreground">
                   Análise inteligente de probabilidade de êxito
                 </p>
-
+              </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-5 w-5" />
@@ -151,9 +151,9 @@ export default function PremonicaoModal({
 
         <Separator />
 
-
+        <ScrollArea className="flex-1">
           <div className="p-6 space-y-6">
-
+            {isLoading && (
               <motion.div
                 className="flex flex-col items-center justify-center py-12 gap-4"
                 initial={{ opacity: 0 }}
@@ -164,7 +164,7 @@ export default function PremonicaoModal({
                   <p className="font-medium text-foreground">Analisando o processo...</p>
                   <p className="text-sm text-muted-foreground">
                     A IA está consultando jurisprudências e calculando probabilidades
-
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -173,11 +173,11 @@ export default function PremonicaoModal({
               <div className="bg-destructive/10 border border-destructive rounded-lg p-4">
                 <p className="text-destructive font-medium">Erro na Análise</p>
                 <p className="text-sm text-muted-foreground mt-1">{error}</p>
-
+              </div>
             )}
 
             {!isLoading && !error && data && (
-
+              <>
                 <div className="grid md:grid-cols-2 gap-6">
                   <ProbabilityMeter percentage={data.probabilidade_exito} />
 
@@ -185,13 +185,13 @@ export default function PremonicaoModal({
                     <h3 className="font-semibold text-lg mb-2">Análise da IA</h3>
                     <p className="text-muted-foreground leading-relaxed">
                       {data.analise_ia}
-
+                    </p>
                   </div>
                 </div>
 
+                <Separator />
 
-
-
+                <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Estratégias Recomendadas</h3>
                   <div className="space-y-2">
                     {data.estrategias_recomendadas.map((estrategia, index) => (
@@ -200,7 +200,7 @@ export default function PremonicaoModal({
                           <div className="flex items-start gap-3 flex-1">
                             <CaretRight className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm">{estrategia}</p>
-
+                          </div>
                           <CopyButton text={estrategia} />
                         </CardContent>
                       </Card>
@@ -221,7 +221,7 @@ export default function PremonicaoModal({
                               <div className="flex items-center gap-2 mb-1">
                                 <Badge variant="outline">{precedente.tribunal}</Badge>
                                 <span className="text-sm font-medium">{precedente.numero}</span>
-
+                              </div>
                               <p className="text-sm font-medium text-foreground">
                                 {precedente.tema}
                               </p>
@@ -239,26 +239,26 @@ export default function PremonicaoModal({
                                     href={precedente.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-
+                                  >
                                     <ArrowSquareOut className="h-4 w-4" />
-
+                                  </a>
                                 </Button>
-
+                              )}
                             </div>
-
+                          </div>
                           <p className="text-sm text-muted-foreground">
-
+                            {precedente.resumo_relevancia}
                           </p>
-
+                        </CardContent>
                       </Card>
                     ))}
                   </div>
                 </div>
               </>
-
+            )}
           </div>
-
+        </ScrollArea>
       </DialogContent>
-
+    </Dialog>
   )
-
+}
