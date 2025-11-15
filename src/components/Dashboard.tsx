@@ -17,7 +17,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     const ativos = processes.filter(p => p.status === 'ativo').length
     const concluidos = processes.filter(p => p.status === 'concluido').length
     
-    const todosPrazos = processes.flatMap(p => p.prazos || [])
+    const todosPrazos = processes.flatMap(p => (p.prazos && Array.isArray(p.prazos)) ? p.prazos : [])
     const prazosPendentes = todosPrazos.filter(p => !p.concluido).length
     const prazosUrgentes = todosPrazos.filter(p => {
       if (p.concluido) return false
@@ -32,14 +32,16 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     const todosPrazos: (Prazo & { processoTitulo: string })[] = []
     
     processes.forEach(process => {
-      process.prazos?.forEach(prazo => {
-        if (!prazo.concluido) {
-          todosPrazos.push({
-            ...prazo,
-            processoTitulo: process.titulo
-          })
-        }
-      })
+      if (process.prazos && Array.isArray(process.prazos)) {
+        process.prazos.forEach(prazo => {
+          if (!prazo.concluido) {
+            todosPrazos.push({
+              ...prazo,
+              processoTitulo: process.titulo
+            })
+          }
+        })
+      }
     })
 
     return todosPrazos

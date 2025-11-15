@@ -17,9 +17,11 @@ export default function PrazosView() {
     const lista: (Prazo & { processo: Process })[] = []
     
     processes.forEach(process => {
-      process.prazos?.forEach(prazo => {
-        lista.push({ ...prazo, processo })
-      })
+      if (process.prazos && Array.isArray(process.prazos)) {
+        process.prazos.forEach(prazo => {
+          lista.push({ ...prazo, processo })
+        })
+      }
     })
 
     return lista.sort((a, b) => a.dataFinal.localeCompare(b.dataFinal))
