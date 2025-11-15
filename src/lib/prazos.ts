@@ -56,7 +56,21 @@ export function calcularPrazoCLT(dataInicio: Date, diasCorridos: number): Date {
 
 export function validarNumeroCNJ(numero: string): boolean {
   const cleanNumber = numero.replace(/\D/g, '')
-  return cleanNumber.length === 20
+  
+  if (cleanNumber.length !== 20) return false
+  
+  const nnnnnnn = cleanNumber.slice(0, 7)
+  const dd = cleanNumber.slice(7, 9)
+  const aaaa = cleanNumber.slice(9, 13)
+  const jtr = cleanNumber.slice(13, 14)
+  const oo = cleanNumber.slice(14, 16)
+  const oooo = cleanNumber.slice(16, 20)
+  
+  const r = parseInt(nnnnnnn + dd + aaaa + jtr + oo + oooo)
+  const resto = r % 97
+  const dv = 98 - resto
+  
+  return dv === parseInt(dd)
 }
 
 export function formatarNumeroCNJ(numero: string): string {
@@ -87,4 +101,16 @@ export function isUrgente(diasRestantes: number): boolean {
 
 export function getFeriadosNacionais(): Feriado[] {
   return [...feriadosNacionais2025]
+}
+
+export function formatarMoeda(valor: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor)
+}
+
+export function formatarDataCurta(data: string): string {
+  const date = parse(data, 'yyyy-MM-dd', new Date())
+  return format(date, 'dd/MM/yyyy')
 }

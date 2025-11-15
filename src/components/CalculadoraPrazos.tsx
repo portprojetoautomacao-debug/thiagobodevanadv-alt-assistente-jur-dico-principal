@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 
 export default function CalculadoraPrazos() {
-  const [processes] = useKV<Process[]>('processes', [])
+  const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [selectedProcessId, setSelectedProcessId] = useState<string>('')
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0])
   const [diasCorridos, setDiasCorridos] = useState('15')
@@ -46,14 +46,6 @@ export default function CalculadoraPrazos() {
       return
     }
 
-    const processes_current = processes
-    const processIndex = processes_current.findIndex(p => p.id === selectedProcessId)
-    
-    if (processIndex === -1) {
-      toast.error('Processo não encontrado')
-      return
-    }
-
     const novoPrazo: Prazo = {
       id: `prazo_${Date.now()}`,
       processId: selectedProcessId,
@@ -67,11 +59,23 @@ export default function CalculadoraPrazos() {
       createdAt: new Date().toISOString()
     }
 
-    const updatedProcess = {
-      ...processes_current[processIndex],
-      prazos: [...(processes_current[processIndex].prazos || []), novoPrazo],
-      updatedAt: new Date().toISOString()
-    }
+    setProcesses(current => {
+      const processIndex = current.findIndex(p => p.id === selectedProcessId)
+      
+      if (processIndex === -1) {
+        toast.error('Processo não encontrado')
+        return current
+      }
+
+      const updated = [...current]
+      updated[processIndex] = {
+        ...updated[processIndex],
+        prazos: [...(updated[processIndex].prazos || []), novoPrazo],
+        updatedAt: new Date().toISOString()
+      }
+      
+      return updated
+    })
 
     toast.success('Prazo salvo no processo')
     setDescricao('')

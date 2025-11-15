@@ -4,6 +4,7 @@ import type { ChatMessage, Process } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { ChatCircle, PaperPlaneRight, Sparkle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
@@ -12,6 +13,7 @@ export default function AssistenteIA() {
   const [processes] = useKV<Process[]>('processes', [])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [clearDialogOpen, setClearDialogOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -80,10 +82,13 @@ Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cá
   }
 
   const handleClearHistory = () => {
-    if (confirm('Deseja limpar todo o histórico de conversas?')) {
-      setMessages([])
-      toast.success('Histórico limpo')
-    }
+    setClearDialogOpen(true)
+  }
+
+  const confirmClearHistory = () => {
+    setMessages([])
+    toast.success('Histórico limpo')
+    setClearDialogOpen(false)
   }
 
   const suggestions = [
@@ -202,6 +207,21 @@ Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cá
           <PaperPlaneRight size={20} />
         </Button>
       </form>
+
+      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar histórico</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja limpar todo o histórico de conversas? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearHistory}>Limpar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

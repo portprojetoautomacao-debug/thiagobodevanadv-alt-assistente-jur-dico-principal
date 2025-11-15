@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Pencil, Trash, CalendarCheck } from '@phosphor-icons/react'
-import { formatarData, calcularDiasRestantes, isUrgente } from '@/lib/prazos'
+import { formatarData, calcularDiasRestantes, isUrgente, formatarMoeda } from '@/lib/prazos'
 import { toast } from 'sonner'
 
 interface ProcessDetailsDialogProps {
@@ -16,14 +18,18 @@ interface ProcessDetailsDialogProps {
 }
 
 export default function ProcessDetailsDialog({ open, onOpenChange, process, onEdit, onDelete }: ProcessDetailsDialogProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  
   if (!process) return null
 
-  const handleDelete = () => {
-    if (confirm('Tem certeza que deseja excluir este processo?')) {
-      onDelete(process.id)
-      onOpenChange(false)
-      toast.success('Processo excluído')
-    }
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = () => {
+    onDelete(process.id)
+    setDeleteDialogOpen(false)
+    toast.success('Processo excluído')
   }
 
   return (
@@ -40,7 +46,7 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
                 <Pencil size={16} />
                 Editar
               </Button>
-              <Button size="sm" variant="destructive" onClick={handleDelete}>
+              <Button size="sm" variant="destructive" onClick={handleDeleteClick}>
                 <Trash size={16} />
               </Button>
             </div>
@@ -93,7 +99,7 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
               <div className="flex flex-col gap-1">
                 <p className="text-sm text-muted-foreground">Valor da Causa</p>
                 <p className="text-sm font-semibold">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(process.valor)}
+                  {formatarMoeda(process.valor)}
                 </p>
               </div>
             )}
@@ -159,6 +165,23 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
           )}
         </div>
       </DialogContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir processo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este processo? Esta ação não pode ser desfeita e todos os prazos associados serão removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }
