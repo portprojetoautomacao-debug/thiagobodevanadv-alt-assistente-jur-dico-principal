@@ -2,98 +2,105 @@ import { createAgentTask, type AgentTask } from './agents'
 
 interface TaskGeneratorConfig {
   enabled: boolean
-  agentIds: string[]
+  intervalMinutes: number
   maxTasksPerInterval: number
   agentIds: string[]
 }
 
 const defaultConfig: TaskGeneratorConfig = {
-
+  enabled: false,
   intervalMinutes: 5,
   maxTasksPerInterval: 3,
-  agentIds: []
- 
+  agentIds: [],
+}
 
 const taskTemplates = {
   'doc-analyzer': [
+    { type: 'analyze_document' as const, priority: 'medium' as const },
+  ],
+  'djen-monitor': [
+    { type: 'monitor_djen' as const, priority: 'high' as const },
+  ],
+  'deadline-tracker': [
+    { type: 'calculate_deadline' as const, priority: 'high' as const },
+  ],
+  'petition-writer': [
+    { type: 'draft_petition' as const, priority: 'medium' as const },
+  ],
+  'datajud-query': [
+    { type: 'check_datajud' as const, priority: 'medium' as const },
+  ],
+  'file-organizer': [
+    { type: 'organize_files' as const, priority: 'low' as const },
+  ],
+}
+
+export class AgentTaskGenerator {
+  private config: TaskGeneratorConfig
+  private intervalId: NodeJS.Timeout | null = null
+
+  constructor(config?: Partial<TaskGeneratorConfig>) {
+    this.config = { ...defaultConfig, ...config }
   }
-  pu
-  }
+
   public start() {
+    if (!this.config.enabled) {
+      return
+    }
+
+    if (this.intervalId) {
+      this.stop()
+    }
+
+    this.intervalId = setInterval(() => {
+      this.generateTasks()
+    }, this.config.intervalMinutes * 60 * 1000)
+
+    this.generateTasks()
+  }
+
+  public stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
+  }
+
+  private generateTasks() {
+    const agentIds = this.config.agentIds.length > 0 
+      ? this.config.agentIds 
+      : Object.keys(taskTemplates)
+
+    const tasksToGenerate = Math.min(
+      this.config.maxTasksPerInterval,
+      agentIds.length
+    )
+
+    for (let i = 0; i < tasksToGenerate; i++) {
+      const agentId = agentIds[Math.floor(Math.random() * agentIds.length)]
+      const templates = taskTemplates[agentId as keyof typeof taskTemplates]
+      
+      if (!templates || templates.length === 0) {
+        continue
+      }
+
+      const template = templates[Math.floor(Math.random() * templates.length)]
+      
+      createAgentTask(
+        agentId,
+        template.type,
+        {},
+        template.priority
+      )
+    }
+  }
+
+  public updateConfig(newConfig: Partial<TaskGeneratorConfig>) {
+    const wasRunning = this.intervalId !== null
     
+    if (wasRunning) {
+      this.stop()
     }
-    if (!this.config.enabled) {
-      return
-
-
-
-  }
-  public stop() {
-      clearInterval(this.inte
-    }
-
-    const agentIds = this.config.agentIds.length > 0 
-      : Object.keys(taskTemplates)
-  }
-
-
-      if (!templates || template
-  }
-
-  public start() {
-      }
-  }
-  public upd
-    }
-
-    if (!this.config.enabled) {
-
-      return
-  }
-
-  }
-
-  return new AgentTaskGenerator(config)
-
-
-  }
-
-  public stop() {
-
-
-
-    }
-
-
-
-    const agentIds = this.config.agentIds.length > 0 
-
-      : Object.keys(taskTemplates)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-  }
-
-
-
-
-
-
-
 
     this.config = { ...this.config, ...newConfig }
 

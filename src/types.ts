@@ -111,3 +111,18 @@ export interface PremonicaoJuridica {
   estrategias_recomendadas: string[]
   precedentes_relevantes: Precedente[]
 }
+
+export interface Minuta {
+  id: string
+  titulo: string
+  processId?: string
+  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'outro'
+  conteudo: string
+  googleDocsId?: string
+  googleDocsUrl?: string
+  status: 'rascunho' | 'em-revisao' | 'finalizada' | 'arquivada'
+  criadoEm: string
+  atualizadoEm: string
+  ultimaSincronizacao?: string
+  autor: string
+}
