@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, MagnifyingGlass } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, Sparkle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import type { Process } from '@/types'
+import PremonicaoModal from '@/components/PremonicaoModal'
+import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
+import type { Process, PremonicaoJuridica } from '@/types'
 
 const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
 const STATUS_COLORS = {
@@ -32,6 +34,11 @@ export default function ProcessCRM() {
     lawyer: '',
     stage: 'Inicial',
   })
+  
+  const [premonicaoOpen, setPremonicaoOpen] = useState(false)
+  const [premonicaoLoading, setPremonicaoLoading] = useState(false)
+  const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null)
+  const [premonicaoError, setPremonicaoError] = useState<string | null>(null)
 
   const filteredProcesses = (processes || []).filter(p => {
     const matchesFilter = filter === '' || 
@@ -80,6 +87,23 @@ export default function ProcessCRM() {
       )
     )
     toast.success('Status atualizado')
+  }
+
+  const handlePremonicao = async (process: Process) => {
+    setPremonicaoOpen(true)
+    setPremonicaoLoading(true)
+    setPremonicaoError(null)
+    setPremonicaoData(null)
+
+    try {
+      const data = await generatePremonicaoJuridica(process.cnj, process)
+      setPremonicaoData(data)
+    } catch (error) {
+      setPremonicaoError(error instanceof Error ? error.message : 'Erro desconhecido')
+      toast.error('Erro ao gerar premonição jurídica')
+    } finally {
+      setPremonicaoLoading(false)
+    }
   }
 
   return (
@@ -236,6 +260,14 @@ export default function ProcessCRM() {
                   <SelectItem value="arquivado">Arquivado</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => handlePremonicao(process)}
+              >
+                <Sparkle className="w-4 h-4" weight="fill" />
+                Premonição Jurídica
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -252,6 +284,14 @@ export default function ProcessCRM() {
           </CardContent>
         </Card>
       )}
+
+      <PremonicaoModal
+        isOpen={premonicaoOpen}
+        onClose={() => setPremonicaoOpen(false)}
+        isLoading={premonicaoLoading}
+        data={premonicaoData}
+        error={premonicaoError}
+      />
     </div>
   )
 }

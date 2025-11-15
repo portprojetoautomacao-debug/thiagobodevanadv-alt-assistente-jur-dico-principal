@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import Login from '@/components/Login'
@@ -15,11 +15,18 @@ import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import AIAgents from '@/components/AIAgents'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
+import { initializeSampleData } from '@/lib/sample-data'
 import type { User } from '@/types'
 
 function App() {
   const [currentUser, setCurrentUser] = useKV<User | null>('currentUser', null)
   const [currentView, setCurrentView] = useState<string>('dashboard')
+
+  useEffect(() => {
+    if (currentUser) {
+      initializeSampleData()
+    }
+  }, [currentUser])
 
   const handleLogin = (user: User) => {
     setCurrentUser(user)
