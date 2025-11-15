@@ -1,14 +1,14 @@
 # Planning Guide
 
-Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gemini, operating 24/7 to automate and optimize your legal workflow from start to finish. A high-performance AI-powered suite of tools designed for law offices using Brazil's PJe (Electronic Judicial Process) system, featuring autonomous agents that analyze documents, draft petitions, organize files, transcribe media, calculate deadlines, and monitor court notifications.
+Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gemini, operating 24/7 to automate and optimize your legal workflow from start to finish. A high-performance AI-powered suite featuring intelligent agents that work continuously without human intervention, seamlessly collaborating with humans when needed, analyzing documents, drafting petitions, organizing files, transcribing media, calculating deadlines, and monitoring court notifications.
 
 **Experience Qualities**: 
-1. **Professional & Trustworthy** - The interface must convey reliability and precision, essential for legal professionals handling critical cases and deadlines, with autonomous AI agents that work continuously in the background
-2. **Efficient & Streamlined** - Every interaction should minimize clicks and cognitive load, enabling lawyers to process information and take action rapidly while AI agents handle repetitive tasks
-3. **Intelligent & Insightful** - AI-powered autonomous agents should surface relevant information proactively, operating 24/7 to provide actionable insights that enhance decision-making without human intervention
+1. **Professional & Trustworthy** - The interface must convey reliability and precision, essential for legal professionals handling critical cases and deadlines, with autonomous AI agents that work continuously in the background without human supervision
+2. **Efficient & Streamlined** - Every interaction should minimize clicks and cognitive load, enabling lawyers to process information and take action rapidly while AI agents handle repetitive tasks autonomously 24/7
+3. **Intelligent & Collaborative** - AI-powered autonomous agents operate continuously but intelligently detect human activity, pausing gracefully when you edit documents and resuming automatically after 5 seconds of inactivity, creating a seamless human-AI collaboration
 
-**Complexity Level**: Complex Application (advanced functionality, authentication, multiple integrated modules)
-  - This is a comprehensive legal practice management system with user authentication, real-time data processing, AI integration, document analysis, calendar management, financial tracking, and knowledge base features requiring sophisticated state management and data persistence.
+**Complexity Level**: Complex Application (advanced functionality, authentication, multiple integrated modules, autonomous agent orchestration)
+  - This is a comprehensive legal practice management system with user authentication, real-time data processing, AI integration, autonomous agent management, document analysis, calendar management, financial tracking, and knowledge base features requiring sophisticated state management, data persistence, and intelligent task queuing.
 
 ## Essential Features
 
@@ -20,11 +20,25 @@ Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gem
 - **Success criteria**: User can access the system within 2 clicks, credentials persist across sessions
 
 ### 2. Dashboard (Meu Painel)
-- **Functionality**: Centralized command center displaying appointments, fatal deadlines, pending tasks, and real-time autonomous AI agent activity with status monitoring for all active agents
-- **Purpose**: Provide at-a-glance situational awareness of critical case information and showcase autonomous AI agents operating 24/7 in the background
+- **Functionality**: Centralized command center displaying appointments, fatal deadlines, pending tasks, and real-time autonomous AI agent activity with live status monitoring, task queues, and seamless human-agent collaboration indicators
+- **Purpose**: Provide at-a-glance situational awareness of critical case information and showcase autonomous AI agents operating 24/7 in the background, including their current tasks, queue status, and collaboration state with human users
 - **Trigger**: Successful login or navigation menu selection
-- **Progression**: Login → Dashboard load → Widget rendering (appointments, deadlines, tasks, AI agent status) → Real-time agent activity updates → Interactive card navigation
-- **Success criteria**: All critical information visible without scrolling, deadline alerts prominent, AI agent status displayed with live activity feed, data updates in real-time
+- **Progression**: Login → Dashboard load → Widget rendering (appointments, deadlines, tasks, AI agent status) → Real-time agent activity feed → Live task queue updates → Human intervention detection → Agent collaboration status display
+- **Success criteria**: All critical information visible without scrolling, deadline alerts prominent, AI agent status displayed with live activity feed showing current tasks and collaboration state, data updates in real-time, clear indication when agents are waiting for human input or processing autonomously
+
+### 12. Autonomous Agent Management System
+- **Functionality**: Complete autonomous agent orchestration with 24/7 continuous operation, intelligent task queuing, priority-based processing, human activity detection, collaborative handoff, and automatic resumption after human intervention
+- **Purpose**: Enable truly autonomous legal workflow automation that works continuously without human supervision while intelligently collaborating when humans interact with the same resources
+- **Trigger**: Agents start automatically on login and run continuously; humans can view status, pause/resume agents, or interact with agent-managed tasks at any time
+- **Progression**: Agent initialization → Continuous background operation → Task queue processing → Human activity detection → Collaborative pause → Wait 5s without activity → Automatic resumption → Task completion → Next task in queue
+- **Success criteria**: Agents process tasks continuously 24/7, detect human edits within 1 second, pause gracefully without data loss, resume automatically after 5 seconds of human inactivity, maintain complete task history, display real-time status, show task queue with priorities, log all activities with timestamps
+
+### 13. Human-Agent Collaboration System
+- **Functionality**: Intelligent detection of human activity on agent-managed resources, graceful pause of agent work, preservation of human edits, automatic resumption after inactivity period, clear visual indicators of collaboration state
+- **Purpose**: Eliminate conflicts between human and AI work, ensure human edits are never overwritten, provide seamless handoff between human and autonomous agent work
+- **Trigger**: Human opens or edits a document/task that an agent is working on
+- **Progression**: Agent working autonomously → Human opens resource → Agent detects activity → Agent marks task as "human_intervention" → Agent pauses and waits → Human makes edits → 5 seconds without activity → Agent marks task as resumable → Agent resumes processing → Agent continues from where it paused
+- **Success criteria**: Zero conflicts between human and agent work, human edits always preserved, agent resumes within 6 seconds of last human activity, clear visual indicators showing collaboration state (agent working / human editing / agent waiting / agent resuming), complete audit trail of handoffs
 
 ### 3. Process CRM (Acervo) - Kanban Board
 - **Functionality**: Visual process management with drag-and-drop Kanban board for tracking cases through workflow stages
@@ -187,3 +201,148 @@ Animations should be purposeful and subtle - reinforcing spatial relationships a
   - Multi-column layouts collapse to single column with prioritized information first
   - Touch-friendly button sizes (min 44x44px) with increased padding on mobile
   - Calendar switches to agenda list view with expandable day sections
+  - Agent status floater remains accessible but collapses to minimal view showing only active agent count
+
+## Autonomous Agent Architecture
+
+### Agent Types and Capabilities
+
+**1. Document Analyzer Agent (analyzer)**
+- Continuously monitors new expedientes and court documents
+- Extracts structured data (parties, CNJ numbers, deadlines, document types)
+- Generates summaries and identifies required actions
+- Detects pending documents and suggests responses
+- Operating mode: 24/7 continuous with collaborative human handoff
+- Priority: High - processes critical documents first
+
+**2. DJEN Monitor Agent (monitor)**
+- Monitors Diário de Justiça Eletrônico hourly for new intimations
+- Automatically extracts intimation data and calculates deadlines
+- Generates notifications for time-sensitive intimations
+- Updates process status based on publications
+- Operating mode: 24/7 continuous, scheduled hourly checks
+- Priority: Critical - deadline-related tasks always processed first
+
+**3. Deadline Calculator Agent (calculator)**
+- Automatically calculates procedural deadlines from intimations
+- Validates calculations against holiday calendars
+- Generates alerts for approaching deadlines
+- Recalculates when suspensions or extensions occur
+- Operating mode: 24/7 continuous with on-demand processing
+- Priority: Critical - deadline calculations never delayed
+
+**4. Legal Writer Agent (writer)**
+- Drafts petition templates based on case context
+- Standardizes formatting and legal structure
+- Generates legal arguments from knowledge base
+- Creates hearing summaries from transcriptions
+- Operating mode: On-demand with queue processing
+- Priority: Medium - processes requests in order received
+
+**5. DataJud Researcher Agent (researcher)**
+- Performs automatic queries to DataJud database
+- Extracts case updates and procedural movements
+- Consolidates statistical data for analysis
+- Detects significant case status changes
+- Operating mode: 24/7 continuous, configurable intervals
+- Priority: Low - processes during idle periods
+
+**6. File Organizer Agent (organizer)**
+- Categorizes and indexes uploaded documents
+- Renames files with intelligent naming conventions
+- Archives completed processes automatically
+- Maintains document structure and relationships
+- Operating mode: 24/7 continuous background processing
+- Priority: Low - processes during idle periods
+
+### Collaboration Modes
+
+**Collaborative Mode** (default for most agents)
+- Agent works autonomously on tasks
+- Detects when human opens/edits the same resource
+- Immediately pauses work and preserves current state
+- Waits for 5 seconds of human inactivity
+- Automatically resumes from where it paused
+- Best for: Document analysis, petition writing, file organization
+
+**Queue Mode**
+- Agent adds new tasks to queue when human is active
+- Processes queue sequentially when human finishes
+- Does not pause current task unless critical
+- Best for: Monitoring tasks, scheduled queries
+
+**Pause Mode**
+- Agent completely stops when human intervention detected
+- Requires manual resume from user
+- Used for critical tasks requiring human approval
+- Best for: High-stakes calculations, final document submissions
+
+### Task Priority System
+
+**Critical Priority**
+- Deadline calculations approaching due date
+- New intimations with short deadlines
+- Court-ordered urgent responses
+- Processed immediately, may interrupt lower priority tasks
+
+**High Priority**
+- New expediente analysis
+- Document extraction requests
+- Petition drafting for upcoming deadlines
+- Processed before medium/low priority tasks
+
+**Medium Priority**
+- Knowledge base indexing
+- Routine DataJud queries
+- Document categorization
+- Processed during normal queue flow
+
+**Low Priority**
+- File organization and archiving
+- Statistical data consolidation
+- Cleanup and maintenance tasks
+- Processed during idle periods
+
+### Human-Agent Handoff Protocol
+
+**Detection Phase**
+1. Agent monitors resource access timestamps
+2. Human opens or modifies resource
+3. Agent detects change within 1 second
+4. Agent marks task as "human_intervention"
+
+**Pause Phase**
+1. Agent saves current state and progress
+2. Agent stops processing immediately
+3. Status updated to "waiting_human"
+4. Visual indicator shown to user
+
+**Wait Phase**
+1. System tracks time since last human activity
+2. Countdown displayed: "Agent resumes in Xs"
+3. Any new human activity resets timer
+4. After 5s without activity, moves to resume phase
+
+**Resume Phase**
+1. Agent validates resource hasn't changed structure
+2. Agent merges any human changes with agent work
+3. Status updated to "agent_resuming"
+4. Agent continues processing from saved state
+5. Status updated back to "processing"
+
+### Activity Logging and Transparency
+
+All agent actions are logged with:
+- Timestamp (ISO 8601 format)
+- Agent ID and name
+- Action type and description
+- Result (success/warning/error)
+- Duration of task processing
+- Human intervention timestamps if applicable
+
+Users can view:
+- Real-time activity feed (last 100 actions)
+- Complete task history (last 500 completed tasks)
+- Current task queue with priorities
+- Agent status and current activities
+- Collaboration state for each agent

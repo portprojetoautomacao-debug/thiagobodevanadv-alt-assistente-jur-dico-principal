@@ -1,8 +1,9 @@
 import { useKV } from '@github/spark/hooks'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
 import { 
   Clock, 
   CheckCircle, 
@@ -13,17 +14,13 @@ import {
   Briefcase,
   Robot,
   Lightning,
-  CheckSquare
+  CheckSquare,
+  Brain,
+  ArrowRight,
+  TrendUp
 } from '@phosphor-icons/react'
 import type { User, Task, Appointment, Process } from '@/types'
-
-interface AIAgent {
-  id: string
-  name: string
-  status: 'active' | 'idle' | 'processing'
-  lastActivity: string
-  tasksCompleted: number
-}
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 
 interface DashboardProps {
   user: User
@@ -33,36 +30,7 @@ export default function Dashboard({ user }: DashboardProps) {
   const [tasks] = useKV<Task[]>('tasks', [])
   const [appointments] = useKV<Appointment[]>('appointments', [])
   const [processes] = useKV<Process[]>('processes', [])
-  const [aiAgents, setAiAgents] = useState<AIAgent[]>([
-    { id: '1', name: 'Agente de Análise Documental', status: 'idle', lastActivity: 'Aguardando documentos', tasksCompleted: 0 },
-    { id: '2', name: 'Agente de Monitoramento DJEN', status: 'active', lastActivity: 'Verificando intimações', tasksCompleted: 0 },
-    { id: '3', name: 'Agente de Prazos', status: 'active', lastActivity: 'Monitorando deadlines', tasksCompleted: 0 },
-    { id: '4', name: 'Agente de Redação', status: 'idle', lastActivity: 'Pronto para redigir', tasksCompleted: 0 },
-  ])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAiAgents(prev => prev.map(agent => {
-        if (agent.status === 'active' && Math.random() > 0.7) {
-          const activities = [
-            'Verificando novas intimações',
-            'Analisando documentos',
-            'Calculando prazos',
-            'Monitorando DataJud',
-            'Organizando expedientes',
-            'Preparando relatórios'
-          ]
-          return {
-            ...agent,
-            lastActivity: activities[Math.floor(Math.random() * activities.length)],
-            tasksCompleted: agent.tasksCompleted + (Math.random() > 0.5 ? 1 : 0)
-          }
-        }
-        return agent
-      }))
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
+  const { agents, activityLog, completedTasks } = useAutonomousAgents()
 
   const pendingTasks = (tasks || []).filter(t => !t.completed)
   const urgentTasks = pendingTasks.filter(t => t.priority === 'urgent')
@@ -82,8 +50,15 @@ export default function Dashboard({ user }: DashboardProps) {
     ? Math.round(((tasks || []).filter(t => t.completed).length / (tasks || []).length) * 100)
     : 0
   
-  const activeAgents = aiAgents.filter(a => a.status === 'active').length
-  const totalAgentTasks = aiAgents.reduce((sum, a) => sum + a.tasksCompleted, 0)
+  const activeAgents = agents.filter(a => a.enabled && a.status !== 'paused').length
+  const totalAgentTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
+  const todayAgentTasks = agents.reduce((sum, a) => sum + a.tasksToday, 0)
+  const recentActivities = activityLog.slice(0, 5)
+  const tasksCompletedLast24h = completedTasks.filter(t => {
+    const taskTime = new Date(t.completedAt || t.createdAt).getTime()
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
+    return taskTime > oneDayAgo
+  }).length
 
   return (
     <div className="p-6 space-y-6">
@@ -92,49 +67,80 @@ export default function Dashboard({ user }: DashboardProps) {
           Bem-vindo, {user.name}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Seus agentes de IA autônomos estão trabalhando 24/7 para você
+          {activeAgents} agentes de IA trabalhando 24/7 para você • {todayAgentTasks} tarefas hoje
         </p>
       </div>
 
       <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Robot className="w-6 h-6 text-primary" weight="fill" />
-            Agentes de IA Autônomos
-          </CardTitle>
-          <CardDescription>Operando continuamente para otimizar seu fluxo de trabalho</CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Robot className="w-6 h-6 text-primary" weight="fill" />
+                Sistema de Agentes Autônomos 24/7
+              </CardTitle>
+              <CardDescription>Operando continuamente sem intervenção humana</CardDescription>
+            </div>
+            <Badge variant="outline" className="bg-green-500/10 border-green-500 text-green-700 dark:text-green-400">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2" />
+              {activeAgents} Ativos
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/60">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/60 border border-border/50">
               <Lightning className="w-8 h-8 text-accent" weight="fill" />
               <div>
-                <p className="text-2xl font-bold text-foreground">{activeAgents}/{aiAgents.length}</p>
-                <p className="text-sm text-muted-foreground">Agentes Ativos</p>
+                <p className="text-2xl font-bold text-foreground">{todayAgentTasks}</p>
+                <p className="text-sm text-muted-foreground">Tarefas Hoje</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/60">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/60 border border-border/50">
               <CheckSquare className="w-8 h-8 text-green-600" weight="fill" />
               <div>
+                <p className="text-2xl font-bold text-foreground">{tasksCompletedLast24h}</p>
+                <p className="text-sm text-muted-foreground">Últimas 24h</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/60 border border-border/50">
+              <TrendUp className="w-8 h-8 text-primary" weight="fill" />
+              <div>
                 <p className="text-2xl font-bold text-foreground">{totalAgentTasks}</p>
-                <p className="text-sm text-muted-foreground">Tarefas Executadas</p>
+                <p className="text-sm text-muted-foreground">Total Executadas</p>
               </div>
             </div>
           </div>
           <div className="space-y-2">
-            {aiAgents.map((agent) => (
-              <div key={agent.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/60 border border-border/50">
-                <div className={`w-2 h-2 rounded-full ${agent.status === 'active' ? 'bg-green-500 animate-pulse' : agent.status === 'processing' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}`} />
+            {agents.slice(0, 4).map((agent) => (
+              <div key={agent.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/60 border border-border/50 hover:border-primary/30 transition-colors">
+                <div className={`w-2 h-2 rounded-full ${
+                  agent.status === 'active' ? 'bg-green-500 animate-pulse' : 
+                  agent.status === 'processing' ? 'bg-yellow-500 animate-pulse' : 
+                  agent.status === 'waiting_human' ? 'bg-orange-500 animate-pulse' :
+                  'bg-gray-400'
+                }`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{agent.name}</p>
                   <p className="text-xs text-muted-foreground">{agent.lastActivity}</p>
                 </div>
-                <Badge variant={agent.status === 'active' ? 'default' : 'secondary'} className="flex-shrink-0">
-                  {agent.status === 'active' ? 'Ativo' : agent.status === 'processing' ? 'Processando' : 'Aguardando'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {agent.currentTask && (
+                    <Brain className="w-4 h-4 text-primary animate-pulse" weight="fill" />
+                  )}
+                  <Badge variant={agent.enabled && agent.status !== 'paused' ? 'default' : 'secondary'} className="flex-shrink-0">
+                    {agent.enabled && agent.status !== 'paused' ? 'Operando' : 'Pausado'}
+                  </Badge>
+                </div>
               </div>
             ))}
           </div>
+          {agents.length > 4 && (
+            <Button variant="ghost" className="w-full mt-3" size="sm">
+              Ver todos os {agents.length} agentes
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -231,25 +237,41 @@ export default function Dashboard({ user }: DashboardProps) {
               <Sparkle className="w-5 h-5" weight="fill" />
               Atividade Recente da IA
             </CardTitle>
-            <CardDescription>Análises e automações executadas</CardDescription>
+            <CardDescription>Últimas ações dos agentes autônomos</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {aiAgents.filter(a => a.status === 'active').map((agent) => (
-                <div key={agent.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted">
-                  <Sparkle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" weight="fill" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{agent.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {agent.lastActivity} • {agent.tasksCompleted} tarefas executadas
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {aiAgents.filter(a => a.status === 'active').length === 0 && (
+              {recentActivities.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Nenhum agente ativo no momento
+                  Aguardando atividade dos agentes...
                 </p>
+              ) : (
+                recentActivities.map((log) => {
+                  const agent = agents.find(a => a.id === log.agentId)
+                  return (
+                    <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted">
+                      <Sparkle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" weight="fill" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {log.action}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(log.timestamp).toLocaleString('pt-BR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </div>
+                      {log.result === 'success' && (
+                        <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" weight="fill" />
+                      )}
+                      {log.result === 'warning' && (
+                        <Warning className="w-4 h-4 text-yellow-600 flex-shrink-0" weight="fill" />
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
           </CardContent>

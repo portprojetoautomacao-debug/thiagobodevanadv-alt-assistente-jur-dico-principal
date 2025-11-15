@@ -14,6 +14,7 @@ import Calendar from '@/components/Calendar'
 import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import AIAgents from '@/components/AIAgents'
+import AgentStatusFloater from '@/components/AgentStatusFloater'
 import type { User } from '@/types'
 
 function App() {
@@ -79,6 +80,7 @@ function App() {
       <main className="flex-1 overflow-auto">
         {renderView()}
       </main>
+      <AgentStatusFloater />
       <Toaster />
     </div>
   )
