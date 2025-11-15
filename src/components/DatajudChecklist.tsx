@@ -1,255 +1,259 @@
 import { useState, FormEvent } from 'react'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+  Select
+  SelectV
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  MagnifyingGlass,
   Spinner,
-  CheckCircle,
   Warning,
-  Sparkle,
   Copy,
-  Calendar as CalendarIcon,
   Gavel,
-  FileText,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
+} from '
 
-interface DatajudMovimento {
-  codigo: number
-  nome: string
-  dataHora: string
-  complementosTabelados?: any[]
+  codigo: 
+  dataHora: st
 }
-
-interface DatajudProcesso {
-  numeroProcesso: string
-  classe?: {
-    codigo: number
+interface 
+  class
     nome: string
-  }
-  sistema?: {
-    codigo: number
-    nome: string
-  }
+  sistem
+    nome: s
   tribunal: string
-  dataAjuizamento?: string
-  movimentos: DatajudMovimento[]
-  orgaoJulgador?: {
-    codigo: number
-    nome: string
+  movimentos: DatajudMovimento
+
   }
-  assuntos?: Array<{
-    codigo: number
-    nome: string
+    codigo: numb
   }>
-}
 
-const TRIBUNAIS = [
-  { value: 'tjmg', label: 'TJMG - Tribunal de Justiça de Minas Gerais' },
-  { value: 'tjsp', label: 'TJSP - Tribunal de Justiça de São Paulo' },
-  { value: 'tjrj', label: 'TJRJ - Tribunal de Justiça do Rio de Janeiro' },
-  { value: 'trf1', label: 'TRF1 - Tribunal Regional Federal 1ª Região' },
-  { value: 'trf2', label: 'TRF2 - Tribunal Regional Federal 2ª Região' },
-  { value: 'trf3', label: 'TRF3 - Tribunal Regional Federal 3ª Região' },
-  { value: 'trf4', label: 'TRF4 - Tribunal Regional Federal 4ª Região' },
-  { value: 'trf5', label: 'TRF5 - Tribunal Regional Federal 5ª Região' },
-  { value: 'tst', label: 'TST - Tribunal Superior do Trabalho' },
-  { value: 'stj', label: 'STJ - Superior Tribunal de Justiça' },
+  { value: 'tjmg', label: 'TJMG
+ 
+
+  { value: 'trf4', label: '
+  { value: 'tst', label:
 ]
-
-export default function DatajudChecklist() {
-  const [cnjInput, setCnjInput] = useState('')
-  const [tribunal, setTribunal] = useState('tjmg')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [processoData, setProcessoData] = useState<DatajudProcesso | null>(null)
-  const [analysis, setAnalysis] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [analysisError, setAnalysisError] = useState<string | null>(null)
-
-  const handleSearch = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!cnjInput.trim()) {
-      toast.error('Digite o número do processo')
+export default fun
+  const [tribuna
+  c
+  const [anal
+  const [analysisE
+  const handleSe
+   
       return
-    }
 
-    setIsLoading(true)
     setError(null)
-    setProcessoData(null)
-    setAnalysis(null)
-    setAnalysisError(null)
+    setAnalysis(nul
 
-    try {
-      const prompt = `Simule uma consulta ao DataJud API para o processo CNJ ${cnjInput} no tribunal ${tribunal.toUpperCase()}.
-        
-Retorne um JSON válido com a estrutura:
-{
-  "numeroProcesso": "${cnjInput}",
-  "classe": {
+      const prom
+Ret
+  "numeroProcesso": 
     "codigo": 1,
-    "nome": "Ação Ordinária"
   },
-  "sistema": {
-    "codigo": 1,
-    "nome": "Comum"
-  },
-  "tribunal": "${tribunal.toUpperCase()}",
-  "dataAjuizamento": "2024-01-15T10:30:00Z",
-  "movimentos": [
+    
+ 
+
     {
-      "codigo": 101,
       "nome": "Petição Inicial",
-      "dataHora": "2024-01-15T10:30:00Z",
       "complementosTabelados": []
-    },
     {
-      "codigo": 102,
       "nome": "Distribuição",
-      "dataHora": "2024-01-15T11:00:00Z",
       "complementosTabelados": []
-    },
     {
-      "codigo": 200,
       "nome": "Conclusão ao Juiz",
-      "dataHora": "2024-02-20T14:30:00Z",
       "complementosTabelados": []
-    },
     {
-      "codigo": 201,
       "nome": "Intimação para Contestação",
-      "dataHora": "2024-03-01T09:00:00Z",
-      "complementosTabelados": []
-    },
-    {
-      "codigo": 202,
-      "nome": "Contestação Apresentada",
-      "dataHora": "2024-03-15T16:45:00Z",
-      "complementosTabelados": []
-    }
-  ],
-  "orgaoJulgador": {
-    "codigo": 5001,
-    "nome": "1ª Câmara Cível"
-  },
-  "assuntos": [
-    {
-      "codigo": 1001,
-      "nome": "Responsabilidade Civil"
-    }
-  ]
-}`
+ 
 
-      const result = await spark.llm(prompt, 'gpt-4o', true)
-      const data = JSON.parse(result)
+      "nome": "Contestação Apresentada",
+      "complementosTabelados": []
+  ],
+    "codigo": 5001,
+  },
+    {
+      "nome": "Responsabilidade Civil"
+  ]
+
 
       setProcessoData(data)
-      toast.success('Processo encontrado com sucesso!')
     } catch (err) {
-      const message = (err as Error).message || 'Erro ao consultar o processo'
       setError(message)
-      toast.error(message)
     } finally {
-      setIsLoading(false)
     }
-  }
 
-  const handleAnalyze = async () => {
-    if (!processoData) return
 
-    setIsAnalyzing(true)
-    setAnalysisError(null)
+    setIsAnalyzing(tru
 
-    try {
-      const recentMovements = processoData.movimentos
-        .sort((a, b) => new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime())
+      const recentMovemen
         .slice(0, 15)
-        .map(
           (m) =>
-            `- ${m.nome} (em ${new Date(m.dataHora).toLocaleDateString('pt-BR')})`
-        )
-        .join('\n')
 
-      const prompt = `Analise os andamentos processuais e forneça um resumo objetivo, o estado atual e o próximo passo esperado.
 
-Processo: ${processoData.numeroProcesso}
+
 Classe: ${processoData.classe?.nome || 'Não especificada'}
-Tribunal: ${processoData.tribunal}
-Assuntos: ${processoData.assuntos?.map((a) => a.nome).join(', ') || 'Não especificado'}
-
+Assuntos
 Últimos andamentos:
-${recentMovements}
 
-Forneça uma análise clara e concisa em português, incluindo:
 1. Resumo do estado atual do processo
-2. Último andamento relevante
-3. Próximo passo esperado
-4. Prazos importantes (se houver)
-5. Recomendações estratégicas`
-
-      const analysisText = await spark.llm(prompt, 'gpt-4o')
-      setAnalysis(analysisText)
-      toast.success('Análise gerada com sucesso!')
-    } catch (err) {
-      const message = (err as Error).message || 'Erro ao gerar análise'
-      setAnalysisError(message)
-      toast.error(message)
-    } finally {
+3. Próximo passo espe
+5. Recomendações estraté
+      const analysisText = await spa
+      toast.
+      const message = 
+      toast.error(messag
       setIsAnalyzing(false)
-    }
   }
-
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success('Copiado para a área de transferência!')
-  }
+    toast.success('Copiado para a área de transferên
 
-  return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="border-b bg-card px-6 py-4">
-        <h1 className="text-2xl font-bold text-foreground">Checklist Diário via Datajud</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Consulte os últimos andamentos de um processo através da API pública do DataJud (CNJ)
-        </p>
+    <div clas
+        <h1 className="text-
+          Consulte os últimos andamentos
       </div>
-
-      <ScrollArea className="flex-1 px-6 py-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <Card className="p-6">
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cnj">Número do Processo (CNJ)</Label>
-                  <Input
+      <ScrollArea className="flex-1 px-6 
+          <Car
+             
+                  <Label htm
                     id="cnj"
-                    type="text"
-                    placeholder="0000001-00.2024.8.00.0000"
-                    value={cnjInput}
-                    onChange={(e) => setCnjInput(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Digite o número CNJ com 20 dígitos
-                  </p>
+                    placeholder="0000001-00.2024.
+                    onChange={(e) => setC
+              
+             
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tribunal">Tribunal</Label>
-                  <Select value={tribunal} onValueChange={setTribunal} disabled={isLoading}>
-                    <SelectTrigger id="tribunal">
+                <div className="space-y-2"
+                  <Select value={tribunal} onValu
                       <SelectValue />
+              
+             
+                        </Se
+                    </SelectContent>
+                  <p className="text-xs text-mute
+                  </p>
+              
+             
+                  <>
+                    Consultando...
+                ) : (
+                    <MagnifyingGlass clas
+             
+            
+          </Card>
+          {error && (
+              <Warning className="h-4
+            
+
+            <
+                <div classNam
+                    <div className="flex items
+             
+           
+         
+       
+
+                  </Badge>
+
+
+                      <p cl
+                        {processoData.orgaoJulgador.nom
+                   
+                  {processoData.dataAjuizamento && (
+                      <
+                        {n
+               
+                </div>
+     
+   
+
+                          {assunto.no
+                      ))}
+
+
+                  onClick=
+
+         
+                    <>
+                      Analisando com IA...
+                  ) :
+             
+                
+                </Button>
+
+                <Al
+
+              )}
+              {analysis && (
+        
+                    <h3 className="text-lg font-
+                  <div className="prose prose-sm max-w-none">
+                      {analysis}
+                  </div>
+        
+                    onClick
+                  >
+        
+                </Card>
+
+                <div className="flex 
+                    <FileText cla
+                      Últimos Andamentos
+                  </div>
+       
+
+                <div className="space-y-3">
+                    .sort(
+                        new Date(b.dataHora).getTi
+                   
+                      <div
+                        classNa
+                        <d
+               
+                        </d
+     
+   
+
+                              {new Date(movim
+                          </div>
+                      </div>
+   
+
+          
+                  </p>
+              </Card>
+          )}
+      </ScrollArea>
+  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     </SelectTrigger>
                     <SelectContent>
                       {TRIBUNAIS.map((t) => (
