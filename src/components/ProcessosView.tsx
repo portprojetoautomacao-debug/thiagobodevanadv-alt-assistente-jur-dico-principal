@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
 import type { Process } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader
 import { Input } from '@/components/ui/input'
-import { Plus, MagnifyingGlass, Gavel } from '@phosphor-icons/react'
 import ProcessDialog from './ProcessDialog'
-import ProcessDetailsDialog from './ProcessDetailsDialog'
 
-export default function ProcessosView() {
-  const [processes, setProcesses] = useKV<Process[]>('processes', [])
-  const [search, setSearch] = useState('')
+  const [processes, setProcesses] = useKV<Pro
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [selectedProcess, setSelectedProces
+  const filteredProcesses = processes.filter(p => 
+
+    p.reu.toLowerCase().includes(search.t
+
+    setSelectedProcess(process)
+  }
+  const handleView = (process: Process) => {
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null)
 
   const filteredProcesses = processes.filter(p => 
@@ -30,38 +30,38 @@ export default function ProcessosView() {
 
   const handleView = (process: Process) => {
     setSelectedProcess(process)
-    setDetailsOpen(true)
-  }
+          setDialogOpen(
+   
 
-  const handleDelete = (processId: string) => {
-    setProcesses(current => current.filter(p => p.id !== processId))
-  }
 
-  return (
-    <div className="flex flex-col gap-6 p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Processos</h1>
-          <p className="text-muted-foreground">Gerencie seu portfólio de processos</p>
-        </div>
-        <Button onClick={() => {
-          setSelectedProcess(null)
-          setDialogOpen(true)
-        }}>
-          <Plus size={20} />
-          Novo Processo
-        </Button>
-      </div>
+        <MagnifyingGlass className="absolute left-3 top-1/2 -transla
+   
 
-      <div className="relative">
-        <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-        <Input
-          placeholder="Buscar por número CNJ, título, autor ou réu..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
         />
-      </div>
+
+        <Card>
+            <Gavel size={64} className="text-
+              {search ? 'Nenhum processo encontrado' : 'Nenhum processo cadastrado'}
+            <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
+              
+              }
+            {!search && (
+                <Plus size={2
+           
+          </CardContent>
+      ) : (
+          {filter
+            
+
+                    process.stat
+                    process.status === 'suspenso' ? 'outline' : 'destructive'
+              
+                </div>
+              <CardConte
+                  <p className="text-xs text-muted-fo
+                </div>
+          
+            
 
       {filteredProcesses.length === 0 ? (
         <Card>
@@ -110,6 +110,62 @@ export default function ProcessosView() {
                   <p className="text-xs text-muted-foreground">Partes</p>
                   <p className="text-sm">{process.autor} × {process.reu}</p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-muted-foreground">Comarca</p>
+                    <p className="text-sm">{process.comarca}</p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-muted-foreground">Vara</p>
+                    <p className="text-sm">{process.vara}</p>
+                  </div>
+                </div>
+
+                {process.prazos && process.prazos.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-muted-foreground mb-1">Prazos</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {process.prazos.filter(p => !p.concluido).length} pendentes
+                      </Badge>
+                      {process.prazos.some(p => p.urgente && !p.concluido) && (
+                        <Badge variant="destructive" className="text-xs">Urgente</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <ProcessDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        process={selectedProcess}
+        onSave={(process) => {
+          if (selectedProcess) {
+            setProcesses(current => current.map(p => p.id === process.id ? process : p))
+          } else {
+            setProcesses(current => [...current, process])
+          }
+          setDialogOpen(false)
+          setSelectedProcess(null)
+        }}
+      />
+
+      <ProcessDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        process={selectedProcess}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+    </div>
+  )
+}
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
