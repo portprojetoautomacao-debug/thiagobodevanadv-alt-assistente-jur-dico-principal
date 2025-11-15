@@ -290,6 +290,47 @@ Tailwind spacing (4px base):
 
 ## Changelog
 
+### v1.2 - 2025-01-18 - Auditoria Completa e Correções
+**Auditoria Geral Realizada - Melhorias Implementadas:**
+
+#### 🔧 Correções Críticas
+- ✅ **Dashboard.tsx reconstruído completamente** - arquivo estava com código severamente corrompido e ilegível
+- ✅ **index.css otimizado** - removida toda duplicação de código entre main.css e index.css
+- ✅ **Cores atualizadas** - palette profissional com azul índigo (primary), âmbar (accent) em formato OKLCH
+- ✅ **Tipografia consolidada** - variáveis de fonte unificadas (Inter + IBM Plex Mono)
+
+#### 📊 Dados de Seed
+- ✅ **4 processos realistas** adicionados com diferentes estados:
+  - Ação de Cobrança (Ativo) - 2 prazos pendentes
+  - Reclamação Trabalhista (Ativo) - 2 prazos urgentes
+  - Divórcio Consensual (Concluído) - 1 prazo concluído
+  - Indenização por Danos Morais (Ativo) - 2 prazos pendentes
+- ✅ **Histórico de chat** com 2 conversas educativas sobre cálculo de prazos CPC vs CLT
+
+#### 🎨 Melhorias de UX/UI
+- ✅ Dashboard com cards de métricas funcionais (processos ativos, concluídos, prazos pendentes/urgentes)
+- ✅ Lista de próximos prazos ordenada por data
+- ✅ Processos recentes com badges de status
+- ✅ Alerta visual destacado quando há prazos urgentes
+- ✅ Navegação fluida entre views via callbacks
+
+#### ⚡ Otimizações de Performance
+- ✅ useMemo para cálculos pesados (stats, prazos próximos, processos recentes)
+- ✅ Remoção de código duplicado e importações desnecessárias
+- ✅ Estrutura de CSS otimizada (2.2KB vs 6.5KB anterior)
+
+#### 🔍 Code Quality
+- ✅ TypeScript types corretos e consistentes
+- ✅ Hooks do React utilizados corretamente (useKV para persistência)
+- ✅ Componentes funcionais puros sem side effects desnecessários
+- ✅ Validação de dados antes de renderização (arrays vazios, null checks)
+
+#### 📱 Responsividade
+- ✅ Grid responsivo para cards de métricas (1 col mobile → 4 cols desktop)
+- ✅ Layout adaptativo para listas (stack em mobile, grid em desktop)
+- ✅ Truncate text para evitar overflow em títulos longos
+- ✅ Padding/spacing ajustado para mobile (p-4) e desktop (p-8)
+
 ### v1.1 - 2025-01-17
 - ✅ Corrigido Dashboard.tsx (arquivo estava corrompido)
 - ✅ Otimizado index.css removendo código duplicado
