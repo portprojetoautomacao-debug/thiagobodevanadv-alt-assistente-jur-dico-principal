@@ -28,7 +28,7 @@ interface SidebarProps {
 
 const NAVIGATION_ITEMS = [
   { id: 'dashboard', label: 'Meu Painel', icon: House },
-  { id: 'donna', label: 'Donn@ Assistente', icon: Robot, featured: true },
+  { id: 'donna', label: 'Harvey Specter', icon: Robot, featured: true },
   { id: 'ai-agents', label: 'Agentes de IA', icon: Robot },
   { id: 'processes', label: 'Acervo (CRM)', icon: Briefcase },
   { id: 'expedientes', label: 'Expedientes', icon: Tray },
