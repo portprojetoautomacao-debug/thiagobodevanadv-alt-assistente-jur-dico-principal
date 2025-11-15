@@ -1,64 +1,63 @@
 import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   CheckCircle,
   Clock,
   Robot,
   TrendUp,
-  ArrowRig
-import typ
+  FileText,
+  Warning,
+  CalendarDots
+} from '@phosphor-icons/react'
+import type { User, Process, Task, Appointment } from '@/types'
 
+interface DashboardProps {
   user: User
+}
 
+export default function Dashboard({ user }: DashboardProps) {
+  const [processes] = useKV<Process[]>('processes', [])
   const [tasks] = useKV<Task[]>('tasks', [])
+  const [appointments] = useKV<Appointment[]>('appointments', [])
+  const [agents] = useKV<any[]>('agents', [])
 
+  const today = new Date().toISOString().split('T')[0]
 
-  const toda
-
-
-    concluido: (processes || []).filter(p => p.status === 'co
+  const processStats = {
+    total: (processes || []).length,
+    emAndamento: (processes || []).filter(p => p.status === 'em-andamento').length,
+    concluido: (processes || []).filter(p => p.status === 'concluido').length,
   }
+
   const taskStats = {
+    total: (tasks || []).length,
     completed: (tasks || []).filter(t => t.completed).length,
+    pending: (tasks || []).filter(t => !t.completed).length,
   }
 
+  const completionRate = taskStats.total > 0
+    ? Math.round((taskStats.completed / taskStats.total) * 100)
     : 0
-  const activeAgents = (agents || []).filter(a => a.en
+
+  const activeAgents = (agents || []).filter(a => a.enabled).length
+
+  const urgentTasks = (tasks || []).filter(t => !t.completed && t.priority === 'urgent')
+  
+  const todayAppointments = (appointments || []).filter(a => a.date === today)
+
   return (
-
-          Bem-vindo, {us
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-semibold">
+          Bem-vindo, {user.name}
+        </h1>
         <p className="text-muted-foreground mt-1">
+          Aqui está um resumo das suas atividades
         </p>
+      </div>
 
-        <Card>
-   
-
-            <div clas
-              {processStats.total} processos totais
-          </CardContent>
-
-   
-
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-       
-
-        <Card>
-
-          
-            <div className="text-2x
-           
-          </CardContent>
-
-          <Ca
-            <TrendUp className="w-4 h-4 text-muted
-          <CardContent>
-            
-            
-
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Processos em Andamento</CardTitle>
@@ -133,92 +132,56 @@ import typ
               <div className="space-y-3">
                 {urgentTasks.slice(0, 5).map((task) => (
                   <div key={task.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent transition-colors">
-                <CheckCircle className="w-4 h-4" />
-              </div>
-              <div className="space-y-3">
-                  <div key={appointment.
+                    <Clock className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="flex-1 min-w-0">
+                      <p className="font-medium">{task.title}</p>
                       <p className="text-xs text-muted-foreground mt-1">
+                        {task.dueDate ? `Vence em ${new Date(task.dueDate).toLocaleDateString('pt-BR')}` : 'Sem prazo definido'}
                       </p>
-                    <Bad
+                    </div>
+                    <Badge variant="destructive">Urgente</Badge>
+                  </div>
                 ))}
+              </div>
             )}
+          </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDots className="w-5 h-5 text-primary" />
+              Compromissos de Hoje
+            </CardTitle>
+            <CardDescription>
+              {todayAppointments.length} compromissos agendados
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {todayAppointments.length === 0 ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">Nenhum compromisso hoje</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {todayAppointments.slice(0, 5).map((appointment) => (
+                  <div key={appointment.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent transition-colors">
+                    <CalendarDots className="w-5 h-5 text-primary mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium">{appointment.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {appointment.time} {appointment.location && `- ${appointment.location}`}
+                      </p>
+                    </div>
+                    <Badge>{appointment.type}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
+  )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
