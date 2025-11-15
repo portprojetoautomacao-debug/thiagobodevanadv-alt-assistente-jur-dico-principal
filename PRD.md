@@ -217,7 +217,26 @@ Cron dispara → Sistema consulta API DJEN/DataJud → Filtra por OAB/nome do ad
 - Notificações são enviadas corretamente
 - Dados estruturados são armazenados
 
-### 6. Gestão Financeira
+### 7. Integração Google Calendar
+
+**Funcionalidade:** Sincronização bidirecional de eventos entre agenda local e Google Calendar
+
+**Propósito:** Centralizar compromissos em uma única plataforma e eliminar duplicação de eventos
+
+**Trigger:** Conexão manual do usuário, sincronização automática ou manual
+
+**Progressão:**
+Usuário conecta conta Google → Autentica via OAuth 2.0 → Sistema obtém acesso ao Calendar → Usuário escolhe sincronizar → Eventos locais são enviados ao Google OU eventos do Google são importados → Sistema detecta duplicatas → Merge inteligente → Sincronização automática mantém tudo atualizado
+
+**Critérios de Sucesso:**
+- Autenticação OAuth funciona em < 5 segundos
+- Importação de 30+ eventos em < 2 segundos
+- Zero duplicatas após sincronização
+- Eventos criados localmente aparecem no Google automaticamente (se sync ativo)
+- Cores corretas por tipo de evento (Audiência=vermelho, Reunião=azul, Prazo=amarelo)
+- 80%+ dos usuários ativam sincronização nos primeiros 7 dias
+
+### 8. Gestão Financeira
 
 **Funcionalidade:** Controle de receitas, despesas, honorários e fluxo de caixa
 
@@ -235,7 +254,7 @@ Abre financeiro → Carrega lançamentos → Calcula saldos (previsto, a receber
 - Anexos podem ser adicionados
 - Relatórios podem ser exportados
 
-### 7. Calculadora de Prazos
+### 9. Calculadora de Prazos
 
 **Funcionalidade:** Cálculo automático de prazos processuais considerando dias úteis, feriados e regras específicas
 

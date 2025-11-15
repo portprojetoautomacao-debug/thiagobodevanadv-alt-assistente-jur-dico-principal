@@ -11,6 +11,7 @@ Um sistema completo de gestão para escritórios de advocacia com foco em automa
 - **IA Assistente (Harvey Specter)**: Chatbot jurídico com contexto processual
 - **Agentes IA Autônomos**: 7 agentes especializados trabalhando 24/7
 - **Integração DJEN/DataJud**: Monitoramento automático de publicações
+- **Google Calendar**: Sincronização bidirecional de eventos ([documentação completa](GOOGLE_CALENDAR_INTEGRATION.md))
 - **Gestão Financeira**: Controle completo de honorários e despesas
 - **Calculadora de Prazos**: Cálculo preciso com feriados e dias úteis
 
@@ -94,6 +95,7 @@ src/
 
 - `PRD.md` - Documento de requisitos do produto
 - `OAUTH_SETUP.md` - Guia de configuração OAuth
+- `GOOGLE_CALENDAR_INTEGRATION.md` - **Integração Google Calendar (NOVO)**
 - `SECURITY.md` - Políticas de segurança
 - `DJEN_DOCUMENTATION.md` - Integração DJEN
 - `PREMONICAO_JURIDICA.md` - Sistema de premonição
