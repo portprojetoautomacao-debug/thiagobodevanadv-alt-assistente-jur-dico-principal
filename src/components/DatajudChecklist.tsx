@@ -1,351 +1,333 @@
 import { useState, FormEvent } from 'react'
-import { Input } from '@/components/ui/inpu
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/co
-import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Spinner,
+  Warning,
   Copy,
   Gavel,
-  SelectV
+  MagnifyingGlass,
+  Sparkle,
+  FileText,
+  CheckCircle,
+  CalendarBlank as CalendarIcon,
+} from '@phosphor-icons/react'
+import { toast } from 'sonner'
 
-  Spinner,
-  dataHora: st
+interface DatajudMovimento {
+  codigo: number
+  nome: string
+  dataHora: string
+  complementosTabelados?: Array<{ nome: string }>
 }
-  Gavel,
-  class
 
-  sistem
-    nome: s
-}
-  movimentos: DatajudMovimento
-  class
+interface DatajudProcesso {
+  numeroProcesso: string
+  classe?: {
+    codigo: number
+    nome: string
   }
-  sistem
-    nome: s
+  sistema?: {
+    codigo: number
+    nome: string
+  }
   tribunal: string
-  movimentos: DatajudMovimento
- 
+  orgaoJulgador?: {
+    nome: string
   }
-  { value: 'trf4', label: '
-  }>e: 'tst', label:
+  dataAjuizamento?: string
+  assuntos?: Array<{
+    codigo: number
+    nome: string
+  }>
+  movimentos: DatajudMovimento[]
+}
 
-  { value: 'tjmg', label: 'TJMG
-  const [tribuna
-  c
-  const [anal
-  const [analysisE
-  const handleSe
-   
+const TRIBUNAIS = [
+  { value: 'tjsp', label: 'TJSP - Tribunal de Justiça de São Paulo' },
+  { value: 'tjrj', label: 'TJRJ - Tribunal de Justiça do Rio de Janeiro' },
+  { value: 'tjmg', label: 'TJMG - Tribunal de Justiça de Minas Gerais' },
+  { value: 'trf1', label: 'TRF1 - Tribunal Regional Federal da 1ª Região' },
+  { value: 'trf2', label: 'TRF2 - Tribunal Regional Federal da 2ª Região' },
+  { value: 'trf3', label: 'TRF3 - Tribunal Regional Federal da 3ª Região' },
+  { value: 'trf4', label: 'TRF4 - Tribunal Regional Federal da 4ª Região' },
+  { value: 'tst', label: 'TST - Tribunal Superior do Trabalho' },
+]
+
+export default function DatajudChecklist() {
+  const [cnjNumber, setCnjNumber] = useState('')
+  const [tribunal, setTribunal] = useState('tjsp')
+  const [isLoading, setIsLoading] = useState(false)
+  const [processoData, setProcessoData] = useState<DatajudProcesso | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysis, setAnalysis] = useState<string | null>(null)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+
+  const handleSearch = async (e: FormEvent) => {
+    e.preventDefault()
+
+    if (!cnjNumber.trim()) {
+      setError('Por favor, digite um número de processo CNJ válido.')
       return
-  c
-  const [anal
-  const [analysisE
+    }
 
-      const prom
-      return
-so": 
-    "codigo": 1,
-  },
-    
- 
+    setError(null)
+    setAnalysis(null)
+    setProcessoData(null)
+    setIsLoading(true)
 
-  "numeroProcesso": 
-    "codigo": 1,
-  },
-    
- 
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      
+      const mockData: DatajudProcesso = {
+        numeroProcesso: cnjNumber,
+        classe: {
+          codigo: 1,
+          nome: 'Procedimento Comum Cível',
+        },
+        sistema: {
+          codigo: 1,
+          nome: 'PJe',
+        },
+        tribunal: tribunal.toUpperCase(),
+        orgaoJulgador: {
+          nome: '1ª Vara Cível',
+        },
+        dataAjuizamento: '2024-01-15',
+        assuntos: [
+          {
+            codigo: 5001,
+            nome: 'Responsabilidade Civil',
+          },
+        ],
+        movimentos: [
+          {
+            codigo: 1,
+            nome: 'Petição Inicial',
+            dataHora: '2024-01-15T10:30:00',
+            complementosTabelados: [],
+          },
+          {
+            codigo: 2,
+            nome: 'Distribuição',
+            dataHora: '2024-01-15T14:00:00',
+            complementosTabelados: [],
+          },
+          {
+            codigo: 3,
+            nome: 'Conclusão ao Juiz',
+            dataHora: '2024-01-20T09:15:00',
+            complementosTabelados: [],
+          },
+          {
+            codigo: 4,
+            nome: 'Intimação para Contestação',
+            dataHora: '2024-01-25T11:00:00',
+            complementosTabelados: [],
+          },
+          {
+            codigo: 5,
+            nome: 'Contestação Apresentada',
+            dataHora: '2024-02-10T16:45:00',
+            complementosTabelados: [],
+          },
+        ],
+      }
 
-    {
-      "nome": "Petição Inicial",
-      "complementosTabelados": []
-    {
-      "nome": "Distribuição", Contestação",
-      "complementosTabelados": []
-    {
-      "nome": "Conclusão ao Juiz",tada",
-      "complementosTabelados": []
-    {
-    "codigo": 5001,
- 
-    {
-      "nome": "Responsabilidade Civil"
-  ]
-
-    "codigo": 5001,
-  },
-    {
-      "nome": "Responsabilidade Civil"
-  ]
-
-
-      setProcessoData(data)
-    setIsAnalyzing(tru
-
+      setProcessoData(mockData)
+      toast.success('Processo encontrado com sucesso!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao buscar processo.'
+      setError(message)
+      toast.error(message)
     } finally {
-        .slice(0, 15)
-    (m) =>
-
-
-
-Classe: ${processoData.classe?.nome || 'Não especificada'}
-Assuntos
-Últimos andamentos:
-
-1. Resumo do estado atual do processo
-3. Próximo passo espe
-Classe: ${processoData.classe?.nome || 'Não especificada'}
-Assuntos
-Últimos andamentos:
-ssage = 
-1. Resumo do estado atual do processo
-3. Próximo passo espe
+      setIsLoading(false)
+    }
   }
+
+  const handleAnalyze = async () => {
+    if (!processoData) return
+
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+
+    try {
+      const recentMovements = processoData.movimentos
+        .slice(0, 15)
+        .map((m) => `${m.nome} - ${new Date(m.dataHora).toLocaleDateString('pt-BR')}`)
+        .join('\n')
+
+      const promptText = `Você é um assistente jurídico especializado em análise de processos. Analise os dados do processo abaixo e forneça:
+
+Número do Processo: ${processoData.numeroProcesso}
+Tribunal: ${processoData.tribunal}
+Classe: ${processoData.classe?.nome || 'Não especificada'}
+Assuntos: ${processoData.assuntos?.map((a) => a.nome).join(', ') || 'Não especificados'}
+Últimos andamentos:
+${recentMovements}
+
+Forneça uma análise concisa contendo:
+1. Resumo do estado atual do processo
+2. Fase processual em que se encontra
+3. Próximos passos esperados
+4. Prazos relevantes a observar
+5. Recomendações estratégicas
+
+Mantenha a resposta objetiva e profissional.`
+
+      const analysisText = await spark.llm(promptText, 'gpt-4o')
+      setAnalysis(analysisText)
+      toast.success('Análise concluída!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao analisar processo.'
+      setAnalysisError(message)
+      toast.error(message)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   const copyToClipboard = (text: string) => {
-    toast.success('Copiado para a área de transferên
+    navigator.clipboard.writeText(text)
+    toast.success('Copiado para a área de transferência!')
+  }
 
-    <div clas
-        <h1 className="text-
-          Consulte os últimos andamentos
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      <div className="border-b bg-card px-6 py-4">
+        <h1 className="text-2xl font-bold text-foreground">Consulta DataJud</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Consulte os últimos andamentos processuais via DataJud
+        </p>
       </div>
-      <ScrollArea className="flex-1 px-6 
-          <Car
-             
-                  <Label htm
-          Consulte os últimos andamentos
-                    placeholder="0000001-00.2024.
-                    onChange={(e) => setC
-          <Car
-             
-                  <Label htm
+
+      <ScrollArea className="flex-1 px-6 py-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Card className="p-6">
+            <form onSubmit={handleSearch} className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cnj">Número do Processo (CNJ)</Label>
+                  <Input
                     id="cnj"
-                    placeholder="0000001-00.2024.
-                    onChange={(e) => setC
-              
-                        </Se
-                    </SelectContent>
-                  <p className="text-xs text-mute
-                  </p>
-              
-              
-                  <>
-                        </Se
-                    </SelectContent>
-                    <MagnifyingGlass clas
-             
-              
-             
-                  <>
-                    Consultando...
-                ) : (
-                    <MagnifyingGlass clas
-             
-            
-          </Card>Name="flex items
-             
-              <Warning className="h-4
-            
-       
+                    placeholder="0000001-00.2024.8.26.0100"
+                    value={cnjNumber}
+                    onChange={(e) => setCnjNumber(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
 
-                <div classNam
-                    <div className="flex items
-             
-                      <p cl
-         cessoData.orgaoJulgador.nom
-       
-.dataAjuizamento && (
-                  </Badge>
-        {n
-
-                      <p cl
-                        {processoData.orgaoJulgador.nom
-                   
-                  {processoData.dataAjuizamento && (
-                          {assunto.no
-                      ))}
-               
-
-        onClick=
-   
-        
-                          {assunto.no
-                      ))}
-
-
-                  onClick=
-
-         
-                <Al
-
-              )}
-              {analysis && (
-                
-                    <h3 className="text-lg font-
-        <div className="prose prose-sm max-w-none">
-                <Al
-               </div>
-              )}
-                    onClick
-                  >
-        
-                </Card>
-
-                <div className="flex 
-        
-                    onClick
-                  >
-       
-
-                <div className="space-y-3">
-                    .sort(
-                        new Date(b.dataHora).getTi
-                      Últimos Andamentos
-                      <div
-                        classNa
-                        <d
-               
-                    .sort(d
-                        new Date(b.dataHora).getTi
-   
-
-                              {new Date(movim
-                          </div>
-                      </div>
-   
-     
-          
-                  </p>
-                              {new Date(movim
-                          </div>
-                      </div>
-   
-
-
-
-              </Card>
-
-
-  )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</SelectTrigger>
-
-
-<SelectItem key={t.value} value={t.value}>
-  {t.label}
-
-
+                <div className="space-y-2">
+                  <Label htmlFor="tribunal">Tribunal</Label>
+                  <Select value={tribunal} onValueChange={setTribunal} disabled={isLoading}>
+                    <SelectTrigger id="tribunal">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {TRIBUNAIS.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
                     Selecione o tribunal de origem
                   </p>
                 </div>
-                      ))}
-                    </SelectContent>
+              </div>
+
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? (
                   <>
-                  </p>spin" />
-                </div>
-                  </>
-
-                  <>
-                {isLoading ? (
-                  <>
-                  </>
-                )}
+                    <Spinner className="w-5 h-5 mr-2 animate-spin" />
+                    Consultando...
                   </>
                 ) : (
-          </Card>
+                  <>
                     <MagnifyingGlass className="w-5 h-5 mr-2" weight="bold" />
-          {error && (
+                    Buscar Processo
                   </>
-              <Warning className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+                )}
+              </Button>
+            </form>
           </Card>
 
-          {processoData && (
+          {error && (
             <Alert variant="destructive">
               <Warning className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-mary" weight="fill" />
+            </Alert>
+          )}
+
           {processoData && (
-            <div className="space-y-4">l'}
-                      </h2>
+            <div className="space-y-4">
+              <Card className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                      {processoData.numeroProcesso}
+                    <div className="flex items-center gap-2 mb-2">
                       <Gavel className="w-6 h-6 text-primary" weight="fill" />
+                      <h2 className="text-xl font-bold text-foreground">
+                        {processoData.classe?.nome || 'Processo Judicial'}
+                      </h2>
+                    </div>
+                    <p className="text-sm font-mono text-muted-foreground mb-3">
+                      {processoData.numeroProcesso}
+                    </p>
                   </div>
                   <Badge variant="outline" className="text-sm">
                     {processoData.tribunal}
                   </Badge>
                 </div>
 
-                    </p>-1 md:grid-cols-2 gap-4 mb-4">
-                  </div>ssoData.orgaoJulgador && (
-                  <Badge variant="outline" className="text-sm">
-                      <p className="text-xs text-muted-foreground">Órgão Julgador</p>
-                  </Badge>
-                </div>r.nome}
-</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {processoData.orgaoJulgador && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Órgão Julgador</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {processoData.orgaoJulgador.nome}
+                      </p>
+                    </div>
                   )}
                   {processoData.dataAjuizamento && (
                     <div>
                       <p className="text-xs text-muted-foreground">Data de Ajuizamento</p>
                       <p className="text-sm font-medium text-foreground">
                         {new Date(processoData.dataAjuizamento).toLocaleDateString('pt-BR')}
+                      </p>
                     </div>
-                    </div>
-                  {processoData.dataAjuizamento && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Data de Ajuizamento</p>
-                      <p className="text-sm font-medium text-foreground">
-                  <div className="mb-4">
-                    <p className="text-xs text-muted-foreground mb-2">Assuntos</p>
-                    <div className="flex flex-wrap gap-2">
                   )}
-                </div>ondary">
+                </div>
 
                 {processoData.assuntos && processoData.assuntos.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs text-muted-foreground mb-2">Assuntos</p>
-                  </div>
-                )}
+                    <div className="flex flex-wrap gap-2">
+                      {processoData.assuntos.map((assunto) => (
                         <Badge key={assunto.codigo} variant="secondary">
                           {assunto.nome}
                         </Badge>
-                      ))}isAnalyzing}
+                      ))}
                     </div>
-                  className="w-full border-accent text-accent hover:bg-accent/10"
+                  </div>
                 )}
 
-                    <>
-                  onClick={handleAnalyze} />
-                      Analisando com IA...
+                <Button
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing}
                   variant="outline"
                   className="w-full border-accent text-accent hover:bg-accent/10"
                 >
@@ -370,8 +352,15 @@ mary" weight="fill" />
                 </Alert>
               )}
 
-                    <pre className="whitespace-pre-wrap text-sm text-foreground font-sans bg-background/50 p-4 rounded-lg">
+              {analysis && (
                 <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkle className="w-6 h-6 text-accent" weight="fill" />
+                    <h3 className="text-lg font-bold text-foreground">Análise da IA</h3>
+                  </div>
+                  <div className="prose prose-sm max-w-none">
+                    <pre className="whitespace-pre-wrap text-sm text-foreground font-sans bg-background/50 p-4 rounded-lg">
+                      {analysis}
                     </pre>
                   </div>
                   <Button
