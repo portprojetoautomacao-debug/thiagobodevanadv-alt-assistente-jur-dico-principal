@@ -1,4 +1,4 @@
-import { addDays, isWeekend, format } from 'date-fns'
+import { addDays, isWeekend, format, differenceInDays, parseISO } from 'date-fns'
 import type { Feriado } from '@/types'
 
 const feriadosNacionais2025: Feriado[] = [
@@ -13,6 +13,10 @@ const feriadosNacionais2025: Feriado[] = [
   { data: '2025-11-15', nome: 'Proclamação da República', tipo: 'nacional' },
   { data: '2025-12-25', nome: 'Natal', tipo: 'nacional' },
 ]
+
+export function getFeriadosNacionais(): Feriado[] {
+  return feriadosNacionais2025
+}
 
 export function isFeriado(date: Date): boolean {
   const dateStr = format(date, 'yyyy-MM-dd')
@@ -78,4 +82,23 @@ export function validarNumeroCNJ(numero: string): boolean {
   if (ano < 1900 || ano > anoAtual + 1) return false
 
   return true
+}
+
+export function calcularDiasRestantes(dataFinal: string): number {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  
+  const final = parseISO(dataFinal)
+  final.setHours(0, 0, 0, 0)
+  
+  return differenceInDays(final, hoje)
+}
+
+export function isUrgente(diasRestantes: number): boolean {
+  return diasRestantes >= 0 && diasRestantes <= 5
+}
+
+export function formatarData(dataISO: string): string {
+  const date = parseISO(dataISO)
+  return format(date, 'dd/MM/yyyy')
 }
