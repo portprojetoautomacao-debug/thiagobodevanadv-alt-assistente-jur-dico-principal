@@ -14,7 +14,8 @@ import {
   CurrencyCircleDollar, 
   Books,
   SignOut,
-  Robot
+  Robot,
+  Newspaper
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types'
@@ -36,6 +37,7 @@ const NAVIGATION_ITEMS = [
   { id: 'audio', label: 'Transcrição', icon: MicrophoneStage },
   { id: 'calculator', label: 'Calc. Prazos', icon: Calculator },
   { id: 'queries', label: 'Consultas', icon: Database },
+  { id: 'datajud', label: 'DataJud Checklist', icon: Newspaper },
   { id: 'calendar', label: 'Agenda', icon: CalendarDots },
   { id: 'financial', label: 'Financeiro', icon: CurrencyCircleDollar },
   { id: 'knowledge', label: 'Base Conhecimento', icon: Books },

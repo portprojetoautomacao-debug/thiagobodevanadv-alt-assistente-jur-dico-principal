@@ -16,6 +16,7 @@ import KnowledgeBase from '@/components/KnowledgeBase'
 import AIAgents from '@/components/AIAgents'
 import HarveySpecter from '@/components/Donna'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
+import DatajudChecklist from '@/components/DatajudChecklist'
 import { initializeSampleData } from '@/lib/sample-data'
 import type { User } from '@/types'
 
@@ -68,6 +69,8 @@ function App() {
         return <DeadlineCalculator />
       case 'queries':
         return <DatabaseQueries />
+      case 'datajud':
+        return <DatajudChecklist />
       case 'calendar':
         return <Calendar />
       case 'financial':
