@@ -7,14 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Database, MagnifyingGlass } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import DJENConsulta from '@/components/DJENConsulta'
 
 export default function DatabaseQueries() {
   const [cnjQuery, setCnjQuery] = useState('')
-  const [lawyerQuery, setLawyerQuery] = useState('')
-  const [oabQuery, setOabQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [datajudResult, setDatajudResult] = useState<any>(null)
-  const [djenResult, setDjenResult] = useState<any[]>([])
 
   const handleDatajudQuery = () => {
     if (!cnjQuery) {
@@ -41,42 +39,6 @@ export default function DatabaseQueries() {
       })
       setLoading(false)
       toast.success('Consulta realizada no Datajud')
-    }, 1500)
-  }
-
-  const handleDjenQuery = () => {
-    if (!lawyerQuery && !oabQuery) {
-      toast.error('Digite o nome do advogado ou número da OAB')
-      return
-    }
-
-    setLoading(true)
-    setTimeout(() => {
-      setDjenResult([
-        {
-          tribunal: 'TRT 2ª Região',
-          data: new Date().toLocaleDateString('pt-BR'),
-          tipo: 'Intimação',
-          processo: '0001234-56.2023.5.02.0001',
-          conteudo: 'Intimação para apresentar alegações finais no prazo de 5 dias'
-        },
-        {
-          tribunal: 'TRT 15ª Região',
-          data: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          tipo: 'Despacho',
-          processo: '0002345-67.2023.5.15.0001',
-          conteudo: 'Despacho determinando regularização de documentos'
-        },
-        {
-          tribunal: 'TRT 2ª Região',
-          data: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          tipo: 'Sentença',
-          processo: '0003456-78.2022.5.02.0001',
-          conteudo: 'Sentença publicada - Procedência parcial do pedido'
-        }
-      ])
-      setLoading(false)
-      toast.success('Consulta realizada nos DJENs')
     }, 1500)
   }
 
@@ -174,75 +136,7 @@ export default function DatabaseQueries() {
         </TabsContent>
 
         <TabsContent value="djen" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                Diários de Justiça Eletrônicos
-              </CardTitle>
-              <CardDescription>
-                Busque publicações por nome de advogado ou número da OAB
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lawyer-query">Nome do Advogado</Label>
-                  <Input
-                    id="lawyer-query"
-                    placeholder="Nome completo"
-                    value={lawyerQuery}
-                    onChange={(e) => setLawyerQuery(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="oab-query">Número OAB</Label>
-                  <Input
-                    id="oab-query"
-                    placeholder="000000/UF"
-                    value={oabQuery}
-                    onChange={(e) => setOabQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <Button onClick={handleDjenQuery} disabled={loading} className="w-full">
-                <MagnifyingGlass className="w-4 h-4 mr-2" />
-                Buscar em Todos os DJENs
-              </Button>
-
-              {djenResult.length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h3 className="text-sm font-semibold">Resultados Encontrados ({djenResult.length})</h3>
-                  {djenResult.map((item, idx) => (
-                    <Card key={idx}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <CardTitle className="text-base">{item.tribunal}</CardTitle>
-                            <CardDescription className="text-xs mt-1">
-                              Publicado em {item.data}
-                            </CardDescription>
-                          </div>
-                          <Badge>{item.tipo}</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Processo</p>
-                          <p className="text-sm font-mono">{item.processo}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Conteúdo</p>
-                          <p className="text-sm">{item.conteudo}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <DJENConsulta />
         </TabsContent>
       </Tabs>
     </div>
