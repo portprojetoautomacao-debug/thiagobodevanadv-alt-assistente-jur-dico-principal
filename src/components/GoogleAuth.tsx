@@ -1,69 +1,69 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardDescription, Ca
+import { Warning } from '@phosphor-icons/react'
+
 import { Warning } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
 
 interface GoogleAuthButtonProps {
-  onSuccess?: (user: GoogleUser) => void
-  onError?: (error: Error) => void
-}
-
-interface GoogleUser {
-  id: string
-  email: string
-  name: string
   picture: string
-}
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void
-          renderButton: (element: HTMLElement, config: any) => void
-          prompt: () => void
-        }
+ 
+
+          initialize: 
+          pr
       }
-    }
   }
-}
+  picture: string
+ 
 
-export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) {
-  const [isConfigured, setIsConfigured] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+    const isVali
 
-  useEffect(() => {
-    const isValid = validateConfig()
-    setIsConfigured(isValid)
-
-    if (!isValid) {
-      setError('Google OAuth is not properly configured. See OAUTH_SETUP.md for instructions.')
-      return
+      setError
     }
-
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
+    const scr
     script.async = true
-    script.defer = true
     script.onload = initializeGoogleSignIn
-    document.body.appendChild(script)
 
-    return () => {
-      document.body.removeChild(script)
-    }
-  }, [])
+      doc
+      }
+  con
+  }
+ 
 
-  const initializeGoogleSignIn = () => {
-    if (!window.google) return
+    })
+    const buttonDiv = document.getElementById('google-sig
+      window.google.accounts.id.renderButton(buttonDiv, {
 
-    window.google.accounts.id.initialize({
-      client_id: config.google.clientId,
-      callback: handleCredentialResponse,
-      auto_select: false,
-      cancel_on_tap_outside: true,
+        text: 'sign
+      })
+  }
+
+      const credent
+
+        id: 
+     
+
+      onSuccess?.(user)
+      const error = err instanceof Error ? err : new Erro
+    script.async = true
+  }
+    script.onload = initializeGoogleSignIn
+      <Alert variant="destructive">
+
+          <p class
+          </p>
+     
+        
+
+    )
+
+
+        <Warning className="h-4 w-4" />
+      </Alert>
+  }
+  return (
+      <div id="google-signin-butto
     })
 
     const buttonDiv = document.getElementById('google-signin-button')
@@ -130,15 +130,15 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
     <div className="w-full">
       <div id="google-signin-button" className="w-full" />
     </div>
-  )
+
 }
 
 export function GoogleAuthExample() {
-  const [user, setUser] = useState<GoogleUser | null>(null)
+
 
   const handleSuccess = (user: GoogleUser) => {
     console.log('User signed in:', user)
-    setUser(user)
+
   }
 
   const handleError = (error: Error) => {
@@ -146,7 +146,7 @@ export function GoogleAuthExample() {
   }
 
   const handleSignOut = () => {
-    setUser(null)
+
   }
 
   if (user) {
@@ -158,25 +158,25 @@ export function GoogleAuthExample() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <img
+
               src={user.picture}
               alt={user.name}
               className="w-16 h-16 rounded-full"
-            />
+
             <div>
-              <p className="font-medium">{user.name}</p>
+
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
           <Button onClick={handleSignOut} variant="outline" className="w-full">
             Sign Out
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
 
-  return (
+        </CardContent>
+
+    )
+
+
+
     <Card>
       <CardHeader>
         <CardTitle>Sign in with Google</CardTitle>
@@ -184,9 +184,9 @@ export function GoogleAuthExample() {
           Use your Google account to sign in securely
         </CardDescription>
       </CardHeader>
-      <CardContent>
+
         <GoogleAuthButton onSuccess={handleSuccess} onError={handleError} />
-      </CardContent>
+
     </Card>
-  )
+
 }
