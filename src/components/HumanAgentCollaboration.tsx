@@ -39,9 +39,9 @@ export default function HumanAgentCollaboration({ agentName, taskDescription, on
             onComplete?.()
             return 100
           }
-          return prev + 2
+          return prev + 1
         })
-      }, 200)
+      }, 150)
       return () => clearInterval(interval)
     }
   }, [phase, onComplete])

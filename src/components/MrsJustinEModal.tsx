@@ -14,7 +14,7 @@ interface MrsMichaelRossModalProps {
   onActivate?: () => void
 }
 
-export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: MrsMichaelRossModalProps) {
+export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsMichaelRossModalProps) {
   const skills = [
     'Interpreta intimações',
     'Conta prazos',
@@ -40,7 +40,7 @@ export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: 
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <Brain className="w-8 h-8 text-primary" weight="fill" />
-              Mrs. Michael Ross
+              Mrs. Justin-e
             </DialogTitle>
           </div>
         </DialogHeader>
@@ -89,7 +89,7 @@ export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: 
 
           <div className="border-t pt-4">
             <h3 className="text-base font-semibold text-foreground mb-3">
-              Como utilizar a Michael Ross
+              Como utilizar a Mrs. Justin-e
             </h3>
             <div className="space-y-3">
               <div className="flex gap-3">
@@ -98,7 +98,7 @@ export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: 
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Nas suas intimações, clique em <span className="font-semibold">"Ativar Michael Ross"</span> para
+                    Nas suas intimações, clique em <span className="font-semibold">"Ativar Mrs. Justin-e"</span> para
                     receber um resumo da intimação e sugestões de tarefas.
                   </p>
                 </div>
@@ -121,7 +121,7 @@ export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: 
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Michael Ross irá executar a tarefa e criar um workflow completo de controladoria.
+                    Mrs. Justin-e irá executar a tarefa e criar um workflow completo de controladoria.
                   </p>
                 </div>
               </div>
@@ -132,7 +132,7 @@ export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: 
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Se necessário, forneça informações adicionais e Michael Ross refará a análise automaticamente.
+                    Se necessário, forneça informações adicionais e Mrs. Justin-e refará a análise automaticamente.
                   </p>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export default function MrsMichaelRossModal({ open, onOpenChange, onActivate }: 
               onClick={handleActivate}
             >
               <Brain className="w-5 h-5 mr-2" weight="fill" />
-              Ativar Michael Ross
+              Ativar Mrs. Justin-e
             </Button>
             <Button 
               variant="outline" 

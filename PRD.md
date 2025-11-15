@@ -83,24 +83,124 @@ Abre modal/página → Usuário digita pergunta → Sistema envia para spark.llm
 - Interface suporta markdown/formatação
 - Histórico de conversas é mantido
 
-### 4. Mrs. Michael Ross (Análise de Intimações)
+### 4. Agentes de IA Autônomos 24/7
 
-**Funcionalidade:** Agente autônomo que analisa intimações judiciais com 95% de precisão
+**Funcionalidade:** Sistema de múltiplos agentes especializados que trabalham continuamente sem intervenção humana, processando tarefas em segundo plano
 
-**Propósito:** Economizar tempo na triagem de intimações e garantir que nenhum prazo seja perdido
+**Propósito:** Automatizar completamente workflows repetitivos, permitindo que advogados foquem em trabalho estratégico enquanto agentes cuidam da operação
 
-**Trigger:** Upload de expediente/intimação ou integração DJEN detecta novo documento
+**Trigger:** Agentes iniciam automaticamente ao login e operam continuamente; tarefas são geradas automaticamente ou manualmente adicionadas à fila
 
 **Progressão:**
-Documento recebido → Sistema detecta pendência → Mrs. Michael Ross analisa conteúdo → Extrai dados estruturados (CNJ, partes, prazo, tipo) → Calcula deadline → Sugere tarefas → Cria workflow de controladoria → Usuário revisa → Aprova/ajusta → Sistema executa
+Sistema carrega agentes do KV → Cada agente verifica sua fila de trabalho → Processa tarefas por prioridade → Detecta intervenção humana → Pausa colaborativamente → Aguarda 5min sem atividade → Retoma trabalho → Registra resultados → Atualiza métricas
 
 **Critérios de Sucesso:**
-- Precisão > 95% na extração de dados
-- Análise completa em < 1 minuto
-- Sugestões de tarefas são relevantes
-- Sistema D-1, D-2 funciona corretamente
+- 7 agentes operacionais (Doc Analyzer, DJEN Monitor, Deadline Tracker, Petition Writer, DataJud Query, File Organizer, Mrs. Justin-e)
+- 95%+ taxa de sucesso em tarefas
+- Tempo médio de processamento < 5 segundos por tarefa
+- Zero conflitos com edições humanas
+- Métricas em tempo real atualizadas a cada 5 segundos
+- Sistema de colaboração funciona: agente pausa quando humano edita, retoma após inatividade
 
-### 5. Integração DJEN/DataJud
+**Sub-funcionalidades:**
+
+**4.1. Mrs. Justin-e (Agente Especialista em Intimações)**
+- Analisa intimações com 95% de precisão em < 1 minuto
+- Interpreta conteúdo e contexto jurídico
+- Calcula prazos automaticamente
+- Cria workflow completo de controladoria
+- Sugere tarefas baseadas no tipo de intimação
+- Sistema D-1, D-2, D-n para notificações progressivas
+- Refaz análise automaticamente quando recebe novas informações
+- Economiza 50 horas a cada 150 intimações processadas
+
+**4.2. Agente de Análise Documental**
+- Monitora novos documentos 24/7
+- Extrai dados estruturados (CNJ, partes, valores, datas)
+- Classifica por tipo (petição, sentença, despacho)
+- Detecta prazos fatais automaticamente
+- Gera resumos executivos
+- Confidence score para cada extração
+
+**4.3. Agente de Monitoramento DJEN**
+- Consulta DJEN automaticamente a cada hora
+- Filtra por OAB e nome de advogados cadastrados
+- Notifica sobre novas intimações instantaneamente
+- Armazena publicações estruturadas
+- Detecta duplicatas via hash
+- Log completo de execuções
+
+**4.4. Agente de Gestão de Prazos**
+- Calcula prazos processuais considerando dias úteis
+- Valida contra calendário de feriados nacional/local
+- Gera alertas D-3, D-1 automaticamente
+- Recalcula após suspensões processuais
+- Auditoria de cálculos com reasoning
+- Integração com agenda
+
+**4.5. Agente de Redação Jurídica**
+- Redige minutas de petições sob demanda
+- Usa templates contextuais por tipo de ação
+- Padroniza formatação e estilo
+- Sugere argumentos jurídicos relevantes
+- Revisão gramatical automática
+- Confidence score + flag de revisão necessária
+
+**4.6. Agente de Consultas DataJud**
+- Busca automática de processos no DataJud
+- Extrai andamentos e movimentações
+- Detecta mudanças de status
+- Consolidação de dados históricos
+- Alertas sobre eventos importantes
+
+**4.7. Agente Organizador de Arquivos**
+- Categoriza documentos automaticamente
+- Indexa para busca rápida
+- Renomeia seguindo padrão inteligente
+- Detecta e remove duplicatas
+- Arquiva processos concluídos
+- Estatísticas de espaço economizado
+
+**Modo de Operação:**
+
+**Modo Contínuo 24/7:**
+- Agentes rodam em loop verificando suas filas a cada 5 segundos
+- Processam tarefas por prioridade (critical > high > medium > low)
+- Atualizam status e métricas em tempo real
+- Registram todas ações em activity log
+
+**Modo Colaborativo:**
+- Agente detecta quando humano começa a editar
+- Entra em estado "waiting_human" imediatamente
+- Aguarda 5 minutos de inatividade
+- Retoma trabalho automaticamente
+- Nunca sobrescreve edições humanas
+
+**Geração Automática de Tarefas (Demo):**
+- Sistema pode gerar tarefas realistas automaticamente
+- Intervalo configurável (padrão: 3 minutos)
+- Máximo 2 tarefas por intervalo
+- Distribuição entre agentes habilitados
+- Pode ser desabilitado via toggle
+
+### 5. Harvey Specter (Assistente de IA)
+
+**Funcionalidade:** Chatbot jurídico inteligente que responde perguntas sobre processos, prazos, finanças e fornece análises
+
+**Propósito:** Democratizar acesso a insights complexos através de linguagem natural
+
+**Trigger:** Usuário clica em "Harvey Specter" ou usa atalho de teclado
+
+**Progressão:**
+Abre modal/página → Usuário digita pergunta → Sistema envia para spark.llm → IA analisa contexto (processos, finanças, etc.) → Gera resposta estruturada → Exibe resposta formatada → Usuário pode fazer follow-up
+
+**Critérios de Sucesso:**
+- Resposta gerada em < 3 segundos
+- Resposta é relevante e precisa
+- Interface suporta markdown/formatação
+- Histórico de conversas é mantido
+
+### 6. Integração DJEN/DataJud
 
 **Funcionalidade:** Monitoramento automático de publicações no Diário de Justiça Eletrônico Nacional
 

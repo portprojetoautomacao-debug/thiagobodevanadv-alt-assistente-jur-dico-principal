@@ -21,7 +21,8 @@ import {
   ListChecks,
   ClockCounterClockwise,
   ArrowsLeftRight,
-  Info
+  Info,
+  ChartLine
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
@@ -29,6 +30,7 @@ import { createAgentTask } from '@/lib/agents'
 import type { Agent } from '@/lib/agents'
 import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
 import MrsJustinEModal from '@/components/MrsJustinEModal'
+import AgentMetrics from '@/components/AgentMetrics'
 
 const agentIcons: Record<string, any> = {
   'doc-analyzer': FileText,
@@ -45,9 +47,11 @@ export default function AIAgents() {
     agents, 
     taskQueue, 
     completedTasks, 
-    activityLog, 
+    activityLog,
+    autoGenerateEnabled,
     toggleAgent,
     addTask,
+    toggleAutoGenerate,
     setAgents 
   } = useAutonomousAgents()
   
@@ -351,9 +355,38 @@ export default function AIAgents() {
         </Card>
       )}
 
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Geração Automática de Tarefas</CardTitle>
+              <CardDescription>
+                Simula tarefas reais para demonstrar o funcionamento 24/7 dos agentes
+              </CardDescription>
+            </div>
+            <Switch
+              checked={autoGenerateEnabled}
+              onCheckedChange={toggleAutoGenerate}
+              id="auto-generate-tasks"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {autoGenerateEnabled 
+              ? 'Os agentes estão recebendo tarefas automaticamente a cada 3 minutos para demonstração.' 
+              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente.'}
+          </p>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="agents" className="space-y-4">
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
+          <TabsTrigger value="metrics">
+            <ChartLine className="w-4 h-4 mr-2" />
+            Métricas
+          </TabsTrigger>
           <TabsTrigger value="collaboration">
             <ArrowsLeftRight className="w-4 h-4 mr-2" />
             Demo Colaboração
@@ -377,6 +410,14 @@ export default function AIAgents() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="metrics" className="space-y-4">
+          <AgentMetrics 
+            agents={agents}
+            completedTasks={completedTasks}
+            activityLog={activityLog}
+          />
+        </TabsContent>
 
         <TabsContent value="collaboration" className="space-y-4">
           <div className="space-y-4">
