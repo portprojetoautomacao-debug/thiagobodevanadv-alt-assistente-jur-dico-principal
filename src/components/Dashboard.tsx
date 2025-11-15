@@ -1,18 +1,16 @@
 import { useKV } from '@github/spark/hooks'
 import { Badge } from '@/components/ui/badge'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import {
   CheckCircle,
   Clock, 
   Brain,
-  TrendUp
-  CheckCircle,
+  TrendUp,
   Warning,
-  Clock, 
   CheckSquare,
-  user: 
-  ArrowRight,
-  TrendUp
+  ArrowRight
 } from '@phosphor-icons/react'
 import type { User, Task, Appointment, Process } from '@/types'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
@@ -25,94 +23,101 @@ export default function Dashboard({ user }: DashboardProps) {
   const [tasks] = useKV<Task[]>('tasks', [])
   const [appointments] = useKV<Appointment[]>('appointments', [])
   const [processes] = useKV<Process[]>('processes', [])
-          Bem-vindo, {user.name}
+  
+  const { agents, activityLog } = useAutonomousAgents()
 
-        </p>
+  const urgentTasks = (tasks || []).filter(t => !t.completed && t.priority === 'high')
+  const todayAppointments = (appointments || []).filter(a => {
+    const today = new Date().toLocaleDateString('pt-BR')
+    return new Date(a.date).toLocaleDateString('pt-BR') === today
+  })
 
-        <Card>
-            <CardTitle className="text-sm font-medium">P
-          </CardHeader>
-    
+  const processStats = {
+    emAndamento: (processes || []).filter(p => p.status === 'em-andamento').length,
+    aguardando: (processes || []).filter(p => p.status === 'aguardando').length,
+    concluido: (processes || []).filter(p => p.status === 'concluido').length,
+    total: (processes || []).length
+  }
 
-          </CardContent>
+  const taskStats = {
+    pending: (tasks || []).filter(t => !t.completed).length,
+    completed: (tasks || []).filter(t => t.completed).length,
+    total: (tasks || []).length
+  }
 
-          <CardHeader className="flex flex-row items-center justify-between space-y
-            <CheckSquare className="w-4 h-4 text-muted-foreground" />
-   
-
-            </p>
-        </Card>
+  const completionPercentage = taskStats.total > 0 
+    ? Math.round((taskStats.completed / taskStats.total) * 100) 
     : 0
 
   const activeAgents = agents.filter(a => a.status === 'active').length
   const totalAgentTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
   const recentActivities = activityLog.slice(0, 5)
 
-
+  return (
     <div className="p-6 space-y-6">
-           
-          <CardContent>
-            <Progress value={com
+      <div>
+        <h1 className="text-3xl font-bold">
+          Bem-vindo, {user.name}
         </h1>
-
-        <Card>
-            
+        <p className="text-muted-foreground mt-2">
+          Aqui está um resumo das suas atividades
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Processos Ativos</CardTitle>
-                      <p className="text-sm font-medium">{task.titl
+            <CheckCircle className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
-                    </d
+          <CardContent>
             <div className="text-2xl font-bold">{processStats.emAndamento}</div>
-            )}
+            <p className="text-xs text-muted-foreground mt-1">
               {processStats.aguardando} aguardando
-        <Card>
+            </p>
           </CardContent>
-              S
+        </Card>
 
-            </
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tarefas Pendentes</CardTitle>
             <CheckSquare className="w-4 h-4 text-muted-foreground" />
-                      a
-                    }`}
-                      <p className="text-sm font-medium">{agent.name}</p>
-                    </div>
-                  <Badge variant="outline" 
-                
-              ))}
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{taskStats.pending}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {taskStats.completed} concluídas
+            </p>
+          </CardContent>
         </Card>
 
-          </Ca
-      </div>
-      <Card>
-          <CardTitle className="flex items-center gap-2">
-            Atividade R
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Compromissos Hoje</CardTitle>
+            <Clock className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
           <CardContent>
-          {recentActivities.length === 0 ? (
-          ) : (
-              {recentActivities.map((log) => {
-                
-                    <div
-               
+            <div className="text-2xl font-bold">{todayAppointments.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {(appointments || []).length} total
+            </p>
+          </CardContent>
+        </Card>
 
-              
-                      className="text-xs"
-                      {agent?.name || 'Agente'}
-                  </div>
-              })}
-          )}
-      </Card>
-  )
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Progresso</CardTitle>
+            <TrendUp className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{completionPercentage}%</div>
+            <Progress value={completionPercentage} className="mt-2" />
+          </CardContent>
+        </Card>
+      </div>
 
-
-
-
-
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
@@ -123,7 +128,7 @@ export default function Dashboard({ user }: DashboardProps) {
             {urgentTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma tarefa urgente no momento</p>
             ) : (
-
+              <div className="space-y-3">
                 {urgentTasks.slice(0, 5).map((task) => (
                   <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                     <Warning className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -134,11 +139,11 @@ export default function Dashboard({ user }: DashboardProps) {
                       </p>
                     </div>
                   </div>
-
+                ))}
               </div>
-
+            )}
           </CardContent>
-
+        </Card>
 
         <Card>
           <CardHeader>
@@ -161,7 +166,7 @@ export default function Dashboard({ user }: DashboardProps) {
                     }`} />
                     <div>
                       <p className="text-sm font-medium">{agent.name}</p>
-
+                      <p className="text-xs text-muted-foreground">{agent.currentTask ? agent.currentTask.type : 'Aguardando'}</p>
                     </div>
                   </div>
                   <Badge variant="outline" className="text-xs">
@@ -213,6 +218,6 @@ export default function Dashboard({ user }: DashboardProps) {
           )}
         </CardContent>
       </Card>
-
+    </div>
   )
-
+}
