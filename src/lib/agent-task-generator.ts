@@ -1,6 +1,6 @@
 import { createAgentTask, type AgentTask } from './agents'
 
-interface TaskGeneratorConfig {
+export interface TaskGeneratorConfig {
   enabled: boolean
   intervalMinutes: number
   maxTasksPerInterval: number
