@@ -1,19 +1,19 @@
 import { useKV } from '@github/spark/hooks'
-import type { Process, Prazo } from '@/types'
+import { Card, CardContent, CardHeader, CardT
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Gavel, CalendarCheck, Clock, CheckCircle } from '@phosphor-icons/react'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
-import { useMemo } from 'react'
+  onNavigate: (view: string) =>
 
-interface DashboardProps {
-  onNavigate: (view: string) => void
-}
+    const ativos = process
+    
+ 
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
-  const [processes] = useKV<Process[]>('processes', [])
+      return isUrgente(dias)
 
-  const stats = useMemo(() => {
+
+  const prazosProximos = useMem
     const ativos = processes.filter(p => p.status === 'ativo').length
     const concluidos = processes.filter(p => p.status === 'concluido').length
     
@@ -30,36 +30,36 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   const prazosProximos = useMemo(() => {
     const todosPrazos: (Prazo & { processoTitulo: string })[] = []
-    
-    processes.forEach(process => {
-      if (process.prazos && Array.isArray(process.prazos)) {
-        process.prazos.forEach(prazo => {
-          if (!prazo.concluido) {
-            todosPrazos.push({
-              ...prazo,
-              processoTitulo: process.titulo
-            })
-          }
-        })
-      }
-    })
 
-    return todosPrazos
-      .sort((a, b) => a.dataFinal.localeCompare(b.dataFinal))
-      .slice(0, 5)
-  }, [processes])
+          <CardHeader className="f
+            <Gavel className="text-primary" size={20} />
+          <CardContent>
+            <p className="text-xs
+        </Card>
+        <Card>
+            <CardTitle className="text-sm fo
+          </Ca
+           
+          
 
-  const processosRecentes = useMemo(() => {
-    return [...processes]
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 5)
-  }, [processes])
+      
 
-  return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral dos seus processos e prazos</p>
+          <CardContent
+            <p className="text-xs text-muted-foreground mt-1"
+        </Card>
+        <Card>
+
+          </CardHeader>
+            <div classNam
+          </CardContent>
+      </div>
+      <div classN
+
+          
+            {prazosProximos.length === 0 ? (
+            ) : (
+                {prazosProximos.map(prazo => {
+                  const urgente = isUrgente(diasRestantes)
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -126,61 +126,61 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     <div key={prazo.id} className="flex items-start justify-between gap-3 pb-3 border-b last:border-0">
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{prazo.descricao}</p>
-                        <p className="text-xs text-muted-foreground truncate">{prazo.processoTitulo}</p>
-                        <p className="text-xs text-muted-foreground">{formatarData(prazo.dataFinal)}</p>
-                      </div>
-                      <Badge variant={urgente ? 'destructive' : 'secondary'} className="shrink-0">
-                        {diasRestantes === 0 ? 'Hoje' : diasRestantes === 1 ? 'Amanhã' : `${diasRestantes}d`}
-                      </Badge>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Processos Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {processosRecentes.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground mb-4">Nenhum processo cadastrado</p>
-                <button
-                  onClick={() => onNavigate('processos')}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Adicionar primeiro processo
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {processosRecentes.map(process => (
-                  <div
-                    key={process.id}
-                    className="flex items-start justify-between gap-3 pb-3 border-b last:border-0 cursor-pointer hover:bg-muted/50 -mx-3 px-3 py-2 rounded transition-colors"
-                    onClick={() => onNavigate('processos')}
-                  >
-                    <div className="flex flex-col gap-1 flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{process.titulo}</p>
-                      <p className="text-xs text-muted-foreground truncate">{process.numeroCNJ}</p>
-                      <p className="text-xs text-muted-foreground">{process.autor} × {process.reu}</p>
-                    </div>
-                    <Badge variant={
-                      process.status === 'ativo' ? 'default' :
-                      process.status === 'concluido' ? 'secondary' : 'outline'
-                    }>
-                      {process.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

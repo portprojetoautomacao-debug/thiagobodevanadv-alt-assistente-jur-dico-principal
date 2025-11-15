@@ -1,2 +1,10 @@
+:root{
+    --font-sans: "IBM Plex Sans"
+;
+    --font-serif: "IBM Plex Serif";
+    --font-mono: "IBM Plex Mono"}
 @import 'tailwindcss';
 @import "tw-animate-css";
+body{
+    font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'
+}
