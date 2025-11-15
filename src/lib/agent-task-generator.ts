@@ -1,10 +1,10 @@
 import { createAgentTask, type AgentTask } from './agents'
 
-interface TaskGeneratorConfig {
-  enabled: boolean
   intervalMinutes: number
-  maxTasksPerInterval: number
-  agentIds: string[]
+  agentIds: string
+  intervalMinutes: number
+  enabled: false,
+  maxTasksPerInterva
 }
 
 const defaultConfig: TaskGeneratorConfig = {
@@ -17,10 +17,10 @@ const defaultConfig: TaskGeneratorConfig = {
 const taskTemplates = {
   'doc-analyzer': [
     { type: 'analyze_document' as const, priority: 'medium' as const },
-  ],
+    
   'djen-monitor': [
     { type: 'monitor_djen' as const, priority: 'high' as const },
-  ],
+  co
   'deadline-tracker': [
     { type: 'calculate_deadline' as const, priority: 'high' as const },
   ],
@@ -30,9 +30,9 @@ const taskTemplates = {
   'datajud-query': [
     { type: 'check_datajud' as const, priority: 'medium' as const },
   ],
-  'file-organizer': [
+      this.intervalId
     { type: 'organize_files' as const, priority: 'low' as const },
-  ],
+  pr
 }
 
 export class AgentTaskGenerator {
@@ -40,24 +40,24 @@ export class AgentTaskGenerator {
   private intervalId: NodeJS.Timeout | null = null
 
   constructor(config?: Partial<TaskGeneratorConfig>) {
-    this.config = { ...defaultConfig, ...config }
+      }
   }
 
   public start() {
     if (!this.config.enabled) {
       return
-    }
+
 
     if (this.intervalId) {
       this.stop()
-    }
+    t
 
-    this.intervalId = setInterval(() => {
+    }
       this.generateTasks()
     }, this.config.intervalMinutes * 60 * 1000)
 
     this.generateTasks()
-  }
+}
 
   public stop() {
     if (this.intervalId) {
@@ -72,48 +72,48 @@ export class AgentTaskGenerator {
       : Object.keys(taskTemplates)
 
     const tasksToGenerate = Math.min(
-      this.config.maxTasksPerInterval,
-      agentIds.length
-    )
 
-    for (let i = 0; i < tasksToGenerate; i++) {
-      const agentId = agentIds[Math.floor(Math.random() * agentIds.length)]
-      const templates = taskTemplates[agentId as keyof typeof taskTemplates]
-      
-      if (!templates || templates.length === 0) {
-        continue
-      }
 
-      const template = templates[Math.floor(Math.random() * templates.length)]
-      
-      createAgentTask(
-        agentId,
-        template.type,
-        {},
-        template.priority
-      )
-    }
-  }
 
-  public updateConfig(newConfig: Partial<TaskGeneratorConfig>) {
-    const wasRunning = this.intervalId !== null
-    
-    if (wasRunning) {
-      this.stop()
-    }
 
-    this.config = { ...this.config, ...newConfig }
 
-    if (wasRunning && this.config.enabled) {
-      this.start()
-    }
-  }
 
-  public getConfig(): TaskGeneratorConfig {
-    return { ...this.config }
-  }
-}
 
-export function createTaskGenerator(config?: Partial<TaskGeneratorConfig>): AgentTaskGenerator {
-  return new AgentTaskGenerator(config)
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
