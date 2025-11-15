@@ -7,6 +7,7 @@ import {
   shouldPauseForHuman,
   canResumeAfterHuman 
 } from '@/lib/agents'
+import { createTaskGenerator, type AgentTaskGenerator } from '@/lib/agent-task-generator'
 
 export function useAutonomousAgents() {
   const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', [])
@@ -19,8 +20,10 @@ export function useAutonomousAgents() {
     action: string
     result: 'success' | 'warning' | 'error'
   }>>('agent-activity-log', [])
+  const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-tasks', true)
   
   const processingRef = useRef<Set<string>>(new Set())
+  const taskGeneratorRef = useRef<AgentTaskGenerator | null>(null)
 
   const addTask = useCallback((task: AgentTask) => {
     setTaskQueue((current) => {
@@ -163,17 +166,51 @@ export function useAutonomousAgents() {
           
           const activity = getAgentActivity(agent)
           
-          if (activity !== agent.lastActivity && Math.random() > 0.5) {
+          if (activity !== agent.lastActivity && Math.random() > 0.3) {
             return { ...agent, lastActivity: activity }
           }
           
           return agent
         })
       )
-    }, 3000)
+    }, 5000)
 
     return () => clearInterval(interval)
   }, [agents, processNextTask, setAgents])
+
+  useEffect(() => {
+    const resetDailyCounters = () => {
+      const now = new Date()
+      const midnight = new Date(now)
+      midnight.setHours(24, 0, 0, 0)
+      
+      const timeUntilMidnight = midnight.getTime() - now.getTime()
+      
+      const timeout = setTimeout(() => {
+        setAgents((current) =>
+          (current || []).map(agent => ({
+            ...agent,
+            tasksToday: 0
+          }))
+        )
+        
+        const dailyInterval = setInterval(() => {
+          setAgents((current) =>
+            (current || []).map(agent => ({
+              ...agent,
+              tasksToday: 0
+            }))
+          )
+        }, 24 * 60 * 60 * 1000)
+        
+        return () => clearInterval(dailyInterval)
+      }, timeUntilMidnight)
+      
+      return () => clearTimeout(timeout)
+    }
+    
+    return resetDailyCounters()
+  }, [])
 
   const toggleAgent = useCallback((agentId: string) => {
     setAgents((current) => 
@@ -212,15 +249,62 @@ export function useAutonomousAgents() {
     )
   }, [setTaskQueue])
 
+  const toggleAutoGenerate = useCallback(() => {
+    setAutoGenerateEnabled((current) => !current)
+  }, [setAutoGenerateEnabled])
+
+  useEffect(() => {
+    if (!taskGeneratorRef.current && agents && agents.length > 0) {
+      const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
+      
+      const generator = createTaskGenerator({
+        enabled: autoGenerateEnabled,
+        intervalMinutes: 3,
+        maxTasksPerInterval: 2,
+        agentIds: enabledAgentIds
+      })
+
+      generator.setTaskCallback((task) => {
+        addTask(task)
+        logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
+      })
+
+      if (autoGenerateEnabled) {
+        generator.start()
+      }
+
+      taskGeneratorRef.current = generator
+    }
+
+    return () => {
+      if (taskGeneratorRef.current) {
+        taskGeneratorRef.current.stop()
+      }
+    }
+  }, [agents, autoGenerateEnabled, addTask, logActivity])
+
+  useEffect(() => {
+    if (taskGeneratorRef.current && agents) {
+      const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
+      
+      taskGeneratorRef.current.updateConfig({
+        enabled: autoGenerateEnabled,
+        agentIds: enabledAgentIds
+      })
+    }
+  }, [agents, autoGenerateEnabled])
+
   return {
     agents: agents || [],
     taskQueue: taskQueue || [],
     completedTasks: completedTasks || [],
     activityLog: activityLog || [],
+    autoGenerateEnabled,
     addTask,
     toggleAgent,
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
+    toggleAutoGenerate,
     setAgents,
   }
 }
