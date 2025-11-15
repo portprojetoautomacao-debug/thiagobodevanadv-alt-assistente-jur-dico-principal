@@ -1,16 +1,16 @@
 import { useKV } from '@github/spark/hooks'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { 
-  Briefcase, 
-  CalendarDots, 
+  CheckCircle,
+  Clock, 
+  Brain,
+  TrendUp
   CheckCircle,
   Warning,
   Clock, 
   CheckSquare,
-  Brain,
+  user: 
   ArrowRight,
   TrendUp
 } from '@phosphor-icons/react'
@@ -25,94 +25,94 @@ export default function Dashboard({ user }: DashboardProps) {
   const [tasks] = useKV<Task[]>('tasks', [])
   const [appointments] = useKV<Appointment[]>('appointments', [])
   const [processes] = useKV<Process[]>('processes', [])
-  const { agents, activityLog, completedTasks } = useAutonomousAgents()
+          Bem-vindo, {user.name}
 
-  const pendingTasks = (tasks || []).filter(t => !t.completed)
-  const urgentTasks = pendingTasks.filter(t => t.priority === 'urgent')
-  const todayAppointments = (appointments || []).filter(a => {
-    const today = new Date().toISOString().split('T')[0]
-    return a.date === today
-  })
+        </p>
 
-  const processStats = {
-    aguardando: (processes || []).filter(p => p.status === 'aguardando').length,
-    emAndamento: (processes || []).filter(p => p.status === 'em-andamento').length,
-    concluido: (processes || []).filter(p => p.status === 'concluido').length,
-  }
+        <Card>
+            <CardTitle className="text-sm font-medium">P
+          </CardHeader>
+    
 
-  const completionRate = (tasks || []).length > 0 
-    ? Math.round(((tasks || []).filter(t => t.completed).length / (tasks || []).length) * 100)
+          </CardContent>
+
+          <CardHeader className="flex flex-row items-center justify-between space-y
+            <CheckSquare className="w-4 h-4 text-muted-foreground" />
+   
+
+            </p>
+        </Card>
     : 0
 
   const activeAgents = agents.filter(a => a.status === 'active').length
   const totalAgentTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
   const recentActivities = activityLog.slice(0, 5)
 
-  return (
+
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Bem-vindo, {user.name}
+           
+          <CardContent>
+            <Progress value={com
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Seus agentes de IA autônomos estão trabalhando 24/7 para você
-        </p>
+
+        <Card>
+            
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Processos Ativos</CardTitle>
-            <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      <p className="text-sm font-medium">{task.titl
           </CardHeader>
-          <CardContent>
+                    </d
             <div className="text-2xl font-bold">{processStats.emAndamento}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            )}
               {processStats.aguardando} aguardando
-            </p>
-          </CardContent>
-        </Card>
-
         <Card>
+          </CardContent>
+              S
+
+            </
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tarefas Pendentes</CardTitle>
             <CheckSquare className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingTasks.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {urgentTasks.length} urgentes
-            </p>
-          </CardContent>
+                      a
+                    }`}
+                      <p className="text-sm font-medium">{agent.name}</p>
+                    </div>
+                  <Badge variant="outline" 
+                
+              ))}
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compromissos Hoje</CardTitle>
-            <CalendarDots className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todayAppointments.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {(appointments || []).length} total este mês
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Conclusão</CardTitle>
-            <CheckCircle className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completionRate}%</div>
-            <Progress value={completionRate} className="mt-2" />
-          </CardContent>
-        </Card>
+          </Ca
       </div>
+      <Card>
+          <CardTitle className="flex items-center gap-2">
+            Atividade R
+          <CardContent>
+          {recentActivities.length === 0 ? (
+          ) : (
+              {recentActivities.map((log) => {
+                
+                    <div
+               
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+              
+                      className="text-xs"
+                      {agent?.name || 'Agente'}
+                  </div>
+              })}
+          )}
+      </Card>
+  )
+
+
+
+
+
+
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
@@ -123,7 +123,7 @@ export default function Dashboard({ user }: DashboardProps) {
             {urgentTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma tarefa urgente no momento</p>
             ) : (
-              <div className="space-y-3">
+
                 {urgentTasks.slice(0, 5).map((task) => (
                   <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                     <Warning className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -134,11 +134,11 @@ export default function Dashboard({ user }: DashboardProps) {
                       </p>
                     </div>
                   </div>
-                ))}
+
               </div>
-            )}
+
           </CardContent>
-        </Card>
+
 
         <Card>
           <CardHeader>
@@ -161,7 +161,7 @@ export default function Dashboard({ user }: DashboardProps) {
                     }`} />
                     <div>
                       <p className="text-sm font-medium">{agent.name}</p>
-                      <p className="text-xs text-muted-foreground">{agent.lastActivity || 'Aguardando'}</p>
+
                     </div>
                   </div>
                   <Badge variant="outline" className="text-xs">
@@ -213,6 +213,6 @@ export default function Dashboard({ user }: DashboardProps) {
           )}
         </CardContent>
       </Card>
-    </div>
+
   )
-}
+
