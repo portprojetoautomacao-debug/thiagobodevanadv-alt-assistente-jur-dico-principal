@@ -59,7 +59,7 @@ Contexto do usuário:
 
 Pergunta do usuário: ${input.trim()}
 
-Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cálculo de prazos, análise processual ou orientação jurídica, use seus conhecimentos sobre o CPC e CLT. Seja conciso mas completo.`
+Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cálculo de prazos, análise processual ou orientação jurídica, use seus conhecimentos sobre o CPC, CPP e CLT. Seja conciso mas completo.`
 
       const response = await spark.llm(prompt, 'gpt-4o')
 

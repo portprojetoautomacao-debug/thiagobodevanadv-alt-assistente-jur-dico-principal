@@ -42,4 +42,19 @@ export interface Feriado {
   tipo: 'nacional' | 'estadual' | 'municipal'
 }
 
+export interface PremonicaoJuridica {
+  processo_cnj: string
+  probabilidade_exito: number
+  analise_ia: string
+  estrategias_recomendadas: string[]
+  precedentes_relevantes: {
+    id: string
+    tribunal: string
+    numero: string
+    tema: string
+    resumo_relevancia: string
+    link: string
+  }[]
+}
+
 export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente'
