@@ -1,6 +1,6 @@
 import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert";
 import { Button } from "./components/ui/button";
-import { AlertTriangle, RefreshCw } from "@phosphor-icons/react";
+import { Warning, ArrowClockwise } from "@phosphor-icons/react";
 
 export const ErrorFallback = ({ error, resetErrorBoundary }) => {
   if (import.meta.env.DEV) throw error;
@@ -9,7 +9,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }) => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Alert variant="destructive" className="mb-6">
-          <AlertTriangle size={20} />
+          <Warning size={20} />
           <AlertTitle>Erro na aplicação</AlertTitle>
           <AlertDescription>
             Algo inesperado aconteceu durante a execução da aplicação. Os detalhes do erro estão abaixo. Tente recarregar a página ou entre em contato com o suporte.
@@ -28,7 +28,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }) => {
           className="w-full"
           variant="outline"
         >
-          <RefreshCw size={20} />
+          <ArrowClockwise size={20} />
           Tentar Novamente
         </Button>
       </div>

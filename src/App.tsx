@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { 
-  LayoutDashboard, 
+  SquaresFour, 
   Gavel, 
   CalendarCheck, 
   Calculator, 
@@ -21,7 +20,7 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
 
   const navigation = [
-    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: SquaresFour },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
     { id: 'calculadora' as ViewType, label: 'Calculadora', icon: Calculator },
