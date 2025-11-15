@@ -1,10 +1,10 @@
 import { createAgentTask, type AgentTask } from './agents'
 
+interface TaskGeneratorConfig {
+  enabled: boolean
   intervalMinutes: number
-  agentIds: string
-  intervalMinutes: number
-  enabled: true,
-  maxTasksPerInterva
+  maxTasksPerInterval: number
+  agentIds: string[]
 }
 
 const defaultConfig: TaskGeneratorConfig = {
@@ -16,24 +16,6 @@ const defaultConfig: TaskGeneratorConfig = {
 
 const taskTemplates = {
   'doc-analyzer': [
-    { type: 'check_datajud' as const, data: { numeroProcesso: '1234567-89.2024.8.07.0001' }, priority: 'low' as const }
-  'file-organizer': [
-  ],
-    
-  ]
-
-  private config: TaskGeneratorConfig
-  pr
-  constructor(config: P
-  }
-  public setTaskCallback(callback: (task: AgentTask) => void) {
-  }
-  pu
-      console.warn('Ta
-    }
-    if (!this.config.enabled) {
-    
-
     { type: 'check_datajud' as const, data: { numeroProcesso: '1234567-89.2024.8.07.0001' }, priority: 'low' as const }
   ],
   'file-organizer': [
@@ -71,79 +53,47 @@ export class AgentTaskGenerator {
 
     this.generateTasks()
 
-
-
-      this.start()
+    this.intervalId = window.setInterval(() => {
+      this.generateTasks()
+    }, this.config.intervalMinutes * 60 * 1000)
   }
 
+  public stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+      this.intervalId = undefined
+    }
   }
 
-  return new AgentTaskGenerator(conf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  private generateTasks() {
+    const agentIds = this.config.agentIds.length > 0 
+      ? this.config.agentIds 
+      : Object.keys(taskTemplates)
+
+    let tasksGenerated = 0
+
+    for (const agentId of agentIds) {
+      if (tasksGenerated >= this.config.maxTasksPerInterval) break
+
+      const templates = taskTemplates[agentId as keyof typeof taskTemplates]
+      if (!templates || templates.length === 0) continue
+
+      const template = templates[Math.floor(Math.random() * templates.length)]
+      const task = createAgentTask(agentId, template.type, template.data, template.priority)
+
+      if (this.taskCallback) {
+        this.taskCallback(task)
+        tasksGenerated++
+      }
+    }
+  }
+
+  public updateConfig(newConfig: Partial<TaskGeneratorConfig>) {
+    const wasRunning = !!this.intervalId
+
+    if (wasRunning) {
+      this.stop()
+    }
 
     this.config = { ...this.config, ...newConfig }
 
