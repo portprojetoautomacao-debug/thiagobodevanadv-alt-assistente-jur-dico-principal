@@ -111,11 +111,11 @@ Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gem
 - **Success criteria**: Respostas contextualmente relevantes em <2s, insights apresentados com métricas visuais (estatísticas, alertas, tendências, sugestões), análises precisas sobre performance da equipe, processos, prazos, finanças, clientes e tarefas, histórico de conversas salvo entre sessões
 
 ### 13. Premonição Jurídica (Legal Prediction)
-- **Functionality**: AI-powered predictive analysis estimating success probability of legal cases with strategic recommendations and relevant case law
-- **Purpose**: Provide data-driven insights for case strategy and client expectation management using advanced AI analysis
-- **Trigger**: User clicks "Premonição Jurídica" button on any process card in the Acervo
-- **Progression**: Button click → Modal opens with loading state → AI analyzes case (Gemini 4o) → Display probability meter (0-100%) → Show detailed analysis → Present 3-4 actionable strategies → List 2-4 relevant precedents with links
-- **Success criteria**: Analysis completes in <10s, probability realistic based on case facts, strategies are specific and actionable, precedents include tribunal references with summaries, all content copyable for use in petitions
+- **Functionality**: AI-powered predictive analysis estimating success probability (0-100%) of legal cases with detailed reasoning, strategic recommendations, and relevant case law precedents with links, all content copyable for petition drafting
+- **Purpose**: Provide data-driven insights for case strategy and client expectation management using advanced AI analysis to help lawyers make informed decisions and set realistic expectations
+- **Trigger**: User clicks "Premonição Jurídica" button (lightbulb icon) on any process card in the Acervo
+- **Progression**: Button click → Modal opens with loading state ("A IA está consultando jurisprudência...") → AI analyzes case context (Gemini GPT-4o with JSON mode) → Display animated circular probability meter (0-100%) with color-coded badge → Show detailed AI analysis text → Present 3-5 actionable legal strategies (each with copy button) → List 2-5 relevant precedents from STJ/TRF/TJMG with tribunal badges, case numbers, themes, relevance summaries, and links to jurisprudence → Footer with process CNJ and disclaimer
+- **Success criteria**: Analysis completes in <15s, probability realistic and well-reasoned (considers case facts, jurisprudence, legal context), AI analysis text is clear and mentions both strengths and weaknesses, strategies are specific and actionable for Brazilian law, precedents include actual tribunal references with case themes and detailed summaries explaining relevance, all text elements have copy buttons for easy reuse in petitions, visual feedback on copy (icon changes to checkmark), modal is fully responsive on mobile
 
 ## Edge Case Handling
 
