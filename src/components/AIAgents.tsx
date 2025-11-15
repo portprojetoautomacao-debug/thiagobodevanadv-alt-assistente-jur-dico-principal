@@ -20,13 +20,15 @@ import {
   Brain,
   ListChecks,
   ClockCounterClockwise,
-  ArrowsLeftRight
+  ArrowsLeftRight,
+  Info
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { createAgentTask } from '@/lib/agents'
 import type { Agent } from '@/lib/agents'
 import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
+import MrsJustinEModal from '@/components/MrsJustinEModal'
 
 const agentIcons: Record<string, any> = {
   'doc-analyzer': FileText,
@@ -35,6 +37,7 @@ const agentIcons: Record<string, any> = {
   'petition-writer': Sparkle,
   'datajud-query': Database,
   'file-organizer': Stack,
+  'mrs-justin-e': Brain,
 }
 
 export default function AIAgents() {
@@ -49,10 +52,37 @@ export default function AIAgents() {
   } = useAutonomousAgents()
   
   const [showCollaborationDemo, setShowCollaborationDemo] = useState(false)
+  const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
 
   useEffect(() => {
     if (agents.length === 0) {
       setAgents([
+        {
+          id: 'mrs-justin-e',
+          name: 'Mrs. Justin-e',
+          description: 'Analiso intimações com 95% de precisão em menos de 1 minuto, economizando 50 horas a cada 150 intimações',
+          type: 'analyzer',
+          status: 'active',
+          enabled: true,
+          lastActivity: 'Aguardando intimações para análise',
+          tasksCompleted: 150,
+          tasksToday: 12,
+          autonomyLevel: 95,
+          capabilities: [
+            'Interpreta intimações',
+            'Conta prazos',
+            'Orienta Controller',
+            'Sugere Tarefas',
+            'Sistema D-1, D-2 ou D-n',
+            'Prepara Atendimentos',
+            'Cria Workflow de Controladoria',
+            'Refaz Análise após nova informação'
+          ],
+          nextScheduledRun: 'Contínuo',
+          workQueue: [],
+          continuousMode: true,
+          humanInteractionMode: 'collaborate',
+        },
         {
           id: 'doc-analyzer',
           name: 'Agente de Análise Documental',
@@ -190,6 +220,18 @@ export default function AIAgents() {
         </p>
       </div>
 
+      <MrsJustinEModal 
+        open={showMrsJustinEModal}
+        onOpenChange={setShowMrsJustinEModal}
+        onActivate={() => {
+          const agent = agents.find(a => a.id === 'mrs-justin-e')
+          if (agent && !agent.enabled) {
+            handleToggleAgent('mrs-justin-e')
+          }
+          toast.success('Mrs. Justin-e ativada! Pronta para analisar intimações.')
+        }}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -241,6 +283,59 @@ export default function AIAgents() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <Brain className="w-8 h-8 text-primary" weight="fill" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Mrs. Justin-e</CardTitle>
+                <CardDescription className="mt-1">
+                  Especialista em análise de intimações - 95% de precisão em menos de 1 minuto
+                </CardDescription>
+              </div>
+            </div>
+            <Button onClick={() => setShowMrsJustinEModal(true)}>
+              <Info className="w-4 h-4 mr-2" />
+              Ver Detalhes
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-background/50 rounded-lg p-4 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+                <h4 className="font-semibold text-foreground">Super Rápida</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Análise em menos de 1 minuto vs. 8 minutos humanos
+              </p>
+            </div>
+            <div className="bg-background/50 rounded-lg p-4 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-green-600" weight="fill" />
+                <h4 className="font-semibold text-foreground">95% Precisa</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Precisão garantida sem esquecer detalhes importantes
+              </p>
+            </div>
+            <div className="bg-background/50 rounded-lg p-4 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-5 h-5 text-primary" weight="fill" />
+                <h4 className="font-semibold text-foreground">Economiza Tempo</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                50 horas economizadas a cada 150 intimações
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {humanInterventionTasks > 0 && (
         <Card className="border-accent bg-accent/5">
@@ -443,6 +538,15 @@ export default function AIAgents() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {agent.id === 'mrs-justin-e' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowMrsJustinEModal(true)}
+                          >
+                            <Info className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Switch
                           checked={agent.enabled}
                           onCheckedChange={() => handleToggleAgent(agent.id)}
