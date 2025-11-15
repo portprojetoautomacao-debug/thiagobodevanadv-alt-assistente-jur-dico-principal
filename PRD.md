@@ -103,6 +103,13 @@ Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gem
 - **Progression**: Document upload → Embedding generation → ChromaDB storage → User query → Semantic search → Context retrieval → AI response with sources
 - **Success criteria**: Relevant results in <2s, source attribution, contextual answers, support for legal document formats
 
+### 12. Premonição Jurídica (Legal Prediction)
+- **Functionality**: AI-powered predictive analysis estimating success probability of legal cases with strategic recommendations and relevant case law
+- **Purpose**: Provide data-driven insights for case strategy and client expectation management using advanced AI analysis
+- **Trigger**: User clicks "Premonição Jurídica" button on any process card in the Acervo
+- **Progression**: Button click → Modal opens with loading state → AI analyzes case (Gemini 4o) → Display probability meter (0-100%) → Show detailed analysis → Present 3-4 actionable strategies → List 2-4 relevant precedents with links
+- **Success criteria**: Analysis completes in <10s, probability realistic based on case facts, strategies are specific and actionable, precedents include tribunal references with summaries, all content copyable for use in petitions
+
 ## Edge Case Handling
 
 - **Authentication Failures**: Clear error messages with retry options and demo credential reminders

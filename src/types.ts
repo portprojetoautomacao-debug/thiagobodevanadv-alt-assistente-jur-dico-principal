@@ -94,3 +94,20 @@ export interface AIAnalysis {
   timestamp: string
   status: 'processing' | 'completed' | 'error'
 }
+
+export interface Precedente {
+  id: string
+  tribunal: string
+  numero: string
+  tema: string
+  resumo_relevancia: string
+  link: string
+}
+
+export interface PremonicaoJuridica {
+  processo_cnj: string
+  probabilidade_exito: number
+  analise_ia: string
+  estrategias_recomendadas: string[]
+  precedentes_relevantes: Precedente[]
+}
