@@ -103,10 +103,10 @@ Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gem
 - **Progression**: Document upload → Embedding generation → ChromaDB storage → User query → Semantic search → Context retrieval → AI response with sources
 - **Success criteria**: Relevant results in <2s, source attribution, contextual answers, support for legal document formats
 
-### 12. Donn@ - Assistente Jurídica Inteligente
+### 12. Harvey Specter - Assistente Jurídico Inteligente
 - **Functionality**: Chat conversacional inteligente que analisa dados em tempo real, identifica padrões, gera análises completas e entrega insights estratégicos sobre o escritório
 - **Purpose**: Transformar dados brutos em decisões estratégicas, economizar tempo na elaboração de relatórios, e entregar respostas rápidas para apoiar a gestão jurídica
-- **Trigger**: Usuário navega para "Donn@ Assistente" ou faz perguntas no chat
+- **Trigger**: Usuário navega para "Harvey Specter" ou faz perguntas no chat
 - **Progression**: Abertura do chat → Seleção de pergunta rápida ou digitação de pergunta personalizada → IA processa consulta → Exibição de resposta detalhada com insights visuais → Cards de métricas e sugestões acionáveis → Histórico de conversas persistido
 - **Success criteria**: Respostas contextualmente relevantes em <2s, insights apresentados com métricas visuais (estatísticas, alertas, tendências, sugestões), análises precisas sobre performance da equipe, processos, prazos, finanças, clientes e tarefas, histórico de conversas salvo entre sessões
 
