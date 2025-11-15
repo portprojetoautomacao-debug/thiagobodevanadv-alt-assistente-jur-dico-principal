@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import { 
   House, 
   Briefcase, 
@@ -12,7 +13,8 @@ import {
   CalendarDots, 
   CurrencyCircleDollar, 
   Books,
-  SignOut
+  SignOut,
+  Robot
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types'
@@ -26,6 +28,7 @@ interface SidebarProps {
 
 const NAVIGATION_ITEMS = [
   { id: 'dashboard', label: 'Meu Painel', icon: House },
+  { id: 'ai-agents', label: 'Agentes de IA', icon: Robot },
   { id: 'processes', label: 'Acervo (CRM)', icon: Briefcase },
   { id: 'expedientes', label: 'Expedientes', icon: Tray },
   { id: 'batch', label: 'Análise em Lote', icon: FileText },
@@ -41,8 +44,15 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
-        <p className="text-sm text-muted-foreground mt-1">Com IA Gemini</p>
+        <div className="flex items-center gap-2 mb-2">
+          <Robot className="w-6 h-6 text-primary" weight="fill" />
+          <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>
+        <Badge className="mt-2 bg-green-500/10 text-green-700 border-green-500/20">
+          <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse" />
+          Gemini AI Ativo
+        </Badge>
       </div>
 
       <ScrollArea className="flex-1 px-3 py-4">

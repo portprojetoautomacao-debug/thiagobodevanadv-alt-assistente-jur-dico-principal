@@ -1,11 +1,11 @@
 # Planning Guide
 
-Assistente Jurídico PJe - A high-performance AI-powered suite of tools designed to optimize and automate the workflow of law offices using Brazil's PJe (Electronic Judicial Process) system, integrating Google Gemini AI to transform manual tasks into intelligent, efficient workflows.
+Assistente Jurídico PJe - Your team of 100% autonomous AI agents powered by Gemini, operating 24/7 to automate and optimize your legal workflow from start to finish. A high-performance AI-powered suite of tools designed for law offices using Brazil's PJe (Electronic Judicial Process) system, featuring autonomous agents that analyze documents, draft petitions, organize files, transcribe media, calculate deadlines, and monitor court notifications.
 
 **Experience Qualities**: 
-1. **Professional & Trustworthy** - The interface must convey reliability and precision, essential for legal professionals handling critical cases and deadlines
-2. **Efficient & Streamlined** - Every interaction should minimize clicks and cognitive load, enabling lawyers to process information and take action rapidly
-3. **Intelligent & Insightful** - AI-powered features should surface relevant information proactively, providing actionable insights that enhance decision-making
+1. **Professional & Trustworthy** - The interface must convey reliability and precision, essential for legal professionals handling critical cases and deadlines, with autonomous AI agents that work continuously in the background
+2. **Efficient & Streamlined** - Every interaction should minimize clicks and cognitive load, enabling lawyers to process information and take action rapidly while AI agents handle repetitive tasks
+3. **Intelligent & Insightful** - AI-powered autonomous agents should surface relevant information proactively, operating 24/7 to provide actionable insights that enhance decision-making without human intervention
 
 **Complexity Level**: Complex Application (advanced functionality, authentication, multiple integrated modules)
   - This is a comprehensive legal practice management system with user authentication, real-time data processing, AI integration, document analysis, calendar management, financial tracking, and knowledge base features requiring sophisticated state management and data persistence.
@@ -20,11 +20,11 @@ Assistente Jurídico PJe - A high-performance AI-powered suite of tools designed
 - **Success criteria**: User can access the system within 2 clicks, credentials persist across sessions
 
 ### 2. Dashboard (Meu Painel)
-- **Functionality**: Centralized command center displaying appointments, fatal deadlines, pending tasks, and recent AI agent activity
-- **Purpose**: Provide at-a-glance situational awareness of critical case information
+- **Functionality**: Centralized command center displaying appointments, fatal deadlines, pending tasks, and real-time autonomous AI agent activity with status monitoring for all active agents
+- **Purpose**: Provide at-a-glance situational awareness of critical case information and showcase autonomous AI agents operating 24/7 in the background
 - **Trigger**: Successful login or navigation menu selection
-- **Progression**: Login → Dashboard load → Widget rendering (appointments, deadlines, tasks, AI activity) → Interactive card navigation
-- **Success criteria**: All critical information visible without scrolling, deadline alerts prominent, data updates in real-time
+- **Progression**: Login → Dashboard load → Widget rendering (appointments, deadlines, tasks, AI agent status) → Real-time agent activity updates → Interactive card navigation
+- **Success criteria**: All critical information visible without scrolling, deadline alerts prominent, AI agent status displayed with live activity feed, data updates in real-time
 
 ### 3. Process CRM (Acervo) - Kanban Board
 - **Functionality**: Visual process management with drag-and-drop Kanban board for tracking cases through workflow stages

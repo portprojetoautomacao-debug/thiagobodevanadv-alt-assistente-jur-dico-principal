@@ -13,6 +13,7 @@ import DatabaseQueries from '@/components/DatabaseQueries'
 import Calendar from '@/components/Calendar'
 import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
+import AIAgents from '@/components/AIAgents'
 import type { User } from '@/types'
 
 function App() {
@@ -42,6 +43,8 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard user={currentUser} />
+      case 'ai-agents':
+        return <AIAgents />
       case 'processes':
         return <ProcessCRM />
       case 'expedientes':
