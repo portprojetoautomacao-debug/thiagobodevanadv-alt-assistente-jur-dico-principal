@@ -27,12 +27,12 @@ export default function ProcessCRM() {
   const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [showDialog, setShowDialog] = useState(false)
   const [newProcess, setNewProcess] = useState({
-    cnj: '',
-    title: '',
-    plaintiff: '',
-    defendant: '',
-    lawyer: '',
-    stage: 'Inicial',
+    numeroCNJ: '',
+    titulo: '',
+    autor: '',
+    reu: '',
+    advogado: '',
+    fase: 'Inicial',
   })
   
   const [premonicaoOpen, setPremonicaoOpen] = useState(false)
@@ -42,39 +42,41 @@ export default function ProcessCRM() {
 
   const filteredProcesses = (processes || []).filter(p => {
     const matchesFilter = filter === '' || 
-      p.cnj.toLowerCase().includes(filter.toLowerCase()) ||
-      p.title.toLowerCase().includes(filter.toLowerCase()) ||
-      p.parties.plaintiff.toLowerCase().includes(filter.toLowerCase())
+      p.numeroCNJ.toLowerCase().includes(filter.toLowerCase()) ||
+      p.titulo.toLowerCase().includes(filter.toLowerCase()) ||
+      p.autor.toLowerCase().includes(filter.toLowerCase())
     
-    const matchesStage = !selectedStage || p.stage === selectedStage
+    const matchesStage = !selectedStage || (p as any).fase === selectedStage
     
     return matchesFilter && matchesStage
   })
 
   const handleAddProcess = () => {
-    if (!newProcess.cnj || !newProcess.title) {
+    if (!newProcess.numeroCNJ || !newProcess.titulo) {
       toast.error('CNJ e título são obrigatórios')
       return
     }
 
+    const now = new Date().toISOString()
     const process: Process = {
       id: crypto.randomUUID(),
-      cnj: newProcess.cnj,
-      title: newProcess.title,
-      parties: {
-        plaintiff: newProcess.plaintiff,
-        defendant: newProcess.defendant,
-      },
-      status: 'aguardando',
-      stage: newProcess.stage,
-      lawyer: newProcess.lawyer,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      numeroCNJ: newProcess.numeroCNJ,
+      titulo: newProcess.titulo,
+      autor: newProcess.autor,
+      reu: newProcess.reu,
+      comarca: '',
+      vara: '',
+      status: 'ativo',
+      dataDistribuicao: now.split('T')[0],
+      dataUltimaMovimentacao: now,
+      prazos: [],
+      createdAt: now,
+      updatedAt: now,
     }
 
     setProcesses((current) => [...(current || []), process])
     setShowDialog(false)
-    setNewProcess({ cnj: '', title: '', plaintiff: '', defendant: '', lawyer: '', stage: 'Inicial' })
+    setNewProcess({ numeroCNJ: '', titulo: '', autor: '', reu: '', advogado: '', fase: 'Inicial' })
     toast.success('Processo adicionado com sucesso')
   }
 
@@ -96,7 +98,7 @@ export default function ProcessCRM() {
     setPremonicaoData(null)
 
     try {
-      const data = await generatePremonicaoJuridica(process.cnj, process)
+      const data = await generatePremonicaoJuridica(process.numeroCNJ, process)
       setPremonicaoData(data)
     } catch (error) {
       setPremonicaoError(error instanceof Error ? error.message : 'Erro desconhecido')
