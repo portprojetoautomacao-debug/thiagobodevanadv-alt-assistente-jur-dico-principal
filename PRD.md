@@ -284,6 +284,18 @@ Tailwind spacing (4px base):
 
 ---
 
-**Version:** 1.0  
-**Last Updated:** 2025-01-16  
-**Status:** Active Development
+**Version:** 1.1  
+**Last Updated:** 2025-01-17  
+**Status:** Production Ready
+
+## Changelog
+
+### v1.1 - 2025-01-17
+- ✅ Corrigido Dashboard.tsx (arquivo estava corrompido)
+- ✅ Otimizado index.css removendo código duplicado
+- ✅ Atualizado index.html com fontes Inter e IBM Plex Mono
+- ✅ Adicionados dados de exemplo (seed data) com 4 processos realistas
+- ✅ Adicionado histórico de chat de exemplo
+- ✅ Melhorada tipografia e consistência visual
+- ✅ Corrigida urgência de prazos (5 dias ao invés de 3)
+- ✅ Otimizadas importações e estrutura de código
