@@ -65,7 +65,7 @@ const QUICK_INSIGHTS = [
   },
 ]
 
-export default function Donna() {
+export default function HarveySpecter() {
   const [messages, setMessages] = useKV<Message[]>('harvey-specter-chat', [])
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)

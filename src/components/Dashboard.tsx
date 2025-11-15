@@ -65,20 +65,20 @@ export default function Dashboard({ user }: DashboardProps) {
             </div>
             <div className="flex-1">
               <CardTitle className="flex items-center gap-2">
-                Conheça a Donn@
+                Conheça o Harvey Specter
                 <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
                   Novo
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Assistente jurídica inteligente que transforma dados em decisões estratégicas
+                Assistente jurídico inteligente que transforma dados em decisões estratégicas
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-foreground">
-            Mais do que responder perguntas, a Donn@ analisa informações em tempo real e apresenta insights claros sobre:
+            Mais do que responder perguntas, o Harvey Specter analisa informações em tempo real e apresenta insights claros sobre:
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <div className="p-2 bg-card rounded-lg border border-border">
