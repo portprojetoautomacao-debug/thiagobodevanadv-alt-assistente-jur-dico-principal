@@ -1,19 +1,16 @@
-import { addDays, isWeekend, format, parse, differenceInDays } from 'date-fns'
-import type { Feriado } from '@/types'
+import { addDays, isWeekend, format } from 'date-fns'
 import type { Feriado } from '@/types'
 
-  { data: '2025-04-21', nome: 'Tiradentes'
-  { data: '2025-06-19', nome: 'Corpus Christi', tipo: 'nacion
-  { data: '2025-10-12', nome: 'Nossa Senhora Aparecida', tipo
-  { data: '2025-11-15', nome: 'Proclamação da República', tipo: 'nacio
-  { data: '2025-12-25', nome: 'Natal', tipo: 'nacional' },
-
-  const dateStr = format(date, 'yyyy-MM-dd')
-}
-export function isDiaUtil(date: Date): boolean {
-}
-export function calcularPrazoCPC(dataInicio: Date, diasCorridos: number): Dat
-  let diasContados = 0
+const feriadosNacionais2025: Feriado[] = [
+  { data: '2025-01-01', nome: 'Ano Novo', tipo: 'nacional' },
+  { data: '2025-04-18', nome: 'Sexta-feira Santa', tipo: 'nacional' },
+  { data: '2025-04-21', nome: 'Tiradentes', tipo: 'nacional' },
+  { data: '2025-05-01', nome: 'Dia do Trabalho', tipo: 'nacional' },
+  { data: '2025-06-19', nome: 'Corpus Christi', tipo: 'nacional' },
+  { data: '2025-09-07', nome: 'Independência do Brasil', tipo: 'nacional' },
+  { data: '2025-10-12', nome: 'Nossa Senhora Aparecida', tipo: 'nacional' },
+  { data: '2025-11-02', nome: 'Finados', tipo: 'nacional' },
+  { data: '2025-11-15', nome: 'Proclamação da República', tipo: 'nacional' },
   { data: '2025-12-25', nome: 'Natal', tipo: 'nacional' },
 ]
 
@@ -30,8 +27,8 @@ export function calcularPrazoCPC(dataInicio: Date, diasCorridos: number): Date {
   let dataFinal = dataInicio
   let diasContados = 0
 
-
-  return dataFinal
+  while (diasContados < diasCorridos) {
+    dataFinal = addDays(dataFinal, 1)
     if (isDiaUtil(dataFinal)) {
       diasContados++
     }
@@ -42,75 +39,43 @@ export function calcularPrazoCPC(dataInicio: Date, diasCorridos: number): Date {
   }
 
   return dataFinal
- 
+}
 
 export function calcularPrazoCLT(dataInicio: Date, diasCorridos: number): Date {
   let dataFinal = addDays(dataInicio, diasCorridos)
 
   while (!isDiaUtil(dataFinal)) {
-export function formatarNumeroCNJ(num
+    dataFinal = addDays(dataFinal, 1)
   }
 
   return dataFinal
 }
 
-  hoje.setHours(0, 0, 0, 0)
+export function formatarNumeroCNJ(numero: string): string {
   const cleanNumber = numero.replace(/\D/g, '')
   
-  if (cleanNumber.length !== 20) return false
-}
+  if (cleanNumber.length !== 20) return numero
+
   const nnnnnnn = cleanNumber.slice(0, 7)
   const dd = cleanNumber.slice(7, 9)
   const aaaa = cleanNumber.slice(9, 13)
+  const j = cleanNumber.slice(13, 14)
+  const tr = cleanNumber.slice(14, 16)
+  const oooo = cleanNumber.slice(16, 20)
 
+  return `${nnnnnnn}-${dd}.${aaaa}.${j}.${tr}.${oooo}`
+}
 
+export function validarNumeroCNJ(numero: string): boolean {
+  const cleanNumber = numero.replace(/\D/g, '')
+  
+  if (cleanNumber.length !== 20) return false
 
+  const ano = parseInt(cleanNumber.slice(9, 13))
+  const hoje = new Date()
+  const anoAtual = hoje.getFullYear()
 
+  if (ano < 1900 || ano > anoAtual + 1) return false
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  return true
+}
