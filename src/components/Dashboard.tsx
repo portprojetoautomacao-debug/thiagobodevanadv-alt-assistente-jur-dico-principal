@@ -1,152 +1,107 @@
 import { useKV } from '@github/spark/hooks'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Process, Prazo } from '@/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  CheckCircle,
-  Clock,
-  Robot,
-  TrendUp,
-  FileText,
-  Warning,
-  CalendarDots
-} from '@phosphor-icons/react'
-import type { User, Process, Task, Appointment } from '@/types'
+import { Gavel, CalendarCheck, Clock, CheckCircle } from '@phosphor-icons/react'
+import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
+import { useMemo } from 'react'
 
 interface DashboardProps {
-  user: User
+  onNavigate: (view: string) => void
 }
 
-export default function Dashboard({ user }: DashboardProps) {
+export default function Dashboard({ onNavigate }: DashboardProps) {
   const [processes] = useKV<Process[]>('processes', [])
-  const [tasks] = useKV<Task[]>('tasks', [])
-  const [appointments] = useKV<Appointment[]>('appointments', [])
-  const [agents] = useKV<any[]>('agents', [])
 
-  const today = new Date().toISOString().split('T')[0]
+  const stats = useMemo(() => {
+    const ativos = processes.filter(p => p.status === 'ativo').length
+    const concluidos = processes.filter(p => p.status === 'concluido').length
+    
+    const todosPrazos = processes.flatMap(p => p.prazos || [])
+    const prazosPendentes = todosPrazos.filter(p => !p.concluido).length
+    const prazosUrgentes = todosPrazos.filter(p => {
+      if (p.concluido) return false
+      const dias = calcularDiasRestantes(p.dataFinal)
+      return isUrgente(dias)
+    }).length
 
-  const processStats = {
-    total: (processes || []).length,
-    emAndamento: (processes || []).filter(p => p.status === 'em-andamento').length,
-    concluido: (processes || []).filter(p => p.status === 'concluido').length,
-  }
+    return { ativos, concluidos, prazosPendentes, prazosUrgentes }
+  }, [processes])
 
-  const taskStats = {
-    total: (tasks || []).length,
-    completed: (tasks || []).filter(t => t.completed).length,
-    pending: (tasks || []).filter(t => !t.completed).length,
-  }
+  const prazosProximos = useMemo(() => {
+    const todosPrazos: (Prazo & { processoTitulo: string })[] = []
+    
+    processes.forEach(process => {
+      process.prazos?.forEach(prazo => {
+        if (!prazo.concluido) {
+          todosPrazos.push({
+            ...prazo,
+            processoTitulo: process.titulo
+          })
+        }
+      })
+    })
 
-  const completionRate = taskStats.total > 0
-    ? Math.round((taskStats.completed / taskStats.total) * 100)
-    : 0
+    return todosPrazos
+      .sort((a, b) => a.dataFinal.localeCompare(b.dataFinal))
+      .slice(0, 5)
+  }, [processes])
 
-  const activeAgents = (agents || []).filter(a => a.enabled).length
-
-  const urgentTasks = (tasks || []).filter(t => !t.completed && t.priority === 'urgent')
-  
-  const todayAppointments = (appointments || []).filter(a => a.date === today)
+  const processosRecentes = useMemo(() => {
+    return [...processes]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5)
+  }, [processes])
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold">
-          Bem-vindo, {user.name}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Aqui está um resumo das suas atividades
-        </p>
+    <div className="flex flex-col gap-8 p-4 md:p-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Visão geral dos seus processos e prazos</p>
       </div>
 
-      <Card className="border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Robot className="w-6 h-6 text-white" weight="fill" />
-            </div>
-            <div className="flex-1">
-              <CardTitle className="flex items-center gap-2">
-                Conheça o Harvey Specter
-                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-                  Novo
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                Assistente jurídico inteligente que transforma dados em decisões estratégicas
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-foreground">
-            Mais do que responder perguntas, o Harvey Specter analisa informações em tempo real e apresenta insights claros sobre:
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <div className="p-2 bg-card rounded-lg border border-border">
-              <p className="text-xs font-medium">📊 Relatórios</p>
-            </div>
-            <div className="p-2 bg-card rounded-lg border border-border">
-              <p className="text-xs font-medium">⚖️ Processos</p>
-            </div>
-            <div className="p-2 bg-card rounded-lg border border-border">
-              <p className="text-xs font-medium">💰 Financeiro</p>
-            </div>
-            <div className="p-2 bg-card rounded-lg border border-border">
-              <p className="text-xs font-medium">📅 Prazos</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processos em Andamento</CardTitle>
-            <FileText className="w-4 h-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Processos Ativos</CardTitle>
+            <Gavel className="text-primary" size={20} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{processStats.emAndamento}</div>
-            <p className="text-xs text-muted-foreground">
-              {processStats.total} processos totais
-            </p>
+            <div className="text-3xl font-bold">{stats.ativos}</div>
+            <p className="text-xs text-muted-foreground mt-1">Em andamento</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tarefas Pendentes</CardTitle>
-            <Clock className="w-4 h-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Prazos Pendentes</CardTitle>
+            <Clock className="text-primary" size={20} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{taskStats.pending}</div>
-            <p className="text-xs text-muted-foreground">
-              {completionRate}% concluídas
-            </p>
+            <div className="text-3xl font-bold">{stats.prazosPendentes}</div>
+            <p className="text-xs text-muted-foreground mt-1">Aguardando cumprimento</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
-            <Robot className="w-4 h-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Prazos Urgentes</CardTitle>
+            <CalendarCheck className="text-accent" size={20} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeAgents}</div>
-            <p className="text-xs text-muted-foreground">
-              de {(agents || []).length} agentes
-            </p>
+            <div className="text-3xl font-bold text-accent">{stats.prazosUrgentes}</div>
+            <p className="text-xs text-muted-foreground mt-1">Nos próximos 3 dias</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Produtividade</CardTitle>
-            <TrendUp className="w-4 h-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
+            <CheckCircle className="text-primary" size={20} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completionRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              Taxa de conclusão
-            </p>
+            <div className="text-3xl font-bold">{stats.concluidos}</div>
+            <p className="text-xs text-muted-foreground mt-1">Processos finalizados</p>
           </CardContent>
         </Card>
       </div>
@@ -154,34 +109,30 @@ export default function Dashboard({ user }: DashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Warning className="w-5 h-5 text-destructive" />
-              Tarefas Urgentes
-            </CardTitle>
-            <CardDescription>
-              {urgentTasks.length} tarefas de alta prioridade
-            </CardDescription>
+            <CardTitle>Prazos Próximos</CardTitle>
           </CardHeader>
           <CardContent>
-            {urgentTasks.length === 0 ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Nenhuma tarefa urgente</span>
-              </div>
+            {prazosProximos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum prazo pendente</p>
             ) : (
-              <div className="space-y-3">
-                {urgentTasks.slice(0, 5).map((task) => (
-                  <div key={task.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent transition-colors">
-                    <Clock className="w-5 h-5 text-destructive mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{task.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {task.dueDate ? `Vence em ${new Date(task.dueDate).toLocaleDateString('pt-BR')}` : 'Sem prazo definido'}
-                      </p>
+              <div className="flex flex-col gap-3">
+                {prazosProximos.map(prazo => {
+                  const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
+                  const urgente = isUrgente(diasRestantes)
+
+                  return (
+                    <div key={prazo.id} className="flex items-start justify-between gap-3 pb-3 border-b last:border-0">
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{prazo.descricao}</p>
+                        <p className="text-xs text-muted-foreground truncate">{prazo.processoTitulo}</p>
+                        <p className="text-xs text-muted-foreground">{formatarData(prazo.dataFinal)}</p>
+                      </div>
+                      <Badge variant={urgente ? 'destructive' : 'secondary'} className="shrink-0">
+                        {diasRestantes === 0 ? 'Hoje' : diasRestantes === 1 ? 'Amanhã' : `${diasRestantes}d`}
+                      </Badge>
                     </div>
-                    <Badge variant="destructive">Urgente</Badge>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </CardContent>
@@ -189,32 +140,38 @@ export default function Dashboard({ user }: DashboardProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarDots className="w-5 h-5 text-primary" />
-              Compromissos de Hoje
-            </CardTitle>
-            <CardDescription>
-              {todayAppointments.length} compromissos agendados
-            </CardDescription>
+            <CardTitle>Processos Recentes</CardTitle>
           </CardHeader>
           <CardContent>
-            {todayAppointments.length === 0 ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm">Nenhum compromisso hoje</span>
+            {processosRecentes.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground mb-4">Nenhum processo cadastrado</p>
+                <button
+                  onClick={() => onNavigate('processos')}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Adicionar primeiro processo
+                </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {todayAppointments.slice(0, 5).map((appointment) => (
-                  <div key={appointment.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent transition-colors">
-                    <CalendarDots className="w-5 h-5 text-primary mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{appointment.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {appointment.time} {appointment.location && `- ${appointment.location}`}
-                      </p>
+              <div className="flex flex-col gap-3">
+                {processosRecentes.map(process => (
+                  <div
+                    key={process.id}
+                    className="flex items-start justify-between gap-3 pb-3 border-b last:border-0 cursor-pointer hover:bg-muted/50 -mx-3 px-3 py-2 rounded transition-colors"
+                    onClick={() => onNavigate('processos')}
+                  >
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{process.titulo}</p>
+                      <p className="text-xs text-muted-foreground truncate">{process.numeroCNJ}</p>
+                      <p className="text-xs text-muted-foreground">{process.autor} × {process.reu}</p>
                     </div>
-                    <Badge>{appointment.type}</Badge>
+                    <Badge variant={
+                      process.status === 'ativo' ? 'default' :
+                      process.status === 'concluido' ? 'secondary' : 'outline'
+                    }>
+                      {process.status}
+                    </Badge>
                   </div>
                 ))}
               </div>
