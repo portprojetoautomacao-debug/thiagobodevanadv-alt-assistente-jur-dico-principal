@@ -83,12 +83,12 @@ export class AgentTaskGenerator {
       if (templates && templates.length > 0) {
         const template = templates[Math.floor(Math.random() * templates.length)]
         
-        createAgentTask({
-          agentId: randomAgentId,
-          type: template.type,
-          priority: template.priority,
-          description: `Auto-generated task for ${randomAgentId}`,
-        })
+        createAgentTask(
+          randomAgentId,
+          template.type,
+          { description: `Auto-generated task for ${randomAgentId}` },
+          template.priority
+        )
       }
     }
   }
@@ -109,3 +109,7 @@ export class AgentTaskGenerator {
 }
 
 export const taskGenerator = new AgentTaskGenerator()
+
+export function createTaskGenerator(config?: Partial<TaskGeneratorConfig>): AgentTaskGenerator {
+  return new AgentTaskGenerator(config)
+}
