@@ -231,33 +231,33 @@ export default function ProcessCRM() {
           <Card key={process.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base line-clamp-2">{process.title}</CardTitle>
-                <Badge className={STATUS_COLORS[process.status]}>
-                  {process.status.replace('-', ' ')}
+                <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>
+                <Badge className={STATUS_COLORS[process.status] || 'bg-gray-100 text-gray-800 border-gray-300'}>
+                  {process.status}
                 </Badge>
               </div>
-              <CardDescription className="text-xs">{process.cnj}</CardDescription>
+              <CardDescription className="text-xs">{process.numeroCNJ}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Autor:</p>
-                <p className="font-medium line-clamp-1">{process.parties.plaintiff || '-'}</p>
+                <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Réu:</p>
-                <p className="font-medium line-clamp-1">{process.parties.defendant || '-'}</p>
+                <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Fase:</p>
-                <Badge variant="outline">{process.stage}</Badge>
+                <Badge variant="outline">{(process as any).fase || 'N/A'}</Badge>
               </div>
               <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="aguardando">Aguardando</SelectItem>
-                  <SelectItem value="em-andamento">Em Andamento</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="suspenso">Suspenso</SelectItem>
                   <SelectItem value="concluido">Concluído</SelectItem>
                   <SelectItem value="arquivado">Arquivado</SelectItem>
                 </SelectContent>
