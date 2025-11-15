@@ -1,16 +1,15 @@
 import { useKV } from '@github/spark/hooks'
-import { Card, CardContent, CardDescription, Ca
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-  CheckCircle,
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   CheckCircle,
   Clock,
   Robot,
   FileText,
   TrendUp,
-  AlertCircle,
-  user
+  Warning,
+  ArrowRight
 } from '@phosphor-icons/react'
 import type { User, Task, Process, Appointment } from '@/types'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
@@ -26,10 +25,8 @@ export default function Dashboard({ user }: DashboardProps) {
   const { agents, activityLog } = useAutonomousAgents()
 
   const urgentTasks = (tasks || []).filter(t => !t.completed && t.priority === 'high')
-    completed: (tasks || []).filter(t => t.completed).length,
-    const today = new Date().toLocaleDateString('pt-BR')
-
-  })
+  const today = new Date().toLocaleDateString('pt-BR')
+  const todayAppointments = (appointments || []).filter(a => a.date === today)
 
   const processStats = {
     emAndamento: (processes || []).filter(p => p.status === 'em-andamento').length,
@@ -40,101 +37,103 @@ export default function Dashboard({ user }: DashboardProps) {
 
   const taskStats = {
     pending: (tasks || []).filter(t => !t.completed).length,
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid
+    completed: (tasks || []).filter(t => t.completed).length,
     total: (tasks || []).length
-   
+  }
 
-          <CardContent>
-    ? Math.round((taskStats.completed / taskStats.total) * 100) 
-       
+  const completionRate = taskStats.total > 0
+    ? Math.round((taskStats.completed / taskStats.total) * 100)
+    : 0
 
   const activeAgents = (agents || []).filter(a => a.enabled).length
 
   return (
     <div className="p-6 space-y-6">
-          <
+      <div>
         <h1 className="text-3xl font-bold">
-            <p className="text-x
+          Bem-vindo, {user.name}
         </h1>
-          </CardContent>
+        <p className="text-muted-foreground mt-1">
           Aqui está um resumo das suas atividades
-        <Car
-            
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Processos em Andamento</CardTitle>
             <FileText className="w-4 h-4 text-muted-foreground" />
-                    <Wa
-                      <
-                        <p className="text-xs text-muted-foreground mt-1">
-                        </p>
-                    </div>
-                
-                  </div>
-              <
-
-
-          <CardHeader>
-              <Robot className="w-5 h-5" />
-            </CardTitle>
-              {activeAg
           </CardHeader>
-            <div className="space-y-3">
-                <div key={agent.id} className="flex items-cent
-                    <div className={`w-2 h-2 r
-                
-                    </di
-               
-
-              
+          <CardContent>
+            <div className="text-2xl font-bold">{processStats.emAndamento}</div>
+            <p className="text-xs text-muted-foreground">
+              {processStats.total} processos totais
+            </p>
           </CardContent>
-      </div>
-      <div className="grid grid-cols-1 gap-6">
-          <CardHeader>
-              <Clock cl
-            </CardTitle>
-              {todayAppointments.length} agendados
-          </CardHeader>
-            {tod
-                <CheckCi
-              <
-
-              
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground mt-1">
-                      </p>
-                    <Ba
-                ))}
-            )}
         </Card>
-    </div>
-}
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tarefas Pendentes</CardTitle>
+            <Clock className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{taskStats.pending}</div>
+            <p className="text-xs text-muted-foreground">
+              {completionRate}% concluídas
+            </p>
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
+            <Robot className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeAgents}</div>
+            <p className="text-xs text-muted-foreground">
+              de {(agents || []).length} agentes
+            </p>
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Produtividade</CardTitle>
+            <TrendUp className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{completionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Taxa de conclusão
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Warning className="w-5 h-5 text-destructive" />
+              Tarefas Urgentes
+            </CardTitle>
+            <CardDescription>
+              {urgentTasks.length} tarefas de alta prioridade
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {urgentTasks.length === 0 ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">Nenhuma tarefa urgente</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {urgentTasks.slice(0, 5).map((task) => (
+                  <div key={task.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent transition-colors">
+                    <Warning className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{task.title}</p>
                       {task.dueDate && (
@@ -156,7 +155,7 @@ export default function Dashboard({ user }: DashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bot className="w-5 h-5" />
+              <Robot className="w-5 h-5" />
               Status dos Agentes IA
             </CardTitle>
             <CardDescription>
