@@ -60,19 +60,19 @@ export default function DataManager({ currentProcesses, onAddProcesses, onClearA
 
     setLoading(true)
     try {
-      toast.info('Gerando processos com IA...')
+      toast.info(`Gerando ${count} processos com IA... Aguarde de 10 a 30 segundos.`)
       const processes = await generateRealisticProcesses(count)
       
       if (processes.length === 0) {
-        toast.error('Nenhum processo foi gerado')
+        toast.error('Nenhum processo foi gerado. Tente novamente.')
         return
       }
 
       onAddProcesses(processes)
-      toast.success(`${processes.length} processos gerados e adicionados!`)
+      toast.success(`${processes.length} processos jurídicos realistas adicionados! ✨`)
       setOpen(false)
     } catch (error) {
-      toast.error('Erro ao gerar dados. Tente novamente.')
+      toast.error('Erro ao gerar dados. Verifique sua conexão e tente novamente.')
       console.error(error)
     } finally {
       setLoading(false)
@@ -125,7 +125,7 @@ export default function DataManager({ currentProcesses, onAddProcesses, onClearA
                   )}
                   <div className="text-left">
                     <p className="font-semibold">Dados de Exemplo</p>
-                    <p className="text-xs text-muted-foreground">5 processos pré-configurados</p>
+                    <p className="text-xs text-muted-foreground">10 processos pré-configurados</p>
                   </div>
                 </Button>
 
@@ -134,11 +134,11 @@ export default function DataManager({ currentProcesses, onAddProcesses, onClearA
                     <Sparkle size={24} className="text-primary" weight="fill" />
                     <div>
                       <p className="font-semibold text-sm">Gerar com IA</p>
-                      <p className="text-xs text-muted-foreground">Processos realistas</p>
+                      <p className="text-xs text-muted-foreground">Dados realistas e únicos</p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="count-modal" className="text-xs">Quantidade</Label>
+                    <Label htmlFor="count-modal" className="text-xs">Quantidade (1-50)</Label>
                     <Input
                       id="count-modal"
                       type="number"
@@ -148,6 +148,7 @@ export default function DataManager({ currentProcesses, onAddProcesses, onClearA
                       onChange={(e) => setCount(parseInt(e.target.value) || 10)}
                       disabled={loading}
                       className="h-8"
+                      placeholder="Ex: 10"
                     />
                   </div>
                   <Button
@@ -161,7 +162,7 @@ export default function DataManager({ currentProcesses, onAddProcesses, onClearA
                         Gerando...
                       </>
                     ) : (
-                      'Gerar'
+                      'Gerar Processos'
                     )}
                   </Button>
                 </div>
