@@ -57,4 +57,4 @@ export interface PremonicaoJuridica {
   }[]
 }
 
-export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente'
+export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes'

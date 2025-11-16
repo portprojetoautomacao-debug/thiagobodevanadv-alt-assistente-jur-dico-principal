@@ -9,13 +9,15 @@ import {
   CalendarCheck, 
   Calculator, 
   ChatCircle,
-  Clock 
+  Clock,
+  Robot
 } from '@phosphor-icons/react'
 import Dashboard from '@/components/Dashboard'
 import ProcessosView from '@/components/ProcessosView'
 import PrazosView from '@/components/PrazosView'
 import CalculadoraPrazos from '@/components/CalculadoraPrazos'
 import AssistenteIA from '@/components/AssistenteIA'
+import AIAgents from '@/components/AIAgents'
 import type { ViewType, Process } from '@/types'
 import { SAMPLE_PROCESSES } from '@/lib/sample-data'
 
@@ -35,6 +37,7 @@ function App() {
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
     { id: 'calculadora' as ViewType, label: 'Calculadora', icon: Calculator },
     { id: 'assistente' as ViewType, label: 'Assistente IA', icon: ChatCircle },
+    { id: 'agentes' as ViewType, label: 'Agentes IA', icon: Robot },
   ]
 
   const renderView = () => {
@@ -49,6 +52,8 @@ function App() {
         return <CalculadoraPrazos />
       case 'assistente':
         return <AssistenteIA />
+      case 'agentes':
+        return <AIAgents />
       default:
         return <Dashboard onNavigate={setCurrentView} />
     }

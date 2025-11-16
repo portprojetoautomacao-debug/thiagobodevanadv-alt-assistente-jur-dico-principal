@@ -33,14 +33,19 @@ const taskTemplates = {
   'file-organizer': [
     { type: 'organize_files' as const, priority: 'low' as const },
   ],
+  'mrs-justin-e': [
+    { type: 'analyze_document' as const, priority: 'high' as const },
+  ],
 }
 
 export class AgentTaskGenerator {
   private config: TaskGeneratorConfig
   private intervalId: NodeJS.Timeout | null = null
+  private onTaskGenerated?: (task: AgentTask) => void
 
-  constructor(config?: Partial<TaskGeneratorConfig>) {
+  constructor(config?: Partial<TaskGeneratorConfig>, onTaskGenerated?: (task: AgentTask) => void) {
     this.config = { ...defaultConfig, ...config }
+    this.onTaskGenerated = onTaskGenerated
   }
 
   public start() {
@@ -83,14 +88,25 @@ export class AgentTaskGenerator {
       if (templates && templates.length > 0) {
         const template = templates[Math.floor(Math.random() * templates.length)]
         
-        createAgentTask(
+        const task = createAgentTask(
           randomAgentId,
           template.type,
-          { description: `Auto-generated task for ${randomAgentId}` },
+          { 
+            description: `Auto-generated task for ${randomAgentId}`,
+            generatedAt: new Date().toISOString()
+          },
           template.priority
         )
+
+        if (this.onTaskGenerated) {
+          this.onTaskGenerated(task)
+        }
       }
     }
+  }
+
+  public setOnTaskGenerated(callback: (task: AgentTask) => void) {
+    this.onTaskGenerated = callback
   }
 
   public updateConfig(config: Partial<TaskGeneratorConfig>) {
@@ -110,6 +126,6 @@ export class AgentTaskGenerator {
 
 export const taskGenerator = new AgentTaskGenerator()
 
-export function createTaskGenerator(config?: Partial<TaskGeneratorConfig>): AgentTaskGenerator {
-  return new AgentTaskGenerator(config)
+export function createTaskGenerator(config?: Partial<TaskGeneratorConfig>, onTaskGenerated?: (task: AgentTask) => void): AgentTaskGenerator {
+  return new AgentTaskGenerator(config, onTaskGenerated)
 }

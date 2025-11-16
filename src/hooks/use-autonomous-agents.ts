@@ -262,6 +262,12 @@ export function useAutonomousAgents() {
         intervalMinutes: 3,
         maxTasksPerInterval: 2,
         agentIds: enabledAgentIds
+      }, (task) => {
+        addTask(task)
+        const agent = agents.find(a => a.id === task.agentId)
+        if (agent) {
+          logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
+        }
       })
 
       if (autoGenerateEnabled) {
@@ -282,12 +288,20 @@ export function useAutonomousAgents() {
     if (taskGeneratorRef.current && agents) {
       const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
       
+      taskGeneratorRef.current.setOnTaskGenerated((task) => {
+        addTask(task)
+        const agent = agents.find(a => a.id === task.agentId)
+        if (agent) {
+          logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
+        }
+      })
+      
       taskGeneratorRef.current.updateConfig({
         enabled: autoGenerateEnabled,
         agentIds: enabledAgentIds
       })
     }
-  }, [agents, autoGenerateEnabled])
+  }, [agents, autoGenerateEnabled, addTask, logActivity])
 
   return {
     agents: agents || [],
