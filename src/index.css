@@ -8,8 +8,8 @@
 }
 
 :root {
-  --font-sans: Barlow;
-  --font-mono: Fira Code;
+  --font-sans: IBM Plex Sans;
+  --font-mono: IBM Plex Mono;
 
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.15 0 0);
@@ -31,7 +31,7 @@
   --input: oklch(0.92 0.005 264.05);
   --ring: oklch(0.51 0.182 264.05);
   --radius: 0.625rem;
-  --font-serif: "Alegreya";
+  --font-serif: IBM Plex Serif;
 }
 
 @theme {

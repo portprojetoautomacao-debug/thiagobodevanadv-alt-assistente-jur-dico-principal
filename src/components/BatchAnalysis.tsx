@@ -54,10 +54,17 @@ export default function BatchAnalysis() {
       const newExpedientes: Expediente[] = mockData.map((data) => ({
         id: crypto.randomUUID(),
         processId: data.cnj,
+        tipo: data.type.includes('Intimação') ? 'intimacao' : data.type.includes('Citação') ? 'citacao' : 'outro',
+        titulo: data.type,
         type: data.type,
+        conteudo: inputText,
         content: inputText,
+        dataRecebimento: new Date().toISOString(),
         receivedAt: new Date().toISOString(),
+        prazoFatal: data.deadline.split(' - ')[1],
         deadline: data.deadline.split(' - ')[1],
+        lido: false,
+        arquivado: false,
         analyzed: false
       }))
 

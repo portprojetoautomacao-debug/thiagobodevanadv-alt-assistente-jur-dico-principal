@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { 
   ChartPieSlice,
   Gavel, 
@@ -28,18 +26,10 @@ import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
-import type { ViewType, Process } from '@/types'
-import { SAMPLE_PROCESSES } from '@/lib/sample-data'
+import type { ViewType } from '@/types'
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
-  const [processes, setProcesses] = useKV<Process[]>('processes', [])
-
-  useEffect(() => {
-    if ((processes || []).length === 0) {
-      setProcesses(SAMPLE_PROCESSES)
-    }
-  }, [])
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },

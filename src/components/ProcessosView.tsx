@@ -16,7 +16,7 @@ export default function ProcessosView() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null)
 
-  const filteredProcesses = processes.filter(p => 
+  const filteredProcesses = (processes || []).filter(p => 
     p.titulo.toLowerCase().includes(search.toLowerCase()) ||
     p.numeroCNJ.includes(search) ||
     p.autor.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,7 +34,7 @@ export default function ProcessosView() {
   }
 
   const handleDelete = (processId: string) => {
-    setProcesses(current => current.filter(p => p.id !== processId))
+    setProcesses(current => (current || []).filter(p => p.id !== processId))
     setDetailsOpen(false)
     setSelectedProcess(null)
   }
@@ -149,9 +149,9 @@ export default function ProcessosView() {
         process={selectedProcess}
         onSave={(process) => {
           if (selectedProcess) {
-            setProcesses(current => current.map(p => p.id === process.id ? process : p))
+            setProcesses(current => (current || []).map(p => p.id === process.id ? process : p))
           } else {
-            setProcesses(current => [...current, process])
+            setProcesses(current => [...(current || []), process])
           }
           setDialogOpen(false)
           setSelectedProcess(null)
