@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
+import DataInitializer from '@/components/DataInitializer'
+import DataManager from '@/components/DataManager'
 import { 
   Gavel, 
   CheckCircle, 
@@ -19,7 +21,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const [processes] = useKV<Process[]>('processes', [])
+  const [processes, setProcesses] = useKV<Process[]>('processes', [])
 
   const stats = useMemo(() => {
     const processesList = processes || []
@@ -84,11 +86,36 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       .slice(0, 5)
   }, [processes])
 
+  const handleDataGenerated = (generatedProcesses: Process[]) => {
+    setProcesses(generatedProcesses)
+  }
+
+  const handleAddProcesses = (newProcesses: Process[]) => {
+    setProcesses(current => [...(current || []), ...newProcesses])
+  }
+
+  const handleClearAll = () => {
+    setProcesses([])
+  }
+
+  if (!processes || processes.length === 0) {
+    return <DataInitializer onDataGenerated={handleDataGenerated} />
+  }
+
   return (
     <div className="p-4 lg:p-8 flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
+          </div>
+          <DataManager 
+            currentProcesses={processes}
+            onAddProcesses={handleAddProcesses}
+            onClearAll={handleClearAll}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
