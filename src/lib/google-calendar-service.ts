@@ -1,9 +1,6 @@
 // Google Calendar Service
 // Provides integration with Google Calendar API
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
-const SCOPES = 'https://www.googleapis.com/auth/calendar'
 import { Appointment } from '@/types'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -13,16 +10,12 @@ const CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 interface GoogleAuthResponse {
   access_token: string
   expires_in: number
+  token_type: string
   error?: string
 }
 
 interface GoogleCalendarEvent {
   id?: string
-  token_type: string
-  error?: string
-}
-
-interface CalendarEvent {
   summary: string
   description?: string
   location?: string
@@ -55,16 +48,11 @@ class GoogleCalendarService {
       return
     }
 
-    await this.loadScripts()
-    if (this.gapiInited && this.gisInited) return
-
     await this.loadGoogleScripts()
     await this.initializeGapi()
     this.initializeGis()
   }
 
-  private loadScripts(): Promise<void> {
-    return new Promise((resolve, reject) => {
   private loadGoogleScripts(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (document.querySelector('script[src*="apis.google.com"]')) {
@@ -106,7 +94,6 @@ class GoogleCalendarService {
   private initializeGis(): void {
     this.tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
       scope: CALENDAR_SCOPES,
       callback: '',
     })
@@ -159,12 +146,6 @@ class GoogleCalendarService {
     }
   }
 
-  async createEvent(event: GoogleCalendarEvent): Promise<GoogleCalendarEvent | null> {
-    try {
-  isAuthenticated(): boolean {
-    return this.accessToken !== null
-  }
-
   async createEvent(appointment: Appointment): Promise<string | null> {
     if (!this.accessToken) {
       const authenticated = await this.authenticate()
@@ -175,7 +156,7 @@ class GoogleCalendarService {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
       const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000)
 
-      const event: CalendarEvent = {
+      const event: GoogleCalendarEvent = {
         summary: appointment.title,
         description: appointment.description || '',
         location: appointment.location || '',
@@ -200,9 +181,6 @@ class GoogleCalendarService {
         calendarId: 'primary',
         resource: event,
       })
-      return response.result
-    } catch (error) {
-      console.error('Error creating calendar event:', error)
 
       return response.result.id
     } catch (error) {
@@ -211,9 +189,6 @@ class GoogleCalendarService {
     }
   }
 
-  async updateEvent(eventId: string, event: GoogleCalendarEvent): Promise<GoogleCalendarEvent | null> {
-    try {
-      const response = await (window as any).gapi.client.calendar.events.update({
   async updateEvent(eventId: string, appointment: Appointment): Promise<boolean> {
     if (!this.accessToken) {
       const authenticated = await this.authenticate()
@@ -224,7 +199,7 @@ class GoogleCalendarService {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
       const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000)
 
-      const event: CalendarEvent = {
+      const event: GoogleCalendarEvent = {
         summary: appointment.title,
         description: appointment.description || '',
         location: appointment.location || '',
@@ -250,10 +225,6 @@ class GoogleCalendarService {
         eventId: eventId,
         resource: event,
       })
-      return response.result
-    } catch (error) {
-      console.error('Error updating calendar event:', error)
-      return null
 
       return true
     } catch (error) {
@@ -273,9 +244,6 @@ class GoogleCalendarService {
         calendarId: 'primary',
         eventId: eventId,
       })
-      return true
-    } catch (error) {
-      console.error('Error deleting calendar event:', error)
 
       return true
     } catch (error) {
@@ -297,6 +265,8 @@ class GoogleCalendarService {
 
   openGoogleCalendar(): void {
     window.open('https://calendar.google.com', '_blank')
+  }
+
   logout(): void {
     this.accessToken = null
   }
