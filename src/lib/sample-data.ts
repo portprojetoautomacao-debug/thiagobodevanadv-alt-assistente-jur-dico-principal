@@ -1,4 +1,7 @@
 import type { Process } from '@/types'
+import { addDays, format } from 'date-fns'
+
+const hoje = new Date()
 
 export const SAMPLE_PROCESSES: Process[] = [
   {
@@ -12,11 +15,36 @@ export const SAMPLE_PROCESSES: Process[] = [
     status: 'ativo',
     valor: 50000.00,
     dataDistribuicao: '2024-01-15',
-    dataUltimaMovimentacao: '2024-11-10T14:30:00.000Z',
+    dataUltimaMovimentacao: new Date().toISOString(),
     notas: 'Processo em fase de instrução. Aguardando produção de provas.',
-    prazos: [],
+    prazos: [
+      {
+        id: 'prazo-1',
+        processId: 'sample-1',
+        descricao: 'Apresentar contestação',
+        dataInicio: format(addDays(hoje, -10), 'yyyy-MM-dd'),
+        diasCorridos: 15,
+        tipoPrazo: 'cpc',
+        dataFinal: format(addDays(hoje, 3), 'yyyy-MM-dd'),
+        concluido: false,
+        urgente: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'prazo-2',
+        processId: 'sample-1',
+        descricao: 'Protocolar recurso de apelação',
+        dataInicio: format(addDays(hoje, 5), 'yyyy-MM-dd'),
+        diasCorridos: 15,
+        tipoPrazo: 'cpc',
+        dataFinal: format(addDays(hoje, 20), 'yyyy-MM-dd'),
+        concluido: false,
+        urgente: false,
+        createdAt: new Date().toISOString()
+      }
+    ],
     createdAt: '2024-01-15T10:00:00.000Z',
-    updatedAt: '2024-11-10T14:30:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'sample-2',
@@ -29,11 +57,24 @@ export const SAMPLE_PROCESSES: Process[] = [
     status: 'ativo',
     valor: 25000.00,
     dataDistribuicao: '2024-02-20',
-    dataUltimaMovimentacao: '2024-11-12T16:45:00.000Z',
+    dataUltimaMovimentacao: new Date().toISOString(),
     notas: 'Reclamação trabalhista por horas extras não pagas.',
-    prazos: [],
+    prazos: [
+      {
+        id: 'prazo-3',
+        processId: 'sample-2',
+        descricao: 'Responder petição inicial',
+        dataInicio: format(addDays(hoje, -5), 'yyyy-MM-dd'),
+        diasCorridos: 5,
+        tipoPrazo: 'clt',
+        dataFinal: format(hoje, 'yyyy-MM-dd'),
+        concluido: false,
+        urgente: true,
+        createdAt: new Date().toISOString()
+      }
+    ],
     createdAt: '2024-02-20T09:00:00.000Z',
-    updatedAt: '2024-11-12T16:45:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'sample-3',
@@ -46,11 +87,24 @@ export const SAMPLE_PROCESSES: Process[] = [
     status: 'suspenso',
     valor: 15000.00,
     dataDistribuicao: '2024-03-10',
-    dataUltimaMovimentacao: '2024-11-08T10:20:00.000Z',
+    dataUltimaMovimentacao: new Date().toISOString(),
     notas: 'Aguardando sentença do juiz.',
-    prazos: [],
+    prazos: [
+      {
+        id: 'prazo-4',
+        processId: 'sample-3',
+        descricao: 'Apresentar memoriais finais',
+        dataInicio: format(addDays(hoje, -30), 'yyyy-MM-dd'),
+        diasCorridos: 10,
+        tipoPrazo: 'cpc',
+        dataFinal: format(addDays(hoje, -20), 'yyyy-MM-dd'),
+        concluido: true,
+        urgente: false,
+        createdAt: new Date().toISOString()
+      }
+    ],
     createdAt: '2024-03-10T11:00:00.000Z',
-    updatedAt: '2024-11-08T10:20:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'sample-4',
@@ -63,11 +117,24 @@ export const SAMPLE_PROCESSES: Process[] = [
     status: 'ativo',
     valor: 100000.00,
     dataDistribuicao: '2023-06-15',
-    dataUltimaMovimentacao: '2024-11-05T09:15:00.000Z',
+    dataUltimaMovimentacao: new Date().toISOString(),
     notas: 'Processo em fase recursal. Recurso de apelação em análise.',
-    prazos: [],
+    prazos: [
+      {
+        id: 'prazo-5',
+        processId: 'sample-4',
+        descricao: 'Apresentar contrarrazões de apelação',
+        dataInicio: format(addDays(hoje, 2), 'yyyy-MM-dd'),
+        diasCorridos: 15,
+        tipoPrazo: 'cpc',
+        dataFinal: format(addDays(hoje, 17), 'yyyy-MM-dd'),
+        concluido: false,
+        urgente: false,
+        createdAt: new Date().toISOString()
+      }
+    ],
     createdAt: '2023-06-15T14:00:00.000Z',
-    updatedAt: '2024-11-05T09:15:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'sample-5',
@@ -79,26 +146,23 @@ export const SAMPLE_PROCESSES: Process[] = [
     vara: 'Vara de Família',
     status: 'concluido',
     dataDistribuicao: '2024-01-05',
-    dataUltimaMovimentacao: '2024-10-30T17:00:00.000Z',
+    dataUltimaMovimentacao: new Date().toISOString(),
     notas: 'Divórcio homologado com partilha de bens realizada.',
-    prazos: [],
+    prazos: [
+      {
+        id: 'prazo-6',
+        processId: 'sample-5',
+        descricao: 'Apresentar documentação patrimonial',
+        dataInicio: format(addDays(hoje, -60), 'yyyy-MM-dd'),
+        diasCorridos: 10,
+        tipoPrazo: 'cpc',
+        dataFinal: format(addDays(hoje, -50), 'yyyy-MM-dd'),
+        concluido: true,
+        urgente: false,
+        createdAt: new Date().toISOString()
+      }
+    ],
     createdAt: '2024-01-05T08:00:00.000Z',
-    updatedAt: '2024-10-30T17:00:00.000Z',
+    updatedAt: new Date().toISOString(),
   },
 ]
-
-export async function initializeSampleData() {
-  try {
-    const existingProcesses = await spark.kv.get<Process[]>('processes')
-    
-    if (!existingProcesses || existingProcesses.length === 0) {
-      await spark.kv.set('processes', SAMPLE_PROCESSES)
-      return true
-    }
-    
-    return false
-  } catch (error) {
-    console.error('Error initializing sample data:', error)
-    return false
-  }
-}

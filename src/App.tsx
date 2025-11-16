@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -15,10 +16,18 @@ import ProcessosView from '@/components/ProcessosView'
 import PrazosView from '@/components/PrazosView'
 import CalculadoraPrazos from '@/components/CalculadoraPrazos'
 import AssistenteIA from '@/components/AssistenteIA'
-import type { ViewType } from '@/types'
+import type { ViewType, Process } from '@/types'
+import { SAMPLE_PROCESSES } from '@/lib/sample-data'
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
+  const [processes, setProcesses] = useKV<Process[]>('processes', [])
+
+  useEffect(() => {
+    if (processes.length === 0) {
+      setProcesses(SAMPLE_PROCESSES)
+    }
+  }, [])
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
