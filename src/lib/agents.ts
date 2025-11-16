@@ -1,7 +1,7 @@
 export interface AgentTask {
   id: string
   agentId: string
-  type: 'analyze_document' | 'monitor_djen' | 'calculate_deadline' | 'draft_petition' | 'check_datajud' | 'organize_files'
+  type: 'analyze_document' | 'monitor_djen' | 'calculate_deadline' | 'draft_petition' | 'check_datajud' | 'organize_files' | 'research_precedents' | 'risk_analysis' | 'contract_review' | 'client_communication' | 'billing_analysis' | 'case_strategy' | 'legal_translation' | 'compliance_check'
   priority: 'low' | 'medium' | 'high' | 'critical'
   status: 'queued' | 'processing' | 'completed' | 'failed' | 'human_intervention'
   createdAt: string
@@ -18,7 +18,7 @@ export interface Agent {
   id: string
   name: string
   description: string
-  type: 'analyzer' | 'monitor' | 'calculator' | 'writer' | 'organizer' | 'researcher' | 'strategic'
+  type: 'analyzer' | 'monitor' | 'calculator' | 'writer' | 'organizer' | 'researcher' | 'strategic' | 'compliance' | 'translator' | 'communicator'
   status: 'active' | 'idle' | 'processing' | 'paused' | 'waiting_human'
   enabled: boolean
   lastActivity: string
@@ -90,6 +90,30 @@ export const agentActivities = {
     'Identificando gargalos operacionais',
     'Sugerindo otimizações de processo',
   ],
+  compliance: [
+    'Verificando conformidade regulatória',
+    'Auditando procedimentos internos',
+    'Validando cláusulas contratuais',
+    'Checando prazos prescriptionais',
+    'Identificando riscos legais',
+    'Monitorando mudanças legislativas',
+  ],
+  translator: [
+    'Traduzindo documentos jurídicos',
+    'Adaptando termos técnicos',
+    'Convertendo jargão legal',
+    'Simplificando linguagem para clientes',
+    'Padronizando terminologia',
+    'Criando glossários especializados',
+  ],
+  communicator: [
+    'Redigindo comunicações com clientes',
+    'Preparando relatórios de andamento',
+    'Gerando alertas de prazos',
+    'Criando templates de e-mail',
+    'Personalizando notificações',
+    'Agendando follow-ups automáticos',
+  ],
 }
 
 export function getAgentActivity(agent: Agent): string {
@@ -119,6 +143,14 @@ export function getTaskDescription(task: AgentTask): string {
     draft_petition: 'Redação de petição',
     check_datajud: 'Consulta DataJud',
     organize_files: 'Organização de arquivos',
+    research_precedents: 'Pesquisa de precedentes',
+    risk_analysis: 'Análise de risco',
+    contract_review: 'Revisão de contrato',
+    client_communication: 'Comunicação com cliente',
+    billing_analysis: 'Análise de faturamento',
+    case_strategy: 'Estratégia processual',
+    legal_translation: 'Tradução jurídica',
+    compliance_check: 'Verificação de compliance',
   }
   return descriptions[task.type] || task.type
 }
@@ -299,6 +331,264 @@ OAB/XX XXXXX
         duplicatesFound: Math.floor(Math.random() * 3),
         spaceSaved: `${(Math.random() * 50 + 10).toFixed(2)} MB`,
         indexingCompleted: true,
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'research_precedents':
+      return {
+        precedentsFound: Math.floor(Math.random() * 15) + 5,
+        tribunals: ['STJ', 'STF', 'TST', 'TRF1', 'TJDFT'],
+        relevantCases: [
+          {
+            id: crypto.randomUUID(),
+            tribunal: 'STJ',
+            number: `REsp ${Math.floor(Math.random() * 2000000) + 1000000}/DF`,
+            year: 2020 + Math.floor(Math.random() * 4),
+            summary: 'Precedente relevante sobre a matéria analisada',
+            relevanceScore: 0.85 + Math.random() * 0.15,
+            keywords: task.data?.keywords || ['direito civil', 'processo', 'jurisprudência']
+          }
+        ],
+        thematicAnalysis: {
+          mainTopic: task.data?.topic || 'Análise jurisprudencial',
+          trends: ['Entendimento consolidado', 'Jurisprudência pacífica', 'Tese favorável'],
+          confidence: 0.88 + Math.random() * 0.12
+        },
+        recommendation: 'Utilizar precedentes identificados para fundamentar petição',
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'risk_analysis':
+      return {
+        riskLevel: ['baixo', 'médio', 'alto', 'crítico'][Math.floor(Math.random() * 4)],
+        riskScore: Math.floor(Math.random() * 100),
+        factors: [
+          {
+            category: 'Processual',
+            description: 'Análise de viabilidade processual',
+            impact: 'Médio',
+            mitigation: 'Reforçar fundamentação jurídica'
+          },
+          {
+            category: 'Financeiro',
+            description: 'Exposição financeira do caso',
+            impact: task.data?.valor ? 'Alto' : 'Baixo',
+            mitigation: 'Avaliar acordo extrajudicial'
+          },
+          {
+            category: 'Temporal',
+            description: 'Risco de perda de prazo',
+            impact: 'Baixo',
+            mitigation: 'Sistema de alertas configurado'
+          }
+        ],
+        recommendations: [
+          'Monitorar evolução do caso semanalmente',
+          'Considerar estratégias alternativas',
+          'Manter documentação completa',
+          'Avaliar custos vs benefícios'
+        ],
+        probabilitySuccess: 0.65 + Math.random() * 0.30,
+        estimatedDuration: `${Math.floor(Math.random() * 24) + 6} meses`,
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'contract_review':
+      return {
+        contractAnalysis: {
+          type: task.data?.contractType || 'Contrato de Prestação de Serviços',
+          pages: Math.floor(Math.random() * 20) + 5,
+          clauses: Math.floor(Math.random() * 30) + 10,
+          reviewedAt: new Date().toISOString()
+        },
+        findings: [
+          {
+            severity: 'alta',
+            clause: Math.floor(Math.random() * 15) + 1,
+            issue: 'Cláusula com redação ambígua',
+            suggestion: 'Revisar para maior clareza e segurança jurídica'
+          },
+          {
+            severity: 'média',
+            clause: Math.floor(Math.random() * 15) + 1,
+            issue: 'Falta de especificação de prazos',
+            suggestion: 'Incluir prazos específicos para cada obrigação'
+          },
+          {
+            severity: 'baixa',
+            clause: Math.floor(Math.random() * 15) + 1,
+            issue: 'Formatação inconsistente',
+            suggestion: 'Padronizar formatação do documento'
+          }
+        ],
+        compliance: {
+          lgpd: Math.random() > 0.3,
+          codigoCivil: Math.random() > 0.2,
+          codigoDefesaConsumidor: task.data?.isConsumerRelation || Math.random() > 0.5
+        },
+        riskAssessment: 'Risco baixo a médio - revisões sugeridas',
+        approvalRecommendation: Math.random() > 0.4 ? 'Aprovado com ressalvas' : 'Requer revisão',
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'client_communication':
+      return {
+        messageGenerated: true,
+        template: `Prezado(a) ${task.data?.clientName || 'Cliente'},
+
+Informamos que houve uma atualização no processo ${task.data?.processNumber || '[Número do Processo]'}.
+
+${task.data?.update || 'Recebemos nova movimentação processual que requer sua atenção.'}
+
+${task.data?.action ? `Próximos passos: ${task.data.action}` : 'Estamos analisando a movimentação e retornaremos em breve com orientações.'}
+
+Qualquer dúvida, estamos à disposição.
+
+Atenciosamente,
+${task.data?.lawyerName || '[Advogado]'}`,
+        tone: 'formal',
+        urgency: task.data?.urgent ? 'alta' : 'normal',
+        channels: ['email', 'whatsapp'],
+        scheduledSend: task.data?.scheduleFor || 'immediate',
+        attachments: task.data?.attachments || [],
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'billing_analysis':
+      return {
+        periodAnalyzed: task.data?.period || 'Últimos 30 dias',
+        totalBilled: (Math.random() * 50000 + 10000).toFixed(2),
+        totalReceived: (Math.random() * 40000 + 8000).toFixed(2),
+        pendingInvoices: Math.floor(Math.random() * 10) + 2,
+        breakdown: {
+          consultoria: (Math.random() * 15000 + 5000).toFixed(2),
+          processos: (Math.random() * 20000 + 10000).toFixed(2),
+          honorarios: (Math.random() * 15000 + 5000).toFixed(2)
+        },
+        insights: [
+          'Recebimento médio em 45 dias',
+          'Taxa de adimplência: 85%',
+          'Crescimento de 12% vs mês anterior',
+          '3 clientes com pendências > 60 dias'
+        ],
+        recommendations: [
+          'Acionar clientes com atraso superior a 60 dias',
+          'Considerar desconto para pagamento antecipado',
+          'Automatizar lembretes de vencimento'
+        ],
+        projectedRevenue: (Math.random() * 60000 + 20000).toFixed(2),
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'case_strategy':
+      return {
+        strategyAnalysis: {
+          caseType: task.data?.caseType || 'Processo Civil',
+          currentPhase: task.data?.phase || 'Instrução',
+          estimatedDuration: `${Math.floor(Math.random() * 18) + 6} meses`,
+          complexity: ['baixa', 'média', 'alta', 'muito alta'][Math.floor(Math.random() * 4)]
+        },
+        recommendedActions: [
+          {
+            priority: 'alta',
+            action: 'Protocolar contestação com documentação comprobatória',
+            deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+            estimatedTime: '3 horas'
+          },
+          {
+            priority: 'média',
+            action: 'Solicitar perícia técnica',
+            deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            estimatedTime: '2 horas'
+          },
+          {
+            priority: 'baixa',
+            action: 'Preparar rol de testemunhas',
+            deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+            estimatedTime: '1 hora'
+          }
+        ],
+        successProbability: 0.60 + Math.random() * 0.35,
+        alternativeStrategies: [
+          'Tentativa de acordo antes da sentença',
+          'Recurso à instância superior',
+          'Mediação extrajudicial'
+        ],
+        precedentAnalysis: {
+          favorablePrecedents: Math.floor(Math.random() * 10) + 3,
+          unfavorablePrecedents: Math.floor(Math.random() * 5) + 1,
+          recommendation: 'Jurisprudência majoritariamente favorável'
+        },
+        riskFactors: [
+          'Ausência de documentação específica',
+          'Prazo processual apertado',
+          'Mudança recente na legislação'
+        ],
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'legal_translation':
+      return {
+        translationCompleted: true,
+        sourceLanguage: task.data?.sourceLang || 'Jurídico técnico',
+        targetLanguage: task.data?.targetLang || 'Linguagem simples',
+        originalLength: Math.floor(Math.random() * 1000) + 500,
+        translatedLength: Math.floor(Math.random() * 800) + 400,
+        simplificationLevel: task.data?.level || 'intermediário',
+        keyTermsGlossary: [
+          { term: 'Exordial', translation: 'Petição inicial' },
+          { term: 'Litisconsórcio', translation: 'Múltiplas partes no processo' },
+          { term: 'Prescricional', translation: 'Relacionado ao prazo de prescrição' },
+          { term: 'Petitum', translation: 'Pedidos feitos ao juiz' }
+        ],
+        readabilityScore: 0.75 + Math.random() * 0.20,
+        suggestedImprovements: [
+          'Substituir termos técnicos por expressões do dia a dia',
+          'Dividir frases longas em períodos menores',
+          'Adicionar exemplos práticos'
+        ],
+        timestamp: new Date().toISOString()
+      }
+      
+    case 'compliance_check':
+      return {
+        complianceStatus: Math.random() > 0.3 ? 'conforme' : 'não conforme',
+        checksPerformed: [
+          {
+            area: 'LGPD',
+            status: Math.random() > 0.2 ? 'conforme' : 'pendente',
+            details: 'Verificação de tratamento de dados pessoais',
+            priority: 'alta'
+          },
+          {
+            area: 'Código de Ética OAB',
+            status: Math.random() > 0.1 ? 'conforme' : 'pendente',
+            details: 'Adequação às normas éticas profissionais',
+            priority: 'crítica'
+          },
+          {
+            area: 'Legislação Trabalhista',
+            status: Math.random() > 0.3 ? 'conforme' : 'pendente',
+            details: 'Conformidade com CLT e normas regulamentadoras',
+            priority: 'média'
+          },
+          {
+            area: 'Código Civil',
+            status: Math.random() > 0.2 ? 'conforme' : 'pendente',
+            details: 'Verificação de cláusulas contratuais',
+            priority: 'alta'
+          }
+        ],
+        violations: Math.floor(Math.random() * 3),
+        warnings: Math.floor(Math.random() * 5),
+        recommendations: [
+          'Atualizar política de privacidade',
+          'Revisar termos de uso',
+          'Implementar controles de acesso',
+          'Documentar processos de compliance'
+        ],
+        nextReview: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        certificationStatus: Math.random() > 0.3 ? 'válido' : 'requer renovação',
         timestamp: new Date().toISOString()
       }
       
