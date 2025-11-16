@@ -1,3 +1,9 @@
+// Google Calendar Service
+// Provides integration with Google Calendar API
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
+const SCOPES = 'https://www.googleapis.com/auth/calendar'
 import { Appointment } from '@/types'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -7,6 +13,11 @@ const CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 interface GoogleAuthResponse {
   access_token: string
   expires_in: number
+  error?: string
+}
+
+interface GoogleCalendarEvent {
+  id?: string
   token_type: string
   error?: string
 }
@@ -40,6 +51,11 @@ class GoogleCalendarService {
   private gisInited = false
 
   async initialize(): Promise<void> {
+    if (this.gapiInited && this.gisInited) {
+      return
+    }
+
+    await this.loadScripts()
     if (this.gapiInited && this.gisInited) return
 
     await this.loadGoogleScripts()
@@ -47,6 +63,8 @@ class GoogleCalendarService {
     this.initializeGis()
   }
 
+  private loadScripts(): Promise<void> {
+    return new Promise((resolve, reject) => {
   private loadGoogleScripts(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (document.querySelector('script[src*="apis.google.com"]')) {
@@ -88,6 +106,7 @@ class GoogleCalendarService {
   private initializeGis(): void {
     this.tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES,
       scope: CALENDAR_SCOPES,
       callback: '',
     })
@@ -117,6 +136,31 @@ class GoogleCalendarService {
     })
   }
 
+  async listEvents(timeMin?: Date, timeMax?: Date): Promise<GoogleCalendarEvent[]> {
+    try {
+      const params: any = {
+        calendarId: 'primary',
+        timeMin: (timeMin || new Date()).toISOString(),
+        showDeleted: false,
+        singleEvents: true,
+        maxResults: 100,
+        orderBy: 'startTime',
+      }
+
+      if (timeMax) {
+        params.timeMax = timeMax.toISOString()
+      }
+
+      const response = await (window as any).gapi.client.calendar.events.list(params)
+      return response.result.items || []
+    } catch (error) {
+      console.error('Error fetching calendar events:', error)
+      return []
+    }
+  }
+
+  async createEvent(event: GoogleCalendarEvent): Promise<GoogleCalendarEvent | null> {
+    try {
   isAuthenticated(): boolean {
     return this.accessToken !== null
   }
@@ -156,6 +200,9 @@ class GoogleCalendarService {
         calendarId: 'primary',
         resource: event,
       })
+      return response.result
+    } catch (error) {
+      console.error('Error creating calendar event:', error)
 
       return response.result.id
     } catch (error) {
@@ -164,6 +211,9 @@ class GoogleCalendarService {
     }
   }
 
+  async updateEvent(eventId: string, event: GoogleCalendarEvent): Promise<GoogleCalendarEvent | null> {
+    try {
+      const response = await (window as any).gapi.client.calendar.events.update({
   async updateEvent(eventId: string, appointment: Appointment): Promise<boolean> {
     if (!this.accessToken) {
       const authenticated = await this.authenticate()
@@ -200,6 +250,10 @@ class GoogleCalendarService {
         eventId: eventId,
         resource: event,
       })
+      return response.result
+    } catch (error) {
+      console.error('Error updating calendar event:', error)
+      return null
 
       return true
     } catch (error) {
@@ -219,6 +273,9 @@ class GoogleCalendarService {
         calendarId: 'primary',
         eventId: eventId,
       })
+      return true
+    } catch (error) {
+      console.error('Error deleting calendar event:', error)
 
       return true
     } catch (error) {
@@ -227,9 +284,23 @@ class GoogleCalendarService {
     }
   }
 
+  isAuthenticated(): boolean {
+    return this.accessToken !== null
+  }
+
+  revokeAccess(): void {
+    if (this.accessToken) {
+      ;(window as any).google.accounts.oauth2.revoke(this.accessToken)
+      this.accessToken = null
+    }
+  }
+
+  openGoogleCalendar(): void {
+    window.open('https://calendar.google.com', '_blank')
   logout(): void {
     this.accessToken = null
   }
 }
 
 export const googleCalendarService = new GoogleCalendarService()
+export type { GoogleCalendarEvent }

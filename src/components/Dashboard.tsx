@@ -4,6 +4,8 @@ import type { Process, Prazo, ViewType } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { calcularDiasRestantes, isUrgente } from '@/lib/prazos'
+import { Gavel, Clock, CheckCircle, Warning } from '@phosphor-icons/react'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import { 
   Gavel, 
@@ -22,6 +24,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [processes] = useKV<Process[]>('processes', [])
 
   const stats = useMemo(() => {
+    const ativos = processes.filter(p => p.status === 'ativo').length
+    const concluidos = processes.filter(p => p.status === 'concluido').length
+    
+    const todosPrazos: (Prazo & { processoTitulo: string })[] = []
+    processes.forEach(process => {
     const processesList = processes || []
     const ativos = processesList.filter(p => p.status === 'ativo').length
     const concluidos = processesList.filter(p => p.status === 'concluido').length
@@ -49,6 +56,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       ativos,
       concluidos,
       prazosPendentes,
+      prazosUrgentes,
+      todosPrazos: todosPrazos.filter(p => !p.concluido).slice(0, 5)
+    }
+  }, [processes])
+
+  const processosRecentes = useMemo(() => {
+    return [...processes]
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       prazosUrgentes
     }
   }, [processes])
@@ -84,6 +99,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, [processes])
 
   return (
+    <div className="flex flex-col gap-6 p-4 md:p-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Visão geral do seu escritório</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('processos')}>
     <div className="p-4 lg:p-8 flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -113,6 +136,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
 
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('prazos')}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Pendentes</CardTitle>
@@ -130,6 +154,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <Warning className={stats.prazosUrgentes > 0 ? 'text-destructive' : 'text-primary'} size={20} />
           </CardHeader>
           <CardContent>
+            <div className="text-3xl font-bold text-destructive">{stats.prazosUrgentes}</div>
+            <p className="text-xs text-muted-foreground mt-1">Atenção necessária</p>
             <div className={`text-3xl font-bold ${stats.prazosUrgentes > 0 ? 'text-destructive' : ''}`}>
               {stats.prazosUrgentes}
             </div>
@@ -144,6 +170,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <CardTitle>Próximos Prazos</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => onNavigate('prazos')}>
               Ver todos
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {stats.todosPrazos.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Clock size={48} className="mx-auto mb-2 opacity-50" />
+                <p>Nenhum prazo pendente</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.todosPrazos.map(prazo => {
               <ArrowRight size={16} />
             </Button>
           </CardHeader>
@@ -160,6 +197,21 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   const urgente = isUrgente(diasRestantes)
 
                   return (
+                    <div key={prazo.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{prazo.descricao}</p>
+                        <p className="text-xs text-muted-foreground truncate">{prazo.processoTitulo}</p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-2">
+                        <Badge variant={urgente ? 'destructive' : 'secondary'}>
+                          {diasRestantes > 0 
+                            ? `${diasRestantes} ${diasRestantes === 1 ? 'dia' : 'dias'}`
+                            : diasRestantes === 0 
+                              ? 'Hoje' 
+                              : 'Vencido'
+                          }
+                        </Badge>
+                      </div>
                     <div key={prazo.id} className="flex items-start justify-between gap-3 pb-3 border-b last:border-0">
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{prazo.descricao}</p>
@@ -194,6 +246,27 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </CardHeader>
           <CardContent>
             {processosRecentes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Gavel size={48} className="mx-auto mb-2 opacity-50" />
+                <p>Nenhum processo cadastrado</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {processosRecentes.map(process => (
+                  <div 
+                    key={process.id} 
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => onNavigate('processos')}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{process.titulo}</p>
+                      <p className="text-xs text-muted-foreground">{process.numeroCNJ}</p>
+                    </div>
+                    <Badge variant={
+                      process.status === 'ativo' ? 'default' :
+                      process.status === 'concluido' ? 'secondary' :
+                      process.status === 'suspenso' ? 'outline' : 'destructive'
+                    }>
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Gavel size={48} className="text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Nenhum processo cadastrado</p>
