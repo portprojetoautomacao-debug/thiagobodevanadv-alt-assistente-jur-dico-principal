@@ -42,4 +42,87 @@ export interface Feriado {
   tipo: 'nacional' | 'estadual' | 'municipal'
 }
 
-export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente'
+export interface PremonicaoJuridica {
+  processo_cnj: string
+  probabilidade_exito: number
+  analise_ia: string
+  estrategias_recomendadas: string[]
+  precedentes_relevantes: {
+    id: string
+    tribunal: string
+    numero: string
+    tema: string
+    resumo_relevancia: string
+    link: string
+  }[]
+}
+
+export interface Minuta {
+  id: string
+  titulo: string
+  processId?: string
+  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'outro'
+  conteudo: string
+  status: 'rascunho' | 'em-revisao' | 'finalizada' | 'arquivada'
+  criadoEm: string
+  atualizadoEm: string
+  autor: string
+  googleDocsId?: string
+  googleDocsUrl?: string
+  ultimaSincronizacao?: string
+}
+
+export interface FinancialEntry {
+  id: string
+  type: 'income' | 'expense'
+  amount: number
+  category: string
+  description: string
+  date: string
+}
+
+export interface Expediente {
+  id: string
+  processId: string
+  tipo: 'intimacao' | 'citacao' | 'documento' | 'outro'
+  type?: string
+  titulo: string
+  conteudo: string
+  content?: string
+  dataRecebimento: string
+  receivedAt?: string
+  prazoFatal?: string
+  deadline?: string
+  lido: boolean
+  arquivado: boolean
+  analyzed?: boolean
+  tags?: string[]
+  summary?: string
+  suggestedAction?: string
+  pendingDocs?: string[]
+  draftPetition?: string
+}
+
+export interface Appointment {
+  id: string
+  title: string
+  description?: string
+  date: string
+  time: string
+  duration: number
+  processId?: string
+  location?: string
+  type: 'audiencia' | 'reuniao' | 'prazo' | 'outro'
+  reminders?: number[]
+  googleEventId?: string
+}
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: 'admin' | 'advogado' | 'assistente'
+  avatarUrl?: string
+}
+
+export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas'

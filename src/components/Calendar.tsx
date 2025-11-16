@@ -38,9 +38,10 @@ export default function Calendar() {
   const [newAppointment, setNewAppointment] = useState({
     title: '',
     description: '',
-    type: 'other' as Appointment['type'],
+    type: 'outro' as Appointment['type'],
     date: '',
     time: '',
+    duration: 60,
     location: '',
   })
 
@@ -105,7 +106,7 @@ export default function Calendar() {
     }
 
     setShowDialog(false)
-    setNewAppointment({ title: '', description: '', type: 'other', date: '', time: '', location: '' })
+    setNewAppointment({ title: '', description: '', type: 'outro', date: '', time: '', duration: 60, location: '' })
   }
 
   const handleConnectGoogle = async () => {
@@ -130,29 +131,30 @@ export default function Calendar() {
 
     setIsSyncing(true)
     try {
-      const startOfMonth = new Date(year, month, 1)
-      const endOfMonth = new Date(year, month + 1, 0)
+      toast.info('Sincronização automática em desenvolvimento')
       
-      const googleEvents = await googleCalendarService.syncEvents(startOfMonth, endOfMonth)
+      // const startOfMonth = new Date(year, month, 1)
+      // const endOfMonth = new Date(year, month + 1, 0)
+      // const googleEvents = await googleCalendarService.syncEvents(startOfMonth, endOfMonth)
       
-      const mergedAppointments = [...(appointments || [])]
-      let newCount = 0
+      // const mergedAppointments = [...(appointments || [])]
+      // let newCount = 0
 
-      for (const event of googleEvents) {
-        const exists = mergedAppointments.find(apt => 
-          apt.date === event.date && 
-          apt.time === event.time && 
-          apt.title === event.title
-        )
+      // for (const event of googleEvents) {
+      //   const exists = mergedAppointments.find(apt => 
+      //     apt.date === event.date && 
+      //     apt.time === event.time && 
+      //     apt.title === event.title
+      //   )
         
-        if (!exists) {
-          mergedAppointments.push(event)
-          newCount++
-        }
-      }
+      //   if (!exists) {
+      //     mergedAppointments.push(event)
+      //     newCount++
+      //   }
+      // }
 
-      setAppointments(mergedAppointments)
-      toast.success(`Sincronização concluída: ${newCount} novos eventos importados`)
+      // setAppointments(mergedAppointments)
+      // toast.success(`Sincronização concluída: ${newCount} novos eventos importados`)
     } catch (error) {
       toast.error('Erro ao sincronizar com Google Calendar')
     } finally {
@@ -379,7 +381,7 @@ export default function Calendar() {
                 </Button>
 
                 <Button 
-                  onClick={() => googleCalendarService.openCalendar()} 
+                  onClick={() => window.open('https://calendar.google.com', '_blank')} 
                   variant="outline"
                 >
                   <LinkIcon className="w-4 h-4 mr-2" />
