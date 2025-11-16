@@ -15,7 +15,8 @@ import {
   Books,
   UsersFour,
   Database,
-  SignOut
+  SignOut,
+  ChartBar
 } from '@phosphor-icons/react'
 import Login from '@/components/Login'
 import Dashboard from '@/components/Dashboard'
@@ -31,23 +32,32 @@ import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
+import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
+import { useAnalytics } from '@/hooks/use-analytics'
 
 function App() {
   const [currentUser, setCurrentUser] = useKV<User | null>('current-user', null)
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
   const [isLoading, setIsLoading] = useState(true)
+  const { trackPageView, trackAction } = useAnalytics()
 
   useEffect(() => {
     setIsLoading(false)
   }, [])
 
+  useEffect(() => {
+    trackPageView(currentView)
+  }, [currentView])
+
   const handleLogin = (user: User) => {
     setCurrentUser(() => user)
+    trackAction('login', 'authentication', user.role)
   }
 
   const handleLogout = () => {
+    trackAction('logout', 'authentication')
     setCurrentUser(() => null)
     setCurrentView('dashboard')
     toast.success('Logout realizado com sucesso')
@@ -87,6 +97,7 @@ function App() {
     { id: 'conhecimento' as ViewType, label: 'Conhecimento', icon: Books },
     { id: 'assistente' as ViewType, label: 'Assistente IA', icon: ChatCircle },
     { id: 'agentes' as ViewType, label: 'Agentes IA', icon: Robot },
+    { id: 'analytics' as ViewType, label: 'Analytics', icon: ChartBar },
   ]
 
   const renderView = () => {
@@ -117,6 +128,8 @@ function App() {
         return <AssistenteIA />
       case 'agentes':
         return <AIAgents />
+      case 'analytics':
+        return <AnalyticsDashboard />
       default:
         return <Dashboard onNavigate={setCurrentView} />
     }
