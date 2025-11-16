@@ -13,6 +13,9 @@ export const config = {
     clientId: getEnvVar('VITE_GOOGLE_CLIENT_ID', ''),
     redirectUri: getEnvVar('VITE_REDIRECT_URI', window.location.origin),
   },
+  datajud: {
+    apiKey: getEnvVar('VITE_DATAJUD_API_KEY', ''),
+  },
   app: {
     environment: getEnvVar('VITE_APP_ENV', 'development'),
     isDevelopment: getEnvVar('VITE_APP_ENV', 'development') === 'development',
