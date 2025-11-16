@@ -1,5 +1,3 @@
-import type { Process, Expediente, Task, Appointment } from '@/types'
-
 export interface AgentTask {
   id: string
   agentId: string
