@@ -1,19 +1,19 @@
+import { Appointment } from '@/types'
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-const SCOPES = 'https://www.googleapis.com/auth/calendar'
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
 const SCOPES = 'https://www.googleapis.com/auth/calendar'
 
-  expires_in: number
+interface GoogleAuthResponse {
   access_token: string
   expires_in: number
   token_type: string
-  start: {
- 
+  error?: string
+}
 
-    timeZone: string
-  colorId?: s
-    useDefault: b
-      method: string
-    }>
+interface CalendarEvent {
+  summary: string
+  description?: string
   start: {
     dateTime: string
     timeZone: string
@@ -30,7 +30,7 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar'
       minutes: number
     }>
   }
- 
+}
 
 class GoogleCalendarService {
   private tokenClient: any = null
@@ -44,13 +44,13 @@ class GoogleCalendarService {
     await this.loadGoogleScripts()
     await this.initializeGapi()
     this.initializeGis()
-   
+  }
 
   private loadGoogleScripts(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (document.querySelector('script[src*="apis.google.com"]')) {
         resolve()
-          disc
+        return
       }
 
       const gapiScript = document.createElement('script')
@@ -68,7 +68,7 @@ class GoogleCalendarService {
       }
       gapiScript.onerror = reject
       document.body.appendChild(gapiScript)
-      
+    })
   }
 
   private async initializeGapi(): Promise<void> {
@@ -76,29 +76,31 @@ class GoogleCalendarService {
       ;(window as any).gapi.load('client', async () => {
         await (window as any).gapi.client.init({
           apiKey: GOOGLE_API_KEY,
-          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+          discoveryDocs: [
+            'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest',
+          ],
         })
-      const authenticated = aw
+        this.gapiInited = true
         resolve()
-
+      })
     })
   }
 
-      return true
+  private initializeGis(): void {
     this.tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
-
+      callback: '',
     })
     this.gisInited = true
   }
 
   async authenticate(): Promise<boolean> {
-        calendarId: 'primary',
+    if (!this.gapiInited || !this.gisInited) {
       await this.initialize()
-     
+    }
 
-      }
+    return new Promise((resolve) => {
       this.tokenClient.callback = (resp: GoogleAuthResponse) => {
         if (resp.error !== undefined) {
           resolve(false)
@@ -108,109 +110,132 @@ class GoogleCalendarService {
         resolve(true)
       }
 
-    title: string
+      if (this.accessToken === null) {
         this.tokenClient.requestAccessToken({ prompt: 'consent' })
-    processNum
+      } else {
         this.tokenClient.requestAccessToken({ prompt: '' })
-    con
+      }
     })
-   
+  }
 
-  async createEvent(event: GoogleCalendarEvent): Promise<boolean> {
+  async createEvent(appointment: Appointment): Promise<string | null> {
     if (!this.accessToken) {
-      },
-      if (!authenticated) return false
-     
+      const authenticated = await this.authenticate()
+      if (!authenticated) return null
+    }
 
-      rem
-      await (window as any).gapi.client.calendar.events.insert({
-          { method: 'email', m
+    try {
+      const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
+      const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000)
+
+      const event: CalendarEvent = {
+        summary: appointment.title,
+        description: appointment.description || '',
+        start: {
+          dateTime: startDateTime.toISOString(),
+          timeZone: 'America/Sao_Paulo',
+        },
+        end: {
+          dateTime: endDateTime.toISOString(),
+          timeZone: 'America/Sao_Paulo',
+        },
+        reminders: {
+          useDefault: false,
+          overrides: appointment.reminders?.map(minutes => ({
+            method: 'popup',
+            minutes: minutes,
+          })) || [
+            { method: 'popup', minutes: 30 },
+          ],
+        },
+      }
+
+      const response = await (window as any).gapi.client.calendar.events.insert({
+        calendarId: 'primary',
         resource: event,
-        
-      return true
+      })
 
+      return response.result.id
+    } catch (error) {
       console.error('Erro ao criar evento:', error)
-
+      return null
     }
   }
 
-  async getEvents(timeMin?: Date, timeMax?: Date): Promise<GoogleCalendarEvent[]> {
+  async updateEvent(eventId: string, appointment: Appointment): Promise<boolean> {
     if (!this.accessToken) {
       const authenticated = await this.authenticate()
-      if (!authenticated) return []
-  ope
-
-    try {
-      const params: any = {
-        calendarId: 'primary',
-        timeMin: (timeMin || new Date()).toISOString(),
-
-        singleEvents: true,
-
-        orderBy: 'startTime',
-
-
-
-        params.timeMax = timeMax.toISOString()
-
-
-
-      return response.result.items || []
-    } catch (error) {
-      console.error('Erro ao buscar eventos:', error)
-
+      if (!authenticated) return false
     }
 
+    try {
+      const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
+      const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000)
 
-  async syncDeadlineToCalendar(deadline: {
-    title: string
-    description: string
-    date: string
-    processNumber?: string
-  }): Promise<boolean> {
-    const startDate = new Date(deadline.date)
-    const endDate = new Date(startDate)
-    endDate.setHours(endDate.getHours() + 1)
+      const event: CalendarEvent = {
+        summary: appointment.title,
+        description: appointment.description || '',
+        start: {
+          dateTime: startDateTime.toISOString(),
+          timeZone: 'America/Sao_Paulo',
+        },
+        end: {
+          dateTime: endDateTime.toISOString(),
+          timeZone: 'America/Sao_Paulo',
+        },
+        reminders: {
+          useDefault: false,
+          overrides: appointment.reminders?.map(minutes => ({
+            method: 'popup',
+            minutes: minutes,
+          })) || [
+            { method: 'popup', minutes: 30 },
+          ],
+        },
+      }
 
+      await (window as any).gapi.client.calendar.events.update({
+        calendarId: 'primary',
+        eventId: eventId,
+        resource: event,
+      })
 
-      summary: `⚖️ ${deadline.title}`,
-      description: `${deadline.description}\n\n${deadline.processNumber ? `Processo: ${deadline.processNumber}` : ''}`,
-      start: {
-        dateTime: startDate.toISOString(),
-        timeZone: 'America/Sao_Paulo',
+      return true
+    } catch (error) {
+      console.error('Erro ao atualizar evento:', error)
+      return false
+    }
+  }
 
-      end: {
-        dateTime: endDate.toISOString(),
-        timeZone: 'America/Sao_Paulo',
+  async deleteEvent(eventId: string): Promise<boolean> {
+    if (!this.accessToken) {
+      const authenticated = await this.authenticate()
+      if (!authenticated) return false
+    }
 
-      colorId: '11',
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 24 * 60 },
-          { method: 'popup', minutes: 60 },
-          { method: 'popup', minutes: 30 },
+    try {
+      await (window as any).gapi.client.calendar.events.delete({
+        calendarId: 'primary',
+        eventId: eventId,
+      })
 
-      },
-
-
-    return this.createEvent(event)
+      return true
+    } catch (error) {
+      console.error('Erro ao deletar evento:', error)
+      return false
+    }
   }
 
   isAuthenticated(): boolean {
-
+    return this.accessToken !== null
   }
 
   revokeAccess(): void {
-
+    if (this.accessToken) {
       ;(window as any).google.accounts.oauth2.revoke(this.accessToken)
       this.accessToken = null
     }
-
-
-  openCalendar(): void {
-    window.open('https://calendar.google.com', '_blank', 'noopener,noreferrer')
-
+  }
 }
 
 export const googleCalendarService = new GoogleCalendarService()

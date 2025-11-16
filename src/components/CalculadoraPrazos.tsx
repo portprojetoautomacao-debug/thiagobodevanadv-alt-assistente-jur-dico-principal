@@ -60,14 +60,15 @@ export default function CalculadoraPrazos() {
     }
 
     setProcesses(current => {
-      const processIndex = current.findIndex(p => p.id === selectedProcessId)
+      const processesList = current || []
+      const processIndex = processesList.findIndex(p => p.id === selectedProcessId)
       
       if (processIndex === -1) {
         toast.error('Processo não encontrado')
-        return current
+        return processesList
       }
 
-      const updated = [...current]
+      const updated = [...processesList]
       updated[processIndex] = {
         ...updated[processIndex],
         prazos: [...(updated[processIndex].prazos || []), novoPrazo],
@@ -169,7 +170,7 @@ export default function CalculadoraPrazos() {
                       <SelectValue placeholder="Selecione um processo" />
                     </SelectTrigger>
                     <SelectContent>
-                      {processes.filter(p => p.status === 'ativo').map(p => (
+                      {(processes || []).filter(p => p.status === 'ativo').map(p => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.titulo} - {p.numeroCNJ}
                         </SelectItem>

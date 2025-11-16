@@ -22,11 +22,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [processes] = useKV<Process[]>('processes', [])
 
   const stats = useMemo(() => {
-    const ativos = processes.filter(p => p.status === 'ativo').length
-    const concluidos = processes.filter(p => p.status === 'concluido').length
+    const processesList = processes || []
+    const ativos = processesList.filter(p => p.status === 'ativo').length
+    const concluidos = processesList.filter(p => p.status === 'concluido').length
     
     const todosPrazos: (Prazo & { processoTitulo: string })[] = []
-    processes.forEach(process => {
+    processesList.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach(prazo => {
           todosPrazos.push({
@@ -54,7 +55,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   const prazosProximos = useMemo(() => {
     const todosPrazos: (Prazo & { processoTitulo: string })[] = []
-    processes.forEach(process => {
+    const processesList = processes || []
+    processesList.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach(prazo => {
           todosPrazos.push({
@@ -76,7 +78,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, [processes])
 
   const processosRecentes = useMemo(() => {
-    return [...processes]
+    return [...(processes || [])]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
   }, [processes])

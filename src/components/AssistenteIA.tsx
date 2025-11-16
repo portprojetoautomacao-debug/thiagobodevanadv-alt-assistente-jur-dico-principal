@@ -36,17 +36,18 @@ export default function AssistenteIA() {
       timestamp: new Date().toISOString()
     }
 
-    setMessages(current => [...current, userMessage])
+    setMessages(current => [...(current || []), userMessage])
     setInput('')
     setLoading(true)
 
     try {
+      const processesList = processes || []
       const context = {
-        totalProcessos: processes.length,
-        processosAtivos: processes.filter(p => p.status === 'ativo').length,
-        processosConcluidos: processes.filter(p => p.status === 'concluido').length,
-        todosPrazos: processes.flatMap(p => p.prazos || []),
-        prazosPendentes: processes.flatMap(p => p.prazos || []).filter(p => !p.concluido).length
+        totalProcessos: processesList.length,
+        processosAtivos: processesList.filter(p => p.status === 'ativo').length,
+        processosConcluidos: processesList.filter(p => p.status === 'concluido').length,
+        todosPrazos: processesList.flatMap(p => p.prazos || []),
+        prazosPendentes: processesList.flatMap(p => p.prazos || []).filter(p => !p.concluido).length
       }
 
       const prompt = spark.llmPrompt`Você é um assistente jurídico especializado em direito processual brasileiro. 
@@ -70,7 +71,7 @@ Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cá
         timestamp: new Date().toISOString()
       }
 
-      setMessages(current => [...current, assistantMessage])
+      setMessages(current => [...(current || []), assistantMessage])
     } catch (error) {
       toast.error('Erro ao processar mensagem', {
         description: 'Tente novamente em alguns instantes'
@@ -105,7 +106,7 @@ Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cá
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Assistente Jurídico IA</h1>
           <p className="text-muted-foreground">Tire dúvidas sobre processos e prazos</p>
         </div>
-        {messages.length > 0 && (
+        {(messages || []).length > 0 && (
           <Button variant="outline" onClick={handleClearHistory}>
             Limpar Histórico
           </Button>
@@ -120,7 +121,7 @@ Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cá
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto p-6">
-          {messages.length === 0 ? (
+          {(messages || []).length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-6">
               <div className="flex flex-col items-center gap-3">
                 <ChatCircle size={64} className="text-muted-foreground" />
@@ -147,7 +148,7 @@ Forneça uma resposta útil, precisa e profissional. Se a pergunta for sobre cá
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {messages.map((msg) => (
+              {(messages || []).map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}

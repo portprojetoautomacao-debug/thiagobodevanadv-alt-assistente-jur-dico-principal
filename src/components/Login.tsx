@@ -12,9 +12,9 @@ interface LoginProps {
 }
 
 const DEMO_ACCOUNTS = [
-  { username: 'admin', password: 'admin123', name: 'Administrador', role: 'admin' as const },
-  { username: 'demo', password: 'demo', name: 'Usuário Demo', role: 'lawyer' as const },
-  { username: 'usuario', password: '123456', name: 'Usuário Teste', role: 'assistant' as const },
+  { username: 'admin', password: 'admin123', name: 'Administrador', email: 'admin@lawtech.com', role: 'admin' as const },
+  { username: 'demo', password: 'demo', name: 'Usuário Demo', email: 'demo@lawtech.com', role: 'advogado' as const },
+  { username: 'usuario', password: '123456', name: 'Usuário Teste', email: 'usuario@lawtech.com', role: 'assistente' as const },
 ]
 
 export default function Login({ onLogin }: LoginProps) {
@@ -31,7 +31,7 @@ export default function Login({ onLogin }: LoginProps) {
     if (account) {
       const user: UserType = {
         id: crypto.randomUUID(),
-        username: account.username,
+        email: account.email,
         name: account.name,
         role: account.role,
       }
@@ -45,7 +45,7 @@ export default function Login({ onLogin }: LoginProps) {
   const handleQuickAccess = (account: typeof DEMO_ACCOUNTS[0]) => {
     const user: UserType = {
       id: crypto.randomUUID(),
-      username: account.username,
+      email: account.email,
       name: account.name,
       role: account.role,
     }
