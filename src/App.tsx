@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
@@ -36,15 +36,31 @@ import { toast } from 'sonner'
 function App() {
   const [currentUser, setCurrentUser] = useKV<User | null>('current-user', null)
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setIsLoading(false)
+  }, [])
 
   const handleLogin = (user: User) => {
-    setCurrentUser(user)
+    setCurrentUser(() => user)
   }
 
   const handleLogout = () => {
-    setCurrentUser(null)
+    setCurrentUser(() => null)
     setCurrentView('dashboard')
     toast.success('Logout realizado com sucesso')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <CalendarCheck size={64} className="text-primary neon-glow mx-auto mb-4" weight="duotone" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!currentUser) {
