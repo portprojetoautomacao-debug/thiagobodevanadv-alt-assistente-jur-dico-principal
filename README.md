@@ -167,22 +167,7 @@ VITE_APP_ENV=production
 
 📖 **Guia completo de deploy**: Veja `GUIA_DEPLOY_SIMPLES.md` e `VERCEL_DEPLOYMENT.md`
 
-### Render (Alternativa)
-
-Se preferir usar Render ao invés de Vercel:
-
-1. Configure variáveis de ambiente no dashboard:
-   - `VITE_GOOGLE_CLIENT_ID`
-   - `VITE_REDIRECT_URI`
-   - `VITE_APP_ENV=production`
-
-2. Adicione URI de produção no Google Cloud Console
-
-3. Deploy automático via Git push
-
-**Build & Start:**
-- Build Command: `npm install && npm run build`
-- Start Command: `npm start` (serves static files on port 10000)
+**Nota**: Este projeto está configurado para deploy integral no Vercel. Não use Render.
 
 ### Outras Plataformas
 
