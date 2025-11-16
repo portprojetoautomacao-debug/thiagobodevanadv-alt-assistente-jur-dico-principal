@@ -38,11 +38,11 @@ const taskTemplates = {
   ],
 }
 
-export class AgentTaskGenerator {
-  private config: TaskGeneratorConfig
-  private intervalId: NodeJS.Timeout | null = null
   private onTaskGenerated?: (task: AgentTask) => void
 
+  constructor(config?: Partial<TaskGeneratorConfig>, onTaskGenerated?: (task: AgentTask) => void) {
+  private onTaskGenerated?: (task: AgentTask) => void
+    this.onTaskGenerated = onTaskGenerated
   constructor(config?: Partial<TaskGeneratorConfig>, onTaskGenerated?: (task: AgentTask) => void) {
     this.config = { ...defaultConfig, ...config }
     this.onTaskGenerated = onTaskGenerated
@@ -85,27 +85,27 @@ export class AgentTaskGenerator {
       const randomAgentId = agentIds[Math.floor(Math.random() * agentIds.length)]
       const templates = taskTemplates[randomAgentId as keyof typeof taskTemplates]
       
-      if (templates && templates.length > 0) {
+        const task = createAgentTask(
         const template = templates[Math.floor(Math.random() * templates.length)]
         
-        const task = createAgentTask(
-          randomAgentId,
-          template.type,
           { 
             description: `Auto-generated task for ${randomAgentId}`,
             generatedAt: new Date().toISOString()
           },
-          template.priority
-        )
+            description: `Auto-generated task for ${randomAgentId}`,
+            generatedAt: new Date().toISOString()
 
         if (this.onTaskGenerated) {
           this.onTaskGenerated(task)
         }
+        if (this.onTaskGenerated) {
+          this.onTaskGenerated(task)
+        }
       }
-    }
+  public setOnTaskGenerated(callback: (task: AgentTask) => void) {
+    this.onTaskGenerated = callback
   }
 
-  public setOnTaskGenerated(callback: (task: AgentTask) => void) {
     this.onTaskGenerated = callback
   }
 
