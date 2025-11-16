@@ -125,4 +125,21 @@ export interface User {
   avatarUrl?: string
 }
 
+export interface Cliente {
+  id: string
+  nome: string
+  cpfCnpj: string
+  email: string
+  telefone: string
+  endereco: string
+  cidade: string
+  estado: string
+  cep: string
+  tipo: 'fisica' | 'juridica'
+  status: 'ativo' | 'inativo'
+  observacoes?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas'
