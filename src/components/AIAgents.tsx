@@ -24,10 +24,12 @@ import {
   ListChecks
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+import { useProcesses } from '@/hooks/use-processes'
 import AgentMetrics from '@/components/AgentMetrics'
 import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
 import MrsJustinEModal from '@/components/MrsJustinEModal'
+import DocumentCheckAgent from '@/components/DocumentCheckAgent'
 import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
 
@@ -58,6 +60,7 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
     setAgents,
   } = useAutonomousAgents()
   
+  const { processes } = useProcesses()
   const [showCollaborationDemo, setShowCollaborationDemo] = useState(false)
   const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
 
@@ -445,6 +448,10 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
       <Tabs defaultValue="agents" className="space-y-4">
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
+          <TabsTrigger value="doc-check">
+            <FileText className="w-4 h-4 mr-2" />
+            Verificação Documental
+          </TabsTrigger>
           <TabsTrigger value="metrics">
             <ChartLine className="w-4 h-4 mr-2" />
             Métricas
@@ -551,6 +558,10 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
               )
             })}
           </div>
+        </TabsContent>
+
+        <TabsContent value="doc-check" className="space-y-4">
+          <DocumentCheckAgent processes={processes} />
         </TabsContent>
 
         <TabsContent value="metrics" className="space-y-4">
