@@ -100,12 +100,12 @@ function App() {
 
   return (
     <div className="flex h-screen bg-background">
-      <aside className="hidden lg:flex w-64 border-r flex-col">
-        <div className="p-6 border-b">
+      <aside className="hidden lg:flex w-64 border-r border-border/50 flex-col bg-card/50 backdrop-blur-xl">
+        <div className="p-6 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <CalendarCheck size={32} className="text-primary" />
+            <CalendarCheck size={32} className="text-primary neon-glow" weight="duotone" />
             <div className="flex flex-col">
-              <h1 className="font-bold text-lg leading-none">Assistente Jurídico</h1>
+              <h1 className="font-bold text-lg leading-none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Assistente Jurídico</h1>
               <p className="text-xs text-muted-foreground mt-1">Gestão Processual</p>
             </div>
           </div>
@@ -130,10 +130,10 @@ function App() {
           })}
         </nav>
 
-        <div className="p-4 border-t space-y-3">
+        <div className="p-4 border-t border-border/50 space-y-3">
           <div className="flex items-center gap-2 px-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center ring-2 ring-primary/20">
+              <span className="text-sm font-semibold text-primary-foreground">
                 {currentUser.name.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -157,7 +157,7 @@ function App() {
         </div>
       </aside>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-50 overflow-x-auto">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t border-border/50 bg-card/80 backdrop-blur-xl z-50 overflow-x-auto">
         <nav className="flex items-center justify-start min-w-max p-2 gap-1">
           {navigation.map((item) => {
             const Icon = item.icon
@@ -167,11 +167,11 @@ function App() {
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg min-w-[70px] ${
-                  isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground'
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg min-w-[70px] transition-all ${
+                  isActive ? 'text-primary bg-primary/10 ring-1 ring-primary/30' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon size={20} />
+                <Icon size={20} weight={isActive ? 'duotone' : 'regular'} />
                 <span className="text-xs whitespace-nowrap">{item.label.split(' ')[0]}</span>
               </button>
             )
