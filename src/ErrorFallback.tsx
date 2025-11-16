@@ -1,5 +1,6 @@
 import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert";
 import { Button } from "./components/ui/button";
+import { Warning, ArrowClockwise } from "@phosphor-icons/react";
 import { WarningCircle, ArrowsClockwise } from "@phosphor-icons/react";
 
 interface ErrorFallbackProps {
@@ -14,6 +15,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Alert variant="destructive" className="mb-6">
+          <Warning size={20} />
           <WarningCircle size={20} />
           <AlertTitle>Erro na aplicação</AlertTitle>
           <AlertDescription>
@@ -33,6 +35,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
           className="w-full"
           variant="outline"
         >
+          <ArrowClockwise size={20} />
           <ArrowsClockwise size={20} />
           Tentar Novamente
         </Button>
