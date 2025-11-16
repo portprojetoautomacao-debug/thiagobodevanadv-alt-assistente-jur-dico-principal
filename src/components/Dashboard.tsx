@@ -107,7 +107,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
             <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
           </div>
           <DataManager 
@@ -119,46 +119,46 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="card-glow-hover status-gradient-active">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Processos Ativos</CardTitle>
-            <Gavel className="text-primary" size={20} />
+            <Gavel className="text-secondary neon-glow" size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.ativos}</div>
+            <div className="text-3xl font-bold gradient-text">{stats.ativos}</div>
             <p className="text-xs text-muted-foreground mt-1">Em andamento</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-glow-hover status-gradient-completed">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Processos Concluídos</CardTitle>
-            <CheckCircle className="text-primary" size={20} />
+            <CheckCircle className="text-accent neon-glow" size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.concluidos}</div>
+            <div className="text-3xl font-bold gradient-text">{stats.concluidos}</div>
             <p className="text-xs text-muted-foreground mt-1">Finalizados</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-glow-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Pendentes</CardTitle>
-            <Clock className="text-primary" size={20} />
+            <Clock className="text-primary neon-glow" size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.prazosPendentes}</div>
+            <div className="text-3xl font-bold gradient-text">{stats.prazosPendentes}</div>
             <p className="text-xs text-muted-foreground mt-1">Não concluídos</p>
           </CardContent>
         </Card>
 
-        <Card className={stats.prazosUrgentes > 0 ? 'border-destructive' : ''}>
+        <Card className={`card-glow-hover ${stats.prazosUrgentes > 0 ? 'status-gradient-urgent border-destructive/50' : ''}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Urgentes</CardTitle>
-            <Warning className={stats.prazosUrgentes > 0 ? 'text-destructive' : 'text-primary'} size={20} />
+            <Warning className={stats.prazosUrgentes > 0 ? 'text-destructive neon-glow' : 'text-primary'} size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${stats.prazosUrgentes > 0 ? 'text-destructive' : ''}`}>
+            <div className={`text-3xl font-bold ${stats.prazosUrgentes > 0 ? 'text-destructive' : 'gradient-text'}`}>
               {stats.prazosUrgentes}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Próximos 5 dias</p>
@@ -167,10 +167,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="card-glow-hover glassmorphic">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Próximos Prazos</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => onNavigate('prazos')}>
+            <CardTitle className="gradient-text">Próximos Prazos</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => onNavigate('prazos')} className="hover:button-gradient hover:text-primary-foreground">
               Ver todos
               <ArrowRight size={16} />
             </Button>
@@ -188,7 +188,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   const urgente = isUrgente(diasRestantes)
 
                   return (
-                    <div key={prazo.id} className="flex items-start justify-between gap-3 pb-3 border-b last:border-0">
+                    <div key={prazo.id} className={`flex items-start justify-between gap-3 pb-3 border-b last:border-0 p-3 rounded-lg transition-all ${urgente ? 'status-gradient-urgent' : 'hover:bg-card/50'}`}>
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{prazo.descricao}</p>
                         <p className="text-xs text-muted-foreground truncate">
@@ -198,7 +198,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                           {formatarData(prazo.dataFinal)}
                         </p>
                       </div>
-                      <Badge variant={urgente ? 'destructive' : 'default'} className="shrink-0">
+                      <Badge variant={urgente ? 'destructive' : 'default'} className={`shrink-0 ${urgente ? 'neon-glow' : ''}`}>
                         {diasRestantes < 0 ? 'Vencido' : 
                          diasRestantes === 0 ? 'Hoje' : 
                          diasRestantes === 1 ? 'Amanhã' :
@@ -212,10 +212,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-glow-hover glassmorphic">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Processos Recentes</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => onNavigate('processos')}>
+            <CardTitle className="gradient-text">Processos Recentes</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => onNavigate('processos')} className="hover:button-gradient hover:text-primary-foreground">
               Ver todos
               <ArrowRight size={16} />
             </Button>
@@ -225,14 +225,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Gavel size={48} className="text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Nenhum processo cadastrado</p>
-                <Button size="sm" className="mt-3" onClick={() => onNavigate('processos')}>
+                <Button size="sm" className="mt-3 button-gradient" onClick={() => onNavigate('processos')}>
                   Adicionar Processo
                 </Button>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {processosRecentes.map(process => (
-                  <div key={process.id} className="flex items-start justify-between gap-3 pb-3 border-b last:border-0">
+                  <div key={process.id} className={`flex items-start justify-between gap-3 pb-3 border-b last:border-0 p-3 rounded-lg transition-all hover:bg-card/50 ${process.status === 'ativo' ? 'status-gradient-active' : ''}`}>
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{process.titulo}</p>
                       <p className="text-xs text-muted-foreground truncate">

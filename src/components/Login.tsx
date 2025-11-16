@@ -54,15 +54,15 @@ export default function Login({ onLogin }: LoginProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md card-glow glassmorphic">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-2">
-            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-              <Sparkle className="w-10 h-10 text-primary-foreground" weight="fill" />
+            <div className="w-16 h-16 button-gradient rounded-xl flex items-center justify-center shadow-lg ring-4 ring-primary/20">
+              <Sparkle className="w-10 h-10 text-primary-foreground neon-glow" weight="fill" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Assistente Jurídico PJe</CardTitle>
+          <CardTitle className="text-3xl font-bold gradient-text">Assistente Jurídico PJe</CardTitle>
           <CardDescription className="text-base">
             Ferramentas inteligentes com IA Gemini para otimizar sua rotina jurídica
           </CardDescription>
@@ -79,7 +79,7 @@ export default function Login({ onLogin }: LoginProps) {
                   placeholder="Digite seu usuário"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 focus:ring-2 focus:ring-primary/50 transition-all"
                 />
               </div>
             </div>
@@ -93,11 +93,11 @@ export default function Login({ onLogin }: LoginProps) {
                   placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 focus:ring-2 focus:ring-primary/50 transition-all"
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" size="lg">
+            <Button type="submit" className="w-full button-gradient" size="lg">
               Entrar
             </Button>
           </form>
@@ -118,7 +118,7 @@ export default function Login({ onLogin }: LoginProps) {
               <Button
                 key={account.username}
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start hover:gradient-border hover:scale-[1.02] transition-all"
                 onClick={() => handleQuickAccess(account)}
               >
                 <User className="w-4 h-4 mr-2" />
