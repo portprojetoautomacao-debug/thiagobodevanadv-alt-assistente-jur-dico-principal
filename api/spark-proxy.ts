@@ -3,7 +3,9 @@
  * This function handles /_spark/* requests and forwards them to GitHub's runtime API
  */
 
-export default async function handler(req, res) {
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -59,7 +61,7 @@ export default async function handler(req, res) {
     }
 
     // Prepare fetch options
-    const options = {
+    const options: RequestInit = {
       method: req.method || 'GET',
       headers,
     };
