@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import type { Process } from '@/types'
+import type { Process, PremonicaoJuridica } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Pencil, Trash, CalendarCheck } from '@phosphor-icons/react'
+import { Pencil, Trash, CalendarCheck, Sparkle } from '@phosphor-icons/react'
 import { formatarData, calcularDiasRestantes, isUrgente, formatarMoeda } from '@/lib/prazos'
 import { toast } from 'sonner'
+import PremonicaoModal from './PremonicaoModal'
+import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
 
 interface ProcessDetailsDialogProps {
   open: boolean
@@ -19,6 +21,10 @@ interface ProcessDetailsDialogProps {
 
 export default function ProcessDetailsDialog({ open, onOpenChange, process, onEdit, onDelete }: ProcessDetailsDialogProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [premonicaoOpen, setPremonicaoOpen] = useState(false)
+  const [premonicaoLoading, setPremonicaoLoading] = useState(false)
+  const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null)
+  const [premonicaoError, setPremonicaoError] = useState<string | null>(null)
   
   if (!process) return null
 
@@ -32,6 +38,23 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
     toast.success('Processo excluído')
   }
 
+  const handlePremonicao = async () => {
+    setPremonicaoOpen(true)
+    setPremonicaoLoading(true)
+    setPremonicaoError(null)
+    setPremonicaoData(null)
+
+    try {
+      const data = await generatePremonicaoJuridica(process.numeroCNJ, process)
+      setPremonicaoData(data)
+    } catch (error) {
+      setPremonicaoError(error instanceof Error ? error.message : 'Erro desconhecido')
+      toast.error('Erro ao gerar premonição jurídica')
+    } finally {
+      setPremonicaoLoading(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -39,6 +62,10 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
           <div className="flex items-start justify-between gap-4">
             <DialogTitle className="flex-1">{process.titulo}</DialogTitle>
             <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={handlePremonicao}>
+                <Sparkle size={16} weight="fill" />
+                Premonição
+              </Button>
               <Button size="sm" variant="outline" onClick={() => {
                 onEdit(process)
                 onOpenChange(false)
@@ -182,6 +209,14 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PremonicaoModal
+        isOpen={premonicaoOpen}
+        onClose={() => setPremonicaoOpen(false)}
+        isLoading={premonicaoLoading}
+        data={premonicaoData}
+        error={premonicaoError}
+      />
     </Dialog>
   )
 }
