@@ -31,9 +31,9 @@ cd assistente-juridico-pje
 npm install
 ```
 
-### 2. Configure OAuth (Obrigatório)
+### 2. Configure OAuth e APIs
 
-Este aplicativo requer credenciais Google OAuth para autenticação.
+Este aplicativo requer configuração de APIs externas.
 
 **⚠️ IMPORTANTE: Nunca commit credenciais no Git!**
 
@@ -44,9 +44,12 @@ cp .env.example .env
 # Edite .env e adicione suas credenciais
 # VITE_GOOGLE_CLIENT_ID=seu-client-id-aqui
 # VITE_REDIRECT_URI=http://localhost:5173
+# VITE_DATAJUD_API_KEY=sua-api-key-datajud (opcional)
 ```
 
-📖 **Guia completo de configuração**: Veja `OAUTH_SETUP.md`
+📖 **Guias de configuração**:
+- `OAUTH_SETUP.md` - Configuração Google OAuth (obrigatório)
+- `DATAJUD_SETUP.md` - Configuração API DataJud (opcional)
 
 ### 3. Execute o Desenvolvimento
 
@@ -96,10 +99,13 @@ src/
 - `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
 - `PRD.md` - Documento de requisitos do produto
+- `OAUTH_SETUP.md` - Guia de configuração OAuth Google
+- `DATAJUD_SETUP.md` - **Guia de configuração API DataJud (NOVO)**
+- `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
+- `DJEN_DOCUMENTATION.md` - Integração DJEN (API Comunica PJe)
 - `OAUTH_SETUP.md` - Guia de configuração OAuth
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
 - `SECURITY.md` - Políticas de segurança
-- `DJEN_DOCUMENTATION.md` - Integração DJEN
 - `PREMONICAO_JURIDICA.md` - Sistema de premonição
 
 ## 🎨 Stack Tecnológica
