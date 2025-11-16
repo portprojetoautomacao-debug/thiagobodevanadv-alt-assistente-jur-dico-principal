@@ -81,4 +81,48 @@ export interface FinancialEntry {
   date: string
 }
 
+export interface Expediente {
+  id: string
+  processId: string
+  tipo: 'intimacao' | 'citacao' | 'documento' | 'outro'
+  type?: string
+  titulo: string
+  conteudo: string
+  content?: string
+  dataRecebimento: string
+  receivedAt?: string
+  prazoFatal?: string
+  deadline?: string
+  lido: boolean
+  arquivado: boolean
+  analyzed?: boolean
+  tags?: string[]
+  summary?: string
+  suggestedAction?: string
+  pendingDocs?: string[]
+  draftPetition?: string
+}
+
+export interface Appointment {
+  id: string
+  title: string
+  description?: string
+  date: string
+  time: string
+  duration: number
+  processId?: string
+  location?: string
+  type: 'audiencia' | 'reuniao' | 'prazo' | 'outro'
+  reminders?: number[]
+  googleEventId?: string
+}
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: 'admin' | 'advogado' | 'assistente'
+  avatarUrl?: string
+}
+
 export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas'
