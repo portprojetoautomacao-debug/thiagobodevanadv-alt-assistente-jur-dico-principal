@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { 
-  LayoutDashboard, 
+  ChartPieSlice,
   Gavel, 
   CalendarCheck, 
   Calculator, 
@@ -36,13 +36,13 @@ function App() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
 
   useEffect(() => {
-    if (processes.length === 0) {
+    if ((processes || []).length === 0) {
       setProcesses(SAMPLE_PROCESSES)
     }
   }, [])
 
   const navigation = [
-    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
     { id: 'calculadora' as ViewType, label: 'Calculadora', icon: Calculator },
