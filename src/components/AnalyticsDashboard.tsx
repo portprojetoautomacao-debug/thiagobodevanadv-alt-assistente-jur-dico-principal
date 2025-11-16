@@ -13,13 +13,8 @@ export default function AnalyticsDashboard() {
     toast.success('Dados de análise limpos com sucesso')
   }
 
-  const sortedPages = Object.entries(analytics.last24h.popularPages)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
-
-  const sortedActions = Object.entries(analytics.last24h.topActions)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
+  const sortedPages = analytics.last24h.popularPages
+  const sortedActions = analytics.last24h.topActions
 
   return (
     <div className="p-6 space-y-6">
@@ -47,7 +42,7 @@ export default function AnalyticsDashboard() {
             <ChartBar size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold gradient-text">{analytics.totalEvents}</div>
+            <div className="text-2xl font-bold gradient-text">{analytics.last24h.total}</div>
             <p className="text-xs text-muted-foreground">
               {analytics.last7d.total} nos últimos 7 dias
             </p>
