@@ -38,18 +38,18 @@ export default function DataInitializer({ onDataGenerated }: DataInitializerProp
 
     setLoading(true)
     try {
-      toast.info('Gerando processos com IA... Isso pode levar alguns segundos.')
+      toast.info(`Gerando ${count} processos com IA... Isso pode levar de 10 a 30 segundos.`)
       const processes = await generateRealisticProcesses(count)
       
       if (processes.length === 0) {
-        toast.error('Nenhum processo foi gerado')
+        toast.error('Nenhum processo foi gerado. Tente novamente.')
         return
       }
 
       onDataGenerated(processes)
-      toast.success(`${processes.length} processos realistas gerados com sucesso!`)
+      toast.success(`${processes.length} processos jurídicos realistas gerados com sucesso! ✨`)
     } catch (error) {
-      toast.error('Erro ao gerar dados. Tente novamente.')
+      toast.error('Erro ao gerar dados. Verifique sua conexão e tente novamente.')
       console.error(error)
     } finally {
       setLoading(false)
@@ -78,7 +78,7 @@ export default function DataInitializer({ onDataGenerated }: DataInitializerProp
                   <CardTitle className="text-lg">Dados de Exemplo</CardTitle>
                 </div>
                 <CardDescription>
-                  Carregue 5 processos pré-configurados para testar o sistema rapidamente
+                  Carregue 10 processos pré-configurados e diversos para testar o sistema rapidamente
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -110,12 +110,12 @@ export default function DataInitializer({ onDataGenerated }: DataInitializerProp
                   <CardTitle className="text-lg">Gerar com IA</CardTitle>
                 </div>
                 <CardDescription>
-                  Use inteligência artificial para criar processos realistas e variados
+                  Use IA para criar processos jurídicos brasileiros altamente realistas, com dados variados, prazos específicos e informações contextualizadas
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
-                  <Label htmlFor="count">Quantidade de processos</Label>
+                  <Label htmlFor="count">Quantidade de processos (1-50)</Label>
                   <Input
                     id="count"
                     type="number"
@@ -124,7 +124,11 @@ export default function DataInitializer({ onDataGenerated }: DataInitializerProp
                     value={count}
                     onChange={(e) => setCount(parseInt(e.target.value) || 10)}
                     disabled={loading}
+                    placeholder="Ex: 10"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Cada processo será único com nomes, comarcas, varas e prazos diferentes
+                  </p>
                 </div>
                 <Button 
                   onClick={handleGenerateData} 
@@ -134,7 +138,7 @@ export default function DataInitializer({ onDataGenerated }: DataInitializerProp
                   {loading ? (
                     <>
                       <CircleNotch className="animate-spin" size={20} />
-                      Gerando...
+                      Gerando processos realistas...
                     </>
                   ) : (
                     <>

@@ -322,11 +322,45 @@ Tailwind spacing (4px base):
 
 ---
 
-**Version:** 1.3  
+**Version:** 1.4  
 **Last Updated:** 2025-01-18  
 **Status:** ✅ Production Ready - Auditado e Aprovado
 
 ## Changelog
+
+### v1.4 - 2025-01-18 - Geração de Dados Realistas Aprimorada ✅
+
+**🎯 GERAÇÃO DE DADOS COM IA SIGNIFICATIVAMENTE MELHORADA**
+
+#### ✨ Aprimoramentos na Geração de Processos
+- ✅ **Prompt de IA expandido e detalhado** - Instruções muito mais específicas para geração de dados realistas
+- ✅ **Diversidade massiva de tipos de ação** - 15+ tipos diferentes de ações jurídicas (Cobrança, Despejo, Indenização, Execução, Trabalhista, Família, Usucapião, etc.)
+- ✅ **Nomes brasileiros realistas** - Geração de nomes de pessoas e empresas verdadeiramente diversos
+- ✅ **Empresas variadas** - Diferentes tipos (construtoras, comércio, serviços, indústria, tecnologia)
+- ✅ **Comarcas MG diversificadas** - 25+ comarcas diferentes de Minas Gerais
+- ✅ **Varas específicas por área** - Vara Cível, Família, Trabalho, Fazenda com especificações corretas
+- ✅ **Números CNJ válidos** - Formato correto com variação realista de segmentos judiciários
+- ✅ **Valores monetários realistas** - Distribuição apropriada (pequenas, médias e grandes causas)
+- ✅ **Status distribuído corretamente** - 60% ativo, 20% concluído, 15% suspenso, 5% arquivado
+- ✅ **Prazos altamente variados** - 10+ descrições diferentes de prazos específicos
+- ✅ **Notas contextuais específicas** - Informações detalhadas sobre andamento processual
+- ✅ **Datas realistas** - Distribuição de 2023-2025 com movimentações recentes
+- ✅ **Tratamento de erros robusto** - Try-catch com mensagens claras
+
+#### 📊 Dados de Exemplo Expandidos
+- ✅ **10 processos de exemplo** (anteriormente 5)
+- ✅ **Maior diversidade de casos** - Usucapião, Execução, Revisional, Acidente de Trabalho, Alimentos
+- ✅ **Diferentes comarcas** - BH, Uberlândia, Juiz de Fora, Montes Claros, Gov. Valadares, Poços de Caldas
+- ✅ **Variação de valores** - De R$ 0 a R$ 250.000
+- ✅ **Mix de status e urgências** - Processos em diferentes fases e com prazos variados
+
+#### 🎨 Experiência do Usuário
+- Os processos gerados por IA agora são significativamente mais realistas
+- Cada processo é único com detalhes específicos contextualizados
+- A IA gera dados que parecem casos reais de escritórios de advocacia
+- Maior variedade evita repetição de padrões genéricos
+
+---
 
 ### v1.3 - 2025-01-18 - Agente de Verificação Documental ✅
 
