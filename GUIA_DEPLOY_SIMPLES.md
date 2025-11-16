@@ -81,9 +81,9 @@ Vercel Deploy
 
 ## E o Render?
 
-O arquivo `render.yaml` pode ser **ignorado** se você usar o Vercel.
+**NÃO use o Render!** Este projeto é configurado para deploy integral no Vercel.
 
-Ele estava lá de tentativas anteriores de deploy, mas **não é necessário** para o Vercel.
+O arquivo `render.yaml` foi **removido** pois estava configurado incorretamente. Use apenas o Vercel para deploy.
 
 ## Troubleshooting
 
