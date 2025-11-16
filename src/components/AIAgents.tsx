@@ -1,259 +1,241 @@
-import { useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-  Robot, 
-  CheckCircle, 
-  FileText,
-  Calenda
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { 
   Robot, 
   Lightning, 
   CheckCircle, 
   Warning,
-  FileText,
   Gavel,
   Calendar,
   Database,
-import Age
-const ag
-  'djen-
-  'petit
-  'file-organ
-  'harvey-specter': Spar
+  Brain,
+  Sparkle,
+  Clock,
+  ChartLine,
+  Info,
+  ArrowsLeftRight,
+  ListChecks,
+  FileText
+} from '@phosphor-icons/react'
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+import AgentMetrics from '@/components/AgentMetrics'
+import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
+import MrsJustinEModal from '@/components/MrsJustinEModal'
+import AgentStatusFloater from '@/components/AgentStatusFloater'
+import { toast } from 'sonner'
+import type { Agent } from '@/lib/agents'
 
-  const
-    taskQue
+const agentIcons: Record<string, React.ComponentType<any>> = {
+  'djen-monitor': Database,
+  'deadline-tracker': Calendar,
+  'petition-writer': Gavel,
+  'file-organizer': FileText,
+  'harvey-specter': Sparkle,
+  'doc-analyzer': FileText,
+  'mrs-justin-e': Brain,
+}
+
+interface AIAgentsProps {
+  onNavigate?: (view: string) => void
+}
+
+export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
+  const {
+    agents,
+    taskQueue,
+    completedTasks,
     activityLog,
+    autoGenerateEnabled,
     toggleAgent,
     toggleAutoGenerate,
+    setAgents,
   } = useAutonomousAgents()
-  const [showCollaborationDemo, setShowCo
+  const [showCollaborationDemo, setShowCollaborationDemo] = useState(false)
+  const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
 
-    if (agents.length === 0) {
-        {
+  if (agents.length === 0) {
+    const initialAgents: Agent[] = [
+      {
+        id: 'harvey-specter',
+        name: 'Harvey Specter',
+        description: 'Assistente jurídico inteligente que analisa performance, processos, prazos e finanças com insights estratégicos',
+        type: 'strategic',
+        status: 'active',
+        enabled: true,
+        lastActivity: 'Pronto para análises estratégicas',
+        tasksCompleted: 287,
+        tasksToday: 15,
+        autonomyLevel: 98,
+        capabilities: [
+          'Análise de Performance',
+          'Insights Estratégicos',
+          'Monitoramento de KPIs',
+          'Análise Financeira',
+          'Gestão de Equipe',
+          'Previsões e Tendências',
+          'Alertas Inteligentes',
+          'Relatórios Executivos'
+        ],
+        nextScheduledRun: 'Sob demanda',
+        workQueue: [],
+        continuousMode: false,
+        humanInteractionMode: 'collaborate',
+      },
+      {
+        id: 'mrs-justin-e',
+        name: 'Mrs. Justin-e',
+        description: 'Analiso intimações com 95% de precisão em menos de 1 minuto, economizando 50 horas a cada 150 intimações',
+        type: 'analyzer',
+        status: 'active',
+        enabled: true,
+        lastActivity: 'Aguardando intimações para análise',
+        tasksCompleted: 150,
+        tasksToday: 12,
+        autonomyLevel: 95,
+        capabilities: [
+          'Interpreta intimações',
+          'Conta prazos',
+          'Orienta Controller',
+          'Sugere Tarefas',
+          'Sistema D-1, D-2 ou D-n',
+          'Prepara Atendimentos',
+          'Cria Workflow de Controladoria',
+          'Refaz Análise após nova informação'
+        ],
+        nextScheduledRun: 'Sob demanda',
+        workQueue: [],
+        continuousMode: false,
+        humanInteractionMode: 'collaborate',
+      },
+      {
+        id: 'doc-analyzer',
+        name: 'Agente de Análise Documental',
+        description: 'Analisa automaticamente expedientes, intimações e documentos do PJe 24/7',
+        type: 'analyzer',
+        status: 'active',
+        enabled: true,
+        lastActivity: 'Aguardando documentos para análise',
+        tasksCompleted: 143,
+        tasksToday: 7,
+        autonomyLevel: 95,
+        capabilities: ['Extração de dados', 'Sumarização', 'Classificação de documentos', 'Detecção de prazos'],
+        nextScheduledRun: 'Contínuo',
+        workQueue: [],
+        continuousMode: true,
+        humanInteractionMode: 'collaborate',
+      },
+      {
+        id: 'djen-monitor',
+        name: 'Agente de Monitoramento DJEN',
+        description: 'Monitora automaticamente o Diário de Justiça Eletrônico Nacional',
+        type: 'monitor',
+        status: 'active',
+        enabled: true,
+        lastActivity: 'Verificando novas publicações',
+        tasksCompleted: 231,
+        tasksToday: 18,
+        autonomyLevel: 92,
+        capabilities: ['Monitoramento 24/7', 'Detecção de publicações', 'Alertas em tempo real', 'Análise de relevância'],
+        nextScheduledRun: 'Contínuo',
+        workQueue: [],
+        continuousMode: true,
+        humanInteractionMode: 'pause',
+      },
+      {
+        id: 'deadline-tracker',
+        name: 'Agente de Gestão de Prazos',
+        description: 'Calcula e acompanha prazos processuais automaticamente',
+        type: 'calculator',
+        status: 'active',
+        enabled: true,
+        lastActivity: 'Verificando prazos próximos',
+        tasksCompleted: 189,
+        tasksToday: 14,
+        autonomyLevel: 98,
+        capabilities: ['Cálculo automático', 'Alertas de vencimento', 'Calendário processual', 'Análise de urgências'],
+        nextScheduledRun: 'A cada hora',
+        workQueue: [],
+        continuousMode: true,
+        humanInteractionMode: 'pause',
+      },
+      {
+        id: 'petition-writer',
+        name: 'Agente de Redação de Petições',
+        description: 'Auxilia na criação de petições e documentos jurídicos',
+        type: 'writer',
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 67,
+        tasksToday: 0,
+        autonomyLevel: 85,
+        capabilities: ['Redação assistida', 'Modelos jurisprudenciais', 'Revisão gramatical', 'Formatação automática'],
+        nextScheduledRun: 'Sob demanda',
+        workQueue: [],
+        continuousMode: false,
+        humanInteractionMode: 'collaborate',
+      },
+      {
+        id: 'file-organizer',
+        name: 'Agente de Organização de Arquivos',
+        description: 'Organiza e categoriza automaticamente documentos do escritório',
+        type: 'organizer',
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 54,
+        tasksToday: 0,
+        autonomyLevel: 88,
+        capabilities: ['Classificação automática', 'Renomeação inteligente', 'Detecção de duplicatas', 'Indexação'],
+        nextScheduledRun: 'Diariamente',
+        workQueue: [],
+        continuousMode: false,
+        humanInteractionMode: 'queue',
+      }
+    ]
+    setAgents(initialAgents)
+  }
 
-          type: 'strategic',
-          enabled: true,
-          tasksCompleted
-          autonomyLevel: 98,
-            'Análise de Perfo
-            'Monitoramento d
-            'Gestão de Equ
-            'Alertas Int
-          ],
- 
+  const activeAgents = agents.filter(a => a.enabled).length
+  const totalTasksToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
+  const avgAutonomy = agents.length > 0 
+    ? Math.round(agents.reduce((sum, a) => sum + a.autonomyLevel, 0) / agents.length)
+    : 0
 
-        {
-          
-          ty
-          enabl
-          tasksCompl
-    activityLog,
-            'Interpreta 
-    toggleAgent,
-            
-    toggleAutoGenerate,
-          ],
-  } = useAutonomousAgents()
-  
-        {
-          name: 'Agente de Análise Documental',
+  const queuedTasks = taskQueue.filter(t => t.status === 'queued').length
+  const processingTasks = taskQueue.filter(t => t.status === 'processing').length
+  const humanInterventionTasks = taskQueue.filter(t => t.status === 'human_intervention').length
 
-          enabled: 
-          tasksCompleted: 143,
-          autonom
-        {
-          id: 'harvey-specter',
-          name: 'Harvey Specter',
-          description: 'Assistente jurídico inteligente que analisa performance, processos, prazos e finanças com insights estratégicos',
-          type: 'strategic',
-          status: 'active',
-          enabled: true,
-          lastActivity: 'Pronto para análises estratégicas',
-          tasksCompleted: 287,
-          tasksToday: 15,
-          autonomyLevel: 98,
-          capabilities: [
-            'Análise de Performance',
-            'Insights Estratégicos',
-            'Monitoramento de KPIs',
-            'Análise Financeira',
-            'Gestão de Equipe',
-            'Previsões e Tendências',
-            'Alertas Inteligentes',
-            'Relatórios Executivos'
-          ],
-          nextScheduledRun: 'Sob demanda',
-          workQueue: [],
-          name: 'Agente de Gest
-          humanInteractionMode: 'collaborate',
-          
-        {
-          id: 'mrs-justin-e',
-          name: 'Mrs. Justin-e',
-          description: 'Analiso intimações com 95% de precisão em menos de 1 minuto, economizando 50 horas a cada 150 intimações',
-          type: 'analyzer',
-          status: 'active',
-          enabled: true,
-          lastActivity: 'Aguardando intimações para análise',
-          tasksCompleted: 150,
-          tasksToday: 12,
-          autonomyLevel: 95,
-          capabilities: [
-            'Interpreta intimações',
-            'Conta prazos',
-            'Orienta Controller',
-            'Sugere Tarefas',
-            'Sistema D-1, D-2 ou D-n',
-            'Prepara Atendimentos',
-            'Cria Workflow de Controladoria',
-            'Refaz Análise após nova informação'
-          ],
-  const handleToggleAgent = (agentId: s
+  const handleToggleAgent = (agentId: string) => {
+    toggleAgent(agentId)
+    const agent = agents.find(a => a.id === agentId)
     if (agent) {
       toast.success(
+        agent.enabled 
           ? `${agent.name} pausado` 
+          : `${agent.name} ativado`
       )
+    }
   }
-          id: 'doc-analyzer',
-          name: 'Agente de Análise Documental',
-          description: 'Analisa automaticamente expedientes, intimações e documentos do PJe 24/7',
-          type: 'analyzer',
-          status: 'active',
-          enabled: true,
-          lastActivity: 'Aguardando documentos para análise',
-          tasksCompleted: 143,
-          tasksToday: 7,
-          autonomyLevel: 95,
-          capabilities: ['Extração de dados', 'Sumarização', 'Classificação de documentos', 'Detecção de prazos'],
-          nextScheduledRun: 'Contínuo',
-          workQueue: [],
-          continuousMode: true,
-          humanInteractionMode: 'collaborate',
-        },
-        {
-            <CardTitle classN
-          </CardHeader>
-            <div className="text-2xl font-bold">{activeAgents}/{agents.length}</div>
-              Operando con
-          </CardContent>
 
-          <CardHeader className="flex flex-row items-ce
-            <CheckCircle clas
-          <CardContent>
-            <p className="tex
-            </p>
-        </Card>
-        <Card>
-            <CardTitle classNam
-          </CardHeader>
-          
-         
-          </CardContent>
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Agentes de IA Autônomos</h1>
+        <p className="text-muted-foreground mt-1">
+          Equipe de inteligência artificial trabalhando 24/7 para automatizar tarefas jurídicas
+        </p>
+      </div>
 
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <Robot className=
-          <CardContent>
-            <Progress va
-        </Card>
-
-        <CardHeader>
-            <div className="
-                <Sparkle className="w-8 h-8 text-primary" weight="fill" />
-              <div>
-                <CardDes
-                </CardDescripti
-            </div>
-          
-         
-        </CardHeader>
-          <div className="grid grid-cols-1 md
-              <div className="flex items-center gap-2 mb-2">
-                <h4 class
-              <p classNam
-              </p>
-            <div className="bg-background/50 round
-                <Brain classN
-              </div>
-                Identifica p
-            </div>
-              <div className="flex items-c
-                <h4 clas
-              <p className="tex
-              </p>
-          
-      </C
-      <Card className="bg-grad
-          <div className="flex items-start jus
-              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-              </div>
-                <CardTitl
-                  Especia
-              </div>
-            <Button onClick={
-              Ver Detalh
-          </div>
-        <CardContent>
-            <div className="bg-backgro
-                <Sparkle
-              </div>
-                Análise em menos de 1 mi
-          
-         
-                <h4 className="
-              <p className="text-sm text-muted-fo
-              </p>
-            <div className="
-                <Clock clas
-              </div>
-                50 horas economizadas a cada 150 
-            </div>
-        </CardContent>
-
-        <Card className="border-accent bg-accent/5">
-            <CardTitle className="flex 
-              {humanInte
-            <CardDescription>
-            </CardDescription>
-        </
-
-     
-            <div>
-
-              </CardDescription>
-            <Switch
-              on
-            />
-        </CardHeader
-          <p className
-              ? 'Os agentes estão re
-          </p>
-      <
-     
-   
-
-          </TabsTrigger>
-            <ArrowsLeftRight className="w-4 h-4 mr-2" />
-          </TabsTrigger>
-            Atividade em Tempo Real
-       
-
-            Fila de Tarefas
-              <Badge variant="secondary" className="ml-2">{queuedTasks + processi
-          </TabsTrigger>
-
-          
-          </TabsTrigger>
-
-          <AgentMetrics 
-            completedTasks={completedTasks}
-          />
-
-          <d
-
-                  <Arro
-                </CardTitle>
-                  Veja como os agentes detect
+      <MrsJustinEModal 
+        open={showMrsJustinEModal}
+        onOpenChange={setShowMrsJustinEModal}
         onActivate={() => {
           const agent = agents.find(a => a.id === 'mrs-justin-e')
           if (agent && !agent.enabled) {
@@ -491,6 +473,86 @@ const ag
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="agents" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {agents.map((agent) => {
+              const IconComponent = agentIcons[agent.id] || Robot
+              const statusColor = agent.enabled 
+                ? agent.status === 'processing' 
+                  ? 'text-accent' 
+                  : 'text-green-600'
+                : 'text-muted-foreground'
+
+              return (
+                <Card key={agent.id} className={agent.enabled ? 'border-primary/30' : ''}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg ${agent.enabled ? 'bg-primary/10' : 'bg-muted'}`}>
+                          <IconComponent className={`w-6 h-6 ${statusColor}`} weight="fill" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{agent.name}</CardTitle>
+                          <CardDescription className="text-xs mt-1">
+                            {agent.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={agent.enabled}
+                        onCheckedChange={() => handleToggleAgent(agent.id)}
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Status:</span>
+                      <Badge variant={agent.enabled ? 'default' : 'secondary'}>
+                        {agent.enabled ? 'Ativo' : 'Pausado'}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Última atividade:</span>
+                      <span className="text-foreground text-xs">{agent.lastActivity}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t">
+                      <div>
+                        <div className="text-lg font-bold text-foreground">{agent.tasksToday}</div>
+                        <div className="text-xs text-muted-foreground">Hoje</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-foreground">{agent.tasksCompleted}</div>
+                        <div className="text-xs text-muted-foreground">Total</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-foreground">{agent.autonomyLevel}%</div>
+                        <div className="text-xs text-muted-foreground">Autonomia</div>
+                      </div>
+                    </div>
+                    <div className="pt-2">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                        <span>Capacidades:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {agent.capabilities.slice(0, 4).map((cap, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {cap}
+                          </Badge>
+                        ))}
+                        {agent.capabilities.length > 4 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{agent.capabilities.length - 4}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </TabsContent>
+
         <TabsContent value="metrics" className="space-y-4">
           <AgentMetrics 
             agents={agents}
@@ -500,465 +562,159 @@ const ag
         </TabsContent>
 
         <TabsContent value="collaboration" className="space-y-4">
-          <div className="space-y-4">
-            <Card className="bg-gradient-to-br from-accent/10 to-primary/5 border-accent/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ArrowsLeftRight className="w-6 h-6 text-accent" weight="bold" />
-                  Demonstração de Colaboração Humano-Agente
-                </CardTitle>
-                <CardDescription>
-                  Veja como os agentes detectam e colaboram com intervenções humanas em tempo real
-                </CardDescription>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          <HumanAgentCollaboration 
+            agentName="Mrs. Justin-e"
+            taskDescription="Análise de intimação processual"
+          />
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Registro de Atividades</CardTitle>
+              <CardDescription>
+                Acompanhe em tempo real todas as ações dos agentes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                {activityLog.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma atividade registrada ainda
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {activityLog.map((log) => {
+                      const agent = agents.find(a => a.id === log.agentId)
+                      const IconComponent = agentIcons[log.agentId] || Robot
+                      
+                      return (
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{log.action}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(log.timestamp).toLocaleString('pt-BR')}
+                            </p>
+                          </div>
+                          <Badge 
+                            variant={
+                              log.result === 'success' ? 'default' : 
+                              log.result === 'warning' ? 'secondary' : 
+                              'destructive'
+                            }
+                            className="flex-shrink-0"
+                          >
+                            {log.result}
+                          </Badge>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="queue" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Fila de Tarefas</CardTitle>
+              <CardDescription>
+                Tarefas aguardando processamento pelos agentes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                {taskQueue.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma tarefa na fila
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {taskQueue.map((task) => {
+                      const agent = agents.find(a => a.id === task.agentId)
+                      const IconComponent = agentIcons[task.agentId] || Robot
+                      
+                      return (
+                        <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Criada em: {new Date(task.createdAt).toLocaleString('pt-BR')}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                            <Badge variant={
+                              task.priority === 'critical' ? 'destructive' :
+                              task.priority === 'high' ? 'default' :
+                              'secondary'
+                            }>
+                              {task.priority}
+                            </Badge>
+                            <Badge variant="outline">
+                              {task.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Histórico de Tarefas Completadas</CardTitle>
+              <CardDescription>
+                Últimas 100 tarefas concluídas pelos agentes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                {completedTasks.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma tarefa completada ainda
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {completedTasks.map((task) => {
+                      const agent = agents.find(a => a.id === task.agentId)
+                      const IconComponent = agentIcons[task.agentId] || Robot
+                      
+                      return (
+                        <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <IconComponent className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" weight="fill" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Concluída em: {task.completedAt ? new Date(task.completedAt).toLocaleString('pt-BR') : '-'}
+                            </p>
+                          </div>
+                          <Badge variant="default" className="flex-shrink-0 bg-green-600">
+                            Completa
+                          </Badge>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <AgentStatusFloater />
+    </div>
+  )
+}
