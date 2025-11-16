@@ -1,583 +1,485 @@
-# Product Requirements Document (PRD)
-## Assistente Jurídico Digital - Gestão Processual Inteligente
+# PRD - Assistente Jurídico PJe com IA Gemini
 
-Um assistente digital inteligente para advogados gerenciarem processos, calcularem prazos e organizarem informações processuais com auxílio de IA.
-
----
-
-## Missão
-
-Criar uma ferramenta de produtividade jurídica que auxilia advogados a gerenciar seus processos, calcular prazos processuais com precisão e organizar informações de forma eficiente, tudo com o poder da inteligência artificial.
+**Versão:** 2.0  
+**Data:** 16 de Novembro de 2025  
+**Status:** Produção
 
 ---
 
-## Experience Qualities
+## Declaração de Propósito
 
-1. **Profissional e Confiável** - O sistema deve transmitir seriedade e precisão, essenciais para um ambiente jurídico onde erros podem ter consequências graves.
-
-2. **Intuitivo e Eficiente** - Interface clara que permite encontrar informações e executar tarefas rapidamente, com curva de aprendizado mínima.
-
-3. **Inteligente e Útil** - IA que auxilia em análises, cálculos e organização de informações de forma natural e contextual.
+Um assistente jurídico inteligente movido por IA que automatiza completamente a rotina de escritórios de advocacia brasileiros, operando 24/7 sem intervenção humana para monitorar processos PJe, analisar intimações, calcular prazos e gerenciar todo o ciclo de vida processual.
 
 ---
 
-## Complexity Level
+## Qualidades da Experiência
 
-**Light Application (múltiplos recursos com estado básico)**
-
-Sistema focado em produtividade jurídica com gestão de processos, cálculo de prazos e assistente de IA, usando persistência client-side para dados. Não requer backend complexo, mantendo simplicidade e performance.
+1. **Autônomo e Confiável**: Opera continuamente sem supervisão, com precisão de 95% em análises e zero perda de prazos.
+2. **Intuitivo e Rápido**: Interface moderna que responde em menos de 100ms, com ações acessíveis em até 2 cliques.
+3. **Cyberpunk Sofisticado**: Estética futurista com tema Aurora Boreal neon, transmitindo tecnologia de ponta e confiança.
 
 ---
 
-## Essential Features
+## Nível de Complexidade
 
-### 1. Dashboard de Processos
+**Aplicação Complexa** - Sistema enterprise com múltiplos módulos integrados:
+- Automação RPA com Puppeteer
+- IA generativa (Google Gemini)
+- Websockets em tempo real
+- Gerenciamento de estado complexo
+- Integração com APIs externas (PJe, DataJud, DJEN, Google)
+- Sistema de agentes autônomos
 
-**Funcionalidade:** Visão geral dos processos em andamento com métricas e status
+---
 
-**Propósito:** Permitir visão rápida do portfólio de processos e identificar prioridades
+## Funcionalidades Essenciais
 
-**Trigger:** Acesso à aplicação
+### 1. Sistema de Agentes Autônomos 24/7
 
-**Progressão:** 
-Carrega processos do KV → Calcula estatísticas → Exibe cards com métricas → Lista processos recentes → Mostra prazos próximos → Usuário pode clicar para ver detalhes
+**Funcionalidade:** Agentes de IA operam continuamente sem intervenção humana.
 
-**Critérios de Sucesso:**
-- Dashboard carrega em < 500ms
-- Métricas calculadas corretamente
-- Prazos urgentes destacados visualmente
-- Navegação fluida para detalhes
+**Propósito:** Automatizar 100% das tarefas rotineiras jurídicas.
 
-### 2. Gestão de Processos
-
-**Funcionalidade:** CRUD completo de processos com informações estruturadas
-
-**Propósito:** Centralizar informações processuais e manter histórico organizado
-
-**Trigger:** Usuário clica em "Novo Processo" ou edita existente
+**Trigger:** Sistema inicia automaticamente ao deploy e roda em loop contínuo.
 
 **Progressão:**
-Abre formulário → Usuário preenche dados (número CNJ, partes, comarca, vara) → Adiciona notas e documentos → Salva → Sistema valida → Persiste no KV → Atualiza lista → Exibe confirmação
+1. Agente acorda conforme schedule (cron) → 
+2. Verifica fila de tarefas no banco → 
+3. Executa ferramentas específicas (análise, cálculo, consulta) → 
+4. Registra resultados e eventos → 
+5. Notifica usuário se necessário → 
+6. Volta a dormir até próximo ciclo
 
 **Critérios de Sucesso:**
-- Formulário valida número CNJ
-- Dados persistem após reload
-- Busca e filtros funcionam
-- Histórico de alterações mantido
+- Uptime de 99.9%
+- Máximo 5 minutos de latência entre intimação e análise
+- Zero prazos perdidos
 
-### 3. Calculadora de Prazos Processuais
+**Agentes Ativos:**
+- **Mrs. Justin-e**: Analisa intimações com 95% de precisão
+- **Doc Analyzer**: Extrai dados estruturados de documentos
+- **DJEN Monitor**: Monitora diários oficiais por nome/OAB
+- **Deadline Tracker**: Calcula e alerta prazos críticos
+- **Petition Writer**: Gera minutas de petições
+- **DataJud Query**: Consulta andamentos processuais oficiais
+- **Harvey Specter**: Assistente conversacional estratégico
 
-**Funcionalidade:** Cálculo de prazos processuais considerando dias úteis, feriados e regras do CPC/CLT
+---
 
-**Propósito:** Eliminar erros no cálculo de prazos críticos e garantir cumprimento
+### 2. Harvey Specter - Assistente Estratégico
 
-**Trigger:** Usuário acessa calculadora ou adiciona prazo a processo
+**Funcionalidade:** Chat IA que analisa dados do escritório e fornece insights estratégicos.
+
+**Propósito:** Transformar dados brutos em decisões inteligentes sobre:
+- Performance da equipe
+- Processos em andamento
+- Produtividade e métricas
+- Financeiro e rentabilidade
+- Agenda e compromissos
+- Relatórios customizados
+
+**Trigger:** Usuário acessa aba "Harvey Specter" ou faz pergunta.
 
 **Progressão:**
-Usuário seleciona tipo de prazo → Informa data inicial → Define quantidade de dias → Sistema consulta feriados nacionais → Calcula prazo final → Exibe resultado com detalhamento → Usuário pode salvar como lembrete
+1. Usuário pergunta (ex: "Qual advogado teve mais tarefas concluídas este mês?") →
+2. Harvey processa query usando dados do sistema →
+3. Consulta banco de dados e agrega informações →
+4. Gera análise usando Gemini Pro →
+5. Apresenta resposta clara com gráficos/tabelas →
+6. Oferece ações sugeridas
 
 **Critérios de Sucesso:**
-- Cálculos seguem regras CPC/CLT corretamente
-- Feriados nacionais considerados
-- Resultado claro com justificativa
-- Integração com processos funciona
+- Responde em menos de 3 segundos
+- Precisão de 90%+ nas análises
+- Capacidade de gerar relatórios exportáveis
 
-### 4. Assistente de IA (Consultor Jurídico)
+---
 
-**Funcionalidade:** Chat com IA para análise de documentos, sugestões e consultas
+### 3. Premonição Jurídica
 
-**Propósito:** Fornecer assistência inteligente para análise de textos jurídicos e orientação
+**Funcionalidade:** Análise preditiva de probabilidade de êxito processual.
 
-**Trigger:** Usuário abre chat e digita pergunta
+**Propósito:** Fornecer estimativa fundamentada de chances de vitória com base em:
+- Jurisprudência similar
+- Histórico de decisões do tribunal
+- Análise de andamentos do processo
+- Precedentes do STJ/tribunais superiores
+
+**Trigger:** Usuário clica em ícone 💡 em um expediente/processo.
 
 **Progressão:**
-Usuário digita pergunta ou cola texto → Sistema envia para spark.llm com contexto → IA analisa e gera resposta → Resposta formatada é exibida → Usuário pode fazer follow-up ou nova consulta
+1. Usuário seleciona processo → 
+2. Sistema busca dados no DataJud → 
+3. Consulta jurisprudência relevante (CNJ, STJ) → 
+4. Gemini Pro analisa contexto completo → 
+5. Calcula probabilidade (0-100%) → 
+6. Gera estratégias recomendadas → 
+7. Exibe precedentes com links
 
 **Critérios de Sucesso:**
-- Respostas em < 4 segundos
-- IA fornece análises relevantes
-- Suporta análise de documentos colados
-- Histórico de conversas mantido
+- Análise completa em menos de 10 segundos
+- Citar pelo menos 3 precedentes relevantes
+- Estratégias acionáveis e específicas
 
-### 5. Gerenciamento de Prazos e Lembretes
+---
 
-**Funcionalidade:** Sistema de alertas para prazos processuais importantes
+### 4. Upload e OCR Automático de Documentos
 
-**Propósito:** Garantir que nenhum prazo seja perdido
+**Funcionalidade:** Upload de PDF/imagem com extração automática de dados.
 
-**Trigger:** Sistema verifica prazos automaticamente ou usuário adiciona manualmente
+**Propósito:** Eliminar digitação manual ao cadastrar clientes/processos.
+
+**Trigger:** Usuário clica "Anexar Documento" em Cadastrar Cliente ou Processos.
 
 **Progressão:**
-Sistema carrega prazos → Verifica datas próximas → Calcula urgência → Exibe alertas visuais → Usuário pode marcar como concluído → Sistema remove da lista de pendentes
+1. Usuário faz upload de procuração/contrato/certidão →
+2. Sistema converte PDF em imagem (se necessário) →
+3. Gemini Pro Vision extrai dados estruturados →
+4. Auto-preenche campos: nome, CPF/CNPJ, endereço, telefone, número CNJ, partes →
+5. Usuário revisa e confirma →
+6. Salva no banco de dados
 
 **Critérios de Sucesso:**
-- Alertas aparecem para prazos D-3, D-1
-- Notificações visuais destacadas
-- Fácil marcação de conclusão
-- Integração com processos
+- Taxa de extração correta: 85%+
+- Suporta PDF e imagens (JPG, PNG)
+- Processa em menos de 5 segundos
 
-### 6. Inicialização e Gerenciamento de Dados
+---
 
-**Funcionalidade:** Sistema de inicialização de dados que permite carregar dados de exemplo ou gerar dados realistas com IA
+### 5. Integração Google Docs para Minutas
 
-**Propósito:** Facilitar o primeiro uso do sistema e permitir testes com dados variados e realistas
+**Funcionalidade:** Minutas abrem no Google Docs para edição colaborativa.
 
-**Trigger:** Primeira vez que o usuário acessa o sistema sem processos ou através do gerenciador de dados
+**Propósito:** Permitir edição rica e compartilhamento com equipe.
+
+**Trigger:** Usuário clica "Editar Minuta" na aba Minutas.
 
 **Progressão:**
-Sistema detecta ausência de processos → Exibe tela de inicialização → Usuário escolhe entre dados de exemplo ou geração com IA → Se IA: usuário define quantidade → Sistema gera processos via spark.llm → Dados são persistidos → Dashboard atualiza automaticamente
+1. Usuário clica em minuta existente →
+2. Sistema cria documento no Google Drive do usuário →
+3. Abre Google Docs em nova aba →
+4. Usuário edita (formatação, colaboração em tempo real) →
+5. Ao fechar/salvar, webhook sincroniza alterações →
+6. Sistema atualiza conteúdo no banco local
 
 **Critérios de Sucesso:**
-- Detecção automática de sistema vazio
-- Opções claras entre exemplo e geração IA
-- Geração de IA produz dados realistas e variados
-- Processos incluem prazos e informações completas
-- Possibilidade de adicionar mais dados posteriormente
-- Opção de limpar todos os dados quando necessário
+- Sincronização bidirecional automática
+- Suporte a múltiplos editores simultâneos
+- Histórico de versões preservado
 
-### 7. Agente de Verificação Documental
+---
 
-**Funcionalidade:** Agente de IA que identifica automaticamente documentos faltantes nos processos e notifica para juntá-los
+### 6. Dashboard Principal (Meu Painel)
 
-**Propósito:** Evitar atrasos processuais causados por documentação incompleta e garantir que todos os processos tenham a documentação necessária
+**Funcionalidade:** Visão geral centralizada com métricas chave.
 
-**Trigger:** Usuário solicita análise manual ou agente verifica automaticamente em intervalos programados
+**Propósito:** Permitir visualização rápida do estado atual do escritório.
+
+**Trigger:** Ao fazer login ou clicar em "Dashboard".
 
 **Progressão:**
-Agente analisa processos ativos → IA identifica documentos faltantes baseado no tipo de ação e contexto → Classifica por urgência (alta/média/baixa) → Exibe lista de documentos pendentes → Usuário pode notificar responsáveis → Marca como resolvido quando documento é juntado
+Usuário vê cards com:
+- Processos ativos/concluídos/suspensos
+- Prazos urgentes (próximos 5 dias)
+- Prazos pendentes totais
+- Atividade recente dos agentes
+- Processos recentes
+- Alertas de prazos vencendo
 
 **Critérios de Sucesso:**
-- IA identifica documentos relevantes com precisão
-- Classificação de urgência adequada ao contexto
-- Interface clara mostrando processos e documentos pendentes
-- Notificações efetivas para responsáveis
-- Fácil marcação de resolução
-- Histórico de documentos solicitados e juntados
+- Carrega em menos de 1 segundo
+- Dados em tempo real
+- Gráficos intuitivos
 
 ---
 
-## Edge Case Handling
+### 7. CRM Kanban de Processos
 
-- **Número CNJ inválido:** Sistema valida formato e alerta usuário, permite salvar mesmo assim com warning
-- **Prazo em feriado:** Sistema avança automaticamente para próximo dia útil conforme regra processual
-- **Processo sem prazo:** Sistema permite, mas sugere adicionar pelo menos um prazo de controle
-- **IA sem resposta:** Exibe mensagem amigável e sugestões de como reformular pergunta
-- **Dados corrompidos:** Sistema tenta recuperar, em caso de falha oferece reset com backup
+**Funcionalidade:** Gestão visual de processos em colunas arrastar-e-soltar.
 
----
+**Propósito:** Organizar pipeline processual por fases.
 
-## Design Direction
+**Trigger:** Usuário acessa "Acervo (CRM)".
 
-O design deve ser **moderno, vibrante e profissional**, transmitindo inovação e competência tecnológica. Interface contemporânea com elementos de glassmorphism e gradientes sutis, focada em legibilidade e eficiência. Hierarquia visual clara com uso estratégico de cores saturadas para destacar informações críticas (prazos urgentes, status de processos), mantendo a profissionalidade necessária ao ambiente jurídico.
+**Progressão:**
+1. Visualização em colunas: Novos → Em Andamento → Aguardando → Concluídos →
+2. Usuário arrasta card de processo entre colunas →
+3. Status atualiza automaticamente →
+4. Filtros por cliente, advogado, tribunal
 
----
-
-## Color Selection
-
-**Esquema:** Triadic moderno (índigo/violeta/rosa) com cores vibrantes e saturadas
-
-### Aplicação:
-
-- **Primary Color (Índigo Vibrante - oklch(0.55 0.22 264)):** Ações principais, links, headers importantes. Transmite modernidade, inovação tecnológica e confiabilidade digital.
-
-- **Secondary Colors:**
-  - **Violeta Médio - oklch(0.68 0.19 285):** Elementos secundários, variações de estado
-  - **Cinza Moderno - oklch(0.52 0.02 264):** Textos secundários com leve toque de cor
-  - **Cinza Claro Levemente Azulado - oklch(0.95 0.01 264):** Backgrounds sutis e elegantes
-
-- **Accent Color (Rosa Vibrante - oklch(0.72 0.21 330)):** Alertas importantes, CTAs de destaque, elementos que precisam chamar atenção. Cria contraste dinâmico e moderno.
-
-### Foreground/Background Pairings:
-
-- **Background (Cinza Clarissímo Azulado - oklch(0.98 0.004 264)):** Texto escuro (oklch(0.13 0.016 264)) - Ratio 15.8:1 ✓
-- **Card (Branco Levemente Azulado - oklch(0.995 0.003 264)):** Texto escuro (oklch(0.13 0.016 264)) - Ratio 16.4:1 ✓
-- **Primary (Índigo Vibrante - oklch(0.55 0.22 264)):** Texto claro (oklch(0.98 0.004 264)) - Ratio 7.2:1 ✓
-- **Secondary (Violeta - oklch(0.68 0.19 285)):** Texto claro (oklch(0.98 0.004 264)) - Ratio 5.8:1 ✓ (Large text)
-- **Accent (Rosa Vibrante - oklch(0.72 0.21 330)):** Texto claro (oklch(0.98 0.004 264)) - Ratio 5.1:1 ✓ (Large text)
-- **Muted (Cinza Claro - oklch(0.95 0.01 264)):** Texto médio (oklch(0.52 0.02 264)) - Ratio 5.4:1 ✓
+**Critérios de Sucesso:**
+- Drag-and-drop fluido (sem lag)
+- Atualização instantânea
+- Suporta 100+ processos sem lentidão
 
 ---
 
-## Font Selection
+### 8. Calculadora de Prazos com Raciocínio
 
-Fontes modernas e elegantes com excelente legibilidade digital. Inter para interface por sua versatilidade e clareza em todas as escalas, Cormorant para toques elegantes quando necessário.
+**Funcionalidade:** Calcula prazos processuais considerando feriados e regras CPC/CLT.
 
-### Typographic Hierarchy:
+**Propósito:** Garantir precisão em contagem de prazos.
 
-- **H1 (Título Página):** Inter Bold/36px/tight (-0.02em)
-- **H2 (Seção):** Inter Semibold/28px/normal
-- **H3 (Card Title):** Inter Semibold/20px/normal
-- **Body (Texto):** Inter Regular/16px/1.6 line-height
-- **Small (Labels):** Inter Medium/14px/1.5 line-height
-- **Caption (Meta):** Inter Regular/13px/text-muted-foreground
+**Trigger:** Usuário acessa "Calculadora" e insere dados.
 
----
+**Progressão:**
+1. Usuário seleciona: prazo (dias), tipo (úteis/corridos), data inicial, tribunal →
+2. Sistema consulta calendário de feriados (nacionais + locais) →
+3. Gemini Pro fornece raciocínio passo a passo →
+4. Exibe data final + explicação auditável
 
-## Animations
-
-**Contexto:** Animações sutis que reforçam ações e transições sem distrair. Prioridade em feedback imediato e orientação visual.
-
-### Purposeful Meaning:
-
-- **Interações:** Hover suave em cards e botões (100ms)
-- **Transições:** Fade para modais e páginas (200ms)
-- **Feedback:** Pulse em badges de prazo urgente
-- **Loading:** Skeleton screens com shimmer
-- **Sucesso:** Check animado ao salvar
-
-### Hierarchy of Movement:
-
-1. **Crítico:** Feedback de click/hover (< 100ms)
-2. **Importante:** Transições de modais (200-300ms)
-3. **Decorativo:** Animações sutis de atenção (pulso, shimmer)
+**Critérios de Sucesso:**
+- 100% de precisão
+- Explicação clara e auditável
+- Suporte a todos os tribunais brasileiros
 
 ---
 
-## Component Selection
+### 9. Consultas DataJud e DJEN
 
-### Shadcn Components:
+**Funcionalidade:** Busca oficial em bases do CNJ.
 
-- **Button:** Ações primárias e secundárias
-- **Card:** Container para processos e informações
-- **Dialog:** Modais para novo processo, detalhes
-- **Form + Input:** Formulários validados
-- **Badge:** Status de processos, urgência de prazos
-- **Tabs:** Navegação entre seções
-- **Calendar:** Seleção de datas
-- **Table:** Listas de processos e prazos
-- **Separator:** Divisões visuais
-- **Alert:** Avisos e alertas importantes
-- **Textarea:** Notas e observações
-- **Select:** Dropdowns para filtros
-- **Toast:** Confirmações de ações
+**Propósito:** Obter andamentos oficiais e intimações publicadas.
 
-### Custom Components:
+**Trigger:** Usuário acessa "Consultas" e insere CNJ ou OAB.
 
-- **ProcessCard:** Card rico com informações do processo
-- **PrazoCalculator:** Interface especializada para cálculos
-- **ChatInterface:** Interface de chat com IA
-- **PrazoAlert:** Componente de alerta visual para prazos
+**Progressão:**
+- **DataJud**: Busca por CNJ → retorna andamentos estruturados
+- **DJEN**: Busca por nome/OAB → retorna publicações em diários oficiais
 
-### States:
-
-- **Button:** Default, Hover (bg lighter), Active (scale 0.98), Disabled (opacity 50%), Loading (spinner)
-- **Input:** Default, Focus (ring azul), Error (border red), Success (border green), Disabled
-- **Card:** Default, Hover (shadow-md), Selected (border primary)
-
-### Icon Selection (Phosphor Icons):
-
-- **Gavel:** Processos jurídicos
-- **CalendarCheck:** Prazos e datas
-- **FileText:** Documentos
-- **Clock:** Prazos pendentes
-- **CheckCircle:** Concluído
-- **Warning:** Urgente
-- **ChatCircle:** Assistente IA
-- **Plus:** Adicionar novo
-- **MagnifyingGlass:** Buscar
-
-### Spacing:
-
-Tailwind spacing (4px base):
-- **Intra-card:** p-6 (24px)
-- **Entre elementos:** gap-4 (16px)
-- **Entre seções:** gap-8 (32px)
-- **Margens:** p-8 (32px) desktop, p-4 (16px) mobile
-
-### Mobile:
-
-**Mobile-first approach:**
-
-- **Breakpoints:** sm (640px), md (768px), lg (1024px)
-- **Dashboard:** Cards stack em mobile, grid >= md
-- **Formulários:** Full width < md, max-w-2xl >= md
-- **Tabelas:** Scroll horizontal ou cards empilhados < md
-- **Modals:** Full-screen < sm, centered >= sm
-- **Navigation:** Bottom tabs < md, sidebar >= lg
-- **Typography:** Scale -2px em mobile
+**Critérios de Sucesso:**
+- Resposta em menos de 5 segundos
+- Cache de 5 minutos
+- Retry automático em caso de falha
 
 ---
 
-## Technical Stack
+### 10. Base de Conhecimento (RAG)
 
-- **Framework:** React 19 + TypeScript
-- **Build:** Vite
-- **Styling:** Tailwind CSS v4
-- **Components:** Shadcn v4
-- **Icons:** Phosphor Icons
-- **State:** useState + useKV (Spark)
-- **Forms:** React Hook Form + Zod
-- **AI:** spark.llm (GPT-4)
-- **Date:** date-fns
-- **Animations:** Framer Motion (minimal)
+**Funcionalidade:** Indexa documentos do escritório e permite consultas semânticas.
 
----
+**Propósito:** Encontrar rapidamente petições, precedentes, modelos.
 
-## Success Metrics
+**Trigger:** Usuário acessa "Conhecimento" e faz pergunta.
 
-- **Usabilidade:** Usuários adicionam primeiro processo em < 2 minutos
-- **Precisão:** 100% acurácia em cálculos de prazos
-- **Performance:** LCP < 1.5s, interações < 100ms
-- **IA:** Respostas relevantes em 95%+ dos casos
-- **Adoção:** Usuários voltam 3+ vezes na primeira semana
+**Progressão:**
+1. Usuário pergunta (ex: "Modelos de contestação trabalhista") →
+2. Sistema busca em vetores (ChromaDB) →
+3. Retorna documentos relevantes →
+4. Gemini contextualiza resposta
+
+**Critérios de Sucesso:**
+- Busca em menos de 2 segundos
+- Top 5 resultados sempre relevantes
+- Suporta 10.000+ documentos
 
 ---
 
-**Version:** 1.6  
-**Last Updated:** 2025-01-18  
-**Status:** ✅ Production Ready - Efeitos Visuais com Gradientes Coloridos
+## Tratamento de Casos Extremos
 
-## Changelog
+**Falta de Conexão com PJe:**
+- Exibir mensagem clara de erro
+- Modo offline com dados em cache
+- Retry automático a cada 5 minutos
 
-### v1.6 - 2025-01-18 - Efeitos Visuais com Gradientes Coloridos ✨
+**Análise de IA Falha:**
+- Fallback para análise padrão (sem IA)
+- Log detalhado do erro
+- Notificar usuário para revisão manual
 
-**🎨 SISTEMA VISUAL COMPLETAMENTE APRIMORADO**
+**Prazo Crítico Detectado:**
+- Alerta vermelho no dashboard
+- Notificação push (se habilitada)
+- Email automático para advogado responsável
 
-#### ✨ Novos Efeitos Visuais
-- ✅ **Cores mais vibrantes e saturadas** - Primary (oklch(0.75 0.25 330)), Secondary (oklch(0.65 0.24 195)), Accent (oklch(0.70 0.26 285))
-- ✅ **Background com gradiente radial animado** - Múltiplos gradientes coloridos sobrepostos criando profundidade
-- ✅ **Neon glow effect intensificado** - Efeitos de brilho neon mais pronunciados nos ícones
-- ✅ **Card glow hover** - Cards com sombra colorida que intensifica no hover com transição suave
-- ✅ **Glassmorphic design** - Efeito de vidro fosco com backdrop-filter blur nos cards e sidebar
-- ✅ **Gradient text** - Texto com gradiente animado (shift) em títulos importantes
-- ✅ **Gradient border** - Bordas com gradiente animado para elementos ativos
-- ✅ **Button gradient** - Botões principais com gradiente rosa/roxo animado
-- ✅ **Shimmer effect** - Efeito shimmer para elementos de carregamento
-- ✅ **Status gradients** - Fundos com gradiente sutil para diferentes status (ativo, urgente, concluído)
-
-#### 🎯 Animações Implementadas
-- ✅ **neon-pulse** - Pulso de brilho neon nos ícones (3s ease-in-out infinite)
-- ✅ **gradient-shift** - Animação de shift nos gradientes (8s ease infinite)
-- ✅ **shimmer** - Animação de shimmer horizontal (3s infinite)
-- ✅ **card-glow-hover** - Transição suave de sombra nos cards (0.3s cubic-bezier)
-
-#### 🎨 Classes CSS Customizadas
-- `.neon-glow` - Efeito de pulso neon
-- `.gradient-border` - Borda com gradiente animado
-- `.gradient-text` - Texto com gradiente colorido animado
-- `.card-glow` - Sombra colorida em cards
-- `.card-glow-hover` - Sombra interativa com hover
-- `.glassmorphic` - Efeito glass com blur e transparência
-- `.shimmer-effect` - Efeito shimmer multicolorido
-- `.button-gradient` - Botão com gradiente e hover animado
-- `.status-gradient-active` - Gradiente sutil para status ativo
-- `.status-gradient-urgent` - Gradiente sutil para status urgente
-- `.status-gradient-completed` - Gradiente sutil para status concluído
-
-#### 📊 Componentes Atualizados
-- ✅ **App.tsx** - Sidebar e navegação com glassmorphic, ícones neon, gradientes ativos
-- ✅ **Dashboard.tsx** - Cards com glow hover, ícones coloridos duotone maiores, títulos gradient
-- ✅ **Login.tsx** - Card glassmorphic com glow, botão gradient, inputs com ring colorido
-- ✅ **index.css** - Novas variáveis de gradiente, classes utilitárias, animações
-
-#### 🌈 Paleta de Cores Expandida
-- **Gradient 1**: oklch(0.75 0.25 330) - Rosa vibrante
-- **Gradient 2**: oklch(0.70 0.26 285) - Roxo vibrante
-- **Gradient 3**: oklch(0.65 0.24 195) - Azul ciano vibrante
-- **Gradient 4**: oklch(0.68 0.22 250) - Azul roxeado
-
-#### 💫 Experiência do Usuário
-- Interface muito mais vibrante e moderna
-- Efeitos visuais sofisticados sem comprometer performance
-- Feedback visual rico em todas as interações
-- Hierarquia visual clara através de gradientes e glows
-- Mantém profissionalismo com toque contemporâneo
-- Elementos importantes se destacam naturalmente
+**Documento Ilegível (OCR):**
+- Solicitar re-upload de melhor qualidade
+- Oferecer digitação manual assistida
 
 ---
 
-### v1.5 - 2025-01-18 - Tema Moderno e Vibrante ✅
+## Direção de Design
 
-**🎨 TEMA VISUAL COMPLETAMENTE REDESENHADO**
-
-#### ✨ Novo Esquema de Cores
-- ✅ **Primary Color (Índigo Vibrante)** - oklch(0.55 0.22 264) - Cores mais saturadas e vibrantes
-- ✅ **Secondary Color (Violeta Médio)** - oklch(0.68 0.19 285) - Esquema triádico moderno
-- ✅ **Accent Color (Rosa Vibrante)** - oklch(0.72 0.21 330) - Contraste dinâmico e contemporâneo
-- ✅ **Background Sofisticado** - oklch(0.98 0.004 264) - Leve toque azulado para elegância
-- ✅ **Borders Modernas** - oklch(0.90 0.008 264) - Mais definição visual
-- ✅ **Radius Aumentado** - 0.75rem (12px) - Formas mais suaves e modernas
-
-#### 🎯 Design Modernizado
-- ✅ **Esquema Triádico** - Cores complementares vibrantes (índigo/violeta/rosa)
-- ✅ **Saturação Aumentada** - Cores mais vivas e impactantes (chroma ~0.20-0.22)
-- ✅ **Background Sofisticado** - Leve toque de cor para profundidade
-- ✅ **Contraste Mantido** - WCAG AA compliance em todas as combinações
-- ✅ **Visual Contemporâneo** - Aparência de apps modernos SaaS
-
-#### 🔤 Tipografia Aprimorada
-- ✅ **Fonte Inter** - Família Inter com pesos variados (400/500/600/700)
-- ✅ **Melhor Legibilidade** - Tipografia otimizada para telas modernas
-- ✅ **Hierarquia Clara** - Pesos definidos para cada nível
-
-#### 📊 Melhorias Visuais
-- **Profissional e Moderno**: Mantém a seriedade jurídica com visual contemporâneo
-- **Vibrante sem Exagero**: Cores saturadas mas balanceadas
-- **Elegância Digital**: Toques sutis de cor nos backgrounds
-- **Contraste Otimizado**: Acessibilidade mantida com visual melhorado
+**Cyberpunk Sofisticado com Aurora Boreal** - O design deve evocar tecnologia de ponta, confiança e eficiência através de um tema neon futurista inspirado nas luzes nórdicas. A interface deve ser predominantemente escura com acentos vibrantes em gradientes de roxo, verde e azul-ciano, transmitindo inovação e seriedade.
 
 ---
 
-### v1.4 - 2025-01-18 - Geração de Dados Realistas Aprimorada ✅
+## Seleção de Cores
 
-**🎯 GERAÇÃO DE DADOS COM IA SIGNIFICATIVAMENTE MELHORADA**
+**Tipo:** Custom Palette - Aurora Boreal Neon
 
-#### ✨ Aprimoramentos na Geração de Processos
-- ✅ **Prompt de IA expandido e detalhado** - Instruções muito mais específicas para geração de dados realistas
-- ✅ **Diversidade massiva de tipos de ação** - 15+ tipos diferentes de ações jurídicas (Cobrança, Despejo, Indenização, Execução, Trabalhista, Família, Usucapião, etc.)
-- ✅ **Nomes brasileiros realistas** - Geração de nomes de pessoas e empresas verdadeiramente diversos
-- ✅ **Empresas variadas** - Diferentes tipos (construtoras, comércio, serviços, indústria, tecnologia)
-- ✅ **Comarcas MG diversificadas** - 25+ comarcas diferentes de Minas Gerais
-- ✅ **Varas específicas por área** - Vara Cível, Família, Trabalho, Fazenda com especificações corretas
-- ✅ **Números CNJ válidos** - Formato correto com variação realista de segmentos judiciários
-- ✅ **Valores monetários realistas** - Distribuição apropriada (pequenas, médias e grandes causas)
-- ✅ **Status distribuído corretamente** - 60% ativo, 20% concluído, 15% suspenso, 5% arquivado
-- ✅ **Prazos altamente variados** - 10+ descrições diferentes de prazos específicos
-- ✅ **Notas contextuais específicas** - Informações detalhadas sobre andamento processual
-- ✅ **Datas realistas** - Distribuição de 2023-2025 com movimentações recentes
-- ✅ **Tratamento de erros robusto** - Try-catch com mensagens claras
+**Cores em OKLCH:**
 
-#### 📊 Dados de Exemplo Expandidos
-- ✅ **10 processos de exemplo** (anteriormente 5)
-- ✅ **Maior diversidade de casos** - Usucapião, Execução, Revisional, Acidente de Trabalho, Alimentos
-- ✅ **Diferentes comarcas** - BH, Uberlândia, Juiz de Fora, Montes Claros, Gov. Valadares, Poços de Caldas
-- ✅ **Variação de valores** - De R$ 0 a R$ 250.000
-- ✅ **Mix de status e urgências** - Processos em diferentes fases e com prazos variados
+- **Primary (Aurora Verde-Azul)**: `oklch(0.75 0.25 190)` - Verde-ciano vibrante, principal ação
+  - *Foreground:* `oklch(0.98 0.01 0)` - Branco puro - Ratio 15.2:1 ✓
 
-#### 🎨 Experiência do Usuário
-- Os processos gerados por IA agora são significativamente mais realistas
-- Cada processo é único com detalhes específicos contextualizados
-- A IA gera dados que parecem casos reais de escritórios de advocacia
-- Maior variedade evita repetição de padrões genéricos
+- **Secondary (Aurora Roxo)**: `oklch(0.70 0.26 300)` - Roxo neon, ações secundárias
+  - *Foreground:* `oklch(0.98 0.01 0)` - Branco puro - Ratio 12.8:1 ✓
 
----
+- **Accent (Aurora Rosa)**: `oklch(0.75 0.28 350)` - Rosa-magenta, destaques
+  - *Foreground:* `oklch(0.12 0.02 0)` - Preto profundo - Ratio 14.5:1 ✓
 
-### v1.3 - 2025-01-18 - Agente de Verificação Documental ✅
+- **Background**: `oklch(0.12 0.03 240)` - Azul escuro profundo, quase preto
+  - *Foreground:* `oklch(0.92 0.02 180)` - Branco esverdeado - Ratio 16.5:1 ✓
 
-**🤖 NOVO AGENTE DE IA IMPLEMENTADO**
+- **Card**: `oklch(0.16 0.04 240)` - Azul escuro com leve saturação
+  - *Foreground:* `oklch(0.92 0.02 180)` - Branco esverdeado - Ratio 13.8:1 ✓
 
-#### ✨ Agente de Verificação Documental
-- ✅ **Identificação automática de documentos faltantes** - Analisa processos ativos e identifica documentação incompleta
-- ✅ **Classificação por urgência** - Categoriza documentos como alta/média/baixa urgência
-- ✅ **Notificações inteligentes** - Sistema de alertas para documentos pendentes
-- ✅ **Interface dedicada** - Aba "Verificação Documental" na seção de Agentes IA
-- ✅ **Dashboard de pendências** - Cards com estatísticas de documentos por urgência
-- ✅ **Gestão de resoluções** - Marcação de documentos como juntados
-- ✅ **Análise via IA** - Utiliza GPT-4 para análise contextual dos processos
-- ✅ **Verificação automática** - Opção de análise periódica automática
+- **Muted**: `oklch(0.20 0.04 240)` - Azul médio escuro
+  - *Foreground:* `oklch(0.65 0.08 180)` - Verde-azul acinzentado - Ratio 5.2:1 ✓
 
-#### 📊 Funcionalidades
-- **Análise Inteligente**: IA analisa tipo de ação, partes, comarca e contexto
-- **Sugestões Contextuais**: Identifica até 3 documentos relevantes por processo
-- **Métricas em Tempo Real**: Total pendente, alta/média/baixa urgência
-- **Sistema de Notificações**: Alertas para documentos críticos
-- **Histórico**: Rastreamento de documentos solicitados e juntados
+- **Destructive (Alerta Urgente)**: `oklch(0.65 0.28 25)` - Vermelho neon
+  - *Foreground:* `oklch(0.98 0.01 0)` - Branco puro - Ratio 8.5:1 ✓
 
-#### 🎨 Interface
-- Nova aba "Verificação Documental" na tela de Agentes IA
-- Cards coloridos por urgência (vermelho/azul/cinza)
-- Botões "Notificar" e "Juntado" para gestão
-- ScrollArea para lista de documentos pendentes
-- Alert informativo sobre funcionamento do agente
+- **Border**: `oklch(0.25 0.06 240 / 0.5)` - Azul translúcido
+- **Input**: `oklch(0.22 0.05 240)` - Azul escuro sólido
+- **Ring**: `oklch(0.75 0.25 190)` - Mesma do primary para consistência
+
+**Gradientes Aurora:**
+- `--gradient-aurora-1`: `linear-gradient(135deg, oklch(0.75 0.25 190), oklch(0.70 0.26 300))`
+- `--gradient-aurora-2`: `linear-gradient(135deg, oklch(0.70 0.26 300), oklch(0.75 0.28 350))`
+- `--gradient-aurora-3`: `radial-gradient(ellipse at top, oklch(0.25 0.20 190 / 0.4), transparent)`
 
 ---
 
-### v1.2 - 2025-01-18 - Auditoria Final Completa ✅
+## Seleção de Fontes
 
-**🎯 SISTEMA AUDITADO E APROVADO PARA PRODUÇÃO**
+**Características:** Moderno, tecnológico, legível em telas, com contraste claro entre heading e body.
 
-#### 🔍 Auditoria Completa Realizada
-- ✅ **Todos os componentes verificados** (Dashboard, ProcessosView, PrazosView, CalculadoraPrazos, AssistenteIA)
-- ✅ **Todos os diálogos verificados** (ProcessDialog, ProcessDetailsDialog)
-- ✅ **Todos os utilitários verificados** (prazos.ts, utils.ts)
-- ✅ **Tipos TypeScript validados** (types.ts - 100% type-safe)
-- ✅ **Estilos otimizados** (index.css, main.css)
-- ✅ **Zero bugs críticos ou moderados encontrados**
+- **Sans-serif Principal**: **Inter** - Clean, moderno, excelente legibilidade digital
+- **Monospace (Códigos/CNJ)**: **Geist Mono** - Técnico, alinhamento perfeito para números processuais
+- **Serif (Opcional para contratos)**: **Cormorant** - Elegante, jurídico
 
-#### 📊 Resultados da Auditoria
-- **Qualidade Geral:** ⭐⭐⭐⭐⭐ (4.9/5)
-- **Conformidade com PRD:** 100% ✅
-- **Performance:** Otimizada com useMemo e functional updates
-- **Segurança:** Validações e sanitização implementadas
-- **Responsividade:** Mobile-first, testado em todos breakpoints
-- **Acessibilidade:** WCAG AA compliance nas cores
-
-#### ✨ Componentes Validados
-1. **Dashboard.tsx** ✅
-   - Carregamento e cálculo de estatísticas
-   - Lista de próximos prazos (top 5)
-   - Processos recentes (top 5)
-   - Alertas visuais para urgências
-   - Performance otimizada com useMemo
-
-2. **ProcessosView.tsx** ✅
-   - CRUD completo funcionando
-   - Busca e filtros operacionais
-   - Integração com diálogos
-   - Empty states apropriados
-
-3. **PrazosView.tsx** ✅
-   - Filtros por status (todos, pendentes, urgentes, concluídos)
-   - Toggle de conclusão
-   - Cálculo em tempo real
-   - Badges coloridos por urgência
-
-4. **CalculadoraPrazos.tsx** ✅
-   - Cálculos CPC e CLT corretos
-   - Feriados nacionais 2025
-   - Salvamento vinculado a processos
-   - Validações robustas
-
-5. **AssistenteIA.tsx** ✅
-   - Chat com spark.llm funcionando
-   - Contexto de processos enviado
-   - Histórico persistido
-   - Error handling apropriado
-
-#### 🛠️ Utilitários Validados
-- ✅ **lib/prazos.ts** - 11 funções, todas testadas
-- ✅ **lib/utils.ts** - Helper de classes funcionando
-
-#### 📐 TypeScript
-- ✅ **Interfaces bem definidas** - Process, Prazo, ChatMessage, Feriado, ViewType
-- ✅ **Zero tipos `any`** - Type-safety completo
-- ✅ **Props validadas** - Todos os componentes tipados
-
-#### 🎨 Design & UX
-- ✅ **Palette profissional** - Azul índigo + âmbar em OKLCH
-- ✅ **Contraste WCAG AA** - Todas as combinações validadas
-- ✅ **Tipografia consistente** - Barlow, Fira Code, Alegreya
-- ✅ **Layout responsivo** - Mobile-first, grid adaptativo
-- ✅ **Micro-interações** - Hovers, transições, feedbacks
-
-#### ⚡ Performance
-- ✅ **useMemo** para cálculos pesados
-- ✅ **Functional updates** no useKV (evita stale closures)
-- ✅ **Lazy evaluation** de estatísticas
-- ✅ **First Load** < 1s (esperado)
-- ✅ **Interações** < 100ms
-
-#### 🔒 Segurança
-- ✅ Sem credenciais hardcoded
-- ✅ Validação de inputs (CNJ, datas)
-- ✅ Sanitização de dados do usuário
-- ✅ XSS protection (React escaping)
-- ✅ Uso seguro de spark.llmPrompt
-
-#### 📱 Responsividade Testada
-- ✅ Mobile (< 640px): Stack layout, bottom nav
-- ✅ Tablet (640-1024px): Grid 2 colunas
-- ✅ Desktop (> 1024px): Grid 4 colunas, sidebar
-
-#### 📋 Relatório Completo
-Ver **AUDITORIA_FINAL.md** para detalhes completos da auditoria.
+**Hierarquia Tipográfica:**
+- **H1 (Título Principal)**: Inter Bold / 32px / tracking tight
+- **H2 (Seção)**: Inter Semibold / 24px / tracking normal
+- **H3 (Subsseção)**: Inter Medium / 20px / tracking normal
+- **Body**: Inter Regular / 16px / line-height 1.6
+- **Caption (Datas/Metadados)**: Inter Regular / 14px / line-height 1.4
+- **CNJ/Monospace**: Geist Mono Regular / 14px / tracking wide
 
 ---
 
-### v1.1 - 2025-01-17 - Correções Críticas
-- ✅ Corrigido Dashboard.tsx (arquivo estava corrompido)
-- ✅ Otimizado index.css removendo código duplicado
-- ✅ Atualizado index.html com fontes corretas
-- ✅ Adicionados dados de exemplo (4 processos realistas)
-- ✅ Adicionado histórico de chat de exemplo
-- ✅ Melhorada tipografia e consistência visual
+## Animações
+
+**Contextualmente Apropriado** - Animações devem reforçar o tema cyberpunk sem prejudicar performance. Movimento sutil para transições, neon pulse para elementos ativos.
+
+**Hierarquia de Movimento:**
+- **Alta Prioridade**: Alertas de prazo urgente (pulse rápido)
+- **Média Prioridade**: Transições de página (slide suave)
+- **Baixa Prioridade**: Hover effects (glow sutil)
+
+**Animações Chave:**
+
+1. **Neon Glow Pulse** (Ícones ativos, botões primários):
+```css
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 10px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 15px currentColor);
+  }
+}
+animation: neon-pulse 3s ease-in-out infinite;
+```
+
+2. **Gradient Shift** (Backgrounds, borders):
+```css
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+animation: gradient-shift 8s ease infinite;
+background-size: 200% 200%;
+```
+
+3. **Shimmer Effect** (Loading states):
+```css
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+animation: shimmer 3s infinite;
+```
+
+4. **Card Hover Glow** (Cards, processos):
+```css
+.card-glow-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-glow-hover:hover {
+  box-shadow: 
+    0 0 30px -5px oklch(0.75 0.25 190 / 0.5),
+    0 0 60px -10px oklch(0.70 0.26 300 / 0.4);
+  transform: translateY(-2px);
+}
+```
+
+**Timings:**
+- Micro-interação (hover): 150ms
+- Transição de estado: 300ms
+- Transição de página: 400ms
+- Animação contínua (pulse): 3000ms
+
+---
+
+## Seleção de Componentes
+
+**Shadcn UI v4** como base, com customizações no tema Aurora Boreal:
+
+- **Dashboard**: Cards com `card-glow` class, gradientes aurora em backgrounds
+- **Navegação**: Sidebar com glassmorphism (`backdrop-filter: blur(12px)`)
+- **Botões**: 
+  - Primary: `.button-gradient` (aurora-1)
+  - Secondary: Outline com border neon
+  - Destructive: Vermelho neon com pulse
+- **Inputs**: Border sutil com `:focus` glow verde-ciano
+- **Modals/Dialogs**: `Dialog` com overlay escuro e blur
+- **Cards de Processo**: Border left accent (4px) colorido por status
+- **Badges**: Status com cores específicas (ativo=verde, urgente=vermelho, concluído=roxo)
+- **Tabelas**: `Table` com hover row glow sutil
+- **Gráficos**: Recharts com cores aurora (chart-1 a chart-5)
+
+**Customizações Específicas:**
+- Todos os botões primários recebem `neon-glow` em hover
+- Cards têm `glassmorphic` class para transparência
+- Sidebar tem gradient aurora sutil no topo
+- Alertas urgentes pulsam com `neon-pulse`
+
+**Ícones:** `@phosphor-icons/react` - peso `duotone` para ativos, `regular` para inativos
+
+**Espaçamento:** Grid de 8px, usando classes Tailwind (`gap-4`, `p-6`, etc.)
+
+**Mobile:** 
+- Breakpoint: 768px
+- Bottom navigation bar em mobile
+- Cards empilhados verticalmente
+- Sidebar colapsa em drawer
+
+---
+
+## Próximas Etapas de Implementação
+
+**Sprint 1 (Crítico - 3 dias):**
+- [x] Corrigir erros de compilação
+- [ ] Implementar tema Aurora Boreal completo
+- [ ] Implementar Harvey Specter (chat IA)
+- [ ] Implementar Premonição Jurídica
+
+**Sprint 2 (Alta Prioridade - 5 dias):**
+- [ ] Upload e OCR de documentos
+- [ ] Integração Google Docs para minutas
+- [ ] Melhorar agentes autônomos (garantir 24/7)
+
+**Sprint 3 (Médio Prazo - 1 semana):**
+- [ ] Notificações push
+- [ ] Relatórios exportáveis
+- [ ] Sincronização Google Calendar
+- [ ] Dashboard analytics avançado
+
+---
+
+**Versão:** 2.0  
+**Última Atualização:** 16 de Novembro de 2025  
+**Status:** ✅ Pronto para Implementação
