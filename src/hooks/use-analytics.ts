@@ -1,27 +1,27 @@
 import { useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 
-  type: 'pageview' | 'acti
+interface AnalyticsEvent {
+  id: string
+  type: 'pageview' | 'action' | 'error'
+  timestamp: number
   data: {
+    path?: string
+    action?: string
     category?: string
     label?: string
-    error
+    value?: number
+    error?: string
+    userAgent?: string
     viewport?: {
+      width: number
       height: number
+    }
   }
+}
 
-  const [events, s
-  const trackPageV
-      id: `${Date.now(
-      timestamp:
-        path,
-        viewport: {
-     
-   
-
-
-      return newEvents.slice(-10
-  }
+export function useAnalytics() {
+  const [events, setEvents] = useKV<AnalyticsEvent[]>('analytics-events', [])
 
   const trackPageView = (path: string) => {
     const event: AnalyticsEvent = {
@@ -132,30 +132,26 @@ import { useKV } from '@github/spark/hooks'
         total: last24h.length,
         pageViews: pageViews.length,
         actions: actions.length,
+        errors: errors.length,
+        popularPages,
+        topActions,
+      },
+      last7d: {
+        total: last7d.length,
+        pageViews: last7d.filter(e => e.type === 'pageview').length,
+        actions: last7d.filter(e => e.type === 'action').length,
+        errors: last7d.filter(e => e.type === 'error').length,
+      },
+      allEvents: eventsList,
+    }
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }, [path, trackPageView])
-
+  return {
+    trackPageView,
+    trackAction,
+    trackError,
+    clearEvents,
+    getAnalytics,
+    events: events || [],
+  }
+}
