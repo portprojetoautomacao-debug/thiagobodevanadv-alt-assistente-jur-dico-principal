@@ -20,6 +20,7 @@ import {
 } from '@phosphor-icons/react'
 import Login from '@/components/Login'
 import Dashboard from '@/components/Dashboard'
+import CadastrarCliente from '@/components/CadastrarCliente'
 import ClientesView from '@/components/ClientesView'
 import ProcessosView from '@/components/ProcessosView'
 import PrazosView from '@/components/PrazosView'
@@ -76,6 +77,7 @@ function App() {
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
+    { id: 'cadastrar-cliente' as ViewType, label: 'Cadastrar Cliente', icon: UsersFour },
     { id: 'clientes' as ViewType, label: 'Clientes', icon: UsersFour },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
@@ -93,6 +95,8 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentView} />
+      case 'cadastrar-cliente':
+        return <CadastrarCliente />
       case 'clientes':
         return <ClientesView />
       case 'processos':
