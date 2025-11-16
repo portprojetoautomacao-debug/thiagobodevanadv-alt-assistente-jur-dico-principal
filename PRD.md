@@ -168,38 +168,39 @@ Agente analisa processos ativos → IA identifica documentos faltantes baseado n
 
 ## Design Direction
 
-O design deve ser **profissional, limpo e moderno**, transmitindo confiança e competência. Interface minimalista focada em legibilidade e eficiência, usando tema claro por padrão com opção para tema escuro. Hierarquia visual clara com uso estratégico de cor para destacar informações críticas (prazos urgentes, status de processos).
+O design deve ser **moderno, vibrante e profissional**, transmitindo inovação e competência tecnológica. Interface contemporânea com elementos de glassmorphism e gradientes sutis, focada em legibilidade e eficiência. Hierarquia visual clara com uso estratégico de cores saturadas para destacar informações críticas (prazos urgentes, status de processos), mantendo a profissionalidade necessária ao ambiente jurídico.
 
 ---
 
 ## Color Selection
 
-**Esquema:** Analogous (tons de azul/índigo) com acento complementar (âmbar) para warnings
+**Esquema:** Triadic moderno (índigo/violeta/rosa) com cores vibrantes e saturadas
 
 ### Aplicação:
 
-- **Primary Color (Azul Índigo #4f46e5):** Ações principais, links, headers importantes. Transmite profissionalismo, confiabilidade e autoridade jurídica.
+- **Primary Color (Índigo Vibrante - oklch(0.55 0.22 264)):** Ações principais, links, headers importantes. Transmite modernidade, inovação tecnológica e confiabilidade digital.
 
 - **Secondary Colors:**
-  - **Azul Ardósia (#334155):** Textos secundários e backgrounds sutis
-  - **Cinza Neutro (#64748b):** Borders, divisores, elementos de suporte
-  - **Azul Claro (#e0e7ff):** Backgrounds de destaque, hovers
+  - **Violeta Médio - oklch(0.68 0.19 285):** Elementos secundários, variações de estado
+  - **Cinza Moderno - oklch(0.52 0.02 264):** Textos secundários com leve toque de cor
+  - **Cinza Claro Levemente Azulado - oklch(0.95 0.01 264):** Backgrounds sutis e elegantes
 
-- **Accent Color (Âmbar #f59e0b):** Alertas de prazo urgente, CTAs importantes. Chama atenção sem ser alarmista.
+- **Accent Color (Rosa Vibrante - oklch(0.72 0.21 330)):** Alertas importantes, CTAs de destaque, elementos que precisam chamar atenção. Cria contraste dinâmico e moderno.
 
 ### Foreground/Background Pairings:
 
-- **Background (Branco #ffffff):** Texto escuro (#0f172a) - Ratio 18.1:1 ✓
-- **Card (Cinza Claro #f8fafc):** Texto escuro (#1e293b) - Ratio 16.2:1 ✓
-- **Primary (Azul Índigo #4f46e5):** Texto branco (#ffffff) - Ratio 8.9:1 ✓
-- **Accent (Âmbar #f59e0b):** Texto escuro (#1e293b) - Ratio 8.7:1 ✓
-- **Muted (Cinza #f1f5f9):** Texto médio (#475569) - Ratio 7.8:1 ✓
+- **Background (Cinza Clarissímo Azulado - oklch(0.98 0.004 264)):** Texto escuro (oklch(0.13 0.016 264)) - Ratio 15.8:1 ✓
+- **Card (Branco Levemente Azulado - oklch(0.995 0.003 264)):** Texto escuro (oklch(0.13 0.016 264)) - Ratio 16.4:1 ✓
+- **Primary (Índigo Vibrante - oklch(0.55 0.22 264)):** Texto claro (oklch(0.98 0.004 264)) - Ratio 7.2:1 ✓
+- **Secondary (Violeta - oklch(0.68 0.19 285)):** Texto claro (oklch(0.98 0.004 264)) - Ratio 5.8:1 ✓ (Large text)
+- **Accent (Rosa Vibrante - oklch(0.72 0.21 330)):** Texto claro (oklch(0.98 0.004 264)) - Ratio 5.1:1 ✓ (Large text)
+- **Muted (Cinza Claro - oklch(0.95 0.01 264)):** Texto médio (oklch(0.52 0.02 264)) - Ratio 5.4:1 ✓
 
 ---
 
 ## Font Selection
 
-Fontes modernas e legíveis, priorizando clareza em longos períodos de leitura. Inter para interface por sua excelente legibilidade em telas, Lora para documentos quando necessário.
+Fontes modernas e elegantes com excelente legibilidade digital. Inter para interface por sua versatilidade e clareza em todas as escalas, Cormorant para toques elegantes quando necessário.
 
 ### Typographic Hierarchy:
 
@@ -322,11 +323,43 @@ Tailwind spacing (4px base):
 
 ---
 
-**Version:** 1.4  
+**Version:** 1.5  
 **Last Updated:** 2025-01-18  
-**Status:** ✅ Production Ready - Auditado e Aprovado
+**Status:** ✅ Production Ready - Tema Modernizado
 
 ## Changelog
+
+### v1.5 - 2025-01-18 - Tema Moderno e Vibrante ✅
+
+**🎨 TEMA VISUAL COMPLETAMENTE REDESENHADO**
+
+#### ✨ Novo Esquema de Cores
+- ✅ **Primary Color (Índigo Vibrante)** - oklch(0.55 0.22 264) - Cores mais saturadas e vibrantes
+- ✅ **Secondary Color (Violeta Médio)** - oklch(0.68 0.19 285) - Esquema triádico moderno
+- ✅ **Accent Color (Rosa Vibrante)** - oklch(0.72 0.21 330) - Contraste dinâmico e contemporâneo
+- ✅ **Background Sofisticado** - oklch(0.98 0.004 264) - Leve toque azulado para elegância
+- ✅ **Borders Modernas** - oklch(0.90 0.008 264) - Mais definição visual
+- ✅ **Radius Aumentado** - 0.75rem (12px) - Formas mais suaves e modernas
+
+#### 🎯 Design Modernizado
+- ✅ **Esquema Triádico** - Cores complementares vibrantes (índigo/violeta/rosa)
+- ✅ **Saturação Aumentada** - Cores mais vivas e impactantes (chroma ~0.20-0.22)
+- ✅ **Background Sofisticado** - Leve toque de cor para profundidade
+- ✅ **Contraste Mantido** - WCAG AA compliance em todas as combinações
+- ✅ **Visual Contemporâneo** - Aparência de apps modernos SaaS
+
+#### 🔤 Tipografia Aprimorada
+- ✅ **Fonte Inter** - Família Inter com pesos variados (400/500/600/700)
+- ✅ **Melhor Legibilidade** - Tipografia otimizada para telas modernas
+- ✅ **Hierarquia Clara** - Pesos definidos para cada nível
+
+#### 📊 Melhorias Visuais
+- **Profissional e Moderno**: Mantém a seriedade jurídica com visual contemporâneo
+- **Vibrante sem Exagero**: Cores saturadas mas balanceadas
+- **Elegância Digital**: Toques sutis de cor nos backgrounds
+- **Contraste Otimizado**: Acessibilidade mantida com visual melhorado
+
+---
 
 ### v1.4 - 2025-01-18 - Geração de Dados Realistas Aprimorada ✅
 

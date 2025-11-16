@@ -8,29 +8,29 @@
 }
 
 :root {
-  --font-sans: Montserrat;
+  --font-sans: Inter, Montserrat;
   --font-mono: Geist Mono;
 
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
+  --background: oklch(0.98 0.004 264);
+  --foreground: oklch(0.13 0.016 264);
+  --card: oklch(0.995 0.003 264);
+  --card-foreground: oklch(0.13 0.016 264);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.51 0.182 264.05);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.005 264.05);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0.005 264.05);
-  --muted-foreground: oklch(0.55 0.015 264.05);
-  --accent: oklch(0.71 0.166 37.42);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.58 0.22 25.73);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.005 264.05);
-  --input: oklch(0.92 0.005 264.05);
-  --ring: oklch(0.51 0.182 264.05);
-  --radius: 0.625rem;
+  --popover-foreground: oklch(0.13 0.016 264);
+  --primary: oklch(0.55 0.22 264);
+  --primary-foreground: oklch(0.98 0.004 264);
+  --secondary: oklch(0.68 0.19 285);
+  --secondary-foreground: oklch(0.98 0.004 264);
+  --muted: oklch(0.95 0.01 264);
+  --muted-foreground: oklch(0.52 0.02 264);
+  --accent: oklch(0.72 0.21 330);
+  --accent-foreground: oklch(0.98 0.004 264);
+  --destructive: oklch(0.61 0.24 25);
+  --destructive-foreground: oklch(0.98 0.004 264);
+  --border: oklch(0.90 0.008 264);
+  --input: oklch(0.88 0.01 264);
+  --ring: oklch(0.55 0.22 264);
+  --radius: 0.75rem;
   --font-serif: Cormorant;
 }
 
