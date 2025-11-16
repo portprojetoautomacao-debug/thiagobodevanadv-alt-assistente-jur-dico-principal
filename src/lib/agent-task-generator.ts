@@ -91,15 +91,16 @@ export class AgentTaskGenerator {
         const task = createAgentTask(
           randomAgentId,
           template.type,
-          template.priority,
           { 
             description: `Auto-generated task for ${randomAgentId}`,
             generatedAt: new Date().toISOString()
-          }
+          },
+          template.priority
+        )
 
         if (this.onTaskGenerated) {
-        if (this.onTaskGenerated) {
           this.onTaskGenerated(task)
+        }
       }
     }
   }
@@ -126,5 +127,5 @@ export class AgentTaskGenerator {
 export const taskGenerator = new AgentTaskGenerator()
 
 export function createTaskGenerator(config?: Partial<TaskGeneratorConfig>, onTaskGenerated?: (task: AgentTask) => void): AgentTaskGenerator {
-export function createTaskGenerator(config?: Partial<TaskGeneratorConfig>, onTaskGenerated?: (task: AgentTask) => void): AgentTaskGenerator {
   return new AgentTaskGenerator(config, onTaskGenerated)
+}
