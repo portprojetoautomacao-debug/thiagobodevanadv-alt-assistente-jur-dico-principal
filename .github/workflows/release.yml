@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+      env:
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
+        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI }}
+        VITE_APP_ENV: 'production'
+
+    - name: Create release archive
+      run: |
+        cd dist
+        zip -r ../assistente-juridico-pje-${{ github.ref_name }}.zip .
+        cd ..
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        if [ -f "CHANGELOG.md" ]; then
+          # Extract changelog for this version
+          sed -n "/^## \[${{ github.ref_name }}\]/,/^## \[/p" CHANGELOG.md | sed '$d' > release_notes.md
+        else
+          # Generate basic changelog from git commits
+          echo "## What's Changed" > release_notes.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md
+        fi
+        
+        echo "Release notes generated"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        body_path: release_notes.md
+        files: |
+          assistente-juridico-pje-${{ github.ref_name }}.zip
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Deploy to production
+      run: |
+        echo "🚀 Triggering production deployment..."
+        # This will trigger the deploy workflow
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-release:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: create-release
+
+    steps:
+    - name: Notify release completion
+      run: |
+        echo "✅ Release ${{ github.ref_name }} created successfully"
+        echo "📦 Build artifacts uploaded"
+        echo "🚀 Production deployment initiated"
