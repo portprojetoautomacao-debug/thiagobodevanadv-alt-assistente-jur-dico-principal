@@ -10,6 +10,8 @@ jobs:
   nightly-build:
     name: Nightly Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
     - name: Checkout code
@@ -97,6 +99,8 @@ jobs:
   dependency-update-check:
     name: Check for Dependency Updates
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
     - name: Checkout code

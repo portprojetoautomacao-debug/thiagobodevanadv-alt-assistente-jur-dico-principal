@@ -8,6 +8,9 @@ jobs:
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     if: github.event.pull_request.draft == false
 
     steps:
@@ -102,6 +105,9 @@ jobs:
   pr-labeler:
     name: Auto Label PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
     - name: Checkout code
@@ -116,6 +122,8 @@ jobs:
   size-limit:
     name: Bundle Size Limit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
     - name: Checkout code

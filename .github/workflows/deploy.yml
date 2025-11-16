@@ -18,6 +18,9 @@ jobs:
   deploy-vercel:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     environment:
       name: ${{ github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
@@ -72,6 +75,8 @@ jobs:
   deploy-notification:
     name: Deployment Notification
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: deploy-vercel
     if: always()
 
