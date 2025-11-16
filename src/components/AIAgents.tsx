@@ -40,6 +40,7 @@ const agentIcons: Record<string, any> = {
   'datajud-query': Database,
   'file-organizer': Stack,
   'mrs-justin-e': Brain,
+  'harvey-specter': Sparkle,
 }
 
 export default function AIAgents() {
@@ -61,6 +62,32 @@ export default function AIAgents() {
   useEffect(() => {
     if (agents.length === 0) {
       setAgents([
+        {
+          id: 'harvey-specter',
+          name: 'Harvey Specter',
+          description: 'Assistente jurídico inteligente que analisa performance, processos, prazos e finanças com insights estratégicos',
+          type: 'strategic',
+          status: 'active',
+          enabled: true,
+          lastActivity: 'Pronto para análises estratégicas',
+          tasksCompleted: 287,
+          tasksToday: 15,
+          autonomyLevel: 98,
+          capabilities: [
+            'Análise de Performance',
+            'Insights Estratégicos',
+            'Monitoramento de KPIs',
+            'Análise Financeira',
+            'Gestão de Equipe',
+            'Previsões e Tendências',
+            'Alertas Inteligentes',
+            'Relatórios Executivos'
+          ],
+          nextScheduledRun: 'Sob demanda',
+          workQueue: [],
+          continuousMode: true,
+          humanInteractionMode: 'collaborate',
+        },
         {
           id: 'mrs-justin-e',
           name: 'Mrs. Justin-e',
@@ -287,6 +314,60 @@ export default function AIAgents() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <Sparkle className="w-8 h-8 text-primary" weight="fill" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Harvey Specter</CardTitle>
+                <CardDescription className="mt-1">
+                  Assistente jurídico inteligente - Análises estratégicas e insights em tempo real
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400">
+                Disponível na aba "Assistente IA"
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-background/50 rounded-lg p-4 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <ChartLine className="w-5 h-5 text-accent" weight="fill" />
+                <h4 className="font-semibold text-foreground">Análises Inteligentes</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Performance, processos, prazos e finanças em um só lugar
+              </p>
+            </div>
+            <div className="bg-background/50 rounded-lg p-4 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="w-5 h-5 text-primary" weight="fill" />
+                <h4 className="font-semibold text-foreground">Insights Estratégicos</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Identifica padrões e sugere otimizações
+              </p>
+            </div>
+            <div className="bg-background/50 rounded-lg p-4 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightning className="w-5 h-5 text-accent" weight="fill" />
+                <h4 className="font-semibold text-foreground">Respostas Rápidas</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Análises complexas em questão de segundos
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
         <CardHeader>

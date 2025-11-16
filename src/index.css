@@ -8,8 +8,8 @@
 }
 
 :root {
-  --font-sans: IBM Plex Sans;
-  --font-mono: IBM Plex Mono;
+  --font-sans: Roboto;
+  --font-mono: Space Mono;
 
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.15 0 0);
@@ -31,7 +31,7 @@
   --input: oklch(0.92 0.005 264.05);
   --ring: oklch(0.51 0.182 264.05);
   --radius: 0.625rem;
-  --font-serif: IBM Plex Serif;
+  --font-serif: Noto Serif;
 }
 
 @theme {

@@ -18,7 +18,7 @@ export interface Agent {
   id: string
   name: string
   description: string
-  type: 'analyzer' | 'monitor' | 'calculator' | 'writer' | 'organizer' | 'researcher'
+  type: 'analyzer' | 'monitor' | 'calculator' | 'writer' | 'organizer' | 'researcher' | 'strategic'
   status: 'active' | 'idle' | 'processing' | 'paused' | 'waiting_human'
   enabled: boolean
   lastActivity: string
@@ -81,6 +81,14 @@ export const agentActivities = {
     'Analisando decisões similares',
     'Consolidando dados estatísticos',
     'Extraindo informações relevantes',
+  ],
+  strategic: [
+    'Analisando performance da equipe',
+    'Gerando insights estratégicos',
+    'Monitorando KPIs do escritório',
+    'Avaliando tendências financeiras',
+    'Identificando gargalos operacionais',
+    'Sugerindo otimizações de processo',
   ],
 }
 
