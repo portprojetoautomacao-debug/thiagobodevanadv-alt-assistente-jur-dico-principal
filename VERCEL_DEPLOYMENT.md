@@ -2,7 +2,10 @@
 
 This document explains how to deploy the Assistente Jurídico PJe application to Vercel.
 
-> **📌 Important:** If you're experiencing 404 errors on `/_spark/*` endpoints, see [SPARK_FIX_GUIDE.md](./SPARK_FIX_GUIDE.md) for a complete troubleshooting guide.
+> **📌 Important Notes:**
+> - If you're experiencing 404 errors on `/_spark/*` endpoints, see [SPARK_FIX_GUIDE.md](./SPARK_FIX_GUIDE.md)
+> - If you have package-lock.json conflicts, see [VERCEL_DEPLOYMENT_FIX.md](./VERCEL_DEPLOYMENT_FIX.md)
+> - For PR #18 resolution details, see [PR_18_RESOLUTION.md](./PR_18_RESOLUTION.md)
 
 ## Prerequisites
 

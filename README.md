@@ -96,15 +96,20 @@ src/
 
 ## 📖 Documentação
 
+### Deployment
 - `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
+- `VERCEL_DEPLOYMENT_FIX.md` - **Resolução de conflitos no package-lock.json** 🔧
+- `QUICKFIX_PACKAGE_LOCK.md` - **Fix rápido de conflitos (1 linha)** ⚡
+- `PR_18_RESOLUTION.md` - Detalhes da resolução do PR #18
+- `SPARK_FIX_GUIDE.md` - Troubleshooting de endpoints Spark
+
+### Features & Setup
 - `PRD.md` - Documento de requisitos do produto
 - `OAUTH_SETUP.md` - Guia de configuração OAuth Google
 - `DATAJUD_SETUP.md` - **Guia de configuração API DataJud (NOVO)**
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
 - `DJEN_DOCUMENTATION.md` - Integração DJEN (API Comunica PJe)
-- `OAUTH_SETUP.md` - Guia de configuração OAuth
-- `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
 - `SECURITY.md` - Políticas de segurança
 - `PREMONICAO_JURIDICA.md` - Sistema de premonição
 
