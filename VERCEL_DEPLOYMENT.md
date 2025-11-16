@@ -2,6 +2,8 @@
 
 This document explains how to deploy the Assistente Jurídico PJe application to Vercel.
 
+> **📌 Important:** If you're experiencing 404 errors on `/_spark/*` endpoints, see [SPARK_FIX_GUIDE.md](./SPARK_FIX_GUIDE.md) for a complete troubleshooting guide.
+
 ## Prerequisites
 
 1. A [Vercel account](https://vercel.com/signup)
@@ -120,6 +122,8 @@ If you see 404 errors for `/_spark/*` endpoints:
 1. **Check environment variables**: Ensure `GITHUB_RUNTIME_PERMANENT_NAME` and `GITHUB_TOKEN` are set in Vercel
 2. **Verify GitHub token**: Make sure your token has the required scopes
 3. **Check runtime name**: Verify the value matches what's in `runtime.config.json`
+
+**📖 For detailed troubleshooting and step-by-step instructions, see [SPARK_FIX_GUIDE.md](./SPARK_FIX_GUIDE.md)**
 
 ### Build Failures
 
