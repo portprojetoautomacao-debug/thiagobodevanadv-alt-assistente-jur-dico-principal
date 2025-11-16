@@ -315,7 +315,7 @@ export default function MinutasManager() {
                   <Label htmlFor="processo">Processo (opcional)</Label>
                   <Select
                     value={formData.processId}
-                    onValueChange={(value) => setFormData({ ...formData, processId: value === '_none' ? '' : value })}
+                    onValueChange={(value) => setFormData({ ...formData, processId: value })}
                   >
                     <SelectTrigger id="processo">
                       <SelectValue placeholder="Selecione um processo" />
