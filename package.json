@@ -7,7 +7,7 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
-        "start": "serve -s dist -l 10000",
+        "start": "serve -s dist",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"
