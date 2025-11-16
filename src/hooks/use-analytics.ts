@@ -1,27 +1,27 @@
 import { useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 
-interface AnalyticsEvent {
-  id: string
-  type: 'pageview' | 'action' | 'error'
-  timestamp: number
+  type: 'pageview' | 'acti
   data: {
-    path?: string
     category?: string
-    action?: string
     label?: string
-    value?: number
-    error?: string
-    userAgent?: string
+    error
     viewport?: {
-      width: number
       height: number
-    }
   }
-}
 
-export function useAnalytics() {
-  const [events, setEvents] = useKV<AnalyticsEvent[]>('analytics-events', [])
+  const [events, s
+  const trackPageV
+      id: `${Date.now(
+      timestamp:
+        path,
+        viewport: {
+     
+   
+
+
+      return newEvents.slice(-10
+  }
 
   const trackPageView = (path: string) => {
     const event: AnalyticsEvent = {
@@ -132,30 +132,30 @@ export function useAnalytics() {
         total: last24h.length,
         pageViews: pageViews.length,
         actions: actions.length,
-        errors: errors.length,
-        popularPages,
-        topActions,
-      },
-      last7d: {
-        total: last7d.length,
-      },
-    }
-  }
 
-  return {
-    trackPageView,
-    trackAction,
-    trackError,
-    clearEvents,
-    getAnalytics,
-    events,
-  }
-}
 
-export function usePageViewTracking(path: string) {
-  const { trackPageView } = useAnalytics()
 
-  useEffect(() => {
-    trackPageView(path)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }, [path, trackPageView])
-}
+
