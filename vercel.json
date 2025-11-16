@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "buildCommand": "npm install && npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/_spark/llm",
+      "destination": "/api/llm-proxy"
+    },
+    {
+      "source": "/_spark/:service/:path*",
+      "destination": "/api/spark-proxy?service=:service&path=:path"
+    },
+    {
+      "source": "/_spark/:service",
+      "destination": "/api/spark-proxy?service=:service"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}
