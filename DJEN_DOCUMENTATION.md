@@ -50,16 +50,28 @@ O componente foi integrado na aba DJEN do módulo de consultas existente.
 
 ### Endpoint Base
 ```
-GET https://comunicaapi.pje.jus.br/api/v1/caderno/{siglaTribunal}/{data}/{meio}
+GET https://comunicaapi.pje.jus.br/api/v1/comunicacao
 ```
 
-### Parâmetros
+### Parâmetros (Query String)
 
-| Parâmetro | Tipo | Descrição | Exemplo |
-|-----------|------|-----------|---------|
-| siglaTribunal | string | Sigla oficial do tribunal | `TJSP`, `TST`, `TRT3` |
-| data | string | Data no formato AAAA-MM-DD | `2025-01-16` |
-| meio | string | Formato da resposta | `html` ou `pdf` |
+| Parâmetro | Tipo | Obrigatório | Descrição | Exemplo |
+|-----------|------|-------------|-----------|---------|
+| siglaTribunal | string | Sim | Sigla oficial do tribunal | `TJSP`, `TST`, `TRT3` |
+| dataDisponibilizacaoInicio | string | Sim | Data inicial no formato YYYY-MM-DD | `2025-01-16` |
+| dataDisponibilizacaoFim | string | Sim | Data final no formato YYYY-MM-DD | `2025-01-16` |
+| nomeAdvogado | string | Condicional* | Nome do advogado | `João Silva` |
+| numeroOab | string | Condicional* | Número da OAB (apenas dígitos) | `123456` |
+| ufOab | string | Condicional* | UF da OAB | `SP`, `MG` |
+| nomeParte | string | Condicional* | Nome da parte | `Maria Santos` |
+| numeroProcesso | string | Condicional* | Número do processo | `50012345620228130000` |
+
+\* Pelo menos um dos parâmetros condicionais deve ser fornecido.
+
+### Exemplo de Requisição
+```
+GET https://comunicaapi.pje.jus.br/api/v1/comunicacao?siglaTribunal=TJMG&dataDisponibilizacaoInicio=2025-01-16&dataDisponibilizacaoFim=2025-01-16&numeroOab=123456&ufOab=MG
+```
 
 ### Tribunais Suportados
 
@@ -133,8 +145,8 @@ const resultado = await consultarDJEN({
     nomeAdvogado: 'Thiago Bodevan',
     numeroOAB: 'OAB/MG 123456'
   },
-  data: '2025-01-16',
-  meio: 'html'
+  dataInicio: '2025-01-16',
+  dataFim: '2025-01-16'
 })
 
 console.log(`${resultado.resultados.length} publicações encontradas`)
@@ -150,6 +162,8 @@ try {
     searchTerms: {
       numeroOAB: 'OAB/SP 12345'
     },
+    dataInicio: '2025-01-16',
+    dataFim: '2025-01-20',
     timeout: 90000, // 90 segundos
     delayBetweenRequests: 2000 // 2s entre requests
   })
@@ -193,6 +207,15 @@ Embora não documentado oficialmente, recomenda-se:
 
 ## Possíveis Erros e Soluções
 
+### Erro 400 Bad Request
+
+**Causa**: Parâmetros faltando ou inválidos
+**Solução**: 
+- Garantir que siglaTribunal, dataDisponibilizacaoInicio e dataDisponibilizacaoFim estão presentes
+- Fornecer pelo menos um dos parâmetros de busca (nomeAdvogado, numeroOab/ufOab, nomeParte, ou numeroProcesso)
+- Validar formato da data (YYYY-MM-DD)
+- Verificar que numeroOab e ufOab estão corretos quando fornecidos
+
 ### Erro 403 Forbidden
 
 **Causa**: Falta do User-Agent correto
@@ -200,11 +223,11 @@ Embora não documentado oficialmente, recomenda-se:
 
 ### Erro 404 Not Found
 
-**Causa**: Tribunal ou data inválidos
+**Causa**: Tribunal ou endpoint inválidos
 **Solução**: 
 - Verificar sigla do tribunal (case-sensitive)
-- Validar formato da data (AAAA-MM-DD)
-- Confirmar que há publicação naquela data (evitar finais de semana)
+- Usar o endpoint correto: `/api/v1/comunicacao`
+- Confirmar que o tribunal está disponível na API
 
 ### Timeout
 
@@ -269,6 +292,13 @@ Para dúvidas ou problemas:
 4. Testar endpoint manualmente (curl/Postman)
 
 ## Changelog
+
+### v1.1.0 (2025-11-16)
+- ✅ **CORREÇÃO CRÍTICA**: Atualizado endpoint de `/api/v1/caderno` para `/api/v1/comunicacao` (endpoint correto)
+- ✅ Parâmetros agora passados via query string em vez de path
+- ✅ Adicionado suporte a dataDisponibilizacaoInicio e dataDisponibilizacaoFim
+- ✅ Extração automática de UF do número OAB (formato OAB/UF 12345)
+- ✅ Corrigido erro HTTP 400 que impedia consultas
 
 ### v1.0.0 (2025-01-16)
 - ✅ Implementação inicial completa

@@ -110,7 +110,7 @@ describe('DJEN API - Integração', () => {
     const resultado = await consultarDJEN({
       tribunais: ['TJSP'],
       searchTerms: { nomeAdvogado: 'Teste' },
-      data: '2025-01-16'
+      dataInicio: '2025-01-16'
     })
 
     expect(resultado.resultados).toHaveLength(0)
@@ -141,7 +141,7 @@ describe('DJEN API - Integração', () => {
     const resultado = await consultarDJEN({
       tribunais: ['TJSP'],
       searchTerms: { nomeAdvogado: 'João Silva' },
-      data: '2025-01-16'
+      dataInicio: '2025-01-16'
     })
 
     expect(resultado.resultados).toHaveLength(1)
@@ -166,7 +166,7 @@ describe('DJEN API - Integração', () => {
     const resultado = await consultarDJEN({
       tribunais: ['TJMG'],
       searchTerms: { numeroOAB: 'OAB/MG 999999' },
-      data: '2025-01-16'
+      dataInicio: '2025-01-16'
     })
 
     expect(resultado.resultados).toHaveLength(1)
@@ -193,7 +193,7 @@ describe('DJEN API - Integração', () => {
         nomeAdvogado: 'Pedro Costa',
         numeroOAB: 'OAB/RJ 555555'
       },
-      data: '2025-01-16'
+      dataInicio: '2025-01-16'
     })
 
     expect(resultado.resultados).toHaveLength(1)
@@ -217,7 +217,7 @@ describe('DJEN API - Integração', () => {
     const resultado = await consultarDJEN({
       tribunais: ['TJSP', 'TJMG'],
       searchTerms: { nomeAdvogado: 'Teste' },
-      data: '2025-01-16'
+      dataInicio: '2025-01-16'
     })
 
     expect(resultado.erros).toHaveLength(1)
