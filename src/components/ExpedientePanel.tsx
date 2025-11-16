@@ -119,9 +119,9 @@ export default function ExpedientePanel() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium line-clamp-1">{exp.type}</p>
+                        <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(exp.receivedAt).toLocaleDateString('pt-BR')}
+                          {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                       {exp.analyzed ? (
@@ -146,7 +146,7 @@ export default function ExpedientePanel() {
                     <div className="flex-1">
                       <CardTitle>{selectedExp.type}</CardTitle>
                       <CardDescription className="mt-1">
-                        Recebido em {new Date(selectedExp.receivedAt).toLocaleDateString('pt-BR')}
+                        Recebido em {new Date(selectedExp.receivedAt || selectedExp.dataRecebimento).toLocaleDateString('pt-BR')}
                       </CardDescription>
                     </div>
                     {!selectedExp.analyzed && (

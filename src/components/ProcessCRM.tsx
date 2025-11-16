@@ -15,8 +15,8 @@ import type { Process, PremonicaoJuridica } from '@/types'
 
 const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
 const STATUS_COLORS = {
-  'aguardando': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  'em-andamento': 'bg-blue-100 text-blue-800 border-blue-300',
+  'ativo': 'bg-blue-100 text-blue-800 border-blue-300',
+  'suspenso': 'bg-yellow-100 text-yellow-800 border-yellow-300',
   'concluido': 'bg-green-100 text-green-800 border-green-300',
   'arquivado': 'bg-gray-100 text-gray-800 border-gray-300',
 }
@@ -27,12 +27,12 @@ export default function ProcessCRM() {
   const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [showDialog, setShowDialog] = useState(false)
   const [newProcess, setNewProcess] = useState({
-    cnj: '',
-    title: '',
-    plaintiff: '',
-    defendant: '',
-    lawyer: '',
-    stage: 'Inicial',
+    numeroCNJ: '',
+    titulo: '',
+    autor: '',
+    reu: '',
+    advogado: '',
+    fase: 'Inicial',
   })
   
   const [premonicaoOpen, setPremonicaoOpen] = useState(false)
@@ -42,39 +42,41 @@ export default function ProcessCRM() {
 
   const filteredProcesses = (processes || []).filter(p => {
     const matchesFilter = filter === '' || 
-      p.cnj.toLowerCase().includes(filter.toLowerCase()) ||
-      p.title.toLowerCase().includes(filter.toLowerCase()) ||
-      p.parties.plaintiff.toLowerCase().includes(filter.toLowerCase())
+      p.numeroCNJ.toLowerCase().includes(filter.toLowerCase()) ||
+      p.titulo.toLowerCase().includes(filter.toLowerCase()) ||
+      p.autor.toLowerCase().includes(filter.toLowerCase())
     
-    const matchesStage = !selectedStage || p.stage === selectedStage
+    const matchesStage = !selectedStage || (p as any).fase === selectedStage
     
     return matchesFilter && matchesStage
   })
 
   const handleAddProcess = () => {
-    if (!newProcess.cnj || !newProcess.title) {
+    if (!newProcess.numeroCNJ || !newProcess.titulo) {
       toast.error('CNJ e título são obrigatórios')
       return
     }
 
+    const now = new Date().toISOString()
     const process: Process = {
       id: crypto.randomUUID(),
-      cnj: newProcess.cnj,
-      title: newProcess.title,
-      parties: {
-        plaintiff: newProcess.plaintiff,
-        defendant: newProcess.defendant,
-      },
-      status: 'aguardando',
-      stage: newProcess.stage,
-      lawyer: newProcess.lawyer,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      numeroCNJ: newProcess.numeroCNJ,
+      titulo: newProcess.titulo,
+      autor: newProcess.autor,
+      reu: newProcess.reu,
+      comarca: '',
+      vara: '',
+      status: 'ativo',
+      dataDistribuicao: now.split('T')[0],
+      dataUltimaMovimentacao: now,
+      prazos: [],
+      createdAt: now,
+      updatedAt: now,
     }
 
     setProcesses((current) => [...(current || []), process])
     setShowDialog(false)
-    setNewProcess({ cnj: '', title: '', plaintiff: '', defendant: '', lawyer: '', stage: 'Inicial' })
+    setNewProcess({ numeroCNJ: '', titulo: '', autor: '', reu: '', advogado: '', fase: 'Inicial' })
     toast.success('Processo adicionado com sucesso')
   }
 
@@ -96,7 +98,7 @@ export default function ProcessCRM() {
     setPremonicaoData(null)
 
     try {
-      const data = await generatePremonicaoJuridica(process.cnj, process)
+      const data = await generatePremonicaoJuridica(process.numeroCNJ, process)
       setPremonicaoData(data)
     } catch (error) {
       setPremonicaoError(error instanceof Error ? error.message : 'Erro desconhecido')
@@ -131,53 +133,53 @@ export default function ProcessCRM() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="cnj">Número CNJ *</Label>
+                <Label htmlFor="numeroCNJ">Número CNJ *</Label>
                 <Input
-                  id="cnj"
+                  id="numeroCNJ"
                   placeholder="0000000-00.0000.0.00.0000"
-                  value={newProcess.cnj}
-                  onChange={(e) => setNewProcess({ ...newProcess, cnj: e.target.value })}
+                  value={newProcess.numeroCNJ}
+                  onChange={(e) => setNewProcess({ ...newProcess, numeroCNJ: e.target.value })}
                 />
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="title">Título do Processo *</Label>
+                <Label htmlFor="titulo">Título do Processo *</Label>
                 <Input
-                  id="title"
+                  id="titulo"
                   placeholder="Ex: Ação Trabalhista - Horas Extras"
-                  value={newProcess.title}
-                  onChange={(e) => setNewProcess({ ...newProcess, title: e.target.value })}
+                  value={newProcess.titulo}
+                  onChange={(e) => setNewProcess({ ...newProcess, titulo: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="plaintiff">Autor</Label>
+                <Label htmlFor="autor">Autor</Label>
                 <Input
-                  id="plaintiff"
+                  id="autor"
                   placeholder="Nome do autor"
-                  value={newProcess.plaintiff}
-                  onChange={(e) => setNewProcess({ ...newProcess, plaintiff: e.target.value })}
+                  value={newProcess.autor}
+                  onChange={(e) => setNewProcess({ ...newProcess, autor: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="defendant">Réu</Label>
+                <Label htmlFor="reu">Réu</Label>
                 <Input
-                  id="defendant"
+                  id="reu"
                   placeholder="Nome do réu"
-                  value={newProcess.defendant}
-                  onChange={(e) => setNewProcess({ ...newProcess, defendant: e.target.value })}
+                  value={newProcess.reu}
+                  onChange={(e) => setNewProcess({ ...newProcess, reu: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lawyer">Advogado Responsável</Label>
+                <Label htmlFor="advogado">Advogado Responsável</Label>
                 <Input
-                  id="lawyer"
+                  id="advogado"
                   placeholder="Nome do advogado"
-                  value={newProcess.lawyer}
-                  onChange={(e) => setNewProcess({ ...newProcess, lawyer: e.target.value })}
+                  value={newProcess.advogado}
+                  onChange={(e) => setNewProcess({ ...newProcess, advogado: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stage">Fase Processual</Label>
-                <Select value={newProcess.stage} onValueChange={(value) => setNewProcess({ ...newProcess, stage: value })}>
+                <Label htmlFor="fase">Fase Processual</Label>
+                <Select value={newProcess.fase} onValueChange={(value) => setNewProcess({ ...newProcess, fase: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -229,33 +231,33 @@ export default function ProcessCRM() {
           <Card key={process.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base line-clamp-2">{process.title}</CardTitle>
-                <Badge className={STATUS_COLORS[process.status]}>
-                  {process.status.replace('-', ' ')}
+                <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>
+                <Badge className={STATUS_COLORS[process.status] || 'bg-gray-100 text-gray-800 border-gray-300'}>
+                  {process.status}
                 </Badge>
               </div>
-              <CardDescription className="text-xs">{process.cnj}</CardDescription>
+              <CardDescription className="text-xs">{process.numeroCNJ}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Autor:</p>
-                <p className="font-medium line-clamp-1">{process.parties.plaintiff || '-'}</p>
+                <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Réu:</p>
-                <p className="font-medium line-clamp-1">{process.parties.defendant || '-'}</p>
+                <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Fase:</p>
-                <Badge variant="outline">{process.stage}</Badge>
+                <Badge variant="outline">{(process as any).fase || 'N/A'}</Badge>
               </div>
               <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="aguardando">Aguardando</SelectItem>
-                  <SelectItem value="em-andamento">Em Andamento</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="suspenso">Suspenso</SelectItem>
                   <SelectItem value="concluido">Concluído</SelectItem>
                   <SelectItem value="arquivado">Arquivado</SelectItem>
                 </SelectContent>

@@ -15,11 +15,12 @@ export default function PrazosView() {
 
   const prazosComProcesso = useMemo(() => {
     const lista: (Prazo & { processo: Process })[] = []
+    const processesList = processes || []
     
-    processes.forEach(process => {
+    processesList.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach(prazo => {
-          lista.push({ ...prazo, processo })
+          lista.push({ ...prazo, processo: process })
         })
       }
     })
@@ -52,7 +53,7 @@ export default function PrazosView() {
 
   const handleToggleConcluido = (prazo: Prazo & { processo: Process }) => {
     setProcesses(current => 
-      current.map(process => {
+      (current || []).map(process => {
         if (process.id === prazo.processId) {
           return {
             ...process,
