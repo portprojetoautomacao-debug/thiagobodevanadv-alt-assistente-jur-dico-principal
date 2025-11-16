@@ -1,0 +1,91 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+      env:
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
+        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI }}
+        VITE_APP_ENV: ${{ github.event.inputs.environment || 'production' }}
+
+    - name: Deploy to Vercel
+      id: deploy
+      run: |
+        npm install -g vercel
+        if [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
+        else
+          vercel deploy --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
+        fi
+        echo "url=$(cat deployment-url.txt)" >> $GITHUB_OUTPUT
+      env:
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    - name: Comment deployment URL on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚀 Deployed to Vercel: ${{ steps.deploy.outputs.url }}'
+          })
+
+  deploy-notification:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: deploy-vercel
+    if: always()
+
+    steps:
+    - name: Notify deployment status
+      run: |
+        if [[ "${{ needs.deploy-vercel.result }}" == "success" ]]; then
+          echo "✅ Deployment successful"
+        else
+          echo "❌ Deployment failed"
+          exit 1
+        fi

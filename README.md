@@ -134,11 +134,35 @@ npm run preview      # Preview do build
 npm run lint         # Lint código
 ```
 
+## 🤖 CI/CD com GitHub Actions
+
+Este projeto utiliza GitHub Actions para automação completa de CI/CD:
+
+**Workflows disponíveis:**
+- ✅ **CI**: Build, lint e testes automáticos em cada push/PR
+- 🚀 **Deploy**: Deploy automático para Vercel na branch main
+- 🔍 **Code Quality**: Análise de código com CodeQL e verificações de segurança
+- 📋 **PR Validation**: Validação automática de Pull Requests
+- 🏷️ **Release**: Criação automática de releases e tags
+- 🌙 **Nightly**: Builds noturnos e verificação de dependências
+
+📖 **Documentação completa**: [GitHub Actions Workflows](.github/WORKFLOWS.md)
+
+**Status badges:**
+```markdown
+![CI](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/CI/badge.svg)
+![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)
+```
+
 ## 🌐 Deploy
 
 ### Vercel (Recomendado) ⭐
 
-**Deploy com 1 clique:**
+**Deploy automático via GitHub Actions:**
+- Push na branch `main` → Deploy automático
+- Configure os secrets necessários (veja documentação)
+
+**Deploy manual:**
 1. Conecte sua conta do GitHub ao [Vercel](https://vercel.com)
 2. Importe este repositório
 3. Configure as variáveis de ambiente (veja abaixo)
@@ -154,7 +178,17 @@ VITE_REDIRECT_URI=https://seu-app.vercel.app
 VITE_APP_ENV=production
 ```
 
-📖 **Guia completo de deploy**: Veja `GUIA_DEPLOY_SIMPLES.md` e `VERCEL_DEPLOYMENT.md`
+**Secrets para GitHub Actions:**
+```
+VERCEL_TOKEN          # Token do Vercel CLI
+VERCEL_ORG_ID         # ID da organização
+VERCEL_PROJECT_ID     # ID do projeto
+```
+
+📖 **Guias de deploy**: 
+- [GitHub Actions](.github/WORKFLOWS.md)
+- [Vercel Deploy](GUIA_DEPLOY_SIMPLES.md)
+- [Documentação Completa](VERCEL_DEPLOYMENT.md)
 
 ### Render (Alternativa)
 
