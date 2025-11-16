@@ -49,7 +49,7 @@ export default function DeadlineCalculator() {
       const days = selectedDeadline?.days || 15
 
       const base = new Date(baseDate + 'T12:00:00')
-      let currentDate = new Date(base)
+      const currentDate = new Date(base)
       let workingDays = 0
       const reasoning: string[] = []
       const holidays: string[] = []

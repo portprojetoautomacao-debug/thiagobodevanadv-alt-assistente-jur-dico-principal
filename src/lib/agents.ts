@@ -170,7 +170,7 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
         ] : []
       }
       
-    case 'monitor_djen':
+    case 'monitor_djen': {
       const hasNewIntimations = Math.random() > 0.7
       return {
         newIntimations: hasNewIntimations ? [
@@ -187,12 +187,13 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
         tribunaisVerificados: task.data?.tribunais || ['TJDFT', 'STJ', 'TST'],
         nextCheck: new Date(Date.now() + 60 * 60 * 1000).toISOString()
       }
+    }
       
-    case 'calculate_deadline':
+    case 'calculate_deadline': {
       const businessDays = task.data?.businessDays || 15
       const startDate = task.data?.startDate ? new Date(task.data.startDate) : new Date()
       let daysAdded = 0
-      let currentDate = new Date(startDate)
+      const currentDate = new Date(startDate)
       
       while (daysAdded < businessDays) {
         currentDate.setDate(currentDate.getDate() + 1)
@@ -225,6 +226,7 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
           }
         ]
       }
+    }
       
     case 'draft_petition':
       return {
