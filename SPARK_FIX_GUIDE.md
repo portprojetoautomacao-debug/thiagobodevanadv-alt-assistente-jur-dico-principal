@@ -1,24 +1,44 @@
-# Fixing 404 Errors on Spark Endpoints - Deployment Guide
+# Fixing Spark Proxy Errors - Deployment Guide
 
-## Problem Fixed
-This document explains the fix for 404 errors occurring on `/_spark/*` endpoints in Vercel deployments.
+## Problems Fixed
+
+### 1. 404 Errors (Previous Fix)
+The TypeScript serverless functions were not handling requests properly, causing 404 errors for all Spark-related endpoints.
+
+### 2. 401 Unauthorized Errors (Latest Fix)
+The proxy was using incorrect authentication format, causing GitHub Runtime API to reject requests with 401 Unauthorized errors.
 
 ## What Was Wrong
+
+### Original Issue (404s)
 The TypeScript serverless functions in the `api/` directory were not handling requests properly, causing 404 errors for all Spark-related endpoints:
 - `/_spark/kv/*` - Key-value storage operations
 - `/_spark/loaded` - Spark runtime initialization signal
 - `/_spark/llm` - LLM (Large Language Model) API proxy
 
-## Solution Applied
+### Authentication Issue (401s)
+The proxy was using `Authorization: Bearer ${token}` (capitalized), but GitHub Runtime API expects `Authorization: bearer ${token}` (lowercase).
+
+## Solutions Applied
+
+### Authentication Fix (Latest)
+- Changed `Bearer` to `bearer` (lowercase) in Authorization header
+- Added explicit check for `GITHUB_TOKEN` environment variable
+- Improved error messages when token is missing
+- Made token required for all Spark proxy requests
+
+### Proxy Implementation (Previous)
 Converted the TypeScript serverless functions to JavaScript with the following improvements:
 
-### 1. `api/spark-proxy.js`
+### 1. `api/spark-proxy.js` and `api/spark-proxy.ts`
 Handles all `/_spark/*` requests except `/llm`:
 - ✅ Proper CORS preflight (OPTIONS) handling
 - ✅ Support for GET, POST, PUT, DELETE methods
 - ✅ Proper path parameter handling (including arrays for multiple segments)
 - ✅ Better error logging with request context
 - ✅ Correct content-type forwarding
+- ✅ **NEW**: Correct authentication header format (`bearer` instead of `Bearer`)
+- ✅ **NEW**: Explicit GITHUB_TOKEN requirement with helpful error messages
 
 ### 2. `api/llm-proxy.js`
 Handles `/_spark/llm` requests:
@@ -144,11 +164,18 @@ To check if the API functions are working:
    - `GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set`
      → You need to set this env var in Vercel
    
+   - `GITHUB_TOKEN environment variable is not set`
+     → **FIXED**: The proxy now requires GITHUB_TOKEN and will show this error if missing
+     → Set the token in Vercel environment variables
+   
    - `Failed to proxy request to GitHub API: 401`
-     → Your GitHub token is invalid or missing required scopes
+     → **FIXED**: Changed Authorization header from `Bearer` to `bearer` (lowercase)
+     → If still getting 401, your GitHub token may be invalid or missing required scopes
+     → Regenerate token with `repo` and `workflow` scopes
    
    - `Failed to proxy request to GitHub API: 404`
      → The runtime name might be incorrect
+     → Verify `GITHUB_RUNTIME_PERMANENT_NAME` matches the value in `runtime.config.json`
 
 ## How the Fix Works
 
