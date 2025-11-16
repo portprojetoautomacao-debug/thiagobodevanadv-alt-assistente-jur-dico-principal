@@ -6,3 +6,10 @@ node_modules
 .env
 .env.local
 .env.*.local
+api/*.js.map
+node_modules
+.git
+*.log
+.env
+.env.local
+.env.*.local
