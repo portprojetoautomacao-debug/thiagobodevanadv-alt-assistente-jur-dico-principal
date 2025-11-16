@@ -9,6 +9,9 @@
         "build": "tsc -b --noCheck && vite build",
         "start": "serve -s dist -l 10000",
         "lint": "eslint .",
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:coverage": "vitest --coverage",
         "optimize": "vite optimize",
         "preview": "vite preview"
     },
