@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { 
@@ -13,8 +14,10 @@ import {
   CurrencyCircleDollar,
   Books,
   UsersFour,
-  Database
+  Database,
+  SignOut
 } from '@phosphor-icons/react'
+import Login from '@/components/Login'
 import Dashboard from '@/components/Dashboard'
 import ProcessosView from '@/components/ProcessosView'
 import PrazosView from '@/components/PrazosView'
@@ -26,10 +29,31 @@ import FinancialManagement from '@/components/FinancialManagement'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
-import type { ViewType } from '@/types'
+import type { ViewType, User } from '@/types'
+import { toast } from 'sonner'
 
 function App() {
+  const [currentUser, setCurrentUser] = useKV<User | null>('current-user', null)
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user)
+  }
+
+  const handleLogout = () => {
+    setCurrentUser(null)
+    setCurrentView('dashboard')
+    toast.success('Logout realizado com sucesso')
+  }
+
+  if (!currentUser) {
+    return (
+      <>
+        <Login onLogin={handleLogin} />
+        <Toaster />
+      </>
+    )
+  }
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
@@ -106,8 +130,27 @@ function App() {
           })}
         </nav>
 
-        <div className="p-4 border-t">
-          <div className="text-xs text-muted-foreground text-center">
+        <div className="p-4 border-t space-y-3">
+          <div className="flex items-center gap-2 px-2">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-sm font-semibold text-primary">
+                {currentUser.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{currentUser.name}</p>
+              <p className="text-xs text-muted-foreground capitalize">{currentUser.role}</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={handleLogout}
+          >
+            <SignOut size={20} />
+            Sair
+          </Button>
+          <div className="text-xs text-muted-foreground text-center pt-2">
             <p>Assistente Jurídico Digital</p>
             <p className="mt-1">v1.0.0</p>
           </div>
@@ -133,6 +176,13 @@ function App() {
               </button>
             )
           })}
+          <button
+            onClick={handleLogout}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg min-w-[70px] text-destructive"
+          >
+            <SignOut size={20} />
+            <span className="text-xs whitespace-nowrap">Sair</span>
+          </button>
         </nav>
       </div>
 
