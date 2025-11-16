@@ -116,7 +116,26 @@ Sistema carrega prazos → Verifica datas próximas → Calcula urgência → Ex
 - Fácil marcação de conclusão
 - Integração com processos
 
-### 6. Agente de Verificação Documental
+### 6. Inicialização e Gerenciamento de Dados
+
+**Funcionalidade:** Sistema de inicialização de dados que permite carregar dados de exemplo ou gerar dados realistas com IA
+
+**Propósito:** Facilitar o primeiro uso do sistema e permitir testes com dados variados e realistas
+
+**Trigger:** Primeira vez que o usuário acessa o sistema sem processos ou através do gerenciador de dados
+
+**Progressão:**
+Sistema detecta ausência de processos → Exibe tela de inicialização → Usuário escolhe entre dados de exemplo ou geração com IA → Se IA: usuário define quantidade → Sistema gera processos via spark.llm → Dados são persistidos → Dashboard atualiza automaticamente
+
+**Critérios de Sucesso:**
+- Detecção automática de sistema vazio
+- Opções claras entre exemplo e geração IA
+- Geração de IA produz dados realistas e variados
+- Processos incluem prazos e informações completas
+- Possibilidade de adicionar mais dados posteriormente
+- Opção de limpar todos os dados quando necessário
+
+### 7. Agente de Verificação Documental
 
 **Funcionalidade:** Agente de IA que identifica automaticamente documentos faltantes nos processos e notifica para juntá-los
 
