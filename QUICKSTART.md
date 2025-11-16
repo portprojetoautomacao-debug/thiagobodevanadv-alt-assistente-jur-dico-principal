@@ -17,10 +17,10 @@ VITE_REDIRECT_URI=http://localhost:5173
 VITE_APP_ENV=development
 ```
 
-**For production (Render):**
+**For production (Vercel):**
 ```env
 VITE_GOOGLE_CLIENT_ID=572929400457-lufh2hv2dt7129mikbr1e9k5h1copv4s.apps.googleusercontent.com
-VITE_REDIRECT_URI=https://assistente-juridico-rs1e.onrender.com
+VITE_REDIRECT_URI=https://seu-app.vercel.app
 VITE_APP_ENV=production
 ```
 
@@ -29,15 +29,15 @@ VITE_APP_ENV=production
 Your current configuration from Google Cloud:
 
 ✅ **Client ID**: `572929400457-lufh2hv2dt7129mikbr1e9k5h1copv4s.apps.googleusercontent.com`  
-✅ **Production URL**: `https://assistente-juridico-rs1e.onrender.com`  
+✅ **Production URL**: `https://seu-app.vercel.app` (configure após deploy)  
 ✅ **Created**: November 14, 2025  
 ✅ **Status**: Active
 
 **Authorized JavaScript Origins:**
-- `https://assistente-juridico-rs1e.onrender.com`
+- `https://seu-app.vercel.app`
 
 **Authorized Redirect URIs:**
-- `https://assistente-juridico-rs1e.onrender.com`
+- `https://seu-app.vercel.app`
 
 ### Step 4: Add Local Development URIs
 
@@ -108,13 +108,15 @@ Before committing code, verify:
 
 ## 🚀 Deployment Checklist
 
-### Render.com
+### Vercel
 
-1. **Environment Variables** (in Render dashboard):
+1. **Environment Variables** (in Vercel dashboard):
    ```
    VITE_GOOGLE_CLIENT_ID=572929400457-lufh2hv2dt7129mikbr1e9k5h1copv4s.apps.googleusercontent.com
-   VITE_REDIRECT_URI=https://assistente-juridico-rs1e.onrender.com
+   VITE_REDIRECT_URI=https://seu-app.vercel.app
    VITE_APP_ENV=production
+   GITHUB_RUNTIME_PERMANENT_NAME=97a1cb1e48835e0ecf1e
+   GITHUB_TOKEN=seu_token_do_github_aqui
    ```
 
 2. **Google Cloud Console**:
@@ -122,9 +124,9 @@ Before committing code, verify:
    - Ensure production URL is in authorized redirects
 
 3. **Deploy**:
-   ```bash
-   git push origin main
-   ```
+   - Connect repository to Vercel
+   - Configure environment variables
+   - Deploy automatically on each push to main
 
 ## 🐛 Troubleshooting
 
