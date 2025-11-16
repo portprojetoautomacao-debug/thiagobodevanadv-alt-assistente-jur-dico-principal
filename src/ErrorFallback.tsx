@@ -2,7 +2,12 @@ import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert";
 import { Button } from "./components/ui/button";
 import { AlertTriangle, RefreshCw } from "@phosphor-icons/react";
 
-export const ErrorFallback = ({ error, resetErrorBoundary }) => {
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
+}
+
+export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps) => {
   if (import.meta.env.DEV) throw error;
 
   return (
