@@ -36,6 +36,30 @@ const taskTemplates = {
   'mrs-justin-e': [
     { type: 'analyze_document' as const, priority: 'high' as const },
   ],
+  'precedent-researcher': [
+    { type: 'research_precedents' as const, priority: 'medium' as const },
+  ],
+  'risk-analyst': [
+    { type: 'risk_analysis' as const, priority: 'high' as const },
+  ],
+  'contract-reviewer': [
+    { type: 'contract_review' as const, priority: 'medium' as const },
+  ],
+  'client-communicator': [
+    { type: 'client_communication' as const, priority: 'medium' as const },
+  ],
+  'billing-analyst': [
+    { type: 'billing_analysis' as const, priority: 'low' as const },
+  ],
+  'strategy-advisor': [
+    { type: 'case_strategy' as const, priority: 'high' as const },
+  ],
+  'legal-translator': [
+    { type: 'legal_translation' as const, priority: 'low' as const },
+  ],
+  'compliance-checker': [
+    { type: 'compliance_check' as const, priority: 'high' as const },
+  ],
 }
 
 export class AgentTaskGenerator {
