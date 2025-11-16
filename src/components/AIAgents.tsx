@@ -162,296 +162,208 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
         autonomyLevel: 98,
         capabilities: ['Cálculo automático', 'Alertas de vencimento', 'Calendário processual', 'Análise de urgências'],
         nextScheduledRun: 'A cada hora',
+        workQueue: [],
+        continuousMode: false,
+        humanInteractionMode: 'collaborate',
+      },
+      {
         id: 'petition-writer',
         name: 'Agente de Redação de Petições',
         description: 'Auxilia na criação de petições e documentos jurídicos',
-      },
-      {
+        type: 'writer',
+        status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
         tasksCompleted: 67,
-        type: 'writer',
-        status: 'idle',
+        tasksToday: 0,
+        autonomyLevel: 85,
         capabilities: ['Redação assistida', 'Modelos jurisprudenciais', 'Revisão gramatical', 'Formatação automática'],
         nextScheduledRun: 'Sob demanda',
         workQueue: [],
-        tasksToday: 0,
-        autonomyLevel: 85,
+        continuousMode: false,
+        humanInteractionMode: 'collaborate',
       },
       {
         id: 'file-organizer',
-        continuousMode: false,
-        humanInteractionMode: 'collaborate',
+        name: 'Agente de Organização de Arquivos',
+        description: 'Organiza e categoriza automaticamente documentos do escritório',
         type: 'organizer',
         status: 'idle',
         enabled: false,
-        name: 'Agente de Organização de Arquivos',
-        description: 'Organiza e categoriza automaticamente documentos do escritório',
-        tasksToday: 0,
-        autonomyLevel: 88,
-        capabilities: ['Classificação automática', 'Renomeação inteligente', 'Detecção de duplicatas', 'Indexação'],
         lastActivity: 'Aguardando ativação',
         tasksCompleted: 54,
         tasksToday: 0,
         autonomyLevel: 88,
         capabilities: ['Classificação automática', 'Renomeação inteligente', 'Detecção de duplicatas', 'Indexação'],
+        nextScheduledRun: 'Sob demanda',
+        workQueue: [],
+        continuousMode: false,
+        humanInteractionMode: 'collaborate',
+      }
     ]
     setAgents(initialAgents)
   }
-        humanInteractionMode: 'collaborate',
-      }
+
   const totalTasksToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
   const avgAutonomy = agents.length > 0 
     ? Math.round(agents.reduce((sum, a) => sum + a.autonomyLevel, 0) / agents.length)
+    : 0
 
   const activeAgents = agents.filter(a => a.enabled).length
   const queuedTasks = taskQueue.filter(t => t.status === 'queued').length
   const processingTasks = taskQueue.filter(t => t.status === 'processing').length
   const humanInterventionTasks = taskQueue.filter(t => t.status === 'human_intervention').length
-    : 0
 
+  const handleToggleAgent = (agentId: string) => {
     const agent = agents.find(a => a.id === agentId)
     toggleAgent(agentId)
     toast.success(agent?.enabled 
- `${agent.name} desativado` 
+      ? `${agent.name} desativado` 
       : `${agent.name} ativado`
-  }
-    toggleAgent(agentId)
-    toast.success(agent?.enabled 
-          Equipe de inteligência artificial trabalhando 24/7 para automatizar tarefas jurídicas
-        </p>
     )
   }
-      <MrsJustinEModal 
+
   return (
     <div className="p-6 space-y-6">
-        onActivate={() => {
+      <div>
         <h1 className="text-3xl font-bold text-foreground">Agentes de IA Autônomos</h1>
-          if (agent && !agent.enabled) {
+        <p className="text-muted-foreground mt-2">
           Equipe de inteligência artificial trabalhando 24/7 para automatizar tarefas jurídicas
-          }
+        </p>
       </div>
 
       <MrsJustinEModal 
         open={showMrsJustinEModal}
         onClose={() => setShowMrsJustinEModal(false)}
         onActivate={() => {
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
-            handleToggleAgent('mrs-justin-e')imary" weight="fill" />
-          </CardHeader>
+          const agent = agents.find(a => a.id === 'mrs-justin-e')
+          if (agent && !agent.enabled) {
+            handleToggleAgent('mrs-justin-e')
+          }
           setShowMrsJustinEModal(false)
         }}
       />
 
-            </p>
-          </CardContent>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
-            <Robot className="w-4 h-4 text-primary" weight="fill" />
-          </CardHeader>
-          <CardContent>
-            <CheckCircle className="w-4 h-4 text-green-600" weight="fill" />
-            <p className="text-xs text-muted-foreground mt-1">
-              Operando continuamente
-            <div className="text-2xl font-bold">{totalTasksToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-        </Card>
-            </p>
-          </CardContent>
-        </Card>
+      <AgentStatusFloater agents={agents} />
 
-            <CheckCircle className="w-4 h-4 text-green-600" weight="fill" />
-          </CardHeader>lex-row items-center justify-between space-y-0 pb-2">
-          <CardContent>medium">Fila de Trabalho</CardTitle>
-            <div className="text-2xl font-bold">{totalTasksToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Automações executadas
-            </p>
-          </CardContent>
-              {processingTasks} em processamento
-
-          </CardContent>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fila de Trabalho</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
+            <Robot className="w-4 h-4 text-muted-foreground" weight="fill" />
+          </CardHeader>
           <CardContent>
-            <Robot className="w-4 h-4 text-primary" weight="fill" />
+            <div className="text-2xl font-bold">{activeAgents}/{agents.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {processingTasks} em processamento
+              {activeAgents === 0 ? 'Nenhum agente ativo' : `${activeAgents} trabalhando agora`}
             </p>
-            <Progress value={avgAutonomy} className="mt-2" />
+          </CardContent>
         </Card>
-        </Card>
-      </div>
 
-            <CardTitle className="text-sm font-medium">Nível de Autonomia</CardTitle>
-            <Robot className="w-4 h-4 text-primary" weight="fill" />
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tarefas Hoje</CardTitle>
+            <CheckCircle className="w-4 h-4 text-muted-foreground" weight="fill" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTasksToday}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {completedTasks.length} total concluídas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Fila de Tarefas</CardTitle>
+            <Clock className="w-4 h-4 text-muted-foreground" weight="fill" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{queuedTasks + processingTasks}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {processingTasks} em andamento
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Autonomia Média</CardTitle>
+            <ChartLine className="w-4 h-4 text-muted-foreground" weight="fill" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{avgAutonomy}%</div>
             <Progress value={avgAutonomy} className="mt-2" />
           </CardContent>
         </Card>
       </div>
 
-      <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
+      <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            </div>
-              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-              <Info className="w-4 h-4 mr-2" />
-              Abrir Chat
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-background/50 rounded-lg p-4 border border-border">
-              <div className="flex items-center gap-2 mb-2">
-                <ChartLine className="w-5 h-5 text-accent" weight="fill" />
-              <Info className="w-4 h-4 mr-2" />lises Inteligentes</h4>
-              Abrir Chat
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-2 mb-2">
-                <ChartLine className="w-5 h-5 text-accent" weight="fill" />
-                <h4 className="font-semibold text-foreground">Análises Inteligentes</h4>
-              <p className="text-sm text-muted-foreground">
-              <p className="text-sm text-muted-foreground">
-                Performance, processos, prazos e finanças em um só lugar
-              </p>
-            <div className="bg-background/50 rounded-lg p-4 border border-border">
-              <div className="flex items-center gap-2 mb-2">
-                <Lightning className="w-5 h-5 text-accent" weight="fill" />
-                <Brain className="w-5 h-5 text-primary" weight="fill" />
-                <h4 className="font-semibold text-foreground">Insights Estratégicos</h4>
-              </div>text-muted-foreground">
-              <p className="text-sm text-muted-foreground">
-                Identifica padrões e sugere otimizações
-              </p>
-            </div>
-        </CardContent>
-              <div className="flex items-center gap-2 mb-2">
-                <Lightning className="w-5 h-5 text-accent" weight="fill" />
-                <h4 className="font-semibold text-foreground">Respostas Rápidas</h4>
-              </div>
-          <div className="flex items-start justify-between">
-                Análises complexas em questão de segundos
-              </p>
-                <Brain className="w-8 h-8 text-primary" weight="fill" />
-              </div>
-        </CardContent>
-                <CardTitle className="text-xl">Mrs. Justin-e</CardTitle>
-
-      <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
-                </CardDescription>
-              </div>
-            </div>
-            <Button onClick={() => setShowMrsJustinEModal(true)}>
-              <Info className="w-4 h-4 mr-2" />
-              Saiba Mais
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-background/50 rounded-lg p-4 border border-border">
-            </div>
-            <Button onClick={() => setShowMrsJustinEModal(true)}>
-                <h4 className="font-semibold text-foreground">95% Precisa</h4>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Precisão garantida sem esquecer detalhes importantes
-              </p>
-            </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-5 h-5 text-primary" weight="fill" />
-                <h4 className="font-semibold text-foreground">Economiza Tempo</h4>
-              </div>
-              <p className="text-sm text-muted-foreground">
-
-                Precisão garantida sem esquecer detalhes importantes
-        <Card className="border-accent bg-accent/5">
-            </div>
-            <div className="bg-background/50 rounded-lg p-4 border border-border">
-              <Warning className="w-5 h-5 text-accent" weight="fill" />
-              {humanInterventionTasks} tarefa(s) aguardando conclusão da edição humana
-                <h4 className="font-semibold text-foreground">Economiza Tempo</h4>
-            <CardDescription>
-              <p className="text-sm text-muted-foreground"> humana
-                50 horas economizadas a cada 150 intimações
-              </p>
-        </Card>
-      )}
-              <div className="flex items-center gap-2 mb-2">
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-        <CardHeader>
-              </div>fy-between">
-              <p className="text-sm text-muted-foreground">
-              <CardTitle className="text-base">Geração Automática de Tarefas</CardTitle>
-              </p>
-                Simula tarefas reais para demonstrar o funcionamento 24/7 dos agentes
-              </CardDescription>
-            </div>
-      </Card>
-              checked={autoGenerateEnabled}
-              onCheckedChange={toggleAutoGenerate}
-        <Card className="border-accent bg-accent/5">
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-            </CardTitle>
-            <CardDescription>
-              Os agentes irão retomar automaticamente após 5 minutos sem atividade humana
+          <CardTitle className="flex items-center gap-2">
+            <Lightning className="w-5 h-5" weight="fill" />
+            Geração Automática de Tarefas
+          </CardTitle>
+          <CardDescription>
+            {autoGenerateEnabled 
+              ? 'Os agentes estão recebendo tarefas de demonstração automaticamente.' 
               : 'Ative para que os agentes recebam tarefas de demonstração automaticamente.'}
-          </p>
-        </Card>
-      )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Switch 
+                checked={autoGenerateEnabled} 
+                onCheckedChange={toggleAutoGenerate}
+              />
+              <span className="text-sm">
+                {autoGenerateEnabled ? 'Ativado' : 'Desativado'}
+              </span>
+            </div>
+            {humanInterventionTasks > 0 && (
+              <Badge variant="destructive">
+                {humanInterventionTasks} aguardando intervenção humana
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-        <CardHeader>
+      <Tabs defaultValue="agents" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
-            <div>">
-            <ChartLine className="w-4 h-4 mr-2" />
-              <CardDescription>
-                Simula tarefas reais para demonstrar o funcionamento 24/7 dos agentes
-          <TabsTrigger value="collaboration">
-            <ArrowsLeftRight className="w-4 h-4 mr-2" />
-            Demo Colaboração
+          <TabsTrigger value="metrics">
+            Métricas
+            {completedTasks.length > 0 && (
+              <Badge variant="secondary" className="ml-2">{completedTasks.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="activity">
             Atividade em Tempo Real
-            />gth > 0 && (
+            {activityLog.length > 0 && (
               <Badge variant="secondary" className="ml-2">{activityLog.length}</Badge>
-        </CardHeader>
+            )}
           </TabsTrigger>
           <TabsTrigger value="queue">
-            {autoGenerateEnabled 
+            Fila de Tarefas
             {(queuedTasks + processingTasks) > 0 && (
-              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente.'}
-          </p>
-        </CardContent>
+              <Badge variant="secondary" className="ml-2">{queuedTasks + processingTasks}</Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="completed">
-
-      <Tabs defaultValue="agents" className="space-y-4">
+            Histórico
+            {completedTasks.length > 0 && (
               <Badge variant="secondary" className="ml-2">{completedTasks.length}</Badge>
-          <TabsTrigger value="agents">Agentes</TabsTrigger>
-          <TabsTrigger value="metrics">
+            )}
+          </TabsTrigger>
         </TabsList>
 
-          </TabsTrigger>
+        <TabsContent value="agents" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agents.map((agent) => {
               const IconComponent = agentIcons[agent.id] || Robot
-          </TabsTrigger>
+              const statusColor = agent.enabled 
                 ? agent.status === 'processing' 
                   ? 'text-accent' 
                   : 'text-green-600'
@@ -459,78 +371,41 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
 
               return (
                 <Card key={agent.id} className={agent.enabled ? 'border-primary/30' : ''}>
-            Fila de Tarefas
-            {(queuedTasks + processingTasks) > 0 && (
-                      <div className="flex items-start gap-3">
-            )} rounded-lg ${agent.enabled ? 'bg-primary/10' : 'bg-muted'}`}>
-          </TabsTrigger>l" />
-          <TabsTrigger value="completed">
-            Histórico
-            {completedTasks.length > 0 && (
-              <Badge variant="secondary" className="ml-2">{completedTasks.length}</Badge>
-            )}gent.description}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="agents" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {agents.map((agent) => {agent.id)}
-              const IconComponent = agentIcons[agent.id] || Robot
-              const statusColor = agent.enabled 
-                ? agent.status === 'processing' 
-                  ? 'text-accent' 
-                  : 'text-green-600'-sm">
-                : 'text-muted-foreground'
-variant={agent.enabled ? 'default' : 'secondary'}>
-              return ( : 'Pausado'}
-                <Card key={agent.id} className={agent.enabled ? 'border-primary/30' : ''}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg ${agent.enabled ? 'bg-primary/10' : 'bg-muted'}`}>
                           <IconComponent className={`w-6 h-6 ${statusColor}`} weight="fill" />
                         </div>
-                      <div>
-                        <div className="text-lg font-bold text-foreground">{agent.tasksToday}</div>
+                        <div>
+                          <CardTitle className="text-lg">{agent.name}</CardTitle>
                           <CardDescription className="text-xs mt-1">
                             {agent.description}
                           </CardDescription>
-                        <div className="text-lg font-bold text-foreground">{agent.tasksCompleted}</div>
-                        <div className="text-xs text-muted-foreground">Total</div>
+                        </div>
+                      </div>
                       <Switch
                         checked={agent.enabled}
-                        onCheckedChange={() => handleToggleAgent(agent.id)}>
-                      />ext-muted-foreground">Autonomia</div>
-                      </div>
+                        onCheckedChange={() => handleToggleAgent(agent.id)}
+                      />
                     </div>
-                    <div className="pt-2">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                        <span>Capacidades:</span>
+                    <div className="grid grid-cols-3 gap-4 pt-4">
+                      <div>
+                        <div className="text-lg font-bold text-foreground">{agent.tasksToday}</div>
+                        <div className="text-xs text-muted-foreground">Hoje</div>
                       </div>
-                      <div className="flex flex-wrap gap-1">
-                        {agent.capabilities.slice(0, 4).map((cap, idx) => (
-                    </div> className="text-xs">
-                    <div className="flex items-center justify-between text-sm">
-                          </Badge>
-                      <span className="text-foreground text-xs">{agent.lastActivity}</span>
-                    </div>&& (
-                          <Badge variant="outline" className="text-xs">
-                            +{agent.capabilities.length - 4}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+                      <div>
                         <div className="text-lg font-bold text-foreground">{agent.tasksCompleted}</div>
                         <div className="text-xs text-muted-foreground">Total</div>
                       </div>
                       <div>
                         <div className="text-lg font-bold text-foreground">{agent.autonomyLevel}%</div>
                         <div className="text-xs text-muted-foreground">Autonomia</div>
-
-        <TabsContent value="metrics" className="space-y-4">
+                      </div>
+                    </div>
                     <div className="pt-2">
-            agents={agents}
-            completedTasks={completedTasks}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                        <span>Capacidades:</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {agent.capabilities.slice(0, 4).map((cap, idx) => (
@@ -545,40 +420,71 @@ variant={agent.enabled ? 'default' : 'secondary'}>
                         )}
                       </div>
                     </div>
-                  </CardContent>
+                    <div className="pt-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <Badge variant={agent.enabled ? 'default' : 'secondary'}>
+                          {agent.enabled ? 'Ativo' : 'Pausado'}
+                        </Badge>
+                        <span className="text-foreground text-xs">{agent.lastActivity}</span>
+                      </div>
+                    </div>
+                  </CardHeader>
                 </Card>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {activityLog.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma atividade registrada ainda
-                  </div>
-                ) : (
-            agents={agents}
-                    {activityLog.map((log) => {
-                      const agent = agents.find(a => a.id === log.agentId)
-          />
+              )
+            })}
+          </div>
         </TabsContent>
 
-        <TabsContent value="collaboration" className="space-y-4">
-          <HumanAgentCollaboration />
+        <TabsContent value="metrics" className="space-y-4">
+          <AgentMetrics 
+            agents={agents}
+            completedTasks={completedTasks}
+          />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Registro de Atividades</CardTitle>
+              <CardTitle>Log de Atividades</CardTitle>
+              <CardDescription>Atividades recentes dos agentes autônomos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                {activityLog.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Info className="w-12 h-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhuma atividade registrada ainda</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {activityLog.map((log) => {
+                      const agent = agents.find(a => a.id === log.agentId)
+                      const IconComponent = agentIcons[log.agentId] || Robot
+                      
+                      return (
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <IconComponent className="w-5 h-5 text-primary mt-0.5" weight="fill" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{log.action}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge 
+                                variant={
+                                  log.result === 'success' ? 'default' : 
+                                  log.result === 'warning' ? 'secondary' : 
+                                  'destructive'
+                                }
+                                className="text-xs"
+                              >
+                                {log.result === 'success' ? 'Sucesso' : 
+                                 log.result === 'warning' ? 'Aviso' : 
+                                 'Erro'}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(log.timestamp).toLocaleString('pt-BR')}
+                              </span>
+                            </div>
                           </div>
-                          <Badge
-                            variant={
-                              log.result === 'success' ? 'default' : 
-                              log.result === 'warning' ? 'secondary' : 
-                              'destructive'
-                            }
-                            className="flex-shrink-0"
-                          >
-                            {log.result}
-                          </Badge>
                         </div>
                       )
                     })}
@@ -599,21 +505,58 @@ variant={agent.enabled ? 'default' : 'secondary'}>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
-                            }
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma tarefa na fila
+                {taskQueue.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <ListChecks className="w-12 h-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhuma tarefa na fila</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {taskQueue.map((task) => {
                       const agent = agents.find(a => a.id === task.agentId)
                       const IconComponent = agentIcons[task.agentId] || Robot
+                      const priorityColors = {
+                        critical: 'destructive',
+                        high: 'default',
+                        medium: 'secondary',
+                        low: 'outline'
+                      } as const
                       
                       return (
                         <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
-        </TabsContent>-w-0">
-                        <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                          <IconComponent className="w-5 h-5 text-primary mt-0.5" weight="fill" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Tipo: {task.type}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant={priorityColors[task.priority]} className="text-xs">
+                                {task.priority === 'critical' ? 'Crítico' :
+                                 task.priority === 'high' ? 'Alto' :
+                                 task.priority === 'medium' ? 'Médio' : 'Baixo'}
+                              </Badge>
+                              <Badge 
+                                variant={
+                                  task.status === 'processing' ? 'default' :
+                                  task.status === 'human_intervention' ? 'destructive' :
+                                  'secondary'
+                                }
+                                className="text-xs"
+                              >
+                                {task.status === 'processing' ? 'Processando' :
+                                 task.status === 'human_intervention' ? 'Aguardando Humano' :
+                                 'Na fila'}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(task.createdAt).toLocaleString('pt-BR')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
               </ScrollArea>
             </CardContent>
@@ -623,61 +566,57 @@ variant={agent.enabled ? 'default' : 'secondary'}>
         <TabsContent value="completed" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Tarefas Completadas</CardTitle>
+              <CardTitle>Histórico de Tarefas Concluídas</CardTitle>
               <CardDescription>
-                Últimas 100 tarefas concluídas pelos agentes
+                Tarefas processadas com sucesso pelos agentes
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
                 {completedTasks.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma tarefa completada ainda
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <CheckCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhuma tarefa concluída ainda</p>
                   </div>
+                ) : (
+                  <div className="space-y-2">
+                    {completedTasks.slice(0, 50).map((task) => {
+                      const agent = agents.find(a => a.id === task.agentId)
+                      const IconComponent = agentIcons[task.agentId] || Robot
+                      
                       return (
                         <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
+                          <IconComponent className="w-5 h-5 text-green-600 mt-0.5" weight="fill" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground">{agent?.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Criada em: {new Date(task.createdAt).toLocaleString('pt-BR')}
-                          <IconComponent className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" weight="fill" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Concluída em: {task.completedAt ? new Date(task.completedAt).toLocaleString('pt-BR') : '-'}
+                              Tipo: {task.type}
                             </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="default" className="text-xs bg-green-600">
+                                Concluído
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {task.completedAt && new Date(task.completedAt).toLocaleString('pt-BR')}
+                              </span>
+                            </div>
                           </div>
-                          <Badge variant="default" className="flex-shrink-0 bg-green-600">
-                            Completa
-                          </Badge>
                         </div>
                       )
                     })}
                   </div>
-                      )
+                )}
               </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <AgentStatusFloater agents={agents} />
+      {showCollaborationDemo && (
+        <HumanAgentCollaboration 
+          onClose={() => setShowCollaborationDemo(false)}
+        />
+      )}
     </div>
   )
 }
-            </CardHeader>            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {completedTasks.length === 0 ? (
-                      return (                        <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          <IconComponent className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" weight="fill" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Concluída em: {task.completedAt ? new Date(task.completedAt).toLocaleString('pt-BR') : '-'}
-                            </p>
-  )
-
