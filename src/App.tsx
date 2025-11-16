@@ -10,7 +10,12 @@ import {
   Calculator, 
   ChatCircle,
   Clock,
-  Robot
+  Robot,
+  FileText,
+  CurrencyCircleDollar,
+  Books,
+  UsersFour,
+  Database
 } from '@phosphor-icons/react'
 import Dashboard from '@/components/Dashboard'
 import ProcessosView from '@/components/ProcessosView'
@@ -18,6 +23,11 @@ import PrazosView from '@/components/PrazosView'
 import CalculadoraPrazos from '@/components/CalculadoraPrazos'
 import AssistenteIA from '@/components/AssistenteIA'
 import AIAgents from '@/components/AIAgents'
+import MinutasManager from '@/components/MinutasManager'
+import FinancialManagement from '@/components/FinancialManagement'
+import KnowledgeBase from '@/components/KnowledgeBase'
+import ProcessCRM from '@/components/ProcessCRM'
+import DatabaseQueries from '@/components/DatabaseQueries'
 import type { ViewType, Process } from '@/types'
 import { SAMPLE_PROCESSES } from '@/lib/sample-data'
 
@@ -36,6 +46,11 @@ function App() {
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
     { id: 'calculadora' as ViewType, label: 'Calculadora', icon: Calculator },
+    { id: 'minutas' as ViewType, label: 'Minutas', icon: FileText },
+    { id: 'financeiro' as ViewType, label: 'Financeiro', icon: CurrencyCircleDollar },
+    { id: 'crm' as ViewType, label: 'CRM', icon: UsersFour },
+    { id: 'consultas' as ViewType, label: 'Consultas', icon: Database },
+    { id: 'conhecimento' as ViewType, label: 'Conhecimento', icon: Books },
     { id: 'assistente' as ViewType, label: 'Assistente IA', icon: ChatCircle },
     { id: 'agentes' as ViewType, label: 'Agentes IA', icon: Robot },
   ]
@@ -50,6 +65,16 @@ function App() {
         return <PrazosView />
       case 'calculadora':
         return <CalculadoraPrazos />
+      case 'minutas':
+        return <MinutasManager />
+      case 'financeiro':
+        return <FinancialManagement />
+      case 'crm':
+        return <ProcessCRM />
+      case 'consultas':
+        return <DatabaseQueries />
+      case 'conhecimento':
+        return <KnowledgeBase />
       case 'assistente':
         return <AssistenteIA />
       case 'agentes':
@@ -72,7 +97,7 @@ function App() {
           </div>
         </div>
 
-        <nav className="flex-1 p-4 flex flex-col gap-1">
+        <nav className="flex-1 p-4 flex flex-col gap-1 overflow-y-auto">
           {navigation.map((item) => {
             const Icon = item.icon
             const isActive = currentView === item.id
@@ -99,8 +124,8 @@ function App() {
         </div>
       </aside>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-50">
-        <nav className="flex items-center justify-around p-2">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-50 overflow-x-auto">
+        <nav className="flex items-center justify-start min-w-max p-2 gap-1">
           {navigation.map((item) => {
             const Icon = item.icon
             const isActive = currentView === item.id
@@ -109,12 +134,12 @@ function App() {
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg min-w-[70px] ${
+                  isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground'
                 }`}
               >
-                <Icon size={24} />
-                <span className="text-xs">{item.label.split(' ')[0]}</span>
+                <Icon size={20} />
+                <span className="text-xs whitespace-nowrap">{item.label.split(' ')[0]}</span>
               </button>
             )
           })}
