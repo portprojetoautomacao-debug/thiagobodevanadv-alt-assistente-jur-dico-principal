@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
@@ -10,7 +9,6 @@ import {
   Robot, 
   Lightning, 
   CheckCircle, 
-  Warning,
   Calendar,
   Database,
   Brain,
@@ -20,7 +18,6 @@ import {
   FileText,
   Gavel,
   Sparkle,
-  ArrowsLeftRight,
   ListChecks
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
@@ -31,7 +28,7 @@ import MrsJustinEModal from '@/components/MrsJustinEModal'
 import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
 
-const agentIcons: Record<string, React.ComponentType<any>> = {
+const agentIcons: Record<string, React.ComponentType<{ className?: string; weight?: string }>> = {
   'djen-monitor': Database,
   'mrs-justin-e': Brain,
   'petition-writer': Gavel,
@@ -46,7 +43,7 @@ interface AIAgentsProps {
   onNavigate?: (view: string) => void
 }
 
-export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
+export default function AIAgents(_props: AIAgentsProps) {
   const {
     agents,
     taskQueue,
@@ -280,7 +277,7 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
           <CardContent>
             <div className="text-2xl font-bold">{queuedTasks + processingTasks}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {processingTasks} em processamento
+              {activeAgents === 0 ? 'Nenhum agente ativo' : `${activeAgents} trabalhando agora`}
             </p>
           </CardContent>
         </Card>
@@ -297,7 +294,7 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
         </Card>
       </div>
 
-      <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
+      <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
@@ -592,16 +589,6 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
                               {new Date(log.timestamp).toLocaleString('pt-BR')}
                             </p>
                           </div>
-                          <Badge
-                            variant={
-                              log.result === 'success' ? 'default' : 
-                              log.result === 'warning' ? 'secondary' : 
-                              'destructive'
-                            }
-                            className="flex-shrink-0"
-                          >
-                            {log.result}
-                          </Badge>
                         </div>
                       )
                     })}
@@ -631,6 +618,12 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
                     {taskQueue.map((task) => {
                       const agent = agents.find(a => a.id === task.agentId)
                       const IconComponent = agentIcons[task.agentId] || Robot
+                      const priorityColors = {
+                        critical: 'destructive',
+                        high: 'default',
+                        medium: 'secondary',
+                        low: 'outline'
+                      } as const
                       
                       return (
                         <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
@@ -665,16 +658,17 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
         <TabsContent value="completed" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Tarefas Completadas</CardTitle>
+              <CardTitle>Histórico de Tarefas Concluídas</CardTitle>
               <CardDescription>
-                Últimas 100 tarefas concluídas pelos agentes
+                Tarefas processadas com sucesso pelos agentes
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
                 {completedTasks.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma tarefa completada ainda
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <CheckCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhuma tarefa concluída ainda</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -691,10 +685,15 @@ export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
                             <p className="text-xs text-muted-foreground mt-1">
                               Concluída em: {task.completedAt ? new Date(task.completedAt).toLocaleString('pt-BR') : '-'}
                             </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="default" className="text-xs bg-green-600">
+                                Concluído
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {task.completedAt && new Date(task.completedAt).toLocaleString('pt-BR')}
+                              </span>
+                            </div>
                           </div>
-                          <Badge variant="default" className="flex-shrink-0 bg-green-600">
-                            Completa
-                          </Badge>
                         </div>
                       )
                     })}

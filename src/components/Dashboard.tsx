@@ -49,7 +49,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       ativos,
       concluidos,
       prazosPendentes,
-      prazosUrgentes
+      prazosUrgentes,
+      todosPrazos: todosPrazos.filter(p => !p.concluido).slice(0, 5)
     }
   }, [processes])
 

@@ -1,3 +1,6 @@
+// Google Calendar Service
+// Provides integration with Google Calendar API
+
 import { Appointment } from '@/types'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -11,7 +14,8 @@ interface GoogleAuthResponse {
   error?: string
 }
 
-interface CalendarEvent {
+interface GoogleCalendarEvent {
+  id?: string
   summary: string
   description?: string
   location?: string
@@ -40,7 +44,9 @@ class GoogleCalendarService {
   private gisInited = false
 
   async initialize(): Promise<void> {
-    if (this.gapiInited && this.gisInited) return
+    if (this.gapiInited && this.gisInited) {
+      return
+    }
 
     await this.loadGoogleScripts()
     await this.initializeGapi()
@@ -117,8 +123,27 @@ class GoogleCalendarService {
     })
   }
 
-  isAuthenticated(): boolean {
-    return this.accessToken !== null
+  async listEvents(timeMin?: Date, timeMax?: Date): Promise<GoogleCalendarEvent[]> {
+    try {
+      const params: any = {
+        calendarId: 'primary',
+        timeMin: (timeMin || new Date()).toISOString(),
+        showDeleted: false,
+        singleEvents: true,
+        maxResults: 100,
+        orderBy: 'startTime',
+      }
+
+      if (timeMax) {
+        params.timeMax = timeMax.toISOString()
+      }
+
+      const response = await (window as any).gapi.client.calendar.events.list(params)
+      return response.result.items || []
+    } catch (error) {
+      console.error('Error fetching calendar events:', error)
+      return []
+    }
   }
 
   async createEvent(appointment: Appointment): Promise<string | null> {
@@ -131,7 +156,7 @@ class GoogleCalendarService {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
       const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000)
 
-      const event: CalendarEvent = {
+      const event: GoogleCalendarEvent = {
         summary: appointment.title,
         description: appointment.description || '',
         location: appointment.location || '',
@@ -174,7 +199,7 @@ class GoogleCalendarService {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
       const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000)
 
-      const event: CalendarEvent = {
+      const event: GoogleCalendarEvent = {
         summary: appointment.title,
         description: appointment.description || '',
         location: appointment.location || '',
@@ -227,9 +252,25 @@ class GoogleCalendarService {
     }
   }
 
+  isAuthenticated(): boolean {
+    return this.accessToken !== null
+  }
+
+  revokeAccess(): void {
+    if (this.accessToken) {
+      ;(window as any).google.accounts.oauth2.revoke(this.accessToken)
+      this.accessToken = null
+    }
+  }
+
+  openGoogleCalendar(): void {
+    window.open('https://calendar.google.com', '_blank')
+  }
+
   logout(): void {
     this.accessToken = null
   }
 }
 
 export const googleCalendarService = new GoogleCalendarService()
+export type { GoogleCalendarEvent }
