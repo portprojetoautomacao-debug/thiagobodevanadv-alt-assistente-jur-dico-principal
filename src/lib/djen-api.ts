@@ -14,8 +14,11 @@ export interface DJENPublication {
 
 export interface DJENQueryParams {
   tribunal: string
-  data: string
-  meio: 'html' | 'pdf'
+  dataInicio: string
+  dataFim: string
+  nomeAdvogado?: string
+  numeroOAB?: string
+  ufOAB?: string
 }
 
 export interface DJENFilteredResult {
@@ -34,8 +37,8 @@ export interface DJENConfig {
     nomeAdvogado?: string
     numeroOAB?: string
   }
-  data?: string
-  meio?: 'html' | 'pdf'
+  dataInicio?: string
+  dataFim?: string
   timeout?: number
   delayBetweenRequests?: number
 }
@@ -62,6 +65,18 @@ function normalizeText(text: string): string {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
+}
+
+function extractUFFromOAB(numeroOAB: string): string | undefined {
+  // Extract UF from format "OAB/UF 12345" or "OAB/UF12345"
+  const match = numeroOAB.match(/OAB\/([A-Z]{2})/i)
+  return match ? match[1].toUpperCase() : undefined
+}
+
+function extractNumeroFromOAB(numeroOAB: string): string | undefined {
+  // Extract number from format "OAB/UF 12345" or "OAB/UF12345"
+  const match = numeroOAB.match(/OAB\/[A-Z]{2}\s*(\d+)/i)
+  return match ? match[1] : undefined
 }
 
 function extractPublicationText(pub: DJENPublication): string {
@@ -105,7 +120,22 @@ async function consultarPublicacoesTribunal(
   params: DJENQueryParams,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<DJENPublication[]> {
-  const url = `https://comunicaapi.pje.jus.br/api/v1/caderno/${params.tribunal}/${params.data}/${params.meio}`
+  // Build query parameters
+  const queryParams = new URLSearchParams()
+  queryParams.append('siglaTribunal', params.tribunal)
+  queryParams.append('dataDisponibilizacaoInicio', params.dataInicio)
+  queryParams.append('dataDisponibilizacaoFim', params.dataFim)
+  
+  if (params.nomeAdvogado) {
+    queryParams.append('nomeAdvogado', params.nomeAdvogado)
+  }
+  
+  if (params.numeroOAB && params.ufOAB) {
+    queryParams.append('numeroOab', params.numeroOAB)
+    queryParams.append('ufOab', params.ufOAB)
+  }
+  
+  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryParams.toString()}`
   
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
@@ -213,8 +243,8 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   const {
     tribunais = DEFAULT_TRIBUNAIS,
     searchTerms,
-    data,
-    meio = 'html',
+    dataInicio,
+    dataFim,
     timeout = DEFAULT_TIMEOUT,
     delayBetweenRequests = DEFAULT_DELAY
   } = config
@@ -223,7 +253,19 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
     throw new Error('É necessário fornecer pelo menos um termo de busca (nome ou OAB)')
   }
 
-  const dataConsulta = data || formatDate(new Date())
+  // Use the same date for both inicio and fim if not specified
+  const defaultDate = formatDate(new Date())
+  const queryDataInicio = dataInicio || defaultDate
+  const queryDataFim = dataFim || dataInicio || defaultDate
+  
+  // Extract UF and number from OAB if provided
+  let numeroOAB: string | undefined
+  let ufOAB: string | undefined
+  
+  if (searchTerms.numeroOAB) {
+    ufOAB = extractUFFromOAB(searchTerms.numeroOAB)
+    numeroOAB = extractNumeroFromOAB(searchTerms.numeroOAB)
+  }
 
   const resultados: DJENFilteredResult[] = []
   const erros: Array<{ tribunal: string; erro: string }> = []
@@ -232,7 +274,14 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   for (const tribunal of tribunais) {
     try {
       const publicacoes = await consultarPublicacoesTribunal(
-        { tribunal, data: dataConsulta, meio },
+        { 
+          tribunal, 
+          dataInicio: queryDataInicio, 
+          dataFim: queryDataFim,
+          nomeAdvogado: searchTerms.nomeAdvogado,
+          numeroOAB,
+          ufOAB
+        },
         timeout
       )
 
@@ -243,7 +292,7 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
         const { matches, matchType } = matchesSearchTerms(pubText, searchTerms)
 
         if (matches && matchType) {
-          resultados.push(parsePublicationToResult(pub, tribunal, dataConsulta, matchType))
+          resultados.push(parsePublicationToResult(pub, tribunal, queryDataInicio, matchType))
         }
       }
 

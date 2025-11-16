@@ -107,8 +107,8 @@ export default function DJENConsulta() {
           nomeAdvogado: nomeAdvogado.trim() || undefined,
           numeroOAB: numeroOAB.trim() || undefined
         },
-        data: dataConsulta,
-        meio: 'html',
+        dataInicio: dataConsulta,
+        dataFim: dataConsulta,
         timeout: 60000,
         delayBetweenRequests: 1500
       }

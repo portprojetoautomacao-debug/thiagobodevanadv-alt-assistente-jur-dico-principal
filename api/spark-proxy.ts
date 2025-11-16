@@ -30,6 +30,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  if (!githubToken) {
+    console.error('GITHUB_TOKEN environment variable is not set');
+    res.status(500).json({
+      error: 'GITHUB_TOKEN environment variable is not set. Please configure this in Vercel environment variables.',
+      docs: 'See SPARK_FIX_GUIDE.md for setup instructions'
+    });
+    return;
+  }
+
   if (!service) {
     res.status(400).json({ error: 'Service parameter is required' });
     return;
@@ -54,11 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Prepare headers
     const headers = {
       'Content-Type': 'application/json',
+      'Authorization': `bearer ${githubToken}`,
     };
-
-    if (githubToken) {
-      headers['Authorization'] = `Bearer ${githubToken}`;
-    }
 
     // Prepare fetch options
     const options: RequestInit = {
