@@ -132,9 +132,11 @@ body {
   );
   background-size: 200% 200%;
   -webkit-background-clip: text;
-  background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
   animation: gradient-shift 8s ease infinite;
+  will-change: background-position;
 }
 
 .card-glow {
