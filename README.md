@@ -145,6 +145,10 @@ npm run lint         # Lint código
 
 3. Deploy automático via Git push
 
+**Build & Start:**
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start` (serves static files on port 10000)
+
 ### Outras Plataformas
 
 Compatível com Vercel, Netlify, e qualquer host de SPA.
