@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
@@ -10,7 +9,6 @@ import {
   Robot, 
   Lightning, 
   CheckCircle, 
-  Warning,
   Calendar,
   Database,
   Brain,
@@ -20,7 +18,6 @@ import {
   FileText,
   Gavel,
   Sparkle,
-  ArrowsLeftRight,
   ListChecks
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
@@ -31,7 +28,7 @@ import MrsJustinEModal from '@/components/MrsJustinEModal'
 import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
 
-const agentIcons: Record<string, React.ComponentType<any>> = {
+const agentIcons: Record<string, React.ComponentType<{ className?: string; weight?: string }>> = {
   'djen-monitor': Database,
   'mrs-justin-e': Brain,
   'petition-writer': Gavel,
@@ -46,7 +43,7 @@ interface AIAgentsProps {
   onNavigate?: (view: string) => void
 }
 
-export default function AIAgents({ onNavigate = () => {} }: AIAgentsProps) {
+export default function AIAgents(_props: AIAgentsProps) {
   const {
     agents,
     taskQueue,
