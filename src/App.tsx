@@ -20,6 +20,7 @@ import {
 } from '@phosphor-icons/react'
 import Login from '@/components/Login'
 import Dashboard from '@/components/Dashboard'
+import ClientesView from '@/components/ClientesView'
 import ProcessosView from '@/components/ProcessosView'
 import PrazosView from '@/components/PrazosView'
 import CalculadoraPrazos from '@/components/CalculadoraPrazos'
@@ -75,13 +76,14 @@ function App() {
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
+    { id: 'clientes' as ViewType, label: 'Clientes', icon: UsersFour },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
     { id: 'calculadora' as ViewType, label: 'Calculadora', icon: Calculator },
     { id: 'minutas' as ViewType, label: 'Minutas', icon: FileText },
     { id: 'financeiro' as ViewType, label: 'Financeiro', icon: CurrencyCircleDollar },
-    { id: 'crm' as ViewType, label: 'CRM', icon: UsersFour },
-    { id: 'consultas' as ViewType, label: 'Consultas', icon: Database },
+    { id: 'crm' as ViewType, label: 'CRM', icon: Database },
+    { id: 'consultas' as ViewType, label: 'Consultas', icon: Books },
     { id: 'conhecimento' as ViewType, label: 'Conhecimento', icon: Books },
     { id: 'assistente' as ViewType, label: 'Assistente IA', icon: ChatCircle },
     { id: 'agentes' as ViewType, label: 'Agentes IA', icon: Robot },
@@ -91,6 +93,8 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentView} />
+      case 'clientes':
+        return <ClientesView />
       case 'processos':
         return <ProcessosView />
       case 'prazos':
