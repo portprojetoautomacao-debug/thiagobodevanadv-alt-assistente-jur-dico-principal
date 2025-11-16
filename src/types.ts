@@ -57,4 +57,28 @@ export interface PremonicaoJuridica {
   }[]
 }
 
-export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes'
+export interface Minuta {
+  id: string
+  titulo: string
+  processId?: string
+  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'outro'
+  conteudo: string
+  status: 'rascunho' | 'em-revisao' | 'finalizada' | 'arquivada'
+  criadoEm: string
+  atualizadoEm: string
+  autor: string
+  googleDocsId?: string
+  googleDocsUrl?: string
+  ultimaSincronizacao?: string
+}
+
+export interface FinancialEntry {
+  id: string
+  type: 'income' | 'expense'
+  amount: number
+  category: string
+  description: string
+  date: string
+}
+
+export type ViewType = 'dashboard' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas'

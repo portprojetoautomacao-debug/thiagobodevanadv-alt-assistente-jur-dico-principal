@@ -324,7 +324,7 @@ export default function MinutasManager() {
                       <SelectItem value="">Nenhum</SelectItem>
                       {(processes || []).map((p) => (
                         <SelectItem key={p.id} value={p.id}>
-                          {p.cnj} - {p.title}
+                          {p.numeroCNJ} - {p.titulo}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -414,7 +414,7 @@ export default function MinutasManager() {
                         <Badge variant="outline">{getTipoLabel(minuta.tipo)}</Badge>
                         {processo && (
                           <Badge variant="secondary">
-                            {processo.cnj}
+                            {processo.numeroCNJ}
                           </Badge>
                         )}
                         {minuta.googleDocsId && (
