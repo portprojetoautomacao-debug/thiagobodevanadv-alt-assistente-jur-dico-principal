@@ -116,6 +116,25 @@ Sistema carrega prazos → Verifica datas próximas → Calcula urgência → Ex
 - Fácil marcação de conclusão
 - Integração com processos
 
+### 6. Agente de Verificação Documental
+
+**Funcionalidade:** Agente de IA que identifica automaticamente documentos faltantes nos processos e notifica para juntá-los
+
+**Propósito:** Evitar atrasos processuais causados por documentação incompleta e garantir que todos os processos tenham a documentação necessária
+
+**Trigger:** Usuário solicita análise manual ou agente verifica automaticamente em intervalos programados
+
+**Progressão:**
+Agente analisa processos ativos → IA identifica documentos faltantes baseado no tipo de ação e contexto → Classifica por urgência (alta/média/baixa) → Exibe lista de documentos pendentes → Usuário pode notificar responsáveis → Marca como resolvido quando documento é juntado
+
+**Critérios de Sucesso:**
+- IA identifica documentos relevantes com precisão
+- Classificação de urgência adequada ao contexto
+- Interface clara mostrando processos e documentos pendentes
+- Notificações efetivas para responsáveis
+- Fácil marcação de resolução
+- Histórico de documentos solicitados e juntados
+
 ---
 
 ## Edge Case Handling
@@ -284,11 +303,41 @@ Tailwind spacing (4px base):
 
 ---
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Last Updated:** 2025-01-18  
 **Status:** ✅ Production Ready - Auditado e Aprovado
 
 ## Changelog
+
+### v1.3 - 2025-01-18 - Agente de Verificação Documental ✅
+
+**🤖 NOVO AGENTE DE IA IMPLEMENTADO**
+
+#### ✨ Agente de Verificação Documental
+- ✅ **Identificação automática de documentos faltantes** - Analisa processos ativos e identifica documentação incompleta
+- ✅ **Classificação por urgência** - Categoriza documentos como alta/média/baixa urgência
+- ✅ **Notificações inteligentes** - Sistema de alertas para documentos pendentes
+- ✅ **Interface dedicada** - Aba "Verificação Documental" na seção de Agentes IA
+- ✅ **Dashboard de pendências** - Cards com estatísticas de documentos por urgência
+- ✅ **Gestão de resoluções** - Marcação de documentos como juntados
+- ✅ **Análise via IA** - Utiliza GPT-4 para análise contextual dos processos
+- ✅ **Verificação automática** - Opção de análise periódica automática
+
+#### 📊 Funcionalidades
+- **Análise Inteligente**: IA analisa tipo de ação, partes, comarca e contexto
+- **Sugestões Contextuais**: Identifica até 3 documentos relevantes por processo
+- **Métricas em Tempo Real**: Total pendente, alta/média/baixa urgência
+- **Sistema de Notificações**: Alertas para documentos críticos
+- **Histórico**: Rastreamento de documentos solicitados e juntados
+
+#### 🎨 Interface
+- Nova aba "Verificação Documental" na tela de Agentes IA
+- Cards coloridos por urgência (vermelho/azul/cinza)
+- Botões "Notificar" e "Juntado" para gestão
+- ScrollArea para lista de documentos pendentes
+- Alert informativo sobre funcionamento do agente
+
+---
 
 ### v1.2 - 2025-01-18 - Auditoria Final Completa ✅
 
