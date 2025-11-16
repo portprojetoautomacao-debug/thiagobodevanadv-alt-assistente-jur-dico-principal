@@ -2,35 +2,6 @@
 
 > Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
 
----
-
-## 🚨 CORREÇÃO URGENTE - 74 Conflitos no package-lock.json
-
-**Se você está vendo este projeto pela primeira vez após o PR #21:**
-
-### ⚡ Solução Ultra-Rápida (copie e cole):
-```bash
-rm package-lock.json && npm install && npm run build
-```
-
-### 📖 Leia a documentação:
-- **[COMECE-AQUI.txt](./COMECE-AQUI.txt)** ← 📌 Visual rápido de todas as opções
-- **[LEIA-ME-PRIMEIRO.md](./LEIA-ME-PRIMEIRO.md)** ← 📘 Guia completo em português
-- **[INDICE_DOCUMENTACAO.md](./INDICE_DOCUMENTACAO.md)** ← 📚 Índice de toda documentação
-
-### 🤖 Scripts Automatizados:
-```bash
-# Linux/Mac
-./fix-merge-conflicts.sh
-
-# Windows
-fix-merge-conflicts.bat
-```
-
-**Problema resolvido?** Continue para "Características Principais" abaixo ⬇️
-
----
-
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
 ## 🚀 Características Principais

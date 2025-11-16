@@ -32,7 +32,3 @@ pids
 .devcontainer/
 
 .spark-workbench-id
-
-# API compiled files
-api/**/*.js
-api/**/*.js.map
