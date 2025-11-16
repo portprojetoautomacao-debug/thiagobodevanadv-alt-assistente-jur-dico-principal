@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
@@ -18,7 +19,9 @@ import {
   FileText,
   Gavel,
   Sparkle,
-  ListChecks
+  ListChecks,
+  WarningCircle,
+  ArrowsLeftRight
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import AgentMetrics from '@/components/AgentMetrics'
@@ -43,7 +46,7 @@ interface AIAgentsProps {
   onNavigate?: (view: string) => void
 }
 
-export default function AIAgents(_props: AIAgentsProps) {
+export default function AIAgents({ onNavigate }: AIAgentsProps) {
   const {
     agents,
     taskQueue,
@@ -308,7 +311,7 @@ export default function AIAgents(_props: AIAgentsProps) {
                 </CardDescription>
               </div>
             </div>
-            <Button onClick={() => onNavigate('assistente')}>
+            <Button onClick={() => onNavigate?.('assistente')}>
               <Info className="w-4 h-4 mr-2" />
               Abrir Chat
             </Button>
@@ -404,7 +407,7 @@ export default function AIAgents(_props: AIAgentsProps) {
         <Card className="border-accent bg-accent/5">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Warning className="w-5 h-5 text-accent" weight="fill" />
+              <WarningCircle className="w-5 h-5 text-accent" weight="fill" />
               <CardTitle className="text-base">Intervenção Humana Necessária</CardTitle>
             </div>
             <CardDescription>

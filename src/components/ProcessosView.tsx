@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { MagnifyingGlass, Plus, Gavel } from '@phosphor-icons/react'
 import ProcessDialog from './ProcessDialog'
 import ProcessDetailsDialog from './ProcessDetailsDialog'
+import DataInitializer from './DataInitializer'
 
 export default function ProcessosView() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
@@ -37,6 +38,14 @@ export default function ProcessosView() {
     setProcesses(current => (current || []).filter(p => p.id !== processId))
     setDetailsOpen(false)
     setSelectedProcess(null)
+  }
+
+  const handleDataGenerated = (generatedProcesses: Process[]) => {
+    setProcesses(generatedProcesses)
+  }
+
+  if (!processes || processes.length === 0) {
+    return <DataInitializer onDataGenerated={handleDataGenerated} />
   }
 
   return (
