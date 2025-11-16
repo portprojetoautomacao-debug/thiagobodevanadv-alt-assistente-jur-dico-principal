@@ -19,7 +19,7 @@ export default function PrazosView() {
     processes.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach(prazo => {
-          lista.push({ ...prazo, processo })
+          lista.push({ ...prazo, processo: process })
         })
       }
     })
