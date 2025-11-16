@@ -96,11 +96,15 @@ src/
 
 ## 📖 Documentação
 
+- `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
+- `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
 - `PRD.md` - Documento de requisitos do produto
 - `OAUTH_SETUP.md` - Guia de configuração OAuth Google
 - `DATAJUD_SETUP.md` - **Guia de configuração API DataJud (NOVO)**
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
 - `DJEN_DOCUMENTATION.md` - Integração DJEN (API Comunica PJe)
+- `OAUTH_SETUP.md` - Guia de configuração OAuth
+- `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
 - `SECURITY.md` - Políticas de segurança
 - `PREMONICAO_JURIDICA.md` - Sistema de premonição
 
@@ -138,7 +142,29 @@ npm run lint         # Lint código
 
 ## 🌐 Deploy
 
-### Render
+### Vercel (Recomendado) ⭐
+
+**Deploy com 1 clique:**
+1. Conecte sua conta do GitHub ao [Vercel](https://vercel.com)
+2. Importe este repositório
+3. Configure as variáveis de ambiente (veja abaixo)
+4. Deploy!
+
+**Variáveis de ambiente necessárias:**
+```
+GITHUB_RUNTIME_PERMANENT_NAME=97a1cb1e48835e0ecf1e
+GITHUB_TOKEN=seu_token_github
+VITE_GOOGLE_CLIENT_ID=seu_client_id
+VITE_GOOGLE_API_KEY=sua_api_key
+VITE_REDIRECT_URI=https://seu-app.vercel.app
+VITE_APP_ENV=production
+```
+
+📖 **Guia completo de deploy**: Veja `GUIA_DEPLOY_SIMPLES.md` e `VERCEL_DEPLOYMENT.md`
+
+### Render (Alternativa)
+
+Se preferir usar Render ao invés de Vercel:
 
 1. Configure variáveis de ambiente no dashboard:
    - `VITE_GOOGLE_CLIENT_ID`
