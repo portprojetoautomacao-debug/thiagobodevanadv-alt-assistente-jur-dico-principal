@@ -73,8 +73,8 @@ export class DJENMonitorAgent {
             nomeAdvogado: advogado.nome,
             numeroOAB: advogado.oab
           },
-          data: dataHoje,
-          meio: 'html',
+          dataInicio: dataHoje,
+          dataFim: dataHoje,
           timeout: 60000,
           delayBetweenRequests: 1500
         }
