@@ -22,16 +22,4 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tabs'],
-          'charts': ['recharts'],
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1000,
-  },
 });
