@@ -87,7 +87,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, [processes])
 
   const handleDataGenerated = (generatedProcesses: Process[]) => {
-    setProcesses(generatedProcesses)
+    setProcesses(() => generatedProcesses)
   }
 
   const handleAddProcesses = (newProcesses: Process[]) => {
@@ -95,7 +95,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }
 
   const handleClearAll = () => {
-    setProcesses([])
+    setProcesses(() => [])
   }
 
   if (!processes || processes.length === 0) {

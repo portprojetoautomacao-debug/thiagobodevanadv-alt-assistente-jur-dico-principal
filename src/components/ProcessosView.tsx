@@ -41,7 +41,7 @@ export default function ProcessosView() {
   }
 
   const handleDataGenerated = (generatedProcesses: Process[]) => {
-    setProcesses(generatedProcesses)
+    setProcesses(() => generatedProcesses)
   }
 
   if (!processes || processes.length === 0) {
