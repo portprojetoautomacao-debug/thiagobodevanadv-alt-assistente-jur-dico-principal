@@ -82,6 +82,8 @@ jobs:
   notify-release:
     name: Notify Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: create-release
 
     steps:
