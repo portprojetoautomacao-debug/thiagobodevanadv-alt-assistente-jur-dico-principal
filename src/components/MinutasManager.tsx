@@ -33,7 +33,7 @@ export default function MinutasManager() {
   
   const [formData, setFormData] = useState({
     titulo: '',
-    processId: '',
+    processId: '_none',
     tipo: 'peticao' as Minuta['tipo'],
     conteudo: '',
   })
@@ -66,7 +66,7 @@ export default function MinutasManager() {
     const novaMinuta: Minuta = {
       id: `minuta-${Date.now()}`,
       titulo: formData.titulo,
-      processId: formData.processId || undefined,
+      processId: formData.processId !== '_none' ? formData.processId : undefined,
       tipo: formData.tipo,
       conteudo: formData.conteudo,
       status: 'rascunho',
@@ -79,7 +79,7 @@ export default function MinutasManager() {
     
     setFormData({
       titulo: '',
-      processId: '',
+      processId: '_none',
       tipo: 'peticao',
       conteudo: '',
     })
@@ -100,7 +100,7 @@ export default function MinutasManager() {
           ? {
               ...m,
               titulo: formData.titulo,
-              processId: formData.processId || undefined,
+              processId: formData.processId !== '_none' ? formData.processId : undefined,
               tipo: formData.tipo,
               conteudo: formData.conteudo,
               atualizadoEm: new Date().toISOString(),
@@ -126,7 +126,7 @@ export default function MinutasManager() {
     setEditingMinuta(null)
     setFormData({
       titulo: '',
-      processId: '',
+      processId: '_none',
       tipo: 'peticao',
       conteudo: '',
     })
@@ -217,7 +217,7 @@ export default function MinutasManager() {
     setEditingMinuta(minuta)
     setFormData({
       titulo: minuta.titulo,
-      processId: minuta.processId || '',
+      processId: minuta.processId || '_none',
       tipo: minuta.tipo,
       conteudo: minuta.conteudo,
     })
@@ -283,7 +283,7 @@ export default function MinutasManager() {
             <DialogTrigger asChild>
               <Button onClick={() => {
                 setEditingMinuta(null)
-                setFormData({ titulo: '', processId: '', tipo: 'peticao', conteudo: '' })
+                setFormData({ titulo: '', processId: '_none', tipo: 'peticao', conteudo: '' })
               }}>
                 <Plus className="mr-2" weight="bold" />
                 Nova Minuta
@@ -321,7 +321,7 @@ export default function MinutasManager() {
                       <SelectValue placeholder="Selecione um processo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="_none">Nenhum</SelectItem>
                       {(processes || []).map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.numeroCNJ} - {p.titulo}

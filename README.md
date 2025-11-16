@@ -2,6 +2,35 @@
 
 > Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
 
+---
+
+## 🚨 CORREÇÃO URGENTE - 74 Conflitos no package-lock.json
+
+**Se você está vendo este projeto pela primeira vez após o PR #21:**
+
+### ⚡ Solução Ultra-Rápida (copie e cole):
+```bash
+rm package-lock.json && npm install && npm run build
+```
+
+### 📖 Leia a documentação:
+- **[COMECE-AQUI.txt](./COMECE-AQUI.txt)** ← 📌 Visual rápido de todas as opções
+- **[LEIA-ME-PRIMEIRO.md](./LEIA-ME-PRIMEIRO.md)** ← 📘 Guia completo em português
+- **[INDICE_DOCUMENTACAO.md](./INDICE_DOCUMENTACAO.md)** ← 📚 Índice de toda documentação
+
+### 🤖 Scripts Automatizados:
+```bash
+# Linux/Mac
+./fix-merge-conflicts.sh
+
+# Windows
+fix-merge-conflicts.bat
+```
+
+**Problema resolvido?** Continue para "Características Principais" abaixo ⬇️
+
+---
+
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
 ## 🚀 Características Principais
@@ -31,9 +60,9 @@ cd assistente-juridico-pje
 npm install
 ```
 
-### 2. Configure OAuth e APIs
+### 2. Configure OAuth (Obrigatório)
 
-Este aplicativo requer configuração de APIs externas.
+Este aplicativo requer credenciais Google OAuth para autenticação.
 
 **⚠️ IMPORTANTE: Nunca commit credenciais no Git!**
 
@@ -44,12 +73,9 @@ cp .env.example .env
 # Edite .env e adicione suas credenciais
 # VITE_GOOGLE_CLIENT_ID=seu-client-id-aqui
 # VITE_REDIRECT_URI=http://localhost:5173
-# VITE_DATAJUD_API_KEY=sua-api-key-datajud (opcional)
 ```
 
-📖 **Guias de configuração**:
-- `OAUTH_SETUP.md` - Configuração Google OAuth (obrigatório)
-- `DATAJUD_SETUP.md` - Configuração API DataJud (opcional)
+📖 **Guia completo de configuração**: Veja `OAUTH_SETUP.md`
 
 ### 3. Execute o Desenvolvimento
 
@@ -96,21 +122,13 @@ src/
 
 ## 📖 Documentação
 
-### Deployment
 - `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
-- `VERCEL_DEPLOYMENT_FIX.md` - **Resolução de conflitos no package-lock.json** 🔧
-- `QUICKFIX_PACKAGE_LOCK.md` - **Fix rápido de conflitos (1 linha)** ⚡
-- `PR_18_RESOLUTION.md` - Detalhes da resolução do PR #18
-- `SPARK_FIX_GUIDE.md` - Troubleshooting de endpoints Spark
-
-### Features & Setup
 - `PRD.md` - Documento de requisitos do produto
-- `OAUTH_SETUP.md` - Guia de configuração OAuth Google
-- `DATAJUD_SETUP.md` - **Guia de configuração API DataJud (NOVO)**
+- `OAUTH_SETUP.md` - Guia de configuração OAuth
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
-- `DJEN_DOCUMENTATION.md` - Integração DJEN (API Comunica PJe)
 - `SECURITY.md` - Políticas de segurança
+- `DJEN_DOCUMENTATION.md` - Integração DJEN
 - `PREMONICAO_JURIDICA.md` - Sistema de premonição
 
 ## 🎨 Stack Tecnológica
@@ -167,7 +185,22 @@ VITE_APP_ENV=production
 
 📖 **Guia completo de deploy**: Veja `GUIA_DEPLOY_SIMPLES.md` e `VERCEL_DEPLOYMENT.md`
 
-**Nota**: Este projeto está configurado para deploy integral no Vercel. Não use Render.
+### Render (Alternativa)
+
+Se preferir usar Render ao invés de Vercel:
+
+1. Configure variáveis de ambiente no dashboard:
+   - `VITE_GOOGLE_CLIENT_ID`
+   - `VITE_REDIRECT_URI`
+   - `VITE_APP_ENV=production`
+
+2. Adicione URI de produção no Google Cloud Console
+
+3. Deploy automático via Git push
+
+**Build & Start:**
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start` (serves static files on port 10000)
 
 ### Outras Plataformas
 
