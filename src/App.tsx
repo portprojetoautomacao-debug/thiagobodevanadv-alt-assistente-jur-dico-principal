@@ -196,3 +196,9 @@ function App() {
 }
 
 export default App
+      <Toaster />
+    </div>
+  )
+}
+
+export default App
