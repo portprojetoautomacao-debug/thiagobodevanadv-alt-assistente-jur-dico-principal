@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { 
   ChartPieSlice,
   Gavel, 
@@ -51,6 +52,7 @@ function App() {
       <>
         <Login onLogin={handleLogin} />
         <Toaster />
+        <SpeedInsights />
       </>
     )
   }
@@ -191,6 +193,7 @@ function App() {
       </main>
 
       <Toaster />
+      <SpeedInsights />
     </div>
   )
 }
