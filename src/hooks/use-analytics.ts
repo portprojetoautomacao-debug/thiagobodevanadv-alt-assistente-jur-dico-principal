@@ -1,27 +1,27 @@
 import { useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 
-export interface AnalyticsEvent {
-  id: string
-  type: 'pageview' | 'action' | 'error'
   timestamp: number
-  data: {
-    path?: string
-    action?: string
+    path?: s
     category?: string
-    label?: string
     value?: number
-    error?: string
-    userAgent?: string
-    viewport?: { width: number; height: number }
+    userA
   }
-}
 
-export function useAnalytics() {
-  const [events, setEvents] = useKV<AnalyticsEvent[]>('analytics-events', [])
-
+  const [events, setE
   const track = (
-    type: AnalyticsEvent['type'],
+    data: Analytic
+    const event: A
+      type,
+      data: {
+   
+ 
+
+    }
+    setEvents((currentEvents) => {
+
+    })
+
     data: AnalyticsEvent['data']
   ) => {
     const event: AnalyticsEvent = {
@@ -35,7 +35,7 @@ export function useAnalytics() {
           width: window.innerWidth,
           height: window.innerHeight,
         },
-      },
+  const 
     }
 
     setEvents((currentEvents) => {
@@ -43,57 +43,57 @@ export function useAnalytics() {
       const newEvents = [...eventsList, event]
       return newEvents.slice(-1000)
     })
-  }
+
 
   const trackPageView = (path: string) => {
-    track('pageview', { path })
+        errors: errors.length,
+   
+
+      },
   }
+  return {
+    trackAction,
+    clearEvents,
+    even
+}
+exp
 
-  const trackAction = (
-    action: string,
-    category?: string,
-    label?: string,
-    value?: number
-  ) => {
-    track('action', { action, category, label, value })
-  }
+    trackPageView(path)
+}
 
-  const trackError = (error: string) => {
-    track('error', { error })
-  }
 
-  const clearEvents = () => {
-    setEvents([])
-  }
 
-  const getAnalytics = () => {
-    const eventList = events || []
-    const now = Date.now()
-    const last24h = eventList.filter((e) => now - e.timestamp < 86400000)
-    const last7d = eventList.filter((e) => now - e.timestamp < 604800000)
 
-    const pageViews = last24h.filter((e) => e.type === 'pageview')
-    const actions = last24h.filter((e) => e.type === 'action')
-    const errors = last24h.filter((e) => e.type === 'error')
 
-    const popularPages = pageViews.reduce((acc, event) => {
-      const path = event.data.path || 'unknown'
-      acc[path] = (acc[path] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
 
-    const topActions = actions.reduce((acc, event) => {
-      const action = event.data.action || 'unknown'
-      acc[action] = (acc[action] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
 
-    return {
-      totalEvents: eventList.length,
-      last24h: {
-        total: last24h.length,
-        pageViews: pageViews.length,
-        actions: actions.length,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         errors: errors.length,
         popularPages,
         topActions,
