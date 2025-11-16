@@ -25,46 +25,17 @@ import {
   CalendarBlank as CalendarIcon,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import {
+  consultarProcessoDatajud,
+  validarNumeroCNJ,
+  getTribunaisDisponiveis,
+  isApiKeyConfigured,
+  type DatajudProcesso,
+} from '@/lib/datajud-api'
 
-interface DatajudMovimento {
-  codigo: number
-  nome: string
-  dataHora: string
-  complementosTabelados?: Array<{ nome: string }>
-}
-
-interface DatajudProcesso {
-  numeroProcesso: string
-  classe?: {
-    codigo: number
-    nome: string
-  }
-  sistema?: {
-    codigo: number
-    nome: string
-  }
-  tribunal: string
-  orgaoJulgador?: {
-    nome: string
-  }
-  dataAjuizamento?: string
-  assuntos?: Array<{
-    codigo: number
-    nome: string
-  }>
-  movimentos: DatajudMovimento[]
-}
-
-const TRIBUNAIS = [
-  { value: 'tjsp', label: 'TJSP - Tribunal de Justiça de São Paulo' },
-  { value: 'tjrj', label: 'TJRJ - Tribunal de Justiça do Rio de Janeiro' },
-  { value: 'tjmg', label: 'TJMG - Tribunal de Justiça de Minas Gerais' },
-  { value: 'trf1', label: 'TRF1 - Tribunal Regional Federal da 1ª Região' },
-  { value: 'trf2', label: 'TRF2 - Tribunal Regional Federal da 2ª Região' },
-  { value: 'trf3', label: 'TRF3 - Tribunal Regional Federal da 3ª Região' },
-  { value: 'trf4', label: 'TRF4 - Tribunal Regional Federal da 4ª Região' },
-  { value: 'tst', label: 'TST - Tribunal Superior do Trabalho' },
-]
+const TRIBUNAIS = getTribunaisDisponiveis().filter(t => 
+  ['tjsp', 'tjrj', 'tjmg', 'trf1', 'trf2', 'trf3', 'trf4', 'tst'].includes(t.value)
+)
 
 export default function DatajudChecklist() {
   const [cnjNumber, setCnjNumber] = useState('')
@@ -75,12 +46,26 @@ export default function DatajudChecklist() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<string | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const apiKeyConfigured = isApiKeyConfigured()
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault()
 
     if (!cnjNumber.trim()) {
       setError('Por favor, digite um número de processo CNJ válido.')
+      toast.error('Digite um número de processo CNJ válido')
+      return
+    }
+
+    if (!validarNumeroCNJ(cnjNumber)) {
+      setError('Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO')
+      toast.error('Formato de número CNJ inválido')
+      return
+    }
+
+    if (!apiKeyConfigured) {
+      setError('API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env')
+      toast.error('Configure a API Key do DataJud')
       return
     }
 
@@ -90,69 +75,18 @@ export default function DatajudChecklist() {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      
-      const mockData: DatajudProcesso = {
+      const processo = await consultarProcessoDatajud({
         numeroProcesso: cnjNumber,
-        classe: {
-          codigo: 1,
-          nome: 'Procedimento Comum Cível',
-        },
-        sistema: {
-          codigo: 1,
-          nome: 'PJe',
-        },
-        tribunal: tribunal.toUpperCase(),
-        orgaoJulgador: {
-          nome: '1ª Vara Cível',
-        },
-        dataAjuizamento: '2024-01-15',
-        assuntos: [
-          {
-            codigo: 5001,
-            nome: 'Responsabilidade Civil',
-          },
-        ],
-        movimentos: [
-          {
-            codigo: 1,
-            nome: 'Petição Inicial',
-            dataHora: '2024-01-15T10:30:00',
-            complementosTabelados: [],
-          },
-          {
-            codigo: 2,
-            nome: 'Distribuição',
-            dataHora: '2024-01-15T14:00:00',
-            complementosTabelados: [],
-          },
-          {
-            codigo: 3,
-            nome: 'Conclusão ao Juiz',
-            dataHora: '2024-01-20T09:15:00',
-            complementosTabelados: [],
-          },
-          {
-            codigo: 4,
-            nome: 'Intimação para Contestação',
-            dataHora: '2024-01-25T11:00:00',
-            complementosTabelados: [],
-          },
-          {
-            codigo: 5,
-            nome: 'Contestação Apresentada',
-            dataHora: '2024-02-10T16:45:00',
-            complementosTabelados: [],
-          },
-        ],
-      }
+        tribunal: tribunal
+      })
 
-      setProcessoData(mockData)
+      setProcessoData(processo)
       toast.success('Processo encontrado com sucesso!')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao buscar processo.'
       setError(message)
       toast.error(message)
+      console.error('Erro ao consultar DataJud:', err)
     } finally {
       setIsLoading(false)
     }
@@ -265,6 +199,24 @@ Mantenha a resposta objetiva e profissional.`
               </Button>
             </form>
           </Card>
+
+          {!apiKeyConfigured && (
+            <Alert variant="destructive">
+              <Warning className="h-4 w-4" />
+              <AlertDescription>
+                API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env para usar este recurso.
+                <br />
+                <a 
+                  href="https://www.cnj.jus.br/sistemas/datajud/api-publica/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline text-sm mt-1 inline-block"
+                >
+                  Obtenha sua API Key gratuita aqui
+                </a>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {error && (
             <Alert variant="destructive">

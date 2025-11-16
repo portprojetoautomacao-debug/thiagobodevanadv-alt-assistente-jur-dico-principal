@@ -3,7 +3,6 @@ import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { 
-  SquaresFour, 
   ChartPieSlice,
   Gavel, 
   CalendarCheck, 
@@ -57,7 +56,6 @@ function App() {
   }
 
   const navigation = [
-    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: SquaresFour },
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
