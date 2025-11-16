@@ -1,0 +1,8 @@
+api/*.js
+api/*.js.map
+node_modules
+.git
+*.log
+.env
+.env.local
+.env.*.local
