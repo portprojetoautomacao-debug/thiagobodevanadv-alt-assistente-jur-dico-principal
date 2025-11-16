@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 
 interface AnalyticsEvent {
