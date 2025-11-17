@@ -8,6 +8,8 @@
  * - Advanced NLP processing capabilities
  */
 
+import * as spark from '@github/spark/llm'
+
 // LLM Models supported
 export type LLMModel = 'gpt-4o' | 'gpt-4' | 'gpt-3.5-turbo'
 

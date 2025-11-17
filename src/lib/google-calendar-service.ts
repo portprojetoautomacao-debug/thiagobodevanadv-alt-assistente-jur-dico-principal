@@ -2,17 +2,12 @@
 // Provides integration with Google Calendar API
 
 import { Appointment } from '@/types'
+import type { GoogleAuthResponse, TokenClient, GapiGlobal, GoogleGisGlobal, CalendarClient } from './google-types'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
 const CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 
-interface GoogleAuthResponse {
-  access_token: string
-  expires_in: number
-  token_type: string
-  error?: string
-}
 
 interface GoogleCalendarEvent {
   id?: string
@@ -38,7 +33,7 @@ interface GoogleCalendarEvent {
 }
 
 class GoogleCalendarService {
-  private tokenClient: any = null
+  private tokenClient: TokenClient | null = null
   private accessToken: string | null = null
   private gapiInited = false
   private gisInited = false
@@ -80,22 +75,38 @@ class GoogleCalendarService {
 
   private async initializeGapi(): Promise<void> {
     return new Promise((resolve) => {
-      ;(window as any).gapi.load('client', async () => {
-        await (window as any).gapi.client.init({
-          apiKey: GOOGLE_API_KEY,
-          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-        })
-        this.gapiInited = true
-        resolve()
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      gapiWindow.gapi?.load('client', async () => {
+        // we need to call init on client; caller provides API key & discovery docs
+        // keep a minimal `any` at the call site to avoid disabling rule for entire file
+        const clientInit = (gapiWindow.gapi?.client as { init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void> })?.init
+        if (typeof clientInit === 'function') {
+          try {
+            await clientInit({
+              apiKey: GOOGLE_API_KEY,
+              discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+            })
+            this.gapiInited = true
+          } catch (err) {
+            console.error('Erro ao inicializar Google API client:', err)
+          }
+          resolve()
+        } else {
+          console.error('Google API client init not available')
+          resolve()
+        }
       })
     })
   }
 
   private initializeGis(): void {
-    this.tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+    const google = (window as unknown as { google?: GoogleGisGlobal })?.google
+    if (!google) return
+
+    this.tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: CALENDAR_SCOPES,
-      callback: '',
+      callback: (_resp: GoogleAuthResponse) => {},
     })
     this.gisInited = true
   }
@@ -106,12 +117,16 @@ class GoogleCalendarService {
     }
 
     return new Promise((resolve) => {
+      if (!this.tokenClient) {
+        resolve(false)
+        return
+      }
       this.tokenClient.callback = (resp: GoogleAuthResponse) => {
         if (resp.error !== undefined) {
           resolve(false)
           return
         }
-        this.accessToken = resp.access_token
+        this.accessToken = resp.access_token ?? null
         resolve(true)
       }
 
@@ -125,7 +140,7 @@ class GoogleCalendarService {
 
   async listEvents(timeMin?: Date, timeMax?: Date): Promise<GoogleCalendarEvent[]> {
     try {
-      const params: any = {
+      const params: Record<string, unknown> = {
         calendarId: 'primary',
         timeMin: (timeMin || new Date()).toISOString(),
         showDeleted: false,
@@ -138,8 +153,11 @@ class GoogleCalendarService {
         params.timeMax = timeMax.toISOString()
       }
 
-      const response = await (window as any).gapi.client.calendar.events.list(params)
-      return response.result.items || []
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      if (!eventsApi || typeof eventsApi.list !== 'function') return []
+      const response = (await eventsApi.list(params)) as unknown as { result?: { items?: GoogleCalendarEvent[] } }
+      return response.result?.items || []
     } catch (error) {
       console.error('Error fetching calendar events:', error)
       return []
@@ -177,12 +195,14 @@ class GoogleCalendarService {
         },
       }
 
-      const response = await (window as any).gapi.client.calendar.events.insert({
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      if (!eventsApi || typeof eventsApi.insert !== 'function') return null
+      const response = (await eventsApi.insert({
         calendarId: 'primary',
         resource: event,
-      })
-
-      return response.result.id
+      })) as unknown as { result?: { id?: string } }
+      return response.result?.id ?? null
     } catch (error) {
       console.error('Erro ao criar evento:', error)
       return null
@@ -220,7 +240,10 @@ class GoogleCalendarService {
         },
       }
 
-      await (window as any).gapi.client.calendar.events.update({
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      if (!eventsApi || typeof eventsApi.update !== 'function') return false
+      await eventsApi.update({
         calendarId: 'primary',
         eventId: eventId,
         resource: event,
@@ -240,7 +263,10 @@ class GoogleCalendarService {
     }
 
     try {
-      await (window as any).gapi.client.calendar.events.delete({
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      if (!eventsApi || typeof eventsApi.delete !== 'function') return false
+      await eventsApi.delete({
         calendarId: 'primary',
         eventId: eventId,
       })
@@ -258,7 +284,12 @@ class GoogleCalendarService {
 
   revokeAccess(): void {
     if (this.accessToken) {
-      ;(window as any).google.accounts.oauth2.revoke(this.accessToken)
+      const google = (window as unknown as { google?: GoogleGisGlobal })?.google
+      try {
+        google?.accounts.oauth2.revoke(this.accessToken)
+      } catch {
+        // ignore non-critical revoke errors
+      }
       this.accessToken = null
     }
   }
