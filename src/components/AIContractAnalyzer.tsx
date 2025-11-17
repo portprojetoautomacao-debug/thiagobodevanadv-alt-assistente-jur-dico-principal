@@ -47,13 +47,13 @@ ${contractText}
 
 Retorne a resposta EXATAMENTE neste formato JSON:
 {
-  "riskLevel": "low" | "medium" | "high",
-  "riskScore": número entre 0 e 100,
-  "risks": ["risco 1", "risco 2", ...],
-  "protections": ["proteção 1", "proteção 2", ...],
-  "recommendations": ["recomendação 1", "recomendação 2", ...],
-  "keyTerms": ["termo 1", "termo 2", ...],
-  "missingClauses": ["cláusula ausente 1", "cláusula ausente 2", ...]
+"riskLevel": "low" | "medium" | "high",
+"riskScore": número entre 0 e 100,
+"risks": ["risco 1", "risco 2", ...],
+"protections": ["proteção 1", "proteção 2", ...],
+"recommendations": ["recomendação 1", "recomendação 2", ...],
+"keyTerms": ["termo 1", "termo 2", ...],
+"missingClauses": ["cláusula ausente 1", "cláusula ausente 2", ...]
 }`
 
       const response = await spark.llm(prompt, 'gpt-4o', true)
