@@ -15,9 +15,11 @@ try {
 const defaultTheme = {
   extend: {
     screens: {
-      coarse: { raw: "(pointer: coarse)" },
-      fine: { raw: "(pointer: fine)" },
-      pwa: { raw: "(display-mode: standalone)" },
+      // Removed 'coarse', 'fine', and 'pwa' raw screens because
+      // the container-queries plugin generated invalid CSS like
+      // '@media (width >= (pointer: coarse))' which caused build warnings.
+      // Use regular media queries directly in styles or re-add carefully
+      // after confirming plugin behavior.
     },
     colors: {
       neutral: {
