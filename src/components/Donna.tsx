@@ -175,10 +175,36 @@ export default function HarveySpecter() {
   }
 
   const generateResponse = async (userQuery: string): Promise<string> => {
-    const lowerQuery = userQuery.toLowerCase()
-    
-    if (lowerQuery.includes('performance') || lowerQuery.includes('equipe')) {
-      return `**Análise de Performance da Equipe - ${new Date().toLocaleDateString('pt-BR')}**
+    try {
+      const prompt = spark.llmPrompt`Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
+
+Contexto do escritório:
+- 127 processos ativos (45 em contestação, 25 em recurso, 57 aguardando sentença)
+- Equipe: Marcos Oliveira (18 tarefas/semana), Maria Silva (14 tarefas/semana), João Santos (8 tarefas/semana)
+- 3 prazos urgentes nas próximas 48h
+- 18 intimações pendentes de análise
+- Receita mensal: R$ 87.450 | Despesas: R$ 34.200 | Margem: 61%
+- 5 clientes com inadimplência 60+ dias
+
+Pergunta do usuário: ${userQuery}
+
+Responda de forma profissional, objetiva e com insights estratégicos. Use markdown para formatação e emojis quando apropriado. Seja direto e forneça recomendações acionáveis quando relevante.`
+
+      const response = await Promise.race([
+        spark.llm(prompt, 'gpt-4o-mini'),
+        new Promise<string>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 25000)
+        )
+      ])
+
+      return response
+    } catch (error) {
+      console.error('LLM Error:', error)
+      
+      const lowerQuery = userQuery.toLowerCase()
+      
+      if (lowerQuery.includes('performance') || lowerQuery.includes('equipe')) {
+        return `**Análise de Performance da Equipe - ${new Date().toLocaleDateString('pt-BR')}**
 
 **Destaques:**
 • Marcos Oliveira manteve excelência com 18 tarefas concluídas (vs. média de 12)
@@ -189,10 +215,10 @@ export default function HarveySpecter() {
 1. Reconhecer publicamente o desempenho de Marcos
 2. Investigar possíveis bloqueios com João Santos
 3. Redistribuir carga se necessário`
-    }
-    
-    if (lowerQuery.includes('processo') || lowerQuery.includes('acervo')) {
-      return `**Status do Acervo de Processos**
+      }
+      
+      if (lowerQuery.includes('processo') || lowerQuery.includes('acervo')) {
+        return `**Status do Acervo de Processos**
 
 • 127 processos em andamento
 • 45 em fase de contestação
@@ -202,10 +228,10 @@ export default function HarveySpecter() {
 ⚡ **Ações Prioritárias:**
 1. 12 processos com prazos críticos (< 7 dias)
 2. Revisar 8 processos sem movimentação há 30+ dias`
-    }
-    
-    if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo')) {
-      return `**Prazos e Intimações - Visão Geral**
+      }
+      
+      if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo')) {
+        return `**Prazos e Intimações - Visão Geral**
 
 ⚠️ **URGENTE - Próximas 48h:**
 • Processo 0001234-56.2024.8.02.0001 - Contestação (vence amanhã)
@@ -214,10 +240,10 @@ export default function HarveySpecter() {
 ⚠️ **Próximos 7 dias:**
 • 8 audiências agendadas
 • 15 prazos para manifestação`
-    }
-    
-    if (lowerQuery.includes('financ') || lowerQuery.includes('receita')) {
-      return `**Análise Financeira - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**
+      }
+      
+      if (lowerQuery.includes('financ') || lowerQuery.includes('receita')) {
+        return `**Análise Financeira - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**
 
 📊 **Receita:**
 • Total recebido: R$ 87.450
@@ -234,10 +260,10 @@ export default function HarveySpecter() {
 
 ⚠️ **Alertas:**
 • 5 clientes com pendências há 60+ dias`
-    }
-    
-    if (lowerQuery.includes('cliente')) {
-      return `**Top 5 Clientes por Volume de Processos**
+      }
+      
+      if (lowerQuery.includes('cliente')) {
+        return `**Top 5 Clientes por Volume de Processos**
 
 1. XYZ Transportadora - 28 processos ativos
 2. ABC Comércio - 15 processos ativos
@@ -248,10 +274,10 @@ export default function HarveySpecter() {
 **Observações:**
 • XYZ Transportadora: Principal cliente, necessita atenção especial
 • João da Silva: 90% taxa de sucesso (excelente relacionamento)`
-    }
-    
-    if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente')) {
-      return `**Tarefas Pendentes por Colaborador**
+      }
+      
+      if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente')) {
+        return `**Tarefas Pendentes por Colaborador**
 
 **Marcos Oliveira:**
 • 5 contestações aguardando redação
@@ -267,9 +293,9 @@ export default function HarveySpecter() {
 • 3 pesquisas jurídicas pendentes
 • 2 pareceres para finalizar
 • 4 processos para atualizar`
-    }
-    
-    return `Olá! Sou o Harvey Specter, seu assistente jurídico inteligente. 
+      }
+      
+      return `Olá! Sou o Harvey Specter, seu assistente jurídico inteligente. 
 
 Posso ajudar você com:
 • Análise de performance da equipe
@@ -279,6 +305,7 @@ Posso ajudar você com:
 • Gestão de tarefas e colaboradores
 
 O que você gostaria de saber?`
+    }
   }
 
   const handleSend = async () => {
@@ -297,8 +324,6 @@ O que você gostaria de saber?`
 
     try {
       setMessages((currentMessages) => [...(currentMessages || []), userMessage])
-
-      await new Promise(resolve => setTimeout(resolve, 800))
       
       const responseContent = await generateResponse(query)
       const insights = getInsights(query)
@@ -315,10 +340,14 @@ O que você gostaria de saber?`
     } catch (error) {
       console.error('Error sending message:', error)
       
+      const isTimeout = error instanceof Error && error.message === 'Timeout'
+      
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
+        content: isTimeout 
+          ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
+          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
         timestamp: new Date().toISOString(),
       }
       
