@@ -179,3 +179,58 @@ Animações devem ser sutis e funcionais, nunca chamativas - reforçando feedbac
 6. **Debouncing em quick questions**: handleQuickQuestion agora aguarda antes de enviar para evitar cliques duplos
 
 **Impact**: Chat agora funciona de forma confiável sem erros 409, com feedback claro ao usuário em caso de problemas.
+
+## New AI-Powered Features (Latest Update)
+
+### 1. AI Document Summarizer
+**Functionality**: Transforms long legal documents into executive summaries with key points extraction
+- **Input**: Any legal document text (petitions, sentences, contracts)
+- **Output**: Concise summary + bullet points + identified deadlines + recommended actions
+- **Use Cases**: Quickly review lengthy documents, extract critical information, prepare case briefs
+- **AI Model**: GPT-4o with structured JSON output
+
+### 2. AI Contract Analyzer
+**Functionality**: Analyzes contracts for risks, protections, and missing clauses
+- **Risk Assessment**: Calculates risk score (0-100) and categorizes as low/medium/high
+- **Identifies**: Potential risks, existing protections, missing clauses, key terms
+- **Recommendations**: Actionable suggestions to mitigate identified risks
+- **Use Cases**: Due diligence, contract review, negotiation preparation
+- **AI Model**: GPT-4o with legal domain expertise
+
+### 3. AI Legal Research
+**Functionality**: Generates comprehensive legal research with precedents and arguments
+- **Precedents**: Finds 5+ relevant case law with tribunal, date, summary, and relevance explanation
+- **Legal Arguments**: Structured arguments with legal foundation, precedent citations, and doctrine references
+- **Related Themes**: Suggests related topics for deeper research
+- **Use Cases**: Petition drafting, appeal preparation, legal strategy development
+- **AI Model**: GPT-4o with Brazilian legal knowledge
+
+### 4. AI Email Drafter
+**Functionality**: Generates professional legal emails automatically
+- **Email Types**: 
+  - Client - Initial Contact
+  - Client - Case Updates
+  - Opposing Party - Negotiation
+  - Court - Petition Submission
+  - Expert - Report Request
+  - Formal Professional / Informal Client
+- **Customization**: Recipient name, case number, custom context
+- **Output**: Subject line + full email body with appropriate tone
+- **Use Cases**: Save time on routine communications, maintain professional standards
+- **AI Model**: GPT-4o with tone and formality control
+
+### 5. AI Process Analysis (Enhanced ProcessosView)
+**Functionality**: One-click AI analysis of any process in the system
+- **Strategic Insights**: Executive summary, attention points, identified risks, recommendations, next steps
+- **Auto-Documentation**: Analysis saved directly to process notes with timestamp
+- **Use Cases**: Quick case review, strategic planning, client reporting
+- **AI Model**: GPT-4o with process context awareness
+
+### Technical Implementation
+All AI features use the Spark LLM API:
+- `spark.llmPrompt` for safe prompt construction
+- `spark.llm()` for inference with GPT-4o model
+- JSON mode enabled for structured outputs
+- Comprehensive error handling and user feedback
+- Copy/download functionality for all generated content
+- Mobile-responsive design with glassmorphic styling
