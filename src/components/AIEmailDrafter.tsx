@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import * as spark from '@github/spark/llm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -67,10 +68,10 @@ O email deve:
 
 Retorne EXATAMENTE neste formato JSON:
 {
-  "subject": "assunto do email",
-  "body": "corpo completo do email com quebras de linha (use \\n)",
-  "tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
-  "type": "${typeDescription}"
+"subject": "assunto do email",
+"body": "corpo completo do email com quebras de linha (use \\n)",
+"tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
+"type": "${typeDescription}"
 }`
 
       const response = await spark.llm(prompt, 'gpt-4o', true)

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import * as spark from '@github/spark/llm'
 import { useProcesses } from '@/hooks/use-processes'
 import type { Process } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -135,8 +136,8 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-            <Gavel size={32} weight="duotone" className="text-primary neon-glow" />
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Gavel size={32} weight="duotone" className="text-primary" />
             Processos
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -184,7 +185,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`
       </div>
 
       {filteredProcesses.length === 0 ? (
-        <Card className="glassmorphic">
+        <Card className="windows-mica">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Gavel size={48} className="text-muted-foreground mb-4" weight="duotone" />
             <h3 className="text-lg font-semibold mb-2">
@@ -200,7 +201,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProcesses.map((process) => (
-            <Card key={process.id} className="glassmorphic card-glow-hover cursor-pointer" onClick={() => handleViewDetails(process)}>
+            <Card key={process.id} className="windows-card cursor-pointer" onClick={() => handleViewDetails(process)}>
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>

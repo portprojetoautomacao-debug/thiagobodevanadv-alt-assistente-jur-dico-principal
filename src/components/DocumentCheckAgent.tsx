@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
+import * as spark from '@github/spark/llm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -73,13 +74,13 @@ Para cada documento faltante, informe:
 
 Retorne um objeto JSON com a seguinte estrutura:
 {
-  "missingDocuments": [
-    {
-      "documentType": "Nome do documento",
-      "reason": "Por que é necessário",
-      "urgency": "high"
-    }
-  ]
+"missingDocuments": [
+{
+"documentType": "Nome do documento",
+"reason": "Por que é necessário",
+"urgency": "high"
+}
+]
 }`
 
         const response = await spark.llm(prompt, 'gpt-4o', true)
@@ -164,7 +165,7 @@ Retorne um objeto JSON com a seguinte estrutura:
     if (autoCheckEnabled && processes.length > 0) {
       const interval = setInterval(() => {
         analyzeProcessDocuments()
-      }, 30 * 60 * 1000)
+      }, 60 * 60 * 1000)
 
       return () => clearInterval(interval)
     }
