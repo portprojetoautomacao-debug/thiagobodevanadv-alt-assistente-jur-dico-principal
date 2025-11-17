@@ -160,7 +160,7 @@ const handleSearch = (query: string) => {
 
 **O que fazer:**
 - [ ] Upload de PDFs para processos
-- [ ] Armazenamento em base64 no KV (para arquivos pequenos < 1MB)
+- [ ] Armazenamento em base64 no KV (para arquivos até 50MB)
 - [ ] Preview de PDFs inline
 - [ ] Lista de documentos por processo
 - [ ] Download de documentos
@@ -177,8 +177,8 @@ function DocumentUploader({ processoId }: { processoId: string }) {
     const file = e.target.files?.[0]
     if (!file) return
     
-    if (file.size > 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo 1MB')
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Arquivo muito grande. Máximo 50MB')
       return
     }
     
