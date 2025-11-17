@@ -8,37 +8,55 @@
 }
 
 :root {
-  --font-sans: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'SF Mono', 'Consolas', 'Courier New', monospace;
   --font-serif: 'Georgia', serif;
 
-  /* Windows 11 inspired theme - light and airy */
-  --background: oklch(0.98 0.005 240);
-  --foreground: oklch(0.15 0.01 240);
-  --card: oklch(0.995 0.002 240 / 0.7);
-  --card-foreground: oklch(0.15 0.01 240);
-  --popover: oklch(0.99 0.002 240);
-  --popover-foreground: oklch(0.15 0.01 240);
-  --primary: oklch(0.55 0.22 250);
-  --primary-foreground: oklch(0.99 0.01 240);
-  --secondary: oklch(0.92 0.01 240);
-  --secondary-foreground: oklch(0.15 0.01 240);
-  --muted: oklch(0.95 0.01 240);
-  --muted-foreground: oklch(0.45 0.01 240);
-  --accent: oklch(0.60 0.20 220);
-  --accent-foreground: oklch(0.99 0.01 240);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.99 0.01 0);
-  --border: oklch(0.88 0.01 240);
-  --input: oklch(0.96 0.005 240);
-  --ring: oklch(0.55 0.22 250);
+  /* Windows 11 Fluent Design - Refined & Polished */
+  --background: oklch(0.99 0.003 240);
+  --foreground: oklch(0.20 0.008 240);
+  
+  --card: oklch(0.998 0.001 240 / 0.85);
+  --card-foreground: oklch(0.20 0.008 240);
+  
+  --popover: oklch(0.998 0.001 240 / 0.95);
+  --popover-foreground: oklch(0.20 0.008 240);
+  
+  /* Windows 11 Blue - Iconic accent */
+  --primary: oklch(0.55 0.24 264);
+  --primary-foreground: oklch(0.99 0.005 240);
+  
+  --secondary: oklch(0.95 0.008 240);
+  --secondary-foreground: oklch(0.25 0.010 240);
+  
+  --muted: oklch(0.96 0.005 240);
+  --muted-foreground: oklch(0.50 0.008 240);
+  
+  --accent: oklch(0.60 0.22 264);
+  --accent-foreground: oklch(0.99 0.005 240);
+  
+  --destructive: oklch(0.57 0.24 25);
+  --destructive-foreground: oklch(0.99 0.005 0);
+  
+  --border: oklch(0.90 0.005 240);
+  --input: oklch(0.97 0.003 240);
+  --ring: oklch(0.55 0.24 264);
+  
   --radius: 0.5rem;
   
-  /* Accent colors for highlights */
-  --accent-blue: oklch(0.55 0.22 250);
-  --accent-purple: oklch(0.58 0.20 280);
-  --accent-teal: oklch(0.60 0.18 200);
-  --accent-green: oklch(0.62 0.18 140);
+  /* Windows 11 Accent Colors Palette */
+  --accent-blue: oklch(0.55 0.24 264);
+  --accent-purple: oklch(0.60 0.22 290);
+  --accent-teal: oklch(0.62 0.20 200);
+  --accent-green: oklch(0.65 0.20 145);
+  --accent-orange: oklch(0.65 0.22 50);
+  --accent-pink: oklch(0.65 0.24 340);
+  
+  /* Shadows - Layered & Soft */
+  --shadow-sm: 0 1px 2px oklch(0.20 0.008 240 / 0.04);
+  --shadow-md: 0 2px 8px oklch(0.20 0.008 240 / 0.06), 0 1px 2px oklch(0.20 0.008 240 / 0.03);
+  --shadow-lg: 0 8px 24px oklch(0.20 0.008 240 / 0.10), 0 2px 8px oklch(0.20 0.008 240 / 0.05);
+  --shadow-xl: 0 16px 48px oklch(0.20 0.008 240 / 0.14), 0 4px 16px oklch(0.20 0.008 240 / 0.08);
 }
 
 @theme {
@@ -62,106 +80,188 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) * 1.5);
-  --radius-xl: calc(var(--radius) * 2);
-  --radius-2xl: calc(var(--radius) * 3);
+  --radius-lg: calc(var(--radius) * 1.25);
+  --radius-xl: calc(var(--radius) * 1.75);
+  --radius-2xl: calc(var(--radius) * 2.5);
   --radius-full: 9999px;
   
   --color-accent-blue: var(--accent-blue);
   --color-accent-purple: var(--accent-purple);
   --color-accent-teal: var(--accent-teal);
   --color-accent-green: var(--accent-green);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-pink: var(--accent-pink);
 }
 
 body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background: 
-    radial-gradient(ellipse 80% 50% at 50% 0%, oklch(0.60 0.15 250 / 0.08), transparent),
-    radial-gradient(ellipse 60% 50% at 0% 100%, oklch(0.62 0.12 200 / 0.05), transparent),
-    radial-gradient(ellipse 60% 50% at 100% 100%, oklch(0.58 0.10 280 / 0.05), transparent),
-    linear-gradient(180deg, oklch(0.98 0.005 240) 0%, oklch(0.96 0.008 245) 100%);
+    radial-gradient(ellipse 100% 60% at 50% -10%, oklch(0.55 0.24 264 / 0.08), transparent),
+    radial-gradient(ellipse 80% 50% at 0% 100%, oklch(0.60 0.22 290 / 0.06), transparent),
+    radial-gradient(ellipse 80% 50% at 100% 100%, oklch(0.62 0.20 200 / 0.05), transparent),
+    linear-gradient(180deg, oklch(0.99 0.003 240) 0%, oklch(0.97 0.005 245) 100%);
   background-attachment: fixed;
   min-height: 100vh;
 }
 
-/* Windows 11 style acrylic effect */
+/* Windows 11 Acrylic Material - Premium Glass Effect */
 .windows-acrylic {
-  background: oklch(0.995 0.002 240 / 0.7);
-  backdrop-filter: blur(40px) saturate(150%);
-  border: 1px solid oklch(0.88 0.01 240 / 0.5);
+  background: oklch(0.998 0.001 240 / 0.75);
+  backdrop-filter: blur(60px) saturate(180%);
+  border: 1px solid oklch(0.90 0.005 240 / 0.6);
   box-shadow: 
-    0 8px 32px oklch(0.15 0.01 240 / 0.08),
-    0 2px 8px oklch(0.15 0.01 240 / 0.04),
-    inset 0 1px 0 oklch(1 0 0 / 0.8);
+    0 8px 32px oklch(0.20 0.008 240 / 0.10),
+    0 2px 8px oklch(0.20 0.008 240 / 0.05),
+    inset 0 1px 0 oklch(1 0 0 / 0.9),
+    inset 0 -1px 0 oklch(0 0 0 / 0.02);
 }
 
-/* Soft shadow for cards */
+/* Mica Material - Subtle Translucency */
+.windows-mica {
+  background: oklch(0.995 0.002 240 / 0.6);
+  backdrop-filter: blur(30px) saturate(120%);
+  border: 1px solid oklch(0.92 0.005 240 / 0.5);
+}
+
+/* Fluent Card - Elevated & Modern */
 .windows-card {
   background: var(--card);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px) saturate(150%);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 
-    0 2px 8px oklch(0.15 0.01 240 / 0.04),
-    0 1px 2px oklch(0.15 0.01 240 / 0.02);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.windows-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    135deg, 
+    oklch(1 0 0 / 0.4) 0%, 
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
 }
 
 .windows-card:hover {
-  box-shadow: 
-    0 8px 24px oklch(0.15 0.01 240 / 0.08),
-    0 2px 8px oklch(0.15 0.01 240 / 0.04);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+  border-color: oklch(0.85 0.008 240);
 }
 
-/* Smooth button styles */
+.windows-card:hover::before {
+  opacity: 1;
+}
+
+/* Fluent Button - Interactive & Responsive */
 .windows-button {
   background: var(--primary);
   color: var(--primary-foreground);
-  border-radius: calc(var(--radius) * 0.75);
-  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1.5rem;
   font-weight: 600;
+  font-size: 0.9375rem;
   border: none;
-  box-shadow: 
-    0 2px 8px oklch(0.55 0.22 250 / 0.2),
-    0 1px 2px oklch(0.55 0.22 250 / 0.1);
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.windows-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    oklch(1 0 0 / 0.15) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .windows-button:hover {
-  background: oklch(0.50 0.24 250);
-  box-shadow: 
-    0 4px 12px oklch(0.55 0.22 250 / 0.25),
-    0 2px 4px oklch(0.55 0.22 250 / 0.15);
+  background: oklch(0.50 0.26 264);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
-.windows-button:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 1px 4px oklch(0.55 0.22 250 / 0.2);
+.windows-button:hover::before {
+  opacity: 1;
 }
 
-/* Subtle animations */
+.windows-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Reveal Hover Effect - Windows 11 Signature */
+.reveal-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal-hover::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(
+    circle at center,
+    oklch(0.55 0.24 264 / 0.12) 0%,
+    transparent 70%
+  );
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.reveal-hover:hover::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Smooth Animations - Fluent Motion */
 @keyframes gentle-float {
   0%, 100% { 
     transform: translateY(0);
   }
   50% { 
-    transform: translateY(-4px);
+    transform: translateY(-6px);
   }
 }
 
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -174,7 +274,16 @@ body {
   }
 }
 
-/* Modern gradient effects */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.55 0.24 264 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px oklch(0.55 0.24 264 / 0);
+  }
+}
+
+/* Modern Gradient Effects */
 .accent-gradient {
   background: linear-gradient(135deg, 
     var(--accent-blue), 
@@ -182,21 +291,96 @@ body {
   );
 }
 
-.subtle-gradient {
-  background: linear-gradient(135deg, 
-    oklch(0.98 0.005 240), 
-    oklch(0.96 0.008 250)
+.accent-gradient-warm {
+  background: linear-gradient(135deg,
+    var(--accent-orange),
+    var(--accent-pink)
   );
 }
 
-/* Glass effect for overlays */
-.glass-effect {
-  background: oklch(0.995 0.002 240 / 0.8);
-  backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid oklch(0.88 0.01 240 / 0.3);
+.accent-gradient-cool {
+  background: linear-gradient(135deg,
+    var(--accent-teal),
+    var(--accent-blue)
+  );
 }
 
-/* Remove old neon effects */
+.subtle-gradient {
+  background: linear-gradient(135deg, 
+    oklch(0.99 0.003 240), 
+    oklch(0.97 0.005 250)
+  );
+}
+
+/* Glass Effect for Modals & Overlays */
+.glass-effect {
+  background: oklch(0.998 0.001 240 / 0.85);
+  backdrop-filter: blur(60px) saturate(180%);
+  border: 1px solid oklch(0.90 0.005 240 / 0.4);
+}
+
+/* Command Bar Style - Windows 11 Inspired */
+.command-bar {
+  background: oklch(0.998 0.001 240 / 0.9);
+  backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid oklch(0.90 0.005 240 / 0.6);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Navigation Rail - Modern Sidebar */
+.nav-rail {
+  background: oklch(0.998 0.001 240 / 0.7);
+  backdrop-filter: blur(40px) saturate(140%);
+  border-right: 1px solid oklch(0.92 0.005 240 / 0.5);
+}
+
+/* Input Focus State - Fluent Style */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 
+    0 0 0 3px oklch(0.55 0.24 264 / 0.12),
+    var(--shadow-sm);
+}
+
+/* Scrollbar - Windows 11 Style */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.85 0.008 240 / 0.5);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.75 0.010 240 / 0.7);
+  background-clip: padding-box;
+}
+
+/* Selection Highlight */
+::selection {
+  background: oklch(0.55 0.24 264 / 0.25);
+  color: var(--foreground);
+}
+
+/* Utility Classes for Spacing */
+.fluent-spacing-sm { padding: 0.75rem; }
+.fluent-spacing-md { padding: 1rem; }
+.fluent-spacing-lg { padding: 1.5rem; }
+.fluent-spacing-xl { padding: 2rem; }
+
+/* Remove Deprecated Neon Classes */
 .neon-glow,
 .gradient-border,
 .gradient-text,
@@ -215,5 +399,5 @@ body {
 .neon-text-magenta,
 .neon-text-pink,
 .cyber-grid {
-  /* Deprecated - use new Windows 11 classes instead */
+  /* Deprecated - use Windows 11 Fluent classes instead */
 }
