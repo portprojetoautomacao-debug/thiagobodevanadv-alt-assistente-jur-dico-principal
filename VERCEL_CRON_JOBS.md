@@ -317,12 +317,12 @@ Vercel Serverless Functions têm limite de 10s (Hobby) ou 60s (Pro):
 
 - [x] Estrutura básica de cron jobs criada
 - [x] Health check implementado
-- [x] DJEN monitor placeholder criado
-- [x] Daily reset placeholder criado
+- [x] DJEN monitor implementado
+- [x] Daily reset implementado
 - [x] Configuração no vercel.json
 - [x] Documentação completa
-- [ ] Implementação completa DJEN com backend state
-- [ ] Implementação completa daily reset com backend state
+- [x] Implementação completa DJEN com backend state
+- [x] Implementação completa daily reset com backend state
 - [ ] Testes automatizados dos endpoints
 - [ ] Sistema de notificações
-- [ ] Integração com Vercel KV ou backend externo
+- [x] Integração com Vercel KV ou backend externo
