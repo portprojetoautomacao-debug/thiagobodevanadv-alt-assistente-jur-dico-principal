@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -6,15 +6,24 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, TrendUp, TrendDown } from '@phosphor-icons/react'
+import { Plus, TrendUp, TrendDown, Paperclip, X, File } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
 import type { FinancialEntry } from '@/types'
 import { formatCurrency } from '@/lib/utils'
 
+interface FileAttachment {
+  id: string
+  name: string
+  size: number
+  type: string
+}
+
 export default function FinancialManagementAdvbox() {
   const [entries, setEntries] = useKV<FinancialEntry[]>('financialEntries', [])
   const [showDialog, setShowDialog] = useState(false)
+  const [attachments, setAttachments] = useState<FileAttachment[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [newEntry, setNewEntry] = useState({
     type: 'income' as 'income' | 'expense',
     amount: '',
@@ -111,6 +120,7 @@ export default function FinancialManagementAdvbox() {
 
     setEntries((current) => [...(current || []), entry])
     setShowDialog(false)
+    setAttachments([])
     setNewEntry({
       type: 'income',
       amount: '',
@@ -118,7 +128,37 @@ export default function FinancialManagementAdvbox() {
       description: '',
       date: new Date().toISOString().split('T')[0],
     })
-    toast.success('Lançamento adicionado')
+    
+    if (attachments.length > 0) {
+      toast.success(`Lançamento adicionado com ${attachments.length} anexo(s)`)
+    } else {
+      toast.success('Lançamento adicionado')
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files) {
+      const newAttachments: FileAttachment[] = Array.from(files).map(file => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        size: file.size,
+        type: file.type
+      }))
+      setAttachments(prev => [...prev, ...newAttachments])
+      toast.success(`${files.length} arquivo(s) anexado(s)`)
+    }
+  }
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== id))
+    toast.info('Anexo removido')
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
   return (
@@ -200,6 +240,60 @@ export default function FinancialManagementAdvbox() {
                   className="bg-background border-border"
                 />
               </div>
+              
+              {/* File Attachments */}
+              <div>
+                <Label>Anexar Documentos</Label>
+                <div className="mt-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    <Paperclip size={16} className="mr-2" />
+                    Escolher Arquivos
+                  </Button>
+                </div>
+                
+                {/* Attachment List */}
+                {attachments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {attachments.map(file => (
+                      <div
+                        key={file.id}
+                        className="flex items-center justify-between p-2 bg-muted rounded-lg border border-border"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <File size={16} className="text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 flex-shrink-0"
+                          onClick={() => removeAttachment(file.id)}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
               <div className="flex gap-2">
                 <Button onClick={handleAddEntry} className="flex-1">
                   Adicionar

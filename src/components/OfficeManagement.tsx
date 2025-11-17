@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,6 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
+import { Users, Clock, CurrencyDollar, TrendUp } from '@phosphor-icons/react'
+import type { Process } from '@/types'
 
 interface SafraData {
   ano: number
@@ -33,6 +37,47 @@ const safrasData: SafraData[] = [
 
 export default function OfficeManagement() {
   const [activeTab, setActiveTab] = useState('safra')
+  const [processes] = useKV<Process[]>('processes', [])
+
+  const produtividadeData = useMemo(() => {
+    const processesList = processes || []
+    return {
+      totalProcessos: processesList.length,
+      processosAtivos: processesList.filter(p => p.status === 'ativo').length,
+      processosConcluidos: processesList.filter(p => p.status === 'concluido').length,
+      taxa: processesList.length > 0 
+        ? Math.round((processesList.filter(p => p.status === 'concluido').length / processesList.length) * 100)
+        : 0
+    }
+  }, [processes])
+
+  const estoqueData = useMemo(() => {
+    return [
+      { name: 'Prospectados', value: 45, color: '#00b4d8' },
+      { name: 'Em Negociação', value: 32, color: '#48cae4' },
+      { name: 'Convertidos', value: 23, color: '#52b788' },
+    ]
+  }, [])
+
+  const tempoData = useMemo(() => {
+    return [
+      { mes: 'Jan', horas: 120, honorarios: 15000 },
+      { mes: 'Fev', horas: 135, honorarios: 18000 },
+      { mes: 'Mar', horas: 150, honorarios: 20000 },
+      { mes: 'Abr', horas: 128, honorarios: 16500 },
+      { mes: 'Mai', horas: 145, honorarios: 19000 },
+      { mes: 'Jun', horas: 160, honorarios: 22000 },
+    ]
+  }, [])
+
+  const custosData = useMemo(() => {
+    return [
+      { categoria: 'Salários', valor: 45000, percentual: 60 },
+      { categoria: 'Infraestrutura', valor: 15000, percentual: 20 },
+      { categoria: 'Marketing', valor: 7500, percentual: 10 },
+      { categoria: 'Outros', valor: 7500, percentual: 10 },
+    ]
+  }, [])
 
   return (
     <div className="p-4 lg:p-6 flex flex-col gap-6 h-full overflow-y-auto">
@@ -57,47 +102,261 @@ export default function OfficeManagement() {
         </TabsList>
 
         <TabsContent value="produtividade" className="mt-6">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg">Produtividade da Equipe</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Métricas de produtividade em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <Card className="bg-card border-border">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <Users size={24} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{produtividadeData.totalProcessos}</p>
+                      <p className="text-xs text-muted-foreground">Total de Processos</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card border-border">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-green-500/10 rounded-lg">
+                      <TrendUp size={24} className="text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{produtividadeData.processosAtivos}</p>
+                      <p className="text-xs text-muted-foreground">Processos Ativos</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card border-border">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-accent/10 rounded-lg">
+                      <Clock size={24} className="text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{produtividadeData.processosConcluidos}</p>
+                      <p className="text-xs text-muted-foreground">Concluídos</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card border-border">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-yellow-500/10 rounded-lg">
+                      <CurrencyDollar size={24} className="text-yellow-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{produtividadeData.taxa}%</p>
+                      <p className="text-xs text-muted-foreground">Taxa de Conclusão</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg">Produtividade por Mês</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={tempoData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
+                      <XAxis dataKey="mes" stroke="#6b7280" />
+                      <YAxis stroke="#6b7280" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e2130',
+                          border: '1px solid #2a2d3e',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Bar dataKey="horas" fill="#00b4d8" name="Horas Trabalhadas" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="estoque" className="mt-6">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg">Estoque e Prospecção</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Análise de estoque em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg">Funil de Prospecção</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={estoqueData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {estoqueData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e2130',
+                          border: '1px solid #2a2d3e',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg">Detalhamento</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead className="text-right">Quantidade</TableHead>
+                      <TableHead className="text-right">Percentual</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {estoqueData.map((item) => (
+                      <TableRow key={item.name}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="text-right">{item.value}</TableCell>
+                        <TableCell className="text-right">
+                          {Math.round((item.value / estoqueData.reduce((sum, i) => sum + i.value, 0)) * 100)}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="tempo" className="mt-6">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-lg">Tempo e Honorários</CardTitle>
+              <CardTitle className="text-lg">Tempo x Honorários</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Gestão de tempo em desenvolvimento...</p>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={tempoData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
+                    <XAxis dataKey="mes" stroke="#6b7280" />
+                    <YAxis yAxisId="left" stroke="#6b7280" />
+                    <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e2130',
+                        border: '1px solid #2a2d3e',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'Honorários (R$)') {
+                          return `R$ ${value.toLocaleString('pt-BR')}`
+                        }
+                        return value
+                      }}
+                    />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="horas" fill="#00b4d8" name="Horas" />
+                    <Bar yAxisId="right" dataKey="honorarios" fill="#52b788" name="Honorários (R$)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="custos" className="mt-6">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg">Custos Operacionais</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Análise de custos em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="bg-card border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg">Distribuição de Custos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={custosData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percentual }) => `${name} ${percentual}%`}
+                          outerRadius={80}
+                          dataKey="valor"
+                        >
+                          {custosData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={['#00b4d8', '#48cae4', '#52b788', '#fbbf24'][index % 4]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e2130',
+                            border: '1px solid #2a2d3e',
+                            borderRadius: '8px',
+                          }}
+                          formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg">Total de Custos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {custosData.map((item) => (
+                      <div key={item.categoria} className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{item.categoria}</p>
+                          <p className="text-sm text-muted-foreground">{item.percentual}% do total</p>
+                        </div>
+                        <p className="text-lg font-bold">R$ {item.valor.toLocaleString('pt-BR')}</p>
+                      </div>
+                    ))}
+                    <div className="pt-4 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold">Total</p>
+                        <p className="text-xl font-bold text-primary">
+                          R$ {custosData.reduce((sum, item) => sum + item.valor, 0).toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="safra" className="mt-6">
