@@ -52,16 +52,23 @@ class GoogleDocsService {
       gapiWindow.gapi?.load('client', async () => {
         const clientInit = (gapiWindow.gapi?.client as { init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void> })?.init
         if (typeof clientInit === 'function') {
-          await clientInit({
+          try {
+            await clientInit({
               apiKey: GOOGLE_DOCS_API_KEY,
               discoveryDocs: [
                 'https://docs.googleapis.com/$discovery/rest?version=v1',
                 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
               ],
             })
+            this.gapiInited = true
+          } catch (err) {
+            console.error('Erro ao inicializar Google API client:', err)
           }
-          this.gapiInited = true
-        resolve()
+          resolve()
+        } else {
+          console.error('Google API client init not available')
+          resolve()
+        }
       })
     })
   }
