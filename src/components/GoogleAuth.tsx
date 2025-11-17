@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -21,6 +21,71 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   const [error, setError] = useState<string>('')
   const [isConfigured, setIsConfigured] = useState(false)
 
+  type CredentialResponse = { credential: string }
+
+  const handleCredentialResponse = useCallback(async (response: unknown) => {
+    try {
+      if (!response || typeof response !== 'object' || !('credential' in response)) {
+        throw new Error('Invalid credential response from Google')
+      }
+
+      const { credential } = response as CredentialResponse
+      const payloadBase64 = credential.split('.')?.[1] ?? ''
+      const payload = JSON.parse(atob(payloadBase64)) as {
+        sub?: string
+        email?: string
+        name?: string
+        picture?: string
+      }
+
+      const user: GoogleUser = {
+        id: payload.sub ?? '',
+        email: payload.email ?? '',
+        name: payload.name ?? '',
+        picture: payload.picture ?? '',
+      }
+
+      onSuccess?.(user)
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Falha ao processar login do Google')
+      setError(error.message)
+      onError?.(error)
+    }
+  }, [onSuccess, onError])
+
+  type GoogleAccount = {
+    accounts: {
+      id: {
+        initialize: (opts: { client_id: string; callback: (resp: { credential: string }) => void }) => void
+        renderButton: (
+          el: HTMLElement,
+          options: { theme?: string; size?: string; width?: number; text?: string; shape?: string }
+        ) => void
+      }
+    }
+  }
+
+  const initializeGoogleSignIn = useCallback(() => {
+    const google = (window as unknown as { google?: GoogleAccount })?.google
+    if (!google) return
+
+    google.accounts.id.initialize({
+      client_id: config.google.clientId,
+      callback: handleCredentialResponse,
+    })
+
+    const buttonDiv = document.getElementById('google-signin-button')
+    if (buttonDiv) {
+      google.accounts.id.renderButton(buttonDiv, {
+        theme: 'outline',
+        size: 'large',
+        width: buttonDiv.offsetWidth,
+        text: 'signin_with',
+        shape: 'rectangular',
+      })
+    }
+  }, [handleCredentialResponse])
+
   useEffect(() => {
     const configured = validateConfig()
     setIsConfigured(configured)
@@ -41,47 +106,9 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
         document.body.removeChild(script)
       }
     }
-  }, [])
+  }, [initializeGoogleSignIn])
 
-  const initializeGoogleSignIn = () => {
-    if (!(window as any).google) return
-
-    ;(window as any).google.accounts.id.initialize({
-      client_id: config.google.clientId,
-      callback: handleCredentialResponse,
-    })
-
-    const buttonDiv = document.getElementById('google-signin-button')
-    if (buttonDiv) {
-      ;(window as any).google.accounts.id.renderButton(buttonDiv, {
-        theme: 'outline',
-        size: 'large',
-        width: buttonDiv.offsetWidth,
-        text: 'signin_with',
-        shape: 'rectangular',
-      })
-    }
-  }
-
-  const handleCredentialResponse = async (response: any) => {
-    try {
-      const credential = response.credential
-      const payload = JSON.parse(atob(credential.split('.')[1]))
-
-      const user: GoogleUser = {
-        id: payload.sub,
-        email: payload.email,
-        name: payload.name,
-        picture: payload.picture,
-      }
-
-      onSuccess?.(user)
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Falha ao processar login do Google')
-      setError(error.message)
-      onError?.(error)
-    }
-  }
+  
 
   if (!isConfigured) {
     return (
