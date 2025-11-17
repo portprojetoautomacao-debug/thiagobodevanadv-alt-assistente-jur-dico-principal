@@ -12,6 +12,7 @@ import { CalendarCheck, Info } from '@phosphor-icons/react'
 import { calcularPrazoCPC, calcularPrazoCLT, formatarData, getFeriadosNacionais } from '@/lib/prazos'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
+import { LabelWithTooltip } from '@/components/ui/info-tooltip'
 
 export default function CalculadoraPrazos() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
@@ -99,7 +100,11 @@ export default function CalculadoraPrazos() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="dataInicio">Data de Início</Label>
+              <LabelWithTooltip 
+                label="Data de Início" 
+                tooltip="Data em que o prazo começa a contar (ex: data da intimação ou citação)"
+                required
+              />
               <Input
                 id="dataInicio"
                 type="date"
@@ -109,7 +114,11 @@ export default function CalculadoraPrazos() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="diasCorridos">Quantidade de Dias</Label>
+              <LabelWithTooltip 
+                label="Quantidade de Dias" 
+                tooltip="Número de dias do prazo conforme a legislação processual"
+                required
+              />
               <Input
                 id="diasCorridos"
                 type="number"
@@ -120,7 +129,11 @@ export default function CalculadoraPrazos() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="tipoPrazo">Tipo de Prazo</Label>
+              <LabelWithTooltip 
+                label="Tipo de Prazo" 
+                tooltip="CPC: conta apenas dias úteis. CLT: conta dias corridos incluindo finais de semana"
+                required
+              />
               <Select value={tipoPrazo} onValueChange={(v) => setTipoPrazo(v as 'cpc' | 'clt')}>
                 <SelectTrigger id="tipoPrazo">
                   <SelectValue />

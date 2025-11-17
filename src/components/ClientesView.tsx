@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, MagnifyingGlass, PencilSimple, Trash, User, Buildings } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, PencilSimple, Trash, User, Buildings, DownloadSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Cliente } from '@/types'
+import { exportToCSV } from '@/lib/utils'
 
 export default function ClientesView() {
   const [clientes, setClientes] = useKV<Cliente[]>('clientes', [])
@@ -108,6 +109,24 @@ export default function ClientesView() {
     return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
   }
 
+  const handleExportCSV = () => {
+    const exportData = (clientes || []).map(c => ({
+      'Nome': c.nome,
+      'CPF/CNPJ': c.cpfCnpj,
+      'Tipo': c.tipo === 'fisica' ? 'Pessoa Física' : 'Pessoa Jurídica',
+      'Email': c.email,
+      'Telefone': c.telefone,
+      'Endereço': c.endereco,
+      'Cidade': c.cidade,
+      'Estado': c.estado,
+      'CEP': c.cep,
+      'Status': c.status === 'ativo' ? 'Ativo' : 'Inativo',
+      'Observações': c.observacoes || ''
+    }))
+    exportToCSV(exportData, 'clientes')
+    toast.success('Clientes exportados com sucesso!')
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -118,14 +137,19 @@ export default function ClientesView() {
           <p className="text-muted-foreground mt-1">Gerencie seus clientes</p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingCliente(null)}>
-              <Plus size={20} />
-              Novo Cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <DownloadSimple size={20} />
+            Exportar CSV
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEditingCliente(null)}>
+                <Plus size={20} />
+                Novo Cliente
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingCliente ? 'Editar Cliente' : 'Novo Cliente'}
@@ -271,7 +295,8 @@ export default function ClientesView() {
               </DialogFooter>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <Card>

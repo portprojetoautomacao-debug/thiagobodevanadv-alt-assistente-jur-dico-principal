@@ -34,15 +34,80 @@ import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import PDFUploader from '@/components/PDFUploader'
+import KeyboardShortcutsDialog from '@/components/KeyboardShortcutsDialog'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
 import { useAnalytics } from '@/hooks/use-analytics'
+import { useNotifications } from '@/hooks/use-notifications'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 
 function App() {
   const [currentUser, setCurrentUser] = useKV<User | null>('current-user', null)
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
   const [isLoading, setIsLoading] = useState(true)
+  const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false)
   const { trackPageView, trackAction } = useAnalytics()
+  useNotifications() // Initialize notifications (badge count available)
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'k',
+      ctrl: true,
+      description: 'Ir para busca',
+      callback: () => {
+        if (currentView !== 'processos') {
+          setCurrentView('processos')
+        }
+        // Focus search input after a brief delay
+        setTimeout(() => {
+          const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
+          searchInput?.focus()
+        }, 100)
+      }
+    },
+    {
+      key: 'n',
+      ctrl: true,
+      description: 'Novo processo',
+      callback: () => {
+        setCurrentView('processos')
+        toast.info('Use o botão "Novo Processo" para adicionar')
+      }
+    },
+    {
+      key: 'd',
+      ctrl: true,
+      description: 'Dashboard',
+      callback: () => {
+        setCurrentView('dashboard')
+      }
+    },
+    {
+      key: 'p',
+      ctrl: true,
+      description: 'Processos',
+      callback: () => {
+        setCurrentView('processos')
+      }
+    },
+    {
+      key: 'c',
+      ctrl: true,
+      shift: true,
+      description: 'Calculadora de Prazos',
+      callback: () => {
+        setCurrentView('calculadora')
+      }
+    },
+    {
+      key: '?',
+      description: 'Mostrar atalhos',
+      callback: () => {
+        setShortcutsDialogOpen(true)
+      }
+    },
+  ])
 
   useEffect(() => {
     setIsLoading(false)
@@ -232,6 +297,7 @@ function App() {
       </main>
 
       <Toaster />
+      <KeyboardShortcutsDialog open={shortcutsDialogOpen} onOpenChange={setShortcutsDialogOpen} />
     </div>
   )
 }
