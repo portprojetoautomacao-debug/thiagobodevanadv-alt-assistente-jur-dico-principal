@@ -67,10 +67,10 @@ O email deve:
 
 Retorne EXATAMENTE neste formato JSON:
 {
-  "subject": "assunto do email",
-  "body": "corpo completo do email com quebras de linha (use \\n)",
-  "tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
-  "type": "${typeDescription}"
+"subject": "assunto do email",
+"body": "corpo completo do email com quebras de linha (use \\n)",
+"tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
+"type": "${typeDescription}"
 }`
 
       const response = await spark.llm(prompt, 'gpt-4o', true)
