@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import * as spark from '@github/spark/llm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,28 +60,28 @@ Forneça:
 
 Retorne EXATAMENTE neste formato JSON:
 {
-  "precedents": [
-    {
-      "id": "único id",
-      "tribunal": "nome do tribunal",
-      "numero": "número do processo/recurso",
-      "data": "data da decisão",
-      "relator": "nome do relator",
-      "ementa": "resumo da ementa",
-      "tema": "tema principal",
-      "relevancia": "por que é relevante para o caso"
-    }
-  ],
-  "legalArguments": [
-    {
-      "titulo": "título do argumento",
-      "fundamentacao": "texto detalhado da fundamentação",
-      "precedentes": ["precedente 1", "precedente 2"],
-      "doutrina": ["autor 1 - obra", "autor 2 - obra"]
-    }
-  ],
-  "keywords": ["palavra 1", "palavra 2", ...],
-  "relatedThemes": ["tema relacionado 1", "tema relacionado 2", ...]
+"precedents": [
+{
+"id": "único id",
+"tribunal": "nome do tribunal",
+"numero": "número do processo/recurso",
+"data": "data da decisão",
+"relator": "nome do relator",
+"ementa": "resumo da ementa",
+"tema": "tema principal",
+"relevancia": "por que é relevante para o caso"
+}
+],
+"legalArguments": [
+{
+"titulo": "título do argumento",
+"fundamentacao": "texto detalhado da fundamentação",
+"precedentes": ["precedente 1", "precedente 2"],
+"doutrina": ["autor 1 - obra", "autor 2 - obra"]
+}
+],
+"keywords": ["palavra 1", "palavra 2", ...],
+"relatedThemes": ["tema relacionado 1", "tema relacionado 2", ...]
 }`
 
       const response = await spark.llm(prompt, 'gpt-4o', true)

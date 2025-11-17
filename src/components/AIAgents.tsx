@@ -80,8 +80,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'active',
         enabled: true,
         lastActivity: 'Pronto para análises estratégicas',
-        tasksCompleted: 287,
-        tasksToday: 15,
+        tasksCompleted: 312,
+        tasksToday: 18,
         autonomyLevel: 98,
         capabilities: [
           'Análise de Performance',
@@ -106,8 +106,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'active',
         enabled: true,
         lastActivity: 'Aguardando intimações para análise',
-        tasksCompleted: 150,
-        tasksToday: 12,
+        tasksCompleted: 178,
+        tasksToday: 15,
         autonomyLevel: 95,
         capabilities: [
           'Interpreta intimações',
@@ -132,8 +132,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'active',
         enabled: true,
         lastActivity: 'Aguardando documentos para análise',
-        tasksCompleted: 143,
-        tasksToday: 7,
+        tasksCompleted: 167,
+        tasksToday: 9,
         autonomyLevel: 95,
         capabilities: ['Extração de dados', 'Sumarização', 'Classificação de documentos', 'Detecção de prazos'],
         nextScheduledRun: 'Contínuo',
@@ -149,8 +149,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'active',
         enabled: true,
         lastActivity: 'Verificando novas publicações',
-        tasksCompleted: 231,
-        tasksToday: 18,
+        tasksCompleted: 256,
+        tasksToday: 21,
         autonomyLevel: 92,
         capabilities: ['Monitoramento 24/7', 'Detecção de publicações', 'Alertas em tempo real', 'Análise de relevância'],
         nextScheduledRun: 'Contínuo',
@@ -166,8 +166,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'active',
         enabled: true,
         lastActivity: 'Verificando prazos próximos',
-        tasksCompleted: 189,
-        tasksToday: 14,
+        tasksCompleted: 213,
+        tasksToday: 17,
         autonomyLevel: 98,
         capabilities: ['Cálculo automático', 'Alertas de vencimento', 'Calendário processual', 'Análise de urgências'],
         nextScheduledRun: 'A cada hora',
@@ -566,9 +566,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">Geração Automática de Tarefas</CardTitle>
+              <CardTitle className="text-base">Modo de Demonstração Automática</CardTitle>
               <CardDescription>
-                Simula tarefas reais para demonstrar o funcionamento 24/7 dos agentes
+                Gera tarefas automaticamente para demonstrar o funcionamento contínuo dos agentes
               </CardDescription>
             </div>
             <Switch
@@ -580,8 +580,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         <CardContent>
           <p className="text-sm text-muted-foreground">
             {autoGenerateEnabled 
-              ? 'Os agentes irão retomar automaticamente após 5 minutos sem atividade humana'
-              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente.'}
+              ? 'Agentes ativos receberão tarefas de demonstração a cada 2 minutos. Mais rápido e eficiente.'
+              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente e vejam o sistema em ação.'}
           </p>
         </CardContent>
       </Card>

@@ -45,8 +45,10 @@ export default function MultiSourcePublications() {
   const [publications, setPublications] = useState<UnifiedPublication[]>([])
   const [searchStats, setSearchStats] = useState<any>(null)
   
-  const capabilities = getSourceCapabilities()
   const enabledSources = getEnabledSources()
+  const sourceCapabilitiesMap = Object.fromEntries(
+    enabledSources.map(source => [source, getSourceCapabilities(source)])
+  )
   
   const handleSearch = async () => {
     // Validation
@@ -130,36 +132,24 @@ export default function MultiSourcePublications() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {capabilities
-              .filter(cap => enabledSources.includes(cap.source))
-              .map(capability => (
-                <div key={capability.source} className="flex items-start space-x-3 p-3 border rounded-lg">
+            {enabledSources.map(source => (
+                <div key={source} className="flex items-start space-x-3 p-3 border rounded-lg">
                   <Checkbox
-                    id={capability.source}
-                    checked={selectedSources.includes(capability.source)}
-                    onCheckedChange={() => handleSourceToggle(capability.source)}
+                    id={source}
+                    checked={selectedSources.includes(source)}
+                    onCheckedChange={() => handleSourceToggle(source)}
                   />
                   <div className="flex-1">
                     <label
-                      htmlFor={capability.source}
+                      htmlFor={source}
                       className="font-medium cursor-pointer flex items-center gap-2"
                     >
-                      {capability.name}
-                      {capability.official && (
-                        <Badge variant="secondary" className="text-xs">Oficial</Badge>
-                      )}
-                      {capability.status === 'beta' && (
-                        <Badge variant="outline" className="text-xs">Beta</Badge>
-                      )}
+                      {source.toUpperCase()}
+                      <Badge variant="secondary" className="text-xs">Disponível</Badge>
                     </label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {capability.description}
+                      Fonte: {source}
                     </p>
-                    {capability.requiresAuth && !capability.official && (
-                      <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                        ⚠️ Requer assinatura paga
-                      </p>
-                    )}
                   </div>
                 </div>
               ))}
@@ -383,7 +373,7 @@ export default function MultiSourcePublications() {
                     <div>
                       <span className="text-muted-foreground">Data:</span>
                       <div className="font-medium">
-                        {new Date(pub.publicationDate).toLocaleDateString('pt-BR')}
+                        {pub.publicationDate ? new Date(pub.publicationDate).toLocaleDateString('pt-BR') : 'N/A'}
                       </div>
                     </div>
                     {pub.processNumber && (

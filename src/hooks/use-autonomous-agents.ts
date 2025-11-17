@@ -166,14 +166,14 @@ export function useAutonomousAgents() {
           
           const activity = getAgentActivity(agent)
           
-          if (activity !== agent.lastActivity && Math.random() > 0.3) {
+          if (activity !== agent.lastActivity && Math.random() > 0.5) {
             return { ...agent, lastActivity: activity }
           }
           
           return agent
         })
       )
-    }, 5000)
+    }, 3000)
 
     return () => clearInterval(interval)
   }, [agents, processNextTask, setAgents])
@@ -257,10 +257,12 @@ export function useAutonomousAgents() {
     if (!taskGeneratorRef.current && agents && agents.length > 0) {
       const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
       
+      if (enabledAgentIds.length === 0) return
+      
       const generator = createTaskGenerator({
         enabled: autoGenerateEnabled,
-        intervalMinutes: 3,
-        maxTasksPerInterval: 2,
+        intervalMinutes: 2,
+        maxTasksPerInterval: 3,
         agentIds: enabledAgentIds
       }, (task) => {
         addTask(task)

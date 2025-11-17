@@ -1,18 +1,14 @@
 import { Minuta } from '@/types'
+import type { GoogleAuthResponse, TokenClient, GapiGlobal, GoogleGisGlobal, DocsClient, DocsCreateResponse, DocsGetResponse, DocsBatchUpdateResponse, DocumentElement, ParagraphElement } from './google-types'
 
 const GOOGLE_DOCS_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 const GOOGLE_DOCS_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
 const SCOPES = 'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file'
 
-interface GoogleAuthResponse {
-  access_token: string
-  expires_in: number
-  token_type: string
-  error?: string
-}
+// local interface removed; using imported `GoogleAuthResponse` from google-types
 
 class GoogleDocsService {
-  private tokenClient: any = null
+  private tokenClient: TokenClient | null = null
   private accessToken: string | null = null
   private gapiInited = false
   private gisInited = false
@@ -52,25 +48,32 @@ class GoogleDocsService {
 
   private async initializeGapi(): Promise<void> {
     return new Promise((resolve) => {
-      ;(window as any).gapi.load('client', async () => {
-        await (window as any).gapi.client.init({
-          apiKey: GOOGLE_DOCS_API_KEY,
-          discoveryDocs: [
-            'https://docs.googleapis.com/$discovery/rest?version=v1',
-            'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
-          ],
-        })
-        this.gapiInited = true
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      gapiWindow.gapi?.load('client', async () => {
+        const clientInit = (gapiWindow.gapi?.client as { init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void> })?.init
+        if (typeof clientInit === 'function') {
+          await clientInit({
+              apiKey: GOOGLE_DOCS_API_KEY,
+              discoveryDocs: [
+                'https://docs.googleapis.com/$discovery/rest?version=v1',
+                'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+              ],
+            })
+          }
+          this.gapiInited = true
         resolve()
       })
     })
   }
 
   private initializeGis(): void {
-    this.tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+    const google = (window as unknown as { google?: GoogleGisGlobal })?.google
+    if (!google) return
+
+    this.tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_DOCS_CLIENT_ID,
       scope: SCOPES,
-      callback: '',
+      callback: (_resp: GoogleAuthResponse) => {},
     })
     this.gisInited = true
   }
@@ -81,12 +84,16 @@ class GoogleDocsService {
     }
 
     return new Promise((resolve) => {
+      if (!this.tokenClient) {
+        resolve(false)
+        return
+      }
       this.tokenClient.callback = (resp: GoogleAuthResponse) => {
         if (resp.error !== undefined) {
           resolve(false)
           return
         }
-        this.accessToken = resp.access_token
+        this.accessToken = resp.access_token ?? null
         resolve(true)
       }
 
@@ -105,11 +112,15 @@ class GoogleDocsService {
     }
 
     try {
-      const createResponse = await (window as any).gapi.client.docs.documents.create({
-        title: minuta.titulo,
-      })
+        const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+        const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs
+        if (!docsApi || typeof docsApi.documents?.create !== 'function') return null
+        const createResponse = (await docsApi.documents.create({
+          title: minuta.titulo,
+        })) as DocsCreateResponse
 
-      const docId = createResponse.result.documentId
+      const docId = createResponse.result?.documentId
+      if (!docId) return null
 
       await this.updateDocumentContent(docId, minuta.conteudo)
 
@@ -140,10 +151,13 @@ class GoogleDocsService {
         },
       ]
 
-      await (window as any).gapi.client.docs.documents.batchUpdate({
-        documentId: docId,
-        requests: requests,
-      })
+        const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+        const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs
+        if (!docsApi || typeof docsApi.documents?.batchUpdate !== 'function') return false
+        await (docsApi.documents.batchUpdate({
+          documentId: docId,
+          requests: requests,
+        }) as Promise<DocsBatchUpdateResponse>)
 
       return true
     } catch (error) {
@@ -159,17 +173,19 @@ class GoogleDocsService {
     }
 
     try {
-      const response = await (window as any).gapi.client.docs.documents.get({
-        documentId: docId,
-      })
-
-      const doc = response.result
+        const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+        const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs
+        if (!docsApi || typeof docsApi.documents?.get !== 'function') return null
+        const response = (await docsApi.documents.get({
+          documentId: docId,
+        })) as DocsGetResponse
+      const doc = (response as DocsGetResponse).result
       let text = ''
 
-      if (doc.body && doc.body.content) {
-        doc.body.content.forEach((element: any) => {
+      if (doc?.body && doc.body.content) {
+        doc.body.content.forEach((element: DocumentElement) => {
           if (element.paragraph && element.paragraph.elements) {
-            element.paragraph.elements.forEach((paragraphElement: any) => {
+            element.paragraph.elements.forEach((paragraphElement: ParagraphElement) => {
               if (paragraphElement.textRun && paragraphElement.textRun.content) {
                 text += paragraphElement.textRun.content
               }
@@ -179,7 +195,7 @@ class GoogleDocsService {
       }
 
       return text
-    } catch (error) {
+      } catch (error) {
       console.error('Erro ao buscar conteúdo do documento:', error)
       return null
     }
@@ -199,7 +215,12 @@ class GoogleDocsService {
 
   revokeAccess(): void {
     if (this.accessToken) {
-      ;(window as any).google.accounts.oauth2.revoke(this.accessToken)
+      const google = (window as unknown as { google?: GoogleGisGlobal })?.google
+      try {
+        google?.accounts.oauth2.revoke(this.accessToken)
+      } catch {
+        // ignore non-critical revoke errors
+      }
       this.accessToken = null
     }
   }

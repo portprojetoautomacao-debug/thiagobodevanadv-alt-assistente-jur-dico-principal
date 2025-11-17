@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import * as spark from '@github/spark/llm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -36,10 +37,10 @@ ${documentText}
 
 Retorne a resposta em JSON no formato:
 {
-  "summary": "resumo executivo aqui",
-  "keyPoints": ["ponto 1", "ponto 2", ...],
-  "deadlines": ["prazo 1", "prazo 2", ...],
-  "actions": ["ação 1", "ação 2", ...]
+"summary": "resumo executivo aqui",
+"keyPoints": ["ponto 1", "ponto 2", ...],
+"deadlines": ["prazo 1", "prazo 2", ...],
+"actions": ["ação 1", "ação 2", ...]
 }`
 
       const response = await spark.llm(prompt, 'gpt-4o', true)

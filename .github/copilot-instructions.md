@@ -357,3 +357,12 @@ Already in `.gitignore`:
 - Review existing similar code
 - Ensure security guidelines are followed
 - Test changes thoroughly before committing
+
+## Comunicação e Idioma (Português)
+
+- Responda sempre em Português do Brasil (pt-BR) nas mensagens de resposta, instruções, comentários e planos — tanto no Copilot Chat quanto nas operações de revisão e sugestões automáticas.
+- Use linguagem clara, objetiva e direta. Se for necessário usar termos técnicos em inglês, explique-os em português entre parênteses.
+- Ao apresentar passos (ex.: rodar build, executar lint, corrigir erros), forneça instruções passo a passo em português.
+- Para mensagens de commit sugeridas ou descrições de PR, gere o texto em português e, opcionalmente, inclua uma tradução curta em inglês somente se solicitado.
+
+> Nota: Para que essas instruções sejam aplicadas automaticamente no Copilot Chat em VS Code, habilite nas configurações do VS Code: "GitHub > Copilot > Copilot Chat: Enable custom instructions to be loaded from .github/copilot-instructions.md files and added to requests".
