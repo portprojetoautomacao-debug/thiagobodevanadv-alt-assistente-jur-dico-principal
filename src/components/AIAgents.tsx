@@ -566,9 +566,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">Geração Automática de Tarefas</CardTitle>
+              <CardTitle className="text-base">Modo de Demonstração Automática</CardTitle>
               <CardDescription>
-                Simula tarefas reais para demonstrar o funcionamento 24/7 dos agentes
+                Gera tarefas automaticamente para demonstrar o funcionamento contínuo dos agentes
               </CardDescription>
             </div>
             <Switch
@@ -580,8 +580,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         <CardContent>
           <p className="text-sm text-muted-foreground">
             {autoGenerateEnabled 
-              ? 'Os agentes irão retomar automaticamente após 5 minutos sem atividade humana'
-              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente.'}
+              ? 'Agentes ativos receberão tarefas de demonstração a cada 2 minutos. Mais rápido e eficiente.'
+              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente e vejam o sistema em ação.'}
           </p>
         </CardContent>
       </Card>

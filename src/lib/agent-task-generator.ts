@@ -15,6 +15,10 @@ const defaultConfig: TaskGeneratorConfig = {
 }
 
 const taskTemplates = {
+  'harvey-specter': [
+    { type: 'billing_analysis' as const, priority: 'high' as const },
+    { type: 'case_strategy' as const, priority: 'high' as const },
+  ],
   'doc-analyzer': [
     { type: 'analyze_document' as const, priority: 'medium' as const },
   ],
