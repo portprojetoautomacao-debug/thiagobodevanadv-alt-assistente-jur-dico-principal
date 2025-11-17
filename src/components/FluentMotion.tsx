@@ -121,14 +121,15 @@ export function FluentReveal({
 
 export function FluentFade({ 
   children,
+  delay = 0,
   ...props 
-}: HTMLMotionProps<'div'>) {
+}: HTMLMotionProps<'div'> & { delay?: number }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={fluentTransitions.standard as any}
+      transition={{ ...fluentTransitions.standard, delay } as any}
       {...props}
     >
       {children}
@@ -139,8 +140,9 @@ export function FluentFade({
 export function FluentSlide({ 
   children,
   direction = 'up',
+  delay = 0,
   ...props 
-}: HTMLMotionProps<'div'> & { direction?: 'up' | 'down' | 'left' | 'right' }) {
+}: HTMLMotionProps<'div'> & { direction?: 'up' | 'down' | 'left' | 'right'; delay?: number }) {
   const variants = {
     up: { initial: { y: 40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
     down: { initial: { y: -40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
@@ -154,7 +156,7 @@ export function FluentSlide({
       animate="animate"
       exit="initial"
       variants={variants[direction] as any}
-      transition={fluentTransitions.emphasized as any}
+      transition={{ ...fluentTransitions.emphasized, delay } as any}
       {...props}
     >
       {children}
@@ -164,14 +166,15 @@ export function FluentSlide({
 
 export function FluentScale({ 
   children,
+  delay = 0,
   ...props 
-}: HTMLMotionProps<'div'>) {
+}: HTMLMotionProps<'div'> & { delay?: number }) {
   return (
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}
-      transition={fluentTransitions.emphasized as any}
+      transition={{ ...fluentTransitions.emphasized, delay } as any}
       {...props}
     >
       {children}
