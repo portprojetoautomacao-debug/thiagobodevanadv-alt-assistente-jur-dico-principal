@@ -12,6 +12,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getAgents, updateAgents, getCompletedTasks, updateCompletedTasks } from '../lib/kv-utils';
 
 interface DailyResetResult {
   success: boolean;
@@ -45,26 +46,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       errors: []
     };
 
-    // Note: In a real implementation, this would:
-    // 1. Connect to Spark KV to get all autonomous agents
-    // 2. Reset tasksToday counter for each agent
-    // 3. Archive completed tasks older than 30 days
-    // 4. Generate daily statistics report
-    // 5. Clean up old logs
-    
-    console.log(`[Daily Reset Cron] Executing daily maintenance tasks`);
-    console.log(`[Daily Reset Cron] This is a placeholder implementation`);
-    console.log(`[Daily Reset Cron] In production, this would:`);
-    console.log(`  - Reset agent daily counters`);
-    console.log(`  - Archive old completed tasks`);
-    console.log(`  - Generate daily statistics`);
-    console.log(`  - Clean up old activity logs`);
+    // Get all agents from Vercel KV
+    const agents = await getAgents();
+    console.log(`[Daily Reset Cron] Found ${agents.length} agents`);
+
+    if (agents.length > 0) {
+      // Reset tasksToday counter for each agent
+      const updatedAgents = agents.map(agent => ({
+        ...agent,
+        tasksToday: 0
+      }));
+
+      await updateAgents(updatedAgents);
+      result.agentsReset = updatedAgents.length;
+      console.log(`[Daily Reset Cron] Reset counters for ${result.agentsReset} agents`);
+    }
+
+    // Archive old completed tasks (older than 30 days)
+    const completedTasks = await getCompletedTasks();
+    console.log(`[Daily Reset Cron] Found ${completedTasks.length} completed tasks`);
+
+    if (completedTasks.length > 0) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 30);
+      
+      const tasksToKeep = completedTasks.filter((task: any) => {
+        if (!task.completedAt) return true;
+        return new Date(task.completedAt) >= cutoffDate;
+      });
+
+      result.tasksArchived = completedTasks.length - tasksToKeep.length;
+
+      if (result.tasksArchived > 0) {
+        await updateCompletedTasks(tasksToKeep);
+        console.log(`[Daily Reset Cron] Archived ${result.tasksArchived} old tasks`);
+      }
+    }
+
+    // Generate daily statistics
+    console.log(`[Daily Reset Cron] Daily statistics:`);
+    console.log(`  - Agents reset: ${result.agentsReset}`);
+    console.log(`  - Tasks archived: ${result.tasksArchived}`);
+    console.log(`  - Active tasks: ${completedTasks.length - result.tasksArchived}`);
+
+    console.log(`[Daily Reset Cron] Daily maintenance completed successfully`);
 
     return res.status(200).json({
       ok: true,
       message: 'Daily reset cron executed successfully',
-      result,
-      note: 'This is a placeholder implementation. Full reset requires backend state management.'
+      result
     });
 
   } catch (error) {
