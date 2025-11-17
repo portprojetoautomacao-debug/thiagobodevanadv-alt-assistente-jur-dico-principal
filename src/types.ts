@@ -142,4 +142,29 @@ export interface Cliente {
   updatedAt: string
 }
 
+export interface PDFUploadHistory {
+  id: string
+  fileName: string
+  fileSize: number
+  uploadedAt: string
+  processedAt?: string
+  status: 'processing' | 'success' | 'error'
+  extractedData?: {
+    nome?: string
+    cpfCnpj?: string
+    email?: string
+    telefone?: string
+    endereco?: string
+    cidade?: string
+    estado?: string
+    cep?: string
+    tipo?: 'fisica' | 'juridica'
+    numeroProcesso?: string
+    dataDocumento?: string
+    observacoes?: string
+  }
+  clienteId?: string
+  errorMessage?: string
+}
+
 export type ViewType = 'dashboard' | 'upload-pdf' | 'cadastrar-cliente' | 'clientes' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas' | 'analytics'
