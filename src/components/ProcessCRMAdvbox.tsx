@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -149,7 +149,7 @@ export default function ProcessCRMAdvbox() {
   )
 
   // Initialize process cards
-  useState(() => {
+  useEffect(() => {
     const cards: ProcessCardData[] = (processes || []).slice(0, 8).map((p, idx) => ({
       id: p.id,
       autor: p.autor || 'Não informado',
@@ -163,7 +163,7 @@ export default function ProcessCRMAdvbox() {
       processo: p
     }))
     setProcessCards(cards)
-  })
+  }, [processes])
 
   const getCardsByColumn = (column: string) => {
     return processCards.filter(card => card.column === column)
