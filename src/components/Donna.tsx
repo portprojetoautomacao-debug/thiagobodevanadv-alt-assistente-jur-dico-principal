@@ -284,23 +284,27 @@ O que você gostaria de saber?`
   const handleSend = async () => {
     if (!input.trim() || isProcessing) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date().toISOString(),
-    }
-
-    setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+    const query = input.trim()
     setInput('')
     setIsProcessing(true)
 
-    setTimeout(async () => {
-      const responseContent = await generateResponse(input.trim())
-      const insights = getInsights(input.trim())
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: query,
+      timestamp: new Date().toISOString(),
+    }
+
+    try {
+      setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      const responseContent = await generateResponse(query)
+      const insights = getInsights(query)
 
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: responseContent,
         timestamp: new Date().toISOString(),
@@ -308,8 +312,20 @@ O que você gostaria de saber?`
       }
 
       setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
+    } catch (error) {
+      console.error('Error sending message:', error)
+      
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
+        timestamp: new Date().toISOString(),
+      }
+      
+      setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
+    } finally {
       setIsProcessing(false)
-    }, 800)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -319,9 +335,11 @@ O que você gostaria de saber?`
     }
   }
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = async (question: string) => {
+    if (isProcessing) return
     setInput(question)
-    setTimeout(() => handleSend(), 100)
+    await new Promise(resolve => setTimeout(resolve, 150))
+    await handleSend()
   }
 
   const getInsightIcon = (type: string) => {
