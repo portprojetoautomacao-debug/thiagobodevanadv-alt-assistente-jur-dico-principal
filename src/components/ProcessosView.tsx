@@ -1,30 +1,58 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useKV } from '@github/spark/hooks'
 import type { Process } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MagnifyingGlass, Plus, Gavel, DownloadSimple } from '@phosphor-icons/react'
+import { MagnifyingGlass, Plus, Gavel, DownloadSimple, Funnel } from '@phosphor-icons/react'
 import ProcessDialog from './ProcessDialog'
 import ProcessDetailsDialog from './ProcessDetailsDialog'
 import DataInitializer from './DataInitializer'
 import { exportToCSV } from '@/lib/utils'
 import { toast } from 'sonner'
+import Fuse from 'fuse.js'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function ProcessosView() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null)
 
-  const filteredProcesses = (processes || []).filter(p => 
-    p.titulo.toLowerCase().includes(search.toLowerCase()) ||
-    p.numeroCNJ.includes(search) ||
-    p.autor.toLowerCase().includes(search.toLowerCase()) ||
-    p.reu.toLowerCase().includes(search.toLowerCase())
-  )
+  // Fuzzy search with Fuse.js
+  const fuse = useMemo(() => {
+    return new Fuse(processes || [], {
+      keys: ['numeroCNJ', 'titulo', 'autor', 'reu', 'comarca', 'vara'],
+      threshold: 0.3, // 0 = exact match, 1 = match anything
+      includeScore: true,
+    })
+  }, [processes])
+
+  const filteredProcesses = useMemo(() => {
+    let results = processes || []
+
+    // Apply fuzzy search
+    if (search.trim()) {
+      const fuseResults = fuse.search(search)
+      results = fuseResults.map(r => r.item)
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      results = results.filter(p => p.status === statusFilter)
+    }
+
+    return results
+  }, [processes, search, statusFilter, fuse])
 
   const handleEdit = (process: Process) => {
     setSelectedProcess(process)
@@ -90,14 +118,30 @@ export default function ProcessosView() {
         </div>
       </div>
 
-      <div className="relative">
-        <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-        <Input
-          placeholder="Buscar por título, CNJ, autor ou réu..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+          <Input
+            placeholder="Buscar por título, CNJ, autor, réu, comarca ou vara..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <Funnel size={16} className="mr-2" />
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="ativo">Ativo</SelectItem>
+            <SelectItem value="concluido">Concluído</SelectItem>
+            <SelectItem value="suspenso">Suspenso</SelectItem>
+            <SelectItem value="arquivado">Arquivado</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {filteredProcesses.length === 0 ? (
