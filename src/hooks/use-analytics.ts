@@ -24,7 +24,7 @@ export function useAnalytics() {
 
   const trackPageView = (path: string) => {
     const event: AnalyticsEvent = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       type: 'pageview',
       timestamp: Date.now(),
       data: {
@@ -46,7 +46,7 @@ export function useAnalytics() {
 
   const trackAction = (action: string, category?: string, label?: string, value?: number) => {
     const event: AnalyticsEvent = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       type: 'action',
       timestamp: Date.now(),
       data: {
@@ -71,7 +71,7 @@ export function useAnalytics() {
 
   const trackError = (error: string, path?: string) => {
     const event: AnalyticsEvent = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       type: 'error',
       timestamp: Date.now(),
       data: {
