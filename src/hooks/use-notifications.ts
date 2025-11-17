@@ -95,7 +95,12 @@ export function useNotifications() {
 
     const permission = await Notification.requestPermission()
     if (permission === 'granted') {
-      setPreferences((current) => ({ ...current, enabled: true }))
+      setPreferences((current) => ({ 
+        enabled: true,
+        prazoAlerts: current?.prazoAlerts ?? true,
+        agentAlerts: current?.agentAlerts ?? true,
+        financialAlerts: current?.financialAlerts ?? true,
+      }))
     }
     return permission
   }
@@ -109,6 +114,18 @@ export function useNotifications() {
     }
   }
 
+  const updatePreferences = (updater: (current: NotificationPreferences) => NotificationPreferences) => {
+    setPreferences((current) => {
+      const currentPrefs: NotificationPreferences = current || {
+        enabled: false,
+        prazoAlerts: true,
+        agentAlerts: true,
+        financialAlerts: true,
+      }
+      return updater(currentPrefs)
+    })
+  }
+
   return {
     preferences: preferences || {
       enabled: false,
@@ -116,7 +133,7 @@ export function useNotifications() {
       agentAlerts: true,
       financialAlerts: true,
     },
-    setPreferences,
+    setPreferences: updatePreferences,
     requestPermission,
     testNotification,
     isSupported: 'Notification' in window,
