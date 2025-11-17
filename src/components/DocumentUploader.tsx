@@ -55,9 +55,9 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        // Validate file size (max 1MB)
-        if (file.size > 1024 * 1024) {
-          toast.error(`Arquivo ${file.name} é muito grande. Máximo: 1MB`)
+        // Validate file size (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+          toast.error(`Arquivo ${file.name} é muito grande. Máximo: 50MB`)
           continue
         }
 
@@ -167,7 +167,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
       )}
 
       <div className="text-xs text-muted-foreground">
-        Tipos aceitos: PDF, DOC, DOCX, TXT, JPG, PNG (máx. 1MB por arquivo)
+        Tipos aceitos: PDF, DOC, DOCX, TXT, JPG, PNG (máx. 50MB por arquivo)
       </div>
 
       {documentos && documentos.length > 0 ? (
