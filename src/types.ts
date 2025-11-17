@@ -142,4 +142,4 @@ export interface Cliente {
   updatedAt: string
 }
 
-export type ViewType = 'dashboard' | 'cadastrar-cliente' | 'clientes' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas' | 'analytics'
+export type ViewType = 'dashboard' | 'upload-pdf' | 'cadastrar-cliente' | 'clientes' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas' | 'analytics'

@@ -13,7 +13,8 @@ import {
   Clock, 
   Warning, 
   CalendarCheck,
-  ArrowRight 
+  ArrowRight,
+  Upload 
 } from '@phosphor-icons/react'
 
 interface DashboardProps {
@@ -165,6 +166,42 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="card-glow border-primary/30 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 gradient-text">
+            <Upload size={24} weight="duotone" />
+            Nova Funcionalidade: Upload de PDF
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm">
+            Agora você pode fazer upload de procurações e contratos em PDF para extrair automaticamente os dados do cliente usando IA!
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary" className="gap-1">
+              <CheckCircle size={14} weight="fill" />
+              Extração automática
+            </Badge>
+            <Badge variant="secondary" className="gap-1">
+              <CheckCircle size={14} weight="fill" />
+              Powered by GPT-4
+            </Badge>
+            <Badge variant="secondary" className="gap-1">
+              <CheckCircle size={14} weight="fill" />
+              Salva automaticamente
+            </Badge>
+          </div>
+          <Button 
+            onClick={() => onNavigate('upload-pdf')} 
+            className="button-gradient w-full sm:w-auto"
+            size="lg"
+          >
+            <Upload size={20} />
+            Testar Upload de PDF
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="card-glow-hover glassmorphic">
