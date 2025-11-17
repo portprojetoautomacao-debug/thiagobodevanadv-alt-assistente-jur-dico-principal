@@ -79,25 +79,26 @@ Um sistema completo de gestão processual inteligente com agentes de IA autônom
 
 ## Design Direction
 
-O design deve evocar profissionalismo jurídico moderno com toques de tecnologia futurista - sério mas não antiquado, confiável mas não conservador demais. Interface minimalista que privilegia dados e ações sobre decoração, com hierarquia visual clara que guia o usuário naturalmente pelas informações mais importantes.
+O design deve evocar um futuro cyberpunk onde a tecnologia jurídica encontra a estética neon noir - escuro, elegante e futurista. Interface minimalista com fundo profundamente escuro, iluminada por neons vibrantes (cyan, magenta, pink) que criam contraste dramático e energia tecnológica. Efeitos de brilho (glow) sutis em elementos interativos transmitem sensação de interface holográfica avançada.
 
 ## Color Selection
 
-**Custom palette** - Tons escuros e frios que evocam seriedade e tecnologia, com acentos vibrantes de cyan/magenta para criar contraste moderno e energia tecnológica.
+**Neon Noir Palette** - Fundo escuro profundo (quase preto) com neons vibrantes inspirados em cidades cyberpunk - cyan elétrico, magenta intenso, pink vibrante - criando contraste dramático e sensação de interface futurista holográfica.
 
-- **Primary Color**: Cyan elétrico (oklch(0.75 0.25 190)) - Representa inteligência artificial e tecnologia de ponta, usado em CTAs principais e ícones de agentes
+- **Primary Color**: Cyan elétrico (oklch(0.75 0.25 190)) - Representa tecnologia avançada e IA, usado em CTAs principais, ícones de agentes, e elementos interativos com efeito glow
 - **Secondary Colors**: 
-  - Magenta vibrante (oklch(0.70 0.26 300)) - Suporta a identidade tech, usado em elementos secundários
-  - Rosa accent (oklch(0.75 0.28 350)) - Adiciona sofisticação, usado para destaques especiais
-- **Accent Color**: Cyan brilhante - Destaca ações críticas como envio de petição, alertas de prazo fatal
-- **Destructive**: Vermelho alaranjado (oklch(0.65 0.28 25)) - Prazos urgentes, ações irreversíveis
+  - Magenta intenso (oklch(0.70 0.26 300)) - Energia tecnológica, usado em elementos secundários e gradientes
+  - Pink neon (oklch(0.75 0.28 350)) - Sofisticação futurista, destaques especiais e hover states
+  - Purple neon (oklch(0.65 0.24 280)) - Complementa a paleta, usado em gradientes e transições
+- **Accent Color**: Pink brilhante - Destaca ações críticas como alertas de prazo fatal, notificações urgentes
+- **Destructive**: Vermelho alaranjado neon (oklch(0.65 0.28 25)) - Prazos urgentes, ações irreversíveis, alertas críticos
 
 **Foreground/Background Pairings**:
-- Background (Dark Navy oklch(0.12 0.03 240)): Light Cyan text (oklch(0.92 0.02 180)) - Ratio 16.2:1 ✓
-- Card (Dark Slate oklch(0.16 0.04 240)): Light Cyan text (oklch(0.92 0.02 180)) - Ratio 14.8:1 ✓
-- Primary (Cyan oklch(0.75 0.25 190)): White text (oklch(0.98 0.01 0)) - Ratio 8.1:1 ✓
-- Secondary (Magenta oklch(0.70 0.26 300)): White text (oklch(0.98 0.01 0)) - Ratio 6.9:1 ✓
-- Accent (Pink oklch(0.75 0.28 350)): Dark Navy text (oklch(0.12 0.02 0)) - Ratio 11.2:1 ✓
+- Background (Deep Dark oklch(0.08 0.01 240)): Cyan Light text (oklch(0.95 0.02 180)) - Ratio 18.5:1 ✓
+- Card (Dark Slate oklch(0.12 0.02 240)): Cyan Light text (oklch(0.95 0.02 180)) - Ratio 16.2:1 ✓
+- Primary (Cyan Neon oklch(0.75 0.25 190)): Dark text (oklch(0.08 0.01 240)) - Ratio 14.8:1 ✓
+- Secondary (Magenta Neon oklch(0.70 0.26 300)): Dark text (oklch(0.08 0.01 240)) - Ratio 12.5:1 ✓
+- Accent (Pink Neon oklch(0.75 0.28 350)): Dark text (oklch(0.08 0.01 240)) - Ratio 14.2:1 ✓
 
 ## Font Selection
 
@@ -116,10 +117,10 @@ Tipografia que equilibra profissionalismo jurídico com modernidade tech - san-s
 
 ## Animations
 
-Animações devem ser sutis e funcionais, nunca chamativas - reforçando feedback de ações sem atrasar o fluxo de trabalho. Movimento serve para orientar atenção (novos alertas, conclusão de tarefas de agentes) e comunicar hierarquia de informação.
+Animações devem reforçar a estética neon noir com efeitos de glow pulsante e transições suaves que simulam interfaces holográficas. Movimento serve para criar atmosfera cyberpunk enquanto guia atenção do usuário.
 
-- **Purposeful Meaning**: Pulse suave em ícones de agentes ativos transmite "trabalhando em segundo plano", gradientes animados em cards especiais (Harvey, Mrs. Justin-e) comunicam tecnologia avançada
-- **Hierarchy of Movement**: Alertas de prazo fatal têm animação mais proeminente (subtle shake + glow), tarefas concluídas têm fade-in smooth, transições de página são instantâneas para não atrasar advogados
+- **Purposeful Meaning**: Pulse neon em ícones de agentes ativos transmite "processamento em tempo real", gradientes animados em cards especiais (Harvey, Mrs. Justin-e) simulam energia holográfica fluindo, bordas com glow suave comunicam interatividade
+- **Hierarchy of Movement**: Alertas críticos têm glow intenso pulsante, elementos interativos respondem com lift e intensificação de neon no hover, transições de página mantêm fluidez sem atrasar workflow
 
 ## Component Selection
 
