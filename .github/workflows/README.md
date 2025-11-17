@@ -135,6 +135,31 @@ This directory contains all CI/CD workflows for the Assistente Jurídico PJe pro
 - Detailed build reports in GitHub Summary
 - Continues on errors to collect all information
 
+### 7. GitHub Copilot Setup Steps (`copilot-setup-steps.yml`)
+**Triggers:** Push/PR to the workflow file itself; Manual workflow dispatch
+
+**Jobs:**
+- **copilot-setup-steps**: Prepares the environment for GitHub Copilot coding agent
+  - Checks out repository code
+  - Sets up Node.js 20 with npm caching
+  - Installs all project dependencies with `npm ci`
+
+**Features:**
+- Automatically runs when the workflow file is modified (for easy validation)
+- Can be triggered manually via Actions tab
+- Provides a pre-configured environment for the Copilot agent
+- Enables Copilot to run builds, tests, and linters without setup delays
+- Uses minimal permissions (contents: read)
+- Runs on ubuntu-latest (required for Copilot compatibility)
+
+**Purpose:**
+This workflow is specifically designed for GitHub Copilot's coding agent. When Copilot starts working on a task, this workflow runs first to prepare the environment with all necessary tools and dependencies. This ensures:
+- Faster agent startup (dependencies are pre-installed)
+- Reliable builds and tests (consistent environment)
+- Better agent performance (no trial-and-error for dependency installation)
+
+**Note:** This workflow must be present in the default branch to be recognized by GitHub Copilot.
+
 ## Workflow Dependencies
 
 ### Required npm packages
@@ -209,6 +234,7 @@ PRs are automatically labeled based on changed files:
 4. **Test locally first** with `npm run lint && npm run build && npm test`
 5. **Monitor bundle size** - keep main bundle under 500 KB
 6. **Review security alerts** - check CodeQL and dependency review findings
+7. **Keep copilot-setup-steps.yml updated** - ensure it matches your project's setup needs
 
 ## Troubleshooting
 
