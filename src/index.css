@@ -12,51 +12,52 @@
   --font-mono: 'Cascadia Code', 'SF Mono', 'Consolas', 'Courier New', monospace;
   --font-serif: 'Georgia', serif;
 
-  /* Windows 11 Fluent Design - Refined & Polished */
-  --background: oklch(0.99 0.003 240);
-  --foreground: oklch(0.20 0.008 240);
+  /* ADVBOX Dark Theme - Professional Legal UI */
+  --background: #0f1117;
+  --foreground: #e8eaed;
   
-  --card: oklch(0.998 0.001 240 / 0.85);
-  --card-foreground: oklch(0.20 0.008 240);
+  --card: #1e2130;
+  --card-foreground: #e8eaed;
   
-  --popover: oklch(0.998 0.001 240 / 0.95);
-  --popover-foreground: oklch(0.20 0.008 240);
+  --popover: #252836;
+  --popover-foreground: #e8eaed;
   
-  /* Windows 11 Blue - Iconic accent */
-  --primary: oklch(0.55 0.24 264);
-  --primary-foreground: oklch(0.99 0.005 240);
+  /* Cyan Accent - ADVBOX Style */
+  --primary: #00b4d8;
+  --primary-foreground: #0f1117;
   
-  --secondary: oklch(0.95 0.008 240);
-  --secondary-foreground: oklch(0.25 0.010 240);
+  --secondary: #2a2d3e;
+  --secondary-foreground: #b0b3c1;
   
-  --muted: oklch(0.96 0.005 240);
-  --muted-foreground: oklch(0.50 0.008 240);
+  --muted: #1a1d29;
+  --muted-foreground: #6b7280;
   
-  --accent: oklch(0.60 0.22 264);
-  --accent-foreground: oklch(0.99 0.005 240);
+  --accent: #48cae4;
+  --accent-foreground: #0f1117;
   
-  --destructive: oklch(0.57 0.24 25);
-  --destructive-foreground: oklch(0.99 0.005 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
   
-  --border: oklch(0.90 0.005 240);
-  --input: oklch(0.97 0.003 240);
-  --ring: oklch(0.55 0.24 264);
+  --border: #2a2d3e;
+  --input: #1e2130;
+  --ring: #00b4d8;
   
   --radius: 0.5rem;
   
-  /* Windows 11 Accent Colors Palette */
-  --accent-blue: oklch(0.55 0.24 264);
-  --accent-purple: oklch(0.60 0.22 290);
-  --accent-teal: oklch(0.62 0.20 200);
-  --accent-green: oklch(0.65 0.20 145);
-  --accent-orange: oklch(0.65 0.22 50);
-  --accent-pink: oklch(0.65 0.24 340);
+  /* ADVBOX Accent Colors */
+  --accent-blue: #00b4d8;
+  --accent-cyan: #48cae4;
+  --accent-green: #52b788;
+  --accent-yellow: #fbbf24;
+  --accent-orange: #fb8500;
+  --accent-red: #ef4444;
+  --accent-purple: #a855f7;
   
-  /* Shadows - Layered & Soft */
-  --shadow-sm: 0 1px 2px oklch(0.20 0.008 240 / 0.04);
-  --shadow-md: 0 2px 8px oklch(0.20 0.008 240 / 0.06), 0 1px 2px oklch(0.20 0.008 240 / 0.03);
-  --shadow-lg: 0 8px 24px oklch(0.20 0.008 240 / 0.10), 0 2px 8px oklch(0.20 0.008 240 / 0.05);
-  --shadow-xl: 0 16px 48px oklch(0.20 0.008 240 / 0.14), 0 4px 16px oklch(0.20 0.008 240 / 0.08);
+  /* Dark Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 @theme {
@@ -99,11 +100,7 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: 
-    radial-gradient(ellipse 100% 60% at 50% -10%, oklch(0.55 0.24 264 / 0.08), transparent),
-    radial-gradient(ellipse 80% 50% at 0% 100%, oklch(0.60 0.22 290 / 0.06), transparent),
-    radial-gradient(ellipse 80% 50% at 100% 100%, oklch(0.62 0.20 200 / 0.05), transparent),
-    linear-gradient(180deg, oklch(0.99 0.003 240) 0%, oklch(0.97 0.005 245) 100%);
+  background: var(--background);
   background-attachment: fixed;
   min-height: 100vh;
 }
