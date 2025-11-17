@@ -556,24 +556,16 @@ select:focus {
 .fluent-spacing-lg { padding: 1.5rem; }
 .fluent-spacing-xl { padding: 2rem; }
 
-/* Remove Deprecated Neon Classes */
-.neon-glow,
-.gradient-border,
-.gradient-text,
-.card-glow,
-.card-glow-hover,
-.glassmorphic,
-.shimmer-effect,
-.button-gradient,
-.status-gradient-active,
-.status-gradient-urgent,
-.status-gradient-completed,
-.neon-border-cyan,
-.neon-border-magenta,
-.neon-border-pink,
-.neon-text-cyan,
-.neon-text-magenta,
-.neon-text-pink,
-.cyber-grid {
-  /* Deprecated - use Windows 11 Fluent classes instead */
+/* Legacy Gradient Text Support */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glassmorphic {
+  background: oklch(0.998 0.001 240 / 0.75);
+  backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid oklch(0.90 0.005 240 / 0.5);
 }
