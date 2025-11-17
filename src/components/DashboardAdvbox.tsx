@@ -9,7 +9,6 @@ import {
   CheckCircle, 
   Clock, 
   Trophy,
-  CalendarBlank,
   CaretLeft,
   CaretRight,
   ArrowUp,
