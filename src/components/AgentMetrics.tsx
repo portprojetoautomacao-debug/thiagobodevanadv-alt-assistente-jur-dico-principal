@@ -26,7 +26,7 @@ interface AgentMetricsProps {
 export default function AgentMetrics({ agents, completedTasks, activityLog }: AgentMetricsProps) {
   const totalTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
   const totalToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
-  const averageAutonomy = agents.length > 0 
+  const averageAutonomy = agents.length > 0
     ? Math.round(agents.reduce((sum, a) => sum + a.autonomyLevel, 0) / agents.length)
     : 0
 
@@ -80,6 +80,32 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             <p className="text-xs text-muted-foreground">
               {activityLog.filter(log => log.result === 'success').length} de {activityLog.length} ações bem-sucedidas
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" weight="fill" />
+              Tarefas Hoje
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground mb-2">{totalToday}</div>
+            <p className="text-xs text-muted-foreground">Tarefas concluídas hoje por todos os agentes</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <ChartLine className="w-4 h-4 text-primary" weight="fill" />
+              Autonomia Média
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground mb-2">{averageAutonomy}%</div>
+            <p className="text-xs text-muted-foreground">Nível médio de autonomia dos agentes</p>
           </CardContent>
         </Card>
 
@@ -155,7 +181,6 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         </CardHeader>
         <CardContent className="space-y-3">
           {agents.map((agent) => {
-            const agentTasks = completedTasks.filter(t => t.agentId === agent.id)
             const agentLogs = activityLog.filter(l => l.agentId === agent.id)
             const agentSuccessRate = agentLogs.length > 0
               ? Math.round((agentLogs.filter(l => l.result === 'success').length / agentLogs.length) * 100)
