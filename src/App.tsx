@@ -35,6 +35,10 @@ import DatabaseQueries from '@/components/DatabaseQueries'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import PDFUploader from '@/components/PDFUploader'
 import KeyboardShortcutsDialog from '@/components/KeyboardShortcutsDialog'
+import AIDocumentSummarizer from '@/components/AIDocumentSummarizer'
+import AIContractAnalyzer from '@/components/AIContractAnalyzer'
+import AILegalResearch from '@/components/AILegalResearch'
+import AIEmailDrafter from '@/components/AIEmailDrafter'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
 import { useAnalytics } from '@/hooks/use-analytics'
@@ -164,6 +168,10 @@ function App() {
     { id: 'conhecimento' as ViewType, label: 'Conhecimento', icon: Books },
     { id: 'assistente' as ViewType, label: 'Assistente IA', icon: ChatCircle },
     { id: 'agentes' as ViewType, label: 'Agentes IA', icon: Robot },
+    { id: 'ai-document-summarizer' as ViewType, label: 'Resumidor IA', icon: FileText },
+    { id: 'ai-contract-analyzer' as ViewType, label: 'Análise Contratos', icon: FileText },
+    { id: 'ai-legal-research' as ViewType, label: 'Pesquisa Jurídica', icon: Books },
+    { id: 'ai-email-drafter' as ViewType, label: 'Emails IA', icon: ChatCircle },
     { id: 'analytics' as ViewType, label: 'Analytics', icon: ChartBar },
   ]
 
@@ -199,6 +207,14 @@ function App() {
         return <AIAgents />
       case 'analytics':
         return <AnalyticsDashboard />
+      case 'ai-document-summarizer':
+        return <AIDocumentSummarizer />
+      case 'ai-contract-analyzer':
+        return <AIContractAnalyzer />
+      case 'ai-legal-research':
+        return <AILegalResearch />
+      case 'ai-email-drafter':
+        return <AIEmailDrafter />
       default:
         return <Dashboard onNavigate={setCurrentView} />
     }

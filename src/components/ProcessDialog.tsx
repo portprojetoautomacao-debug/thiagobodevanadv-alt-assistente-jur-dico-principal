@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 interface ProcessDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  process: Process | null
+  process?: Process
   onSave: (process: Process) => void
 }
 
