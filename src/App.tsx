@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
+import { AnimatePresence } from 'framer-motion'
+import { FluentMotion, FluentFade, FluentStaggerItem } from '@/components/FluentMotion'
 import { 
   ChartPieSlice,
   Gavel, 
@@ -136,10 +138,12 @@ function App() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <CalendarCheck size={64} className="text-primary neon-glow mx-auto mb-4" weight="duotone" />
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
+        <FluentMotion variant="fadeInScale">
+          <div className="text-center">
+            <CalendarCheck size={64} className="text-primary mx-auto mb-4 animate-pulse" weight="duotone" />
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
+        </FluentMotion>
       </div>
     )
   }
