@@ -61,8 +61,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Prepare headers
+    // forward accept header from client or default to application/json
+    const incomingAccept = req.headers['accept'] as string | undefined;
     const headers = {
       'Content-Type': 'application/json',
+      'Accept': incomingAccept || 'application/json',
       'Authorization': `bearer ${githubToken}`,
     };
 
@@ -97,6 +100,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (isJson) {
       res.json(data);
     } else {
+      // If we got HTML back, log a more descriptive message to help debugging (likely runtime/proxy misconfiguration)
+      if (typeof data === 'string' && data.trim().startsWith('<')) {
+        console.warn(`Proxy request to ${targetUrl} returned HTML (status ${response.status}). This likely indicates a rewrite to index.html or a login page. Response snippet: ${data.slice(0, 512)}`);
+      }
       res.send(data);
     }
   } catch (error) {
