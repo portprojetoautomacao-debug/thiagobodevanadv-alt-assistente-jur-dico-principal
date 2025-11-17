@@ -6,6 +6,18 @@ O **GitHub Spark AI** (a interface de IA que você usa para editar código no Gi
 
 **IMPORTANTE:** O problema NÃO é com o aplicativo que você está desenvolvendo. O problema é com a própria ferramenta GitHub Spark AI.
 
+### 🚨 ERRO CONFIRMADO (17/11/2024 16:11):
+
+```
+Failed to submit prompt: RestError: 
+The specified blob does not exist. 
+RequestId:fe175712-001e-00ab-3edc-571de0000000 
+Time:2025-11-17T16:11:51.1525960Z
+```
+
+**Isso confirma:** O problema está na **infraestrutura do Azure Blob Storage** usada pelo GitHub Spark AI.
+Este é um **problema do lado do servidor GitHub**, não do seu navegador ou código.
+
 ---
 
 ## ✅ O Que JÁ Foi Corrigido
@@ -35,7 +47,28 @@ Durante a análise, encontrei e corrigi um problema real no código:
 
 ## 🚨 Soluções para o Travamento do Spark AI
 
-### Solução 1: Limpar Cache do Navegador
+### ⚠️ ERRO DE BLOB STORAGE - Problema do GitHub
+
+**Se você está vendo este erro:**
+```
+RestError: The specified blob does not exist
+```
+
+**Isso significa:**
+- ❌ NÃO é problema no seu navegador
+- ❌ NÃO é problema no seu código
+- ✅ É problema na infraestrutura do **Azure Blob Storage** do GitHub
+- ✅ Você precisa **aguardar o GitHub resolver**
+
+**O que fazer:**
+1. ⏰ **Aguarde 1-2 horas** - Problemas de infraestrutura geralmente são resolvidos rapidamente
+2. 📊 Verifique status: https://www.githubstatus.com/
+3. 🔄 Use alternativas abaixo enquanto aguarda
+4. 📧 Considere reportar ao GitHub Support se persistir por mais de 24h
+
+---
+
+### Solução 1: Limpar Cache do Navegador (Pode não resolver o erro de blob)
 
 O cache corrompido pode causar travamentos na interface do Spark:
 
@@ -266,9 +299,31 @@ Se precisar fazer mudanças urgentes enquanto o Spark está com problemas:
 
 ---
 
+## 🆘 Erro de Blob Storage - O Que Fazer
+
+### ⚠️ Se você está vendo "The specified blob does not exist"
+
+Este é um erro do **backend do GitHub Spark AI**. Você não pode resolver sozinho.
+
+**Ação Recomendada:**
+
+1. **Aguarde 1-2 horas**
+   - Problemas de infraestrutura geralmente são temporários
+   - GitHub costuma resolver rapidamente
+
+2. **Verifique o Status do GitHub**
+   - https://www.githubstatus.com/
+   - Procure por: "Copilot", "Models", "API"
+
+3. **Use Alternativas Temporárias** (veja abaixo)
+
+---
+
 ## 🆘 Se Nada Funcionar
 
 ### Opção 1: Reportar ao GitHub
+
+**Para erros de Blob Storage, reporte imediatamente:**
 
 Se o problema persistir por mais de 1 dia:
 
@@ -277,10 +332,19 @@ Se o problema persistir por mais de 1 dia:
 3. Categoria: "GitHub Spark"
 4. Descreva o problema:
    ```
-   "GitHub Spark AI está travando ao processar
-   requisições no repositório [seu-repo].
-   Tentei limpar cache, usar modo anônimo,
-   e o problema persiste desde [data]."
+   ERRO DE BLOB STORAGE no GitHub Spark AI
+   
+   Erro: RestError: The specified blob does not exist
+   RequestId: fe175712-001e-00ab-3edc-571de0000000
+   Time: 2025-11-17T16:11:51.1525960Z
+   
+   Repositório: thiagobodevan-a11y/assistente-jurdico-p
+   
+   O erro ocorre ao tentar enviar qualquer prompt
+   para o Spark AI. Problema começou em 16/11/2024.
+   
+   Tentei: limpar cache, modo anônimo, diferentes
+   navegadores - problema persiste.
    ```
 
 ### Opção 2: Usar GitHub Copilot (Alternativa)
@@ -371,6 +435,10 @@ Se o problema persistir após tentar todas essas soluções:
 
 ---
 
-**Última Atualização:** 17/11/2024  
+**Última Atualização:** 17/11/2024 16:11 UTC  
 **Status do Código:** ✅ Funcionando Perfeitamente  
-**Status do Spark AI:** 🔄 Com problemas reportados pelo usuário
+**Status do Spark AI:** 🔴 **ERRO DE BLOB STORAGE (Azure Backend)**
+
+**Erro Específico:** `RestError: The specified blob does not exist`  
+**Causa:** Problema na infraestrutura Azure do GitHub Spark AI  
+**Solução:** Aguardar correção do GitHub ou usar alternativas abaixo
