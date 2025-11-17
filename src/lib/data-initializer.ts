@@ -1,3 +1,4 @@
+import * as spark from '@github/spark/llm'
 import type { Process } from '@/types'
 
 export async function generateRealisticProcesses(count: number = 10): Promise<Process[]> {
