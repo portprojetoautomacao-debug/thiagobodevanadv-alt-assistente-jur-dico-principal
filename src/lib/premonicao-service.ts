@@ -1,3 +1,4 @@
+import * as spark from '@github/spark/llm'
 import type { PremonicaoJuridica, Process } from '@/types'
 
 export async function generatePremonicaoJuridica(
