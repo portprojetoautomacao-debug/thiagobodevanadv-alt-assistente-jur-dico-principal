@@ -34,6 +34,7 @@ import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import PDFUploader from '@/components/PDFUploader'
+import KeyboardShortcutsDialog from '@/components/KeyboardShortcutsDialog'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
 import { useAnalytics } from '@/hooks/use-analytics'
@@ -44,6 +45,7 @@ function App() {
   const [currentUser, setCurrentUser] = useKV<User | null>('current-user', null)
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
   const [isLoading, setIsLoading] = useState(true)
+  const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false)
   const { trackPageView, trackAction } = useAnalytics()
   const { unreadCount: _unreadCount } = useNotifications() // Initialize notifications (badge count available)
 
@@ -96,6 +98,13 @@ function App() {
       description: 'Calculadora de Prazos',
       callback: () => {
         setCurrentView('calculadora')
+      }
+    },
+    {
+      key: '?',
+      description: 'Mostrar atalhos',
+      callback: () => {
+        setShortcutsDialogOpen(true)
       }
     },
   ])
@@ -288,6 +297,7 @@ function App() {
       </main>
 
       <Toaster />
+      <KeyboardShortcutsDialog open={shortcutsDialogOpen} onOpenChange={setShortcutsDialogOpen} />
     </div>
   )
 }
