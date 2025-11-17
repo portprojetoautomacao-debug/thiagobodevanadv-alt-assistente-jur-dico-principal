@@ -39,6 +39,8 @@ import AIDocumentSummarizer from '@/components/AIDocumentSummarizer'
 import AIContractAnalyzer from '@/components/AIContractAnalyzer'
 import AILegalResearch from '@/components/AILegalResearch'
 import AIEmailDrafter from '@/components/AIEmailDrafter'
+import LLMObservabilityDashboard from '@/components/LLMObservabilityDashboard'
+import AdvancedNLPDashboard from '@/components/AdvancedNLPDashboard'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
 import { useAnalytics } from '@/hooks/use-analytics'
@@ -172,6 +174,8 @@ function App() {
     { id: 'ai-contract-analyzer' as ViewType, label: 'Análise Contratos', icon: FileText },
     { id: 'ai-legal-research' as ViewType, label: 'Pesquisa Jurídica', icon: Books },
     { id: 'ai-email-drafter' as ViewType, label: 'Emails IA', icon: ChatCircle },
+    { id: 'nlp-advanced' as ViewType, label: 'NLP Avançado', icon: Robot },
+    { id: 'llm-observability' as ViewType, label: 'Observabilidade LLM', icon: ChartBar },
     { id: 'analytics' as ViewType, label: 'Analytics', icon: ChartBar },
   ]
 
@@ -215,6 +219,10 @@ function App() {
         return <AILegalResearch />
       case 'ai-email-drafter':
         return <AIEmailDrafter />
+      case 'nlp-advanced':
+        return <AdvancedNLPDashboard />
+      case 'llm-observability':
+        return <LLMObservabilityDashboard />
       default:
         return <Dashboard onNavigate={setCurrentView} />
     }
