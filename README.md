@@ -1,78 +1,19 @@
-# Assistente Jurídico PJe com IA Gemini
+# Assistente Jurídico PJe
 
-## ✅ STATUS: PRODUÇÃO - PRONTO PARA USO REAL
+> Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
 
-> Sistema de gestão jurídica inteligente com 7 agentes de IA trabalhando 24/7
-
-Uma suíte de ferramentas de alta performance para otimizar e automatizar a rotina de escritórios de advocacia. Integra Google Gemini para transformar tarefas manuais em fluxos inteligentes e eficientes.
-
-### 🚀 INÍCIO RÁPIDO (5 MINUTOS)
-
-```bash
-# 1. Configure a API do Gemini
-# Obtenha em: https://aistudio.google.com/apikey
-# Cole no arquivo .env:
-VITE_GEMINI_API_KEY=sua_chave_aqui
-
-# 2. Inicie o aplicativo
-npm run dev
-
-# 3. Abra http://localhost:5173
-# 4. Faça login com Google
-# 5. Pronto! Comece a trabalhar com processos reais
-```
-
-### ⚡ DESTAQUES
-
-- 🤖 **7 Agentes de IA** trabalhando 24/7 sem intervenção humana
-- 📄 **Extração automática** de dados de documentos (PDF, Word, imagens)
-- ⚖️ **95% de precisão** na análise de intimações
-- ⏰ **Zero prazos perdidos** com alertas inteligentes
-- 💾 **100+ horas economizadas** por mês
-- 🎨 **Tema Neon Noir** com Aurora Boreal
-
-### 📚 DOCUMENTAÇÃO COMPLETA
-
-- 📖 [**CONFIGURAÇÃO RÁPIDA**](CONFIGURACAO_RAPIDA.md) - 5 minutos para começar
-- 📊 [**FUNCIONALIDADES COMPLETAS**](FUNCIONALIDADES_COMPLETAS.md) - Tudo que o app faz  
-- 🎯 [**FINALIZAÇÃO PARA PRODUÇÃO**](FINALIZACAO_PRODUCAO.md) - Guia completo
-
----
-
-> **⚠️ IMPORTANTE**: Este app requer uma chave API do Google Gemini para funcionar.  
-> É **gratuita** e pode ser obtida em 2 minutos: https://aistudio.google.com/apikey  
-> Veja [CONFIGURACAO_RAPIDA.md](CONFIGURACAO_RAPIDA.md) para instruções detalhadas.
-
----
+Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
 ## 🚀 Características Principais
 
-### Gestão Completa
-- ✅ **Dashboard Inteligente**: Métricas em tempo real com gradientes neon
-- ✅ **Cadastro de Clientes com IA**: Upload de documento → extração automática de dados
-- ✅ **Gestão de Processos**: Kanban visual com drag & drop
-- ✅ **Calculadora de Prazos**: CPC/CLT com feriados e dias úteis
-
-### Agentes de IA Autônomos (24/7)
-- 🤖 **Mrs. Justin-e**: Analisa intimações (95% precisão, < 1 min)
-- ⚖️ **Harvey Specter**: Consultor estratégico e premonição jurídica
-- 📚 **Michael Ross**: Pesquisador de jurisprudência
-- 📄 **Agente Documental**: Análise automática de documentos
-- 📰 **Monitor DJEN**: Diários de Justiça em tempo real
-- ⏰ **Gestor de Prazos**: Alertas e notificações inteligentes
-- ✍️ **Redator Jurídico**: Geração de minutas com IA
-
-### Integrações
-- 🗓️ **Google Calendar**: Sincronização de audiências ([docs](GOOGLE_CALENDAR_INTEGRATION.md))
-- 📊 **DataJud/DJEN**: Consultas automáticas a bases oficiais
-- 📝 **Google Docs**: Edição de minutas em tempo real
-- 🔐 **Google OAuth**: Login seguro
-
-### Extras
-- 💰 **Gestão Financeira**: Controle de honorários e despesas
-- 📚 **Base de Conhecimento**: RAG com busca semântica
-- 📊 **Analytics**: Métricas de produtividade
-- 🌙 **Tema Neon Noir**: Design moderno com Aurora Boreal
+- **Dashboard Inteligente**: Visão consolidada de processos, tarefas e métricas
+- **Gestão de Processos**: Kanban visual com drag & drop
+- **IA Assistente (Harvey Specter)**: Chatbot jurídico com contexto processual
+- **Agentes IA Autônomos**: 7 agentes especializados trabalhando 24/7
+- **Integração DJEN/DataJud**: Monitoramento automático de publicações
+- **Google Calendar**: Sincronização bidirecional de eventos ([documentação completa](GOOGLE_CALENDAR_INTEGRATION.md))
+- **Gestão Financeira**: Controle completo de honorários e despesas
+- **Calculadora de Prazos**: Cálculo preciso com feriados e dias úteis
 
 ## 📋 Pré-requisitos
 
@@ -193,35 +134,11 @@ npm run preview      # Preview do build
 npm run lint         # Lint código
 ```
 
-## 🤖 CI/CD com GitHub Actions
-
-Este projeto utiliza GitHub Actions para automação completa de CI/CD:
-
-**Workflows disponíveis:**
-- ✅ **CI**: Build, lint e testes automáticos em cada push/PR
-- 🚀 **Deploy**: Deploy automático para Vercel na branch main
-- 🔍 **Code Quality**: Análise de código com CodeQL e verificações de segurança
-- 📋 **PR Validation**: Validação automática de Pull Requests
-- 🏷️ **Release**: Criação automática de releases e tags
-- 🌙 **Nightly**: Builds noturnos e verificação de dependências
-
-📖 **Documentação completa**: [GitHub Actions Workflows](.github/WORKFLOWS.md)
-
-**Status badges:**
-```markdown
-![CI](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/CI/badge.svg)
-![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)
-```
-
 ## 🌐 Deploy
 
 ### Vercel (Recomendado) ⭐
 
-**Deploy automático via GitHub Actions:**
-- Push na branch `main` → Deploy automático
-- Configure os secrets necessários (veja documentação)
-
-**Deploy manual:**
+**Deploy com 1 clique:**
 1. Conecte sua conta do GitHub ao [Vercel](https://vercel.com)
 2. Importe este repositório
 3. Configure as variáveis de ambiente (veja abaixo)
@@ -237,17 +154,7 @@ VITE_REDIRECT_URI=https://seu-app.vercel.app
 VITE_APP_ENV=production
 ```
 
-**Secrets para GitHub Actions:**
-```
-VERCEL_TOKEN          # Token do Vercel CLI
-VERCEL_ORG_ID         # ID da organização
-VERCEL_PROJECT_ID     # ID do projeto
-```
-
-📖 **Guias de deploy**: 
-- [GitHub Actions](.github/WORKFLOWS.md)
-- [Vercel Deploy](GUIA_DEPLOY_SIMPLES.md)
-- [Documentação Completa](VERCEL_DEPLOYMENT.md)
+📖 **Guia completo de deploy**: Veja `GUIA_DEPLOY_SIMPLES.md` e `VERCEL_DEPLOYMENT.md`
 
 ### Render (Alternativa)
 
