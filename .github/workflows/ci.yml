@@ -26,6 +26,18 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          ~/.npm
+        key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-${{ matrix.node-version }}-
+          ${{ runner.os }}-node-
 
     - name: Install dependencies
       run: npm ci
@@ -86,14 +98,12 @@ jobs:
 
     - name: Run ESLint with SARIF output
       run: |
-        npx eslint . \
-          --format @microsoft/eslint-formatter-sarif \
-          --output-file eslint-results.sarif
+        npm run lint -- --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif || true
       continue-on-error: true
 
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && hashFiles('eslint-results.sarif') != ''
       with:
         sarif_file: eslint-results.sarif
       continue-on-error: true
