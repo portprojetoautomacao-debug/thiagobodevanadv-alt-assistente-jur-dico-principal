@@ -199,7 +199,10 @@ export function applySparkLLMFixes() {
           return text;
         } catch (e) {
           console.error('LLM diagnostic fetch failed:', e);
-          throw err;
+          // Lança um erro combinando informações do erro de diagnóstico e do erro original
+          throw new Error(
+            `LLM diagnostic fetch failed: ${e && e.message ? e.message : String(e)} | Original error: ${err && err.message ? err.message : String(err)}`
+          );
         }
       }
     };
