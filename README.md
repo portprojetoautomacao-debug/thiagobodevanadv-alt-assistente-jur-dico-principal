@@ -94,12 +94,14 @@ src/
 ## 📖 Documentação
 
 - `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
+- `MULTI_SOURCE_PUBLICATIONS.md` - **Sistema multi-fonte de publicações jurídicas** 🆕
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
 - `PRD.md` - Documento de requisitos do produto
 - `OAUTH_SETUP.md` - Guia de configuração OAuth
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
 - `SECURITY.md` - Políticas de segurança
 - `DJEN_DOCUMENTATION.md` - Integração DJEN
+- `DATAJUD_SETUP.md` - Integração DataJud
 - `PREMONICAO_JURIDICA.md` - Sistema de premonição
 
 ## 🎨 Stack Tecnológica
