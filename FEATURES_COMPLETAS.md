@@ -74,7 +74,7 @@ O sistema **Assistente Jurídico PJe** está agora **90% completo** e **pronto p
 - TXT
 - JPG, PNG
 
-**Limite:** 1MB por arquivo
+**Limite:** 50MB por arquivo
 
 **Como usar:**
 1. Abra qualquer processo (clique no card)
@@ -233,7 +233,7 @@ Estas funcionalidades **NÃO são necessárias** para uso em produção:
 ✅ **Build:** Sucesso (bundle de 1.4MB)  
 
 ### Boas Práticas Implementadas
-✅ Validação de tamanho de arquivos (1MB limite)  
+✅ Validação de tamanho de arquivos (50MB limite)  
 ✅ Validação de tipos de arquivo  
 ✅ Sanitização de dados antes de armazenar  
 ✅ Confirmações para ações destrutivas  
