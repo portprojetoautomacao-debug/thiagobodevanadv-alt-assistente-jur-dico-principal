@@ -81,13 +81,20 @@ class GoogleCalendarService {
         // keep a minimal `any` at the call site to avoid disabling rule for entire file
         const clientInit = (gapiWindow.gapi?.client as { init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void> })?.init
         if (typeof clientInit === 'function') {
-          await clientInit({
-            apiKey: GOOGLE_API_KEY,
-            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-          })
+          try {
+            await clientInit({
+              apiKey: GOOGLE_API_KEY,
+              discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+            })
+            this.gapiInited = true
+          } catch (err) {
+            console.error('Erro ao inicializar Google API client:', err)
+          }
+          resolve()
+        } else {
+          console.error('Google API client init not available')
+          resolve()
         }
-        this.gapiInited = true
-        resolve()
       })
     })
   }
