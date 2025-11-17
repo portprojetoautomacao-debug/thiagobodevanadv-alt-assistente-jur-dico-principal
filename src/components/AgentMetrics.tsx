@@ -34,8 +34,8 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
     ? Math.round((activityLog.filter(log => log.result === 'success').length / activityLog.length) * 100)
     : 0
 
-  const estimatedTimeSaved = totalTasks * 8
-  const hoursPerTask = 8 / 60
+  const estimatedTimeSaved = totalTasks * 10
+  const hoursPerTask = 10 / 60
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1)
 
   const getTasksLast24Hours = () => {
@@ -137,7 +137,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
           </div>
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
-              Baseado em 8 minutos por tarefa se feita manualmente por humanos
+              Baseado em 10 minutos por tarefa se feita manualmente por humanos
             </p>
           </div>
         </CardContent>

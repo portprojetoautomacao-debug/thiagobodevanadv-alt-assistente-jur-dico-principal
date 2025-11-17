@@ -164,7 +164,7 @@ Retorne um objeto JSON com a seguinte estrutura:
     if (autoCheckEnabled && processes.length > 0) {
       const interval = setInterval(() => {
         analyzeProcessDocuments()
-      }, 30 * 60 * 1000)
+      }, 60 * 60 * 1000)
 
       return () => clearInterval(interval)
     }
