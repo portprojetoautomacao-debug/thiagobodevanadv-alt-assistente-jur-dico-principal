@@ -81,43 +81,48 @@ function SortableCard({ card, onOpenDetails }: SortableCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-card border-border hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing group"
+      className="relative overflow-hidden bg-gradient-to-br from-card via-card to-card/90 border-border/50 hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing group shadow-lg hover:shadow-2xl hover:shadow-primary/10 rounded-xl"
       onClick={() => onOpenDetails(card)}
     >
-      <CardHeader className="p-4 pb-2">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <CardHeader className="p-4 pb-2 relative z-10">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${getStatusColor(card.status)}`}></div>
-              <span className="text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-3 h-3 rounded-full ${getStatusColor(card.status)} shadow-lg`} />
+              <span className="text-xs text-muted-foreground font-mono">
                 {card.numero.substring(0, 20)}...
               </span>
             </div>
-            <h4 className="font-medium text-sm mb-1">
+            <h4 className="font-bold text-sm mb-1 text-foreground">
               {card.autor}
             </h4>
-            <p className="text-xs text-muted-foreground">
-              {card.reu}
+            <p className="text-xs text-muted-foreground font-medium">
+              vs. {card.reu}
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
-            <DotsThree size={16} />
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 rounded-lg">
+            <DotsThree size={18} weight="bold" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <div className="space-y-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <span>{card.tipo}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 text-sm">
-              <CurrencyDollar size={14} className="text-primary" />
-              <span className="font-medium">{card.valor}</span>
+      <CardContent className="p-4 pt-2 relative z-10">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="px-2 py-1 bg-primary/10 rounded-lg">
+              <span className="text-xs font-semibold text-primary">{card.tipo}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs">
-              <TrendUp size={12} className="text-green-500" />
-              <span className="text-green-500">{card.resultado}</span>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-green-500/10 rounded-lg">
+                <CurrencyDollar size={16} className="text-green-500" weight="bold" />
+              </div>
+              <span className="font-bold text-sm text-foreground">{card.valor}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 rounded-lg">
+              <TrendUp size={14} className="text-green-500" weight="bold" />
+              <span className="text-xs font-bold text-green-500">{card.resultado}</span>
             </div>
           </div>
         </div>
@@ -207,28 +212,28 @@ export default function ProcessCRMAdvbox() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col h-full bg-gradient-to-br from-background via-background to-[#1a1d29]">
         {/* Header */}
-        <div className="p-4 border-b border-border bg-card">
+        <div className="p-4 border-b border-border/50 bg-gradient-to-r from-card/50 to-transparent backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder="Buscar por nome, cpf, cnj, e-mail, tag ou pasta"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-[400px] bg-background"
-              />
-              <Button variant="ghost" size="icon">
-                <MagnifyingGlass size={20} />
-              </Button>
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Buscar por nome, cpf, cnj, e-mail, tag ou pasta"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="w-[400px] pl-10 bg-background/80 backdrop-blur-sm border-border/50 rounded-xl shadow-lg"
+                />
+                <MagnifyingGlass size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="border-border/50 hover:bg-primary/10 rounded-xl">
                 <Funnel size={16} className="mr-1" />
                 Filtros
               </Button>
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 font-semibold hover:scale-105 transition-all">
                 + NOVO PROCESSO
               </Button>
             </div>
@@ -242,7 +247,9 @@ export default function ProcessCRMAdvbox() {
                 variant={selectedPhase === phase ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setSelectedPhase(phase)}
-                className={selectedPhase === phase ? 'bg-primary text-primary-foreground' : ''}
+                className={selectedPhase === phase 
+                  ? 'bg-gradient-to-r from-primary to-accent text-white shadow-lg shadow-primary/20 rounded-lg font-semibold' 
+                  : 'hover:bg-primary/10 rounded-lg'}
               >
                 {phase}
               </Button>
@@ -251,33 +258,54 @@ export default function ProcessCRMAdvbox() {
         </div>
 
         {/* Kanban Board */}
-        <div className="flex-1 p-4 overflow-x-auto">
-          <div className="flex items-start gap-4 min-w-max mb-4">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="font-medium">{processCards.length} Processos</span>
-              <span>•</span>
-              <span>R$ {(processCards.length * 5000).toLocaleString('pt-BR')}</span>
-              <span>•</span>
-              <span>0 Estagnados</span>
+        <div className="flex-1 p-6 overflow-x-auto">
+          <div className="flex items-start gap-6 min-w-max mb-6">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span className="text-2xl font-bold text-foreground">{processCards.length}</span>
+                  <span className="text-sm text-muted-foreground ml-2">Processos</span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-border/50" />
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <CurrencyDollar size={20} className="text-green-500" weight="bold" />
+                </div>
+                <div>
+                  <span className="text-2xl font-bold text-foreground">R$ {(processCards.length * 5000).toLocaleString('pt-BR')}</span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-border/50" />
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-red-500/10 text-red-500 border-red-500/20 font-semibold">
+                  0 Estagnados
+                </Badge>
+              </div>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="ml-auto border-border/50 hover:bg-primary/10 rounded-xl font-semibold">
               Mover etapas em massa
             </Button>
           </div>
 
-          <div className="flex items-start gap-4 min-w-max">
+          <div className="flex items-start gap-6 min-w-max">
             {KANBAN_COLUMNS.map(column => {
               const cards = getCardsByColumn(column)
               return (
-                <div key={column} className="w-[300px] flex-shrink-0">
+                <div key={column} className="w-[320px] flex-shrink-0">
                   {/* Column Header */}
                   <div className="mb-4">
-                    <div className="flex items-center justify-between p-3 bg-card rounded-t-lg border border-border">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span className="font-medium text-sm">{column}</span>
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-card/80 to-card rounded-t-2xl border border-border/50 shadow-lg backdrop-blur-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-gradient-to-br from-primary to-accent rounded-full shadow-lg shadow-primary/30 animate-pulse"></div>
+                        <span className="font-bold text-sm text-foreground">{column}</span>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge className="bg-primary/10 text-primary border-primary/20 font-bold">
                         {cards.length}
                       </Badge>
                     </div>
@@ -289,7 +317,7 @@ export default function ProcessCRMAdvbox() {
                     strategy={verticalListSortingStrategy}
                     id={column}
                   >
-                    <div className="space-y-3 min-h-[200px] p-2 rounded-lg bg-muted/20 border-2 border-dashed border-transparent hover:border-primary/30 transition-colors">
+                    <div className="space-y-4 min-h-[300px] p-4 rounded-2xl bg-gradient-to-br from-muted/10 via-muted/5 to-transparent border-2 border-dashed border-border/30 hover:border-primary/40 hover:bg-primary/5 transition-all">
                       {cards.map(card => (
                         <SortableCard
                           key={card.id}
@@ -297,6 +325,11 @@ export default function ProcessCRMAdvbox() {
                           onOpenDetails={handleOpenDetails}
                         />
                       ))}
+                      {cards.length === 0 && (
+                        <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+                          Arraste os cards aqui
+                        </div>
+                      )}
                     </div>
                   </SortableContext>
                 </div>
