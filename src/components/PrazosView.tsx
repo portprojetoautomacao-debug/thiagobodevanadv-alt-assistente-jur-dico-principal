@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CalendarCheck, CheckCircle, Clock } from '@phosphor-icons/react'
+import { CalendarCheck, CheckCircle, Clock, DownloadSimple } from '@phosphor-icons/react'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import { toast } from 'sonner'
+import { exportToCSV } from '@/lib/utils'
 
 export default function PrazosView() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
@@ -70,11 +71,34 @@ export default function PrazosView() {
     toast.success(prazo.concluido ? 'Prazo marcado como pendente' : 'Prazo concluído')
   }
 
+  const handleExportCSV = () => {
+    const exportData = prazosComProcesso.map(p => ({
+      'Processo': p.processo.titulo,
+      'CNJ': p.processo.numeroCNJ,
+      'Descrição': p.descricao,
+      'Data Início': p.dataInicio,
+      'Dias Corridos': p.diasCorridos,
+      'Tipo': p.tipoPrazo === 'cpc' ? 'CPC' : 'CLT',
+      'Vencimento': p.dataFinal,
+      'Dias Restantes': calcularDiasRestantes(p.dataFinal),
+      'Status': p.concluido ? 'Concluído' : 'Pendente',
+      'Urgente': !p.concluido && isUrgente(calcularDiasRestantes(p.dataFinal)) ? 'Sim' : 'Não'
+    }))
+    exportToCSV(exportData, 'prazos')
+    toast.success('Prazos exportados com sucesso!')
+  }
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Prazos</h1>
-        <p className="text-muted-foreground">Gerencie todos os seus prazos processuais</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Prazos</h1>
+          <p className="text-muted-foreground">Gerencie todos os seus prazos processuais</p>
+        </div>
+        <Button variant="outline" onClick={handleExportCSV}>
+          <DownloadSimple size={20} />
+          Exportar CSV
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

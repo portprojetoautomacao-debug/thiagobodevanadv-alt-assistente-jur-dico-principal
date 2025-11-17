@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MagnifyingGlass, Plus, Gavel } from '@phosphor-icons/react'
+import { MagnifyingGlass, Plus, Gavel, DownloadSimple } from '@phosphor-icons/react'
 import ProcessDialog from './ProcessDialog'
 import ProcessDetailsDialog from './ProcessDetailsDialog'
 import DataInitializer from './DataInitializer'
+import { exportToCSV } from '@/lib/utils'
+import { toast } from 'sonner'
 
 export default function ProcessosView() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
@@ -44,6 +46,24 @@ export default function ProcessosView() {
     setProcesses(() => generatedProcesses)
   }
 
+  const handleExportCSV = () => {
+    const exportData = (processes || []).map(p => ({
+      'Número CNJ': p.numeroCNJ,
+      'Título': p.titulo,
+      'Autor': p.autor,
+      'Réu': p.reu,
+      'Comarca': p.comarca,
+      'Vara': p.vara,
+      'Status': p.status,
+      'Valor': p.valor || '',
+      'Data Distribuição': p.dataDistribuicao,
+      'Última Movimentação': p.dataUltimaMovimentacao,
+      'Notas': p.notas || ''
+    }))
+    exportToCSV(exportData, 'processos')
+    toast.success('Processos exportados com sucesso!')
+  }
+
   if (!processes || processes.length === 0) {
     return <DataInitializer onDataGenerated={handleDataGenerated} />
   }
@@ -55,13 +75,19 @@ export default function ProcessosView() {
           <h1 className="text-2xl font-bold">Processos</h1>
           <p className="text-sm text-muted-foreground">Gerencie seu acervo processual</p>
         </div>
-        <Button onClick={() => {
-          setSelectedProcess(null)
-          setDialogOpen(true)
-        }}>
-          <Plus size={20} />
-          Novo Processo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <DownloadSimple size={20} />
+            Exportar CSV
+          </Button>
+          <Button onClick={() => {
+            setSelectedProcess(null)
+            setDialogOpen(true)
+          }}>
+            <Plus size={20} />
+            Novo Processo
+          </Button>
+        </div>
       </div>
 
       <div className="relative">
