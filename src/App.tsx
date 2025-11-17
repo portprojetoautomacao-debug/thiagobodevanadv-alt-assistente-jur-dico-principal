@@ -23,6 +23,9 @@ import {
 } from '@phosphor-icons/react'
 import Login from '@/components/Login'
 import Dashboard from '@/components/Dashboard'
+import DashboardAdvbox from '@/components/DashboardAdvbox'
+import ProcessCRMAdvbox from '@/components/ProcessCRMAdvbox'
+import OfficeManagement from '@/components/OfficeManagement'
 import CadastrarCliente from '@/components/CadastrarCliente'
 import ClientesView from '@/components/ClientesView'
 import ProcessosView from '@/components/ProcessosView'
@@ -37,6 +40,7 @@ import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import PDFUploader from '@/components/PDFUploader'
+import Calendar from '@/components/Calendar'
 import KeyboardShortcutsDialog from '@/components/KeyboardShortcutsDialog'
 import AIDocumentSummarizer from '@/components/AIDocumentSummarizer'
 import AIContractAnalyzer from '@/components/AIContractAnalyzer'
@@ -160,32 +164,33 @@ function App() {
   }
 
   const navigation = [
-    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
-    { id: 'fluent-animations' as ViewType, label: 'Animações Fluent', icon: Sparkle },
-    { id: 'upload-pdf' as ViewType, label: 'Upload PDF', icon: FileText },
-    { id: 'cadastrar-cliente' as ViewType, label: 'Cadastrar Cliente', icon: UsersFour },
-    { id: 'clientes' as ViewType, label: 'Clientes', icon: UsersFour },
+    { id: 'dashboard' as ViewType, label: 'Meu Painel', icon: ChartPieSlice },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
+    { id: 'crm' as ViewType, label: 'CRM', icon: Database },
+    { id: 'intimacoes' as ViewType, label: 'Intimações', icon: FileText },
+    { id: 'agenda' as ViewType, label: 'Agenda', icon: CalendarCheck },
+    { id: 'gestao' as ViewType, label: 'Gestão', icon: ChartBar },
+    { id: 'financeiro' as ViewType, label: 'Financeiro', icon: CurrencyCircleDollar },
     { id: 'prazos' as ViewType, label: 'Prazos', icon: Clock },
     { id: 'calculadora' as ViewType, label: 'Calculadora', icon: Calculator },
     { id: 'minutas' as ViewType, label: 'Minutas', icon: FileText },
-    { id: 'financeiro' as ViewType, label: 'Financeiro', icon: CurrencyCircleDollar },
-    { id: 'crm' as ViewType, label: 'CRM', icon: Database },
-    { id: 'consultas' as ViewType, label: 'Consultas', icon: Books },
-    { id: 'conhecimento' as ViewType, label: 'Conhecimento', icon: Books },
+    { id: 'conhecimento' as ViewType, label: 'Base de Conhecimento', icon: Books },
     { id: 'assistente' as ViewType, label: 'Assistente IA', icon: ChatCircle },
     { id: 'agentes' as ViewType, label: 'Agentes IA', icon: Robot },
-    { id: 'ai-document-summarizer' as ViewType, label: 'Resumidor IA', icon: FileText },
-    { id: 'ai-contract-analyzer' as ViewType, label: 'Análise Contratos', icon: FileText },
-    { id: 'ai-legal-research' as ViewType, label: 'Pesquisa Jurídica', icon: Books },
-    { id: 'ai-email-drafter' as ViewType, label: 'Emails IA', icon: ChatCircle },
-    { id: 'analytics' as ViewType, label: 'Analytics', icon: ChartBar },
   ]
 
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard onNavigate={setCurrentView} />
+        return <DashboardAdvbox onNavigate={setCurrentView} />
+      case 'crm':
+        return <ProcessCRMAdvbox />
+      case 'gestao':
+        return <OfficeManagement />
+      case 'intimacoes':
+        return <PrazosView />
+      case 'agenda':
+        return <Calendar />
       case 'fluent-animations':
         return <FluentAnimationsShowcase />
       case 'upload-pdf':
@@ -204,8 +209,6 @@ function App() {
         return <MinutasManager />
       case 'financeiro':
         return <FinancialManagement />
-      case 'crm':
-        return <ProcessCRM />
       case 'consultas':
         return <DatabaseQueries />
       case 'conhecimento':
@@ -225,7 +228,7 @@ function App() {
       case 'ai-email-drafter':
         return <AIEmailDrafter />
       default:
-        return <Dashboard onNavigate={setCurrentView} />
+        return <DashboardAdvbox onNavigate={setCurrentView} />
     }
   }
 
@@ -234,21 +237,21 @@ function App() {
       <FluentMotion 
         variant="slideInLeft" 
         transition="emphasized"
-        className="hidden lg:flex w-64 border-r border-border/50 flex-col"
+        className="hidden lg:flex w-64 border-r border-border flex-col"
         style={{
-          background: 'oklch(0.998 0.001 240 / 0.7)',
-          backdropFilter: 'blur(40px) saturate(140%)'
+          background: '#1a1d29',
         }}
       >
         <FluentFade delay={0.1}>
-          <div className="p-6 border-b border-border/50">
+          <div className="p-6 border-b border-border">
             <div className="flex items-center gap-2">
-              <CalendarCheck size={32} className="text-primary" weight="duotone" />
+              <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">AJ</span>
+              </div>
               <div className="flex flex-col">
-                <h1 className="font-bold text-lg leading-none bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Assistente Jurídico
+                <h1 className="font-bold text-base leading-none text-foreground">
+                  Meu Painel
                 </h1>
-                <p className="text-xs text-muted-foreground mt-1">Gestão Processual</p>
               </div>
             </div>
           </div>
@@ -263,18 +266,18 @@ function App() {
               return (
                 <FluentStaggerItem key={item.id}>
                   <Button
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className={`justify-start transition-all ${
-                      isActive ? 'shadow-lg border border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10' : ''
+                    variant="ghost"
+                    className={`justify-start transition-all w-full text-left ${
+                      isActive ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                     }`}
                     onClick={() => setCurrentView(item.id)}
                   >
                     <Icon 
-                      size={20} 
+                      size={18} 
                       className={isActive ? 'text-primary' : ''} 
-                      weight={isActive ? 'duotone' : 'regular'} 
+                      weight={isActive ? 'fill' : 'regular'} 
                     />
-                    {item.label}
+                    <span className="text-sm">{item.label}</span>
                   </Button>
                 </FluentStaggerItem>
               )
