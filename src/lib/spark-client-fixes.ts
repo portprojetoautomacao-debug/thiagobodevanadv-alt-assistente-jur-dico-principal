@@ -182,22 +182,25 @@ export function applySparkLLMFixes() {
           const body = JSON.stringify({ messages: [{ role: 'system', content: 'You are a helpful assistant.' }, { role: 'user', content: String(prompt) }], model: model, response_format: jsonResponse ? { type: 'json_object' } : { type: 'text' } });
           const res = await fetch('/_spark/llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
           const contentType = res.headers.get('content-type') || '';
+          const text = await res.text();
           if (!res.ok) {
-            const txt = await res.text();
-            throw new Error(`LLM request failed: ${res.status} ${res.statusText} - ${txt.slice(0, 600)}`);
+            throw new Error(`LLM request failed: ${res.status} ${res.statusText} - ${text.slice(0, 600)}`);
           }
           if (contentType.includes('text/html') || contentType.trim().startsWith('text/html')) {
-            const txt = await res.text();
-            console.error('LLM endpoint returned HTML. Response (truncated):', txt.slice(0, 500));
+            console.error('LLM endpoint returned HTML. Response (truncated):', text.slice(0, 500));
             throw new Error('LLM request returned HTML. Check /_spark/llm proxy, credentials, and that the runtime is available.');
           }
           if (contentType.includes('application/json')) {
-            const data = await res.json();
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              throw new Error('LLM response claimed JSON but failed to parse: ' + e + ' - ' + text.slice(0, 500));
+            }
             // try to extract the expected content if possible
             if (data.choices?.[0]?.message?.content) return data.choices[0].message.content;
             return data;
           }
-          const text = await res.text();
           // if not JSON nor HTML, return text
           return text;
         } catch (e) {
