@@ -73,13 +73,13 @@ Para cada documento faltante, informe:
 
 Retorne um objeto JSON com a seguinte estrutura:
 {
-  "missingDocuments": [
-    {
-      "documentType": "Nome do documento",
-      "reason": "Por que é necessário",
-      "urgency": "high"
-    }
-  ]
+"missingDocuments": [
+{
+"documentType": "Nome do documento",
+"reason": "Por que é necessário",
+"urgency": "high"
+}
+]
 }`
 
         const response = await spark.llm(prompt, 'gpt-4o', true)
