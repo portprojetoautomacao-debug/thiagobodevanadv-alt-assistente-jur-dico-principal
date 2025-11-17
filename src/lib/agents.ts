@@ -1,3 +1,6 @@
+export type AgentTaskData = Record<string, unknown>
+export type AgentTaskResult = Record<string, unknown>
+
 export interface AgentTask {
   id: string
   agentId: string
@@ -7,8 +10,8 @@ export interface AgentTask {
   createdAt: string
   startedAt?: string
   completedAt?: string
-  data: any
-  result?: any
+  data: AgentTaskData
+  result?: AgentTaskResult
   error?: string
   humanTouchedAt?: string
   resumeAfterHuman?: boolean
@@ -32,6 +35,12 @@ export interface Agent {
   continuousMode: boolean
   humanInteractionMode: 'pause' | 'queue' | 'collaborate'
 }
+
+// Utility type guards for `AgentTaskData`
+const asString = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined)
+const asNumber = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined)
+const asBoolean = (v: unknown): boolean | undefined => (typeof v === 'boolean' ? v : undefined)
+const asStringArray = (v: unknown): string[] | undefined => (Array.isArray(v) ? (v as unknown as string[]) : undefined)
 
 export const agentActivities = {
   analyzer: [
@@ -158,7 +167,7 @@ export function getTaskDescription(task: AgentTask): string {
 export function createAgentTask(
   agentId: string,
   type: AgentTask['type'],
-  data: any,
+  data: AgentTaskData,
   priority: AgentTask['priority'] = 'medium'
 ): AgentTask {
   return {
@@ -172,7 +181,7 @@ export function createAgentTask(
   }
 }
 
-export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<any> {
+export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<AgentTaskResult> {
   const processingTime = 1500 + Math.random() * 3000
   
   await new Promise(resolve => setTimeout(resolve, processingTime))
@@ -193,7 +202,7 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
           'Agendar reunião de alinhamento'
         ],
         confidence: 0.92 + Math.random() * 0.08,
-        deadlines: task.data.hasDeadline ? [
+        deadlines: asBoolean(task.data.hasDeadline) ? [
           {
             type: 'Resposta',
             date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
@@ -216,14 +225,14 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
         ] : [],
         checked: true,
         timestamp: new Date().toISOString(),
-        tribunaisVerificados: task.data?.tribunais || ['TJDFT', 'STJ', 'TST'],
+        tribunaisVerificados: asStringArray(task.data?.tribunais) ?? ['TJDFT', 'STJ', 'TST'],
         nextCheck: new Date(Date.now() + 60 * 60 * 1000).toISOString()
       }
     }
       
     case 'calculate_deadline': {
-      const businessDays = task.data?.businessDays || 15
-      const startDate = task.data?.startDate ? new Date(task.data.startDate) : new Date()
+      const businessDays = asNumber(task.data?.businessDays) ?? 15
+      const startDate = asString(task.data?.startDate) ? new Date(asString(task.data?.startDate)!) : new Date()
       let daysAdded = 0
       const currentDate = new Date(startDate)
       
@@ -265,9 +274,9 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
         draft: `
 EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(ÍZA) DE DIREITO DA ${task.data?.vara || 'VARA'} ${task.data?.comarca || 'COMARCA'}
 
-${task.data?.requerente || '[REQUERENTE]'}, por meio de seu(sua) advogado(a) que esta subscreve, vem, respeitosamente, à presença de Vossa Excelência, para apresentar:
+${asString(task.data?.requerente) || '[REQUERENTE]'}, por meio de seu(sua) advogado(a) que esta subscreve, vem, respeitosamente, à presença de Vossa Excelência, para apresentar:
 
-${task.data?.tipo?.toUpperCase() || 'PETIÇÃO'}
+${asString(task.data?.tipo)?.toUpperCase() ?? 'PETIÇÃO'}
 
 pelos fundamentos de fato e de direito a seguir expostos:
 
@@ -283,8 +292,8 @@ III. DOS PEDIDOS
 
 Diante do exposto, requer:
 
-a) O recebimento da presente ${task.data?.tipo || 'petição'};
-b) ${task.data?.pedido || 'A procedência dos pedidos'};
+  a) O recebimento da presente ${asString(task.data?.tipo) || 'petição'};
+  b) ${asString(task.data?.pedido) || 'A procedência dos pedidos'};
 
 Termos em que,
 Pede deferimento.
@@ -346,11 +355,11 @@ OAB/XX XXXXX
             year: 2020 + Math.floor(Math.random() * 4),
             summary: 'Precedente relevante sobre a matéria analisada',
             relevanceScore: 0.85 + Math.random() * 0.15,
-            keywords: task.data?.keywords || ['direito civil', 'processo', 'jurisprudência']
+            keywords: asStringArray(task.data?.keywords) ?? ['direito civil', 'processo', 'jurisprudência']
           }
         ],
         thematicAnalysis: {
-          mainTopic: task.data?.topic || 'Análise jurisprudencial',
+          mainTopic: asString(task.data?.topic) || 'Análise jurisprudencial',
           trends: ['Entendimento consolidado', 'Jurisprudência pacífica', 'Tese favorável'],
           confidence: 0.88 + Math.random() * 0.12
         },
@@ -372,7 +381,7 @@ OAB/XX XXXXX
           {
             category: 'Financeiro',
             description: 'Exposição financeira do caso',
-            impact: task.data?.valor ? 'Alto' : 'Baixo',
+            impact: asNumber(task.data?.valor) ? 'Alto' : 'Baixo',
             mitigation: 'Avaliar acordo extrajudicial'
           },
           {
@@ -434,29 +443,29 @@ OAB/XX XXXXX
     case 'client_communication':
       return {
         messageGenerated: true,
-        template: `Prezado(a) ${task.data?.clientName || 'Cliente'},
+        template: `Prezado(a) ${asString(task.data?.clientName) || 'Cliente'},
 
-Informamos que houve uma atualização no processo ${task.data?.processNumber || '[Número do Processo]'}.
+Informamos que houve uma atualização no processo ${asString(task.data?.processNumber) || '[Número do Processo]'}.
 
-${task.data?.update || 'Recebemos nova movimentação processual que requer sua atenção.'}
+${asString(task.data?.update) || 'Recebemos nova movimentação processual que requer sua atenção.'}
 
-${task.data?.action ? `Próximos passos: ${task.data.action}` : 'Estamos analisando a movimentação e retornaremos em breve com orientações.'}
+${asString(task.data?.action) ? `Próximos passos: ${asString(task.data?.action)}` : 'Estamos analisando a movimentação e retornaremos em breve com orientações.'}
 
 Qualquer dúvida, estamos à disposição.
 
 Atenciosamente,
 ${task.data?.lawyerName || '[Advogado]'}`,
         tone: 'formal',
-        urgency: task.data?.urgent ? 'alta' : 'normal',
+        urgency: asBoolean(task.data?.urgent) ? 'alta' : 'normal',
         channels: ['email', 'whatsapp'],
-        scheduledSend: task.data?.scheduleFor || 'immediate',
-        attachments: task.data?.attachments || [],
+        scheduledSend: asString(task.data?.scheduleFor) || 'immediate',
+        attachments: task.data?.attachments ?? [],
         timestamp: new Date().toISOString()
       }
       
     case 'billing_analysis':
       return {
-        periodAnalyzed: task.data?.period || 'Últimos 30 dias',
+        periodAnalyzed: asString(task.data?.period) || 'Últimos 30 dias',
         totalBilled: (Math.random() * 50000 + 10000).toFixed(2),
         totalReceived: (Math.random() * 40000 + 8000).toFixed(2),
         pendingInvoices: Math.floor(Math.random() * 10) + 2,
@@ -483,8 +492,8 @@ ${task.data?.lawyerName || '[Advogado]'}`,
     case 'case_strategy':
       return {
         strategyAnalysis: {
-          caseType: task.data?.caseType || 'Processo Civil',
-          currentPhase: task.data?.phase || 'Instrução',
+          caseType: asString(task.data?.caseType) || 'Processo Civil',
+          currentPhase: asString(task.data?.phase) || 'Instrução',
           estimatedDuration: `${Math.floor(Math.random() * 18) + 6} meses`,
           complexity: ['baixa', 'média', 'alta', 'muito alta'][Math.floor(Math.random() * 4)]
         },
