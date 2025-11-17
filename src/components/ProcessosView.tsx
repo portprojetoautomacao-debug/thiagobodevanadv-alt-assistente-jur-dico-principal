@@ -11,7 +11,7 @@ import ProcessDetailsDialog from './ProcessDetailsDialog'
 import DataInitializer from './DataInitializer'
 import { exportToCSV } from '@/lib/utils'
 import { toast } from 'sonner'
-import Fuse from 'fuse.js'
+import Fuse from 'fuse.js/min-basic'
 import {
   Select,
   SelectContent,

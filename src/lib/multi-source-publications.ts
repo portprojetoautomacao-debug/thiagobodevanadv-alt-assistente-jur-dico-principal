@@ -20,6 +20,15 @@ import type {
   SourceCapabilities
 } from './publication-sources-types'
 
+export type {
+  PublicationSource,
+  UnifiedPublication,
+  PublicationSearchParams,
+  PublicationSearchResult,
+  PublicationSourceConfig,
+  SourceCapabilities
+}
+
 import { consultarDJEN, type DJENConfig, type DJENFilteredResult } from './djen-api'
 import { consultarProcessoDatajud, type DatajudProcesso } from './datajud-api'
 import { consultarPublicacoesPJe, type PJeConfig, getTribunaisComPJe } from './pje-api'
