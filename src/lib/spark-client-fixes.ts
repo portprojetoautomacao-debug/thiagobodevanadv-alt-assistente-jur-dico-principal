@@ -85,7 +85,7 @@ export function applySparkClientFixes() {
     }
 
     // build wrappers for methods we want to patch
-    w.spark.kv = {
+    const patchedKV: SparkKV = {
       async get(key: string) {
         try {
           // Prefer calling the original if available (it may throw in plugin), otherwise implement ourselves
@@ -123,7 +123,7 @@ export function applySparkClientFixes() {
           const res = await fetch('/_spark/kv', { method: 'GET' });
           if (!res.ok) throw new Error(`Failed to fetch KV keys: ${res.status} ${res.statusText}`);
           try {
-            return await res.json();
+            return await res.json() as string[];
           } catch (err) {
             console.error('Failed to parse KV keys response as JSON. Will attempt to inspect text.');
             const text = await res.text();
@@ -181,6 +181,8 @@ export function applySparkClientFixes() {
       }
     }
 
+    w.spark.kv = patchedKV;
+
     console.info('Applied spark client fixes: kv methods patched for improved error handling and diagnostics');
   } catch (err) {
     console.warn('Unable to apply spark client fixes:', err);
@@ -218,7 +220,7 @@ export function applySparkLLMFixes() {
             throw new Error('LLM request returned HTML. Check /_spark/llm proxy, credentials, and that the runtime is available.');
           }
           if (contentType.includes('application/json')) {
-            let data;
+            let data: unknown;
             try {
               data = JSON.parse(text);
             } catch (e) {
@@ -238,6 +240,8 @@ export function applySparkLLMFixes() {
           const diagnosticMsg = e instanceof Error ? e.message : String(e);
           const originalMsg = err instanceof Error ? err.message : String(err);
           // Lança um erro combinando informações do erro de diagnóstico e do erro original
+          const diagnosticMessage = e instanceof Error ? e.message : String(e);
+          const originalMessage = err instanceof Error ? err.message : String(err);
           throw new Error(
             `LLM diagnostic fetch failed: ${diagnosticMsg} | Original error: ${originalMsg}`
           );
