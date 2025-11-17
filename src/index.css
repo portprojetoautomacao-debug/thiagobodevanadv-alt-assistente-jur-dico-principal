@@ -16,56 +16,35 @@
 }
 
 :root {
-  --font-sans: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Cascadia Code', 'SF Mono', 'Consolas', 'Courier New', monospace;
-  --font-serif: 'Georgia', serif;
+  --font-sans: Inter, Montserrat;
+  --font-mono: Geist Mono;
+  --font-serif: Cormorant;
 
-  /* ADVBOX Dark Theme - Professional Legal UI */
-  --background: #0f1117;
-  --foreground: #e8eaed;
+  --background: oklch(0.12 0.03 240);
+  --foreground: oklch(0.92 0.02 180);
+  --card: oklch(0.16 0.04 240);
+  --card-foreground: oklch(0.92 0.02 180);
+  --popover: oklch(0.14 0.035 240);
+  --popover-foreground: oklch(0.92 0.02 180);
+  --primary: oklch(0.75 0.25 190);
+  --primary-foreground: oklch(0.98 0.01 0);
+  --secondary: oklch(0.70 0.26 300);
+  --secondary-foreground: oklch(0.98 0.01 0);
+  --muted: oklch(0.20 0.04 240);
+  --muted-foreground: oklch(0.65 0.08 180);
+  --accent: oklch(0.75 0.28 350);
+  --accent-foreground: oklch(0.12 0.02 0);
+  --destructive: oklch(0.65 0.28 25);
+  --destructive-foreground: oklch(0.98 0.01 0);
+  --border: oklch(0.25 0.06 240 / 0.5);
+  --input: oklch(0.22 0.05 240);
+  --ring: oklch(0.75 0.25 190);
+  --radius: 0.75rem;
   
-  --card: #1e2130;
-  --card-foreground: #e8eaed;
-  
-  --popover: #252836;
-  --popover-foreground: #e8eaed;
-  
-  /* Cyan Accent - ADVBOX Style */
-  --primary: #00b4d8;
-  --primary-foreground: #0f1117;
-  
-  --secondary: #2a2d3e;
-  --secondary-foreground: #b0b3c1;
-  
-  --muted: #1a1d29;
-  --muted-foreground: #6b7280;
-  
-  --accent: #48cae4;
-  --accent-foreground: #0f1117;
-  
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  
-  --border: #2a2d3e;
-  --input: #1e2130;
-  --ring: #00b4d8;
-  
-  --radius: 0.5rem;
-  
-  /* ADVBOX Accent Colors */
-  --accent-blue: #00b4d8;
-  --accent-cyan: #48cae4;
-  --accent-green: #52b788;
-  --accent-yellow: #fbbf24;
-  --accent-orange: #fb8500;
-  --accent-red: #ef4444;
-  --accent-purple: #a855f7;
-  
-  /* Dark Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --gradient-aurora-1: oklch(0.75 0.25 190);
+  --gradient-aurora-2: oklch(0.70 0.26 300);
+  --gradient-aurora-3: oklch(0.75 0.28 350);
+  --gradient-aurora-4: oklch(0.68 0.22 210);
 }
 
 @theme {
@@ -96,8 +75,10 @@
   --radius-2xl: calc(var(--radius) * 3);
   --radius-full: 9999px;
   
-  --color-accent-blue: var(--accent-blue);
-  --color-accent-purple: var(--accent-purple);
+  --color-gradient-1: var(--gradient-aurora-1);
+  --color-gradient-2: var(--gradient-aurora-2);
+  --color-gradient-3: var(--gradient-aurora-3);
+  --color-gradient-4: var(--gradient-aurora-4);
   --color-accent-teal: var(--accent-teal);
   --color-accent-green: var(--accent-green);
   --color-accent-orange: var(--accent-orange);
@@ -566,19 +547,144 @@ select:focus {
 .gradient-border,
 .gradient-text,
 .card-glow,
-.card-glow-hover,
-.glassmorphic,
-.shimmer-effect,
-.button-gradient,
-.status-gradient-active,
-.status-gradient-urgent,
-.status-gradient-completed,
-.neon-border-cyan,
-.neon-border-magenta,
-.neon-border-pink,
-.neon-text-cyan,
-.neon-text-magenta,
-.neon-text-pink,
-.cyber-grid {
-  /* Deprecated - use Windows 11 Fluent classes instead */
+/* Modern Visual Effects */
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.25 0.20 190 / 0.4), transparent),
+              radial-gradient(ellipse 60% 50% at 0% 50%, oklch(0.25 0.18 300 / 0.3), transparent),
+              radial-gradient(ellipse 60% 50% at 100% 50%, oklch(0.25 0.16 350 / 0.3), transparent),
+              oklch(0.12 0.03 240);
+  background-attachment: fixed;
+}
+
+@keyframes neon-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 10px currentColor);
+  }
+  50% { 
+    filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 15px currentColor);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.neon-glow {
+  animation: neon-pulse 3s ease-in-out infinite;
+}
+
+.gradient-border {
+  position: relative;
+  background: linear-gradient(135deg, 
+    oklch(0.75 0.25 190 / 0.15), 
+    oklch(0.70 0.26 300 / 0.15), 
+    oklch(0.75 0.28 350 / 0.15)
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, 
+    oklch(0.75 0.25 190), 
+    oklch(0.70 0.26 300), 
+    oklch(0.75 0.28 350)
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-shift 8s ease infinite;
+  will-change: background-position;
+}
+
+.card-glow {
+  box-shadow: 
+    0 0 20px -5px oklch(0.75 0.25 190 / 0.3),
+    0 0 40px -10px oklch(0.70 0.26 300 / 0.2),
+    0 8px 32px -8px oklch(0 0 0 / 0.5);
+}
+
+.card-glow-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-glow-hover:hover {
+  box-shadow: 
+    0 0 30px -5px oklch(0.75 0.25 190 / 0.5),
+    0 0 60px -10px oklch(0.70 0.26 300 / 0.4),
+    0 12px 48px -8px oklch(0 0 0 / 0.6);
+  transform: translateY(-2px);
+}
+
+.glassmorphic {
+  background: oklch(0.16 0.04 240 / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.25 0.06 240 / 0.5);
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.75 0.25 190 / 0.2) 25%,
+    oklch(0.70 0.26 300 / 0.2) 50%,
+    oklch(0.75 0.28 350 / 0.2) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+.button-gradient {
+  background: linear-gradient(135deg, 
+    oklch(0.75 0.25 190), 
+    oklch(0.70 0.26 300)
+  );
+  background-size: 200% 200%;
+  transition: all 0.3s ease;
+}
+
+.button-gradient:hover {
+  background-position: 100% 0;
+  box-shadow: 
+    0 0 20px oklch(0.75 0.25 190 / 0.6),
+    0 0 40px oklch(0.70 0.26 300 / 0.4);
+}
+
+.status-gradient-active {
+  background: linear-gradient(135deg, 
+    oklch(0.75 0.25 190 / 0.2), 
+    oklch(0.70 0.26 300 / 0.1)
+  );
+}
+
+.status-gradient-urgent {
+  background: linear-gradient(135deg, 
+    oklch(0.65 0.28 25 / 0.2), 
+    oklch(0.75 0.28 350 / 0.1)
+  );
+}
+
+.status-gradient-completed {
+  background: linear-gradient(135deg, 
+    oklch(0.70 0.26 300 / 0.2), 
+    oklch(0.75 0.25 190 / 0.1)
+  );
 }
