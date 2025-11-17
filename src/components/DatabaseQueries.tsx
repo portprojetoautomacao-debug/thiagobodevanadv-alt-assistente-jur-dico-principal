@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Database, MagnifyingGlass, Spinner, Warning } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import DJENConsulta from '@/components/DJENConsulta'
+import MultiSourcePublications from '@/components/MultiSourcePublications'
 import {
   consultarProcessoDatajud,
   validarNumeroCNJ,
@@ -88,15 +89,20 @@ export default function DatabaseQueries() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Consultas a Bases de Dados</h1>
         <p className="text-muted-foreground mt-1">
-          Datajud e DJEN - Informações oficiais do judiciário
+          DataJud, DJEN e múltiplas fontes oficiais de publicações jurídicas
         </p>
       </div>
 
-      <Tabs defaultValue="datajud" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="datajud">Datajud</TabsTrigger>
+      <Tabs defaultValue="multi-source" className="w-full">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+          <TabsTrigger value="multi-source">Multi-Fonte</TabsTrigger>
+          <TabsTrigger value="datajud">DataJud</TabsTrigger>
           <TabsTrigger value="djen">DJEN</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="multi-source" className="space-y-4">
+          <MultiSourcePublications />
+        </TabsContent>
 
         <TabsContent value="datajud" className="space-y-4">
           <Card>
