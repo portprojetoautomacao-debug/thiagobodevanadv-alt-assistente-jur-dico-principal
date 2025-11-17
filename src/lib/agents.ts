@@ -173,7 +173,7 @@ export function createAgentTask(
 }
 
 export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<any> {
-  const processingTime = 2000 + Math.random() * 4000
+  const processingTime = 1500 + Math.random() * 3000
   
   await new Promise(resolve => setTimeout(resolve, processingTime))
   
