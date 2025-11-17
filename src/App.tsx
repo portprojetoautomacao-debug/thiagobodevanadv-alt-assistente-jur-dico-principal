@@ -47,7 +47,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false)
   const { trackPageView, trackAction } = useAnalytics()
-  const { unreadCount: _unreadCount } = useNotifications() // Initialize notifications (badge count available)
+  useNotifications() // Initialize notifications (badge count available)
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
