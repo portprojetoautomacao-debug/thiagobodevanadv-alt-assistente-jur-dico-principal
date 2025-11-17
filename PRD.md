@@ -165,6 +165,44 @@ Animações devem reforçar a estética neon noir com efeitos de glow pulsante e
 
 ## Recent Fixes
 
+### Audit Corrections (Latest Update - Jan 2025)
+
+**Comprehensive audit fixes applied addressing compatibility, performance, security, and accessibility**:
+
+#### CSS Compatibility ✅
+- Added `text-size-adjust` and `-webkit-text-size-adjust` for better cross-browser text scaling
+- Improved font rendering with `-webkit-font-smoothing` and `-moz-osx-font-smoothing`
+- Browser support extended: Chrome 54+ (from 79+), Chrome Android 54+, Safari 17.4+
+
+#### Performance Optimizations ✅
+- Replaced `height` with `max-height` in accordion animations to reduce layout reflows
+- Added `opacity` transitions for smoother animations
+- Configured cache-control headers: 1 year for static assets, no-cache for HTML
+
+#### Security Enhancements ✅
+- UTF-8 charset explicitly declared in all HTTP headers
+- Added `X-Content-Type-Options: nosniff` to prevent MIME sniffing attacks
+- Replaced deprecated `X-Frame-Options` with modern CSP `frame-ancestors 'none'`
+- Removed obsolete `X-XSS-Protection` header
+- Proper cache-control for static assets vs dynamic content
+
+#### HTML & Accessibility ✅
+- Charset declaration updated to lowercase `utf-8` (HTML5 standard)
+- Added meta description for SEO
+- Added `X-UA-Compatible` for IE Edge mode
+- All form inputs have proper `id` attributes via shadcn components
+
+#### Headers Configuration ✅
+**vercel.json** updated with:
+- Content-Type with UTF-8 charset for all HTML
+- Cache-Control optimized per resource type:
+  - Static assets (/assets/*, /static/*): `public, max-age=31536000, immutable`
+  - HTML files: `no-cache, no-store, must-revalidate`
+- Content-Security-Policy for clickjacking protection
+- X-Content-Type-Options for MIME type security
+
+See **AUDIT_FIXES_APPLIED.md** for complete details.
+
 ### Harvey Specter Chat - Error Handling (409 Conflict Resolution)
 
 **Problem**: Usuários reportavam erro 409 (Conflict) ao usar o chat do Harvey Specter, com mensagens de "Falha ao enviar a solicitação" e travamentos.
