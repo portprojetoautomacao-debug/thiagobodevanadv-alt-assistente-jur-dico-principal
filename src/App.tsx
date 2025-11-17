@@ -33,6 +33,7 @@ import KnowledgeBase from '@/components/KnowledgeBase'
 import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import PDFUploader from '@/components/PDFUploader'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
 import { useAnalytics } from '@/hooks/use-analytics'
@@ -85,6 +86,7 @@ function App() {
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
+    { id: 'upload-pdf' as ViewType, label: 'Upload PDF', icon: FileText },
     { id: 'cadastrar-cliente' as ViewType, label: 'Cadastrar Cliente', icon: UsersFour },
     { id: 'clientes' as ViewType, label: 'Clientes', icon: UsersFour },
     { id: 'processos' as ViewType, label: 'Processos', icon: Gavel },
@@ -104,6 +106,8 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentView} />
+      case 'upload-pdf':
+        return <PDFUploader />
       case 'cadastrar-cliente':
         return <CadastrarCliente />
       case 'clientes':
