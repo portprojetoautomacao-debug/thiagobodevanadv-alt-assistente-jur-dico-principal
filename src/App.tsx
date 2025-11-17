@@ -35,6 +35,7 @@ import AssistenteIA from '@/components/AssistenteIA'
 import AIAgents from '@/components/AIAgents'
 import MinutasManager from '@/components/MinutasManager'
 import FinancialManagement from '@/components/FinancialManagement'
+import FinancialManagementAdvbox from '@/components/FinancialManagementAdvbox'
 import KnowledgeBase from '@/components/KnowledgeBase'
 import ProcessCRM from '@/components/ProcessCRM'
 import DatabaseQueries from '@/components/DatabaseQueries'
@@ -208,7 +209,7 @@ function App() {
       case 'minutas':
         return <MinutasManager />
       case 'financeiro':
-        return <FinancialManagement />
+        return <FinancialManagementAdvbox />
       case 'consultas':
         return <DatabaseQueries />
       case 'conhecimento':
