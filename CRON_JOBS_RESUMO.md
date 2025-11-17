@@ -157,10 +157,10 @@ Veja a seção **"Próximos Passos"** em `VERCEL_CRON_JOBS.md` para detalhes com
    - Os cron jobs aparecerão automaticamente
    - Monitore as primeiras execuções
 
-3. **Implementar funcionalidade completa** (opcional)
-   - Adicionar Vercel KV ou banco de dados
-   - Implementar consulta DJEN real
-   - Adicionar sistema de notificações
+3. **Próximos desenvolvimentos**
+   - Implementar sistema de envio de notificações (e-mail, push, etc.)
+   - Criar interface frontend para visualização das publicações monitoradas
+   - (Opcional) Integrar com outros sistemas de gestão ou automação
 
 4. **Configurar variáveis de ambiente**
    ```
