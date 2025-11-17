@@ -18,7 +18,8 @@ import {
   UsersFour,
   Database,
   SignOut,
-  ChartBar
+  ChartBar,
+  Sparkle
 } from '@phosphor-icons/react'
 import Login from '@/components/Login'
 import Dashboard from '@/components/Dashboard'
@@ -41,6 +42,7 @@ import AIDocumentSummarizer from '@/components/AIDocumentSummarizer'
 import AIContractAnalyzer from '@/components/AIContractAnalyzer'
 import AILegalResearch from '@/components/AILegalResearch'
 import AIEmailDrafter from '@/components/AIEmailDrafter'
+import FluentAnimationsShowcase from '@/components/FluentAnimationsShowcase'
 import type { ViewType, User } from '@/types'
 import { toast } from 'sonner'
 import { useAnalytics } from '@/hooks/use-analytics'
@@ -159,6 +161,7 @@ function App() {
 
   const navigation = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartPieSlice },
+    { id: 'fluent-animations' as ViewType, label: 'Animações Fluent', icon: Sparkle },
     { id: 'upload-pdf' as ViewType, label: 'Upload PDF', icon: FileText },
     { id: 'cadastrar-cliente' as ViewType, label: 'Cadastrar Cliente', icon: UsersFour },
     { id: 'clientes' as ViewType, label: 'Clientes', icon: UsersFour },
@@ -183,6 +186,8 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentView} />
+      case 'fluent-animations':
+        return <FluentAnimationsShowcase />
       case 'upload-pdf':
         return <PDFUploader />
       case 'cadastrar-cliente':
@@ -226,64 +231,92 @@ function App() {
 
   return (
     <div className="flex h-screen bg-background">
-      <aside className="hidden lg:flex w-64 border-r border-border/50 flex-col glassmorphic">
-        <div className="p-6 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <CalendarCheck size={32} className="text-primary neon-glow" weight="duotone" />
-            <div className="flex flex-col">
-              <h1 className="font-bold text-lg leading-none gradient-text">Assistente Jurídico</h1>
-              <p className="text-xs text-muted-foreground mt-1">Gestão Processual</p>
+      <FluentMotion 
+        variant="slideInLeft" 
+        transition="emphasized"
+        className="hidden lg:flex w-64 border-r border-border/50 flex-col"
+        style={{
+          background: 'oklch(0.998 0.001 240 / 0.7)',
+          backdropFilter: 'blur(40px) saturate(140%)'
+        }}
+      >
+        <FluentFade delay={0.1}>
+          <div className="p-6 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <CalendarCheck size={32} className="text-primary" weight="duotone" />
+              <div className="flex flex-col">
+                <h1 className="font-bold text-lg leading-none bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Assistente Jurídico
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">Gestão Processual</p>
+              </div>
             </div>
           </div>
-        </div>
+        </FluentFade>
 
         <nav className="flex-1 p-4 flex flex-col gap-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const Icon = item.icon
-            const isActive = currentView === item.id
+          <FluentMotion variant="fadeIn" stagger delay={0.2}>
+            {navigation.map((item, index) => {
+              const Icon = item.icon
+              const isActive = currentView === item.id
 
-            return (
-              <Button
-                key={item.id}
-                variant={isActive ? 'secondary' : 'ghost'}
-                className={`justify-start transition-all ${isActive ? 'gradient-border shadow-lg' : ''}`}
-                onClick={() => setCurrentView(item.id)}
-              >
-                <Icon size={20} className={isActive ? 'text-primary neon-glow' : ''} weight={isActive ? 'duotone' : 'regular'} />
-                {item.label}
-              </Button>
-            )
-          })}
+              return (
+                <FluentStaggerItem key={item.id}>
+                  <Button
+                    variant={isActive ? 'secondary' : 'ghost'}
+                    className={`justify-start transition-all ${
+                      isActive ? 'shadow-lg border border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10' : ''
+                    }`}
+                    onClick={() => setCurrentView(item.id)}
+                  >
+                    <Icon 
+                      size={20} 
+                      className={isActive ? 'text-primary' : ''} 
+                      weight={isActive ? 'duotone' : 'regular'} 
+                    />
+                    {item.label}
+                  </Button>
+                </FluentStaggerItem>
+              )
+            })}
+          </FluentMotion>
         </nav>
 
-        <div className="p-4 border-t border-border/50 space-y-3">
-          <div className="flex items-center gap-2 px-2">
-            <div className="w-8 h-8 rounded-full button-gradient flex items-center justify-center ring-2 ring-primary/30 shadow-lg">
-              <span className="text-sm font-semibold text-primary-foreground">
-                {currentUser.name.charAt(0).toUpperCase()}
-              </span>
+        <FluentFade delay={0.3}>
+          <div className="p-4 border-t border-border/50 space-y-3">
+            <div className="flex items-center gap-2 px-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center ring-2 ring-primary/30 shadow-lg">
+                <span className="text-sm font-semibold text-primary-foreground">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{currentUser.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">{currentUser.role}</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{currentUser.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{currentUser.role}</p>
+            <Button
+              variant="outline"
+              className="w-full justify-start hover:border-destructive/50 hover:text-destructive transition-all"
+              onClick={handleLogout}
+            >
+              <SignOut size={20} />
+              Sair
+            </Button>
+            <div className="text-xs text-muted-foreground text-center pt-2">
+              <p>Assistente Jurídico Digital</p>
+              <p className="mt-1">v1.0.0</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            className="w-full justify-start hover:border-destructive/50 hover:text-destructive transition-all"
-            onClick={handleLogout}
-          >
-            <SignOut size={20} />
-            Sair
-          </Button>
-          <div className="text-xs text-muted-foreground text-center pt-2">
-            <p>Assistente Jurídico Digital</p>
-            <p className="mt-1">v1.0.0</p>
-          </div>
-        </div>
-      </aside>
+        </FluentFade>
+      </FluentMotion>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t border-border/50 glassmorphic z-50 overflow-x-auto">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t border-border/50 z-50 overflow-x-auto"
+        style={{
+          background: 'oklch(0.998 0.001 240 / 0.9)',
+          backdropFilter: 'blur(40px) saturate(150%)'
+        }}
+      >
         <nav className="flex items-center justify-start min-w-max p-2 gap-1">
           {navigation.map((item) => {
             const Icon = item.icon
@@ -294,11 +327,19 @@ function App() {
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={`flex flex-col items-center gap-1 p-2 rounded-lg min-w-[70px] transition-all ${
-                  isActive ? 'gradient-border shadow-lg' : 'hover:bg-card/50'
+                  isActive ? 'shadow-lg border border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10' : 'hover:bg-card/50'
                 }`}
               >
-                <Icon size={20} weight={isActive ? 'duotone' : 'regular'} className={isActive ? 'text-primary neon-glow' : 'text-muted-foreground'} />
-                <span className={`text-xs whitespace-nowrap ${isActive ? 'gradient-text font-semibold' : 'text-muted-foreground'}`}>{item.label.split(' ')[0]}</span>
+                <Icon 
+                  size={20} 
+                  weight={isActive ? 'duotone' : 'regular'} 
+                  className={isActive ? 'text-primary' : 'text-muted-foreground'} 
+                />
+                <span className={`text-xs whitespace-nowrap ${
+                  isActive ? 'bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-semibold' : 'text-muted-foreground'
+                }`}>
+                  {item.label.split(' ')[0]}
+                </span>
               </button>
             )
           })}
@@ -313,7 +354,16 @@ function App() {
       </div>
 
       <main className="flex-1 overflow-auto pb-20 lg:pb-0">
-        {renderView()}
+        <AnimatePresence mode="wait">
+          <FluentMotion 
+            key={currentView}
+            variant="fadeInUp" 
+            transition="emphasized"
+            className="min-h-full"
+          >
+            {renderView()}
+          </FluentMotion>
+        </AnimatePresence>
       </main>
 
       <Toaster />
