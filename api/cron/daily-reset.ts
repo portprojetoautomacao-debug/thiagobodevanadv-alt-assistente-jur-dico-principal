@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Verify this is a cron request
   const authHeader = req.headers.authorization;
   const isVercelCron = authHeader?.startsWith('Bearer ');
-  const isLocalTest = process.env.NODE_ENV === 'development' || !authHeader;
+  const isLocalTest = process.env.NODE_ENV === 'development';
   
   if (!isVercelCron && !isLocalTest) {
     return res.status(401).json({ 
