@@ -95,6 +95,7 @@ src/
 
 - `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
+- `GITHUB_COPILOT_AGENT.md` - **Configuração do GitHub Copilot agent** 🤖
 - `PRD.md` - Documento de requisitos do produto
 - `OAUTH_SETUP.md` - Guia de configuração OAuth
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
