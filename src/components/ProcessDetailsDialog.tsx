@@ -5,11 +5,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Pencil, Trash, CalendarCheck, Sparkle } from '@phosphor-icons/react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Pencil, Trash, CalendarCheck, Sparkle, FileText } from '@phosphor-icons/react'
 import { formatarData, calcularDiasRestantes, isUrgente, formatarMoeda } from '@/lib/prazos'
 import { toast } from 'sonner'
 import PremonicaoModal from './PremonicaoModal'
 import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
+import DocumentUploader from './DocumentUploader'
 
 interface ProcessDetailsDialogProps {
   open: boolean
@@ -80,117 +82,132 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-2">
-            <Badge variant={
-              process.status === 'ativo' ? 'default' :
-              process.status === 'concluido' ? 'secondary' :
-              process.status === 'suspenso' ? 'outline' : 'destructive'
-            }>
-              {process.status}
-            </Badge>
-          </div>
+        <Tabs defaultValue="detalhes" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+            <TabsTrigger value="prazos">
+              <CalendarCheck size={16} className="mr-2" />
+              Prazos {process.prazos?.length > 0 && `(${process.prazos.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="documentos">
+              <FileText size={16} className="mr-2" />
+              Documentos
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">Número CNJ</p>
-              <p className="font-mono text-sm">{process.numeroCNJ}</p>
+          <TabsContent value="detalhes" className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Badge variant={
+                process.status === 'ativo' ? 'default' :
+                process.status === 'concluido' ? 'secondary' :
+                process.status === 'suspenso' ? 'outline' : 'destructive'
+              }>
+                {process.status}
+              </Badge>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">Data de Distribuição</p>
-              <p className="text-sm">{formatarData(process.dataDistribuicao)}</p>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">Autor</p>
-              <p className="text-sm">{process.autor}</p>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">Réu</p>
-              <p className="text-sm">{process.reu}</p>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">Comarca</p>
-              <p className="text-sm">{process.comarca}</p>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">Vara</p>
-              <p className="text-sm">{process.vara}</p>
-            </div>
-
-            {process.valor && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <p className="text-sm text-muted-foreground">Valor da Causa</p>
-                <p className="text-sm font-semibold">
-                  {formatarMoeda(process.valor)}
-                </p>
+                <p className="text-sm text-muted-foreground">Número CNJ</p>
+                <p className="font-mono text-sm">{process.numeroCNJ}</p>
               </div>
-            )}
-          </div>
 
-          {process.notas && (
-            <>
-              <Separator />
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-semibold">Observações</p>
-                <p className="text-sm whitespace-pre-wrap">{process.notas}</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">Data de Distribuição</p>
+                <p className="text-sm">{formatarData(process.dataDistribuicao)}</p>
               </div>
-            </>
-          )}
 
-          {process.prazos && process.prazos.length > 0 && (
-            <>
-              <Separator />
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <CalendarCheck size={20} className="text-primary" />
-                  <p className="text-sm font-semibold">Prazos ({process.prazos.length})</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">Autor</p>
+                <p className="text-sm">{process.autor}</p>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">Réu</p>
+                <p className="text-sm">{process.reu}</p>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">Comarca</p>
+                <p className="text-sm">{process.comarca}</p>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">Vara</p>
+                <p className="text-sm">{process.vara}</p>
+              </div>
+
+              {process.valor && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm text-muted-foreground">Valor da Causa</p>
+                  <p className="text-sm font-semibold">
+                    {formatarMoeda(process.valor)}
+                  </p>
                 </div>
-                
-                <div className="flex flex-col gap-2">
-                  {process.prazos.map(prazo => {
-                    const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
-                    const urgente = isUrgente(diasRestantes) && !prazo.concluido
+              )}
+            </div>
 
-                    return (
-                      <div key={prazo.id} className="flex items-start justify-between gap-3 p-3 border rounded-lg">
-                        <div className="flex flex-col gap-1 flex-1">
-                          <p className="font-medium text-sm">{prazo.descricao}</p>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span>Início: {formatarData(prazo.dataInicio)}</span>
-                            <span>•</span>
-                            <span>Final: {formatarData(prazo.dataFinal)}</span>
-                            <span>•</span>
-                            <span>{prazo.diasCorridos} dias ({prazo.tipoPrazo.toUpperCase()})</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          {prazo.concluido ? (
-                            <Badge variant="secondary">Concluído</Badge>
-                          ) : (
-                            <>
-                              <Badge variant={urgente ? 'destructive' : 'default'}>
-                                {diasRestantes < 0 ? 'Vencido' : 
-                                 diasRestantes === 0 ? 'Hoje' : 
-                                 diasRestantes === 1 ? 'Amanhã' : 
-                                 `${diasRestantes}d`}
-                              </Badge>
-                              {urgente && <Badge variant="outline" className="text-xs">Urgente</Badge>}
-                            </>
-                          )}
+            {process.notas && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-semibold">Observações</p>
+                  <p className="text-sm whitespace-pre-wrap">{process.notas}</p>
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="prazos" className="space-y-4">
+            {process.prazos && process.prazos.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {process.prazos.map(prazo => {
+                  const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
+                  const urgente = isUrgente(diasRestantes) && !prazo.concluido
+
+                  return (
+                    <div key={prazo.id} className="flex items-start justify-between gap-3 p-3 border rounded-lg">
+                      <div className="flex flex-col gap-1 flex-1">
+                        <p className="font-medium text-sm">{prazo.descricao}</p>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>Início: {formatarData(prazo.dataInicio)}</span>
+                          <span>•</span>
+                          <span>Final: {formatarData(prazo.dataFinal)}</span>
+                          <span>•</span>
+                          <span>{prazo.diasCorridos} dias ({prazo.tipoPrazo.toUpperCase()})</span>
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
+                      <div className="flex flex-col items-end gap-1">
+                        {prazo.concluido ? (
+                          <Badge variant="secondary">Concluído</Badge>
+                        ) : (
+                          <>
+                            <Badge variant={urgente ? 'destructive' : 'default'}>
+                              {diasRestantes < 0 ? 'Vencido' : 
+                               diasRestantes === 0 ? 'Hoje' : 
+                               diasRestantes === 1 ? 'Amanhã' : 
+                               `${diasRestantes}d`}
+                            </Badge>
+                            {urgente && <Badge variant="outline" className="text-xs">Urgente</Badge>}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            </>
-          )}
-        </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CalendarCheck size={48} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhum prazo cadastrado</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="documentos" className="space-y-4">
+            <DocumentUploader processoId={process.id} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

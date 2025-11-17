@@ -14,8 +14,11 @@ import {
   Warning, 
   CalendarCheck,
   ArrowRight,
-  Upload 
+  Upload,
+  ChartPie,
+  TrendUp
 } from '@phosphor-icons/react'
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid, Legend } from 'recharts'
 
 interface DashboardProps {
   onNavigate: (view: ViewType) => void
@@ -85,6 +88,44 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     return [...(processes || [])]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
+  }, [processes])
+
+  const chartData = useMemo(() => {
+    const processesList = processes || []
+    
+    const statusData = [
+      { name: 'Ativo', value: processesList.filter(p => p.status === 'ativo').length, color: 'oklch(0.75 0.25 190)' },
+      { name: 'Concluído', value: processesList.filter(p => p.status === 'concluido').length, color: 'oklch(0.70 0.26 300)' },
+      { name: 'Suspenso', value: processesList.filter(p => p.status === 'suspenso').length, color: 'oklch(0.65 0.08 180)' },
+      { name: 'Arquivado', value: processesList.filter(p => p.status === 'arquivado').length, color: 'oklch(0.55 0.08 180)' }
+    ].filter(item => item.value > 0)
+
+    const varaData: { [key: string]: number } = {}
+    processesList.forEach(p => {
+      const vara = p.vara || 'Não especificada'
+      varaData[vara] = (varaData[vara] || 0) + 1
+    })
+    const varaChartData = Object.entries(varaData)
+      .map(([name, value]) => ({ name: name.length > 25 ? name.substring(0, 25) + '...' : name, value }))
+      .slice(0, 5)
+
+    const monthlyData: { [key: string]: { ativos: number; concluidos: number } } = {}
+    processesList.forEach(p => {
+      const month = new Date(p.createdAt).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+      if (!monthlyData[month]) {
+        monthlyData[month] = { ativos: 0, concluidos: 0 }
+      }
+      if (p.status === 'concluido') {
+        monthlyData[month].concluidos++
+      } else {
+        monthlyData[month].ativos++
+      }
+    })
+    const trendData = Object.entries(monthlyData)
+      .map(([month, data]) => ({ month, ...data }))
+      .slice(-6)
+
+    return { statusData, varaChartData, trendData }
   }, [processes])
 
   const handleDataGenerated = (generatedProcesses: Process[]) => {
@@ -202,6 +243,113 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </Button>
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <Card className="card-glow-hover glassmorphic">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 gradient-text">
+              <ChartPie size={24} weight="duotone" />
+              Processos por Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {chartData.statusData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <ChartPie size={48} className="text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={chartData.statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {chartData.statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="card-glow-hover glassmorphic">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 gradient-text">
+              <Gavel size={24} weight="duotone" />
+              Top 5 Varas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {chartData.varaChartData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Gavel size={48} className="text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={chartData.varaChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
+                  <XAxis dataKey="name" stroke="oklch(0.65 0.08 180)" fontSize={12} angle={-15} textAnchor="end" height={80} />
+                  <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'oklch(0.16 0.04 240)', 
+                      border: '1px solid oklch(0.25 0.06 240)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar dataKey="value" fill="oklch(0.75 0.25 190)" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="card-glow-hover glassmorphic lg:col-span-2 xl:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 gradient-text">
+              <TrendUp size={24} weight="duotone" />
+              Evolução (6 meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {chartData.trendData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <TrendUp size={48} className="text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={chartData.trendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
+                  <XAxis dataKey="month" stroke="oklch(0.65 0.08 180)" fontSize={12} />
+                  <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'oklch(0.16 0.04 240)', 
+                      border: '1px solid oklch(0.25 0.06 240)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="ativos" stroke="oklch(0.75 0.25 190)" strokeWidth={2} name="Ativos" />
+                  <Line type="monotone" dataKey="concluidos" stroke="oklch(0.70 0.26 300)" strokeWidth={2} name="Concluídos" />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="card-glow-hover glassmorphic">

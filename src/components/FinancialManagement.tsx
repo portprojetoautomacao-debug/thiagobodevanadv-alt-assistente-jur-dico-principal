@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { CurrencyCircleDollar, Plus, TrendUp, TrendDown } from '@phosphor-icons/react'
+import { CurrencyCircleDollar, Plus, TrendUp, TrendDown, DownloadSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { FinancialEntry } from '@/types'
+import { exportToCSV, formatCurrency } from '@/lib/utils'
 
 export default function FinancialManagement() {
   const [entries, setEntries] = useKV<FinancialEntry[]>('financialEntries', [])
@@ -60,11 +61,16 @@ export default function FinancialManagement() {
     toast.success('Lançamento adicionado')
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value)
+  const handleExportCSV = () => {
+    const exportData = (entries || []).map(e => ({
+      'Tipo': e.type === 'income' ? 'Receita' : 'Despesa',
+      'Categoria': e.category,
+      'Descrição': e.description,
+      'Valor': e.amount,
+      'Data': e.date
+    }))
+    exportToCSV(exportData, 'financeiro')
+    toast.success('Dados exportados com sucesso!')
   }
 
   return (
@@ -76,14 +82,19 @@ export default function FinancialManagement() {
             Controle de receitas e despesas
           </p>
         </div>
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Lançamento
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <DownloadSimple className="w-4 h-4 mr-2" />
+            Exportar CSV
+          </Button>
+          <Dialog open={showDialog} onOpenChange={setShowDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Lançamento
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Adicionar Lançamento</DialogTitle>
               <DialogDescription>
@@ -153,7 +164,8 @@ export default function FinancialManagement() {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
