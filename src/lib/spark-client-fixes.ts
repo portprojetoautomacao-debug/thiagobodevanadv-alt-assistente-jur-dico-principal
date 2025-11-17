@@ -10,7 +10,7 @@ interface SparkKV {
   set: (key: string, value: unknown) => Promise<unknown>
   delete: (key: string) => Promise<void>
   keys: () => Promise<string[]>
-  [key: string]: unknown // for other properties that might exist
+  [key: string]: unknown // Allow other properties
 }
 
 interface SparkLLM {
@@ -26,7 +26,6 @@ interface SparkWindow extends Window {
   spark?: SparkGlobal
 }
 
-// Type for response objects that can be either fetch Response or plain object with text()
 interface ResponseLike {
   text: () => Promise<string>
   json?: () => Promise<unknown>
@@ -177,8 +176,8 @@ export function applySparkClientFixes() {
 
     // Keep other properties of kv that might be used (events etc.)
     for (const k of Object.keys(original)) {
-      if (!(k in patchedKV)) {
-        patchedKV[k] = original[k];
+      if (!(k in w.spark.kv)) {
+        w.spark.kv[k] = original[k];
       }
     }
 
@@ -229,7 +228,7 @@ export function applySparkLLMFixes() {
             }
             // try to extract the expected content if possible
             if (data && typeof data === 'object' && 'choices' in data) {
-              const choices = (data as { choices?: Array<{ message?: { content?: unknown } }> }).choices;
+              const choices = data.choices as Array<{ message?: { content?: unknown } }>;
               if (choices?.[0]?.message?.content) return choices[0].message.content;
             }
             return data;
@@ -238,11 +237,13 @@ export function applySparkLLMFixes() {
           return text;
         } catch (e) {
           console.error('LLM diagnostic fetch failed:', e);
+          const diagnosticMsg = e instanceof Error ? e.message : String(e);
+          const originalMsg = err instanceof Error ? err.message : String(err);
           // Lança um erro combinando informações do erro de diagnóstico e do erro original
           const diagnosticMessage = e instanceof Error ? e.message : String(e);
           const originalMessage = err instanceof Error ? err.message : String(err);
           throw new Error(
-            `LLM diagnostic fetch failed: ${diagnosticMessage} | Original error: ${originalMessage}`
+            `LLM diagnostic fetch failed: ${diagnosticMsg} | Original error: ${originalMsg}`
           );
         }
       }
