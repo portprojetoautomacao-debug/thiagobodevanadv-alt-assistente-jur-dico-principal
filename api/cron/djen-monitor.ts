@@ -8,16 +8,19 @@
  * This cron job will:
  * 1. Query DJEN/DataJud APIs for new publications
  * 2. Filter publications relevant to tracked lawyers/processes
- * 3. Store new publications in the system
+ * 3. Store new publications in Vercel KV
  * 4. Generate notifications for users
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getMonitoredLawyers, storePublication, updateLastDJENCheck, queueNotification } from '../lib/kv-utils';
+import { consultarDJENForLawyer } from '../lib/djen-client';
 
 interface DJENMonitorResult {
   success: boolean;
   timestamp: string;
   publicationsFound: number;
+  lawyersChecked: number;
   tribunaisChecked: string[];
   errors: string[];
 }
@@ -39,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Default tribunals to monitor
-    const tribunais = process.env.DJEN_TRIBUNAIS?.split(',') || [
+    const defaultTribunais = process.env.DJEN_TRIBUNAIS?.split(',') || [
       'TST', 'TRT3', 'TJMG', 'TRF1', 'TJES', 'TJSP', 'STJ'
     ];
 
@@ -47,35 +50,98 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       timestamp,
       publicationsFound: 0,
-      tribunaisChecked: tribunais,
+      lawyersChecked: 0,
+      tribunaisChecked: defaultTribunais,
       errors: []
     };
 
-    // Note: In a real implementation, this would:
-    // 1. Connect to Spark KV to get list of lawyers/processes to monitor
-    // 2. Query each tribunal's DJEN API
-    // 3. Filter results based on lawyer OAB numbers or process numbers
-    // 4. Store new publications in Spark KV
-    // 5. Trigger notifications via Spark notifications system
-    
-    // For now, we'll log that the cron ran successfully
-    console.log(`[DJEN Monitor Cron] Would check ${tribunais.length} tribunals`);
-    console.log(`[DJEN Monitor Cron] This is a placeholder implementation`);
-    console.log(`[DJEN Monitor Cron] In production, this would:`);
-    console.log(`  - Query DJEN APIs for publications`);
-    console.log(`  - Filter by tracked lawyers/processes`);
-    console.log(`  - Store new publications`);
-    console.log(`  - Send notifications to users`);
+    // Get monitored lawyers from Vercel KV
+    const lawyers = await getMonitoredLawyers();
+    console.log(`[DJEN Monitor Cron] Found ${lawyers.length} monitored lawyers`);
+
+    if (lawyers.length === 0) {
+      console.log(`[DJEN Monitor Cron] No monitored lawyers configured. Use Vercel KV to add lawyers.`);
+      return res.status(200).json({
+        ok: true,
+        message: 'DJEN monitor executed - no lawyers configured',
+        result,
+        note: 'Configure monitored lawyers in Vercel KV with key "monitored-lawyers"'
+      });
+    }
+
+    // Query DJEN for each enabled lawyer
+    for (const lawyer of lawyers) {
+      if (!lawyer.enabled) {
+        console.log(`[DJEN Monitor Cron] Skipping disabled lawyer: ${lawyer.name}`);
+        continue;
+      }
+
+      result.lawyersChecked++;
+      const tribunais = lawyer.tribunals.length > 0 ? lawyer.tribunals : defaultTribunais;
+
+      try {
+        console.log(`[DJEN Monitor Cron] Checking publications for ${lawyer.name} (${lawyer.oab})`);
+        
+        const { resultados, erros } = await consultarDJENForLawyer(
+          tribunais,
+          lawyer.name,
+          lawyer.oab
+        );
+
+        console.log(`[DJEN Monitor Cron] Found ${resultados.length} publications for ${lawyer.name}`);
+
+        // Store each publication
+        for (const pub of resultados) {
+          const storedPub = {
+            id: crypto.randomUUID(),
+            ...pub,
+            lawyerId: lawyer.id,
+            notified: false,
+            createdAt: timestamp
+          };
+
+          await storePublication(storedPub);
+          result.publicationsFound++;
+
+          // Queue notification
+          if (lawyer.email) {
+            await queueNotification({
+              type: 'publication',
+              title: `Nova publicação - ${pub.tribunal}`,
+              message: `Publicação encontrada para ${lawyer.name} no tribunal ${pub.tribunal}`,
+              data: storedPub,
+              recipientEmail: lawyer.email
+            });
+          }
+        }
+
+        // Log errors
+        for (const erro of erros) {
+          const errorMsg = `${erro.tribunal}: ${erro.erro}`;
+          result.errors.push(errorMsg);
+          console.warn(`[DJEN Monitor Cron] ${errorMsg}`);
+        }
+
+      } catch (error) {
+        const errorMsg = `Error checking ${lawyer.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        result.errors.push(errorMsg);
+        console.error(`[DJEN Monitor Cron] ${errorMsg}`);
+      }
+    }
+
+    // Update last check timestamp
+    await updateLastDJENCheck();
+
+    console.log(`[DJEN Monitor Cron] Completed: ${result.publicationsFound} publications found`);
 
     return res.status(200).json({
       ok: true,
       message: 'DJEN monitor cron executed successfully',
-      result,
-      note: 'This is a placeholder implementation. Full DJEN monitoring requires backend state management.'
+      result
     });
 
   } catch (error) {
-    console.error('[DJEN Monitor Cron] Error:', error);
+    console.error('[DJEN Monitor Cron] Fatal error:', error);
     
     return res.status(500).json({
       ok: false,
