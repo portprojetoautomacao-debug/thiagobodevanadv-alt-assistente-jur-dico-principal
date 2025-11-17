@@ -34,6 +34,9 @@ export function applySparkClientFixes() {
 
       // Fall back to text and inspect
       // @ts-ignore
+      if (!response || typeof response.text !== 'function') {
+        return undefined;
+      }
       const text = await response.text();
       const trimmed = (text || '').trim();
       if (!trimmed) return undefined;
