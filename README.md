@@ -2,6 +2,10 @@
 
 > Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
 
+[![CI](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/CI/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/ci.yml)
+[![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
+[![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
+
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
 ## 🚀 Características Principais
@@ -93,15 +97,28 @@ src/
 
 ## 📖 Documentação
 
-- `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel** ⭐
+### Guias Essenciais
+- 🚀 `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - **Guia completo de CI/CD e Deploy Automático** ⭐
+- 🚀 `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel**
+- 🤖 `GITHUB_COPILOT_AGENT.md` - **Configuração do GitHub Copilot agent**
+
+### CI/CD e Deploy
+- `GITHUB_ACTIONS_CONFIGURADO.md` - Setup inicial do GitHub Actions
+- `GITHUB_ACTIONS_CORRECOES.md` - Correções e melhorias aplicadas
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
-- `GITHUB_COPILOT_AGENT.md` - **Configuração do GitHub Copilot agent** 🤖
-- `PRD.md` - Documento de requisitos do produto
-- `OAUTH_SETUP.md` - Guia de configuração OAuth
+- `DEPLOYMENT_FIX_COMPLETE.md` - Solução de problemas de deployment
+
+### Funcionalidades
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
+- `DJEN_DOCUMENTATION.md` - Integração DJEN/DataJud
+- `PREMONICAO_JURIDICA.md` - Sistema de premonição jurídica
+- `MULTI_SOURCE_PUBLICATIONS.md` - Publicações multi-fonte
+
+### Configuração
+- `OAUTH_SETUP.md` - Guia de configuração OAuth
+- `PRD.md` - Documento de requisitos do produto
 - `SECURITY.md` - Políticas de segurança
-- `DJEN_DOCUMENTATION.md` - Integração DJEN
-- `PREMONICAO_JURIDICA.md` - Sistema de premonição
+- `QUICKSTART.md` - Início rápido
 
 ## 🎨 Stack Tecnológica
 
@@ -137,6 +154,21 @@ npm run lint         # Lint código
 
 ## 🌐 Deploy
 
+### ⚡ Deploy Automático (GitHub Actions + Vercel)
+
+Este projeto possui **deploy automático** configurado com GitHub Actions:
+
+✅ **Deploy em Produção**: Automático ao fazer merge na branch `main`  
+✅ **Deploy Preview**: Automático em cada Pull Request  
+✅ **Deploy Manual**: Via workflow_dispatch no GitHub Actions
+
+**Para configurar:**
+1. Configure os secrets necessários no GitHub (Settings → Secrets → Actions)
+2. Conecte o repositório ao Vercel
+3. Pronto! Deploys automáticos em cada push
+
+📖 **Guia completo**: Veja `GITHUB_ACTIONS_DEPLOY_GUIDE.md` para instruções detalhadas
+
 ### Vercel (Recomendado) ⭐
 
 **Deploy com 1 clique:**
@@ -155,7 +187,10 @@ VITE_REDIRECT_URI=https://seu-app.vercel.app
 VITE_APP_ENV=production
 ```
 
-📖 **Guia completo de deploy**: Veja `GUIA_DEPLOY_SIMPLES.md` e `VERCEL_DEPLOYMENT.md`
+📖 **Guias de deploy**: 
+- `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - Deploy automático (recomendado)
+- `GUIA_DEPLOY_SIMPLES.md` - Deploy manual
+- `VERCEL_DEPLOYMENT.md` - Documentação completa
 
 ### Render (Alternativa)
 
