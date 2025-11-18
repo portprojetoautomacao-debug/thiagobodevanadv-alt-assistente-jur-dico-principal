@@ -39,10 +39,24 @@ jobs:
         fi
 
     - name: Lint code
-      run: npm run lint
+      run: |
+        echo "Running linter on PR changes..."
+        if ! npm run lint; then
+          echo "❌ Linting failed"
+          echo "Please fix the linting errors in your PR"
+          exit 1
+        fi
+        echo "✅ Linting passed"
 
     - name: Build application
-      run: npm run build
+      run: |
+        echo "Building application from PR..."
+        npm run build || {
+          echo "❌ Build failed"
+          echo "Please fix the build errors in your PR"
+          exit 1
+        }
+        echo "✅ Build successful"
       env:
         VITE_GOOGLE_CLIENT_ID: 'dummy-client-id'
         VITE_GOOGLE_API_KEY: 'dummy-api-key'
@@ -84,16 +98,33 @@ jobs:
           const { number } = context.issue;
           
           let body = '## 🤖 PR Validation Summary\n\n';
-          body += '✅ All checks passed!\n\n';
-          body += '### Checks performed:\n';
-          body += '- ✅ No merge conflicts\n';
-          body += '- ✅ Code linting passed\n';
-          body += '- ✅ Build successful\n';
-          body += '- ✅ Tests executed\n';
+          
+          const checks = [
+            { name: 'No merge conflicts', status: '✅' },
+            { name: 'Code linting', status: '✅' },
+            { name: 'Build successful', status: '✅' },
+            { name: 'Tests executed', status: '✅' }
+          ];
+          
+          body += '### Validation Results\n\n';
+          checks.forEach(check => {
+            body += `- ${check.status} ${check.name}\n`;
+          });
           
           if ('${{ steps.package-check.outputs.changed }}' === 'true') {
-            body += '- ⚠️ Dependencies changed - please review\n';
+            body += '\n### ⚠️ Dependencies Changed\n';
+            body += '- package.json was modified\n';
+            body += '- package-lock.json was updated\n';
+            body += '- Please review the dependency changes\n';
           }
+          
+          body += '\n### 📊 Next Steps\n';
+          body += '- Review the changes carefully\n';
+          body += '- Check the preview deployment when ready\n';
+          body += '- Request reviews from team members\n';
+          body += '- Merge when all checks pass\n';
+          
+          body += '\n---\n*Automated validation by GitHub Actions*';
           
           await github.rest.issues.createComment({
             owner,
