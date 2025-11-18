@@ -284,26 +284,65 @@ O GitHub Actions automaticamente:
   - Ver [CHANGELOG.md](./CHANGELOG.md) para detalhes completos
 
 
-### Render (Alternativa)
+### 🌐 Outras Plataformas Gratuitas
 
-Se preferir usar Render ao invés de Vercel:
+Além do Vercel, você pode usar outras plataformas 100% gratuitas:
 
-1. Configure variáveis de ambiente no dashboard:
-   - `VITE_GOOGLE_CLIENT_ID`
-   - `VITE_REDIRECT_URI`
-   - `VITE_APP_ENV=production`
+#### Render (100% Gratuito)
 
-2. Adicione URI de produção no Google Cloud Console
+Deploy automático com `render.yaml` já configurado!
 
-3. Deploy automático via Git push
+👉 **[GUIA_DEPLOY_RENDER.md](./GUIA_DEPLOY_RENDER.md)** - Guia completo passo a passo (15 min) ⭐
 
-**Build & Start:**
-- Build Command: `npm install && npm run build`
-- Start Command: `npm start` (serves static files on port 10000)
+**TL;DR:**
+- Conecte ao GitHub
+- Configure variáveis de ambiente
+- Deploy automático a cada push
+- ⚠️ App "dorme" após 15 min de inatividade
 
-### Outras Plataformas
+#### Netlify (Recomendado para Sites Estáticos)
 
-Compatível com Vercel, Netlify, e qualquer host de SPA.
+Deploy super rápido com CDN global!
+
+👉 **[GUIA_DEPLOY_NETLIFY.md](./GUIA_DEPLOY_NETLIFY.md)** - Guia completo com CLI e interface
+
+**TL;DR:**
+- Arquivo `netlify.toml` já configurado
+- SSL automático
+- Preview de PRs
+- 100 GB/mês de banda grátis
+
+#### Railway ($5/mês grátis)
+
+Melhor se precisar de PostgreSQL grátis!
+
+👉 **[GUIA_DEPLOY_RAILWAY.md](./GUIA_DEPLOY_RAILWAY.md)** - Guia completo
+
+**TL;DR:**
+- $5/mês em créditos grátis
+- PostgreSQL incluído
+- App sempre ativo (sem sleep)
+- Requer cartão (não cobra)
+
+#### 📊 Comparação de Plataformas
+
+Não sabe qual escolher? Veja a comparação completa:
+
+👉 **[PLATAFORMAS_DEPLOY_GRATIS.md](./PLATAFORMAS_DEPLOY_GRATIS.md)** - Comparação detalhada ⭐
+
+Inclui: Vercel, Render, Netlify, Railway, Fly.io, Cloudflare Pages
+
+### Compatibilidade
+
+Este app é compatível com qualquer plataforma que suporte aplicações React/Vite:
+- ✅ Vercel (recomendado)
+- ✅ Render
+- ✅ Netlify
+- ✅ Railway
+- ✅ Fly.io
+- ✅ Cloudflare Pages
+- ✅ GitHub Pages (com algumas limitações)
+- ✅ Qualquer host de SPA
 
 ## 🧹 Começando do Zero?
 
