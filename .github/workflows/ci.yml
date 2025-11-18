@@ -45,11 +45,11 @@ jobs:
     - name: Run linter
       run: |
         echo "Running ESLint..."
-        npm run lint || {
+        if ! npm run lint; then
           echo "❌ Linting failed"
           echo "Please fix the linting errors before proceeding"
           exit 1
-        }
+        fi
         echo "✅ Linting passed"
       continue-on-error: false
 
