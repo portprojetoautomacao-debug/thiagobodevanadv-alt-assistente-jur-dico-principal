@@ -7,14 +7,13 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import {
   PaperPlaneTilt,
   ChartBar,
   Briefcase,
   Bell,
   CurrencyCircleDollar,
-  Users,
-  Calendar,
 } from '@phosphor-icons/react'
 
 interface Message {
@@ -75,7 +74,10 @@ export default function HarveySpecter() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight
+      }
     }
   }, [messages])
 
@@ -177,6 +179,10 @@ export default function HarveySpecter() {
 
   const generateResponse = async (userQuery: string): Promise<string> => {
     try {
+      if (typeof spark === 'undefined' || !spark.llm || !spark.llmPrompt) {
+        throw new Error('Spark SDK not available')
+      }
+
       const prompt = spark.llmPrompt`Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
 
 Contexto do escritório:
@@ -323,9 +329,9 @@ O que você gostaria de saber?`
       timestamp: new Date().toISOString(),
     }
 
+    setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+
     try {
-      setMessages((currentMessages) => [...(currentMessages || []), userMessage])
-      
       const responseContent = await generateResponse(query)
       const insights = getInsights(query)
 
@@ -353,6 +359,7 @@ O que você gostaria de saber?`
       }
       
       setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
+      toast.error('Erro ao processar mensagem')
     } finally {
       setIsProcessing(false)
     }
@@ -367,9 +374,50 @@ O que você gostaria de saber?`
 
   const handleQuickQuestion = async (question: string) => {
     if (isProcessing) return
-    setInput(question)
-    await new Promise(resolve => setTimeout(resolve, 150))
-    await handleSend()
+    
+    setIsProcessing(true)
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: question,
+      timestamp: new Date().toISOString(),
+    }
+
+    setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+
+    try {
+      const responseContent = await generateResponse(question)
+      const insights = getInsights(question)
+
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date().toISOString(),
+        insights: insights,
+      }
+
+      setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
+    } catch (error) {
+      console.error('Error sending message:', error)
+      
+      const isTimeout = error instanceof Error && error.message === 'Timeout'
+      
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: isTimeout 
+          ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
+          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
+        timestamp: new Date().toISOString(),
+      }
+      
+      setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
+      toast.error('Erro ao processar mensagem')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const getInsightIcon = (type: string) => {
@@ -421,8 +469,9 @@ O que você gostaria de saber?`
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <ScrollArea className="flex-1 px-6 py-4" ref={scrollRef}>
-          {!messages || messages.length === 0 ? (
+        <div className="flex-1 overflow-hidden" ref={scrollRef}>
+          <ScrollArea className="h-full px-6 py-4">
+            {!messages || messages.length === 0 ? (
             <div className="space-y-6">
               <div className="text-center py-8">
                 <h2 className="text-xl font-semibold text-foreground mb-2">
@@ -559,7 +608,8 @@ O que você gostaria de saber?`
               )}
             </div>
           )}
-        </ScrollArea>
+          </ScrollArea>
+        </div>
 
         <Separator />
         
