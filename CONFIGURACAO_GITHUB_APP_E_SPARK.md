@@ -330,7 +330,7 @@ VITE_REDIRECT_URI = https://assistente-jurídico-último.vercel.app
 | `GITHUB_PRIVATE_KEY` | `-----BEGIN RSA PRIVATE KEY-----...` | ⬜ Opcional | GitHub App settings |
 | `VERCEL_TOKEN` | `ROh3NzABqd1N5Ksm68N3n68L` | ✅ Sim (Deploy) | https://vercel.com/account/tokens |
 | `VERCEL_ORG_ID` | `team_xxxxxxxxxxxxx` | ✅ Sim (Deploy) | Via `vercel link` |
-| `VERCEL_PROJECT_ID` | `5BKmD71HE` | ✅ Sim (Deploy) | Confirmado do dashboard |
+| `VERCEL_PROJECT_ID` | `prj_xxxxxxxxxxxxx` | ✅ Sim (Deploy) | Confirmado do dashboard |
 | `VITE_GOOGLE_CLIENT_ID` | `123456-abc.apps.googleusercontent.com` | ✅ Sim (OAuth) | Google Cloud Console |
 | `VITE_GOOGLE_API_KEY` | `AIzaSyXXXXXXXXXXXXXXXXXX` | ✅ Sim (OAuth) | Google Cloud Console |
 | `GOOGLE_API_KEY` | `AIzaSyXXXXXXXXXXXXXXXXXX` | ⬜ Opcional | Mesmo que acima |
