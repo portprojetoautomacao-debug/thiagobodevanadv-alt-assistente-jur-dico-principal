@@ -117,6 +117,9 @@ src/
 - 🔧 `MIGRACAO_VERCEL_KV.md` - **Migração para Vercel KV (código e hooks)** 🆕
 
 ### CI/CD e Deploy
+- 🔑 `CONFIGURACAO_VERCEL_TOKEN.md` - **Configuração do token Vercel para deploy automático** 🆕 ⭐
+- 📋 `GITHUB_SECRETS_CHECKLIST.md` - **Checklist rápido para configurar secrets** 🆕 ⭐
+- `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - Guia completo de CI/CD
 - `GITHUB_ACTIONS_CONFIGURADO.md` - Setup inicial do GitHub Actions
 - `GITHUB_ACTIONS_CORRECOES.md` - Correções e melhorias aplicadas
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
