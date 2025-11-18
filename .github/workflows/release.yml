@@ -73,11 +73,23 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Deploy to production
-      run: |
-        echo "🚀 Triggering production deployment..."
-        # This will trigger the deploy workflow
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          console.log('🚀 Triggering production deployment workflow...');
+          
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'deploy.yml',
+            ref: 'main',
+            inputs: {
+              environment: 'production'
+            }
+          });
+          
+          console.log('✅ Production deployment workflow triggered successfully');
 
   notify-release:
     name: Notify Release
