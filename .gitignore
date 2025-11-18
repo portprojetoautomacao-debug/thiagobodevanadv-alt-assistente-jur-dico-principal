@@ -32,3 +32,19 @@ pids
 .devcontainer/
 
 .spark-workbench-id
+
+# Screenshots and documentation images
+*.png
+!docs/**/*.png
+!public/**/*.png
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# OS files
+Thumbs.db
+.DS_Store
