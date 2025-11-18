@@ -2,9 +2,11 @@
 
 > Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/releases/tag/v1.0.0)
 [![CI](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/CI/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/ci.yml)
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
 
@@ -245,6 +247,42 @@ As variáveis `KV_REST_API_URL`, `KV_REST_API_TOKEN` e `KV_REST_API_READ_ONLY_TO
 - `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - Deploy automático (recomendado)
 - `GUIA_DEPLOY_SIMPLES.md` - Deploy manual
 - `VERCEL_DEPLOYMENT.md` - Documentação completa
+- `VERSIONAMENTO.md` - Guia de versionamento e releases
+
+## 🏷️ Versionamento e Releases
+
+Este projeto segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/) e possui **releases automáticas** via GitHub Actions.
+
+**Versão Atual:** `v1.0.0` 🎉
+
+### Como fazer uma nova release
+
+```bash
+# 1. Atualize o CHANGELOG.md
+# 2. Atualize a versão no package.json
+npm version [major|minor|patch]
+
+# 3. Faça push da tag (isso aciona deploy automático!)
+git push origin main
+git push origin v1.x.x
+```
+
+O GitHub Actions automaticamente:
+- ✅ Executa testes e build
+- ✅ Cria GitHub Release com notas do CHANGELOG
+- ✅ Faz deploy para produção no Vercel
+- ✅ Gera arquivo ZIP da aplicação
+
+📖 **Guia completo**: Veja [`VERSIONAMENTO.md`](./VERSIONAMENTO.md) para detalhes
+
+### Histórico de Versões
+
+- **v1.0.0** (2025-11-18) - Primeira versão estável oficial
+  - Dashboard inteligente com 7 agentes IA autônomos
+  - Integrações DJEN/DataJud e Google Calendar
+  - Sistema completo de gestão jurídica
+  - Ver [CHANGELOG.md](./CHANGELOG.md) para detalhes completos
+
 
 ### Render (Alternativa)
 
