@@ -6,6 +6,16 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
+## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
+
+**Se você teve problemas ao fazer o deploy na Vercel:**
+
+👉 **[GUIA_RAPIDO_DEPLOY.md](./GUIA_RAPIDO_DEPLOY.md)** - ⚡ Solução em 3 passos (5 min) ⭐  
+👉 **[VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md)** - Checklist completo de variáveis  
+👉 **[RESOLUCAO_DEPLOY.md](./RESOLUCAO_DEPLOY.md)** - Análise detalhada do problema
+
+**TL;DR**: O build funciona! Você só precisa configurar 2 variáveis de ambiente na Vercel: `GITHUB_RUNTIME_PERMANENT_NAME` e `GITHUB_TOKEN`. Execute `./verificar-deploy.sh` para verificar tudo antes do deploy.
+
 ## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI PRIMEIRO!
 
 **Se você está vendo erros 403 Forbidden, "Failed to fetch KV key", ou problemas com GitHub App Callback URL:**
