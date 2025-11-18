@@ -6,7 +6,21 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
-## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI PRIMEIRO!
+## 🚀 DEPLOY NO VERCEL - COMECE AQUI!
+
+**Quer fazer deploy pela primeira vez ou está com problemas?**
+
+👉 **[INDICE_DEPLOY.md](./INDICE_DEPLOY.md)** - 📚 Índice completo de documentação de deploy ⭐  
+👉 **[DEPLOY_RAPIDO.md](./DEPLOY_RAPIDO.md)** - ⚡ Deploy em 3 passos (5-10 min)  
+👉 **[TROUBLESHOOTING_DEPLOY.md](./TROUBLESHOOTING_DEPLOY.md)** - 🔧 Solução de problemas
+
+**Verificar configuração antes do deploy:**
+```bash
+chmod +x verificar-deploy.sh
+./verificar-deploy.sh
+```
+
+## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI!
 
 **Se você está vendo erros 403 Forbidden, "Failed to fetch KV key", ou problemas com GitHub App Callback URL:**
 
