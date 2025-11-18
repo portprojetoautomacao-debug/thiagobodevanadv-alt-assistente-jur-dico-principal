@@ -6,6 +6,8 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
+> **🆕 Atualização Importante**: Os erros 403 no Vercel foram corrigidos! A aplicação agora usa Vercel KV ao invés de GitHub Spark KV. Ver [guia de migração](MIGRACAO_VERCEL_KV.md) para detalhes.
+
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
 ## 🚀 Características Principais
@@ -101,12 +103,14 @@ src/
 - 🚀 `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - **Guia completo de CI/CD e Deploy Automático** ⭐
 - 🚀 `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel**
 - 🤖 `GITHUB_COPILOT_AGENT.md` - **Configuração do GitHub Copilot agent**
+- 🔧 `MIGRACAO_VERCEL_KV.md` - **Migração para Vercel KV (correção erros 403)** 🆕
 
 ### CI/CD e Deploy
 - `GITHUB_ACTIONS_CONFIGURADO.md` - Setup inicial do GitHub Actions
 - `GITHUB_ACTIONS_CORRECOES.md` - Correções e melhorias aplicadas
 - `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
 - `DEPLOYMENT_FIX_COMPLETE.md` - Solução de problemas de deployment
+- `VERCEL_KV_SETUP.md` - Configuração do Vercel KV storage
 
 ### Funcionalidades
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
@@ -127,7 +131,7 @@ src/
 - **Styling**: Tailwind CSS v4
 - **Components**: shadcn/ui v4
 - **Icons**: Phosphor Icons
-- **State**: Spark KV (useKV hook)
+- **State**: Custom KV hook + Vercel KV (localStorage em dev)
 - **Forms**: React Hook Form + Zod
 - **Charts**: Recharts
 - **AI**: Spark LLM (GPT-4)
