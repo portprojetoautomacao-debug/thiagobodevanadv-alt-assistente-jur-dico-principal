@@ -196,6 +196,22 @@ npm run lint         # Lint código
 
 ## 🌐 Deploy
 
+### 🚀 COMECE AQUI: Escolha Sua Plataforma
+
+**Não sabe qual plataforma usar?**
+
+👉 **[ESCOLHA_PLATAFORMA_DEPLOY.md](./ESCOLHA_PLATAFORMA_DEPLOY.md)** - ⚡ Decisão em 30 segundos ⭐
+
+**TL;DR:**
+- **Vercel**: Melhor performance, já configurado
+- **Render**: 100% grátis, sem cartão (com sleep)
+- **Netlify**: CDN global, super rápido
+- **Railway**: $5/mês grátis + PostgreSQL
+
+📊 [Ver comparação completa](./PLATAFORMAS_DEPLOY_GRATIS.md)
+
+---
+
 ### ⚡ Deploy Automático (GitHub Actions + Vercel)
 
 Este projeto possui **deploy automático** configurado com GitHub Actions:
