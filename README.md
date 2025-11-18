@@ -6,15 +6,16 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
-## 🔥 ERROS 403? LEIA AQUI PRIMEIRO!
+## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI PRIMEIRO!
 
-**Se você está vendo erros 403 Forbidden ou "Failed to fetch KV key":**
+**Se você está vendo erros 403 Forbidden, "Failed to fetch KV key", ou problemas com GitHub App Callback URL:**
 
+👉 **[CONFIGURACAO_GITHUB_APP_E_SPARK.md](./CONFIGURACAO_GITHUB_APP_E_SPARK.md)** - 🆕 Guia completo (25 min) ⭐  
 👉 **[QUICK_FIX_403.md](./QUICK_FIX_403.md)** - Solução em 60 segundos  
 👉 **[CORRECAO_RAPIDA_403.md](./CORRECAO_RAPIDA_403.md)** - Guia rápido (10 minutos)  
 👉 **[VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)** - Guia completo passo a passo
 
-**TL;DR**: Você precisa configurar `GITHUB_TOKEN` e `GITHUB_RUNTIME_PERMANENT_NAME` nas variáveis de ambiente do Vercel. Veja os guias acima.
+**TL;DR**: Você precisa configurar `GITHUB_TOKEN` e `GITHUB_RUNTIME_PERMANENT_NAME` nas variáveis de ambiente do Vercel + configurar Callback URL no GitHub App. Veja os guias acima.
 
 ---
 

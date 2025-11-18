@@ -117,7 +117,7 @@ Environments: ✅ Production  ✅ Preview  ✅ Development
 ```
 *Save*
 
-#### Variável 4/4: VITE_APP_ENV
+#### Variável 4/6: VITE_APP_ENV
 ```
 Key: VITE_APP_ENV
 Value: production
@@ -125,7 +125,29 @@ Environments: ✅ Production  ⬜ Preview  ⬜ Development
 ```
 *Save*
 
+#### Variável 5/6: GITHUB_TOKEN ⚠️ IMPORTANTE
+```
+Key: GITHUB_TOKEN
+Value: [Token do GitHub com scopes: repo, workflow]
+Environments: ✅ Production  ✅ Preview  ✅ Development
+```
+*Obter em: https://github.com/settings/tokens/new*  
+*Necessário para evitar erros 403 do Spark API*  
+*Save*
+
+#### Variável 6/6: GITHUB_RUNTIME_PERMANENT_NAME ⚠️ IMPORTANTE
+```
+Key: GITHUB_RUNTIME_PERMANENT_NAME
+Value: [Valor do arquivo runtime.config.json - ex: 97a1cb1e48835e0ecf1e]
+Environments: ✅ Production  ✅ Preview  ✅ Development
+```
+*Obter executando: cat runtime.config.json*  
+*Necessário para evitar erros 403 do Spark API*  
+*Save*
+
 **Importante:** Após salvar todas, clique em **"Redeploy"** no último deployment para aplicar as variáveis.
+
+**Veja também:** `CONFIGURACAO_GITHUB_APP_E_SPARK.md` para configuração detalhada do GitHub App e solução de erros 403.
 
 ---
 
