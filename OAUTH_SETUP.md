@@ -2,6 +2,8 @@
 
 This application uses Google OAuth 2.0 for authentication. Follow these steps to configure it properly.
 
+> **🚀 Para deploy no Vercel:** Veja o guia específico [VERCEL_OAUTH_SETUP.md](./VERCEL_OAUTH_SETUP.md) com instruções passo a passo e URLs pré-configuradas.
+
 ## ⚠️ Security Warning
 
 **NEVER commit your OAuth client secret to version control!** Client secrets should be treated like passwords.
@@ -97,8 +99,12 @@ The app should be available at `http://localhost:5173`
 Based on the information provided:
 
 - **Client ID:** `572929400457-lufh2hv2dt7129mikbr1e9k5h1copv4s.apps.googleusercontent.com`
-- **Production URL:** `https://assistente-juridico-rs1e.onrender.com`
+- **Production URL (Render):** `https://assistente-juridico-rs1e.onrender.com`
+- **Production URL (Vercel):** `https://assistente-juridico-ultimo.vercel.app`
+- **Preview URL (Vercel):** `https://assistente-juridico-ultimo-git-main-thiagos-projects-9834ca6f.vercel.app`
 - **Client Created:** November 14, 2025
+
+> **Nota:** Para o deploy no Vercel, use as URLs do Vercel em "Authorized JavaScript origins" e "Authorized redirect URIs" no Google Cloud Console. Veja [VERCEL_OAUTH_SETUP.md](./VERCEL_OAUTH_SETUP.md) para instruções detalhadas.
 
 ## Troubleshooting
 
