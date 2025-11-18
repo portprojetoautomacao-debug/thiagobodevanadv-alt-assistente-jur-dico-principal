@@ -262,8 +262,8 @@ jobs:
           echo "5. **Review documentation:** \`CONFIGURACAO_VERCEL_TOKEN.md\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📚 Helpful Resources" >> $GITHUB_STEP_SUMMARY
-          echo "- [Vercel Token Setup Guide](./CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [GitHub Actions Deploy Guide](./GITHUB_ACTIONS_DEPLOY_GUIDE.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Vercel Token Setup Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Actions Deploy Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/GITHUB_ACTIONS_DEPLOY_GUIDE.md)" >> $GITHUB_STEP_SUMMARY
           echo "- [Vercel Documentation](https://vercel.com/docs)" >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
