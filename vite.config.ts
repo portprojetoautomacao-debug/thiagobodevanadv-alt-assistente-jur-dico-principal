@@ -22,4 +22,58 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // React core
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react-vendor';
+          }
+          
+          // Radix UI components
+          if (id.includes('@radix-ui')) {
+            return 'ui-vendor';
+          }
+          
+          // Charts libraries
+          if (id.includes('recharts') || id.includes('d3')) {
+            return 'charts';
+          }
+          
+          // Form libraries
+          if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform/resolvers')) {
+            return 'forms';
+          }
+          
+          // Phosphor icons
+          if (id.includes('@phosphor-icons/react')) {
+            return 'icons';
+          }
+          
+          // GitHub Spark
+          if (id.includes('@github/spark')) {
+            return 'spark';
+          }
+          
+          // Framer Motion
+          if (id.includes('framer-motion')) {
+            return 'animation';
+          }
+          
+          // Three.js
+          if (id.includes('three')) {
+            return 'three';
+          }
+          
+          // Other utilities
+          if (id.includes('date-fns') || id.includes('clsx') || 
+              id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
+            return 'utils';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600,
+  }
 });
