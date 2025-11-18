@@ -41,11 +41,11 @@ jobs:
     - name: Lint code
       run: |
         echo "Running linter on PR changes..."
-        npm run lint || {
+        if ! npm run lint; then
           echo "❌ Linting failed"
           echo "Please fix the linting errors in your PR"
           exit 1
-        }
+        fi
         echo "✅ Linting passed"
 
     - name: Build application
