@@ -318,18 +318,51 @@ VITE_REDIRECT_URI = https://assistente-jurídico-último.vercel.app
 
 ### No Vercel Environment Variables
 
-| Variável | Valor Exemplo | Obrigatória? |
-|----------|---------------|--------------|
-| `GITHUB_TOKEN` | `ghp_xxxxx` | ✅ Sim (Spark) |
-| `GITHUB_RUNTIME_PERMANENT_NAME` | `97a1cb1e48835e0ecf1e` | ✅ Sim (Spark) |
-| `VERCEL_TOKEN` | `ROh3NzABqd1N5Ksm68N3n68L` | ✅ Sim (Deploy) |
-| `VERCEL_ORG_ID` | `team_xxxxx` | ✅ Sim (Deploy) |
-| `VERCEL_PROJECT_ID` | `5BKmD71HE` | ✅ Sim (Deploy) |
-| `VITE_GOOGLE_CLIENT_ID` | `xxxxx.apps.googleusercontent.com` | ✅ Sim (OAuth) |
-| `VITE_GOOGLE_API_KEY` | `AIzaSyxxxxx` | ✅ Sim (OAuth) |
-| `VITE_REDIRECT_URI` | `https://assistente-jurídico-último.vercel.app` | ✅ Sim (OAuth) |
-| `VITE_APP_ENV` | `production` | ✅ Sim |
-| `GITHUB_API_URL` | `https://api.github.com` | ⬜ Opcional |
+⚠️ **IMPORTANTE:** Os valores abaixo são EXEMPLOS FORMATADOS. Use suas credenciais reais, mas **NUNCA** compartilhe em comentários públicos!
+
+| Variável | Formato/Exemplo | Obrigatória? | Onde Obter |
+|----------|-----------------|--------------|------------|
+| `GITHUB_TOKEN` | `ghp_xxxxxxxxxxxxxxxxxxxxx` | ✅ Sim (Spark) | https://github.com/settings/tokens |
+| `GITHUB_RUNTIME_PERMANENT_NAME` | `97a1cb1e48835e0ecf1e` | ✅ Sim (Spark) | arquivo `runtime.config.json` |
+| `GITHUB_APP_ID` | `1234567` | ⬜ Opcional | GitHub App settings |
+| `GITHUB_CLIENT_ID` | `Iv1.a1b2c3d4e5f6g7h8` | ⬜ Opcional | GitHub App settings |
+| `GITHUB_CLIENT_SECRET` | `xxxxxxxxxxxxxxxxxxxxxxxx` | ⬜ Opcional | GitHub App settings |
+| `GITHUB_PRIVATE_KEY` | `-----BEGIN RSA PRIVATE KEY-----...` | ⬜ Opcional | GitHub App settings |
+| `VERCEL_TOKEN` | `ROh3NzABqd1N5Ksm68N3n68L` | ✅ Sim (Deploy) | https://vercel.com/account/tokens |
+| `VERCEL_ORG_ID` | `team_xxxxxxxxxxxxx` | ✅ Sim (Deploy) | Via `vercel link` |
+| `VERCEL_PROJECT_ID` | `5BKmD71HE` | ✅ Sim (Deploy) | Confirmado do dashboard |
+| `VITE_GOOGLE_CLIENT_ID` | `123456-abc.apps.googleusercontent.com` | ✅ Sim (OAuth) | Google Cloud Console |
+| `VITE_GOOGLE_API_KEY` | `AIzaSyXXXXXXXXXXXXXXXXXX` | ✅ Sim (OAuth) | Google Cloud Console |
+| `GOOGLE_API_KEY` | `AIzaSyXXXXXXXXXXXXXXXXXX` | ⬜ Opcional | Mesmo que acima |
+| `VITE_REDIRECT_URI` | `https://seu-app.vercel.app` | ✅ Sim (OAuth) | URL do Vercel |
+| `NEXTAUTH_URL` | `https://seu-app.vercel.app` | ⬜ Opcional | URL do Vercel |
+| `VITE_BASE_URL` | `https://seu-app.vercel.app` | ⬜ Opcional | URL do Vercel |
+| `VITE_APP_ENV` | `production` | ✅ Sim | Literal |
+| `NODE_ENV` | `production` | ⬜ Opcional | Literal |
+| `DATAJUD_API_KEY` | `base64encodedkey==` | ⬜ Opcional | Portal DataJud |
+| `VERCEL_WEBHOOK_SECRET` | `randomsecretstring` | ⬜ Opcional | Gerar aleatório |
+| `VAPID_PRIVATE_KEY` | `base64key` | ⬜ Opcional | `npx web-push generate-vapid-keys` |
+| `GITHUB_API_URL` | `https://api.github.com` | ⬜ Opcional | Literal |
+
+### 🔒 Segurança de Credenciais
+
+**NUNCA:**
+- ❌ Compartilhe credenciais em comentários públicos
+- ❌ Commite credenciais no código
+- ❌ Envie credenciais por email não criptografado
+- ❌ Poste screenshots com credenciais visíveis
+
+**SEMPRE:**
+- ✅ Use variáveis de ambiente
+- ✅ Guarde em gerenciador de senhas
+- ✅ Revogue credenciais comprometidas imediatamente
+- ✅ Rotacione credenciais regularmente
+
+**Se você acidentalmente expôs credenciais:**
+1. Revogue IMEDIATAMENTE
+2. Gere novas credenciais
+3. Atualize no Vercel
+4. Veja `ALERTA_SEGURANCA_CREDENCIAIS_EXPOSTAS.md` para instruções completas
 
 ---
 
