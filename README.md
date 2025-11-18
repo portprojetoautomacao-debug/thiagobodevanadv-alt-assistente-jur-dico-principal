@@ -6,10 +6,17 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
-> **🆕 Atualização Importante**: Os erros 403 no Vercel foram **100% corrigidos**! 
-> - ✅ Migração de GitHub Spark KV para Vercel KV completa
-> - ✅ Rotas do `vercel.json` atualizadas para usar `/api/kv`
-> - 📖 Ver [guia de correção](CORRECAO_403_VERCEL_JSON.md) e [guia de migração](MIGRACAO_VERCEL_KV.md) para detalhes
+## 🔥 ERROS 403? LEIA AQUI PRIMEIRO!
+
+**Se você está vendo erros 403 Forbidden ou "Failed to fetch KV key":**
+
+👉 **[QUICK_FIX_403.md](./QUICK_FIX_403.md)** - Solução em 60 segundos  
+👉 **[CORRECAO_RAPIDA_403.md](./CORRECAO_RAPIDA_403.md)** - Guia rápido (10 minutos)  
+👉 **[VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)** - Guia completo passo a passo
+
+**TL;DR**: Você precisa configurar `GITHUB_TOKEN` e `GITHUB_RUNTIME_PERMANENT_NAME` nas variáveis de ambiente do Vercel. Veja os guias acima.
+
+---
 
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
