@@ -15,8 +15,8 @@ Acesse: **GitHub → Settings → Secrets and variables → Actions → New repo
 | Secret Name | Valor | Status | Onde Obter |
 |-------------|-------|--------|------------|
 | **VERCEL_TOKEN** | `ROh3NzABqd1N5Ksm68N3n68L` | ✅ Fornecido | [Vercel Settings → Tokens](https://vercel.com/account/tokens) |
-| **VERCEL_ORG_ID** | `team_xxxxx` ou `user_xxxxx` | ⚠️ Pendente | Via `vercel link` ou Vercel Dashboard |
-| **VERCEL_PROJECT_ID** | `prj_xxxxx` | ⚠️ Pendente | Via `vercel link` ou Vercel Dashboard |
+| **VERCEL_ORG_ID** | `[Execute vercel link]` | ⚠️ Pendente | Via `vercel link` → `.vercel/project.json` |
+| **VERCEL_PROJECT_ID** | `5BKmD71HE` | ✅ Confirmado | Extraído do dashboard Vercel |
 
 ### 2. Google OAuth Secrets
 
@@ -24,7 +24,7 @@ Acesse: **GitHub → Settings → Secrets and variables → Actions → New repo
 |-------------|-------|--------|------------|
 | **VITE_GOOGLE_CLIENT_ID** | `xxxxx.apps.googleusercontent.com` | ⚠️ Pendente | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 | **VITE_GOOGLE_API_KEY** | `AIzaSyxxxxx` | ⚠️ Pendente | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
-| **VITE_REDIRECT_URI** | `https://seu-app.vercel.app` | ⚠️ Pendente | URL do seu app na Vercel |
+| **VITE_REDIRECT_URI** | `https://assistente-jurídico-último.vercel.app` | ✅ Confirmado | URL do app na Vercel (confirmada) |
 
 ---
 
@@ -53,7 +53,7 @@ Saída esperada:
 ```json
 {
   "orgId": "team_xxxxxxxxxxxxxxxxxxxxx",    ← Use como VERCEL_ORG_ID
-  "projectId": "prj_xxxxxxxxxxxxxxxxxxxxx"   ← Use como VERCEL_PROJECT_ID
+  "projectId": "5BKmD71HE"                   ← ✅ Confirmado (ID do projeto)
 }
 ```
 
@@ -76,7 +76,7 @@ Saída esperada:
 ```
 VITE_GOOGLE_CLIENT_ID     = [seu-client-id].apps.googleusercontent.com
 VITE_GOOGLE_API_KEY       = AIzaSyxxxxx...
-VITE_REDIRECT_URI         = https://seu-app.vercel.app
+VITE_REDIRECT_URI         = https://assistente-jurídico-último.vercel.app
 VITE_APP_ENV              = production
 ```
 
@@ -94,13 +94,12 @@ Marque conforme for completando:
 - [ ] **Vercel CLI instalado** (`npm install -g vercel`)
 - [ ] **Vercel login realizado** (`vercel login`)
 - [ ] **Projeto vinculado** (`vercel link`)
-- [ ] **IDs obtidos** (`.vercel/project.json`)
-- [ ] **VERCEL_TOKEN** adicionado ao GitHub
-- [ ] **VERCEL_ORG_ID** adicionado ao GitHub
-- [ ] **VERCEL_PROJECT_ID** adicionado ao GitHub
+- [ ] **VERCEL_ORG_ID obtido** (`.vercel/project.json`)
+- [ ] **VERCEL_TOKEN** adicionado ao GitHub (`ROh3NzABqd1N5Ksm68N3n68L`)
+- [ ] **VERCEL_PROJECT_ID** adicionado ao GitHub (`5BKmD71HE`)
+- [ ] **VITE_REDIRECT_URI** adicionado ao GitHub (`https://assistente-jurídico-último.vercel.app`)
 - [ ] **VITE_GOOGLE_CLIENT_ID** adicionado ao GitHub
 - [ ] **VITE_GOOGLE_API_KEY** adicionado ao GitHub
-- [ ] **VITE_REDIRECT_URI** adicionado ao GitHub
 - [ ] **Variáveis adicionadas no Vercel Dashboard**
 - [ ] **Deploy manual testado** (Actions → Deploy → Run workflow)
 - [ ] **Deploy em PR testado** (Criar PR de teste)
@@ -130,7 +129,7 @@ git push origin test/github-actions-deploy
 **Solução:** Verifique se o token `ROh3NzABqd1N5Ksm68N3n68L` está correto no GitHub Secrets
 
 ### Problema: "Project not found"
-**Solução:** Execute `vercel link` novamente e atualize `VERCEL_PROJECT_ID`
+**Solução:** Execute `vercel link` novamente no projeto local. O Project ID correto é `5BKmD71HE`
 
 ### Problema: Build falha com "Missing environment variables"
 **Solução:** Adicione as variáveis do Google OAuth no Vercel Dashboard também
@@ -171,5 +170,7 @@ Para informações detalhadas, consulte:
 
 ---
 
-**Última atualização:** 18 de novembro de 2025
-**Configurado por:** GitHub Copilot Agent
+**Última atualização:** 18 de novembro de 2025  
+**Configurado por:** GitHub Copilot Agent  
+**Projeto Vercel:** assistente-jurídico-último (ID: 5BKmD71HE)  
+**URL Produção:** https://assistente-jurídico-último.vercel.app
