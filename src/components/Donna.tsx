@@ -366,9 +366,49 @@ O que você gostaria de saber?`
 
   const handleQuickQuestion = async (question: string) => {
     if (isProcessing) return
-    setInput(question)
-    await new Promise(resolve => setTimeout(resolve, 150))
-    await handleSend()
+    
+    setIsProcessing(true)
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: question,
+      timestamp: new Date().toISOString(),
+    }
+
+    try {
+      setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+      
+      const responseContent = await generateResponse(question)
+      const insights = getInsights(question)
+
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date().toISOString(),
+        insights: insights,
+      }
+
+      setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
+    } catch (error) {
+      console.error('Error sending message:', error)
+      
+      const isTimeout = error instanceof Error && error.message === 'Timeout'
+      
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: isTimeout 
+          ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
+          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
+        timestamp: new Date().toISOString(),
+      }
+      
+      setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const getInsightIcon = (type: string) => {
