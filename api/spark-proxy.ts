@@ -25,7 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!githubRuntimeName) {
     console.error('GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set');
     res.status(500).json({
-      error: 'GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set'
+      error: 'GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set',
+      message: 'Please configure this in Vercel environment variables.',
+      quickFix: 'See QUICK_FIX_403.md or VERCEL_ENV_SETUP.md for setup instructions',
+      value: '97a1cb1e48835e0ecf1e'
     });
     return;
   }
@@ -33,8 +36,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!githubToken) {
     console.error('GITHUB_TOKEN environment variable is not set');
     res.status(500).json({
-      error: 'GITHUB_TOKEN environment variable is not set. Please configure this in Vercel environment variables.',
-      docs: 'See SPARK_FIX_GUIDE.md for setup instructions'
+      error: 'GITHUB_TOKEN environment variable is not set',
+      message: 'Please configure this in Vercel environment variables.',
+      quickFix: 'See QUICK_FIX_403.md or VERCEL_ENV_SETUP.md for setup instructions',
+      createToken: 'https://github.com/settings/tokens'
     });
     return;
   }
