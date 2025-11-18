@@ -78,13 +78,17 @@ jobs:
         fi
         
         if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
-          echo "⚠️ Warning: VERCEL_ORG_ID is not configured"
-          echo "This may cause deployment to fail"
+          echo "❌ Error: VERCEL_ORG_ID is not configured"
+          echo "Please add your Organization ID to GitHub Secrets"
+          echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+          exit 1
         fi
         
         if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-          echo "⚠️ Warning: VERCEL_PROJECT_ID is not configured"
-          echo "This may cause deployment to fail"
+          echo "❌ Error: VERCEL_PROJECT_ID is not configured"
+          echo "Please add your Project ID to GitHub Secrets"
+          echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+          exit 1
         fi
         
         echo "✅ Vercel token validation passed"
