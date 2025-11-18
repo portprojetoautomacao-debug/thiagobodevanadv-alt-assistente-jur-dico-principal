@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useKV } from '@/hooks/use-kv'
 import type { Agent, AgentTask } from '@/lib/agents'
 import { 
   getAgentActivity, 

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import * as spark from '@github/spark/llm'
 import { useProcesses } from '@/hooks/use-processes'
 import type { Process } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

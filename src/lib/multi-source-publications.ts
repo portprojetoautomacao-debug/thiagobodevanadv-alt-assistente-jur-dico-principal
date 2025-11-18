@@ -1,5 +1,5 @@
 export interface MultiSourceConfig {
-  sources: any[]
+  sources: PublicationSource[]
   preferredSources?: string[]
   maxConcurrentRequests?: number
   aggregateResults?: boolean

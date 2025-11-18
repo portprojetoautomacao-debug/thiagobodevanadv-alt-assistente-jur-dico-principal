@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import * as spark from '@github/spark/llm'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
