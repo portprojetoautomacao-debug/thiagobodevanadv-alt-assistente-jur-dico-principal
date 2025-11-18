@@ -1,11 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm ci && npm run build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/_spark/llm",
       "destination": "/api/llm-proxy"
+    },
+    {
+      "source": "/_spark/kv/:key*",
+      "destination": "/api/kv"
     },
     {
       "source": "/_spark/:service/:path*",

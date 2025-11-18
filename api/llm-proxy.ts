@@ -21,7 +21,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!githubToken) {
     console.error('GITHUB_TOKEN environment variable is not set');
     res.status(500).json({
-      error: 'GITHUB_TOKEN environment variable is not set'
+      error: 'GITHUB_TOKEN environment variable is not set',
+      message: 'Please configure this in Vercel environment variables.',
+      quickFix: 'See QUICK_FIX_403.md or VERCEL_ENV_SETUP.md for setup instructions',
+      createToken: 'https://github.com/settings/tokens'
     });
     return;
   }

@@ -1,0 +1,38 @@
+name: "Copilot Setup Steps"
+
+# Automaticamente executa as etapas de configuração quando são alteradas para permitir
+# validação fácil, e permite testes manuais através da aba "Actions" do repositório
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # O job DEVE ser chamado `copilot-setup-steps` ou não será reconhecido pelo Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    # Define as permissões para o mínimo necessário.
+    # O Copilot receberá seu próprio token para suas operações.
+    permissions:
+      # Necessário para clonar o repositório e instalar dependências
+      contents: read
+
+    # Você pode definir quaisquer steps que desejar, e eles serão executados antes do agente iniciar.
+    # Se você não fizer checkout do código, o Copilot fará isso automaticamente para você.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install JavaScript dependencies
+        run: npm ci

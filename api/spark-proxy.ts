@@ -25,7 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!githubRuntimeName) {
     console.error('GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set');
     res.status(500).json({
-      error: 'GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set'
+      error: 'GITHUB_RUNTIME_PERMANENT_NAME environment variable is not set',
+      message: 'Please configure this in Vercel environment variables.',
+      quickFix: 'See QUICK_FIX_403.md or VERCEL_ENV_SETUP.md for setup instructions',
+      value: '97a1cb1e48835e0ecf1e'
     });
     return;
   }
@@ -33,8 +36,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!githubToken) {
     console.error('GITHUB_TOKEN environment variable is not set');
     res.status(500).json({
-      error: 'GITHUB_TOKEN environment variable is not set. Please configure this in Vercel environment variables.',
-      docs: 'See SPARK_FIX_GUIDE.md for setup instructions'
+      error: 'GITHUB_TOKEN environment variable is not set',
+      message: 'Please configure this in Vercel environment variables.',
+      quickFix: 'See QUICK_FIX_403.md or VERCEL_ENV_SETUP.md for setup instructions',
+      createToken: 'https://github.com/settings/tokens'
     });
     return;
   }
@@ -61,8 +66,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Prepare headers
+    // forward accept header from client or default to application/json
+    const incomingAccept = req.headers['accept'] as string | undefined;
     const headers = {
       'Content-Type': 'application/json',
+      'Accept': incomingAccept || 'application/json',
       'Authorization': `bearer ${githubToken}`,
     };
 
@@ -97,6 +105,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (isJson) {
       res.json(data);
     } else {
+      // If we got HTML back, log a more descriptive message to help debugging (likely runtime/proxy misconfiguration)
+      if (typeof data === 'string' && data.trim().startsWith('<')) {
+        console.warn(`Proxy request to ${targetUrl} returned HTML (status ${response.status}). This likely indicates a rewrite to index.html or a login page. Response snippet: ${data.slice(0, 512)}`);
+      }
       res.send(data);
     }
   } catch (error) {
