@@ -4,7 +4,7 @@
 
 Este documento mostra as diferenças EXATAS entre:
 - **ANTES:** Commit 0dd2655 (visual perfeito)
-- **DEPOIS:** Estado atual (visual que você não gostou)
+- **DEPOIS:** Estado restaurado após solução aplicada (visual corrigido)
 
 ---
 
