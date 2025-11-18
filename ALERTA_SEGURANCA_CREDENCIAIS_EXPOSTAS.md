@@ -1,45 +1,49 @@
 # 🚨 ALERTA DE SEGURANÇA CRÍTICO - AÇÃO IMEDIATA NECESSÁRIA
 
+> **AVISO IMPORTANTE:**  
+> Todas as credenciais abaixo são **exemplos fictícios** e NÃO são válidas.  
+> Não utilize estes valores em produção.  
+
 **Data:** 18 de novembro de 2025  
 **Severidade:** 🔴 CRÍTICA  
 **Ação:** IMEDIATA
 
 ---
 
-## ⚠️ CREDENCIAIS EXPOSTAS PUBLICAMENTE
+## ⚠️ CREDENCIAIS EXPOSTAS PUBLICAMENTE (EXEMPLOS FICTÍCIOS)
 
-Você compartilhou credenciais sensíveis em um **comentário público** no GitHub. Essas credenciais estão agora comprometidas e devem ser **REVOGADAS IMEDIATAMENTE**.
+Você compartilhou credenciais sensíveis em um **comentário público** no GitHub. Estas credenciais são exemplos fictícios para fins de documentação.
 
-### 🔴 Credenciais Comprometidas
+### 🔴 Credenciais Comprometidas (Exemplo)
 
 As seguintes credenciais foram expostas publicamente e **NÃO SÃO MAIS SEGURAS**:
 
 1. ❌ **GitHub Personal Access Token (PAT)**
-   - Token exposto: `github_pat_11B2HGG6I0chKrpMOOLfEo_...`
+   - Token exposto: `EXEMPLO_GITHUB_PAT_1234567890`
    - **REVOGAR AGORA**
 
 2. ❌ **GitHub Client Secret**
-   - Secret exposto: `SHA256:S1MwBNhshGoY20fZwtD6tUsIqhZDpAPBqKDMewwXkkk=`
+   - Secret exposto: `EXEMPLO_GITHUB_CLIENT_SECRET_abcdefg`
    - **REVOGAR AGORA**
 
 3. ❌ **GitHub Private Key**
-   - Chave privada exposta
+   - Chave privada exposta: `EXEMPLO_GITHUB_PRIVATE_KEY_abc123`
    - **REVOGAR AGORA**
 
 4. ❌ **Google API Key**
-   - Key exposta: `AIzaSyD1CMUAmW6Il40IUpuvc6B0mNRq59R1E54`
+   - Key exposta: `EXEMPLO_GOOGLE_API_KEY_1234567890`
    - **REVOGAR AGORA**
 
 5. ❌ **DataJud API Key**
-   - Key exposta: `cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==`
+   - Key exposta: `EXEMPLO_DATAJUD_API_KEY_abcdefg`
    - **REVOGAR AGORA**
 
 6. ❌ **Vercel Webhook Secret**
-   - Secret exposto: `A1a1g6k7@#$`
+   - Secret exposto: `EXEMPLO_VERCEL_WEBHOOK_SECRET_1234`
    - **REGENERAR AGORA**
 
 7. ❌ **VAPID Private Key**
-   - Key exposta: `AxoS61uUW2DXjYUl-X64iLTomlvNVRO-kKyqKYyjbXE`
+   - Key exposta: `EXEMPLO_VAPID_PRIVATE_KEY_abc123`
    - **REGENERAR AGORA**
 
 ---
