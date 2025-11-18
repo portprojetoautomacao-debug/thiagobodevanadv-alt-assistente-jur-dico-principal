@@ -1,14 +1,18 @@
 #!/bin/bash
 
-# =============================================================================
-# Script de Verificação de Configuração de Deploy - Assistente Jurídico PJe
-# =============================================================================
-# Este script verifica se tudo está configurado corretamente para deploy
-# Uso: ./verificar-deploy.sh
-# =============================================================================
+# ============================================================================
+# Script de Verificação Pré-Deploy - Assistente Jurídico PJe
+# ============================================================================
+# Este script verifica se tudo está pronto para o deployment na Vercel
+# Execute antes de fazer o deploy: ./verificar-deploy.sh
+# ============================================================================
 
-# Don't exit on error - we want to collect all issues
-set +e
+set -e
+
+echo "======================================================================"
+echo "🔍 Verificação Pré-Deploy - Assistente Jurídico PJe"
+echo "======================================================================"
+echo ""
 
 # Cores para output
 RED='\033[0;31m'
@@ -22,368 +26,250 @@ ERRORS=0
 WARNINGS=0
 SUCCESS=0
 
-echo -e "${BLUE}=============================================${NC}"
-echo -e "${BLUE}  Verificação de Configuração de Deploy${NC}"
-echo -e "${BLUE}  Assistente Jurídico PJe${NC}"
-echo -e "${BLUE}=============================================${NC}"
-echo ""
-
-# Função para imprimir sucesso
-print_success() {
+# Função para log de sucesso
+log_success() {
     echo -e "${GREEN}✓${NC} $1"
     ((SUCCESS++))
 }
 
-# Função para imprimir erro
-print_error() {
+# Função para log de erro
+log_error() {
     echo -e "${RED}✗${NC} $1"
     ((ERRORS++))
 }
 
-# Função para imprimir aviso
-print_warning() {
+# Função para log de aviso
+log_warning() {
     echo -e "${YELLOW}⚠${NC} $1"
     ((WARNINGS++))
 }
 
-# Função para imprimir info
-print_info() {
+# Função para log de info
+log_info() {
     echo -e "${BLUE}ℹ${NC} $1"
 }
 
-# =============================================================================
-# 1. Verificar Node.js e npm
-# =============================================================================
-echo -e "\n${BLUE}[1/8] Verificando Node.js e npm...${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "1. Verificando Arquivos de Configuração"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if command -v node &> /dev/null; then
-    NODE_VERSION=$(node --version)
-    print_success "Node.js instalado: $NODE_VERSION"
-    
-    # Verificar se é v20.x
-    if [[ $NODE_VERSION == v20.* ]]; then
-        print_success "Versão do Node.js compatível (20.x)"
-    else
-        print_warning "Versão do Node.js não é 20.x (encontrado: $NODE_VERSION)"
-        print_info "Considere usar Node.js 20.x para consistência com produção"
-    fi
-else
-    print_error "Node.js não encontrado. Instale: https://nodejs.org"
-fi
-
-if command -v npm &> /dev/null; then
-    NPM_VERSION=$(npm --version)
-    print_success "npm instalado: $NPM_VERSION"
-    
-    # Verificar se npm >= 10.0.0
-    NPM_MAJOR=$(echo $NPM_VERSION | cut -d. -f1)
-    if [ "$NPM_MAJOR" -ge 10 ]; then
-        print_success "Versão do npm compatível (>=10.0.0)"
-    else
-        print_warning "npm versão < 10.0.0. Considere atualizar: npm install -g npm@latest"
-    fi
-else
-    print_error "npm não encontrado"
-fi
-
-# =============================================================================
-# 2. Verificar arquivos de configuração essenciais
-# =============================================================================
-echo -e "\n${BLUE}[2/8] Verificando arquivos de configuração...${NC}"
-
+# Verificar package.json
 if [ -f "package.json" ]; then
-    print_success "package.json encontrado"
-    
-    # Verificar engines
-    if grep -q '"node".*"20.x"' package.json; then
-        print_success "Node engine configurado para 20.x"
-    else
-        print_warning "Node engine não está configurado para 20.x"
-    fi
+    log_success "package.json encontrado"
 else
-    print_error "package.json não encontrado"
+    log_error "package.json não encontrado"
 fi
 
+# Verificar vercel.json
 if [ -f "vercel.json" ]; then
-    print_success "vercel.json encontrado"
-    
-    # Verificar buildCommand
-    if grep -q '"buildCommand"' vercel.json; then
-        print_success "buildCommand configurado"
-    else
-        print_warning "buildCommand não encontrado no vercel.json"
-    fi
-    
-    # Verificar outputDirectory
-    if grep -q '"outputDirectory".*"dist"' vercel.json; then
-        print_success "outputDirectory configurado para 'dist'"
-    else
-        print_warning "outputDirectory pode não estar configurado corretamente"
-    fi
+    log_success "vercel.json encontrado"
 else
-    print_error "vercel.json não encontrado"
+    log_error "vercel.json não encontrado"
 fi
 
+# Verificar runtime.config.json
 if [ -f "runtime.config.json" ]; then
-    print_success "runtime.config.json encontrado"
+    log_success "runtime.config.json encontrado"
     
-    # Extrair app ID
-    if command -v jq &> /dev/null; then
-        APP_ID=$(jq -r '.app' runtime.config.json 2>/dev/null)
-        if [ -n "$APP_ID" ] && [ "$APP_ID" != "null" ]; then
-            print_success "Runtime app ID: $APP_ID"
-        else
-            print_error "app ID não encontrado no runtime.config.json"
-        fi
+    # Extrair app name
+    RUNTIME_NAME=$(cat runtime.config.json | grep -o '"app": *"[^"]*"' | sed 's/"app": *"\([^"]*\)"/\1/')
+    if [ -n "$RUNTIME_NAME" ]; then
+        log_info "  Runtime name: $RUNTIME_NAME"
     else
-        print_info "Instale 'jq' para validação mais detalhada: sudo apt-get install jq"
+        log_warning "  Não foi possível extrair runtime name"
     fi
 else
-    print_error "runtime.config.json não encontrado"
+    log_error "runtime.config.json não encontrado"
 fi
 
+# Verificar .env.example
 if [ -f ".env.example" ]; then
-    print_success ".env.example encontrado"
+    log_success ".env.example encontrado"
 else
-    print_warning ".env.example não encontrado (recomendado para documentação)"
+    log_warning ".env.example não encontrado (não é crítico)"
 fi
 
-# =============================================================================
-# 3. Verificar .gitignore
-# =============================================================================
-echo -e "\n${BLUE}[3/8] Verificando .gitignore...${NC}"
-
-if [ -f ".gitignore" ]; then
-    print_success ".gitignore encontrado"
-    
-    # Verificar entradas importantes
-    if grep -q "^\.env$\|^\.env\.local$" .gitignore; then
-        print_success ".env está no .gitignore (segurança OK)"
-    else
-        print_error ".env NÃO está no .gitignore - RISCO DE SEGURANÇA!"
-        print_info "Adicione '.env' ao .gitignore imediatamente"
-    fi
-    
-    if grep -q "node_modules" .gitignore; then
-        print_success "node_modules está no .gitignore"
-    else
-        print_warning "node_modules deveria estar no .gitignore"
-    fi
-    
-    if grep -q "dist" .gitignore; then
-        print_success "dist está no .gitignore"
-    else
-        print_warning "dist deveria estar no .gitignore"
-    fi
-else
-    print_error ".gitignore não encontrado"
-fi
-
-# =============================================================================
-# 4. Verificar dependências
-# =============================================================================
-echo -e "\n${BLUE}[4/8] Verificando dependências...${NC}"
-
-if [ -d "node_modules" ]; then
-    print_success "node_modules encontrado"
-else
-    print_warning "node_modules não encontrado. Execute: npm install"
-fi
-
-if [ -f "package-lock.json" ]; then
-    print_success "package-lock.json encontrado"
-else
-    print_warning "package-lock.json não encontrado. Execute: npm install"
-fi
-
-# =============================================================================
-# 5. Verificar estrutura de diretórios
-# =============================================================================
-echo -e "\n${BLUE}[5/8] Verificando estrutura de diretórios...${NC}"
-
-if [ -d "src" ]; then
-    print_success "Diretório src/ encontrado"
-else
-    print_error "Diretório src/ não encontrado"
-fi
-
-if [ -d "api" ]; then
-    print_success "Diretório api/ encontrado (serverless functions)"
-else
-    print_warning "Diretório api/ não encontrado"
-fi
-
-if [ -f "index.html" ]; then
-    print_success "index.html encontrado"
-else
-    print_error "index.html não encontrado"
-fi
-
-# =============================================================================
-# 6. Testar build local
-# =============================================================================
-echo -e "\n${BLUE}[6/8] Testando build local...${NC}"
-
-if [ -d "node_modules" ]; then
-    print_info "Executando npm run build..."
-    
-    if npm run build &> /tmp/build-output.log; then
-        print_success "Build executado com sucesso"
-        
-        # Verificar se dist foi criado
-        if [ -d "dist" ]; then
-            print_success "Diretório dist/ criado"
-            
-            # Verificar arquivos essenciais em dist
-            if [ -f "dist/index.html" ]; then
-                print_success "dist/index.html criado"
-            else
-                print_error "dist/index.html não foi criado"
-            fi
-            
-            if ls dist/assets/*.js 1> /dev/null 2>&1; then
-                print_success "Arquivos JavaScript gerados em dist/assets/"
-            else
-                print_error "Arquivos JavaScript não foram gerados"
-            fi
-            
-            if ls dist/assets/*.css 1> /dev/null 2>&1; then
-                print_success "Arquivos CSS gerados em dist/assets/"
-            else
-                print_warning "Arquivos CSS não foram gerados"
-            fi
-        else
-            print_error "Diretório dist/ não foi criado após build"
-        fi
-    else
-        print_error "Build falhou. Verifique os erros em /tmp/build-output.log"
-        print_info "Execute: npm run build"
-        ((ERRORS++))
-    fi
-else
-    print_warning "Pulando teste de build (execute npm install primeiro)"
-fi
-
-# =============================================================================
-# 7. Verificar vulnerabilidades
-# =============================================================================
-echo -e "\n${BLUE}[7/8] Verificando vulnerabilidades de segurança...${NC}"
-
-if [ -d "node_modules" ]; then
-    print_info "Executando npm audit..."
-    
-    # Executar npm audit e capturar resultado
-    AUDIT_OUTPUT=$(npm audit --json 2>/dev/null || true)
-    
-    if command -v jq &> /dev/null; then
-        VULNS=$(echo "$AUDIT_OUTPUT" | jq -r '.metadata.vulnerabilities.total' 2>/dev/null || echo "0")
-        HIGH=$(echo "$AUDIT_OUTPUT" | jq -r '.metadata.vulnerabilities.high' 2>/dev/null || echo "0")
-        CRITICAL=$(echo "$AUDIT_OUTPUT" | jq -r '.metadata.vulnerabilities.critical' 2>/dev/null || echo "0")
-        
-        if [ "$VULNS" = "0" ] || [ -z "$VULNS" ]; then
-            print_success "Nenhuma vulnerabilidade encontrada"
-        else
-            if [ "$CRITICAL" != "0" ] && [ -n "$CRITICAL" ]; then
-                print_error "$CRITICAL vulnerabilidades CRÍTICAS encontradas"
-            fi
-            if [ "$HIGH" != "0" ] && [ -n "$HIGH" ]; then
-                print_error "$HIGH vulnerabilidades HIGH encontradas"
-            fi
-            print_warning "Total de $VULNS vulnerabilidades. Execute: npm audit fix"
-        fi
-    else
-        # Fallback sem jq
-        if npm audit | grep -q "found 0 vulnerabilities"; then
-            print_success "Nenhuma vulnerabilidade encontrada"
-        else
-            print_warning "Vulnerabilidades detectadas. Execute: npm audit"
-        fi
-    fi
-else
-    print_warning "Pulando audit (execute npm install primeiro)"
-fi
-
-# =============================================================================
-# 8. Verificar variáveis de ambiente
-# =============================================================================
-echo -e "\n${BLUE}[8/8] Verificando variáveis de ambiente...${NC}"
-
-print_info "Verificando variáveis necessárias no .env.example..."
-
-# Variáveis críticas
-declare -a CRITICAL_VARS=(
-    "GITHUB_RUNTIME_PERMANENT_NAME"
-    "GITHUB_TOKEN"
-)
-
-declare -a RECOMMENDED_VARS=(
-    "VITE_GOOGLE_CLIENT_ID"
-    "VITE_REDIRECT_URI"
-    "VITE_APP_ENV"
-)
-
-if [ -f ".env.example" ]; then
-    for var in "${CRITICAL_VARS[@]}"; do
-        if grep -q "^$var=" .env.example || grep -q "^# $var=" .env.example; then
-            print_success "$var documentado em .env.example"
-        else
-            print_warning "$var não encontrado em .env.example"
-        fi
-    done
-    
-    for var in "${RECOMMENDED_VARS[@]}"; do
-        if grep -q "^$var=" .env.example || grep -q "^# $var=" .env.example || grep -q "^VITE_" .env.example; then
-            print_info "$var documentado (opcional)"
-        fi
-    done
-else
-    print_warning ".env.example não encontrado para verificação"
-fi
-
-# Verificar se existe .env local (não deve ser commitado)
-if [ -f ".env" ]; then
-    print_info "Arquivo .env encontrado (OK para desenvolvimento local)"
-    
-    # Verificar se está no .gitignore
-    if git check-ignore .env &> /dev/null; then
-        print_success ".env está sendo ignorado pelo git (seguro)"
-    else
-        print_error ".env NÃO está sendo ignorado pelo git - RISCO DE SEGURANÇA!"
-    fi
-else
-    print_info "Arquivo .env não encontrado (será necessário para desenvolvimento local)"
-fi
-
-# =============================================================================
-# Resumo Final
-# =============================================================================
-echo -e "\n${BLUE}=============================================${NC}"
-echo -e "${BLUE}  Resumo da Verificação${NC}"
-echo -e "${BLUE}=============================================${NC}"
 echo ""
-echo -e "Sucessos:  ${GREEN}$SUCCESS${NC}"
-echo -e "Avisos:    ${YELLOW}$WARNINGS${NC}"
-echo -e "Erros:     ${RED}$ERRORS${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "2. Verificando Estrutura de Diretórios"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Verificar diretório src
+if [ -d "src" ]; then
+    log_success "Diretório src/ encontrado"
+else
+    log_error "Diretório src/ não encontrado"
+fi
+
+# Verificar diretório api
+if [ -d "api" ]; then
+    log_success "Diretório api/ encontrado"
+    
+    # Verificar arquivos essenciais da API
+    if [ -f "api/kv.ts" ]; then
+        log_success "  api/kv.ts encontrado"
+    else
+        log_error "  api/kv.ts não encontrado"
+    fi
+    
+    if [ -f "api/llm-proxy.ts" ] || [ -f "api/llm-proxy.js" ]; then
+        log_success "  api/llm-proxy encontrado"
+    else
+        log_error "  api/llm-proxy não encontrado"
+    fi
+    
+    if [ -f "api/spark-proxy.ts" ] || [ -f "api/spark-proxy.js" ]; then
+        log_success "  api/spark-proxy encontrado"
+    else
+        log_error "  api/spark-proxy não encontrado"
+    fi
+else
+    log_error "Diretório api/ não encontrado"
+fi
+
+# Verificar node_modules
+if [ -d "node_modules" ]; then
+    log_success "node_modules/ encontrado (dependências instaladas)"
+else
+    log_warning "node_modules/ não encontrado - execute 'npm install'"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "3. Verificando Configuração do Package.json"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Verificar script de build
+if grep -q '"build"' package.json; then
+    BUILD_SCRIPT=$(grep '"build"' package.json | head -1)
+    log_success "Script 'build' definido"
+    log_info "  $BUILD_SCRIPT"
+else
+    log_error "Script 'build' não definido em package.json"
+fi
+
+# Verificar engines
+if grep -q '"engines"' package.json; then
+    log_success "Engines definidos"
+    NODE_VERSION=$(grep -A 2 '"engines"' package.json | grep '"node"' | sed 's/.*: *"\([^"]*\)".*/\1/')
+    if [ -n "$NODE_VERSION" ]; then
+        log_info "  Node.js: $NODE_VERSION"
+    fi
+else
+    log_warning "Engines não definidos (recomendado especificar versão do Node)"
+fi
+
+# Verificar type: module
+if grep -q '"type": *"module"' package.json; then
+    log_success "Type 'module' configurado (ES modules)"
+else
+    log_warning "Type 'module' não configurado"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "4. Testando Build Local"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+log_info "Executando npm run build..."
+
+# Executar build
+if npm run build > /tmp/build.log 2>&1; then
+    log_success "Build executado com sucesso"
+    
+    # Verificar se dist foi criado
+    if [ -d "dist" ]; then
+        log_success "Diretório dist/ criado"
+        
+        # Verificar index.html
+        if [ -f "dist/index.html" ]; then
+            log_success "  dist/index.html criado"
+        else
+            log_error "  dist/index.html não encontrado"
+        fi
+        
+        # Contar arquivos em dist
+        FILE_COUNT=$(find dist -type f | wc -l)
+        log_info "  Total de arquivos: $FILE_COUNT"
+    else
+        log_error "Diretório dist/ não foi criado"
+    fi
+else
+    log_error "Build falhou - veja os erros em /tmp/build.log"
+    echo ""
+    echo "Últimas 20 linhas do log de build:"
+    tail -20 /tmp/build.log
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "5. Verificando Segurança (npm audit)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+AUDIT_OUTPUT=$(npm audit --json)
+VULNERABILITIES=$(echo "$AUDIT_OUTPUT" | grep -o '"total":[0-9]*' | tail -1 | sed 's/"total"://')
+
+if [ "$VULNERABILITIES" = "0" ]; then
+    log_success "Nenhuma vulnerabilidade encontrada"
+else
+    log_warning "$VULNERABILITIES vulnerabilidades encontradas"
+    log_info "Execute 'npm audit' para detalhes"
+    log_info "Execute 'npm audit fix' para tentar correção automática"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "6. Checklist de Variáveis de Ambiente para Vercel"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+log_info "Variáveis OBRIGATÓRIAS que devem estar na Vercel:"
+echo ""
+echo "  1. GITHUB_RUNTIME_PERMANENT_NAME"
+if [ -n "$RUNTIME_NAME" ]; then
+    echo "     Valor sugerido: $RUNTIME_NAME"
+    echo "     (extraído de runtime.config.json)"
+else
+    echo "     Valor: <verificar runtime.config.json>"
+fi
+echo ""
+echo "  2. GITHUB_TOKEN"
+echo "     Obter em: https://github.com/settings/tokens"
+echo "     Escopos necessários: repo, workflow"
+echo ""
+
+log_info "Variáveis OPCIONAIS (recomendadas para produção):"
+echo ""
+echo "  3. VITE_GOOGLE_CLIENT_ID (para Google OAuth)"
+echo "  4. VITE_REDIRECT_URI (URL do seu app Vercel)"
+echo "  5. VITE_APP_ENV=production"
+echo ""
+
+log_warning "IMPORTANTE: Certifique-se de adicionar essas variáveis na Vercel ANTES do deploy!"
+log_info "Acesse: https://vercel.com/dashboard → Seu Projeto → Settings → Environment Variables"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 Resumo da Verificação"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo -e "${GREEN}Sucessos:${NC} $SUCCESS"
+echo -e "${YELLOW}Avisos:${NC} $WARNINGS"
+echo -e "${RED}Erros:${NC} $ERRORS"
 echo ""
 
 if [ $ERRORS -eq 0 ]; then
-    if [ $WARNINGS -eq 0 ]; then
-        echo -e "${GREEN}✓ TUDO OK!${NC} Seu projeto está pronto para deploy."
-        echo ""
-        echo -e "Próximos passos:"
-        echo -e "  1. Configure variáveis de ambiente no Vercel"
-        echo -e "  2. Execute: ${BLUE}git push${NC} para fazer deploy"
-        echo -e "  3. Monitore o build em: https://vercel.com/dashboard"
-    else
-        echo -e "${YELLOW}⚠ ATENÇÃO!${NC} Projeto OK mas há $WARNINGS avisos."
-        echo -e "Revise os avisos acima antes de fazer deploy."
-    fi
+    echo -e "${GREEN}✓ Projeto pronto para deploy na Vercel!${NC}"
+    echo ""
+    echo "Próximos passos:"
+    echo "1. Verifique se as variáveis de ambiente estão configuradas na Vercel"
+    echo "2. Execute: vercel --prod"
+    echo "   OU faça push para o GitHub (se tiver CI/CD configurado)"
+    echo ""
+    echo "📚 Documentação: VERCEL_ENV_CHECKLIST.md"
+    exit 0
 else
-    echo -e "${RED}✗ ERROS ENCONTRADOS!${NC}"
-    echo -e "Corrija os $ERRORS erros acima antes de fazer deploy."
+    echo -e "${RED}✗ Projeto tem problemas que precisam ser resolvidos${NC}"
+    echo ""
+    echo "Corrija os erros acima antes de fazer o deploy."
     exit 1
 fi
-
-echo ""
-echo -e "Documentação completa: ${BLUE}GUIA_DEPLOY_VERCEL_COMPLETO.md${NC}"
-echo ""

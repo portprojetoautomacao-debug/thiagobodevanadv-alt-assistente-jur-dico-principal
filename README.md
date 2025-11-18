@@ -6,21 +6,17 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
-## 🚀 DEPLOY NO VERCEL - COMECE AQUI!
+## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
 
-**Quer fazer deploy pela primeira vez ou está com problemas?**
+**Se você teve problemas ao fazer o deploy na Vercel:**
 
-👉 **[INDICE_DEPLOY.md](./INDICE_DEPLOY.md)** - 📚 Índice completo de documentação de deploy ⭐  
-👉 **[DEPLOY_RAPIDO.md](./DEPLOY_RAPIDO.md)** - ⚡ Deploy em 3 passos (5-10 min)  
-👉 **[TROUBLESHOOTING_DEPLOY.md](./TROUBLESHOOTING_DEPLOY.md)** - 🔧 Solução de problemas
+👉 **[GUIA_RAPIDO_DEPLOY.md](./GUIA_RAPIDO_DEPLOY.md)** - ⚡ Solução em 3 passos (5 min) ⭐  
+👉 **[VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md)** - Checklist completo de variáveis  
+👉 **[RESOLUCAO_DEPLOY.md](./RESOLUCAO_DEPLOY.md)** - Análise detalhada do problema
 
-**Verificar configuração antes do deploy:**
-```bash
-chmod +x verificar-deploy.sh
-./verificar-deploy.sh
-```
+**TL;DR**: O build funciona! Você só precisa configurar 2 variáveis de ambiente na Vercel: `GITHUB_RUNTIME_PERMANENT_NAME` e `GITHUB_TOKEN`. Execute `./verificar-deploy.sh` para verificar tudo antes do deploy.
 
-## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI!
+## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI PRIMEIRO!
 
 **Se você está vendo erros 403 Forbidden, "Failed to fetch KV key", ou problemas com GitHub App Callback URL:**
 
