@@ -178,9 +178,9 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <DashboardAdvbox onNavigate={setCurrentView} />
+        return <Dashboard onNavigate={setCurrentView} />
       case 'crm':
-        return <ProcessCRMAdvbox />
+        return <ProcessCRM />
       case 'gestao':
         return <OfficeManagement />
       case 'intimacoes':
@@ -204,7 +204,7 @@ function App() {
       case 'minutas':
         return <MinutasManager />
       case 'financeiro':
-        return <FinancialManagementAdvbox />
+        return <FinancialManagement />
       case 'consultas':
         return <DatabaseQueries />
       case 'conhecimento':
@@ -224,7 +224,7 @@ function App() {
       case 'ai-email-drafter':
         return <AIEmailDrafter />
       default:
-        return <DashboardAdvbox onNavigate={setCurrentView} />
+        return <Dashboard onNavigate={setCurrentView} />
     }
   }
 
