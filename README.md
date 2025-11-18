@@ -6,7 +6,10 @@
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 
-> **🆕 Atualização Importante**: Os erros 403 no Vercel foram corrigidos! A aplicação agora usa Vercel KV ao invés de GitHub Spark KV. Ver [guia de migração](MIGRACAO_VERCEL_KV.md) para detalhes.
+> **🆕 Atualização Importante**: Os erros 403 no Vercel foram **100% corrigidos**! 
+> - ✅ Migração de GitHub Spark KV para Vercel KV completa
+> - ✅ Rotas do `vercel.json` atualizadas para usar `/api/kv`
+> - 📖 Ver [guia de correção](CORRECAO_403_VERCEL_JSON.md) e [guia de migração](MIGRACAO_VERCEL_KV.md) para detalhes
 
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
 
@@ -103,7 +106,8 @@ src/
 - 🚀 `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - **Guia completo de CI/CD e Deploy Automático** ⭐
 - 🚀 `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel**
 - 🤖 `GITHUB_COPILOT_AGENT.md` - **Configuração do GitHub Copilot agent**
-- 🔧 `MIGRACAO_VERCEL_KV.md` - **Migração para Vercel KV (correção erros 403)** 🆕
+- 🔧 `CORRECAO_403_VERCEL_JSON.md` - **Correção definitiva dos erros 403** ✅ 🆕
+- 🔧 `MIGRACAO_VERCEL_KV.md` - **Migração para Vercel KV (código e hooks)** 🆕
 
 ### CI/CD e Deploy
 - `GITHUB_ACTIONS_CONFIGURADO.md` - Setup inicial do GitHub Actions
@@ -190,6 +194,20 @@ VITE_GOOGLE_API_KEY=sua_api_key
 VITE_REDIRECT_URI=https://seu-app.vercel.app
 VITE_APP_ENV=production
 ```
+
+**⚠️ IMPORTANTE: Configure o Vercel KV Storage**
+
+Para evitar erros 403 no armazenamento, você **deve** configurar o Vercel KV:
+
+1. No Vercel Dashboard: **Storage** → **Create Database** → **KV**
+2. Nome: `assistente-juridico-kv`
+3. Região: São Paulo (GRU) ou mais próxima
+4. **Connect Project** → Selecione seu projeto
+5. Ambientes: Production, Preview, Development
+
+As variáveis `KV_REST_API_URL`, `KV_REST_API_TOKEN` e `KV_REST_API_READ_ONLY_TOKEN` serão automaticamente injetadas pelo Vercel.
+
+📖 **Guia de correção 403**: Ver `CORRECAO_403_VERCEL_JSON.md` para detalhes completos
 
 📖 **Guias de deploy**: 
 - `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - Deploy automático (recomendado)
