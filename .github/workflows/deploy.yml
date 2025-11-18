@@ -208,7 +208,7 @@ jobs:
           echo "2. Verify all required secrets are configured" >> $GITHUB_STEP_SUMMARY
           echo "3. Ensure Vercel project is properly linked" >> $GITHUB_STEP_SUMMARY
           echo "4. Check for TypeScript or build errors" >> $GITHUB_STEP_SUMMARY
-          echo "5. See \`CONFIGURACAO_VERCEL_TOKEN.md\` for setup guide" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Review documentation:** [\`CONFIGURACAO_VERCEL_TOKEN.md\`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
         fi
 
   deploy-notification:
