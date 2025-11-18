@@ -3,6 +3,8 @@ name: Deploy
 on:
   push:
     branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       environment:
@@ -13,6 +15,7 @@ on:
         options:
           - production
           - staging
+          - preview
 
 jobs:
   deploy-vercel:
@@ -21,9 +24,11 @@ jobs:
     permissions:
       contents: read
       deployments: write
+      pull-requests: write
     environment:
-      name: ${{ github.event.inputs.environment || 'production' }}
+      name: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
 
     steps:
     - name: Checkout code
@@ -35,27 +40,51 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
 
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          ~/.npm
+        key: ${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-20-
+          ${{ runner.os }}-node-
+
     - name: Install dependencies
       run: npm ci
+
+    - name: Run linter
+      run: npm run lint
+      continue-on-error: true
 
     - name: Build application
       run: npm run build
       env:
-        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
-        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI }}
-        VITE_APP_ENV: ${{ github.event.inputs.environment || 'production' }}
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
+        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
+        VITE_APP_ENV: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
 
     - name: Deploy to Vercel
       id: deploy
       run: |
-        npm install -g vercel
-        if [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
+        npm install -g vercel@latest
+        
+        # Determine deployment type
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "Deploying preview for PR #${{ github.event.pull_request.number }}"
+          DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
+        elif [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "Deploying to production"
+          DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
         else
-          vercel deploy --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
+          echo "Deploying to staging"
+          DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
         fi
-        echo "url=$(cat deployment-url.txt)" >> $GITHUB_OUTPUT
+        
+        echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+        echo "Deployment URL: $DEPLOYMENT_URL"
       env:
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -65,12 +94,54 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
+          const deploymentUrl = '${{ steps.deploy.outputs.url }}';
+          const prNumber = context.issue.number;
+          const commitSha = context.sha.substring(0, 7);
+          
+          const body = `## 🚀 Deploy Preview Ready!
+          
+          **Preview URL:** ${deploymentUrl}
+          
+          ### Deployment Details
+          - **Environment:** Preview
+          - **Commit:** \`${commitSha}\`
+          - **Branch:** \`${{ github.head_ref }}\`
+          
+          ### Quick Links
+          - 🔗 [View Preview](${deploymentUrl})
+          - 📊 [View Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          _This preview will be automatically updated with new commits._`;
+          
+          // Check if there's an existing deployment comment
+          const comments = await github.rest.issues.listComments({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '🚀 Deployed to Vercel: ${{ steps.deploy.outputs.url }}'
-          })
+            issue_number: prNumber
+          });
+          
+          const botComment = comments.data.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Deploy Preview Ready')
+          );
+          
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });
+          }
 
   deploy-notification:
     name: Deployment Notification
@@ -83,9 +154,26 @@ jobs:
     steps:
     - name: Notify deployment status
       run: |
+        echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
         if [[ "${{ needs.deploy-vercel.result }}" == "success" ]]; then
-          echo "✅ Deployment successful"
+          echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ needs.deploy-vercel.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || github.event.inputs.environment || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Visit the deployment URL to verify" >> $GITHUB_STEP_SUMMARY
+          echo "- Check application functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor for any runtime errors" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Deployment failed"
+          echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Troubleshooting" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check the build logs above" >> $GITHUB_STEP_SUMMARY
+          echo "2. Verify all required secrets are configured" >> $GITHUB_STEP_SUMMARY
+          echo "3. Ensure Vercel project is properly linked" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check for TypeScript or build errors" >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
