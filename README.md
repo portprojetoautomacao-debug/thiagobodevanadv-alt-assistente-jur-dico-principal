@@ -16,6 +16,15 @@
 
 **TL;DR**: Você precisa configurar `GITHUB_TOKEN` e `GITHUB_RUNTIME_PERMANENT_NAME` nas variáveis de ambiente do Vercel. Veja os guias acima.
 
+## 🔑 CONFIGURAÇÃO OAUTH PARA VERCEL
+
+**Se você está configurando o aplicativo no Vercel pela primeira vez:**
+
+👉 **[CONFIGURACAO_RAPIDA_VERCEL.md](./CONFIGURACAO_RAPIDA_VERCEL.md)** - Guia rápido com URLs prontas  
+👉 **[VERCEL_OAUTH_SETUP.md](./VERCEL_OAUTH_SETUP.md)** - Guia completo passo a passo
+
+**TL;DR**: Configure o Google OAuth com as URLs corretas do Vercel em "Authorized JavaScript origins" no Google Cloud Console.
+
 ---
 
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
@@ -62,7 +71,9 @@ cp .env.example .env
 # VITE_REDIRECT_URI=http://localhost:5173
 ```
 
-📖 **Guia completo de configuração**: Veja `OAUTH_SETUP.md`
+📖 **Guias de configuração:**
+- **Para desenvolvimento local:** Veja [OAUTH_SETUP.md](./OAUTH_SETUP.md)
+- **Para deploy no Vercel:** Veja [VERCEL_OAUTH_SETUP.md](./VERCEL_OAUTH_SETUP.md) ou [CONFIGURACAO_RAPIDA_VERCEL.md](./CONFIGURACAO_RAPIDA_VERCEL.md)
 
 ### 3. Execute o Desenvolvimento
 
