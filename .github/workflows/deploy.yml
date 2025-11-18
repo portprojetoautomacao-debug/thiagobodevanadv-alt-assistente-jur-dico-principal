@@ -66,6 +66,29 @@ jobs:
         VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
         VITE_APP_ENV: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
 
+    - name: Validate Vercel secrets
+      run: |
+        echo "Validating Vercel configuration..."
+        
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+          echo "❌ Error: VERCEL_TOKEN secret is not configured"
+          echo "Please add your Vercel token to GitHub Secrets"
+          echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+          echo "⚠️ Warning: VERCEL_ORG_ID is not configured"
+          echo "This may cause deployment to fail"
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+          echo "⚠️ Warning: VERCEL_PROJECT_ID is not configured"
+          echo "This may cause deployment to fail"
+        fi
+        
+        echo "✅ Vercel token validation passed"
+
     - name: Deploy to Vercel
       id: deploy
       run: |
@@ -73,18 +96,25 @@ jobs:
         
         # Determine deployment type
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          echo "Deploying preview for PR #${{ github.event.pull_request.number }}"
+          echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
           DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
         elif [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          echo "Deploying to production"
+          echo "🚀 Deploying to production"
           DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
         else
-          echo "Deploying to staging"
+          echo "🚀 Deploying to staging"
           DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
         fi
         
+        # Validate deployment URL
+        if [ -z "$DEPLOYMENT_URL" ]; then
+          echo "❌ Error: Failed to extract deployment URL"
+          echo "Please check Vercel logs for details"
+          exit 1
+        fi
+        
         echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-        echo "Deployment URL: $DEPLOYMENT_URL"
+        echo "✅ Deployment successful: $DEPLOYMENT_URL"
       env:
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -102,16 +132,24 @@ jobs:
           
           **Preview URL:** ${deploymentUrl}
           
-          ### Deployment Details
+          ### 📋 Deployment Details
           - **Environment:** Preview
           - **Commit:** \`${commitSha}\`
           - **Branch:** \`${{ github.head_ref }}\`
+          - **Deploy Time:** ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
           
-          ### Quick Links
-          - 🔗 [View Preview](${deploymentUrl})
-          - 📊 [View Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          ### 🔗 Quick Links
+          - 🌐 [View Preview](${deploymentUrl})
+          - 📊 [View Build Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - ⚙️ [Vercel Dashboard](https://vercel.com)
           
-          _This preview will be automatically updated with new commits._`;
+          ### ℹ️ About Preview Deployments
+          - ✅ This preview will be automatically updated with new commits
+          - 🔍 The GitHub Copilot AI agent can access this URL to test your app
+          - 🚀 Merge to \`main\` to deploy to production
+          
+          ---
+          *Powered by Vercel & GitHub Actions*`;
           
           // Check if there's an existing deployment comment
           const comments = await github.rest.issues.listComments({
@@ -143,6 +181,36 @@ jobs:
             });
           }
 
+    - name: Add deployment summary
+      if: always()
+      run: |
+        echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ steps.deploy.outcome }}" == "success" ]]; then
+          echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || github.event.inputs.environment || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Visit the deployment URL to verify" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Check application functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Monitor for any runtime errors" >> $GITHUB_STEP_SUMMARY
+          echo "- 🤖 AI agents can now access the preview URL" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Troubleshooting" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check the build logs above" >> $GITHUB_STEP_SUMMARY
+          echo "2. Verify all required secrets are configured" >> $GITHUB_STEP_SUMMARY
+          echo "3. Ensure Vercel project is properly linked" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check for TypeScript or build errors" >> $GITHUB_STEP_SUMMARY
+          echo "5. See \`CONFIGURACAO_VERCEL_TOKEN.md\` for setup guide" >> $GITHUB_STEP_SUMMARY
+        fi
+
   deploy-notification:
     name: Deployment Notification
     runs-on: ubuntu-latest
@@ -154,26 +222,44 @@ jobs:
     steps:
     - name: Notify deployment status
       run: |
-        echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "## 🔔 Deployment Notification" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         if [[ "${{ needs.deploy-vercel.result }}" == "success" ]]; then
-          echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **All deployment steps completed successfully**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** ${{ needs.deploy-vercel.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || github.event.inputs.environment || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "### 📌 Deployment Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Success" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || github.event.inputs.environment || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "- Visit the deployment URL to verify" >> $GITHUB_STEP_SUMMARY
-          echo "- Check application functionality" >> $GITHUB_STEP_SUMMARY
-          echo "- Monitor for any runtime errors" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Code checkout completed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Dependencies installed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Linter passed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Vercel deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Preview URL available" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          echo "❌ **Deployment failed**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Troubleshooting" >> $GITHUB_STEP_SUMMARY
-          echo "1. Check the build logs above" >> $GITHUB_STEP_SUMMARY
-          echo "2. Verify all required secrets are configured" >> $GITHUB_STEP_SUMMARY
-          echo "3. Ensure Vercel project is properly linked" >> $GITHUB_STEP_SUMMARY
-          echo "4. Check for TypeScript or build errors" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Troubleshooting Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Check the build logs** in the deploy-vercel job above" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Verify Vercel secrets** are configured:" >> $GITHUB_STEP_SUMMARY
+          echo "   - VERCEL_TOKEN" >> $GITHUB_STEP_SUMMARY
+          echo "   - VERCEL_ORG_ID" >> $GITHUB_STEP_SUMMARY
+          echo "   - VERCEL_PROJECT_ID" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Verify Google OAuth secrets** are configured:" >> $GITHUB_STEP_SUMMARY
+          echo "   - VITE_GOOGLE_CLIENT_ID" >> $GITHUB_STEP_SUMMARY
+          echo "   - VITE_GOOGLE_API_KEY" >> $GITHUB_STEP_SUMMARY
+          echo "   - VITE_REDIRECT_URI" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Check Vercel project** is properly linked" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Review documentation:** \`CONFIGURACAO_VERCEL_TOKEN.md\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 Helpful Resources" >> $GITHUB_STEP_SUMMARY
+          echo "- [Vercel Token Setup Guide](./CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Actions Deploy Guide](./GITHUB_ACTIONS_DEPLOY_GUIDE.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Vercel Documentation](https://vercel.com/docs)" >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
