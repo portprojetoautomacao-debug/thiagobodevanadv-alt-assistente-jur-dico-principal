@@ -34,11 +34,13 @@
 
 - Requer configuração de variáveis de ambiente
 - Limitado a 1 projeto pessoal no plano gratuito
+- **⚠️ Cron jobs limitados**: Apenas 1x por dia no plano gratuito ([veja alternativas](./VERCEL_CRON_LIMITACAO.md))
 
 ### 📖 Guia Completo
 
 → [GUIA_RAPIDO_DEPLOY.md](./GUIA_RAPIDO_DEPLOY.md)  
-→ [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
+→ [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)  
+→ [VERCEL_CRON_LIMITACAO.md](./VERCEL_CRON_LIMITACAO.md) ⚠️ **Importante: Limitações de Cron**
 
 ### 🚀 Deploy em 3 Passos
 
@@ -58,6 +60,7 @@
 - **SSL grátis**: HTTPS automático
 - **Interface simples**: Muito fácil de usar
 - **Logs em tempo real**: Debugging facilitado
+- **✅ Cron jobs nativos**: Qualquer frequência, sem limites!
 
 ### ❌ Desvantagens
 
