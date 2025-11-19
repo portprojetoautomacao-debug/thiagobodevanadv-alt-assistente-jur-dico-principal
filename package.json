@@ -10,7 +10,7 @@
     "scripts": {
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
-        "build": "tsc -b --noCheck && vite build",
+        "build": "vite build",
         "start": "serve -s dist -l 10000",
         "lint": "eslint .",
         "optimize": "vite optimize",
