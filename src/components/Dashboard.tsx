@@ -7,11 +7,8 @@ import { Button } from '@/components/ui/button'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import DataInitializer from '@/components/DataInitializer'
 import DataManager from '@/components/DataManager'
-// Importação dinâmica para evitar erro de inicialização
-import { lazy, Suspense } from 'react'
-const StatusChart = lazy(() => import('@/components/DashboardCharts').then(module => ({ default: module.StatusChart })))
-const VaraChart = lazy(() => import('@/components/DashboardCharts').then(module => ({ default: module.VaraChart })))
-const TrendChart = lazy(() => import('@/components/DashboardCharts').then(module => ({ default: module.TrendChart })))
+import { Suspense } from 'react'
+import { StatusChart, VaraChart, TrendChart } from '@/components/DashboardCharts'
 import { 
   Gavel, 
   CheckCircle, 
