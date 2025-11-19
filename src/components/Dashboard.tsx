@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import DataInitializer from '@/components/DataInitializer'
 import DataManager from '@/components/DataManager'
-import { Suspense } from 'react'
 import { StatusChart, VaraChart, TrendChart } from '@/components/DashboardCharts'
 import { 
   Gavel, 
