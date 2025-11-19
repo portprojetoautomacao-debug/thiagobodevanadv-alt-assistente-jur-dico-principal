@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import DataInitializer from '@/components/DataInitializer'
 import DataManager from '@/components/DataManager'
-import { StatusChart, VaraChart, TrendChart } from '@/components/DashboardCharts'
+// Importação dinâmica para evitar erro de inicialização
+import { lazy, Suspense } from 'react'
+const StatusChart = lazy(() => import('@/components/DashboardCharts').then(module => ({ default: module.StatusChart })))
+const VaraChart = lazy(() => import('@/components/DashboardCharts').then(module => ({ default: module.VaraChart })))
+const TrendChart = lazy(() => import('@/components/DashboardCharts').then(module => ({ default: module.TrendChart })))
 import { 
   Gavel, 
   CheckCircle, 
@@ -253,7 +257,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <StatusChart chartData={chartData} />
+            <Suspense fallback={<div className="h-[250px] flex items-center justify-center"><ChartPie className="animate-spin" size={24} /></div>}>
+              <StatusChart chartData={chartData} />
+            </Suspense>
           </CardContent>
         </Card>
 
@@ -265,7 +271,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <VaraChart chartData={chartData} />
+            <Suspense fallback={<div className="h-[250px] flex items-center justify-center"><Gavel className="animate-spin" size={24} /></div>}>
+              <VaraChart chartData={chartData} />
+            </Suspense>
           </CardContent>
         </Card>
 
@@ -277,7 +285,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <TrendChart chartData={chartData} />
+            <Suspense fallback={<div className="h-[250px] flex items-center justify-center"><TrendUp className="animate-spin" size={24} /></div>}>
+              <TrendChart chartData={chartData} />
+            </Suspense>
           </CardContent>
         </Card>
       </div>
