@@ -569,16 +569,6 @@ O que você gostaria de saber?`
                                   {insight.description}
                                 </p>
                               </div>
-                                  {insight.value && (
-                                    <span className="text-sm font-bold text-foreground">
-                                      {insight.value}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {insight.description}
-                                </p>
-                              </div>
                             </div>
                           </Card>
                         ))}
