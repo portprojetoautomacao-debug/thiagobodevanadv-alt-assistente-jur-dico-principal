@@ -1,31 +1,112 @@
+import { useState, useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sparkle } from '@phosphor-icons/react'
+import { GoogleAuthButton } from '@/components/GoogleAuth'
+import Sidebar from '@/components/Sidebar'
+import Dashboard from '@/components/Dashboard'
+import ProcessCRM from '@/components/ProcessCRM'
+import Calendar from '@/components/Calendar'
+import FinancialManagement from '@/components/FinancialManagement'
+import CalculadoraPrazos from '@/components/CalculadoraPrazos'
+import PDFUploader from '@/components/PDFUploader'
+import MinutasManager from '@/components/MinutasManager'
+import Donna from '@/components/Donna'
+import AIAgents from '@/components/AIAgents'
+import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import { useKV } from '@/hooks/use-kv'
+import type { ViewType, User } from '@/types'
 
 function App() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Sparkle size={32} className="text-primary" weight="duotone" />
+  const [currentView, setCurrentView] = useState<ViewType>('dashboard')
+  const [user, setUser] = useKV<User | null>('user', null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    setIsAuthenticated(!!user)
+  }, [user])
+
+  const handleAuthSuccess = (userData: User) => {
+    setUser(userData)
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setIsAuthenticated(false)
+    setCurrentView('dashboard')
+  }
+
+  const renderContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <Dashboard onNavigate={setCurrentView} />
+      case 'crm':
+      case 'processos':
+        return <ProcessCRM />
+      case 'calendar':
+      case 'calendario':
+        return <Calendar />
+      case 'financeiro':
+        return <FinancialManagement />
+      case 'prazos':
+      case 'calculadora':
+        return <CalculadoraPrazos />
+      case 'upload-pdf':
+        return <PDFUploader />
+      case 'minutas':
+        return <MinutasManager />
+      case 'donna':
+      case 'assistente':
+        return <Donna />
+      case 'ai-agents':
+        return <AIAgents onNavigate={setCurrentView} />
+      case 'analytics':
+        return <AnalyticsDashboard />
+      default:
+        return <Dashboard onNavigate={setCurrentView} />
+    }
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full space-y-6">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Assistente Jurídico PJe
+            </h1>
+            <p className="text-muted-foreground">
+              Sistema inteligente de gestão jurídica com IA
+            </p>
           </div>
-          <CardTitle className="text-2xl">Welcome to Spark</CardTitle>
-          <CardDescription>
-            Your app is ready to be built
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            This is a fresh Spark template. Start building your application by modifying the App.tsx file.
-          </p>
-          <Button className="w-full" size="lg">Get Started</Button>
-        </CardContent>
-      </Card>
+          
+          <div className="space-y-4">
+            <GoogleAuthButton
+              onSuccess={handleAuthSuccess}
+              onError={(error) => console.error('Erro na autenticação:', error)}
+            />
+          </div>
+        </div>
+        <Toaster />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        user={user}
+        onLogout={handleLogout}
+      />
+      <main className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto p-6">
+          {renderContent()}
+        </div>
+      </main>
       <Toaster />
     </div>
-  );
+  )
 }
 
 export default App
