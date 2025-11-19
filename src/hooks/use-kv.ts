@@ -51,7 +51,7 @@ export function useKV<T>(
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
         
         // In production, also sync to Vercel KV (if available)
-        if (import.meta.env.PROD && window.fetch) {
+        if (import.meta.env.PROD && typeof window.fetch !== 'undefined') {
           syncToVercelKV(key, valueToStore);
         }
       } catch (error) {

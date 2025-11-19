@@ -6,24 +6,15 @@
 
 // TypeScript interfaces for Spark global objects
 interface SparkKV {
-  get: (key: string) => Promise<unknown>
-  set: (key: string, value: unknown) => Promise<unknown>
+  get: <T>(key: string) => Promise<T | undefined>
+  set: <T>(key: string, value: T) => Promise<void>
   delete: (key: string) => Promise<void>
   keys: () => Promise<string[]>
-  [key: string]: unknown // Allow other properties
+  [key: string]: unknown
 }
 
 interface SparkLLM {
-  (prompt: string, model: string, jsonResponse?: boolean): Promise<unknown>
-}
-
-interface SparkGlobal {
-  kv?: SparkKV
-  llm?: SparkLLM
-}
-
-interface SparkWindow extends Window {
-  spark?: SparkGlobal
+  (prompt: string, modelName?: string, jsonMode?: boolean): Promise<string>
 }
 
 interface ResponseLike {
@@ -36,7 +27,7 @@ interface ResponseLike {
 
 export function applySparkClientFixes() {
   if (typeof window === 'undefined') return;
-  const w = window as SparkWindow;
+  const w = window;
   if (!w.spark?.kv) return;
 
   try {
@@ -86,12 +77,12 @@ export function applySparkClientFixes() {
 
     // build wrappers for methods we want to patch
     const patchedKV: SparkKV = {
-      async get(key: string) {
+      async get<T>(key: string): Promise<T | undefined> {
         try {
           // Prefer calling the original if available (it may throw in plugin), otherwise implement ourselves
           if (typeof original.get === 'function') {
             try {
-              return await original.get(key);
+              return await original.get<T>(key);
             } catch (err) {
               // if plugin throws failed-to-parse, try to fetch directly to provide more context
               // continue to fallback
@@ -104,13 +95,13 @@ export function applySparkClientFixes() {
             const body = await res.text();
             throw new Error(`Failed to fetch KV key: ${res.status} ${res.statusText} - ${body.slice(0, 600)}`);
           }
-          return await parseJSONSafely(res);
+          return await parseJSONSafely(res) as T | undefined;
         } catch (err) {
           console.error('Error in wrapped spark.kv.get():', err);
           throw err;
         }
       },
-      async keys() {
+      async keys(): Promise<string[]> {
         try {
           if (typeof original.keys === 'function') {
             try {
@@ -138,10 +129,10 @@ export function applySparkClientFixes() {
           throw err;
         }
       },
-      async set(key: string, value: unknown) {
+      async set<T>(key: string, value: T): Promise<void> {
         if (typeof original.set === 'function') {
           try {
-            return await original.set(key, value);
+            return await original.set<T>(key, value);
           } catch (err) {
             // fallback
           }
@@ -155,7 +146,6 @@ export function applySparkClientFixes() {
           const body = await res.text();
           throw new Error(`Failed to set KV key: ${res.status} ${res.statusText} - ${body.slice(0, 300)}`);
         }
-        return value;
       },
       async delete(key: string) {
         if (typeof original.delete === 'function') {
@@ -189,10 +179,9 @@ export function applySparkClientFixes() {
   }
 }
 
-// Additional wrapper to make spark.llm safer to diagnose HTML responses
 export function applySparkLLMFixes() {
   if (typeof window === 'undefined') return;
-  const w = window as SparkWindow;
+  const w = window;
   if (!w.spark?.llm) return;
 
   try {
