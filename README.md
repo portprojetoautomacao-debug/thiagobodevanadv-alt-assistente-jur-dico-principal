@@ -38,6 +38,22 @@
 
 **TL;DR**: Configure o Google OAuth com as URLs corretas do Vercel em "Authorized JavaScript origins" no Google Cloud Console.
 
+## 🚨 AVISO CRÍTICO - DEPLOYMENT VERCEL
+
+**⚠️ LEIA [`REGRAS_VERCEL_DEPLOYMENT.md`](./REGRAS_VERCEL_DEPLOYMENT.md) ANTES DE ALTERAR O `vercel.json`**
+
+**REGRA FUNDAMENTAL**: Se `rewrites`, `redirects`, `headers`, `cleanUrls` ou `trailingSlash` estão sendo usados, então `routes` NÃO PODE estar presente.
+
+❌ **NUNCA faça isso** (quebra o deploy):
+```json
+{
+  "rewrites": [...],
+  "routes": [...]     // ← ERRO FATAL!
+}
+```
+
+✅ **Configuração atual funciona** - não altere sem ler as regras completas.
+
 ---
 
 Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
