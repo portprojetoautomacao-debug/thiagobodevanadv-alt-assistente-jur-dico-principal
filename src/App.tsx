@@ -20,14 +20,12 @@ function App() {
           <p className="text-sm text-muted-foreground text-center">
             This is a fresh Spark template. Start building your application by modifying the App.tsx file.
           </p>
-          <Button className="w-full" size="lg">
-            Get Started
-          </Button>
+          <Button className="w-full" size="lg">Get Started</Button>
         </CardContent>
       </Card>
       <Toaster />
     </div>
-  )
+  );
 }
 
 export default App
