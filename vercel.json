@@ -18,11 +18,11 @@
     {
       "source": "/_spark/:service",
       "destination": "/api/spark-proxy?service=:service"
-    },
-    {
-      "source": "/((?!api).*)",
-      "destination": "/index.html"
     }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
     {
