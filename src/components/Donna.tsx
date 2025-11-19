@@ -582,7 +582,6 @@ O que você gostaria de saber?`
                       })}
                     </span>
                   </div>
-                </div>
               ))}
               
               {isProcessing && (
