@@ -36,9 +36,14 @@ export default defineConfig({
             return 'ui-vendor';
           }
           
-          // Charts libraries
-          if (id.includes('recharts') || id.includes('d3')) {
+          // Charts libraries - separate chunk to avoid initialization issues
+          if (id.includes('recharts')) {
             return 'charts';
+          }
+          
+          // D3 separately to avoid conflicts
+          if (id.includes('d3')) {
+            return 'd3-vendor';
           }
           
           // Form libraries

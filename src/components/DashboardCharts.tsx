@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { 
   PieChart, 
   Pie, 
@@ -26,13 +25,6 @@ interface DashboardChartsProps {
   chartData: ChartData
 }
 
-// Loading placeholder
-const ChartLoading = () => (
-  <div className="flex items-center justify-center h-[250px]">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-  </div>
-)
-
 export function StatusChart({ chartData }: DashboardChartsProps) {
   try {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
@@ -45,26 +37,24 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <Suspense fallback={<ChartLoading />}>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={chartData.statusData}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            >
-              {chartData.statusData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </Suspense>
+      <ResponsiveContainer width="100%" height={250}>
+        <PieChart>
+          <Pie
+            data={chartData.statusData}
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+          >
+            {chartData.statusData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
     )
   } catch (error) {
     console.error('Error rendering StatusChart:', error)
@@ -89,23 +79,21 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <Suspense fallback={<ChartLoading />}>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={chartData.varaChartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
-            <XAxis dataKey="name" stroke="oklch(0.65 0.08 180)" fontSize={12} />
-            <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'oklch(0.16 0.04 240)', 
-                border: '1px solid oklch(0.25 0.06 240)',
-                borderRadius: '8px'
-              }}
-            />
-            <Bar dataKey="value" fill="oklch(0.75 0.25 190)" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </Suspense>
+      <ResponsiveContainer width="100%" height={250}>
+        <BarChart data={chartData.varaChartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
+          <XAxis dataKey="name" stroke="oklch(0.65 0.08 180)" fontSize={12} />
+          <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: 'oklch(0.16 0.04 240)', 
+              border: '1px solid oklch(0.25 0.06 240)',
+              borderRadius: '8px'
+            }}
+          />
+          <Bar dataKey="value" fill="oklch(0.75 0.25 190)" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     )
   } catch (error) {
     console.error('Error rendering VaraChart:', error)
@@ -130,25 +118,23 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <Suspense fallback={<ChartLoading />}>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={chartData.trendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
-            <XAxis dataKey="month" stroke="oklch(0.65 0.08 180)" fontSize={12} />
-            <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'oklch(0.16 0.04 240)', 
-                border: '1px solid oklch(0.25 0.06 240)',
-                borderRadius: '8px'
-              }}
-            />
-            <Legend />
-            <Line type="monotone" dataKey="ativos" stroke="oklch(0.75 0.25 190)" strokeWidth={2} name="Ativos" />
-            <Line type="monotone" dataKey="concluidos" stroke="oklch(0.70 0.26 300)" strokeWidth={2} name="Concluídos" />
-          </LineChart>
-        </ResponsiveContainer>
-      </Suspense>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={chartData.trendData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
+          <XAxis dataKey="month" stroke="oklch(0.65 0.08 180)" fontSize={12} />
+          <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: 'oklch(0.16 0.04 240)', 
+              border: '1px solid oklch(0.25 0.06 240)',
+              borderRadius: '8px'
+            }}
+          />
+          <Legend />
+          <Line type="monotone" dataKey="ativos" stroke="oklch(0.75 0.25 190)" strokeWidth={2} name="Ativos" />
+          <Line type="monotone" dataKey="concluidos" stroke="oklch(0.70 0.26 300)" strokeWidth={2} name="Concluídos" />
+        </LineChart>
+      </ResponsiveContainer>
     )
   } catch (error) {
     console.error('Error rendering TrendChart:', error)
