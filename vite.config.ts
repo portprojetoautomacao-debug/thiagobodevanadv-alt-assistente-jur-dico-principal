@@ -36,10 +36,10 @@ export default defineConfig({
             return 'ui-vendor';
           }
           
-          // Charts libraries - separate chunk to avoid initialization issues
-          if (id.includes('recharts')) {
-            return 'charts';
-          }
+          // Charts libraries - temporarily disable separate chunk to avoid initialization issues
+          // if (id.includes('recharts')) {
+          //   return 'charts';
+          // }
           
           // D3 separately to avoid conflicts
           if (id.includes('d3')) {
