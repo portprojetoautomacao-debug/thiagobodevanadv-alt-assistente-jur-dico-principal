@@ -265,7 +265,7 @@ Responda de forma profissional, objetiva e com insights estratégicos. Use markd
 💎 **Resultado:**
 • Lucro líquido: R$ 53.250 (61% margem)
 
-⚠️ **Alertas:**
+���️ **Alertas:**
 • 5 clientes com pendências há 60+ dias`
       }
       
@@ -529,16 +529,6 @@ O que você gostaria de saber?`
               {(messages || []).map((message) => (
                 <div
                   key={message.id}
-                  className={cn(
-                    'flex gap-3',
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'max-w-[80%] space-y-2',
-                      message.role === 'user' ? 'items-end' : 'items-start'
-                    )}
                   >
                     <Card
                       className={cn(
@@ -569,6 +559,16 @@ O que você gostaria de saber?`
                                   <h4 className="text-xs font-semibold text-foreground">
                                     {insight.title}
                                   </h4>
+                                  {insight.value && (
+                                    <span className="text-sm font-bold text-foreground">
+                                      {insight.value}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {insight.description}
+                                </p>
+                              </div>
                                   {insight.value && (
                                     <span className="text-sm font-bold text-foreground">
                                       {insight.value}
