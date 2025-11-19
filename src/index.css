@@ -87,12 +87,20 @@
   --color-accent-pink: var(--accent-pink);
 }
 
+html {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.25 0.20 190 / 0.4), transparent),
+              radial-gradient(ellipse 60% 50% at 0% 50%, oklch(0.25 0.18 300 / 0.3), transparent),
+              radial-gradient(ellipse 60% 50% at 100% 50%, oklch(0.25 0.16 350 / 0.3), transparent),
+              oklch(0.12 0.03 240);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
 body {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--background);
-  background-attachment: fixed;
+  background: transparent;
   min-height: 100vh;
 }
 
@@ -544,20 +552,7 @@ select:focus {
 .fluent-spacing-lg { padding: 1.5rem; }
 .fluent-spacing-xl { padding: 2rem; }
 
-/* Remove Deprecated Neon Classes */
-.neon-glow,
-.gradient-border,
-.gradient-text,
-.card-glow,
 /* Modern Visual Effects */
-body {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  background: radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.25 0.20 190 / 0.4), transparent),
-              radial-gradient(ellipse 60% 50% at 0% 50%, oklch(0.25 0.18 300 / 0.3), transparent),
-              radial-gradient(ellipse 60% 50% at 100% 50%, oklch(0.25 0.16 350 / 0.3), transparent),
-              oklch(0.12 0.03 240);
-  background-attachment: fixed;
-}
 
 @keyframes neon-pulse {
   0%, 100% { 
