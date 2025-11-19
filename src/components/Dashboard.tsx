@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, Suspense } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import type { Process, Prazo, ViewType } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
