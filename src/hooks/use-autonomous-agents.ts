@@ -150,37 +150,45 @@ export function useAutonomousAgents() {
     }
   }, [taskQueue, setTaskQueue, setAgents, setCompletedTasks, logActivity])
 
+  // Store the processNextTask function in a ref to avoid re-renders
+  const processNextTaskRef = useRef(processNextTask)
+
+  // Update the ref when processNextTask changes
   useEffect(() => {
-    // Temporarily disabled automatic processing to prevent infinite re-renders
-    // TODO: Fix the infinite loop issue
-    /*
+    processNextTaskRef.current = processNextTask
+  }, [processNextTask])
+
+  useEffect(() => {
     const interval = setInterval(() => {
       const currentAgents = agents || []
-      
+
       currentAgents.forEach(agent => {
         if (agent.enabled && agent.continuousMode) {
-          processNextTask(agent)
+          // Use the ref to avoid triggering re-renders
+          processNextTaskRef.current(agent)
         }
       })
 
-      setAgents((current) => 
-        (current || []).map(agent => {
-          if (!agent.enabled || !agent.continuousMode) return agent
-          
-          const activity = getAgentActivity(agent)
-          
-          if (activity !== agent.lastActivity && Math.random() > 0.5) {
-            return { ...agent, lastActivity: activity }
-          }
-          
-          return agent
-        })
-      )
-    }, 3000)
+      // Update agent activities less frequently to reduce re-renders
+      if (Math.random() > 0.7) { // Only update ~30% of the time
+        setAgents((current) =>
+          (current || []).map(agent => {
+            if (!agent.enabled || !agent.continuousMode) return agent
+
+            const activity = getAgentActivity(agent)
+
+            if (activity !== agent.lastActivity) {
+              return { ...agent, lastActivity: activity }
+            }
+
+            return agent
+          })
+        )
+      }
+    }, 5000) // Increased interval from 3s to 5s
 
     return () => clearInterval(interval)
-    */
-  }, [agents, processNextTask, setAgents])
+  }, [agents, setAgents]) // Removed processNextTask from dependencies
 
   useEffect(() => {
     const resetDailyCounters = () => {
