@@ -13,6 +13,12 @@ import MinutasManager from '@/components/MinutasManager'
 import Donna from '@/components/Donna'
 import AIAgents from '@/components/AIAgents'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import ExpedientePanel from '@/components/ExpedientePanel'
+import BatchAnalysis from '@/components/BatchAnalysis'
+import AudioTranscription from '@/components/AudioTranscription'
+import DatabaseQueries from '@/components/DatabaseQueries'
+import DatajudChecklist from '@/components/DatajudChecklist'
+import KnowledgeBase from '@/components/KnowledgeBase'
 import { useKV } from '@/hooks/use-kv'
 import type { ViewType, User } from '@/types'
 
@@ -46,14 +52,17 @@ function App() {
         return <Dashboard onNavigate={setCurrentView} />
       case 'crm':
       case 'processos':
+      case 'processes':
         return <ProcessCRM />
       case 'calendar':
       case 'calendario':
         return <Calendar />
       case 'financeiro':
+      case 'financial':
         return <FinancialManagement />
       case 'prazos':
       case 'calculadora':
+      case 'calculator':
         return <CalculadoraPrazos />
       case 'upload-pdf':
         return <PDFUploader />
@@ -66,6 +75,18 @@ function App() {
         return <AIAgents onNavigate={setCurrentView} />
       case 'analytics':
         return <AnalyticsDashboard />
+      case 'expedientes':
+        return <ExpedientePanel />
+      case 'batch':
+        return <BatchAnalysis />
+      case 'audio':
+        return <AudioTranscription />
+      case 'queries':
+        return <DatabaseQueries />
+      case 'datajud':
+        return <DatajudChecklist />
+      case 'knowledge':
+        return <KnowledgeBase />
       default:
         return <Dashboard onNavigate={setCurrentView} />
     }
