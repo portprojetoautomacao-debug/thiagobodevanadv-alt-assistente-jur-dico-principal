@@ -37,7 +37,7 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="99%" height={250}>
         <PieChart>
           <Pie
             data={chartData.statusData}
@@ -79,7 +79,7 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="99%" height={250}>
         <BarChart data={chartData.varaChartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
           <XAxis dataKey="name" stroke="oklch(0.65 0.08 180)" fontSize={12} />
@@ -118,7 +118,7 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="99%" height={250}>
         <LineChart data={chartData.trendData}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
           <XAxis dataKey="month" stroke="oklch(0.65 0.08 180)" fontSize={12} />
