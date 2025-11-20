@@ -9,6 +9,17 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* Fix for Sonner toast compatibility */
+[data-sonner-toast][data-swiped=true] {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 :root {
