@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Sparkle, FileText, Download, Brain } from '@phosphor-icons/react'
+import { Sparkle, FileText, Download, Brain, Tray } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
 import {
@@ -21,6 +21,9 @@ export default function ExpedientePanel() {
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<string | null>(null)
+
+  // Ensure expedientes is always an array to prevent runtime errors
+  const safeExpedientes = Array.isArray(expedientes) ? expedientes : []
 
   const handleAnalyze = async (exp: Expediente) => {
     setAnalyzing(true)
@@ -86,61 +89,61 @@ export default function ExpedientePanel() {
   ]
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
-        <p className="text-muted-foreground mt-1">
-          Caixa de entrada inteligente com análise de IA
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Expedientes Recentes</CardTitle>
-              <CardDescription>Intimações aguardando análise</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {(expedientes || []).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Nenhum expediente cadastrado. Use "Análise em Lote" para adicionar.
-                </p>
-              ) : (
-                (expedientes || []).map((exp) => (
-                  <div
-                    key={exp.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedExp?.id === exp.id
-                        ? 'bg-primary/10 border-primary'
-                        : 'bg-card border-border hover:bg-muted'
-                    }`}
-                    onClick={() => setSelectedExp(exp)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                      {exp.analyzed ? (
-                        <Badge variant="default">Analisado</Badge>
-                      ) : (
-                        <Badge variant="outline">Pendente</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+    <>
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
+          <p className="text-muted-foreground mt-1">
+            Caixa de entrada inteligente com análise de IA
+          </p>
         </div>
 
-        <div className="lg:col-span-2 space-y-4">
-          {selectedExp ? (
-            <>
-              <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Expedientes Recentes</CardTitle>
+                <CardDescription>Intimações aguardando análise</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {safeExpedientes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Nenhum expediente cadastrado. Use "Análise em Lote" para adicionar.
+                  </p>
+                ) : (
+                  safeExpedientes.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedExp?.id === exp.id
+                          ? 'bg-primary/10 border-primary'
+                          : 'bg-card border-border hover:bg-muted'
+                      }`}
+                      onClick={() => setSelectedExp(exp)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        {exp.analyzed ? (
+                          <Badge variant="default">Analisado</Badge>
+                        ) : (
+                          <Badge variant="outline">Pendente</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-2 space-y-4">
+            {selectedExp ? (
+              <Card key="selected-expediente">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -227,18 +230,18 @@ export default function ExpedientePanel() {
                   )}
                 </CardContent>
               </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <Tray className="w-16 h-16 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium text-foreground">Selecione um expediente</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Escolha um expediente da lista para visualizar e analisar
-                </p>
-              </CardContent>
-            </Card>
-          )}
+            ) : (
+              <Card key="empty-selection">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Tray className="w-16 h-16 text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium text-foreground">Selecione um expediente</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Escolha um expediente da lista para visualizar e analisar
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
 
@@ -299,14 +302,6 @@ export default function ExpedientePanel() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-function Tray(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor">
-      <path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM48,48H208V152H176a16,16,0,0,0-16,16v40H96V168a16,16,0,0,0-16-16H48Zm0,160V168H80v40Zm160,0H176V168h32Z" />
-    </svg>
+    </>
   )
 }
