@@ -361,7 +361,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
   const handleToggleAgent = (agentId: string) => {
     const agent = agents.find(a => a.id === agentId)
-    if (!agent) return
+    if (!agent) return null
     toggleAgent(agentId)
     toast.success(agent.enabled 
       ? `${agent.name} desativado` 
