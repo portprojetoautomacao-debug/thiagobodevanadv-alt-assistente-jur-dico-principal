@@ -7,6 +7,10 @@ import {
   shouldPauseForHuman,
   canResumeAfterHuman 
 } from '@/lib/agents'
+import { 
+  processTaskWithRealAI, 
+  isRealAgentsEnabled 
+} from '@/lib/real-agent-client'
 import { createTaskGenerator, type AgentTaskGenerator } from '@/lib/agent-task-generator'
 
 export function useAutonomousAgents() {
@@ -21,6 +25,7 @@ export function useAutonomousAgents() {
     result: 'success' | 'warning' | 'error'
   }>>('agent-activity-log', [])
   const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-tasks', true)
+  const [useRealAI, setUseRealAI] = useKV<boolean>('use-real-ai', false)
   
   const processingRef = useRef<Set<string>>(new Set())
   const taskGeneratorRef = useRef<AgentTaskGenerator | null>(null)
@@ -102,7 +107,10 @@ export function useAutonomousAgents() {
     )
 
     try {
-      const result = await processTaskWithAI(task, agent)
+      // Usar IA real se habilitado
+      const result = useRealAI && isRealAgentsEnabled()
+        ? await processTaskWithRealAI(task, agent)
+        : await processTaskWithAI(task, agent)
 
       const completedTask: AgentTask = {
         ...task,
@@ -265,6 +273,26 @@ export function useAutonomousAgents() {
     setAutoGenerateEnabled((current) => !current)
   }, [setAutoGenerateEnabled])
 
+  const toggleRealAI = useCallback(() => {
+    setUseRealAI((current) => {
+      const newValue = !current
+      if (newValue && !isRealAgentsEnabled()) {
+        // Mostrar aviso sobre uso de IA real
+        const confirmed = window.confirm(
+          'Ativar modo de IA Real?\n\n' +
+          '✓ Os agentes usarão Spark LLM (GPT-4) para processar tarefas\n' +
+          '✓ Respostas mais precisas e contextualizadas\n' +
+          '✓ Integração com APIs externas (DJEN, DataJud)\n' +
+          '✗ Maior consumo de recursos\n' +
+          '✗ Pode ter custos associados\n\n' +
+          'Continuar?'
+        )
+        if (!confirmed) return current
+      }
+      return newValue
+    })
+  }, [setUseRealAI])
+
   useEffect(() => {
     if (!taskGeneratorRef.current && agents && agents.length > 0) {
       const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
@@ -323,11 +351,13 @@ export function useAutonomousAgents() {
     completedTasks: completedTasks || [],
     activityLog: activityLog || [],
     autoGenerateEnabled,
+    useRealAI,
     addTask,
     toggleAgent,
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
     toggleAutoGenerate,
+    toggleRealAI,
     setAgents,
   }
 }
