@@ -1,6 +1,5 @@
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
-import "@github/spark/spark"
 import { applySparkClientFixes, applySparkLLMFixes } from './lib/spark-client-fixes'
 
 import App from './App.tsx'
@@ -12,7 +11,17 @@ import "./main.css"
 applySparkClientFixes()
 applySparkLLMFixes()
 
-createRoot(document.getElementById('root')!).render(
+// Delay Spark initialization to avoid DOM conflicts
+setTimeout(() => {
+  import("@github/spark/spark")
+}, 100)
+
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  throw new Error('Root element not found')
+}
+
+createRoot(rootElement).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
     <App />
   </ErrorBoundary>

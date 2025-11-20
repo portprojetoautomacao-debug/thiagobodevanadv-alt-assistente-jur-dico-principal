@@ -43,7 +43,7 @@ export default function DocumentCheckAgent({ processes }: DocumentCheckAgentProp
   const [autoCheckEnabled, setAutoCheckEnabled] = useKV<boolean>('auto-document-check', true)
 
   const analyzeProcessDocuments = async () => {
-    if (processes.length === 0) return
+    if (processes.length === 0) return null
 
     setIsAnalyzing(true)
     

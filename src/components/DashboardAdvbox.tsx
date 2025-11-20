@@ -211,7 +211,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
             </CardHeader>
             <CardContent className="pt-6">
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="99%" height="100%">
                   <LineChart data={performanceData}>
                     <defs>
                       <linearGradient id="colorEste" x1="0" y1="0" x2="0" y2="1">

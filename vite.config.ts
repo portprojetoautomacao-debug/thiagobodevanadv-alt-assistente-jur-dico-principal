@@ -14,12 +14,17 @@ export default defineConfig({
     react(),
     tailwindcss(),
     // DO NOT REMOVE
-    createIconImportProxy() as PluginOption,
+    // createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
   ],
   resolve: {
     alias: {
       '@': resolve(projectRoot, 'src')
+    }
+  },
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
     }
   },
   build: {
@@ -36,9 +41,14 @@ export default defineConfig({
             return 'ui-vendor';
           }
           
-          // Charts libraries
-          if (id.includes('recharts') || id.includes('d3')) {
-            return 'charts';
+          // Charts libraries - temporarily disable separate chunk to avoid initialization issues
+          // if (id.includes('recharts')) {
+          //   return 'charts';
+          // }
+          
+          // D3 separately to avoid conflicts
+          if (id.includes('d3')) {
+            return 'd3-vendor';
           }
           
           // Form libraries
