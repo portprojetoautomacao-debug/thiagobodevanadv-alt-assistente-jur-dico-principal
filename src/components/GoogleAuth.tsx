@@ -5,11 +5,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Warning } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
 
-interface GoogleUser {
+export interface GoogleUser {
   id: string
   email: string
   name: string
   picture: string
+  role?: 'admin' | 'advogado' | 'assistente'
 }
 
 interface GoogleAuthButtonProps {

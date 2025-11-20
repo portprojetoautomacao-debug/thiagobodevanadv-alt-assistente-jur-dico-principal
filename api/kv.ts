@@ -28,13 +28,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // If Vercel KV is not available, return an error
-  // In development, the client will fall back to localStorage
+  // If Vercel KV is not available, return success with fallback indication
+  // This allows the client to use localStorage as fallback
   if (!isVercelKVAvailable) {
-    res.status(503).json({
-      error: 'Vercel KV not configured',
-      message: 'Using localStorage fallback in development'
-    });
+    if (req.method === 'GET') {
+      // Return null for GET requests when KV is not available
+      res.status(200).json({ key: req.query.key, value: null, fallback: true });
+    } else if (req.method === 'POST') {
+      // Return success for POST requests when KV is not available
+      res.status(200).json({ success: true, key: req.body?.key, fallback: true });
+    } else {
+      res.status(405).json({ error: 'Method not allowed' });
+    }
     return;
   }
 

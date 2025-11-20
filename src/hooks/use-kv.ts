@@ -40,25 +40,27 @@ export function useKV<T>(
   // Return a wrapped version of useState's setter function that persists
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
-      try {
-        // Allow value to be a function so we have same API as useState
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        
-        // Save state
-        setStoredValue(valueToStore);
-        
-        // Save to localStorage
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-        
-        // In production, also sync to Vercel KV (if available)
-        if (import.meta.env.PROD && window.fetch) {
-          syncToVercelKV(key, valueToStore);
+      setStoredValue((currentStoredValue) => {
+        try {
+          // Allow value to be a function so we have same API as useState
+          const valueToStore = value instanceof Function ? value(currentStoredValue) : value;
+          
+          // Save to localStorage
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          
+          // In production, also sync to Vercel KV (if available)
+          if (import.meta.env.PROD && typeof window.fetch !== 'undefined') {
+            syncToVercelKV(key, valueToStore);
+          }
+          
+          return valueToStore;
+        } catch (error) {
+          console.error(`Error setting localStorage key "${key}":`, error);
+          return currentStoredValue;
         }
-      } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error);
-      }
+      });
     },
-    [key, storedValue]
+    [key]
   );
 
   // Load from Vercel KV on mount (production only)

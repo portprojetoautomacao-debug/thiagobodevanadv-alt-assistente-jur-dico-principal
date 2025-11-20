@@ -167,7 +167,7 @@ export default function OfficeManagement() {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="99%" height="100%">
                     <BarChart data={tempoData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
                       <XAxis dataKey="mes" stroke="#6b7280" />
@@ -196,7 +196,7 @@ export default function OfficeManagement() {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="99%" height="100%">
                     <PieChart>
                       <Pie
                         data={estoqueData}
@@ -262,7 +262,7 @@ export default function OfficeManagement() {
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="99%" height="100%">
                   <BarChart data={tempoData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
                     <XAxis dataKey="mes" stroke="#6b7280" />
@@ -300,7 +300,7 @@ export default function OfficeManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="99%" height="100%">
                       <PieChart>
                         <Pie
                           data={custosData}

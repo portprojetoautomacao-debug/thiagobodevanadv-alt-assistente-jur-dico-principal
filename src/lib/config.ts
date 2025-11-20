@@ -1,10 +1,11 @@
-const getEnvVar = (key: string, defaultValue?: string): string => {
+const getEnvVar = (key: string, defaultValue?: string, logError: boolean = true): string => {
   const value = import.meta.env[key] || defaultValue
-  
-  if (!value) {
+
+  // Only log error if no value and no default provided AND logging is enabled
+  if (!value && !defaultValue && logError) {
     console.error(`Missing required environment variable: ${key}`)
   }
-  
+
   return value || ''
 }
 
@@ -14,7 +15,7 @@ export const config = {
     redirectUri: getEnvVar('VITE_REDIRECT_URI', window.location.origin),
   },
   datajud: {
-    apiKey: getEnvVar('VITE_DATAJUD_API_KEY', ''),
+    apiKey: getEnvVar('VITE_DATAJUD_API_KEY', '', false), // Optional - no error logging
   },
   app: {
     environment: getEnvVar('VITE_APP_ENV', 'development'),
