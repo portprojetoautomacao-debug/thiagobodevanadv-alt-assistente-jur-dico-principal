@@ -97,9 +97,13 @@ Exemplos realistas:
 - "Acordo homologado. Aguardando cumprimento das parcelas."
 - "Recurso de apelação distribuído ao TJ. Aguardando inclusão em pauta."
 
-FORMATO DE RETORNO:
-Retorne um objeto JSON com uma propriedade "processos" contendo o array de processos.
+INSTRUÇÕES CRÍTICAS PARA RESPOSTA:
+- RETORNE APENAS O OBJETO JSON, SEM NENHUM TEXTO ADICIONAL ANTES OU DEPOIS
+- NÃO INCLUA EXPLICAÇÕES, COMENTÁRIOS OU MARKDOWN
+- O JSON DEVE SER VÁLIDO E BEM FORMADO
+- GARANTA QUE TODAS AS CHAVES E VALORES ESTEJAM CORRETAMENTE FECHADOS
 
+FORMATO DE RETORNO:
 {
   "processos": [
     {
@@ -137,16 +141,57 @@ Retorne um objeto JSON com uma propriedade "processos" contendo o array de proce
 
 GERE ${count} PROCESSOS COMPLETAMENTE DIFERENTES entre si!`
 
-  try {
-    const response = await spark.llm(prompt, "gpt-4o", true)
-    const data = JSON.parse(response)
-    
-    if (!data.processos || !Array.isArray(data.processos)) {
-      console.error('Formato inválido retornado pela IA:', data)
-      return []
+  // Function to clean and extract JSON from response
+  function extractJSON(text: string): string {
+    // Remove any text before the first {
+    const startIndex = text.indexOf('{')
+    if (startIndex === -1) return text
+
+    let braceCount = 0
+    let endIndex = startIndex
+
+    for (let i = startIndex; i < text.length; i++) {
+      if (text[i] === '{') braceCount++
+      else if (text[i] === '}') braceCount--
+
+      if (braceCount === 0) {
+        endIndex = i
+        break
+      }
     }
-    
-    return data.processos
+
+    return text.substring(startIndex, endIndex + 1)
+  }
+
+  try {
+    let retries = 3
+    let response: string
+    let data: any
+
+    while (retries > 0) {
+      try {
+        response = await spark.llm(prompt, "gpt-4o", true)
+        
+        // Clean the response to extract only the JSON
+        const cleanedResponse = extractJSON(response)
+        
+        data = JSON.parse(cleanedResponse)
+
+        if (!data.processos || !Array.isArray(data.processos)) {
+          console.error('Formato inválido retornado pela IA (sem "processos" ou não é array):', data)
+          throw new Error('Invalid AI response format.')
+        }
+        
+        return data.processos
+      } catch (parseError) {
+        console.error('Erro de parse JSON ou formato inválido, tentando novamente:', parseError)
+        console.log('Resposta bruta da IA:', response)
+        retries--
+        if (retries === 0) {
+          throw parseError
+        }
+      }
+    }
   } catch (error) {
     console.error('Erro ao gerar processos com IA:', error)
     throw new Error('Falha ao gerar processos. Por favor, tente novamente.')
