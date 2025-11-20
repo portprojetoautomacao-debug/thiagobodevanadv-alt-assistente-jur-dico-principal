@@ -3,6 +3,20 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "crons": [
+    {
+      "path": "/api/cron/djen-monitor",
+      "schedule": "0 8-20/2 * * *"
+    },
+    {
+      "path": "/api/cron/daily-reset",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/agents/process-queue",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/_spark/llm",
