@@ -13,6 +13,10 @@
       "destination": "/api/kv"
     },
     {
+      "source": "/_spark/loaded",
+      "destination": "/api/loaded"
+    },
+    {
       "source": "/_spark/:service/:path*",
       "destination": "/api/spark-proxy?service=:service&path=:path"
     },

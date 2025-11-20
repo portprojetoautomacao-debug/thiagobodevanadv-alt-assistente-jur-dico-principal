@@ -1,10 +1,11 @@
 const getEnvVar = (key: string, defaultValue?: string): string => {
   const value = import.meta.env[key] || defaultValue
-  
-  if (!value) {
+
+  // Only log error if no value and no default provided (required variables)
+  if (!value && !defaultValue) {
     console.error(`Missing required environment variable: ${key}`)
   }
-  
+
   return value || ''
 }
 
