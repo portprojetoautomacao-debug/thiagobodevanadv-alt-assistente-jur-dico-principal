@@ -1,4 +1,4 @@
-import { useMemo, Suspense } from 'react'
+import { useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import type { Process, Prazo, ViewType } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -253,9 +253,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<div className="h-[250px] flex items-center justify-center"><ChartPie className="animate-spin" size={24} /></div>}>
-              <StatusChart chartData={chartData} />
-            </Suspense>
+            <StatusChart chartData={chartData} />
           </CardContent>
         </Card>
 
@@ -267,9 +265,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<div className="h-[250px] flex items-center justify-center"><Gavel className="animate-spin" size={24} /></div>}>
-              <VaraChart chartData={chartData} />
-            </Suspense>
+            <VaraChart chartData={chartData} />
           </CardContent>
         </Card>
 
@@ -281,9 +277,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<div className="h-[250px] flex items-center justify-center"><TrendUp className="animate-spin" size={24} /></div>}>
-              <TrendChart chartData={chartData} />
-            </Suspense>
+            <TrendChart chartData={chartData} />
           </CardContent>
         </Card>
       </div>
