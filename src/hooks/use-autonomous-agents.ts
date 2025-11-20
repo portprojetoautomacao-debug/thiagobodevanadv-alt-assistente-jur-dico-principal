@@ -151,6 +151,9 @@ export function useAutonomousAgents() {
   }, [taskQueue, setTaskQueue, setAgents, setCompletedTasks, logActivity])
 
   useEffect(() => {
+    // Temporarily disabled automatic processing to prevent infinite re-renders
+    // TODO: Fix the infinite loop issue
+    /*
     const interval = setInterval(() => {
       const currentAgents = agents || []
       
@@ -176,6 +179,7 @@ export function useAutonomousAgents() {
     }, 3000)
 
     return () => clearInterval(interval)
+    */
   }, [agents, processNextTask, setAgents])
 
   useEffect(() => {
