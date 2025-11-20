@@ -191,7 +191,7 @@ function ChartTooltipContent({
               )}
             >
               {formatter && item?.value !== undefined && item.name ? (
-                <div>{formatter(item.value, item.name, item, index, item.payload)}</div>
+                <div>{formatter(item.value, item.name, item, index, item.payload) || item.value?.toLocaleString()}</div>
               ) : (
                 <>
                   {itemConfig?.icon ? (

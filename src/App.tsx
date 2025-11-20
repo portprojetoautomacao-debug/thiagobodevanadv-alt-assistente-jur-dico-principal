@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { GoogleAuthButton } from '@/components/GoogleAuth'
+import type { GoogleUser } from '@/components/GoogleAuth'
 import Sidebar from '@/components/Sidebar'
 import Dashboard from '@/components/Dashboard'
 import ProcessCRM from '@/components/ProcessCRM'
@@ -24,8 +25,12 @@ function App() {
     setIsAuthenticated(!!user)
   }, [user])
 
-  const handleAuthSuccess = (userData: User) => {
-    setUser(userData)
+  const handleAuthSuccess = (googleUser: GoogleUser) => {
+    const user: User = {
+      ...googleUser,
+      role: googleUser.role || 'advogado' // Valor padrão para advogados
+    }
+    setUser(user)
     setIsAuthenticated(true)
   }
 
