@@ -94,7 +94,7 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 notranslate" translate="no">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -118,7 +118,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background notranslate" translate="no">
       <Sidebar
         currentView={currentView}
         onViewChange={setCurrentView}
