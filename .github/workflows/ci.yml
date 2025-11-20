@@ -71,13 +71,9 @@ jobs:
 
     - name: Run tests
       run: |
-        echo "Running tests..."
-        npm test -- --run || {
-          echo "⚠️ Tests failed or not configured"
-          echo "This is expected if tests are not yet implemented"
-        }
+        echo "Running unit tests..."
+        npm test -- --run
       if: success()
-      continue-on-error: true
 
     - name: Build summary
       if: always()
