@@ -102,6 +102,9 @@ INSTRUÇÕES CRÍTICAS PARA RESPOSTA:
 - NÃO INCLUA EXPLICAÇÕES, COMENTÁRIOS OU MARKDOWN
 - O JSON DEVE SER VÁLIDO E BEM FORMADO
 - GARANTA QUE TODAS AS CHAVES E VALORES ESTEJAM CORRETAMENTE FECHADOS
+- NÃO USE VÍRGULAS NO FINAL DE LISTAS OU OBJETOS (TRAILING COMMAS)
+- ESCAPE CORRETAMENTE ASPAS DENTRO DE STRINGS
+- NÃO USE COMENTÁRIOS // DENTRO DO JSON
 
 FORMATO DE RETORNO:
 {
@@ -165,7 +168,7 @@ GERE ${count} PROCESSOS COMPLETAMENTE DIFERENTES entre si!`
 
   try {
     let retries = 3
-    let response: string
+    let response: string = ''
     let data: any
 
     while (retries > 0) {
@@ -192,6 +195,9 @@ GERE ${count} PROCESSOS COMPLETAMENTE DIFERENTES entre si!`
         }
       }
     }
+    
+    // This should never be reached, but TypeScript requires it
+    throw new Error('Failed to generate processes after all retries')
   } catch (error) {
     console.error('Erro ao gerar processos com IA:', error)
     throw new Error('Falha ao gerar processos. Por favor, tente novamente.')

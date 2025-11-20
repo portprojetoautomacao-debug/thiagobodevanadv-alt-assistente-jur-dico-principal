@@ -46,7 +46,7 @@ export default function ProcessCRM() {
       p.titulo.toLowerCase().includes(filter.toLowerCase()) ||
       p.autor.toLowerCase().includes(filter.toLowerCase())
     
-    const matchesStage = !selectedStage || (p as any).fase === selectedStage
+    const matchesStage = !selectedStage || p.fase === selectedStage
     
     return matchesFilter && matchesStage
   })
@@ -67,6 +67,7 @@ export default function ProcessCRM() {
       comarca: '',
       vara: '',
       status: 'ativo',
+      fase: newProcess.fase,
       dataDistribuicao: now.split('T')[0],
       dataUltimaMovimentacao: now,
       prazos: [],
@@ -249,7 +250,7 @@ export default function ProcessCRM() {
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-1">Fase:</p>
-                <Badge variant="outline">{(process as any).fase || 'N/A'}</Badge>
+                <Badge variant="outline">{process.fase || 'N/A'}</Badge>
               </div>
               <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
                 <SelectTrigger className="w-full">

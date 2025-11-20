@@ -31,6 +31,7 @@ import AgentStatusFloater from '@/components/AgentStatusFloater'
 import MrsJustinEModal from '@/components/MrsJustinEModal'
 import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
+import type { ViewType } from '@/types'
 
 const agentIcons: Record<string, React.ComponentType<{ className?: string; weight?: string }>> = {
   'djen-monitor': Database,
@@ -52,7 +53,7 @@ const agentIcons: Record<string, React.ComponentType<{ className?: string; weigh
 }
 
 interface AIAgentsProps {
-  onNavigate?: (view: string) => void
+  onNavigate?: (view: ViewType) => void
 }
 
 export default function AIAgents({ onNavigate }: AIAgentsProps) {

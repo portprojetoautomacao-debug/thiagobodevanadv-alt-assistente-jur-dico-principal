@@ -19,12 +19,12 @@ import {
   PencilLine
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-import type { User } from '@/types'
+import type { User, ViewType } from '@/types'
 
 interface SidebarProps {
   currentView: string
-  onViewChange: (view: string) => void
-  user: User
+  onViewChange: (view: ViewType) => void
+  user: User | null
   onLogout: () => void
 }
 
@@ -76,7 +76,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
                   isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
                   isFeatured && !isActive && 'border border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5'
                 )}
-                onClick={() => onViewChange(item.id)}
+                onClick={() => onViewChange(item.id as ViewType)}
               >
                 <Icon className="w-5 h-5 mr-3" weight={isActive ? 'fill' : 'regular'} />
                 {item.label}
@@ -92,18 +92,22 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
       </ScrollArea>
 
       <div className="p-4 border-t border-border space-y-3">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-sm font-semibold text-primary">
-              {user.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
-          </div>
-        </div>
-        <Separator />
+        {user && (
+          <>
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground hover:text-foreground"
