@@ -1,26 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { GoogleAuthButton } from '@/components/GoogleAuth'
 import type { GoogleUser } from '@/components/GoogleAuth'
 import Sidebar from '@/components/Sidebar'
-import Dashboard from '@/components/Dashboard'
-import ProcessCRM from '@/components/ProcessCRM'
-import Calendar from '@/components/Calendar'
-import FinancialManagement from '@/components/FinancialManagement'
-import CalculadoraPrazos from '@/components/CalculadoraPrazos'
-import PDFUploader from '@/components/PDFUploader'
-import MinutasManager from '@/components/MinutasManager'
-import Donna from '@/components/Donna'
-import AIAgents from '@/components/AIAgents'
-import AnalyticsDashboard from '@/components/AnalyticsDashboard'
-import ExpedientePanel from '@/components/ExpedientePanel'
-import BatchAnalysis from '@/components/BatchAnalysis'
-import AudioTranscription from '@/components/AudioTranscription'
-import DatabaseQueries from '@/components/DatabaseQueries'
-import DatajudChecklist from '@/components/DatajudChecklist'
-import KnowledgeBase from '@/components/KnowledgeBase'
 import { useKV } from '@/hooks/use-kv'
 import type { ViewType, User } from '@/types'
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="flex flex-col items-center gap-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <p className="text-sm text-muted-foreground">Carregando...</p>
+    </div>
+  </div>
+)
+
+// ✅ Code Splitting: Componentes carregados apenas quando necessários
+// Dashboard carregado imediatamente (é a tela inicial)
+import Dashboard from '@/components/Dashboard'
+
+// Outros componentes carregados sob demanda (lazy loading)
+const ProcessCRM = lazy(() => import('@/components/ProcessCRM'))
+const Calendar = lazy(() => import('@/components/Calendar'))
+const FinancialManagement = lazy(() => import('@/components/FinancialManagement'))
+const CalculadoraPrazos = lazy(() => import('@/components/CalculadoraPrazos'))
+const PDFUploader = lazy(() => import('@/components/PDFUploader'))
+const MinutasManager = lazy(() => import('@/components/MinutasManager'))
+const Donna = lazy(() => import('@/components/Donna'))
+const AIAgents = lazy(() => import('@/components/AIAgents'))
+const AnalyticsDashboard = lazy(() => import('@/components/AnalyticsDashboard'))
+const ExpedientePanel = lazy(() => import('@/components/ExpedientePanel'))
+const BatchAnalysis = lazy(() => import('@/components/BatchAnalysis'))
+const AudioTranscription = lazy(() => import('@/components/AudioTranscription'))
+const DatabaseQueries = lazy(() => import('@/components/DatabaseQueries'))
+const DatajudChecklist = lazy(() => import('@/components/DatajudChecklist'))
+const KnowledgeBase = lazy(() => import('@/components/KnowledgeBase'))
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
@@ -53,40 +68,100 @@ function App() {
       case 'crm':
       case 'processos':
       case 'processes':
-        return <ProcessCRM />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ProcessCRM />
+          </Suspense>
+        )
       case 'calendar':
       case 'calendario':
-        return <Calendar />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Calendar />
+          </Suspense>
+        )
       case 'financeiro':
       case 'financial':
-        return <FinancialManagement />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <FinancialManagement />
+          </Suspense>
+        )
       case 'prazos':
       case 'calculadora':
       case 'calculator':
-        return <CalculadoraPrazos />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <CalculadoraPrazos />
+          </Suspense>
+        )
       case 'upload-pdf':
-        return <PDFUploader />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <PDFUploader />
+          </Suspense>
+        )
       case 'minutas':
-        return <MinutasManager />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <MinutasManager />
+          </Suspense>
+        )
       case 'donna':
       case 'assistente':
-        return <Donna />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Donna />
+          </Suspense>
+        )
       case 'ai-agents':
-        return <AIAgents onNavigate={setCurrentView} />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AIAgents onNavigate={setCurrentView} />
+          </Suspense>
+        )
       case 'analytics':
-        return <AnalyticsDashboard />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AnalyticsDashboard />
+          </Suspense>
+        )
       case 'expedientes':
-        return <ExpedientePanel />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ExpedientePanel />
+          </Suspense>
+        )
       case 'batch':
-        return <BatchAnalysis />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <BatchAnalysis />
+          </Suspense>
+        )
       case 'audio':
-        return <AudioTranscription />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AudioTranscription />
+          </Suspense>
+        )
       case 'queries':
-        return <DatabaseQueries />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <DatabaseQueries />
+          </Suspense>
+        )
       case 'datajud':
-        return <DatajudChecklist />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <DatajudChecklist />
+          </Suspense>
+        )
       case 'knowledge':
-        return <KnowledgeBase />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <KnowledgeBase />
+          </Suspense>
+        )
       default:
         return <Dashboard onNavigate={setCurrentView} />
     }

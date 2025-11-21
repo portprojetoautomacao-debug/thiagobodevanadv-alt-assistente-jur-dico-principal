@@ -36,15 +36,10 @@ export default defineConfig({
             return 'react-vendor';
           }
           
-          // Radix UI components
+          // Radix UI components - separar em chunks menores
           if (id.includes('@radix-ui')) {
             return 'ui-vendor';
           }
-          
-          // Charts libraries - temporarily disable separate chunk to avoid initialization issues
-          // if (id.includes('recharts')) {
-          //   return 'charts';
-          // }
           
           // D3 separately to avoid conflicts
           if (id.includes('d3')) {
@@ -76,14 +71,46 @@ export default defineConfig({
             return 'three';
           }
           
+          // Recharts (gráficos) - chunk separado
+          if (id.includes('recharts')) {
+            return 'charts';
+          }
+          
+          // DnD Kit (drag and drop para Kanban)
+          if (id.includes('@dnd-kit')) {
+            return 'dnd';
+          }
+          
+          // PDF e upload de arquivos
+          if (id.includes('pdf') || id.includes('file-upload')) {
+            return 'files';
+          }
+          
           // Other utilities
           if (id.includes('date-fns') || id.includes('clsx') || 
               id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
             return 'utils';
           }
+          
+          // Sample data (usado apenas em desenvolvimento/demo)
+          if (id.includes('sample-data')) {
+            return 'sample-data';
+          }
         }
       }
     },
-    chunkSizeWarningLimit: 600,
+    // Reduzir limite de warning para 500KB
+    chunkSizeWarningLimit: 500,
+    // Otimizações adicionais
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log em produção
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug']
+      }
+    },
+    // Sourcemaps apenas em desenvolvimento
+    sourcemap: false,
   }
 });

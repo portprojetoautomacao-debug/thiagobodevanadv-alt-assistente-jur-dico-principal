@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,9 +22,13 @@ import {
   ListChecks,
   WarningCircle,
   ArrowsLeftRight,
-  ChatCircle
+  ChatCircle,
+  CloudArrowUp,
+  ClockCounterClockwise
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+import { useAgentBackup } from '@/hooks/use-agent-backup'
+import { useKV } from '@/hooks/use-kv'
 import AgentMetrics from '@/components/AgentMetrics'
 import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
@@ -68,8 +72,55 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     setAgents,
   } = useAutonomousAgents()
   
+  const [user] = useKV<any>('user', null)
+  const userId = user?.email || 'default-user'
+  
+  // Sistema de backup automático
+  const { createBackup, restoreBackup, getBackupHistory, lastBackup } = useAgentBackup({
+    userId,
+    autoBackupInterval: 5, // Backup a cada 5 minutos
+    enableAutoBackup: true
+  })
+  
   const [showCollaborationDemo, setShowCollaborationDemo] = useState(false)
   const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
+  const [backupStatus, setBackupStatus] = useState<'idle' | 'saving' | 'restoring'>('idle')
+
+  // Manual backup handler
+  const handleManualBackup = async () => {
+    setBackupStatus('saving')
+    try {
+      await createBackup()
+      toast.success('Backup criado com sucesso', {
+        description: 'Seus dados foram salvos no servidor'
+      })
+    } catch (error) {
+      toast.error('Erro ao criar backup', {
+        description: 'Tente novamente mais tarde'
+      })
+    } finally {
+      setBackupStatus('idle')
+    }
+  }
+
+  // Manual restore handler
+  const handleManualRestore = async () => {
+    setBackupStatus('restoring')
+    try {
+      const backup = await restoreBackup()
+      if (backup) {
+        toast.success('Dados restaurados com sucesso', {
+          description: `Backup de ${new Date(backup.timestamp).toLocaleString()}`
+        })
+      } else {
+        toast.info('Nenhum backup encontrado')
+      }
+    } catch (error) {
+      toast.error('Erro ao restaurar backup')
+    } finally {
+      setBackupStatus('idle')
+    }
+  }
 
   if (agents.length === 0) {
     const initialAgents: Agent[] = [
@@ -433,12 +484,38 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nível de Autonomia</CardTitle>
-            <Lightning className="w-4 h-4 text-accent" weight="fill" />
+            <CardTitle className="text-sm font-medium">Backup Local</CardTitle>
+            <CloudArrowUp className="w-4 h-4 text-blue-600" weight="fill" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgAutonomy}%</div>
-            <Progress value={avgAutonomy} className="mt-2" />
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold text-green-600">Ativo</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  A cada 5 min
+                </p>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleManualBackup}
+                  disabled={backupStatus === 'saving'}
+                  title="Salvar backup agora"
+                >
+                  <CloudArrowUp className="w-3 h-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleManualRestore}
+                  disabled={backupStatus === 'restoring'}
+                  title="Ver histórico de backups"
+                >
+                  <ClockCounterClockwise className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
