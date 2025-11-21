@@ -45,8 +45,8 @@ async function processTaskWithRealAI(task: AgentTask, agent: Agent): Promise<any
       throw new Error(`Spark LLM error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const aiResult = data.choices[0]?.message?.content;
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const aiResult = data.choices?.[0]?.message?.content || '';
 
     // Parse AI response based on task type
     return parseAIResponse(task.type, aiResult, task.data);
@@ -158,7 +158,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw new Error('Failed to fetch tasks from KV');
     }
 
-    const { value: taskQueue = [] } = await tasksResponse.json();
+    const kvData = await tasksResponse.json() as { value?: AgentTask[] };
+    const taskQueue = kvData.value || [];
     const pendingTasks = taskQueue.filter((t: AgentTask) => t.status === 'queued');
 
     console.log(`[Agent Queue] Found ${pendingTasks.length} pending tasks`);
@@ -189,7 +190,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         );
 
-        const { value: agents = [] } = await agentsResponse.json();
+        const agentsData = await agentsResponse.json() as { value?: any[] };
+        const agents = agentsData.value || [];
         const agent = agents.find((a: Agent) => a.id === task.agentId);
 
         if (!agent || !agent.enabled) {
@@ -209,7 +211,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         results.push({
           taskId: task.id,
           agentId: agent.id,
-          status: 'completed',
+          status: 'completed' as const,
         });
 
       } catch (error) {
@@ -219,7 +221,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         results.push({
           taskId: task.id,
-          status: 'failed',
+          status: 'failed' as const,
           error: task.error,
         });
       }

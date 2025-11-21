@@ -293,7 +293,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw new Error(`Spark LLM error: ${sparkResponse.statusText}`);
     }
 
-    const sparkData = await sparkResponse.json();
+    const sparkData = await sparkResponse.json() as { choices?: Array<{ message?: { content?: string } }>, usage?: { total_tokens?: number } };
     const aiContent = sparkData.choices?.[0]?.message?.content || '';
 
     // Tentar parsear como JSON
