@@ -71,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const tribunalResult = tribunaisMap.get(comunicacao.tribunal)!;
       tribunalResult.publicacoes.push({
-        id: String(comunicacao.id),
+        id: comunicacao.id ? String(comunicacao.id) : `pub-${Date.now()}-${Math.random()}`,
         data: comunicacao.data,
         processo: comunicacao.numeroProcesso,
         tipo: comunicacao.tipo,

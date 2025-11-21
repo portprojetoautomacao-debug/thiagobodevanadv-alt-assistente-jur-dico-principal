@@ -40,6 +40,11 @@ interface DJENMonitorResult {
   rateLimitWarning: boolean;
 }
 
+interface CompletedTask {
+  completedAt?: string | null;
+  [key: string]: unknown;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action } = req.query;
 
@@ -79,26 +84,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tasksToday: 0
         }));
 
-        await updateAgents(updatedAgents);
-        result.agentsReset = updatedAgents.length;
-        console.log(`[Cron Daily Reset] Reset counters for ${result.agentsReset} agents`);
-      }
-
       // Archive old completed tasks (>30 days)
-      const completedTasks = await getCompletedTasks();
-      console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
-
-      if (completedTasks.length > 0) {
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - 30);
-        
-        const tasksToKeep = completedTasks.filter((task: { completedAt?: string }) => {
-          if (!task.completedAt) return true;
-          return new Date(task.completedAt) >= cutoffDate;
-        });
-
-        result.tasksArchived = completedTasks.length - tasksToKeep.length;
-
+            const completedTasks = (await getCompletedTasks()) as CompletedTask[];
+            console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
+      
+            if (completedTasks.length > 0) {
+              const cutoffDate = new Date();
+              cutoffDate.setDate(cutoffDate.getDate() - 30);
+              
+              const tasksToKeep = completedTasks.filter((task) => {
+                if (!task.completedAt) return true;
+                return new Date(task.completedAt) >= cutoffDate;
+              });
+      
+              result.tasksArchived = completedTasks.length - tasksToKeep.length;
+      
+              if (result.tasksArchived > 0) {
+                await updateCompletedTasks(tasksToKeep);
+                console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
+              }
+            }
         if (result.tasksArchived > 0) {
           await updateCompletedTasks(tasksToKeep);
           console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
