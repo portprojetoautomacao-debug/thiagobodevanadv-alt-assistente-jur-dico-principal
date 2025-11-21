@@ -134,7 +134,7 @@ function parseAIResponse(_taskType: string, aiResponse: string, _taskData: Recor
     return {
       rawResponse: aiResponse,
       processedAt: new Date().toISOString(),
-      taskType,
+      taskType: _taskType,
       confidence: 0.85,
     };
   } catch (error) {
