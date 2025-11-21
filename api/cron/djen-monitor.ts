@@ -157,8 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 advogado: lawyer.name,
                 oab: lawyer.oab
               },
-              recipientEmail: lawyer.email,
-              priority: 'high'
+              recipientEmail: lawyer.email
             });
           }
         }
