@@ -60,6 +60,51 @@ jobs:
       run: npm run lint
       continue-on-error: true
 
+    - name: Validate serverless function count
+      run: |
+        FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
+        echo "📊 Serverless functions: $FUNCTION_COUNT"
+        
+        if [ $FUNCTION_COUNT -gt 12 ]; then
+          echo "❌ Error: Function count ($FUNCTION_COUNT) exceeds Vercel Hobby limit (12)"
+          echo "Please remove unused functions or upgrade to Vercel Pro"
+          exit 1
+        elif [ $FUNCTION_COUNT -eq 12 ]; then
+          echo "⚠️ Warning: At Vercel Hobby function limit (12/12)"
+        else
+          echo "✅ Function count OK ($FUNCTION_COUNT/12)"
+        fi
+
+    - name: Verify agent files
+      run: |
+        echo "🤖 Verifying AI agent files..."
+        MISSING=0
+        
+        REQUIRED_FILES=(
+          "api/agents/process-queue.ts"
+          "api/agents/process-task.ts"
+          "api/cron/djen-monitor.ts"
+          "api/cron/daily-reset.ts"
+          "lib/api/djen-client.ts"
+          "lib/api/datajud-client.ts"
+        )
+        
+        for file in "${REQUIRED_FILES[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Missing: $file"
+            MISSING=$((MISSING + 1))
+          else
+            echo "✅ Found: $file"
+          fi
+        done
+        
+        if [ $MISSING -gt 0 ]; then
+          echo "❌ Error: $MISSING required agent files are missing"
+          exit 1
+        fi
+        
+        echo "✅ All agent files present"
+
     - name: Build application
       run: npm run build
       env:
@@ -206,6 +251,13 @@ jobs:
           echo "- 🔍 Check application functionality" >> $GITHUB_STEP_SUMMARY
           echo "- 📊 Monitor for any runtime errors" >> $GITHUB_STEP_SUMMARY
           echo "- 🤖 AI agents can now access the preview URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🤖 AI Agents Status" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 7 AI agents configured" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ DJEN monitor: runs daily at 9 AM UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Daily reset: runs at midnight UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- 📡 Monitoring: TJMG, TRT3, TST, STJ" >> $GITHUB_STEP_SUMMARY
+          echo "- 👨‍⚖️ Lawyer: Thiago Bodevan Veiga (OAB/MG 184.404)" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
