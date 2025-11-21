@@ -5,11 +5,11 @@
   "outputDirectory": "dist",
   "crons": [
     {
-      "path": "/api/cron/djen-monitor",
+      "path": "/api/cron?action=djen-monitor",
       "schedule": "0 9 * * *"
     },
     {
-      "path": "/api/cron/daily-reset",
+      "path": "/api/cron?action=daily-reset",
       "schedule": "0 0 * * *"
     }
   ],
