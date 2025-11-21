@@ -1,8 +1,10 @@
 /**
  * DJEN API Client for Serverless Functions
  * 
- * This is a simplified version of the DJEN API client that works
- * in Vercel serverless functions without importing from src/
+ * API do Comunica PJe (DJEN) - Consulta de publicações do Diário de Justiça Eletrônico Nacional
+ * Endpoint: https://comunicaapi.pje.jus.br/api/v1/caderno/{siglaTribunal}/{data}/{meio}
+ * 
+ * IMPORTANTE: Esta é a API do DJEN (publicações oficiais), diferente da API DataJud (metadados processuais)
  */
 
 export interface DJENPublication {
@@ -97,80 +99,36 @@ function matchesSearchTerms(
   return { matches: false };
 }
 
-// Mapeamento de tribunais para endpoints DataJud API
-const DATAJUD_ENDPOINTS: Record<string, string> = {
-  'TJMG': 'api_publica_tjmg',
-  'TRT3': 'api_publica_trt3',
-  'TST': 'api_publica_tst',
-  'STJ': 'api_publica_stj',
-  'TRF1': 'api_publica_trf1',
-};
-
+/**
+ * Consulta publicações do DJEN (Diário de Justiça Eletrônico Nacional)
+ * API do Comunica PJe - CNJ
+ * 
+ * Endpoint: GET https://comunicaapi.pje.jus.br/api/v1/caderno/{siglaTribunal}/{data}/{meio}
+ * 
+ * IMPORTANTE:
+ * - Não requer autenticação (API pública)
+ * - Requer User-Agent: PJe-DataCollector/1.0
+ * - Requer Accept: application/json
+ * - Data no formato AAAA-MM-DD
+ * - Meio: 'html' ou 'pdf'
+ */
 async function consultarPublicacoesTribunal(
   params: DJENQueryParams,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<DJENPublication[]> {
-  const endpoint = DATAJUD_ENDPOINTS[params.tribunal];
-  
-  if (!endpoint) {
-    console.warn(`[DJEN] Tribunal ${params.tribunal} não configurado no DataJud`);
-    return [];
-  }
-
-  // API Key pública do DataJud (CNJ)
-  const apiKey = process.env.DATAJUD_API_KEY || 'cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==';
-  
-  // Construir query DataJud
-  const query = {
-    query: {
-      bool: {
-        must: [] as any[],
-        filter: [
-          {
-            range: {
-              dataAjuizamento: {
-                gte: params.dataInicio,
-                lte: params.dataFim
-              }
-            }
-          }
-        ]
-      }
-    },
-    size: 100
-  };
-
-  // Adicionar filtros por advogado/OAB
-  if (params.nomeAdvogado) {
-    query.query.bool.must.push({
-      match: {
-        'advogados.nome': params.nomeAdvogado
-      }
-    });
-  }
-
-  if (params.numeroOAB && params.ufOAB) {
-    query.query.bool.must.push({
-      match: {
-        'advogados.numeroOAB': `${params.numeroOAB}/${params.ufOAB}`
-      }
-    });
-  }
-
-  const url = `https://api-publica.datajud.cnj.jus.br/${endpoint}/_search`;
+  // DJEN usa formato: /caderno/{tribunal}/{data}/html
+  const url = `https://comunicaapi.pje.jus.br/api/v1/caderno/${params.tribunal}/${params.dataInicio}/html`;
   
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Authorization': `APIKey ${apiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'User-Agent': 'PJe-DataCollector/1.0',  // Obrigatório para API DJEN
+        'Accept': 'application/json'            // Para receber JSON estruturado
       },
-      body: JSON.stringify(query),
       signal: controller.signal
     });
 
@@ -180,21 +138,20 @@ async function consultarPublicacoesTribunal(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      console.warn(`[DJEN] Resposta não é JSON para ${params.tribunal}`);
+      return [];
+    }
+
     const data = await response.json();
     
-    // DataJud retorna formato Elasticsearch
-    const hits = data.hits?.hits || [];
-    
-    return hits.map((hit: any) => ({
-      tribunal: params.tribunal,
-      data_disponibilizacao: hit._source?.dataAjuizamento || params.dataInicio,
-      tipo_comunicacao: hit._source?.classe?.nome || 'Não especificado',
-      orgao: hit._source?.orgaoJulgador?.nome || '',
-      inteiro_teor: JSON.stringify(hit._source).substring(0, 500),
-      numero_processo: hit._source?.numeroProcesso || '',
-      partes: hit._source?.partes?.map((p: any) => p.nome) || [],
-      advogados: hit._source?.advogados?.map((a: any) => a.nome) || [],
-    }));
+    if (!Array.isArray(data)) {
+      console.warn(`[DJEN] Resposta não é array para ${params.tribunal}`);
+      return [];
+    }
+
+    return data as DJENPublication[];
   } catch (error) {
     clearTimeout(timeoutId);
     console.error(`[DJEN] Error querying ${params.tribunal}:`, error);
