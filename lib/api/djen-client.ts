@@ -113,14 +113,40 @@ function normalizeText(text: string): string {
     .trim();
 }
 
-function extractUFFromOAB(numeroOAB: string): string | undefined {
-  const match = numeroOAB.match(/OAB\/([A-Z]{2})/i);
-  return match ? match[1].toUpperCase() : undefined;
-}
+/**
+ * Parse multiple OAB formats: "OAB/UF 123456", "OAB/UF123456", "123456/UF", "123456"
+ * Returns { numero, uf } where applicable
+ */
+function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
+  if (!numeroOAB) return {};
+  // Trim and normalize
+  const value = numeroOAB.trim();
 
-function extractNumeroFromOAB(numeroOAB: string): string | undefined {
-  const match = numeroOAB.match(/OAB\/[A-Z]{2}\s*(\d+)/i);
-  return match ? match[1] : undefined;
+  // Match patterns like "OAB/UF 123456" or "OAB/UF123456"
+  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
+  if (matchOABPattern) {
+    return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
+  }
+
+  // Match numeric with UF: "123456/UF" or "123456/UF"
+  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
+  if (matchNumericUF) {
+    return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
+  }
+
+  // Match simple numeric OAB
+  const matchNumeric = value.match(/^(\d+)$/);
+  if (matchNumeric) {
+    return { numero: matchNumeric[1] };
+  }
+
+  // Match "OAB/UF" without number
+  const matchOABOnly = value.match(/OAB\s*\/\s*([A-Z]{2})/i);
+  if (matchOABOnly) {
+    return { uf: matchOABOnly[1].toUpperCase() };
+  }
+
+  return {};
 }
 
 function buildQueryString(params: DJENQueryParams): string {
@@ -255,10 +281,11 @@ export async function consultarDJENForLawyer(
   
   let numeroOabNumerico: string | undefined;
   let ufOab: string | undefined;
-  
+
   if (numeroOAB) {
-    ufOab = extractUFFromOAB(numeroOAB);
-    numeroOabNumerico = extractNumeroFromOAB(numeroOAB);
+    const parsed = parseOAB(numeroOAB);
+    numeroOabNumerico = parsed.numero;
+    ufOab = parsed.uf;
   }
 
   const resultados: DJENFilteredResult[] = [];

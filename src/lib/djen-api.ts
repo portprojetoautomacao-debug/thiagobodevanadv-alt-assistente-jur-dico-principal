@@ -67,16 +67,31 @@ function normalizeText(text: string): string {
     .trim()
 }
 
-function extractUFFromOAB(numeroOAB: string): string | undefined {
-  // Extract UF from format "OAB/UF 12345" or "OAB/UF12345"
-  const match = numeroOAB.match(/OAB\/([A-Z]{2})/i)
-  return match ? match[1].toUpperCase() : undefined
-}
+function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
+  if (!numeroOAB) return {}
+  const value = numeroOAB.trim()
 
-function extractNumeroFromOAB(numeroOAB: string): string | undefined {
-  // Extract number from format "OAB/UF 12345" or "OAB/UF12345"
-  const match = numeroOAB.match(/OAB\/[A-Z]{2}\s*(\d+)/i)
-  return match ? match[1] : undefined
+  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i)
+  if (matchOABPattern) {
+    return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() }
+  }
+
+  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i)
+  if (matchNumericUF) {
+    return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() }
+  }
+
+  const matchNumeric = value.match(/^(\d+)$/)
+  if (matchNumeric) {
+    return { numero: matchNumeric[1] }
+  }
+
+  const matchOABOnly = value.match(/OAB\s*\/\s*([A-Z]{2})/i)
+  if (matchOABOnly) {
+    return { uf: matchOABOnly[1].toUpperCase() }
+  }
+
+  return {}
 }
 
 function extractPublicationText(pub: DJENPublication): string {
@@ -263,8 +278,9 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   let ufOAB: string | undefined
   
   if (searchTerms.numeroOAB) {
-    ufOAB = extractUFFromOAB(searchTerms.numeroOAB)
-    numeroOAB = extractNumeroFromOAB(searchTerms.numeroOAB)
+    const parsed = parseOAB(searchTerms.numeroOAB)
+    ufOAB = parsed.uf
+    numeroOAB = parsed.numero
   }
 
   const resultados: DJENFilteredResult[] = []
@@ -342,6 +358,10 @@ export function validarFormatoData(data: string): boolean {
 }
 
 export function validarNumeroOAB(oab: string): boolean {
-  const regex = /^OAB\/[A-Z]{2}\s*\d+$/i
-  return regex.test(oab.trim())
+  // Accept formats: "OAB/UF 123456", "123456/UF", "123456"
+  const trimmed = oab.trim()
+  if (/^OAB\/[A-Z]{2}\s*\d+$/i.test(trimmed)) return true
+  if (/^\d+\/[A-Z]{2}$/i.test(trimmed)) return true
+  if (/^\d+$/.test(trimmed)) return true
+  return false
 }
