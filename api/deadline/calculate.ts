@@ -82,7 +82,7 @@ function calcularPrazo(
 } {
   const reasoning: string[] = [];
   const holidays: string[] = [];
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   let daysAdded = 0;
   let calendarDays = 0;
 
