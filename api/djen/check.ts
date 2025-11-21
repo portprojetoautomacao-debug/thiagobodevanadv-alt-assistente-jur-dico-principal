@@ -1,68 +1,32 @@
 /**
  * Endpoint para verificar DJEN em tempo real
- * Integra com APIs dos tribunais
+ * Usa API oficial Comunica PJe (CNJ)
  * 
  * Path: /api/djen/check
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { consultarDJENForLawyer } from '../../lib/api/djen-client';
+
+interface DJENCheckRequest {
+  tribunais?: string[];
+  oab?: string;
+  ufOab?: string;
+  lawyerName?: string;
+}
 
 interface DJENResult {
   tribunal: string;
   publicacoes: Array<{
+    id: string;
     data: string;
-    processo: string;
+    processo?: string;
     tipo: string;
     conteudo: string;
     advogado?: string;
+    link?: string;
   }>;
   erro?: string;
-}
-
-/**
- * Simula consulta ao DJEN (em produção, usar APIs reais dos tribunais)
- * 
- * APIs disponíveis:
- * - DataJud (CNJ): https://datajud-wiki.cnj.jus.br/
- * - API PJe: Varia por tribunal
- * - Consultas processuais públicas
- */
-async function consultarDJEN(tribunal: string): Promise<DJENResult> {
-  // TODO: Implementar integração real com APIs dos tribunais
-  // Por enquanto, retorna estrutura esperada
-  
-  const tribunaisSuportados = ['TJDFT', 'STJ', 'TST', 'TRF1', 'TJSP', 'TJMG'];
-  
-  if (!tribunaisSuportados.includes(tribunal)) {
-    return {
-      tribunal,
-      publicacoes: [],
-      erro: `Tribunal ${tribunal} não suportado ou API não disponível`,
-    };
-  }
-
-  // Simulação de consulta (substituir por chamada real à API)
-  const temPublicacao = Math.random() > 0.7;
-  
-  if (!temPublicacao) {
-    return {
-      tribunal,
-      publicacoes: [],
-    };
-  }
-
-  // Simula publicação encontrada
-  return {
-    tribunal,
-    publicacoes: [
-      {
-        data: new Date().toISOString(),
-        processo: `${Math.floor(Math.random() * 9000000) + 1000000}-${Math.floor(Math.random() * 90) + 10}.2024.8.07.0001`,
-        tipo: 'Intimação',
-        conteudo: 'Intimação para apresentação de manifestação no prazo de 15 dias úteis',
-      },
-    ],
-  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -71,32 +35,87 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { tribunais = ['TJDFT', 'STJ', 'TST'] } = req.body as {
-      tribunais?: string[];
-    };
+    const { 
+      tribunais = ['TJMG', 'TRT3', 'TST', 'STJ'],
+      oab = '184404',
+      ufOab = 'MG',
+      lawyerName = 'Thiago Bodevan Veiga'
+    } = req.body as DJENCheckRequest;
 
-    console.log(`[DJEN Check] Consultando ${tribunais.length} tribunais`);
+    console.log(`[DJEN Check] Consultando DJEN para ${lawyerName} (OAB ${oab}/${ufOab}) em ${tribunais.length} tribunais`);
 
-    const resultados = await Promise.all(
-      tribunais.map((tribunal) => consultarDJEN(tribunal))
+    // Usar API real do DJEN (Comunica PJe)
+    const { resultados, erros, rateLimitWarning } = await consultarDJENForLawyer(
+      tribunais,
+      lawyerName,
+      `${oab}/${ufOab}`,
+      undefined, // dataInicio (padrão: hoje)
+      undefined, // dataFim (padrão: dataInicio)
+      'D' // Diário Eletrônico
     );
 
-    const publicacoesEncontradas = resultados
-      .flatMap((r) => r.publicacoes)
-      .length;
+    console.log(`[DJEN Check] Encontradas ${resultados.length} comunicações`);
 
-    const erros = resultados
-      .filter((r) => r.erro)
-      .map((r) => ({ tribunal: r.tribunal, erro: r.erro }));
+    // Transformar resultados para formato esperado
+    const resultadosFormatados: DJENResult[] = [];
+    const tribunaisMap = new Map<string, DJENResult>();
+
+    // Agrupar por tribunal
+    for (const comunicacao of resultados) {
+      if (!tribunaisMap.has(comunicacao.tribunal)) {
+        tribunaisMap.set(comunicacao.tribunal, {
+          tribunal: comunicacao.tribunal,
+          publicacoes: []
+        });
+      }
+
+      const tribunalResult = tribunaisMap.get(comunicacao.tribunal)!;
+      tribunalResult.publicacoes.push({
+        id: comunicacao.id,
+        data: comunicacao.data,
+        processo: comunicacao.numeroProcesso,
+        tipo: comunicacao.tipo,
+        conteudo: comunicacao.teor || 'Ver documento completo',
+        advogado: comunicacao.advogados?.join(', '),
+        link: comunicacao.link
+      });
+    }
+
+    // Converter mapa para array
+    resultadosFormatados.push(...tribunaisMap.values());
+
+    // Adicionar tribunais sem publicações
+    for (const tribunal of tribunais) {
+      if (!tribunaisMap.has(tribunal)) {
+        resultadosFormatados.push({
+          tribunal,
+          publicacoes: []
+        });
+      }
+    }
+
+    // Adicionar erros
+    const errosFormatados = erros.map(e => ({
+      tribunal: e.tribunal,
+      erro: e.erro
+    }));
+
+    const publicacoesEncontradas = resultados.length;
 
     return res.status(200).json({
       ok: true,
       timestamp: new Date().toISOString(),
       tribunaisConsultados: tribunais.length,
       publicacoesEncontradas,
-      resultados,
-      erros: erros.length > 0 ? erros : undefined,
-      note: 'IMPORTANTE: Esta é uma implementação demonstrativa. Para uso em produção, integre com as APIs oficiais dos tribunais (DataJud, PJe, etc.)',
+      resultados: resultadosFormatados,
+      erros: errosFormatados.length > 0 ? errosFormatados : undefined,
+      rateLimitWarning,
+      apiUsed: 'Comunica PJe (API Oficial CNJ)',
+      endpoint: 'https://comunicaapi.pje.jus.br/api/v1/comunicacao',
+      lawyer: {
+        name: lawyerName,
+        oab: `${oab}/${ufOab}`
+      }
     });
 
   } catch (error) {
