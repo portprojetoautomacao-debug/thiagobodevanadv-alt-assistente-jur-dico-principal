@@ -29,7 +29,7 @@ interface MonitoredLawyer {
   enabled: boolean;
 }
 
-async function putKV(key: string, value: any) {
+async function putKV(key: string, value: unknown) {
   // Usar endpoint /api/kv que aceita POST com operação set
   const response = await fetch(`${BASE_URL}/api/kv`, {
     method: 'POST',
@@ -229,7 +229,7 @@ async function initializeLawyers() {
 async function initializeTaskQueue() {
   console.log('📋 Inicializando Fila de Tarefas...\n');
 
-  const initialTasks: any[] = [];
+  const initialTasks: unknown[] = [];
 
   try {
     const result = await putKV('agent-task-queue', initialTasks);
@@ -244,7 +244,7 @@ async function initializeTaskQueue() {
 async function initializeCompletedTasks() {
   console.log('✅ Inicializando Histórico de Tarefas Completadas...\n');
 
-  const completedTasks: any[] = [];
+  const completedTasks: unknown[] = [];
 
   try {
     const result = await putKV('completed-agent-tasks', completedTasks);

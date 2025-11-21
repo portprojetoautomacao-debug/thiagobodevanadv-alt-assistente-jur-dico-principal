@@ -13,6 +13,14 @@ import crypto from 'crypto';
 interface WebhookEvent {
   event: string;
   action?: string;
+  ref?: string;
+  number?: number;
+  commits?: unknown[];
+  workflow_run?: { name?: string; conclusion?: string };
+  workflow_job?: { name?: string; conclusion?: string };
+  deployment?: { environment?: string };
+  deployment_status?: { state?: string };
+  check_run?: { name?: string; conclusion?: string };
   repository?: {
     name: string;
     full_name: string;
@@ -43,7 +51,7 @@ function validateSignature(
 /**
  * Processa eventos específicos
  */
-async function processEvent(event: string, payload: any): Promise<void> {
+async function processEvent(event: string, payload: WebhookEvent): Promise<void> {
   console.log(`[Webhook] Processando evento: ${event}`);
   
   switch (event) {

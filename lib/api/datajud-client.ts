@@ -162,7 +162,7 @@ async function consultarProcessosDataJud(
     // DataJud retorna formato Elasticsearch
     const hits = data.hits?.hits || [];
     
-    return hits.map((hit: any) => ({
+    return hits.map((hit: { _source?: Record<string, unknown> }) => ({
       numeroProcesso: hit._source?.numeroProcesso || '',
       tribunal: params.tribunal,
       dataAjuizamento: hit._source?.dataAjuizamento || '',
