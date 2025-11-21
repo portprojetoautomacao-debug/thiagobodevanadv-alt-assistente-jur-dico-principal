@@ -52,7 +52,7 @@ export default function DocumentCheckAgent({ processes }: DocumentCheckAgentProp
       const newMissingDocs: MissingDocument[] = []
 
       for (const processo of processesToAnalyze) {
-        const prompt = spark.llmPrompt`Você é um agente especializado em análise documental jurídica.
+        const prompt = `Você é um agente especializado em análise documental jurídica.
 
 Analise o seguinte processo e identifique documentos que podem estar faltando com base nas informações fornecidas:
 

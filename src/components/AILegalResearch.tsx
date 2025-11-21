@@ -48,7 +48,7 @@ export default function AILegalResearch() {
     setIsResearching(true)
 
     try {
-      const prompt = spark.llmPrompt`Você é um pesquisador jurídico especializado. Faça uma pesquisa completa sobre o seguinte tema jurídico:
+      const prompt = `Você é um pesquisador jurídico especializado. Faça uma pesquisa completa sobre o seguinte tema jurídico:
 
 Tema: ${query}
 

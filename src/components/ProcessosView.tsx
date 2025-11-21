@@ -83,7 +83,7 @@ export default function ProcessosView() {
     setAnalyzingProcess(process.id)
     
     try {
-      const prompt = spark.llmPrompt`Você é um assistente jurídico especializado. Analise o seguinte processo e forneça insights estratégicos:
+      const prompt = `Você é um assistente jurídico especializado. Analise o seguinte processo e forneça insights estratégicos:
 
 Processo: ${process.numeroCNJ}
 Título: ${process.titulo}
