@@ -13,8 +13,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getMonitoredLawyers, storePublication, updateLastDJENCheck, queueNotification } from '../lib/kv-utils';
-import { consultarDJENForLawyer } from '../lib/djen-client';
+import { getMonitoredLawyers, storePublication, updateLastDJENCheck, queueNotification } from '../../lib/api/kv-utils';
+import { consultarDJENForLawyer } from '../../lib/api/djen-client';
 
 interface DJENMonitorResult {
   success: boolean;
