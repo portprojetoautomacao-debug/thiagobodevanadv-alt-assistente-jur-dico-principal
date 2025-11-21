@@ -35,11 +35,24 @@
       "destination": "/api/spark-proxy?service=:service"
     },
     {
-      "source": "/((?!api).*)",
+      "source": "/((?!api|robots\\.txt|sitemap\\.xml|favicon\\.ico|manifest\\.json|assets).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
     {
       "source": "/index.html",
       "headers": [
