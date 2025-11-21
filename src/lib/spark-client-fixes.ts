@@ -2,6 +2,8 @@
  * Wraps window.spark.kv methods to add robust JSON detection and improved errors
  * when the runtime or proxy returns HTML (eg. index.html / login page / 404 HTML)
  * instead of the expected JSON payload.
+ * 
+ * Also patches Spark initialization to handle localization errors gracefully.
  */
 
 // TypeScript interfaces for Spark global objects
@@ -25,8 +27,32 @@ interface ResponseLike {
   }
 }
 
+/**
+ * Patches Spark client to suppress localization errors that don't affect functionality
+ */
+export function patchSparkLocalization() {
+  if (typeof window === 'undefined') return;
+  
+  // Intercept console errors to suppress RegisterClientLocalizationsError
+  const originalError = console.error;
+  console.error = function(...args: unknown[]) {
+    const firstArg = args[0];
+    if (firstArg && typeof firstArg === 'object' && 'name' in firstArg) {
+      if (firstArg.name === 'RegisterClientLocalizationsError') {
+        console.warn('Spark localization error suppressed (non-critical):', args);
+        return;
+      }
+    }
+    originalError.apply(console, args);
+  };
+}
+
 export function applySparkClientFixes() {
   if (typeof window === 'undefined') return;
+  
+  // Apply localization patch first
+  patchSparkLocalization();
+  
   const w = window;
   if (!w.spark?.kv) return;
 

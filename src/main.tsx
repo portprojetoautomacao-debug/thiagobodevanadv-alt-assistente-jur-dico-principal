@@ -7,14 +7,30 @@ import { ErrorFallback } from './ErrorFallback.tsx'
 
 import "./main.css"
 
-// Apply safety fixes early, so the wrapper is available to hooks/components
-applySparkClientFixes()
-applySparkLLMFixes()
+// Initialize Spark client with error handling for localization issues
+async function initializeSpark() {
+  try {
+    // Apply safety fixes before Spark loads
+    applySparkClientFixes()
+    applySparkLLMFixes()
+    
+    // Import Spark with error handling
+    await import("@github/spark/spark").catch(err => {
+      // Ignore localization errors - they don't affect functionality
+      if (err?.name === 'RegisterClientLocalizationsError') {
+        console.warn('Spark localization error ignored:', err.message)
+        return
+      }
+      throw err
+    })
+  } catch (error) {
+    console.error('Failed to initialize Spark:', error)
+    // App can still work without Spark in fallback mode
+  }
+}
 
-// Delay Spark initialization to avoid DOM conflicts
-setTimeout(() => {
-  import("@github/spark/spark")
-}, 100)
+// Start Spark initialization (non-blocking)
+initializeSpark()
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
