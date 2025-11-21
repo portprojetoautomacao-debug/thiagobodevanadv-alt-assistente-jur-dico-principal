@@ -174,7 +174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Process up to 5 tasks per execution
     const tasksToProcess = pendingTasks.slice(0, 5);
-    const results = [];
+    const results: Array<{ taskId: string; agentId?: any; status: 'completed' | 'failed'; error?: string }> = [];
 
     for (const task of tasksToProcess) {
       try {
