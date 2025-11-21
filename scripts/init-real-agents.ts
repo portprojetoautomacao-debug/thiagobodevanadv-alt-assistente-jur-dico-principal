@@ -30,13 +30,18 @@ interface MonitoredLawyer {
 }
 
 async function putKV(key: string, value: any) {
-  const response = await fetch(`${BASE_URL}/_spark/kv/${key}`, {
-    method: 'PUT',
+  // Usar endpoint /api/kv que aceita POST com operação set
+  const response = await fetch(`${BASE_URL}/api/kv`, {
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${GITHUB_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ value }),
+    body: JSON.stringify({ 
+      key,
+      value,
+      operation: 'set'
+    }),
   });
 
   if (!response.ok) {
@@ -48,7 +53,8 @@ async function putKV(key: string, value: any) {
 }
 
 async function getKV(key: string) {
-  const response = await fetch(`${BASE_URL}/_spark/kv/${key}`, {
+  const response = await fetch(`${BASE_URL}/api/kv?key=${key}`, {
+    method: 'GET',
     headers: {
       'Authorization': `Bearer ${GITHUB_TOKEN}`,
     },
@@ -193,12 +199,12 @@ async function initializeAgents() {
 async function initializeLawyers() {
   console.log('👨‍⚖️ Configurando Advogado...\n');
 
-  const lawyers: MonitoredLawyer[] = [
+    const lawyers: MonitoredLawyer[] = [
     {
       id: 'lawyer-thiago-bodevan',
       name: 'Thiago Bodevan Veiga',
       oab: 'OAB/MG 184.404',
-      email: '', // TODO: Adicionar email real para receber notificações
+      email: 'thiagobodevan@gmail.com',
       tribunals: [
         'TJMG',      // Tribunal de Justiça de Minas Gerais (1ª e 2ª instâncias)
         'TRT3',      // Tribunal Regional do Trabalho 3ª Região (MG) (1ª e 2ª instâncias)
@@ -207,9 +213,7 @@ async function initializeLawyers() {
       ],
       enabled: true,
     },
-  ];
-
-  try {
+  ];  try {
     const result = await putKV('monitored-lawyers', lawyers);
     console.log('✅ Advogado configurado com sucesso!');
     console.log(`   Nome: ${lawyers[0].name}`);
