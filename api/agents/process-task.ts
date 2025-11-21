@@ -4,7 +4,21 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { AgentTask } from '@/lib/agents';
+
+// Types duplicated from src/lib/agents.ts for serverless compatibility
+interface AgentTask {
+  id: string
+  agentId: string
+  type: 'analyze_document' | 'monitor_djen' | 'calculate_deadline' | 'draft_petition' | 'check_datajud' | 'organize_files' | 'research_precedents' | 'risk_analysis' | 'contract_review' | 'client_communication' | 'billing_analysis' | 'case_strategy' | 'legal_translation' | 'compliance_check'
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'human_intervention'
+  createdAt: string
+  startedAt?: string
+  completedAt?: string
+  data: Record<string, unknown>
+  result?: Record<string, unknown>
+  error?: string
+}
 
 function getSystemPrompt(agentType: string): string {
   const prompts: Record<string, string> = {
