@@ -126,6 +126,34 @@ git push origin v1.0.0
 - ✅ Testes com cobertura
 - 🔄 Sugestões de atualização de dependências
 
+### 7. AI Agents Health Check
+**Arquivo**: `.github/workflows/agents-health-check.yml`
+
+**Quando executa**:
+- A cada 6 horas (monitoramento contínuo)
+- Push em `main` que afeta arquivos de agentes
+- Manualmente via workflow_dispatch
+
+**O que faz**:
+- 🤖 Verifica configuração dos 7 agentes de IA
+- 📡 Valida integração DJEN API (Comunica PJe)
+- 📊 Valida integração DataJud API (CNJ)
+- ⏰ Verifica configuração dos cron jobs
+- 👨‍⚖️ Confirma dados do advogado configurado
+- 💾 Valida uso do Spark KV storage
+- 📊 Monitora limite de funções serverless (12 max)
+
+**Validações incluídas**:
+- ✅ Todos os arquivos de agentes existem
+- ✅ Endpoints de API estão funcionais
+- ✅ DJEN client configurado corretamente
+- ✅ DataJud client configurado corretamente
+- ✅ Tribunais configurados (TJMG, TRT3, TST, STJ)
+- ✅ Advogado: Thiago Bodevan Veiga (OAB/MG 184.404)
+- ✅ Email: thiagobodevanadvocacia@gmail.com
+- ✅ Cron schedules válidos
+- ✅ Spark KV keys utilizados no código
+
 ## ⚙️ Configuração
 
 ### Secrets Necessários
@@ -145,6 +173,15 @@ VERCEL_TOKEN                 - Token de autenticação do Vercel
 VERCEL_ORG_ID                - ID da organização no Vercel
 VERCEL_PROJECT_ID            - ID do projeto no Vercel
 ```
+
+#### Para AI Agents (Configurar no Vercel Dashboard):
+```
+GITHUB_TOKEN                      - Token do GitHub para Spark LLM API
+DATAJUD_API_KEY                   - API Key do DataJud (CNJ)
+VERCEL_AUTOMATION_BYPASS_SECRET   - Token bypass para webhooks e cron jobs
+```
+
+**Nota importante:** Os secrets dos agentes devem ser configurados no Vercel Dashboard (Settings → Environment Variables), não no GitHub Secrets, pois são utilizados em runtime pelas funções serverless.
 
 ### Como obter os secrets do Vercel:
 
