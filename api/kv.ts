@@ -1,18 +1,26 @@
 /**
- * Vercel KV API endpoint
+ * KV API endpoint
  * 
  * Handles GET and POST requests for key-value storage
  * - GET: Retrieve value by key
  * - POST: Set value for key
  * - POST ?action=init: Initialize configuration with agents and lawyer data
  * 
- * Uses Vercel KV in production, returns 404 in development (falls back to localStorage)
+ * Supports both Upstash Redis and Vercel KV
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Redis } from '@upstash/redis';
 
-// Check if we're in a production environment with Vercel KV available
+// Check which KV service is available
+const isUpstashAvailable = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
 const isVercelKVAvailable = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
+
+// Initialize Upstash Redis client if available
+const redis = isUpstashAvailable ? new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+}) : null;
 
 /**
  * Initialize configuration with default agents and lawyer data
@@ -143,38 +151,17 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
       enabled: true,
     };
 
-    // Use Spark KV API directly via /_spark/kv
-    const sparkKvUrl = '/_spark/kv';
-    const baseUrl = `https://${req.headers.host}`;
-
-    // Helper to save to Spark KV
-    const saveToSparkKV = async (key: string, value: any) => {
-      const response = await fetch(`${baseUrl}${sparkKvUrl}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          key,
-          value: JSON.stringify(value),
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save ${key}: ${response.status} ${errorText}`);
-      }
-      
-      return response.json();
-    };
-
-    // Save all keys to Spark KV
-    await Promise.all([
-      saveToSparkKV('autonomous-agents', agentes),
-      saveToSparkKV('monitored-lawyers', [advogado]),
-      saveToSparkKV('agent-task-queue', []),
-      saveToSparkKV('completed-agent-tasks', []),
-    ]);
+    // Use Upstash Redis if available
+    if (redis) {
+      await Promise.all([
+        redis.set('autonomous-agents', JSON.stringify(agentes)),
+        redis.set('monitored-lawyers', JSON.stringify([advogado])),
+        redis.set('agent-task-queue', JSON.stringify([])),
+        redis.set('completed-agent-tasks', JSON.stringify([])),
+      ]);
+    } else {
+      throw new Error('No KV storage available (Upstash or Vercel KV required)');
+    }
 
     return res.status(200).json({
       ok: true,
@@ -227,14 +214,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return handleInitConfig(req, res);
   }
 
-  // If Vercel KV is not available, return success with fallback indication
-  // This allows the client to use localStorage as fallback
-  if (!isVercelKVAvailable) {
+  // If no KV is available, return fallback indication
+  if (!redis && !isVercelKVAvailable) {
     if (req.method === 'GET') {
-      // Return null for GET requests when KV is not available
       res.status(200).json({ key: req.query.key, value: null, fallback: true });
     } else if (req.method === 'POST') {
-      // Return success for POST requests when KV is not available
       res.status(200).json({ success: true, key: req.body?.key, fallback: true });
     } else {
       res.status(405).json({ error: 'Method not allowed' });
@@ -243,44 +227,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Dynamically import @vercel/kv (only available in production)
-    const { kv } = await import('@vercel/kv');
+    // Use Upstash if available, otherwise Vercel KV
+    if (redis) {
+      // Upstash Redis
+      if (req.method === 'GET') {
+        const { key } = req.query;
+        if (!key || typeof key !== 'string') {
+          res.status(400).json({ error: 'Key parameter is required' });
+          return;
+        }
 
-    if (req.method === 'GET') {
-      // GET: Retrieve value
-      const { key } = req.query;
+        const value = await redis.get(key);
+        if (value === null) {
+          res.status(404).json({ error: 'Key not found' });
+          return;
+        }
 
-      if (!key || typeof key !== 'string') {
-        res.status(400).json({ error: 'Key parameter is required' });
-        return;
+        res.status(200).json({ key, value });
+      } else if (req.method === 'POST') {
+        const { key, value } = req.body;
+        if (!key || typeof key !== 'string') {
+          res.status(400).json({ error: 'Key is required in request body' });
+          return;
+        }
+        if (value === undefined) {
+          res.status(400).json({ error: 'Value is required in request body' });
+          return;
+        }
+
+        await redis.set(key, value);
+        res.status(200).json({ success: true, key });
+      } else {
+        res.status(405).json({ error: 'Method not allowed' });
       }
+    } else if (isVercelKVAvailable) {
+      // Vercel KV (fallback)
+      const { kv } = await import('@vercel/kv');
 
-      const value = await kv.get(key);
+      if (req.method === 'GET') {
+        const { key } = req.query;
+        if (!key || typeof key !== 'string') {
+          res.status(400).json({ error: 'Key parameter is required' });
+          return;
+        }
 
-      if (value === null) {
-        res.status(404).json({ error: 'Key not found' });
-        return;
+        const value = await kv.get(key);
+        if (value === null) {
+          res.status(404).json({ error: 'Key not found' });
+          return;
+        }
+
+        res.status(200).json({ key, value });
+      } else if (req.method === 'POST') {
+        const { key, value } = req.body;
+        if (!key || typeof key !== 'string') {
+          res.status(400).json({ error: 'Key is required in request body' });
+          return;
+        }
+        if (value === undefined) {
+          res.status(400).json({ error: 'Value is required in request body' });
+          return;
+        }
+
+        await kv.set(key, value);
+        res.status(200).json({ success: true, key });
+      } else {
+        res.status(405).json({ error: 'Method not allowed' });
       }
-
-      res.status(200).json({ key, value });
-    } else if (req.method === 'POST') {
-      // POST: Set value
-      const { key, value } = req.body;
-
-      if (!key || typeof key !== 'string') {
-        res.status(400).json({ error: 'Key is required in request body' });
-        return;
-      }
-
-      if (value === undefined) {
-        res.status(400).json({ error: 'Value is required in request body' });
-        return;
-      }
-
-      await kv.set(key, value);
-      res.status(200).json({ success: true, key });
-    } else {
-      res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
     console.error('Vercel KV error:', error);
