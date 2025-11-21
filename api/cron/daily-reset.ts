@@ -12,7 +12,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAgents, updateAgents, getCompletedTasks, updateCompletedTasks } from '../lib/kv-utils';
+import { getAgents, updateAgents, getCompletedTasks, updateCompletedTasks } from '../../lib/api/kv-utils';
 
 interface DailyResetResult {
   success: boolean;
