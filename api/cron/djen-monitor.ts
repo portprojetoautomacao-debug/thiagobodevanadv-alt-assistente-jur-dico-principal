@@ -2,19 +2,26 @@
  * Vercel Cron Job - DJEN Publication Monitor
  * This endpoint runs periodically to check for new legal publications
  * 
- * Schedule: Every 2 hours during business hours (8 AM - 8 PM)
+ * Schedule: Daily at 9 AM (Hobby plan limit)
  * Path: /api/cron/djen-monitor
  * 
  * This cron job will:
- * 1. Query DJEN/DataJud APIs for new publications
- * 2. Filter publications relevant to tracked lawyers/processes
- * 3. Store new publications in Vercel KV
- * 4. Generate notifications for users
+ * 1. Query DJEN API (Comunica PJe) for new publications in official gazette
+ * 2. Optionally query DataJud API for process metadata
+ * 3. Filter publications relevant to tracked lawyers
+ * 4. Store new publications in Spark KV
+ * 5. Generate notifications for users
+ * 
+ * IMPORTANTE:
+ * - DJEN API: https://comunicaapi.pje.jus.br/api/v1/caderno/{tribunal}/{data}/html
+ * - DataJud API: https://api-publica.datajud.cnj.jus.br/{alias}/_search
+ * - São APIs diferentes com propósitos diferentes
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getMonitoredLawyers, storePublication, updateLastDJENCheck, queueNotification } from '../../lib/api/kv-utils';
 import { consultarDJENForLawyer } from '../../lib/api/djen-client';
+import { consultarDataJudForLawyer } from '../../lib/api/datajud-client';
 
 interface DJENMonitorResult {
   success: boolean;
@@ -82,20 +89,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         console.log(`[DJEN Monitor Cron] Checking publications for ${lawyer.name} (${lawyer.oab})`);
         
-        const { resultados, erros } = await consultarDJENForLawyer(
+        // 1. Consultar DJEN (publicações do diário oficial)
+        const { resultados: pubsDJEN, erros: errosDJEN } = await consultarDJENForLawyer(
           tribunais,
           lawyer.name,
           lawyer.oab
         );
 
-        console.log(`[DJEN Monitor Cron] Found ${resultados.length} publications for ${lawyer.name}`);
+        console.log(`[DJEN Monitor Cron] Found ${pubsDJEN.length} DJEN publications for ${lawyer.name}`);
 
-        // Store each publication
-        for (const pub of resultados) {
+        // Store DJEN publications
+        for (const pub of pubsDJEN) {
           const storedPub = {
             id: crypto.randomUUID(),
             ...pub,
             lawyerId: lawyer.id,
+            source: 'DJEN',
             notified: false,
             createdAt: timestamp
           };
@@ -107,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (lawyer.email) {
             await queueNotification({
               type: 'publication',
-              title: `Nova publicação - ${pub.tribunal}`,
+              title: `Nova publicação DJEN - ${pub.tribunal}`,
               message: `Publicação encontrada para ${lawyer.name} no tribunal ${pub.tribunal}`,
               data: storedPub,
               recipientEmail: lawyer.email
@@ -115,9 +124,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // 2. Opcionalmente consultar DataJud (metadados processuais)
+        // Descomente se quiser buscar também processos novos no DataJud
+        /*
+        const { resultados: processosDataJud, erros: errosDataJud } = await consultarDataJudForLawyer(
+          tribunais,
+          lawyer.name,
+          lawyer.oab
+        );
+
+        console.log(`[DJEN Monitor Cron] Found ${processosDataJud.length} DataJud processes for ${lawyer.name}`);
+
+        for (const processo of processosDataJud) {
+          // Armazenar metadados do processo
+          await storePublication({
+            id: crypto.randomUUID(),
+            tribunal: processo.tribunal,
+            numeroProcesso: processo.numeroProcesso,
+            data: processo.dataAjuizamento,
+            tipo: processo.classe?.nome || 'Processo',
+            teor: `Processo ${processo.numeroProcesso} - ${processo.classe?.nome || ''}`,
+            lawyerId: lawyer.id,
+            source: 'DataJud',
+            notified: false,
+            createdAt: timestamp
+          });
+        }
+        
+        errosDataJud.forEach(erro => {
+          result.errors.push(`DataJud ${erro.tribunal}: ${erro.erro}`);
+        });
+        */
+
         // Log errors
-        for (const erro of erros) {
-          const errorMsg = `${erro.tribunal}: ${erro.erro}`;
+        for (const erro of errosDJEN) {
+          const errorMsg = `DJEN ${erro.tribunal}: ${erro.erro}`;
           result.errors.push(errorMsg);
           console.warn(`[DJEN Monitor Cron] ${errorMsg}`);
         }
