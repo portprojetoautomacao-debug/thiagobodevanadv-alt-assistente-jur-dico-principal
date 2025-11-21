@@ -330,7 +330,15 @@ export function validarFormatoData(data: string): boolean {
   if (!regex.test(data)) return false
   
   const date = new Date(data)
-  return !isNaN(date.getTime())
+  if (isNaN(date.getTime())) return false
+  
+  // Verifica se a data não foi ajustada (ex: 2025-04-31 vira 2025-05-01)
+  const [year, month, day] = data.split('-').map(Number)
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() + 1 === month &&
+    date.getDate() === day
+  )
 }
 
 export function validarNumeroOAB(oab: string): boolean {
