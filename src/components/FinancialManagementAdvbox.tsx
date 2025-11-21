@@ -75,7 +75,7 @@ export default function FinancialManagementAdvbox() {
     const monthlyData: { [key: string]: { receitas: number; despesas: number } } = {}
 
     // Generate last 6 months
-    const months = []
+    const months: string[] = []
     for (let i = 5; i >= 0; i--) {
       const date = new Date()
       date.setMonth(date.getMonth() - i)

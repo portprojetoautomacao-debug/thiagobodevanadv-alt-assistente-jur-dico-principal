@@ -179,11 +179,11 @@ export default function HarveySpecter() {
 
   const generateResponse = async (userQuery: string): Promise<string> => {
     try {
-      if (typeof spark === 'undefined' || !spark.llm || !spark.llmPrompt) {
+      if (typeof spark === 'undefined' || !spark.llm) {
         throw new Error('Spark SDK not available')
       }
 
-      const prompt = spark.llmPrompt`Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
+      const prompt = `Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
 
 Contexto do escritório:
 - 127 processos ativos (45 em contestação, 25 em recurso, 57 aguardando sentença)

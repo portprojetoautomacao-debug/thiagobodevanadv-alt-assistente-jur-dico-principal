@@ -57,7 +57,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
     const monthlyStats: { [key: string]: { entradas: number; meta: number; tarefas: number } } = {}
     
     // Generate last 6 months of data
-    const months = []
+    const months: string[] = []
     for (let i = 5; i >= 0; i--) {
       const date = new Date()
       date.setMonth(date.getMonth() - i)
@@ -92,7 +92,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = firstDay.getDay()
 
-    const days = []
+    const days: (number | null)[] = []
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null)
     }

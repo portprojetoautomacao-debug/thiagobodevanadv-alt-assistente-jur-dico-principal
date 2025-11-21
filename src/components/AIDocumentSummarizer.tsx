@@ -23,7 +23,7 @@ export default function AIDocumentSummarizer() {
     setIsProcessing(true)
 
     try {
-      const prompt = spark.llmPrompt`Você é um assistente jurídico especializado em resumir documentos legais.
+      const prompt = `Você é um assistente jurídico especializado em resumir documentos legais.
 
 Analise o seguinte texto e forneça:
 

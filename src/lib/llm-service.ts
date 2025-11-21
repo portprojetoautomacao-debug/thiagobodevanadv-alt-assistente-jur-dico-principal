@@ -203,8 +203,7 @@ export class LLMService {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const sparkPrompt = spark.llmPrompt`${prompt}`
-        const response = await spark.llm(sparkPrompt, model)
+        const response = await spark.llm(prompt, model)
         return response
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error')
@@ -232,7 +231,7 @@ export class LLMService {
     const model = config.model || 'gpt-4o'
 
     try {
-      const sparkPrompt = spark.llmPrompt`${prompt}`
+      const sparkPrompt = prompt
       const response = await spark.llm(sparkPrompt, model, true)
       
       const latencyMs = Date.now() - startTime

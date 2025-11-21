@@ -33,7 +33,7 @@ export default function AIContractAnalyzer() {
     setIsAnalyzing(true)
 
     try {
-      const prompt = spark.llmPrompt`Você é um advogado especializado em análise de contratos. Analise o seguinte contrato e identifique:
+      const prompt = `Você é um advogado especializado em análise de contratos. Analise o seguinte contrato e identifique:
 
 1. Nível de risco geral (low, medium, high)
 2. Score de risco (0-100)

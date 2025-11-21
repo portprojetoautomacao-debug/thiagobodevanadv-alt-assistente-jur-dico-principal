@@ -168,4 +168,4 @@ export interface PDFUploadHistory {
   errorMessage?: string
 }
 
-export type ViewType = 'dashboard' | 'upload-pdf' | 'cadastrar-cliente' | 'clientes' | 'processos' | 'prazos' | 'calculadora' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'conhecimento' | 'crm' | 'consultas' | 'analytics' | 'ai-document-summarizer' | 'ai-contract-analyzer' | 'ai-legal-research' | 'ai-email-drafter' | 'fluent-animations' | 'gestao' | 'intimacoes' | 'agenda' | 'calendar' | 'calendario' | 'donna' | 'ai-agents'
+export type ViewType = 'dashboard' | 'upload-pdf' | 'cadastrar-cliente' | 'clientes' | 'processos' | 'processes' | 'prazos' | 'calculadora' | 'calculator' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'financial' | 'conhecimento' | 'knowledge' | 'crm' | 'consultas' | 'queries' | 'analytics' | 'ai-document-summarizer' | 'ai-contract-analyzer' | 'ai-legal-research' | 'ai-email-drafter' | 'fluent-animations' | 'gestao' | 'intimacoes' | 'expedientes' | 'batch' | 'audio' | 'datajud' | 'agenda' | 'calendar' | 'calendario' | 'donna' | 'ai-agents'

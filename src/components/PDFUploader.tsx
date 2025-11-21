@@ -85,7 +85,7 @@ export default function PDFUploader() {
   }
 
   const extractDataWithAI = async (text: string): Promise<ExtractedData> => {
-    const prompt = spark.llmPrompt`Você é um assistente jurídico especializado em extrair dados de documentos legais.
+    const prompt = `Você é um assistente jurídico especializado em extrair dados de documentos legais.
 
 Analise o texto abaixo extraído de uma procuração ou contrato e extraia as seguintes informações do CLIENTE (não do advogado):
 

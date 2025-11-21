@@ -212,7 +212,7 @@ export function applySparkLLMFixes() {
 
   try {
     const originalLlm = w.spark.llm;
-    w.spark.llm = async function (prompt: string, model: string, jsonResponse?: boolean): Promise<unknown> {
+    w.spark.llm = async function (prompt: string, model?: string, jsonResponse?: boolean): Promise<string> {
       try {
         // Call original first
         return await originalLlm(prompt, model, jsonResponse);
@@ -244,9 +244,9 @@ export function applySparkLLMFixes() {
             // try to extract the expected content if possible
             if (data && typeof data === 'object' && 'choices' in data) {
               const choices = data.choices as Array<{ message?: { content?: unknown } }>;
-              if (choices?.[0]?.message?.content) return choices[0].message.content;
+              if (choices?.[0]?.message?.content) return String(choices[0].message.content);
             }
-            return data;
+            return JSON.stringify(data);
           }
           // if not JSON nor HTML, return text
           return text;
