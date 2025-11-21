@@ -70,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - 30);
       
-      const tasksToKeep = completedTasks.filter((task: any) => {
+      const tasksToKeep = completedTasks.filter((task: { completedAt?: string }) => {
         if (!task.completedAt) return true;
         return new Date(task.completedAt) >= cutoffDate;
       });
