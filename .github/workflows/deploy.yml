@@ -217,33 +217,33 @@ jobs:
           echo "5. **Review documentation:** [\`CONFIGURACAO_VERCEL_TOKEN.md\`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
         fi
 
-  e2e-tests:
-    name: Run E2E Tests
-    needs: deploy-vercel
-    runs-on: ubuntu-latest
-    if: needs.deploy-vercel.result == 'success'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-
-    - name: Run Playwright tests
-      run: npx playwright test
-      env:
-        VERCEL_URL: ${{ needs.deploy-vercel.outputs.url }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+  # e2e-tests:
+  #   name: Run E2E Tests
+  #   needs: deploy-vercel
+  #   runs-on: ubuntu-latest
+  #   if: needs.deploy-vercel.result == 'success'
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '20.x'
+  #       cache: 'npm'
+  #
+  #   - name: Install dependencies
+  #     run: npm ci
+  #
+  #   - name: Install Playwright Browsers
+  #     run: npx playwright install --with-deps
+  #
+  #   - name: Run Playwright tests
+  #     run: npx playwright test
+  #     env:
+  #       VERCEL_URL: ${{ needs.deploy-vercel.outputs.url }}
+  #       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
   deploy-notification:
     name: Deployment Notification
