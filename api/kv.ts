@@ -143,15 +143,37 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
       enabled: true,
     };
 
-    // Dynamically import @vercel/kv (only available in production)
-    const { kv } = await import('@vercel/kv');
+    // Use Spark KV API directly via /_spark/kv
+    const sparkKvUrl = '/_spark/kv';
+    const baseUrl = `https://${req.headers.host}`;
 
-    // Salvar todas as chaves
+    // Helper to save to Spark KV
+    const saveToSparkKV = async (key: string, value: any) => {
+      const response = await fetch(`${baseUrl}${sparkKvUrl}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key,
+          value: JSON.stringify(value),
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save ${key}: ${response.status} ${errorText}`);
+      }
+      
+      return response.json();
+    };
+
+    // Save all keys to Spark KV
     await Promise.all([
-      kv.set('autonomous-agents', JSON.stringify(agentes)),
-      kv.set('monitored-lawyers', JSON.stringify([advogado])),
-      kv.set('agent-task-queue', JSON.stringify([])),
-      kv.set('completed-agent-tasks', JSON.stringify([])),
+      saveToSparkKV('autonomous-agents', agentes),
+      saveToSparkKV('monitored-lawyers', [advogado]),
+      saveToSparkKV('agent-task-queue', []),
+      saveToSparkKV('completed-agent-tasks', []),
     ]);
 
     return res.status(200).json({
