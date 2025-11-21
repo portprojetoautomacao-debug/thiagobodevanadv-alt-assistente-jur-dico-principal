@@ -1,0 +1,9 @@
+# robots.txt - Assistente Jurídico PJe
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://assistente-jurdico-p.vercel.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
