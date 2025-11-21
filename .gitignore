@@ -25,6 +25,22 @@ dist-ssr
 *.sw?
 
 .env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.vercel
+.env.staging
+
+# Credential files (NEVER commit these!)
+credentials.json
+secrets.json
+*.pem
+*.key
+*.cert
+*.pfx
+serviceAccountKey.json
+
 **/agent-eval-report*
 packages
 pids

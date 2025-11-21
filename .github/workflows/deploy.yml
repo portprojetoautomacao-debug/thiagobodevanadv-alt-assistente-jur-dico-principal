@@ -105,6 +105,30 @@ jobs:
         
         echo "✅ All agent files present"
 
+    - name: Validate environment variables
+      run: |
+        echo "Validating environment variables..."
+        HAS_ERRORS=0
+        
+        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          # Production/staging deploys require real credentials
+          if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
+            echo "❌ VITE_GOOGLE_CLIENT_ID is required for production"
+            HAS_ERRORS=1
+          fi
+          
+          if [ -z "${{ secrets.VITE_GOOGLE_API_KEY }}" ]; then
+            echo "❌ VITE_GOOGLE_API_KEY is required for production"
+            HAS_ERRORS=1
+          fi
+        fi
+        
+        if [ $HAS_ERRORS -eq 1 ]; then
+          exit 1
+        fi
+        
+        echo "✅ Environment variables validated"
+
     - name: Build application
       run: npm run build
       env:
@@ -142,20 +166,42 @@ jobs:
 
     - name: Deploy to Vercel
       id: deploy
+      timeout-minutes: 15
       run: |
         npm install -g vercel@latest
         
         # Determine deployment type
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
-          DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
+          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }}"
         elif [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "🚀 Deploying to production"
-          DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
+          DEPLOY_CMD="vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}"
         else
           echo "🚀 Deploying to staging"
-          DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
+          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }}"
         fi
+        
+        # Deploy with retry logic (max 3 attempts)
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        DEPLOYMENT_URL=""
+        
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+          DEPLOYMENT_URL=$($DEPLOY_CMD 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
+          
+          if [ -n "$DEPLOYMENT_URL" ]; then
+            echo "✅ Deployment successful on attempt $((RETRY_COUNT + 1))"
+            break
+          fi
+          
+          RETRY_COUNT=$((RETRY_COUNT + 1))
+          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "⚠️ Deployment failed, retrying in 10 seconds..."
+            sleep 10
+          fi
+        done
         
         # Validate deployment URL
         if [ -z "$DEPLOYMENT_URL" ]; then
