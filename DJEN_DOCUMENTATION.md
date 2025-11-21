@@ -2,7 +2,15 @@
 
 ## Visão Geral
 
-Sistema completo de consulta ao Diário de Justiça Eletrônico Nacional (DJEN) através da API pública do Comunica PJe do CNJ. Permite buscar publicações de múltiplos tribunais por nome de advogado ou número de OAB de forma automatizada e eficiente.
+Sistema completo de consulta ao **Diário de Justiça Eletrônico Nacional (DJEN)** através da **API oficial pública do Comunica PJe** do Conselho Nacional de Justiça (CNJ). Permite buscar publicações de múltiplos tribunais por nome de advogado ou número de OAB de forma automatizada, **gratuita** e eficiente - **sem necessidade de robôs privados pagos**.
+
+> 💡 **DJEN: habemus API!** Como compartilhado por advogados no LinkedIn: _"O CNJ disponibiliza uma API para acessar os dados do DJEN. Basta colocar no seu browser o endereço da API ou usar o Swagger para mais opções. Dá até para rodar um código que baixa e trabalha os dados em Excel!"_
+
+### 📚 Documentação Oficial
+
+- **Swagger UI**: https://comunicaapi.pje.jus.br/swagger/index.html
+- **Versão**: 1.0.3 (última atualização: 29/05/2025)
+- **Recursos**: API REST com suporte a JSON, controle de rate limiting, autenticação para tribunais
 
 ## Arquitetura
 
@@ -48,32 +56,275 @@ O componente foi integrado na aba DJEN do módulo de consultas existente.
 
 ## Endpoints da API
 
-### Endpoint Base
+### 1. GET /api/v1/comunicacao - Consulta de Comunicações
+
+**Endpoint Base:**
 ```
 GET https://comunicaapi.pje.jus.br/api/v1/comunicacao
 ```
 
-### Parâmetros (Query String)
+**Descrição**: Método de consulta de comunicações processuais (publicações) do DJEN e Plataforma de Editais.
 
-| Parâmetro | Tipo | Obrigatório | Descrição | Exemplo |
-|-----------|------|-------------|-----------|---------|
-| siglaTribunal | string | Sim | Sigla oficial do tribunal | `TJSP`, `TST`, `TRT3` |
-| dataDisponibilizacaoInicio | string | Sim | Data inicial no formato YYYY-MM-DD | `2025-01-16` |
-| dataDisponibilizacaoFim | string | Sim | Data final no formato YYYY-MM-DD | `2025-01-16` |
-| nomeAdvogado | string | Condicional* | Nome do advogado | `João Silva` |
-| numeroOab | string | Condicional* | Número da OAB (apenas dígitos) | `123456` |
-| ufOab | string | Condicional* | UF da OAB | `SP`, `MG` |
-| nomeParte | string | Condicional* | Nome da parte | `Maria Santos` |
-| numeroProcesso | string | Condicional* | Número do processo | `50012345620228130000` |
+#### Parâmetros (Query String)
 
-\* Pelo menos um dos parâmetros condicionais deve ser fornecido.
+| Parâmetro | Tipo | Obrigatório | Descrição | Exemplo | Valores |
+|-----------|------|-------------|-----------|---------|---------|
+| `numeroOab` | string | Condicional* | Número da OAB (apenas dígitos) | `184404` | - |
+| `ufOab` | string | Condicional* | UF da OAB (sigla) | `MG` | 2 letras |
+| `nomeAdvogado` | string | Condicional* | Nome do advogado | `Thiago Bodevan Veiga` | - |
+| `nomeParte` | string | Condicional* | Nome da parte no processo | `Maria Santos` | - |
+| `numeroProcesso` | string | Condicional* | Número CNJ do processo | `50012345620228130000` | 20 dígitos |
+| `dataDisponibilizacaoInicio` | string | Não | Data inicial (padrão: hoje) | `2025-01-16` | AAAA-MM-DD |
+| `dataDisponibilizacaoFim` | string | Não | Data final (padrão: dataInicio) | `2025-01-16` | AAAA-MM-DD |
+| `siglaTribunal` | string | Condicional* | Sigla do tribunal | `TJMG`, `TST` | Oficial |
+| `numeroComunicacao` | number | Não | ID interno da comunicação | `123456` | - |
+| `pagina` | number | Não | Número da página (padrão: 1) | `1`, `2` | ≥ 1 |
+| `itensPorPagina` | number | Não | Itens por página | `100` | 5 ou 100 |
+| `orgaoId` | number | Não | ID interno do órgão | `1234` | - |
+| `meio` | string | Não | Tipo de publicação | `D`, `E` | D=Diário, E=Edital |
+| `texto` | string | Condicional* | Busca textual livre | `intimação` | - |
 
-### Exemplo de Requisição
+**\* Regras de Obrigatoriedade:**
+- A pesquisa **deve conter pelo menos um** dos seguintes parâmetros:
+  - `siglaTribunal`
+  - `texto`
+  - `nomeParte`
+  - `nomeAdvogado`
+  - `numeroOab`
+  - `numeroProcesso`
+  - OU ser limitado a 5 `itensPorPagina`
+
+#### ⚠️ Limitações e Rate Limiting
+
+**Limitações de Resultado (máximo 10.000 itens):**
+- Pesquisas com campos textuais ou OAB (`texto`, `nomeAdvogado`, `numeroOab`, `nomeParte`)
+- Pesquisas com 5 ou menos `itensPorPagina`
+- Pesquisas com `dataDisponibilizacaoInicio` ≠ `dataDisponibilizacaoFim`
+- Pesquisas com `numeroProcesso`
+
+**Rate Limiting (controle por IP):**
+- Headers retornados:
+  - `x-ratelimit-limit`: Janela de quantidade de requisições
+  - `x-ratelimit-remaining`: Requisições restantes na janela atual
+- Erro `429 Too Many Requests`: Aguardar **1 minuto** antes de retomar
+- ⚠️ **Uso de múltiplos IPs para contornar rate limit é considerado abuso** e pode resultar em bloqueios
+
+#### Headers Obrigatórios
+
+```http
+Accept: application/json
+User-Agent: PJe-DataCollector/1.0
 ```
-GET https://comunicaapi.pje.jus.br/api/v1/comunicacao?siglaTribunal=TJMG&dataDisponibilizacaoInicio=2025-01-16&dataDisponibilizacaoFim=2025-01-16&numeroOab=123456&ufOab=MG
+
+⚠️ **CRÍTICO**: 
+- Sem `Accept: application/json` a resposta pode vir em HTML/PDF
+- Sem `User-Agent` correto a API retorna `403 Forbidden`
+
+#### Exemplo de Requisição
+
+**Simples (browser):**
+```
+https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=184404&ufOab=MG&meio=D
 ```
 
-### Tribunais Suportados
+**Completa (cURL):**
+```bash
+curl -X GET "https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=184404&ufOab=MG&dataDisponibilizacaoInicio=2025-11-21&dataDisponibilizacaoFim=2025-11-21&meio=D&pagina=1&itensPorPagina=100" \
+  -H "Accept: application/json" \
+  -H "User-Agent: PJe-DataCollector/1.0"
+```
+
+#### Resposta (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Comunicações encontradas",
+  "count": 42,
+  "items": [
+    {
+      "id": 123456,
+      "data_disponibilizacao": "2025-11-21",
+      "siglaTribunal": "TJMG",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara Cível",
+      "texto": "Intimação para apresentação de manifestação...",
+      "numero_processo": "50012345620228130001",
+      "meio": "D",
+      "link": "https://...",
+      "tipoDocumento": "Despacho",
+      "nomeClasse": "Procedimento Comum Cível",
+      "codigoClasse": "318",
+      "numeroComunicacao": 123456,
+      "ativo": true,
+      "hash": "abc123def456",
+      "datadisponibilizacao": "2025-11-21",
+      "meiocompleto": "Diário Eletrônico",
+      "numeroprocessocommascara": "5001234-56.2022.8.13.0001",
+      "destinatarios": [
+        {
+          "nome": "João da Silva",
+          "polo": "A",
+          "comunicacao_id": 123456
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 789,
+          "comunicacao_id": 123456,
+          "advogado_id": 101112,
+          "created_at": "2025-11-21T09:00:00Z",
+          "updated_at": "2025-11-21T09:00:00Z",
+          "advogado": {
+            "id": 101112,
+            "nome": "Thiago Bodevan Veiga",
+            "numero_oab": "184404",
+            "uf_oab": "MG"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Códigos de Status
+
+| Código | Descrição | Ação |
+|--------|-----------|------|
+| `200` | OK - Comunicações encontradas | Processar `items` |
+| `422` | Erro negocial - Parâmetros inválidos | Verificar parâmetros obrigatórios |
+| `429` | Rate limit excedido | Aguardar 1 minuto e tentar novamente |
+
+---
+
+### 2. GET /api/v1/caderno/{sigla_tribunal}/{data}/{meio} - Download de Cadernos
+
+**Endpoint:**
+```
+GET https://comunicaapi.pje.jus.br/api/v1/caderno/{sigla_tribunal}/{data}/{meio}
+```
+
+**Descrição**: Método para baixar cadernos compactados de comunicações de cada tribunal. Retorna metadados e URL temporária (5 minutos) para download.
+
+#### Parâmetros (Path)
+
+| Parâmetro | Tipo | Obrigatório | Descrição | Exemplo | Valores |
+|-----------|------|-------------|-----------|---------|---------|
+| `sigla_tribunal` | string | Sim | Sigla oficial do tribunal | `TJMG` | - |
+| `data` | string | Sim | Data do caderno | `2025-11-21` | AAAA-MM-DD |
+| `meio` | string | Sim | Tipo de publicação | `D` | D=Diário, E=Edital |
+
+**Disponibilidade**: Cadernos do dia atual são disponibilizados a partir das **02:00** (madrugada).
+
+#### Exemplo de Requisição
+
+```bash
+curl -X GET "https://comunicaapi.pje.jus.br/api/v1/caderno/TJMG/2025-11-21/D" \
+  -H "Accept: application/json"
+```
+
+#### Resposta (200 OK)
+
+```json
+{
+  "tribunal": "Tribunal de Justiça de Minas Gerais",
+  "sigla_tribunal": "TJMG",
+  "meio": "D",
+  "status": "disponivel",
+  "versao": "1.0",
+  "data": "2025-11-21",
+  "total_comunicacoes": 1523,
+  "numero_paginas": 245,
+  "hash": "abc123def456789",
+  "url": "https://storage.googleapis.com/comunicaapi-cadernos/TJMG_2025-11-21_D.zip?expires=300"
+}
+```
+
+**⚠️ URL expira em 5 minutos!**
+
+---
+
+### 3. GET /api/v1/comunicacao/tribunal - Lista de Tribunais
+
+**Endpoint:**
+```
+GET https://comunicaapi.pje.jus.br/api/v1/comunicacao/tribunal
+```
+
+**Descrição**: Retorna lista de tribunais por UF com dados de último envio.
+
+#### Resposta (200 OK)
+
+```json
+[
+  {
+    "id": 1,
+    "nome": "Tribunal de Justiça de Minas Gerais",
+    "sigla": "TJMG",
+    "jurisdicao": "MG",
+    "endereco": "Av. Afonso Pena, 1212 - Belo Horizonte/MG",
+    "telefone": "(31) 3250-0000"
+  }
+]
+```
+
+---
+
+### 4. GET /api/v1/comunicacao/{hash}/certidao - Download de Certidão
+
+**Endpoint:**
+```
+GET https://comunicaapi.pje.jus.br/api/v1/comunicacao/{hash}/certidao
+```
+
+**Descrição**: Download de certidão de uma comunicação específica (PDF).
+
+#### Parâmetros (Path)
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| `hash` | string | Sim | Hash único da comunicação |
+
+---
+
+### 5. POST /api/v1/login - Autenticação (Tribunais)
+
+**⚠️ Apenas para uso dos Tribunais** (inclusão/remoção de comunicações).
+
+**Endpoint:**
+```
+POST https://comunicaapi.pje.jus.br/api/v1/login
+```
+
+#### Request Body
+
+```json
+{
+  "login": "usuario_tribunal",
+  "senha": "senha_tribunal"
+}
+```
+
+#### Resposta (200 OK)
+
+```json
+{
+  "user": {
+    "id": 123,
+    "nome": "Tribunal de Justiça XY",
+    "email": "ti@tjxy.jus.br",
+    "cpf": "12345678900"
+  },
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+## Tribunais Suportados
+
+Lista atualizada de tribunais integrados ao DJEN:
 
 - **TST** - Tribunal Superior do Trabalho
 - **TRT3** - Tribunal Regional do Trabalho da 3ª Região (MG)
@@ -83,20 +334,7 @@ GET https://comunicaapi.pje.jus.br/api/v1/comunicacao?siglaTribunal=TJMG&dataDis
 - **TJSP** - Tribunal de Justiça de São Paulo
 - **STJ** - Superior Tribunal de Justiça
 
-## Requisitos HTTP
-
-### Headers Obrigatórios
-
-```typescript
-{
-  'User-Agent': 'PJe-DataCollector/1.0',
-  'Accept': 'application/json'
-}
-```
-
-⚠️ **CRÍTICO**: Sem o User-Agent correto a API retorna 403 Forbidden.
-
-⚠️ **CRÍTICO**: Sem Accept: application/json a resposta pode vir em HTML/PDF.
+Consulte `/api/v1/comunicacao/tribunal` para lista completa e atualizada.
 
 ## Estrutura de Dados
 
