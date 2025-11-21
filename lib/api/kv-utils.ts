@@ -172,7 +172,16 @@ export async function queueNotification(notification: {
   recipientEmail?: string;
 }): Promise<void> {
   try {
-    const queue = await kv.get<unknown[]>(KV_KEYS.NOTIFICATION_QUEUE) || [];
+    const queue = await kv.get<Array<{
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      data?: unknown;
+      recipientEmail?: string;
+      createdAt: string;
+      sent: boolean;
+    }>>(KV_KEYS.NOTIFICATION_QUEUE) || [];
     queue.push({
       ...notification,
       id: crypto.randomUUID(),

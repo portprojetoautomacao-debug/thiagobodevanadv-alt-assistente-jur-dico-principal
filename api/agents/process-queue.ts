@@ -30,15 +30,10 @@ interface Agent {
   enabled: boolean
 }
 
-interface QueueItem {
-  task: AgentTask;
-  agent: Agent;
-}
-
 /**
  * Processa tarefas usando Spark LLM real
  */
-async function processTaskWithRealAI(task: AgentTask, agent: Agent): Promise<any> {
+async function processTaskWithRealAI(task: AgentTask, agent: Agent): Promise<Record<string, unknown>> {
   const sparkEndpoint = process.env.GITHUB_RUNTIME_PERMANENT_NAME 
     ? `/_spark/llm`
     : 'https://assistente-jurdico-p.vercel.app/_spark/llm';
@@ -127,7 +122,7 @@ function getUserPromptForTask(task: AgentTask): string {
   return prompts[task.type] || `Processe a seguinte tarefa:\n\n${taskData}`;
 }
 
-function parseAIResponse(taskType: string, aiResponse: string, taskData: any): any {
+function parseAIResponse(_taskType: string, aiResponse: string, _taskData: Record<string, unknown>): Record<string, unknown> {
   try {
     // Tenta extrair JSON do response
     const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
@@ -196,7 +191,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Process up to 5 tasks per execution
     const tasksToProcess = pendingTasks.slice(0, 5);
-    const results: Array<{ taskId: string; agentId?: any; status: 'completed' | 'failed'; error?: string }> = [];
+    const results: Array<{ taskId: string; agentId?: string; status: 'completed' | 'failed'; error?: string }> = [];
 
     for (const task of tasksToProcess) {
       try {

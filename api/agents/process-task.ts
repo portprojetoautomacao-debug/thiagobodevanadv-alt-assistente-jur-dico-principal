@@ -67,7 +67,7 @@ Retorne JSON com: messageText, tone, channels, urgency.`,
 }
 
 function getUserPrompt(task: AgentTask): string {
-  const taskDescriptions: Record<AgentTask['type'], (data: any) => string> = {
+  const taskDescriptions: Record<AgentTask['type'], (data: Record<string, unknown>) => string> = {
     analyze_document: (data) => `Analise o seguinte documento jurídico:
 
 ${JSON.stringify(data, null, 2)}
@@ -81,7 +81,7 @@ Extraia e retorne em JSON:
 
     monitor_djen: (data) => `Verifique publicações no DJEN/DataJud para:
 
-Tribunais: ${data.tribunais?.join(', ') || 'TJDFT, STJ, TST'}
+Tribunais: ${(data.tribunais as string[] | undefined)?.join(', ') || 'TJDFT, STJ, TST'}
 Advogado: ${data.lawyerName || 'Não especificado'}
 OAB: ${data.oab || 'Não especificada'}
 
@@ -149,8 +149,8 @@ Retorne em JSON:
     research_precedents: (data) => `Pesquise precedentes jurídicos sobre:
 
 Tema: ${data.topic || 'Análise jurisprudencial'}
-Palavras-chave: ${data.keywords?.join(', ') || 'processo civil'}
-Tribunais: ${data.tribunals?.join(', ') || 'STJ, STF, TST'}
+Palavras-chave: ${(data.keywords as string[] | undefined)?.join(', ') || 'processo civil'}
+Tribunais: ${(data.tribunals as string[] | undefined)?.join(', ') || 'STJ, STF, TST'}
 
 Retorne em JSON:
 - precedentsFound: número de precedentes
@@ -311,7 +311,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const aiContent = sparkData.choices?.[0]?.message?.content || '';
 
     // Tentar parsear como JSON
-    let result: any;
+    let result: Record<string, unknown>;
     try {
       const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
       result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent };
