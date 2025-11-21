@@ -1,0 +1,42 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0A0A0B"/>
+  
+  <!-- Gradient overlay -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:0.2" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grad1)"/>
+  
+  <!-- Icon -->
+  <circle cx="600" cy="200" r="80" fill="#3B82F6" opacity="0.2"/>
+  <circle cx="600" cy="200" r="60" fill="#3B82F6"/>
+  <path d="M580 180h40v40h-40z" fill="#FFFFFF"/>
+  <rect x="570" y="190" width="60" height="20" fill="#FFFFFF"/>
+  
+  <!-- Title -->
+  <text x="600" y="340" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
+    Assistente Jurídico PJe
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="400" font-family="Arial, sans-serif" font-size="32" fill="#94A3B8" text-anchor="middle">
+    Sistema Inteligente de Gestão Jurídica
+  </text>
+  
+  <!-- Features -->
+  <g>
+    <text x="300" y="480" font-family="Arial, sans-serif" font-size="24" fill="#60A5FA">✓ 7 Agentes IA Autônomos</text>
+    <text x="300" y="520" font-family="Arial, sans-serif" font-size="24" fill="#60A5FA">✓ Monitoramento DJEN/DataJud</text>
+    <text x="300" y="560" font-family="Arial, sans-serif" font-size="24" fill="#60A5FA">✓ Calculadora de Prazos</text>
+  </g>
+  
+  <g>
+    <text x="750" y="480" font-family="Arial, sans-serif" font-size="24" fill="#60A5FA">✓ CRM de Processos</text>
+    <text x="750" y="520" font-family="Arial, sans-serif" font-size="24" fill="#60A5FA">✓ Integração Google Calendar</text>
+    <text x="750" y="560" font-family="Arial, sans-serif" font-size="24" fill="#60A5FA">✓ Gestão Financeira</text>
+  </g>
+</svg>
