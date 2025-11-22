@@ -74,10 +74,10 @@ export default defineConfig({
             return 'three';
           }
           
-          // Recharts (gráficos) - chunk separado
-          if (id.includes('recharts')) {
-            return 'charts';
-          }
+          // Recharts (gráficos) - chunk separado REMOVIDO para evitar ReferenceError
+          // if (id.includes('recharts')) {
+          //   return 'charts';
+          // }
           
           // DnD Kit (drag and drop para Kanban)
           if (id.includes('@dnd-kit')) {
