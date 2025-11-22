@@ -38,6 +38,10 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info'],
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
       },
     },
     rollupOptions: {
