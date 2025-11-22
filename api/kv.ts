@@ -17,8 +17,9 @@ const isUpstashAvailable = process.env.UPSTASH_REDIS_REST_URL && process.env.UPS
 const isVercelKVAvailable = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
 
 // Initialize Redis client (supports both Upstash and Vercel KV)
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+// Prefer Upstash explicit configuration if available
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
 const redis = (redisUrl && redisToken) ? new Redis({
   url: redisUrl,
