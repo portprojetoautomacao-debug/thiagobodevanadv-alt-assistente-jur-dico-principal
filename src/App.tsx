@@ -5,6 +5,7 @@ import type { GoogleUser } from '@/components/GoogleAuth'
 import Sidebar from '@/components/Sidebar'
 import { useKV } from '@/hooks/use-kv'
 import type { ViewType, User } from '@/types'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -192,6 +193,7 @@ function App() {
           </div>
         </div>
         <Toaster />
+        <SpeedInsights />
       </div>
     )
   }
@@ -210,6 +212,7 @@ function App() {
         </div>
       </main>
       <Toaster />
+      <SpeedInsights />
     </div>
   )
 }
