@@ -1,0 +1,9 @@
+{
+  "files.watcherExclude": {
+    "**/docs/archive/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true
+  },
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "editor.stickyScroll.enabled": true
+}
