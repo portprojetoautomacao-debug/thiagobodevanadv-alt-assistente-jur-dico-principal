@@ -28,6 +28,20 @@ export default defineConfig({
     }
   },
   build: {
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+      },
+      mangle: {
+        safari10: true,
+      },
+    },
+    cssMinify: true,
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -97,17 +111,6 @@ export default defineConfig({
             return 'sample-data';
           }
         }
-      }
-    },
-    // Reduzir limite de warning para 500KB
-    chunkSizeWarningLimit: 500,
-    // Otimizações adicionais
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log em produção
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug']
       }
     },
     // Sourcemaps apenas em desenvolvimento
