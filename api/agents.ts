@@ -276,6 +276,104 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     sourceTask: task.id
                   }
                 };
+              } else if (actionStr.includes('avisar') || actionStr.includes('comunicar') || actionStr.includes('informar') || actionStr.includes('cliente')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'client-communicator',
+                  type: 'client_communication',
+                  priority: 'medium',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('datajud') || actionStr.includes('andamento') || actionStr.includes('autos') || actionStr.includes('movimentação')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'datajud-query',
+                  type: 'check_datajud',
+                  priority: 'medium',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('sentença') || actionStr.includes('decisão') || actionStr.includes('acórdão') || actionStr.includes('risco')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'risk-analyst',
+                  type: 'risk_analysis',
+                  priority: 'high',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('custas') || actionStr.includes('honorários') || actionStr.includes('depósito') || actionStr.includes('guia') || actionStr.includes('pagamento')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'billing-analyst',
+                  type: 'billing_analysis',
+                  priority: 'high',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('arquivar') || actionStr.includes('salvar') || actionStr.includes('pasta') || actionStr.includes('organizar')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'document-organizer',
+                  type: 'organize_files',
+                  priority: 'low',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('lgpd') || actionStr.includes('sigilo') || actionStr.includes('segredo') || actionStr.includes('ética') || actionStr.includes('compliance')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'compliance-officer',
+                  type: 'compliance_check',
+                  priority: 'high',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('explicar') || actionStr.includes('simplificar') || actionStr.includes('traduzir') || actionStr.includes('leigo')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'legal-translator',
+                  type: 'legal_translation',
+                  priority: 'medium',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
               }
 
               if (nextTask) {

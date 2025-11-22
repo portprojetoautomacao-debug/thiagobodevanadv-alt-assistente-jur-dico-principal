@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMocks } from 'node-mocks-http';
 import cronHandler from '../../api/cron';
@@ -134,9 +133,14 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
       ok: true,
       json: async () => ({
         choices: [{ message: { content: JSON.stringify({
-          summary: "Publicação analisada com sucesso",
-          deadlines: [{ date: "2025-12-01", description: "Prazo fatal" }],
-          suggestedActions: ["Agendar reunião", "Protocolar defesa"]
+          summary: "Sentença proferida. Necessário comunicar cliente e analisar riscos.",
+          deadlines: [{ date: "2025-12-01", description: "Prazo recursal" }],
+          suggestedActions: [
+            "Calcular prazo recursal", 
+            "Comunicar cliente sobre sentença", 
+            "Analisar riscos da decisão",
+            "Verificar andamento no DataJud"
+          ]
         }) } }],
         usage: { total_tokens: 150 }
       })
@@ -168,7 +172,103 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     
     // Verify AI analysis result
     const analysis = result.result;
-    expect(analysis.summary).toBe("Publicação analisada com sucesso");
+    expect(analysis.summary).toBe("Sentença proferida. Necessário comunicar cliente e analisar riscos.");
     expect(analysis.deadlines).toHaveLength(1);
+  });
+  
+  it('Step 3: Agent Queue Processing should chain new tasks based on analysis', async () => {
+    const taskData = {
+      id: 'task-chain-test',
+      agentId: 'analyzer-agent',
+      type: 'analyze_document',
+      status: 'queued',
+      data: { text: "Sentença com custas" }
+    };
+
+    // Mock fetch to handle multiple endpoints for the queue processing flow
+    global.fetch = vi.fn().mockImplementation((url, options) => {
+      // 1. GET Task Queue
+      if (url.toString().includes('/_spark/kv/agent-task-queue') && (!options || options.method === 'GET' || !options.method)) {
+        return Promise.resolve({ 
+          ok: true, 
+          json: async () => ({ value: [taskData] }) 
+        });
+      }
+      
+      // 2. GET Agents
+      if (url.toString().includes('/_spark/kv/autonomous-agents')) {
+        return Promise.resolve({ 
+          ok: true, 
+          json: async () => ({ value: [{ id: 'analyzer-agent', enabled: true, type: 'analyzer', name: 'Analyzer' }] }) 
+        });
+      }
+      
+      // 3. LLM Call
+      if (url.toString().includes('/_spark/llm')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: JSON.stringify({
+              suggestedActions: [
+                "Pagar custas processuais",
+                "Arquivar documento na pasta do processo",
+                "Verificar compliance LGPD",
+                "Traduzir termos para linguagem simples"
+              ]
+            }) } }],
+            usage: { total_tokens: 150 }
+          })
+        });
+      }
+
+      // 4. PUT Task Queue (Update)
+      if (url.toString().includes('/_spark/kv/agent-task-queue') && options?.method === 'PUT') {
+        return Promise.resolve({ ok: true, json: async () => ({}) });
+      }
+
+      return Promise.resolve({ ok: false, statusText: 'Not Found: ' + url });
+    }) as any;
+
+    const { req, res } = createMocks({
+      method: 'POST',
+      query: { action: 'process-queue' },
+      headers: { authorization: 'Bearer cron-secret' }
+    });
+
+    await agentsHandler(req as any, res as any);
+
+    expect(res._getStatusCode()).toBe(200);
+    
+    // Verify that the queue update was called with the new chained tasks
+    const putCall = (global.fetch as any).mock.calls.find((call: any[]) => 
+      call[0].toString().includes('/_spark/kv/agent-task-queue') && call[1].method === 'PUT'
+    );
+    
+    expect(putCall).toBeDefined();
+    const body = JSON.parse(putCall[1].body);
+    const updatedQueue = body.value;
+    
+    // Original task should be completed (or we are just checking the pushed tasks)
+    // The code pushes new tasks to the queue array.
+    
+    // Check for Billing Analyst task
+    const billingTask = updatedQueue.find((t: any) => t.type === 'billing_analysis');
+    expect(billingTask).toBeDefined();
+    expect(billingTask.agentId).toBe('billing-analyst');
+    
+    // Check for Organizer task
+    const organizerTask = updatedQueue.find((t: any) => t.type === 'organize_files');
+    expect(organizerTask).toBeDefined();
+    expect(organizerTask.agentId).toBe('document-organizer');
+
+    // Check for Compliance task
+    const complianceTask = updatedQueue.find((t: any) => t.type === 'compliance_check');
+    expect(complianceTask).toBeDefined();
+    expect(complianceTask.agentId).toBe('compliance-officer');
+
+    // Check for Translator task
+    const translatorTask = updatedQueue.find((t: any) => t.type === 'legal_translation');
+    expect(translatorTask).toBeDefined();
+    expect(translatorTask.agentId).toBe('legal-translator');
   });
 });
