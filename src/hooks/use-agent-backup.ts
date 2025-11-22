@@ -68,7 +68,7 @@ export function useAgentBackup(options: BackupOptions) {
       
       // Validar com servidor (opcional - não bloqueia se falhar)
       try {
-        await fetch('/api/backup/agents-backup', {
+        await fetch('/api/backup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, data: backupData.data })
