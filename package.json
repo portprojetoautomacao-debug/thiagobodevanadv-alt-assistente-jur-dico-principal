@@ -13,6 +13,7 @@
         "build": "vite build",
         "start": "serve -s dist -l 10000",
         "lint": "eslint .",
+        "lint:sarif": "eslint . --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
         "optimize": "vite optimize",
         "preview": "vite preview",
         "test": "vitest",
@@ -93,6 +94,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.21.0",
+        "@microsoft/eslint-formatter-sarif": "^3.1.0",
         "@playwright/test": "^1.56.1",
         "@tailwindcss/postcss": "^4.1.8",
         "@testing-library/jest-dom": "^6.9.1",

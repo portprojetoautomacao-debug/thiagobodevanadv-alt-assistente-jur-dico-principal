@@ -17,8 +17,8 @@ const LoadingFallback = () => (
 )
 
 // ✅ Code Splitting: Componentes carregados apenas quando necessários
-// Dashboard carregado imediatamente (é a tela inicial)
-import Dashboard from '@/components/Dashboard'
+// Dashboard carregado sob demanda para reduzir bundle inicial
+const Dashboard = lazy(() => import('@/components/Dashboard'))
 
 // Outros componentes carregados sob demanda (lazy loading)
 const ProcessCRM = lazy(() => import('@/components/ProcessCRM'))
@@ -64,7 +64,11 @@ function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard onNavigate={setCurrentView} />
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Dashboard onNavigate={setCurrentView} />
+          </Suspense>
+        )
       case 'crm':
       case 'processos':
       case 'processes':

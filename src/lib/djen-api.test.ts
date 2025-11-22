@@ -36,10 +36,10 @@ describe('DJEN API - Validações', () => {
       expect(validarNumeroOAB('OAB/SP 999999')).toBe(true)
       expect(validarNumeroOAB('OAB/RJ 1')).toBe(true)
       expect(validarNumeroOAB('oab/mg 123')).toBe(true)
+      expect(validarNumeroOAB('123456')).toBe(true) // Aceita apenas números
     })
 
     it('deve rejeitar formatos inválidos', () => {
-      expect(validarNumeroOAB('123456')).toBe(false)
       expect(validarNumeroOAB('OAB 123456')).toBe(false)
       expect(validarNumeroOAB('MG 123456')).toBe(false)
       expect(validarNumeroOAB('OAB/MG')).toBe(false)

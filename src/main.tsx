@@ -5,7 +5,7 @@ import { applySparkClientFixes, applySparkLLMFixes } from './lib/spark-client-fi
 // import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
 
-import "./main.css"
+import './index.css';
 
 // Initialize Spark client with error handling for localization issues
 async function initializeSpark() {

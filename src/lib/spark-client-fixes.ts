@@ -57,12 +57,12 @@ export function patchFileReader() {
       // Evita o crash chamando o callback de erro ou apenas retornando
       if (this.onerror) {
         const event = new ProgressEvent('error');
-        // @ts-ignore
+        // @ts-expect-error - Propriedade error é readonly na definição padrão
         Object.defineProperty(this, 'error', {
           value: new DOMException('Parameter is not of type Blob', 'TypeMismatchError'),
           writable: true
         });
-        // @ts-ignore
+        // @ts-expect-error - onerror pode ser null
         this.onerror(event);
       }
       return;
