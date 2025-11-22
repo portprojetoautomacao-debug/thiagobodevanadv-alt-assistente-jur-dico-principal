@@ -231,3 +231,15 @@ export async function queueNotification(notification: {
     console.error('[KV] Error queuing notification:', error);
   }
 }
+
+// Add task to queue
+export async function addTaskToQueue(task: any): Promise<void> {
+  try {
+    const kv = await getKv();
+    const queue = (await kv.get('agent-task-queue') as any[]) || [];
+    queue.push(task);
+    await kv.set('agent-task-queue', queue);
+  } catch (error) {
+    console.error('[KV] Error adding task to queue:', error);
+  }
+}
