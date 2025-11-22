@@ -8,6 +8,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { addTaskToQueue } from '../lib/api/kv-utils';
 
 // Types duplicated from src/lib/agents.ts for serverless compatibility
 interface AgentTask {
@@ -226,6 +227,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           task.status = 'completed';
           task.completedAt = new Date().toISOString();
           task.result = result;
+
+          // Chain tasks based on analysis
+          if (task.type === 'analyze_document' && result.suggestedActions && Array.isArray(result.suggestedActions)) {
+            for (const action of result.suggestedActions) {
+              const actionStr = String(action).toLowerCase();
+              let nextTask = null;
+
+              if (actionStr.includes('prazo') || actionStr.includes('deadline')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'deadline-tracker',
+                  type: 'calculate_deadline',
+                  priority: 'high',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('petição') || actionStr.includes('defesa') || actionStr.includes('recurso') || actionStr.includes('manifestação')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'petition-writer',
+                  type: 'draft_petition',
+                  priority: 'medium',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('pesquisa') || actionStr.includes('jurisprudência')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'precedent-researcher',
+                  type: 'research_precedents',
+                  priority: 'low',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              }
+
+              if (nextTask) {
+                console.log(`[Agents] Chaining task: ${nextTask.type} for ${nextTask.agentId}`);
+                // We use the imported function, but we need to be careful about mixing fetch/direct KV usage.
+                // Since we are in the loop, we can just push to taskQueue if we are updating it at the end.
+                // BUT the code below updates taskQueue via fetch PUT.
+                // So we should push to taskQueue array directly.
+                taskQueue.push(nextTask as AgentTask);
+              }
+            }
+          }
 
           results.push({ taskId: task.id, status: 'completed' });
 

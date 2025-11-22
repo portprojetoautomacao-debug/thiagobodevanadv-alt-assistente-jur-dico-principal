@@ -18,7 +18,8 @@ import {
   getMonitoredLawyers,
   storePublication,
   updateLastDJENCheck,
-  queueNotification
+  queueNotification,
+  addTaskToQueue
 } from '../lib/api/kv-utils';
 import { consultarDJENForLawyer } from '../lib/api/djen-client';
 
@@ -209,6 +210,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             await storePublication(storedPub);
             result.publicationsFound++;
+
+            // Create analysis task for the new publication
+            await addTaskToQueue({
+              id: crypto.randomUUID(),
+              agentId: 'doc-analyzer', // ID do agente de análise
+              type: 'analyze_document',
+              priority: 'high',
+              status: 'queued',
+              createdAt: new Date().toISOString(),
+              data: {
+                publicationId: storedPub.id,
+                text: storedPub.teor,
+                processNumber: storedPub.numeroProcesso,
+                tribunal: storedPub.tribunal,
+                type: storedPub.tipo,
+                source: 'DJEN Monitor'
+              }
+            });
 
             // Queue notification
             if (lawyer.email) {
