@@ -101,7 +101,7 @@ function SortableCard({ card, onOpenDetails }: SortableCardProps) {
               vs. {card.reu}
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 rounded-lg">
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 rounded-lg" aria-label="Opções do processo">
             <DotsThree size={18} weight="bold" />
           </Button>
         </div>
@@ -349,7 +349,7 @@ export default function ProcessCRMAdvbox() {
                     {selectedCard?.numero}
                   </DialogDescription>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(false)}>
+                <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(false)} aria-label="Fechar detalhes">
                   <X size={20} />
                 </Button>
               </div>

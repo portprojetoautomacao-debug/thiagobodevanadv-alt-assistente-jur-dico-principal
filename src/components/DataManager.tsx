@@ -90,7 +90,7 @@ export default function DataManager({ currentProcesses, onAddProcesses, onClearA
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Gerenciar dados">
             <Gear size={20} />
           </Button>
         </DialogTrigger>

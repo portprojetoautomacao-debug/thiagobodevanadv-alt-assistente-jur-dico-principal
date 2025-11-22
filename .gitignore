@@ -67,3 +67,4 @@ Thumbs.db
 .DS_Store
 .vercel
 mcp-server-config.json*
+.env*.local

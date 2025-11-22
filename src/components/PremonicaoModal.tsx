@@ -136,7 +136,7 @@ export default function PremonicaoModal({
               Premonição Jurídica
             </DialogTitle>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar premonição">
             <X className="h-5 w-5" />
           </Button>
         </div>

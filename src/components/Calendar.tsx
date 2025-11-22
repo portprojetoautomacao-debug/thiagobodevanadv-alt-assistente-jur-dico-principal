@@ -398,10 +398,10 @@ export default function Calendar() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">{MONTHS[month]} {year}</CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+              <Button variant="outline" size="icon" onClick={handlePreviousMonth} aria-label="Mês anterior">
                 <CaretLeft className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon" onClick={handleNextMonth}>
+              <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Próximo mês">
                 <CaretRight className="w-5 h-5" />
               </Button>
             </div>
