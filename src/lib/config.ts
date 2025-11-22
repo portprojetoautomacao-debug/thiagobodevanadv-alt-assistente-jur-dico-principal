@@ -17,6 +17,9 @@ export const config = {
   datajud: {
     apiKey: getEnvVar('VITE_DATAJUD_API_KEY', '', false), // Optional - no error logging
   },
+  todoist: {
+    apiKey: getEnvVar('VITE_TODOIST_API_KEY', '', false), // Optional - no error logging
+  },
   app: {
     environment: getEnvVar('VITE_APP_ENV', 'development'),
     isDevelopment: getEnvVar('VITE_APP_ENV', 'development') === 'development',
