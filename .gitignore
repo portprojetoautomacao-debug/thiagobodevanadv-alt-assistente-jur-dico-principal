@@ -68,3 +68,4 @@ Thumbs.db
 .vercel
 mcp-server-config.json*
 .env*.local
+eslint-results.sarif
