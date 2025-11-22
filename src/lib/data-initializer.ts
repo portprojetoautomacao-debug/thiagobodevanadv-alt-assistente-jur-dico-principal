@@ -1,7 +1,8 @@
-import * as spark from '@github/spark/llm'
+// import * as spark from '@github/spark/llm'
 import type { Process } from '@/types'
 
 export async function generateRealisticProcesses(count: number = 10): Promise<Process[]> {
+  const spark = await import('@github/spark/llm')
   const prompt = `Você é um especialista em direito processual brasileiro. Gere exatamente ${count} processos jurídicos brasileiros ALTAMENTE REALISTAS e VARIADOS.
 
 IMPORTANTE: Use dados VERDADEIRAMENTE DIVERSOS e ESPECÍFICOS. Não repita padrões genéricos.

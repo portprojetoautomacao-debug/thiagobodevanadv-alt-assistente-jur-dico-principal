@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
 import { applySparkClientFixes, applySparkLLMFixes } from './lib/spark-client-fixes'
 
-import App from './App.tsx'
+// import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
 
 import "./main.css"
@@ -37,8 +37,14 @@ if (!rootElement) {
   throw new Error('Root element not found')
 }
 
-createRoot(rootElement).render(
-  <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <App />
-  </ErrorBoundary>
-)
+// Dynamic import of App to ensure Spark fixes are applied first
+import('./App').then(({ default: App }) => {
+  createRoot(rootElement).render(
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <App />
+    </ErrorBoundary>
+  )
+}).catch(err => {
+  console.error('Failed to load App:', err)
+  rootElement.innerHTML = `<div style="color: red; padding: 20px;">Failed to load application: ${err.message}</div>`
+})
