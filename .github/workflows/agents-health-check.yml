@@ -14,6 +14,10 @@ on:
       - 'lib/api/djen-client.ts'
       - 'lib/api/datajud-client.ts'
 
+concurrency:
+  group: agents-health-check
+  cancel-in-progress: true
+
 jobs:
   check-agents-configuration:
     name: Verify AI Agents Configuration

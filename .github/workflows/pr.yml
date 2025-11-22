@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   pr-validation:
     name: PR Validation
@@ -64,7 +68,17 @@ jobs:
         VITE_APP_ENV: 'ci'
 
     - name: Run tests
-      run: npm test -- --run
+      run: |
+        if grep -q "\"test\":" package.json; then
+          echo "Running tests..."
+          npm test -- --run || {
+            echo "⚠️ Tests failed"
+            exit 1
+          }
+          echo "✅ Tests passed"
+        else
+          echo "⚠️ No test script configured, skipping tests"
+        fi
       continue-on-error: false
 
     - name: Check package.json changes

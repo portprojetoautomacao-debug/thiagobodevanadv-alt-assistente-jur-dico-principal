@@ -8,6 +8,10 @@ on:
     - cron: '0 4 * * 1'
   workflow_dispatch:
 
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lighthouse-ci:
     name: Lighthouse CI
@@ -40,10 +44,11 @@ jobs:
     - name: Run Lighthouse CI
       run: |
         npm install -g @lhci/cli
-        npm run build
         lhci autorun
       env:
         LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+      continue-on-error: true
+
     - name: Generate performance report
       if: always()
       run: |

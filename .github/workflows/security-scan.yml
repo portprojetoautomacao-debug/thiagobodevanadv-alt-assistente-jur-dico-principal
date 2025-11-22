@@ -11,6 +11,10 @@ on:
       - 'package.json'
       - 'package-lock.json'
 
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: false  # Don't cancel security scans
+
 jobs:
   npm-audit:
     name: NPM Security Audit
@@ -182,23 +186,23 @@ npm audit --json > audit-full.json
         FOUND_ISSUES=0
         
         # Verificar arquivos .env que não deveriam estar versionados
-        if find . -name ".env.vercel" -o -name ".env.production" -o -name ".env.local" | grep -v ".example" | grep -q .; then
+        if find . -type f \( -name ".env.vercel" -o -name ".env.production" -o -name ".env.local" \) ! -name "*.example" 2>/dev/null | grep -q .; then
           echo "❌ **CRITICAL:** Found .env files that should not be committed!" >> $GITHUB_STEP_SUMMARY
-          find . -name ".env.vercel" -o -name ".env.production" -o -name ".env.local" | grep -v ".example" >> $GITHUB_STEP_SUMMARY
+          find . -type f \( -name ".env.vercel" -o -name ".env.production" -o -name ".env.local" \) ! -name "*.example" 2>/dev/null >> $GITHUB_STEP_SUMMARY || true
           FOUND_ISSUES=1
         fi
         
         # Procurar por possíveis client IDs/secrets
-        if git grep -i "client_id.*=.*[0-9]" | grep -v ".example" | grep -v "dummy" | grep -q .; then
+        if git grep -i "client_id.*=.*[0-9]" 2>/dev/null | grep -v ".example" | grep -v "dummy" | grep -q .; then
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "⚠️ **WARNING:** Possible OAuth client IDs found in code:" >> $GITHUB_STEP_SUMMARY
-          git grep -i "client_id.*=.*[0-9]" | grep -v ".example" | grep -v "dummy" >> $GITHUB_STEP_SUMMARY
+          git grep -i "client_id.*=.*[0-9]" 2>/dev/null | grep -v ".example" | grep -v "dummy" | head -10 >> $GITHUB_STEP_SUMMARY || true
           FOUND_ISSUES=1
         fi
         
         # Verificar .gitignore
         if [ -f ".gitignore" ]; then
-          if ! grep -q ".env.vercel" .gitignore; then
+          if ! grep -q ".env.vercel" .gitignore 2>/dev/null; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "⚠️ **WARNING:** .env.vercel not in .gitignore" >> $GITHUB_STEP_SUMMARY
             FOUND_ISSUES=1
@@ -213,6 +217,7 @@ npm audit --json > audit-full.json
           echo "**Action Required:** Review and remove sensitive information from repository" >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
+      continue-on-error: false
 
   license-compliance:
     name: License Compliance Check
