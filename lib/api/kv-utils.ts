@@ -3,9 +3,11 @@
  * 
  * This module provides utilities for interacting with Vercel KV storage
  * from serverless cron job functions.
+ * 
+ * Supports both Upstash Redis and Vercel KV.
  */
 
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 // Key prefixes for different data types
 export const KV_KEYS = {
@@ -54,11 +56,38 @@ export interface Agent {
   currentTask?: unknown;
 }
 
+// Lazy-loaded KV client
+let _kvClient: any = null;
+
+async function getKv() {
+  if (_kvClient) return _kvClient;
+
+  // Try Upstash first
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    _kvClient = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    return _kvClient;
+  }
+
+  // Fallback to Vercel KV
+  try {
+    const { kv } = await import('@vercel/kv');
+    _kvClient = kv;
+    return _kvClient;
+  } catch (e) {
+    console.error('Failed to load KV client:', e);
+    throw new Error('No KV storage available (Upstash or Vercel KV required)');
+  }
+}
+
 // Get monitored lawyers
 export async function getMonitoredLawyers(): Promise<MonitoredLawyer[]> {
   try {
-    const lawyers = await kv.get<MonitoredLawyer[]>(KV_KEYS.MONITORED_LAWYERS);
-    return lawyers || [];
+    const kv = await getKv();
+    const lawyers = await kv.get(KV_KEYS.MONITORED_LAWYERS);
+    return (lawyers as MonitoredLawyer[]) || [];
   } catch (error) {
     console.error('[KV] Error getting monitored lawyers:', error);
     return [];
@@ -68,8 +97,9 @@ export async function getMonitoredLawyers(): Promise<MonitoredLawyer[]> {
 // Store a new publication
 export async function storePublication(publication: StoredPublication): Promise<void> {
   try {
+    const kv = await getKv();
     const key = `${KV_KEYS.PUBLICATIONS}:${publication.lawyerId}`;
-    const existing = await kv.get<StoredPublication[]>(key) || [];
+    const existing = (await kv.get(key) as StoredPublication[]) || [];
     
     // Avoid duplicates
     const isDuplicate = existing.some(p => 
@@ -93,9 +123,10 @@ export async function storePublication(publication: StoredPublication): Promise<
 // Get publications for a lawyer
 export async function getPublications(lawyerId: string): Promise<StoredPublication[]> {
   try {
+    const kv = await getKv();
     const key = `${KV_KEYS.PUBLICATIONS}:${lawyerId}`;
-    const publications = await kv.get<StoredPublication[]>(key);
-    return publications || [];
+    const publications = await kv.get(key);
+    return (publications as StoredPublication[]) || [];
   } catch (error) {
     console.error('[KV] Error getting publications:', error);
     return [];
@@ -105,6 +136,7 @@ export async function getPublications(lawyerId: string): Promise<StoredPublicati
 // Update last DJEN check timestamp
 export async function updateLastDJENCheck(): Promise<void> {
   try {
+    const kv = await getKv();
     await kv.set(KV_KEYS.LAST_DJEN_CHECK, new Date().toISOString());
   } catch (error) {
     console.error('[KV] Error updating last DJEN check:', error);
@@ -114,7 +146,8 @@ export async function updateLastDJENCheck(): Promise<void> {
 // Get last DJEN check timestamp
 export async function getLastDJENCheck(): Promise<string | null> {
   try {
-    return await kv.get<string>(KV_KEYS.LAST_DJEN_CHECK);
+    const kv = await getKv();
+    return (await kv.get(KV_KEYS.LAST_DJEN_CHECK)) as string | null;
   } catch (error) {
     console.error('[KV] Error getting last DJEN check:', error);
     return null;
@@ -124,8 +157,9 @@ export async function getLastDJENCheck(): Promise<string | null> {
 // Get all autonomous agents
 export async function getAgents(): Promise<Agent[]> {
   try {
-    const agents = await kv.get<Agent[]>(KV_KEYS.AGENTS);
-    return agents || [];
+    const kv = await getKv();
+    const agents = await kv.get(KV_KEYS.AGENTS);
+    return (agents as Agent[]) || [];
   } catch (error) {
     console.error('[KV] Error getting agents:', error);
     return [];
@@ -135,6 +169,7 @@ export async function getAgents(): Promise<Agent[]> {
 // Update agents
 export async function updateAgents(agents: Agent[]): Promise<void> {
   try {
+    const kv = await getKv();
     await kv.set(KV_KEYS.AGENTS, agents);
   } catch (error) {
     console.error('[KV] Error updating agents:', error);
@@ -145,8 +180,9 @@ export async function updateAgents(agents: Agent[]): Promise<void> {
 // Get completed tasks
 export async function getCompletedTasks(): Promise<unknown[]> {
   try {
-    const tasks = await kv.get<unknown[]>(KV_KEYS.COMPLETED_TASKS);
-    return tasks || [];
+    const kv = await getKv();
+    const tasks = await kv.get(KV_KEYS.COMPLETED_TASKS);
+    return (tasks as unknown[]) || [];
   } catch (error) {
     console.error('[KV] Error getting completed tasks:', error);
     return [];
@@ -156,6 +192,7 @@ export async function getCompletedTasks(): Promise<unknown[]> {
 // Update completed tasks
 export async function updateCompletedTasks(tasks: unknown[]): Promise<void> {
   try {
+    const kv = await getKv();
     await kv.set(KV_KEYS.COMPLETED_TASKS, tasks);
   } catch (error) {
     console.error('[KV] Error updating completed tasks:', error);
@@ -172,7 +209,8 @@ export async function queueNotification(notification: {
   recipientEmail?: string;
 }): Promise<void> {
   try {
-    const queue = await kv.get<Array<{
+    const kv = await getKv();
+    const queue = (await kv.get(KV_KEYS.NOTIFICATION_QUEUE) as Array<{
       id: string;
       type: string;
       title: string;
@@ -181,7 +219,7 @@ export async function queueNotification(notification: {
       recipientEmail?: string;
       createdAt: string;
       sent: boolean;
-    }>>(KV_KEYS.NOTIFICATION_QUEUE) || [];
+    }>) || [];
     queue.push({
       ...notification,
       id: crypto.randomUUID(),

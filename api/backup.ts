@@ -32,7 +32,16 @@ export default async function handler(
   try {
     // POST - Criar backup
     if (req.method === 'POST') {
-      const { userId, data } = req.body;
+      let body = req.body;
+      if (typeof body === 'string') {
+        try {
+          body = JSON.parse(body);
+        } catch (e) {
+          console.warn('Failed to parse request body:', e);
+        }
+      }
+      
+      const { userId, data } = body || {};
 
       if (!userId) {
         return res.status(400).json({ error: 'userId is required' });
