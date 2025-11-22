@@ -1,0 +1,50 @@
+image: node:22
+
+# Cache modules in between jobs
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+stages:
+  - install
+  - test
+  - build
+
+# Install dependencies
+install_deps:
+  stage: install
+  script:
+    - npm ci
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+# Run linting
+lint:
+  stage: test
+  dependencies:
+    - install_deps
+  script:
+    - npm run lint
+
+# Run unit tests
+unit_tests:
+  stage: test
+  dependencies:
+    - install_deps
+  script:
+    - npm test -- --run
+
+# Build the application
+build:
+  stage: build
+  dependencies:
+    - install_deps
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 day
