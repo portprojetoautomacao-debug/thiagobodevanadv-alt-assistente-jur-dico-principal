@@ -8,6 +8,12 @@
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 💾 CONFIGURAÇÃO DE BANCO DE DADOS (UPSTASH)
+
+**O Vercel KV foi descontinuado. Use o Upstash Redis:**
+
+👉 **[UPSTASH_SETUP.md](./docs/UPSTASH_SETUP.md)** - Guia passo a passo para configurar o banco de dados Redis.
+
 ## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
 
 **Se você teve problemas ao fazer o deploy na Vercel:**

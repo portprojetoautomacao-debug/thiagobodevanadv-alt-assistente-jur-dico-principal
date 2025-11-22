@@ -65,7 +65,7 @@ function App() {
     switch (currentView) {
       case 'dashboard':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="dashboard" fallback={<LoadingFallback />}>
             <Dashboard onNavigate={setCurrentView} />
           </Suspense>
         )
@@ -73,21 +73,21 @@ function App() {
       case 'processos':
       case 'processes':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="crm" fallback={<LoadingFallback />}>
             <ProcessCRM />
           </Suspense>
         )
       case 'calendar':
       case 'calendario':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="calendar" fallback={<LoadingFallback />}>
             <Calendar />
           </Suspense>
         )
       case 'financeiro':
       case 'financial':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="financial" fallback={<LoadingFallback />}>
             <FinancialManagement />
           </Suspense>
         )
@@ -95,74 +95,74 @@ function App() {
       case 'calculadora':
       case 'calculator':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="prazos" fallback={<LoadingFallback />}>
             <CalculadoraPrazos />
           </Suspense>
         )
       case 'upload-pdf':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="upload-pdf" fallback={<LoadingFallback />}>
             <PDFUploader />
           </Suspense>
         )
       case 'minutas':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="minutas" fallback={<LoadingFallback />}>
             <MinutasManager />
           </Suspense>
         )
       case 'donna':
       case 'assistente':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="donna" fallback={<LoadingFallback />}>
             <Donna />
           </Suspense>
         )
       case 'ai-agents':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="ai-agents" fallback={<LoadingFallback />}>
             <AIAgents onNavigate={setCurrentView} />
           </Suspense>
         )
       case 'analytics':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="analytics" fallback={<LoadingFallback />}>
             <AnalyticsDashboard />
           </Suspense>
         )
       case 'expedientes':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="expedientes" fallback={<LoadingFallback />}>
             <ExpedientePanel />
           </Suspense>
         )
       case 'batch':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="batch" fallback={<LoadingFallback />}>
             <BatchAnalysis />
           </Suspense>
         )
       case 'audio':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="audio" fallback={<LoadingFallback />}>
             <AudioTranscription />
           </Suspense>
         )
       case 'queries':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="queries" fallback={<LoadingFallback />}>
             <DatabaseQueries />
           </Suspense>
         )
       case 'datajud':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="datajud" fallback={<LoadingFallback />}>
             <DatajudChecklist />
           </Suspense>
         )
       case 'knowledge':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense key="knowledge" fallback={<LoadingFallback />}>
             <KnowledgeBase />
           </Suspense>
         )
