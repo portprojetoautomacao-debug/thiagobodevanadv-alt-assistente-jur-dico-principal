@@ -75,10 +75,7 @@ jobs:
         echo "Running unit tests..."
         # Verificar se Vitest está configurado
         if grep -q "\"test\":" package.json; then
-          npm test -- --run || {
-            echo "⚠️ Tests failed but continuing..."
-            exit 0  # Não falhar o CI por enquanto
-          }
+          npm test -- --run
         else
           echo "⚠️ No test script configured, skipping tests"
         fi

@@ -65,7 +65,7 @@ jobs:
 
     - name: Run tests
       run: npm test -- --run
-      continue-on-error: true
+      continue-on-error: false
 
     - name: Check package.json changes
       id: package-check

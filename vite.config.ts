@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, PluginOption } from "vite";
@@ -105,5 +106,11 @@ export default defineConfig({
     // Sourcemaps apenas em desenvolvimento
     sourcemap: false,
     minify: 'esbuild', // Revertendo para esbuild para evitar erros de ReferenceError no Recharts
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
+  },
 });
