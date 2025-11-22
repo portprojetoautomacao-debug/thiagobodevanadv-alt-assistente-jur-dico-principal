@@ -39,21 +39,28 @@ import type { ViewType } from '@/types'
 
 const agentIcons: Record<string, React.ComponentType<{ className?: string; weight?: string }>> = {
   'djen-monitor': Database,
+  'agent-djen-monitor': Database,
   'mrs-justin-e': Brain,
   'petition-writer': Gavel,
+  'agent-legal-writer': Gavel,
   'file-organizer': FileText,
   'harvey-specter': Sparkle,
   'doc-analyzer': FileText,
+  'agent-document-analyzer': FileText,
   'deadline-tracker': Calendar,
+  'agent-deadline-calculator': Calendar,
   'datajud-query': Database,
   'precedent-researcher': Database,
+  'agent-jurisprudence-researcher': Database,
   'risk-analyst': WarningCircle,
   'contract-reviewer': FileText,
   'client-communicator': ChatCircle,
   'billing-analyst': ChartLine,
   'strategy-advisor': Brain,
+  'agent-strategic-advisor': Brain,
   'legal-translator': ArrowsLeftRight,
   'compliance-checker': CheckCircle,
+  'agent-calendar-sync': Calendar,
 }
 
 interface AIAgentsProps {
@@ -122,7 +129,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     }
   }
 
-  if (agents.length === 0) {
+  useEffect(() => {
     const initialAgents: Agent[] = [
       {
         id: 'harvey-specter',
@@ -398,8 +405,19 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         humanInteractionMode: 'collaborate',
       }
     ]
-    setAgents(initialAgents)
-  }
+
+    // Check for missing agents and add them
+    const missingAgents = initialAgents.filter(
+      initAgent => !agents.some(existingAgent => 
+        existingAgent.id === initAgent.id || existingAgent.name === initAgent.name
+      )
+    )
+
+    if (missingAgents.length > 0) {
+      console.log('Adding missing agents:', missingAgents.map(a => a.name))
+      setAgents(prev => [...(prev || []), ...missingAgents])
+    }
+  }, [agents, setAgents])
 
   const totalTasksToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
   const avgAutonomy = agents.length > 0 
