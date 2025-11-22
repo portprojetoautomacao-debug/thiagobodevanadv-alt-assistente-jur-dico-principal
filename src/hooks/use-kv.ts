@@ -50,7 +50,12 @@ export function useKV<T>(
           
           // In production, also sync to Vercel KV (if available)
           if (import.meta.env.PROD && typeof window.fetch !== 'undefined') {
-            syncToVercelKV(key, valueToStore);
+            // Use requestIdleCallback to avoid blocking the main thread
+            if ('requestIdleCallback' in window) {
+              window.requestIdleCallback(() => syncToVercelKV(key, valueToStore));
+            } else {
+              setTimeout(() => syncToVercelKV(key, valueToStore), 0);
+            }
           }
           
           return valueToStore;
