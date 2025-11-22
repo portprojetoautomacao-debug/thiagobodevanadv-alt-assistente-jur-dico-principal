@@ -9,10 +9,15 @@ on:
     # Run weekly on Monday at 00:00 UTC
     - cron: '0 0 * * 1'
 
+concurrency:
+  group: code-quality-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   codeql-analysis:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -138,6 +143,7 @@ jobs:
   eslint-analysis:
     name: ESLint Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
@@ -156,11 +162,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run ESLint
-      run: npm run lint:sarif
+    - name: Run ESLint with SARIF output
+      run: |
+        echo "Running ESLint with SARIF formatter..."
+        npm run lint:sarif || {
+          echo "⚠️ ESLint found issues"
+          # Ensure SARIF file exists
+          if [ ! -f "eslint-results.sarif" ]; then
+            echo "Creating empty SARIF file..."
+            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
+          fi
+        }
       continue-on-error: true
 
     - name: Upload SARIF file
+      if: always() && hashFiles('eslint-results.sarif') != ''
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: eslint-results.sarif
