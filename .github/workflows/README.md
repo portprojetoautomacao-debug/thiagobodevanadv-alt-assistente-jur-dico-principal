@@ -1,8 +1,33 @@
 # GitHub Actions Workflows
 
-This directory contains all CI/CD workflows for the Assistente Jurídico PJe project.
+Este diretório contém todos os workflows de CI/CD para o projeto Assistente Jurídico PJe.
 
-## Workflows Overview
+## 📋 Índice
+
+- [Visão Geral](#visão-geral)
+- [Workflows Principais](#workflows-principais)
+- [Workflows de Qualidade](#workflows-de-qualidade)
+- [Workflows de Segurança](#workflows-de-segurança)
+- [Workflows de Automação](#workflows-de-automação)
+- [Workflows dos Agentes AI](#workflows-dos-agentes-ai)
+- [Configuração de Concurrency](#configuração-de-concurrency)
+- [Secrets Necessários](#secrets-necessários)
+- [Manutenção](#manutenção)
+
+---
+
+## Visão Geral
+
+Todos os workflows foram atualizados com:
+- ✅ **Concurrency groups** para evitar execuções duplicadas
+- ✅ **Timeouts** em jobs críticos
+- ✅ **Tratamento de erros** melhorado
+- ✅ **Verificações de arquivos** antes de executar
+- ✅ **Mensagens de erro** mais claras
+
+---
+
+## Workflows Principais
 
 ### 1. CI Workflow (`ci.yml`)
 **Triggers:** Push to `main`, `develop`, `copilot/**` branches; Pull requests to `main`, `develop`
@@ -26,8 +51,41 @@ This directory contains all CI/CD workflows for the Assistente Jurídico PJe pro
 - Artifact retention for 7 days
 - Caching for faster builds
 - SARIF integration for security findings
+- **Concurrency:** Cancela execuções anteriores no mesmo branch
+- **Melhorias:** Tratamento robusto de erros no SARIF, verificação de test scripts
 
-### 2. Pull Request Workflow (`pr.yml`)
+---
+
+### 2. Deploy Workflow (`deploy.yml`)
+**Triggers:** Push to `main`; Pull requests; Manual workflow dispatch
+
+**Jobs:**
+- **deploy-vercel**: Deploys to Vercel
+  - Valida secrets do Vercel
+  - Verifica limite de 12 funções serverless (Hobby)
+  - Valida arquivos dos agentes AI
+  - Deploy com retry logic (3 tentativas)
+  - Comenta URL no PR
+  
+- **e2e-tests**: Testes E2E após deploy
+  - Verifica se Playwright está configurado
+  - Upload de resultados mesmo em falha
+  
+- **deploy-notification**: Notificação de status
+
+**Features:**
+- Environment-based deployment (production/staging/preview)
+- Automatic PR commenting with deployment URL
+- **Concurrency:** NÃO cancela deploys em andamento
+- **Timeout:** 30 minutos para E2E
+- **Melhorias:** Verificação de Playwright config, melhor tratamento de falhas
+
+**Required Secrets:**
+- `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_REDIRECT_URI`
+- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+- `VERCEL_AUTOMATION_BYPASS_SECRET` (opcional)
+
+---
 **Triggers:** Pull request events (opened, synchronize, reopened, ready_for_review)
 
 **Jobs:**
