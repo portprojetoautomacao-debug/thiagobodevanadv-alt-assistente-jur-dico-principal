@@ -28,17 +28,6 @@ export default defineConfig({
     }
   },
   build: {
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info'],
-      },
-      mangle: {
-        safari10: true,
-      },
-    },
     cssMinify: true,
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
