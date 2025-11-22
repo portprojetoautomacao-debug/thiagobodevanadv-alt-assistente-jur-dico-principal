@@ -35,7 +35,7 @@ unit_tests:
   dependencies:
     - install_deps
   script:
-    - npm test
+    - npm test -- --run
 
 # Build the application
 build:
