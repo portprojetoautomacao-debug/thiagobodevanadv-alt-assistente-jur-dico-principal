@@ -11,6 +11,10 @@ on:
     paths:
       - .github/workflows/copilot-setup-steps.yml
 
+concurrency:
+  group: copilot-setup-steps-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # O job DEVE ser chamado `copilot-setup-steps` ou não será reconhecido pelo Copilot.
   copilot-setup-steps:
