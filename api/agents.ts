@@ -232,7 +232,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (task.type === 'analyze_document' && result.suggestedActions && Array.isArray(result.suggestedActions)) {
             for (const action of result.suggestedActions) {
               const actionStr = String(action).toLowerCase();
-              let nextTask = null;
+              let nextTask: AgentTask | null = null;
 
               if (actionStr.includes('prazo') || actionStr.includes('deadline')) {
                 nextTask = {
