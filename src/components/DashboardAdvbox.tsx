@@ -198,10 +198,10 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
               <CardTitle className="text-lg font-bold text-foreground flex items-center justify-between">
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">MEU DESEMPENHO</span>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg" aria-label="Ver detalhes">
                     <ArrowUp size={18} />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg" aria-label="Alternar visualização">
                     <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M2 2h4v4H2V2zm6 0h6v4H8V2zM2 8h4v6H2V8zm6 0h6v6H8V8z" />
                     </svg>
@@ -291,10 +291,10 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                   {selectedMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase()}
                 </CardTitle>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg" onClick={prevMonth}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg" onClick={prevMonth} aria-label="Mês anterior">
                     <CaretLeft size={18} />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg" onClick={nextMonth}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 rounded-lg" onClick={nextMonth} aria-label="Próximo mês">
                     <CaretRight size={18} />
                   </Button>
                 </div>
