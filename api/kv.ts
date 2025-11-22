@@ -16,10 +16,13 @@ import { Redis } from '@upstash/redis';
 const isUpstashAvailable = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
 const isVercelKVAvailable = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
 
-// Initialize Upstash Redis client if available
-const redis = isUpstashAvailable ? new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+// Initialize Redis client (supports both Upstash and Vercel KV)
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+const redis = (redisUrl && redisToken) ? new Redis({
+  url: redisUrl,
+  token: redisToken,
 }) : null;
 
 /**
