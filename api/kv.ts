@@ -12,14 +12,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 
-// Check which KV service is available
-const isUpstashAvailable = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
-const isVercelKVAvailable = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
-
 // Initialize Redis client (supports both Upstash and Vercel KV)
 // Prefer Upstash explicit configuration if available
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
 
 const redis = (redisUrl && redisToken) ? new Redis({
   url: redisUrl,
@@ -163,16 +159,8 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
         redis.set('agent-task-queue', JSON.stringify([])),
         redis.set('completed-agent-tasks', JSON.stringify([])),
       ]);
-    } else if (isVercelKVAvailable) {
-      const { kv } = await import('@vercel/kv');
-      await Promise.all([
-        kv.set('autonomous-agents', JSON.stringify(agentes)),
-        kv.set('monitored-lawyers', JSON.stringify([advogado])),
-        kv.set('agent-task-queue', JSON.stringify([])),
-        kv.set('completed-agent-tasks', JSON.stringify([])),
-      ]);
     } else {
-      throw new Error('No KV storage available (Upstash or Vercel KV required)');
+      throw new Error('No KV storage available (Upstash Redis required)');
     }
 
     return res.status(200).json({
@@ -237,7 +225,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // If no KV is available, return fallback indication
-  if (!redis && !isVercelKVAvailable) {
+  if (!redis) {
     console.warn('No KV storage available');
     if (req.method === 'GET') {
       res.status(200).json({ key: req.query.key, value: null, fallback: true });
@@ -280,47 +268,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         await redis.set(key, value);
-        res.status(200).json({ success: true, key });
-      } else {
-        res.status(405).json({ error: 'Method not allowed' });
-      }
-    } else if (isVercelKVAvailable) {
-      // Vercel KV (fallback)
-      let kv;
-      try {
-        const vercelKv = await import('@vercel/kv');
-        kv = vercelKv.kv;
-      } catch (e) {
-        console.error('Failed to import @vercel/kv:', e);
-        throw new Error('Vercel KV package not found or failed to load');
-      }
-
-      if (req.method === 'GET') {
-        const { key } = req.query;
-        if (!key || typeof key !== 'string') {
-          res.status(400).json({ error: 'Key parameter is required' });
-          return;
-        }
-
-        const value = await kv.get(key);
-        if (value === null || value === undefined) {
-          res.status(200).json({ key, value: null });
-          return;
-        }
-
-        res.status(200).json({ key, value });
-      } else if (req.method === 'POST') {
-        const { key, value } = body || {};
-        if (!key || typeof key !== 'string') {
-          res.status(400).json({ error: 'Key is required in request body' });
-          return;
-        }
-        if (value === undefined) {
-          res.status(400).json({ error: 'Value is required in request body' });
-          return;
-        }
-
-        await kv.set(key, value);
         res.status(200).json({ success: true, key });
       } else {
         res.status(405).json({ error: 'Method not allowed' });
