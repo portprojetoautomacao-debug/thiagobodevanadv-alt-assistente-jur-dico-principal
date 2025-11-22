@@ -14,8 +14,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    // DO NOT REMOVE
-    // createIconImportProxy() as PluginOption,
+    createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
   ],
   resolve: {
@@ -29,9 +28,18 @@ export default defineConfig({
     }
   },
   build: {
-    cssMinify: true,
+    cssMinify: 'lightningcss',
+    cssCodeSplit: true,
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
