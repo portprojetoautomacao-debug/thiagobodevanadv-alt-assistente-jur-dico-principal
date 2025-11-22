@@ -163,6 +163,14 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
         redis.set('agent-task-queue', JSON.stringify([])),
         redis.set('completed-agent-tasks', JSON.stringify([])),
       ]);
+    } else if (isVercelKVAvailable) {
+      const { kv } = await import('@vercel/kv');
+      await Promise.all([
+        kv.set('autonomous-agents', JSON.stringify(agentes)),
+        kv.set('monitored-lawyers', JSON.stringify([advogado])),
+        kv.set('agent-task-queue', JSON.stringify([])),
+        kv.set('completed-agent-tasks', JSON.stringify([])),
+      ]);
     } else {
       throw new Error('No KV storage available (Upstash or Vercel KV required)');
     }
@@ -218,12 +226,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return handleInitConfig(req, res);
   }
 
+  // Parse body if needed
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      console.warn('Failed to parse request body:', e);
+    }
+  }
+
   // If no KV is available, return fallback indication
   if (!redis && !isVercelKVAvailable) {
+    console.warn('No KV storage available');
     if (req.method === 'GET') {
       res.status(200).json({ key: req.query.key, value: null, fallback: true });
     } else if (req.method === 'POST') {
-      res.status(200).json({ success: true, key: req.body?.key, fallback: true });
+      res.status(200).json({ success: true, key: body?.key, fallback: true });
     } else {
       res.status(405).json({ error: 'Method not allowed' });
     }
@@ -244,14 +263,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const value = await redis.get(key);
         // Handle null/undefined values gracefully
         if (value === null || value === undefined) {
-          // Return null value instead of 404 to match client expectations
           res.status(200).json({ key, value: null });
           return;
         }
 
         res.status(200).json({ key, value });
       } else if (req.method === 'POST') {
-        const { key, value } = req.body;
+        const { key, value } = body || {};
         if (!key || typeof key !== 'string') {
           res.status(400).json({ error: 'Key is required in request body' });
           return;
@@ -268,14 +286,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } else if (isVercelKVAvailable) {
       // Vercel KV (fallback)
-      // Dynamic import to avoid build errors if package is missing
       let kv;
       try {
         const vercelKv = await import('@vercel/kv');
         kv = vercelKv.kv;
       } catch (e) {
         console.error('Failed to import @vercel/kv:', e);
-        throw new Error('Vercel KV package not found');
+        throw new Error('Vercel KV package not found or failed to load');
       }
 
       if (req.method === 'GET') {
@@ -286,16 +303,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const value = await kv.get(key);
-        // Handle null/undefined values gracefully
         if (value === null || value === undefined) {
-          // Return null value instead of 404 to match client expectations
           res.status(200).json({ key, value: null });
           return;
         }
 
         res.status(200).json({ key, value });
       } else if (req.method === 'POST') {
-        const { key, value } = req.body;
+        const { key, value } = body || {};
         if (!key || typeof key !== 'string') {
           res.status(400).json({ error: 'Key is required in request body' });
           return;
@@ -312,10 +327,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
   } catch (error) {
-    console.error('Vercel KV error:', error);
+    console.error('KV API Error:', error);
     res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error),
     });
   }
 }
