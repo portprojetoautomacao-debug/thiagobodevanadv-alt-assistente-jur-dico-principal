@@ -374,6 +374,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     sourceTask: task.id
                   }
                 };
+              } else if (actionStr.includes('contrato') || actionStr.includes('minuta') || actionStr.includes('aditivo') || actionStr.includes('cláusula') || actionStr.includes('rescisão')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'contract-reviewer',
+                  type: 'contract_review',
+                  priority: 'high',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
+              } else if (actionStr.includes('estratégia') || actionStr.includes('plano') || actionStr.includes('probabilidade') || actionStr.includes('tese') || actionStr.includes('linha de defesa')) {
+                nextTask = {
+                  id: crypto.randomUUID(),
+                  agentId: 'case-strategist',
+                  type: 'case_strategy',
+                  priority: 'high',
+                  status: 'queued',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    ...task.data,
+                    instruction: action,
+                    sourceTask: task.id
+                  }
+                };
               }
 
               if (nextTask) {

@@ -213,7 +213,9 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
                 "Pagar custas processuais",
                 "Arquivar documento na pasta do processo",
                 "Verificar compliance LGPD",
-                "Traduzir termos para linguagem simples"
+                "Traduzir termos para linguagem simples",
+                "Revisar minuta de contrato",
+                "Definir estratégia do caso"
               ]
             }) } }],
             usage: { total_tokens: 150 }
@@ -270,5 +272,15 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     const translatorTask = updatedQueue.find((t: any) => t.type === 'legal_translation');
     expect(translatorTask).toBeDefined();
     expect(translatorTask.agentId).toBe('legal-translator');
+
+    // Check for Contract Reviewer task
+    const contractTask = updatedQueue.find((t: any) => t.type === 'contract_review');
+    expect(contractTask).toBeDefined();
+    expect(contractTask.agentId).toBe('contract-reviewer');
+
+    // Check for Case Strategist task
+    const strategyTask = updatedQueue.find((t: any) => t.type === 'case_strategy');
+    expect(strategyTask).toBeDefined();
+    expect(strategyTask.agentId).toBe('case-strategist');
   });
 });
