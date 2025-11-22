@@ -65,21 +65,13 @@ async function getKv() {
   // Try Upstash first
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     _kvClient = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: process.env.UPSTASH_REDIS_REST_URL.trim(),
+      token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
     });
     return _kvClient;
   }
 
-  // Fallback to Vercel KV
-  try {
-    const { kv } = await import('@vercel/kv');
-    _kvClient = kv;
-    return _kvClient;
-  } catch (e) {
-    console.error('Failed to load KV client:', e);
-    throw new Error('No KV storage available (Upstash or Vercel KV required)');
-  }
+  throw new Error('No KV storage available (Upstash Redis required)');
 }
 
 // Get monitored lawyers

@@ -115,7 +115,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Valida assinatura (se WEBHOOK_SECRET estiver configurado)
-  const webhookSecret = process.env.WEBHOOK_SECRET;
+  const webhookSecret = process.env.WEBHOOK_SECRET?.trim();
   const payload = JSON.stringify(req.body);
   
   if (!validateSignature(payload, signature, webhookSecret)) {
