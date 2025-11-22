@@ -1,6 +1,46 @@
 @import 'tailwindcss';
 @import "tw-animate-css";
 
+/* Variáveis de Acessibilidade */
+:root {
+  --min-font-size: 16px;
+  --focus-color: #3b82f6;
+  --focus-width: 3px;
+}
+
+/* Indicadores de foco visíveis (WCAG 2.4.7) */
+*:focus-visible {
+  outline: var(--focus-width) solid var(--focus-color) !important;
+  outline-offset: 2px !important;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip link acessível */
+.skip-link:focus {
+  left: 10px !important;
+  top: 10px !important;
+  z-index: 9999 !important;
+}
+
+/* Touch targets mínimos 44x44px (WCAG 2.5.5) */
+button, a[href], input, select, textarea, [role="button"], [role="link"] {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+}
+
+/* Prevenir zoom em inputs iOS */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+textarea {
+  font-size: 16px !important;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -200,7 +200,7 @@ function App() {
         user={user}
         onLogout={handleLogout}
       />
-      <main className="flex-1 overflow-hidden">
+      <main id="main-content" role="main" aria-label="Conteúdo principal" className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto p-6">
           {renderContent()}
         </div>
