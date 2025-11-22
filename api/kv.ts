@@ -242,8 +242,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const value = await redis.get(key);
-        if (value === null) {
-          res.status(404).json({ error: 'Key not found' });
+        // Handle null/undefined values gracefully
+        if (value === null || value === undefined) {
+          // Return null value instead of 404 to match client expectations
+          res.status(200).json({ key, value: null });
           return;
         }
 
@@ -266,7 +268,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } else if (isVercelKVAvailable) {
       // Vercel KV (fallback)
-      const { kv } = await import('@vercel/kv');
+      // Dynamic import to avoid build errors if package is missing
+      let kv;
+      try {
+        const vercelKv = await import('@vercel/kv');
+        kv = vercelKv.kv;
+      } catch (e) {
+        console.error('Failed to import @vercel/kv:', e);
+        throw new Error('Vercel KV package not found');
+      }
 
       if (req.method === 'GET') {
         const { key } = req.query;
@@ -276,8 +286,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const value = await kv.get(key);
-        if (value === null) {
-          res.status(404).json({ error: 'Key not found' });
+        // Handle null/undefined values gracefully
+        if (value === null || value === undefined) {
+          // Return null value instead of 404 to match client expectations
+          res.status(200).json({ key, value: null });
           return;
         }
 
