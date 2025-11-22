@@ -40,10 +40,8 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         
         AGENT_FILES=(
-          "api/agents/process-queue.ts"
-          "api/agents/process-task.ts"
-          "api/cron/djen-monitor.ts"
-          "api/cron/daily-reset.ts"
+          "api/agents.ts"
+          "api/cron.ts"
           "src/hooks/use-autonomous-agents.ts"
           "lib/api/djen-client.ts"
           "lib/api/datajud-client.ts"
