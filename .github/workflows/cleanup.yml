@@ -12,6 +12,10 @@ on:
         default: '7'
         type: number
 
+concurrency:
+  group: cleanup
+  cancel-in-progress: false
+
 jobs:
   cleanup-vercel:
     name: Cleanup Old Vercel Deployments
