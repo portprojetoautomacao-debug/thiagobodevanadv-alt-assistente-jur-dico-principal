@@ -47,16 +47,53 @@ export function patchSparkLocalization() {
   };
 }
 
+export function patchFileReader() {
+  if (typeof window === 'undefined') return;
+
+  const originalReadAsText = FileReader.prototype.readAsText;
+  FileReader.prototype.readAsText = function(blob, encoding) {
+    if (!(blob instanceof Blob)) {
+      console.warn('FileReader.readAsText called with non-Blob argument:', blob);
+      // Evita o crash chamando o callback de erro ou apenas retornando
+      if (this.onerror) {
+        const event = new ProgressEvent('error');
+        // @ts-ignore
+        Object.defineProperty(this, 'error', {
+          value: new DOMException('Parameter is not of type Blob', 'TypeMismatchError'),
+          writable: true
+        });
+        // @ts-ignore
+        this.onerror(event);
+      }
+      return;
+    }
+    return originalReadAsText.call(this, blob, encoding);
+  };
+}
+
 export function applySparkClientFixes() {
   if (typeof window === 'undefined') return;
   
   // Apply localization patch first
   patchSparkLocalization();
   
+  // Apply FileReader patch to prevent crashes
+  patchFileReader();
+  
   const w = window;
-  if (!w.spark?.kv) return;
+  // if (!w.spark?.kv) return; // REMOVIDO: Não podemos depender de w.spark existir
 
   try {
+    // Se spark não existir, cria um mock seguro para evitar crash
+    if (!w.spark) {
+      w.spark = {} as any;
+    }
+    
+    // Se kv não existir, cria um mock
+    if (!w.spark.kv) {
+      w.spark.kv = {} as any;
+    }
+
     const original = { ...w.spark.kv };
 
     async function parseJSONSafely(response: Response | ResponseLike | null): Promise<unknown> {
