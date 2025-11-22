@@ -140,12 +140,28 @@ const defaultTheme = {
 }
 
 export default {
-  content: [
-    "./index.html", 
-    "./src/**/*.{js,ts,jsx,tsx}"
-  ],
+  content: {
+    files: [
+      "./index.html", 
+      "./src/**/*.{js,ts,jsx,tsx}"
+    ],
+    options: {
+      safelist: [
+        'bg-blue-500',
+        'bg-green-500', 
+        'bg-red-500',
+        'bg-amber-500',
+        'text-blue-600',
+        'text-green-600',
+        'text-red-600',
+      ],
+    },
+  },
   theme: { ...defaultTheme, ...theme },
   experimental: {
     optimizeUniversalDefaults: true,
+  },
+  corePlugins: {
+    preflight: true,
   },
 };
