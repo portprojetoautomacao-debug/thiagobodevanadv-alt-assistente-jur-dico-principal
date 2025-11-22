@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -155,7 +159,16 @@ jobs:
 
     - name: Run ESLint with SARIF output
       run: |
-        npm run lint -- --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif || true
+        echo "Running ESLint with SARIF formatter..."
+        npm run lint:sarif || {
+          echo "⚠️ ESLint completed with warnings/errors"
+          # Ensure SARIF file exists even on failure
+          if [ ! -f "eslint-results.sarif" ]; then
+            echo "Creating empty SARIF file..."
+            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
+          fi
+        }
+        echo "✅ SARIF report generated"
       continue-on-error: true
 
     - name: Upload SARIF file
@@ -163,6 +176,7 @@ jobs:
       if: always() && hashFiles('eslint-results.sarif') != ''
       with:
         sarif_file: eslint-results.sarif
+        category: eslint-ci
       continue-on-error: true
 
   build-matrix-status:
