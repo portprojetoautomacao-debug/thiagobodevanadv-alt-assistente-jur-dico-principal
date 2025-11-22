@@ -3,7 +3,7 @@
  * 
  * This hook provides a unified interface for key-value storage that works in both:
  * - Development: Uses localStorage as a fallback
- * - Production: Uses Vercel KV (Redis) for persistent storage
+ * - Production: Uses Upstash Redis (via API) for persistent storage
  * 
  * This replaces @github/spark's useKV to avoid 403 authentication errors
  * when deployed to Vercel.
