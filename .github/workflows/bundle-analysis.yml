@@ -40,6 +40,7 @@ jobs:
     - name: Build PR version
       run: npm run build
       env:
+        # Using dummy values for CI bundle analysis - real secrets are used in production deploy
         VITE_GOOGLE_CLIENT_ID: 'dummy-client-id'
         VITE_GOOGLE_API_KEY: 'dummy-api-key'
         VITE_REDIRECT_URI: 'http://localhost:5173'
@@ -216,9 +217,13 @@ jobs:
     - name: Install base dependencies
       run: npm ci
 
+    - name: Clean previous build
+      run: rm -rf dist .vite
+
     - name: Build base version
       run: npm run build
       env:
+        # Using dummy values for CI bundle analysis - real secrets are used in production deploy
         VITE_GOOGLE_CLIENT_ID: 'dummy-client-id'
         VITE_GOOGLE_API_KEY: 'dummy-api-key'
         VITE_REDIRECT_URI: 'http://localhost:5173'
@@ -233,8 +238,15 @@ jobs:
         PR_SIZE=$(cat pr-size.txt | cut -f1)
         
         DIFF=$((PR_SIZE - BASE_SIZE))
-        # Calculate percentage using awk instead of bc for better compatibility
-        PERCENT=$(awk "BEGIN {printf \"%.2f\", ($DIFF * 100) / $BASE_SIZE}")
+        
+        # Check for division by zero
+        if [ "$BASE_SIZE" -eq 0 ]; then
+          echo "⚠️ Warning: Base size is 0, cannot calculate percentage" >> $GITHUB_STEP_SUMMARY
+          PERCENT="N/A"
+        else
+          # Calculate percentage using awk instead of bc for better compatibility
+          PERCENT=$(awk "BEGIN {printf \"%.2f\", ($DIFF * 100) / $BASE_SIZE}")
+        fi
         
         # Use numfmt if available, otherwise use simple formatting
         if command -v numfmt >/dev/null 2>&1; then

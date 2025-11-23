@@ -19,7 +19,8 @@ jobs:
   update-badges:
     name: Update README Badges
     runs-on: ubuntu-latest
-    # Temporarily disabled - needs main branch access
+    # Temporarily disabled - will be re-enabled after merge to main
+    # When enabled, will work on current branch instead of forcing main checkout
     if: false && github.event.workflow_run.conclusion != 'cancelled'
 
     steps:
@@ -27,7 +28,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        ref: main
+        # Use current branch instead of forcing main
+        # ref: main
 
     - name: Generate badge data
       id: badge-data
