@@ -13,10 +13,6 @@ const StatusChart = lazy(() => import('@/components/DashboardCharts').then(m => 
 const VaraChart = lazy(() => import('@/components/DashboardCharts').then(m => ({ default: m.VaraChart })))
 const TrendChart = lazy(() => import('@/components/DashboardCharts').then(m => ({ default: m.TrendChart })))
 
-// Loading fallback
-const SectionLoader = () => (
-  <div className="animate-pulse bg-neutral-3 rounded-lg h-32" />
-)
 
 interface DashboardProps {
   onNavigate: (view: ViewType) => void
