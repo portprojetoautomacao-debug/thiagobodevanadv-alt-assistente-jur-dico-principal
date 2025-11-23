@@ -182,6 +182,7 @@ export default defineConfig({
       },
     },
     rollupOptions: {
+      external: ['fs', 'path', 'crypto'],
       output: {
         manualChunks(id) {
           // React core
