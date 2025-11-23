@@ -1,0 +1,121 @@
+name: Configure GitHub CLI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  schedule:
+    # Daily at 8:20 UTC
+    - cron: '20 8 * * *'
+
+jobs:
+  configure-cli:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      repository-projects: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh --version
+          gh auth status
+
+      - name: Comment on issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "Obrigado por abrir esta issue! 🎉
+          
+          Este repositório possui um sistema de agentes jurídicos V2 100% alinhado com:
+          - ✅ 15 agentes especializados
+          - ✅ Endpoints wrappers funcionais
+          - ✅ Dados reais integrados
+          - ✅ Pronto para produção
+          
+          Estamos analisando sua contribuição. Por favor, aguarde feedback do time."
+
+      - name: Report metrics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== GitHub CLI Repository Metrics ==="
+          
+          # Get open issues count
+          numOpenIssues="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=${{ github.event.repository.name }} -f query='
+            query($name: String!, $owner: String!) {
+              repository(owner: $owner, name: $name) {
+                issues(states:OPEN){
+                  totalCount
+                }
+              }
+            }
+          ' --jq '.data.repository.issues.totalCount')"
+          
+          echo "Open Issues: $numOpenIssues"
+          echo 'NUM_OPEN_ISSUES='$numOpenIssues >> $GITHUB_ENV
+          
+          # Get open PRs count
+          numOpenPRs="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=${{ github.event.repository.name }} -f query='
+            query($name: String!, $owner: String!) {
+              repository(owner: $owner, name: $name) {
+                pullRequests(states:OPEN){
+                  totalCount
+                }
+              }
+            }
+          ' --jq '.data.repository.pullRequests.totalCount')"
+          
+          echo "Open PRs: $numOpenPRs"
+          echo 'NUM_OPEN_PRS='$numOpenPRs >> $GITHUB_ENV
+
+      - name: Create summary issue (if needed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: env.NUM_OPEN_ISSUES > 5 || env.NUM_OPEN_PRS > 3
+        run: |
+          gh issue create \
+            --title "📊 Daily Report: ${{ github.event.repository.name }}" \
+            --body "## Repository Status
+          
+          **Open Issues:** ${{ env.NUM_OPEN_ISSUES }}
+          **Open PRs:** ${{ env.NUM_OPEN_PRS }}
+          
+          Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          
+          Workflow: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
+            --label "report" \
+            --assignee ${{ github.repository_owner }}
+
+      - name: List recent commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== Recent Commits ==="
+          gh api repos/${{ github.repository }}/commits \
+            --jq '.[] | "\(.commit.message | split("\n")[0]) - \(.author.login) (\(.commit.author.date))"' \
+            | head -10
+
+      - name: Check deployment status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== Deployment Status ==="
+          gh api repos/${{ github.repository }}/deployments \
+            --jq '.[] | "Environment: \(.environment) | Status: \(.state) | Created: \(.created_at)"' \
+            | head -5 || echo "No deployments found"
