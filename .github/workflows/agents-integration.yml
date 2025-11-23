@@ -9,6 +9,9 @@ on:
       - 'src/hooks/use-autonomous-agents.ts'
       - 'tests/integration/**'
       - 'lib/api/**'
+      - 'src/lib/agents/todoist-agent.ts'
+      - 'src/lib/todoist-integration.ts'
+      - 'api/todoist-webhook.ts'
   pull_request:
     branches: [ main, develop ]
     paths:
@@ -17,6 +20,9 @@ on:
       - 'src/hooks/use-autonomous-agents.ts'
       - 'tests/integration/**'
       - 'lib/api/**'
+      - 'src/lib/agents/todoist-agent.ts'
+      - 'src/lib/todoist-integration.ts'
+      - 'api/todoist-webhook.ts'
   workflow_dispatch:
 
 concurrency:
@@ -55,5 +61,12 @@ jobs:
           echo "Expected: tests/integration/djen-agent-flow.test.ts"
           exit 0
         fi
+      env:
+        CI: true
+
+    - name: Run Todoist Agent Tests
+      run: |
+        echo "Running Todoist Agent tests..."
+        npx vitest run src/lib/agents/todoist-agent.test.ts src/lib/todoist-integration.test.ts src/lib/todoist-client.test.ts api/todoist-webhook.test.ts --reporter=verbose
       env:
         CI: true
