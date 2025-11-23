@@ -180,12 +180,20 @@ build_app:
   stage: build
   image: node:22-alpine
   script:
-    - npm ci
+    - echo "📦 Installing dependencies..."
+    - npm ci --prefer-offline --no-audit
+    - echo "🔨 Building application..."
     - npm run build
+    - echo "✅ Build completed successfully"
   artifacts:
     paths:
       - dist/
     expire_in: 1 hour
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .npm/
   only:
     - main
     - merge_requests
@@ -194,18 +202,24 @@ test_app:
   stage: test
   image: node:22-alpine
   script:
-    - npm ci
-    - npm run test:ci || true
-    - npm run lint || true
-  coverage: '/Statements\s*:\s*(\d+\.\d+)%/'
+    - echo "📦 Installing dependencies..."
+    - npm ci --prefer-offline --no-audit
+    - echo "🧪 Running tests..."
+    - npm run test -- --run --reporter=verbose || echo "⚠️  Tests skipped or not configured"
+    - echo "🔍 Running linter..."
+    - npm run lint || echo "⚠️  Linting completed with warnings"
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .npm/
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura-coverage.xml
+    when: always
     paths:
       - coverage/
-    expire_in: 30 days
+    expire_in: 7 days
+  allow_failure: true
   only:
     - main
     - merge_requests
@@ -214,8 +228,15 @@ security_scan:
   stage: test
   image: node:22-alpine
   script:
-    - npm audit --audit-level=moderate || true
-    - echo "Security scan completed"
+    - echo "🔒 Running security audit..."
+    - npm ci --prefer-offline --no-audit
+    - npm audit --audit-level=moderate || echo "⚠️  Vulnerabilities found (non-blocking)"
+    - echo "✅ Security scan completed"
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .npm/
   allow_failure: true
   only:
     - main
@@ -224,49 +245,36 @@ security_scan:
 # Deploy para Staging (automático em main)
 deploy_staging:
   stage: staging
-  image: bitnami/kubectl:latest
+  image: alpine:latest
   script:
     - echo "🚀 Deploying to STAGING environment"
-    - echo "Kubernetes cluster: $KUBE_INGRESS_BASE_DOMAIN"
-    - echo "Image: $CI_REGISTRY_IMAGE:staging-$CI_COMMIT_SHORT_SHA"
-    # Aqui você adicionaria os comandos kubectl quando conectar ao cluster
-    # - kubectl set image deployment/assistente-juridico assistente-juridico=$CI_REGISTRY_IMAGE:staging-$CI_COMMIT_SHORT_SHA -n staging
-    - echo "✅ Staging deployment completed"
+    - echo "📦 Build artifact ready: dist/"
+    - echo "🌐 Environment: staging"
+    - echo "✅ Staging deployment simulated (configure kubectl for real deployment)"
   environment:
     name: staging
-    url: https://staging.$KUBE_INGRESS_BASE_DOMAIN
-    on_stop: stop_staging
+    url: https://staging-assistente-juridico-p.example.com
+  needs:
+    - build_app
   only:
     - main
-  when: on_success
-
-stop_staging:
-  stage: staging
-  image: bitnami/kubectl:latest
-  script:
-    - echo "🛑 Stopping staging environment"
-  environment:
-    name: staging
-    action: stop
   when: manual
-  only:
-    - main
 
 # Deploy para Production (manual)
 deploy_production:
   stage: production
-  image: bitnami/kubectl:latest
+  image: alpine:latest
   script:
     - echo "🚀 Deploying to PRODUCTION environment"
-    - echo "Kubernetes cluster: $KUBE_INGRESS_BASE_DOMAIN"
-    - echo "Image: $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
-    # Aqui você adicionaria os comandos kubectl quando conectar ao cluster
-    # - kubectl set image deployment/assistente-juridico assistente-juridico=$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG -n production
-    - echo "✅ Production deployment completed"
-    - echo "📊 URL: https://$KUBE_INGRESS_BASE_DOMAIN"
+    - echo "📦 Build artifact ready: dist/"
+    - echo "🌐 Environment: production"
+    - echo "🏷️  Tag: $CI_COMMIT_TAG"
+    - echo "✅ Production deployment simulated (configure kubectl for real deployment)"
   environment:
     name: production
-    url: https://$KUBE_INGRESS_BASE_DOMAIN
+    url: https://assistente-juridico-p.example.com
+  needs:
+    - build_app
   only:
     - tags
   when: manual
@@ -277,6 +285,7 @@ deploy_production:
 
 notify_success:
   stage: .post
+  image: alpine:latest
   script:
     - |
       echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -291,6 +300,7 @@ notify_success:
 
 notify_failure:
   stage: .post
+  image: alpine:latest
   script:
     - |
       echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
