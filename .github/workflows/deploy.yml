@@ -66,7 +66,7 @@ jobs:
 
     - name: Validate serverless function count
       run: |
-        FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
+        FUNCTION_COUNT=$(find api -type f -name "*.ts" 2>/dev/null | wc -l)
         echo "📊 Serverless functions: $FUNCTION_COUNT"
         
         if [ $FUNCTION_COUNT -gt 12 ]; then
@@ -75,9 +75,19 @@ jobs:
           exit 1
         elif [ $FUNCTION_COUNT -eq 12 ]; then
           echo "⚠️ Warning: At Vercel Hobby function limit (12/12)"
+          echo "Consider cleaning up unused functions or upgrading plan"
         else
           echo "✅ Function count OK ($FUNCTION_COUNT/12)"
+          HEADROOM=$((12 - FUNCTION_COUNT))
+          echo "ℹ️ You can add $HEADROOM more functions"
         fi
+        
+        # Adicionar ao summary
+        echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** $([ $FUNCTION_COUNT -gt 12 ] && echo '❌ Over limit' || echo '✅ Within limit')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Remaining:** $((12 - FUNCTION_COUNT))" >> $GITHUB_STEP_SUMMARY
 
     - name: Verify agent files
       run: |

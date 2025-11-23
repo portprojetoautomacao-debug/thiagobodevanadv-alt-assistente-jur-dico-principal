@@ -39,10 +39,23 @@ jobs:
         path: |
           node_modules
           ~/.npm
-        key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
+          ~/.cache
+        key: ${{ runner.os }}-node-${{ matrix.node-version }}-deps-${{ hashFiles('package-lock.json') }}
         restore-keys: |
+          ${{ runner.os }}-node-${{ matrix.node-version }}-deps-
           ${{ runner.os }}-node-${{ matrix.node-version }}-
           ${{ runner.os }}-node-
+
+    - name: Cache build artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist
+          .vite
+        key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**', 'vite.config.ts', 'package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ matrix.node-version }}-
+          ${{ runner.os }}-build-
 
     - name: Install dependencies
       run: npm ci
@@ -93,6 +106,8 @@ jobs:
         echo "**Node Version:** ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
         echo "**OS:** ubuntu-latest" >> $GITHUB_STEP_SUMMARY
         echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### ✅ Completed Steps" >> $GITHUB_STEP_SUMMARY
         echo "- [x] Code checkout" >> $GITHUB_STEP_SUMMARY
@@ -102,6 +117,10 @@ jobs:
         echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
         echo "- [x] Tests executed" >> $GITHUB_STEP_SUMMARY
         echo "- [x] Artifacts uploaded" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Workflow Duration:** ${{ github.run_duration || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Hit:** Check logs above" >> $GITHUB_STEP_SUMMARY
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
