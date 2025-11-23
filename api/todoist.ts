@@ -30,11 +30,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch (action) {
       case 'getTasks': {
-        const { projectId, label, filter } = req.method === 'POST' ? req.body : req.query;
+        const { projectId, label } = req.method === 'POST' ? req.body : req.query;
         const tasks = await todoistClient.getTasks({
           projectId,
-          label,
-          filter
+          label
         });
         return res.status(200).json({ ok: true, tasks });
       }
