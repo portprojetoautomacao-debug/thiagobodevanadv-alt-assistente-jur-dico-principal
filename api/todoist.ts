@@ -31,10 +31,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     switch (action) {
       case 'getTasks': {
         const { projectId, label } = req.method === 'POST' ? req.body : req.query;
-        const tasks = await todoistClient.getTasks({
+        const response = await todoistClient.getTasks({
           projectId,
           label
         });
+        // Extrair apenas o array de tasks da resposta paginada
+        const tasks = response.results || [];
         return res.status(200).json({ ok: true, tasks });
       }
 
