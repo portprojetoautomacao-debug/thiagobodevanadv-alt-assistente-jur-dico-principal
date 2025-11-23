@@ -1,14 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { 
   TrendUp, 
   Clock, 
   CheckCircle, 
   Lightning,
   ChartLine,
-  Timer
+  Timer,
+  Activity,
+  Zap,
+  RefreshCw
 } from '@phosphor-icons/react'
+import { useState, useEffect } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 
 interface AgentMetricsProps {
@@ -24,6 +29,28 @@ interface AgentMetricsProps {
 }
 
 export default function AgentMetrics({ agents, completedTasks, activityLog }: AgentMetricsProps) {
+  const [circuitBreakers, setCircuitBreakers] = useState<any>(null)
+  const [v2Metrics, setV2Metrics] = useState<any>(null)
+
+  // Fetch V2 metrics
+  useEffect(() => {
+    const fetchV2Metrics = async () => {
+      try {
+        const response = await fetch('/api/observability?action=circuit-breakers')
+        if (response.ok) {
+          const data = await response.json()
+          setCircuitBreakers(data)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar métricas V2:', error)
+      }
+    }
+
+    fetchV2Metrics()
+    const interval = setInterval(fetchV2Metrics, 15000) // Atualiza a cada 15s
+    return () => clearInterval(interval)
+  }, [])
+
   const totalTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
   const totalToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
   const averageAutonomy = agents.length > 0
@@ -66,6 +93,47 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
 
   return (
     <div className="space-y-6">
+      {/* Circuit Breakers Status - V2 Architecture */}
+      {circuitBreakers && (
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-blue-600" weight="fill" />
+                  Circuit Breakers (Arquitetura V2)
+                </CardTitle>
+                <CardDescription>
+                  Monitoramento de resiliência das APIs externas
+                </CardDescription>
+              </div>
+              <Badge variant={circuitBreakers.summary.down === 0 ? 'default' : 'destructive'}>
+                {circuitBreakers.summary.healthy}/{circuitBreakers.summary.total} APIs Saudáveis
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-1" weight="fill" />
+                <div className="text-2xl font-bold text-green-600">{circuitBreakers.summary.healthy}</div>
+                <div className="text-xs text-muted-foreground">Saudáveis</div>
+              </div>
+              <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+                <Activity className="w-6 h-6 text-yellow-600 mx-auto mb-1" weight="fill" />
+                <div className="text-2xl font-bold text-yellow-600">{circuitBreakers.summary.degraded}</div>
+                <div className="text-xs text-muted-foreground">Degradadas</div>
+              </div>
+              <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                <Lightning className="w-6 h-6 text-red-600 mx-auto mb-1" weight="fill" />
+                <div className="text-2xl font-bold text-red-600">{circuitBreakers.summary.down}</div>
+                <div className="text-xs text-muted-foreground">Indisponíveis</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">

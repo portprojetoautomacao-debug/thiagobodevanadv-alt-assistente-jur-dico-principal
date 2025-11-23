@@ -5,5 +5,13 @@
     "**/dist/**": true
   },
   "typescript.tsserver.maxTsServerMemory": 4096,
-  "editor.stickyScroll.enabled": true
+  "editor.stickyScroll.enabled": true,
+  "gitlab.instanceUrl": "https://gitlab.com",
+  "gitlab.pipelineGitRemoteName": "gitlab",
+  "gitlab.showPipelineUpdateNotifications": true,
+  "gitlab.showStatusBarLinks": true,
+  "gitlab.showIssueLinkOnStatusBar": false,
+  "gitlab.showMrStatusOnStatusBar": true,
+  "gitlab.remoteName": "gitlab",
+  "gitlab.debug": false
 }

@@ -33,6 +33,7 @@ import AgentMetrics from '@/components/AgentMetrics'
 import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
 import MrsJustinEModal from '@/components/MrsJustinEModal'
+import AgentOrchestrationPanel from '@/components/AgentOrchestrationPanel'
 import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
 import type { ViewType } from '@/types'
@@ -92,6 +93,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
   const [showCollaborationDemo, setShowCollaborationDemo] = useState(false)
   const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
   const [backupStatus, setBackupStatus] = useState<'idle' | 'saving' | 'restoring'>('idle')
+  const [showOrchestration, setShowOrchestration] = useState(false)
+  const [useV2Architecture, setUseV2Architecture] = useState(true) // Nova arquitetura ativada por padrão
 
   // Manual backup handler
   const handleManualBackup = async () => {
@@ -689,6 +692,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <ChartLine className="w-4 h-4 mr-2" />
             Métricas
           </TabsTrigger>
+          <TabsTrigger value="orchestration">
+            <Robot className="w-4 h-4 mr-2" />
+            Orquestração V2
+          </TabsTrigger>
           <TabsTrigger value="collaboration">
             <ArrowsLeftRight className="w-4 h-4 mr-2" />
             Demo Colaboração
@@ -797,6 +804,35 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             completedTasks={completedTasks}
             activityLog={activityLog}
           />
+        </TabsContent>
+
+        <TabsContent value="orchestration" className="space-y-4">
+          {useV2Architecture ? (
+            <AgentOrchestrationPanel />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Arquitetura V2 - ReAct + Circuit Breakers</CardTitle>
+                <CardDescription>
+                  Painel de orquestração com observabilidade completa
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-semibold">Ativar Arquitetura V2</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Nova arquitetura com ReAct Pattern, Circuit Breakers, Traces e Orquestração
+                    </p>
+                  </div>
+                  <Switch
+                    checked={useV2Architecture}
+                    onCheckedChange={setUseV2Architecture}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="collaboration" className="space-y-4">

@@ -2,17 +2,43 @@
 
 > Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
 
+## Status do Projeto
+
+### GitHub
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/releases/tag/v1.0.0)
 [![CI](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/CI/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/ci.yml)
 [![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
 [![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+### GitLab CI/CD
+[![GitLab Pipeline](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/pipeline.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines)
+[![GitLab Coverage](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/coverage.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/graphs/main/charts)
+[![Kubernetes](https://img.shields.io/badge/kubernetes-ready-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+
 ## 💾 CONFIGURAÇÃO DE BANCO DE DADOS (UPSTASH)
 
 **O Vercel KV foi descontinuado. Use o Upstash Redis:**
 
 👉 **[UPSTASH_SETUP.md](./docs/UPSTASH_SETUP.md)** - Guia passo a passo para configurar o banco de dados Redis.
+
+## 🦊 INTEGRAÇÃO GITLAB WORKFLOW NO VS CODE
+
+**Configure o GitLab Workflow para CI/CD direto no VS Code:**
+
+👉 **[GITLAB_QUICK_START.md](./GITLAB_QUICK_START.md)** - ⚡ Guia rápido (3 passos)  
+👉 **[docs/GITLAB_VSCODE_GUIA.md](./docs/GITLAB_VSCODE_GUIA.md)** - 📚 Guia completo  
+👉 **[docs/GITLAB_TROUBLESHOOTING.md](./docs/GITLAB_TROUBLESHOOTING.md)** - 🔧 Solução de problemas
+
+**TL;DR**: Execute `./verify-gitlab-setup.sh` para verificar, depois `./add-gitlab-account.sh` e siga as instruções. Nunca use OAuth, sempre use PAT (Personal Access Token).
+
+**Recursos disponíveis:**
+- ✅ Ver status do pipeline na barra inferior do VS Code
+- ✅ Criar/cancelar/retentar pipelines com um clique
+- ✅ Ver logs de jobs CI/CD na sidebar
+- ✅ Validar `.gitlab-ci.yml` antes de commitar
+- ✅ Autocompletar variáveis CI/CD
 
 ## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
 
