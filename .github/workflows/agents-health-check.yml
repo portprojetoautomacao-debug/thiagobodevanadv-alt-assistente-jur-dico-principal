@@ -32,7 +32,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '22.x'
         cache: 'npm'
 
     - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
       run: |
         echo "## 🤖 AI Agents File Check" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         AGENT_FILES=(
           "api/agents.ts"
           "api/cron.ts"
@@ -51,10 +51,10 @@ jobs:
           "lib/api/datajud-client.ts"
           "lib/api/kv-utils.ts"
         )
-        
+
         echo "| File | Status |" >> $GITHUB_STEP_SUMMARY
         echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-        
+
         MISSING=0
         for file in "${AGENT_FILES[@]}"; do
           if [ -f "$file" ]; then
@@ -64,7 +64,7 @@ jobs:
             MISSING=$((MISSING + 1))
           fi
         done
-        
+
         echo "" >> $GITHUB_STEP_SUMMARY
         if [ $MISSING -gt 0 ]; then
           echo "⚠️ **Warning:** $MISSING agent files are missing!" >> $GITHUB_STEP_SUMMARY
@@ -85,18 +85,18 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Variable | Required For | Status |" >> $GITHUB_STEP_SUMMARY
         echo "|----------|-------------|--------|" >> $GITHUB_STEP_SUMMARY
-        
+
         # Note: We can't check actual values in CI, but we can check if they're documented
         REQUIRED_VARS=(
           "GITHUB_TOKEN:Spark LLM API"
           "DATAJUD_API_KEY:DataJud API"
           "VERCEL_AUTOMATION_BYPASS_SECRET:Webhook Bypass"
         )
-        
+
         for var in "${REQUIRED_VARS[@]}"; do
           VAR_NAME="${var%%:*}"
           VAR_DESC="${var##*:}"
-          
+
           # Check if variable is mentioned in code
           if grep -r "$VAR_NAME" api/ lib/ > /dev/null 2>&1; then
             echo "| ✅ $VAR_NAME | $VAR_DESC | Used in code |" >> $GITHUB_STEP_SUMMARY
@@ -104,7 +104,7 @@ jobs:
             echo "| ⚠️ $VAR_NAME | $VAR_DESC | Not found |" >> $GITHUB_STEP_SUMMARY
           fi
         done
-        
+
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "💡 **Note:** Actual secret values should be configured in Vercel Dashboard" >> $GITHUB_STEP_SUMMARY
 
@@ -122,7 +122,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '22.x'
         cache: 'npm'
 
     - name: Install dependencies
@@ -140,12 +140,12 @@ jobs:
       run: |
         echo "## 🔍 Agent Endpoints Analysis" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         # Count serverless functions
         FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
         echo "**Total Serverless Functions:** $FUNCTION_COUNT" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         # List agent-related endpoints
         echo "### Agent Endpoints" >> $GITHUB_STEP_SUMMARY
         echo "| Endpoint | Purpose |" >> $GITHUB_STEP_SUMMARY
@@ -155,7 +155,7 @@ jobs:
         echo "| /api/cron/djen-monitor | Monitor DJEN publications (9 AM daily) |" >> $GITHUB_STEP_SUMMARY
         echo "| /api/cron/daily-reset | Reset daily counters (midnight) |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         # Check Vercel function limit
         if [ $FUNCTION_COUNT -gt 12 ]; then
           echo "⚠️ **Warning:** Function count ($FUNCTION_COUNT) exceeds Vercel Hobby limit (12)" >> $GITHUB_STEP_SUMMARY
@@ -170,15 +170,15 @@ jobs:
       run: |
         echo "## ⏰ Cron Schedule Validation" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ ! -f "vercel.json" ]; then
           echo "❌ vercel.json not found" >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
-        
+
         # Extract cron jobs from vercel.json
         CRON_COUNT=$(grep -c '"path":' vercel.json || echo "0")
-        
+
         echo "**Configured Cron Jobs:** $CRON_COUNT" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Endpoint | Schedule | Description |" >> $GITHUB_STEP_SUMMARY
@@ -186,7 +186,7 @@ jobs:
         echo "| /api/cron/djen-monitor | 0 9 * * * | Daily at 9 AM UTC - Monitor DJEN for lawyer publications |" >> $GITHUB_STEP_SUMMARY
         echo "| /api/cron/daily-reset | 0 0 * * * | Daily at midnight UTC - Reset agent daily statistics |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ $CRON_COUNT -gt 2 ]; then
           echo "⚠️ **Warning:** Vercel Hobby plan supports daily cron jobs only" >> $GITHUB_STEP_SUMMARY
           echo "Hourly jobs require Vercel Pro plan" >> $GITHUB_STEP_SUMMARY
@@ -207,7 +207,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '22.x'
         cache: 'npm'
 
     - name: Install dependencies
@@ -217,23 +217,23 @@ jobs:
       run: |
         echo "## 📡 DJEN API Validation" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ -f "lib/api/djen-client.ts" ]; then
           echo "✅ DJEN client exists" >> $GITHUB_STEP_SUMMARY
-          
+
           # Check for required functions
           if grep -q "consultarPublicacoesTribunal" lib/api/djen-client.ts; then
             echo "✅ Function: consultarPublicacoesTribunal" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Missing: consultarPublicacoesTribunal" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if grep -q "consultarDJENForLawyer" lib/api/djen-client.ts; then
             echo "✅ Function: consultarDJENForLawyer" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Missing: consultarDJENForLawyer" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Check API endpoint
           if grep -q "comunicaapi.pje.jus.br" lib/api/djen-client.ts; then
             echo "✅ DJEN API endpoint configured: comunicaapi.pje.jus.br" >> $GITHUB_STEP_SUMMARY
@@ -249,24 +249,24 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## 📡 DataJud API Validation" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ -f "lib/api/datajud-client.ts" ]; then
           echo "✅ DataJud client exists" >> $GITHUB_STEP_SUMMARY
-          
+
           # Check for required functions
           if grep -q "consultarProcessosDataJud" lib/api/datajud-client.ts; then
             echo "✅ Function: consultarProcessosDataJud" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Missing: consultarProcessosDataJud" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Check API endpoint
           if grep -q "api-publica.datajud.cnj.jus.br" lib/api/datajud-client.ts; then
             echo "✅ DataJud API endpoint configured: api-publica.datajud.cnj.jus.br" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ DataJud API endpoint not found" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Check for tribunal mappings
           TRIBUNALS=("TJMG" "TRT3" "TST" "STJ")
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -287,7 +287,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## 💾 Spark KV Storage Validation" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         # Check for KV keys usage
         KV_KEYS=(
           "autonomous-agents"
@@ -295,7 +295,7 @@ jobs:
           "agent-task-queue"
           "completed-agent-tasks"
         )
-        
+
         echo "**Expected KV Keys:**" >> $GITHUB_STEP_SUMMARY
         for key in "${KV_KEYS[@]}"; do
           if grep -r "$key" src/ lib/ api/ > /dev/null 2>&1; then
@@ -319,23 +319,23 @@ jobs:
       run: |
         echo "## 👨‍⚖️ Lawyer Configuration Check" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ -f "INICIALIZAR_AGENTES_BROWSER.js" ]; then
           echo "✅ Browser initialization script exists" >> $GITHUB_STEP_SUMMARY
-          
+
           # Extract lawyer info
           if grep -q "Thiago Bodevan Veiga" INICIALIZAR_AGENTES_BROWSER.js; then
             echo "✅ Lawyer: Thiago Bodevan Veiga" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if grep -q "OAB/MG 184.404" INICIALIZAR_AGENTES_BROWSER.js; then
             echo "✅ OAB: OAB/MG 184.404" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if grep -q "thiagobodevanadvocacia@gmail.com" INICIALIZAR_AGENTES_BROWSER.js; then
             echo "✅ Email: thiagobodevanadvocacia@gmail.com" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Check tribunals
           TRIBUNALS=("TJMG" "TRT3" "TST" "STJ")
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -347,12 +347,12 @@ jobs:
               echo "- ⚠️ $tribunal (not configured)" >> $GITHUB_STEP_SUMMARY
             fi
           done
-          
+
           # Count agents
           AGENT_COUNT=$(grep -c '"id": "agent-' INICIALIZAR_AGENTES_BROWSER.js || echo "0")
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Configured Agents:** $AGENT_COUNT" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ $AGENT_COUNT -eq 7 ]; then
             echo "✅ All 7 agents configured" >> $GITHUB_STEP_SUMMARY
           else
@@ -380,7 +380,7 @@ jobs:
         echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
         echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         echo "## 📊 Job Results" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
@@ -390,7 +390,7 @@ jobs:
         echo "| API Integrations | ${{ needs.validate-api-integrations.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Lawyer Configuration | ${{ needs.lawyer-configuration-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [[ "${{ needs.check-agents-configuration.result }}" == "success" ]] && \
            [[ "${{ needs.test-agent-endpoints.result }}" == "success" ]] && \
            [[ "${{ needs.validate-api-integrations.result }}" == "success" ]] && \

@@ -43,7 +43,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '22.x'
         cache: 'npm'
 
     - name: Install dependencies
@@ -52,7 +52,7 @@ jobs:
     - name: Run Agent Integration Tests
       run: |
         echo "Running integration tests for Agent Flow..."
-        
+
         # Check if test file exists
         if [ -f "tests/integration/djen-agent-flow.test.ts" ]; then
           npx vitest run tests/integration/djen-agent-flow.test.ts --reporter=verbose

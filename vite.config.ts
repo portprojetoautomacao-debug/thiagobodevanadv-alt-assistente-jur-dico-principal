@@ -74,9 +74,6 @@ export default defineConfig({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 // 24 horas
-              },
-              cacheKeyWillBeUsed: async ({ request }) => {
-                return `${request.url}?version=${Date.now()}`
               }
             }
           },
