@@ -1,0 +1,45 @@
+# GitLab Duo Configuration
+# Habilita revisão automática de código com IA via GitLab Duo
+
+duo_review:
+  enabled: true
+  auto_review: true
+  analysis_scope:
+    - performance
+    - security
+    - maintainability
+    - code_smell
+    - best_practices
+  exclude_paths:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - "*.lock"
+    - ".git/**"
+  languages:
+    - typescript
+    - javascript
+    - python
+    - sql
+  check_test_coverage: true
+  check_code_quality: true
+  suggest_refactoring: true
+  enforce_standards: true
+
+commands:
+  available:
+    - /explain
+    - /refactor
+    - /fix
+    - /tests
+    - /suggest
+    - /security-check
+    - /performance-check
+  
+review_criteria:
+  - correctness
+  - performance
+  - security
+  - readability
+  - maintainability
+  - test_coverage
