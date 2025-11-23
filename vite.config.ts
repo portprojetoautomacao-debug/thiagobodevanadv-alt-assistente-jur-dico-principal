@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import sparkPlugin from "@github/spark/spark-vite-plugin";
 import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
+import { phosphorIconOptimizer } from './vite-icon-optimizer';
 import { resolve } from 'path'
 
 const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
@@ -15,6 +16,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    phosphorIconOptimizer(),
     createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
     VitePWA({

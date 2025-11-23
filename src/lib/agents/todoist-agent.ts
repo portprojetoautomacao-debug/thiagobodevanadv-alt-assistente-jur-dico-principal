@@ -12,6 +12,7 @@ import type { TodoistClient } from '@/lib/todoist-stub';
 import { getTodoistClient, updateLegalTask } from '../todoist-integration';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
+import type { TodoistClient } from '../todoist-client';
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {
@@ -230,7 +231,7 @@ export class TodoistAgent {
           
           try {
             await googleCalendarService.createEvent({
-              id: randomUUID(),
+              id: crypto.randomUUID(),
               title: command.parameters.description,
               description: `Criado via Todoist Agent. Comando original: ${command.originalText}`,
               date: command.parameters.date,
