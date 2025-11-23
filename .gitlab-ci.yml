@@ -1,8 +1,5 @@
-# GitLab Auto DevOps - Pipeline Completo
-# Docs: https://docs.gitlab.com/ee/topics/autodevops/
-
-include:
-  - template: Auto-DevOps.gitlab-ci.yml
+# GitLab CI/CD Pipeline
+# Kubernetes deployment ready
 
 variables:
   # ═══════════════════════════════════════════════════════
