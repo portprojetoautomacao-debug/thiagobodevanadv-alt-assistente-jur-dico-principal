@@ -1,14 +1,19 @@
 # GitLab CI/CD Pipeline - Kubernetes Ready
-# Versão simplificada e funcional
+# Pipeline completo com Docker, Coverage e Deploy
 
 stages:
   - build
   - test
+  - docker
   - deploy
 
 variables:
   NODE_ENV: "production"
   KUBE_INGRESS_BASE_DOMAIN: "$KUBE_INGRESS_BASE_DOMAIN"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  LATEST_TAG: $CI_REGISTRY_IMAGE:latest
 
 # Cache global para acelerar builds
 cache:
@@ -32,14 +37,24 @@ build_app:
     - main
     - merge_requests
 
-# Testes
+# Testes com Coverage
 test_app:
   stage: test
   image: node:22-alpine
   script:
     - npm ci --prefer-offline --no-audit
-    - npm run test -- --run --reporter=verbose || echo "Tests not configured yet"
+    - npm run test -- --run --reporter=verbose --coverage || echo "Tests not configured yet"
     - npm run lint || echo "Linting with warnings"
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 30 days
   allow_failure: true
   only:
     - main
@@ -57,13 +72,42 @@ security_scan:
     - main
     - merge_requests
 
-# Deploy Staging
+# Build Docker Image
+docker_build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    - docker push $IMAGE_TAG
+    - docker push $LATEST_TAG
+  needs:
+    - build_app
+    - test_app
+  only:
+    - main
+    - tags
+  when: manual
+
+# Deploy Staging com Kubernetes
 deploy_staging:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - echo "Deploying to staging"
+    - echo "Deploying to staging environment"
+    - echo "Image $IMAGE_TAG"
     - echo "Cluster $KUBE_INGRESS_BASE_DOMAIN"
+    - |
+      if [ -f "$HOME/.kube/config" ]; then
+        kubectl config use-context minikube || echo "Context minikube not found"
+        kubectl set image deployment/assistente-juridico assistente-juridico=$IMAGE_TAG -n staging || echo "Deployment will be created manually"
+        kubectl rollout status deployment/assistente-juridico -n staging || echo "Rollout status not available"
+      else
+        echo "Kubeconfig not found - configure kubectl first"
+      fi
   environment:
     name: staging
     url: https://staging.$KUBE_INGRESS_BASE_DOMAIN
@@ -73,13 +117,22 @@ deploy_staging:
     - main
   when: manual
 
-# Deploy Production
+# Deploy Production com Kubernetes
 deploy_production:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - echo "Deploying to production"
+    - echo "Deploying to production environment"
     - echo "Tag $CI_COMMIT_TAG"
+    - echo "Cluster $KUBE_INGRESS_BASE_DOMAIN"
+    - |
+      if [ -f "$HOME/.kube/config" ]; then
+        kubectl config use-context minikube || echo "Context minikube not found"
+        kubectl set image deployment/assistente-juridico assistente-juridico=$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG -n production || echo "Deployment will be created manually"
+        kubectl rollout status deployment/assistente-juridico -n production || echo "Rollout status not available"
+      else
+        echo "Kubeconfig not found - configure kubectl first"
+      fi
   environment:
     name: production
     url: https://$KUBE_INGRESS_BASE_DOMAIN

@@ -1,17 +1,10 @@
 import { useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import type { Agent, AgentTask } from '@/lib/agents'
-import { 
-  getAgentActivity, 
-  processTaskWithAI, 
-  shouldPauseForHuman,
-  canResumeAfterHuman 
-} from '@/lib/agents'
 import { 
   processTaskWithRealAI, 
   isRealAgentsEnabled 
 } from '@/lib/real-agent-client'
-import { createTaskGenerator, type AgentTaskGenerator } from '@/lib/agent-task-generator'
+
 
 export function useAutonomousAgents() {
   const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', [])
@@ -177,17 +170,16 @@ export function useAutonomousAgents() {
         }
       })
 
-      // Update agent activities less frequently to reduce re-renders
-      if (Math.random() > 0.7) { // Only update ~30% of the time
-        setAgents((current) =>
-          (current || []).map(agent => {
-            if (!agent.enabled || !agent.continuousMode) return agent
+      // Update agent activities periodically
+      setAgents((current) =>
+        (current || []).map(agent => {
+          if (!agent.enabled || !agent.continuousMode) return agent
 
-            const activity = getAgentActivity(agent)
+          const activity = getAgentActivity(agent)
 
-            if (activity !== agent.lastActivity) {
-              return { ...agent, lastActivity: activity }
-            }
+          if (activity !== agent.lastActivity) {
+            return { ...agent, lastActivity: activity }
+          }
 
             return agent
           })

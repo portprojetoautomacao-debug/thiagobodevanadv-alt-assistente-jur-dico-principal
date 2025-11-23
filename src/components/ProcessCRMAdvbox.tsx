@@ -156,9 +156,9 @@ export default function ProcessCRMAdvbox() {
       reu: p.reu || 'INSS',
       tipo: p.titulo || 'Auxílio doença Previdenciário',
       numero: p.numeroCNJ,
-      valor: 'R$ 5.000,00',
-      resultado: Math.random() > 0.5 ? 'Provável' : 'Possível',
-      status: ['green', 'yellow', 'red'][Math.floor(Math.random() * 3)] as 'green' | 'yellow' | 'red',
+      valor: p.valor || 'A definir',
+      resultado: p.resultado || 'Em análise',
+      status: p.status || 'yellow' as 'green' | 'yellow' | 'red',
       column: KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
       processo: p
     }))

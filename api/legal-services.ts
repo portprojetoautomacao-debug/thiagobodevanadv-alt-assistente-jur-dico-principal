@@ -188,7 +188,7 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
 
       const tribunalResult = tribunaisMap.get(comunicacao.tribunal)!;
       tribunalResult.publicacoes.push({
-        id: comunicacao.id ? String(comunicacao.id) : `pub-${Date.now()}-${Math.random()}`,
+        id: comunicacao.id ? String(comunicacao.id) : crypto.randomUUID(),
         data: comunicacao.data,
         processo: comunicacao.numeroProcesso,
         tipo: comunicacao.tipo,

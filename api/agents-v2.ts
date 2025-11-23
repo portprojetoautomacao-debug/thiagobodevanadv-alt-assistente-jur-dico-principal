@@ -115,7 +115,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`[Agentes] ${persona.name} concluído em ${executionTime}ms`);
     console.log(`[Agentes] Steps: ${result.steps}, Tools usadas: ${result.usedTools.join(', ')}`);
 
-    // Retornar resultado
+    // Retornar resultado COM TRACES (V2)
     return res.status(200).json({
       ok: true,
       agentId,
@@ -123,6 +123,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       steps: result.steps,
       usedTools: result.usedTools,
       answer: result.answer,
+      traces: result.traces, // ✅ NOVO: histórico completo ReAct
+      totalDuration: `${(result.totalDuration / 1000).toFixed(1)}s`, // ✅ NOVO: duração formatada
       executionTimeMs: executionTime,
       timestamp: new Date().toISOString(),
     });
