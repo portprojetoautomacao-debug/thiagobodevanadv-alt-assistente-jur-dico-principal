@@ -31,13 +31,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     switch (action) {
       case 'getTasks': {
         const { projectId, label } = req.method === 'POST' ? req.body : req.query;
-        const response = await todoistClient.getTasks({
-          projectId,
-          label
-        });
-        // Extrair apenas o array de tasks da resposta paginada
-        const tasks = response.results || [];
-        return res.status(200).json({ ok: true, tasks });
+        
+        // Implementar paginação completa - buscar todas as páginas
+        const allTasks: Array<{
+          id: string;
+          content: string;
+          description?: string;
+          projectId?: string;
+          labels?: string[];
+          priority?: number;
+          [key: string]: unknown;
+        }> = [];
+        let cursor: string | null = null;
+        
+        do {
+          const response = await todoistClient.getTasks({
+            projectId,
+            label,
+            ...(cursor && { cursor }) // Adiciona cursor apenas se existir
+          });
+          
+          allTasks.push(...(response.results || []));
+          cursor = response.nextCursor || null;
+          
+        } while (cursor !== null);
+        
+        return res.status(200).json({ ok: true, tasks: allTasks });
       }
 
       case 'getProjects': {
