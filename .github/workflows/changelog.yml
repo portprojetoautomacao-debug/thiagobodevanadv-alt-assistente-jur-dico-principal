@@ -82,19 +82,19 @@ jobs:
         
         # Categorizar commits
         echo "### ✨ Features" >> $NEW_SECTION
-        git log $COMMITS_RANGE --oneline --grep="^feat" --grep="^feature" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhuma feature nova" >> $NEW_SECTION
+        git log $COMMITS_RANGE --oneline --grep="^feat:" --grep="^feature:" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhuma feature nova" >> $NEW_SECTION
         echo "" >> $NEW_SECTION
         
         echo "### 🐛 Bug Fixes" >> $NEW_SECTION
-        git log $COMMITS_RANGE --oneline --grep="^fix" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhum bug fix" >> $NEW_SECTION
+        git log $COMMITS_RANGE --oneline --grep="^fix:" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhum bug fix" >> $NEW_SECTION
         echo "" >> $NEW_SECTION
         
         echo "### 📚 Documentation" >> $NEW_SECTION
-        git log $COMMITS_RANGE --oneline --grep="^docs" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhuma alteração na documentação" >> $NEW_SECTION
+        git log $COMMITS_RANGE --oneline --grep="^docs:" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhuma alteração na documentação" >> $NEW_SECTION
         echo "" >> $NEW_SECTION
         
         echo "### 🔧 Maintenance" >> $NEW_SECTION
-        git log $COMMITS_RANGE --oneline --grep="^chore" --grep="^refactor" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhuma manutenção" >> $NEW_SECTION
+        git log $COMMITS_RANGE --oneline --grep="^chore:" --grep="^refactor:" | sed 's/^/- /' >> $NEW_SECTION || echo "- Nenhuma manutenção" >> $NEW_SECTION
         echo "" >> $NEW_SECTION
         
         echo "### 🔒 Security" >> $NEW_SECTION
