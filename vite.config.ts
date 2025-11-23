@@ -17,9 +17,57 @@ export default defineConfig({
     tailwindcss(),
     createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
-    // PWA desabilitado temporariamente devido a conflito com @doist/todoist-api-typescript
-    // Será reativado após migrar Todoist para server-side only
-    // VitePWA({ ... })
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['robots.txt', 'sitemap.xml', '*.svg', '*.png'],
+      manifest: {
+        name: 'Assistente Jurídico PJe',
+        short_name: 'PJe Assistant',
+        description: 'Sistema inteligente de gestão jurídica com IA, monitoramento DJEN/DataJud e CRM de processos',
+        theme_color: '#1e40af',
+        background_color: '#ffffff',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/icon-192.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'google-apis',
+              expiration: { maxEntries: 50, maxAgeSeconds: 86400 }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 31536000 }
+            }
+          }
+        ],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/_/, /^\/api/]
+      }
+    })
   ],
   resolve: {
     alias: {
