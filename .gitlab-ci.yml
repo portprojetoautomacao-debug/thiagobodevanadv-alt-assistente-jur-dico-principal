@@ -6,6 +6,11 @@ variables:
   FF_USE_FASTZIP: "true"
   CACHE_COMPRESSION_LEVEL: "fast"
   GIT_DEPTH: 10
+  # Desabilitar LFS para evitar erros 404
+  GIT_LFS_SKIP_SMUDGE: "1"
+  # Estratégia de clone otimizada
+  GIT_STRATEGY: fetch
+  GIT_SUBMODULE_STRATEGY: none
 
 # Cache otimizado
 cache:
