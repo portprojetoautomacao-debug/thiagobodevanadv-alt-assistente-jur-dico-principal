@@ -8,7 +8,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import type { TodoistApi } from '@doist/todoist-api-typescript';
+import type { TodoistApi } from '@/lib/todoist-stub';
 import { getTodoistClient, updateLegalTask } from '../todoist-integration';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';

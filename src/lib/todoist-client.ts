@@ -1,4 +1,4 @@
-import { TodoistApi } from '@doist/todoist-api-typescript'
+import { TodoistApi } from '@/lib/todoist-stub'
 import { config } from './config'
 
 /**
