@@ -1,13 +1,48 @@
-/**
- * Health Check Endpoint
- * Verifica se todas as variáveis de ambiente necessárias estão configuradas
- * 
- * Acesse: /api/health
- */
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
+/**
+ * Status Endpoint
+ * Combines Health Check and Spark Loaded functionality
+ * 
+ * Access: 
+ * - /api/status?type=health (Health Check)
+ * - /api/status?type=loaded (Spark Loaded)
+ */
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(200).end();
+    return;
+  }
+
+  const type = req.query.type as string;
+
+  // Spark Loaded Logic
+  if (type === 'loaded' || req.url?.includes('/loaded')) {
+    // For POST requests (runtime loaded signal), just return success
+    if (req.method === 'POST') {
+      res.status(200).json({
+        status: 'loaded',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // For GET requests, return a simple health check
+    if (req.method === 'GET') {
+      res.status(200).json({
+        status: 'ok',
+        service: 'spark-loaded',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+  }
+
+  // Health Check Logic (Default)
   // Verificar variáveis de ambiente
   const checks = {
     github_token: !!process.env.GITHUB_TOKEN,
@@ -38,27 +73,12 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   // Status code baseado nas checks
   const statusCode = allCriticalOk ? 200 : 500;
 
-  // Mensagens de ajuda
-  const missingVars = Object.entries(checks)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key.toUpperCase());
-
   const response = {
     status: allOk ? 'healthy' : allCriticalOk ? 'partially_healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
     checks,
     info,
-    ...(missingVars.length > 0 && {
-      missing_variables: missingVars,
-      help: 'Configure as variáveis faltantes em: Vercel Dashboard → Settings → Environment Variables',
-      docs: [
-        'CORRIGIR_SPARK_VERCEL.md',
-        'VERCEL_BUILD_CONFIGURATION.md'
-      ]
-    })
   };
 
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.status(statusCode).json(response);
 }

@@ -38,7 +38,19 @@
     },
     {
       "source": "/_spark/loaded",
-      "destination": "/api/loaded"
+      "destination": "/api/status?type=loaded"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/status?type=health"
+    },
+    {
+      "source": "/api/deadline/calculate",
+      "destination": "/api/legal-services?service=deadline"
+    },
+    {
+      "source": "/api/djen/check",
+      "destination": "/api/legal-services?service=djen"
     },
     {
       "source": "/_spark/:service/:path*",
