@@ -3,12 +3,6 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
   "redirects": [
     {
       "source": "/:path*",
@@ -23,12 +17,185 @@
       "permanent": true
     }
   ],
-  "env": [
-    "GEMINI_API_KEY",
-    "TODOIST_TOKEN",
-    "DJEN_API_KEY",
-    "EVOLUTION_API_KEY",
-    "EVOLUTION_INSTANCE_ID",
-    "EVOLUTION_API_URL"
+  "crons": [
+    {
+      "path": "/api/cron?action=djen-monitor",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron?action=daily-reset",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/_spark/llm",
+      "destination": "/api/llm-proxy"
+    },
+    {
+      "source": "/_spark/kv/:key*",
+      "destination": "/api/kv"
+    },
+    {
+      "source": "/_spark/loaded",
+      "destination": "/api/status?type=loaded"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/status?type=health"
+    },
+    {
+      "source": "/api/deadline/calculate",
+      "destination": "/api/legal-services?service=deadline"
+    },
+    {
+      "source": "/api/djen/check",
+      "destination": "/api/legal-services?service=djen"
+    },
+    {
+      "source": "/_spark/:service/:path*",
+      "destination": "/api/spark-proxy?service=:service&path=:path"
+    },
+    {
+      "source": "/_spark/:service",
+      "destination": "/api/spark-proxy?service=:service"
+    },
+    {
+      "source": "/((?!api|robots\\.txt|sitemap\\.xml|favicon\\.ico|manifest\\.json|assets).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel.app https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://www.gstatic.com; img-src 'self' data: https://*.googleusercontent.com https://*.githubusercontent.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.vercel.app https://*.googleapis.com https://*.upstash.io https://accounts.google.com https://main.vscode-cdn.net https://*.tunnels.api.visualstudio.com wss://*.tunnels.api.visualstudio.com https://*.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com; frame-src 'self' https://accounts.google.com https://vercel.live;"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=(), payment=()"
+        }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    },
+    {
+      "source": "/_spark/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
   ]
 }
