@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: '22.x']
+        node-version: ['22.x']
         # Node 18.x removido - package.json especifica 22.x
 
     steps:
