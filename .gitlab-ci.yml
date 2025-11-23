@@ -14,8 +14,10 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   LATEST_TAG: $CI_REGISTRY_IMAGE:latest
-  # GitLab Kubernetes Agent
-  KUBE_CONTEXT: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
+  # GitLab Kubernetes Agents (primary e secondary)
+  KUBE_CONTEXT_PRIMARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
+  KUBE_CONTEXT_SECONDARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
+  KUBE_CONTEXT: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
 
 # Cache global para acelerar builds
 cache:

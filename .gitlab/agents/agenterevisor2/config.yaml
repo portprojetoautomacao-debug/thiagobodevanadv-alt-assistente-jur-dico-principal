@@ -1,0 +1,17 @@
+gitops:
+  manifest_projects:
+  - paths:
+      glob: 'k8s/**/*.yaml'
+    reconcile:
+      mode: auto
+      timeout: 3600s
+
+ci_access:
+  projects:
+  - id: thiagobodevan-a11y/assistente-juridico-p
+
+user_access:
+  access_as:
+    agent: {}
+  projects:
+  - id: thiagobodevan-a11y/assistente-juridico-p
