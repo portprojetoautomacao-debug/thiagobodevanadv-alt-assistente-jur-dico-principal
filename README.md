@@ -4,12 +4,18 @@
 
 ## Status do Projeto
 
-### GitHub
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/releases/tag/v1.0.0)
-[![CI](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/CI/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/ci.yml)
-[![Deploy](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/deploy.yml)
-[![Code Quality](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-jurdico-p/actions/workflows/code-quality.yml)
+### GitHub Actions
+[![CI](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/CI/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/ci.yml)
+[![Deploy](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/deploy.yml)
+[![Code Quality](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/code-quality.yml)
+[![Security Scan](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Security%20Scan/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/security-scan.yml)
+[![E2E Tests](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Playwright%20E2E%20Tests/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/e2e.yml)
+
+### Project Info
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/releases/tag/v1.0.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22.x-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 
 ### GitLab CI/CD
 [![GitLab Pipeline](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/pipeline.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines)
