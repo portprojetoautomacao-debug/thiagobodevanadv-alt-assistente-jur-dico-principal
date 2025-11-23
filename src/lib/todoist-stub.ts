@@ -57,22 +57,29 @@ export class TodoistApi {
 export interface Task {
   id: string;
   content: string;
-  description?: string;
-  projectId?: string;
-  sectionId?: string;
-  parentId?: string;
-  order?: number;
-  labels?: string[];
-  priority?: number;
+  description: string;
+  projectId: string;
+  sectionId: string | null;
+  parentId: string | null;
+  order: number;
+  labels: string[];
+  priority: number;
   dueString?: string;
   dueDate?: string;
   dueDatetime?: string;
   dueLang?: string;
   assigneeId?: string;
-  url?: string;
-  commentCount?: number;
-  isCompleted?: boolean;
-  createdAt?: string;
+  url: string;
+  commentCount: number;
+  isCompleted: boolean;
+  createdAt: string;
+  userId?: string;
+  addedByUid?: string | null;
+  assignedByUid?: string | null;
+  responsibleUid?: string | null;
+  syncId?: string | null;
+  completedAt?: string | null;
+  isCollapsed?: boolean;
 }
 
 export interface Project {
