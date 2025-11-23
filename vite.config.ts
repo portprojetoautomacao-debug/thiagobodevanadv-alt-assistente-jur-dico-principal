@@ -2,6 +2,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, PluginOption } from "vite";
+import { VitePWA } from 'vite-plugin-pwa';
 
 import sparkPlugin from "@github/spark/spark-vite-plugin";
 import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
@@ -16,6 +17,145 @@ export default defineConfig({
     tailwindcss(),
     createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['robots.txt', 'sitemap.xml', '*.svg'],
+      manifest: {
+        name: 'Assistente Jurídico PJe - Gestão Inteligente',
+        short_name: 'PJe Assistant',
+        description: 'Sistema inteligente de gestão jurídica com IA, monitoramento DJEN/DataJud, 7 agentes autônomos e CRM de processos',
+        theme_color: '#1e40af',
+        background_color: '#ffffff',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable any'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable any'
+          }
+        ],
+        categories: ['business', 'productivity', 'utilities'],
+        screenshots: [
+          {
+            src: '/screenshot-wide.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide'
+          },
+          {
+            src: '/screenshot-narrow.png',
+            sizes: '640x1136',
+            type: 'image/png',
+            form_factor: 'narrow'
+          }
+        ]
+      },
+      workbox: {
+        // Cache de recursos estáticos
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        
+        // Configurações avançadas de cache
+        runtimeCaching: [
+          // APIs Google (OAuth, Calendar)
+          {
+            urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'google-apis-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 24 horas
+              },
+              cacheKeyWillBeUsed: async ({ request }) => {
+                return `${request.url}?version=${Date.now()}`
+              }
+            }
+          },
+          
+          // API Todoist
+          {
+            urlPattern: /^https:\/\/api\.todoist\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'todoist-api-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 12 // 12 horas
+              }
+            }
+          },
+          
+          // DJEN API
+          {
+            urlPattern: /^https:\/\/.*\.djen\.com\.br\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'djen-api-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 6 // 6 horas
+              }
+            }
+          },
+          
+          // Recursos Spark
+          {
+            urlPattern: /^\/_spark\/.*/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'spark-api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 2 // 2 horas
+              }
+            }
+          },
+          
+          // CDN de fonts
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 ano
+              }
+            }
+          },
+          
+          // Font files
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 ano
+              }
+            }
+          }
+        ],
+        
+        // Background sync para ações offline
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/_/, /^\/api/],
+        
+        // Configurações de skip waiting
+        skipWaiting: true,
+        clientsClaim: true
+      }
+    })
   ],
   resolve: {
     alias: {

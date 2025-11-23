@@ -19,6 +19,8 @@ export const config = {
   },
   todoist: {
     apiKey: getEnvVar('VITE_TODOIST_API_KEY', '', false), // Optional - no error logging
+    webhookSecret: getEnvVar('TODOIST_WEBHOOK_SECRET', '', false),
+    icalUrl: getEnvVar('TODOIST_ICAL_URL', '', false),
   },
   app: {
     environment: getEnvVar('VITE_APP_ENV', 'development'),
