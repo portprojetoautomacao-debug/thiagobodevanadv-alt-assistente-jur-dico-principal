@@ -8,7 +8,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import type { TodoistApi } from '@/lib/todoist-stub';
+import type { TodoistClient } from '@/lib/todoist-stub';
 import { getTodoistClient, updateLegalTask } from '../todoist-integration';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
@@ -52,7 +52,7 @@ interface InterpretedCommand {
  * Agente Todoist
  */
 export class TodoistAgent {
-  private client: TodoistApi;
+  private client: TodoistClient;
 
   constructor() {
     this.client = getTodoistClient();
