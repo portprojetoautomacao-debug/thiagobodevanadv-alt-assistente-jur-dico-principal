@@ -11,6 +11,8 @@ import { Plus, MagnifyingGlass, Sparkle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import PremonicaoModal from '@/components/PremonicaoModal'
 import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
+import { createProcessTasks, initializeTodoistClient } from '@/lib/todoist-integration'
+import { config } from '@/lib/config'
 import type { Process, PremonicaoJuridica } from '@/types'
 
 const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
@@ -51,7 +53,7 @@ export default function ProcessCRM() {
     return matchesFilter && matchesStage
   })
 
-  const handleAddProcess = () => {
+  const handleAddProcess = async () => {
     if (!newProcess.numeroCNJ || !newProcess.titulo) {
       toast.error('CNJ e título são obrigatórios')
       return
@@ -76,6 +78,29 @@ export default function ProcessCRM() {
     }
 
     setProcesses((current) => [...(current || []), process])
+
+    // Integração com Todoist
+    if (config.todoist.apiKey) {
+      try {
+        initializeTodoistClient(config.todoist.apiKey)
+        await createProcessTasks({
+          number: process.numeroCNJ,
+          type: process.titulo,
+          deadlines: [
+            {
+              type: 'Análise Inicial',
+              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +2 dias
+              description: 'Analisar processo recém cadastrado'
+            }
+          ]
+        })
+        toast.success('Tarefas criadas no Todoist!')
+      } catch (error) {
+        console.error('Erro ao criar tarefas no Todoist:', error)
+        toast.error('Erro na integração com Todoist')
+      }
+    }
+
     setShowDialog(false)
     setNewProcess({ numeroCNJ: '', titulo: '', autor: '', reu: '', advogado: '', fase: 'Inicial' })
     toast.success('Processo adicionado com sucesso')
