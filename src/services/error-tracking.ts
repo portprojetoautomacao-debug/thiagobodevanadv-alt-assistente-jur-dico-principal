@@ -1,8 +1,8 @@
 // GitLab Error Tracking Integration
 // DSN: https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042
 
-import * as Sentry from "@sentry/node";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
 
 /**
  * Initialize Sentry for Error Tracking
@@ -20,22 +20,29 @@ export function initErrorTracking() {
     dsn: "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042",
     
     // Environment
-    environment: process.env.NODE_ENV || "development",
+    environment: import.meta.env.MODE || "development",
     
     // Release version
-    release: process.env.RELEASE_VERSION || "unknown",
+    release: import.meta.env.VITE_APP_VERSION || "unknown",
     
-    // Profiling
-    integrations: [nodeProfilingIntegration()],
+    // Integrations
+    integrations: [
+      new BrowserTracing(),
+      new Sentry.Replay({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
     
     // Performance monitoring
-    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+    tracesSampleRate: import.meta.env.MODE === "production" ? 0.1 : 1.0,
     
-    // Profiles sample rate
-    profilesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+    // Replay sample rate
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
     
     // Debug mode
-    debug: process.env.NODE_ENV !== "production",
+    debug: import.meta.env.MODE !== "production",
     
     // Capture breadcrumbs
     maxBreadcrumbs: 50,
@@ -89,7 +96,7 @@ export function setErrorTag(key: string, value: string | number) {
 /**
  * Capture error manually
  */
-export function captureError(error: Error, context?: Record<string, any>) {
+export function captureError(error: Error, context?: Record<string, unknown>) {
   Sentry.captureException(error, {
     contexts: context ? { custom: context } : undefined,
   });
@@ -114,7 +121,7 @@ export function captureApiError(
   method: string,
   url: string,
   statusCode?: number,
-  responseBody?: any
+  responseBody?: unknown
 ) {
   Sentry.captureException(error, {
     contexts: {
@@ -122,7 +129,9 @@ export function captureApiError(
         method,
         url,
         statusCode,
-        responseBody: JSON.stringify(responseBody).substring(0, 1000),
+        responseBody: typeof responseBody === 'string' 
+          ? responseBody.substring(0, 1000)
+          : JSON.stringify(responseBody).substring(0, 1000),
       },
     },
     tags: {
@@ -136,20 +145,24 @@ export function captureApiError(
 }
 
 /**
- * Start performance monitoring
+ * Start performance monitoring transaction
  */
 export function startTransaction(name: string, op: string = "http.request") {
-  return Sentry.startTransaction({
+  return Sentry.startTransaction?.({
     name,
     op,
-    sampled: process.env.NODE_ENV === "production" ? Math.random() < 0.1 : true,
-  });
+    sampled: import.meta.env.MODE === "production" ? Math.random() < 0.1 : true,
+  }) || null;
 }
 
 /**
  * Flush pending events before shutdown
  */
 export async function flushErrors(timeout: number = 2000) {
-  await Sentry.close(timeout);
-  console.log("✅ Error tracking flushed");
+  try {
+    await Sentry.close(timeout);
+    console.log("✅ Error tracking flushed");
+  } catch (error) {
+    console.warn("Error flushing Sentry:", error);
+  }
 }

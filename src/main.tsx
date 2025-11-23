@@ -1,11 +1,20 @@
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
 import { applySparkClientFixes, applySparkLLMFixes } from './lib/spark-client-fixes'
+import { initErrorTracking } from './services/error-tracking'
 
 // import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
 
 import './index.css';
+
+// Initialize Sentry Error Tracking FIRST
+try {
+  initErrorTracking()
+  console.log('✅ Sentry Error Tracking initialized')
+} catch (error) {
+  console.error('❌ Failed to initialize Sentry:', error)
+}
 
 // Initialize Spark client with error handling for localization issues
 async function initializeSpark() {
