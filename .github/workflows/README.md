@@ -33,11 +33,13 @@ Todos os workflows foram atualizados com:
 **Triggers:** Push to `main`, `develop`, `copilot/**` branches; Pull requests to `main`, `develop`
 
 **Jobs:**
-- **build-and-test**: Builds and tests on Node.js 18.x and 20.x
+- **build-and-test**: Builds and tests on Node.js 22.x
   - Runs linter
   - Builds application
   - Runs tests
   - Uploads build artifacts
+  - **✨ NEW:** Enhanced caching for faster builds
+  - **✨ NEW:** Build artifact caching for incremental builds
   
 - **lint-security**: Security and quality checks
   - npm audit
@@ -47,7 +49,9 @@ Todos os workflows foram atualizados com:
 - **build-matrix-status**: Aggregates status of all jobs
 
 **Features:**
-- Matrix testing across multiple Node.js versions
+- Optimized dependency caching with multiple restore keys
+- Build artifact caching for faster rebuilds
+- Enhanced build summary with performance metrics
 - Artifact retention for 7 days
 - Caching for faster builds
 - SARIF integration for security findings
@@ -217,6 +221,76 @@ This workflow is specifically designed for GitHub Copilot's coding agent. When C
 - Better agent performance (no trial-and-error for dependency installation)
 
 **Note:** This workflow must be present in the default branch to be recognized by GitHub Copilot.
+
+---
+
+## 🆕 Novos Workflows (Adicionados em 2025-11-23)
+
+### 8. Bundle Analysis (`bundle-analysis.yml`)
+**Triggers:** Pull requests com mudanças no código; Execução manual
+
+**Objetivo:** Analisar e monitorar o tamanho do bundle JavaScript
+
+**Jobs:**
+- **analyze-bundle**: Análise completa do bundle
+  - Tamanhos de arquivos JS/CSS
+  - Compressão gzip
+  - Alertas de tamanho
+  
+- **compare-with-base**: Comparação com branch base
+  - Diferença de tamanho
+  - Percentual de mudança
+
+**Features:**
+- Relatório detalhado em comentários de PR
+- Recomendações de otimização
+- Limites configuráveis (500 KB padrão)
+
+### 9. Auto Changelog (`changelog.yml`)
+**Triggers:** Release published; Push em tags; Execução manual
+
+**Objetivo:** Gerar e manter CHANGELOG.md automaticamente
+
+**Features:**
+- Categorização de commits (features, fixes, docs, maintenance, security)
+- Geração automática de release notes
+- Formato compatível com [Keep a Changelog](https://keepachangelog.com/)
+- Atualização automática em releases
+
+### 10. Status Badges (`badges.yml`)
+**Triggers:** Conclusão de workflows principais (CI, Deploy, Security, Code Quality)
+
+**Objetivo:** Manter badges de status atualizados
+
+**Features:**
+- Geração automática de badge JSON
+- Atualização do README
+- Suporte para múltiplos workflows
+
+### 11. Dependency Health Check (`dependency-health.yml`)
+**Triggers:** Semanalmente (segundas 9h UTC); PRs com mudanças em dependências; Execução manual
+
+**Objetivo:** Monitorar saúde e segurança das dependências
+
+**Jobs:**
+- **check-dependencies**: Análise completa
+  - Pacotes desatualizados
+  - Vulnerabilidades de segurança
+  - Verificação de licenças
+  - Análise de tamanho
+  - Dependências duplicadas
+  
+- **check-npm-scripts**: Validação de scripts
+  - Verifica scripts essenciais
+  - Lista todos os scripts disponíveis
+
+**Features:**
+- Relatórios detalhados em artifacts
+- Comentários automáticos em PRs
+- Recomendações de manutenção
+- Análise top 10 maiores pacotes
+
+---
 
 ## Workflow Dependencies
 
