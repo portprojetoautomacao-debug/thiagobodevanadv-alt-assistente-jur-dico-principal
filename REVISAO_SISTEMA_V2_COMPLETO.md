@@ -46,6 +46,7 @@ const messages: ChatMessage[] = [...]
 
 **Mudanças:**
 - ❌ Removido: `import { BrowserTracing } from "@sentry/tracing"`
+- ❌ Removido: Dependência `@sentry/tracing` do package.json
 - ✅ Adicionado: `Sentry.replayIntegration()` (substitui `new Sentry.Replay()`)
 - ✅ Atualizado: `Sentry.startSpan()` (substitui `Sentry.startTransaction()`)
 
