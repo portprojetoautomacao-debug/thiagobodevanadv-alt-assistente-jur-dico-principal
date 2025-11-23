@@ -1,24 +1,22 @@
-import { useMemo } from 'react'
+import { useMemo, lazy, Suspense } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import type { Process, Prazo, ViewType } from '@/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
+import { calcularDiasRestantes, isUrgente } from '@/lib/prazos'
 import DataInitializer from '@/components/DataInitializer'
 import DataManager from '@/components/DataManager'
-import { StatusChart, VaraChart, TrendChart } from '@/components/DashboardCharts'
-import { 
-  Gavel, 
-  CheckCircle, 
-  Clock, 
-  Warning, 
-  CalendarCheck,
-  ArrowRight,
-  Upload,
-  ChartPie,
-  TrendUp
-} from '@phosphor-icons/react'
+
+// Lazy load dashboard sections for better code splitting
+const DashboardStats = lazy(() => import('@/components/dashboard/DashboardStats').then(m => ({ default: m.DashboardStats })))
+const DashboardDeadlines = lazy(() => import('@/components/dashboard/DashboardDeadlines').then(m => ({ default: m.DashboardDeadlines })))
+const DashboardActions = lazy(() => import('@/components/dashboard/DashboardActions').then(m => ({ default: m.DashboardActions })))
+const StatusChart = lazy(() => import('@/components/DashboardCharts').then(m => ({ default: m.StatusChart })))
+const VaraChart = lazy(() => import('@/components/DashboardCharts').then(m => ({ default: m.VaraChart })))
+const TrendChart = lazy(() => import('@/components/DashboardCharts').then(m => ({ default: m.TrendChart })))
+
+// Loading fallback
+const SectionLoader = () => (
+  <div className="animate-pulse bg-neutral-3 rounded-lg h-32" />
+)
 
 interface DashboardProps {
   onNavigate: (view: ViewType) => void
