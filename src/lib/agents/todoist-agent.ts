@@ -8,11 +8,10 @@
  */
 
 import { randomUUID } from 'crypto';
-import type { TodoistClient } from '@/lib/todoist-stub';
+import type { TodoistApi } from '@/lib/todoist-stub';
 import { getTodoistClient, updateLegalTask } from '../todoist-integration';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
-import type { TodoistClient } from '../todoist-client';
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {
@@ -53,7 +52,7 @@ interface InterpretedCommand {
  * Agente Todoist
  */
 export class TodoistAgent {
-  private client: TodoistClient;
+  private client: TodoistApi;
 
   constructor() {
     this.client = getTodoistClient();
