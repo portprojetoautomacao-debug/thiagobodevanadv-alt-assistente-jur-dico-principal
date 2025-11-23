@@ -7,6 +7,10 @@ on:
       - completed
   workflow_dispatch:
 
+concurrency:
+  group: badges-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
   actions: read
