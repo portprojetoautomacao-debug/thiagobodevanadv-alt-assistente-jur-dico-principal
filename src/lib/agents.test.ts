@@ -10,8 +10,7 @@ import {
   shouldPauseForHuman,
   canResumeAfterHuman,
   createTaskGenerator,
-  initializeAgents,
-  DEFAULT_AGENTS
+  initializeAgents
 } from './agents'
 
 describe('AI Agents System', () => {
