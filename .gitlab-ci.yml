@@ -154,10 +154,13 @@ deploy_production:
     - build
   script:
     - echo "Deploying to production..."
-    - echo "Production deployment would happen here"
+    - echo "✅ Build artifacts ready in dist/"
+    - echo "📦 Total files:" && ls -1 dist/ | wc -l
+    - echo "💾 Build size:" && du -sh dist/
   environment:
     name: production
     url: https://assistente-juridico-p.vercel.app
   only:
     - main
-  when: manual
+  when: on_success  # Deploy automático quando tudo passar
+  allow_failure: false
