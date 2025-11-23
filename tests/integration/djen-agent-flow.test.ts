@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMocks } from 'node-mocks-http';
 import cronHandler from '../../api/cron';
-import agentsHandler from '../../api/agents';
+import agentsHandler, { AgentTaskType, AgentType, TaskPriority, TaskStatus, AgentStatus } from '../../api/agents';
 import * as djenClient from '../../lib/api/djen-client';
 import * as kvUtils from '../../lib/api/kv-utils';
 
@@ -92,8 +92,10 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     const taskData = {
       id: 'task-1',
       agentId: 'analyzer-agent',
-      type: 'analyze_document',
-      status: 'queued',
+      type: AgentTaskType.ANALYZE_DOCUMENT,
+      priority: TaskPriority.HIGH,
+      status: TaskStatus.QUEUED,
+      createdAt: new Date().toISOString(),
       data: {
         text: mockPublication.teor,
         context: `Processo: ${mockPublication.numeroProcesso}`
@@ -120,8 +122,8 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     (kvUtils.getAgents as any) = vi.fn().mockResolvedValue([{
       id: 'analyzer-agent',
       name: 'Analyzer',
-      type: 'analyzer',
-      status: 'idle',
+      type: AgentType.ANALYZER,
+      status: AgentStatus.IDLE,
       enabled: true
     }]);
     (kvUtils.updateAgents as any) = vi.fn().mockResolvedValue(undefined);
@@ -154,8 +156,8 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
         agent: {
           id: 'analyzer-agent',
           name: 'Analyzer',
-          type: 'analyzer',
-          status: 'idle',
+          type: AgentType.ANALYZER,
+          status: AgentStatus.IDLE,
           enabled: true
         }
       },
