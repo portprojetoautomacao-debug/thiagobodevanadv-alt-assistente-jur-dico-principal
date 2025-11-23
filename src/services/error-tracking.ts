@@ -2,7 +2,6 @@
 // DSN: https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042
 
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 
 /**
  * Initialize Sentry for Error Tracking
@@ -27,8 +26,7 @@ export function initErrorTracking() {
     
     // Integrations
     integrations: [
-      new BrowserTracing(),
-      new Sentry.Replay({
+      Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),
@@ -148,11 +146,10 @@ export function captureApiError(
  * Start performance monitoring transaction
  */
 export function startTransaction(name: string, op: string = "http.request") {
-  return Sentry.startTransaction?.({
+  return Sentry.startSpan?.({
     name,
     op,
-    sampled: import.meta.env.MODE === "production" ? Math.random() < 0.1 : true,
-  }) || null;
+  }, () => null) || null;
 }
 
 /**

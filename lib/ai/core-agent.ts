@@ -147,7 +147,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     const usedTools: string[] = [];
     const traces: AgentTrace[] = [];
 
-    let messages: ChatMessage[] = [
+    const messages: ChatMessage[] = [
       this.buildSystemMessage(),
       ...history,
       { role: "user", content: userInput },
