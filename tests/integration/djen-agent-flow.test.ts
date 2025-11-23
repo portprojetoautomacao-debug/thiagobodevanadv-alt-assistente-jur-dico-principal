@@ -182,8 +182,10 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     const taskData = {
       id: 'task-chain-test',
       agentId: 'analyzer-agent',
-      type: 'analyze_document',
-      status: 'queued',
+      type: AgentTaskType.ANALYZE_DOCUMENT,
+      priority: TaskPriority.HIGH,
+      status: TaskStatus.QUEUED,
+      createdAt: new Date().toISOString(),
       data: { text: "Sentença com custas" }
     };
 
