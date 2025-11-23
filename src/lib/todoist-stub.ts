@@ -15,12 +15,17 @@ export function getProjectUrl(projectId: string): string {
   return `https://todoist.com/app/project/${projectId}`;
 }
 
+export interface GetTasksResponse {
+  results: Task[];
+  nextCursor: string | null;
+}
+
 export class TodoistApi {
   constructor(_apiKey: string) {
     console.warn('[Todoist Stub] TodoistApi should only be used server-side. Use API routes from the client.');
   }
 
-  getTasks(_args?: { projectId?: string; label?: string }): Promise<Task[]> {
+  getTasks(_args?: { projectId?: string; label?: string }): Promise<GetTasksResponse> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
