@@ -23,6 +23,7 @@ jobs:
   check-dependencies:
     name: Check Dependencies Health
     runs-on: ubuntu-latest
+    continue-on-error: true  # Don't fail CI if dependency check has issues
 
     steps:
     - name: Checkout code

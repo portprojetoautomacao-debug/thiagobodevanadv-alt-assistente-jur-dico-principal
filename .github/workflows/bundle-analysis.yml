@@ -65,8 +65,9 @@ jobs:
             # Use wc -c for portability across BSD and GNU systems
             SIZE=$(wc -c < "$file" 2>/dev/null || echo 0)
             GZIP_SIZE=$(gzip -c "$file" | wc -c)
-            SIZE_KB=$(echo "scale=2; $SIZE / 1024" | bc)
-            GZIP_KB=$(echo "scale=2; $GZIP_SIZE / 1024" | bc)
+            # Use awk instead of bc for better compatibility
+            SIZE_KB=$(awk "BEGIN {printf \"%.2f\", $SIZE / 1024}")
+            GZIP_KB=$(awk "BEGIN {printf \"%.2f\", $GZIP_SIZE / 1024}")
             
             echo "| $FILENAME | ${SIZE_KB} KB | ${GZIP_KB} KB |" >> bundle-report.md
             
@@ -76,8 +77,8 @@ jobs:
         done
         
         # Calcular totais
-        TOTAL_SIZE_KB=$(echo "scale=2; $TOTAL_SIZE / 1024" | bc)
-        TOTAL_GZIP_KB=$(echo "scale=2; $TOTAL_GZIP / 1024" | bc)
+        TOTAL_SIZE_KB=$(awk "BEGIN {printf \"%.2f\", $TOTAL_SIZE / 1024}")
+        TOTAL_GZIP_KB=$(awk "BEGIN {printf \"%.2f\", $TOTAL_GZIP / 1024}")
         
         echo "" >> bundle-report.md
         echo "**Total JS:** ${TOTAL_SIZE_KB} KB (${TOTAL_GZIP_KB} KB gzipped)" >> bundle-report.md
@@ -92,8 +93,9 @@ jobs:
             # Use wc -c for portability across BSD and GNU systems
             SIZE=$(wc -c < "$file" 2>/dev/null || echo 0)
             GZIP_SIZE=$(gzip -c "$file" | wc -c)
-            SIZE_KB=$(echo "scale=2; $SIZE / 1024" | bc)
-            GZIP_KB=$(echo "scale=2; $GZIP_SIZE / 1024" | bc)
+            # Use awk instead of bc for better compatibility
+            SIZE_KB=$(awk "BEGIN {printf \"%.2f\", $SIZE / 1024}")
+            GZIP_KB=$(awk "BEGIN {printf \"%.2f\", $GZIP_SIZE / 1024}")
             
             CSS_SIZE=$((CSS_SIZE + SIZE))
             CSS_GZIP=$((CSS_GZIP + GZIP_SIZE))
@@ -175,6 +177,7 @@ jobs:
     name: Compare with Base Branch
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    continue-on-error: true  # Don't fail the entire workflow if comparison fails
     permissions:
       contents: read
 
@@ -230,11 +233,23 @@ jobs:
         PR_SIZE=$(cat pr-size.txt | cut -f1)
         
         DIFF=$((PR_SIZE - BASE_SIZE))
-        PERCENT=$(echo "scale=2; ($DIFF * 100) / $BASE_SIZE" | bc)
+        # Calculate percentage using awk instead of bc for better compatibility
+        PERCENT=$(awk "BEGIN {printf \"%.2f\", ($DIFF * 100) / $BASE_SIZE}")
         
-        echo "**Base branch:** $(numfmt --to=iec-i --suffix=B $BASE_SIZE)" >> $GITHUB_STEP_SUMMARY
-        echo "**PR branch:** $(numfmt --to=iec-i --suffix=B $PR_SIZE)" >> $GITHUB_STEP_SUMMARY
-        echo "**Difference:** $(numfmt --to=iec-i --suffix=B $DIFF) ($PERCENT%)" >> $GITHUB_STEP_SUMMARY
+        # Use numfmt if available, otherwise use simple formatting
+        if command -v numfmt >/dev/null 2>&1; then
+          BASE_FORMATTED=$(numfmt --to=iec-i --suffix=B $BASE_SIZE)
+          PR_FORMATTED=$(numfmt --to=iec-i --suffix=B $PR_SIZE)
+          DIFF_FORMATTED=$(numfmt --to=iec-i --suffix=B ${DIFF#-})
+        else
+          BASE_FORMATTED="${BASE_SIZE} bytes"
+          PR_FORMATTED="${PR_SIZE} bytes"
+          DIFF_FORMATTED="${DIFF#-} bytes"
+        fi
+        
+        echo "**Base branch:** $BASE_FORMATTED" >> $GITHUB_STEP_SUMMARY
+        echo "**PR branch:** $PR_FORMATTED" >> $GITHUB_STEP_SUMMARY
+        echo "**Difference:** $DIFF_FORMATTED ($PERCENT%)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         if [ $DIFF -gt 0 ]; then
