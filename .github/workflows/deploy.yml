@@ -82,12 +82,17 @@ jobs:
           echo "ℹ️ You can add $HEADROOM more functions"
         fi
         
+        # Calcular headroom para o summary, nunca negativo
+        HEADROOM=$((12 - FUNCTION_COUNT))
+        if [ $HEADROOM -lt 0 ]; then
+          HEADROOM=0
+        fi
         # Adicionar ao summary
         echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
         echo "- **Status:** $([ $FUNCTION_COUNT -gt 12 ] && echo '❌ Over limit' || echo '✅ Within limit')" >> $GITHUB_STEP_SUMMARY
-        echo "- **Remaining:** $((12 - FUNCTION_COUNT))" >> $GITHUB_STEP_SUMMARY
+        echo "- **Remaining:** $HEADROOM" >> $GITHUB_STEP_SUMMARY
 
     - name: Verify agent files
       run: |
