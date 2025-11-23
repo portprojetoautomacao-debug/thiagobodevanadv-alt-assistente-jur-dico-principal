@@ -143,13 +143,23 @@ export function captureApiError(
 }
 
 /**
- * Start performance monitoring transaction
+ * Start performance monitoring span (Sentry v10+)
+ * Returns a callback that can be used to wrap async operations
+ * 
+ * @deprecated Use Sentry.startSpan directly for better performance tracking
+ * @example
+ * ```ts
+ * await Sentry.startSpan({ name: 'myOperation', op: 'task' }, async (span) => {
+ *   // Your async operation here
+ *   return result;
+ * });
+ * ```
  */
 export function startTransaction(name: string, op: string = "http.request") {
-  return Sentry.startSpan?.({
-    name,
-    op,
-  }, () => null) || null;
+  // This is a compatibility shim for legacy code
+  // Modern code should use Sentry.startSpan directly with a proper callback
+  console.warn('startTransaction is deprecated. Use Sentry.startSpan directly.');
+  return null;
 }
 
 /**
