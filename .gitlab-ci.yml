@@ -99,18 +99,18 @@ deploy_staging:
   script:
     - echo "Deploying to staging environment"
     - echo "Image $IMAGE_TAG"
-    - echo "Cluster $KUBE_INGRESS_BASE_DOMAIN"
-    - |
-      if [ -f "$HOME/.kube/config" ]; then
-        kubectl config use-context minikube || echo "Context minikube not found"
-        kubectl set image deployment/assistente-juridico assistente-juridico=$IMAGE_TAG -n staging || echo "Deployment will be created manually"
-        kubectl rollout status deployment/assistente-juridico -n staging || echo "Rollout status not available"
-      else
-        echo "Kubeconfig not found - configure kubectl first"
-      fi
+    - echo "Using GitLab Kubernetes Agent"
+    - kubectl config get-contexts
+    - kubectl get nodes
+    - kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl set image deployment/assistente-juridico assistente-juridico=$IMAGE_TAG -n staging || echo "Deployment not found - will be created"
+    - kubectl rollout status deployment/assistente-juridico -n staging --timeout=5m || echo "Rollout status check skipped"
   environment:
     name: staging
     url: https://staging.$KUBE_INGRESS_BASE_DOMAIN
+    kubernetes:
+      namespace: staging
+      agent: thiagobodevan-a11y/assistente-juridico-p:agenterevisor
   needs:
     - build_app
   only:
@@ -124,18 +124,18 @@ deploy_production:
   script:
     - echo "Deploying to production environment"
     - echo "Tag $CI_COMMIT_TAG"
-    - echo "Cluster $KUBE_INGRESS_BASE_DOMAIN"
-    - |
-      if [ -f "$HOME/.kube/config" ]; then
-        kubectl config use-context minikube || echo "Context minikube not found"
-        kubectl set image deployment/assistente-juridico assistente-juridico=$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG -n production || echo "Deployment will be created manually"
-        kubectl rollout status deployment/assistente-juridico -n production || echo "Rollout status not available"
-      else
-        echo "Kubeconfig not found - configure kubectl first"
-      fi
+    - echo "Using GitLab Kubernetes Agent"
+    - kubectl config get-contexts
+    - kubectl get nodes
+    - kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl set image deployment/assistente-juridico assistente-juridico=$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG -n production || echo "Deployment not found - will be created"
+    - kubectl rollout status deployment/assistente-juridico -n production --timeout=5m || echo "Rollout status check skipped"
   environment:
     name: production
     url: https://$KUBE_INGRESS_BASE_DOMAIN
+    kubernetes:
+      namespace: production
+      agent: thiagobodevan-a11y/assistente-juridico-p:agenterevisor
   needs:
     - build_app
   only:

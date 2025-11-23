@@ -1,0 +1,24 @@
+# GitLab Agent Configuration
+# Documentação: https://docs.gitlab.com/ee/user/clusters/agent/
+
+ci_access:
+  projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+      default_namespace: default
+  groups:
+    - id: thiagobodevan-a11y
+
+user_access:
+  projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+      default_namespace: default
+  groups:
+    - id: thiagobodevan-a11y
+
+gitops:
+  manifest_projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+      default_namespace: default
+      paths:
+        - glob: 'k8s/**/*.yaml'
+        - glob: 'k8s/**/*.yml'
