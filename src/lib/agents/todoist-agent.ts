@@ -7,11 +7,28 @@
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import { TodoistApi, Task } from '@doist/todoist-api-typescript';
-import { getTodoistClient, addLegalTasks, updateLegalTask, completeLegalTask } from '../todoist-integration';
-import { config } from '../config';
+import { TodoistApi } from '@doist/todoist-api-typescript';
+import { getTodoistClient, updateLegalTask } from '../todoist-integration';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
+
+// Tipos para eventos do Todoist
+interface TodoistWebhookEvent {
+  event_name: string;
+  event_data: TodoistEventData;
+}
+
+interface TodoistEventData {
+  id: string;
+  content: string;
+  description?: string;
+  due?: {
+    date: string;
+    datetime?: string;
+  };
+  priority?: number;
+  item_id?: string; // Para comentários
+}
 
 // Interface para comandos interpretados pela IA
 interface InterpretedCommand {
@@ -43,7 +60,7 @@ export class TodoistAgent {
   /**
    * Processa um evento vindo do Webhook do Todoist
    */
-  async processWebhookEvent(event: any) {
+  async processWebhookEvent(event: TodoistWebhookEvent) {
     console.log('🤖 Agente Todoist processando evento:', event.event_name);
 
     switch (event.event_name) {
@@ -64,7 +81,7 @@ export class TodoistAgent {
   /**
    * Lida com atualizações de tarefas (ex: mudança de data)
    */
-  private async handleItemUpdated(item: any) {
+  private async handleItemUpdated(item: TodoistEventData) {
     // Se a data mudou, sincronizar com Google Calendar
     if (item.due) {
       console.log(`📅 Data da tarefa ${item.id} atualizada para ${item.due.date}`);
@@ -84,7 +101,7 @@ export class TodoistAgent {
   /**
    * Lida com conclusão de tarefas
    */
-  private async handleItemCompleted(item: any) {
+  private async handleItemCompleted(item: TodoistEventData) {
     console.log(`✅ Tarefa ${item.content} concluída!`);
     
     // Verificar se é uma tarefa de processo
@@ -104,14 +121,14 @@ export class TodoistAgent {
   /**
    * Lida com comentários (onde a mágica dos comandos acontece)
    */
-  private async handleCommentAdded(comment: any) {
+  private async handleCommentAdded(comment: TodoistEventData) {
     const text = comment.content;
     
     // Verificar se é um comando para o agente (ex: "@Harvey ...")
     if (text.toLowerCase().includes('@harvey') || text.toLowerCase().includes('urgente:')) {
       console.log(`🧠 Interpretando comando: "${text}"`);
       
-      const command = await this.interpretCommandWithAI(text, comment.item_id);
+      const command = await this.interpretCommandWithAI(text, comment.item_id || comment.id);
       await this.executeCommand(command);
     }
   }
