@@ -1,0 +1,190 @@
+# GitLab Auto DevOps - Pipeline Completo
+# Docs: https://docs.gitlab.com/ee/topics/autodevops/
+
+include:
+  - template: Auto-DevOps.gitlab-ci.yml
+
+variables:
+  # ═══════════════════════════════════════════════════════
+  # CONFIGURAÇÃO AUTO DEVOPS
+  # ═══════════════════════════════════════════════════════
+  
+  # Plataforma de deploy (obrigatório)
+  AUTO_DEVOPS_PLATFORM_TARGET: "KUBERNETES"
+  
+  # Domínio base (configurar no GitLab > Settings > CI/CD > Variables)
+  # Para Minikube: Use o IP do minikube com nip.io
+  # Exemplo: 192.168.49.2.nip.io
+  # Para GKE: Use seu domínio real
+  # Exemplo: assistente-juridico.com
+  KUBE_INGRESS_BASE_DOMAIN: "$KUBE_INGRESS_BASE_DOMAIN"
+  
+  # ═══════════════════════════════════════════════════════
+  # ESTRATÉGIA DE DEPLOYMENT
+  # ═══════════════════════════════════════════════════════
+  
+  # Habilitar staging (ambiente de teste antes da produção)
+  STAGING_ENABLED: "1"
+  
+  # Modo de rollout incremental
+  # Opções: "manual" ou "timed"
+  # - manual: Você aprova cada etapa
+  # - timed: Rollout automático em intervalos
+  INCREMENTAL_ROLLOUT_MODE: "manual"
+  
+  # Habilitar canary deployments (5% -> 25% -> 50% -> 100%)
+  # INCREMENTAL_ROLLOUT_ENABLED: "true"
+  
+  # ═══════════════════════════════════════════════════════
+  # SERVIÇOS (DESABILITAR OS NÃO USADOS)
+  # ═══════════════════════════════════════════════════════
+  
+  # PostgreSQL
+  POSTGRES_ENABLED: "false"
+  # POSTGRES_VERSION: "15"
+  # POSTGRES_USER: "$POSTGRES_USER"
+  # POSTGRES_PASSWORD: "$POSTGRES_PASSWORD"
+  # POSTGRES_DB: "assistente_juridico"
+  
+  # Redis
+  REDIS_ENABLED: "false"
+  
+  # ═══════════════════════════════════════════════════════
+  # CONTAINER REGISTRY
+  # ═══════════════════════════════════════════════════════
+  
+  # GitLab Container Registry (automático)
+  CI_REGISTRY: "registry.gitlab.com"
+  CI_REGISTRY_IMAGE: "registry.gitlab.com/$CI_PROJECT_PATH"
+  
+  # Ou usar Docker Hub / GCR / ECR
+  # CI_REGISTRY: "docker.io"
+  # CI_REGISTRY_IMAGE: "docker.io/username/assistente-juridico-p"
+  
+  # ═══════════════════════════════════════════════════════
+  # BUILD
+  # ═══════════════════════════════════════════════════════
+  
+  # Node.js version
+  NODE_ENV: "production"
+  
+  # Docker buildkit (build mais rápido)
+  DOCKER_BUILDKIT: "1"
+  
+  # ═══════════════════════════════════════════════════════
+  # SECURITY & TESTING
+  # ═══════════════════════════════════════════════════════
+  
+  # SAST (Static Application Security Testing)
+  SAST_DISABLED: "false"
+  
+  # Dependency Scanning
+  DEPENDENCY_SCANNING_DISABLED: "false"
+  
+  # Container Scanning
+  CONTAINER_SCANNING_DISABLED: "false"
+  
+  # DAST (Dynamic Application Security Testing)
+  DAST_DISABLED: "true"  # Desabilitado por padrão (requer app rodando)
+  
+  # License Scanning
+  LICENSE_MANAGEMENT_DISABLED: "false"
+  
+  # ═══════════════════════════════════════════════════════
+  # PERFORMANCE & MONITORING
+  # ═══════════════════════════════════════════════════════
+  
+  # Performance testing
+  PERFORMANCE_DISABLED: "true"
+  
+  # Browser Performance
+  BROWSER_PERFORMANCE_DISABLED: "true"
+  
+  # ═══════════════════════════════════════════════════════
+  # REVIEW APPS
+  # ═══════════════════════════════════════════════════════
+  
+  # Habilitar Review Apps (ambientes temporários por MR)
+  REVIEW_DISABLED: "false"
+  
+  # Tempo de vida das Review Apps (7 dias)
+  REVIEW_APP_TTL: "168h"
+
+# ═══════════════════════════════════════════════════════
+# STAGES (Ordem de execução)
+# ═══════════════════════════════════════════════════════
+
+stages:
+  - build
+  - test
+  - deploy
+  - review
+  - dast
+  - staging
+  - canary
+  - production
+  - incremental rollout 10%
+  - incremental rollout 25%
+  - incremental rollout 50%
+  - incremental rollout 100%
+  - performance
+  - cleanup
+
+# ═══════════════════════════════════════════════════════
+# CUSTOMIZAÇÕES (Opcional)
+# ═══════════════════════════════════════════════════════
+
+# Você pode sobrescrever jobs do Auto DevOps aqui
+
+# Exemplo: Build customizado
+# build:
+#   extends: .auto-devops-build
+#   script:
+#     - npm ci
+#     - npm run build
+#     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+#     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+# Exemplo: Testes customizados
+# test:
+#   extends: .auto-devops-test
+#   script:
+#     - npm ci
+#     - npm test -- --coverage
+
+# Exemplo: Deploy customizado para produção
+# production:
+#   extends: .auto-devops-deploy-production
+#   before_script:
+#     - echo "Preparando deploy para produção..."
+#   after_script:
+#     - echo "Deploy concluído! Notificando equipe..."
+
+# ═══════════════════════════════════════════════════════
+# KUBERNETES CUSTOMIZATION
+# ═══════════════════════════════════════════════════════
+
+# Se você precisa customizar os manifestos K8s gerados automaticamente,
+# crie um arquivo: .gitlab/auto-deploy-values.yaml
+# 
+# Exemplo de customizações:
+# - Limites de recursos
+# - Variáveis de ambiente
+# - Secrets
+# - Health checks
+# - Ingress annotations
+
+# ═══════════════════════════════════════════════════════
+# NOTIFICAÇÕES (Opcional)
+# ═══════════════════════════════════════════════════════
+
+# Notificar sucesso/falha
+# .post:success:
+#   script:
+#     - echo "Pipeline succeeded! 🎉"
+#     # Adicione integração com Slack, Discord, etc.
+
+# .post:failure:
+#   script:
+#     - echo "Pipeline failed! ❌"
+#     # Notificar equipe sobre falha
