@@ -1,254 +1,69 @@
-# GitLab CI/CD Pipeline
-# Kubernetes deployment ready
-
-variables:
-  # ═══════════════════════════════════════════════════════
-  # CONFIGURAÇÃO AUTO DEVOPS
-  # ═══════════════════════════════════════════════════════
-  
-  # Plataforma de deploy (obrigatório)
-  AUTO_DEVOPS_PLATFORM_TARGET: "KUBERNETES"
-  
-  # Domínio base (configurar no GitLab > Settings > CI/CD > Variables)
-  # Para Minikube: Use o IP do minikube com nip.io
-  # Exemplo: 192.168.49.2.nip.io
-  # Para GKE: Use seu domínio real
-  # Exemplo: assistente-juridico.com
-  KUBE_INGRESS_BASE_DOMAIN: "$KUBE_INGRESS_BASE_DOMAIN"
-  
-  # ═══════════════════════════════════════════════════════
-  # ESTRATÉGIA DE DEPLOYMENT
-  # ═══════════════════════════════════════════════════════
-  
-  # Habilitar staging (ambiente de teste antes da produção)
-  STAGING_ENABLED: "1"
-  
-  # Modo de rollout incremental
-  # Opções: "manual" ou "timed"
-  # - manual: Você aprova cada etapa
-  # - timed: Rollout automático em intervalos
-  INCREMENTAL_ROLLOUT_MODE: "manual"
-  
-  # Habilitar canary deployments (5% -> 25% -> 50% -> 100%)
-  # INCREMENTAL_ROLLOUT_ENABLED: "true"
-  
-  # ═══════════════════════════════════════════════════════
-  # SERVIÇOS (DESABILITAR OS NÃO USADOS)
-  # ═══════════════════════════════════════════════════════
-  
-  # PostgreSQL
-  POSTGRES_ENABLED: "false"
-  # POSTGRES_VERSION: "15"
-  # POSTGRES_USER: "$POSTGRES_USER"
-  # POSTGRES_PASSWORD: "$POSTGRES_PASSWORD"
-  # POSTGRES_DB: "assistente_juridico"
-  
-  # Redis
-  REDIS_ENABLED: "false"
-  
-  # ═══════════════════════════════════════════════════════
-  # CONTAINER REGISTRY
-  # ═══════════════════════════════════════════════════════
-  
-  # GitLab Container Registry (automático)
-  CI_REGISTRY: "registry.gitlab.com"
-  CI_REGISTRY_IMAGE: "registry.gitlab.com/$CI_PROJECT_PATH"
-  
-  # Ou usar Docker Hub / GCR / ECR
-  # CI_REGISTRY: "docker.io"
-  # CI_REGISTRY_IMAGE: "docker.io/username/assistente-juridico-p"
-  
-  # ═══════════════════════════════════════════════════════
-  # BUILD
-  # ═══════════════════════════════════════════════════════
-  
-  # Node.js version
-  NODE_ENV: "production"
-  
-  # Docker buildkit (build mais rápido)
-  DOCKER_BUILDKIT: "1"
-  
-  # ═══════════════════════════════════════════════════════
-  # SECURITY & TESTING
-  # ═══════════════════════════════════════════════════════
-  
-  # SAST (Static Application Security Testing)
-  SAST_DISABLED: "false"
-  
-  # Dependency Scanning
-  DEPENDENCY_SCANNING_DISABLED: "false"
-  
-  # Container Scanning
-  CONTAINER_SCANNING_DISABLED: "false"
-  
-  # DAST (Dynamic Application Security Testing)
-  DAST_DISABLED: "true"  # Desabilitado por padrão (requer app rodando)
-  
-  # License Scanning
-  LICENSE_MANAGEMENT_DISABLED: "false"
-  
-  # ═══════════════════════════════════════════════════════
-  # PERFORMANCE & MONITORING
-  # ═══════════════════════════════════════════════════════
-  
-  # Performance testing
-  PERFORMANCE_DISABLED: "true"
-  
-  # Browser Performance
-  BROWSER_PERFORMANCE_DISABLED: "true"
-  
-  # ═══════════════════════════════════════════════════════
-  # REVIEW APPS
-  # ═══════════════════════════════════════════════════════
-  
-  # Habilitar Review Apps (ambientes temporários por MR)
-  REVIEW_DISABLED: "false"
-  
-  # Tempo de vida das Review Apps (7 dias)
-  REVIEW_APP_TTL: "168h"
-
-# ═══════════════════════════════════════════════════════
-# STAGES (Ordem de execução)
-# ═══════════════════════════════════════════════════════
+# GitLab CI/CD Pipeline - Kubernetes Ready
+# Versão simplificada e funcional
 
 stages:
   - build
   - test
   - deploy
-  - review
-  - dast
-  - staging
-  - canary
-  - production
-  - incremental rollout 10%
-  - incremental rollout 25%
-  - incremental rollout 50%
-  - incremental rollout 100%
-  - performance
-  - cleanup
 
-# ═══════════════════════════════════════════════════════
-# CUSTOMIZAÇÕES (Opcional)
-# ═══════════════════════════════════════════════════════
+variables:
+  NODE_ENV: "production"
+  KUBE_INGRESS_BASE_DOMAIN: "$KUBE_INGRESS_BASE_DOMAIN"
 
-# Você pode sobrescrever jobs do Auto DevOps aqui
+# Cache global para acelerar builds
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .npm/
 
-# Exemplo: Build customizado
-# build:
-#   extends: .auto-devops-build
-#   script:
-#     - npm ci
-#     - npm run build
-#     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
-#     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-
-# Exemplo: Testes customizados
-# test:
-#   extends: .auto-devops-test
-#   script:
-#     - npm ci
-#     - npm test -- --coverage
-
-# Exemplo: Deploy customizado para produção
-# production:
-#   extends: .auto-devops-deploy-production
-#   before_script:
-#     - echo "Preparando deploy para produção..."
-#   after_script:
-#     - echo "Deploy concluído! Notificando equipe..."
-
-# ═══════════════════════════════════════════════════════
-# KUBERNETES CUSTOMIZATION
-# ═══════════════════════════════════════════════════════
-
-# Se você precisa customizar os manifestos K8s gerados automaticamente,
-# crie um arquivo: .gitlab/auto-deploy-values.yaml
-# 
-# Exemplo de customizações:
-# - Limites de recursos
-# - Variáveis de ambiente
-# - Secrets
-# - Health checks
-# - Ingress annotations
-
-# ═══════════════════════════════════════════════════════
-# JOBS CUSTOMIZADOS
-# ═══════════════════════════════════════════════════════
-
-# Build e testes
+# Build da aplicação
 build_app:
   stage: build
   image: node:22-alpine
   script:
-    - echo "📦 Installing dependencies..."
     - npm ci --prefer-offline --no-audit
-    - echo "🔨 Building application..."
     - npm run build
-    - echo "✅ Build completed successfully"
   artifacts:
     paths:
       - dist/
     expire_in: 1 hour
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - node_modules/
-      - .npm/
   only:
     - main
     - merge_requests
 
+# Testes
 test_app:
   stage: test
   image: node:22-alpine
   script:
-    - echo "📦 Installing dependencies..."
     - npm ci --prefer-offline --no-audit
-    - echo "🧪 Running tests..."
-    - npm run test -- --run --reporter=verbose || echo "⚠️  Tests skipped or not configured"
-    - echo "🔍 Running linter..."
-    - npm run lint || echo "⚠️  Linting completed with warnings"
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - node_modules/
-      - .npm/
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
-  artifacts:
-    when: always
-    paths:
-      - coverage/
-    expire_in: 7 days
+    - npm run test -- --run --reporter=verbose || echo "Tests not configured yet"
+    - npm run lint || echo "Linting with warnings"
   allow_failure: true
   only:
     - main
     - merge_requests
 
+# Security scan
 security_scan:
   stage: test
   image: node:22-alpine
   script:
-    - echo "🔒 Running security audit..."
     - npm ci --prefer-offline --no-audit
-    - npm audit --audit-level=moderate || echo "⚠️  Vulnerabilities found (non-blocking)"
-    - echo "✅ Security scan completed"
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - node_modules/
-      - .npm/
+    - npm audit --audit-level=moderate || echo "Vulnerabilities found (non-blocking)"
   allow_failure: true
   only:
     - main
     - merge_requests
 
+# Deploy Staging
 deploy_staging:
-  stage: staging
+  stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - echo "Deploying to STAGING environment"
-    - echo "Kubernetes cluster configured"
-    - echo "Deployment completed successfully"
+    - echo "Deploying to staging"
+    - echo "Cluster $KUBE_INGRESS_BASE_DOMAIN"
   environment:
     name: staging
     url: https://staging.$KUBE_INGRESS_BASE_DOMAIN
@@ -258,14 +73,13 @@ deploy_staging:
     - main
   when: manual
 
+# Deploy Production
 deploy_production:
-  stage: production
+  stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - echo "Deploying to PRODUCTION environment"
-    - echo "Kubernetes cluster configured"
+    - echo "Deploying to production"
     - echo "Tag $CI_COMMIT_TAG"
-    - echo "Deployment completed successfully"
   environment:
     name: production
     url: https://$KUBE_INGRESS_BASE_DOMAIN
@@ -275,37 +89,15 @@ deploy_production:
     - tags
   when: manual
 
-# ═══════════════════════════════════════════════════════
-# NOTIFICAÇÕES
-# ═══════════════════════════════════════════════════════
-
-notify_success:
-  stage: .post
+# Notificações
+.post:success:
   image: alpine:latest
   script:
-    - |
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-      echo "✅ PIPELINE SUCCEEDED!"
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-      echo "📊 Pipeline: $CI_PIPELINE_URL"
-      echo "🔀 Branch: $CI_COMMIT_REF_NAME"
-      echo "📝 Commit: $CI_COMMIT_SHORT_SHA"
-      echo "👤 Author: $CI_COMMIT_AUTHOR"
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  when: on_success
+    - echo "Pipeline succeeded!"
+    - echo "Pipeline $CI_PIPELINE_URL"
 
-notify_failure:
-  stage: .post
+.post:failure:
   image: alpine:latest
   script:
-    - |
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-      echo "❌ PIPELINE FAILED!"
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-      echo "📊 Pipeline: $CI_PIPELINE_URL"
-      echo "🔀 Branch: $CI_COMMIT_REF_NAME"
-      echo "📝 Commit: $CI_COMMIT_SHORT_SHA"
-      echo "👤 Author: $CI_COMMIT_AUTHOR"
-      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-      echo "🔧 Check the logs above for details"
-  when: on_failure
+    - echo "Pipeline failed!"
+    - echo "Check $CI_PIPELINE_URL"
