@@ -2,7 +2,6 @@
 // DSN: https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042
 
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 
 /**
  * Initialize Sentry for Error Tracking
@@ -27,8 +26,7 @@ export function initErrorTracking() {
     
     // Integrations
     integrations: [
-      new BrowserTracing(),
-      new Sentry.Replay({
+      Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),
@@ -145,14 +143,27 @@ export function captureApiError(
 }
 
 /**
- * Start performance monitoring transaction
+ * Legacy function for backwards compatibility
+ * 
+ * @deprecated This function is deprecated and should not be used.
+ * Use Sentry.startSpan() directly instead:
+ * 
+ * @example
+ * ```ts
+ * await Sentry.startSpan({ name: 'myOperation', op: 'task' }, async (span) => {
+ *   // Your async operation here
+ *   return result;
+ * });
+ * ```
+ * 
+ * @throws {Error} Always throws an error to prevent silent failures
  */
-export function startTransaction(name: string, op: string = "http.request") {
-  return Sentry.startTransaction?.({
-    name,
-    op,
-    sampled: import.meta.env.MODE === "production" ? Math.random() < 0.1 : true,
-  }) || null;
+export function startTransaction(_name: string, _op: string = "http.request"): never {
+  throw new Error(
+    'startTransaction is deprecated in Sentry v10+. ' +
+    'Use Sentry.startSpan() directly. ' +
+    'See: https://docs.sentry.io/platforms/javascript/guides/react/performance/'
+  );
 }
 
 /**

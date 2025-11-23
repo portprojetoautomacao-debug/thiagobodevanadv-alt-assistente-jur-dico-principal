@@ -8,7 +8,6 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { addTaskToQueue } from '../lib/api/kv-utils';
 
 // Types duplicated from src/lib/agents.ts for serverless compatibility
 interface AgentTask {

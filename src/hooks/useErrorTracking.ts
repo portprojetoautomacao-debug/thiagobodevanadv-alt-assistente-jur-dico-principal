@@ -53,24 +53,25 @@ export function useErrorHandler(componentName: string) {
 }
 
 /**
- * Hook para rastrear performance de funções assíncronas
+ * Hook para rastrear performance de funções assíncronas (Sentry v10+)
  */
 export function useAsyncTracking(functionName: string) {
   return async <T,>(fn: () => Promise<T>): Promise<T> => {
-    const transaction = Sentry.startTransaction({
-      name: functionName,
-      op: 'async_operation',
-    });
-
-    try {
-      const result = await fn();
-      transaction?.finish();
-      return result;
-    } catch (error) {
-      transaction?.setStatus('error');
-      transaction?.finish();
-      throw error;
-    }
+    return await Sentry.startSpan(
+      {
+        name: functionName,
+        op: 'async_operation',
+      },
+      async () => {
+        try {
+          const result = await fn();
+          return result;
+        } catch (error) {
+          Sentry.captureException(error);
+          throw error;
+        }
+      }
+    );
   };
 }
 
