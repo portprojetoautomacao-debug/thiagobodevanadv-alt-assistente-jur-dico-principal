@@ -6,8 +6,6 @@
  */
 
 import type { Plugin } from 'vite'
-import fs from 'fs'
-import path from 'path'
 
 export function phosphorIconOptimizer(): Plugin {
   const usedIcons = new Set<string>()

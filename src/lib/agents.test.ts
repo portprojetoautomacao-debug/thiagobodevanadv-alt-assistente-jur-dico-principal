@@ -2,7 +2,7 @@
  * Tests for AI Agents system
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
   type Agent,
   type AgentTask,
@@ -10,8 +10,7 @@ import {
   shouldPauseForHuman,
   canResumeAfterHuman,
   createTaskGenerator,
-  initializeAgents,
-  DEFAULT_AGENTS
+  initializeAgents
 } from './agents'
 
 describe('AI Agents System', () => {
