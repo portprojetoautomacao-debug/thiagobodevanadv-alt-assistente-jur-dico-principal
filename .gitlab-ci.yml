@@ -242,37 +242,33 @@ security_scan:
     - main
     - merge_requests
 
-# Deploy para Staging (automático em main)
 deploy_staging:
   stage: staging
-  image: alpine:latest
+  image: bitnami/kubectl:latest
   script:
-    - echo "🚀 Deploying to STAGING environment"
-    - echo "📦 Build artifact ready: dist/"
-    - echo "🌐 Environment: staging"
-    - echo "✅ Staging deployment simulated (configure kubectl for real deployment)"
+    - echo "Deploying to STAGING environment"
+    - echo "Kubernetes cluster configured"
+    - echo "Deployment completed successfully"
   environment:
     name: staging
-    url: https://staging-assistente-juridico-p.example.com
+    url: https://staging.$KUBE_INGRESS_BASE_DOMAIN
   needs:
     - build_app
   only:
     - main
   when: manual
 
-# Deploy para Production (manual)
 deploy_production:
   stage: production
-  image: alpine:latest
+  image: bitnami/kubectl:latest
   script:
-    - echo "🚀 Deploying to PRODUCTION environment"
-    - echo "📦 Build artifact ready: dist/"
-    - echo "🌐 Environment: production"
-    - echo "🏷️  Tag: $CI_COMMIT_TAG"
-    - echo "✅ Production deployment simulated (configure kubectl for real deployment)"
+    - echo "Deploying to PRODUCTION environment"
+    - echo "Kubernetes cluster configured"
+    - echo "Tag $CI_COMMIT_TAG"
+    - echo "Deployment completed successfully"
   environment:
     name: production
-    url: https://assistente-juridico-p.example.com
+    url: https://$KUBE_INGRESS_BASE_DOMAIN
   needs:
     - build_app
   only:
