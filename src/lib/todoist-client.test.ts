@@ -27,8 +27,23 @@ const mocks = vi.hoisted(() => ({
   deleteTask: vi.fn(),
 }));
 
-// Mock do TodoistApi
+// Mock do TodoistApi da biblioteca real
 vi.mock('@doist/todoist-api-typescript', () => {
+  return {
+    TodoistApi: class {
+      addTask = mocks.addTask;
+      getTasks = mocks.getTasks;
+      getProjects = mocks.getProjects;
+      addProject = mocks.addProject;
+      closeTask = mocks.closeTask;
+      updateTask = mocks.updateTask;
+      deleteTask = mocks.deleteTask;
+    },
+  };
+});
+
+// Also mock o stub que é usado como fallback
+vi.mock('./todoist-stub', () => {
   return {
     TodoistApi: class {
       addTask = mocks.addTask;
@@ -236,11 +251,12 @@ describe('TodoistClient', () => {
 
   describe('Tratamento de Erros', () => {
     it('deve propagar erro ao adicionar tarefa', async () => {
-      mocks.addTask.mockRejectedValue(new Error('API Error'));
+      const testError = new Error('API Error');
+      mocks.addTask.mockRejectedValue(testError);
 
       await expect(
         client.addTask({ content: 'Tarefa' })
-      ).rejects.toThrow('API Error');
+      ).rejects.toThrow(testError);
     });
   });
 });
