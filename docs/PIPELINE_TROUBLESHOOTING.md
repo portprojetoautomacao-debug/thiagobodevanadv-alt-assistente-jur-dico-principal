@@ -186,3 +186,10 @@ Você saberá que está tudo bem quando:
 - ✅ Pods aparecem em: `kubectl get pods -n staging`
 
 **Status atual:** Revise o novo pipeline #2174681927 e superiores
+````
+This is the code block that represents the suggested code change:
+```markdown
+main → build_app → test_app → docker_build (manual) → deploy_staging (manual)
+              ↓
+        security_scan (non-blocking)
+```

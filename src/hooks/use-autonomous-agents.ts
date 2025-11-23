@@ -5,6 +5,36 @@ import {
   isRealAgentsEnabled 
 } from '@/lib/real-agent-client'
 
+// Types from lib/ai/agents-registry.ts
+type AgentTask = {
+  id: string
+  agentId: string
+  type: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  status: 'queued' | 'processing' | 'completed' | 'failed'
+  createdAt: string
+  data: Record<string, unknown>
+  result?: Record<string, unknown>
+}
+
+type Agent = {
+  id: string
+  name: string
+  description: string
+  type: string
+  status: 'active' | 'idle' | 'processing'
+  enabled: boolean
+  lastActivity: string
+  tasksCompleted: number
+  tasksToday: number
+  continuousMode: boolean
+}
+
+function getAgentActivity(agent: Agent): string {
+  if (agent.status === 'processing') return 'Processando tarefa...'
+  if (agent.status === 'idle' && agent.tasksToday > 0) return `${agent.tasksToday} tarefas concluídas hoje`
+  return 'Aguardando tarefas'
+}
 
 export function useAutonomousAgents() {
   const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', [])
@@ -181,10 +211,9 @@ export function useAutonomousAgents() {
             return { ...agent, lastActivity: activity }
           }
 
-            return agent
-          })
-        )
-      }
+          return agent
+        })
+      )
     }, 5000) // Increased interval from 3s to 5s
 
     return () => clearInterval(interval)
