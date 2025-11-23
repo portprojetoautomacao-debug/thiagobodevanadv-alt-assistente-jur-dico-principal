@@ -9,9 +9,9 @@ import {
   Lightning,
   ChartLine,
   Timer,
-  Activity,
-  Zap,
-  RefreshCw
+  Pulse,
+  LightningSlash,
+  ArrowsClockwise
 } from '@phosphor-icons/react'
 import { useState, useEffect } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
@@ -100,7 +100,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-blue-600" weight="fill" />
+                  <LightningSlash className="w-5 h-5 text-blue-600" weight="fill" />
                   Circuit Breakers (Arquitetura V2)
                 </CardTitle>
                 <CardDescription>
@@ -120,7 +120,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
                 <div className="text-xs text-muted-foreground">Saudáveis</div>
               </div>
               <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                <Activity className="w-6 h-6 text-yellow-600 mx-auto mb-1" weight="fill" />
+                <Pulse className="w-6 h-6 text-yellow-600 mx-auto mb-1" weight="fill" />
                 <div className="text-2xl font-bold text-yellow-600">{circuitBreakers.summary.degraded}</div>
                 <div className="text-xs text-muted-foreground">Degradadas</div>
               </div>
