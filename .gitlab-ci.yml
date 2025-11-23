@@ -30,7 +30,7 @@ build_app:
   image: node:22-alpine
   script:
     - npm ci --prefer-offline --no-audit
-    - npm run build
+    - npm run build 2>&1 || { echo "Build failed"; exit 1; }
   artifacts:
     paths:
       - dist/
@@ -38,6 +38,9 @@ build_app:
   only:
     - main
     - merge_requests
+  retry:
+    max: 2
+    when: runner_system_failure
 
 # Testes com Coverage
 test_app:
@@ -61,6 +64,9 @@ test_app:
   only:
     - main
     - merge_requests
+  retry:
+    max: 2
+    when: runner_system_failure
 
 # Security scan
 security_scan:
@@ -73,6 +79,9 @@ security_scan:
   only:
     - main
     - merge_requests
+  retry:
+    max: 2
+    when: runner_system_failure
 
 # Build Docker Image
 docker_build:
@@ -93,6 +102,9 @@ docker_build:
     - main
     - tags
   when: manual
+  retry:
+    max: 2
+    when: runner_system_failure
 
 # Deploy Staging com Kubernetes
 deploy_staging:
