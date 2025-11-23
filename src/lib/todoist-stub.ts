@@ -20,27 +20,31 @@ export class TodoistApi {
     console.warn('[Todoist Stub] TodoistApi should only be used server-side. Use API routes from the client.');
   }
 
-  getTasks() {
+  getTasks(_args?: { projectId?: string; label?: string }): Promise<Task[]> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
-  getProjects() {
+  getProjects(): Promise<Project[]> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
-  addTask() {
+  addTask(_args: { content: string; description?: string; projectId?: string; dueString?: string; priority?: number; labels?: string[] }): Promise<Task> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
-  updateTask() {
+  updateTask(_id: string, _args: { content?: string; description?: string; dueString?: string; priority?: number; labels?: string[] }): Promise<Task> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
-  closeTask() {
+  closeTask(_id: string): Promise<boolean> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
-  deleteTask() {
+  deleteTask(_id: string): Promise<boolean> {
+    throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
+  }
+
+  addProject(_args: { name: string; color?: string }): Promise<Project> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 }
