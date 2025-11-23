@@ -1,0 +1,8 @@
+ci_access:
+  projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+user_access:
+  access_as:
+    agent: {}
+  projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
