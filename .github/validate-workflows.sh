@@ -2,6 +2,9 @@
 
 # Script de validação dos workflows GitHub Actions
 # Verifica sintaxe, práticas recomendadas e configurações
+#
+# Uso: bash .github/validate-workflows.sh
+#      ou chmod +x .github/validate-workflows.sh && .github/validate-workflows.sh
 
 set -e
 
