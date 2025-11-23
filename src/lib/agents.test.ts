@@ -2,7 +2,7 @@
  * Tests for AI Agents system
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
   type Agent,
   type AgentTask,
