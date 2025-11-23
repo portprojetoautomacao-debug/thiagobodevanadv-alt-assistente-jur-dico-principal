@@ -52,7 +52,7 @@ jobs:
         path: |
           dist
           .vite
-        key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**', 'vite.config.ts', 'package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*', 'vite.config.ts', 'package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-build-${{ matrix.node-version }}-
           ${{ runner.os }}-build-
