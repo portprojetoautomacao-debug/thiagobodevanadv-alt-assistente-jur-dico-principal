@@ -1,166 +1,190 @@
-image: node:22
+# GitLab Auto DevOps - Pipeline Completo
+# Docs: https://docs.gitlab.com/ee/topics/autodevops/
 
-# Variáveis globais
+include:
+  - template: Auto-DevOps.gitlab-ci.yml
+
 variables:
+  # ═══════════════════════════════════════════════════════
+  # CONFIGURAÇÃO AUTO DEVOPS
+  # ═══════════════════════════════════════════════════════
+  
+  # Plataforma de deploy (obrigatório)
+  AUTO_DEVOPS_PLATFORM_TARGET: "KUBERNETES"
+  
+  # Domínio base (configurar no GitLab > Settings > CI/CD > Variables)
+  # Para Minikube: Use o IP do minikube com nip.io
+  # Exemplo: 192.168.49.2.nip.io
+  # Para GKE: Use seu domínio real
+  # Exemplo: assistente-juridico.com
+  KUBE_INGRESS_BASE_DOMAIN: "$KUBE_INGRESS_BASE_DOMAIN"
+  
+  # ═══════════════════════════════════════════════════════
+  # ESTRATÉGIA DE DEPLOYMENT
+  # ═══════════════════════════════════════════════════════
+  
+  # Habilitar staging (ambiente de teste antes da produção)
+  STAGING_ENABLED: "1"
+  
+  # Modo de rollout incremental
+  # Opções: "manual" ou "timed"
+  # - manual: Você aprova cada etapa
+  # - timed: Rollout automático em intervalos
+  INCREMENTAL_ROLLOUT_MODE: "manual"
+  
+  # Habilitar canary deployments (5% -> 25% -> 50% -> 100%)
+  # INCREMENTAL_ROLLOUT_ENABLED: "true"
+  
+  # ═══════════════════════════════════════════════════════
+  # SERVIÇOS (DESABILITAR OS NÃO USADOS)
+  # ═══════════════════════════════════════════════════════
+  
+  # PostgreSQL
+  POSTGRES_ENABLED: "false"
+  # POSTGRES_VERSION: "15"
+  # POSTGRES_USER: "$POSTGRES_USER"
+  # POSTGRES_PASSWORD: "$POSTGRES_PASSWORD"
+  # POSTGRES_DB: "assistente_juridico"
+  
+  # Redis
+  REDIS_ENABLED: "false"
+  
+  # ═══════════════════════════════════════════════════════
+  # CONTAINER REGISTRY
+  # ═══════════════════════════════════════════════════════
+  
+  # GitLab Container Registry (automático)
+  CI_REGISTRY: "registry.gitlab.com"
+  CI_REGISTRY_IMAGE: "registry.gitlab.com/$CI_PROJECT_PATH"
+  
+  # Ou usar Docker Hub / GCR / ECR
+  # CI_REGISTRY: "docker.io"
+  # CI_REGISTRY_IMAGE: "docker.io/username/assistente-juridico-p"
+  
+  # ═══════════════════════════════════════════════════════
+  # BUILD
+  # ═══════════════════════════════════════════════════════
+  
+  # Node.js version
   NODE_ENV: "production"
-  FF_USE_FASTZIP: "true"
-  CACHE_COMPRESSION_LEVEL: "fast"
-  GIT_DEPTH: 10
-  # Desabilitar LFS para evitar erros 404
-  GIT_LFS_SKIP_SMUDGE: "1"
-  # Estratégia de clone otimizada
-  GIT_STRATEGY: fetch
-  GIT_SUBMODULE_STRATEGY: none
+  
+  # Docker buildkit (build mais rápido)
+  DOCKER_BUILDKIT: "1"
+  
+  # ═══════════════════════════════════════════════════════
+  # SECURITY & TESTING
+  # ═══════════════════════════════════════════════════════
+  
+  # SAST (Static Application Security Testing)
+  SAST_DISABLED: "false"
+  
+  # Dependency Scanning
+  DEPENDENCY_SCANNING_DISABLED: "false"
+  
+  # Container Scanning
+  CONTAINER_SCANNING_DISABLED: "false"
+  
+  # DAST (Dynamic Application Security Testing)
+  DAST_DISABLED: "true"  # Desabilitado por padrão (requer app rodando)
+  
+  # License Scanning
+  LICENSE_MANAGEMENT_DISABLED: "false"
+  
+  # ═══════════════════════════════════════════════════════
+  # PERFORMANCE & MONITORING
+  # ═══════════════════════════════════════════════════════
+  
+  # Performance testing
+  PERFORMANCE_DISABLED: "true"
+  
+  # Browser Performance
+  BROWSER_PERFORMANCE_DISABLED: "true"
+  
+  # ═══════════════════════════════════════════════════════
+  # REVIEW APPS
+  # ═══════════════════════════════════════════════════════
+  
+  # Habilitar Review Apps (ambientes temporários por MR)
+  REVIEW_DISABLED: "false"
+  
+  # Tempo de vida das Review Apps (7 dias)
+  REVIEW_APP_TTL: "168h"
 
-# Cache otimizado
-cache:
-  key: 
-    files:
-      - package-lock.json
-  paths:
-    - node_modules/
-    - .npm/
-  policy: pull
+# ═══════════════════════════════════════════════════════
+# STAGES (Ordem de execução)
+# ═══════════════════════════════════════════════════════
 
 stages:
-  - install
-  - test
-  - security
   - build
+  - test
   - deploy
+  - review
+  - dast
+  - staging
+  - canary
+  - production
+  - incremental rollout 10%
+  - incremental rollout 25%
+  - incremental rollout 50%
+  - incremental rollout 100%
+  - performance
+  - cleanup
 
-# Template para jobs de teste
-.test_template: &test_template
-  stage: test
-  dependencies:
-    - install_deps
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
+# ═══════════════════════════════════════════════════════
+# CUSTOMIZAÇÕES (Opcional)
+# ═══════════════════════════════════════════════════════
 
-# Install dependencies
-install_deps:
-  stage: install
-  cache:
-    key: 
-      files:
-        - package-lock.json
-    paths:
-      - node_modules/
-      - .npm/
-    policy: pull-push
-  script:
-    - npm ci --cache .npm --prefer-offline
-  artifacts:
-    paths:
-      - node_modules/
-    expire_in: 1 hour
-    when: on_success
+# Você pode sobrescrever jobs do Auto DevOps aqui
 
-# Lint code
-lint:
-  <<: *test_template
-  script:
-    - npm run lint
-  allow_failure: true  # Permitir falha temporariamente
+# Exemplo: Build customizado
+# build:
+#   extends: .auto-devops-build
+#   script:
+#     - npm ci
+#     - npm run build
+#     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+#     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
 
-# Run unit tests
-unit_tests:
-  <<: *test_template
-  script:
-    - npm test -- --run --coverage
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura-coverage.xml
-    paths:
-      - coverage/
-    expire_in: 7 days
-  allow_failure: true  # Permitir falha temporariamente
+# Exemplo: Testes customizados
+# test:
+#   extends: .auto-devops-test
+#   script:
+#     - npm ci
+#     - npm test -- --coverage
 
-# Security scan
-security_scan:
-  stage: security
-  dependencies:
-    - install_deps
-  script:
-    - npm audit --production --audit-level=moderate
-  allow_failure: true
-  only:
-    - main
-    - merge_requests
+# Exemplo: Deploy customizado para produção
+# production:
+#   extends: .auto-devops-deploy-production
+#   before_script:
+#     - echo "Preparando deploy para produção..."
+#   after_script:
+#     - echo "Deploy concluído! Notificando equipe..."
 
-# Dependency check
-dependency_check:
-  stage: security
-  dependencies:
-    - install_deps
-  script:
-    - npx license-checker --summary
-  allow_failure: true
+# ═══════════════════════════════════════════════════════
+# KUBERNETES CUSTOMIZATION
+# ═══════════════════════════════════════════════════════
 
-# Build the application
-build:
-  stage: build
-  dependencies:
-    - install_deps
-  script:
-    - npm run build
-  artifacts:
-    paths:
-      - dist/
-    expire_in: 1 day
-    when: on_success
-  only:
-    - main
-    - merge_requests
+# Se você precisa customizar os manifestos K8s gerados automaticamente,
+# crie um arquivo: .gitlab/auto-deploy-values.yaml
+# 
+# Exemplo de customizações:
+# - Limites de recursos
+# - Variáveis de ambiente
+# - Secrets
+# - Health checks
+# - Ingress annotations
 
-# Deploy to staging (preview)
-deploy_preview:
-  stage: deploy
-  dependencies:
-    - build
-  script:
-    - echo "Deploying to preview environment..."
-    - echo "Preview URL would be generated here"
-  environment:
-    name: preview/$CI_COMMIT_REF_NAME
-    url: https://preview-$CI_COMMIT_REF_SLUG.assistente-juridico-p.vercel.app
-    on_stop: stop_preview
-    auto_stop_in: 1 day
-  only:
-    - merge_requests
+# ═══════════════════════════════════════════════════════
+# NOTIFICAÇÕES (Opcional)
+# ═══════════════════════════════════════════════════════
 
-# Stop preview environment
-stop_preview:
-  stage: deploy
-  script:
-    - echo "Stopping preview environment..."
-  environment:
-    name: preview/$CI_COMMIT_REF_NAME
-    action: stop
-  when: manual
-  only:
-    - merge_requests
+# Notificar sucesso/falha
+# .post:success:
+#   script:
+#     - echo "Pipeline succeeded! 🎉"
+#     # Adicione integração com Slack, Discord, etc.
 
-# Deploy to production
-deploy_production:
-  stage: deploy
-  dependencies:
-    - build
-  script:
-    - echo "Deploying to production..."
-    - echo "✅ Build artifacts ready in dist/"
-    - echo "📦 Total files:" && ls -1 dist/ | wc -l
-    - echo "💾 Build size:" && du -sh dist/
-  environment:
-    name: production
-    url: https://assistente-juridico-p.vercel.app
-  only:
-    - main
-  when: on_success  # Deploy automático quando tudo passar
-  allow_failure: false
+# .post:failure:
+#   script:
+#     - echo "Pipeline failed! ❌"
+#     # Notificar equipe sobre falha
