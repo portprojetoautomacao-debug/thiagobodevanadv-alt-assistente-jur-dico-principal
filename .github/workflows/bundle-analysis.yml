@@ -62,7 +62,8 @@ jobs:
         for file in dist/assets/*.js; do
           if [ -f "$file" ]; then
             FILENAME=$(basename "$file")
-            SIZE=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+            # Use wc -c for portability across BSD and GNU systems
+            SIZE=$(wc -c < "$file" 2>/dev/null || echo 0)
             GZIP_SIZE=$(gzip -c "$file" | wc -c)
             SIZE_KB=$(echo "scale=2; $SIZE / 1024" | bc)
             GZIP_KB=$(echo "scale=2; $GZIP_SIZE / 1024" | bc)
@@ -88,7 +89,8 @@ jobs:
         for file in dist/assets/*.css; do
           if [ -f "$file" ]; then
             FILENAME=$(basename "$file")
-            SIZE=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+            # Use wc -c for portability across BSD and GNU systems
+            SIZE=$(wc -c < "$file" 2>/dev/null || echo 0)
             GZIP_SIZE=$(gzip -c "$file" | wc -c)
             SIZE_KB=$(echo "scale=2; $SIZE / 1024" | bc)
             GZIP_KB=$(echo "scale=2; $GZIP_SIZE / 1024" | bc)

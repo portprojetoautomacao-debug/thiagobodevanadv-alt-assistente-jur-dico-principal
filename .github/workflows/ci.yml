@@ -119,8 +119,7 @@ jobs:
         echo "- [x] Artifacts uploaded" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
-        echo "- **Workflow Duration:** ${{ github.run_duration || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Cache Hit:** Check logs above" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Hit:** Check cache step logs above" >> $GITHUB_STEP_SUMMARY
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
