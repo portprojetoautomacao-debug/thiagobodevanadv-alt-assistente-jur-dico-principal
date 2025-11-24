@@ -89,14 +89,37 @@ jobs:
 
     - name: Run tests
       run: |
-        echo "Running unit tests..."
-        # Verificar se Vitest está configurado
-        if grep -q "\"test\":" package.json; then
-          npm test -- --run
-        else
-          echo "⚠️ No test script configured, skipping tests"
-        fi
+        echo "Running all tests..."
+        npm run test:all
       if: success()
+
+    - name: Check package.json sync
+      run: |
+        if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package.json"; then
+          if ! git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package-lock.json"; then
+            echo "❌ package.json changed but package-lock.json didn't!"
+            exit 1
+          fi
+        fi
+      if: github.event_name == 'pull_request'
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
+    - name: Start development server
+      run: PORT=5000 npm run dev &
+      env:
+        PORT: 5000
+        VITE_APP_ENV: 'test'
+
+    - name: Wait for server to be ready
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:5000 > /dev/null 2>&1; do sleep 1; done'
+
+    - name: Run E2E tests
+      run: npm run test:e2e
+      env:
+        CI: true
 
     - name: Build summary
       if: always()
