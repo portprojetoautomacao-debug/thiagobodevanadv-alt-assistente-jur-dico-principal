@@ -20,7 +20,7 @@ on:
         type: boolean
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-${{ github.ref }}-v2
   cancel-in-progress: true
 
 jobs:
