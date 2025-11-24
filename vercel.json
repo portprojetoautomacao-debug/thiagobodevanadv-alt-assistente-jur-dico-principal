@@ -203,13 +203,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "GEMINI_API_KEY": "@gemini-api-key",
-    "TODOIST_TOKEN": "@todoist-token",
-    "DJEN_API_KEY": "@djen-api-key",
-    "EVOLUTION_API_KEY": "@evolution-api-key",
-    "EVOLUTION_INSTANCE_ID": "@evolution-instance-id",
-    "EVOLUTION_API_URL": "@evolution-api-url"
-  }
+  ]
 }
