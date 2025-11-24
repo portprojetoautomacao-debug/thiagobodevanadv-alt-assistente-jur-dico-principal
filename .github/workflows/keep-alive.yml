@@ -1,0 +1,28 @@
+name: Keep Alive - Vercel Redeploy
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Executa diariamente às 12:00 UTC
+  workflow_dispatch:        # Permite execução manual
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Vercel CLI
+        run: npm install -g vercel
+
+      - name: Redeploy para Vercel (manter ativo)
+        run: vercel --prod --yes
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

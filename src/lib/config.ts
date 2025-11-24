@@ -14,6 +14,10 @@ export const config = {
     clientId: getEnvVar('VITE_GOOGLE_CLIENT_ID', ''),
     redirectUri: getEnvVar('VITE_REDIRECT_URI', window.location.origin),
   },
+  github: {
+    oauthClientId: getEnvVar('VITE_GITHUB_OAUTH_CLIENT_ID', ''),
+    oauthClientSecret: getEnvVar('GITHUB_OAUTH_CLIENT_SECRET', ''),
+  },
   datajud: {
     apiKey: getEnvVar('VITE_DATAJUD_API_KEY', '', false), // Optional - no error logging
   },
@@ -38,6 +42,14 @@ export const validateConfig = (): boolean => {
 
   if (!config.google.redirectUri) {
     errors.push('Redirect URI is not configured')
+  }
+
+  if (!config.github.oauthClientId) {
+    errors.push('GitHub OAuth Client ID is not configured')
+  }
+
+  if (!config.github.oauthClientSecret) {
+    errors.push('GitHub OAuth Client Secret is not configured')
   }
 
   if (errors.length > 0) {

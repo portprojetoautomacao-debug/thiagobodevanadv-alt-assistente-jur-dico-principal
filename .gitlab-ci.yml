@@ -146,3 +146,31 @@ deploy_production:
   only:
     - main
   when: on_success
+
+# Jobs para agendamentos (schedules)
+backup_data:
+  stage: deploy
+  script:
+    - echo "💾 Executando backup automatizado..."
+    - echo "📊 Tipo de agendamento: $SCHEDULE_TYPE"
+    - echo "⏰ Retenção: $BACKUP_RETENTION dias"
+    - node scripts/backup.js --type=$SCHEDULE_TYPE --retention=$BACKUP_RETENTION
+    - echo "✅ Backup concluído com sucesso"
+  environment:
+    name: backup
+  only:
+    - schedules
+  when: manual
+  dependencies:
+    - build
+
+cleanup_cache:
+  stage: deploy
+  script:
+    - echo "🧹 Executando limpeza de cache..."
+    - npm cache clean --force
+    - rm -rf node_modules/.cache
+    - echo "✅ Cache limpo com sucesso"
+  only:
+    - schedules
+  when: manual

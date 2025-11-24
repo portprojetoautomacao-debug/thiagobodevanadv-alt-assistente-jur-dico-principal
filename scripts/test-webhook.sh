@@ -5,7 +5,7 @@
 
 set -e
 
-WEBHOOK_URL="https://assistente-jurdico-p.vercel.app/api/health?x-vercel-protection-bypass=qajocbzc7FeZcqllHRkERDIRhAYaQD08"
+WEBHOOK_URL="https://assistente-juridico-p.vercel.app/api/webhook"
 
 echo "🔍 Testando Webhook do GitHub..."
 echo ""

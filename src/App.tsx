@@ -1,7 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { GoogleAuthButton } from '@/components/GoogleAuth'
+import { GitHubAuthButton } from '@/components/GitHubAuth'
 import type { GoogleUser } from '@/components/GoogleAuth'
+import type { GitHubUser } from '@/components/GitHubAuth'
 import Sidebar from '@/components/Sidebar'
 import { useKV } from '@/hooks/use-kv'
 import type { ViewType, User } from '@/types'
@@ -47,10 +49,14 @@ function App() {
     setIsAuthenticated(!!user)
   }, [user])
 
-  const handleAuthSuccess = (googleUser: GoogleUser) => {
+  const handleAuthSuccess = (authUser: GoogleUser | GitHubUser) => {
+    // Normalize user data for both providers
     const user: User = {
-      ...googleUser,
-      role: googleUser.role || 'advogado' // Valor padrão para advogados
+      id: authUser.id,
+      email: authUser.email,
+      name: authUser.name,
+      avatarUrl: 'picture' in authUser ? authUser.picture : authUser.avatar_url,
+      role: authUser.role || 'advogado' // Valor padrão para advogados
     }
     setUser(user)
     setIsAuthenticated(true)
@@ -188,7 +194,19 @@ function App() {
           <div className="space-y-4">
             <GoogleAuthButton
               onSuccess={handleAuthSuccess}
-              onError={(error) => console.error('Erro na autenticação:', error)}
+              onError={(error) => console.error('Erro na autenticação Google:', error)}
+            />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Ou</span>
+              </div>
+            </div>
+            <GitHubAuthButton
+              onSuccess={handleAuthSuccess}
+              onError={(error) => console.error('Erro na autenticação GitHub:', error)}
             />
           </div>
         </div>
