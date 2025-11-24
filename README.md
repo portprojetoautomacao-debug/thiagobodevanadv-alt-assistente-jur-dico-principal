@@ -454,4 +454,3 @@ No GitLab CI/CD Settings → Variables:
 - [GitLab Agents Documentation](docs/KUBERNETES_MANIFESTOS.md)
 - [Configuração GitLab Duo](GITLAB_DUO_SETUP_COMPLETE.md)
 - [Guia de Infraestrutura](docs/CLOUD_CODE_DEPLOY.md)
-# Teste de commit assinado GPG
