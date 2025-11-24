@@ -72,6 +72,10 @@ cache:
 build_app:
   stage: build
   image: node:22-alpine
+  tags:
+    - docker
+    - linux
+    - dev
   script:
     - npm ci --prefer-offline --no-audit
     - npm run build 2>&1 || { echo "Build failed"; exit 1; }
@@ -90,6 +94,10 @@ build_app:
 test_app:
   stage: test
   image: node:22-alpine
+  tags:
+    - docker
+    - linux
+    - qa
   script:
     - npm ci --prefer-offline --no-audit
     - npm run test -- --run --reporter=verbose --coverage || echo "Tests not configured yet"
@@ -282,6 +290,10 @@ create_release:
 pages:
   stage: deploy
   image: node:22-alpine
+  tags:
+    - docker
+    - linux
+    - dev
   script:
     - npm ci --prefer-offline --no-audit
     - npm run build
@@ -291,6 +303,7 @@ pages:
   artifacts:
     paths:
       - public
+    expire_in: 30 days
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   when: manual
