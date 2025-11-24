@@ -38,11 +38,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           },
         });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Observability] Erro:', error);
     return res.status(500).json({
       ok: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

@@ -129,14 +129,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       timestamp: new Date().toISOString(),
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[/api/agents] Erro na execução:', err);
     
     // Retornar erro detalhado
     return res.status(500).json({
       ok: false,
-      error: err?.message ?? 'Erro interno no agente',
-      stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined,
+      error: err instanceof Error ? err.message : 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? (err instanceof Error ? err.stack : undefined) : undefined,
     });
   }
 }

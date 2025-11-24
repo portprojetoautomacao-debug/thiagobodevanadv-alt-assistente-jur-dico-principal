@@ -22,9 +22,27 @@ concurrency:
   cancel-in-progress: false  # Don't cancel deployments in progress
 
 jobs:
+  fork-guard:
+    name: Detect forked pull requests
+    runs-on: ubuntu-latest
+    outputs:
+      blocked: ${{ steps.evaluate.outputs.blocked }}
+    steps:
+      - id: evaluate
+        env:
+          IS_FORK: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) && 'true' || 'false' }}
+        run: |
+          if [ "$IS_FORK" = "true" ]; then
+            echo "::notice::Forked pull request detected. Deploy workflow disabled for this run."
+            echo "blocked=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy-vercel:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
+    needs: fork-guard
     permissions:
       contents: read
       deployments: write
@@ -34,7 +52,7 @@ jobs:
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
-    if: github.event_name != 'pull_request' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false)
+    if: needs.fork-guard.outputs.blocked != 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
     - name: Checkout code
