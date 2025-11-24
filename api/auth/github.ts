@@ -1,11 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const { code } = await request.json()
 
     if (!code) {
-      return NextResponse.json({ error: 'Code is required' }, { status: 400 })
+      return Response.json({ error: 'Code is required' }, { status: 400 })
     }
 
     // Exchange code for access token
@@ -24,14 +22,14 @@ export async function POST(request: NextRequest) {
 
     if (!tokenResponse.ok) {
       console.error('GitHub token exchange failed:', await tokenResponse.text())
-      return NextResponse.json({ error: 'Failed to exchange code for token' }, { status: 400 })
+      return Response.json({ error: 'Failed to exchange code for token' }, { status: 400 })
     }
 
     const tokenData = await tokenResponse.json()
     const accessToken = tokenData.access_token
 
     if (!accessToken) {
-      return NextResponse.json({ error: 'No access token received' }, { status: 400 })
+      return Response.json({ error: 'No access token received' }, { status: 400 })
     }
 
     // Get user info
@@ -44,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (!userResponse.ok) {
       console.error('GitHub user fetch failed:', await userResponse.text())
-      return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 400 })
+      return Response.json({ error: 'Failed to fetch user data' }, { status: 400 })
     }
 
     const userData = await userResponse.json()
@@ -75,9 +73,9 @@ export async function POST(request: NextRequest) {
       avatar_url: userData.avatar_url,
     }
 
-    return NextResponse.json(user)
+    return Response.json(user)
   } catch (error) {
     console.error('GitHub auth error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
