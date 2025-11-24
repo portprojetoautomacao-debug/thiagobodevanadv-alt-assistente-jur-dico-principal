@@ -1,12 +1,26 @@
+include:
+  - template: Auto-DevOps.gitlab-ci.yml
+
 # GitLab CI/CD Pipeline - Kubernetes Ready
 # Pipeline completo com Docker, Coverage e Deploy
 
 stages:
   - build
   - test
+  - deploy
   - review
   - docker
-  - deploy
+  - dast
+  - staging
+  - canary
+  - production
+  - incremental rollout 10%
+  - incremental rollout 25%
+  - incremental rollout 50%
+  - incremental rollout 100%
+  - performance
+  - cleanup
+  - post
 
 variables:
   NODE_ENV: "production"
@@ -17,6 +31,16 @@ variables:
   LATEST_TAG: $CI_REGISTRY_IMAGE:latest
   GITLAB_TOKEN: "${GITLAB_TOKEN}"
   GITLAB_DUO_ACCESS_TOKEN: "${GITLAB_DUO_ACCESS_TOKEN}"
+  AUTO_DEVOPS_PLATFORM_TARGET: "kubernetes"
+  AUTO_DEVOPS_DEPLOY_STRATEGY: "continuous"
+  BUILD_DISABLED: "true"
+  TEST_DISABLED: "true"
+  REVIEW_DISABLED: "true"
+  BROWSER_PERFORMANCE_DISABLED: "true"
+  LOAD_PERFORMANCE_DISABLED: "true"
+  CODE_INTELLIGENCE_DISABLED: "true"
+  DAST_DISABLED: "true"
+  CONTAINER_SCANNING_DISABLED: "true"
   # GitLab Kubernetes Agents (primary e secondary)
   KUBE_CONTEXT_PRIMARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
   KUBE_CONTEXT_SECONDARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
@@ -140,7 +164,7 @@ docker_build:
 
 # Deploy Staging com Kubernetes
 deploy_staging:
-  stage: deploy
+  stage: staging
   image: bitnami/kubectl:latest
   script:
     - echo "Deploying to staging environment"
@@ -159,13 +183,14 @@ deploy_staging:
       namespace: staging
   needs:
     - build_app
+    - docker_build
   only:
     - main
   when: manual
 
 # Deploy Production com Kubernetes
 deploy_production:
-  stage: deploy
+  stage: production
   image: bitnami/kubectl:latest
   script:
     - echo "Deploying to production environment"
@@ -184,18 +209,30 @@ deploy_production:
       namespace: production
   needs:
     - build_app
+    - docker_build
   only:
     - tags
   when: manual
 
+# Disable default Auto DevOps production promotion in favor of custom job above.
+production:
+  rules:
+    - when: never
+
+production_manual:
+  rules:
+    - when: never
+
 # Notificações
 .post:success:
+  stage: post
   image: alpine:latest
   script:
     - echo "Pipeline succeeded!"
     - echo "Pipeline $CI_PIPELINE_URL"
 
 .post:failure:
+  stage: post
   image: alpine:latest
   script:
     - echo "Pipeline failed!"
