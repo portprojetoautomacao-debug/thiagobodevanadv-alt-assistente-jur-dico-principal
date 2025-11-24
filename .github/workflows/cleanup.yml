@@ -20,6 +20,7 @@ jobs:
   cleanup-vercel:
     name: Cleanup Old Vercel Deployments
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
 
@@ -43,8 +44,8 @@ jobs:
         echo "**Max Age**: ${{ github.event.inputs.max_age_days || 7 }} days" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        # Get all deployments
-        DEPLOYMENTS=$(vercel list --token=${{ secrets.VERCEL_TOKEN }} 2>&1 || true)
+        # Get all deployments - token passed via env
+        DEPLOYMENTS=$(vercel list 2>&1 || true)
         
         if [ $? -eq 0 ]; then
           echo "✅ Successfully retrieved deployment list" >> $GITHUB_STEP_SUMMARY
@@ -68,6 +69,7 @@ jobs:
           echo "This is expected if Vercel secrets are not configured" >> $GITHUB_STEP_SUMMARY
         fi
       env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       continue-on-error: true
