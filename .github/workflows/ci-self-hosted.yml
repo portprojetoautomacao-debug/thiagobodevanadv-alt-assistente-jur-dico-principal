@@ -1,4 +1,4 @@
-name: CI (Self-Hosted Runner)
+name: CI
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build and Test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -45,26 +45,3 @@ jobs:
 
     - name: Run E2E tests
       run: npm run test:e2e
-
-  # Fallback job caso o self-hosted runner não esteja disponível
-  build-fallback:
-    name: Build (Fallback)
-    runs-on: ubuntu-latest
-    if: failure() && contains(needs.build-and-test.result, 'failure')
-    needs: build-and-test
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build application
-      run: npm run build
