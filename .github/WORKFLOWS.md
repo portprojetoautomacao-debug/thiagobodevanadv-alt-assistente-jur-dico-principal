@@ -135,7 +135,7 @@ git push origin v1.0.0
 - Manualmente via workflow_dispatch
 
 **O que faz**:
-- 🤖 Verifica configuração dos 7 agentes de IA
+- 🤖 Verifica configuração dos 15 agentes de IA
 - 📡 Valida integração DJEN API (Comunica PJe)
 - 📊 Valida integração DataJud API (CNJ)
 - ⏰ Verifica configuração dos cron jobs
