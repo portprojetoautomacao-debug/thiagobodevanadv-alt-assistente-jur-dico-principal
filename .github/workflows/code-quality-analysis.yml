@@ -310,11 +310,15 @@ jobs:
           echo "- **Branches:** $BRANCHES%" >> coverage-comment.md
           echo "" >> coverage-comment.md
 
-          if (( $(echo "$LINES < 80" | bc -l) )); then
+          # Verificar cobertura de linhas
+          LOW_LINES=$(echo "$LINES < 80" | bc -l)
+          if [ "$LOW_LINES" -eq 1 ]; then
             echo "⚠️  Cobertura de linhas abaixo do threshold (80%)" >> coverage-comment.md
           fi
 
-          if (( $(echo "$FUNCTIONS < 80" | bc -l) )); then
+          # Verificar cobertura de funções
+          LOW_FUNCTIONS=$(echo "$FUNCTIONS < 80" | bc -l)
+          if [ "$LOW_FUNCTIONS" -eq 1 ]; then
             echo "⚠️  Cobertura de funções abaixo do threshold (80%)" >> coverage-comment.md
           fi
 
