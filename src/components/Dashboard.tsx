@@ -1,9 +1,23 @@
 import { useMemo, lazy } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import type { Process, Prazo, ViewType } from '@/types'
-import { calcularDiasRestantes, isUrgente } from '@/lib/prazos'
+import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import DataInitializer from '@/components/DataInitializer'
 import DataManager from '@/components/DataManager'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Gavel, 
+  CheckCircle, 
+  Clock, 
+  Warning, 
+  Upload, 
+  ChartPie, 
+  TrendUp, 
+  ArrowRight, 
+  CalendarCheck 
+} from '@phosphor-icons/react'
 
 // Lazy load dashboard sections for better code splitting
 const StatusChart = lazy(() => import('@/components/DashboardCharts').then(m => ({ default: m.StatusChart })))
