@@ -29,6 +29,10 @@ export class TodoistApi {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }
 
+  getTasksByFilter(_args?: { query?: string; cursor?: string; limit?: number }): Promise<GetTasksResponse> {
+    throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
+  }
+
   getProjects(): Promise<Project[]> {
     throw new Error('TodoistApi is not available in the browser. Use /api/todoist-* endpoints instead.');
   }

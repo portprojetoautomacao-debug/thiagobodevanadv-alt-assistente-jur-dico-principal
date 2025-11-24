@@ -66,10 +66,17 @@ export class TodoistClient {
       throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
     }
 
+    // Se filter for fornecido, usar getTasksByFilter
+    if (params?.filter) {
+      return await this.api.getTasksByFilter({
+        query: params.filter,
+      })
+    }
+
+    // Caso contrário, usar getTasks com projectId e label
     return await this.api.getTasks({
       projectId: params?.projectId,
       label: params?.label,
-      filter: params?.filter,
     })
   }
 
