@@ -3,6 +3,7 @@ ci_access:
     - id: thiagobodevan-a11y/assistente-juridico-p
 user_access:
   access_as:
-    agent: {}
+    agent: {} # for free
+    user: {} # for premium+
   projects:
     - id: thiagobodevan-a11y/assistente-juridico-p

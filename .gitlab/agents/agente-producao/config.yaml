@@ -25,7 +25,8 @@ ci_access:
 # Acesso de usuário limitado para produção
 user_access:
   access_as:
-    agent: {}
+    agent: {} # for free
+    user: {} # for premium+
   projects:
     - id: thiagobodevan-a11y/assistente-juridico-p
       default_namespace: production
