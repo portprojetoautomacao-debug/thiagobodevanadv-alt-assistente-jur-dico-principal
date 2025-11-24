@@ -1,5 +1,10 @@
 include:
   - template: Auto-DevOps.gitlab-ci.yml
+  # Security Scanning Templates
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
 
 # Configuração inicial do Auto-DevOps
 auto_devops_setup:
@@ -49,6 +54,12 @@ variables:
   KUBE_CONTEXT_PRIMARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
   KUBE_CONTEXT_SECONDARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
   KUBE_CONTEXT: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
+  # Security Scanning Configuration
+  SAST_EXCLUDED_PATHS: "node_modules,dist,.git"
+  SECRET_DETECTION_HISTORIC_SCAN: "true"
+  SECRET_DETECTION_EXCLUDED_PATHS: ".gitlab-ci.yml"
+  DEPENDENCY_SCANNING_DISABLED: "false"
+  LICENSE_SCANNING_DISABLED: "false"
 
 # Cache global para acelerar builds
 cache:
@@ -229,14 +240,14 @@ create_tag:
       # Criar tag baseada na data e commit short SHA
       TAG_NAME="v$(date +%Y.%m.%d)-${CI_COMMIT_SHORT_SHA}"
       echo "Creating tag: $TAG_NAME"
-      
+
       # Criar tag usando GitLab API
       curl -X POST \
         --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
         --header "Content-Type: application/json" \
         --data "{\"tag_name\": \"$TAG_NAME\", \"ref\": \"$CI_COMMIT_SHA\", \"message\": \"Automatic tag created by CI/CD pipeline\"}" \
         "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/tags"
-      
+
       echo "Tag $TAG_NAME created successfully"
   needs:
     - deploy_production
@@ -244,14 +255,45 @@ create_tag:
     - main
   when: on_success
 
-# Disable default Auto DevOps production promotion in favor of custom job above.
-production:
-  rules:
-    - when: never
+# Criar release automática
+create_release:
+  stage: post
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - |
+      TAG_NAME="v$(date +%Y.%m.%d)-${CI_COMMIT_SHORT_SHA}"
+      RELEASE_NOTES="🚀 Release Automático - $(date '+%Y-%m-%d %H:%M:%S') - Commit: ${CI_COMMIT_SHORT_SHA}"
+      
+      curl -X POST \
+        --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+        --header "Content-Type: application/json" \
+        --data "{\"name\": \"Release $TAG_NAME\", \"tag_name\": \"$TAG_NAME\", \"description\": \"$RELEASE_NOTES\", \"ref\": \"$CI_COMMIT_SHA\"}" \
+        "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/releases"
+      
+      echo "Release $TAG_NAME created successfully"
+  needs:
+    - create_tag
+  only:
+    - main
+  when: on_success
 
-production_manual:
+# Deploy para GitLab Pages (Documentação)
+pages:
+  stage: deploy
+  image: node:22-alpine
+  script:
+    - npm ci --prefer-offline --no-audit
+    - npm run build
+    - mkdir -p public
+    - cp -r dist/* public/
+    - echo "📄 Documentação disponível em: $CI_PAGES_URL"
+  artifacts:
+    paths:
+      - public
   rules:
-    - when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual
 
 # Notificações
 .post:success:
