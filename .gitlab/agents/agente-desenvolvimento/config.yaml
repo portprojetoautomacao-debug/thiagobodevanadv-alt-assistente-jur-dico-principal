@@ -22,16 +22,6 @@ ci_access:
         - protocol: TCP
           port: 27017 # MongoDB (se usado)
 
-# Configurações específicas de desenvolvimento
-development:
-  debug_mode: true
-  hot_reload: true
-  resource_limits:
-    cpu: "500m"
-    memory: "1Gi"
-  resource_requests:
-    cpu: "100m"
-    memory: "256Mi"
 observability:
   logging:
     level: debug
