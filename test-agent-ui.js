@@ -78,7 +78,7 @@
 
     if (toggles.length > 0) {
       // Simular clique no primeiro toggle
-      const firstToggle = toggles[0] as HTMLElement;
+      const firstToggle = toggles[0];
       firstToggle.click();
       console.log('✅ Toggle clicado com sucesso');
 
