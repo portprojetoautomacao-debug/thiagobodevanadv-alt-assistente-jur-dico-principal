@@ -10,8 +10,17 @@ ci_access:
   projects:
     - id: thiagobodevan-a11y/assistente-juridico-p
       default_namespace: production
+      access_as:
+        ci_job: {}  # Personificar trabalho CI/CD
+      environments:
+        - production
+        - prod
+      protected_branches_only: true  # APENAS branches protegidas em produção
   groups:
     - id: thiagobodevan-a11y
+      environments:
+        - production
+        - prod
 
 # Acesso de usuário limitado para produção
 user_access:

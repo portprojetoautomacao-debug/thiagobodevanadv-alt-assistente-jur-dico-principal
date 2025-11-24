@@ -10,8 +10,18 @@ ci_access:
   projects:
     - id: thiagobodevan-a11y/assistente-juridico-p
       default_namespace: qa
+      access_as:
+        ci_job: {}  # Personificar trabalho CI/CD
+      environments:
+        - qa
+        - staging
+        - test
+      protected_branches_only: true  # Apenas branches protegidas em QA
   groups:
     - id: thiagobodevan-a11y
+      environments:
+        - qa
+        - staging
 
 # Acesso de usuário restrito para QA
 user_access:

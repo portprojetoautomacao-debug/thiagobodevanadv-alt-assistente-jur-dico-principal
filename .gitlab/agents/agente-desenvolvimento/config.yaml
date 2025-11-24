@@ -11,13 +11,24 @@ ci_access:
   projects:
     - id: thiagobodevan-a11y/assistente-juridico-p
       default_namespace: desenvolvimento
+      access_as:
+        ci_job: {}  # Personificar trabalho CI/CD
+      environments:
+        - development
+        - dev
+        - review/*
+      protected_branches_only: false  # Permitir branches não protegidas em dev
   groups:
     - id: thiagobodevan-a11y
+      environments:
+        - development
+        - dev
 
 # Acesso de usuário para desenvolvedores
 user_access:
   access_as:
-    agent: {}
+    agent: {} # for free
+    user: {} # for premium+
   projects:
     - id: thiagobodevan-a11y/assistente-juridico-p
       default_namespace: desenvolvimento
