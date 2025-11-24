@@ -1,0 +1,77 @@
+# GitLab Agent for Kubernetes - Desenvolvimento
+# Agente focado em desenvolvimento e debug
+
+# Desenvolvimento remoto habilitado
+remote_development:
+  enabled: true
+  dns_zone: "dev.workspaces.assistente-juridico.dev"
+
+# Acesso CI/CD para desenvolvimento
+ci_access:
+  projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+      default_namespace: desenvolvimento
+  groups:
+    - id: thiagobodevan-a11y
+
+# Acesso de usuário para desenvolvedores
+user_access:
+  access_as:
+    agent: {}
+  projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+      default_namespace: desenvolvimento
+  groups:
+    - id: thiagobodevan-a11y
+
+# GitOps para manifestos de desenvolvimento
+gitops:
+  manifest_projects:
+    - id: thiagobodevan-a11y/assistente-juridico-p
+      default_namespace: desenvolvimento
+      paths:
+        - glob: 'k8s/dev/**/*.yaml'
+        - glob: 'k8s/dev/**/*.yml'
+        - glob: 'k8s/shared/**/*.yaml'
+
+# Observabilidade para desenvolvimento
+observability:
+  logging:
+    level: debug
+  tracing:
+    connection_string: ""
+
+# Políticas de rede permissivas para desenvolvimento
+network_policy:
+  enabled: true
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              environment: desenvolvimento
+  egress:
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6379  # Redis
+        - protocol: TCP
+          port: 5432  # PostgreSQL (se usado)
+        - protocol: TCP
+          port: 27017 # MongoDB (se usado)
+
+# Configurações específicas de desenvolvimento
+development:
+  debug_mode: true
+  hot_reload: true
+  resource_limits:
+    cpu: "500m"
+    memory: "1Gi"
+  resource_requests:
+    cpu: "100m"
+    memory: "256Mi"
