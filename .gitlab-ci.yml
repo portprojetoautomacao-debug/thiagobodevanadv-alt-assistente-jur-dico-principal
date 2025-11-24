@@ -60,14 +60,19 @@ lint:
 unit_tests:
   stage: test
   image: node:22
+  cache:
+    key: npm-cache-v2-$CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+      - .npm/
   before_script:
     - echo "🧪 Verificando se Vitest está instalado..."
     - npx vitest --version
   script:
-    - echo "🧪 Executando testes unitários..."
+    - echo "🧪 Executando testes de componentes..."
     - npm test -- --run --coverage --reporter=verbose
     - echo "🧪 Executando testes de API..."
-    - npm run test:api -- --run --coverage
+    - npm run test:api -- --run --reporter=verbose
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     when: always
@@ -75,10 +80,14 @@ unit_tests:
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura-coverage.xml
+      junit: coverage/junit.xml
     paths:
       - coverage/
+      - coverage-api/
     expire_in: 30 days
-  allow_failure: true
+  dependencies:
+    - install_deps
+  allow_failure: false
 
 integration_tests:
   stage: test
