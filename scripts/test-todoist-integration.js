@@ -5,7 +5,7 @@
  * Verifica se a integração com Todoist para gerenciamento de tarefas legais está funcionando
  */
 
-const https = require('https');
+import https from 'https';
 
 console.log('🧪 Iniciando teste de integração Todoist...');
 
