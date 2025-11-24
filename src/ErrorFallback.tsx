@@ -1,5 +1,5 @@
-import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert";
-import { Button } from "./components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { WarningCircle, ArrowsClockwise } from "@phosphor-icons/react";
 
 interface ErrorFallbackProps {

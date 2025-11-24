@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
       if (emailsResponse.ok) {
         const emails = await emailsResponse.json()
-        const primaryEmail = emails.find((e: any) => e.primary)
+        const primaryEmail = emails.find((e: { primary: boolean; email: string }) => e.primary)
         email = primaryEmail?.email || emails[0]?.email
       }
     }
