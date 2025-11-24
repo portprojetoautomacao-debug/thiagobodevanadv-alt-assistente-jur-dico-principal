@@ -495,19 +495,21 @@ jobs:
         echo "💬 Comentando qualidade no PR..."
 
         # Comentar no PR sobre problemas de qualidade
-        gh pr comment ${{ github.event.number }} --body "## ⚠️ Problemas de Qualidade Detectados
+        echo "## ⚠️ Problemas de Qualidade Detectados" > quality-alert.md
+        echo "" >> quality-alert.md
+        echo "Algumas verificações de qualidade falharam. Verifique os artefatos do workflow para detalhes:" >> quality-alert.md
+        echo "" >> quality-alert.md
+        echo "- 🔍 **Análise Estática:** ${{ needs.static-analysis.result }}" >> quality-alert.md
+        echo "- 🧩 **Complexidade:** ${{ needs.complexity-analysis.result }}" >> quality-alert.md
+        echo "- 🧪 **Cobertura:** ${{ needs.test-coverage.result }}" >> quality-alert.md
+        echo "- 🔒 **Segurança:** ${{ needs.security-analysis.result }}" >> quality-alert.md
+        echo "" >> quality-alert.md
+        echo "**Ações recomendadas:**" >> quality-alert.md
+        echo "1. Revisar os relatórios de análise nos artefatos" >> quality-alert.md
+        echo "2. Corrigir problemas críticos antes do merge" >> quality-alert.md
+        echo "3. Considerar refatoração para melhorar a qualidade" >> quality-alert.md
 
-Algumas verificações de qualidade falharam. Verifique os artefatos do workflow para detalhes:
-
-- 🔍 **Análise Estática:** ${{ needs.static-analysis.result }}
-- 🧩 **Complexidade:** ${{ needs.complexity-analysis.result }}
-- 🧪 **Cobertura:** ${{ needs.test-coverage.result }}
-- 🔒 **Segurança:** ${{ needs.security-analysis.result }}
-
-**Ações recomendadas:**
-1. Revisar os relatórios de análise nos artefatos
-2. Corrigir problemas críticos antes do merge
-3. Considerar refatoração para melhorar a qualidade"
+        gh pr comment ${{ github.event.number }} --body-file quality-alert.md
 
     - name: 🚫 Bloquear Merge se Qualidade Baixa
       if: github.event_name == 'pull_request' && env.STATUS == 'failure'
