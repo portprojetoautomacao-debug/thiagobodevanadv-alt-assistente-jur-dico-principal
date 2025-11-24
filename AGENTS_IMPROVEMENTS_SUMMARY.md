@@ -13,7 +13,7 @@ Análise completa de todos os agentes IA do código, suas funções, lógica e c
 - ✅ Criado arquivo central `agents.ts` com todos os tipos
 - ✅ Definidos tipos: `Agent`, `AgentTask`, `AgentTaskResult`, `AgentStatus`, `TaskStatus`, `TaskPriority`
 - ✅ Interfaces para `AgentTaskGenerator` e configurações
-- ✅ 7 agentes padrão pré-configurados com capacidades definidas
+- ✅ 15 agentes padrão pré-configurados com capacidades definidas
 
 ### 2. **Funções Auxiliares Faltantes**
 **Problema:** Funções referenciadas mas não implementadas no código.

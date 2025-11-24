@@ -104,7 +104,7 @@ Um sistema completo de gestão para escritórios de advocacia com foco em automa
 - **Dashboard Inteligente**: Visão consolidada de processos, tarefas e métricas
 - **Gestão de Processos**: Kanban visual com drag & drop
 - **IA Assistente (Harvey Specter)**: Chatbot jurídico com contexto processual
-- **Agentes IA Autônomos**: 7 agentes especializados trabalhando 24/7
+- **Agentes IA Autônomos**: 15 agentes especializados trabalhando 24/7
 - **Integração DJEN/DataJud**: Monitoramento automático de publicações
 - **Google Calendar**: Sincronização bidirecional de eventos ([documentação completa](GOOGLE_CALENDAR_INTEGRATION.md))
 - **Gestão Financeira**: Controle completo de honorários e despesas
@@ -351,7 +351,7 @@ O GitHub Actions automaticamente:
 ### Histórico de Versões
 
 - **v1.0.0** (2025-11-18) - Primeira versão estável oficial
-  - Dashboard inteligente com 7 agentes IA autônomos
+  - Dashboard inteligente com 15 agentes IA autônomos
   - Integrações DJEN/DataJud e Google Calendar
   - Sistema completo de gestão jurídica
   - Ver [CHANGELOG.md](./CHANGELOG.md) para detalhes completos

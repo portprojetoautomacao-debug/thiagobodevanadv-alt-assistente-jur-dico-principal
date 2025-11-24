@@ -72,7 +72,7 @@
 - **Autenticação:** Automática via Spark client
 - **Status:** ✅ Implementado em `api/kv.ts` com fallback para localStorage
 - **Keys utilizadas:**
-  - `autonomous-agents` - Configuração dos 7 agentes
+  - `autonomous-agents` - Configuração dos 15 agentes
   - `monitored-lawyers` - Dados do advogado monitorado
   - `agent-task-queue` - Fila de tarefas pendentes
   - `completed-agent-tasks` - Histórico de tarefas concluídas
@@ -117,7 +117,7 @@
 
 ### ✅ Completado
 
-- [x] 7 agentes configurados com capacidades reais
+- [x] 15 agentes configurados com capacidades reais
 - [x] DJEN API client implementado corretamente
 - [x] DataJud API client separado implementado
 - [x] Spark LLM integrado para processamento real
@@ -162,7 +162,7 @@
 3. **Validar Spark KV sync**
    - Recarregar página para ver agentes na UI
    - Verificar contadores (devem estar em 0, não hardcoded)
-   - Confirmar status "Active" para todos os 7 agentes
+   - Confirmar status "Active" para todos os 15 agentes
 
 4. **Quando upgrade para Vercel Pro** (futuro)
    - Habilitar cron hourly para processamento contínuo
