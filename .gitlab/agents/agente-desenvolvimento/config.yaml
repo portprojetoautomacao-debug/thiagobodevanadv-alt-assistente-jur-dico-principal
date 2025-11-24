@@ -1,60 +1,24 @@
 # GitLab Agent for Kubernetes - Desenvolvimento
 # Agente focado em desenvolvimento e debug
 
-# Desenvolvimento remoto habilitado
-remote_development:
-  enabled: true
-  dns_zone: "dev.workspaces.assistente-juridico.dev"
-
-# Acesso CI/CD para desenvolvimento
 ci_access:
   projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
-      default_namespace: desenvolvimento
-      access_as:
-        ci_job: {}  # Personificar trabalho CI/CD
-      environments:
-        - development
-        - dev
-        - review/*
-      protected_branches_only: false  # Permitir branches não protegidas em dev
-  groups:
-    - id: thiagobodevan-a11y
-      environments:
-        - development
-        - dev
+  - id: thiagobodevan-a11y/assistente-juridico-p
+    default_namespace: desenvolvimento
 
-# Acesso de usuário para desenvolvedores
 user_access:
   access_as:
-    agent: {} # for free
-    user: {} # for premium+
+    agent: {}
   projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
-      default_namespace: desenvolvimento
-  groups:
-    - id: thiagobodevan-a11y
+  - id: thiagobodevan-a11y/assistente-juridico-p
+    default_namespace: desenvolvimento
 
-# GitOps para manifestos de desenvolvimento
 gitops:
   manifest_projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
-      default_namespace: desenvolvimento
-      paths:
-        - glob: 'k8s/dev/**/*.yaml'
-        - glob: 'k8s/dev/**/*.yml'
-        - glob: 'k8s/shared/**/*.yaml'
-
-# Observabilidade para desenvolvimento
-observability:
-  logging:
-    level: debug
-  tracing:
-    connection_string: ""
-
-# Políticas de rede permissivas para desenvolvimento
-network_policy:
-  enabled: true
+  - id: thiagobodevan-a11y/assistente-juridico-p
+    default_namespace: desenvolvimento
+    paths:
+    - glob: 'k8s/**'
   ingress:
     - from:
         - podSelector: {}
@@ -86,3 +50,7 @@ development:
   resource_requests:
     cpu: "100m"
     memory: "256Mi"
+observability:
+  logging:
+    level: debug
+    grpc_level: warn

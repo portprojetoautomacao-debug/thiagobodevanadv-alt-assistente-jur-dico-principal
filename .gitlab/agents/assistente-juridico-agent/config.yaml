@@ -14,13 +14,6 @@ ci_access:
       default_namespace: assistente-juridico-production
 
 # Configurações de observabilidade
-observability:
-  logging:
-    level: info
-  tracing:
-    connection_string: ""
-
-# Políticas de rede
 network_policy:
   enabled: true
   # Permite tráfego interno do cluster
@@ -91,3 +84,8 @@ workspaces:
   
   # Máximo de workspaces simultâneos por usuário
   max_workspaces_per_user: 3
+
+observability:
+  logging:
+    level: debug
+    grpc_level: warn

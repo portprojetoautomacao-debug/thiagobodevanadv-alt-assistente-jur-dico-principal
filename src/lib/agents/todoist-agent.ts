@@ -8,6 +8,7 @@
  */
 
 import { getTodoistClient, updateLegalTask } from '../todoist-integration';
+import { todoistClient } from '../todoist-client';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
 import type { TodoistClient } from '../todoist-client';
@@ -54,7 +55,7 @@ export class TodoistAgent {
   private client: TodoistClient;
 
   constructor() {
-    this.client = getTodoistClient();
+    this.client = todoistClient;
   }
 
   /**
