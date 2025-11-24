@@ -48,18 +48,25 @@ interface VercelWebhookEvent {
 }
 
 /**
- * Valida o token do webhook do Vercel
+ * Valida a assinatura do webhook do Vercel usando HMAC-SHA1
  */
-function validateVercelToken(
-  token: string | undefined,
-  expectedToken: string | undefined
+function validateVercelSignature(
+  payload: string,
+  signature: string | undefined,
+  secret: string | undefined
 ): boolean {
-  if (!expectedToken || !token) {
-    console.warn('[Vercel Webhook] Token não configurado ou não enviado');
+  if (!secret || !signature) {
+    console.warn('[Vercel Webhook] Segredo ou assinatura não configurados');
     return false;
   }
 
-  return token === expectedToken;
+  const crypto = require('crypto');
+  const expectedSignature = crypto
+    .createHmac('sha1', secret)
+    .update(payload)
+    .digest('hex');
+
+  return expectedSignature === signature;
 }
 
 /**
@@ -126,15 +133,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Obter token do header Authorization ou x-vercel-token
-    const authHeader = req.headers['authorization'];
-    const vercelToken = authHeader?.replace('Bearer ', '') || req.headers['x-vercel-token'] as string;
-    const expectedToken = process.env.VERCEL_WEBHOOK_SECRET;
+    // Obter o payload como string para validação
+    const rawBody = JSON.stringify(req.body);
+    const signature = req.headers['x-vercel-signature'] as string;
+    const secret = process.env.VERCEL_WEBHOOK_SECRET;
 
-    // Validar token
-    if (!validateVercelToken(vercelToken, expectedToken)) {
-      console.error('[Vercel Webhook] Token inválido');
-      return res.status(401).json({ error: 'Invalid token' });
+    // Validar assinatura HMAC-SHA1
+    if (!validateVercelSignature(rawBody, signature, secret)) {
+      console.error('[Vercel Webhook] Assinatura inválida');
+      return res.status(401).json({ error: 'Invalid signature' });
     }
 
     // Parse do payload
