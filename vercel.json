@@ -105,6 +105,10 @@
         {
           "key": "Permissions-Policy",
           "value": "geolocation=(), microphone=(), camera=(), payment=()"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "all"
         }
       ]
     },
