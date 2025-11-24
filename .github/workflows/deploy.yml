@@ -46,17 +46,6 @@ jobs:
         node-version: '22.x'
         cache: 'npm'
 
-    - name: Cache dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          node_modules
-          ~/.npm
-        key: ${{ runner.os }}-node-22-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-22-
-          ${{ runner.os }}-node-
-
     - name: Install dependencies
       run: npm ci
 
@@ -188,13 +177,16 @@ jobs:
         # Determine deployment type
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
-          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
+          DEPLOY_ARGS="--yes"
+          DEPLOY_PROD=""
         elif [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "🚀 Deploying to production"
-          DEPLOY_CMD="vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes"
+          DEPLOY_ARGS="--yes"
+          DEPLOY_PROD="--prod"
         else
           echo "🚀 Deploying to staging"
-          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
+          DEPLOY_ARGS="--yes"
+          DEPLOY_PROD=""
         fi
         
         # Deploy with retry logic (max 3 attempts)
@@ -204,19 +196,25 @@ jobs:
         
         while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
           echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
-          DEPLOYMENT_URL=$($DEPLOY_CMD 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
+          # Token is passed via env variable, not command line
+          DEPLOYMENT_URL=$(vercel deploy $DEPLOY_PROD $DEPLOY_ARGS 2>&1 | tee deploy.log | grep -o 'https://[^ ]*' | tail -1)
           
           if [ -n "$DEPLOYMENT_URL" ]; then
             echo "✅ Deployment successful on attempt $((RETRY_COUNT + 1))"
+            rm -f deploy.log  # Clean up log file that might contain sensitive info
             break
           fi
           
           RETRY_COUNT=$((RETRY_COUNT + 1))
           if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
             echo "⚠️ Deployment failed, retrying in 10 seconds..."
+            rm -f deploy.log
             sleep 10
           fi
         done
+        
+        # Clean up log file
+        rm -f deploy.log
         
         # Validate deployment URL
         if [ -z "$DEPLOYMENT_URL" ]; then
@@ -228,6 +226,7 @@ jobs:
         echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
         echo "✅ Deployment successful: $DEPLOYMENT_URL"
       env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 

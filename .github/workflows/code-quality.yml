@@ -49,6 +49,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: write
@@ -66,6 +67,7 @@ jobs:
   type-check:
     name: TypeScript Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
 
@@ -95,6 +97,7 @@ jobs:
   bundle-size:
     name: Bundle Size Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
 
@@ -163,17 +166,20 @@ jobs:
       run: npm ci
 
     - name: Run ESLint with SARIF output
-      run: |
-        echo "Running ESLint with SARIF formatter..."
-        npm run lint:sarif || {
-          echo "⚠️ ESLint found issues"
-          # Ensure SARIF file exists
-          if [ ! -f "eslint-results.sarif" ]; then
-            echo "Creating empty SARIF file..."
-            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-          fi
-        }
+      id: eslint
+      run: npm run lint:sarif
       continue-on-error: true
+
+    - name: Verify SARIF file
+      run: |
+        if [ ! -f "eslint-results.sarif" ]; then
+          echo "❌ SARIF file was not generated - ESLint may have failed"
+          echo "Check ESLint configuration and ensure it can output SARIF format"
+          echo "Creating minimal SARIF file to prevent upload failure..."
+          echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"ESLint","informationUri":"https://eslint.org"}},"results":[]}]}' > eslint-results.sarif
+        else
+          echo "✅ SARIF file generated successfully"
+        fi
 
     - name: Upload SARIF file
       if: always() && hashFiles('eslint-results.sarif') != ''

@@ -1,7 +1,7 @@
 name: Copilot Auto Approve
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
 
 concurrency:
@@ -12,7 +12,10 @@ jobs:
   check-tests:
     name: Check Tests Status
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.actor == 'github-actions[bot]' || github.event.pull_request.user.login == 'github-actions'
+    permissions:
+      contents: read
     outputs:
       tests-passed: ${{ steps.check-status.outputs.tests-passed }}
     steps:
@@ -20,7 +23,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,24 +43,72 @@ jobs:
             echo "✅ No merge conflicts"
           fi
 
-      - name: Lint code
-        run: npm run lint || true
+      - name: Run lint
+        id: check-lint
+        run: |
+          if npm run lint; then
+            echo "lint-passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "lint-passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+        continue-on-error: true
 
       - name: Build application
-        run: npm run build || true
+        id: check-build
+        run: |
+          if npm run build; then
+            echo "build-passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build-passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
         env:
           VITE_GOOGLE_CLIENT_ID: 'dummy-client-id'
           VITE_GOOGLE_API_KEY: 'dummy-api-key'
           VITE_REDIRECT_URI: 'http://localhost:5173'
           VITE_APP_ENV: 'ci'
+        continue-on-error: true
 
-      - name: Set tests passed
+      - name: Run tests
+        id: check-tests-run
+        run: |
+          if grep -q "\"test\":" package.json; then
+            if npm test -- --run; then
+              echo "tests-run-passed=true" >> $GITHUB_OUTPUT
+            else
+              echo "tests-run-passed=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "tests-run-passed=true" >> $GITHUB_OUTPUT
+            echo "⚠️ No test script configured, skipping tests"
+          fi
+        continue-on-error: true
+
+      - name: Evaluate approval
         id: check-status
-        run: echo "tests-passed=true" >> $GITHUB_OUTPUT
+        run: |
+          LINT_PASSED="${{ steps.check-lint.outputs.lint-passed }}"
+          BUILD_PASSED="${{ steps.check-build.outputs.build-passed }}"
+          TESTS_PASSED="${{ steps.check-tests-run.outputs.tests-run-passed }}"
+          
+          if [[ "$LINT_PASSED" == "true" ]] && [[ "$BUILD_PASSED" == "true" ]] && [[ "$TESTS_PASSED" == "true" ]]; then
+            echo "tests-passed=true" >> $GITHUB_OUTPUT
+            echo "✅ All checks passed - ready for auto-approval"
+          else
+            echo "tests-passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Some checks failed:"
+            echo "  - Lint: $LINT_PASSED"
+            echo "  - Build: $BUILD_PASSED"
+            echo "  - Tests: $TESTS_PASSED"
+            exit 1
+          fi
 
   approve-pr:
     name: Approve PR
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: check-tests
     if: needs.check-tests.outputs.tests-passed == 'true'
     permissions:

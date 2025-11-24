@@ -12,6 +12,7 @@ jobs:
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write
@@ -150,6 +151,7 @@ jobs:
   pr-labeler:
     name: Auto Label PR
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
@@ -167,6 +169,7 @@ jobs:
   size-limit:
     name: Bundle Size Limit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
 
