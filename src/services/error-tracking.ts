@@ -4,6 +4,45 @@
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 
+function resolveBrowserTracingIntegration(): unknown {
+  const sentryAny = Sentry as unknown as {
+    browserTracingIntegration?: () => unknown;
+  };
+
+  if (typeof sentryAny.browserTracingIntegration === "function") {
+    return sentryAny.browserTracingIntegration();
+  }
+
+  if (typeof BrowserTracing === "function") {
+    return new BrowserTracing();
+  }
+
+  return null;
+}
+
+function resolveReplayIntegration(): unknown {
+  const sentryAny = Sentry as unknown as {
+    replayIntegration?: (options: { maskAllText: boolean; blockAllMedia: boolean }) => unknown;
+    Replay?: new (options: { maskAllText: boolean; blockAllMedia: boolean }) => unknown;
+  };
+
+  if (typeof sentryAny.replayIntegration === "function") {
+    return sentryAny.replayIntegration({
+      maskAllText: true,
+      blockAllMedia: true,
+    });
+  }
+
+  if (typeof sentryAny.Replay === "function") {
+    return new sentryAny.Replay({
+      maskAllText: true,
+      blockAllMedia: true,
+    });
+  }
+
+  return null;
+}
+
 /**
  * Initialize Sentry for Error Tracking
  * 
@@ -15,6 +54,22 @@ import { BrowserTracing } from "@sentry/tracing";
  * - Source maps support
  */
 export function initErrorTracking() {
+  const integrations: unknown[] = [];
+
+  const tracingIntegration = resolveBrowserTracingIntegration();
+  if (tracingIntegration) {
+    integrations.push(tracingIntegration);
+  }
+
+  const replayIntegration = resolveReplayIntegration();
+  if (replayIntegration) {
+    integrations.push(replayIntegration);
+  }
+
+  const resolvedIntegrations = integrations.length
+    ? (integrations as Parameters<typeof Sentry.init>[0]["integrations"])
+    : undefined;
+
   Sentry.init({
     // GitLab Error Tracking DSN
     dsn: "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042",
@@ -26,13 +81,7 @@ export function initErrorTracking() {
     release: import.meta.env.VITE_APP_VERSION || "unknown",
     
     // Integrations
-    integrations: [
-      new BrowserTracing(),
-      new Sentry.Replay({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
+    integrations: resolvedIntegrations,
     
     // Performance monitoring
     tracesSampleRate: import.meta.env.MODE === "production" ? 0.1 : 1.0,
@@ -148,11 +197,21 @@ export function captureApiError(
  * Start performance monitoring transaction
  */
 export function startTransaction(name: string, op: string = "http.request") {
-  return Sentry.startTransaction?.({
-    name,
-    op,
-    sampled: import.meta.env.MODE === "production" ? Math.random() < 0.1 : true,
-  }) || null;
+  const shouldSample = import.meta.env.MODE === "production" ? Math.random() < 0.1 : true;
+  const sentryAny = Sentry as unknown as {
+    startTransaction?: (...args: unknown[]) => unknown;
+  };
+
+  if (typeof sentryAny.startTransaction === "function") {
+    return sentryAny.startTransaction({
+      name,
+      op,
+      sampled: shouldSample,
+    });
+  }
+
+  console.warn("Sentry.startTransaction is not available in this SDK version.");
+  return null;
 }
 
 /**
