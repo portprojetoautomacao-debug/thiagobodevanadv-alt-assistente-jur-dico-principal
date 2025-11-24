@@ -114,10 +114,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // DEBUG: Log environment
+  console.log('[Webhook] DEBUG - WEBHOOK_SECRET env:', process.env.WEBHOOK_SECRET);
+  console.log('[Webhook] DEBUG - Secret length:', process.env.WEBHOOK_SECRET?.length);
+
   // Valida assinatura (se WEBHOOK_SECRET estiver configurado)
   const webhookSecret = process.env.WEBHOOK_SECRET?.trim();
   const payload = JSON.stringify(req.body);
-
+  
   console.log('[Webhook] DEBUG - Secret configured:', !!webhookSecret);
   console.log('[Webhook] DEBUG - Signature received:', !!signature);
   console.log('[Webhook] DEBUG - Event:', event);
@@ -126,13 +130,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[Webhook] Assinatura inválida!');
     console.error('[Webhook] DEBUG - Expected secret length:', webhookSecret?.length);
     console.error('[Webhook] DEBUG - Received signature:', signature);
-    return res.status(401).json({
+    return res.status(401).json({ 
       error: 'Unauthorized',
       message: 'Assinatura do webhook inválida'
     });
-  }
-
-  try {
+  }  try {
     // Processa o evento
     await processEvent(event, req.body);
 
