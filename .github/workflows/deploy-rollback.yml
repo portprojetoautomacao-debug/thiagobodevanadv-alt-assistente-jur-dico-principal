@@ -49,6 +49,31 @@ jobs:
     - name: 📦 Instalar dependências
       run: npm ci
 
+    - name: 📊 Verificar limites Serverless (Hobby)
+      run: |
+        FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
+        LIMIT=12
+        echo "📊 Serverless functions detected: $FUNCTION_COUNT"
+
+        if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
+          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT)."
+        fi
+        
+        echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
+
+    - name: 🤖 Verificar arquivos dos Agentes
+      run: |
+        echo "🤖 Verificando integridade dos Agentes..."
+        REQUIRED_FILES=("api/agents.ts" "src/hooks/use-autonomous-agents.ts")
+        for file in "${REQUIRED_FILES[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Arquivo obrigatório faltando: $file"
+            exit 1
+          fi
+        done
+        echo "✅ Todos os arquivos de agentes presentes"
+
     - name: 🧪 Executar testes rápidos
       run: |
         echo "🧪 Executando testes rápidos..."
