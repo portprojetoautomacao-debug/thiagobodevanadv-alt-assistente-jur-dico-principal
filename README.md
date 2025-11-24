@@ -465,3 +465,6 @@ No GitLab CI/CD Settings → Variables:
 - [GitLab Agents Documentation](docs/KUBERNETES_MANIFESTOS.md)
 - [Configuração GitLab Duo](GITLAB_DUO_SETUP_COMPLETE.md)
 - [Guia de Infraestrutura](docs/CLOUD_CODE_DEPLOY.md)
+
+<!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE -->
+<!-- Este comentário foi adicionado para forçar um novo deploy e testar a integração completa -->
