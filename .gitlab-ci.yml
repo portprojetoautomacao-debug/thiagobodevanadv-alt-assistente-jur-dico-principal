@@ -10,10 +10,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: none
 
 cache:
-  key: 
-    files:
-      - package-lock.json
-      - package.json
+  key: "npm-cache-v2-${CI_COMMIT_REF_SLUG}"
   paths:
     - node_modules/
   policy: pull-push
@@ -29,6 +26,9 @@ stages:
 install_deps:
   stage: install
   script:
+    - echo "🧹 Limpando cache npm..."
+    - npm cache clean --force
+    - echo "📦 Instalando dependências..."
     - npm ci --prefer-offline --no-audit --include=dev --force
   artifacts:
     paths:
