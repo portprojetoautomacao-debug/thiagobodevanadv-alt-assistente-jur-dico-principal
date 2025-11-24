@@ -131,8 +131,10 @@ jobs:
         echo "Validating environment variables..."
         HAS_ERRORS=0
         
-        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-          # Production/staging deploys require real credentials
+        ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
+        
+        if [[ "${{ github.event_name }}" != "pull_request" && "$ENVIRONMENT" != "staging" ]]; then
+          # Production deploys require real credentials, staging allows dummy values
           if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
             echo "❌ VITE_GOOGLE_CLIENT_ID is required for production"
             HAS_ERRORS=1
