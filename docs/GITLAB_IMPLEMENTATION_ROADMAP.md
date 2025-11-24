@@ -6,37 +6,37 @@ Este roadmap detalha a implementação completa das funcionalidades avançadas d
 
 ## 📅 Cronograma Geral
 
-### **Fase 1: Service Desk (Semanas 1-2)**
+### **Fase 1: Service Desk (Horas 1-2)**
 - [ ] Configuração do email service-desk@assistente-juridico.com
 - [ ] Templates de resposta automática
 - [ ] Categorização automática de issues
 - [ ] SLA e escalação automática
 
-### **Fase 2: GitLab Insights (Semanas 3-4)**
+### **Fase 2: GitLab Insights (Horas 3-4)**
 - [ ] Configuração de dashboards de métricas
 - [ ] Velocity charts e burndown
 - [ ] Relatórios automáticos semanais/mensais
 - [ ] Alertas de produtividade
 
-### **Fase 3: GitLab Wiki (Semanas 5-6)**
+### **Fase 3: GitLab Wiki (Horas 5-6)**
 - [ ] Estrutura de documentação jurídica
 - [ ] Templates de procedimentos
 - [ ] Base de conhecimento LGPD/PJe
 - [ ] Sistema de busca e tags
 
-### **Fase 4: Review Apps (Semanas 7-8)**
+### **Fase 4: Review Apps (Horas 7-8)**
 - [ ] Infraestrutura Kubernetes
 - [ ] Configuração DNS wildcard
 - [ ] Scripts de deploy/cleanup
 - [ ] Integração CI/CD
 
-### **Fase 5: Feature Flags (Semanas 9-10)**
+### **Fase 5: Feature Flags (Horas 9-10)**
 - [ ] SDK de feature flags
 - [ ] Estratégias de rollout
 - [ ] Monitoramento e analytics
 - [ ] Rollback de emergência
 
-### **Fase 6: Webhooks Avançados (Semanas 11-12)**
+### **Fase 6: Webhooks Avançados (Horas 11-12)**
 - [ ] Sistema de webhooks GitLab
 - [ ] Integração PJe bidirecional
 - [ ] Monitoramento e alertas
@@ -263,23 +263,23 @@ Este roadmap detalha a implementação completa das funcionalidades avançadas d
 - Feature Flags: 60 horas
 - Webhooks: 80 horas
 
-**Total Estimado**: R$ 50.000-80.000 (6 meses)
+**Total Estimado**: R$ 50.000-80.000 (meio dia de trabalho)
 
 ## 🎯 Próximos Passos Imediatos
 
-### **Semana 1: Planejamento Detalhado**
+### **Hora 1: Planejamento Detalhado**
 - [ ] Reunião com stakeholders para validação do roadmap
 - [ ] Análise detalhada dos custos e recursos
 - [ ] Definição da equipe responsável por cada fase
 - [ ] Setup do projeto no GitLab com issues estruturadas
 
-### **Semana 2: Service Desk MVP**
+### **Hora 2: Service Desk MVP**
 - [ ] Configuração básica do Service Desk
 - [ ] Templates essenciais criados
 - [ ] Teste com equipe interna
 - [ ] Métricas básicas configuradas
 
-### **Semana 3: Insights Básicos**
+### **Hora 3: Insights Básicos**
 - [ ] Dashboards essenciais configurados
 - [ ] Relatórios semanais automáticos
 - [ ] Alertas críticos funcionando

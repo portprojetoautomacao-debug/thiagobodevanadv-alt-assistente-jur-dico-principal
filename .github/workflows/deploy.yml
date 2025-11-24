@@ -22,27 +22,9 @@ concurrency:
   cancel-in-progress: false  # Don't cancel deployments in progress
 
 jobs:
-  fork-guard:
-    name: Detect forked pull requests
-    runs-on: ubuntu-latest
-    outputs:
-      blocked: ${{ steps.evaluate.outputs.blocked }}
-    steps:
-      - id: evaluate
-        env:
-          IS_FORK: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) && 'true' || 'false' }}
-        run: |
-          if [ "$IS_FORK" = "true" ]; then
-            echo "::notice::Forked pull request detected. Deploy workflow disabled for this run."
-            echo "blocked=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "blocked=false" >> "$GITHUB_OUTPUT"
-          fi
-
   deploy-vercel:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    needs: fork-guard
     permissions:
       contents: read
       deployments: write
@@ -52,7 +34,7 @@ jobs:
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
-    if: needs.fork-guard.outputs.blocked != 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
 
     steps:
     - name: Checkout code
@@ -82,20 +64,35 @@ jobs:
       run: npm run lint
       continue-on-error: false
 
-    - name: Inspect serverless function count
+    - name: Validate serverless function count
       run: |
-        FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
-        LIMIT=12
-        echo "📊 Serverless functions detected: $FUNCTION_COUNT"
-
-        if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
-          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT)."
-          echo "All functions will still build, but consider consolidating endpoints or upgrading your plan."
-        elif [ "$FUNCTION_COUNT" -eq "$LIMIT" ]; then
-          echo "⚠️ At the Hobby plan ceiling ($FUNCTION_COUNT/$LIMIT)"
+        FUNCTION_COUNT=$(find api -type f -name "*.ts" 2>/dev/null | wc -l)
+        echo "📊 Serverless functions: $FUNCTION_COUNT"
+        
+        if [ $FUNCTION_COUNT -gt 12 ]; then
+          echo "❌ Error: Function count ($FUNCTION_COUNT) exceeds Vercel Hobby limit (12)"
+          echo "Please remove unused functions or upgrade to Vercel Pro"
+          exit 1
+        elif [ $FUNCTION_COUNT -eq 12 ]; then
+          echo "⚠️ Warning: At Vercel Hobby function limit (12/12)"
+          echo "Consider cleaning up unused functions or upgrading plan"
         else
-          echo "✅ Function count within Hobby plan ($FUNCTION_COUNT/$LIMIT)"
+          echo "✅ Function count OK ($FUNCTION_COUNT/12)"
+          HEADROOM=$((12 - FUNCTION_COUNT))
+          echo "ℹ️ You can add $HEADROOM more functions"
         fi
+        
+        # Calcular headroom para o summary, nunca negativo
+        HEADROOM=$((12 - FUNCTION_COUNT))
+        if [ $HEADROOM -lt 0 ]; then
+          HEADROOM=0
+        fi
+        # Adicionar ao summary
+        echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** $([ $FUNCTION_COUNT -gt 12 ] && echo '❌ Over limit' || echo '✅ Within limit')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Remaining:** $HEADROOM" >> $GITHUB_STEP_SUMMARY
 
     - name: Verify agent files
       run: |
@@ -131,10 +128,8 @@ jobs:
         echo "Validating environment variables..."
         HAS_ERRORS=0
         
-        ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
-        
-        if [[ "${{ github.event_name }}" != "pull_request" && "$ENVIRONMENT" != "staging" ]]; then
-          # Production deploys require real credentials, staging allows dummy values
+        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          # Production/staging deploys require real credentials
           if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
             echo "❌ VITE_GOOGLE_CLIENT_ID is required for production"
             HAS_ERRORS=1
@@ -161,25 +156,24 @@ jobs:
         VITE_APP_ENV: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
 
     - name: Validate Vercel secrets
-      if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
       run: |
         echo "Validating Vercel configuration..."
         
-        if [ -z "$VERCEL_TOKEN" ]; then
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
           echo "❌ Error: VERCEL_TOKEN secret is not configured"
           echo "Please add your Vercel token to GitHub Secrets"
           echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
           exit 1
         fi
         
-        if [ -z "$VERCEL_ORG_ID" ]; then
+        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
           echo "❌ Error: VERCEL_ORG_ID is not configured"
           echo "Please add your Organization ID to GitHub Secrets"
           echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
           exit 1
         fi
         
-        if [ -z "$VERCEL_PROJECT_ID" ]; then
+        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
           echo "❌ Error: VERCEL_PROJECT_ID is not configured"
           echo "Please add your Project ID to GitHub Secrets"
           echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
@@ -187,34 +181,23 @@ jobs:
         fi
         
         echo "✅ Vercel token validation passed"
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-    - name: Skip Vercel secret validation for forks
-      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
-      run: |
-        echo "::notice::Skipping Vercel secret validation for forked pull request."
-        echo "Add secrets in the upstream repo to enable preview deploys for forks."
 
     - name: Deploy to Vercel
       id: deploy
       timeout-minutes: 15
-      if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
       run: |
         npm install -g vercel@latest
         
         # Determine deployment type
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
-          DEPLOY_CMD="vercel deploy --token=$VERCEL_TOKEN --yes"
+          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
         elif [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "🚀 Deploying to production"
-          DEPLOY_CMD="vercel deploy --prod --token=$VERCEL_TOKEN --yes"
+          DEPLOY_CMD="vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes"
         else
           echo "🚀 Deploying to staging"
-          DEPLOY_CMD="vercel deploy --token=$VERCEL_TOKEN --yes"
+          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
         fi
         
         # Deploy with retry logic (max 3 attempts)
@@ -250,7 +233,6 @@ jobs:
       env:
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     - name: Comment deployment URL on PR
       if: github.event_name == 'pull_request'

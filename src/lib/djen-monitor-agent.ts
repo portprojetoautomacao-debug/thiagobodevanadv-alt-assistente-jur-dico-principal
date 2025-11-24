@@ -7,6 +7,8 @@ export interface DJENMonitorConfig {
     oab?: string
   }>
   intervaloHoras?: number
+  maxRetries?: number
+  retryDelayMs?: number
   notificarCallback?: (publicacoes: DJENFilteredResult[]) => void
   logCallback?: (message: string, level: 'info' | 'warn' | 'error') => void
 }
@@ -30,6 +32,8 @@ export class DJENMonitorAgent {
   constructor(config: DJENMonitorConfig) {
     this.config = {
       intervaloHoras: 1,
+      maxRetries: 3,
+      retryDelayMs: 5000,
       ...config
     }
 
@@ -56,6 +60,41 @@ export class DJENMonitorAgent {
     return new Date(agora.getTime() + intervaloMs)
   }
 
+  private async sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  private async consultarComRetry(configConsulta: DJENConfig, advogado: { nome?: string; oab?: string }): Promise<any> {
+    const maxRetries = this.config.maxRetries || 3
+    const retryDelay = this.config.retryDelayMs || 5000
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const resultado = await consultarDJEN(configConsulta)
+        return resultado
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+        
+        if (attempt === maxRetries) {
+          this.log(
+            `Falha após ${maxRetries} tentativas para ${advogado.nome || advogado.oab}: ${errorMessage}`,
+            'error'
+          )
+          throw error
+        }
+        
+        this.log(
+          `Tentativa ${attempt}/${maxRetries} falhou para ${advogado.nome || advogado.oab}. Tentando novamente em ${retryDelay}ms...`,
+          'warn'
+        )
+        
+        await this.sleep(retryDelay * attempt) // Exponential backoff
+      }
+    }
+    
+    throw new Error('Max retries exceeded')
+  }
+
   private async executarConsulta(): Promise<void> {
     if (!this.isRunning) return
 
@@ -79,7 +118,7 @@ export class DJENMonitorAgent {
           delayBetweenRequests: 1500
         }
 
-        const resultado = await consultarDJEN(configConsulta)
+        const resultado = await this.consultarComRetry(configConsulta, advogado)
 
         if (resultado.resultados.length > 0) {
           this.log(

@@ -109,7 +109,7 @@
     --color-neutral-a12: var(--slate-a12);
     --color-neutral-contrast: var(--slate-contrast);
 
-    /* Accent colors */
+    /* Accent colors - Azul Profissional */
     --color-accent-1: var(--blue-1);
     --color-accent-2: var(--blue-2);
     --color-accent-3: var(--blue-3);
@@ -124,20 +124,20 @@
     --color-accent-12: var(--blue-12);
     --color-accent-contrast: var(--blue-contrast);
 
-    /* Secondary accent colors */
-    --color-accent-secondary-1: var(--violet-1);
-    --color-accent-secondary-2: var(--violet-2);
-    --color-accent-secondary-3: var(--violet-3);
-    --color-accent-secondary-4: var(--violet-4);
-    --color-accent-secondary-5: var(--violet-5);
-    --color-accent-secondary-6: var(--violet-6);
-    --color-accent-secondary-7: var(--violet-7);
-    --color-accent-secondary-8: var(--violet-8);
-    --color-accent-secondary-9: var(--violet-9);
-    --color-accent-secondary-10: var(--violet-10);
-    --color-accent-secondary-11: var(--violet-11);
-    --color-accent-secondary-12: var(--violet-12);
-    --color-accent-secondary-contrast: var(--violet-contrast);
+    /* Secondary accent colors - Azul Claro */
+    --color-accent-secondary-1: var(--blue-1);
+    --color-accent-secondary-2: var(--blue-2);
+    --color-accent-secondary-3: var(--blue-3);
+    --color-accent-secondary-4: var(--blue-4);
+    --color-accent-secondary-5: var(--blue-5);
+    --color-accent-secondary-6: var(--blue-6);
+    --color-accent-secondary-7: var(--blue-7);
+    --color-accent-secondary-8: var(--blue-8);
+    --color-accent-secondary-9: var(--blue-9);
+    --color-accent-secondary-10: var(--blue-10);
+    --color-accent-secondary-11: var(--blue-11);
+    --color-accent-secondary-12: var(--blue-12);
+    --color-accent-secondary-contrast: var(--blue-contrast);
 
     /* Foreground colors */
     --color-fg: var(--color-neutral-12);
@@ -161,9 +161,10 @@
   }
 
   #spark-app.dark-theme {
-    --color-bg: var(--color-neutral-1);
-    --color-bg-inset: #000000;
-    --color-bg-overlay: var(--color-neutral-3);
+    /* Fundo escuro com toque de azul */
+    --color-bg: #0a0e1a;
+    --color-bg-inset: #050810;
+    --color-bg-overlay: #0f1420;
   }
 }
 
@@ -231,35 +232,71 @@ textarea {
 }
 
 :root {
-  --background: oklch(0.98 0.002 240);
-  --foreground: oklch(0.15 0.008 240);
+  /* Tema Azul e Branco Profissional */
+  --background: oklch(0.99 0.002 240);
+  --foreground: oklch(0.20 0.015 240);
   
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.008 240);
+  --card-foreground: oklch(0.20 0.015 240);
   
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.008 240);
+  --popover-foreground: oklch(0.20 0.015 240);
   
-  --primary: oklch(0.55 0.22 264);
+  /* Azul primário vibrante */
+  --primary: oklch(0.55 0.20 250);
   --primary-foreground: oklch(0.99 0 0);
   
-  --secondary: oklch(0.92 0.006 240);
-  --secondary-foreground: oklch(0.15 0.008 240);
+  /* Azul secundário claro */
+  --secondary: oklch(0.94 0.015 240);
+  --secondary-foreground: oklch(0.25 0.020 240);
   
-  --muted: oklch(0.95 0.004 240);
-  --muted-foreground: oklch(0.50 0.006 240);
+  --muted: oklch(0.96 0.008 240);
+  --muted-foreground: oklch(0.50 0.010 240);
   
-  --accent: oklch(0.93 0.006 240);
-  --accent-foreground: oklch(0.15 0.008 240);
+  /* Azul accent */
+  --accent: oklch(0.92 0.020 245);
+  --accent-foreground: oklch(0.25 0.020 240);
   
   --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
   
-  --border: oklch(0.88 0.004 240);
-  --input: oklch(0.88 0.004 240);
-  --ring: oklch(0.55 0.22 264);
+  --border: oklch(0.90 0.008 240);
+  --input: oklch(0.90 0.008 240);
+  --ring: oklch(0.55 0.20 250);
   
   --radius: 0.5rem;
+}
+
+.dark {
+  /* Tema Dark com Azul Escuro */
+  --background: oklch(0.12 0.015 240);
+  --foreground: oklch(0.95 0.005 240);
+  
+  --card: oklch(0.15 0.015 240);
+  --card-foreground: oklch(0.95 0.005 240);
+  
+  --popover: oklch(0.15 0.015 240);
+  --popover-foreground: oklch(0.95 0.005 240);
+  
+  /* Azul brilhante para dark mode */
+  --primary: oklch(0.60 0.22 250);
+  --primary-foreground: oklch(0.99 0 0);
+  
+  --secondary: oklch(0.20 0.020 240);
+  --secondary-foreground: oklch(0.90 0.010 240);
+  
+  --muted: oklch(0.18 0.015 240);
+  --muted-foreground: oklch(0.65 0.010 240);
+  
+  --accent: oklch(0.22 0.025 245);
+  --accent-foreground: oklch(0.90 0.010 240);
+  
+  --destructive: oklch(0.60 0.24 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  
+  --border: oklch(0.25 0.020 240);
+  --input: oklch(0.25 0.020 240);
+  --ring: oklch(0.60 0.22 250);
 }
 
 @theme {
