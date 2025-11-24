@@ -103,7 +103,7 @@ function validateAgentTask(task: unknown): task is AgentTask {
     Object.values(TaskPriority).includes(t.priority as TaskPriority) &&
     Object.values(TaskStatus).includes(t.status as TaskStatus) &&
     typeof t.createdAt === 'string' &&
-    (typeof t.data === 'object' || t.data === null)
+    typeof t.data === 'object' && t.data !== null
   )
 }
 

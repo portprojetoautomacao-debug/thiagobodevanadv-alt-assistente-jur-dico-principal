@@ -6,7 +6,6 @@
  */
 
 import type { Plugin } from 'vite'
-import fs from 'fs'
 export function phosphorIconOptimizer(): Plugin {
   const usedIcons = new Set<string>()
   const iconPattern = /from\s+['"]@phosphor-icons\/react['"]/g
