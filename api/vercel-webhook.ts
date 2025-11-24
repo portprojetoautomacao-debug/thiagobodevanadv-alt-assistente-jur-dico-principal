@@ -7,6 +7,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import crypto from 'crypto';
 
 // Tipos de eventos que processamos do Vercel
 interface VercelWebhookEvent {
@@ -60,7 +61,6 @@ function validateVercelSignature(
     return false;
   }
 
-  const crypto = require('crypto');
   const expectedSignature = crypto
     .createHmac('sha1', secret)
     .update(payload)
