@@ -55,12 +55,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       logId: data.id || data.log?.id,
       timestamp: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[api/agents/log] Erro:", err);
     return res.status(500).json({
       ok: false,
       error: "Erro ao registrar log",
-      message: err.message,
+      message: err instanceof Error ? err.message : 'Unknown error',
     });
   }
 }

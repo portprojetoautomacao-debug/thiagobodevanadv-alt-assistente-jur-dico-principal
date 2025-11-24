@@ -52,12 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       id: data.id || data.tarefa?.id,
       timestamp: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[api/tarefas/criar] Erro:", err);
     return res.status(500).json({
       ok: false,
       error: "Erro ao criar tarefa",
-      message: err.message,
+      message: err instanceof Error ? err.message : 'Unknown error',
     });
   }
 }

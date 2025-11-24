@@ -3,7 +3,6 @@
 // Baseado em: LangGraph, CrewAI, AutoGen patterns (2024/2025)
 
 import type { SimpleAgent } from './core-agent';
-import type { AgentPersona } from './agents-registry';
 
 export type OrchestrationPattern = 
   | 'sequential'      // Agentes executam em sequência
@@ -22,11 +21,11 @@ export interface AgentTask {
 
 export interface OrchestrationResult {
   success: boolean;
-  results: Map<string, any>;
+  results: Map<string, unknown>;
   traces: Array<{
     agentId: string;
     taskId: string;
-    result: any;
+    result: unknown;
     duration: number;
     error?: string;
   }>;
@@ -71,7 +70,7 @@ export class AgentOrchestrator {
    * Usado quando: Tarefas dependem umas das outras
    */
   private async executeSequential(tasks: AgentTask[], startTime: number): Promise<OrchestrationResult> {
-    const results = new Map<string, any>();
+    const results = new Map<string, unknown>();
     const traces: OrchestrationResult['traces'] = [];
 
     // Ordenar por dependências e prioridade
@@ -101,13 +100,13 @@ export class AgentOrchestrator {
           result,
           duration: Date.now() - taskStart,
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
         traces.push({
           agentId: task.assignedTo,
           taskId: task.id,
           result: null,
           duration: Date.now() - taskStart,
-          error: e.message,
+          error: e instanceof Error ? e.message : 'Unknown error',
         });
       }
     }
@@ -125,7 +124,7 @@ export class AgentOrchestrator {
    * Usado quando: Tarefas são independentes
    */
   private async executeParallel(tasks: AgentTask[], startTime: number): Promise<OrchestrationResult> {
-    const results = new Map<string, any>();
+    const results = new Map<string, unknown>();
     const traces: OrchestrationResult['traces'] = [];
 
     const promises = tasks.map(async (task) => {
@@ -151,13 +150,13 @@ export class AgentOrchestrator {
           result,
           duration: Date.now() - taskStart,
         };
-      } catch (e: any) {
+      } catch (e: unknown) {
         return {
           agentId: task.assignedTo,
           taskId: task.id,
           result: null,
           duration: Date.now() - taskStart,
-          error: e.message,
+          error: e instanceof Error ? e.message : 'Unknown error',
         };
       }
     });
@@ -198,12 +197,12 @@ export class AgentOrchestrator {
    */
   private async executeCollaborative(tasks: AgentTask[], startTime: number): Promise<OrchestrationResult> {
     // Implementação simplificada: voto majoritário
-    const results = new Map<string, any>();
+    const results = new Map<string, unknown>();
     const traces: OrchestrationResult['traces'] = [];
 
     // Todos agentes processam a mesma task
     const mainTask = tasks[0];
-    const votes: any[] = [];
+    const votes: unknown[] = [];
 
     for (const [agentId, agent] of this.agents.entries()) {
       const taskStart = Date.now();
@@ -217,13 +216,13 @@ export class AgentOrchestrator {
           result,
           duration: Date.now() - taskStart,
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
         traces.push({
           agentId,
           taskId: mainTask.id,
           result: null,
           duration: Date.now() - taskStart,
-          error: e.message,
+          error: e instanceof Error ? e.message : 'Unknown error',
         });
       }
     }
@@ -243,7 +242,7 @@ export class AgentOrchestrator {
   /**
    * Executa agente com timeout
    */
-  private async executeWithTimeout(agent: SimpleAgent, task: AgentTask): Promise<any> {
+  private async executeWithTimeout(agent: SimpleAgent, task: AgentTask): Promise<unknown> {
     const timeout = task.timeout ?? 60000; // 60s padrão
 
     return Promise.race([
@@ -295,12 +294,13 @@ export class AgentOrchestrator {
   /**
    * Encontra consenso entre múltiplos resultados
    */
-  private findConsensus(votes: any[]): any {
+  private findConsensus(votes: unknown[]): unknown {
     if (votes.length === 0) return null;
     
     // Estratégia simples: retorna o primeiro resultado válido
     // Em produção: implementar votação mais sofisticada
-    return votes.find(v => v && !v.error) ?? votes[0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return votes.find((v: any) => v && !v.error) ?? votes[0];
   }
 }
 
