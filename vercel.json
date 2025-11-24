@@ -19,7 +19,7 @@
           "value": "http"
         }
       ],
-      "destination": "https://assistente-jurdico-p.vercel.app/:path*",
+      "destination": "https://assistente-juridico-p.vercel.app/:path*",
       "permanent": true
     }
   ],
@@ -204,12 +204,12 @@
       ]
     }
   ],
-  "env": [
-    "GEMINI_API_KEY",
-    "TODOIST_TOKEN",
-    "DJEN_API_KEY",
-    "EVOLUTION_API_KEY",
-    "EVOLUTION_INSTANCE_ID",
-    "EVOLUTION_API_URL"
-  ]
+  "env": {
+    "GEMINI_API_KEY": "@gemini-api-key",
+    "TODOIST_TOKEN": "@todoist-token",
+    "DJEN_API_KEY": "@djen-api-key",
+    "EVOLUTION_API_KEY": "@evolution-api-key",
+    "EVOLUTION_INSTANCE_ID": "@evolution-instance-id",
+    "EVOLUTION_API_URL": "@evolution-api-url"
+  }
 }
