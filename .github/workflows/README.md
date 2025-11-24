@@ -38,6 +38,26 @@ Este repositório contém uma suíte completa de workflows de CI/CD avançados p
 - **Deploy**: Vercel, Docker
 - **Monitoring**: Health checks, performance monitoring
 
+## 🔐 Configuração de Secrets Avançados
+
+Para funcionalidades avançadas do workflow de automação Vercel, configure estes secrets opcionais:
+
+### Secrets Necessários
+```bash
+# Habilita rollback automático em caso de falha
+AUTO_ROLLBACK_ENABLED=true
+
+# Webhook para notificações (Slack, Discord, Teams)
+NOTIFICATION_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK
+```
+
+### Como Configurar
+1. Acesse: **Repositório → Settings → Secrets and variables → Actions**
+2. Clique: **"New repository secret"**
+3. Adicione cada secret conforme especificado acima
+
+**📖 Documentação completa:** [`GITHUB_SECRETS_SETUP.md`](../GITHUB_SECRETS_SETUP.md)
+
 ## 🚀 Como Usar
 
 ### 1. CI/CD Completo (`ci-cd-complete.yml`)
