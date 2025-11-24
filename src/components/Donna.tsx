@@ -616,6 +616,7 @@ O que você gostaria de saber?`
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
               size="icon"
+              aria-label="Enviar mensagem"
             >
               <PaperPlaneTilt className="w-5 h-5" weight="fill" />
             </Button>

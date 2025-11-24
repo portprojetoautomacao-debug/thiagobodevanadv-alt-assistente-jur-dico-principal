@@ -155,7 +155,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
           multiple
           className="flex-1"
         />
-        <Button disabled={uploading} variant="outline" size="icon">
+        <Button disabled={uploading} variant="outline" size="icon" aria-label="Enviar arquivos">
           <Upload size={20} />
         </Button>
       </div>
@@ -201,6 +201,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                           size="icon"
                           variant="ghost"
                           onClick={() => handlePreview(doc)}
+                          aria-label="Visualizar documento"
                           title="Visualizar"
                         >
                           <Eye size={16} />
@@ -210,6 +211,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                         size="icon"
                         variant="ghost"
                         onClick={() => handleDownload(doc)}
+                        aria-label="Baixar documento"
                         title="Baixar"
                       >
                         <Download size={16} />
@@ -218,6 +220,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                         size="icon"
                         variant="ghost"
                         onClick={() => setDeleteId(doc.id)}
+                        aria-label="Excluir documento"
                         title="Excluir"
                         className="text-destructive"
                       >

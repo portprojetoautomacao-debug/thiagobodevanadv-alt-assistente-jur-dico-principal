@@ -1,24 +1,6 @@
-# GitLab Agent for Kubernetes - Desenvolvimento
-# Agente focado em desenvolvimento e debug
-
 ci_access:
   projects:
   - id: thiagobodevan-a11y/assistente-juridico-p
-    default_namespace: desenvolvimento
-
-user_access:
-  access_as:
-    agent: {}
-  projects:
-  - id: thiagobodevan-a11y/assistente-juridico-p
-    default_namespace: desenvolvimento
-
-gitops:
-  manifest_projects:
-  - id: thiagobodevan-a11y/assistente-juridico-p
-    default_namespace: desenvolvimento
-    paths:
-    - glob: 'k8s/**'
   ingress:
     - from:
         - podSelector: {}

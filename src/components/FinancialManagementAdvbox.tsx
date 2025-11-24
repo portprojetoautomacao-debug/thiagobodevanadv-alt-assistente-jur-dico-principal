@@ -285,6 +285,7 @@ export default function FinancialManagementAdvbox() {
                           size="icon"
                           className="h-6 w-6 flex-shrink-0"
                           onClick={() => removeAttachment(file.id)}
+                          aria-label="Remover anexo"
                         >
                           <X size={14} />
                         </Button>

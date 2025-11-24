@@ -106,6 +106,7 @@ function CopyButton({ text }: CopyButtonProps) {
       size="icon"
       onClick={handleCopy}
       className="h-8 w-8 shrink-0"
+      aria-label={copied ? "Texto copiado" : "Copiar texto"}
       title="Copiar texto"
     >
       {copied ? (
@@ -230,6 +231,7 @@ export default function PremonicaoModal({
                                   size="icon"
                                   className="h-8 w-8 shrink-0"
                                   asChild
+                                  aria-label="Abrir jurisprudência em nova aba"
                                 >
                                   <a
                                     href={precedente.link}

@@ -618,6 +618,7 @@ Retorne APENAS o JSON válido, sem explicações.`
                         size="icon"
                         className="flex-shrink-0 hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => handleDeleteHistory(item.id)}
+                        aria-label="Excluir item do histórico"
                       >
                         <Trash size={16} />
                       </Button>
