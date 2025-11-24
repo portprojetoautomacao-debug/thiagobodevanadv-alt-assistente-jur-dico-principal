@@ -139,7 +139,7 @@ Seu app em produção terá:
 - ✅ **Cron Jobs** (Tarefas agendadas)
 - ✅ **Google OAuth** (Calendar + Docs)
 - ✅ **DJEN Monitor** (Publicações jurídicas)
-- ✅ **7 Agentes IA** (Autônomos 24/7)
+- ✅ **15 Agentes IA** (Autônomos 24/7)
 
 ## 🎯 Resultado Esperado
 
