@@ -128,6 +128,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const gitlabToken = req.headers['x-gitlab-token'] as string;
     const expectedToken = process.env.GITLAB_WEBHOOK_SECRET;
 
+    // DEBUG: Log para verificar tokens
+    console.log('[GitLab Webhook] DEBUG - Received token:', gitlabToken);
+    console.log('[GitLab Webhook] DEBUG - Expected token:', expectedToken);
+    console.log('[GitLab Webhook] DEBUG - Token match:', gitlabToken === expectedToken);
+
     // Validar token
     if (!validateGitLabToken(gitlabToken, expectedToken)) {
       console.error('[GitLab Webhook] Token inválido');
