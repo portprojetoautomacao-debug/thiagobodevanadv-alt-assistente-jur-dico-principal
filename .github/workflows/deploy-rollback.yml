@@ -54,6 +54,12 @@ jobs:
         echo "🧪 Executando testes rápidos..."
         npm run test -- --run --reporter=verbose || exit 1
         echo "✅ Testes passaram"
+      env:
+        VITE_GITHUB_OAUTH_CLIENT_ID: mock_client_id
+        GITHUB_OAUTH_CLIENT_SECRET: mock_secret
+        VITE_GOOGLE_CLIENT_ID: mock_google_client
+        VITE_GOOGLE_API_KEY: mock_google_api_key
+        VITE_APP_ENV: test
 
     - name: 🏗️  Build staging
       run: |
