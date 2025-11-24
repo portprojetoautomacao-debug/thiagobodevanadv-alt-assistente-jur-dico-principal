@@ -1,15 +1,101 @@
-api/*.js
-api/*.js.map
+# Dependencies
 node_modules
-.git
-*.log
+.pnp
+.pnp.js
+
+# Testing
+coverage
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+tests/
+test/
+__tests__/
+.vitest/
+
+# Build artifacts
+.next
+out
+dist
+build
+.cache
+
+# Environment files
 .env
 .env.local
 .env.*.local
-api/*.js.map
-node_modules
+.env.development
+.env.test
+
+# Git
 .git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
 *.log
-.env
-.env.local
-.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Documentation (não precisa no deploy)
+docs/
+*.md
+!README.md
+
+# Scripts de desenvolvimento
+scripts/
+.husky/
+
+# Arquivos de configuração de desenvolvimento
+.eslintrc*
+.prettierrc*
+.editorconfig
+tsconfig.json
+vitest.config.ts
+playwright.config.ts
+lighthouserc.json
+
+# Arquivos temporários
+tmp/
+temp/
+*.tmp
+
+# Source maps
+*.map
+api/*.js.map
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Arquivos do sistema
+Thumbs.db
+
+# Arquivos específicos do projeto
+examples/
+.cursor/
+.devcontainer/
+.devfile.yaml
+.dockerignore
+.gitpod.yml
+.ona/
+
+# Relatórios (não necessários em produção)
+RELATORIO_*.md
+REVISAO_*.md
+MELHORIAS_*.md
+ARQUITETURA_*.md
+TODOS_*.md
+MONITORING_*.md
+NOVO_*.md

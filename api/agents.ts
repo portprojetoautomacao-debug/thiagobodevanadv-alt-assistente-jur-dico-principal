@@ -119,47 +119,64 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
   const systemPrompt = getSystemPrompt(agent.type);
   const userPrompt = getUserPrompt(task);
 
-  const sparkResponse = await fetch('/_spark/llm', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: 2000,
-      temperature: 0.7,
-    }),
-  });
+  // Timeout protection: default 30s, configurable per task
+  const timeoutMs = task.timeout || 30000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!sparkResponse.ok) {
-    throw new Error(`Spark LLM error: ${sparkResponse.statusText}`);
-  }
-
-  const sparkData = await sparkResponse.json() as { 
-    choices?: Array<{ message?: { content?: string } }>, 
-    usage?: { total_tokens?: number } 
-  };
-  
-  const aiContent = sparkData.choices?.[0]?.message?.content || '';
-
-  // Parse JSON from AI response
-  let result: Record<string, unknown>;
   try {
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-    result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent };
-  } catch {
-    result = { rawResponse: aiContent };
+    const sparkResponse = await fetch('/_spark/llm', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 2000,
+        temperature: 0.7,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!sparkResponse.ok) {
+      throw new Error(`Spark LLM error: ${sparkResponse.statusText}`);
+    }
+
+    const sparkData = await sparkResponse.json() as { 
+      choices?: Array<{ message?: { content?: string } }>, 
+      usage?: { total_tokens?: number } 
+    };
+    
+    const aiContent = sparkData.choices?.[0]?.message?.content || '';
+
+    // Parse JSON from AI response
+    let result: Record<string, unknown>;
+    try {
+      const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+      result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent };
+    } catch {
+      result = { rawResponse: aiContent };
+    }
+
+    result.processedAt = new Date().toISOString();
+    result.agentId = agent.id;
+    result.taskType = task.type;
+    result.tokensUsed = sparkData.usage?.total_tokens;
+
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Task timeout after ${timeoutMs}ms`);
+    }
+    throw error;
   }
-
-  result.processedAt = new Date().toISOString();
-  result.agentId = agent.id;
-  result.taskType = task.type;
-  result.tokensUsed = sparkData.usage?.total_tokens;
-
-  return result;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
