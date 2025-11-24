@@ -49,6 +49,24 @@
 - ✅ Validar `.gitlab-ci.yml` antes de commitar
 - ✅ Autocompletar variáveis CI/CD
 
+## 🤖 TESTE DA UI DOS AGENTES IA
+
+**Teste completo da interface dos 15 agentes IA:**
+
+👉 **[docs/UI_AGENTS_TESTING.md](./docs/UI_AGENTS_TESTING.md)** - 🧪 Guia completo de testes  
+👉 **[test-agent-ui.js](./test-agent-ui.js)** - 🔧 Script de teste automático
+
+**TL;DR**: Execute `npm run dev`, abra `http://localhost:5000`, navegue para "Agentes de IA", abra o console (F12) e execute o script de teste.
+
+**O que testar:**
+- ✅ Todos os 15 agentes visíveis e funcionais
+- ✅ Status "Active" e contadores de tarefas
+- ✅ Controles de toggle (ligar/desligar)
+- ✅ Logs de atividade em tempo real
+- ✅ Workflow e pensamento dos agentes
+- ✅ Respostas corretas aos comandos
+- ✅ Sistema de backup e orquestração
+
 ## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
 
 **Se você teve problemas ao fazer o deploy na Vercel:**
