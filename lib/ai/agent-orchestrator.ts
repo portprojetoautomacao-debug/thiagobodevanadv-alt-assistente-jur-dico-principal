@@ -299,8 +299,12 @@ export class AgentOrchestrator {
     
     // Estratégia simples: retorna o primeiro resultado válido
     // Em produção: implementar votação mais sofisticada
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return votes.find((v: any) => v && !v.error) ?? votes[0];
+    return votes.find((v: unknown) => {
+      if (typeof v === 'object' && v !== null && 'error' in v) {
+        return !(v as { error?: unknown }).error;
+      }
+      return v != null;
+    }) ?? votes[0];
   }
 }
 
