@@ -79,6 +79,26 @@ unit_tests:
   only:
     - main
 
+integration_tests:
+  stage: test
+  dependencies:
+    - install_deps
+  script:
+    - echo "🔗 Executando testes de integração com APIs legais..."
+    - echo "📋 Testando integração DJEN/DataJud..."
+    - node scripts/test-djen-integration.js || echo "⚠️  Teste DJEN falhou, mas continuando..."
+    - echo "📅 Testando integração Google Calendar..."
+    - node scripts/test-calendar-integration.js || echo "⚠️  Teste Calendar falhou, mas continuando..."
+    - echo "📝 Testando integração Todoist..."
+    - node scripts/test-todoist-integration.js || echo "⚠️  Teste Todoist falhou, mas continuando..."
+  artifacts:
+    paths:
+      - test-results/
+    expire_in: 7 days
+  allow_failure: true
+  only:
+    - main
+
 security_scan:
   stage: security
   dependencies:
