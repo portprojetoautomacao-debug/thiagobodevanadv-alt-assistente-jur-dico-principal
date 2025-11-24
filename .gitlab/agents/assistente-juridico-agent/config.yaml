@@ -50,6 +50,9 @@ network_policy:
 
 # Configurações de segurança
 user_access:
+  access_as:
+    agent: {} # for free
+    user: {} # for premium+
   # Acesso baseado em grupos do GitLab
   groups:
     - id: thiagobodevan-a11y-group
