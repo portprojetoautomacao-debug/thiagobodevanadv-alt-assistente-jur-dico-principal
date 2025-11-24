@@ -466,5 +466,7 @@ No GitLab CI/CD Settings → Variables:
 - [Configuração GitLab Duo](GITLAB_DUO_SETUP_COMPLETE.md)
 - [Guia de Infraestrutura](docs/CLOUD_CODE_DEPLOY.md)
 
+<!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE #2 -->
+<!-- Este é o segundo teste para verificar se o webhook será acionado após deploy bem-sucedido -->
 <!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE -->
 <!-- Este comentário foi adicionado para forçar um novo deploy e testar a integração completa -->
