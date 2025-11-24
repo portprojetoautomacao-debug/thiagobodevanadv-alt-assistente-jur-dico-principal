@@ -22,6 +22,7 @@ interface GitLabWebhookEvent {
     state?: string;
     action?: string;
     description?: string;
+    status?: string; // Adicionado para pipeline e job events
   };
   project?: {
     id: number;
