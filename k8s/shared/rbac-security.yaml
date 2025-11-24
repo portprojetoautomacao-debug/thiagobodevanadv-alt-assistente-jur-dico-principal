@@ -213,3 +213,59 @@ metadata:
   labels:
     app: gitlab-agent
     environment: production
+---
+# RBAC authorization conforme documentação GitLab
+# Implementa personificação de usuários e controle de acesso
+
+# ClusterRoleBinding para personificação de usuários (User Impersonation)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gitlab-user-impersonation
+  labels:
+    app: gitlab-agent
+    type: user-impersonation
+roleRef:
+  name: gitlab-agent-desenvolvimento
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - name: gitlab:user
+    kind: Group
+
+---
+# ClusterRoleBinding específico para projeto (exemplo da documentação)
+# Permite maintainers do projeto acessar workloads
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gitlab-project-maintainers-view
+  labels:
+    app: gitlab-agent
+    example: documentation
+roleRef:
+  name: view
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  # Exemplo: maintainers do projeto ID 123 podem ver workloads
+  - name: gitlab:project_role:123:maintainer
+    kind: Group
+
+---
+# ClusterRoleBinding para grupos (exemplo da documentação)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gitlab-group-developers-edit
+  labels:
+    app: gitlab-agent
+    example: documentation
+roleRef:
+  name: edit
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  # Exemplo: developers do grupo ID 456 podem editar recursos
+  - name: gitlab:group_role:456:developer
+    kind: Group
