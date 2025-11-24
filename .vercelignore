@@ -1,41 +1,8 @@
-# Build artifacts
-dist
-build
-.next
-.turbo
-.cache
-
-# Git & version control
+api/*.js
+api/*.js.map
+node_modules
 .git
-.github
-.gitlab
-.gitignore
-
-# Environment
+*.log
 .env
 .env.local
 .env.*.local
-
-# Logs & temp
-*.log
-.DS_Store
-*.tmp
-
-# Testing
-playwright-report
-test-results
-coverage
-
-# Development
-node_modules
-.turbo
-
-# Documentation (not needed on Vercel)
-docs
-*.md
-!README.md
-
-# Scripts & tests (not needed on Vercel)
-scripts
-tests
-test-*.js

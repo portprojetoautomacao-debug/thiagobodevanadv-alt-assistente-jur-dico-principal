@@ -185,7 +185,6 @@ export function useTodoist() {
       setIsLoading(false)
     }
   }
-  }
 
   return {
     isConfigured,
