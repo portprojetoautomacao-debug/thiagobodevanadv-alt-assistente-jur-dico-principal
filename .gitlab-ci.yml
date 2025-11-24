@@ -59,25 +59,26 @@ lint:
 
 unit_tests:
   stage: test
-  dependencies:
-    - install_deps
-  script:
+  image: node:22
+  before_script:
     - echo "🧪 Verificando se Vitest está instalado..."
     - npx vitest --version
+  script:
     - echo "🧪 Executando testes unitários..."
-    - npm test -- --run --coverage --reporter=verbose || echo "⚠️  Alguns testes falharam, mas continuando..."
+    - npm test -- --run --coverage --reporter=verbose
+    - echo "🧪 Executando testes de API..."
+    - npm run test:api -- --run --coverage
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
+    when: always
     reports:
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura-coverage.xml
     paths:
       - coverage/
-    expire_in: 7 days
-  allow_failure: true  # Temporário: permitir falhas para focar no deploy
-  only:
-    - main
+    expire_in: 30 days
+  allow_failure: true
 
 integration_tests:
   stage: test
