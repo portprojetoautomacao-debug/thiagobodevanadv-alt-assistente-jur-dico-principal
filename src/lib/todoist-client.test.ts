@@ -13,13 +13,23 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
 describe.skipIf(isBrowser)('TodoistClient', () => {
+  let TodoistClient: any;
+
+  beforeAll(async () => {
+    // Only run these tests in Node.js environment
+    if (isBrowser) {
+      return;
+    }
+
+    const module = await import('./todoist-client');
+    TodoistClient = module.TodoistClient;
+  });
+
   // Only run these tests in Node.js environment
   if (isBrowser) {
     it.skip('TodoistClient tests are not available in browser', () => {});
     return;
   }
-
-  const { TodoistClient } = await import('./todoist-client');
 
   // Mock do config
   vi.mock('./config', () => ({

@@ -1,447 +1,456 @@
-# Assistente Jurídico PJe
+# GLab
 
-> Sistema de gestão jurídica inteligente com IA para escritórios de advocacia
+![GLab](https://user-images.githubusercontent.com/9063085/90530075-d7a58580-e14a-11ea-9727-4f592f7dcf2e.png)
 
-## Status do Projeto
+[![Go Report Card](https://goreportcard.com/badge/github.com/profclems/glab)](https://goreportcard.com/report/github.com/profclems/glab)
+[![Gitter](https://badges.gitter.im/glabcli/community.svg)](https://gitter.im/glabcli/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Reddit](https://img.shields.io/reddit/subreddit-subscribers/glab_cli?style=social)](https://reddit.com/r/glab_cli)
+[![Twitter Follow](https://img.shields.io/twitter/follow/glab_cli?style=social)](https://twitter.com/glab_cli)
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go#version-control)
 
-### GitHub Actions
-[![CI](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/CI/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/ci.yml)
-[![Deploy](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Deploy/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/deploy.yml)
-[![Code Quality](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Code%20Quality/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/code-quality.yml)
-[![Security Scan](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Security%20Scan/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/security-scan.yml)
-[![E2E Tests](https://github.com/thiagobodevan-a11y/assistente-juridico-p/workflows/Playwright%20E2E%20Tests/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions/workflows/e2e.yml)
+GLab is an open source GitLab CLI tool bringing GitLab to your terminal next to where you are already working with `git` and your code without switching between windows and browser tabs. Work with issues, merge requests, **watch running pipelines directly from your CLI** among other features.
+Inspired by [gh], the official GitHub CLI tool.
 
-### Project Info
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/releases/tag/v1.0.0)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D22.x-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+`glab` is available for repositories hosted on GitLab.com and self-hosted GitLab Instances. `glab` supports multiple authenticated GitLab instances and automatically detects the authenticated hostname from the remotes available in the working git directory.
 
-### GitLab CI/CD
-[![GitLab Pipeline](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/pipeline.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines)
-[![GitLab Coverage](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/coverage.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/graphs/main/charts)
-[![GitLab Release](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/badges/release.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/releases)
-[![GitLab SAST](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/badges/main/sast.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/security/dashboard)
-[![GitLab Dependency Scanning](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/badges/main/dependency_scanning.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/security/dashboard)
-[![Kubernetes](https://img.shields.io/badge/kubernetes-ready-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+![image](https://user-images.githubusercontent.com/41906128/88968573-0b556400-d29f-11ea-8504-8ecd9c292263.png)
 
-## 💾 CONFIGURAÇÃO DE BANCO DE DADOS (UPSTASH)
+Table of Contents
+=================
 
-**O Vercel KV foi descontinuado. Use o Upstash Redis:**
+* [Usage](#usage)
+* [Demo](#demo)
+* [Documentation](#documentation)
+* [Installation](#installation)
+  * [Quick Install (Bash)](#quick-install-bash)
+  * [Windows](#windows)
+    * [WinGet](#winget)
+    * [Scoop](#scoop)
+    * [EXE Installer](#exe-installer)
+  * [Linux](#linux)
+    * [Linuxbrew (Homebrew)](#linuxbrew-homebrew)
+    * [Snapcraft](#snapcraft)
+    * [Arch Linux](#arch-linux)
+    * [KISS Linux](#kiss-linux)
+    * [Alpine Linux](#alpine-linux)
+      * [Install a pinned version from edge](#install-a-pinned-version-from-edge)
+      * [Alpine Linux Docker-way](#alpine-linux-docker-way)
+    * [Nix/NixOS](#nixnixos)
+  * [macOS](#macos)
+    * [Homebrew](#homebrew)
+    * [MacPorts](#macports)
+  * [Building From Source](#building-from-source)
+    * [Prerequisites](#prerequisites-for-building-from-source-are)
+* [Authentication](#authentication)
+* [Configuration](#configuration)
+* [Environment Variables](#environment-variables)
+* [What about lab](#what-about-lab)
+* [Issues](#issues)
+* [Contributing](#contributing)
+  * [Support glab <g-emoji class="g-emoji" alias="sparkling_heart" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f496.png">💖</g-emoji>](#support-glab-)
+    * [Individuals](#individuals)
+    * [Backers](#backers)
+* [License](#license)
 
-👉 **[UPSTASH_SETUP.md](./docs/UPSTASH_SETUP.md)** - Guia passo a passo para configurar o banco de dados Redis.
+## Usage
+  ```bash
+  glab <command> <subcommand> [flags]
+  ```
 
-## 🦊 INTEGRAÇÃO GITLAB WORKFLOW NO VS CODE
+## Demo
+[![asciicast](https://asciinema.org/a/368622.svg)](https://asciinema.org/a/368622)
 
-**Configure o GitLab Workflow para CI/CD direto no VS Code:**
+## Documentation
+Read the [documentation](https://glab.readthedocs.io/) for usage instructions.
 
-👉 **[GITLAB_QUICK_START.md](./GITLAB_QUICK_START.md)** - ⚡ Guia rápido (3 passos)  
-👉 **[docs/GITLAB_VSCODE_GUIA.md](./docs/GITLAB_VSCODE_GUIA.md)** - 📚 Guia completo  
-👉 **[docs/GITLAB_TROUBLESHOOTING.md](./docs/GITLAB_TROUBLESHOOTING.md)** - 🔧 Solução de problemas
+## Installation
+Download a binary suitable for your OS at the [releases page](https://github.com/profclems/glab/releases/latest).
 
-**TL;DR**: Execute `./verify-gitlab-setup.sh` para verificar, depois `./add-gitlab-account.sh` e siga as instruções. Nunca use OAuth, sempre use PAT (Personal Access Token).
+### Quick Install
+**Supported Platforms**: Linux and macOS
 
-**Recursos disponíveis:**
-- ✅ Ver status do pipeline na barra inferior do VS Code
-- ✅ Criar/cancelar/retentar pipelines com um clique
-- ✅ Ver logs de jobs CI/CD na sidebar
-- ✅ Validar `.gitlab-ci.yml` antes de commitar
-- ✅ Autocompletar variáveis CI/CD
+#### Homebrew
 
-## 🤖 TESTE DA UI DOS AGENTES IA
-
-**Teste completo da interface dos 15 agentes IA:**
-
-👉 **[docs/UI_AGENTS_TESTING.md](./docs/UI_AGENTS_TESTING.md)** - 🧪 Guia completo de testes  
-👉 **[test-agent-ui.js](./test-agent-ui.js)** - 🔧 Script de teste automático
-
-**TL;DR**: Execute `npm run dev`, abra `http://localhost:5000`, navegue para "Agentes de IA", abra o console (F12) e execute o script de teste.
-
-**O que testar:**
-- ✅ Todos os 15 agentes visíveis e funcionais
-- ✅ Status "Active" e contadores de tarefas
-- ✅ Controles de toggle (ligar/desligar)
-- ✅ Logs de atividade em tempo real
-- ✅ Workflow e pensamento dos agentes
-- ✅ Respostas corretas aos comandos
-- ✅ Sistema de backup e orquestração
-
-## 🚀 PROBLEMAS COM DEPLOY? COMECE AQUI!
-
-**Se você teve problemas ao fazer o deploy na Vercel:**
-
-👉 **[GUIA_RAPIDO_DEPLOY.md](./GUIA_RAPIDO_DEPLOY.md)** - ⚡ Solução em 3 passos (5 min) ⭐  
-👉 **[VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md)** - Checklist completo de variáveis  
-👉 **[RESOLUCAO_DEPLOY.md](./RESOLUCAO_DEPLOY.md)** - Análise detalhada do problema
-
-**TL;DR**: O build funciona! Você só precisa configurar 2 variáveis de ambiente na Vercel: `GITHUB_RUNTIME_PERMANENT_NAME` e `GITHUB_TOKEN`. Execute `./verificar-deploy.sh` para verificar tudo antes do deploy.
-
-## 🔥 ERROS 403 OU PROBLEMAS DE CALLBACK? LEIA AQUI PRIMEIRO!
-
-**Se você está vendo erros 403 Forbidden, "Failed to fetch KV key", ou problemas com GitHub App Callback URL:**
-
-👉 **[CONFIGURACAO_GITHUB_APP_E_SPARK.md](./CONFIGURACAO_GITHUB_APP_E_SPARK.md)** - 🆕 Guia completo (25 min) ⭐  
-👉 **[QUICK_FIX_403.md](./QUICK_FIX_403.md)** - Solução em 60 segundos  
-👉 **[CORRECAO_RAPIDA_403.md](./CORRECAO_RAPIDA_403.md)** - Guia rápido (10 minutos)  
-👉 **[VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)** - Guia completo passo a passo
-
-**TL;DR**: Você precisa configurar `GITHUB_TOKEN` e `GITHUB_RUNTIME_PERMANENT_NAME` nas variáveis de ambiente do Vercel + configurar Callback URL no GitHub App. Veja os guias acima.
-
-## 🔑 CONFIGURAÇÃO OAUTH PARA VERCEL
-
-**Se você está configurando o aplicativo no Vercel pela primeira vez:**
-
-👉 **[CONFIGURACAO_RAPIDA_VERCEL.md](./CONFIGURACAO_RAPIDA_VERCEL.md)** - Guia rápido com URLs prontas  
-👉 **[VERCEL_OAUTH_SETUP.md](./VERCEL_OAUTH_SETUP.md)** - Guia completo passo a passo
-
-**TL;DR**: Configure o Google OAuth com as URLs corretas do Vercel em "Authorized JavaScript origins" no Google Cloud Console.
-
-## 🚨 AVISO CRÍTICO - DEPLOYMENT VERCEL
-
-**⚠️ LEIA [`REGRAS_VERCEL_DEPLOYMENT.md`](./REGRAS_VERCEL_DEPLOYMENT.md) ANTES DE ALTERAR O `vercel.json`**
-
-**REGRA FUNDAMENTAL**: Se `rewrites`, `redirects`, `headers`, `cleanUrls` ou `trailingSlash` estão sendo usados, então `routes` NÃO PODE estar presente.
-
-❌ **NUNCA faça isso** (quebra o deploy):
-```json
-{
-  "rewrites": [...],
-  "routes": [...]     // ← ERRO FATAL!
-}
+```sh
+brew install glab
 ```
 
-✅ **Configuração atual funciona** - não altere sem ler as regras completas.
+Updating (Homebrew):
+```sh
+brew upgrade glab
+```
+
+Alternatively, you can install `glab` by shell script:
+```sh
+curl -sL https://j.mp/glab-cli | sudo sh
+```
+or
+```sh
+curl -s https://raw.githubusercontent.com/profclems/glab/trunk/scripts/install.sh | sudo sh
+```
+*Installs into `usr/bin`*
+
+**NOTE**: Please take care when running scripts in this fashion. Consider peeking at the install script itself and verify that it works as intended.
+
+### Windows
+Available for download via [WinGet](https://github.com/microsoft/winget-cli), [scoop](https://scoop.sh), or downloadable EXE installer file.
+
+#### WinGet
+```sh
+winget install glab
+```
+
+Updating (WinGet):
+```sh
+winget install glab
+```
+
+#### Scoop
+```sh
+scoop install glab
+```
+
+Updating (Scoop):
+```sh
+scoop update glab
+```
+#### EXE Installer
+
+EXE installers are available for download on the [releases page](https://github.com/profclems/glab/releases/latest).
+
+### Linux
+Prebuilt binaries available at the [releases page](https://github.com/profclems/glab/releases/latest).
+
+#### Linuxbrew (Homebrew)
+```sh
+brew install glab
+```
+
+Updating (Homebrew):
+```sh
+brew upgrade glab
+```
+#### Snapcraft
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/glab)
+
+Make sure you have [snap installed on your Linux Distro](https://snapcraft.io/docs/installing-snapd).
+1. `sudo snap install --edge glab`
+1. `sudo snap connect glab:ssh-keys` to grant ssh access
+
+#### Arch Linux
+`glab` is available through the [community/glab](https://archlinux.org/packages/community/x86_64/glab/) package or download and install an archive from the [releases page](https://github.com/profclems/glab/releases/latest). Arch Linux also supports [snap](https://snapcraft.io/docs/installing-snap-on-arch-linux).
+```sh
+yay -Sy glab
+```
+or any other [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) of your choice.
+
+#### KISS Linux
+> WARNING: It seems that KISS Linux may no longer be actively maintained, so links to its web domain have been removed from this README.
+
+`glab` is available on the [KISS Linux Community Repo](https://github.com/kisslinux/community) as `gitlab-glab`.
+If you already have the community repo configured in your `KISS_PATH` you can install `glab` through your terminal.
+```sh
+kiss b gitlab-glab && kiss i gitlab-glab
+```
+
+#### Alpine Linux
+
+`glab` is available on the [Alpine Community Repo](https://git.alpinelinux.org/aports/tree/community/glab?h=master) as `glab`.
+
+##### Install
+
+We use `--no-cache` so we don't need to do an `apk update` before.
+
+```sh
+apk add --no-cache glab
+```
+
+##### Install a pinned version from edge
+
+To ensure that by default edge will be used to get the latest updates. We need the edge repository under `/etc/apk/repositories`.
+
+Afterwards you can install it with `apk add --no-cache glab@edge`
+
+We use `--no-cache` so we don't need to do an `apk update` before.
+
+```sh
+echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+apk add --no-cache glab@edge
+```
+
+##### Alpine Linux Docker-way
+
+Use edge directly
+
+```sh
+FROM alpine:3.13
+RUN apk add --no-cache glab
+```
+
+Fetching latest glab version from edge
+
+```sh
+FROM alpine:3.13
+RUN echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+RUN apk add --no-cache glab@edge
+```
+
+### Nix/NixOS
+
+Nix/NixOS users can install from [nixpkgs](https://search.nixos.org/packages?channel=unstable&show=glab&from=0&size=30&sort=relevance&query=glab):
+
+```bash
+nix-env -iA nixos.glab
+```
+
+### macOS
+
+#### Homebrew
+
+`glab` is available via [Homebrew](https://formulae.brew.sh/formula/glab)
+
+```sh
+brew install glab
+```
+Updating:
+```sh
+brew upgrade glab
+```
+
+#### MacPorts
+
+`glab`is also available via [MacPorts](https://ports.macports.org/port/glab/summary)
+
+```sh
+sudo port install glab
+```
+
+Updating:
+```sh
+sudo port selfupdate && sudo port upgrade glab
+```
+
+### Building From Source
+If a supported binary for your OS is not found at the [releases page](https://github.com/profclems/glab/releases/latest), you can build from source:
+
+#### Prerequisites for building from source
+- `make`
+- Go 1.13+
+
+1. Verify that you have Go 1.13+ installed
+
+   ```sh
+   $ go version
+   go version go1.14
+   ```
+
+   If `go` is not installed, follow instructions on [the Go website](https://golang.org/doc/install).
+
+2. Clone this repository
+
+   ```sh
+   git clone https://github.com/profclems/glab.git
+   cd glab
+   ```
+   If you have $GOPATH/bin or $GOBIN in your $PATH, you can just install with `make install` (install glab in $GOPATH/bin) and **skip steps 3 and 4**.
+
+3. Build the project
+   ```sh
+   make
+   ```
+
+4. Change PATH to find newly compiled `glab`
+
+   ```sh
+   export PATH=$PWD/bin:$PATH
+   ```
+
+4. Run `glab version` to confirm that it worked
+
+## Authentication
+
+Get a GitLab access token at <https://gitlab.com/-/profile/personal_access_tokens> or <https://gitlab.example.com/-/profile/personal_access_tokens> if self-hosted
+
+- start interactive setup
+  ```sh
+  glab auth login
+  ```
+
+- authenticate against gitlab.com by reading the token from a file
+  ```sh
+  glab auth login --stdin < myaccesstoken.txt
+  ```
+
+- authenticate against a self-hosted GitLab instance by reading from a file
+  ```sh
+  glab auth login --hostname salsa.debian.org --stdin < myaccesstoken.txt
+  ```
+
+- authenticate with token and hostname (Not recommended for shared environments)
+  ```sh
+  glab auth login --hostname gitlab.example.org --token xxxxx
+  ```
+
+## Configuration
+
+By default, `glab` follows the XDG Base Directory [Spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html): global configuration file is saved at `~/.config/glab-cli`. Local configuration file is saved at `.git/glab-cli` in the current working git directory. Advanced workflows may override the location of the global configuration by setting the `GLAB_CONFIG_DIR` environment variable.
+
+**To set configuration globally**
+
+```sh
+glab config set --global editor vim
+```
+
+**To set configuration for current directory (must be a git repository)**
+
+```sh
+glab config set editor vim
+```
+
+**To set configuration for a specific host**
+
+Use the `--host` flag to set configuration for a specific host. This is always stored in the global config file with or without the `global` flag.
+
+```sh
+glab config set editor vim --host gitlab.example.org
+```
+
+
+## Environment Variables
+  ```sh
+  GITLAB_TOKEN: an authentication token for API requests. Setting this avoids being
+  prompted to authenticate and overrides any previously stored credentials.
+  Can be set in the config with 'glab config set token xxxxxx'
+
+  GITLAB_URI or GITLAB_HOST: specify the url of the gitlab server if self hosted (eg: https://gitlab.example.com). Default is https://gitlab.com.
+
+  GITLAB_API_HOST: specify the host where the API endpoint is found. Useful when there are separate [sub]domains or hosts for git and the API endpoint: defaults to the hostname found in the git URL
+
+  REMOTE_ALIAS or GIT_REMOTE_URL_VAR: git remote variable or alias that contains the gitlab url.
+  Can be set in the config with 'glab config set remote_alias origin'
+
+  VISUAL, EDITOR (in order of precedence): the editor tool to use for authoring text.
+  Can be set in the config with 'glab config set editor vim'
+
+  BROWSER: the web browser to use for opening links.
+  Can be set in the config with 'glab config set browser mybrowser'
+
+  GLAMOUR_STYLE: environment variable to set your desired markdown renderer style
+  Available options are (dark|light|notty) or set a custom style
+  https://github.com/charmbracelet/glamour#styles
+
+  NO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.
+
+  FORCE_HYPERLINKS: set to 1 to force hyperlinks to be output, even when not outputing to a TTY
+  ```
+
+## What about [Lab]?
+
+Both `glab` and [lab] are open-source tools with the same goal of bringing GitLab to your command line and simplifying the developer workflow. In many ways `lab` is to [hub], while `glab` is to [gh].
+
+If you want a tool that’s more opinionated and intended to help simplify your GitLab workflows from the command line, then `glab` is for you. However, If you're looking for a tool like [hub] that feels like using git and allows you to interact with GitLab, you might consider using [lab].
+
+Some `glab` commands such as `ci view` and `ci trace` were adopted from [lab].
+
+[gh]:https://github.com/cli/cli
+[hub]:https://github.com/github/hub
+[lab]:https://github.com/zaquestion/lab
+
+## Issues
+If you have an issue: report it on the [issue tracker](https://github.com/profclems/glab/issues)
+
+## Contributing
+Feel like contributing? That's awesome! We have a [contributing guide](https://github.com/profclems/glab/blob/trunk/CONTRIBUTING.md) and [Code of conduct](https://github.com/profclems/glab/blob/trunk/CODE_OF_CONDUCT.md) to help guide you
+
+### Contributors
+
+#### Individuals
+
+This project exists thanks to all the people who contribute. [[Contribute](https://github.com/profclems/glab/blob/trunk/.github/CONTRIBUTING.md)].
+<a href="https://opencollective.com/glab/contribute"><img src="https://opencollective.com/glab/contributors.svg?width=890" /></a>
+
+#### Organizations
+
+[![Fosshost.org](https://fosshost.org/img/fosshost-logo.png)](https://fosshost.org)
+
+## License
+Copyright © [Clement Sam](https://clementsam.tech)
+
+`glab` is open-sourced software licensed under the [MIT](LICENSE) license.
 
 ---
 
-Um sistema completo de gestão para escritórios de advocacia com foco em automação, inteligência artificial, e experiência do usuário profissional.
+# 🤖 GitLab Agents - Assistente Jurídico P
 
-## 🚀 Características Principais
+## 📊 Status dos Agentes (4/7 Conectados)
 
-- **Dashboard Inteligente**: Visão consolidada de processos, tarefas e métricas
-- **Gestão de Processos**: Kanban visual com drag & drop
-- **IA Assistente (Harvey Specter)**: Chatbot jurídico com contexto processual
-- **Agentes IA Autônomos**: 15 agentes especializados trabalhando 24/7
-- **Integração DJEN/DataJud**: Monitoramento automático de publicações
-- **Google Calendar**: Sincronização bidirecional de eventos ([documentação completa](GOOGLE_CALENDAR_INTEGRATION.md))
-- **Gestão Financeira**: Controle completo de honorários e despesas
-- **Calculadora de Prazos**: Cálculo preciso com feriados e dias úteis
+### ✅ Agentes Ativos
+- **assistente-juridico-agent**: Agente principal com desenvolvimento remoto e CI/CD completo
+- **agente-cluster**: Agente para gerenciamento de cluster
+- **agenterevisor**: Agente para revisão de código
+- **agenterevisor2**: Segundo agente de revisão
 
-## 📋 Pré-requisitos
+### 🔄 Agentes Pendentes de Registro
+- **agente-desenvolvimento**: Ambiente de desenvolvimento com debug e hot reload
+- **agente-qa**: Ambiente de QA com testes automatizados e segurança
+- **agente-producao**: Ambiente de produção com HA e backup
 
-- Node.js 18+ 
-- npm ou yarn
-- Conta Google Cloud (para OAuth)
+## 🏗️ Infraestrutura Kubernetes
 
-## ⚙️ Configuração Inicial
+### Namespaces Isolados
+- `desenvolvimento`: Ambiente de desenvolvimento
+- `qa`: Ambiente de testes e qualidade
+- `production`: Ambiente de produção
 
-### 1. Clone e Instale
+### Recursos Configurados
+- ✅ RBAC (ClusterRoles e ServiceAccounts)
+- ✅ Network Policies para isolamento
+- ✅ ConfigMaps por ambiente
+- ✅ Minikube cluster local ativo
 
+## 📋 Próximos Passos para Completar Configuração
+
+### 1. Registro Manual dos Agentes
 ```bash
-git clone <repository-url>
-cd assistente-juridico-pje
-npm install
+# Execute o guia de registro
+./.gitlab/register-agents-manual.sh
 ```
 
-### 2. Configure OAuth (Obrigatório)
+### 2. Acesse o GitLab
+- URL: https://gitlab.com/thiagobodevan-a11y-group/assistente-juridico-p
+- Navegue: Infrastructure → Kubernetes clusters → Agents
 
-Este aplicativo requer credenciais Google OAuth para autenticação.
+### 3. Registre Cada Agente
+Para cada agente pendente:
+- Clique em "Register an agent"
+- Selecione o agente da lista
+- Copie o token gerado
 
-**⚠️ IMPORTANTE: Nunca commit credenciais no Git!**
+### 4. Configure Variáveis de Ambiente
+No GitLab CI/CD Settings → Variables:
+- `AGENTE_DESENVOLVIMENTO_TOKEN`
+- `AGENTE_QA_TOKEN`
+- `AGENTE_PRODUCAO_TOKEN`
 
+### 5. Teste a Configuração
 ```bash
-# Copie o arquivo de exemplo
-cp .env.example .env
+# Teste conectividade
+./scripts/test-gitlab-agents.sh
 
-# Edite .env e adicione suas credenciais
-# VITE_GOOGLE_CLIENT_ID=seu-client-id-aqui
-# VITE_REDIRECT_URI=http://localhost:5173
+# Verificação completa
+./verify-gitlab-agents.sh
 ```
 
-📖 **Guias de configuração:**
-- **Para desenvolvimento local:** Veja [OAUTH_SETUP.md](./OAUTH_SETUP.md)
-- **Para deploy no Vercel:** Veja [VERCEL_OAUTH_SETUP.md](./VERCEL_OAUTH_SETUP.md) ou [CONFIGURACAO_RAPIDA_VERCEL.md](./CONFIGURACAO_RAPIDA_VERCEL.md)
-
-### 3. Execute o Desenvolvimento
-
-```bash
-npm run dev
-```
-
-Acesse: `http://localhost:5173`
-
-## 🔐 Segurança
-
-Este projeto implementa boas práticas de segurança:
-
-- ✅ Credenciais OAuth via variáveis de ambiente
-- ✅ Nunca expõe client secrets no código
-- ✅ `.env` no `.gitignore`
-- ✅ Validação de configuração na inicialização
-
-**Nunca:**
-- ❌ Faça commit de credenciais no Git
-- ❌ Compartilhe client secrets em chat/email
-- ❌ Use credenciais de produção em desenvolvimento
-
-Veja `SECURITY.md` para mais informações.
-
-## 🏗️ Estrutura do Projeto
-
-```
-src/
-├── components/
-│   ├── ui/              # Componentes shadcn
-│   ├── Dashboard.tsx    # Dashboard principal
-│   ├── ProcessCRM.tsx   # Gestão Kanban
-│   ├── AIAgents.tsx     # Painel de agentes
-│   ├── GoogleAuth.tsx   # Autenticação Google
-│   └── ...
-├── hooks/
-│   └── use-autonomous-agents.ts
-├── lib/
-│   ├── config.ts        # Configuração centralizada
-│   └── utils.ts
-└── index.css            # Tema e estilos
-```
-
-## 📖 Documentação
-
-### Guias Essenciais
-- 🚀 `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - **Guia completo de CI/CD e Deploy Automático** ⭐
-- 🚀 `GUIA_DEPLOY_SIMPLES.md` - **Guia rápido de deploy no Vercel**
-- 🤖 `GITHUB_COPILOT_AGENT.md` - **Configuração do GitHub Copilot agent**
-- 🔧 `CORRECAO_403_VERCEL_JSON.md` - **Correção definitiva dos erros 403** ✅ 🆕
-- 🔧 `MIGRACAO_VERCEL_KV.md` - **Migração para Vercel KV (código e hooks)** 🆕
-
-### CI/CD e Deploy
-- 🔑 `CONFIGURACAO_VERCEL_TOKEN.md` - **Configuração do token Vercel para deploy automático** 🆕 ⭐
-- 📋 `GITHUB_SECRETS_CHECKLIST.md` - **Checklist rápido para configurar secrets** 🆕 ⭐
-- `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - Guia completo de CI/CD
-- `GITHUB_ACTIONS_CONFIGURADO.md` - Setup inicial do GitHub Actions
-- `GITHUB_ACTIONS_CORRECOES.md` - Correções e melhorias aplicadas
-- `VERCEL_DEPLOYMENT.md` - Documentação completa do deploy no Vercel
-- `DEPLOYMENT_FIX_COMPLETE.md` - Solução de problemas de deployment
-- `VERCEL_KV_SETUP.md` - Configuração do Vercel KV storage
-
-### Funcionalidades
-- `GOOGLE_CALENDAR_INTEGRATION.md` - Integração Google Calendar
-- `DJEN_DOCUMENTATION.md` - Integração DJEN/DataJud
-- `PREMONICAO_JURIDICA.md` - Sistema de premonição jurídica
-- `MULTI_SOURCE_PUBLICATIONS.md` - Publicações multi-fonte
-
-### Configuração
-- `OAUTH_SETUP.md` - Guia de configuração OAuth
-- `PRD.md` - Documento de requisitos do produto
-- `SECURITY.md` - Políticas de segurança
-- `QUICKSTART.md` - Início rápido
-
-## 🎨 Stack Tecnológica
-
-- **Framework**: React 19 + TypeScript
-- **Build**: Vite
-- **Styling**: Tailwind CSS v4
-- **Components**: shadcn/ui v4
-- **Icons**: Phosphor Icons
-- **State**: Custom KV hook + Vercel KV (localStorage em dev)
-- **Forms**: React Hook Form + Zod
-- **Charts**: Recharts
-- **AI**: Spark LLM (GPT-4)
-- **Animation**: Framer Motion
-
-## 🚧 Desenvolvimento
-
-### Acesso Demo
-
-Para desenvolvimento rápido, use as contas demo:
-
-- **Admin**: `admin / admin123`
-- **Demo**: `demo / demo`
-- **Teste**: `usuario / 123456`
-
-### Comandos Úteis
-
-```bash
-npm run dev          # Desenvolvimento
-npm run build        # Build produção
-npm run preview      # Preview do build
-npm run lint         # Lint código
-```
-
-## 🌐 Deploy
-
-### 🚀 COMECE AQUI: Escolha Sua Plataforma
-
-**Não sabe qual plataforma usar?**
-
-👉 **[ESCOLHA_PLATAFORMA_DEPLOY.md](./ESCOLHA_PLATAFORMA_DEPLOY.md)** - ⚡ Decisão em 30 segundos ⭐
-
-**TL;DR:**
-- **Vercel**: Melhor performance, já configurado
-- **Render**: 100% grátis, sem cartão (com sleep)
-- **Netlify**: CDN global, super rápido
-- **Railway**: $5/mês grátis + PostgreSQL
-
-📊 [Ver comparação completa](./PLATAFORMAS_DEPLOY_GRATIS.md)
-
----
-
-### ⚡ Deploy Automático (GitHub Actions + Vercel)
-
-Este projeto possui **deploy automático** configurado com GitHub Actions:
-
-✅ **Deploy em Produção**: Automático ao fazer merge na branch `main`  
-✅ **Deploy Preview**: Automático em cada Pull Request  
-✅ **Deploy Manual**: Via workflow_dispatch no GitHub Actions
-
-**Para configurar:**
-1. Configure os secrets necessários no GitHub (Settings → Secrets → Actions)
-2. Conecte o repositório ao Vercel
-3. Pronto! Deploys automáticos em cada push
-
-📖 **Guia completo**: Veja `GITHUB_ACTIONS_DEPLOY_GUIDE.md` para instruções detalhadas
-
-### Vercel (Recomendado) ⭐
-
-**Deploy com 1 clique:**
-1. Conecte sua conta do GitHub ao [Vercel](https://vercel.com)
-2. Importe este repositório
-3. Configure as variáveis de ambiente (veja abaixo)
-4. Deploy!
-
-**Variáveis de ambiente necessárias:**
-```
-GITHUB_RUNTIME_PERMANENT_NAME=97a1cb1e48835e0ecf1e
-GITHUB_TOKEN=seu_token_github
-VITE_GOOGLE_CLIENT_ID=seu_client_id
-VITE_GOOGLE_API_KEY=sua_api_key
-VITE_REDIRECT_URI=https://seu-app.vercel.app
-VITE_APP_ENV=production
-```
-
-**⚠️ IMPORTANTE: Configure o Vercel KV Storage**
-
-Para evitar erros 403 no armazenamento, você **deve** configurar o Vercel KV:
-
-1. No Vercel Dashboard: **Storage** → **Create Database** → **KV**
-2. Nome: `assistente-juridico-kv`
-3. Região: São Paulo (GRU) ou mais próxima
-4. **Connect Project** → Selecione seu projeto
-5. Ambientes: Production, Preview, Development
-
-As variáveis `KV_REST_API_URL`, `KV_REST_API_TOKEN` e `KV_REST_API_READ_ONLY_TOKEN` serão automaticamente injetadas pelo Vercel.
-
-📖 **Guia de correção 403**: Ver `CORRECAO_403_VERCEL_JSON.md` para detalhes completos
-
-📖 **Guias de deploy**: 
-- `GITHUB_ACTIONS_DEPLOY_GUIDE.md` - Deploy automático (recomendado)
-- `GUIA_DEPLOY_SIMPLES.md` - Deploy manual
-- `VERCEL_DEPLOYMENT.md` - Documentação completa
-- `VERSIONAMENTO.md` - Guia de versionamento e releases
-
-## 🏷️ Versionamento e Releases
-
-Este projeto segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/) e possui **releases automáticas** via GitHub Actions.
-
-**Versão Atual:** `v1.0.0` 🎉
-
-### Como fazer uma nova release
-
-```bash
-# 1. Atualize o CHANGELOG.md
-# 2. Atualize a versão no package.json
-npm version [major|minor|patch]
-
-# 3. Faça push da tag (isso aciona deploy automático!)
-git push origin main
-git push origin v1.x.x
-```
-
-O GitHub Actions automaticamente:
-- ✅ Executa testes e build
-- ✅ Cria GitHub Release com notas do CHANGELOG
-- ✅ Faz deploy para produção no Vercel
-- ✅ Gera arquivo ZIP da aplicação
-
-📖 **Guia completo**: Veja [`VERSIONAMENTO.md`](./VERSIONAMENTO.md) para detalhes
-
-### Histórico de Versões
-
-- **v1.0.0** (2025-11-18) - Primeira versão estável oficial
-  - Dashboard inteligente com 15 agentes IA autônomos
-  - Integrações DJEN/DataJud e Google Calendar
-  - Sistema completo de gestão jurídica
-  - Ver [CHANGELOG.md](./CHANGELOG.md) para detalhes completos
-
-
-### 🌐 Outras Plataformas Gratuitas
-
-Além do Vercel, você pode usar outras plataformas 100% gratuitas:
-
-#### Render (100% Gratuito)
-
-Deploy automático com `render.yaml` já configurado!
-
-👉 **[GUIA_DEPLOY_RENDER.md](./GUIA_DEPLOY_RENDER.md)** - Guia completo passo a passo (15 min) ⭐
-
-**TL;DR:**
-- Conecte ao GitHub
-- Configure variáveis de ambiente
-- Deploy automático a cada push
-- ⚠️ App "dorme" após 15 min de inatividade
-
-#### Netlify (Recomendado para Sites Estáticos)
-
-Deploy super rápido com CDN global!
-
-👉 **[GUIA_DEPLOY_NETLIFY.md](./GUIA_DEPLOY_NETLIFY.md)** - Guia completo com CLI e interface
-
-**TL;DR:**
-- Arquivo `netlify.toml` já configurado
-- SSL automático
-- Preview de PRs
-- 100 GB/mês de banda grátis
-
-#### Railway ($5/mês grátis)
-
-Melhor se precisar de PostgreSQL grátis!
-
-👉 **[GUIA_DEPLOY_RAILWAY.md](./GUIA_DEPLOY_RAILWAY.md)** - Guia completo
-
-**TL;DR:**
-- $5/mês em créditos grátis
-- PostgreSQL incluído
-- App sempre ativo (sem sleep)
-- Requer cartão (não cobra)
-
-#### 📊 Comparação de Plataformas
-
-Não sabe qual escolher? Veja a comparação completa:
-
-👉 **[PLATAFORMAS_DEPLOY_GRATIS.md](./PLATAFORMAS_DEPLOY_GRATIS.md)** - Comparação detalhada ⭐
-
-Inclui: Vercel, Render, Netlify, Railway, Fly.io, Cloudflare Pages
-
-### Compatibilidade
-
-Este app é compatível com qualquer plataforma que suporte aplicações React/Vite:
-- ✅ Vercel (recomendado)
-- ✅ Render
-- ✅ Netlify
-- ✅ Railway
-- ✅ Fly.io
-- ✅ Cloudflare Pages
-- ✅ GitHub Pages (com algumas limitações)
-- ✅ Qualquer host de SPA
-
-## 🧹 Começando do Zero?
-
-Se você está explorando e quer começar do zero:
-
-- Simplesmente delete seu Spark
-- Tudo será limpo sem deixar rastros
-
-## 📄 Licença
-
-MIT License - Copyright GitHub, Inc.
+## 🔧 Scripts Disponíveis
+
+- `./verify-gitlab-agents.sh`: Verifica status dos agentes
+- `./.gitlab/register-agents-manual.sh`: Guia de registro manual
+- `./scripts/test-gitlab-agents.sh`: Testa conectividade
+- `./scripts/apply-k8s-manifests.sh`: Aplica manifests K8s
+- `./scripts/verify-gitlab-agents-k8s.sh`: Verifica infraestrutura
+
+## 📚 Documentação
+
+- [GitLab Agents Documentation](docs/KUBERNETES_MANIFESTOS.md)
+- [Configuração GitLab Duo](GITLAB_DUO_SETUP_COMPLETE.md)
+- [Guia de Infraestrutura](docs/CLOUD_CODE_DEPLOY.md)
