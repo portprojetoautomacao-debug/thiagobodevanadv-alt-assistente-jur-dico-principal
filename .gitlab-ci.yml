@@ -16,7 +16,6 @@ cache:
       - package.json
   paths:
     - node_modules/
-    - .npm/
   policy: pull-push
     - .npm/
 
