@@ -1,26 +1,6 @@
 ci_access:
   projects:
   - id: thiagobodevan-a11y/assistente-juridico-p
-  ingress:
-    - from:
-        - podSelector: {}
-        - namespaceSelector:
-            matchLabels:
-              environment: desenvolvimento
-  egress:
-    - to:
-        - podSelector: {}
-      ports:
-        - protocol: TCP
-          port: 80
-        - protocol: TCP
-          port: 443
-        - protocol: TCP
-          port: 6379  # Redis
-        - protocol: TCP
-          port: 5432  # PostgreSQL (se usado)
-        - protocol: TCP
-          port: 27017 # MongoDB (se usado)
 
 observability:
   logging:
