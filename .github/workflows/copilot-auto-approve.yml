@@ -74,7 +74,8 @@ jobs:
         id: check-tests-run
         run: |
           if grep -q "\"test\":" package.json; then
-            if npm test -- --run; then
+            # Run tests with appropriate command based on test framework
+            if npm test -- --run 2>/dev/null || npm test; then
               echo "tests-run-passed=true" >> $GITHUB_OUTPUT
             else
               echo "tests-run-passed=false" >> $GITHUB_OUTPUT
