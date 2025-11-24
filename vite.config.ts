@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, PluginOption } from "vite";
 import { VitePWA } from 'vite-plugin-pwa';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import sparkPlugin from "@github/spark/spark-vite-plugin";
 import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
@@ -19,14 +18,6 @@ export default defineConfig({
     phosphorIconOptimizer(),
     createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'api/**/*',
-          dest: 'api'
-        }
-      ]
-    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['robots.txt', 'sitemap.xml', '*.svg', '*.png'],
