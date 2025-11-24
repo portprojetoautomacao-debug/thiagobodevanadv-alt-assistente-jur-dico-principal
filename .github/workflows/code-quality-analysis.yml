@@ -303,15 +303,22 @@ jobs:
           FUNCTIONS=$(jq -r '.functions_coverage' coverage-metrics.json)
           BRANCHES=$(jq -r '.branches_coverage' coverage-metrics.json)
 
-          gh pr comment ${{ github.event.number }} --body "## 🧪 Cobertura de Testes
+          echo "## 🧪 Cobertura de Testes" > coverage-comment.md
+          echo "" >> coverage-comment.md
+          echo "**Linhas:** $LINES%" >> coverage-comment.md
+          echo "**Funções:** $FUNCTIONS%" >> coverage-comment.md
+          echo "**Branches:** $BRANCHES%" >> coverage-comment.md
+          echo "" >> coverage-comment.md
 
-**Linhas:** $LINES%
-**Funções:** $FUNCTIONS%
-**Branches:** $BRANCHES%
+          if (( $(echo "$LINES < 80" | bc -l) )); then
+            echo "⚠️  Cobertura de linhas abaixo do threshold (80%)" >> coverage-comment.md
+          fi
 
-$(if (( $(echo "$LINES < 80" | bc -l) )); then echo "⚠️  Cobertura de linhas abaixo do threshold (80%)"; fi)
-$(if (( $(echo "$FUNCTIONS < 80" | bc -l) )); then echo "⚠️  Cobertura de funções abaixo do threshold (80%)"; fi)
-"
+          if (( $(echo "$FUNCTIONS < 80" | bc -l) )); then
+            echo "⚠️  Cobertura de funções abaixo do threshold (80%)" >> coverage-comment.md
+          fi
+
+          gh pr comment ${{ github.event.number }} --body-file coverage-comment.md
         fi
 
   # ==========================================
