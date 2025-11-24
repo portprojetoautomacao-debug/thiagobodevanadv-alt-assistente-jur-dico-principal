@@ -4,31 +4,16 @@ import {
   processTaskWithRealAI, 
   isRealAgentsEnabled 
 } from '@/lib/real-agent-client'
-
-// Types from lib/ai/agents-registry.ts
-type AgentTask = {
-  id: string
-  agentId: string
-  type: string
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  status: 'queued' | 'processing' | 'completed' | 'failed'
-  createdAt: string
-  data: Record<string, unknown>
-  result?: Record<string, unknown>
-}
-
-type Agent = {
-  id: string
-  name: string
-  description: string
-  type: string
-  status: 'active' | 'idle' | 'processing'
-  enabled: boolean
-  lastActivity: string
-  tasksCompleted: number
-  tasksToday: number
-  continuousMode: boolean
-}
+import {
+  type Agent,
+  type AgentTask,
+  type AgentTaskGenerator,
+  processTaskWithAI,
+  shouldPauseForHuman,
+  canResumeAfterHuman,
+  createTaskGenerator,
+  initializeAgents
+} from '@/lib/agents'
 
 function getAgentActivity(agent: Agent): string {
   if (agent.status === 'processing') return 'Processando tarefa...'
@@ -37,7 +22,7 @@ function getAgentActivity(agent: Agent): string {
 }
 
 export function useAutonomousAgents() {
-  const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', [])
+  const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', initializeAgents())
   const [taskQueue, setTaskQueue] = useKV<AgentTask[]>('agent-task-queue', [])
   const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
   const [activityLog, setActivityLog] = useKV<Array<{

@@ -2,46 +2,6 @@
 // DSN: https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042
 
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
-
-function resolveBrowserTracingIntegration(): unknown {
-  const sentryAny = Sentry as unknown as {
-    browserTracingIntegration?: () => unknown;
-  };
-
-  if (typeof sentryAny.browserTracingIntegration === "function") {
-    return sentryAny.browserTracingIntegration();
-  }
-
-  if (typeof BrowserTracing === "function") {
-    return new BrowserTracing();
-  }
-
-  return null;
-}
-
-function resolveReplayIntegration(): unknown {
-  const sentryAny = Sentry as unknown as {
-    replayIntegration?: (options: { maskAllText: boolean; blockAllMedia: boolean }) => unknown;
-    Replay?: new (options: { maskAllText: boolean; blockAllMedia: boolean }) => unknown;
-  };
-
-  if (typeof sentryAny.replayIntegration === "function") {
-    return sentryAny.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    });
-  }
-
-  if (typeof sentryAny.Replay === "function") {
-    return new sentryAny.Replay({
-      maskAllText: true,
-      blockAllMedia: true,
-    });
-  }
-
-  return null;
-}
 
 /**
  * Initialize Sentry for Error Tracking
@@ -54,22 +14,6 @@ function resolveReplayIntegration(): unknown {
  * - Source maps support
  */
 export function initErrorTracking() {
-  const integrations: unknown[] = [];
-
-  const tracingIntegration = resolveBrowserTracingIntegration();
-  if (tracingIntegration) {
-    integrations.push(tracingIntegration);
-  }
-
-  const replayIntegration = resolveReplayIntegration();
-  if (replayIntegration) {
-    integrations.push(replayIntegration);
-  }
-
-  const resolvedIntegrations = integrations.length
-    ? (integrations as Parameters<typeof Sentry.init>[0]["integrations"])
-    : undefined;
-
   Sentry.init({
     // GitLab Error Tracking DSN
     dsn: "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042",
@@ -81,7 +25,12 @@ export function initErrorTracking() {
     release: import.meta.env.VITE_APP_VERSION || "unknown",
     
     // Integrations
-    integrations: resolvedIntegrations,
+    integrations: [
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
     
     // Performance monitoring
     tracesSampleRate: import.meta.env.MODE === "production" ? 0.1 : 1.0,
@@ -194,24 +143,27 @@ export function captureApiError(
 }
 
 /**
- * Start performance monitoring transaction
+ * Legacy function for backwards compatibility
+ * 
+ * @deprecated This function is deprecated and should not be used.
+ * Use Sentry.startSpan() directly instead:
+ * 
+ * @example
+ * ```ts
+ * await Sentry.startSpan({ name: 'myOperation', op: 'task' }, async (span) => {
+ *   // Your async operation here
+ *   return result;
+ * });
+ * ```
+ * 
+ * @throws {Error} Always throws an error to prevent silent failures
  */
-export function startTransaction(name: string, op: string = "http.request") {
-  const shouldSample = import.meta.env.MODE === "production" ? Math.random() < 0.1 : true;
-  const sentryAny = Sentry as unknown as {
-    startTransaction?: (...args: unknown[]) => unknown;
-  };
-
-  if (typeof sentryAny.startTransaction === "function") {
-    return sentryAny.startTransaction({
-      name,
-      op,
-      sampled: shouldSample,
-    });
-  }
-
-  console.warn("Sentry.startTransaction is not available in this SDK version.");
-  return null;
+export function startTransaction(_name: string, _op: string = "http.request"): never {
+  throw new Error(
+    'startTransaction is deprecated in Sentry v10+. ' +
+    'Use Sentry.startSpan() directly. ' +
+    'See: https://docs.sentry.io/platforms/javascript/guides/react/performance/'
+  );
 }
 
 /**

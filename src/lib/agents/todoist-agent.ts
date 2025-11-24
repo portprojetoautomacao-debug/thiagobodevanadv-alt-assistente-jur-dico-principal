@@ -7,10 +7,10 @@
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import type { TodoistApi } from '@doist/todoist-api-typescript';
 import { getTodoistClient, updateLegalTask } from '../todoist-integration';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
+import type { TodoistClient } from '../todoist-client';
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {
@@ -47,23 +47,11 @@ interface InterpretedCommand {
   originalText: string;
 }
 
-function generateEventId(): string {
-  const globalCrypto = typeof globalThis !== 'undefined'
-    ? (globalThis.crypto as { randomUUID?: () => string } | undefined)
-    : undefined;
-
-  if (globalCrypto?.randomUUID) {
-    return globalCrypto.randomUUID();
-  }
-
-  return `todoist-event-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
-}
-
 /**
  * Agente Todoist
  */
 export class TodoistAgent {
-  private client: TodoistApi;
+  private client: TodoistClient;
 
   constructor() {
     this.client = getTodoistClient();
@@ -241,7 +229,7 @@ export class TodoistAgent {
           
           try {
             await googleCalendarService.createEvent({
-              id: generateEventId(),
+              id: crypto.randomUUID(),
               title: command.parameters.description,
               description: `Criado via Todoist Agent. Comando original: ${command.originalText}`,
               date: command.parameters.date,
