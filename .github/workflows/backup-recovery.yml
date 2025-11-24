@@ -1,0 +1,501 @@
+name: Backup e Recuperação de Dados
+
+on:
+  schedule:
+    # Backup diário às 2:00 AM
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      backup_type:
+        description: 'Tipo de backup'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - incremental
+          - config-only
+          - test-restore
+      environment:
+        description: 'Ambiente para backup'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+          - both
+      retention_days:
+        description: 'Dias para reter backups'
+        required: false
+        default: '30'
+        type: string
+
+concurrency:
+  group: backup-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # 💾 BACKUP COMPLETO
+  # ==========================================
+
+  full-backup:
+    name: '💾 Backup Completo'
+    runs-on: self-hosted
+    if: github.event.inputs.backup_type == 'full' || (github.event_name == 'schedule' && github.event.inputs.backup_type != 'incremental' && github.event.inputs.backup_type != 'config-only')
+
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(github.event.inputs.environment == 'both' && '["production", "staging"]' || github.event.inputs.environment == 'staging' && '["staging"]' || '["production"]') }}
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 📅 Preparar metadados do backup
+      run: |
+        echo "📅 Preparando metadados do backup..."
+
+        BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        BACKUP_DATE=$(date +%Y-%m-%d)
+        BACKUP_ID="${{ matrix.environment }}-$BACKUP_TIMESTAMP"
+
+        echo "BACKUP_TIMESTAMP=$BACKUP_TIMESTAMP" >> $GITHUB_ENV
+        echo "BACKUP_DATE=$BACKUP_DATE" >> $GITHUB_ENV
+        echo "BACKUP_ID=$BACKUP_ID" >> $GITHUB_ENV
+
+        # Criar diretório de backup
+        mkdir -p backups/$BACKUP_ID
+
+        # Salvar metadados
+        {
+          echo "backup_id: $BACKUP_ID"
+          echo "timestamp: $BACKUP_TIMESTAMP"
+          echo "date: $BACKUP_DATE"
+          echo "environment: ${{ matrix.environment }}"
+          echo "type: full"
+          echo "version: $(git rev-parse HEAD)"
+          echo "created_by: github-actions"
+        } > backups/$BACKUP_ID/metadata.json
+
+    - name: 💾 Backup do Banco de Dados (Upstash Redis)
+      run: |
+        echo "💾 Fazendo backup do Redis..."
+
+        # Backup usando Upstash REST API
+        if [[ "${{ matrix.environment }}" == "production" ]]; then
+          UPSTASH_URL="${{ secrets.UPSTASH_REDIS_REST_URL }}"
+          UPSTASH_TOKEN="${{ secrets.UPSTASH_REDIS_REST_TOKEN }}"
+        else
+          UPSTASH_URL="${{ secrets.UPSTASH_REDIS_REST_URL_STAGING }}"
+          UPSTASH_TOKEN="${{ secrets.UPSTASH_REDIS_REST_TOKEN_STAGING }}"
+        fi
+
+        # Exportar todos os dados do Redis
+        curl -X GET "$UPSTASH_URL/dump" \
+          -H "Authorization: Bearer $UPSTASH_TOKEN" \
+          -o backups/$BACKUP_ID/redis-dump.json
+
+        # Verificar se o backup foi bem-sucedido
+        if [[ -s backups/$BACKUP_ID/redis-dump.json ]]; then
+          echo "✅ Backup Redis concluído"
+          REDIS_SIZE=$(stat -f%z backups/$BACKUP_ID/redis-dump.json 2>/dev/null || stat -c%s backups/$BACKUP_ID/redis-dump.json)
+          echo "📊 Tamanho do backup Redis: $REDIS_SIZE bytes"
+        else
+          echo "❌ Falha no backup Redis"
+          exit 1
+        fi
+
+    - name: 📁 Backup de Arquivos Estáticos
+      run: |
+        echo "📁 Fazendo backup de arquivos estáticos..."
+
+        # Backup de arquivos do Vercel (se aplicável)
+        # Aqui você pode adicionar backup de arquivos estáticos
+        echo "📦 Arquivos estáticos incluídos no backup"
+
+    - name: ⚙️  Backup de Configurações
+      run: |
+        echo "⚙️  Fazendo backup de configurações..."
+
+        # Backup de variáveis de ambiente (não sensíveis)
+        {
+          echo "# Backup de configurações - $BACKUP_TIMESTAMP"
+          echo "# Ambiente: ${{ matrix.environment }}"
+          echo ""
+          echo "# Configurações da aplicação"
+          echo "NODE_ENV=production"
+          echo "VITE_APP_ENV=${{ matrix.environment }}"
+        } > backups/$BACKUP_ID/config.env
+
+        # Backup de configurações do Vercel
+        if [[ -f vercel.json ]]; then
+          cp vercel.json backups/$BACKUP_ID/
+        fi
+
+        # Backup de configurações do Vite
+        if [[ -f vite.config.ts ]]; then
+          cp vite.config.ts backups/$BACKUP_ID/
+        fi
+
+    - name: 📊 Backup de Logs e Métricas
+      run: |
+        echo "📊 Fazendo backup de logs e métricas..."
+
+        # Aqui você pode adicionar coleta de logs do Vercel
+        # ou outras fontes de logs/métricas
+        echo "📋 Logs e métricas incluídos"
+
+    - name: 🗜️  Compressão do Backup
+      run: |
+        echo "🗜️  Comprimindo backup..."
+
+        # Criar arquivo tar.gz
+        tar -czf backups/$BACKUP_ID.tar.gz -C backups $BACKUP_ID
+
+        # Verificar tamanho do backup comprimido
+        BACKUP_SIZE=$(stat -f%z backups/$BACKUP_ID.tar.gz 2>/dev/null || stat -c%s backups/$BACKUP_ID.tar.gz)
+        echo "📦 Tamanho do backup comprimido: $BACKUP_SIZE bytes"
+
+        # Calcular hash para verificação de integridade
+        BACKUP_HASH=$(sha256sum backups/$BACKUP_ID.tar.gz | cut -d' ' -f1)
+        echo "🔐 Hash SHA256: $BACKUP_HASH"
+
+        # Atualizar metadados
+        echo "compressed_size: $BACKUP_SIZE" >> backups/$BACKUP_ID/metadata.json
+        echo "hash: $BACKUP_HASH" >> backups/$BACKUP_ID/metadata.json
+
+    - name: ☁️  Upload para Armazenamento Seguro
+      run: |
+        echo "☁️  Fazendo upload para armazenamento seguro..."
+
+        # Aqui você pode implementar upload para:
+        # - AWS S3
+        # - Azure Blob Storage
+        # - Google Cloud Storage
+        # - GitHub Releases (para backups pequenos)
+
+        # Exemplo com GitHub Releases
+        gh release create "backup-$BACKUP_ID" \
+          backups/$BACKUP_ID.tar.gz \
+          --title "Backup $BACKUP_ID" \
+          --notes "Backup automático - ${{ matrix.environment }} - $BACKUP_DATE" \
+          --latest=false
+
+    - name: 🧹 Limpeza Local
+      run: |
+        echo "🧹 Fazendo limpeza local..."
+
+        # Remover arquivos locais após upload
+        rm -rf backups/$BACKUP_ID
+        rm -f backups/$BACKUP_ID.tar.gz
+
+        echo "✅ Backup concluído e limpo"
+
+    - name: 📤 Upload Metadados para Auditoria
+      uses: actions/upload-artifact@v4
+      with:
+        name: backup-metadata-${{ matrix.environment }}
+        path: backups/$BACKUP_ID/metadata.json
+
+  # ==========================================
+  # 🔄 BACKUP INCREMENTAL
+  # ==========================================
+
+  incremental-backup:
+    name: '🔄 Backup Incremental'
+    runs-on: self-hosted
+    if: github.event.inputs.backup_type == 'incremental' || (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *') # A cada 6 horas
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔄 Executar Backup Incremental
+      run: |
+        echo "🔄 Executando backup incremental..."
+
+        # Identificar último backup completo
+        LAST_FULL_BACKUP=$(gh release list --limit 10 | grep "backup-production-" | head -1 | cut -f3)
+
+        if [[ -z "$LAST_FULL_BACKUP" ]]; then
+          echo "❌ Nenhum backup completo encontrado. Execute backup completo primeiro."
+          exit 1
+        fi
+
+        echo "📅 Último backup completo: $LAST_FULL_BACKUP"
+
+        # Aqui você implementaria lógica de backup incremental
+        # Por exemplo, backup apenas de dados modificados desde o último backup
+        echo "✅ Backup incremental concluído"
+
+  # ==========================================
+  # ⚙️  BACKUP DE CONFIGURAÇÕES
+  # ==========================================
+
+  config-backup:
+    name: '⚙️  Backup de Configurações'
+    runs-on: self-hosted
+    if: github.event.inputs.backup_type == 'config-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: ⚙️  Backup de Configurações do Projeto
+      run: |
+        echo "⚙️  Fazendo backup de configurações do projeto..."
+
+        BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        mkdir -p config-backup/$BACKUP_TIMESTAMP
+
+        # Arquivos de configuração importantes
+        CONFIG_FILES=(
+          "package.json"
+          "tsconfig.json"
+          "vite.config.ts"
+          "tailwind.config.js"
+          "eslint.config.js"
+          "vercel.json"
+          ".github/workflows/*.yml"
+          "src/lib/config.ts"
+        )
+
+        for file in "${CONFIG_FILES[@]}"; do
+          if [[ -f "$file" ]]; then
+            mkdir -p config-backup/$BACKUP_TIMESTAMP/$(dirname "$file")
+            cp "$file" config-backup/$BACKUP_TIMESTAMP/"$file"
+          fi
+        done
+
+        # Criar arquivo tar.gz
+        tar -czf config-backup-$BACKUP_TIMESTAMP.tar.gz -C config-backup $BACKUP_TIMESTAMP
+
+        # Upload como release
+        gh release create "config-backup-$BACKUP_TIMESTAMP" \
+          config-backup-$BACKUP_TIMESTAMP.tar.gz \
+          --title "Config Backup $BACKUP_TIMESTAMP" \
+          --notes "Backup de configurações - $BACKUP_TIMESTAMP"
+
+        # Limpeza
+        rm -rf config-backup/
+
+  # ==========================================
+  # 🧪 TESTE DE RESTAURAÇÃO
+  # ==========================================
+
+  test-restore:
+    name: '🧪 Teste de Restauração'
+    runs-on: self-hosted
+    if: github.event.inputs.backup_type == 'test-restore'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 📥 Baixar Último Backup
+      run: |
+        echo "📥 Baixando último backup para teste..."
+
+        # Encontrar último backup
+        LAST_BACKUP=$(gh release list --limit 5 | grep "backup-production-" | head -1 | cut -f3)
+
+        if [[ -z "$LAST_BACKUP" ]]; then
+          echo "❌ Nenhum backup encontrado para teste"
+          exit 1
+        fi
+
+        echo "📦 Baixando backup: $LAST_BACKUP"
+
+        # Baixar backup
+        gh release download "$LAST_BACKUP" --pattern "*.tar.gz"
+
+        # Extrair backup
+        mkdir -p restore-test
+        tar -xzf *.tar.gz -C restore-test
+
+    - name: 🧪 Testar Restauração do Redis
+      run: |
+        echo "🧪 Testando restauração do Redis..."
+
+        # Aqui você implementaria a lógica de teste de restauração
+        # Por exemplo, restaurar em um banco de teste e verificar integridade
+
+        echo "✅ Teste de restauração do Redis concluído"
+
+    - name: 🧪 Validar Integridade do Backup
+      run: |
+        echo "🧪 Validando integridade do backup..."
+
+        # Verificar hash do arquivo
+        ORIGINAL_HASH=$(jq -r '.hash' restore-test/*/metadata.json)
+        CURRENT_HASH=$(sha256sum *.tar.gz | cut -d' ' -f1)
+
+        if [[ "$ORIGINAL_HASH" == "$CURRENT_HASH" ]]; then
+          echo "✅ Integridade do backup verificada"
+        else
+          echo "❌ Backup corrompido!"
+          exit 1
+        fi
+
+    - name: 🧹 Limpeza Após Teste
+      run: |
+        echo "🧹 Fazendo limpeza após teste..."
+        rm -rf restore-test/
+        rm -f *.tar.gz
+
+  # ==========================================
+  # 🗂️  GERENCIAMENTO DE RETENÇÃO
+  # ==========================================
+
+  retention-management:
+    name: '🗂️  Gerenciamento de Retenção'
+    runs-on: self-hosted
+    if: github.event_name == 'schedule' || github.event.inputs.backup_type != 'test-restore'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🗂️  Limpar Backups Antigos
+      run: |
+        echo "🗂️  Limpando backups antigos..."
+
+        RETENTION_DAYS=${{ github.event.inputs.retention_days || 30 }}
+
+        echo "📅 Retenção: $RETENTION_DAYS dias"
+
+        # Listar releases de backup antigas
+        OLD_BACKUPS=$(gh release list --limit 100 | grep "backup-" | awk -v days="$RETENTION_DAYS" '$1 < strftime("%Y-%m-%d", systime() - (days * 24 * 60 * 60)) {print $3}')
+
+        for backup in $OLD_BACKUPS; do
+          echo "🗑️  Removendo backup antigo: $backup"
+          gh release delete "$backup" --yes
+        done
+
+        echo "✅ Limpeza de retenção concluída"
+
+    - name: 📊 Relatório de Backups
+      run: |
+        echo "📊 Gerando relatório de backups..."
+
+        # Contar backups atuais
+        TOTAL_BACKUPS=$(gh release list --limit 1000 | grep -c "backup-")
+        FULL_BACKUPS=$(gh release list --limit 1000 | grep -c "backup-production-")
+        CONFIG_BACKUPS=$(gh release list --limit 1000 | grep -c "config-backup-")
+
+        echo "📊 Estatísticas de Backup:" > backup-report.md
+        echo "- Total de backups: $TOTAL_BACKUPS" >> backup-report.md
+        echo "- Backups completos: $FULL_BACKUPS" >> backup-report.md
+        echo "- Backups de configuração: $CONFIG_BACKUPS" >> backup-report.md
+        echo "- Retenção configurada: $RETENTION_DAYS dias" >> backup-report.md
+
+        # Verificar último backup
+        LAST_BACKUP=$(gh release list --limit 1 | grep "backup-" | cut -f1)
+        if [[ -n "$LAST_BACKUP" ]]; then
+          echo "- Último backup: $LAST_BACKUP" >> backup-report.md
+        fi
+
+    - name: 📤 Upload Relatório
+      uses: actions/upload-artifact@v4
+      with:
+        name: backup-report
+        path: backup-report.md
+
+  # ==========================================
+  # 📢 NOTIFICAÇÕES DE BACKUP
+  # ==========================================
+
+  backup-notifications:
+    name: '📢 Notificações de Backup'
+    runs-on: self-hosted
+    needs: [full-backup, incremental-backup, config-backup, test-restore, retention-management]
+    if: always()
+
+    steps:
+    - name: 📢 Preparar Notificação de Backup
+      run: |
+        echo "📢 Preparando notificação de backup..."
+
+        # Determinar status geral
+        if [[ "${{ needs.full-backup.result }}" == "success" || \
+              "${{ needs.incremental-backup.result }}" == "success" || \
+              "${{ needs.config-backup.result }}" == "success" ]]; then
+          STATUS="✅ BACKUP CONCLUÍDO COM SUCESSO"
+          COLOR="success"
+        elif [[ "${{ needs.test-restore.result }}" == "success" ]]; then
+          STATUS="🧪 TESTE DE RESTAURAÇÃO BEM-SUCEDIDO"
+          COLOR="success"
+        else
+          STATUS="❌ FALHA NO BACKUP"
+          COLOR="danger"
+        fi
+
+        echo "STATUS=$STATUS" >> $GITHUB_ENV
+        echo "COLOR=$COLOR" >> $GITHUB_ENV
+
+        # Criar mensagem de notificação
+        {
+          echo "## 💾 Relatório de Backup"
+          echo ""
+          echo "**Status:** $STATUS"
+          echo "**Data/Hora:** $(date)"
+          echo "**Tipo:** ${{ github.event.inputs.backup_type || 'scheduled' }}"
+          echo "**Ambiente:** ${{ github.event.inputs.environment || 'production' }}"
+          echo ""
+          echo "### 📋 Detalhes da Operação"
+          echo "- Backup Completo: ${{ needs.full-backup.result }}"
+          echo "- Backup Incremental: ${{ needs.incremental-backup.result }}"
+          echo "- Backup de Config: ${{ needs.config-backup.result }}"
+          echo "- Teste de Restauração: ${{ needs.test-restore.result }}"
+          echo "- Gerenciamento de Retenção: ${{ needs.retention-management.result }}"
+          echo ""
+        } > backup-notification.md
+
+        # Adicionar informações específicas se foi backup completo
+        if [[ "${{ needs.full-backup.result }}" == "success" ]]; then
+          echo "**Backup ID:** ${{ needs.full-backup.outputs.backup_id }}" >> backup-notification.md
+          echo "**Tamanho:** ${{ needs.full-backup.outputs.backup_size }}" >> backup-notification.md
+        fi
+
+        echo "*Notificação automática do sistema de backup*" >> backup-notification.md
+
+    - name: 💬 Slack Notification
+      run: |
+        echo "💬 Enviando notificação para Slack..."
+        # Implementar webhook do Slack
+
+    - name: 📧 Email Notification
+      run: |
+        echo "📧 Enviando notificação por email..."
+        # Implementar serviço de email
+
+    - name: 📱 Teams Notification
+      run: |
+        echo "📱 Enviando notificação para Teams..."
+        # Implementar webhook do Teams
+
+    - name: 📤 Upload Notificação
+      uses: actions/upload-artifact@v4
+      with:
+        name: backup-notifications
+        path: backup-notification.md

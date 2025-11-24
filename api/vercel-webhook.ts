@@ -119,11 +119,48 @@ async function processVercelEvent(event: VercelWebhookEvent): Promise<void> {
       console.log(`[Vercel Webhook] Evento não processado: ${event.type}`);
   }
 
-  // Aqui você pode adicionar lógica adicional como:
-  // - Notificar sistemas externos sobre deployments
-  // - Atualizar dashboards de monitoramento
-  // - Disparar ações automatizadas
-  // - Integrar com ferramentas de CI/CD
+  // Disparar evento no GitHub Actions para automação
+  await triggerGitHubAction(event);
+}
+
+/**
+ * Dispara evento no GitHub Actions via repository_dispatch
+ */
+async function triggerGitHubAction(event: VercelWebhookEvent): Promise<void> {
+  const githubToken = process.env.GITHUB_TOKEN;
+  const repoOwner = process.env.GITHUB_REPO_OWNER;
+  const repoName = process.env.GITHUB_REPO_NAME;
+
+  if (!githubToken || !repoOwner || !repoName) {
+    console.warn('[GitHub Dispatch] Configuração incompleta - pulando dispatch');
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${repoOwner}/${repoName}/dispatches`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${githubToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event_type: 'vercel-deployment',
+          client_payload: event
+        })
+      }
+    );
+
+    if (response.ok) {
+      console.log('[GitHub Dispatch] Evento enviado com sucesso para GitHub Actions');
+    } else {
+      console.error(`[GitHub Dispatch] Falha ao enviar evento: ${response.status} ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('[GitHub Dispatch] Erro ao enviar evento:', error);
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

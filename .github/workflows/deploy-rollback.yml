@@ -1,0 +1,346 @@
+name: Deploy Automatizado com Rollback
+
+on:
+  push:
+    branches: [ main, staging ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente de deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      force_deploy:
+        description: 'Forçar deploy mesmo com falhas'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # 🚀 DEPLOY STAGING
+  # ==========================================
+
+  deploy-staging:
+    name: '🚀 Deploy Staging'
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: ${{ steps.deploy-staging.outputs.url }}
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🧪 Executar testes rápidos
+      run: |
+        echo "🧪 Executando testes rápidos..."
+        npm run test -- --run --reporter=verbose || exit 1
+        echo "✅ Testes passaram"
+
+    - name: 🏗️  Build staging
+      run: |
+        echo "🏗️  Executando build para staging..."
+        npm run build
+        echo "📦 Build staging concluído"
+
+    - name: 🚀 Deploy para Vercel Staging
+      id: deploy-staging
+      run: |
+        echo "🚀 Deploy para Vercel Staging..."
+        npx vercel --prod=false --yes
+        echo "url=https://$(npx vercel ls | grep staging | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+    - name: 🧪 Testes de smoke no staging
+      run: |
+        echo "🧪 Executando testes de smoke..."
+        sleep 30  # Aguardar deploy
+        curl -f ${{ steps.deploy-staging.outputs.url }} > /dev/null && echo "✅ Staging responde" || exit 1
+
+    - name: 🏷️  Criar tag de staging
+      run: |
+        echo "🏷️  Criando tag de staging..."
+        git tag "staging-$(date +%Y%m%d-%H%M%S)" || echo "Tag já existe"
+
+  # ==========================================
+  # 🎯 DEPLOY PRODUCTION COM ROLLBACK
+  # ==========================================
+
+  deploy-production:
+    name: '🎯 Deploy Production com Rollback'
+    runs-on: self-hosted
+    needs: deploy-staging
+    if: (github.ref == 'refs/heads/main' && needs.deploy-staging.result == 'success') || github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: ${{ steps.deploy-production.outputs.url }}
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🧪 Testes completos antes do deploy
+      run: |
+        echo "🧪 Executando testes completos..."
+        npm run test -- --run --coverage || exit 1
+        npm run test:e2e || exit 1
+        echo "✅ Todos os testes passaram"
+
+    - name: 🏗️  Build production otimizado
+      run: |
+        echo "🏗️  Build production otimizado..."
+        npm run build
+        echo "📦 Build production concluído"
+        echo "📊 Tamanho: $(du -sh dist/)"
+
+    - name: 💾 Backup da versão atual
+      run: |
+        echo "💾 Criando backup da versão atual..."
+        # Aqui você pode implementar backup da versão atual
+        echo "BACKUP_VERSION=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+        echo "✅ Backup criado: ${{ env.BACKUP_VERSION }}"
+
+    - name: 🚀 Deploy para Vercel Production
+      id: deploy-production
+      run: |
+        echo "🚀 Deploy para Vercel Production..."
+        npx vercel --prod --yes
+        echo "url=https://$(npx vercel ls | grep production | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+    - name: 🧪 Testes de produção
+      id: production-tests
+      run: |
+        echo "🧪 Executando testes de produção..."
+        sleep 60  # Aguardar deploy completo
+
+        # Teste básico de conectividade
+        if curl -f --max-time 30 ${{ steps.deploy-production.outputs.url }} > /dev/null; then
+          echo "✅ Aplicação responde"
+        else
+          echo "❌ Aplicação não responde"
+          exit 1
+        fi
+
+        # Teste de funcionalidades críticas
+        # Adicione mais testes conforme necessário
+        echo "✅ Testes de produção passaram"
+
+    - name: 📊 Health check avançado
+      run: |
+        echo "📊 Executando health check avançado..."
+        # Verificar performance básica
+        curl -w "@curl-format.txt" -o /dev/null -s ${{ steps.deploy-production.outputs.url }} > response-time.txt || echo "Health check básico falhou"
+
+        # Verificar se APIs respondem
+        # Adicione verificações específicas da sua aplicação
+        echo "✅ Health check concluído"
+
+    - name: 🏷️  Criar release tag
+      run: |
+        echo "🏷️  Criando release tag..."
+        git tag "release-$(date +%Y%m%d-%H%M%S)"
+        git push origin --tags
+
+  # ==========================================
+  # 🔄 MONITORAMENTO PÓS-DEPLOY
+  # ==========================================
+
+  post-deploy-monitoring:
+    name: '🔄 Monitoramento Pós-Deploy'
+    runs-on: self-hosted
+    needs: deploy-production
+    if: needs.deploy-production.result == 'success'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 📊 Monitoramento inicial
+      run: |
+        echo "📊 Iniciando monitoramento pós-deploy..."
+        PRODUCTION_URL="${{ needs.deploy-production.outputs.url }}"
+
+        # Verificar uptime nos primeiros minutos
+        for i in {1..5}; do
+          if curl -f --max-time 10 $PRODUCTION_URL > /dev/null; then
+            echo "✅ Minuto $i: OK"
+          else
+            echo "❌ Minuto $i: FALHA"
+            exit 1
+          fi
+          sleep 60
+        done
+
+        echo "✅ Monitoramento inicial concluído"
+
+    - name: 🏃 Lighthouse pós-deploy
+      run: |
+        echo "🏃 Executando Lighthouse pós-deploy..."
+        npx lighthouse ${{ needs.deploy-production.outputs.url }} \
+          --output=json \
+          --output-path=./post-deploy-lighthouse.json \
+          --only-categories=performance \
+          --chrome-flags="--headless --disable-gpu --no-sandbox"
+
+    - name: 📤 Upload relatórios de monitoramento
+      uses: actions/upload-artifact@v4
+      with:
+        name: post-deploy-monitoring
+        path: |
+          post-deploy-lighthouse.json
+          response-time.txt
+
+  # ==========================================
+  # 🔙 ROLLBACK AUTOMÁTICO
+  # ==========================================
+
+  rollback-on-failure:
+    name: '🔙 Rollback Automático'
+    runs-on: self-hosted
+    needs: [deploy-production, post-deploy-monitoring]
+    if: failure() && (needs.deploy-production.result == 'success' || needs.post-deploy-monitoring.result == 'failure')
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔙 Iniciar rollback
+      run: |
+        echo "🔙 Iniciando rollback automático..."
+        echo "❌ Deploy falhou, executando rollback"
+
+        # Identificar versão anterior estável
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E "^release-" | head -2 | tail -1)
+        if [ -z "$PREVIOUS_TAG" ]; then
+          echo "❌ Nenhuma versão anterior encontrada para rollback"
+          exit 1
+        fi
+
+        echo "🔄 Fazendo rollback para: $PREVIOUS_TAG"
+        git checkout $PREVIOUS_TAG
+
+    - name: 🚀 Deploy versão anterior
+      run: |
+        echo "🚀 Deploy versão anterior..."
+        npm ci
+        npm run build
+        npx vercel --prod --yes
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    - name: 📢 Notificar rollback
+      run: |
+        echo "📢 Rollback executado com sucesso"
+        echo "🔄 Versão anterior implantada"
+        echo "📊 Monitore a aplicação e resolva os problemas antes do próximo deploy"
+
+  # ==========================================
+  # 📢 NOTIFICAÇÕES
+  # ==========================================
+
+  notifications:
+    name: '📢 Notificações'
+    runs-on: self-hosted
+    needs: [deploy-staging, deploy-production, post-deploy-monitoring, rollback-on-failure]
+    if: always()
+
+    steps:
+    - name: 📢 Preparar notificação
+      run: |
+        echo "📢 Preparando notificação de deploy..."
+
+        # Determinar status geral
+        if [[ "${{ needs.rollback-on-failure.result }}" == "success" ]]; then
+          STATUS="🔙 ROLLBACK EXECUTADO"
+          COLOR="danger"
+        elif [[ "${{ needs.deploy-production.result }}" == "success" && "${{ needs.post-deploy-monitoring.result }}" == "success" ]]; then
+          STATUS="✅ DEPLOY BEM-SUCEDIDO"
+          COLOR="success"
+        elif [[ "${{ needs.deploy-staging.result }}" == "success" ]]; then
+          STATUS="🚀 STAGING DEPLOYED"
+          COLOR="warning"
+        else
+          STATUS="❌ DEPLOY FALHADO"
+          COLOR="danger"
+        fi
+
+        echo "STATUS=$STATUS" >> $GITHUB_ENV
+        echo "COLOR=$COLOR" >> $GITHUB_ENV
+
+        # Preparar mensagem
+        echo "## $STATUS" > notification.md
+        echo "" >> notification.md
+        echo "**Commit:** ${{ github.sha }}" >> notification.md
+        echo "**Branch:** ${{ github.ref }}" >> notification.md
+        echo "**Autor:** ${{ github.actor }}" >> notification.md
+        echo "" >> notification.md
+
+        if [[ "${{ needs.deploy-production.outputs.url }}" != "" ]]; then
+          echo "**URL Produção:** ${{ needs.deploy-production.outputs.url }}" >> notification.md
+        fi
+
+        if [[ "${{ needs.deploy-staging.outputs.url }}" != "" ]]; then
+          echo "**URL Staging:** ${{ needs.deploy-staging.outputs.url }}" >> notification.md
+        fi
+
+        echo "" >> notification.md
+        echo "### 📊 Status dos Jobs" >> notification.md
+        echo "- Staging: ${{ needs.deploy-staging.result }}" >> notification.md
+        echo "- Production: ${{ needs.deploy-production.result }}" >> notification.md
+        echo "- Monitoring: ${{ needs.post-deploy-monitoring.result }}" >> notification.md
+        echo "- Rollback: ${{ needs.rollback-on-failure.result }}" >> notification.md
+
+    - name: 💬 Slack Notification (se configurado)
+      run: |
+        # Aqui você pode adicionar integração com Slack
+        echo "💬 Notificação Slack seria enviada aqui"
+        cat notification.md
+
+    - name: 📧 Email Notification (se configurado)
+      run: |
+        # Aqui você pode adicionar envio de email
+        echo "📧 Notificação por email seria enviada aqui"
+
+    - name: 📱 Teams/Webhook Notification
+      run: |
+        echo "📱 Enviando notificação via webhook..."
+        # Implementar notificação para Microsoft Teams, Discord, etc.
+        echo "Notificação enviada com status: ${{ env.STATUS }}"

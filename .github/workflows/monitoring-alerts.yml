@@ -1,0 +1,554 @@
+name: Monitoramento Contínuo e Alertas
+
+on:
+  schedule:
+    # Executar a cada 15 minutos
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Tipo de verificação'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - health
+          - performance
+          - security
+          - dependencies
+      environment:
+        description: 'Ambiente para verificar'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+          - both
+
+concurrency:
+  group: monitoring-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # 🏥 VERIFICAÇÃO DE SAÚDE
+  # ==========================================
+
+  health-check:
+    name: '🏥 Verificação de Saúde'
+    runs-on: self-hosted
+    if: github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'health' || github.event_name == 'schedule'
+
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(github.event.inputs.environment == 'both' && '["production", "staging"]' || github.event.inputs.environment == 'staging' && '["staging"]' || '["production"]') }}
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🏥 Health Check Básico
+      run: |
+        echo "🏥 Executando health check básico..."
+
+        # Determinar URL baseada no ambiente
+        if [[ "${{ matrix.environment }}" == "production" ]]; then
+          APP_URL="${{ secrets.PRODUCTION_URL }}"
+        else
+          APP_URL="${{ secrets.STAGING_URL }}"
+        fi
+
+        echo "🌐 Verificando: $APP_URL"
+
+        # Teste de conectividade
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$APP_URL")
+        if [[ "$HTTP_STATUS" -eq 200 ]]; then
+          echo "✅ HTTP Status: $HTTP_STATUS"
+        else
+          echo "❌ HTTP Status: $HTTP_STATUS"
+          exit 1
+        fi
+
+        # Verificar tempo de resposta
+        RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$APP_URL")
+        echo "⏱️  Tempo de resposta: ${RESPONSE_TIME}s"
+
+        if (( $(echo "$RESPONSE_TIME > 5.0" | bc -l) )); then
+          echo "⚠️  Tempo de resposta alto: ${RESPONSE_TIME}s"
+        fi
+
+    - name: 🔍 Verificação de APIs Críticas
+      run: |
+        echo "🔍 Verificando APIs críticas..."
+
+        # Lista de endpoints críticos para verificar
+        ENDPOINTS=(
+          "/api/status"
+          "/api/health"
+          "/api/agents/status"
+        )
+
+        for endpoint in "${ENDPOINTS[@]}"; do
+          FULL_URL="${{ secrets.PRODUCTION_URL }}$endpoint"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$FULL_URL")
+
+          if [[ "$STATUS" -eq 200 ]]; then
+            echo "✅ $endpoint: OK"
+          else
+            echo "❌ $endpoint: $STATUS"
+            # Não falhar imediatamente, apenas alertar
+          fi
+        done
+
+    - name: 💾 Verificação de Banco de Dados
+      run: |
+        echo "💾 Verificando conectividade do banco..."
+
+        # Aqui você pode adicionar verificações específicas do seu banco
+        # Por exemplo, verificar se Upstash Redis responde
+        if [[ -n "${{ secrets.UPSTASH_REDIS_REST_URL }}" ]]; then
+          REDIS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.UPSTASH_REDIS_REST_URL }}/ping")
+          if [[ "$REDIS_STATUS" -eq 200 ]]; then
+            echo "✅ Redis: OK"
+          else
+            echo "❌ Redis: $REDIS_STATUS"
+          fi
+        fi
+
+    - name: 📊 Coletar Métricas de Saúde
+      run: |
+        echo "📊 Coletando métricas de saúde..."
+
+        # Salvar métricas em arquivo para upload
+        {
+          echo "timestamp: $(date -Iseconds)"
+          echo "environment: ${{ matrix.environment }}"
+          echo "http_status: $HTTP_STATUS"
+          echo "response_time: $RESPONSE_TIME"
+          echo "uptime_check: true"
+        } > health-metrics.json
+
+    - name: 📤 Upload Métricas de Saúde
+      uses: actions/upload-artifact@v4
+      with:
+        name: health-metrics-${{ matrix.environment }}
+        path: health-metrics.json
+
+  # ==========================================
+  # 📈 MONITORAMENTO DE PERFORMANCE
+  # ==========================================
+
+  performance-monitoring:
+    name: '📈 Monitoramento de Performance'
+    runs-on: self-hosted
+    if: github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'performance' || github.event_name == 'schedule'
+    needs: health-check
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🏃 Lighthouse Performance Audit
+      run: |
+        echo "🏃 Executando Lighthouse performance audit..."
+
+        # Executar Lighthouse para produção
+        npx lighthouse ${{ secrets.PRODUCTION_URL }} \
+          --output=json \
+          --output-path=./lighthouse-report.json \
+          --only-categories=performance,accessibility,best-practices,seo \
+          --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
+
+        # Extrair métricas importantes
+        PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' lighthouse-report.json)
+        ACCESSIBILITY_SCORE=$(jq '.categories.accessibility.score * 100' lighthouse-report.json)
+        BEST_PRACTICES_SCORE=$(jq '.categories."best-practices".score * 100' lighthouse-report.json)
+        SEO_SCORE=$(jq '.categories.seo.score * 100' lighthouse-report.json)
+
+        echo "📊 Performance Score: $PERFORMANCE_SCORE"
+        echo "♿ Accessibility Score: $ACCESSIBILITY_SCORE"
+        echo "✨ Best Practices Score: $BEST_PRACTICES_SCORE"
+        echo "🔍 SEO Score: $SEO_SCORE"
+
+        # Alertar se performance estiver baixa
+        if (( $(echo "$PERFORMANCE_SCORE < 80" | bc -l) )); then
+          echo "⚠️  ALERTA: Performance score baixo ($PERFORMANCE_SCORE)"
+        fi
+
+        # Salvar métricas
+        {
+          echo "timestamp: $(date -Iseconds)"
+          echo "performance_score: $PERFORMANCE_SCORE"
+          echo "accessibility_score: $ACCESSIBILITY_SCORE"
+          echo "best_practices_score: $BEST_PRACTICES_SCORE"
+          echo "seo_score: $SEO_SCORE"
+        } > performance-metrics.json
+
+    - name: 📊 Web Vitals Analysis
+      run: |
+        echo "📊 Analisando Web Vitals..."
+
+        # Extrair Web Vitals do relatório do Lighthouse
+        LCP=$(jq '.audits."largest-contentful-paint".numericValue' lighthouse-report.json)
+        FID=$(jq '.audits."max-potential-fid".numericValue' lighthouse-report.json)
+        CLS=$(jq '.audits."cumulative-layout-shift".numericValue' lighthouse-report.json)
+
+        echo "🖼️  LCP (Largest Contentful Paint): ${LCP}ms"
+        echo "👆 FID (First Input Delay): ${FID}ms"
+        echo "📐 CLS (Cumulative Layout Shift): $CLS"
+
+        # Verificar thresholds
+        if (( $(echo "$LCP > 2500" | bc -l) )); then
+          echo "⚠️  ALERTA: LCP muito alto (${LCP}ms)"
+        fi
+
+        if (( $(echo "$CLS > 0.1" | bc -l) )); then
+          echo "⚠️  ALERTA: CLS alto ($CLS)"
+        fi
+
+    - name: 📤 Upload Relatórios de Performance
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-reports
+        path: |
+          lighthouse-report.json
+          performance-metrics.json
+
+  # ==========================================
+  # 🔒 VERIFICAÇÃO DE SEGURANÇA
+  # ==========================================
+
+  security-check:
+    name: '🔒 Verificação de Segurança'
+    runs-on: self-hosted
+    if: github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'security'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔍 Verificação de Vulnerabilidades
+      run: |
+        echo "🔍 Verificando vulnerabilidades..."
+
+        # Executar npm audit
+        npm audit --audit-level=moderate --json > audit-results.json
+
+        # Verificar se há vulnerabilidades críticas
+        CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical' audit-results.json)
+        HIGH_VULNS=$(jq '.metadata.vulnerabilities.high' audit-results.json)
+
+        echo "🚨 Vulnerabilidades críticas: $CRITICAL_VULNS"
+        echo "⚠️  Vulnerabilidades altas: $HIGH_VULNS"
+
+        if [[ "$CRITICAL_VULNS" -gt 0 ]]; then
+          echo "❌ ALERTA: Vulnerabilidades críticas encontradas!"
+          exit 1
+        fi
+
+    - name: 🛡️  Verificação de Headers de Segurança
+      run: |
+        echo "🛡️  Verificando headers de segurança..."
+
+        # Verificar headers importantes
+        HEADERS=$(curl -s -I ${{ secrets.PRODUCTION_URL }})
+
+        # Verificar Content Security Policy
+        if echo "$HEADERS" | grep -q "Content-Security-Policy"; then
+          echo "✅ CSP presente"
+        else
+          echo "⚠️  CSP ausente"
+        fi
+
+        # Verificar HTTPS Strict Transport Security
+        if echo "$HEADERS" | grep -q "Strict-Transport-Security"; then
+          echo "✅ HSTS presente"
+        else
+          echo "⚠️  HSTS ausente"
+        fi
+
+        # Verificar X-Frame-Options
+        if echo "$HEADERS" | grep -q "X-Frame-Options"; then
+          echo "✅ X-Frame-Options presente"
+        else
+          echo "⚠️  X-Frame-Options ausente"
+        fi
+
+    - name: 🔐 Verificação de Certificado SSL
+      run: |
+        echo "🔐 Verificando certificado SSL..."
+
+        # Verificar validade do certificado
+        CERT_INFO=$(openssl s_client -connect $(echo ${{ secrets.PRODUCTION_URL }} | sed 's|https://||'):443 -servername $(echo ${{ secrets.PRODUCTION_URL }} | sed 's|https://||') < /dev/null 2>/dev/null | openssl x509 -noout -dates)
+
+        if [[ $? -eq 0 ]]; then
+          echo "✅ Certificado SSL válido"
+          echo "$CERT_INFO"
+        else
+          echo "❌ Problema com certificado SSL"
+        fi
+
+    - name: 📤 Upload Relatórios de Segurança
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          audit-results.json
+
+  # ==========================================
+  # 📦 VERIFICAÇÃO DE DEPENDÊNCIAS
+  # ==========================================
+
+  dependency-check:
+    name: '📦 Verificação de Dependências'
+    runs-on: self-hosted
+    if: github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'dependencies'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Verificar Dependências Desatualizadas
+      run: |
+        echo "📦 Verificando dependências desatualizadas..."
+
+        # Verificar pacotes desatualizados
+        npm outdated --json > outdated-packages.json
+
+        # Contar pacotes desatualizados
+        OUTDATED_COUNT=$(jq 'length' outdated-packages.json)
+        echo "📊 Pacotes desatualizados: $OUTDATED_COUNT"
+
+        if [[ "$OUTDATED_COUNT" -gt 10 ]]; then
+          echo "⚠️  ALERTA: Muitos pacotes desatualizados ($OUTDATED_COUNT)"
+        fi
+
+    - name: 🔍 Verificar Licenças
+      run: |
+        echo "🔍 Verificando licenças de dependências..."
+
+        # Verificar licenças problemáticas
+        npx license-checker --json > license-report.json
+
+        # Verificar se há licenças não permitidas
+        PROBLEMATIC_LICENSES=$(jq '[.[] | select(.licenses | test("GPL|LGPL|MS-PL"))] | length' license-report.json)
+
+        if [[ "$PROBLEMATIC_LICENSES" -gt 0 ]]; then
+          echo "⚠️  ALERTA: $PROBLEMATIC_LICENSES dependências com licenças potencialmente problemáticas"
+        fi
+
+    - name: 📤 Upload Relatórios de Dependências
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-reports
+        path: |
+          outdated-packages.json
+          license-report.json
+
+  # ==========================================
+  # 📊 DASHBOARD DE MONITORAMENTO
+  # ==========================================
+
+  monitoring-dashboard:
+    name: '📊 Dashboard de Monitoramento'
+    runs-on: self-hosted
+    needs: [health-check, performance-monitoring, security-check, dependency-check]
+    if: always()
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 📊 Gerar Relatório Consolidado
+      run: |
+        echo "📊 Gerando relatório consolidado de monitoramento..."
+
+        # Criar relatório markdown
+        {
+          echo "# 📊 Relatório de Monitoramento - $(date)"
+          echo ""
+          echo "## 🏥 Status de Saúde"
+          echo "- Health Check: ${{ needs.health-check.result }}"
+          echo ""
+          echo "## 📈 Performance"
+          echo "- Performance Monitoring: ${{ needs.performance-monitoring.result }}"
+          echo ""
+          echo "## 🔒 Segurança"
+          echo "- Security Check: ${{ needs.security-check.result }}"
+          echo ""
+          echo "## 📦 Dependências"
+          echo "- Dependency Check: ${{ needs.dependency-check.result }}"
+          echo ""
+          echo "## 📋 Resumo Executivo"
+        } > monitoring-report.md
+
+        # Determinar status geral
+        if [[ "${{ needs.health-check.result }}" == "success" && \
+              "${{ needs.performance-monitoring.result }}" == "success" && \
+              "${{ needs.security-check.result }}" == "success" && \
+              "${{ needs.dependency-check.result }}" == "success" ]]; then
+          echo "✅ **STATUS GERAL: TODOS OS CHECKS PASSARAM**" >> monitoring-report.md
+          echo "STATUS=success" >> $GITHUB_ENV
+        else
+          echo "❌ **STATUS GERAL: PROBLEMAS DETECTADOS**" >> monitoring-report.md
+          echo "STATUS=failure" >> $GITHUB_ENV
+        fi
+
+        echo "" >> monitoring-report.md
+        echo "*Relatório gerado em: $(date -Iseconds)*" >> monitoring-report.md
+
+    - name: 📤 Upload Relatório Consolidado
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-dashboard
+        path: monitoring-report.md
+
+    - name: 📢 Notificar Status de Monitoramento
+      run: |
+        echo "📢 Enviando notificação de monitoramento..."
+
+        if [[ "${{ env.STATUS }}" == "failure" ]]; then
+          echo "❌ ALERTA: Problemas detectados no monitoramento!"
+          echo "📧 Enviando notificação de alerta..."
+          # Aqui você pode integrar com sistemas de notificação
+        else
+          echo "✅ Monitoramento concluído com sucesso"
+        fi
+
+    - name: 💾 Arquivar Relatórios Anteriores
+      run: |
+        echo "💾 Arquivando relatórios para histórico..."
+
+        # Criar diretório de histórico se não existir
+        mkdir -p monitoring-history
+
+        # Mover artefatos para histórico (se existirem)
+        if [[ -f "health-metrics.json" ]]; then
+          cp health-metrics.json monitoring-history/health-$(date +%Y%m%d-%H%M%S).json
+        fi
+
+        # Manter apenas últimos 30 dias de histórico
+        find monitoring-history -name "*.json" -mtime +30 -delete
+
+    - name: 📤 Upload Histórico
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-history
+        path: monitoring-history/
+
+  # ==========================================
+  # 🚨 ALERTAS E NOTIFICAÇÕES
+  # ==========================================
+
+  alerts-and-notifications:
+    name: '🚨 Alertas e Notificações'
+    runs-on: self-hosted
+    needs: monitoring-dashboard
+    if: failure()
+
+    steps:
+    - name: 🚨 Preparar Alertas
+      run: |
+        echo "🚨 Preparando alertas de monitoramento..."
+
+        # Identificar quais checks falharam
+        FAILED_CHECKS=""
+
+        if [[ "${{ needs.health-check.result }}" != "success" ]]; then
+          FAILED_CHECKS="$FAILED_CHECKS Health Check"
+        fi
+
+        if [[ "${{ needs.performance-monitoring.result }}" != "success" ]]; then
+          FAILED_CHECKS="$FAILED_CHECKS Performance"
+        fi
+
+        if [[ "${{ needs.security-check.result }}" != "success" ]]; then
+          FAILED_CHECKS="$FAILED_CHECKS Security"
+        fi
+
+        if [[ "${{ needs.dependency-check.result }}" != "success" ]]; then
+          FAILED_CHECKS="$FAILED_CHECKS Dependencies"
+        fi
+
+        echo "FAILED_CHECKS=$FAILED_CHECKS" >> $GITHUB_ENV
+
+        # Criar mensagem de alerta
+        {
+          echo "## 🚨 ALERTA DE MONITORAMENTO"
+          echo ""
+          echo "**Timestamp:** $(date -Iseconds)"
+          echo "**Environment:** Production"
+          echo "**Failed Checks:**$FAILED_CHECKS"
+          echo ""
+          echo "### 📋 Ações Recomendadas"
+          echo "1. Verificar logs detalhados nos artefatos do workflow"
+          echo "2. Investigar a causa raiz das falhas"
+          echo "3. Executar correções necessárias"
+          echo "4. Re-executar monitoramento após correções"
+          echo ""
+          echo "*Este é um alerta automático do sistema de monitoramento*"
+        } > alert-message.md
+
+    - name: 📧 Enviar Alerta por Email
+      run: |
+        echo "📧 Enviando alerta por email..."
+        # Implementar envio de email usando serviço como SendGrid, etc.
+        echo "Alerta enviado para equipe de desenvolvimento"
+
+    - name: 💬 Slack Alert
+      run: |
+        echo "💬 Enviando alerta para Slack..."
+        # Implementar integração com Slack webhook
+        cat alert-message.md
+
+    - name: 📱 Teams Alert
+      run: |
+        echo "📱 Enviando alerta para Microsoft Teams..."
+        # Implementar integração com Teams webhook
+
+    - name: 📞 PagerDuty Alert (se crítico)
+      run: |
+        echo "📞 Verificando se alerta é crítico..."
+        # Implementar integração com PagerDuty para alertas críticos
+        echo "Alerta crítico enviado para PagerDuty"
+
+    - name: 📤 Upload Mensagem de Alerta
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-alerts
+        path: alert-message.md

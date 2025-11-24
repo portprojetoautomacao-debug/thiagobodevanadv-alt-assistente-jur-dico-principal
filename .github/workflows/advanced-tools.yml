@@ -1,0 +1,506 @@
+name: Ferramentas Especializadas - Self-Hosted
+
+on:
+  schedule:
+    # Executa toda segunda-feira às 2:00 AM UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: 'Ferramenta específica para executar'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - bundle-analyzer
+          - lighthouse
+          - security-audit
+          - performance-monitor
+          - accessibility
+          - seo-analysis
+
+jobs:
+  # ==========================================
+  # 📦 ANÁLISE AVANÇADA DE BUNDLE
+  # ==========================================
+
+  bundle-analysis:
+    name: '📦 Bundle Analysis Avançado'
+    runs-on: self-hosted
+    if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'bundle-analyzer'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar ferramentas avançadas
+      run: |
+        echo "📦 Instalando ferramentas de análise..."
+        npm install -g webpack-bundle-analyzer
+        npm install -g vite-bundle-analyzer
+        npm install -g rollup-plugin-visualizer
+        echo "✅ Ferramentas instaladas"
+
+    - name: 📊 Análise detalhada do bundle
+      run: |
+        echo "📊 Executando análise detalhada do bundle..."
+        npm run build
+
+        # Analisar com múltiplas ferramentas
+        echo "🔍 Analisando com webpack-bundle-analyzer..."
+        npx webpack-bundle-analyzer dist/static/js/*.js --output bundle-report.html || echo "Webpack analyzer falhou"
+
+        echo "🔍 Analisando com vite-bundle-analyzer..."
+        npx vite-bundle-analyzer dist/ || echo "Vite analyzer falhou"
+
+        echo "📊 Gerando relatório de tamanhos..."
+        find dist -type f -name "*.js" -o -name "*.css" | xargs ls -lh | awk '{print $5, $9}' > bundle-sizes.txt
+
+    - name: 📈 Comparar com versão anterior
+      run: |
+        echo "📈 Comparando com versão anterior..."
+        # Aqui você pode implementar comparação com builds anteriores
+        echo "📊 Comparação de bundle sizes:"
+        cat bundle-sizes.txt
+
+    - name: 📤 Upload relatórios
+      uses: actions/upload-artifact@v4
+      with:
+        name: bundle-analysis-reports
+        path: |
+          bundle-report.html
+          bundle-sizes.txt
+          dist/static/js/*.js.map
+
+  # ==========================================
+  # 🏃 LIGHTHOUSE AVANÇADO
+  # ==========================================
+
+  lighthouse-advanced:
+    name: '🏃 Lighthouse Performance Avançado'
+    runs-on: self-hosted
+    if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'lighthouse'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 🏃 Instalar Lighthouse e ferramentas
+      run: |
+        echo "🏃 Instalando Lighthouse e ferramentas avançadas..."
+        npm install -g lighthouse
+        npm install -g lighthouse-ci
+        npm install -g puppeteer
+        echo "✅ Lighthouse instalado"
+
+    - name: 🏗️  Build otimizado para testes
+      run: |
+        echo "🏗️  Build otimizado para performance..."
+        npm run build
+        npm run preview &
+        sleep 10
+        echo "✅ Aplicação rodando em background"
+
+    - name: 🏃 Executar Lighthouse completo
+      run: |
+        echo "🏃 Executando Lighthouse completo..."
+        lighthouse http://localhost:4173 \
+          --output=json \
+          --output=html \
+          --output-path=./lighthouse-report.json \
+          --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage" \
+          --only-categories=performance,accessibility,best-practices,seo,pwa
+
+        # Executar múltiplas vezes para consistência
+        for i in {1..3}; do
+          echo "🏃 Execução $i de 3..."
+          lighthouse http://localhost:4173 \
+            --output=json \
+            --output-path=./lighthouse-run-$i.json \
+            --quiet
+        done
+
+    - name: 📊 Processar resultados do Lighthouse
+      run: |
+        echo "📊 Processando resultados..."
+        node -e "
+        const fs = require('fs');
+        const results = JSON.parse(fs.readFileSync('./lighthouse-report.json', 'utf8'));
+
+        console.log('🏆 Lighthouse Scores:');
+        console.log('Performance:', results.categories.performance.score * 100);
+        console.log('Accessibility:', results.categories.accessibility.score * 100);
+        console.log('Best Practices:', results.categories['best-practices'].score * 100);
+        console.log('SEO:', results.categories.seo.score * 100);
+        console.log('PWA:', results.categories.pwa.score * 100);
+        "
+
+    - name: 📤 Upload relatórios do Lighthouse
+      uses: actions/upload-artifact@v4
+      with:
+        name: lighthouse-advanced-reports
+        path: |
+          lighthouse-report.json
+          lighthouse-report.html
+          lighthouse-run-*.json
+
+  # ==========================================
+  # 🔒 AUDITORIA DE SEGURANÇA AVANÇADA
+  # ==========================================
+
+  security-advanced:
+    name: '🔒 Auditoria de Segurança Avançada'
+    runs-on: self-hosted
+    if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'security-audit'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 🔒 Instalar ferramentas de segurança
+      run: |
+        echo "🔒 Instalando ferramentas de segurança avançadas..."
+        npm install -g audit-ci
+        npm install -g npm-check-updates
+        npm install -g retire
+        npm install -g lockfile-lint
+        echo "✅ Ferramentas de segurança instaladas"
+
+    - name: 🔍 Audit completo de dependências
+      run: |
+        echo "🔍 Executando audit completo..."
+        npm audit --audit-level=info --json > audit-results.json || true
+        npx audit-ci --config audit-ci.json || echo "Audit CI falhou, mas continuando..."
+
+    - name: 🔄 Verificar dependências desatualizadas
+      run: |
+        echo "🔄 Verificando dependências desatualizadas..."
+        npx npm-check-updates --json > outdated-deps.json
+        echo "📊 Dependências desatualizadas:"
+        cat outdated-deps.json | jq '. | length' || echo "Nenhuma análise disponível"
+
+    - name: 🛡️  Verificar lockfile
+      run: |
+        echo "🛡️  Verificando integridade do lockfile..."
+        npx lockfile-lint --path package-lock.json --allowed-hosts npm || echo "Lockfile lint falhou"
+
+    - name: 🔐 Análise de vulnerabilidades
+      run: |
+        echo "🔐 Executando análise de vulnerabilidades..."
+        npx retire --path . --outputformat json > retire-results.json || true
+
+        # Verificar secrets expostos
+        echo "🕵️  Verificando exposição de secrets..."
+        if grep -r "password\|secret\|key\|token\|api_key" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" src/ | grep -v "process.env" | grep -v "import.meta.env" | grep -v "secrets."; then
+          echo "❌ Possível exposição de secrets encontrada!"
+          exit 1
+        else
+          echo "✅ Nenhum secret exposto encontrado"
+        fi
+
+    - name: 📤 Upload relatórios de segurança
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-advanced-reports
+        path: |
+          audit-results.json
+          outdated-deps.json
+          retire-results.json
+
+  # ==========================================
+  # ⚡ MONITORAMENTO DE PERFORMANCE
+  # ==========================================
+
+  performance-monitor:
+    name: '⚡ Monitoramento de Performance'
+    runs-on: self-hosted
+    if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'performance-monitor'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: ⚡ Instalar ferramentas de performance
+      run: |
+        echo "⚡ Instalando ferramentas de performance..."
+        npm install -g artillery
+        npm install -g autocannon
+        npm install -g clinic
+        npm install -g 0x
+        echo "✅ Ferramentas de performance instaladas"
+
+    - name: 🏗️  Build para testes de performance
+      run: |
+        echo "🏗️  Build otimizado para testes..."
+        npm run build
+        npm run preview &
+        sleep 10
+
+    - name: 🚀 Teste de carga com Artillery
+      run: |
+        echo "🚀 Executando teste de carga..."
+        npx artillery quick \
+          --count 10 \
+          --num 5 \
+          http://localhost:4173 \
+          --output artillery-report.json || echo "Artillery falhou, mas continuando..."
+
+    - name: 🏎️  Benchmark HTTP com Autocannon
+      run: |
+        echo "🏎️  Executando benchmark HTTP..."
+        npx autocannon \
+          -c 10 \
+          -d 10 \
+          -R 100 \
+          http://localhost:4173 \
+          --json > autocannon-results.json || echo "Autocannon falhou, mas continuando..."
+
+    - name: 📊 Análise de performance do Node.js
+      run: |
+        echo "📊 Executando análise de performance..."
+        timeout 30 npm run dev &
+        sleep 5
+        npx clinic doctor -- node --version || echo "Clinic doctor falhou"
+        pkill -f "npm run dev" || true
+
+    - name: 📤 Upload relatórios de performance
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-monitor-reports
+        path: |
+          artillery-report.json
+          autocannon-results.json
+          clinic-*.html
+
+  # ==========================================
+  # ♿ AUDITORIA DE ACESSIBILIDADE
+  # ==========================================
+
+  accessibility-audit:
+    name: '♿ Auditoria de Acessibilidade'
+    runs-on: self-hosted
+    if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'accessibility'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: ♿ Instalar ferramentas de acessibilidade
+      run: |
+        echo "♿ Instalando ferramentas de acessibilidade..."
+        npm install -g axe-core-cli
+        npm install -g pa11y
+        npm install -g lighthouse
+        echo "✅ Ferramentas de acessibilidade instaladas"
+
+    - name: 🏗️  Build para testes de acessibilidade
+      run: |
+        echo "🏗️  Build para testes..."
+        npm run build
+        npm run preview &
+        sleep 10
+
+    - name: ♿ Executar axe-core
+      run: |
+        echo "♿ Executando axe-core..."
+        npx axe http://localhost:4173 \
+          --stdout \
+          --rules color-contrast,html-has-lang,landmark-one-main,image-alt \
+          > axe-results.json || echo "Axe falhou, mas continuando..."
+
+    - name: ♿ Executar Pa11y
+      run: |
+        echo "♿ Executando Pa11y..."
+        npx pa11y http://localhost:4173 \
+          --reporter json \
+          > pa11y-results.json || echo "Pa11y falhou, mas continuando..."
+
+    - name: ♿ Verificar contraste de cores
+      run: |
+        echo "♿ Verificando contraste de cores..."
+        # Análise básica de CSS para contraste
+        find src -name "*.css" -o -name "*.scss" | head -5 | xargs grep -l "color\|background" || echo "Análise de cores concluída"
+
+    - name: 📤 Upload relatórios de acessibilidade
+      uses: actions/upload-artifact@v4
+      with:
+        name: accessibility-audit-reports
+        path: |
+          axe-results.json
+          pa11y-results.json
+
+  # ==========================================
+  # 🔍 ANÁLISE SEO AVANÇADA
+  # ==========================================
+
+  seo-analysis:
+    name: '🔍 Análise SEO Avançada'
+    runs-on: self-hosted
+    if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'seo-analysis'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 🔍 Instalar ferramentas SEO
+      run: |
+        echo "🔍 Instalando ferramentas SEO..."
+        npm install -g lighthouse
+        npm install -g seo-checker
+        npm install -g broken-link-checker
+        echo "✅ Ferramentas SEO instaladas"
+
+    - name: 🏗️  Build para análise SEO
+      run: |
+        echo "🏗️  Build para SEO..."
+        npm run build
+        npm run preview &
+        sleep 10
+
+    - name: 🔍 Executar Lighthouse SEO
+      run: |
+        echo "🔍 Executando Lighthouse SEO..."
+        lighthouse http://localhost:4173 \
+          --output=json \
+          --output-path=./seo-lighthouse.json \
+          --only-categories=seo \
+          --chrome-flags="--headless --disable-gpu --no-sandbox"
+
+    - name: 🔗 Verificar links quebrados
+      run: |
+        echo "🔗 Verificando links quebrados..."
+        npx broken-link-checker http://localhost:4173 \
+          --recursive \
+          --exclude-external \
+          > broken-links-report.txt || echo "Link checker falhou, mas continuando..."
+
+    - name: 📊 Analisar meta tags e estrutura
+      run: |
+        echo "📊 Analisando meta tags..."
+        curl -s http://localhost:4173 | grep -E "<title>|<meta|<h1>|<h2>" | head -10 > meta-analysis.txt
+        echo "📄 Estrutura da página:" >> meta-analysis.txt
+        curl -s http://localhost:4173 | grep -o '<[^>]*>' | grep -E "(h[1-6]|title|meta)" | sort | uniq -c | sort -nr >> meta-analysis.txt
+
+    - name: 📤 Upload relatórios SEO
+      uses: actions/upload-artifact@v4
+      with:
+        name: seo-analysis-reports
+        path: |
+          seo-lighthouse.json
+          broken-links-report.txt
+          meta-analysis.txt
+
+  # ==========================================
+  # 📊 DASHBOARD DE RELATÓRIOS
+  # ==========================================
+
+  generate-reports-dashboard:
+    name: '📊 Dashboard de Relatórios'
+    runs-on: self-hosted
+    needs: [bundle-analysis, lighthouse-advanced, security-advanced, performance-monitor, accessibility-audit, seo-analysis]
+    if: always()
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 📊 Baixar todos os artefatos
+      uses: actions/download-artifact@v4
+      with:
+        path: ./reports
+
+    - name: 📈 Gerar dashboard consolidado
+      run: |
+        echo "📈 Gerando dashboard consolidado..."
+        echo "# 📊 Dashboard de Análises Avançadas - $(date)" > dashboard.md
+        echo "" >> dashboard.md
+        echo "## 📈 Resumo Executivo" >> dashboard.md
+        echo "" >> dashboard.md
+
+        # Bundle Analysis
+        if [ -f "reports/bundle-analysis-reports/bundle-sizes.txt" ]; then
+          echo "### 📦 Bundle Analysis" >> dashboard.md
+          echo "\`\`\`" >> dashboard.md
+          cat reports/bundle-analysis-reports/bundle-sizes.txt | head -5 >> dashboard.md
+          echo "\`\`\`" >> dashboard.md
+          echo "" >> dashboard.md
+        fi
+
+        # Lighthouse
+        if [ -f "reports/lighthouse-advanced-reports/lighthouse-report.json" ]; then
+          echo "### 🏃 Lighthouse Scores" >> dashboard.md
+          node -e "
+          try {
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('reports/lighthouse-advanced-reports/lighthouse-report.json', 'utf8'));
+            console.log('- Performance: ' + (results.categories.performance.score * 100).toFixed(1) + '/100');
+            console.log('- Accessibility: ' + (results.categories.accessibility.score * 100).toFixed(1) + '/100');
+            console.log('- Best Practices: ' + (results.categories['best-practices'].score * 100).toFixed(1) + '/100');
+            console.log('- SEO: ' + (results.categories.seo.score * 100).toFixed(1) + '/100');
+          } catch(e) { console.log('Erro ao processar Lighthouse results'); }
+          " >> dashboard.md
+          echo "" >> dashboard.md
+        fi
+
+        # Security
+        if [ -f "reports/security-advanced-reports/audit-results.json" ]; then
+          echo "### 🔒 Segurança" >> dashboard.md
+          echo "- Status: Audit executado" >> dashboard.md
+          echo "" >> dashboard.md
+        fi
+
+        echo "## 📋 Status dos Jobs" >> dashboard.md
+        echo "- Bundle Analysis: ${{ needs.bundle-analysis.result }}" >> dashboard.md
+        echo "- Lighthouse: ${{ needs.lighthouse-advanced.result }}" >> dashboard.md
+        echo "- Security: ${{ needs.security-advanced.result }}" >> dashboard.md
+        echo "- Performance: ${{ needs.performance-monitor.result }}" >> dashboard.md
+        echo "- Accessibility: ${{ needs.accessibility-audit.result }}" >> dashboard.md
+        echo "- SEO: ${{ needs.seo-analysis.result }}" >> dashboard.md
+        echo "" >> dashboard.md
+        echo "---" >> dashboard.md
+        echo "*Gerado automaticamente em $(date)*" >> dashboard.md
+
+    - name: 📤 Upload dashboard
+      uses: actions/upload-artifact@v4
+      with:
+        name: advanced-analysis-dashboard
+        path: |
+          dashboard.md
+          reports/

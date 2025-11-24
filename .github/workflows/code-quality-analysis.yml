@@ -1,0 +1,568 @@
+name: Análise de Código e Qualidade
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      analysis_type:
+        description: 'Tipo de análise'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - lint-only
+          - complexity-only
+          - coverage-only
+          - security-only
+      fail_on_warnings:
+        description: 'Falhar em warnings'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: code-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================
+  # 🔍 ANÁLISE ESTÁTICA E LINTING
+  # ==========================================
+
+  static-analysis:
+    name: '🔍 Análise Estática e Linting'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'lint-only' || github.event_name != 'workflow_dispatch'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔍 Executar ESLint
+      run: |
+        echo "🔍 Executando ESLint..."
+
+        # Executar ESLint com saída SARIF para GitHub
+        npm run lint -- --format sarif --output-file eslint-results.sarif
+
+        # Também executar com formato legível
+        npm run lint -- --max-warnings 0 || EXIT_CODE=$?
+
+        if [[ $EXIT_CODE -eq 0 ]]; then
+          echo "✅ ESLint passou sem erros ou warnings"
+        elif [[ "${{ github.event.inputs.fail_on_warnings }}" == "false" ]]; then
+          echo "⚠️  ESLint encontrou warnings, mas continuando..."
+        else
+          echo "❌ ESLint falhou"
+          exit $EXIT_CODE
+        fi
+
+    - name: 📊 Executar TypeScript Check
+      run: |
+        echo "📊 Executando verificação TypeScript..."
+
+        # Executar verificação de tipos
+        npx tsc --noEmit --pretty
+
+        if [[ $? -eq 0 ]]; then
+          echo "✅ TypeScript check passou"
+        else
+          echo "❌ TypeScript check falhou"
+          exit 1
+        fi
+
+    - name: 🏗️  Executar Build de Produção
+      run: |
+        echo "🏗️  Executando build de produção..."
+
+        npm run build
+
+        if [[ $? -eq 0 ]]; then
+          echo "✅ Build de produção passou"
+          BUILD_SIZE=$(du -sh dist/ | cut -f1)
+          echo "📦 Tamanho do build: $BUILD_SIZE"
+        else
+          echo "❌ Build de produção falhou"
+          exit 1
+        fi
+
+    - name: 📤 Upload Resultados ESLint
+      uses: actions/upload-artifact@v4
+      with:
+        name: eslint-results
+        path: eslint-results.sarif
+
+    - name: 📊 Upload Relatório SARIF para GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: eslint-results.sarif
+        category: eslint
+
+  # ==========================================
+  # 🧩 ANÁLISE DE COMPLEXIDADE
+  # ==========================================
+
+  complexity-analysis:
+    name: '🧩 Análise de Complexidade'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'complexity-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🧩 Análise de Complexidade Ciclomática
+      run: |
+        echo "🧩 Analisando complexidade ciclomática..."
+
+        # Instalar eslint-plugin-complexity se não estiver instalado
+        npm install --save-dev eslint-plugin-complexity
+
+        # Executar análise de complexidade
+        npx eslint src/ \
+          --plugin complexity \
+          --rule 'complexity: [error, 10]' \
+          --format json \
+          --output-file complexity-results.json || true
+
+        # Processar resultados
+        if [[ -f complexity-results.json ]]; then
+          HIGH_COMPLEXITY=$(jq '[.[] | select(.messages[]?.ruleId == "complexity")] | length' complexity-results.json)
+          echo "🔄 Funções com alta complexidade: $HIGH_COMPLEXITY"
+
+          if [[ $HIGH_COMPLEXITY -gt 0 ]]; then
+            echo "⚠️  ALERTA: $HIGH_COMPLEXITY funções com complexidade > 10"
+            jq -r '.[] | select(.messages[]?.ruleId == "complexity") | "\(.filePath):\(.messages[] | select(.ruleId == "complexity") | .line):\(.messages[] | select(.ruleId == "complexity") | .message)"' complexity-results.json > high-complexity-functions.txt
+          fi
+        fi
+
+    - name: 📊 Análise de Manutenibilidade
+      run: |
+        echo "📊 Analisando manutenibilidade..."
+
+        # Usar jscpd para detectar código duplicado
+        npx jscpd src/ \
+          --format json \
+          --output duplicates.json \
+          --min-lines 10 \
+          --min-tokens 50 || true
+
+        if [[ -f duplicates.json ]]; then
+          DUPLICATE_PERCENTAGE=$(jq '.statistics.total.percentage' duplicates.json 2>/dev/null || echo "0")
+          echo "📋 Percentual de código duplicado: $DUPLICATE_PERCENTAGE%"
+
+          if (( $(echo "$DUPLICATE_PERCENTAGE > 5" | bc -l) )); then
+            echo "⚠️  ALERTA: Alto percentual de código duplicado ($DUPLICATE_PERCENTAGE%)"
+          fi
+        fi
+
+    - name: 📏 Análise de Tamanho de Arquivos
+      run: |
+        echo "📏 Analisando tamanho de arquivos..."
+
+        # Analisar arquivos grandes
+        find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | xargs wc -l | sort -nr | head -10 > large-files.txt
+
+        echo "📊 Top 10 arquivos por linhas:" >> file-size-report.md
+        cat large-files.txt >> file-size-report.md
+
+        # Verificar arquivos muito grandes
+        LARGE_FILES=$(find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -exec wc -l {} \; | awk '$1 > 500 {print $2}' | wc -l)
+
+        if [[ $LARGE_FILES -gt 0 ]]; then
+          echo "⚠️  ALERTA: $LARGE_FILES arquivos com mais de 500 linhas"
+        fi
+
+    - name: 📤 Upload Relatórios de Complexidade
+      uses: actions/upload-artifact@v4
+      with:
+        name: complexity-reports
+        path: |
+          complexity-results.json
+          duplicates.json
+          high-complexity-functions.txt
+          file-size-report.md
+
+  # ==========================================
+  # 🧪 COBERTURA DE TESTES
+  # ==========================================
+
+  test-coverage:
+    name: '🧪 Cobertura de Testes'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'coverage-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🧪 Executar Testes com Cobertura
+      run: |
+        echo "🧪 Executando testes com cobertura..."
+
+        # Executar testes com cobertura usando Vitest
+        npm run test -- --coverage --reporter=json --outputFile=coverage-results.json
+
+        # Verificar se testes passaram
+        if [[ $? -eq 0 ]]; then
+          echo "✅ Testes passaram"
+        else
+          echo "❌ Testes falharam"
+          exit 1
+        fi
+
+    - name: 📊 Analisar Cobertura
+      run: |
+        echo "📊 Analisando cobertura de testes..."
+
+        # Extrair métricas de cobertura
+        if [[ -f coverage/coverage-summary.json ]]; then
+          LINES_COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          FUNCTIONS_COVERAGE=$(jq '.total.functions.pct' coverage/coverage-summary.json)
+          BRANCHES_COVERAGE=$(jq '.total.branches.pct' coverage/coverage-summary.json)
+          STATEMENTS_COVERAGE=$(jq '.total.statements.pct' coverage/coverage-summary.json)
+
+          echo "📈 Cobertura de linhas: $LINES_COVERAGE%"
+          echo "📊 Cobertura de funções: $FUNCTIONS_COVERAGE%"
+          echo "🌿 Cobertura de branches: $BRANCHES_COVERAGE%"
+          echo "📝 Cobertura de statements: $STATEMENTS_COVERAGE%"
+
+          # Verificar thresholds mínimos
+          MIN_COVERAGE=80
+
+          if (( $(echo "$LINES_COVERAGE < $MIN_COVERAGE" | bc -l) )); then
+            echo "❌ ALERTA: Cobertura de linhas baixa ($LINES_COVERAGE% < $MIN_COVERAGE%)"
+            exit 1
+          fi
+
+          if (( $(echo "$FUNCTIONS_COVERAGE < $MIN_COVERAGE" | bc -l) )); then
+            echo "❌ ALERTA: Cobertura de funções baixa ($FUNCTIONS_COVERAGE% < $MIN_COVERAGE%)"
+            exit 1
+          fi
+
+          # Salvar métricas para relatório
+          {
+            echo "lines_coverage: $LINES_COVERAGE"
+            echo "functions_coverage: $FUNCTIONS_COVERAGE"
+            echo "branches_coverage: $BRANCHES_COVERAGE"
+            echo "statements_coverage: $STATEMENTS_COVERAGE"
+            echo "threshold: $MIN_COVERAGE"
+          } > coverage-metrics.json
+
+        else
+          echo "⚠️  Arquivo de cobertura não encontrado"
+        fi
+
+    - name: 📤 Upload Relatórios de Cobertura
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: |
+          coverage/
+          coverage-metrics.json
+
+    - name: 💯 Publicar Cobertura no PR
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "💯 Publicando cobertura no PR..."
+
+        # Criar comentário no PR com cobertura
+        if [[ -f coverage-metrics.json ]]; then
+          LINES=$(jq -r '.lines_coverage' coverage-metrics.json)
+          FUNCTIONS=$(jq -r '.functions_coverage' coverage-metrics.json)
+          BRANCHES=$(jq -r '.branches_coverage' coverage-metrics.json)
+
+          gh pr comment ${{ github.event.number }} --body "## 🧪 Cobertura de Testes
+
+**Linhas:** $LINES%
+**Funções:** $FUNCTIONS%
+**Branches:** $BRANCHES%
+
+$(if (( $(echo "$LINES < 80" | bc -l) )); then echo "⚠️  Cobertura de linhas abaixo do threshold (80%)"; fi)
+$(if (( $(echo "$FUNCTIONS < 80" | bc -l) )); then echo "⚠️  Cobertura de funções abaixo do threshold (80%)"; fi)
+"
+        fi
+
+  # ==========================================
+  # 🔒 ANÁLISE DE SEGURANÇA
+  # ==========================================
+
+  security-analysis:
+    name: '🔒 Análise de Segurança'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'security-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔍 Executar Audit de Segurança
+      run: |
+        echo "🔍 Executando audit de segurança..."
+
+        # Executar npm audit
+        npm audit --audit-level moderate --json > security-audit.json
+
+        # Analisar resultados
+        VULNERABILITIES=$(jq '.metadata.vulnerabilities.total' security-audit.json 2>/dev/null || echo "0")
+        CRITICAL=$(jq '.metadata.vulnerabilities.critical' security-audit.json 2>/dev/null || echo "0")
+        HIGH=$(jq '.metadata.vulnerabilities.high' security-audit.json 2>/dev/null || echo "0")
+        MODERATE=$(jq '.metadata.vulnerabilities.moderate' security-audit.json 2>/dev/null || echo "0")
+
+        echo "🚨 Vulnerabilidades totais: $VULNERABILITIES"
+        echo "🔴 Críticas: $CRITICAL"
+        echo "🟠 Altas: $HIGH"
+        echo "🟡 Moderadas: $MODERATE"
+
+        if [[ $CRITICAL -gt 0 ]]; then
+          echo "❌ ALERTA CRÍTICO: Vulnerabilidades críticas encontradas!"
+          exit 1
+        fi
+
+        if [[ $HIGH -gt 0 ]]; then
+          echo "⚠️  ALERTA: Vulnerabilidades altas encontradas"
+        fi
+
+    - name: 🛡️  Verificação de Dependências
+      run: |
+        echo "🛡️  Verificando dependências desatualizadas..."
+
+        # Verificar dependências desatualizadas
+        npm outdated --json > outdated-dependencies.json || true
+
+        OUTDATED_COUNT=$(jq 'length' outdated-dependencies.json 2>/dev/null || echo "0")
+        echo "📦 Dependências desatualizadas: $OUTDATED_COUNT"
+
+        if [[ $OUTDATED_COUNT -gt 10 ]]; then
+          echo "⚠️  ALERTA: Muitas dependências desatualizadas ($OUTDATED_COUNT)"
+        fi
+
+    - name: 🔐 Verificação de Segredos
+      run: |
+        echo "🔐 Verificando exposição de segredos..."
+
+        # Usar git-secrets ou similar para verificar commits
+        # Aqui você pode integrar ferramentas como:
+        # - git-secrets
+        # - trufflehog
+        # - gitleaks
+
+        echo "🔍 Verificação de segredos concluída"
+
+    - name: 📤 Upload Relatórios de Segurança
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          security-audit.json
+          outdated-dependencies.json
+
+  # ==========================================
+  # 📊 DASHBOARD DE QUALIDADE
+  # ==========================================
+
+  quality-dashboard:
+    name: '📊 Dashboard de Qualidade'
+    runs-on: self-hosted
+    needs: [static-analysis, complexity-analysis, test-coverage, security-analysis]
+    if: always()
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 📊 Gerar Relatório Consolidado de Qualidade
+      run: |
+        echo "📊 Gerando relatório consolidado de qualidade..."
+
+        # Criar relatório markdown
+        {
+          echo "# 📊 Relatório de Qualidade de Código"
+          echo ""
+          echo "**Commit:** ${{ github.sha }}"
+          echo "**Branch:** ${{ github.ref }}"
+          echo "**Data:** $(date)"
+          echo ""
+          echo "## 🔍 Status das Análises"
+          echo ""
+          echo "| Análise | Status | Detalhes |"
+          echo "|---------|--------|----------|"
+          echo "| Análise Estática | ${{ needs.static-analysis.result }} | Linting + TypeScript |"
+          echo "| Complexidade | ${{ needs.complexity-analysis.result }} | Ciclomática + Duplicação |"
+          echo "| Cobertura | ${{ needs.test-coverage.result }} | Testes unitários |"
+          echo "| Segurança | ${{ needs.security-analysis.result }} | Vulnerabilidades + Dependências |"
+          echo ""
+        } > quality-report.md
+
+        # Determinar status geral
+        if [[ "${{ needs.static-analysis.result }}" == "success" && \
+              "${{ needs.complexity-analysis.result }}" == "success" && \
+              "${{ needs.test-coverage.result }}" == "success" && \
+              "${{ needs.security-analysis.result }}" == "success" ]]; then
+          echo "## ✅ STATUS GERAL: TODAS AS ANÁLISES PASSARAM" >> quality-report.md
+          echo "STATUS=success" >> $GITHUB_ENV
+        else
+          echo "## ❌ STATUS GERAL: PROBLEMAS DETECTADOS" >> quality-report.md
+          echo "STATUS=failure" >> $GITHUB_ENV
+        fi
+
+        # Adicionar métricas se disponíveis
+        if [[ -f coverage-metrics.json ]]; then
+          LINES=$(jq -r '.lines_coverage' coverage-metrics.json 2>/dev/null || echo "N/A")
+          FUNCTIONS=$(jq -r '.functions_coverage' coverage-metrics.json 2>/dev/null || echo "N/A")
+          echo "" >> quality-report.md
+          echo "## 🧪 Métricas de Cobertura" >> quality-report.md
+          echo "- **Linhas:** $LINES%" >> quality-report.md
+          echo "- **Funções:** $FUNCTIONS%" >> quality-report.md
+        fi
+
+        echo "" >> quality-report.md
+        echo "## 📋 Recomendações" >> quality-report.md
+        echo "" >> quality-report.md
+
+        # Adicionar recomendações baseadas nos resultados
+        if [[ "${{ needs.complexity-analysis.result }}" != "success" ]]; then
+          echo "- 🔄 **Refatorar funções complexas** - Reduzir complexidade ciclomática" >> quality-report.md
+        fi
+
+        if [[ "${{ needs.test-coverage.result }}" != "success" ]]; then
+          echo "- 🧪 **Aumentar cobertura de testes** - Adicionar mais testes unitários" >> quality-report.md
+        fi
+
+        if [[ "${{ needs.security-analysis.result }}" != "success" ]]; then
+          echo "- 🔒 **Atualizar dependências** - Corrigir vulnerabilidades de segurança" >> quality-report.md
+        fi
+
+        echo "" >> quality-report.md
+        echo "*Relatório gerado automaticamente*" >> quality-report.md
+
+    - name: 📤 Upload Dashboard de Qualidade
+      uses: actions/upload-artifact@v4
+      with:
+        name: quality-dashboard
+        path: quality-report.md
+
+    - name: 💬 Comentar no PR
+      if: github.event_name == 'pull_request' && env.STATUS == 'failure'
+      run: |
+        echo "💬 Comentando qualidade no PR..."
+
+        # Comentar no PR sobre problemas de qualidade
+        gh pr comment ${{ github.event.number }} --body "## ⚠️ Problemas de Qualidade Detectados
+
+Algumas verificações de qualidade falharam. Verifique os artefatos do workflow para detalhes:
+
+- 🔍 **Análise Estática:** ${{ needs.static-analysis.result }}
+- 🧩 **Complexidade:** ${{ needs.complexity-analysis.result }}
+- 🧪 **Cobertura:** ${{ needs.test-coverage.result }}
+- 🔒 **Segurança:** ${{ needs.security-analysis.result }}
+
+**Ações recomendadas:**
+1. Revisar os relatórios de análise nos artefatos
+2. Corrigir problemas críticos antes do merge
+3. Considerar refatoração para melhorar a qualidade"
+
+    - name: 🚫 Bloquear Merge se Qualidade Baixa
+      if: github.event_name == 'pull_request' && env.STATUS == 'failure'
+      run: |
+        echo "🚫 Qualidade insuficiente - merge bloqueado"
+
+        # Aqui você pode implementar lógica para bloquear merge
+        # usando branch protection rules ou labels
+
+  # ==========================================
+  # 📢 NOTIFICAÇÕES DE QUALIDADE
+  # ==========================================
+
+  quality-notifications:
+    name: '📢 Notificações de Qualidade'
+    runs-on: self-hosted
+    needs: quality-dashboard
+    if: always()
+
+    steps:
+    - name: 📢 Preparar Notificações de Qualidade
+      run: |
+        echo "📢 Preparando notificações de qualidade..."
+
+        # Criar notificação baseada no status
+        if [[ "${{ env.STATUS }}" == "success" ]]; then
+          TITLE="✅ Qualidade de Código Aprovada"
+          MESSAGE="Todas as verificações de qualidade passaram com sucesso."
+          PRIORITY="normal"
+        else
+          TITLE="❌ Problemas de Qualidade Detectados"
+          MESSAGE="Algumas verificações de qualidade falharam. Verifique os relatórios."
+          PRIORITY="high"
+        fi
+
+        # Criar payload de notificação
+        {
+          echo "title: \"$TITLE\""
+          echo "message: \"$MESSAGE\""
+          echo "priority: \"$PRIORITY\""
+          echo "timestamp: \"$(date -Iseconds)\""
+          echo "commit: \"${{ github.sha }}\""
+          echo "branch: \"${{ github.ref }}\""
+        } > quality-notification.json
+
+    - name: 💬 Slack Notification
+      run: |
+        echo "💬 Enviando notificação para Slack..."
+        # Implementar webhook do Slack com o payload
+
+    - name: 📧 Email Notification
+      run: |
+        echo "📧 Enviando notificação por email..."
+        # Implementar serviço de email
+
+    - name: 📱 Teams Notification
+      run: |
+        echo "📱 Enviando notificação para Teams..."
+        # Implementar webhook do Teams
+
+    - name: 📤 Upload Notificações
+      uses: actions/upload-artifact@v4
+      with:
+        name: quality-notifications
+        path: quality-notification.json

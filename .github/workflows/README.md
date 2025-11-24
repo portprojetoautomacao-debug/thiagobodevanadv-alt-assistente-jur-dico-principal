@@ -1,420 +1,319 @@
-# GitHub Actions Workflows
+# 🚀 Workflows Avançados de CI/CD - Assistente Jurídico PJe
 
-Este diretório contém todos os workflows de CI/CD para o projeto Assistente Jurídico PJe.
+Este repositório contém uma suíte completa de workflows de CI/CD avançados para o sistema **Assistente Jurídico PJe**, executados em um runner self-hosted Linux x64 com capacidades ilimitadas.
 
-## 📋 Índice
+## 📋 Visão Geral dos Workflows
 
-- [Visão Geral](#visão-geral)
-- [Workflows Principais](#workflows-principais)
-- [Workflows de Qualidade](#workflows-de-qualidade)
-- [Workflows de Segurança](#workflows-de-segurança)
-- [Workflows de Automação](#workflows-de-automação)
-- [Workflows dos Agentes AI](#workflows-dos-agentes-ai)
-- [Configuração de Concurrency](#configuração-de-concurrency)
-- [Secrets Necessários](#secrets-necessários)
-- [Manutenção](#manutenção)
+### 🎯 Workflows Principais
+
+| Workflow | Descrição | Trigger | Status |
+|----------|-----------|---------|--------|
+| [`ci-cd-complete.yml`](.github/workflows/ci-cd-complete.yml) | CI/CD completo com build, test, quality gates e deploy | Push/PR | ✅ Ativo |
+| [`deploy-rollback.yml`](.github/workflows/deploy-rollback.yml) | Deploy automatizado com rollback automático | Push + Manual | ✅ Ativo |
+| [`monitoring-alerts.yml`](.github/workflows/monitoring-alerts.yml) | Monitoramento contínuo e alertas | Schedule + Manual | ✅ Ativo |
+| [`backup-recovery.yml`](.github/workflows/backup-recovery.yml) | Backup e recuperação de dados | Schedule + Manual | ✅ Ativo |
+| [`code-quality-analysis.yml`](.github/workflows/code-quality-analysis.yml) | Análise completa de qualidade de código | Push/PR | ✅ Ativo |
+| [`performance-optimization.yml`](.github/workflows/performance-optimization.yml) | Otimização de performance e bundle analysis | Push/PR | ✅ Ativo |
+| [`vercel-webhook-automation.yml`](.github/workflows/vercel-webhook-automation.yml) | Automação baseada em webhooks do Vercel | Webhook | ✅ Ativo |
+
+### 🔧 Workflows de Suporte
+
+| Workflow | Descrição | Status |
+|----------|-----------|--------|
+| [`test-runner.yml`](.github/workflows/test-runner.yml) | Teste e validação do runner self-hosted | ✅ Ativo |
+| [`vercel-webhook-automation.yml`](.github/workflows/vercel-webhook-automation.yml) | Automação baseada em webhooks do Vercel | ✅ Ativo |
+
+## 🏗️ Infraestrutura
+
+### Self-Hosted Runner
+- **Sistema**: Ubuntu 24.04 LTS (Linux x64)
+- **Capacidades**: CPU/RAM ilimitadas, armazenamento dedicado
+- **Ferramentas**: Docker, Node.js 22.x, Python, ferramentas de build
+- **Localização**: `/workspaces/assistente-juridico-p/actions-runner/`
+
+### Tecnologias Suportadas
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js APIs, Redis (Upstash)
+- **Testing**: Vitest, Playwright, Lighthouse
+- **Deploy**: Vercel, Docker
+- **Monitoring**: Health checks, performance monitoring
+
+## 🚀 Como Usar
+
+### 1. CI/CD Completo (`ci-cd-complete.yml`)
+**Executa automaticamente em:**
+- Push para `main` ou `staging`
+- Pull requests para `main`
+
+**Recursos:**
+- ✅ Build e testes automatizados
+- ✅ Análise de qualidade (ESLint, TypeScript)
+- ✅ Testes unitários e E2E
+- ✅ Deploy para staging/production
+- ✅ Relatórios SARIF para GitHub Security
+
+### 2. Deploy com Rollback (`deploy-rollback.yml`)
+**Triggers:**
+- Push para `main` (deploy automático)
+- Manual via GitHub Actions
+
+**Recursos:**
+- 🚀 Deploy para staging e production
+- 🔄 Rollback automático em caso de falha
+- 🧪 Testes de smoke pós-deploy
+- 📊 Health checks automatizados
+- 📢 Notificações Slack/Teams/Email
+
+**Uso manual:**
+```yaml
+# Via GitHub Actions interface ou CLI
+gh workflow run deploy-rollback.yml -f environment=production
+```
+
+### 3. Monitoramento Contínuo (`monitoring-alerts.yml`)
+**Executa automaticamente:**
+- A cada 15 minutos (health checks)
+- Manual para verificações específicas
+
+**Monitora:**
+- 🏥 Health da aplicação
+- 📈 Performance (Lighthouse)
+- 🔒 Segurança (vulnerabilidades)
+- 📦 Dependências desatualizadas
+
+**Uso manual:**
+```bash
+gh workflow run monitoring-alerts.yml -f check_type=security
+```
+
+### 4. Backup e Recuperação (`backup-recovery.yml`)
+**Executa automaticamente:**
+- Backup diário às 2:00 AM
+- Limpeza automática (30 dias retenção)
+
+**Recursos:**
+- 💾 Backup completo (Redis, configs, arquivos)
+- 🔄 Backup incremental
+- 🧪 Teste de restauração
+- ☁️ Upload para GitHub Releases
+- 📊 Relatórios de backup
+
+### 6. Automação Vercel Webhook (`vercel-webhook-automation.yml`)
+**Executa automaticamente:**
+- Acionado por webhooks do Vercel via `repository_dispatch`
+- Processa eventos de deployment em tempo real
+
+**Recursos:**
+- 🎯 **Monitoramento de Deployments**: Acompanha status em tempo real
+- 🚨 **Detecção de Falhas**: Cria issues automaticamente em caso de falha
+- 🔄 **Rollback Automático**: Opcional, para versões anteriores estáveis
+- 🧪 **Testes de Smoke**: Validação automática após deploy
+- 📊 **Métricas de Deployment**: Registro detalhado de performance
+- 📢 **Notificações**: Integração com Slack/Discord/Teams
+
+**Eventos Processados:**
+- `deployment.succeeded` → ✅ Deploy bem-sucedido
+- `deployment.failed` → 🚨 Deploy falhou + rollback opcional
+- `deployment.created` → 📦 Deploy iniciado
+- `deployment.cancelled` → ❌ Deploy cancelado
+
+**Configuração necessária:**
+```bash
+# No Vercel (Environment Variables)
+GITHUB_TOKEN=your_github_token
+GITHUB_REPO_OWNER=your-username
+GITHUB_REPO_NAME=assistente-juridico-p
+
+# No GitHub (Secrets - opcional)
+NOTIFICATION_WEBHOOK_URL=https://hooks.slack.com/...
+AUTO_ROLLBACK_ENABLED=true
+```
+
+### 7. Análise de Qualidade (`code-quality-analysis.yml`)
+**Executa automaticamente em:**
+- Push e pull requests
+
+**Analisa:**
+- 🔍 Linting e type checking
+- 🧩 Complexidade ciclomática
+- 🧪 Cobertura de testes (80% mínimo)
+- 🔒 Segurança e vulnerabilidades
+
+### 6. Otimização de Performance (`performance-optimization.yml`)
+**Executa automaticamente em:**
+- Push para `main`
+
+**Analisa:**
+- 📦 Tamanho do bundle
+- ⚡ Performance (Lighthouse, Web Vitals)
+- 🔧 Otimizações de build
+- 📊 Comparação com baseline
+
+## ⚙️ Configuração
+
+### Secrets Necessários
+Configure estes secrets no repositório GitHub:
+
+```bash
+# Vercel
+VERCEL_TOKEN
+VERCEL_ORG_ID
+VERCEL_PROJECT_ID
+
+# URLs de produção/staging
+PRODUCTION_URL
+STAGING_URL
+
+# Redis (Upstash)
+UPSTASH_REDIS_REST_URL
+UPSTASH_REDIS_REST_TOKEN
+UPSTASH_REDIS_REST_URL_STAGING
+UPSTASH_REDIS_REST_TOKEN_STAGING
+
+# Notificações (opcional)
+SLACK_WEBHOOK_URL
+TEAMS_WEBHOOK_URL
+```
+
+### Variáveis de Ambiente
+```bash
+# Configurar em GitHub repository settings
+NODE_ENV=production
+VITE_APP_ENV=production
+```
+
+## 📊 Dashboards e Relatórios
+
+### Artefatos Gerados
+Cada workflow gera artefatos detalhados:
+- **Relatórios de qualidade**: ESLint, cobertura, complexidade
+- **Métricas de performance**: Lighthouse, Web Vitals, bundle size
+- **Logs de deploy**: Health checks, testes de smoke
+- **Relatórios de backup**: Status, tamanhos, integridade
+
+### Visualização
+- 📈 **GitHub Actions**: Logs e artefatos em tempo real
+- 🔍 **GitHub Security**: Alertas de segurança e qualidade
+- 📊 **GitHub Releases**: Histórico de backups
+- 💬 **PR Comments**: Feedback automático nos pull requests
+
+## 🚨 Alertas e Notificações
+
+### Canais de Notificação
+- **Slack**: Alertas críticos e resumos diários
+- **Microsoft Teams**: Notificações de deploy e monitoramento
+- **Email**: Relatórios semanais e alertas críticos
+- **GitHub Issues**: Criação automática para problemas críticos
+
+### Tipos de Alerta
+- 🔴 **Crítico**: Falhas de deploy, vulnerabilidades críticas
+- 🟠 **Alto**: Problemas de performance, segurança
+- 🟡 **Médio**: Avisos de qualidade, dependências desatualizadas
+- 🔵 **Info**: Relatórios diários, backups concluídos
+
+## 🔧 Manutenção
+
+### Runner Self-Hosted
+```bash
+# Verificar status do runner
+cd actions-runner/
+./run.sh
+
+# Atualizar runner
+./config.sh --unattended --replace
+
+# Logs do runner
+tail -f _diag/*.log
+```
+
+### Limpeza Automática
+- **Backups**: Retenção de 30 dias
+- **Artefatos**: Removidos após 30 dias
+- **Logs**: Rotação automática
+- **Cache**: Limpeza semanal
+
+### Monitoramento da Infraestrutura
+- CPU/Memória do runner
+- Espaço em disco
+- Status dos serviços
+- Performance dos workflows
+
+## 📈 Métricas e KPIs
+
+### Qualidade de Código
+- Cobertura de testes: >80%
+- Complexidade ciclomática: <10
+- Vulnerabilidades: 0 críticas
+- Tempo de build: <5 min
+
+### Performance
+- Lighthouse Score: >90
+- Bundle size: <2MB
+- LCP: <2.5s
+- CLS: <0.1
+
+### Disponibilidade
+- Uptime: >99.9%
+- Tempo de deploy: <10 min
+- Rollback automático: <5 min
+- Backup diário: 100%
+
+## 🆘 Troubleshooting
+
+### Problemas Comuns
+
+**Runner não conecta:**
+```bash
+# Verificar configuração
+cd actions-runner/
+./config.sh --check
+
+# Reiniciar serviço
+./svc.sh stop
+./svc.sh start
+```
+
+**Deploy falha:**
+- Verificar secrets do Vercel
+- Checar logs do workflow
+- Executar rollback manual se necessário
+
+**Testes falham:**
+- Verificar dependências
+- Checar configuração do Vitest
+- Validar ambiente de teste
+
+**Performance degrada:**
+- Verificar bundle size
+- Analisar Lighthouse report
+- Checar otimizações de build
+
+### Suporte
+- 📖 **Documentação**: Este README e arquivos individuais
+- 🐛 **Issues**: Criar issue no repositório
+- 📧 **Contato**: Equipe de desenvolvimento
+
+## 🔄 Atualizações
+
+### Versionamento
+- Workflows versionados com releases
+- Changelog em cada atualização
+- Rollback automático para versões anteriores
+
+### Melhorias Planejadas
+- [ ] Integração com DataDog/New Relic
+- [ ] Deploy canary com feature flags
+- [ ] Análise de performance em tempo real
+- [ ] Auto-scaling do runner baseado em carga
 
 ---
 
-## Visão Geral
-
-Todos os workflows foram atualizados com:
-- ✅ **Concurrency groups** para evitar execuções duplicadas
-- ✅ **Timeouts** em jobs críticos
-- ✅ **Tratamento de erros** melhorado
-- ✅ **Verificações de arquivos** antes de executar
-- ✅ **Mensagens de erro** mais claras
-
----
-
-## Workflows Principais
-
-### 1. CI Workflow (`ci.yml`)
-**Triggers:** Push to `main`, `develop`, `copilot/**` branches; Pull requests to `main`, `develop`
-
-**Jobs:**
-- **build-and-test**: Builds and tests on Node.js 22.x
-  - Runs linter
-  - Builds application
-  - Runs tests
-  - Uploads build artifacts
-  - **✨ NEW:** Enhanced caching for faster builds
-  - **✨ NEW:** Build artifact caching for incremental builds
-  
-- **lint-security**: Security and quality checks
-  - npm audit
-  - Dependency check
-  - ESLint with SARIF output for GitHub Code Scanning
-  
-- **build-matrix-status**: Aggregates status of all jobs
-
-**Features:**
-- Optimized dependency caching with multiple restore keys
-- Build artifact caching for faster rebuilds
-- Enhanced build summary with performance metrics
-- Artifact retention for 7 days
-- Caching for faster builds
-- SARIF integration for security findings
-- **Concurrency:** Cancela execuções anteriores no mesmo branch
-- **Melhorias:** Tratamento robusto de erros no SARIF, verificação de test scripts
-
----
-
-### 2. Deploy Workflow (`deploy.yml`)
-**Triggers:** Push to `main`; Pull requests; Manual workflow dispatch
-
-**Jobs:**
-- **deploy-vercel**: Deploys to Vercel
-  - Valida secrets do Vercel
-  - Verifica limite de 12 funções serverless (Hobby)
-  - Valida arquivos dos agentes AI
-  - Deploy com retry logic (3 tentativas)
-  - Comenta URL no PR
-  
-- **e2e-tests**: Testes E2E após deploy
-  - Verifica se Playwright está configurado
-  - Upload de resultados mesmo em falha
-  
-- **deploy-notification**: Notificação de status
-
-**Features:**
-- Environment-based deployment (production/staging/preview)
-- Automatic PR commenting with deployment URL
-- **Concurrency:** NÃO cancela deploys em andamento
-- **Timeout:** 30 minutos para E2E
-- **Melhorias:** Verificação de Playwright config, melhor tratamento de falhas
-
-**Required Secrets:**
-- `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_REDIRECT_URI`
-- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
-- `VERCEL_AUTOMATION_BYPASS_SECRET` (opcional)
-
----
-**Triggers:** Pull request events (opened, synchronize, reopened, ready_for_review)
-
-**Jobs:**
-- **pr-validation**: Comprehensive PR checks
-  - Merge conflict detection
-  - Code linting
-  - Build verification
-  - Test execution
-  - package.json/package-lock.json consistency check
-  
-- **pr-labeler**: Auto-labels PRs based on changed files
-  
-- **size-limit**: Bundle size monitoring
-  - Checks main bundle size (500 KB limit)
-  - Warns if exceeded
-
-**Features:**
-- Automated PR commenting with validation summary
-- Skips draft PRs
-- Bundle size warnings (non-blocking)
-
-### 3. Code Quality Workflow (`code-quality.yml`)
-**Triggers:** Push to `main`, `develop`; PRs to `main`, `develop`; Weekly on Monday
-
-**Jobs:**
-- **codeql-analysis**: GitHub CodeQL security scanning
-  - JavaScript/TypeScript analysis
-  - Security and quality queries
-  
-- **dependency-review**: Reviews dependency changes (PRs only)
-  - Fails on moderate+ severity vulnerabilities
-  
-- **type-check**: TypeScript type checking
-  
-- **bundle-size**: Detailed bundle size analysis
-  - Reports all JS/CSS file sizes
-  - Shows gzipped sizes
-
-**Features:**
-- Automated security scanning
-- Dependency vulnerability detection
-- Type safety enforcement
-
-### 4. Deploy Workflow (`deploy.yml`)
-**Triggers:** Push to `main`; Manual workflow dispatch
-
-**Jobs:**
-- **deploy-vercel**: Deploys to Vercel
-  - Builds application with production env vars
-  - Deploys to production or staging
-  - Comments deployment URL on PRs
-  
-- **deploy-notification**: Reports deployment status
-
-**Features:**
-- Environment-based deployment (production/staging)
-- Automatic PR commenting with deployment URL
-- Uses Vercel CLI for deployment
-
-**Required Secrets:**
-- `VITE_GOOGLE_CLIENT_ID`
-- `VITE_GOOGLE_API_KEY`
-- `VITE_REDIRECT_URI`
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
-
-### 5. Release Workflow (`release.yml`)
-**Triggers:** Git tags matching `v*.*.*`; Manual workflow dispatch
-
-**Jobs:**
-- **create-release**: Creates GitHub release
-  - Builds production version
-  - Creates release archive (ZIP)
-  - Generates changelog from git history or CHANGELOG.md
-  - Uploads build artifacts
-  - Marks beta/alpha as prerelease
-  
-- **notify-release**: Reports release completion
-
-**Features:**
-- Automatic changelog generation
-- Release archive creation
-- Pre-release detection (beta/alpha tags)
-- Production deployment trigger
-
-### 6. Nightly Build Workflow (`nightly.yml`)
-**Triggers:** Daily at 2:00 AM UTC; Manual workflow dispatch
-
-**Jobs:**
-- **nightly-build**: Comprehensive nightly checks
-  - Security audit
-  - Dependency updates check
-  - Full build from `develop` branch
-  - Tests with coverage
-  - Build report with bundle sizes
-  
-- **dependency-update-check**: Checks for available updates
-  - Uses npm-check-updates
-  - Reports available minor updates
-
-**Features:**
-- Runs on `develop` branch
-- 7-day artifact retention
-- Detailed build reports in GitHub Summary
-- Continues on errors to collect all information
-
-### 7. GitHub Copilot Setup Steps (`copilot-setup-steps.yml`)
-**Triggers:** Push/PR to the workflow file itself; Manual workflow dispatch
-
-**Jobs:**
-- **copilot-setup-steps**: Prepares the environment for GitHub Copilot coding agent
-  - Checks out repository code
-  - Sets up Node.js 20 with npm caching
-  - Installs all project dependencies with `npm ci`
-
-**Features:**
-- Automatically runs when the workflow file is modified (for easy validation)
-- Can be triggered manually via Actions tab
-- Provides a pre-configured environment for the Copilot agent
-- Enables Copilot to run builds, tests, and linters without setup delays
-- Uses minimal permissions (contents: read)
-- Runs on ubuntu-latest (required for Copilot compatibility)
-
-**Purpose:**
-This workflow is specifically designed for GitHub Copilot's coding agent. When Copilot starts working on a task, this workflow runs first to prepare the environment with all necessary tools and dependencies. This ensures:
-- Faster agent startup (dependencies are pre-installed)
-- Reliable builds and tests (consistent environment)
-- Better agent performance (no trial-and-error for dependency installation)
-
-**Note:** This workflow must be present in the default branch to be recognized by GitHub Copilot.
-
----
-
-## 🆕 Novos Workflows (Adicionados em 2025-11-23)
-
-### 8. Bundle Analysis (`bundle-analysis.yml`)
-**Triggers:** Pull requests com mudanças no código; Execução manual
-
-**Objetivo:** Analisar e monitorar o tamanho do bundle JavaScript
-
-**Jobs:**
-- **analyze-bundle**: Análise completa do bundle
-  - Tamanhos de arquivos JS/CSS
-  - Compressão gzip
-  - Alertas de tamanho
-  
-- **compare-with-base**: Comparação com branch base
-  - Diferença de tamanho
-  - Percentual de mudança
-
-**Features:**
-- Relatório detalhado em comentários de PR
-- Recomendações de otimização
-- Limites configuráveis (500 KB padrão)
-
-### 9. Auto Changelog (`changelog.yml`)
-**Triggers:** Release published; Push em tags; Execução manual
-
-**Objetivo:** Gerar e manter CHANGELOG.md automaticamente
-
-**Features:**
-- Categorização de commits (features, fixes, docs, maintenance, security)
-- Geração automática de release notes
-- Formato compatível com [Keep a Changelog](https://keepachangelog.com/)
-- Atualização automática em releases
-
-### 10. Status Badges (`badges.yml`)
-**Triggers:** Conclusão de workflows principais (CI, Deploy, Security, Code Quality)
-
-**Objetivo:** Manter badges de status atualizados
-
-**Features:**
-- Geração automática de badge JSON
-- Atualização do README
-- Suporte para múltiplos workflows
-
-### 11. Dependency Health Check (`dependency-health.yml`)
-**Triggers:** Semanalmente (segundas 9h UTC); PRs com mudanças em dependências; Execução manual
-
-**Objetivo:** Monitorar saúde e segurança das dependências
-
-**Jobs:**
-- **check-dependencies**: Análise completa
-  - Pacotes desatualizados
-  - Vulnerabilidades de segurança
-  - Verificação de licenças
-  - Análise de tamanho
-  - Dependências duplicadas
-  
-- **check-npm-scripts**: Validação de scripts
-  - Verifica scripts essenciais
-  - Lista todos os scripts disponíveis
-
-**Features:**
-- Relatórios detalhados em artifacts
-- Comentários automáticos em PRs
-- Recomendações de manutenção
-- Análise top 10 maiores pacotes
-
----
-
-## Workflow Dependencies
-
-### Required npm packages
-All workflows require these packages to be installed:
-- `vitest` - Test runner
-- `@vitest/coverage-v8` - Coverage provider
-- `jsdom` - DOM environment for tests
-- `@testing-library/react` - React testing utilities
-- `@testing-library/jest-dom` - DOM matchers
-- `@microsoft/eslint-formatter-sarif` - SARIF formatter for ESLint
-
-### Environment Variables
-Build-time environment variables (prefixed with `VITE_`):
-- `VITE_GOOGLE_CLIENT_ID` - Google OAuth client ID
-- `VITE_GOOGLE_API_KEY` - Google API key
-- `VITE_REDIRECT_URI` - OAuth redirect URI
-- `VITE_APP_ENV` - Environment (ci, production, staging, nightly, test)
-
-## Secrets Configuration
-
-### Repository Secrets
-Configure these in GitHub Settings > Secrets and variables > Actions:
-
-**Google OAuth:**
-- `VITE_GOOGLE_CLIENT_ID`
-- `VITE_GOOGLE_API_KEY`
-- `VITE_REDIRECT_URI`
-
-**Vercel Deployment:**
-- `VERCEL_TOKEN` - Vercel authentication token
-- `VERCEL_ORG_ID` - Vercel organization ID
-- `VERCEL_PROJECT_ID` - Vercel project ID
-
-## Caching Strategy
-
-All workflows use multi-level caching:
-1. **npm cache** - Built-in with `actions/setup-node@v4`
-2. **node_modules cache** - Custom cache for faster installs
-3. **Build artifacts** - Stored for 7 days
-
-Cache keys based on:
-- Operating system
-- Node.js version
-- `package-lock.json` hash
-
-## Security Features
-
-1. **CodeQL Analysis** - Automated code scanning
-2. **Dependency Review** - Blocks PRs with vulnerable dependencies
-3. **npm audit** - Checks for known vulnerabilities
-4. **SARIF Integration** - ESLint findings in Security tab
-5. **Minimal Permissions** - Each job has specific permissions
-
-## Auto-Labeling
-
-PRs are automatically labeled based on changed files:
-- `documentation` - Markdown files
-- `ui` - Components, styles
-- `config` - Configuration files
-- `dependencies` - package.json changes
-- `types` - TypeScript files
-- `api` - API/backend changes
-- `testing` - Test files
-- `ci-cd` - Workflow changes
-- `security` - Security-related files
-
-## Best Practices
-
-1. **Always update package-lock.json** when changing package.json
-2. **Use dummy values** for env vars in CI builds
-3. **Keep secrets out of code** - use GitHub Secrets
-4. **Test locally first** with `npm run lint && npm run build && npm test`
-5. **Monitor bundle size** - keep main bundle under 500 KB
-6. **Review security alerts** - check CodeQL and dependency review findings
-7. **Keep copilot-setup-steps.yml updated** - ensure it matches your project's setup needs
-
-## Troubleshooting
-
-### Build Failures
-1. Check the "build-and-test" job logs
-2. Ensure all dependencies are installed
-3. Verify environment variables are set correctly
-4. Check for TypeScript errors
-
-### Test Failures
-1. Run tests locally: `npm test`
-2. Check test setup in `src/test/setup.ts`
-3. Ensure jsdom is installed for DOM tests
-4. Review test environment variables
-
-### Deployment Failures
-1. Verify Vercel secrets are configured
-2. Check build succeeds locally
-3. Ensure production env vars are set
-4. Review Vercel deployment logs
-
-### SARIF Upload Issues
-1. Ensure ESLint runs successfully
-2. Check `eslint-results.sarif` is generated
-3. Verify file exists before upload
-4. Review CodeQL action logs
-
-## Maintenance
-
-### Weekly Tasks
-- Review CodeQL findings
-- Check dependency updates from nightly builds
-- Monitor bundle size trends
-
-### Monthly Tasks
-- Update GitHub Actions versions (automated via Dependabot)
-- Review and optimize caching strategy
-- Update Node.js versions in matrix
-
-### As Needed
-- Add new workflows for new features
-- Update deployment configuration
-- Adjust bundle size limits
-- Add new auto-labeling rules
-
-## Related Documentation
-
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Vercel Deployment Guide](../VERCEL_DEPLOYMENT.md)
-- [Security Policy](../SECURITY.md)
-- [Contributing Guide](../README.md)
+## 📝 Notas de Desenvolvimento
+
+- **Idioma**: Todos os comentários e documentação em português brasileiro
+- **Padrões**: Seguir convenções do projeto React/TypeScript
+- **Segurança**: Nunca commitar secrets ou credenciais
+- **Performance**: Otimizar para CI/CD rápido e eficiente
+
+**Última atualização:** $(date)
+**Versão:** 1.0.0

@@ -1,0 +1,553 @@
+name: Otimização de Performance e Bundle Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      analysis_type:
+        description: 'Tipo de análise'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - bundle-only
+          - performance-only
+          - optimization-only
+      baseline_comparison:
+        description: 'Comparar com baseline'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: performance-optimization-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================
+  # 📦 ANÁLISE DE BUNDLE
+  # ==========================================
+
+  bundle-analysis:
+    name: '📦 Análise de Bundle'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'bundle-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 📊 Executar Bundle Analyzer
+      run: |
+        echo "📊 Executando análise de bundle..."
+
+        # Instalar webpack-bundle-analyzer se necessário
+        npm install --save-dev webpack-bundle-analyzer
+
+        # Build com análise de bundle
+        npm run build -- --mode analyze
+
+        # Executar análise
+        npx webpack-bundle-analyzer dist/static/js/*.js --mode static --report bundle-report.html
+
+    - name: 📏 Analisar Tamanho do Bundle
+      run: |
+        echo "📏 Analisando tamanho do bundle..."
+
+        # Analisar arquivos do build
+        echo "📊 Tamanho total do build:" > bundle-size-report.md
+        du -sh dist/ >> bundle-size-report.md
+        echo "" >> bundle-size-report.md
+
+        echo "📦 Top 10 maiores arquivos:" >> bundle-size-report.md
+        find dist/ -type f -exec ls -lh {} \; | sort -k5 -hr | head -10 >> bundle-size-report.md
+        echo "" >> bundle-size-report.md
+
+        # Analisar chunks JavaScript
+        echo "🧩 Chunks JavaScript:" >> bundle-size-report.md
+        ls -lh dist/static/js/ >> bundle-size-report.md
+        echo "" >> bundle-size-report.md
+
+        # Calcular tamanhos
+        TOTAL_SIZE=$(du -sb dist/ | cut -f1)
+        JS_SIZE=$(find dist/static/js/ -name "*.js" -exec stat -f%z {} \; | awk '{sum += $1} END {print sum}' 2>/dev/null || find dist/static/js/ -name "*.js" -exec stat -c%s {} \; | awk '{sum += $1} END {print sum}')
+        CSS_SIZE=$(find dist/static/css/ -name "*.css" -exec stat -f%z {} \; | awk '{sum += $1} END {print sum}' 2>/dev/null || find dist/static/css/ -name "*.css" -exec stat -c%s {} \; | awk '{sum += $1} END {print sum}')
+
+        echo "📊 Métricas de tamanho:" >> bundle-size-report.md
+        echo "- **Total:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)" >> bundle-size-report.md
+        echo "- **JavaScript:** $(numfmt --to=iec-i --suffix=B $JS_SIZE)" >> bundle-size-report.md
+        echo "- **CSS:** $(numfmt --to=iec-i --suffix=B $CSS_SIZE)" >> bundle-size-report.md
+
+        # Salvar métricas para comparação
+        {
+          echo "total_size: $TOTAL_SIZE"
+          echo "js_size: $JS_SIZE"
+          echo "css_size: $CSS_SIZE"
+          echo "timestamp: $(date +%s)"
+          echo "commit: ${{ github.sha }}"
+        } > bundle-metrics.json
+
+    - name: 📈 Comparar com Baseline
+      if: github.event.inputs.baseline_comparison == true
+      run: |
+        echo "📈 Comparando com baseline..."
+
+        # Baixar métricas da branch main
+        if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
+          echo "📥 Baixando métricas da main..."
+          gh run download --repo ${{ github.repository }} --name bundle-metrics -D baseline-metrics/ || echo "Baseline não encontrada"
+
+          if [[ -f baseline-metrics/bundle-metrics.json ]]; then
+            BASELINE_TOTAL=$(jq '.total_size' baseline-metrics/bundle-metrics.json)
+            BASELINE_JS=$(jq '.js_size' baseline-metrics/bundle-metrics.json)
+            BASELINE_CSS=$(jq '.css_size' baseline-metrics/bundle-metrics.json)
+
+            CURRENT_TOTAL=$TOTAL_SIZE
+            CURRENT_JS=$JS_SIZE
+            CURRENT_CSS=$CSS_SIZE
+
+            # Calcular diferenças
+            TOTAL_DIFF=$((CURRENT_TOTAL - BASELINE_TOTAL))
+            JS_DIFF=$((CURRENT_JS - BASELINE_JS))
+            CSS_DIFF=$((CURRENT_CSS - BASELINE_CSS))
+
+            echo "📊 Comparação com baseline:" >> bundle-size-report.md
+            echo "" >> bundle-size-report.md
+            echo "| Métrica | Baseline | Atual | Diferença |" >> bundle-size-report.md
+            echo "|---------|----------|-------|-----------|" >> bundle-size-report.md
+            echo "| Total | $(numfmt --to=iec-i --suffix=B $BASELINE_TOTAL) | $(numfmt --to=iec-i --suffix=B $CURRENT_TOTAL) | $(numfmt --to=iec-i --suffix=B $TOTAL_DIFF) |" >> bundle-size-report.md
+            echo "| JS | $(numfmt --to=iec-i --suffix=B $BASELINE_JS) | $(numfmt --to=iec-i --suffix=B $CURRENT_JS) | $(numfmt --to=iec-i --suffix=B $JS_DIFF) |" >> bundle-size-report.md
+            echo "| CSS | $(numfmt --to=iec-i --suffix=B $BASELINE_CSS) | $(numfmt --to=iec-i --suffix=B $CURRENT_CSS) | $(numfmt --to=iec-i --suffix=B $CSS_DIFF) |" >> bundle-size-report.md
+
+            # Alertar se aumento significativo
+            if [[ $TOTAL_DIFF -gt 100000 ]]; then  # 100KB
+              echo "⚠️  ALERTA: Aumento significativo no tamanho do bundle (+$(numfmt --to=iec-i --suffix=B $TOTAL_DIFF))"
+            fi
+          fi
+        fi
+
+    - name: 📤 Upload Relatórios de Bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: bundle-reports
+        path: |
+          bundle-report.html
+          bundle-size-report.md
+          bundle-metrics.json
+
+  # ==========================================
+  # ⚡ ANÁLISE DE PERFORMANCE
+  # ==========================================
+
+  performance-analysis:
+    name: '⚡ Análise de Performance'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'performance-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🏗️  Build de Produção Otimizado
+      run: |
+        echo "🏗️  Executando build de produção otimizado..."
+
+        # Build com otimizações
+        NODE_ENV=production npm run build
+
+    - name: 🖥️  Lighthouse Performance Test
+      run: |
+        echo "🖥️  Executando Lighthouse performance test..."
+
+        # Instalar servisor local
+        npm install --save-dev serve
+
+        # Servir aplicação localmente
+        npx serve -s dist -p 3000 &
+        SERVER_PID=$!
+
+        # Aguardar servidor iniciar
+        sleep 10
+
+        # Executar Lighthouse
+        npx lighthouse http://localhost:3000 \
+          --output=json \
+          --output-path=lighthouse-performance.json \
+          --only-categories=performance \
+          --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
+
+        # Matar servidor
+        kill $SERVER_PID
+
+        # Extrair métricas
+        PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' lighthouse-performance.json)
+        FCP=$(jq '.audits."first-contentful-paint".numericValue' lighthouse-performance.json)
+        LCP=$(jq '.audits."largest-contentful-paint".numericValue' lighthouse-performance.json)
+        TBT=$(jq '.audits."total-blocking-time".numericValue' lighthouse-performance.json)
+        CLS=$(jq '.audits."cumulative-layout-shift".numericValue' lighthouse-performance.json)
+        SPEED_INDEX=$(jq '.audits."speed-index".numericValue' lighthouse-performance.json)
+
+        echo "📊 Performance Score: $PERFORMANCE_SCORE"
+        echo "🖼️  First Contentful Paint: ${FCP}ms"
+        echo "🖼️  Largest Contentful Paint: ${LCP}ms"
+        echo "⏱️  Total Blocking Time: ${TBT}ms"
+        echo "📐 Cumulative Layout Shift: $CLS"
+        echo "⚡ Speed Index: ${SPEED_INDEX}ms"
+
+        # Salvar métricas
+        {
+          echo "performance_score: $PERFORMANCE_SCORE"
+          echo "fcp: $FCP"
+          echo "lcp: $LCP"
+          echo "tbt: $TBT"
+          echo "cls: $CLS"
+          echo "speed_index: $SPEED_INDEX"
+          echo "timestamp: $(date +%s)"
+        } > performance-metrics.json
+
+    - name: 📊 Web Vitals Analysis
+      run: |
+        echo "📊 Analisando Web Vitals..."
+
+        # Verificar se as métricas atendem aos thresholds
+        LCP_THRESHOLD=2500  # 2.5s
+        FID_THRESHOLD=100   # 100ms
+        CLS_THRESHOLD=0.1   # 0.1
+
+        if (( $(echo "$LCP > $LCP_THRESHOLD" | bc -l) )); then
+          echo "⚠️  ALERTA: LCP acima do threshold (${LCP}ms > ${LCP_THRESHOLD}ms)"
+        fi
+
+        if (( $(echo "$TBT > $FID_THRESHOLD" | bc -l) )); then
+          echo "⚠️  ALERTA: TBT acima do threshold (${TBT}ms > ${FID_THRESHOLD}ms)"
+        fi
+
+        if (( $(echo "$CLS > $CLS_THRESHOLD" | bc -l) )); then
+          echo "⚠️  ALERTA: CLS acima do threshold ($CLS > $CLS_THRESHOLD)"
+        fi
+
+    - name: 📈 Comparar Performance com Baseline
+      if: github.event.inputs.baseline_comparison == true
+      run: |
+        echo "📈 Comparando performance com baseline..."
+
+        # Baixar métricas de performance da main
+        if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
+          gh run download --repo ${{ github.repository }} --name performance-metrics -D baseline-performance/ || echo "Baseline não encontrada"
+
+          if [[ -f baseline-performance/performance-metrics.json ]]; then
+            BASELINE_SCORE=$(jq '.performance_score' baseline-performance/performance-metrics.json)
+            BASELINE_LCP=$(jq '.lcp' baseline-performance/performance-metrics.json)
+
+            SCORE_DIFF=$(echo "scale=2; $PERFORMANCE_SCORE - $BASELINE_SCORE" | bc)
+            LCP_DIFF=$(echo "scale=2; $LCP - $BASELINE_LCP" | bc)
+
+            echo "📊 Comparação de Performance:" >> performance-report.md
+            echo "- **Score:** $BASELINE_SCORE → $PERFORMANCE_SCORE (dif: $SCORE_DIFF)" >> performance-report.md
+            echo "- **LCP:** ${BASELINE_LCP}ms → ${LCP}ms (dif: ${LCP_DIFF}ms)" >> performance-report.md
+          fi
+        fi
+
+    - name: 📤 Upload Relatórios de Performance
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-reports
+        path: |
+          lighthouse-performance.json
+          performance-metrics.json
+          performance-report.md
+
+  # ==========================================
+  # 🔧 OTIMIZAÇÕES DE BUILD
+  # ==========================================
+
+  build-optimizations:
+    name: '🔧 Otimizações de Build'
+    runs-on: self-hosted
+    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'optimization-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔍 Analisar Lazy Loading
+      run: |
+        echo "🔍 Analisando implementação de lazy loading..."
+
+        # Verificar se componentes usam React.lazy
+        LAZY_COMPONENTS=$(grep -r "React.lazy\|lazy(" src/components/ | wc -l)
+        TOTAL_COMPONENTS=$(find src/components/ -name "*.tsx" -o -name "*.ts" | wc -l)
+
+        echo "📦 Componentes com lazy loading: $LAZY_COMPONENTS / $TOTAL_COMPONENTS"
+
+        if [[ $LAZY_COMPONENTS -lt $(($TOTAL_COMPONENTS / 2)) ]]; then
+          echo "⚠️  ALERTA: Poucos componentes usam lazy loading"
+        fi
+
+    - name: 📊 Analisar Code Splitting
+      run: |
+        echo "📊 Analisando code splitting..."
+
+        # Verificar se há múltiplos chunks no build
+        CHUNK_COUNT=$(ls dist/static/js/ | wc -l)
+        echo "🧩 Número de chunks JavaScript: $CHUNK_COUNT"
+
+        if [[ $CHUNK_COUNT -lt 3 ]]; then
+          echo "⚠️  ALERTA: Poucos chunks - considere implementar mais code splitting"
+        fi
+
+        # Analisar tamanho dos chunks
+        echo "📏 Tamanhos dos chunks:" > chunk-analysis.md
+        ls -lh dist/static/js/ >> chunk-analysis.md
+
+    - name: 🗜️  Verificar Compressão
+      run: |
+        echo "🗜️  Verificando compressão de assets..."
+
+        # Verificar se arquivos estão comprimidos
+        GZIP_FILES=$(find dist/ -name "*.js" -o -name "*.css" | head -5 | xargs file | grep -c "gzip")
+        TOTAL_ASSETS=$(find dist/ -name "*.js" -o -name "*.css" | wc -l)
+
+        echo "🗜️  Arquivos comprimidos: $GZIP_FILES / $TOTAL_ASSETS"
+
+        if [[ $GZIP_FILES -eq 0 ]]; then
+          echo "⚠️  ALERTA: Assets não estão comprimidos"
+        fi
+
+    - name: 🌐 Verificar CDN e Cache Headers
+      run: |
+        echo "🌐 Verificando configuração de CDN e cache..."
+
+        # Verificar se há configuração de CDN no build
+        if [[ -f dist/_headers ]]; then
+          echo "✅ Headers de cache configurados"
+          cat dist/_headers
+        else
+          echo "⚠️  Headers de cache não configurados"
+        fi
+
+    - name: 📋 Gerar Relatório de Otimizações
+      run: |
+        echo "📋 Gerando relatório de otimizações..."
+
+        {
+          echo "# 🔧 Relatório de Otimizações de Build"
+          echo ""
+          echo "**Data:** $(date)"
+          echo "**Commit:** ${{ github.sha }}"
+          echo ""
+          echo "## 📦 Code Splitting"
+          echo "- Chunks JavaScript: $CHUNK_COUNT"
+          echo "- Componentes lazy: $LAZY_COMPONENTS / $TOTAL_COMPONENTS"
+          echo ""
+          echo "## 🗜️  Compressão"
+          echo "- Assets comprimidos: $GZIP_FILES / $TOTAL_ASSETS"
+          echo ""
+          echo "## ⚡ Performance"
+          echo "- Performance Score: $PERFORMANCE_SCORE"
+          echo "- Bundle Size: $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)"
+          echo ""
+        } > optimization-report.md
+
+    - name: 📤 Upload Relatórios de Otimização
+      uses: actions/upload-artifact@v4
+      with:
+        name: optimization-reports
+        path: |
+          chunk-analysis.md
+          optimization-report.md
+
+  # ==========================================
+  # 📊 DASHBOARD DE PERFORMANCE
+  # ==========================================
+
+  performance-dashboard:
+    name: '📊 Dashboard de Performance'
+    runs-on: self-hosted
+    needs: [bundle-analysis, performance-analysis, build-optimizations]
+    if: always()
+
+    steps:
+    - name: 📊 Gerar Dashboard Consolidado
+      run: |
+        echo "📊 Gerando dashboard de performance consolidado..."
+
+        # Criar dashboard markdown
+        {
+          echo "# 📊 Dashboard de Performance e Bundle"
+          echo ""
+          echo "**Commit:** ${{ github.sha }}"
+          echo "**Branch:** ${{ github.ref }}"
+          echo "**Data:** $(date)"
+          echo ""
+          echo "## 📦 Status das Análises"
+          echo ""
+          echo "| Análise | Status |"
+          echo "|---------|--------|"
+          echo "| Bundle Analysis | ${{ needs.bundle-analysis.result }} |"
+          echo "| Performance Analysis | ${{ needs.performance-analysis.result }} |"
+          echo "| Build Optimizations | ${{ needs.build-optimizations.result }} |"
+          echo ""
+        } > performance-dashboard.md
+
+        # Determinar status geral
+        if [[ "${{ needs.bundle-analysis.result }}" == "success" && \
+              "${{ needs.performance-analysis.result }}" == "success" && \
+              "${{ needs.build-optimizations.result }}" == "success" ]]; then
+          echo "## ✅ STATUS GERAL: PERFORMANCE OTIMIZADA" >> performance-dashboard.md
+          echo "STATUS=success" >> $GITHUB_ENV
+        else
+          echo "## ⚠️  STATUS GERAL: OPORTUNIDADES DE OTIMIZAÇÃO" >> performance-dashboard.md
+          echo "STATUS=warning" >> $GITHUB_ENV
+        fi
+
+        # Adicionar métricas de performance se disponíveis
+        if [[ -f performance-metrics.json ]]; then
+          SCORE=$(jq -r '.performance_score' performance-metrics.json 2>/dev/null || echo "N/A")
+          LCP=$(jq -r '.lcp' performance-metrics.json 2>/dev/null || echo "N/A")
+          echo "" >> performance-dashboard.md
+          echo "## ⚡ Métricas de Performance" >> performance-dashboard.md
+          echo "- **Performance Score:** $SCORE" >> performance-dashboard.md
+          echo "- **Largest Contentful Paint:** ${LCP}ms" >> performance-dashboard.md
+        fi
+
+        # Adicionar métricas de bundle se disponíveis
+        if [[ -f bundle-metrics.json ]]; then
+          TOTAL_SIZE=$(jq -r '.total_size' bundle-metrics.json 2>/dev/null || echo "N/A")
+          if [[ "$TOTAL_SIZE" != "N/A" ]]; then
+            echo "- **Tamanho do Bundle:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)" >> performance-dashboard.md
+          fi
+        fi
+
+        echo "" >> performance-dashboard.md
+        echo "## 📋 Recomendações de Otimização" >> performance-dashboard.md
+        echo "" >> performance-dashboard.md
+
+        # Adicionar recomendações baseadas nos resultados
+        if [[ "${{ needs.bundle-analysis.result }}" != "success" ]]; then
+          echo "- 📦 **Otimizar bundle** - Implementar code splitting e lazy loading" >> performance-dashboard.md
+        fi
+
+        if [[ "${{ needs.performance-analysis.result }}" != "success" ]]; then
+          echo "- ⚡ **Melhorar performance** - Otimizar imagens, reduzir blocking time" >> performance-dashboard.md
+        fi
+
+        if [[ "${{ needs.build-optimizations.result }}" != "success" ]]; then
+          echo "- 🔧 **Otimizar build** - Configurar compressão e cache headers" >> performance-dashboard.md
+        fi
+
+        echo "" >> performance-dashboard.md
+        echo "*Dashboard gerado automaticamente*" >> performance-dashboard.md
+
+    - name: 💬 Comentar Performance no PR
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "💬 Comentando performance no PR..."
+
+        # Comentar no PR sobre performance
+        gh pr comment ${{ github.event.number }} --body "## ⚡ Análise de Performance
+
+**Status:** ${{ env.STATUS }}
+
+### 📊 Métricas Principais
+- **Performance Score:** $SCORE
+- **Bundle Size:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)
+- **LCP:** ${LCP}ms
+
+$(if [[ "${{ env.STATUS }}" != "success" ]]; then echo "**⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**"; fi)
+
+Verifique os relatórios completos nos artefatos do workflow."
+
+    - name: 📤 Upload Dashboard de Performance
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-dashboard
+        path: performance-dashboard.md
+
+  # ==========================================
+  # 📢 NOTIFICAÇÕES DE PERFORMANCE
+  # ==========================================
+
+  performance-notifications:
+    name: '📢 Notificações de Performance'
+    runs-on: self-hosted
+    needs: performance-dashboard
+    if: always()
+
+    steps:
+    - name: 📢 Preparar Notificações de Performance
+      run: |
+        echo "📢 Preparando notificações de performance..."
+
+        # Criar notificação baseada no status
+        if [[ "${{ env.STATUS }}" == "success" ]]; then
+          TITLE="✅ Performance Otimizada"
+          MESSAGE="Análise de performance concluída com sucesso. Bundle e performance dentro dos parâmetros."
+          PRIORITY="normal"
+        else
+          TITLE="⚡ Oportunidades de Otimização de Performance"
+          MESSAGE="Foram identificadas oportunidades de melhoria na performance e tamanho do bundle."
+          PRIORITY="normal"
+        fi
+
+        # Criar payload de notificação
+        {
+          echo "title: \"$TITLE\""
+          echo "message: \"$MESSAGE\""
+          echo "priority: \"$PRIORITY\""
+          echo "timestamp: \"$(date -Iseconds)\""
+          echo "performance_score: \"$SCORE\""
+          echo "bundle_size: \"$TOTAL_SIZE\""
+        } > performance-notification.json
+
+    - name: 💬 Slack Notification
+      run: |
+        echo "💬 Enviando notificação para Slack..."
+        # Implementar webhook do Slack
+
+    - name: 📧 Email Notification
+      run: |
+        echo "📧 Enviando notificação por email..."
+        # Implementar serviço de email
+
+    - name: 📱 Teams Notification
+      run: |
+        echo "📱 Enviando notificação para Teams..."
+        # Implementar webhook do Teams
+
+    - name: 📤 Upload Notificações
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-notifications
+        path: performance-notification.json
