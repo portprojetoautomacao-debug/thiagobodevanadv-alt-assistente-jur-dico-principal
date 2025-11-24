@@ -8,7 +8,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
-    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**', 'playwright-report/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**', 'playwright-report/**', 'actions-runner/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -19,7 +19,8 @@ export default defineConfig({
         '**/*.config.*',
         '**/mockData',
         'dist/',
-        'tests/e2e/**'
+        'tests/e2e/**',
+        'actions-runner/**'
       ]
     }
   },
