@@ -97,10 +97,16 @@ duo_auto_review:
     - test_app
   script:
     - npm ci --prefer-offline --no-audit
-    - npx gitlab-duo-cli review \
-        --project "$CI_PROJECT_PATH" \
-        --merge-request "$CI_MERGE_REQUEST_IID" \
-        --host "$CI_SERVER_URL"
+    - |
+      if [ -z "$CI_MERGE_REQUEST_IID" ]; then
+        echo "No merge request IID available; skipping GitLab Duo review."
+        exit 0
+      fi
+    - npx @gitlab/duo-cli@latest run \
+        --gitlab-auth-token "$GITLAB_DUO_ACCESS_TOKEN" \
+        --gitlab-project-path "$CI_PROJECT_PATH" \
+        --gitlab-base-url "$CI_SERVER_URL" \
+        --goal "Review merge request !${CI_MERGE_REQUEST_IID}"
   allow_failure: true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $GITLAB_DUO_ACCESS_TOKEN'
