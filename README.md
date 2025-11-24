@@ -14,6 +14,9 @@
 ### GitLab CI/CD
 [![GitLab Pipeline](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/pipeline.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines)
 [![GitLab Coverage](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/coverage.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/graphs/main/charts)
+[![GitLab Release](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/badges/release.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/releases)
+[![GitLab SAST](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/badges/main/sast.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/security/dashboard)
+[![GitLab Dependency Scanning](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/badges/main/dependency_scanning.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/security/dashboard)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-ready-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
