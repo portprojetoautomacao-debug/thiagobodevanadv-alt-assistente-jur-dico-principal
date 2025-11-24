@@ -10,9 +10,14 @@ variables:
   GIT_SUBMODULE_STRATEGY: none
 
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: 
+    files:
+      - package-lock.json
+      - package.json
   paths:
     - node_modules/
+    - .npm/
+  policy: pull-push
     - .npm/
 
 stages:
@@ -25,7 +30,7 @@ stages:
 install_deps:
   stage: install
   script:
-    - npm ci --prefer-offline --no-audit --include=dev
+    - npm ci --prefer-offline --no-audit --include=dev --force
   artifacts:
     paths:
       - node_modules/
@@ -38,7 +43,17 @@ lint:
   dependencies:
     - install_deps
   script:
+    - echo "🔍 Verificando se ESLint está instalado..."
+    - npx eslint --version
+    - echo "🧹 Executando lint..."
     - npm run lint
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
+    expire_in: 1 week
+    when: always
   allow_failure: true
   only:
     - main
@@ -48,7 +63,10 @@ unit_tests:
   dependencies:
     - install_deps
   script:
-    - npm test -- --run --coverage
+    - echo "🧪 Verificando se Vitest está instalado..."
+    - npx vitest --version
+    - echo "🧪 Executando testes unitários..."
+    - npm test -- --run --coverage --reporter=verbose
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     reports:
