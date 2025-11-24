@@ -17,6 +17,8 @@ O GitLab foi configurado como plataforma central para:
 - **Processos Cíveis** (ID: 6214352)
 - **Processos Trabalhistas** (ID: 6214353)
 - **Contratos e Documentos** (ID: 6214354)
+- **Processos Penais** (ID: 6214367)
+- **Direito de Família** (ID: 6214368)
 
 ## 🏷️ Sistema de Labels
 
@@ -24,6 +26,8 @@ O GitLab foi configurado como plataforma central para:
 - `tipo::civil` - Processos cíveis
 - `tipo::trabalhista` - Processos trabalhistas
 - `tipo::contrato` - Contratos e documentos
+- `tipo::penal` - Processos criminais e penais
+- `tipo::familia` - Processos de direito de família
 
 ### Labels de Prioridade
 - `prioridade::urgente` - Prazos críticos (< 24h)
@@ -90,6 +94,18 @@ Localizados em `.gitlab/issue_templates/`:
 - Campos contratuais
 - Checklist de cláusulas obrigatórias
 - Labels automáticos: `tipo::contrato`, `prioridade::media`, `status::aguardando`
+
+### 4. Processo Penal
+- Campos criminais específicos
+- Fases do processo penal
+- Estratégias de defesa
+- Labels automáticos: `tipo::penal`, `prioridade::urgente`, `status::aguardando`
+
+### 5. Processo de Família
+- Tipos de ações familiares
+- Questões de guarda e pensão
+- Partilha de bens
+- Labels automáticos: `tipo::familia`, `prioridade::alta`, `status::aguardando`
 
 ## 🔄 CI/CD Pipeline
 
@@ -169,4 +185,4 @@ Para questões sobre esta configuração:
 ---
 
 **Última atualização:** 24 de novembro de 2024
-**Versão:** 1.0.0
+**Versão:** 1.1.0
