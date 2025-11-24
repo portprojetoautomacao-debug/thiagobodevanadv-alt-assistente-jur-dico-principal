@@ -9,6 +9,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { addTaskToQueue } from '../lib/api/kv-utils';
 
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
@@ -134,8 +135,6 @@ const logger = {
     console.warn(`[Agents] WARNING: ${message}`, context ? JSON.stringify(context) : '')
   }
 }
-
-const DEFAULT_TIMEOUT_MS = 30000;
 
 // ✨ Cache de prompts com enum keys
 const SYSTEM_PROMPTS: Record<AgentType, string> = {
@@ -269,20 +268,19 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
     const systemPrompt = getSystemPrompt(agent.type)
     const userPrompt = getUserPrompt(task)
 
-    const timeoutMs = typeof task.timeout === 'number' && Number.isFinite(task.timeout) && task.timeout > 0
-      ? task.timeout
-      : DEFAULT_TIMEOUT_MS
-
     logger.info('Processing task with AI', {
       taskId: task.id,
       agentId: agent.id,
       taskType: task.type,
-      timeout: timeoutMs
+      timeout: task.timeout || 30000
     })
 
     // Timeout protection
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    const timeout = setTimeout(
+      () => controller.abort(),
+      task.timeout || 30000
+    )
 
     try {
       const sparkResponse = await fetch('/_spark/llm', {
@@ -298,7 +296,7 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
           max_tokens: 2000,
           temperature: 0.7,
         }),
-        signal: controller.signal,
+        signal: controller.signal as RequestInit['signal'],
       });
 
       if (!sparkResponse.ok) {
@@ -342,11 +340,6 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
 
       return result
 
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Spark LLM request timed out after ${timeoutMs}ms`)
-      }
-      throw error
     } finally {
       clearTimeout(timeout)
     }
