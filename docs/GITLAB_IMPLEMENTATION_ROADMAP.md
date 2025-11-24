@@ -6,7 +6,7 @@ Este roadmap detalha a implementação completa das funcionalidades avançadas d
 
 ### **Sistema Atual - Status:**
 - ✅ **Dashboard Inteligente**: Visão consolidada de processos, tarefas e métricas
-- ✅ **7 Agentes IA Autônomos**: Trabalhando 24/7 (DJEN, TODOIST, PJe, Calendar, Legal Assistant, etc.)
+- ✅ **15 Agentes IA Autônomos**: Trabalhando 24/7 (DJEN, TODOIST, PJe, Calendar, Legal Assistant, etc.)
 - ✅ **Integrações**: DJEN/DataJud, Google Calendar, Todoist
 - ✅ **Deploy Automatizado**: GitHub Actions + Vercel
 - ✅ **Banco de Dados**: Upstash Redis (migrado do Vercel KV)
@@ -24,12 +24,21 @@ Transformar o Assistente Jurídico em uma plataforma enterprise com:
 ## 🤖 **Integração com Agentes de IA**
 
 ### **Agentes Incluídos:**
-- **DJEN Agent**: Consulta automática ao Diário de Justiça Eletrônico Nacional
-- **TODOIST Agent**: Gerenciamento inteligente de tarefas e prazos
-- **PJe Agent**: Integração com sistema processual
-- **Calendar Agent**: Sincronização com Google Calendar
-- **Legal Assistant Agent**: Assistente jurídico com IA (Harvey Specter)
-- **7 Agentes IA Autônomos** trabalhando 24/7
+- **Harvey Specter**: Assistente jurídico estratégico que analisa performance, processos, prazos e finanças
+- **Mrs. Justin-e**: Especialista em análise automática de intimações com foco em prazos e providências
+- **Analisador de Documentos**: Analisa automaticamente expedientes, intimações e documentos do PJe 24/7
+- **Monitor DJEN**: Monitora automaticamente o Diário de Justiça Eletrônico Nacional e DataJud
+- **Gestão de Prazos**: Calcula e acompanha prazos processuais automaticamente com alertas
+- **Redator de Petições**: Auxilia na criação de petições e documentos jurídicos profissionais
+- **Organizador de Arquivos**: Organiza e categoriza automaticamente documentos por processo e tipo
+- **Pesquisador de Jurisprudência**: Busca e analisa precedentes e jurisprudências em tribunais superiores
+- **Análise de Risco**: Avalia riscos processuais, financeiros e estratégicos de cada caso
+- **Revisor Contratual**: Analisa contratos identificando cláusulas problemáticas e riscos
+- **Comunicação com Clientes**: Gera comunicações personalizadas e relatórios para clientes
+- **Análise Financeira**: Monitora faturamento, recebimentos e rentabilidade do escritório
+- **Estratégia Processual**: Sugere estratégias processuais baseadas em dados e precedentes
+- **Tradutor Jurídico**: Traduz termos técnicos jurídicos para linguagem simples e vice-versa
+- **Compliance**: Verifica conformidade com LGPD, Código de Ética da OAB e normas regulatórias
 
 ### **Benefícios da Integração:**
 - **Service Desk**: Agentes podem criar issues automaticamente para problemas detectados
@@ -79,40 +88,110 @@ Transformar o Assistente Jurídico em uma plataforma enterprise com:
 
 ## 🤖 **Integração Detalhada dos Agentes de IA**
 
-### **1. DJEN Agent + GitLab**
+### **1. Harvey Specter + GitLab**
+- **Service Desk**: Suporte estratégico para decisões críticas e análise de performance
+- **Insights**: Dashboard executivo com métricas de finanças e processos
+- **Webhooks**: Alertas automáticos para decisões estratégicas importantes
+- **Feature Flags**: Controle de rollout de novos recursos estratégicos
+- **Wiki**: Documentação de estratégias e melhores práticas
+
+### **2. Mrs. Justin-e + GitLab**
+- **Service Desk**: Criação automática de issues para intimações críticas
+- **Insights**: Métricas de análise de intimações (taxa de identificação de prazos)
+- **Webhooks**: Notificações em tempo real para novas intimações
+- **Feature Flags**: Controle de novos tipos de intimações suportadas
+- **Review Apps**: Teste de novos algoritmos de análise
+
+### **3. Analisador de Documentos + GitLab**
+- **Service Desk**: Issues para documentos que não puderam ser analisados
+- **Insights**: Taxa de sucesso de extração de informações e precisão
+- **Webhooks**: Eventos quando novos documentos são processados
+- **Feature Flags**: Novos tipos de documentos suportados
+- **Wiki**: Base de conhecimento de padrões documentais
+
+### **4. Monitor DJEN + GitLab**
 - **Service Desk**: Criação automática de issues quando consultas falham
 - **Insights**: Dashboard de performance (tempo de resposta, taxa de sucesso)
 - **Webhooks**: Notificação automática quando novas publicações são encontradas
 - **Feature Flags**: Controle de rollout de novos tribunais suportados
 - **Wiki**: Documentação automática de consultas realizadas
 
-### **2. TODOIST Agent + GitLab**
-- **Service Desk**: Issues para tarefas não concluídas nos prazos
-- **Insights**: Métricas de produtividade (tarefas criadas vs concluídas)
-- **Webhooks**: Sincronização bidirecional com GitLab issues
-- **Feature Flags**: Novos tipos de tarefas e integrações
-- **Review Apps**: Teste de novos workflows de tarefas
+### **5. Gestão de Prazos + GitLab**
+- **Service Desk**: Alertas para prazos críticos próximos
+- **Insights**: Métricas de cumprimento de prazos e alertas preventivos
+- **Webhooks**: Sincronização com calendários e lembretes
+- **Feature Flags**: Novos tipos de prazos e cálculos
+- **Review Apps**: Teste de novos algoritmos de cálculo
 
-### **3. PJe Agent + GitLab**
-- **Service Desk**: Suporte automatizado para problemas de integração
-- **Insights**: Taxa de sucesso de consultas e atualizações
-- **Webhooks**: Eventos em tempo real de andamentos processuais
-- **Feature Flags**: Novos tribunais e funcionalidades
-- **Wiki**: Base de conhecimento de procedimentos PJe
+### **6. Redator de Petições + GitLab**
+- **Service Desk**: Suporte para geração de documentos complexos
+- **Insights**: Métricas de qualidade e tempo de geração de petições
+- **Webhooks**: Triggers para geração automática baseada em eventos
+- **Feature Flags**: Novos templates e tipos de documentos
+- **Wiki**: Biblioteca de precedentes e templates
 
-### **4. Calendar Agent + GitLab**
-- **Service Desk**: Issues para conflitos de agendamento
-- **Insights**: Utilização de agenda e reuniões realizadas
-- **Webhooks**: Sincronização automática de eventos
-- **Feature Flags**: Novos tipos de eventos e lembretes
-- **Review Apps**: Teste de novos recursos de calendário
+### **7. Organizador de Arquivos + GitLab**
+- **Service Desk**: Issues para arquivos não categorizados
+- **Insights**: Métricas de organização e eficiência de busca
+- **Webhooks**: Eventos de organização automática
+- **Feature Flags**: Novos esquemas de categorização
+- **Review Apps**: Teste de novos algoritmos de organização
 
-### **5. Legal Assistant Agent + GitLab**
-- **Service Desk**: Suporte para dúvidas dos usuários
-- **Insights**: Métricas de uso e satisfação do usuário
-- **Webhooks**: Triggers baseados em interações do usuário
-- **Feature Flags**: Novos recursos de IA e sugestões
-- **Wiki**: Documentação gerada automaticamente
+### **8. Pesquisador de Jurisprudência + GitLab**
+- **Service Desk**: Suporte para pesquisas complexas
+- **Insights**: Taxa de sucesso de pesquisa e relevância dos resultados
+- **Webhooks**: Alertas para novos precedentes relevantes
+- **Feature Flags**: Novos tribunais e bases de dados
+- **Wiki**: Base de conhecimento jurisprudencial
+
+### **9. Análise de Risco + GitLab**
+- **Service Desk**: Consultoria para casos de alto risco
+- **Insights**: Dashboard de riscos por caso e categoria
+- **Webhooks**: Alertas automáticos para mudanças de risco
+- **Feature Flags**: Novos modelos de avaliação de risco
+- **Review Apps**: Teste de novos algoritmos de análise
+
+### **10. Revisor Contratual + GitLab**
+- **Service Desk**: Suporte para análise de contratos complexos
+- **Insights**: Métricas de conformidade e identificação de riscos
+- **Webhooks**: Eventos de revisão automática de contratos
+- **Feature Flags**: Novos tipos de contratos suportados
+- **Wiki**: Biblioteca de cláusulas e melhores práticas
+
+### **11. Comunicação com Clientes + GitLab**
+- **Service Desk**: Geração automática de comunicações
+- **Insights**: Métricas de satisfação e tempo de resposta
+- **Webhooks**: Triggers baseados em eventos do processo
+- **Feature Flags**: Novos tipos de comunicação
+- **Review Apps**: Teste de novos templates de comunicação
+
+### **12. Análise Financeira + GitLab**
+- **Service Desk**: Alertas para questões financeiras
+- **Insights**: Dashboard financeiro completo do escritório
+- **Webhooks**: Sincronização com sistemas financeiros
+- **Feature Flags**: Novos relatórios e análises
+- **Wiki**: Documentação financeira e melhores práticas
+
+### **13. Estratégia Processual + GitLab**
+- **Service Desk**: Consultoria estratégica para casos
+- **Insights**: Métricas de sucesso de estratégias implementadas
+- **Webhooks**: Recomendações automáticas baseadas em dados
+- **Feature Flags**: Novos modelos estratégicos
+- **Review Apps**: Teste de novos algoritmos de estratégia
+
+### **14. Tradutor Jurídico + GitLab**
+- **Service Desk**: Suporte para tradução de termos técnicos
+- **Insights**: Métricas de uso e precisão de traduções
+- **Webhooks**: Eventos de tradução automática
+- **Feature Flags**: Novos idiomas e glossários
+- **Wiki**: Glossário jurídico multilíngue
+
+### **15. Compliance + GitLab**
+- **Service Desk**: Alertas de não conformidade
+- **Insights**: Dashboard de conformidade regulatória
+- **Webhooks**: Verificações automáticas de compliance
+- **Feature Flags**: Novos requisitos regulatórios
+- **Wiki**: Base de conhecimento de compliance
 
 ## 🔧 Pré-requisitos Técnicos
 
@@ -408,12 +487,22 @@ Transformar o Assistente Jurídico em uma plataforma enterprise com:
 
 ## 🎯 **Benefícios para Sistema Jurídico**
 
-### **Para os 7 Agentes IA:**
-- **DJEN Agent**: Monitoramento automático com alertas via Service Desk
-- **TODOIST Agent**: Sincronização perfeita com GitLab issues
-- **PJe Agent**: Webhooks em tempo real para andamentos
-- **Calendar Agent**: Agendamento automático via Insights
-- **Legal Assistant**: Base de conhecimento na Wiki
+### **Para os 15 Agentes IA:**
+- **Harvey Specter**: Análise estratégica com dashboards executivos
+- **Mrs. Justin-e**: Análise automática de intimações com Service Desk
+- **Analisador de Documentos**: Processamento 24/7 com webhooks em tempo real
+- **Monitor DJEN**: Alertas automáticos via Service Desk para publicações
+- **Gestão de Prazos**: Cálculos automáticos com métricas de SLA
+- **Redator de Petições**: Geração assistida com templates da Wiki
+- **Organizador de Arquivos**: Categorização automática com Insights
+- **Pesquisador de Jurisprudência**: Busca inteligente com base de conhecimento
+- **Análise de Risco**: Avaliação contínua com alertas automáticos
+- **Revisor Contratual**: Análise preventiva com compliance checking
+- **Comunicação com Clientes**: Geração automática de relatórios
+- **Análise Financeira**: Dashboards financeiros integrados
+- **Estratégia Processual**: Recomendações baseadas em dados
+- **Tradutor Jurídico**: Tradução automática com glossário na Wiki
+- **Compliance**: Verificações automáticas com auditoria completa
 
 ### **Para Escritórios de Advocacia:**
 - **Gestão de Processos**: Kanban visual integrado com GitLab
