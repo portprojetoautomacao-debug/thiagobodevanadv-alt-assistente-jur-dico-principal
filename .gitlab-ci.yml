@@ -4,6 +4,7 @@
 stages:
   - build
   - test
+  - review
   - docker
   - deploy
 
@@ -14,6 +15,8 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+  GITLAB_TOKEN: "${GITLAB_TOKEN}"
+  GITLAB_DUO_ACCESS_TOKEN: "${GITLAB_DUO_ACCESS_TOKEN}"
   # GitLab Kubernetes Agents (primary e secondary)
   KUBE_CONTEXT_PRIMARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
   KUBE_CONTEXT_SECONDARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
@@ -84,6 +87,27 @@ security_scan:
   retry:
     max: 2
     when: runner_system_failure
+
+# GitLab Duo Auto Review
+duo_auto_review:
+  stage: review
+  image: node:22-alpine
+  needs:
+    - build_app
+    - test_app
+  script:
+    - npm ci --prefer-offline --no-audit
+    - npx gitlab-duo-cli review \
+        --project "$CI_PROJECT_PATH" \
+        --merge-request "$CI_MERGE_REQUEST_IID" \
+        --host "$CI_SERVER_URL"
+  allow_failure: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $GITLAB_DUO_ACCESS_TOKEN'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\//' 
+      when: manual
+    - when: never
 
 # Build Docker Image
 docker_build:

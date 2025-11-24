@@ -4,6 +4,9 @@
 duo_review:
   enabled: true
   auto_review: true
+  auto_merge_when_green: true
+  run_on_push: true
+  max_comments: 25
   analysis_scope:
     - performance
     - security
@@ -19,15 +22,26 @@ duo_review:
   languages:
     - typescript
     - javascript
+    - yaml
+    - markdown
     - python
     - sql
   check_test_coverage: true
   check_code_quality: true
+  check_security: true
+  generate_tests: true
   suggest_refactoring: true
   enforce_standards: true
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event'"
+      when: always
+    - if: "$CI_COMMIT_BRANCH =~ /^feature\//"
+      when: always
 
 commands:
+  default: /review
   available:
+    - /review
     - /explain
     - /refactor
     - /fix
