@@ -42,7 +42,7 @@ jobs:
 
   full-backup:
     name: '💾 Backup Completo'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'full' || github.event_name == 'schedule'
 
     strategy:
@@ -214,7 +214,7 @@ jobs:
 
   incremental-backup:
     name: '🔄 Backup Incremental'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'incremental' || (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *') # A cada 6 horas
 
     steps:
@@ -245,7 +245,7 @@ jobs:
 
   config-backup:
     name: '⚙️ Backup de Configurações'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'config-only'
 
     steps:
@@ -296,7 +296,7 @@ jobs:
 
   test-restore:
     name: '🧪 Teste de Restauração'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'test-restore'
 
     steps:
@@ -369,7 +369,7 @@ jobs:
 
   retention-management:
     name: '🗂️  Gerenciamento de Retenção'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type != 'test-restore')
 
     steps:
@@ -427,7 +427,7 @@ jobs:
 
   backup-notifications:
     name: '📢 Notificações de Backup'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [full-backup, incremental-backup, config-backup, test-restore, retention-management]
     if: always()
 
