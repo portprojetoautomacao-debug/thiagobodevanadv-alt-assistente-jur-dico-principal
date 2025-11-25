@@ -315,7 +315,7 @@ jobs:
     needs: [code-quality, test, security, performance]
     if: needs.analyze-and-setup.outputs.should_deploy == 'true'
     environment:
-      name: ${{ github.event.inputs.environment || 'production' }}
+      name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
@@ -384,7 +384,7 @@ jobs:
       run: |
         echo "🔔 Deploy concluído com sucesso!"
         echo "🌐 URL: ${{ steps.deploy.outputs.url }}"
-        echo "📊 Ambiente: ${{ github.event.inputs.environment || 'production' }}"
+        echo "📊 Ambiente: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}"
 
   # ==========================================
   # 📊 RELATÓRIOS E MONITORAMENTO
