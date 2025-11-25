@@ -13,5 +13,6 @@
   "gitlab.showIssueLinkOnStatusBar": false,
   "gitlab.showMrStatusOnStatusBar": true,
   "gitlab.remoteName": "gitlab",
-  "gitlab.debug": false
+  "gitlab.debug": false,
+  "workbench.editor.defaultBinaryEditor": "vscode.hexEditor"
 }
