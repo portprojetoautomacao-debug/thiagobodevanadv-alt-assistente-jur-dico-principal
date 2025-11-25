@@ -1,5 +1,6 @@
 # GitLab Duo CI/CD Inputs Configuration
 # Utilizando a nova funcionalidade CI/CD Inputs do GitLab para configurações flexíveis
+# TESTE: Esta é uma MR de teste para validar as configurações do GitLab Duo com CI/CD Inputs
 
 spec:
   inputs:
