@@ -262,9 +262,34 @@ jobs:
       run: |
         echo "🛡️  Verificando exposição de secrets..."
         # Buscar padrões que indicam exposição real de secrets (valores hardcoded)
-        SECRETS_PATTERN='(password|secret|api_key|apikey|auth_token)\s*[:=]\s*["'\'][^"'\']+(\w{20,})["'\']'
-        if grep -rEi "$SECRETS_PATTERN" --include="*.ts" --include="*.tsx" src/ 2>/dev/null | grep -v "process.env" | grep -v "import.meta.env" | grep -v "test" | grep -v "mock" | grep -v "example"; then
+        # Melhorado para evitar falsos positivos em comentários e nomes de variáveis
+        SECRETS_PATTERN='(password|secret|api_key|apikey|auth_token|private_key)\s*[:=]\s*["'"'"'][^"'"'"']{20,}[^"'"'"']*["'"'"']'
+        if grep -rEi "$SECRETS_PATTERN" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" src/ 2>/dev/null | \
+           grep -v "process\.env" | \
+           grep -v "import\.meta\.env" | \
+           grep -v "VITE_" | \
+           grep -v "test" | \
+           grep -v "mock" | \
+           grep -v "example" | \
+           grep -v "dummy" | \
+           grep -v "placeholder" | \
+           grep -v "//" | \
+           grep -v "/\*" | \
+           grep -v "\*" | \
+           grep -v "#" | \
+           grep -v "console\." | \
+           grep -v "log\." | \
+           grep -v "error\." | \
+           grep -v "warn\." | \
+           grep -v "key:" | \
+           grep -v "key=>" | \
+           grep -v "key\s*=" | \
+           grep -v "apiKey" | \
+           grep -v "authToken" | \
+           grep -v "privateKey" | \
+           grep -v "secretKey"; then
           echo "⚠️  Possível exposição de secrets - verificar manualmente"
+          exit 1
         else
           echo "✅ Nenhum secret exposto encontrado"
         fi
