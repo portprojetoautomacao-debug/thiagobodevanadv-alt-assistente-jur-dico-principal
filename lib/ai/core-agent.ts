@@ -257,7 +257,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
           toolUsed: toolName,
         });
 
-        let result: any;
+        let result: unknown;
         const toolStart = Date.now();
         
         try {
@@ -281,20 +281,21 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
             toolUsed: toolName,
             duration: Date.now() - toolStart,
           });
-        } catch (e: any) {
+        } catch (e: unknown) {
+          const error = e instanceof Error ? e : new Error(String(e));
           result = {
             error: true,
-            message: e?.message ?? String(e),
+            message: error.message,
           };
           
           traces.push({
             timestamp: new Date().toISOString(),
             step,
             type: 'observation',
-            content: `Erro: ${e.message}`,
+            content: `Erro: ${error.message}`,
             toolUsed: toolName,
             duration: Date.now() - toolStart,
-            error: e.message,
+            error: error.message,
           });
         }
 

@@ -87,11 +87,19 @@ async function consultarProcessosDataJud(
   // API Key pública do DataJud (CNJ)
   const apiKey = process.env.DATAJUD_API_KEY || 'cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==';
   
+  // Tipos para query Elasticsearch
+  interface ElasticsearchQuery {
+    match?: Record<string, string>;
+    bool?: {
+      must: ElasticsearchQuery[];
+    };
+  }
+  
   // Construir query Elasticsearch
   const query = {
     query: {
       bool: {
-        must: [] as any[],
+        must: [] as ElasticsearchQuery[],
         filter: [
           {
             range: {
