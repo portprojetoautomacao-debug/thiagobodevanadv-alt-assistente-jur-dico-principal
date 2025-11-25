@@ -476,7 +476,7 @@ jobs:
         echo "💬 Comentando performance no PR..."
 
         # Criar comentário temporário
-        cat > pr_comment.md << 'EOF'
+        cat > pr_comment.md << EOF
         ## ⚡ Análise de Performance
 
         **Status:** $STATUS
