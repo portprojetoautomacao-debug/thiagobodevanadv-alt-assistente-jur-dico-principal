@@ -49,20 +49,21 @@ export const validateConfig = (): boolean => {
     errors.push('Redirect URI is not configured')
   }
 
+  // GitHub and GitLab OAuth are optional - only log warnings
   if (!config.github.oauthClientId) {
-    errors.push('GitHub OAuth Client ID is not configured')
+    console.warn('GitHub OAuth Client ID is not configured (optional)')
   }
 
   if (!config.github.oauthClientSecret) {
-    errors.push('GitHub OAuth Client Secret is not configured')
+    console.warn('GitHub OAuth Client Secret is not configured (optional)')
   }
 
   if (!config.gitlab.oauthClientId) {
-    errors.push('GitLab OAuth Client ID is not configured')
+    console.warn('GitLab OAuth Client ID is not configured (optional)')
   }
 
   if (!config.gitlab.oauthClientSecret) {
-    errors.push('GitLab OAuth Client Secret is not configured')
+    console.warn('GitLab OAuth Client Secret is not configured (optional)')
   }
 
   if (errors.length > 0) {

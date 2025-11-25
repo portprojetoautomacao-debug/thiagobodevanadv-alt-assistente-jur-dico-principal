@@ -88,7 +88,13 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   }, [handleCredentialResponse])
 
   useEffect(() => {
+    console.log('🔍 Debug OAuth Config:')
+    console.log('Client ID:', config.google.clientId)
+    console.log('Redirect URI:', config.google.redirectUri)
+
     const configured = validateConfig()
+    console.log('Validation result:', configured)
+
     setIsConfigured(configured)
 
     if (!configured) {
