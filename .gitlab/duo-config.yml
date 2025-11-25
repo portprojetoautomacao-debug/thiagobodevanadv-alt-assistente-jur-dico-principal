@@ -1,6 +1,7 @@
 # GitLab Duo Configuration
-# Habilita revisão automática de código com IA via GitLab Duo
+# Configuração completa do GitLab Duo com funcionalidades avançadas
 
+# Configurações básicas de revisão
 duo_review:
   enabled: true
   auto_review: true
@@ -13,6 +14,8 @@ duo_review:
     - maintainability
     - code_smell
     - best_practices
+    - legal_compliance
+    - accessibility
   exclude_paths:
     - "node_modules/**"
     - "dist/**"
@@ -38,6 +41,31 @@ duo_review:
     - if: "$CI_COMMIT_BRANCH =~ /^feature\//"
       when: always
 
+# Configurações avançadas do Agent Platform
+agent_platform:
+  enabled: true
+  config_file: ".gitlab/duo-agent-platform.toml"
+  custom_agents:
+    - assistente-juridico-reviewer
+    - assistente-juridico-generator
+    - assistente-juridico-optimizer
+
+# Configurações do Knowledge Graph
+knowledge_graph:
+  enabled: true
+  config_file: ".gitlab/duo-knowledge-graph.toml"
+  domain_context: "legal_technology"
+
+# Configurações do Model Context Protocol
+mcp:
+  enabled: true
+  config_file: ".gitlab/duo-mcp.toml"
+  servers:
+    - gitlab-mcp-server
+    - github-mcp-server
+    - legal-tools-mcp-server
+
+# Comandos disponíveis no chat
 commands:
   default: /review
   available:
@@ -48,6 +76,21 @@ commands:
     - /tests
     - /suggest
     - /security-check
+    - /legal-review
+    - /generate-docs
+    - /optimize-performance
+
+# Configurações específicas do projeto jurídico
+legal_config:
+  enabled: true
+  compliance_checks:
+    - lgpd_compliance
+    - legal_documentation
+    - court_deadlines
+  integrations:
+    - djen_monitoring
+    - google_calendar_sync
+    - todoist_tasks
     - /performance-check
   
 review_criteria:
