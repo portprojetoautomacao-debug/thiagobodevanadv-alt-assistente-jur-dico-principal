@@ -130,7 +130,7 @@ export class DJENMonitorAgent {
 
         if (resultado.erros.length > 0) {
           this.log(
-            `Erros ao consultar tribunais: ${resultado.erros.map(e => e.tribunal).join(', ')}`,
+            `Erros ao consultar tribunais: ${resultado.erros.map((e: any) => e.tribunal).join(', ')}`,
             'warn'
           )
         }
