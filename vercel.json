@@ -8,6 +8,8 @@
       "maxDuration": 30
     }
   },
+  "regions": ["iad1"],
+  "maxLambdaSize": "50mb",
   "redirects": [
     {
       "source": "/:path*",
