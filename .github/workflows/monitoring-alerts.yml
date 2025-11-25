@@ -2,8 +2,8 @@ name: Monitoramento Contínuo e Alertas
 
 on:
   schedule:
-    # Executar a cada 15 minutos
-    - cron: '*/15 * * * *'
+    # Executar a cada hora para evitar excesso de execuções
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       check_type:
@@ -38,7 +38,7 @@ jobs:
 
   health-check:
     name: '🏥 Verificação de Saúde'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'health' || github.event_name == 'schedule'
 
     strategy:
@@ -169,7 +169,7 @@ jobs:
 
   performance-monitoring:
     name: '📈 Monitoramento de Performance'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'performance' || github.event_name == 'schedule'
     needs: health-check
 
@@ -263,7 +263,7 @@ jobs:
 
   security-check:
     name: '🔒 Verificação de Segurança'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'security'
 
     steps:
@@ -364,7 +364,7 @@ jobs:
 
   dependency-check:
     name: '📦 Verificação de Dependências'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'dependencies'
 
     steps:
@@ -420,7 +420,7 @@ jobs:
 
   monitoring-dashboard:
     name: '📊 Dashboard de Monitoramento'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [health-check, performance-monitoring, security-check, dependency-check]
     if: always()
 
@@ -512,7 +512,7 @@ jobs:
 
   alerts-and-notifications:
     name: '🚨 Alertas e Notificações'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: monitoring-dashboard
     if: failure()
 

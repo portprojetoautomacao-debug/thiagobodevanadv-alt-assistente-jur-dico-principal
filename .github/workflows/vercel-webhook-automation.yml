@@ -7,7 +7,7 @@ on:
 jobs:
   handle-vercel-webhook:
     name: '🎯 Processar Evento Vercel'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment: production
 
     steps:
