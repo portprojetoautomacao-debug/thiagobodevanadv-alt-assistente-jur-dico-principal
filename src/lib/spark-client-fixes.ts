@@ -225,7 +225,7 @@ export function applySparkClientFixes() {
     // Keep other properties of kv that might be used (events etc.)
     for (const k of Object.keys(original)) {
       if (!(k in w.spark.kv)) {
-        // @ts-ignore - Ignorando erros de tipo para compatibilidade
+        // @ts-expect-error - Ignorando erros de tipo para compatibilidade
         w.spark.kv[k] = original[k];
       }
     }

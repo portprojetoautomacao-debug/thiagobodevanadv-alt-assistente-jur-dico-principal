@@ -9,12 +9,13 @@ import { ErrorFallback } from './ErrorFallback.tsx'
 import './index.css';
 
 // Initialize Sentry Error Tracking FIRST
-try {
-  initErrorTracking()
-  console.log('✅ Sentry Error Tracking initialized')
-} catch (error) {
-  console.error('❌ Failed to initialize Sentry:', error)
-}
+(async () => {
+  try {
+    await initErrorTracking()
+  } catch (error) {
+    console.error('❌ Failed to initialize Sentry:', error)
+  }
+})()
 
 // Initialize Spark client with error handling for localization issues
 async function initializeSpark() {

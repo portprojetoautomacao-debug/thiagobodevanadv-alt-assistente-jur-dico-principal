@@ -4,8 +4,31 @@
 import * as Sentry from "@sentry/react";
 
 /**
+ * Check if Sentry DSN is valid and reachable
+ */
+async function checkSentryConnectivity(): Promise<boolean> {
+  try {
+    // Test basic connectivity to GitLab Error Tracking
+    await fetch('https://observe.gitlab.com/errortracking/api/v1/projects/76299042/envelope/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-sentry-envelope',
+      },
+      body: '', // Empty envelope for connectivity test
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+
+    // Even if it fails, as long as we get a response (not network error), consider it reachable
+    return true;
+  } catch (error) {
+    console.warn('Sentry connectivity check failed:', error);
+    return false;
+  }
+}
+
+/**
  * Initialize Sentry for Error Tracking
- * 
+ *
  * Features:
  * - Automatic error capture
  * - Performance monitoring
@@ -13,54 +36,112 @@ import * as Sentry from "@sentry/react";
  * - Session tracking
  * - Source maps support
  */
-export function initErrorTracking() {
-  Sentry.init({
-    // GitLab Error Tracking DSN
-    dsn: "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042",
-    
-    // Environment
-    environment: import.meta.env.MODE || "development",
-    
-    // Release version
-    release: import.meta.env.VITE_APP_VERSION || "unknown",
-    
-    // Integrations
-    integrations: [
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
-    
-    // Performance monitoring
-    tracesSampleRate: import.meta.env.MODE === "production" ? 0.1 : 1.0,
-    
-    // Replay sample rate
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-    
-    // Debug mode
-    debug: import.meta.env.MODE !== "production",
-    
-    // Capture breadcrumbs
-    maxBreadcrumbs: 50,
-    
-    // Ignore errors
-    ignoreErrors: [
-      // Browser extensions
-      "top.GLOBALS",
-      // Random plugins/extensions
-      "originalCreateNotification",
-      "canvas.contentDocument",
-      "MyApp_RemoveAllHighlights",
-      // See http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
-      "Can't find variable: ZiteReader",
-      "jigsaw is not defined",
-      "ComboSearch is not defined",
-    ],
-  });
+export async function initErrorTracking() {
+  try {
+    // Check connectivity first (only in production)
+    if (import.meta.env.MODE === "production") {
+      const isReachable = await checkSentryConnectivity();
+      if (!isReachable) {
+        console.warn('Sentry: GitLab Error Tracking not reachable, skipping initialization');
+        return;
+      }
+    }
 
-  console.log("✅ Sentry Error Tracking initialized");
+    Sentry.init({
+      // GitLab Error Tracking DSN
+      dsn: "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042",
+
+      // Environment
+      environment: import.meta.env.MODE || "development",
+
+      // Release version
+      release: import.meta.env.VITE_APP_VERSION || "unknown",
+
+      // Integrations - Atualizado para Sentry v10
+      integrations: [
+        Sentry.replayIntegration({
+          maskAllText: true,
+          blockAllMedia: true,
+        }),
+        Sentry.browserTracingIntegration(),
+      ],
+
+      // Performance monitoring - Atualizado para v10
+      tracesSampleRate: import.meta.env.MODE === "production" ? 0.1 : 1.0,
+
+      // Replay sample rate
+      replaysSessionSampleRate: import.meta.env.MODE === "production" ? 0.1 : 0.0,
+      replaysOnErrorSampleRate: 1.0,
+
+      // Debug mode
+      debug: import.meta.env.MODE !== "production",
+
+      // Capture breadcrumbs
+      maxBreadcrumbs: 50,
+
+      // Before send hook para filtrar erros
+      beforeSend: (event, hint) => {
+        // Filtrar erros de rede relacionados ao Sentry/GitLab
+        if (hint.originalException &&
+            hint.originalException instanceof Error &&
+            hint.originalException.message?.includes('observe.gitlab.com')) {
+          console.warn('Sentry: Filtering GitLab Error Tracking network error');
+          return null; // Não enviar o erro
+        }
+
+        // Filtrar outros erros de rede
+        if (event.exception) {
+          const error = event.exception.values?.[0];
+          if (error?.value?.includes('Failed to fetch') ||
+              error?.value?.includes('NetworkError') ||
+              error?.value?.includes('observe.gitlab.com')) {
+            console.warn('Sentry: Filtering network error');
+            return null;
+          }
+        }
+
+        return event;
+      },
+
+      // Ignore errors
+      ignoreErrors: [
+        // Browser extensions
+        "top.GLOBALS",
+        // Random plugins/extensions
+        "originalCreateNotification",
+        "canvas.contentDocument",
+        "MyApp_RemoveAllHighlights",
+        // See http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
+        "Can't find variable: ZiteReader",
+        "jigsaw is not defined",
+        "ComboSearch is not defined",
+        // Network errors
+        "Failed to fetch",
+        "NetworkError",
+        "observe.gitlab.com",
+        // React DevTools
+        "React DevTools",
+        // Vite HMR
+        "vite",
+        // Spark related
+        "_spark",
+      ],
+
+      // Deny URLs
+      denyUrls: [
+        /observe\.gitlab\.com/,
+        /extensions\//i,
+        /^chrome:\/\//i,
+        /^moz-extension:\/\//i,
+        /^safari-extension:\/\//i,
+      ],
+    });
+
+    console.log("✅ Sentry Error Tracking initialized");
+  } catch (error) {
+    console.error("❌ Failed to initialize Sentry:", error);
+    // Não lançar erro para não quebrar a aplicação
+  }
 }
 
 /**

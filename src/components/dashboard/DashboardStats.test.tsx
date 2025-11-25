@@ -59,4 +59,20 @@ describe('DashboardStats', () => {
     expect(screen.getByText('567')).toBeInTheDocument()
     expect(screen.getByText('89')).toBeInTheDocument()
   })
+
+  it('should render with decimal numbers', () => {
+    const stats = {
+      ativos: 10.5,
+      concluidos: 5.2,
+      prazosPendentes: 8.7,
+      prazosUrgentes: 2.1
+    }
+
+    render(<DashboardStats stats={stats} />)
+
+    expect(screen.getByText('10.5')).toBeInTheDocument()
+    expect(screen.getByText('5.2')).toBeInTheDocument()
+    expect(screen.getByText('8.7')).toBeInTheDocument()
+    expect(screen.getByText('2.1')).toBeInTheDocument()
+  })
 })

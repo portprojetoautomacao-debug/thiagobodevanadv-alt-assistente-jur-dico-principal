@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { WarningCircle } from '@phosphor-icons/react'
+import { Warning } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
 
 export interface GitLabUser {
@@ -121,7 +121,7 @@ export function GitLabAuthButton({ onSuccess, onError }: GitLabAuthButtonProps) 
   if (!isConfigured) {
     return (
       <Alert>
-        <WarningCircle className="h-4 w-4" />
+        <Warning className="h-4 w-4" />
         <AlertDescription>
           GitLab OAuth não está configurado. Verifique as variáveis de ambiente.
         </AlertDescription>
@@ -157,7 +157,7 @@ export function GitLabAuthButton({ onSuccess, onError }: GitLabAuthButtonProps) 
 
         {error && (
           <Alert className="mt-4">
-            <WarningCircle className="h-4 w-4" />
+            <Warning className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
