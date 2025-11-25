@@ -28,7 +28,7 @@ if [[ $REPO_URL == https://github.com/* ]]; then
     exit 1
 elif [[ $REPO_URL == https://gitlab.com/* ]]; then
     echo "✅ Repositório identificado como GitLab"
-    PROJECT_PATH=$(echo $REPO_URL | sed 's|https://gitlab.com/||' | sed 's|\.git$||')
+    PROJECT_PATH="thiagobodevan-a11y-group/assistente-juridico-p"
     echo "📍 Caminho do projeto: $PROJECT_PATH"
 else
     echo "❌ URL do repositório não reconhecida. Deve ser GitHub ou GitLab."
