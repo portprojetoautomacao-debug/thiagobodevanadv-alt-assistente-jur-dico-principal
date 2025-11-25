@@ -44,9 +44,10 @@ export const buscarIntimacaoPendente: Tool = {
 
         return await res.json();
       });
-    } catch (e: any) {
-      console.error(`[buscarIntimacaoPendente] Erro:`, e);
-      throw new Error(`Erro ao buscar intimação: ${e.message}`);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      console.error(`[buscarIntimacaoPendente] Erro:`, error);
+      throw new Error(`Erro ao buscar intimação: ${error.message}`);
     }
   },
 };
@@ -79,9 +80,10 @@ export const criarTarefa: Tool = {
 
       const data = await res.json();
       return data;
-    } catch (e: any) {
-      console.error(`[criarTarefa] Erro:`, e);
-      throw new Error(`Erro ao criar tarefa: ${e.message}`);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      console.error(`[criarTarefa] Erro:`, error);
+      throw new Error(`Erro ao criar tarefa: ${error.message}`);
     }
   },
 };
@@ -111,9 +113,10 @@ export const calcularPrazos: Tool = {
 
       const data = await res.json();
       return data;
-    } catch (e: any) {
-      console.error(`[calcularPrazos] Erro:`, e);
-      throw new Error(`Erro ao calcular prazo: ${e.message}`);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      console.error(`[calcularPrazos] Erro:`, error);
+      throw new Error(`Erro ao calcular prazo: ${error.message}`);
     }
   },
 };
@@ -143,9 +146,10 @@ export const consultarProcessoPJe: Tool = {
 
       const data = await res.json();
       return data;
-    } catch (e: any) {
-      console.error(`[consultarProcessoPJe] Erro:`, e);
-      throw new Error(`Erro ao consultar processo: ${e.message}`);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      console.error(`[consultarProcessoPJe] Erro:`, error);
+      throw new Error(`Erro ao consultar processo: ${error.message}`);
     }
   },
 };
@@ -190,9 +194,10 @@ export const enviarMensagemWhatsApp: Tool = {
 
       const data = await res.json();
       return data;
-    } catch (e: any) {
-      console.error(`[enviarMensagemWhatsApp] Erro:`, e);
-      throw new Error(`Erro ao enviar WhatsApp: ${e.message}`);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      console.error(`[enviarMensagemWhatsApp] Erro:`, error);
+      throw new Error(`Erro ao enviar WhatsApp: ${error.message}`);
     }
   },
 };
@@ -228,9 +233,10 @@ export const registrarLogAgente: Tool = {
 
       const data = await res.json();
       return data;
-    } catch (e: any) {
-      console.error(`[registrarLogAgente] Erro:`, e);
-      throw new Error(`Erro ao registrar log: ${e.message}`);
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      console.error(`[registrarLogAgente] Erro:`, error);
+      throw new Error(`Erro ao registrar log: ${error.message}`);
     }
   },
 };
