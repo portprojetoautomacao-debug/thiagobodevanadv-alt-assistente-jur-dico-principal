@@ -60,3 +60,77 @@ merge_requests:
   labels:
     - 'duo-reviewed'
     - 'ai-reviewed'
+
+# Advanced Features Configuration
+advanced_features:
+  # Agent Platform - Specialized AI agents
+  agent_platform:
+    enabled: true
+    config_file: ".gitlab/duo-agent-platform.toml"
+    custom_agents:
+      - assistente-juridico-reviewer
+      - assistente-juridico-generator
+      - assistente-juridico-optimizer
+  
+  # Knowledge Graph - Code understanding and relationships
+  knowledge_graph:
+    enabled: true
+    config_file: ".gitlab/duo-knowledge-graph.toml"
+    domain_context: "legal_technology"
+    indexing:
+      enabled: true
+      include_paths:
+        - "src/"
+        - "api/"
+        - "docs/"
+      supported_languages:
+        - typescript
+        - javascript
+        - python
+        - yaml
+        - markdown
+  
+  # Model Context Protocol - External tool integrations
+  mcp:
+    enabled: true
+    config_file: ".gitlab/duo-mcp.toml"
+    servers:
+      - gitlab-mcp-server
+      - github-mcp-server
+      - legal-tools-mcp-server
+    tools:
+      - djen-integration
+      - google-calendar-integration
+      - todoist-integration
+
+# Legal Domain Specific Configuration
+legal_config:
+  enabled: true
+  compliance_checks:
+    - lgpd_compliance
+    - legal_documentation
+    - court_deadlines
+  document_types:
+    - peticao_inicial
+    - recurso
+    - contrato
+    - parecer_juridico
+  integrations:
+    - djen_monitoring
+    - google_calendar_sync
+    - todoist_tasks
+
+# Chat Commands Configuration
+chat_commands:
+  enabled: true
+  available_commands:
+    - /review
+    - /explain
+    - /refactor
+    - /fix
+    - /tests
+    - /suggest
+    - /security-check
+    - /legal-review
+    - /generate-docs
+    - /optimize-performance
