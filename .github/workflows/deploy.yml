@@ -34,7 +34,7 @@ jobs:
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
 
     steps:
     - name: Checkout code
