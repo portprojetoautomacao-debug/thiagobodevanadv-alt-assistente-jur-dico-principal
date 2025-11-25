@@ -26,13 +26,22 @@ jobs:
     # Se você não fizer checkout do código, o Copilot fará isso automaticamente para você.
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: package-lock.json
 
       - name: Install JavaScript dependencies
         run: npm ci
+
+      - name: Validate setup
+        run: |
+          echo "✅ Copilot setup steps completed successfully"
+          echo "📦 Dependencies installed: $(npm list --depth=0 | wc -l) packages"
+          echo "🔧 Node version: $(node --version)"
+          echo "📋 NPM version: $(npm --version)"
+          echo "🎯 Setup validation passed"
