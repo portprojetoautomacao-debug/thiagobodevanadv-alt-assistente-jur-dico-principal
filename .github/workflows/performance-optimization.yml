@@ -475,20 +475,30 @@ jobs:
       run: |
         echo "💬 Comentando performance no PR..."
 
-        # Comentar no PR sobre performance
-        gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body |
-          ## ⚡ Análise de Performance
+        # Criar comentário temporário
+        cat > pr_comment.md << 'EOF'
+        ## ⚡ Análise de Performance
 
-          **Status:** ${{ env.STATUS }}
+        **Status:** $STATUS
 
-          ### 📊 Métricas Principais
-          - **Performance Score:** $SCORE
-          - **Bundle Size:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)
-          - **LCP:** ${LCP}ms
+        ### 📊 Métricas Principais
+        - **Performance Score:** $SCORE
+        - **Bundle Size:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)
+        - **LCP:** ${LCP}ms
+        EOF
 
-          $(if [[ "${{ env.STATUS }}" != "success" ]]; then echo "**⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**"; fi)
+        # Adicionar aviso se houver oportunidades de otimização
+        if [[ "$STATUS" != "success" ]]; then
+          echo "" >> pr_comment.md
+          echo "**⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**" >> pr_comment.md
+        fi
 
-          Verifique os relatórios completos nos artefatos do workflow.
+        echo "" >> pr_comment.md
+        echo "Verifique os relatórios completos nos artefatos do workflow." >> pr_comment.md
+
+        # Comentar no PR
+        PR_NUMBER=${{ github.event.number }}
+        gh pr comment $PR_NUMBER --body-file pr_comment.md
 
     - name: 📤 Upload Dashboard de Performance
       uses: actions/upload-artifact@v4
@@ -512,7 +522,7 @@ jobs:
         echo "📢 Preparando notificações de performance..."
 
         # Criar notificação baseada no status
-        if [[ "${{ env.STATUS }}" == "success" ]]; then
+        if [[ "$STATUS" == "success" ]]; then
           TITLE="✅ Performance Otimizada"
           MESSAGE="Análise de performance concluída com sucesso. Bundle e performance dentro dos parâmetros."
           PRIORITY="normal"
