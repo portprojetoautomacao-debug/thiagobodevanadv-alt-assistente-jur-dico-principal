@@ -3,6 +3,8 @@
 // Baseado em best practices 2024/2025: LangChain, AutoGen, ReAct pattern
 // Motor reutilizável e observável para TODOS os agentes
 
+import type { GlobalToolContext } from './tools';
+
 export type Role = "system" | "user" | "assistant";
 
 export interface ChatMessage {
@@ -36,7 +38,7 @@ export interface ToolContext {
 export interface Tool {
   name: string;
   description: string;
-  run: (args: any, ctx: ToolContext) => Promise<any>;
+  run: (args: any, ctx: GlobalToolContext) => Promise<any>;
 }
 
 export interface MemoryStore {
@@ -255,8 +257,8 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
         
         try {
           // Adicionar contexto de trace à tool
-          const enrichedContext = {
-            ...this.opts.toolContext,
+          const enrichedContext: GlobalToolContext = {
+            ...(this.opts.toolContext as GlobalToolContext),
             traceId: `trace-${Date.now()}`,
             agentId: this.opts.persona.id,
             sessionId: this.sessionId,

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Warning } from '@phosphor-icons/react'
 import { GithubLogo } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
 
@@ -28,7 +29,7 @@ export function GitHubAuthButton({ onSuccess, onError }: GitHubAuthButtonProps) 
     const checkConfig = () => {
       try {
         validateConfig()
-        const clientId = config.githubOauthClientId
+        const clientId = config.github.oauthClientId
         setIsConfigured(!!clientId)
       } catch (err) {
         setIsConfigured(false)
@@ -48,8 +49,8 @@ export function GitHubAuthButton({ onSuccess, onError }: GitHubAuthButtonProps) 
     setError('')
 
     try {
-      const clientId = config.githubOauthClientId
-      const redirectUri = config.redirectUri
+      const clientId = config.github.oauthClientId
+      const redirectUri = config.google.redirectUri
 
       // GitHub OAuth URL
       const githubUrl = new URL('https://github.com/login/oauth/authorize')
