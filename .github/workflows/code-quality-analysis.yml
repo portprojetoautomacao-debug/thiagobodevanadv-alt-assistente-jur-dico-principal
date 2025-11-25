@@ -36,7 +36,7 @@ jobs:
   static-analysis:
     name: '🔍 Análise Estática e Linting'
     runs-on: ubuntu-latest
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'lint-only' || github.event_name != 'workflow_dispatch'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'lint-only'
 
     steps:
     - name: 📥 Checkout código
@@ -63,7 +63,7 @@ jobs:
 
         if [[ $EXIT_CODE -eq 0 ]]; then
           echo "✅ ESLint passou sem erros ou warnings"
-        elif [[ "${{ github.event.inputs.fail_on_warnings }}" == "false" ]]; then
+        elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_warnings || 'true' }}" == "false" ]]; then
           echo "⚠️  ESLint encontrou warnings, mas continuando..."
         else
           echo "❌ ESLint falhou"
@@ -118,7 +118,7 @@ jobs:
   complexity-analysis:
     name: '🧩 Análise de Complexidade'
     runs-on: ubuntu-latest
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'complexity-only'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'complexity-only'
 
     steps:
     - name: 📥 Checkout código
@@ -212,7 +212,7 @@ jobs:
   test-coverage:
     name: '🧪 Cobertura de Testes'
     runs-on: ubuntu-latest
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'coverage-only'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'coverage-only'
 
     steps:
     - name: 📥 Checkout código
@@ -322,7 +322,7 @@ jobs:
             echo "⚠️  Cobertura de funções abaixo do threshold (80%)" >> coverage-comment.md
           fi
 
-          gh pr comment ${{ github.event.number }} --body-file coverage-comment.md
+          gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body-file coverage-comment.md
         fi
 
   # ==========================================
@@ -332,7 +332,7 @@ jobs:
   security-analysis:
     name: '🔒 Análise de Segurança'
     runs-on: ubuntu-latest
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'security-only'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'security-only'
 
     steps:
     - name: 📥 Checkout código
@@ -513,7 +513,7 @@ jobs:
         echo "2. Corrigir problemas críticos antes do merge" >> quality-alert.md
         echo "3. Considerar refatoração para melhorar a qualidade" >> quality-alert.md
 
-        gh pr comment ${{ github.event.number }} --body-file quality-alert.md
+        gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body-file quality-alert.md
 
     - name: 🚫 Bloquear Merge se Qualidade Baixa
       if: github.event_name == 'pull_request' && env.STATUS == 'failure'
