@@ -66,6 +66,7 @@ jobs:
   type-check:
     name: TypeScript Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
 
@@ -163,17 +164,17 @@ jobs:
       run: npm ci
 
     - name: Run ESLint with SARIF output
-      run: |
-        echo "Running ESLint with SARIF formatter..."
-        npm run lint:sarif || {
-          echo "⚠️ ESLint found issues"
-          # Ensure SARIF file exists
-          if [ ! -f "eslint-results.sarif" ]; then
-            echo "Creating empty SARIF file..."
-            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-          fi
-        }
+      id: eslint
+      run: npm run lint:sarif
       continue-on-error: true
+
+    - name: Check if SARIF was generated
+      run: |
+        if [ ! -f "eslint-results.sarif" ]; then
+          echo "❌ SARIF file was not generated - ESLint may have failed"
+          echo "Check ESLint configuration and ensure it can output SARIF format"
+          exit 1
+        fi
 
     - name: Upload SARIF file
       if: always() && hashFiles('eslint-results.sarif') != ''

@@ -11,7 +11,7 @@ import {
   Gavel, 
   CheckCircle, 
   Clock, 
-  Warning, 
+  WarningCircle, 
   Upload, 
   ChartPie, 
   TrendUp, 
@@ -202,7 +202,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className={`card-glow-hover ${stats.prazosUrgentes > 0 ? 'status-gradient-urgent border-destructive/50' : ''}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Urgentes</CardTitle>
-            <Warning className={stats.prazosUrgentes > 0 ? 'text-destructive neon-glow' : 'text-primary'} size={24} weight="duotone" />
+            <WarningCircle className={stats.prazosUrgentes > 0 ? 'text-destructive neon-glow' : 'text-primary'} size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${stats.prazosUrgentes > 0 ? 'text-destructive' : 'gradient-text'}`}>
