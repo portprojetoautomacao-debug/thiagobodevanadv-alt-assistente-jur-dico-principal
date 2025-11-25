@@ -60,7 +60,8 @@ jobs:
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           
           # Get open issues count
-          numOpenIssues="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=$REPO_NAME -f query='
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          numOpenIssues="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
               repository(owner: $owner, name: $name) {
                 issues(states:OPEN){
@@ -74,7 +75,7 @@ jobs:
           echo 'NUM_OPEN_ISSUES='$numOpenIssues >> $GITHUB_ENV
           
           # Get open PRs count
-          numOpenPRs="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=$REPO_NAME -f query='
+          numOpenPRs="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
               repository(owner: $owner, name: $name) {
                 pullRequests(states:OPEN){
@@ -96,8 +97,8 @@ jobs:
             --title "📊 Daily Report: $REPO_NAME" \
             --body "## Repository Status
           
-          **Open Issues:** ${{ env.NUM_OPEN_ISSUES }}
-          **Open PRs:** ${{ env.NUM_OPEN_PRS }}
+          **Open Issues:** $NUM_OPEN_ISSUES
+          **Open PRs:** $NUM_OPEN_PRS
           
           Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
           
