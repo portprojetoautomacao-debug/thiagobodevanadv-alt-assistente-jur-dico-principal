@@ -2,8 +2,8 @@ name: Monitoramento Contínuo e Alertas
 
 on:
   schedule:
-    # Executar a cada hora para evitar excesso de execuções
-    - cron: '0 * * * *'
+    # Executar 2x ao dia (6h e 18h UTC) - suficiente para monitoramento
+    - cron: '0 6,18 * * *'
   workflow_dispatch:
     inputs:
       check_type:
@@ -29,7 +29,13 @@ on:
 
 concurrency:
   group: monitoring-${{ github.ref }}
+  # Não cancelar execuções em andamento para workflows de monitoramento
+  # Cada execução agendada deve completar para garantir alertas
   cancel-in-progress: false
+
+# Timeout global para evitar execuções longas
+env:
+  WORKFLOW_TIMEOUT: 10
 
 jobs:
   # ==========================================
