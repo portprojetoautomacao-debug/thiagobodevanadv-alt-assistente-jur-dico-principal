@@ -1,6 +1,70 @@
-# GLab
+# Assistente Jurídico PJe
 
-![GLab](https://user-images.githubusercontent.com/9063085/90530075-d7a58580-e14a-11ea-9727-4f592f7dcf2e.png)
+Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
+
+## 🚀 Funcionalidades Principais
+
+- 🤖 **IA Jurídica**: Chatbot inteligente com Harvey Specter
+- 📋 **CRM Jurídico**: Kanban para gestão de processos
+- 📅 **Calculadora de Prazos**: Automação de prazos processuais
+- 🔗 **Integração Google Calendar**: Sincronização automática
+- 📊 **DJEN/DataJud**: Monitoramento de publicações
+- 💰 **Gestão Financeira**: Controle de custos e honorários
+- ⚡ **7 Agentes Autônomos**: Trabalhando 24/7
+
+## 🏗️ Arquitetura Técnica
+
+- **Frontend**: React 19 + TypeScript + Vite 6
+- **Styling**: Tailwind CSS v4 + shadcn/ui
+- **State**: Spark KV (useKV hook)
+- **Forms**: React Hook Form + Zod
+- **AI**: Spark LLM (GPT-4)
+- **Deployment**: Vercel + GitLab CI/CD
+
+## 🛠️ Componentes CI/CD
+
+Este projeto inclui **componentes reutilizáveis de CI/CD** seguindo as melhores práticas do GitLab:
+
+### 📦 Componentes Disponíveis
+
+| Componente | Descrição | Status |
+|------------|-----------|--------|
+| 🔒 **Segurança** | Auditoria npm + detecção de segredos + LGPD | ✅ Implementado |
+| 🧪 **Testes** | Unitários + Integração + E2E + Acessibilidade | ✅ Implementado |
+| 🚀 **Deployment** | Vercel + Netlify + Docker + Health checks | ✅ Implementado |
+| 📊 **Monitoramento** | Performance + Uptime + Core Web Vitals | ✅ Implementado |
+
+### 🚀 Como Usar os Componentes
+
+```yaml
+# .gitlab-ci.yml
+include:
+  # Segurança
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/security/security-component@1.0.0
+    inputs:
+      audit_level: "standard"
+
+  # Testes
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/testing/testing-component@1.0.0
+    inputs:
+      test_type: "all"
+
+  # Deployment
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/deployment/deployment-component@1.0.0
+    inputs:
+      environment: "production"
+
+  # Monitoramento
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/monitoring/monitoring-component@1.0.0
+    inputs:
+      monitoring_type: "advanced"
+```
+
+📖 **Documentação completa**: [`.gitlab/templates/README.md`](.gitlab/templates/README.md)
+
+---
+
+# GLab
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/profclems/glab)](https://goreportcard.com/report/github.com/profclems/glab)
 [![Gitter](https://badges.gitter.im/glabcli/community.svg)](https://gitter.im/glabcli/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
