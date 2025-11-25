@@ -57,11 +57,6 @@ export function patchFileReader() {
       // Evita o crash chamando o callback de erro ou apenas retornando
       if (this.onerror) {
         const event = new ProgressEvent('error');
-        // @ts-expect-error - Propriedade error é readonly na definição padrão
-        Object.defineProperty(this, 'error', {
-          value: new DOMException('Parameter is not of type Blob', 'TypeMismatchError'),
-          writable: true
-        });
         // @ts-expect-error - onerror pode ser null
         this.onerror(event);
       }
@@ -230,6 +225,7 @@ export function applySparkClientFixes() {
     // Keep other properties of kv that might be used (events etc.)
     for (const k of Object.keys(original)) {
       if (!(k in w.spark.kv)) {
+        // @ts-ignore - Ignorando erros de tipo para compatibilidade
         w.spark.kv[k] = original[k];
       }
     }

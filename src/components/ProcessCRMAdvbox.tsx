@@ -150,15 +150,29 @@ export default function ProcessCRMAdvbox() {
 
   // Initialize process cards
   useEffect(() => {
+    const getStatusColor = (status: string): 'green' | 'yellow' | 'red' => {
+      switch (status) {
+        case 'concluido':
+          return 'green'
+        case 'ativo':
+          return 'yellow'
+        case 'suspenso':
+        case 'arquivado':
+          return 'red'
+        default:
+          return 'yellow'
+      }
+    }
+
     const cards: ProcessCardData[] = (processes || []).slice(0, 8).map((p, idx) => ({
       id: p.id,
       autor: p.autor || 'Não informado',
       reu: p.reu || 'INSS',
       tipo: p.titulo || 'Auxílio doença Previdenciário',
       numero: p.numeroCNJ,
-      valor: p.valor || 'A definir',
-      resultado: p.resultado || 'Em análise',
-      status: p.status || 'yellow' as 'green' | 'yellow' | 'red',
+      valor: p.valor ? p.valor.toString() : 'A definir',
+      resultado: p.fase || 'Em análise',
+      status: getStatusColor(p.status || 'ativo'),
       column: KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
       processo: p
     }))
