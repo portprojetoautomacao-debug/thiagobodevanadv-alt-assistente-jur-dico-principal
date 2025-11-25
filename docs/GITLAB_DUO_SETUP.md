@@ -524,3 +524,169 @@ Habilita:
 2. No chat: `/review this merge request`
 3. Veja Duo analisar seu código
 4. Implemente sugestões se quiser
+
+---
+
+## ⚙️ CI/CD Inputs - Nova Funcionalidade Avançada
+
+### 🎯 O que são CI/CD Inputs?
+
+**CI/CD Inputs** é uma nova funcionalidade do GitLab que permite definir parâmetros tipados e validados para configurações reutilizáveis de CI/CD. Substitui variáveis tradicionais oferecendo:
+
+- ✅ **Validação em tempo real** na criação do pipeline
+- ✅ **Tipos de dados** (string, number, boolean, array)
+- ✅ **Valores padrão** seguros para pipelines automáticos
+- ✅ **Reutilização** entre projetos e ambientes
+
+### 📁 Arquivos de Configuração com Inputs
+
+#### `.gitlab/duo-inputs-config.yml`
+Configuração principal usando CI/CD Inputs com validação tipada.
+
+#### `.gitlab/duo-inputs-examples.yml`
+Exemplos práticos de uso em diferentes cenários.
+
+### 🔧 Como Usar CI/CD Inputs
+
+#### Exemplo Básico
+```yaml
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      duo_enabled: true
+      auto_review: true
+      security_level: "standard"
+```
+
+#### Exemplo para Produção
+```yaml
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      duo_enabled: true
+      auto_review: true
+      max_comments: 50
+      security_level: "strict"
+      audit_logging: true
+      legal_compliance_checks: ["lgpd_compliance", "legal_documentation", "court_deadlines"]
+```
+
+#### Exemplo para Desenvolvimento
+```yaml
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      security_level: "basic"
+      auto_review: false
+      max_comments: 10
+```
+
+### 📋 Parâmetros Disponíveis
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `duo_enabled` | boolean | `true` | Habilita GitLab Duo |
+| `auto_review` | boolean | `true` | Revisão automática em MRs |
+| `max_comments` | number | `25` | Máximo de comentários por revisão |
+| `security_level` | string | `"standard"` | Nível de segurança (basic/standard/strict) |
+| `audit_logging` | boolean | `true` | Habilitar logging de auditoria |
+| `legal_compliance_checks` | array | `["lgpd_compliance"]` | Verificações de compliance |
+| `custom_agents` | array | agentes padrão | Agentes especializados disponíveis |
+| `legal_integrations` | array | integrações padrão | Integrações jurídicas |
+
+### 🎯 Benefícios do CI/CD Inputs
+
+#### ✅ **Validação Robusta**
+- Erros detectados na criação do pipeline
+- Valores inválidos rejeitados imediatamente
+- Tipos de dados verificados automaticamente
+
+#### ✅ **Reutilização Segura**
+- Mesma configuração para múltiplos projetos
+- Valores padrão para pipelines automáticos (MR, branches)
+- Parâmetros específicos por ambiente
+
+#### ✅ **Flexibilidade Controlada**
+- Parâmetros opcionais com valores padrão
+- Listas de opções permitidas (\`options\`)
+- Expressões regulares para validação (\`regex\`)
+
+#### ✅ **Segurança Aprimorada**
+- Funções de manipulação: \`expand_vars\`, \`truncate\`, \`posix_escape\`
+- Validação de inputs não confiáveis
+- Auditoria de mudanças de configuração
+
+### 🚀 Aplicação Prática
+
+#### 1. **Inclua no seu \`.gitlab-ci.yml\`**
+```yaml
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      # Personalize conforme seu ambiente
+      security_level: "strict"
+      legal_compliance_checks: ["lgpd_compliance", "legal_documentation"]
+```
+
+#### 2. **Ou use em pipelines específicas**
+```yaml
+# Pipeline de produção
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      duo_enabled: true
+      audit_logging: true
+      max_comments: 100
+
+# Pipeline de desenvolvimento
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      security_level: "basic"
+      auto_review: false
+```
+
+#### 3. **Valide as configurações**
+```bash
+./scripts/validate-gitlab-duo-advanced.sh
+```
+
+### 🔄 Migração das Configurações Existentes
+
+Se você já usa as configurações tradicionais, pode migrar gradualmente:
+
+```yaml
+# Antes (variáveis)
+variables:
+  DUO_ENABLED: "true"
+  SECURITY_LEVEL: "standard"
+
+# Depois (inputs)
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      duo_enabled: true
+      security_level: "standard"
+```
+
+### 📊 Comparação: Variáveis vs Inputs
+
+| Aspecto | CI/CD Variables | CI/CD Inputs |
+|---------|----------------|--------------|
+| **Validação** | Mínima | Robusta (tipo, regex, options) |
+| **Modificação** | Durante execução | Fixo após criação do pipeline |
+| **Escopo** | Job/project/group | Arquivo de configuração |
+| **Reutilização** | Manual | Automática com includes |
+| **Segurança** | Variável | Validado na criação |
+| **Flexibilidade** | Alta | Controlada |
+
+### 🎉 Conclusão
+
+Com **CI/CD Inputs**, o GitLab Duo no Assistente Jurídico PJe ganha:
+
+- **Configurações mais seguras** e validadas
+- **Reutilização** entre diferentes ambientes
+- **Flexibilidade controlada** para customização
+- **Migração gradual** das configurações existentes
+
+**Comece usando hoje mesmo!** 🚀
