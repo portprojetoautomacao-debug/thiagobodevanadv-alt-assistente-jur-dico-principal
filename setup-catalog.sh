@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script para configurar o Catálogo CI/CD no GitLab
-# Assistente Jurídico PJe - Configuração do Catálogo de Componentes
+# Script para configurar CI/CD Catalog no GitLab
+# Assistente Jurídico PJe - Configuração de Componentes CI/CD
 
 set -e
 
-echo "🚀 Configurando Catálogo CI/CD - Assistente Jurídico PJe"
-echo "======================================================"
+echo "🚀 Configurando CI/CD Catalog para Assistente Jurídico PJe..."
+echo "=========================================================="
 
 # Verificar se estamos em um repositório Git
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
@@ -14,40 +14,206 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     exit 1
 fi
 
-# Verificar se há mudanças não commitadas
-if ! git diff --quiet || ! git diff --staged --quiet; then
-    echo "⚠️  Atenção: Há mudanças não commitadas no repositório"
-    echo "💡 Commit suas mudanças antes de continuar"
-    git status --short
+# Verificar se o diretório .gitlab existe
+if [ ! -d ".gitlab" ]; then
+    echo "❌ Erro: Diretório .gitlab não encontrado. Execute este script na raiz do projeto."
     exit 1
 fi
 
-echo "📋 Verificando pré-requisitos..."
+echo "📋 Verificando componentes CI/CD..."
 
-# Verificar se os componentes existem
-components=(
-    ".gitlab/templates/security/security-component.yml"
-    ".gitlab/templates/testing/testing-component.yml"
-    ".gitlab/templates/deployment/deployment-component.yml"
-    ".gitlab/templates/monitoring/monitoring-component.yml"
+# Lista de componentes obrigatórios
+COMPONENTS=(
+    "templates/security/security-component.yml"
+    "templates/testing/testing-component.yml"
+    "templates/deployment/deployment-component.yml"
+    "templates/monitoring/monitoring-component.yml"
+    "templates/notifications/notifications-component.yml"
+    "templates/backup/backup-component.yml"
+    "templates/api-testing/api-testing-component.yml"
+    "templates/container-deploy/container-deploy-component.yml"
+    "templates/README.md"
+    "templates/example-pipeline.yml"
+    "templates/test-components.yml"
+    "templates/release-pipeline.yml"
+    "templates/production-example.yml"
+    "duo-components-integration.yml"
 )
 
-for component in "${components[@]}"; do
-    if [ ! -f "$component" ]; then
-        echo "❌ Componente não encontrado: $component"
-        exit 1
+# Verificar se todos os componentes existem
+MISSING_COMPONENTS=()
+for component in "${COMPONENTS[@]}"; do
+    if [ ! -f ".gitlab/${component}" ]; then
+        MISSING_COMPONENTS+=("${component}")
     fi
 done
 
+if [ ${#MISSING_COMPONENTS[@]} -ne 0 ]; then
+    echo "❌ Componentes faltando:"
+    for component in "${MISSING_COMPONENTS[@]}"; do
+        echo "   - ${component}"
+    done
+    echo ""
+    echo "Execute o script de criação de componentes primeiro."
+    exit 1
+fi
+
 echo "✅ Todos os componentes estão presentes"
 
-# Verificar se já existe uma tag 1.0.0
-if git tag -l | grep -q "^1.0.0$"; then
-    echo "⚠️  Tag 1.0.0 já existe. Pulando criação de tag."
-else
-    echo "🏷️  Criando tag 1.0.0..."
+# Verificar sintaxe YAML dos componentes
+echo ""
+echo "🔍 Validando sintaxe YAML dos componentes..."
 
-    # Criar anotação de release
+python3 -c "
+import yaml
+import os
+import sys
+
+def validate_yaml_file(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        yaml.safe_load(content)
+        return True, None
+    except yaml.YAMLError as e:
+        return False, str(e)
+    except Exception as e:
+        return False, f'Erro ao ler arquivo: {str(e)}'
+
+yaml_files = [
+    '.gitlab/templates/security/security-component.yml',
+    '.gitlab/templates/testing/testing-component.yml',
+    '.gitlab/templates/deployment/deployment-component.yml',
+    '.gitlab/templates/monitoring/monitoring-component.yml',
+    '.gitlab/templates/notifications/notifications-component.yml',
+    '.gitlab/templates/backup/backup-component.yml',
+    '.gitlab/templates/api-testing/api-testing-component.yml',
+    '.gitlab/templates/container-deploy/container-deploy-component.yml',
+    '.gitlab/templates/example-pipeline.yml',
+    '.gitlab/templates/test-components.yml',
+    '.gitlab/templates/release-pipeline.yml',
+    '.gitlab/duo-components-integration.yml'
+]
+
+valid_count = 0
+for filepath in yaml_files:
+    if os.path.exists(filepath):
+        is_valid, error = validate_yaml_file(filepath)
+        if is_valid:
+            print(f'✅ {filepath}')
+            valid_count += 1
+        else:
+            print(f'❌ {filepath}: {error}')
+    else:
+        print(f'⚠️  {filepath}: ARQUIVO NÃO ENCONTRADO')
+
+if valid_count == len(yaml_files):
+    print('')
+    print('🎉 Todos os componentes YAML são válidos!')
+else:
+    print('')
+    print('❌ Alguns componentes têm erros de sintaxe.')
+    sys.exit(1)
+"
+
+# Verificar se o .gitlab-ci.yml existe e está configurado
+echo ""
+echo "🔍 Verificando configuração do pipeline principal..."
+
+if [ ! -f ".gitlab-ci.yml" ]; then
+    echo "❌ Arquivo .gitlab-ci.yml não encontrado"
+    exit 1
+fi
+
+# Validar .gitlab-ci.yml
+python3 -c "
+import yaml
+try:
+    with open('.gitlab-ci.yml', 'r', encoding='utf-8') as f:
+        yaml.safe_load(f)
+    print('✅ .gitlab-ci.yml: Sintaxe válida')
+except Exception as e:
+    print(f'❌ .gitlab-ci.yml: {e}')
+    exit(1)
+"
+
+echo ""
+echo "📝 Instruções para configurar o CI/CD Catalog no GitLab:"
+echo "======================================================"
+echo ""
+echo "1. 📋 Acesse seu projeto no GitLab:"
+echo "   https://gitlab.com/[seu-usuario]/assistente-juridico-p"
+echo ""
+echo "2. 🔧 Vá para Settings > CI/CD > Components:"
+echo "   - Habilite 'Enable components'"
+echo "   - Configure o path base: templates/"
+echo ""
+echo "3. 🏷️ Configure as tags dos componentes:"
+echo "   - security-component: 1.1.0"
+echo "   - testing-component: 1.1.0"
+echo "   - deployment-component: 1.1.0"
+echo "   - monitoring-component: 1.1.0"
+echo "   - notifications-component: 1.1.0"
+echo "   - backup-component: 1.1.0"
+echo "   - api-testing-component: 1.1.0"
+echo "   - container-deploy-component: 1.1.0"
+echo ""
+echo "4. 🚀 Teste os componentes:"
+echo "   - Crie um Merge Request de teste"
+echo "   - Verifique se o pipeline executa todos os componentes"
+echo "   - Monitore os logs e artefatos gerados"
+echo ""
+echo "5. 📊 Monitore o desempenho:"
+echo "   - Acesse CI/CD > Pipelines"
+echo "   - Verifique os artefatos de cada job"
+echo "   - Analise os relatórios de segurança e cobertura"
+echo ""
+echo "6. 🔄 Configure schedules (opcional):"
+echo "   - CI/CD > Schedules"
+echo "   - Adicione schedule semanal para backup: '0 2 * * 1'"
+echo "   - Configure variáveis: SCHEDULE_TYPE=weekly, BACKUP_RETENTION=30"
+echo ""
+echo "📚 Documentação dos Componentes:"
+echo "================================"
+echo ""
+echo "• 🔒 Security Component:"
+echo "  - Auditoria de dependências npm"
+echo "  - Detecção de segredos com TruffleHog"
+echo "  - Compliance LGPD automático"
+echo ""
+echo "• 🧪 Testing Component:"
+echo "  - Testes unitários com Jest"
+echo "  - Testes de integração com bancos de dados"
+echo "  - Testes E2E com Playwright"
+echo "  - Testes de acessibilidade com Lighthouse"
+echo ""
+echo "• 🚀 Deployment Component:"
+echo "  - Deploy Vercel, Netlify e Docker"
+echo "  - Health checks automatizados"
+echo "  - Rollback automático em falhas"
+echo ""
+echo "• 📊 Monitoring Component:"
+echo "  - Análise de performance com Lighthouse"
+echo "  - Monitoramento de uptime"
+echo "  - Relatórios de Core Web Vitals"
+echo ""
+echo "🎯 Próximos Passos:"
+echo "==================="
+echo ""
+echo "1. Faça commit e push das mudanças:"
+echo "   git add ."
+echo "   git commit -m 'feat: configurar CI/CD Catalog com componentes reutilizáveis'"
+echo "   git push origin main"
+echo ""
+echo "2. Configure o CI/CD Catalog no GitLab conforme instruções acima"
+echo ""
+echo "3. Teste o pipeline criando um Merge Request"
+echo ""
+echo "4. Monitore os resultados e ajuste conforme necessário"
+echo ""
+echo "✅ Configuração do CI/CD Catalog concluída com sucesso!"
+echo ""
+echo "📞 Para suporte, consulte a documentação em .gitlab/templates/README.md"
     git tag -a 1.0.0 -m "Release 1.0.0 - Componentes CI/CD
 
 🎉 Primeira release dos componentes CI/CD do Assistente Jurídico PJe

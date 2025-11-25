@@ -1,0 +1,166 @@
+# Exemplo de Uso em Produção - Aplicação Jurídica
+# Este arquivo demonstra como usar os componentes CI/CD em um projeto real
+
+stages: [security, test, build, deploy, monitor]
+
+# =============================================================================
+# 🔒 COMPONENTES DE SEGURANÇA
+# =============================================================================
+
+include:
+  # Componente de Segurança - Nível avançado para aplicações jurídicas
+  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/security/security-component@1.0.0
+    inputs:
+      stage: security
+      audit_level: "advanced"
+      fail_on_high: true
+      report_format: "sarif"
+
+# =============================================================================
+# 🧪 COMPONENTES DE TESTES
+# =============================================================================
+
+include:
+  # Componente de Testes - Suite completa para aplicações React/TypeScript
+  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/testing/testing-component@1.0.0
+    inputs:
+      stage: test
+      test_type: "all"
+      coverage_threshold: 85
+      fail_on_coverage: true
+      browser: "chromium"
+
+# =============================================================================
+# 🚀 COMPONENTES DE DEPLOYMENT
+# =============================================================================
+
+include:
+  # Componente de Deployment - Vercel para staging
+  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/deployment/deployment-component@1.0.0
+    inputs:
+      stage: deploy
+      environment: "staging"
+      deploy_target: "vercel"
+      health_check_url: "https://assistente-juridico-staging.vercel.app"
+      rollback_on_failure: true
+      monitoring_enabled: true
+    rules:
+      - if: $CI_COMMIT_BRANCH == "develop"
+
+  # Componente de Deployment - Vercel para produção
+  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/deployment/deployment-component@1.0.0
+    inputs:
+      stage: deploy
+      environment: "production"
+      deploy_target: "vercel"
+      health_check_url: "https://assistente-juridico-p.vercel.app"
+      rollback_on_failure: true
+      monitoring_enabled: true
+    rules:
+      - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# 📊 COMPONENTES DE MONITORAMENTO
+# =============================================================================
+
+include:
+  # Componente de Monitoramento - Análise completa de performance
+  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/monitoring/monitoring-component@1.0.0
+    inputs:
+      stage: monitor
+      monitoring_type: "advanced"
+      alert_on_failure: true
+      performance_baseline: 2500
+      accessibility_threshold: 95
+    rules:
+      - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# 🏗️ JOBS ADICIONAIS DO PROJETO
+# =============================================================================
+
+variables:
+  NODE_ENV: "production"
+  CI_ENVIRONMENT_URL: "https://assistente-juridico-p.vercel.app"
+
+# Build da aplicação
+build:
+  stage: build
+  image: node:22
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🏗️ Construindo aplicação..."
+    - npm run build
+    - echo "✅ Build concluído"
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+  dependencies:
+    - security-audit  # Depende da auditoria de segurança passar
+
+# Validação final antes do deploy
+pre-deploy-validation:
+  stage: deploy
+  image: node:22
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Executando validações finais..."
+    - npm run lint
+    - npm run type-check
+    - echo "✅ Validações passaram"
+  dependencies:
+    - build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# Notificação de deploy
+deploy-notification:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "📢 Notificando deploy para $CI_ENVIRONMENT_NAME"
+    - |
+      if [ "$CI_ENVIRONMENT_NAME" = "production" ]; then
+        echo "🚀 Deploy para PRODUÇÃO realizado com sucesso!"
+        echo "📊 Ambiente: $CI_ENVIRONMENT_URL"
+        echo "🏷️  Versão: $CI_COMMIT_SHA"
+        echo "👤 Autor: $GITLAB_USER_NAME"
+      fi
+  dependencies:
+    - deploy-vercel
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# 📋 CONFIGURAÇÕES GLOBAIS
+# =============================================================================
+
+# Cache para acelerar builds
+cache:
+  key: "npm-cache-$CI_COMMIT_REF_SLUG"
+  paths:
+    - node_modules/
+    - .npm/
+
+# Configurações de workflow
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+# Configurações de artefatos
+artifacts:
+  reports:
+    coverage_report:
+      coverage_format: cobertura
+      path: coverage/cobertura-coverage.xml
+    expire_in: 1 week
+  paths:
+    - coverage/
+    - dist/
+  expire_in: 1 week
