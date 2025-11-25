@@ -21,9 +21,26 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 - **AI**: Spark LLM (GPT-4)
 - **Deployment**: Vercel + GitLab CI/CD
 
-## 🛠️ Componentes CI/CD
+## 🔐 Autenticação
 
-Este projeto inclui **componentes reutilizáveis de CI/CD** seguindo as melhores práticas do GitLab:
+O sistema utiliza **Google OAuth 2.0** como método único de autenticação, garantindo segurança e simplicidade para os usuários.
+
+### Configuração OAuth
+
+1. Acesse [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Crie uma nova aplicação OAuth 2.0
+3. Configure as credenciais no arquivo `.env`:
+   ```env
+   VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   VITE_REDIRECT_URI=https://your-domain.vercel.app
+   ```
+
+### Funcionalidades de Segurança
+
+- ✅ Autenticação única via Google
+- ✅ Controle de permissões por papel (advogado, assistente, admin)
+- ✅ Sessões seguras com JWT
+- ✅ Proteção contra CSRF
 
 ### 📦 Componentes Disponíveis
 
