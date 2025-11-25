@@ -197,6 +197,28 @@ echo "  - Análise de performance com Lighthouse"
 echo "  - Monitoramento de uptime"
 echo "  - Relatórios de Core Web Vitals"
 echo ""
+echo "• 📢 Notifications Component:"
+echo "  - Notificações Slack, Teams e Email"
+echo "  - Webhooks customizáveis"
+echo "  - Resumos automáticos de pipeline"
+echo ""
+echo "• 💾 Backup Component:"
+echo "  - Backup de banco de dados (PostgreSQL, MySQL, MongoDB)"
+echo "  - Backup de arquivos e documentos"
+echo "  - Criptografia e compressão automática"
+echo "  - Upload para S3 com retenção configurável"
+echo ""
+echo "• 🔗 API Testing Component:"
+echo "  - Testes smoke, integração e carga"
+echo "  - Testes de segurança automatizados"
+echo "  - Relatórios Newman e Artillery"
+echo ""
+echo "• 🐳 Container Deploy Component:"
+echo "  - Build e push de imagens Docker"
+echo "  - Deploy Kubernetes com Helm"
+echo "  - Estratégias Blue-Green e Canary"
+echo "  - Health checks e rollback automático"
+echo ""
 echo "🎯 Próximos Passos:"
 echo "==================="
 echo ""
@@ -214,31 +236,50 @@ echo ""
 echo "✅ Configuração do CI/CD Catalog concluída com sucesso!"
 echo ""
 echo "📞 Para suporte, consulte a documentação em .gitlab/templates/README.md"
-    git tag -a 1.0.0 -m "Release 1.0.0 - Componentes CI/CD
 
-🎉 Primeira release dos componentes CI/CD do Assistente Jurídico PJe
+# Verificar se a tag já existe
+if ! git tag | grep -q "^1.1.0$"; then
+    git tag -a 1.1.0 -m "Release 1.1.0 - Componentes CI/CD Expandidos
 
-📦 Componentes incluídos:
+🚀 Release 1.1.0 dos componentes CI/CD do Assistente Jurídico PJe
+
+📦 Componentes incluídos (8 componentes):
 • 🔒 Segurança: Auditoria npm, detecção de segredos, compliance LGPD
 • 🧪 Testes: Unitários, integração, E2E, acessibilidade
 • 🚀 Deployment: Vercel, Netlify, Docker com health checks
 • 📊 Monitoramento: Performance, uptime, Core Web Vitals
+• 📢 Notificações: Slack, Teams, Email, Webhooks
+• 💾 Backup: Banco de dados, arquivos, documentos com criptografia
+• 🔗 API Testing: Smoke, integração, carga, segurança
+• 🐳 Container Deploy: Docker + Kubernetes com estratégias avançadas
 
-✨ Funcionalidades:
-• Suporte completo a inputs configuráveis
-• Versionamento semântico
-• Documentação abrangente
-• Testes automatizados
+✨ Novas funcionalidades v1.1.0:
+• Notificações inteligentes com resumos de pipeline
+• Backup completo com criptografia AES-256
+• Testes de API abrangentes (smoke, carga, segurança)
+• Deploy em container com Blue-Green e Canary
+• Suporte a múltiplos bancos de dados
+• Estratégias de deploy avançadas
+• Health checks mais robustos
+
+🔧 Melhorias técnicas:
+• Inputs mais configuráveis
+• Melhor tratamento de erros
+• Artefatos mais ricos
+• Documentação expandida
+• Exemplos de produção atualizados
 
 📖 Documentação: .gitlab/templates/README.md
-🔧 Exemplos: .gitlab/templates/example-pipeline.yml"
+🔧 Exemplos: .gitlab/templates/production-example.yml"
 
-    echo "✅ Tag 1.0.0 criada com sucesso"
+    echo "✅ Tag 1.1.0 criada com sucesso"
+else
+    echo "ℹ️  Tag 1.1.0 já existe, pulando criação"
 fi
 
 echo ""
 echo "📤 Enviando tag para o repositório remoto..."
-git push origin 1.0.0
+git push origin 1.1.0
 
 echo ""
 echo "🎯 PRÓXIMOS PASSOS - Execute no GitLab Web:"
@@ -250,7 +291,7 @@ echo "   • Ative a opção: 'CI/CD Catalog project'"
 echo "   • Salve as configurações"
 echo ""
 echo "2. 📦 PUBLICAR COMPONENTES:"
-echo "   • A tag 1.0.0 será automaticamente detectada"
+echo "   • A tag 1.1.0 será automaticamente detectada"
 echo "   • Os componentes aparecerão no Catálogo CI/CD"
 echo "   • URL do catálogo: https://gitlab.com/[seu-grupo]/assistente-juridico-p/-/explore/catalog"
 echo ""
@@ -272,7 +313,7 @@ cat > .gitlab/catalog-ready.md << 'EOF'
 
 Este projeto foi configurado como um **Catálogo CI/CD** no GitLab.
 
-## 📦 Componentes Publicados
+## 📦 Componentes Publicados (v1.1.0)
 
 ### 🔒 Segurança (`security-component`)
 - Auditoria de dependências npm
@@ -298,11 +339,35 @@ Este projeto foi configurado como um **Catálogo CI/CD** no GitLab.
 - Uptime monitoring
 - Alertas configuráveis
 
+### 📢 Notificações (`notifications-component`)
+- Slack, Microsoft Teams, Email
+- Webhooks customizáveis
+- Resumos automáticos de pipeline
+- Múltiplos canais simultâneos
+
+### 💾 Backup (`backup-component`)
+- Backup de bancos de dados (PostgreSQL, MySQL, MongoDB)
+- Backup de arquivos e documentos jurídicos
+- Criptografia AES-256 automática
+- Upload para S3 com retenção configurável
+
+### 🔗 API Testing (`api-testing-component`)
+- Testes smoke com Postman/Newman
+- Testes de integração com Artillery
+- Testes de carga e performance
+- Testes de segurança automatizados
+
+### 🐳 Container Deploy (`container-deploy-component`)
+- Build e push de imagens Docker
+- Deploy Kubernetes com Helm
+- Estratégias Blue-Green e Canary
+- Health checks e rollback automático
+
 ## 🚀 Como Usar
 
 ```yaml
 include:
-  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/security/security-component@1.0.0
+  - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/security/security-component@1.1.0
     inputs:
       audit_level: "standard"
       fail_on_high: true
@@ -310,9 +375,10 @@ include:
 
 ## 📋 Status
 - ✅ Projeto configurado como catálogo
-- ✅ Tag 1.0.0 criada e publicada
-- ✅ Componentes validados
+- ✅ Tag 1.1.0 criada e publicada
+- ✅ 8 componentes validados
 - ✅ Documentação completa
+- ✅ Exemplos de produção atualizados
 EOF
 
 echo ""
