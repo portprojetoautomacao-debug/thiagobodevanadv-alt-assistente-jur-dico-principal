@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { GoogleAuthButton } from '@/components/GoogleAuth'
 import { GitHubAuthButton } from '@/components/GitHubAuth'
+import { GitLabAuthButton } from '@/components/GitLabAuth'
 import type { GoogleUser } from '@/components/GoogleAuth'
 import type { GitHubUser } from '@/components/GitHubAuth'
 import Sidebar from '@/components/Sidebar'
@@ -207,6 +208,18 @@ function App() {
             <GitHubAuthButton
               onSuccess={handleAuthSuccess}
               onError={(error) => console.error('Erro na autenticação GitHub:', error)}
+            />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Ou</span>
+              </div>
+            </div>
+            <GitLabAuthButton
+              onSuccess={handleAuthSuccess}
+              onError={(error) => console.error('Erro na autenticação GitLab:', error)}
             />
           </div>
         </div>

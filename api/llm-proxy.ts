@@ -74,7 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Error proxying LLM request:', error);
     res.status(500).json({
       error: 'Failed to proxy LLM request',
-      message: error.message || 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }

@@ -26,6 +26,10 @@ export interface Agent {
   currentTask?: AgentTask
   capabilities?: string[]
   config?: Record<string, unknown>
+  autonomyLevel?: number
+  nextScheduledRun?: string
+  workQueue?: any[]
+  humanInteractionMode?: string
 }
 
 export interface AgentTask {

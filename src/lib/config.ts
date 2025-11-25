@@ -18,6 +18,10 @@ export const config = {
     oauthClientId: getEnvVar('VITE_GITHUB_OAUTH_CLIENT_ID', ''),
     oauthClientSecret: getEnvVar('GITHUB_OAUTH_CLIENT_SECRET', ''),
   },
+  gitlab: {
+    oauthClientId: getEnvVar('GITLAB_CLIENT_ID', ''),
+    oauthClientSecret: getEnvVar('GITLAB_CLIENT_SECRET', ''),
+  },
   datajud: {
     apiKey: getEnvVar('VITE_DATAJUD_API_KEY', '', false), // Optional - no error logging
   },
@@ -50,6 +54,14 @@ export const validateConfig = (): boolean => {
 
   if (!config.github.oauthClientSecret) {
     errors.push('GitHub OAuth Client Secret is not configured')
+  }
+
+  if (!config.gitlab.oauthClientId) {
+    errors.push('GitLab OAuth Client ID is not configured')
+  }
+
+  if (!config.gitlab.oauthClientSecret) {
+    errors.push('GitLab OAuth Client Secret is not configured')
   }
 
   if (errors.length > 0) {

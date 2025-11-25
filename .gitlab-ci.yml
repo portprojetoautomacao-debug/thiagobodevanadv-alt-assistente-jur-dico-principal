@@ -1,3 +1,18 @@
+# GitLab CI/CD Pipeline com GitLab Duo e CI/CD Inputs
+# TESTE: MR de teste para validar as configurações avançadas do GitLab Duo
+
+# Configuração usando CI/CD Inputs - Ambiente de Desenvolvimento
+include:
+  - local: '.gitlab/duo-inputs-config.yml'
+    inputs:
+      duo_enabled: true
+      auto_review: true
+      security_level: "standard"
+      max_comments: 25
+      audit_logging: true
+      legal_compliance_checks: ["lgpd_compliance", "legal_documentation"]
+      custom_agents: ["assistente-juridico-reviewer", "assistente-juridico-generator"]
+
 image: node:22
 
 variables:
@@ -16,6 +31,19 @@ cache:
     - .npm/
 
 stages:
+
+# Job de teste do GitLab Duo
+duo_test:
+  stage: test
+  script:
+    - echo "🤖 Testando GitLab Duo com CI/CD Inputs..."
+    - echo "Security Level: $[[ inputs.security_level ]]"
+    - echo "Legal Checks: $[[ inputs.legal_compliance_checks ]]"
+    - echo "Custom Agents: $[[ inputs.custom_agents ]]"
+    - echo "Audit Logging: $[[ inputs.audit_logging ]]"
+    - ./scripts/validate-gitlab-duo-advanced.sh
+  only:
+    - merge_requests
   - install
   - test
   - security
