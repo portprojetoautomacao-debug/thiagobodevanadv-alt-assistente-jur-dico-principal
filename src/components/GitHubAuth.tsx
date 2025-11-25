@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Warning } from '@phosphor-icons/react'
+import { WarningCircle } from '@phosphor-icons/react'
 import { GithubLogo } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
 
@@ -121,7 +121,7 @@ export function GitHubAuthButton({ onSuccess, onError }: GitHubAuthButtonProps) 
   if (!isConfigured) {
     return (
       <Alert>
-        <Warning className="h-4 w-4" />
+        <WarningCircle className="h-4 w-4" />
         <AlertDescription>
           GitHub OAuth não está configurado. Verifique as variáveis de ambiente.
         </AlertDescription>
@@ -153,7 +153,7 @@ export function GitHubAuthButton({ onSuccess, onError }: GitHubAuthButtonProps) 
 
         {error && (
           <Alert className="mt-4">
-            <Warning className="h-4 w-4" />
+            <WarningCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}

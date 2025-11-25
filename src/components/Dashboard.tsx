@@ -382,7 +382,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="border-destructive bg-destructive/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
-              <Warning size={24} />
+              <WarningCircle size={24} />
               Atenção: Prazos Urgentes
             </CardTitle>
           </CardHeader>
