@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     # Temporarily disabled - will be re-enabled after merge to main
     # When enabled, will work on current branch instead of forcing main checkout
-    if: false && github.event.workflow_run.conclusion != 'cancelled'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'cancelled'
 
     steps:
     - name: Checkout code
@@ -36,14 +36,14 @@ jobs:
       run: |
         echo "## 🎖️ Badge Update Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Workflow:** ${{ github.event.workflow_run.name || 'Manual trigger' }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Status:** ${{ github.event.workflow_run.conclusion || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name || 'Manual trigger' }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
         echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # Exportar informações para uso posterior
-        echo "workflow_name=${{ github.event.workflow_run.name }}" >> $GITHUB_OUTPUT
-        echo "workflow_status=${{ github.event.workflow_run.conclusion }}" >> $GITHUB_OUTPUT
+        echo "workflow_name=${{ github.event_name == 'workflow_run' && github.event.workflow_run.name || '' }}" >> $GITHUB_OUTPUT
+        echo "workflow_status=${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion || '' }}" >> $GITHUB_OUTPUT
 
     - name: Create badge JSON
       run: |
@@ -54,8 +54,8 @@ jobs:
         {
           "schemaVersion": 1,
           "label": "CI Build",
-          "message": "${{ github.event.workflow_run.name == 'CI' && github.event.workflow_run.conclusion || 'passing' }}",
-          "color": "${{ github.event.workflow_run.conclusion == 'success' && 'brightgreen' || 'red' }}",
+          "message": "${{ github.event_name == 'workflow_run' && github.event.workflow_run.name == 'CI' && github.event.workflow_run.conclusion || 'passing' }}",
+          "color": "${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && 'brightgreen' || 'red' }}",
           "namedLogo": "github"
         }
         EOF
