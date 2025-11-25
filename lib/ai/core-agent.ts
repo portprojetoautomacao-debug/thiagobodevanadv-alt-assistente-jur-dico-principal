@@ -169,9 +169,12 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       const raw = await this.opts.llm.chat(messages);
       const stepDuration = Date.now() - stepStart;
 
+      // Garantir que raw seja uma string válida
+      const rawContent = typeof raw === 'string' ? raw : JSON.stringify(raw);
+
       let parsed: Record<string, unknown>;
       try {
-        parsed = JSON.parse(raw);
+        parsed = JSON.parse(rawContent);
       } catch {
         // força correção
         traces.push({
@@ -183,7 +186,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
           error: 'JSON parsing failed',
         });
         
-        messages.push({ role: "assistant", content: raw });
+        messages.push({ role: "assistant", content: rawContent });
         messages.push({
           role: "user",
           content:
@@ -223,7 +226,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       }
 
       if (parsed.action === "tool") {
-        const toolName: string = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool);
+        const toolName: string = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
         const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
         const tool = this.allowedTools().find((t) => t.name === toolName);
 
