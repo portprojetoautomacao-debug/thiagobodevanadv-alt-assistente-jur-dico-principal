@@ -56,8 +56,11 @@ jobs:
         run: |
           echo "=== GitHub CLI Repository Metrics ==="
           
+          # Extract repo name from github.repository (format: owner/repo)
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          
           # Get open issues count
-          numOpenIssues="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=${{ github.event.repository.name }} -f query='
+          numOpenIssues="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
               repository(owner: $owner, name: $name) {
                 issues(states:OPEN){
@@ -71,7 +74,7 @@ jobs:
           echo 'NUM_OPEN_ISSUES='$numOpenIssues >> $GITHUB_ENV
           
           # Get open PRs count
-          numOpenPRs="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=${{ github.event.repository.name }} -f query='
+          numOpenPRs="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
               repository(owner: $owner, name: $name) {
                 pullRequests(states:OPEN){
@@ -87,10 +90,10 @@ jobs:
       - name: Create summary issue (if needed)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: env.NUM_OPEN_ISSUES > 5 || env.NUM_OPEN_PRS > 3
+        if: always()
         run: |
           gh issue create \
-            --title "📊 Daily Report: ${{ github.event.repository.name }}" \
+            --title "📊 Daily Report: $REPO_NAME" \
             --body "## Repository Status
           
           **Open Issues:** ${{ env.NUM_OPEN_ISSUES }}
