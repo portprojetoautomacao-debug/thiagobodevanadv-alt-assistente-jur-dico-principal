@@ -96,15 +96,13 @@ jobs:
           gh issue create \
             --title "📊 Daily Report: $REPO_NAME" \
             --body "## Repository Status
-          
+
           **Open Issues:** $NUM_OPEN_ISSUES
           **Open PRs:** $NUM_OPEN_PRS
-          
+
           Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          
-          Workflow: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
-            --label "report" \
-            --assignee ${{ github.repository_owner }}
+
+          Workflow: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
       - name: List recent commits
         env:
