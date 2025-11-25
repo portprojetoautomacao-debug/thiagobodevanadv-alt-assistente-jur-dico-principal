@@ -21,6 +21,7 @@ export const config = {
   gitlab: {
     oauthClientId: getEnvVar('GITLAB_CLIENT_ID', ''),
     oauthClientSecret: getEnvVar('GITLAB_CLIENT_SECRET', ''),
+    redirectUri: getEnvVar('GITLAB_REDIRECT_URI', `${window.location.origin}/api/auth/callback/gitlab`),
   },
   datajud: {
     apiKey: getEnvVar('VITE_DATAJUD_API_KEY', '', false), // Optional - no error logging

@@ -4,11 +4,11 @@
 stages: [security, test, build, deploy, backup, notify, monitor]
 
 # =============================================================================
-# 🔒 COMPONENTES DE SEGURANÇA
+# 🔗 INCLUDES DE TODOS OS COMPONENTES CI/CD
 # =============================================================================
 
 include:
-  # Segurança avançada para aplicações jurídicas (LGPD compliance)
+  # 🔒 Segurança avançada para aplicações jurídicas (LGPD compliance)
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/security/security-component@1.1.0
     inputs:
       stage: security
@@ -17,12 +17,7 @@ include:
       report_format: "sarif"
       compliance_check: true
 
-# =============================================================================
-# 🧪 COMPONENTES DE TESTES
-# =============================================================================
-
-include:
-  # Suite completa de testes para aplicações React/TypeScript
+  # 🧪 Suite completa de testes para aplicações React/TypeScript
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/testing/testing-component@1.1.0
     inputs:
       stage: test
@@ -32,12 +27,7 @@ include:
       browser: "chromium"
       accessibility: true
 
-# =============================================================================
-# 🔗 TESTES DE API (se aplicável)
-# =============================================================================
-
-include:
-  # Testes de API para endpoints jurídicos
+  # 🔗 Testes de API para endpoints jurídicos
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/api-testing/api-testing-component@1.1.0
     inputs:
       stage: test
@@ -50,12 +40,7 @@ include:
     rules:
       - if: $CI_COMMIT_BRANCH == "main"
 
-# =============================================================================
-# 🚀 COMPONENTES DE DEPLOYMENT
-# =============================================================================
-
-include:
-  # Deploy Vercel para staging
+  # 🚀 Deploy Vercel para staging
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/deployment/deployment-component@1.1.0
     inputs:
       stage: deploy
@@ -67,7 +52,7 @@ include:
     rules:
       - if: $CI_COMMIT_BRANCH == "develop"
 
-  # Deploy Vercel para produção
+  # 🚀 Deploy Vercel para produção
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/deployment/deployment-component@1.1.0
     inputs:
       stage: deploy
@@ -79,12 +64,7 @@ include:
     rules:
       - if: $CI_COMMIT_BRANCH == "main"
 
-# =============================================================================
-# 🐳 DEPLOYMENT EM CONTAINER (alternativo)
-# =============================================================================
-
-include:
-  # Deploy em container para produção (exemplo alternativo)
+  # 🐳 Deploy em container para produção (exemplo alternativo)
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/container-deploy/container-deploy-component@1.1.0
     inputs:
       stage: deploy
@@ -99,12 +79,7 @@ include:
     rules:
       - if: $CI_COMMIT_BRANCH == "main" && $DEPLOY_METHOD == "kubernetes"
 
-# =============================================================================
-# 💾 COMPONENTES DE BACKUP
-# =============================================================================
-
-include:
-  # Backup semanal de banco de dados jurídico
+  # 💾 Backup semanal de banco de dados jurídico
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/backup/backup-component@1.1.0
     inputs:
       stage: backup
@@ -123,7 +98,7 @@ include:
       - if: $CI_COMMIT_BRANCH == "main"
       - when: manual
 
-  # Backup mensal de documentos jurídicos
+  # 💾 Backup mensal de documentos jurídicos
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/backup/backup-component@1.1.0
     inputs:
       stage: backup
@@ -138,12 +113,7 @@ include:
       - if: $CI_COMMIT_BRANCH == "main"
       - when: manual
 
-# =============================================================================
-# 📢 COMPONENTES DE NOTIFICAÇÕES
-# =============================================================================
-
-include:
-  # Notificações Slack para todos os ambientes
+  # 📢 Notificações Slack para todos os ambientes
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/notifications/notifications-component@1.1.0
     inputs:
       stage: notify
@@ -154,7 +124,7 @@ include:
       notify_on_failure: true
       include_pipeline_summary: true
 
-  # Notificações Microsoft Teams para produção
+  # 📢 Notificações Microsoft Teams para produção
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/notifications/notifications-component@1.1.0
     inputs:
       stage: notify
@@ -166,12 +136,7 @@ include:
     rules:
       - if: $CI_COMMIT_BRANCH == "main"
 
-# =============================================================================
-# 📊 COMPONENTES DE MONITORAMENTO
-# =============================================================================
-
-include:
-  # Monitoramento avançado para produção
+  # 📊 Monitoramento avançado para produção
   - component: $CI_SERVER_FQDN/assistente-juridico-p/templates/monitoring/monitoring-component@1.1.0
     inputs:
       stage: monitor

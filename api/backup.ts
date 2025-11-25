@@ -15,11 +15,11 @@ interface BackupData {
   timestamp: number;
   userId: string;
   data: {
-    agents?: any;
-    monitoredLawyers?: any;
-    taskQueue?: any;
-    completedTasks?: any;
-    lastDjenCheck?: any;
+    agents?: Record<string, unknown>;
+    monitoredLawyers?: Record<string, unknown>;
+    taskQueue?: Record<string, unknown>;
+    completedTasks?: Record<string, unknown>;
+    lastDjenCheck?: Record<string, unknown>;
   };
 }
 

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         client_secret: process.env.GITLAB_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: process.env.VITE_REDIRECT_URI || 'http://localhost:5173',
+        redirect_uri: process.env.GITLAB_REDIRECT_URI || 'https://assistente-juridico-p.vercel.app/api/auth/callback/gitlab',
       }),
     })
 
