@@ -184,6 +184,68 @@ deploy-production:
   when: manual
   allow_failure: false
 
+# Job adicional: Deploy de Review Apps (Aplicativos de Avaliação)
+deploy-review:
+  stage: deploy
+  image: node:${NODE_VERSION}
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app
+    on_stop: stop-review
+    auto_stop_in: 1 week
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Fazendo deploy do Review App para branch: $CI_COMMIT_REF_NAME"
+    - echo "🌐 URL do Review App: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app"
+    - npm run build
+    - |
+      # Deploy para Vercel com nome único baseado na branch
+      export VERCEL_PROJECT_NAME="assistente-juridico-p-$CI_COMMIT_REF_SLUG"
+      npx vercel --yes --prod=false
+      echo "✅ Review App deploy concluído!"
+      echo "🔗 Acesse: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app"
+  dependencies:
+    - build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_COMMIT_BRANCH =~ /^feature\//
+      when: always
+    - if: $CI_COMMIT_BRANCH =~ /^review\//
+      when: always
+  allow_failure: true
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .vercel/
+    expire_in: 1 week
+
+# Job adicional: Parar Review Apps manualmente
+stop-review:
+  stage: deploy
+  image: node:${NODE_VERSION}
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  script:
+    - echo "🛑 Parando Review App para branch: $CI_COMMIT_REF_NAME"
+    - |
+      # Remover deployment do Vercel
+      export VERCEL_PROJECT_NAME="assistente-juridico-p-$CI_COMMIT_REF_SLUG"
+      npx vercel rm --yes $VERCEL_PROJECT_NAME || echo "Review App já removido ou não encontrado"
+      echo "✅ Review App parado com sucesso!"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+    - if: $CI_COMMIT_BRANCH =~ /^feature\//
+      when: manual
+    - if: $CI_COMMIT_BRANCH =~ /^review\//
+      when: manual
+  allow_failure: true
+  dependencies: []
+
 # Job adicional: Backup de dados (semanal)
 backup:
   stage: monitor
