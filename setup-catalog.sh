@@ -64,21 +64,26 @@ echo "✅ Todos os componentes estão presentes"
 echo ""
 echo "🔍 Validando sintaxe YAML dos componentes..."
 
-python3 -c "
-import yaml
+python3 - <<'PY'
+import importlib
 import os
 import sys
 
-def validate_yaml_file(filepath):
+try:
+    yaml = importlib.import_module('yaml')
+except ModuleNotFoundError:
+    print("❌ Módulo PyYAML não encontrado. Instale com 'pip install pyyaml'.")
+    sys.exit(1)
+
+def validate_yaml_file(filepath: str):
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
-        yaml.safe_load(content)
+        with open(filepath, 'r', encoding='utf-8') as handle:
+            yaml.safe_load(handle.read())
         return True, None
-    except yaml.YAMLError as e:
-        return False, str(e)
-    except Exception as e:
-        return False, f'Erro ao ler arquivo: {str(e)}'
+    except yaml.YAMLError as exc:
+        return False, str(exc)
+    except OSError as exc:
+        return False, f'Erro ao ler arquivo: {exc}'
 
 yaml_files = [
     '.gitlab/templates/security/security-component.yml',
@@ -92,7 +97,7 @@ yaml_files = [
     '.gitlab/templates/example-pipeline.yml',
     '.gitlab/templates/test-components.yml',
     '.gitlab/templates/release-pipeline.yml',
-    '.gitlab/duo-components-integration.yml'
+    '.gitlab/duo-components-integration.yml',
 ]
 
 valid_count = 0
@@ -108,13 +113,11 @@ for filepath in yaml_files:
         print(f'⚠️  {filepath}: ARQUIVO NÃO ENCONTRADO')
 
 if valid_count == len(yaml_files):
-    print('')
-    print('🎉 Todos os componentes YAML são válidos!')
+    print('\n🎉 Todos os componentes YAML são válidos!')
 else:
-    print('')
-    print('❌ Alguns componentes têm erros de sintaxe.')
+    print('\n❌ Alguns componentes têm erros de sintaxe.')
     sys.exit(1)
-"
+PY
 
 # Verificar se o .gitlab-ci.yml existe e está configurado
 echo ""
@@ -126,16 +129,25 @@ if [ ! -f ".gitlab-ci.yml" ]; then
 fi
 
 # Validar .gitlab-ci.yml
-python3 -c "
-import yaml
+python3 - <<'PY'
+import importlib
+import sys
+
 try:
-    with open('.gitlab-ci.yml', 'r', encoding='utf-8') as f:
-        yaml.safe_load(f)
+    yaml = importlib.import_module('yaml')
+except ModuleNotFoundError:
+    print("❌ Módulo PyYAML não encontrado. Instale com 'pip install pyyaml'.")
+    sys.exit(1)
+
+from pathlib import Path
+
+try:
+    yaml.safe_load(Path('.gitlab-ci.yml').read_text(encoding='utf-8'))
     print('✅ .gitlab-ci.yml: Sintaxe válida')
-except Exception as e:
-    print(f'❌ .gitlab-ci.yml: {e}')
-    exit(1)
-"
+except Exception as exc:
+    print(f'❌ .gitlab-ci.yml: {exc}')
+    sys.exit(1)
+PY
 
 echo ""
 echo "📝 Instruções para configurar o CI/CD Catalog no GitLab:"
@@ -301,7 +313,7 @@ echo "   • Execute o pipeline de teste: .gitlab/templates/test-components.yml"
 echo ""
 echo "4. 📚 USAR EM OUTROS PROJETOS:"
 echo "   include:"
-echo "     - component: \$CI_SERVER_FQDN/assistente-juridico-p/templates/security/security-component@1.0.0"
+echo "     - component: \$CI_SERVER_FQDN/assistente-juridico-p/templates/security/security-component@1.1.0"
 echo "       inputs:"
 echo "         audit_level: 'standard'"
 echo ""

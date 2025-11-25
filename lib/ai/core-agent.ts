@@ -32,13 +32,13 @@ export interface ToolContext {
   traceId?: string; // Para correlacionar logs distribuídos
   agentId?: string;
   sessionId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Tool {
   name: string;
   description: string;
-  run: (args: any, ctx: GlobalToolContext) => Promise<any>;
+  run: (args: Record<string, unknown>, ctx: GlobalToolContext) => Promise<unknown>;
 }
 
 export interface MemoryStore {
@@ -169,7 +169,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       const raw = await this.opts.llm.chat(messages);
       const stepDuration = Date.now() - stepStart;
 
-      let parsed: any;
+      let parsed: Record<string, unknown>;
       try {
         parsed = JSON.parse(raw);
       } catch {

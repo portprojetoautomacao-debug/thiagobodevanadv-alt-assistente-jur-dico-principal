@@ -27,9 +27,9 @@ jobs:
       run: |
         echo "🎯 Processando evento do Vercel..."
         EVENT_TYPE="${{ github.event.client_payload.type }}"
-        DEPLOYMENT_STATE="${{ github.event.client_payload.payload.deployment?.state }}"
-        DEPLOYMENT_URL="${{ github.event.client_payload.payload.deployment?.url }}"
-        DEPLOYMENT_NAME="${{ github.event.client_payload.payload.deployment?.name }}"
+        DEPLOYMENT_STATE="${{ github.event.client_payload.payload.deployment.state || 'unknown' }}"
+        DEPLOYMENT_URL="${{ github.event.client_payload.payload.deployment.url || '' }}"
+        DEPLOYMENT_NAME="${{ github.event.client_payload.payload.deployment.name || '' }}"
 
         echo "📊 Evento: $EVENT_TYPE"
         echo "🚀 Estado: $DEPLOYMENT_STATE"
@@ -57,7 +57,7 @@ jobs:
           echo "✅ Aplicação responde corretamente"
 
           # Criar comentário de sucesso no commit
-          gh pr comment ${{ github.event.client_payload.payload.deployment?.meta?.githubCommitSha }} \
+          gh pr comment ${{ github.event.client_payload.payload.deployment.meta.githubCommitSha || github.sha }} \
             --body |
               ✅ **Deployment bem-sucedido!**
 
@@ -115,8 +115,8 @@ jobs:
           "deployment_url": "$DEPLOYMENT_URL",
           "state": "$DEPLOYMENT_STATE",
           "event_type": "$EVENT_TYPE",
-          "commit_sha": "${{ github.event.client_payload.payload.deployment?.meta?.githubCommitSha }}",
-          "commit_message": "${{ github.event.client_payload.payload.deployment?.meta?.githubCommitMessage }}"
+          "commit_sha": "${{ github.event.client_payload.payload.deployment.meta.githubCommitSha || github.sha }}",
+          "commit_message": "${{ github.event.client_payload.payload.deployment.meta.githubCommitMessage || 'Automated deployment' }}"
         }
         EOF
 

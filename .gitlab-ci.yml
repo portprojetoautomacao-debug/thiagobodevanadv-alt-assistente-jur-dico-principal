@@ -31,7 +31,7 @@ cache:
 # Componentes CI/CD reutilizáveis
 include:
   # Componente de Segurança - Auditoria completa com compliance LGPD
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/security/security-component@1.0.0
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/security/security-component@1.1.0
     inputs:
       stage: security
       audit_level: "standard"
@@ -39,7 +39,7 @@ include:
       report_format: "json"
 
   # Componente de Testes - Suite completa para React/TypeScript
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/testing/testing-component@1.0.0
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/testing/testing-component@1.1.0
     inputs:
       stage: test
       test_type: "all"
@@ -48,7 +48,7 @@ include:
       browser: "chromium"
 
   # Componente de Deployment - Multi-plataforma com health checks
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/deployment/deployment-component@1.0.0
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/deployment/deployment-component@1.1.0
     inputs:
       stage: deploy
       environment: "staging"
@@ -58,7 +58,7 @@ include:
       monitoring_enabled: true
 
   # Componente de Monitoramento - Performance e disponibilidade
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/monitoring/monitoring-component@1.0.0
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/monitoring/monitoring-component@1.1.0
     inputs:
       stage: monitor
       monitoring_type: "advanced"
