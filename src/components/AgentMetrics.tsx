@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { 
   TrendUp, 
   Clock, 
@@ -10,8 +9,7 @@ import {
   ChartLine,
   Timer,
   Pulse,
-  LightningSlash,
-  ArrowsClockwise
+  LightningSlash
 } from '@phosphor-icons/react'
 import { useState, useEffect } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
@@ -30,7 +28,6 @@ interface AgentMetricsProps {
 
 export default function AgentMetrics({ agents, completedTasks, activityLog }: AgentMetricsProps) {
   const [circuitBreakers, setCircuitBreakers] = useState<any>(null)
-  const [v2Metrics, setV2Metrics] = useState<any>(null)
 
   // Fetch V2 metrics
   useEffect(() => {
@@ -54,7 +51,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
   const totalTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
   const totalToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
   const averageAutonomy = agents.length > 0
-    ? Math.round(agents.reduce((sum, a) => sum + a.autonomyLevel, 0) / agents.length)
+    ? Math.round(agents.reduce((sum, a) => sum + (a.autonomyLevel || 0), 0) / agents.length)
     : 0
 
   const successRate = activityLog.length > 0

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -38,7 +37,7 @@ import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
 import type { ViewType } from '@/types'
 
-const agentIcons: Record<string, React.ComponentType<{ className?: string; weight?: string }>> = {
+const agentIcons: Record<string, any> = {
   'djen-monitor': Database,
   'agent-djen-monitor': Database,
   'mrs-justin-e': Brain,
@@ -84,16 +83,14 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
   const userId = user?.email || 'default-user'
   
   // Sistema de backup automático
-  const { createBackup, restoreBackup, getBackupHistory, lastBackup } = useAgentBackup({
+  const { createBackup, restoreBackup } = useAgentBackup({
     userId,
     autoBackupInterval: 5, // Backup a cada 5 minutos
     enableAutoBackup: true
   })
   
-  const [showCollaborationDemo, setShowCollaborationDemo] = useState(false)
   const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
   const [backupStatus, setBackupStatus] = useState<'idle' | 'saving' | 'restoring'>('idle')
-  const [showOrchestration, setShowOrchestration] = useState(false)
   const [useV2Architecture, setUseV2Architecture] = useState(true) // Nova arquitetura ativada por padrão
 
   // Manual backup handler
@@ -423,9 +420,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
   }, [agents, setAgents])
 
   const totalTasksToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
-  const avgAutonomy = agents.length > 0 
-    ? Math.round(agents.reduce((sum, a) => sum + a.autonomyLevel, 0) / agents.length)
-    : 0
 
   const activeAgents = agents.filter(a => a.enabled).length
   const queuedTasks = taskQueue.filter(t => t.status === 'queued').length
@@ -759,12 +753,12 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {agent.capabilities.slice(0, 4).map((cap, idx) => (
+                        {agent.capabilities?.slice(0, 4).map((cap, idx) => (
                           <Badge key={idx} variant="outline" className="text-xs">
                             {cap}
                           </Badge>
                         ))}
-                        {agent.capabilities.length > 4 && (
+                        {agent.capabilities && agent.capabilities.length > 4 && (
                           <Badge variant="outline" className="text-xs">
                             +{agent.capabilities.length - 4}
                           </Badge>
