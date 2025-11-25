@@ -20,10 +20,10 @@ const MONTHS = [
 ]
 
 const EVENT_COLORS = {
-  hearing: 'bg-red-100 text-red-800 border-red-300',
-  meeting: 'bg-blue-100 text-blue-800 border-blue-300',
-  deadline: 'bg-amber-100 text-amber-800 border-amber-300',
-  other: 'bg-gray-100 text-gray-800 border-gray-300',
+  audiencia: 'bg-red-100 text-red-800 border-red-300',
+  reuniao: 'bg-blue-100 text-blue-800 border-blue-300',
+  prazo: 'bg-amber-100 text-amber-800 border-amber-300',
+  outro: 'bg-gray-100 text-gray-800 border-gray-300',
 }
 
 export default function Calendar() {

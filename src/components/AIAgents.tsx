@@ -38,7 +38,7 @@ import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
 import type { ViewType } from '@/types'
 
-const agentIcons: Record<string, React.ComponentType<{ className?: string; weight?: string }>> = {
+const agentIcons: Record<string, any> = {
   'djen-monitor': Database,
   'agent-djen-monitor': Database,
   'mrs-justin-e': Brain,
