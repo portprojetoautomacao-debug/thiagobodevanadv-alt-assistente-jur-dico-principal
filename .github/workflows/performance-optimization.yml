@@ -35,7 +35,7 @@ jobs:
   bundle-analysis:
     name: '📦 Análise de Bundle'
     runs-on: self-hosted
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'bundle-only'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'bundle-only'
 
     steps:
     - name: 📥 Checkout código
@@ -101,7 +101,7 @@ jobs:
         } > bundle-metrics.json
 
     - name: 📈 Comparar com Baseline
-      if: github.event.inputs.baseline_comparison == true
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.baseline_comparison == true
       run: |
         echo "📈 Comparando com baseline..."
 
@@ -155,7 +155,7 @@ jobs:
   performance-analysis:
     name: '⚡ Análise de Performance'
     runs-on: self-hosted
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'performance-only'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'performance-only'
 
     steps:
     - name: 📥 Checkout código
@@ -249,7 +249,7 @@ jobs:
         fi
 
     - name: 📈 Comparar Performance com Baseline
-      if: github.event.inputs.baseline_comparison == true
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.baseline_comparison == true
       run: |
         echo "📈 Comparando performance com baseline..."
 
@@ -286,7 +286,7 @@ jobs:
   build-optimizations:
     name: '🔧 Otimizações de Build'
     runs-on: self-hosted
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'optimization-only'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'optimization-only'
 
     steps:
     - name: 📥 Checkout código
@@ -476,7 +476,7 @@ jobs:
         echo "💬 Comentando performance no PR..."
 
         # Comentar no PR sobre performance
-        gh pr comment ${{ github.event.number }} --body |
+        gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body |
           ## ⚡ Análise de Performance
 
           **Status:** ${{ env.STATUS }}
