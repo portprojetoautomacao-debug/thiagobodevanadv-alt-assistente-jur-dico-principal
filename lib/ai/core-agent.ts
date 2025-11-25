@@ -196,24 +196,26 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
         const answer = parsed.answer ?? "";
 
         // FINAL: Resposta final do agente
+        const answerContent = typeof answer === 'string' ? answer : JSON.stringify(answer);
+
         traces.push({
           timestamp: new Date().toISOString(),
           step,
           type: 'final',
-          content: answer,
+          content: answerContent,
           duration: stepDuration,
         });
 
         const newHistory: ChatMessage[] = [
           ...history,
           { role: "user", content: userInput },
-          { role: "assistant", content: answer },
+          { role: "assistant", content: answerContent },
         ];
         await this.memoryStore.save(this.sessionId, newHistory);
 
-        return { 
-          answer, 
-          steps: step + 1, 
+        return {
+          answer: answerContent,
+          steps: step + 1,
           usedTools,
           traces,
           totalDuration: Date.now() - startTime,
@@ -221,8 +223,8 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       }
 
       if (parsed.action === "tool") {
-        const toolName: string = parsed.tool;
-        const toolArgs = parsed.args ?? {};
+        const toolName: string = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool);
+        const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
         const tool = this.allowedTools().find((t) => t.name === toolName);
 
         if (!tool) {
