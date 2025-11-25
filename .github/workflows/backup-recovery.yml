@@ -43,11 +43,11 @@ jobs:
   full-backup:
     name: '💾 Backup Completo'
     runs-on: self-hosted
-    if: github.event.inputs.backup_type == 'full' || (github.event_name == 'schedule' && github.event.inputs.backup_type != 'incremental' && github.event.inputs.backup_type != 'config-only')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'full' || github.event_name == 'schedule'
 
     strategy:
       matrix:
-        environment: ${{ fromJSON(github.event.inputs.environment == 'both' && '["production", "staging"]' || github.event.inputs.environment == 'staging' && '["staging"]' || '["production"]') }}
+        environment: ${{ fromJSON(github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'both' && '["production", "staging"]' || github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging' && '["staging"]' || '["production"]') }}
 
     steps:
     - name: 📥 Checkout código
@@ -215,7 +215,7 @@ jobs:
   incremental-backup:
     name: '🔄 Backup Incremental'
     runs-on: self-hosted
-    if: github.event.inputs.backup_type == 'incremental' || (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *') # A cada 6 horas
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'incremental' || (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *') # A cada 6 horas
 
     steps:
     - name: 📥 Checkout código
@@ -244,9 +244,9 @@ jobs:
   # ==========================================
 
   config-backup:
-    name: '⚙️  Backup de Configurações'
+    name: '⚙️ Backup de Configurações'
     runs-on: self-hosted
-    if: github.event.inputs.backup_type == 'config-only'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'config-only'
 
     steps:
     - name: 📥 Checkout código
@@ -297,7 +297,7 @@ jobs:
   test-restore:
     name: '🧪 Teste de Restauração'
     runs-on: self-hosted
-    if: github.event.inputs.backup_type == 'test-restore'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'test-restore'
 
     steps:
     - name: 📥 Checkout código
@@ -370,7 +370,7 @@ jobs:
   retention-management:
     name: '🗂️  Gerenciamento de Retenção'
     runs-on: self-hosted
-    if: github.event_name == 'schedule' || github.event.inputs.backup_type != 'test-restore'
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type != 'test-restore')
 
     steps:
     - name: 📥 Checkout código
@@ -380,7 +380,7 @@ jobs:
       run: |
         echo "🗂️  Limpando backups antigos..."
 
-        RETENTION_DAYS=${{ github.event.inputs.retention_days || 30 }}
+        RETENTION_DAYS=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.retention_days || 30 }}
 
         echo "📅 Retenção: $RETENTION_DAYS dias"
 
@@ -459,8 +459,8 @@ jobs:
           echo ""
           echo "**Status:** $STATUS"
           echo "**Data/Hora:** $(date)"
-          echo "**Tipo:** ${{ github.event.inputs.backup_type || 'scheduled' }}"
-          echo "**Ambiente:** ${{ github.event.inputs.environment || 'production' }}"
+          echo "**Tipo:** ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type || 'scheduled' }}"
+          echo "**Ambiente:** ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}"
           echo ""
           echo "### 📋 Detalhes da Operação"
           echo "- Backup Completo: ${{ needs.full-backup.result }}"
