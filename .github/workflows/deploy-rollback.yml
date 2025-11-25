@@ -31,7 +31,7 @@ jobs:
   deploy-staging:
     name: '🚀 Deploy Staging'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || github.event.inputs.environment == 'staging'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     outputs:
       url: ${{ steps.deploy-staging.outputs.url }}
     environment:
@@ -125,7 +125,7 @@ jobs:
     name: '🎯 Deploy Production com Rollback'
     runs-on: ubuntu-latest
     needs: deploy-staging
-    if: (github.ref == 'refs/heads/main' && needs.deploy-staging.result == 'success') || github.event.inputs.environment == 'production'
+    if: (github.ref == 'refs/heads/main' && needs.deploy-staging.result == 'success') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     outputs:
       url: ${{ steps.deploy-production.outputs.url }}
     environment:
