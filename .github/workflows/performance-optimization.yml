@@ -106,9 +106,9 @@ jobs:
         echo "📈 Comparando com baseline..."
 
         # Baixar métricas da branch main
-        if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
+        if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
           echo "📥 Baixando métricas da main..."
-          gh run download --repo ${{ github.repository }} --name bundle-metrics -D baseline-metrics/ || echo "Baseline não encontrada"
+          gh run download --repo $GITHUB_REPOSITORY --name bundle-metrics -D baseline-metrics/ || echo "Baseline não encontrada"
 
           if [[ -f baseline-metrics/bundle-metrics.json ]]; then
             BASELINE_TOTAL=$(jq '.total_size' baseline-metrics/bundle-metrics.json)
@@ -254,8 +254,8 @@ jobs:
         echo "📈 Comparando performance com baseline..."
 
         # Baixar métricas de performance da main
-        if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
-          gh run download --repo ${{ github.repository }} --name performance-metrics -D baseline-performance/ || echo "Baseline não encontrada"
+        if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+          gh run download --repo $GITHUB_REPOSITORY --name performance-metrics -D baseline-performance/ || echo "Baseline não encontrada"
 
           if [[ -f baseline-performance/performance-metrics.json ]]; then
             BASELINE_SCORE=$(jq '.performance_score' baseline-performance/performance-metrics.json)
@@ -475,30 +475,30 @@ jobs:
       run: |
         echo "💬 Comentando performance no PR..."
 
-        # Criar comentário temporário
-        cat > pr_comment.md << EOF
-        ## ⚡ Análise de Performance
+        # Criar comentário
+        COMMENT="## ⚡ Análise de Performance
 
         **Status:** $STATUS
 
         ### 📊 Métricas Principais
         - **Performance Score:** $SCORE
         - **Bundle Size:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)
-        - **LCP:** ${LCP}ms
-        EOF
+        - **LCP:** ${LCP}ms"
 
         # Adicionar aviso se houver oportunidades de otimização
         if [[ "$STATUS" != "success" ]]; then
-          echo "" >> pr_comment.md
-          echo "**⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**" >> pr_comment.md
+          COMMENT="$COMMENT
+
+        **⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**"
         fi
 
-        echo "" >> pr_comment.md
-        echo "Verifique os relatórios completos nos artefatos do workflow." >> pr_comment.md
+        COMMENT="$COMMENT
+
+        Verifique os relatórios completos nos artefatos do workflow."
 
         # Comentar no PR
         PR_NUMBER=${{ github.event.number }}
-        gh pr comment $PR_NUMBER --body-file pr_comment.md
+        echo "$COMMENT" | gh pr comment $PR_NUMBER --body-file -
 
     - name: 📤 Upload Dashboard de Performance
       uses: actions/upload-artifact@v4
