@@ -101,7 +101,7 @@ jobs:
         npx vercel --prod=false --yes
         echo "url=https://$(npx vercel ls | grep staging | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
       env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_II }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
         VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
@@ -174,7 +174,7 @@ jobs:
         npx vercel --prod --yes
         echo "url=https://$(npx vercel ls | grep production | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
       env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_II }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
         VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
@@ -298,7 +298,7 @@ jobs:
         npm run build
         npx vercel --prod --yes
       env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_II }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
 
