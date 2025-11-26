@@ -127,6 +127,12 @@ jobs:
           exit 1
         fi
 
+    - name: 🔧 Configurar projeto Vercel
+      run: |
+        mkdir -p .vercel
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+        cat .vercel/project.json
+
     - name: 🚀 Deploy para Vercel Staging
       id: deploy-staging
       run: |
@@ -203,6 +209,11 @@ jobs:
         VERSION=$(date +%Y%m%d-%H%M%S)
         echo "BACKUP_VERSION=$VERSION" >> $GITHUB_ENV
         echo "✅ Backup criado: $VERSION"
+
+    - name: 🔧 Configurar projeto Vercel (Production)
+      run: |
+        mkdir -p .vercel
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
 
     - name: 🚀 Deploy para Vercel Production
       id: deploy-production
@@ -331,6 +342,11 @@ jobs:
 
         echo "🔄 Fazendo rollback para: $PREVIOUS_TAG"
         git checkout $PREVIOUS_TAG
+
+    - name: 🔧 Configurar projeto Vercel (Rollback)
+      run: |
+        mkdir -p .vercel
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
 
     - name: 🚀 Deploy versão anterior
       run: |
