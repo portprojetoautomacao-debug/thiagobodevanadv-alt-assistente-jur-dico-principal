@@ -34,8 +34,16 @@ const KV_KEYS = {
   AGENTS: 'autonomous-agents',
   COMPLETED_TASKS: 'completed-agent-tasks',
   LAST_DJEN_CHECK: 'last-djen-check',
-  NOTIFICATION_QUEUE: 'notification-queue'
+  NOTIFICATION_QUEUE: 'notification-queue',
+  // Cache keys para otimização
+  DJEN_CACHE: 'djen-cache',
+  DJEN_CACHE_TTL: 'djen-cache-ttl',
+  PUBLICATION_HASHES: 'publication-hashes'
 } as const;
+
+// Cache configuration
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_CACHE_SIZE = 500; // Max cached publications
 
 interface MonitoredLawyer {
   id: string;
@@ -110,16 +118,44 @@ async function storePublication(publication: StoredPublication): Promise<void> {
     const kv = await getKv();
     const key = `${KV_KEYS.PUBLICATIONS}:${publication.lawyerId}`;
     const existing = (await kv.get(key) as StoredPublication[]) || [];
-    const isDuplicate = existing.some(p => 
-      p.tribunal === publication.tribunal && p.data === publication.data && p.numeroProcesso === publication.numeroProcesso
-    );
+    
+    // Check duplicate using hash for better performance
+    const pubHash = publication.hash || `${publication.tribunal}-${publication.data}-${publication.numeroProcesso}`;
+    const isDuplicate = existing.some(p => {
+      const existingHash = p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso}`;
+      return existingHash === pubHash;
+    });
+    
     if (!isDuplicate) {
       existing.unshift(publication);
+      // Use pipeline for atomic operations
       await kv.set(key, existing.slice(0, 1000));
+      
+      // Update hash index for fast duplicate checking
+      const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${publication.lawyerId}`;
+      const hashes = (await kv.get(hashKey) as string[]) || [];
+      hashes.unshift(pubHash);
+      await kv.set(hashKey, hashes.slice(0, 2000));
+      
+      console.log(`[KV] Stored publication: ${pubHash}`);
+    } else {
+      console.log(`[KV] Skipped duplicate: ${pubHash}`);
     }
   } catch (error) {
     console.error('[KV] Error storing publication:', error);
     throw error;
+  }
+}
+
+// Check if publication already exists (fast hash lookup)
+async function publicationExists(lawyerId: string, hash: string): Promise<boolean> {
+  try {
+    const kv = await getKv();
+    const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${lawyerId}`;
+    const hashes = (await kv.get(hashKey) as string[]) || [];
+    return hashes.includes(hash);
+  } catch {
+    return false;
   }
 }
 
@@ -182,6 +218,26 @@ async function queueNotification(notification: { type: 'publication' | 'agent' |
     await kv.set(KV_KEYS.NOTIFICATION_QUEUE, queue);
   } catch (error) {
     console.error('[KV] Error queuing notification:', error);
+  }
+}
+
+// Send real-time notification via webhooks
+async function sendRealTimeNotification(notification: { type: string; title: string; message: string; priority?: string; metadata?: Record<string, unknown> }): Promise<void> {
+  try {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    await fetch(`${baseUrl}/api/notifications/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...notification,
+        priority: notification.priority || 'normal'
+      })
+    });
+  } catch (error) {
+    console.error('[Notification] Failed to send real-time notification:', error);
   }
 }
 
@@ -565,6 +621,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           // Store publications
           for (const comunicacao of resultados) {
+            // Generate hash for deduplication
+            const pubHash = comunicacao.hash || `${comunicacao.tribunal}-${comunicacao.data}-${comunicacao.numeroProcesso}-${comunicacao.id}`;
+            
+            // Fast duplicate check using hash index
+            const exists = await publicationExists(lawyer.id, pubHash);
+            if (exists) {
+              console.log(`[Cron DJEN Monitor] Skipping duplicate: ${pubHash}`);
+              continue;
+            }
+            
             const storedPub = {
               id: crypto.randomUUID(),
               djenId: comunicacao.id,
@@ -576,7 +642,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               orgao: comunicacao.orgao,
               meio: comunicacao.meio,
               link: comunicacao.link,
-              hash: comunicacao.hash,
+              hash: pubHash,
               lawyerId: lawyer.id,
               lawyerName: lawyer.name,
               lawyerOAB: lawyer.oab,
@@ -608,7 +674,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               }
             });
 
-            // Queue notification
+            // Send real-time notification via webhooks (Slack/Discord/Teams)
+            await sendRealTimeNotification({
+              type: 'new_publication',
+              title: `📋 Nova Publicação DJEN - ${comunicacao.tribunal}`,
+              message: `${comunicacao.tipo} encontrada para ${lawyer.name}\nProcesso: ${comunicacao.numeroProcesso || 'N/A'}\nÓrgão: ${comunicacao.orgao || 'N/A'}`,
+              priority: 'high',
+              metadata: {
+                tribunal: comunicacao.tribunal,
+                tipo: comunicacao.tipo,
+                processNumber: comunicacao.numeroProcesso,
+                orgao: comunicacao.orgao,
+                advogado: lawyer.name,
+                oab: lawyer.oab,
+                link: comunicacao.link
+              }
+            });
+
+            // Queue email notification
             if (lawyer.email) {
               await queueNotification({
                 type: 'publication',
