@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { consultarDJENForLawyer } from './lib/djen-client';
+import { consultarDJENForLawyer } from './_djen-client';
 
 // --- DEADLINE CALCULATION LOGIC ---
 
