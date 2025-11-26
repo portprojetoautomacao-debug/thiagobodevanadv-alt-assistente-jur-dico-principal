@@ -1,0 +1,419 @@
+name: Code Integrity & Integration Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Executar diariamente às 8h UTC (5h Brasília)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Tipo de verificação'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - mock-data-only
+          - integration-only
+          - unused-code
+
+concurrency:
+  group: code-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================
+  # 🔍 DETECTAR DADOS SIMULADOS/FALSOS
+  # ==========================================
+
+  detect-mock-data:
+    name: '🔍 Detectar Dados Simulados'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'full' || github.event.inputs.check_type == 'mock-data-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔍 Detectar dados mockados em código de produção
+      id: detect-mocks
+      run: |
+        echo "## 🔍 Análise de Dados Simulados/Mockados" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Arquivos para ignorar (testes, exemplos, etc)
+        IGNORE_PATTERNS="\.test\.|\.spec\.|__tests__|__mocks__|sample-data\.ts|test/|mock/"
+        
+        # Padrões de dados simulados
+        MOCK_PATTERNS=(
+          "mock[A-Z]"
+          "fake[A-Z]"
+          "dummy[A-Z]"
+          "MOCK_"
+          "FAKE_"
+          "hardcoded"
+          "= 'test-"
+          "= \"test-"
+          "simulad"
+          "fictíci"
+        )
+        
+        echo "### 📊 Arquivos com possíveis dados simulados" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Arquivo | Linha | Padrão | Contexto |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|-------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+        
+        MOCK_COUNT=0
+        
+        for pattern in "${MOCK_PATTERNS[@]}"; do
+          while IFS=: read -r file line content; do
+            # Ignorar arquivos de teste
+            if echo "$file" | grep -qE "$IGNORE_PATTERNS"; then
+              continue
+            fi
+            
+            # Ignorar node_modules e dist
+            if echo "$file" | grep -qE "node_modules|dist/|\.d\.ts$"; then
+              continue
+            fi
+            
+            MOCK_COUNT=$((MOCK_COUNT + 1))
+            # Truncar conteúdo para caber na tabela
+            SHORT_CONTENT=$(echo "$content" | head -c 60 | tr '\n' ' ')
+            echo "| \`$file\` | $line | \`$pattern\` | $SHORT_CONTENT... |" >> $GITHUB_STEP_SUMMARY
+          done < <(grep -rn "$pattern" src/ api/ lib/ 2>/dev/null || true)
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Total de ocorrências:** $MOCK_COUNT" >> $GITHUB_STEP_SUMMARY
+        echo "mock_count=$MOCK_COUNT" >> $GITHUB_OUTPUT
+        
+        # Verificar dados hardcoded específicos
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔢 Dados Hardcoded Suspeitos" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # CPF/CNPJ hardcoded
+        CPF_COUNT=$(grep -rn "[0-9]\{3\}\.[0-9]\{3\}\.[0-9]\{3\}-[0-9]\{2\}" src/ api/ lib/ 2>/dev/null | grep -v test | wc -l || echo "0")
+        echo "- CPFs hardcoded: $CPF_COUNT" >> $GITHUB_STEP_SUMMARY
+        
+        # OAB hardcoded
+        OAB_COUNT=$(grep -rn "OAB.*[0-9]\{4,6\}" src/ api/ lib/ 2>/dev/null | grep -v test | grep -v type | wc -l || echo "0")
+        echo "- OABs hardcoded: $OAB_COUNT" >> $GITHUB_STEP_SUMMARY
+        
+        # Números de processo hardcoded
+        PROC_COUNT=$(grep -rn "[0-9]\{7\}-[0-9]\{2\}\.[0-9]\{4\}\.[0-9]\.[0-9]\{2\}\.[0-9]\{4\}" src/ api/ lib/ 2>/dev/null | grep -v test | wc -l || echo "0")
+        echo "- Processos hardcoded: $PROC_COUNT" >> $GITHUB_STEP_SUMMARY
+
+    - name: 🎯 Verificar uso de sample-data em produção
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Uso de Sample Data" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Verificar onde sample-data é importado
+        echo "**Arquivos que importam sample-data:**" >> $GITHUB_STEP_SUMMARY
+        grep -rln "from.*sample-data\|import.*sample-data" src/ api/ lib/ 2>/dev/null | while read file; do
+          echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+        done
+        
+        # Verificar se sample-data é usado condicionalmente
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if grep -rq "NODE_ENV.*sample\|APP_ENV.*sample\|isDev.*sample\|isProduction.*sample" src/ 2>/dev/null; then
+          echo "✅ Sample data parece ter uso condicional (dev/prod)" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Sample data pode estar sendo usado incondicionalmente" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 📊 Verificar console.logs em produção
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🖥️ Console Statements" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        CONSOLE_COUNT=$(grep -rn "console\.\(log\|debug\|info\)" src/ 2>/dev/null | grep -v "\.test\.\|\.spec\.\|__test" | wc -l || echo "0")
+        echo "- console.log/debug/info: $CONSOLE_COUNT ocorrências" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$CONSOLE_COUNT" -gt 50 ]; then
+          echo "⚠️ Muitos console statements em código de produção" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ Quantidade de console statements aceitável" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  # ==========================================
+  # 🔗 VERIFICAR INTEGRAÇÕES
+  # ==========================================
+
+  check-integrations:
+    name: '🔗 Verificar Integrações'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'full' || github.event.inputs.check_type == 'integration-only'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔗 Verificar conexões entre módulos
+      run: |
+        echo "## 🔗 Análise de Integrações" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Mapeamento de integrações esperadas
+        echo "### 📊 Mapa de Integrações" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Componente | Conecta com | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|-------------|--------|" >> $GITHUB_STEP_SUMMARY
+        
+        # AIAgents -> use-autonomous-agents
+        if grep -q "useAutonomousAgents" src/components/AIAgents.tsx 2>/dev/null; then
+          echo "| AIAgents.tsx | use-autonomous-agents | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| AIAgents.tsx | use-autonomous-agents | ❌ Desconectado |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # use-autonomous-agents -> api/agents
+        if grep -q "api/agents\|/api/kv" src/hooks/use-autonomous-agents.ts 2>/dev/null; then
+          echo "| use-autonomous-agents | API Agents | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| use-autonomous-agents | API Agents | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # DJEN Client -> api/legal-services ou api/cron
+        if grep -q "djen\|DJEN" api/cron.ts api/legal-services.ts 2>/dev/null; then
+          echo "| DJEN Client | API Cron/Legal | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| DJEN Client | API Cron/Legal | ❌ Desconectado |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # KV Utils -> Upstash Redis
+        if grep -q "UPSTASH\|@upstash/redis" api/_lib/kv-utils.ts api/kv.ts 2>/dev/null; then
+          echo "| KV Utils | Upstash Redis | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| KV Utils | Upstash Redis | ❌ Desconectado |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # ProcessCRM -> useKV
+        if grep -q "useKV" src/components/ProcessCRM.tsx 2>/dev/null; then
+          echo "| ProcessCRM | useKV (Spark) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| ProcessCRM | useKV (Spark) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Dashboard -> useKV
+        if grep -q "useKV" src/components/Dashboard.tsx 2>/dev/null; then
+          echo "| Dashboard | useKV (Spark) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Dashboard | useKV (Spark) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 🧪 Verificar funções exportadas vs usadas
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📤 Exports vs Imports" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Verificar exports de lib/ai
+        echo "**lib/ai exports:**" >> $GITHUB_STEP_SUMMARY
+        if [ -d "lib/ai" ]; then
+          grep -h "^export" lib/ai/*.ts 2>/dev/null | head -20 | while read line; do
+            echo "- \`$line\`" >> $GITHUB_STEP_SUMMARY
+          done
+        else
+          echo "- Diretório lib/ai não encontrado" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Verificar exports de api/_lib
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**api/_lib exports:**" >> $GITHUB_STEP_SUMMARY
+        if [ -d "api/_lib" ]; then
+          grep -h "^export" api/_lib/*.ts 2>/dev/null | head -20 | while read line; do
+            echo "- \`$line\`" >> $GITHUB_STEP_SUMMARY
+          done
+        fi
+
+    - name: 🔄 Verificar ciclos de dependência
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔄 Análise de Dependências Circulares" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Instalar madge para análise de dependências
+        npm install -g madge 2>/dev/null || true
+        
+        # Executar análise de ciclos
+        if command -v madge &> /dev/null; then
+          CYCLES=$(madge --circular --extensions ts,tsx src/ 2>/dev/null || true)
+          if [ -z "$CYCLES" ]; then
+            echo "✅ Nenhum ciclo de dependência detectado" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Ciclos de dependência encontrados:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$CYCLES" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "⚠️ madge não disponível para análise de ciclos" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 📡 Verificar endpoints da API
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📡 Mapa de Endpoints API" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Endpoint | Handler | Métodos |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+        
+        # Listar todos os endpoints
+        for file in api/*.ts api/**/*.ts; do
+          if [ -f "$file" ]; then
+            # Extrair path do arquivo
+            ENDPOINT=$(echo "$file" | sed 's|api/|/api/|' | sed 's|\.ts$||' | sed 's|/index$||')
+            
+            # Detectar métodos HTTP
+            METHODS=""
+            if grep -q "req.method.*GET\|GET.*req.method" "$file" 2>/dev/null; then
+              METHODS="GET "
+            fi
+            if grep -q "req.method.*POST\|POST.*req.method" "$file" 2>/dev/null; then
+              METHODS="${METHODS}POST "
+            fi
+            if grep -q "req.method.*PUT\|PUT.*req.method" "$file" 2>/dev/null; then
+              METHODS="${METHODS}PUT "
+            fi
+            if grep -q "req.method.*DELETE\|DELETE.*req.method" "$file" 2>/dev/null; then
+              METHODS="${METHODS}DELETE "
+            fi
+            
+            # Se não encontrou métodos específicos, provavelmente aceita todos
+            if [ -z "$METHODS" ]; then
+              METHODS="ALL"
+            fi
+            
+            BASENAME=$(basename "$file")
+            echo "| \`$ENDPOINT\` | $BASENAME | $METHODS |" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+
+  # ==========================================
+  # 🧹 CÓDIGO NÃO UTILIZADO
+  # ==========================================
+
+  detect-unused-code:
+    name: '🧹 Detectar Código Não Utilizado'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'full' || github.event.inputs.check_type == 'unused-code'
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: 📦 Instalar dependências
+      run: npm ci
+
+    - name: 🔍 Detectar exports não utilizados
+      run: |
+        echo "## 🧹 Análise de Código Não Utilizado" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Instalar ts-prune para análise
+        npm install -g ts-prune 2>/dev/null || true
+        
+        if command -v ts-prune &> /dev/null; then
+          echo "### 📤 Exports Potencialmente Não Utilizados" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ts-prune 2>/dev/null | head -50 >> $GITHUB_STEP_SUMMARY || echo "Análise não disponível"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ ts-prune não disponível" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 🔍 Detectar arquivos órfãos
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📁 Arquivos Potencialmente Órfãos" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Verificar arquivos .ts/.tsx que não são importados em lugar nenhum
+        ORPHAN_COUNT=0
+        for file in src/lib/*.ts src/components/*.tsx; do
+          if [ -f "$file" ]; then
+            BASENAME=$(basename "$file" | sed 's/\.[^.]*$//')
+            
+            # Verificar se é importado em algum lugar
+            IMPORT_COUNT=$(grep -r "from.*$BASENAME\|import.*$BASENAME" src/ 2>/dev/null | grep -v "$file" | wc -l)
+            
+            if [ "$IMPORT_COUNT" -eq 0 ]; then
+              echo "- \`$file\` (0 imports)" >> $GITHUB_STEP_SUMMARY
+              ORPHAN_COUNT=$((ORPHAN_COUNT + 1))
+            fi
+          fi
+        done
+        
+        if [ "$ORPHAN_COUNT" -eq 0 ]; then
+          echo "✅ Nenhum arquivo órfão detectado" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  # ==========================================
+  # 📊 RELATÓRIO CONSOLIDADO
+  # ==========================================
+
+  generate-report:
+    name: '📊 Gerar Relatório'
+    runs-on: ubuntu-latest
+    needs: [detect-mock-data, check-integrations, detect-unused-code]
+    if: always()
+
+    steps:
+    - name: 📊 Consolidar Resultados
+      run: |
+        echo "## 📊 Relatório de Integridade do Código" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Data:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "### Status dos Jobs" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Detectar Dados Simulados | ${{ needs.detect-mock-data.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Verificar Integrações | ${{ needs.check-integrations.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Detectar Código Não Utilizado | ${{ needs.detect-unused-code.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Recomendações
+        echo "### 💡 Recomendações" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "1. **Dados Mockados**: Revise e remova dados simulados do código de produção" >> $GITHUB_STEP_SUMMARY
+        echo "2. **Integrações**: Verifique se todas as conexões entre módulos estão funcionando" >> $GITHUB_STEP_SUMMARY
+        echo "3. **Código Morto**: Considere remover exports e arquivos não utilizados" >> $GITHUB_STEP_SUMMARY
+        echo "4. **Console Logs**: Remova ou proteja console.log em código de produção" >> $GITHUB_STEP_SUMMARY
