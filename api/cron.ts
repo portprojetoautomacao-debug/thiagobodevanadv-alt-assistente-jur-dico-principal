@@ -20,8 +20,8 @@ import {
   updateLastDJENCheck,
   queueNotification,
   addTaskToQueue
-} from '../lib/api/kv-utils';
-import { consultarDJENForLawyer } from '../lib/api/djen-client';
+} from './lib/kv-utils';
+import { consultarDJENForLawyer } from './lib/djen-client';
 
 interface DailyResetResult {
   success: boolean;
@@ -223,7 +223,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               agentId: 'doc-analyzer', // ID do agente de análise
               type: 'analyze_document',
               priority: 'high',
-              status: 'queued',
+              status: 'pending',
               createdAt: new Date().toISOString(),
               data: {
                 publicationId: storedPub.id,
