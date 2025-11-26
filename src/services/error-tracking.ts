@@ -45,6 +45,16 @@ async function checkSentryConnectivity(): Promise<boolean> {
  */
 export async function initErrorTracking() {
   try {
+    // GitLab Error Tracking não suporta CORS de domínios externos (Vercel, Netlify, etc.)
+    // Desabilitar em produção quando não estiver no GitLab Pages
+    const isGitLabPages = window.location.hostname.includes('gitlab.io');
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (!isGitLabPages && !isLocalhost) {
+      console.info('Error tracking: Disabled on external hosts (CORS not supported by GitLab)');
+      return;
+    }
+
     // Check connectivity first (only in production)
     if (import.meta.env.MODE === "production") {
       const isReachable = await checkSentryConnectivity();
