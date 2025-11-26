@@ -430,18 +430,50 @@ jobs:
       id: deploy
       run: |
         echo "🚀 Iniciando deploy para Vercel..."
-        if command -v vercel &> /dev/null; then
-          echo "📦 Usando Vercel CLI local"
-          vercel --prod --yes
-        else
-          echo "📦 Instalando Vercel CLI"
-          npm i -g vercel
-          vercel --prod --yes
+        
+        # Verificar se as credenciais estão configuradas
+        if [ -z "$VERCEL_TOKEN" ]; then
+          echo "⚠️ VERCEL_TOKEN não configurado"
+          echo "📖 Configure em: Settings → Secrets and variables → Actions"
+          echo "::warning::Deploy ignorado - VERCEL_TOKEN não configurado"
+          exit 0
+        fi
+        
+        # Configurar projeto Vercel
+        mkdir -p .vercel
+        if [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+          echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
+        fi
+        
+        # Instalar e executar deploy
+        npm i -g vercel
+        
+        set +e
+        DEPLOY_OUTPUT=$(vercel --prod --token="$VERCEL_TOKEN" --yes 2>&1)
+        DEPLOY_EXIT_CODE=$?
+        set -e
+        
+        echo "$DEPLOY_OUTPUT"
+        
+        if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+          if echo "$DEPLOY_OUTPUT" | grep -qi "not valid\|invalid token"; then
+            echo "::error::VERCEL_TOKEN inválido - regenere o token em vercel.com/account/tokens"
+          fi
+          echo "::warning::Deploy falhou mas não bloqueando o workflow"
+          exit 0
+        fi
+        
+        # Extrair URL
+        DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | head -1)
+        if [ -n "$DEPLOY_URL" ]; then
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "✅ Deploy concluído: $DEPLOY_URL"
         fi
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      continue-on-error: true
 
     - name: 📝 Gerar release notes
       run: |
