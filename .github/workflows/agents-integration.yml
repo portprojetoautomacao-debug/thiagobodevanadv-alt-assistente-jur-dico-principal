@@ -5,10 +5,15 @@ on:
     branches: [ main, develop ]
     paths:
       - 'api/agents.ts'
+      - 'api/agents-v2.ts'
       - 'api/cron.ts'
+      - 'api/observability.ts'
+      - 'api/legal-services.ts'
+      - 'api/_lib/**'
+      - 'lib/serverless/**'
+      - 'lib/ai/**'
       - 'src/hooks/use-autonomous-agents.ts'
       - 'tests/integration/**'
-      - 'lib/api/**'
       - 'src/lib/agents/todoist-agent.ts'
       - 'src/lib/todoist-integration.ts'
       - 'api/todoist-webhook.ts'
@@ -16,10 +21,15 @@ on:
     branches: [ main, develop ]
     paths:
       - 'api/agents.ts'
+      - 'api/agents-v2.ts'
       - 'api/cron.ts'
+      - 'api/observability.ts'
+      - 'api/legal-services.ts'
+      - 'api/_lib/**'
+      - 'lib/serverless/**'
+      - 'lib/ai/**'
       - 'src/hooks/use-autonomous-agents.ts'
       - 'tests/integration/**'
-      - 'lib/api/**'
       - 'src/lib/agents/todoist-agent.ts'
       - 'src/lib/todoist-integration.ts'
       - 'api/todoist-webhook.ts'
