@@ -16,7 +16,7 @@ import {
   CurrencyCircleDollar,
   Warning,
 } from '@phosphor-icons/react'
-import type { Process } from '@/types'
+import type { Process, FinancialEntry } from '@/types'
 
 interface Message {
   id: string
@@ -34,21 +34,17 @@ interface Insight {
   action?: string
 }
 
-interface FinancialRecord {
+// AgentTask - estrutura usada pelo sistema de agentes autônomos
+interface AgentTask {
   id: string
-  type: 'receita' | 'despesa'
+  agentId: string
+  type: string
+  priority: 'high' | 'medium' | 'low'
+  status: 'pending' | 'in_progress' | 'completed' | 'failed'
   description: string
-  value: number
-  date: string
-  category?: string
-}
-
-interface Task {
-  id: string
-  title: string
-  status: 'pending' | 'in_progress' | 'completed'
-  assignee?: string
-  dueDate?: string
+  createdAt: string
+  completedAt?: string
+  result?: string
 }
 
 const SAMPLE_QUESTIONS = [
@@ -91,10 +87,11 @@ export default function HarveySpecter() {
   const [isProcessing, setIsProcessing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   
-  // Buscar dados REAIS do KV storage
+  // Buscar dados REAIS do KV storage (usando as MESMAS chaves dos outros componentes)
   const [processes] = useKV<Process[]>('processes', [])
-  const [financialRecords] = useKV<FinancialRecord[]>('financial-records', [])
-  const [tasks] = useKV<Task[]>('tasks', [])
+  const [financialRecords] = useKV<FinancialEntry[]>('financialEntries', [])  // CORRIGIDO: era 'financial-records'
+  const [taskQueue] = useKV<AgentTask[]>('agent-task-queue', [])  // CORRIGIDO: era 'tasks'
+  const [completedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
 
   // Calcular estatísticas REAIS
   const realStats = useMemo(() => {
@@ -131,7 +128,7 @@ export default function HarveySpecter() {
       return count + upcomingPrazos
     }, 0) || 0
     
-    // Financeiro
+    // Financeiro - CORRIGIDO: usar 'income'/'expense' (tipo real do FinancialEntry)
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
     const monthlyRecords = financialRecords?.filter(r => {
@@ -139,13 +136,14 @@ export default function HarveySpecter() {
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear
     }) || []
     
-    const receita = monthlyRecords.filter(r => r.type === 'receita').reduce((sum, r) => sum + r.value, 0)
-    const despesas = monthlyRecords.filter(r => r.type === 'despesa').reduce((sum, r) => sum + r.value, 0)
+    const receita = monthlyRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0)
+    const despesas = monthlyRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0)
     const margem = receita > 0 ? ((receita - despesas) / receita * 100).toFixed(1) : '0'
     
-    // Tarefas
-    const pendingTasks = tasks?.filter(t => t.status === 'pending').length || 0
-    const inProgressTasks = tasks?.filter(t => t.status === 'in_progress').length || 0
+    // Tarefas dos Agentes - CORRIGIDO: usar taskQueue e completedTasks
+    const pendingTasks = taskQueue?.filter(t => t.status === 'pending').length || 0
+    const inProgressTasks = taskQueue?.filter(t => t.status === 'in_progress').length || 0
+    const totalCompletedTasks = completedTasks?.length || 0
     
     return {
       totalProcesses,
@@ -157,9 +155,10 @@ export default function HarveySpecter() {
       margem,
       pendingTasks,
       inProgressTasks,
-      hasData: totalProcesses > 0 || financialRecords?.length > 0 || tasks?.length > 0,
+      totalCompletedTasks,
+      hasData: totalProcesses > 0 || financialRecords?.length > 0 || taskQueue?.length > 0 || completedTasks?.length > 0,
     }
-  }, [processes, financialRecords, tasks])
+  }, [processes, financialRecords, taskQueue, completedTasks])
 
   useEffect(() => {
     if (scrollRef.current) {
