@@ -117,12 +117,14 @@ const agentes = [
   },
 ];
 
+// ADVOGADO FIXO - Thiago Bodevan Veiga
 const advogado = {
   id: 'lawyer-thiago-bodevan',
   name: 'Thiago Bodevan Veiga',
-  oab: 'OAB/MG 184.404',
+  oab: 'MG184404',
+  oabFormatted: 'OAB/MG 184.404',
   email: 'thiagobodevanadvocacia@gmail.com',
-  tribunals: ['TJMG', 'TRT3', 'TST', 'STJ'],
+  tribunals: ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1'],
   enabled: true,
 };
 

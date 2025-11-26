@@ -84,24 +84,33 @@ export interface FinancialEntry {
 
 export interface Expediente {
   id: string
-  processId: string
-  tipo: 'intimacao' | 'citacao' | 'documento' | 'outro'
+  processId?: string
+  tipo: 'intimacao' | 'citacao' | 'documento' | 'outro' | string
   type?: string
-  titulo: string
-  conteudo: string
+  titulo?: string
+  conteudo?: string
   content?: string
   dataRecebimento: string
   receivedAt?: string
   prazoFatal?: string
   deadline?: string
-  lido: boolean
-  arquivado: boolean
+  lido?: boolean
+  arquivado?: boolean
   analyzed?: boolean
   tags?: string[]
   summary?: string
   suggestedAction?: string
   pendingDocs?: string[]
   draftPetition?: string
+  // Campos do DJEN
+  tribunal?: string
+  numeroProcesso?: string
+  orgao?: string
+  teor?: string
+  lawyerName?: string
+  matchType?: 'nome' | 'oab' | 'ambos'
+  source?: string
+  createdAt?: string
 }
 
 export interface Appointment {

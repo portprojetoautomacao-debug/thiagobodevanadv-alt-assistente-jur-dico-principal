@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Sparkle, FileText, Download, Brain, Tray } from '@phosphor-icons/react'
+import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
 import {
@@ -21,6 +21,40 @@ export default function ExpedientePanel() {
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [lastSync, setLastSync] = useState<string | null>(null)
+  const [lawyersCount, setLawyersCount] = useState(0)
+
+  // Função para buscar expedientes da API
+  const fetchExpedientes = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/expedientes')
+      const data = await response.json()
+      
+      if (data.success && data.expedientes?.length > 0) {
+        setExpedientes(data.expedientes)
+        setLastSync(data.lastCheck)
+        setLawyersCount(data.lawyersConfigured || 0)
+        toast.success(`${data.expedientes.length} expediente(s) carregado(s)`)
+      } else {
+        setLawyersCount(data.lawyersConfigured || 0)
+        if (data.lawyersConfigured === 0) {
+          toast.info('Nenhum advogado configurado para monitoramento')
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar expedientes:', error)
+      // Silently fail - API may not be available in dev
+    } finally {
+      setLoading(false)
+    }
+  }, [setExpedientes])
+
+  // Busca expedientes ao montar componente
+  useEffect(() => {
+    fetchExpedientes()
+  }, [fetchExpedientes])
 
   // Ensure expedientes is always an array to prevent runtime errors
   const safeExpedientes = Array.isArray(expedientes) ? expedientes : []
@@ -91,25 +125,61 @@ export default function ExpedientePanel() {
   return (
     <>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
-          <p className="text-muted-foreground mt-1">
-            Caixa de entrada inteligente com análise de IA
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
+            <p className="text-muted-foreground mt-1">
+              Caixa de entrada inteligente com análise de IA
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              <span className="font-medium">Advogado:</span> Thiago Bodevan Veiga - OAB/MG 184.404
+              {lastSync && (
+                <span className="ml-2">• Última verificação: {new Date(lastSync).toLocaleString('pt-BR')}</span>
+              )}
+            </p>
+          </div>
+          <Button 
+            onClick={fetchExpedientes} 
+            disabled={loading}
+            variant="outline"
+            size="sm"
+          >
+            <ArrowClockwise className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Atualizando...' : 'Atualizar'}
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Expedientes Recentes</CardTitle>
-                <CardDescription>Intimações aguardando análise</CardDescription>
+                <CardTitle className="text-base flex items-center justify-between">
+                  Expedientes Recentes
+                  <Badge variant="secondary">{safeExpedientes.length}</Badge>
+                </CardTitle>
+                <CardDescription>Intimações do DJEN aguardando análise</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {safeExpedientes.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Nenhum expediente cadastrado. Use "Análise em Lote" para adicionar.
-                  </p>
+                  <div className="text-center py-8 space-y-3">
+                    <CloudArrowDown className="w-12 h-12 mx-auto text-muted-foreground/50" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma publicação encontrada
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      O monitor DJEN verifica automaticamente às 9h (UTC)
+                    </p>
+                    <Button 
+                      onClick={fetchExpedientes}
+                      disabled={loading}
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                    >
+                      <ArrowClockwise className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                      Verificar Agora
+                    </Button>
+                  </div>
                 ) : (
                   safeExpedientes.map((exp) => (
                     <div
@@ -126,6 +196,7 @@ export default function ExpedientePanel() {
                           <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString('pt-BR')}
+                            {exp.tribunal && <span className="ml-1">• {exp.tribunal}</span>}
                           </p>
                         </div>
                         {exp.analyzed ? (
