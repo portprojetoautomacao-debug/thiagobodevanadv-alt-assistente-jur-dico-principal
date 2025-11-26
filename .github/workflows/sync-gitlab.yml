@@ -1,0 +1,33 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: 🔄 Sync to GitLab
+    runs-on: ubuntu-latest
+    # Não sincronizar commits de badges para evitar loop
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔄 Push to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [ -z "$GITLAB_TOKEN" ]; then
+            echo "⚠️ GITLAB_TOKEN não configurado - pulando sincronização"
+            exit 0
+          fi
+          
+          echo "🔄 Sincronizando GitHub → GitLab..."
+          git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com/thiagobodevan-a11y-group/assistente-juridico-p.git || true
+          git push gitlab main --force
+          echo "✅ Sincronização concluída!"
