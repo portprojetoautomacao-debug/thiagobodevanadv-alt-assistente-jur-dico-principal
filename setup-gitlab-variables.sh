@@ -43,7 +43,9 @@ echo "🔑 Configurando variáveis essenciais..."
 echo ""
 
 # Variáveis críticas para funcionamento do app
-create_variable "GITHUB_TOKEN" "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" true false
+# GITHUB_TOKEN deve ser configurado manualmente no GitLab CI/CD Settings
+# Nunca hardcode tokens no código!
+create_variable "GITHUB_TOKEN" "\${GITHUB_TOKEN:-configure_me}" true false
 create_variable "GITLAB_TOKEN" "$GITLAB_TOKEN" true true
 create_variable "KUBE_INGRESS_BASE_DOMAIN" "assistente-juridico-p.vercel.app" false false
 create_variable "AUTO_DEVOPS_PLATFORM_TARGET" "kubernetes" false false
