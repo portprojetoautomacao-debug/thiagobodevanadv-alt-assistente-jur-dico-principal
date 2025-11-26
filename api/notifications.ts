@@ -355,13 +355,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'title and message required' });
       }
 
+      // Use NOTIFICATION_EMAIL como fallback se não for fornecido
+      const finalRecipientEmail = recipientEmail || process.env.NOTIFICATION_EMAIL;
+
       const notification: Notification = {
         id: generateId(),
         type: type || 'custom',
         title,
         message,
         priority: priority || 'normal',
-        recipientEmail,
+        recipientEmail: finalRecipientEmail,
         metadata,
         status: 'pending',
         attempts: 0,
