@@ -8,8 +8,6 @@ updates:
       time: "06:00"
       timezone: "America/Sao_Paulo"
     open-pull-requests-limit: 5
-    reviewers:
-      - "thiagobodevan-a11y"
     assignees:
       - "thiagobodevan-a11y"
     labels:
