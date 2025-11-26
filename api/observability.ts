@@ -3,7 +3,133 @@
 // Monitora: circuit breakers, traces, health das APIs
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { CircuitBreakerRegistry } from './_lib/circuit-breaker';
+
+// ================= CIRCUIT BREAKER (INLINE) =================
+
+type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+
+interface CircuitBreakerConfig {
+  failureThreshold: number;
+  successThreshold: number;
+  timeout: number;
+  resetTimeout: number;
+}
+
+interface CircuitBreakerStats {
+  state: CircuitState;
+  failures: number;
+  successes: number;
+  lastFailureTime?: number;
+  lastStateChange: number;
+}
+
+class CircuitBreaker {
+  private state: CircuitState = 'CLOSED';
+  private failures = 0;
+  private successes = 0;
+  private lastFailureTime?: number;
+  private lastStateChange = Date.now();
+  private config: CircuitBreakerConfig;
+  private name: string;
+
+  constructor(name: string, config?: Partial<CircuitBreakerConfig>) {
+    this.name = name;
+    this.config = {
+      failureThreshold: config?.failureThreshold ?? 5,
+      successThreshold: config?.successThreshold ?? 2,
+      timeout: config?.timeout ?? 60000,
+      resetTimeout: config?.resetTimeout ?? 300000,
+    };
+  }
+
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.state === 'OPEN') {
+      const timeSinceFailure = Date.now() - (this.lastFailureTime ?? 0);
+      if (timeSinceFailure >= this.config.timeout) {
+        this.transitionTo('HALF_OPEN');
+      } else {
+        throw new Error(`Circuit breaker [${this.name}] is OPEN`);
+      }
+    }
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+
+  private onSuccess() {
+    this.failures = 0;
+    this.successes++;
+    if (this.state === 'HALF_OPEN' && this.successes >= this.config.successThreshold) {
+      this.transitionTo('CLOSED');
+    }
+  }
+
+  private onFailure() {
+    this.failures++;
+    this.successes = 0;
+    this.lastFailureTime = Date.now();
+    if (this.state === 'HALF_OPEN') {
+      this.transitionTo('OPEN');
+    } else if (this.failures >= this.config.failureThreshold) {
+      this.transitionTo('OPEN');
+    }
+  }
+
+  private transitionTo(newState: CircuitState) {
+    this.state = newState;
+    this.lastStateChange = Date.now();
+    if (newState === 'CLOSED') {
+      this.failures = 0;
+      this.successes = 0;
+    }
+  }
+
+  getStats(): CircuitBreakerStats {
+    return { state: this.state, failures: this.failures, successes: this.successes, lastFailureTime: this.lastFailureTime, lastStateChange: this.lastStateChange };
+  }
+
+  reset() {
+    this.state = 'CLOSED';
+    this.failures = 0;
+    this.successes = 0;
+    this.lastFailureTime = undefined;
+    this.lastStateChange = Date.now();
+  }
+}
+
+class CircuitBreakerRegistry {
+  private static breakers = new Map<string, CircuitBreaker>();
+
+  static get(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
+    let breaker = this.breakers.get(name);
+    if (!breaker) {
+      breaker = new CircuitBreaker(name, config);
+      this.breakers.set(name, breaker);
+    }
+    return breaker;
+  }
+
+  static getAll(): Map<string, CircuitBreakerStats> {
+    const stats = new Map<string, CircuitBreakerStats>();
+    for (const [name, breaker] of this.breakers.entries()) {
+      stats.set(name, breaker.getStats());
+    }
+    return stats;
+  }
+
+  static resetAll() {
+    for (const breaker of this.breakers.values()) {
+      breaker.reset();
+    }
+  }
+}
+
+// ================= HANDLER =================
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
