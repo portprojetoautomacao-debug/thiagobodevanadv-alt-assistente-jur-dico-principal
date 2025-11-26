@@ -347,10 +347,35 @@ jobs:
       run: |
         echo "🏃 Executando Lighthouse..."
         npm run build
+        
+        # Iniciar servidor em background
         npx serve -s dist -l 3000 &
-        sleep 5
-        npx lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-results.json || echo "Lighthouse falhou, mas continuando..."
-        pkill -f serve || true
+        SERVER_PID=$!
+        
+        # Aguardar servidor iniciar
+        echo "⏳ Aguardando servidor iniciar..."
+        timeout 30 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 1; done' || echo "Servidor pode não ter iniciado completamente"
+        
+        # Executar Lighthouse
+        echo "📊 Executando análise Lighthouse..."
+        npx lighthouse http://localhost:3000 \
+          --output=json \
+          --output-path=./lighthouse-results.json \
+          --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage" \
+          --max-wait-for-load=30000 || echo "Lighthouse falhou, mas continuando..."
+        
+        # Parar servidor
+        kill $SERVER_PID 2>/dev/null || true
+        
+        # Verificar se arquivo foi criado
+        if [ -f "./lighthouse-results.json" ]; then
+          echo "✅ Arquivo lighthouse-results.json criado com sucesso"
+          ls -la lighthouse-results.json
+        else
+          echo "❌ Arquivo lighthouse-results.json não foi criado"
+          echo "Criando arquivo vazio para evitar falha no upload..."
+          echo '{"error": "Lighthouse failed to generate results"}' > lighthouse-results.json
+        fi
 
     - name: 📊 Upload resultados do Lighthouse
       uses: actions/upload-artifact@v4

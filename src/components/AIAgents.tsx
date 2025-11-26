@@ -35,9 +35,10 @@ import MrsJustinEModal from '@/components/MrsJustinEModal'
 import AgentOrchestrationPanel from '@/components/AgentOrchestrationPanel'
 import { toast } from 'sonner'
 import type { Agent } from '@/lib/agents'
-import type { ViewType } from '@/types'
+import type { ViewType, User } from '@/types'
+import type { IconProps } from '@phosphor-icons/react'
 
-const agentIcons: Record<string, any> = {
+const agentIcons: Record<string, React.ComponentType<IconProps>> = {
   'djen-monitor': Database,
   'agent-djen-monitor': Database,
   'mrs-justin-e': Brain,
@@ -79,7 +80,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     setAgents,
   } = useAutonomousAgents()
   
-  const [user] = useKV<any>('user', null)
+  const [user] = useKV<User | null>('user', null)
   const userId = user?.email || 'default-user'
   
   // Sistema de backup automático
@@ -101,7 +102,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
       toast.success('Backup criado com sucesso', {
         description: 'Seus dados foram salvos no servidor'
       })
-    } catch (error) {
+    } catch (_error) {
+      console.error('Erro ao criar backup:', _error)
       toast.error('Erro ao criar backup', {
         description: 'Tente novamente mais tarde'
       })
@@ -122,7 +124,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
       } else {
         toast.info('Nenhum backup encontrado')
       }
-    } catch (error) {
+    } catch (_error) {
+      console.error('Erro ao restaurar backup:', _error)
       toast.error('Erro ao restaurar backup')
     } finally {
       setBackupStatus('idle')
@@ -892,12 +895,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     {taskQueue.map((task) => {
                       const agent = agents.find(a => a.id === task.agentId)
                       const IconComponent = agentIcons[task.agentId] || Robot
-                      const priorityColors = {
-                        critical: 'destructive',
-                        high: 'default',
-                        medium: 'secondary',
-                        low: 'outline'
-                      } as const
                       
                       return (
                         <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">

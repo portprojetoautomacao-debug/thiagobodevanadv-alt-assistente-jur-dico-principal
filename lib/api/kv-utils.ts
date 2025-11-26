@@ -8,6 +8,7 @@
  */
 
 import { Redis } from '@upstash/redis';
+import type { AgentTask } from '@/lib/agents';
 
 // Key prefixes for different data types
 export const KV_KEYS = {
@@ -57,7 +58,7 @@ export interface Agent {
 }
 
 // Lazy-loaded KV client
-let _kvClient: any = null;
+let _kvClient: Redis | null = null;
 
 async function getKv() {
   if (_kvClient) return _kvClient;
@@ -225,10 +226,10 @@ export async function queueNotification(notification: {
 }
 
 // Add task to queue
-export async function addTaskToQueue(task: any): Promise<void> {
+export async function addTaskToQueue(task: AgentTask): Promise<void> {
   try {
     const kv = await getKv();
-    const queue = (await kv.get('agent-task-queue') as any[]) || [];
+    const queue = (await kv.get('agent-task-queue') as AgentTask[]) || [];
     queue.push(task);
     await kv.set('agent-task-queue', queue);
   } catch (error) {

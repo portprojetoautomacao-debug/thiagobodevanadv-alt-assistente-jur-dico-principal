@@ -27,7 +27,14 @@ interface AgentMetricsProps {
 }
 
 export default function AgentMetrics({ agents, completedTasks, activityLog }: AgentMetricsProps) {
-  const [circuitBreakers, setCircuitBreakers] = useState<any>(null)
+  const [circuitBreakers, setCircuitBreakers] = useState<{
+    summary: {
+      healthy: number
+      total: number
+      degraded: number
+      down: number
+    }
+  } | null>(null)
 
   // Fetch V2 metrics
   useEffect(() => {
