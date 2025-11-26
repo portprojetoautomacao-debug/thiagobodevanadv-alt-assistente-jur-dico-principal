@@ -71,5 +71,15 @@
     "./": true,
     "bash": true,
     "sh": true
-  }
+  },
+  "chat.tools.terminal.ignoreDefaultAutoApproveRules": true,
+  "chat.tools.edits.autoApprove": {
+    "**/.vscode/*.json": true,
+    "**/{package.json,package-lock.json,server.xml,build.rs,web.config,.gitattributes,.env}": true,
+    "**/*.{code-workspace,csproj,fsproj,vbproj,vcxproj,proj,targets,props}": true,
+    "**/.git/**": true
+  },
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "chat.mcp.assisted.nuget.enabled": true,
+  "chat.extensionUnification.enabled": true
 }
