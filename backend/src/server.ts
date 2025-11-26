@@ -5,6 +5,11 @@ import sparkRouter from './routes/spark.js';
 import kvRouter from './routes/kv.js';
 import llmRouter from './routes/llm.js';
 
+// Extend Error interface to include status
+interface ErrorWithStatus extends Error {
+  status?: number;
+}
+
 // Load environment variables
 dotenv.config();
 
@@ -48,7 +53,7 @@ app.use((_req, res) => {
 });
 
 // Error handling
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: ErrorWithStatus, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
     error: 'Internal Server Error',
