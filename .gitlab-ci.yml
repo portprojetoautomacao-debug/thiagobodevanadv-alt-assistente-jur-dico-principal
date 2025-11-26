@@ -1,5 +1,4 @@
-# CI/CD Pipeline para Assistente Jurídico PJe
-# Pipeline completo para aplicações React/TypeScript
+# CI/CD Pipeline para Assistente Juridico PJe
 
 stages:
   - security
@@ -27,34 +26,30 @@ cache:
   before_script:
     - npm ci --cache .npm --prefer-offline --silent
 
-# ==========================================
 # STAGE: SECURITY
-# ==========================================
 
 security-audit:
   extends: .node_template
   stage: security
   script:
-    - echo "🔐 Executando auditoria de segurança..."
+    - echo "Executando auditoria de seguranca..."
     - npm audit --audit-level=high || true
-    - echo "✅ Auditoria de segurança concluída"
+    - echo "Auditoria de seguranca concluida"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "develop"
   allow_failure: true
 
-# ==========================================
 # STAGE: TEST
-# ==========================================
 
 lint:
   extends: .node_template
   stage: test
   script:
-    - echo "🔍 Executando linting..."
-    - npm run lint || echo "⚠️ Alguns avisos de lint encontrados"
-    - echo "✅ Linting concluído"
+    - echo "Executando linting..."
+    - npm run lint || echo "Alguns avisos de lint encontrados"
+    - echo "Linting concluido"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
@@ -65,9 +60,9 @@ unit-tests:
   extends: .node_template
   stage: test
   script:
-    - echo "🧪 Executando testes unitários..."
-    - npm run test -- --run --reporter=verbose --coverage || echo "⚠️ Alguns testes falharam"
-    - echo "✅ Testes unitários concluídos"
+    - echo "Executando testes unitarios..."
+    - npm run test -- --run --reporter=verbose --coverage || echo "Alguns testes falharam"
+    - echo "Testes unitarios concluidos"
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     paths:
@@ -84,26 +79,24 @@ typecheck:
   extends: .node_template
   stage: test
   script:
-    - echo "📝 Verificando tipos TypeScript..."
-    - npx tsc --noEmit || echo "⚠️ Alguns erros de tipo encontrados"
-    - echo "✅ Verificação de tipos concluída"
+    - echo "Verificando tipos TypeScript..."
+    - npx tsc --noEmit || echo "Alguns erros de tipo encontrados"
+    - echo "Verificacao de tipos concluida"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
   allow_failure: true
 
-# ==========================================
 # STAGE: BUILD
-# ==========================================
 
 build:
   extends: .node_template
   stage: build
   script:
-    - echo "🏗️ Construindo aplicação React/TypeScript..."
+    - echo "Construindo aplicacao React/TypeScript..."
     - npm run build
-    - echo "📦 Build concluído com sucesso!"
-    - du -sh dist/ || echo "dist não encontrado"
+    - echo "Build concluido com sucesso!"
+    - du -sh dist/ || echo "dist nao encontrado"
   artifacts:
     paths:
       - dist/
@@ -118,9 +111,7 @@ build:
     - job: unit-tests
       optional: true
 
-# ==========================================
 # STAGE: DEPLOY
-# ==========================================
 
 deploy-staging:
   extends: .node_template
@@ -129,12 +120,12 @@ deploy-staging:
     name: staging
     url: https://assistente-juridico-staging.vercel.app
   script:
-    - echo "🚀 Deploy para staging..."
-    - if [ -z "$VERCEL_TOKEN" ]; then echo "⚠️ VERCEL_TOKEN não configurado"; exit 0; fi
+    - echo "Deploy para staging..."
+    - if [ -z "$VERCEL_TOKEN" ]; then echo "VERCEL_TOKEN nao configurado"; exit 0; fi
     - mkdir -p .vercel
     - echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
-    - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "⚠️ Deploy falhou"
-    - echo "✅ Deploy staging concluído"
+    - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "Deploy falhou"
+    - echo "Deploy staging concluido"
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
       when: always
@@ -151,12 +142,12 @@ deploy-production:
     name: production
     url: https://assistente-juridico-p.vercel.app
   script:
-    - echo "🚀 Deploy para produção..."
-    - if [ -z "$VERCEL_TOKEN" ]; then echo "❌ VERCEL_TOKEN não configurado"; exit 1; fi
+    - echo "Deploy para producao..."
+    - if [ -z "$VERCEL_TOKEN" ]; then echo "VERCEL_TOKEN nao configurado"; exit 1; fi
     - mkdir -p .vercel
     - echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
     - npx vercel deploy --prod --token=$VERCEL_TOKEN --yes
-    - echo "✅ Deploy produção concluído!"
+    - echo "Deploy producao concluido!"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual
@@ -173,11 +164,11 @@ deploy-review:
     on_stop: stop-review
     auto_stop_in: 1 week
   script:
-    - echo "🔍 Deploy Review App"
-    - if [ -z "$VERCEL_TOKEN" ]; then echo "⚠️ VERCEL_TOKEN não configurado"; exit 0; fi
+    - echo "Deploy Review App"
+    - if [ -z "$VERCEL_TOKEN" ]; then echo "VERCEL_TOKEN nao configurado"; exit 0; fi
     - mkdir -p .vercel
     - echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
-    - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "⚠️ Review app falhou"
+    - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "Review app falhou"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   needs:
@@ -191,26 +182,23 @@ stop-review:
     name: review/$CI_COMMIT_REF_SLUG
     action: stop
   script:
-    - echo "🛑 Parando Review App"
+    - echo "Parando Review App"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
   allow_failure: true
   dependencies: []
 
-# ==========================================
 # STAGE: MONITOR
-# ==========================================
 
 pipeline-report:
   stage: monitor
   image: alpine:latest
   script:
-    - echo "📊 Gerando relatório do pipeline..."
-    - echo "# Pipeline Report" > pipeline-report.md
-    - echo "Pipeline ID: $CI_PIPELINE_ID" >> pipeline-report.md
-    - echo "Commit: $CI_COMMIT_SHORT_SHA" >> pipeline-report.md
-    - echo "Branch: $CI_COMMIT_REF_NAME" >> pipeline-report.md
+    - echo "Gerando relatorio do pipeline..."
+    - echo "Pipeline ID - $CI_PIPELINE_ID" > pipeline-report.md
+    - echo "Commit - $CI_COMMIT_SHORT_SHA" >> pipeline-report.md
+    - echo "Branch - $CI_COMMIT_REF_NAME" >> pipeline-report.md
     - cat pipeline-report.md
   artifacts:
     paths:
@@ -219,9 +207,7 @@ pipeline-report:
   when: always
   dependencies: []
 
-# ==========================================
 # WORKFLOW RULES
-# ==========================================
 
 workflow:
   rules:
