@@ -4,9 +4,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/!(_)*.ts": {
+    "api/**/*.ts": {
       "maxDuration": 30,
-      "includeFiles": "api/_*.ts"
+      "includeFiles": "lib/serverless/**"
     }
   },
   "regions": ["iad1"],
