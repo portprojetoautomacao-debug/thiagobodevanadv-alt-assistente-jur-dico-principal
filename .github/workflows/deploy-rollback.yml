@@ -137,15 +137,50 @@ jobs:
       id: deploy-staging
       run: |
         echo "🚀 Deploy para Vercel Staging..."
-        # Capturar output e extrair apenas a URL (sem mensagens extras como "Queued...")
-        OUTPUT=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
-        echo "$OUTPUT"
-        # Extrair URL que começa com https:// e termina com .vercel.app
-        DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
-        if [ -z "$DEPLOY_URL" ]; then
-          echo "❌ Falha ao obter URL do deploy"
+        set +e  # Não falhar imediatamente
+        
+        # Executar deploy e capturar saída completa
+        DEPLOY_OUTPUT=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+        DEPLOY_EXIT_CODE=$?
+        
+        echo "=== Output do deploy ==="
+        echo "$DEPLOY_OUTPUT"
+        echo "========================"
+        echo "Exit code: $DEPLOY_EXIT_CODE"
+        
+        # Verificar se o deploy falhou
+        if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+          echo "❌ Deploy falhou com código $DEPLOY_EXIT_CODE"
+          # Verificar erros comuns
+          if echo "$DEPLOY_OUTPUT" | grep -qi "not authorized\|unauthorized\|permission denied"; then
+            echo "⚠️ Erro de autorização - verifique VERCEL_TOKEN"
+          fi
+          if echo "$DEPLOY_OUTPUT" | grep -qi "project not found\|invalid project"; then
+            echo "⚠️ Projeto não encontrado - verifique VERCEL_PROJECT_ID"
+          fi
           exit 1
         fi
+        
+        # Extrair URL - tentar múltiplos padrões
+        DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9_-]+\.vercel\.app' | head -1)
+        
+        # Se não encontrou, tentar padrão alternativo com subdomínios
+        if [ -z "$DEPLOY_URL" ]; then
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | head -1)
+        fi
+        
+        # Se ainda não encontrou, tentar pegar qualquer URL https
+        if [ -z "$DEPLOY_URL" ]; then
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[^ ]+' | grep vercel | head -1)
+        fi
+        
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Não foi possível extrair URL do deploy"
+          echo "Output completo para debug:"
+          echo "$DEPLOY_OUTPUT" | cat -v
+          exit 1
+        fi
+        
         echo "✅ Deploy staging concluído: $DEPLOY_URL"
         echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
@@ -223,15 +258,47 @@ jobs:
       id: deploy-production
       run: |
         echo "🚀 Deploy para Vercel Production..."
-        # Capturar output e extrair apenas a URL (sem mensagens extras como "Queued...")
-        OUTPUT=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
-        echo "$OUTPUT"
-        # Extrair URL que começa com https:// e termina com .vercel.app
-        DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
-        if [ -z "$DEPLOY_URL" ]; then
-          echo "❌ Falha ao obter URL do deploy"
+        set +e  # Não falhar imediatamente
+        
+        # Executar deploy e capturar saída completa
+        DEPLOY_OUTPUT=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+        DEPLOY_EXIT_CODE=$?
+        
+        echo "=== Output do deploy ==="
+        echo "$DEPLOY_OUTPUT"
+        echo "========================"
+        echo "Exit code: $DEPLOY_EXIT_CODE"
+        
+        # Verificar se o deploy falhou
+        if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+          echo "❌ Deploy falhou com código $DEPLOY_EXIT_CODE"
+          if echo "$DEPLOY_OUTPUT" | grep -qi "not authorized\|unauthorized\|permission denied"; then
+            echo "⚠️ Erro de autorização - verifique VERCEL_TOKEN"
+          fi
+          if echo "$DEPLOY_OUTPUT" | grep -qi "project not found\|invalid project"; then
+            echo "⚠️ Projeto não encontrado - verifique VERCEL_PROJECT_ID"
+          fi
           exit 1
         fi
+        
+        # Extrair URL - tentar múltiplos padrões
+        DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9_-]+\.vercel\.app' | head -1)
+        
+        if [ -z "$DEPLOY_URL" ]; then
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | head -1)
+        fi
+        
+        if [ -z "$DEPLOY_URL" ]; then
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[^ ]+' | grep vercel | head -1)
+        fi
+        
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Não foi possível extrair URL do deploy"
+          echo "Output completo para debug:"
+          echo "$DEPLOY_OUTPUT" | cat -v
+          exit 1
+        fi
+        
         echo "✅ Deploy production concluído: $DEPLOY_URL"
         echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
