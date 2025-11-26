@@ -177,9 +177,9 @@ export class CircuitBreakerRegistry {
   static getAll(): Map<string, CircuitBreakerStats> {
     const stats = new Map<string, CircuitBreakerStats>();
     
-    for (const [name, breaker] of this.breakers.entries()) {
+    this.breakers.forEach((breaker, name) => {
       stats.set(name, breaker.getStats());
-    }
+    });
 
     return stats;
   }
@@ -188,8 +188,8 @@ export class CircuitBreakerRegistry {
    * Reseta todos os circuit breakers
    */
   static resetAll() {
-    for (const breaker of this.breakers.values()) {
+    this.breakers.forEach((breaker) => {
       breaker.reset();
-    }
+    });
   }
 }
