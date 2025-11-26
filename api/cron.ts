@@ -20,8 +20,8 @@ import {
   updateLastDJENCheck,
   queueNotification,
   addTaskToQueue
-} from '../lib/serverless/kv-utils';
-import { consultarDJENForLawyer } from '../lib/serverless/djen-client';
+} from '../lib/serverless/kv-utils.js';
+import { consultarDJENForLawyer } from '../lib/serverless/djen-client.js';
 
 interface DailyResetResult {
   success: boolean;
