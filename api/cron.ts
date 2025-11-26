@@ -253,29 +253,59 @@ async function addTaskToQueue(task: AgentTask): Promise<void> {
 }
 
 // ================= DJEN CLIENT (INLINE) =================
+// Conforme documentação oficial DJEN API v1.0.3 (29/05/2025)
 
+/**
+ * Interface de Comunicação retornada pela API DJEN
+ * Endpoint: GET /api/v1/comunicacao
+ */
 interface DJENComunicacao {
   id: number;
-  data_disponibilizacao: string;
+  datadisponibilizacao: string;          // Campo oficial: datadisponibilizacao
+  data_disponibilizacao?: string;        // Alias para compatibilidade
   siglaTribunal: string;
   tipoComunicacao: string;
   nomeOrgao: string;
   texto: string;
   numero_processo: string;
+  numeroprocessocommascara?: string;     // Campo oficial com máscara CNJ
   meio: string;
-  link: string;
   meiocompleto: string;
+  link: string;
   hash: string;
+  // Destinatários conforme doc oficial
+  destinatarios?: Array<{
+    nome: string;
+    polo: string;
+    comunicacao_id: number;
+  }>;
   destinatarioadvogados: Array<{
-    advogado: { id: number; nome: string; numero_oab: string; uf_oab: string };
+    id: number;
+    comunicacao_id: number;
+    advogado_id: number;
+    created_at?: string;
+    updated_at?: string;
+    advogado: {
+      id: number;
+      nome: string;
+      numero_oab: string;
+      uf_oab: string;
+    };
   }>;
 }
 
+/**
+ * Resposta da API DJEN
+ * A API pode retornar array direto ou objeto com items
+ */
 interface DJENResponse {
-  status: string;
-  message: string;
-  count: number;
-  items: DJENComunicacao[];
+  status?: string;
+  message?: string;
+  count?: number;
+  items?: DJENComunicacao[];
+  // API pode retornar array direto em alguns casos
+  [index: number]: DJENComunicacao;
+  length?: number;
 }
 
 interface DJENFilteredResult {
@@ -306,7 +336,8 @@ interface DJENQueryParams {
 }
 
 const DJEN_TIMEOUT = 30000;
-const DJEN_DELAY = 1000;
+const DJEN_DELAY = 2000; // Delay entre tribunais para evitar rate limit
+const DJEN_RATE_LIMIT_WAIT = 60000; // 1 minuto conforme documentação DJEN para erro 429
 
 function normalizeText(text: string): string {
   return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -341,28 +372,52 @@ function buildDJENQueryString(params: DJENQueryParams): string {
   return queryParams.join('&');
 }
 
-async function consultarComunicacoes(params: DJENQueryParams): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number } }> {
+async function consultarComunicacoes(params: DJENQueryParams, retryOnRateLimit = true): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number }; rateLimitHit?: boolean }> {
   const queryString = buildDJENQueryString(params);
   const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
 
   try {
+    console.log(`[DJEN] Consultando: ${url}`);
     const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, signal: controller.signal });
     clearTimeout(timeoutId);
+    
+    // Captura headers de rate limit conforme documentação DJEN
     const rateLimitInfo = {
       limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
       remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
     };
-    if (response.status === 429) return { response: null, rateLimitInfo };
+    
+    console.log(`[DJEN] Rate Limit - Limit: ${rateLimitInfo.limit}, Remaining: ${rateLimitInfo.remaining}`);
+    
+    // Erro 429 - Conforme doc: aguardar 1 minuto para retomar
+    if (response.status === 429) {
+      console.warn(`[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.`);
+      if (retryOnRateLimit) {
+        console.log(`[DJEN] Aguardando ${DJEN_RATE_LIMIT_WAIT / 1000}s antes de retry...`);
+        await new Promise(resolve => setTimeout(resolve, DJEN_RATE_LIMIT_WAIT));
+        return consultarComunicacoes(params, false); // Tenta novamente sem retry
+      }
+      return { response: null, rateLimitInfo, rateLimitHit: true };
+    }
+    
+    // Erro 422 - Erro negocial (parâmetros inválidos)
+    if (response.status === 422) {
+      const errorBody = await response.text();
+      console.error(`[DJEN] Erro negocial (422): ${errorBody}`);
+      throw new Error(`Erro negocial DJEN: ${errorBody}`);
+    }
+    
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
     const data = await response.json() as DJENResponse;
-    console.log(`[DJEN] Consulta retornou ${data.count} comunicações`);
+    console.log(`[DJEN] Consulta retornou ${data.count || data.items?.length || 0} comunicações`);
     return { response: data, rateLimitInfo };
   } catch (error) {
     clearTimeout(timeoutId);
     console.error(`[DJEN] Error:`, error);
-    return { response: null, rateLimitInfo: {} };
+    return { response: null, rateLimitInfo: {}, rateLimitHit: false };
   }
 }
 
@@ -404,14 +459,27 @@ async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string
       if (ufOab) queryParams.ufOab = ufOab;
       if (meio) queryParams.meio = meio;
 
-      const { response, rateLimitInfo } = await consultarComunicacoes(queryParams);
+      const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
+      
+      // Log rate limit info para monitoramento
+      if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
+        console.warn(`[DJEN] Atenção: apenas ${rateLimitInfo.remaining} requisições restantes na janela`);
+      }
+      
       if (!response) {
-        rateLimitWarning = true;
-        erros.push({ tribunal, erro: 'Rate limit ou erro na consulta' });
+        rateLimitWarning = rateLimitHit || rateLimitWarning;
+        erros.push({ tribunal, erro: rateLimitHit ? 'Rate limit atingido (429) - aguarde 1 minuto' : 'Erro na consulta' });
         continue;
       }
 
-      for (const comunicacao of response.items) {
+      // API DJEN pode retornar array direto ou objeto com items
+      const comunicacoes: DJENComunicacao[] = Array.isArray(response) 
+        ? response 
+        : (response.items || []);
+      
+      console.log(`[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`);
+
+      for (const comunicacao of comunicacoes) {
         let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
         const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
           const matchNome = nomeAdvogado ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) : false;
@@ -423,13 +491,16 @@ async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string
         }) || false;
 
         if (temAdvogado) {
+          // Usa datadisponibilizacao (oficial) ou data_disponibilizacao (alias)
+          const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || '';
+          
           resultados.push({
             id: comunicacao.id,
             tribunal: comunicacao.siglaTribunal,
-            data: comunicacao.data_disponibilizacao,
+            data: dataDisp,
             tipo: comunicacao.tipoComunicacao,
             teor: comunicacao.texto,
-            numeroProcesso: comunicacao.numero_processo,
+            numeroProcesso: comunicacao.numeroprocessocommascara || comunicacao.numero_processo,
             orgao: comunicacao.nomeOrgao,
             meio: comunicacao.meiocompleto || comunicacao.meio,
             link: comunicacao.link,
