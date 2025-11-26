@@ -214,7 +214,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
       </div>
 
-      {/* DJEN Publications Widget */}
+      {/* DJEN Publications Widget + Upload PDF */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <Card className="card-glow border-primary/30 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
@@ -261,29 +261,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        <Card className="card-glow-hover glassmorphic">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 gradient-text">
-              <ChartPie size={24} weight="duotone" />
-              Processos por Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<ChartSkeleton />}>
-              <StatusChart chartData={chartData} />
-            </Suspense>
-          </CardContent>
-        </Card>
-        </div>
-        
-        <DJENPublicationsWidget 
-          onViewAll={() => onNavigate('expedientes')}
-          compact={true}
-          maxItems={4}
-        />
-      </div>
-
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <Card className="card-glow-hover glassmorphic">
           <CardHeader>
@@ -322,6 +300,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
       </div>
 
+      {/* Prazos e Processos Recentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="card-glow-hover glassmorphic">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -413,6 +392,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
       </div>
 
+      {/* Alerta de Prazos Urgentes */}
       {stats.prazosUrgentes > 0 && (
         <Card className="border-destructive bg-destructive/5">
           <CardHeader>
