@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import type { Prazo } from '@/types'
+import type { Prazo, Process } from '@/types'
 
 interface NotificationPreferences {
   enabled: boolean
@@ -10,13 +10,28 @@ interface NotificationPreferences {
 }
 
 export function useNotifications() {
-  const [prazos] = useKV<Prazo[]>('prazos', [])
+  // CORRIGIDO: Buscar prazos dos PROCESSOS (onde realmente estão salvos)
+  const [processes] = useKV<Process[]>('processes', [])
   const [preferences, setPreferences] = useKV<NotificationPreferences>('notification-preferences', {
     enabled: true,
     prazoAlerts: true,
     agentAlerts: true,
     financialAlerts: true,
   })
+
+  // Extrair todos os prazos de todos os processos
+  const prazos = useMemo(() => {
+    const allPrazos: (Prazo & { processoNumero?: string })[] = []
+    processes?.forEach(process => {
+      process.prazos?.forEach(prazo => {
+        allPrazos.push({
+          ...prazo,
+          processoNumero: process.numeroCNJ,
+        })
+      })
+    })
+    return allPrazos
+  }, [processes])
 
   useEffect(() => {
     if (!preferences?.enabled) return
@@ -52,28 +67,28 @@ export function useNotifications() {
 
         if (diasRestantes === 7) {
           new Notification('⚖️ Prazo em 7 dias', {
-            body: `${prazo.descricao} vence em uma semana`,
+            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence em uma semana`,
             icon: '/icon-192.png',
             tag: `prazo-7-${prazo.id}`,
             requireInteraction: false,
           })
         } else if (diasRestantes === 2) {
           new Notification('⚠️ Prazo em 2 dias!', {
-            body: `${prazo.descricao} vence em 2 dias`,
+            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence em 2 dias`,
             icon: '/icon-192.png',
             tag: `prazo-2-${prazo.id}`,
             requireInteraction: true,
           })
         } else if (diasRestantes === 1) {
           new Notification('🚨 Prazo AMANHÃ!', {
-            body: `${prazo.descricao} vence amanhã!`,
+            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence amanhã!`,
             icon: '/icon-192.png',
             tag: `prazo-1-${prazo.id}`,
             requireInteraction: true,
           })
         } else if (diasRestantes === 0) {
           new Notification('🔴 PRAZO HOJE!', {
-            body: `${prazo.descricao} vence HOJE!`,
+            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence HOJE!`,
             icon: '/icon-192.png',
             tag: `prazo-0-${prazo.id}`,
             requireInteraction: true,
