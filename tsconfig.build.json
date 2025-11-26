@@ -12,6 +12,9 @@
     "src/test",
     "src/**/*.test.*",
     "src/setupTests.ts",
+    "src/components/archive",
+    "src/examples",
+    "src/hooks/useErrorTracking.ts",
     "node_modules"
   ]
 }
