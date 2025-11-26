@@ -101,10 +101,13 @@ jobs:
         
         REQUIRED_FILES=(
           "api/agents.ts"
+          "api/agents-v2.ts"
           "api/cron.ts"
           "api/kv.ts"
-          "lib/api/djen-client.ts"
-          "lib/api/datajud-client.ts"
+          "api/observability.ts"
+          "api/_lib/circuit-breaker.ts"
+          "api/_lib/kv-utils.ts"
+          "api/_lib/djen-client.ts"
         )
         
         for file in "${REQUIRED_FILES[@]}"; do
