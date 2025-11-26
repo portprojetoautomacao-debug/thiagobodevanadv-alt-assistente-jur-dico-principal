@@ -53,20 +53,19 @@ jobs:
 
         # Executar testes de smoke na produção
         echo "🧪 Executando testes de smoke..."
-        if curl -f --max-time 30 $DEPLOYMENT_URL > /dev/null; then
+        if curl -f --max-time 30 "$DEPLOYMENT_URL" > /dev/null; then
           echo "✅ Aplicação responde corretamente"
 
           # Criar comentário de sucesso no commit
-          gh pr comment ${{ github.event.client_payload.payload.deployment.meta.githubCommitSha || github.sha }} \
-            --body |
-              ✅ **Deployment bem-sucedido!**
+          COMMENT_BODY="✅ **Deployment bem-sucedido!**
 
-              🌐 **URL:** $DEPLOYMENT_URL
-              📦 **Nome:** $DEPLOYMENT_NAME
-              ⏰ **Timestamp:** $(date)
+        🌐 **URL:** $DEPLOYMENT_URL
+        📦 **Nome:** $DEPLOYMENT_NAME
+        ⏰ **Timestamp:** $(date)
 
-              **Status:** Produção ativa e respondendo
+        **Status:** Produção ativa e respondendo"
 
+          echo "$COMMENT_BODY"
         else
           echo "❌ Aplicação não responde após deploy!"
           exit 1
