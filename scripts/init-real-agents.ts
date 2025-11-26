@@ -5,7 +5,11 @@
  * Uso: npx tsx scripts/init-real-agents.ts
  */
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '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';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+if (!GITHUB_TOKEN) {
+  console.error('❌ GITHUB_TOKEN não definido. Configure a variável de ambiente.');
+  process.exit(1);
+}
 const BASE_URL = 'https://assistente-jurdico-p.vercel.app';
 
 interface Agent {
@@ -332,7 +336,7 @@ async function main() {
     await initializeCompletedTasks();
 
     // 5. Verificar configuração
-    const config = await verifyConfiguration();
+    const _config = await verifyConfiguration();
 
     // 6. Testar endpoint DJEN
     await testDJENEndpoint();

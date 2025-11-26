@@ -127,16 +127,16 @@ jobs:
         fi
         
         # Verificar por secrets reais (private keys, tokens com formato específico)
-        # Procurar por chaves privadas RSA/EC
-        if git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -q .; then
+        # Procurar por chaves privadas RSA/EC (ignorar docs, arquivos de exemplo e workflows)
+        if git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -v "docs/" | grep -v ".yml" | grep -v ".md" | grep -q .; then
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "❌ **CRITICAL:** Private keys found in repository!" >> $GITHUB_STEP_SUMMARY
-          git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" >> $GITHUB_STEP_SUMMARY || true
+          git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -v "docs/" | grep -v ".yml" | grep -v ".md" >> $GITHUB_STEP_SUMMARY || true
           FOUND_CRITICAL=1
         fi
         
-        # Procurar por tokens do GitHub (ghp_, gho_, ghs_, etc.)
-        if git grep -E "gh[pso]_[a-zA-Z0-9]{36}" 2>/dev/null | grep -v ".example" | grep -q .; then
+        # Procurar por tokens do GitHub reais (ghp_, gho_, ghs_, etc.) - ignorar exemplos com xxx
+        if git grep -E "gh[pso]_[a-zA-Z0-9]{36}" 2>/dev/null | grep -v ".example" | grep -v "xxx" | grep -v "YOUR_" | grep -q .; then
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "❌ **CRITICAL:** GitHub tokens found in code!" >> $GITHUB_STEP_SUMMARY
           FOUND_CRITICAL=1
