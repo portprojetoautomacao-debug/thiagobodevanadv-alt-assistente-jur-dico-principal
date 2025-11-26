@@ -569,6 +569,229 @@ git log --oneline -10
 
 ---
 
+## 📚 Documentação Oficial API DJEN
+
+Diário de Justiça Eletrônico Nacional e Plataforma de Editais
+
+**Versão:** 1.0.3 OAS 3.0
+
+**Última atualização:** 29/05/2025
+
+### Informações Gerais
+
+Informações atualizadas sobre configurações do endpoint GET /comunicacao.
+
+Informações incluídas sobre o controle de taxas de requisições (ratelimit) do endpoint GET /comunicacao.
+
+### Autenticação
+
+`POST /api/v1/login`
+
+### Comunicações
+
+#### Consultar Comunicações
+
+`GET /api/v1/comunicacao`
+
+Método de consulta de comunicações.
+
+**Atenção:** As seguintes consultas são limitadas em 10.000 resultados:
+- Pesquisas com campos textuais ou OAB (texto, nome de advogado, OAB e nome de parte).
+- Pesquisas com 5 ou menos itensPorPagina.
+- Pesquisas com dados de início e dados de fim diferentes.
+- Pesquisas com número de processo.
+
+**Regras de Pesquisa:**
+A pesquisa deve conter pelo menos um dos seguintes parâmetros: siglaTribunal, texto, nomeParte, nomeAdvogado, numeroOab, numeroProcesso ou ser limitado a 5 itensPorPagina.
+
+**Rate Limit (Controle de Taxas):**
+As consultas estão sujeitas ao controle de taxas de requisições por IP. Os seguintes cabeçalhos são retornados:
+- `x-ratelimit-limit`: Janela de quantidade de requisições.
+- `x-ratelimit-remaining`: Quantidade de requisições restantes na janela atual.
+
+Ao receber um erro 429, orienta-se aguardar 1 minuto para retomar as requisições para evitar um loop de erros. A utilização de múltiplos IPs por um mesmo cliente para contornar o controle é considerada uso abusivo e pode resultar em bloqueios.
+
+#### Parâmetros de Consulta (Query Params)
+
+| Nome | Tipo | Descrição |
+|------|------|-----------|
+| numeroOab | string | Número da OAB |
+| ufOab | string | UF da OAB |
+| nomeAdvogado | string | Nome do Advogado |
+| nomeParte | string | Nome da Parte |
+| numeroProcesso | string | Número do Processo |
+| dataDisponibilizacaoInicio | string | Dados iniciais de disponibilização da comunicação no diário (formato aaaa-mm-dd) |
+| dataDisponibilizacaoFim | string | Data fim de disponibilização da comunicação no diário (formato aaaa-mm-dd) |
+| siglaTribunal | string | Sigla do Tribunal para filtrar as comunicações |
+| numeroComunicacao | number | Número de identificação da comunicação |
+| pagina | number | Número da página |
+| itensPorPagina | number | Número de itens por página para paginação (valores válidos: 5 e 100) |
+| organoID | number | Identificador interno do órgão requisitante |
+| meio | string | "E" para Edital e "D" para Diário Eletrônico (Valores: E, D) |
+
+#### Respostas
+
+**200 OK (application/json)**
+```json
+{
+  "datadisponibilizacao": "string",
+  "meiocompleto": "string",
+  "numeroprocessocommascara": "string",
+  "destinatarios": [
+    {
+      "nome": "string",
+      "polo": "string",
+      "comunicacao_id": 0
+    }
+  ],
+  "destinatarioadvogados": [
+    {
+      "id": 0,
+      "comunicacao_id": 0,
+      "advogado_id": 0,
+      "created_at": "string",
+      "updated_at": "string",
+      "advogado": {
+        "id": 0,
+        "nome": "string",
+        "numero_oab": "string",
+        "uf_oab": "string"
+      }
+    }
+  ]
+}
+```
+
+**422 Erro negocial** - Sem links.
+
+**429 Erro por taxa de requisições elevadas** - Sem links.
+
+### Consultar Certidão de Comunicação
+
+`GET /api/v1/comunicacao/{hash}/certidao`
+
+#### Parâmetros de Caminho (Path Params)
+
+| Nome | Tipo | Obrigatório | Descrição |
+|------|------|-------------|-----------|
+| hash | string | Sim | Hash da comunicação |
+
+#### Respostas
+
+**200 OK** - Sem links.
+
+### Consultar Tribunais
+
+`GET /api/v1/comunicacao/tribunal`
+
+Este endpoint retorna lista de tribunais por UF de atuação com os dados de último envio disponibilizado pelo tribunal.
+
+#### Respostas
+
+**200 Sucesso (application/json)**
+```json
+[
+  {
+    "id": 0,
+    "nome": "string",
+    "sigla": "string",
+    "jurisdicao": "string",
+    "endereco": "string",
+    "telefone": "string"
+  }
+]
+```
+
+**404 Nenhum Tribunal encontrado (application/json)**
+```json
+{
+  "status": "error",
+  "message": "Nenhum Tribunal encontrado."
+}
+```
+
+**500 Erro interno no servidor (application/json)**
+```json
+{
+  "status": "error",
+  "message": "Erro interno ao buscar as informações dos Tribunais."
+}
+```
+
+### Cancelar Comunicação
+
+`DELETE /api/v1/comunicacao/{id}`
+
+Cancelar comunicações. Caso a comunicação não tenha sido disponibilizada, não será exibida em nenhuma forma nas consultas. Caso a comunicação já tenha sido disponibilizada, o conteúdo será substituído por motivo de cancelamento. Pode levar algumas horas para refletir em todas as pesquisas do sistema.
+
+#### Parâmetros de Caminho (Path Params)
+
+| Nome | Tipo | Obrigatório | Descrição |
+|------|------|-------------|-----------|
+| id | string | Sim | ID da comunicação |
+
+#### Corpo da Solicitação (Body)
+
+Opcional caso a comunicação seja cancelada antes da disponibilização e obrigatória após a disponibilização.
+
+```json
+{
+  "motivo_cancelamento": "string"
+}
+```
+
+#### Respostas
+
+**200 OK (application/json)**
+```json
+{
+  "status": "string",
+  "message": "string"
+}
+```
+
+**403 Credenciais inválidas** - Sem links.
+
+**422 Erro negocial** - Sem links.
+
+### Cadernos
+
+#### Baixar Caderno
+
+`GET /api/v1/caderno/{sigla_tribunal}/{data}/{meio}`
+
+Método para baixar os cadernos compactados de comunicações de cada tribunal. O endpoint retorna metadados sobre o caderno e URL temporário (5 minutos) para download. Os cadernos do dia atual são disponibilizados a partir das 02:00.
+
+#### Parâmetros de Caminho (Path Params)
+
+| Nome | Tipo | Obrigatório | Descrição |
+|------|------|-------------|-----------|
+| sigla_tribunal | string | Sim | Sigla do Tribunal |
+| data | string (date) | Sim | Data do caderno |
+| meio | string | Sim | "E" para Edital e "D" para Diário Eletrônico (Valores: E, D) |
+
+#### Respostas
+
+**200 OK (application/json)**
+```json
+{
+  "tribunal": "string",
+  "sigla_tribunal": "string",
+  "meio": "string",
+  "status": "string",
+  "versao": "string",
+  "data": "string",
+  "total_comunicacoes": 0,
+  "numero_paginas": 0,
+  "hash": "string",
+  "url": "string"
+}
+```
+
+**422 Erro negocial** - Sem links.
+
+---
+
 ## 📞 Suporte
 
 - **Repositório**: https://github.com/thiagobodevan-a11y/assistente-juridico-p
