@@ -137,7 +137,11 @@ jobs:
       id: deploy-staging
       run: |
         echo "🚀 Deploy para Vercel Staging..."
-        DEPLOY_URL=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        # Capturar output e extrair apenas a URL (sem mensagens extras como "Queued...")
+        OUTPUT=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+        echo "$OUTPUT"
+        # Extrair URL que começa com https:// e termina com .vercel.app
+        DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
         if [ -z "$DEPLOY_URL" ]; then
           echo "❌ Falha ao obter URL do deploy"
           exit 1
@@ -219,7 +223,11 @@ jobs:
       id: deploy-production
       run: |
         echo "🚀 Deploy para Vercel Production..."
-        DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        # Capturar output e extrair apenas a URL (sem mensagens extras como "Queued...")
+        OUTPUT=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+        echo "$OUTPUT"
+        # Extrair URL que começa com https:// e termina com .vercel.app
+        DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
         if [ -z "$DEPLOY_URL" ]; then
           echo "❌ Falha ao obter URL do deploy"
           exit 1
