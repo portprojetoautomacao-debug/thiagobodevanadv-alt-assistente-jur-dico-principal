@@ -43,7 +43,8 @@ echo "🔑 Configurando variáveis ESSENCIAIS..."
 echo ""
 
 # GitHub Integration
-create_variable "GITHUB_TOKEN" "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" true true
+# NOTA: Defina GITHUB_TOKEN via variável de ambiente ou substitua pelo seu token
+create_variable "GITHUB_TOKEN" "${GITHUB_TOKEN:-YOUR_GITHUB_TOKEN_HERE}" true true
 create_variable "GITHUB_REPO_OWNER" "thiagobodevan-a11y" false false
 create_variable "GITHUB_REPO_NAME" "assistente-juridico-p" false false
 
