@@ -207,13 +207,14 @@ jobs:
         
         while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
           echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
-          DEPLOYMENT_URL=$($DEPLOY_CMD 2>&1 | tee /dev/stderr | grep -o 'https://[^ ]*' | tail -1)
-          
+          $DEPLOY_CMD > deploy.log 2>&1
+          DEPLOYMENT_URL=$(grep -o 'https://[^ ]*vercel.app[^ ]*' deploy.log | tail -1)
+
           if [ -n "$DEPLOYMENT_URL" ]; then
             echo "✅ Deployment successful on attempt $((RETRY_COUNT + 1))"
             break
           fi
-          
+
           RETRY_COUNT=$((RETRY_COUNT + 1))
           if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
             echo "⚠️ Deployment failed, retrying in 10 seconds..."
@@ -230,6 +231,9 @@ jobs:
         
         echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
         echo "✅ Deployment successful: $DEPLOYMENT_URL"
+        
+        # Clean up log file to prevent secrets leakage
+        rm -f deploy.log
       env:
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

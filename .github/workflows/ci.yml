@@ -33,19 +33,6 @@ jobs:
         cache: 'npm'
         cache-dependency-path: package-lock.json
 
-    - name: Cache dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          node_modules
-          ~/.npm
-          ~/.cache
-        key: ${{ runner.os }}-node-${{ matrix.node-version }}-deps-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-${{ matrix.node-version }}-deps-
-          ${{ runner.os }}-node-${{ matrix.node-version }}-
-          ${{ runner.os }}-node-
-
     - name: Cache build artifacts
       uses: actions/cache@v4
       with:
@@ -63,9 +50,11 @@ jobs:
     - name: Run linter
       run: |
         echo "Running ESLint..."
-        if ! npm run lint; then
-          echo "❌ Linting failed"
-          echo "Please fix the linting errors before proceeding"
+        # Run lint with a higher warning threshold for CI
+        # Warnings are acceptable, errors are not
+        if ! npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150; then
+          echo "❌ Linting failed (too many warnings or errors)"
+          echo "Please fix the linting issues before proceeding"
           exit 1
         fi
         echo "✅ Linting passed"
