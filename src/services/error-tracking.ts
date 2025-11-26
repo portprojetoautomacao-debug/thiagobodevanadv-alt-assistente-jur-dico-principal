@@ -1,27 +1,34 @@
 // GitLab Error Tracking Integration
-// DSN: https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042
+// Configure DSN via environment variable VITE_SENTRY_DSN
 
 import * as Sentry from "@sentry/react";
+
+// Default DSN for GitLab Error Tracking (can be overridden via VITE_SENTRY_DSN)
+const DEFAULT_SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || 
+  "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042";
 
 /**
  * Check if Sentry DSN is valid and reachable
  */
 async function checkSentryConnectivity(): Promise<boolean> {
   try {
-    // Test basic connectivity to GitLab Error Tracking
-    await fetch('https://observe.gitlab.com/errortracking/api/v1/projects/76299042/envelope/', {
+    // Minimal valid Sentry envelope for connectivity test
+    const envelope = `{"sent_at":"${new Date().toISOString()}"}\n{"type":"check_in"}\n{}`;
+    
+    const response = await fetch('https://observe.gitlab.com/errortracking/api/v1/projects/76299042/envelope/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-sentry-envelope',
       },
-      body: '', // Empty envelope for connectivity test
+      body: envelope,
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });
 
-    // Even if it fails, as long as we get a response (not network error), consider it reachable
-    return true;
-  } catch (error) {
-    console.warn('Sentry connectivity check failed:', error);
+    // Consider reachable if we get any HTTP response (2xx, 4xx are fine - means server is up)
+    // Only 5xx or network errors should be considered unreachable
+    return response.status < 500;
+  } catch {
+    console.warn('Sentry connectivity check failed - service may be unreachable');
     return false;
   }
 }
@@ -48,8 +55,8 @@ export async function initErrorTracking() {
     }
 
     Sentry.init({
-      // GitLab Error Tracking DSN
-      dsn: "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042",
+      // GitLab Error Tracking DSN (configurable via VITE_SENTRY_DSN)
+      dsn: DEFAULT_SENTRY_DSN,
 
       // Environment
       environment: import.meta.env.MODE || "development",
@@ -91,10 +98,10 @@ export async function initErrorTracking() {
 
         // Filtrar outros erros de rede
         if (event.exception) {
-          const error = event.exception.values?.[0];
-          if (error?.value?.includes('Failed to fetch') ||
-              error?.value?.includes('NetworkError') ||
-              error?.value?.includes('observe.gitlab.com')) {
+          const exceptionValue = event.exception.values?.[0];
+          if (exceptionValue?.value?.includes('Failed to fetch') ||
+              exceptionValue?.value?.includes('NetworkError') ||
+              exceptionValue?.value?.includes('observe.gitlab.com')) {
             console.warn('Sentry: Filtering network error');
             return null;
           }
@@ -138,8 +145,8 @@ export async function initErrorTracking() {
     });
 
     console.log("✅ Sentry Error Tracking initialized");
-  } catch (error) {
-    console.error("❌ Failed to initialize Sentry:", error);
+  } catch (initError) {
+    console.error("❌ Failed to initialize Sentry:", initError);
     // Não lançar erro para não quebrar a aplicação
   }
 }
@@ -254,7 +261,7 @@ export async function flushErrors(timeout: number = 2000) {
   try {
     await Sentry.close(timeout);
     console.log("✅ Error tracking flushed");
-  } catch (error) {
-    console.warn("Error flushing Sentry:", error);
+  } catch {
+    console.warn("Error flushing Sentry - may have already been closed");
   }
 }
