@@ -2,8 +2,20 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Warning } from '@phosphor-icons/react'
+import { Warning, ArrowSquareOut } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
+
+// Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
+const PRODUCTION_DOMAIN = 'https://assistente-juridico-github.vercel.app'
+
+// Detecta se está em ambiente de preview (URL dinâmica da Vercel)
+const isPreviewEnvironment = (): boolean => {
+  const hostname = window.location.hostname
+  // Preview deployments têm formato: projeto-hash-account.vercel.app
+  return hostname.includes('vercel.app') && 
+         hostname !== 'assistente-juridico-github.vercel.app' &&
+         !hostname.startsWith('assistente-juridico-github.')
+}
 
 export interface GoogleUser {
   id: string
@@ -110,7 +122,29 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
     }
   }, [initializeGoogleSignIn])
 
-  
+  // Verificação de ambiente de preview - deve vir antes das outras verificações
+  if (isPreviewEnvironment()) {
+    return (
+      <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+        <Warning className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-amber-800 dark:text-amber-200">
+          <strong>Ambiente de Preview Detectado</strong>
+          <p className="mt-2 text-sm">
+            O login com Google não funciona em ambientes de preview porque cada URL é única e não está autorizada no Google Cloud Console.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3 gap-2"
+            onClick={() => window.location.href = PRODUCTION_DOMAIN}
+          >
+            <ArrowSquareOut className="h-4 w-4" />
+            Ir para Produção
+          </Button>
+        </AlertDescription>
+      </Alert>
+    )
+  }
 
   if (!isConfigured) {
     return (
