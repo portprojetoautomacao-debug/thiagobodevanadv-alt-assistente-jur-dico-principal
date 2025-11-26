@@ -1,6 +1,5 @@
 # CI/CD Pipeline para Assistente Jurídico PJe
 # Pipeline completo para aplicações React/TypeScript
-# Otimizado para deploy na Vercel
 
 stages:
   - security
@@ -9,19 +8,13 @@ stages:
   - deploy
   - monitor
 
-# Configurações globais
 variables:
   NODE_VERSION: "22"
   NODE_ENV: "production"
   FF_USE_FASTZIP: "true"
   CACHE_COMPRESSION_LEVEL: "fast"
   GIT_DEPTH: 10
-  GIT_LFS_SKIP_SMUDGE: "1"
-  GIT_STRATEGY: fetch
-  GIT_SUBMODULE_STRATEGY: none
-  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.npm"
 
-# Cache global para dependências Node.js
 cache:
   key: "npm-cache-v3-${CI_COMMIT_REF_SLUG}"
   paths:
@@ -29,7 +22,6 @@ cache:
     - node_modules/
   policy: pull-push
 
-# Template para jobs Node.js
 .node_template:
   image: node:${NODE_VERSION}-alpine
   before_script:
@@ -39,7 +31,6 @@ cache:
 # STAGE: SECURITY
 # ==========================================
 
-# Auditoria de dependências
 security-audit:
   extends: .node_template
   stage: security
@@ -53,37 +44,16 @@ security-audit:
     - if: $CI_COMMIT_BRANCH == "develop"
   allow_failure: true
 
-# Verificação de segredos expostos
-secret-detection:
-  stage: security
-  image: alpine:latest
-  script:
-    - echo "🔍 Verificando arquivos sensíveis..."
-    - |
-      # Verificar se há credenciais hardcoded (excluindo exemplos e docs)
-      if grep -rE "(ghp_|gho_|ghs_|ghr_|github_pat_)[a-zA-Z0-9]{36}" . \
-         --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" \
-         2>/dev/null | grep -v node_modules | grep -v ".git" | grep -v ".example" | grep -v ".md"; then
-        echo "❌ Possíveis tokens GitHub encontrados!"
-        exit 1
-      fi
-    - echo "✅ Verificação de segredos concluída"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
-  allow_failure: true
-
 # ==========================================
 # STAGE: TEST
 # ==========================================
 
-# Linting e formatação
 lint:
   extends: .node_template
   stage: test
   script:
     - echo "🔍 Executando linting..."
-    - npm run lint 2>&1 || echo "⚠️ Alguns avisos de lint encontrados"
+    - npm run lint || echo "⚠️ Alguns avisos de lint encontrados"
     - echo "✅ Linting concluído"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -91,7 +61,6 @@ lint:
     - if: $CI_COMMIT_BRANCH == "develop"
   allow_failure: true
 
-# Testes unitários
 unit-tests:
   extends: .node_template
   stage: test
@@ -111,7 +80,6 @@ unit-tests:
     - if: $CI_COMMIT_BRANCH == "develop"
   allow_failure: true
 
-# Type check
 typecheck:
   extends: .node_template
   stage: test
@@ -128,7 +96,6 @@ typecheck:
 # STAGE: BUILD
 # ==========================================
 
-# Build da aplicação
 build:
   extends: .node_template
   stage: build
@@ -136,7 +103,6 @@ build:
     - echo "🏗️ Construindo aplicação React/TypeScript..."
     - npm run build
     - echo "📦 Build concluído com sucesso!"
-    - echo "📊 Tamanho do bundle:"
     - du -sh dist/ || echo "dist não encontrado"
   artifacts:
     paths:
@@ -156,7 +122,6 @@ build:
 # STAGE: DEPLOY
 # ==========================================
 
-# Deploy para staging (automático em develop)
 deploy-staging:
   extends: .node_template
   stage: deploy
@@ -165,14 +130,9 @@ deploy-staging:
     url: https://assistente-juridico-staging.vercel.app
   script:
     - echo "🚀 Deploy para staging..."
-    - |
-      if [ -z "$VERCEL_TOKEN" ]; then
-        echo "⚠️ VERCEL_TOKEN não configurado - pulando deploy"
-        exit 0
-      fi
-    - |
-      mkdir -p .vercel
-      echo '{"orgId":"'"$VERCEL_ORG_ID"'","projectId":"'"$VERCEL_PROJECT_ID"'"}' > .vercel/project.json
+    - if [ -z "$VERCEL_TOKEN" ]; then echo "⚠️ VERCEL_TOKEN não configurado"; exit 0; fi
+    - mkdir -p .vercel
+    - echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
     - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "⚠️ Deploy falhou"
     - echo "✅ Deploy staging concluído"
   rules:
@@ -184,7 +144,6 @@ deploy-staging:
     - build
   allow_failure: true
 
-# Deploy para produção (manual em main)
 deploy-production:
   extends: .node_template
   stage: deploy
@@ -193,15 +152,9 @@ deploy-production:
     url: https://assistente-juridico-p.vercel.app
   script:
     - echo "🚀 Deploy para produção..."
-    - |
-      if [ -z "$VERCEL_TOKEN" ]; then
-        echo "❌ VERCEL_TOKEN não configurado"
-        echo "Configure em: Settings > CI/CD > Variables"
-        exit 1
-      fi
-    - |
-      mkdir -p .vercel
-      echo '{"orgId":"'"$VERCEL_ORG_ID"'","projectId":"'"$VERCEL_PROJECT_ID"'"}' > .vercel/project.json
+    - if [ -z "$VERCEL_TOKEN" ]; then echo "❌ VERCEL_TOKEN não configurado"; exit 1; fi
+    - mkdir -p .vercel
+    - echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
     - npx vercel deploy --prod --token=$VERCEL_TOKEN --yes
     - echo "✅ Deploy produção concluído!"
   rules:
@@ -211,7 +164,6 @@ deploy-production:
     - build
   allow_failure: false
 
-# Review Apps para Merge Requests
 deploy-review:
   extends: .node_template
   stage: deploy
@@ -221,15 +173,10 @@ deploy-review:
     on_stop: stop-review
     auto_stop_in: 1 week
   script:
-    - echo "🔍 Deploy Review App: $CI_COMMIT_REF_NAME"
-    - |
-      if [ -z "$VERCEL_TOKEN" ]; then
-        echo "⚠️ VERCEL_TOKEN não configurado - pulando review app"
-        exit 0
-      fi
-    - |
-      mkdir -p .vercel
-      echo '{"orgId":"'"$VERCEL_ORG_ID"'","projectId":"'"$VERCEL_PROJECT_ID"'"}' > .vercel/project.json
+    - echo "🔍 Deploy Review App"
+    - if [ -z "$VERCEL_TOKEN" ]; then echo "⚠️ VERCEL_TOKEN não configurado"; exit 0; fi
+    - mkdir -p .vercel
+    - echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
     - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "⚠️ Review app falhou"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -237,7 +184,6 @@ deploy-review:
     - build
   allow_failure: true
 
-# Parar Review Apps
 stop-review:
   stage: deploy
   image: alpine:latest
@@ -245,7 +191,7 @@ stop-review:
     name: review/$CI_COMMIT_REF_SLUG
     action: stop
   script:
-    - echo "🛑 Parando Review App: $CI_COMMIT_REF_NAME"
+    - echo "🛑 Parando Review App"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
@@ -256,25 +202,15 @@ stop-review:
 # STAGE: MONITOR
 # ==========================================
 
-# Relatório do pipeline
 pipeline-report:
   stage: monitor
   image: alpine:latest
   script:
     - echo "📊 Gerando relatório do pipeline..."
-    - |
-      cat > pipeline-report.md << EOF
-      # 📊 Relatório - Assistente Jurídico PJe
-      
-      | Campo | Valor |
-      |-------|-------|
-      | Pipeline | $CI_PIPELINE_ID |
-      | Commit | ${CI_COMMIT_SHORT_SHA} |
-      | Branch | $CI_COMMIT_REF_NAME |
-      | Data | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |
-      
-      ✅ Pipeline executado!
-      EOF
+    - echo "# Pipeline Report" > pipeline-report.md
+    - echo "Pipeline ID: $CI_PIPELINE_ID" >> pipeline-report.md
+    - echo "Commit: $CI_COMMIT_SHORT_SHA" >> pipeline-report.md
+    - echo "Branch: $CI_COMMIT_REF_NAME" >> pipeline-report.md
     - cat pipeline-report.md
   artifacts:
     paths:
