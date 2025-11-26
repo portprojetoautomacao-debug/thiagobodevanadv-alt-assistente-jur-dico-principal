@@ -476,16 +476,23 @@ interface CompletedTask {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { action } = req.query;
+  const { action, secret } = req.query;
 
   // Verificar autorização cron
+  // Aceita:
+  // 1. Vercel Cron Jobs (header Authorization: Bearer ...)
+  // 2. CRON_SECRET via query param para testes manuais
+  // 3. Ambiente de desenvolvimento local
   const authHeader = req.headers.authorization;
   const isVercelCron = authHeader?.startsWith('Bearer ');
+  const cronSecret = process.env.CRON_SECRET;
+  const isValidSecret = cronSecret && secret === cronSecret;
   const isLocalTest = process.env.NODE_ENV === 'development';
   
-  if (!isVercelCron && !isLocalTest) {
+  if (!isVercelCron && !isValidSecret && !isLocalTest) {
     return res.status(401).json({ 
-      error: 'Unauthorized - This endpoint is only for Vercel Cron Jobs' 
+      error: 'Unauthorized - Use Vercel Cron Jobs or provide valid secret',
+      hint: 'Add ?secret=YOUR_CRON_SECRET for manual testing'
     });
   }
 
