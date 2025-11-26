@@ -116,34 +116,49 @@ jobs:
         echo "### Checking for exposed secrets..." >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        FOUND_ISSUES=0
+        FOUND_CRITICAL=0
+        FOUND_WARNINGS=0
         
-        # Verificar arquivos .env que não deveriam estar versionados
-        if find . -type f \( -name ".env.vercel" -o -name ".env.production" -o -name ".env.local" \) ! -name "*.example" 2>/dev/null | grep -q .; then
-          echo "❌ **CRITICAL:** Found .env files that should not be committed!" >> $GITHUB_STEP_SUMMARY
-          find . -type f \( -name ".env.vercel" -o -name ".env.production" -o -name ".env.local" \) ! -name "*.example" 2>/dev/null >> $GITHUB_STEP_SUMMARY || true
-          FOUND_ISSUES=1
+        # Verificar arquivos .env que não deveriam estar versionados (CRÍTICO)
+        if git ls-files | grep -E "^\.env\.(vercel|production|local|staging)$" | grep -q .; then
+          echo "❌ **CRITICAL:** Found .env files tracked in git that should not be committed!" >> $GITHUB_STEP_SUMMARY
+          git ls-files | grep -E "^\.env\.(vercel|production|local|staging)$" >> $GITHUB_STEP_SUMMARY || true
+          FOUND_CRITICAL=1
         fi
         
-        # Procurar por possíveis client IDs/secrets
-        if git grep -i "client_id.*=.*[0-9]" 2>/dev/null | grep -v ".example" | grep -v "dummy" | grep -q .; then
+        # Verificar por secrets reais (private keys, tokens com formato específico)
+        # Procurar por chaves privadas RSA/EC
+        if git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -q .; then
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ **WARNING:** Possible OAuth client IDs found in code:" >> $GITHUB_STEP_SUMMARY
-          git grep -i "client_id.*=.*[0-9]" 2>/dev/null | grep -v ".example" | grep -v "dummy" | head -10 >> $GITHUB_STEP_SUMMARY || true
-          FOUND_ISSUES=1
+          echo "❌ **CRITICAL:** Private keys found in repository!" >> $GITHUB_STEP_SUMMARY
+          git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" >> $GITHUB_STEP_SUMMARY || true
+          FOUND_CRITICAL=1
         fi
         
-        # Verificar .gitignore
+        # Procurar por tokens do GitHub (ghp_, gho_, ghs_, etc.)
+        if git grep -E "gh[pso]_[a-zA-Z0-9]{36}" 2>/dev/null | grep -v ".example" | grep -q .; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "❌ **CRITICAL:** GitHub tokens found in code!" >> $GITHUB_STEP_SUMMARY
+          FOUND_CRITICAL=1
+        fi
+        
+        # Verificar .gitignore (apenas warning)
         if [ -f ".gitignore" ]; then
           if ! grep -q ".env.vercel" .gitignore 2>/dev/null; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "⚠️ **WARNING:** .env.vercel not in .gitignore" >> $GITHUB_STEP_SUMMARY
-            FOUND_ISSUES=1
+            FOUND_WARNINGS=1
           fi
         fi
         
-        if [ $FOUND_ISSUES -eq 0 ]; then
+        # Nota: client_id é público por design em OAuth 2.0, não é um segredo
+        
+        if [ $FOUND_CRITICAL -eq 0 ] && [ $FOUND_WARNINGS -eq 0 ]; then
           echo "✅ No secrets or sensitive files detected" >> $GITHUB_STEP_SUMMARY
+        elif [ $FOUND_CRITICAL -eq 0 ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ Some warnings were found, but no critical issues." >> $GITHUB_STEP_SUMMARY
+          # Não falha o build por warnings
         else
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
