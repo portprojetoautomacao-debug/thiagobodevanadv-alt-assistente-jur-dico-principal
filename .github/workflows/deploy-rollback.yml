@@ -191,8 +191,39 @@ jobs:
     - name: 🧪 Testes de smoke no staging
       run: |
         echo "🧪 Executando testes de smoke..."
-        sleep 30  # Aguardar deploy
-        curl -f ${{ steps.deploy-staging.outputs.url }} > /dev/null && echo "✅ Staging responde" || exit 1
+        DEPLOY_URL="${{ steps.deploy-staging.outputs.url }}"
+        echo "URL de staging: $DEPLOY_URL"
+        
+        # Aguardar deploy estar disponível (com retry)
+        MAX_RETRIES=5
+        RETRY_DELAY=15
+        
+        for i in $(seq 1 $MAX_RETRIES); do
+          echo "Tentativa $i de $MAX_RETRIES..."
+          sleep $RETRY_DELAY
+          
+          # Usar -L para seguir redirects e aceitar códigos 200-399
+          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" "$DEPLOY_URL" || echo "000")
+          echo "HTTP Status: $HTTP_CODE"
+          
+          # Aceitar 200, 301, 302, 307 (redirects) e 401 (proteção de preview)
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "307" ]; then
+            echo "✅ Staging responde com status $HTTP_CODE"
+            exit 0
+          fi
+          
+          # 401 pode indicar proteção de preview do Vercel (esperado para staging)
+          if [ "$HTTP_CODE" = "401" ]; then
+            echo "⚠️ Deploy protegido por senha (esperado para staging)"
+            echo "✅ Staging está acessível (requer autenticação)"
+            exit 0
+          fi
+          
+          echo "⏳ Aguardando deploy ficar disponível..."
+        done
+        
+        echo "❌ Staging não respondeu após $MAX_RETRIES tentativas"
+        exit 1
 
     - name: 🏷️  Criar tag de staging
       run: |
@@ -310,18 +341,33 @@ jobs:
       id: production-tests
       run: |
         echo "🧪 Executando testes de produção..."
-        sleep 60  # Aguardar deploy completo
-
-        # Teste básico de conectividade
-        if curl -f --max-time 30 ${{ steps.deploy-production.outputs.url }} > /dev/null; then
-          echo "✅ Aplicação responde"
-        else
-          echo "❌ Aplicação não responde"
-          exit 1
-        fi
-
-        # Teste de funcionalidades críticas
-        # Adicione mais testes conforme necessário
+        DEPLOY_URL="${{ steps.deploy-production.outputs.url }}"
+        echo "URL de produção: $DEPLOY_URL"
+        
+        # Aguardar deploy com retry
+        MAX_RETRIES=5
+        RETRY_DELAY=20
+        
+        for i in $(seq 1 $MAX_RETRIES); do
+          echo "Tentativa $i de $MAX_RETRIES..."
+          sleep $RETRY_DELAY
+          
+          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 "$DEPLOY_URL" || echo "000")
+          echo "HTTP Status: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Produção responde com status 200"
+            break
+          fi
+          
+          if [ "$i" = "$MAX_RETRIES" ]; then
+            echo "❌ Produção não respondeu após $MAX_RETRIES tentativas (status: $HTTP_CODE)"
+            exit 1
+          fi
+          
+          echo "⏳ Aguardando produção ficar disponível..."
+        done
+        
         echo "✅ Testes de produção passaram"
 
     - name: 📊 Health check avançado
