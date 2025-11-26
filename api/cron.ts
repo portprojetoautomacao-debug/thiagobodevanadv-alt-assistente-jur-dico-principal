@@ -128,6 +128,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'TJMG', 'TRT3', 'TST', 'STJ', 'TRF1' // Tribunais do advogado Thiago Bodevan
       ];
 
+      // Advogado padrão fixo - Thiago Bodevan Veiga
+      const defaultLawyer = {
+        id: 'lawyer-thiago-bodevan',
+        name: 'Thiago Bodevan Veiga',
+        oab: 'MG184404',
+        email: 'thiagobodevanadvocacia@gmail.com',
+        enabled: true,
+        tribunals: ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1']
+      };
+
       const result: DJENMonitorResult = {
         success: true,
         timestamp,
@@ -138,18 +148,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rateLimitWarning: false
       };
 
-      // Get monitored lawyers
-      const lawyers = await getMonitoredLawyers();
+      // Get monitored lawyers ou usa o padrão
+      let lawyers = await getMonitoredLawyers();
       console.log(`[Cron DJEN Monitor] Found ${lawyers.length} monitored lawyers`);
 
+      // Se não houver advogados configurados, usa o advogado padrão
       if (lawyers.length === 0) {
-        console.log(`[Cron DJEN Monitor] No monitored lawyers configured`);
-        return res.status(200).json({
-          ok: true,
-          message: 'DJEN monitor executed - no lawyers configured',
-          result,
-          note: 'Use o script INICIALIZAR_AGENTES_BROWSER.js para configurar advogados'
-        });
+        console.log(`[Cron DJEN Monitor] Using default lawyer: ${defaultLawyer.name}`);
+        lawyers = [defaultLawyer];
       }
 
       // Query DJEN for each enabled lawyer
