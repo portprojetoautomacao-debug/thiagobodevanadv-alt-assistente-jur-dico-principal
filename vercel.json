@@ -6,7 +6,7 @@
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 30,
-      "includeFiles": "lib/serverless/**"
+      "includeFiles": ["lib/**/*.ts", "lib/**/*.js", "src/lib/**/*.ts", "src/lib/**/*.js"]
     }
   },
   "regions": ["iad1"],
