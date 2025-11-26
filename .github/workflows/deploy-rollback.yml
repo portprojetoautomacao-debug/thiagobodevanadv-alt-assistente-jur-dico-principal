@@ -364,8 +364,12 @@ jobs:
           HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 "$DEPLOY_URL" || echo "000")
           echo "HTTP Status: $HTTP_CODE"
           
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Produção responde com status 200"
+          # 200 = OK, 401 = Protected (Vercel Password Protection), ambos indicam deploy OK
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+            echo "✅ Produção responde com status $HTTP_CODE"
+            if [ "$HTTP_CODE" = "401" ]; then
+              echo "ℹ️  Deploy protegido por senha (Vercel Password Protection)"
+            fi
             break
           fi
           
