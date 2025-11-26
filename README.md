@@ -1,553 +1,587 @@
 # Assistente Jurídico PJe
 
-Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
+Sistema inteligente de gestão jurídica com IA integrada para **Thiago Bodevan Veiga - OAB/MG 184.404**.
 
-## 🚀 Funcionalidades Principais
+---
 
-- 🤖 **IA Jurídica**: Chatbot inteligente com Harvey Specter
+## 📋 Índice
+
+- [Visão Geral](#-visão-geral)
+- [Configuração do Advogado](#-configuração-do-advogado)
+- [Arquitetura do Sistema](#-arquitetura-do-sistema)
+- [Endpoints da API](#-endpoints-da-api)
+- [Variáveis de Ambiente](#-variáveis-de-ambiente)
+- [Sistema DJEN/DataJud](#-sistema-djendatajud)
+- [Sistema de Notificações](#-sistema-de-notificações)
+- [Cron Jobs](#-cron-jobs)
+- [Como Reconstruir](#-como-reconstruir)
+- [Comandos Úteis](#-comandos-úteis)
+
+---
+
+## 🎯 Visão Geral
+
+Sistema completo de gestão jurídica com:
+
+- 🤖 **IA Jurídica**: Chatbot Harvey Specter com GPT-4
 - 📋 **CRM Jurídico**: Kanban para gestão de processos
 - 📅 **Calculadora de Prazos**: Automação de prazos processuais
-- 🔗 **Integração Google Calendar**: Sincronização automática
-- 📊 **DJEN/DataJud**: Monitoramento de publicações
+- 🔗 **Google Calendar**: Sincronização automática de prazos
+- 📊 **DJEN/DataJud**: Monitoramento automático de publicações
 - 💰 **Gestão Financeira**: Controle de custos e honorários
 - ⚡ **7 Agentes Autônomos**: Trabalhando 24/7
-
-## 🏗️ Arquitetura Técnica
-
-- **Frontend**: React 19 + TypeScript + Vite 6
-- **Styling**: Tailwind CSS v4 + shadcn/ui
-- **State**: Spark KV (useKV hook)
-- **Forms**: React Hook Form + Zod
-- **AI**: Spark LLM (GPT-4)
-- **Deployment**: Vercel + GitLab CI/CD
-
-## 🔐 Autenticação
-
-O sistema utiliza **Google OAuth 2.0** como método único de autenticação, garantindo segurança e simplicidade para os usuários.
-
-### Configuração OAuth
-
-1. Acesse [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-2. Crie uma nova aplicação OAuth 2.0
-3. Configure as credenciais no arquivo `.env`:
-   ```env
-   VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-   VITE_REDIRECT_URI=https://your-domain.vercel.app
-   ```
-
-### Funcionalidades de Segurança
-
-- ✅ Autenticação única via Google
-- ✅ Controle de permissões por papel (advogado, assistente, admin)
-- ✅ Sessões seguras com JWT
-- ✅ Proteção contra CSRF
-
-### 📦 Componentes Disponíveis
-
-| Componente | Descrição | Status |
-|------------|-----------|--------|
-| 🔒 **Segurança** | Auditoria npm + detecção de segredos + LGPD | ✅ Implementado |
-| 🧪 **Testes** | Unitários + Integração + E2E + Acessibilidade | ✅ Implementado |
-| 🚀 **Deployment** | Vercel + Netlify + Docker + Health checks | ✅ Implementado |
-| 📊 **Monitoramento** | Performance + Uptime + Core Web Vitals | ✅ Implementado |
-
-### 🚀 Como Usar os Componentes
-
-```yaml
-# .gitlab-ci.yml
-include:
-  # Segurança
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/security/security-component@1.0.0
-    inputs:
-      audit_level: "standard"
-
-  # Testes
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/testing/testing-component@1.0.0
-    inputs:
-      test_type: "all"
-
-  # Deployment
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/deployment/deployment-component@1.0.0
-    inputs:
-      environment: "production"
-
-  # Monitoramento
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/monitoring/monitoring-component@1.0.0
-    inputs:
-      monitoring_type: "advanced"
-```
-
-📖 **Documentação completa**: [`.gitlab/templates/README.md`](.gitlab/templates/README.md)
+- 📧 **Notificações**: Email e webhooks (Slack/Discord/Teams)
 
 ---
 
-# GLab
+## 👤 Configuração do Advogado
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/profclems/glab)](https://goreportcard.com/report/github.com/profclems/glab)
-[![Gitter](https://badges.gitter.im/glabcli/community.svg)](https://gitter.im/glabcli/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![Reddit](https://img.shields.io/reddit/subreddit-subscribers/glab_cli?style=social)](https://reddit.com/r/glab_cli)
-[![Twitter Follow](https://img.shields.io/twitter/follow/glab_cli?style=social)](https://twitter.com/glab_cli)
-[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go#version-control)
+### Dados Cadastrados
 
-## 🔐 Segurança e Autenticação
+| Campo | Valor |
+|-------|-------|
+| **Nome** | Thiago Bodevan Veiga |
+| **OAB** | 184.404 |
+| **UF** | MG (Minas Gerais) |
+| **Email** | thiagobodevan@gmail.com |
+| **Tribunais Monitorados** | TJMG, TRF1, TST, TRT3 |
+| **Status** | ✅ Ativo |
 
-Este projeto utiliza **GPG para assinatura de commits**, garantindo a autenticidade e integridade de todas as contribuições.
-
-### Verificação de Commits
-- ✅ Todos os commits são assinados digitalmente
-- ✅ Chaves GPG verificadas no GitLab
-- ✅ Autenticação de contribuidores validada
-
-
-
-GLab is an open source GitLab CLI tool bringing GitLab to your terminal next to where you are already working with `git` and your code without switching between windows and browser tabs. Work with issues, merge requests, **watch running pipelines directly from your CLI** among other features.
-Inspired by [gh], the official GitHub CLI tool.
-
-`glab` is available for repositories hosted on GitLab.com and self-hosted GitLab Instances. `glab` supports multiple authenticated GitLab instances and automatically detects the authenticated hostname from the remotes available in the working git directory.
-
-![image](https://user-images.githubusercontent.com/41906128/88968573-0b556400-d29f-11ea-8504-8ecd9c292263.png)
-
-Table of Contents
-=================
-
-* [Usage](#usage)
-* [Demo](#demo)
-* [Documentation](#documentation)
-* [Installation](#installation)
-  * [Quick Install (Bash)](#quick-install-bash)
-  * [Windows](#windows)
-    * [WinGet](#winget)
-    * [Scoop](#scoop)
-    * [EXE Installer](#exe-installer)
-  * [Linux](#linux)
-    * [Linuxbrew (Homebrew)](#linuxbrew-homebrew)
-    * [Snapcraft](#snapcraft)
-    * [Arch Linux](#arch-linux)
-    * [KISS Linux](#kiss-linux)
-    * [Alpine Linux](#alpine-linux)
-      * [Install a pinned version from edge](#install-a-pinned-version-from-edge)
-      * [Alpine Linux Docker-way](#alpine-linux-docker-way)
-    * [Nix/NixOS](#nixnixos)
-  * [macOS](#macos)
-    * [Homebrew](#homebrew)
-    * [MacPorts](#macports)
-  * [Building From Source](#building-from-source)
-    * [Prerequisites](#prerequisites-for-building-from-source-are)
-* [Authentication](#authentication)
-* [Configuration](#configuration)
-* [Environment Variables](#environment-variables)
-* [What about lab](#what-about-lab)
-* [Issues](#issues)
-* [Contributing](#contributing)
-  * [Support glab <g-emoji class="g-emoji" alias="sparkling_heart" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f496.png">💖</g-emoji>](#support-glab-)
-    * [Individuals](#individuals)
-    * [Backers](#backers)
-* [License](#license)
-
-## Usage
-  ```bash
-  glab <command> <subcommand> [flags]
-  ```
-
-## Demo
-[![asciicast](https://asciinema.org/a/368622.svg)](https://asciinema.org/a/368622)
-
-## Documentation
-Read the [documentation](https://glab.readthedocs.io/) for usage instructions.
-
-## Installation
-Download a binary suitable for your OS at the [releases page](https://github.com/profclems/glab/releases/latest).
-
-### Quick Install
-**Supported Platforms**: Linux and macOS
-
-#### Homebrew
-
-```sh
-brew install glab
-```
-
-Updating (Homebrew):
-```sh
-brew upgrade glab
-```
-
-Alternatively, you can install `glab` by shell script:
-```sh
-curl -sL https://j.mp/glab-cli | sudo sh
-```
-or
-```sh
-curl -s https://raw.githubusercontent.com/profclems/glab/trunk/scripts/install.sh | sudo sh
-```
-*Installs into `usr/bin`*
-
-**NOTE**: Please take care when running scripts in this fashion. Consider peeking at the install script itself and verify that it works as intended.
-
-### Windows
-Available for download via [WinGet](https://github.com/microsoft/winget-cli), [scoop](https://scoop.sh), or downloadable EXE installer file.
-
-#### WinGet
-```sh
-winget install glab
-```
-
-Updating (WinGet):
-```sh
-winget install glab
-```
-
-#### Scoop
-```sh
-scoop install glab
-```
-
-Updating (Scoop):
-```sh
-scoop update glab
-```
-#### EXE Installer
-
-EXE installers are available for download on the [releases page](https://github.com/profclems/glab/releases/latest).
-
-### Linux
-Prebuilt binaries available at the [releases page](https://github.com/profclems/glab/releases/latest).
-
-#### Linuxbrew (Homebrew)
-```sh
-brew install glab
-```
-
-Updating (Homebrew):
-```sh
-brew upgrade glab
-```
-#### Snapcraft
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/glab)
-
-Make sure you have [snap installed on your Linux Distro](https://snapcraft.io/docs/installing-snapd).
-1. `sudo snap install --edge glab`
-1. `sudo snap connect glab:ssh-keys` to grant ssh access
-
-#### Arch Linux
-`glab` is available through the [community/glab](https://archlinux.org/packages/community/x86_64/glab/) package or download and install an archive from the [releases page](https://github.com/profclems/glab/releases/latest). Arch Linux also supports [snap](https://snapcraft.io/docs/installing-snap-on-arch-linux).
-```sh
-yay -Sy glab
-```
-or any other [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) of your choice.
-
-#### KISS Linux
-> WARNING: It seems that KISS Linux may no longer be actively maintained, so links to its web domain have been removed from this README.
-
-`glab` is available on the [KISS Linux Community Repo](https://github.com/kisslinux/community) as `gitlab-glab`.
-If you already have the community repo configured in your `KISS_PATH` you can install `glab` through your terminal.
-```sh
-kiss b gitlab-glab && kiss i gitlab-glab
-```
-
-#### Alpine Linux
-
-`glab` is available on the [Alpine Community Repo](https://git.alpinelinux.org/aports/tree/community/glab?h=master) as `glab`.
-
-##### Install
-
-We use `--no-cache` so we don't need to do an `apk update` before.
-
-```sh
-apk add --no-cache glab
-```
-
-##### Install a pinned version from edge
-
-To ensure that by default edge will be used to get the latest updates. We need the edge repository under `/etc/apk/repositories`.
-
-Afterwards you can install it with `apk add --no-cache glab@edge`
-
-We use `--no-cache` so we don't need to do an `apk update` before.
-
-```sh
-echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-apk add --no-cache glab@edge
-```
-
-##### Alpine Linux Docker-way
-
-Use edge directly
-
-```sh
-FROM alpine:3.13
-RUN apk add --no-cache glab
-```
-
-Fetching latest glab version from edge
-
-```sh
-FROM alpine:3.13
-RUN echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-RUN apk add --no-cache glab@edge
-```
-
-### Nix/NixOS
-
-Nix/NixOS users can install from [nixpkgs](https://search.nixos.org/packages?channel=unstable&show=glab&from=0&size=30&sort=relevance&query=glab):
+### Comando para Recadastrar
 
 ```bash
-nix-env -iA nixos.glab
+curl -X POST "https://assistente-juridico-github.vercel.app/api/lawyers" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Thiago Bodevan Veiga",
+    "oab": "184404",
+    "oabUF": "MG",
+    "email": "thiagobodevan@gmail.com",
+    "enabled": true,
+    "tribunals": ["TJMG", "TRF1", "TST", "TRT3"]
+  }'
 ```
-
-### macOS
-
-#### Homebrew
-
-`glab` is available via [Homebrew](https://formulae.brew.sh/formula/glab)
-
-```sh
-brew install glab
-```
-Updating:
-```sh
-brew upgrade glab
-```
-
-#### MacPorts
-
-`glab`is also available via [MacPorts](https://ports.macports.org/port/glab/summary)
-
-```sh
-sudo port install glab
-```
-
-Updating:
-```sh
-sudo port selfupdate && sudo port upgrade glab
-```
-
-### Building From Source
-If a supported binary for your OS is not found at the [releases page](https://github.com/profclems/glab/releases/latest), you can build from source:
-
-#### Prerequisites for building from source
-- `make`
-- Go 1.13+
-
-1. Verify that you have Go 1.13+ installed
-
-   ```sh
-   $ go version
-   go version go1.14
-   ```
-
-   If `go` is not installed, follow instructions on [the Go website](https://golang.org/doc/install).
-
-2. Clone this repository
-
-   ```sh
-   git clone https://github.com/profclems/glab.git
-   cd glab
-   ```
-   If you have $GOPATH/bin or $GOBIN in your $PATH, you can just install with `make install` (install glab in $GOPATH/bin) and **skip steps 3 and 4**.
-
-3. Build the project
-   ```sh
-   make
-   ```
-
-4. Change PATH to find newly compiled `glab`
-
-   ```sh
-   export PATH=$PWD/bin:$PATH
-   ```
-
-4. Run `glab version` to confirm that it worked
-
-## Authentication
-
-Get a GitLab access token at <https://gitlab.com/-/profile/personal_access_tokens> or <https://gitlab.example.com/-/profile/personal_access_tokens> if self-hosted
-
-- start interactive setup
-  ```sh
-  glab auth login
-  ```
-
-- authenticate against gitlab.com by reading the token from a file
-  ```sh
-  glab auth login --stdin < myaccesstoken.txt
-  ```
-
-- authenticate against a self-hosted GitLab instance by reading from a file
-  ```sh
-  glab auth login --hostname salsa.debian.org --stdin < myaccesstoken.txt
-  ```
-
-- authenticate with token and hostname (Not recommended for shared environments)
-  ```sh
-  glab auth login --hostname gitlab.example.org --token xxxxx
-  ```
-
-## Configuration
-
-By default, `glab` follows the XDG Base Directory [Spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html): global configuration file is saved at `~/.config/glab-cli`. Local configuration file is saved at `.git/glab-cli` in the current working git directory. Advanced workflows may override the location of the global configuration by setting the `GLAB_CONFIG_DIR` environment variable.
-
-**To set configuration globally**
-
-```sh
-glab config set --global editor vim
-```
-
-**To set configuration for current directory (must be a git repository)**
-
-```sh
-glab config set editor vim
-```
-
-**To set configuration for a specific host**
-
-Use the `--host` flag to set configuration for a specific host. This is always stored in the global config file with or without the `global` flag.
-
-```sh
-glab config set editor vim --host gitlab.example.org
-```
-
-
-## Environment Variables
-  ```sh
-  GITLAB_TOKEN: an authentication token for API requests. Setting this avoids being
-  prompted to authenticate and overrides any previously stored credentials.
-  Can be set in the config with 'glab config set token xxxxxx'
-
-  GITLAB_URI or GITLAB_HOST: specify the url of the gitlab server if self hosted (eg: https://gitlab.example.com). Default is https://gitlab.com.
-
-  GITLAB_API_HOST: specify the host where the API endpoint is found. Useful when there are separate [sub]domains or hosts for git and the API endpoint: defaults to the hostname found in the git URL
-
-  REMOTE_ALIAS or GIT_REMOTE_URL_VAR: git remote variable or alias that contains the gitlab url.
-  Can be set in the config with 'glab config set remote_alias origin'
-
-  VISUAL, EDITOR (in order of precedence): the editor tool to use for authoring text.
-  Can be set in the config with 'glab config set editor vim'
-
-  BROWSER: the web browser to use for opening links.
-  Can be set in the config with 'glab config set browser mybrowser'
-
-  GLAMOUR_STYLE: environment variable to set your desired markdown renderer style
-  Available options are (dark|light|notty) or set a custom style
-  https://github.com/charmbracelet/glamour#styles
-
-  NO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.
-
-  FORCE_HYPERLINKS: set to 1 to force hyperlinks to be output, even when not outputing to a TTY
-  ```
-
-## What about [Lab]?
-
-Both `glab` and [lab] are open-source tools with the same goal of bringing GitLab to your command line and simplifying the developer workflow. In many ways `lab` is to [hub], while `glab` is to [gh].
-
-If you want a tool that’s more opinionated and intended to help simplify your GitLab workflows from the command line, then `glab` is for you. However, If you're looking for a tool like [hub] that feels like using git and allows you to interact with GitLab, you might consider using [lab].
-
-Some `glab` commands such as `ci view` and `ci trace` were adopted from [lab].
-
-[gh]:https://github.com/cli/cli
-[hub]:https://github.com/github/hub
-[lab]:https://github.com/zaquestion/lab
-
-## Issues
-If you have an issue: report it on the [issue tracker](https://github.com/profclems/glab/issues)
-
-## Contributing
-Feel like contributing? That's awesome! We have a [contributing guide](https://github.com/profclems/glab/blob/trunk/CONTRIBUTING.md) and [Code of conduct](https://github.com/profclems/glab/blob/trunk/CODE_OF_CONDUCT.md) to help guide you
-
-### Contributors
-
-#### Individuals
-
-This project exists thanks to all the people who contribute. [[Contribute](https://github.com/profclems/glab/blob/trunk/.github/CONTRIBUTING.md)].
-<a href="https://opencollective.com/glab/contribute"><img src="https://opencollective.com/glab/contributors.svg?width=890" /></a>
-
-#### Organizations
-
-[![Fosshost.org](https://fosshost.org/img/fosshost-logo.png)](https://fosshost.org)
-
-## License
-Copyright © [Clement Sam](https://clementsam.tech)
-
-`glab` is open-sourced software licensed under the [MIT](LICENSE) license.
 
 ---
 
-# 🤖 GitLab Agents - Assistente Jurídico P
+## 🏗️ Arquitetura do Sistema
 
-## 📊 Status dos Agentes (4/7 Conectados)
+### Stack Tecnológica
 
-### ✅ Agentes Ativos
-- **assistente-juridico-agent**: Agente principal com desenvolvimento remoto e CI/CD completo
-- **agente-cluster**: Agente para gerenciamento de cluster
-- **agenterevisor**: Agente para revisão de código
-- **agenterevisor2**: Segundo agente de revisão
+| Camada | Tecnologia | Versão |
+|--------|------------|--------|
+| **Frontend** | React + TypeScript | 19 |
+| **Build Tool** | Vite | 6 |
+| **Styling** | Tailwind CSS | v4 |
+| **UI Components** | shadcn/ui + Radix UI | v4 |
+| **Icons** | Phosphor Icons + Lucide | - |
+| **State** | Spark KV (useKV hook) | - |
+| **Forms** | React Hook Form + Zod | - |
+| **AI** | Spark LLM (GPT-4) | - |
+| **Database** | Upstash Redis (KV) | - |
+| **Deployment** | Vercel | - |
+| **Email** | Resend API | - |
 
-### 🔄 Agentes Pendentes de Registro
-- **agente-desenvolvimento**: Ambiente de desenvolvimento com debug e hot reload
-- **agente-qa**: Ambiente de QA com testes automatizados e segurança
-- **agente-producao**: Ambiente de produção com HA e backup
+### Estrutura de Pastas
 
-## 🏗️ Infraestrutura Kubernetes
-
-### Namespaces Isolados
-- `desenvolvimento`: Ambiente de desenvolvimento
-- `qa`: Ambiente de testes e qualidade
-- `production`: Ambiente de produção
-
-### Recursos Configurados
-- ✅ RBAC (ClusterRoles e ServiceAccounts)
-- ✅ Network Policies para isolamento
-- ✅ ConfigMaps por ambiente
-- ✅ Minikube cluster local ativo
-
-## 📋 Próximos Passos para Completar Configuração
-
-### 1. Registro Manual dos Agentes
-```bash
-# Execute o guia de registro
-./.gitlab/register-agents-manual.sh
+```
+assistente-juridico-p/
+├── api/                    # Serverless Functions (Vercel)
+│   ├── cron.ts            # Cron jobs (DJEN monitor, reset diário)
+│   ├── notifications.ts   # Sistema de notificações
+│   ├── lawyers.ts         # CRUD advogados monitorados
+│   ├── expedientes.ts     # Publicações DJEN
+│   ├── llm-proxy.ts       # Proxy para Spark LLM
+│   ├── kv.ts              # Proxy para Spark KV
+│   └── status.ts          # Health check
+├── src/
+│   ├── components/        # Componentes React
+│   │   ├── ui/           # shadcn/ui (não modificar)
+│   │   ├── Dashboard.tsx # Dashboard principal
+│   │   ├── DJENPublicationsWidget.tsx # Widget publicações
+│   │   ├── ProcessCRM.tsx # Kanban processos
+│   │   ├── AIAgents.tsx  # Painel de agentes IA
+│   │   └── ...
+│   ├── hooks/            # Custom hooks
+│   ├── lib/              # Utilitários
+│   │   └── config.ts     # Configuração centralizada
+│   ├── types.ts          # Tipos TypeScript
+│   └── App.tsx           # Componente principal
+├── vercel.json           # Configuração Vercel + Crons
+└── .env                  # Variáveis de ambiente (local)
 ```
 
-### 2. Acesse o GitLab
-- URL: https://gitlab.com/thiagobodevan-a11y-group/assistente-juridico-p
-- Navegue: Infrastructure → Kubernetes clusters → Agents
+---
 
-### 3. Registre Cada Agente
-Para cada agente pendente:
-- Clique em "Register an agent"
-- Selecione o agente da lista
-- Copie o token gerado
+## 🔌 Endpoints da API
 
-### 4. Configure Variáveis de Ambiente
-No GitLab CI/CD Settings → Variables:
-- `AGENTE_DESENVOLVIMENTO_TOKEN`
-- `AGENTE_QA_TOKEN`
-- `AGENTE_PRODUCAO_TOKEN`
-
-### 5. Teste a Configuração
-```bash
-# Teste conectividade
-./scripts/test-gitlab-agents.sh
-
-# Verificação completa
-./verify-gitlab-agents.sh
+### Base URL
+```
+https://assistente-juridico-github.vercel.app/api
 ```
 
-## 🔧 Scripts Disponíveis
+### Advogados Monitorados
 
-- `./verify-gitlab-agents.sh`: Verifica status dos agentes
-- `./.gitlab/register-agents-manual.sh`: Guia de registro manual
-- `./scripts/test-gitlab-agents.sh`: Testa conectividade
-- `./scripts/apply-k8s-manifests.sh`: Aplica manifests K8s
-- `./scripts/verify-gitlab-agents-k8s.sh`: Verifica infraestrutura
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/lawyers` | Lista todos os advogados |
+| `POST` | `/lawyers` | Adiciona novo advogado |
+| `PUT` | `/lawyers?id={id}` | Atualiza advogado |
+| `DELETE` | `/lawyers?id={id}` | Remove advogado |
 
-## 📚 Documentação
+**Exemplo - Adicionar Advogado:**
+```bash
+curl -X POST "https://assistente-juridico-github.vercel.app/api/lawyers" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Nome Completo",
+    "oab": "123456",
+    "oabUF": "MG",
+    "email": "email@exemplo.com",
+    "enabled": true,
+    "tribunals": ["TJMG", "TRF1"]
+  }'
+```
 
-- [GitLab Agents Documentation](docs/KUBERNETES_MANIFESTOS.md)
-- [Configuração GitLab Duo](GITLAB_DUO_SETUP_COMPLETE.md)
-- [Guia de Infraestrutura](docs/CLOUD_CODE_DEPLOY.md)
+### Publicações DJEN
 
-<!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE #2 -->
-<!-- Este é o segundo teste para verificar se o webhook será acionado após deploy bem-sucedido -->
-<!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE -->
-<!-- Este comentário foi adicionado para forçar um novo deploy e testar a integração completa -->
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/expedientes` | Lista publicações capturadas |
+| `GET` | `/expedientes?lawyerId={id}` | Publicações de um advogado |
+
+**Exemplo:**
+```bash
+curl "https://assistente-juridico-github.vercel.app/api/expedientes"
+```
+
+### Notificações
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/notifications` | Lista notificações pendentes |
+| `POST` | `/notifications/send` | Envia notificação manual |
+| `POST` | `/notifications/webhook` | Configura webhook |
+
+**Exemplo - Enviar Notificação:**
+```bash
+curl -X POST "https://assistente-juridico-github.vercel.app/api/notifications/send" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "custom",
+    "title": "Teste de Notificação",
+    "message": "Esta é uma mensagem de teste",
+    "priority": "normal"
+  }'
+```
+
+### Cron Jobs (Protegidos)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/cron?action=djen-monitor` | Executa monitoramento DJEN |
+| `POST` | `/cron?action=daily-reset` | Reset diário de contadores |
+
+> ⚠️ Estes endpoints são protegidos e só podem ser chamados pelo Vercel Cron ou com `CRON_SECRET`.
+
+### Status/Health Check
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/status` | Health check do sistema |
+
+**Exemplo:**
+```bash
+curl "https://assistente-juridico-github.vercel.app/api/status"
+```
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+### Obrigatórias (Vercel)
+
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `UPSTASH_REDIS_REST_URL` | URL do Redis Upstash | `https://xyz.upstash.io` |
+| `UPSTASH_REDIS_REST_TOKEN` | Token do Redis | `AXxx...` |
+| `NOTIFICATION_EMAIL` | Email padrão para notificações | `thiagobodevan@gmail.com` |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID | `xxx.apps.googleusercontent.com` |
+
+### Opcionais
+
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `RESEND_API_KEY` | API Key do Resend para emails | `re_xxx` |
+| `SLACK_WEBHOOK_URL` | Webhook do Slack | `https://hooks.slack.com/...` |
+| `DISCORD_WEBHOOK_URL` | Webhook do Discord | `https://discord.com/api/webhooks/...` |
+| `GITHUB_TOKEN` | Token GitHub para integrações | `ghp_xxx` |
+| `CRON_SECRET` | Secret para proteger cron jobs | `random-string` |
+
+### Configurar no Vercel
+
+```bash
+# Via CLI
+vercel env add NOTIFICATION_EMAIL production
+# Digite: thiagobodevan@gmail.com
+
+# Listar todas
+vercel env ls
+```
+
+### Configurar Localmente (.env)
+
+```env
+VITE_GOOGLE_CLIENT_ID=572929400457-xxx.apps.googleusercontent.com
+VITE_REDIRECT_URI=http://localhost:5173
+VITE_APP_ENV=development
+NOTIFICATION_EMAIL=thiagobodevan@gmail.com
+```
+
+---
+
+## 📊 Sistema DJEN/DataJud
+
+### Como Funciona
+
+1. **Cron Job** roda às **09:00 UTC** (06:00 BRT)
+2. Consulta a API DJEN para cada advogado monitorado
+3. Filtra publicações por **nome** e **número OAB**
+4. Armazena novas publicações no Redis
+5. Dispara notificações (email/webhook)
+6. Exibe no Dashboard via `DJENPublicationsWidget`
+
+### API DJEN
+
+```
+Base URL: https://comunicaapi.pje.jus.br/api/v1/comunicacao
+```
+
+**Parâmetros de Busca:**
+- `numeroOab`: Número da OAB (ex: `184404`)
+- `ufOab`: Estado da OAB (ex: `MG`)
+- `nomeAdvogado`: Nome completo ou parcial
+- `siglaTribunal`: Tribunal específico (ex: `TJMG`)
+
+### Tribunais Suportados
+
+| Sigla | Nome |
+|-------|------|
+| TJMG | Tribunal de Justiça de Minas Gerais |
+| TRF1 | Tribunal Regional Federal da 1ª Região |
+| TST | Tribunal Superior do Trabalho |
+| TRT3 | Tribunal Regional do Trabalho da 3ª Região |
+| STJ | Superior Tribunal de Justiça |
+| STF | Supremo Tribunal Federal |
+
+### Estrutura de Publicação Armazenada
+
+```typescript
+interface StoredPublication {
+  id: string;
+  djenId?: number;
+  tribunal: string;           // Ex: "TJMG"
+  data: string;               // Data da publicação
+  tipo: string;               // Tipo de comunicação
+  teor: string;               // Conteúdo/texto
+  numeroProcesso?: string;    // Número CNJ
+  orgao?: string;             // Órgão emissor
+  meio?: string;              // Meio de publicação
+  link?: string;              // Link para o documento
+  hash?: string;              // Hash para deduplicação
+  matchType: 'nome' | 'oab' | 'ambos';
+  lawyerId: string;
+  lawyerName?: string;
+  lawyerOAB?: string;
+  notified: boolean;
+  createdAt: string;
+}
+```
+
+---
+
+## 📧 Sistema de Notificações
+
+### Canais Suportados
+
+| Canal | Configuração | Status |
+|-------|--------------|--------|
+| **Email** | `RESEND_API_KEY` + `NOTIFICATION_EMAIL` | ⚠️ Configurar Resend |
+| **Slack** | Webhook URL | ✅ Pronto |
+| **Discord** | Webhook URL | ✅ Pronto |
+| **Microsoft Teams** | Webhook URL | ✅ Pronto |
+| **Webhook Genérico** | URL + Secret opcional | ✅ Pronto |
+
+### Configurar Email (Resend)
+
+1. Criar conta em [resend.com](https://resend.com)
+2. Criar API Key
+3. Adicionar no Vercel:
+```bash
+vercel env add RESEND_API_KEY production
+# Cole: re_xxxxxxxxx
+```
+
+### Configurar Webhook Slack
+
+1. Criar Incoming Webhook no Slack
+2. Chamar API para registrar:
+```bash
+curl -X POST "https://assistente-juridico-github.vercel.app/api/notifications/webhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Slack Jurídico",
+    "url": "https://hooks.slack.com/services/xxx/yyy/zzz",
+    "type": "slack",
+    "enabled": true,
+    "events": ["new_publication", "deadline_reminder"]
+  }'
+```
+
+### Prioridades de Notificação
+
+| Prioridade | Descrição | Emoji |
+|------------|-----------|-------|
+| `low` | Informativo | ℹ️ |
+| `normal` | Padrão | 📢 |
+| `high` | Importante | ⚠️ |
+| `urgent` | Urgente | 🚨 |
+
+---
+
+## ⏰ Cron Jobs
+
+### Configuração (vercel.json)
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron?action=djen-monitor",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron?action=daily-reset",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
+```
+
+### Horários
+
+| Job | Schedule | Horário UTC | Horário BRT |
+|-----|----------|-------------|-------------|
+| **DJEN Monitor** | `0 9 * * *` | 09:00 | 06:00 |
+| **Daily Reset** | `0 0 * * *` | 00:00 | 21:00 (dia anterior) |
+
+### O que cada Job faz
+
+**DJEN Monitor:**
+1. Carrega lista de advogados monitorados
+2. Para cada advogado ativo:
+   - Consulta API DJEN por nome e OAB
+   - Filtra por tribunais configurados
+   - Verifica duplicatas via hash SHA256
+   - Armazena novas publicações
+   - Dispara notificações
+3. Atualiza timestamp da última verificação
+
+**Daily Reset:**
+1. Reseta contadores diários dos agentes
+2. Limpa cache expirado
+3. Arquiva tarefas antigas
+
+---
+
+## 🔧 Como Reconstruir
+
+### 1. Clonar Repositório
+
+```bash
+git clone https://github.com/thiagobodevan-a11y/assistente-juridico-p.git
+cd assistente-juridico-p
+```
+
+### 2. Instalar Dependências
+
+```bash
+npm install
+```
+
+### 3. Configurar Variáveis Locais
+
+```bash
+cp .env.example .env
+# Editar .env com suas credenciais
+```
+
+### 4. Rodar Localmente
+
+```bash
+npm run dev
+# Acesse: http://localhost:5173
+```
+
+### 5. Deploy no Vercel
+
+```bash
+# Instalar Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy
+vercel --prod
+```
+
+### 6. Configurar Variáveis no Vercel
+
+```bash
+# Redis Upstash (obrigatório)
+vercel env add UPSTASH_REDIS_REST_URL production
+vercel env add UPSTASH_REDIS_REST_TOKEN production
+
+# Notificações
+vercel env add NOTIFICATION_EMAIL production
+# Digite: thiagobodevan@gmail.com
+
+# Email (opcional)
+vercel env add RESEND_API_KEY production
+```
+
+### 7. Cadastrar Advogado
+
+```bash
+curl -X POST "https://SEU-DOMINIO.vercel.app/api/lawyers" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Thiago Bodevan Veiga",
+    "oab": "184404",
+    "oabUF": "MG",
+    "email": "thiagobodevan@gmail.com",
+    "enabled": true,
+    "tribunals": ["TJMG", "TRF1", "TST", "TRT3"]
+  }'
+```
+
+### 8. Verificar Status
+
+```bash
+# Health check
+curl "https://SEU-DOMINIO.vercel.app/api/status"
+
+# Advogados cadastrados
+curl "https://SEU-DOMINIO.vercel.app/api/lawyers"
+
+# Publicações
+curl "https://SEU-DOMINIO.vercel.app/api/expedientes"
+```
+
+---
+
+## 💻 Comandos Úteis
+
+### Desenvolvimento
+
+```bash
+# Iniciar servidor de desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview do build
+npm run preview
+
+# Lint
+npm run lint
+```
+
+### Vercel CLI
+
+```bash
+# Login
+vercel login
+
+# Deploy preview
+vercel
+
+# Deploy produção
+vercel --prod
+
+# Ver logs
+vercel logs
+
+# Listar variáveis
+vercel env ls
+
+# Adicionar variável
+vercel env add NOME_VAR production
+```
+
+### Monitoramento
+
+```bash
+# Status do sistema
+curl "https://assistente-juridico-github.vercel.app/api/status"
+
+# Advogados monitorados
+curl "https://assistente-juridico-github.vercel.app/api/lawyers"
+
+# Publicações capturadas
+curl "https://assistente-juridico-github.vercel.app/api/expedientes"
+
+# Notificações pendentes
+curl "https://assistente-juridico-github.vercel.app/api/notifications"
+```
+
+### Git
+
+```bash
+# Commit e push
+git add -A && git commit -m "descrição" && git push
+
+# Ver status
+git status
+
+# Ver logs
+git log --oneline -10
+```
+
+---
+
+## 🔑 Chaves de Armazenamento (Redis)
+
+| Chave | Descrição |
+|-------|-----------|
+| `monitored-lawyers` | Lista de advogados monitorados |
+| `publications:{lawyerId}` | Publicações por advogado |
+| `publication-hashes:{lawyerId}` | Hashes para deduplicação |
+| `notification-queue` | Fila de notificações |
+| `notification-settings` | Configurações de notificação |
+| `configured-webhooks` | Webhooks configurados |
+| `last-djen-check` | Timestamp última verificação |
+| `autonomous-agents` | Estado dos agentes IA |
+| `completed-agent-tasks` | Tarefas completadas |
+| `djen-cache` | Cache de consultas DJEN |
+
+---
+
+## 📞 Suporte
+
+- **Repositório**: https://github.com/thiagobodevan-a11y/assistente-juridico-p
+- **Deploy**: https://assistente-juridico-github.vercel.app
+- **Advogado**: Thiago Bodevan Veiga - OAB/MG 184.404
+- **Email**: thiagobodevan@gmail.com
+
+---
+
+## 📄 Licença
+
+MIT License - Veja [LICENSE](LICENSE) para detalhes.
+
+---
+
+*Última atualização: 26 de Novembro de 2025*
