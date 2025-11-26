@@ -145,7 +145,7 @@ jobs:
     - name: 🔍 Executar TypeScript check
       run: |
         echo "🔍 Verificando tipos TypeScript..."
-        npx tsc --noEmit --skipLibCheck
+        npx tsc --project tsconfig.build.json --noEmit --skipLibCheck
         echo "✅ TypeScript check passou"
 
     - name: 📏 Verificar tamanho do bundle

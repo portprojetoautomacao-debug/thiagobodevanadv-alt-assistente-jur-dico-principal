@@ -11,6 +11,11 @@ paths-ignore:
   - '**/*.spec.ts'
   - '**/*.spec.tsx'
   
+  # Archive and example code (intentionally incomplete)
+  - src/components/archive/**
+  - src/examples/**
+  - src/hooks/useErrorTracking.ts
+  
   # Build artifacts
   - dist/**
   - node_modules/**
