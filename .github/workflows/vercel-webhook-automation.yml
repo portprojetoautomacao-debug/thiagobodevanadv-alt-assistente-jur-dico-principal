@@ -43,11 +43,11 @@ jobs:
         echo "DEPLOYMENT_NAME=$DEPLOYMENT_NAME" >> $GITHUB_ENV
 
     - name: 🚨 Verificar falha de deployment
-      if: env.DEPLOYMENT_STATE == 'error' || env.DEPLOYMENT_STATE == 'failed'
+      if: ${{ env.DEPLOYMENT_STATE == 'error' || env.DEPLOYMENT_STATE == 'failed' }}
       run: bash .github/scripts/handle-deployment-failure.sh
 
     - name: ✅ Verificar sucesso de deployment
-      if: env.DEPLOYMENT_STATE == 'ready'
+      if: ${{ env.DEPLOYMENT_STATE == 'ready' }}
       run: |
         echo "✅ Deployment bem-sucedido!"
 
@@ -72,7 +72,7 @@ jobs:
         fi
 
     - name: 🔄 Iniciar rollback automático (se configurado)
-      if: (env.DEPLOYMENT_STATE == 'error' || env.DEPLOYMENT_STATE == 'failed') && env.AUTO_ROLLBACK == 'true'
+      if: ${{ (env.DEPLOYMENT_STATE == 'error' || env.DEPLOYMENT_STATE == 'failed') && env.AUTO_ROLLBACK == 'true' }}
       run: |
         echo "🔄 Iniciando rollback automático..."
 

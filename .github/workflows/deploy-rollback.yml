@@ -139,14 +139,38 @@ jobs:
         echo "🚀 Deploy para Vercel Staging..."
         set +e  # Não falhar imediatamente
         
-        # Executar deploy e capturar saída completa
-        DEPLOY_OUTPUT=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
-        DEPLOY_EXIT_CODE=$?
+        # Retry logic para erros temporários do Vercel
+        MAX_RETRIES=3
+        RETRY_DELAY=30
         
-        echo "=== Output do deploy ==="
-        echo "$DEPLOY_OUTPUT"
-        echo "========================"
-        echo "Exit code: $DEPLOY_EXIT_CODE"
+        for attempt in $(seq 1 $MAX_RETRIES); do
+          echo "Tentativa $attempt de $MAX_RETRIES..."
+          
+          # Executar deploy e capturar saída completa
+          DEPLOY_OUTPUT=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          DEPLOY_EXIT_CODE=$?
+          
+          echo "=== Output do deploy ==="
+          echo "$DEPLOY_OUTPUT"
+          echo "========================"
+          echo "Exit code: $DEPLOY_EXIT_CODE"
+          
+          # Se sucesso, sair do loop
+          if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
+            break
+          fi
+          
+          # Verificar erros recuperáveis vs permanentes
+          if echo "$DEPLOY_OUTPUT" | grep -qi "internal error\|unexpected error\|timeout"; then
+            echo "⚠️ Erro temporário detectado, aguardando ${RETRY_DELAY}s antes de retry..."
+            sleep $RETRY_DELAY
+            RETRY_DELAY=$((RETRY_DELAY * 2))
+            continue
+          fi
+          
+          # Erro permanente - não fazer retry
+          break
+        done
         
         # Verificar se o deploy falhou
         if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
@@ -300,18 +324,42 @@ jobs:
         echo "🚀 Deploy para Vercel Production..."
         set +e  # Não falhar imediatamente
         
-        # Executar deploy e capturar saída completa
-        DEPLOY_OUTPUT=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
-        DEPLOY_EXIT_CODE=$?
+        # Retry logic para erros temporários do Vercel
+        MAX_RETRIES=3
+        RETRY_DELAY=30
         
-        echo "=== Output do deploy ==="
-        echo "$DEPLOY_OUTPUT"
-        echo "========================"
-        echo "Exit code: $DEPLOY_EXIT_CODE"
+        for attempt in $(seq 1 $MAX_RETRIES); do
+          echo "Tentativa $attempt de $MAX_RETRIES..."
+          
+          # Executar deploy e capturar saída completa
+          DEPLOY_OUTPUT=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          DEPLOY_EXIT_CODE=$?
+          
+          echo "=== Output do deploy ==="
+          echo "$DEPLOY_OUTPUT"
+          echo "========================"
+          echo "Exit code: $DEPLOY_EXIT_CODE"
+          
+          # Se sucesso, sair do loop
+          if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
+            break
+          fi
+          
+          # Verificar erros recuperáveis vs permanentes
+          if echo "$DEPLOY_OUTPUT" | grep -qi "internal error\|unexpected error\|timeout"; then
+            echo "⚠️ Erro temporário detectado, aguardando ${RETRY_DELAY}s antes de retry..."
+            sleep $RETRY_DELAY
+            RETRY_DELAY=$((RETRY_DELAY * 2))
+            continue
+          fi
+          
+          # Erro permanente - não fazer retry
+          break
+        done
         
-        # Verificar se o deploy falhou
+        # Verificar se o deploy falhou após todos os retries
         if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
-          echo "❌ Deploy falhou com código $DEPLOY_EXIT_CODE"
+          echo "❌ Deploy falhou com código $DEPLOY_EXIT_CODE após $MAX_RETRIES tentativas"
           if echo "$DEPLOY_OUTPUT" | grep -qi "not authorized\|unauthorized\|permission denied"; then
             echo "⚠️ Erro de autorização - verifique VERCEL_TOKEN"
           fi
