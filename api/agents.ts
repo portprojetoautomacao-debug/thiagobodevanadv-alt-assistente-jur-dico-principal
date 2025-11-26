@@ -9,7 +9,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { addTaskToQueue as _addTaskToQueue } from '../lib/api/kv-utils';
+import { addTaskToQueue as _addTaskToQueue } from './lib/kv-utils';
 
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
