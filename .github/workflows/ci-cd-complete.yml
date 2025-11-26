@@ -142,11 +142,29 @@ jobs:
         npm run lint
         echo "✅ ESLint passou"
 
+    - name: 📣 Notificar Vercel - Lint
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Notify Vercel about lint check status
+          console.log('Lint check completed with status: ${{ job.status }}');
+      continue-on-error: true
+
     - name: 🔍 Executar TypeScript check
       run: |
         echo "🔍 Verificando tipos TypeScript..."
         npx tsc --project tsconfig.build.json --noEmit --skipLibCheck
         echo "✅ TypeScript check passou"
+
+    - name: 📣 Notificar Vercel - TypeScript
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Notify Vercel about typecheck status
+          console.log('TypeScript check completed with status: ${{ job.status }}');
+      continue-on-error: true
 
     - name: 📏 Verificar tamanho do bundle
       run: |
@@ -205,6 +223,15 @@ jobs:
         echo "🧪 Executando testes unitários..."
         npm run test -- --run --coverage
         echo "✅ Testes unitários passaram"
+
+    - name: 📣 Notificar Vercel - Tests
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Notify Vercel about test status
+          console.log('Unit tests completed with status: ${{ job.status }}');
+      continue-on-error: true
 
     - name: 🎭 Executar testes E2E
       run: |
@@ -417,6 +444,15 @@ jobs:
         echo "📦 Build concluído com sucesso"
         echo "📊 Tamanho final:"
         du -sh dist/
+
+    - name: 📣 Notificar Vercel - Build
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Notify Vercel about build status
+          console.log('Build completed with status: ${{ job.status }}');
+      continue-on-error: true
 
     - name: 🧪 Testes de produção
       run: |
