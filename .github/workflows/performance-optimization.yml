@@ -54,42 +54,49 @@ jobs:
       run: |
         echo "📊 Executando análise de bundle..."
 
-        # Instalar webpack-bundle-analyzer se necessário
-        npm install --save-dev webpack-bundle-analyzer
-
-        # Build com análise de bundle
-        npm run build -- --mode analyze
-
-        # Executar análise
-        npx webpack-bundle-analyzer dist/static/js/*.js --mode static --report bundle-report.html
+        # Build com análise de bundle (Vite gera em dist/assets/)
+        npm run build
+        
+        echo "✅ Build concluído para análise"
 
     - name: 📏 Analisar Tamanho do Bundle
       run: |
         echo "📏 Analisando tamanho do bundle..."
 
         # Analisar arquivos do build
-        echo "📊 Tamanho total do build:" > bundle-size-report.md
+        echo "## 📊 Bundle Size Report" > bundle-size-report.md
+        echo "" >> bundle-size-report.md
+        echo "**Tamanho total do build:**" >> bundle-size-report.md
         du -sh dist/ >> bundle-size-report.md
         echo "" >> bundle-size-report.md
 
-        echo "📦 Top 10 maiores arquivos:" >> bundle-size-report.md
+        echo "### 📦 Top 10 maiores arquivos:" >> bundle-size-report.md
         find dist/ -type f -exec ls -lh {} \; | sort -k5 -hr | head -10 >> bundle-size-report.md
         echo "" >> bundle-size-report.md
 
-        # Analisar chunks JavaScript
-        echo "🧩 Chunks JavaScript:" >> bundle-size-report.md
-        ls -lh dist/static/js/ >> bundle-size-report.md
-        echo "" >> bundle-size-report.md
+        # Analisar chunks JavaScript (Vite usa dist/assets/)
+        if [ -d "dist/assets" ]; then
+          echo "### 🧩 Chunks JavaScript:" >> bundle-size-report.md
+          ls -lh dist/assets/*.js 2>/dev/null >> bundle-size-report.md || echo "Nenhum arquivo JS encontrado" >> bundle-size-report.md
+          echo "" >> bundle-size-report.md
+          
+          echo "### 🎨 Arquivos CSS:" >> bundle-size-report.md
+          ls -lh dist/assets/*.css 2>/dev/null >> bundle-size-report.md || echo "Nenhum arquivo CSS encontrado" >> bundle-size-report.md
+        fi
 
         # Calcular tamanhos
         TOTAL_SIZE=$(du -sb dist/ | cut -f1)
-        JS_SIZE=$(find dist/static/js/ -name "*.js" -exec stat -f%z {} \; | awk '{sum += $1} END {print sum}' 2>/dev/null || find dist/static/js/ -name "*.js" -exec stat -c%s {} \; | awk '{sum += $1} END {print sum}')
-        CSS_SIZE=$(find dist/static/css/ -name "*.css" -exec stat -f%z {} \; | awk '{sum += $1} END {print sum}' 2>/dev/null || find dist/static/css/ -name "*.css" -exec stat -c%s {} \; | awk '{sum += $1} END {print sum}')
+        JS_SIZE=$(find dist/assets/ -name "*.js" -exec stat -c%s {} \; 2>/dev/null | awk '{sum += $1} END {print sum+0}')
+        CSS_SIZE=$(find dist/assets/ -name "*.css" -exec stat -c%s {} \; 2>/dev/null | awk '{sum += $1} END {print sum+0}')
 
-        echo "📊 Métricas de tamanho:" >> bundle-size-report.md
-        echo "- **Total:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)" >> bundle-size-report.md
-        echo "- **JavaScript:** $(numfmt --to=iec-i --suffix=B $JS_SIZE)" >> bundle-size-report.md
-        echo "- **CSS:** $(numfmt --to=iec-i --suffix=B $CSS_SIZE)" >> bundle-size-report.md
+        echo "" >> bundle-size-report.md
+        echo "### 📊 Métricas de tamanho:" >> bundle-size-report.md
+        echo "- **Total:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE 2>/dev/null || echo "$TOTAL_SIZE bytes")" >> bundle-size-report.md
+        echo "- **JavaScript:** $(numfmt --to=iec-i --suffix=B $JS_SIZE 2>/dev/null || echo "$JS_SIZE bytes")" >> bundle-size-report.md
+        echo "- **CSS:** $(numfmt --to=iec-i --suffix=B $CSS_SIZE 2>/dev/null || echo "$CSS_SIZE bytes")" >> bundle-size-report.md
+
+        # Adicionar ao step summary
+        cat bundle-size-report.md >> $GITHUB_STEP_SUMMARY
 
         # Salvar métricas para comparação
         {
