@@ -692,7 +692,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
 
             // Queue email notification
-            if (lawyer.email) {
+            const emailToNotify = lawyer.email || process.env.NOTIFICATION_EMAIL;
+            if (emailToNotify) {
               await queueNotification({
                 type: 'publication',
                 title: `Nova Comunicação DJEN - ${comunicacao.tribunal}`,
@@ -706,7 +707,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   advogado: lawyer.name,
                   oab: lawyer.oab
                 },
-                recipientEmail: lawyer.email
+                recipientEmail: emailToNotify
               });
             }
           }
