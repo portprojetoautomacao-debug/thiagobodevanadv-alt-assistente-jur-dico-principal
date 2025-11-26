@@ -211,8 +211,15 @@ jobs:
 
     - name: Checkout base branch
       run: |
-        git fetch origin ${{ github.base_ref }}
-        git checkout origin/${{ github.base_ref }}
+        # Determine base branch
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_REF="${{ github.base_ref }}"
+        else
+          BASE_REF="main"
+        fi
+        
+        git fetch origin $BASE_REF
+        git checkout origin/$BASE_REF
 
     - name: Install base dependencies
       run: npm ci

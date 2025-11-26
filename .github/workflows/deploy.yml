@@ -32,9 +32,12 @@ jobs:
     outputs:
       url: ${{ steps.deploy.outputs.url }}
     environment:
-      name: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
+      name: ${{ github.event_name == 'pull_request' && 'preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
-    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
     steps:
     - name: Checkout code
@@ -150,7 +153,7 @@ jobs:
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
         VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
         VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
-        VITE_APP_ENV: ${{ github.event_name == 'pull_request' && 'preview' || github.event.inputs.environment || 'production' }}
+        VITE_APP_ENV: ${{ github.event_name == 'pull_request' && 'preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'production' }}
 
     - name: Validate Vercel secrets
       run: |
@@ -189,7 +192,7 @@ jobs:
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
           DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
-        elif [[ "${{ github.event.inputs.environment }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+        elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || '' }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "🚀 Deploying to production"
           DEPLOY_CMD="vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes"
         else
@@ -307,7 +310,7 @@ jobs:
           echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || github.event.inputs.environment || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'Production' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
           echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -401,7 +404,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📌 Deployment Information" >> $GITHUB_STEP_SUMMARY
           echo "- **Status:** Success" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || github.event.inputs.environment || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'Production' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

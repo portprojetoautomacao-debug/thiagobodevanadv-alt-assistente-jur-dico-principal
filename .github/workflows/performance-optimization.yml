@@ -34,8 +34,8 @@ jobs:
 
   bundle-analysis:
     name: '📦 Análise de Bundle'
-    runs-on: self-hosted
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'bundle-only'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'bundle-only'
 
     steps:
     - name: 📥 Checkout código
@@ -101,14 +101,14 @@ jobs:
         } > bundle-metrics.json
 
     - name: 📈 Comparar com Baseline
-      if: github.event.inputs.baseline_comparison == true
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.baseline_comparison == true
       run: |
         echo "📈 Comparando com baseline..."
 
         # Baixar métricas da branch main
-        if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
+        if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
           echo "📥 Baixando métricas da main..."
-          gh run download --repo ${{ github.repository }} --name bundle-metrics -D baseline-metrics/ || echo "Baseline não encontrada"
+          gh run download --repo $GITHUB_REPOSITORY --name bundle-metrics -D baseline-metrics/ || echo "Baseline não encontrada"
 
           if [[ -f baseline-metrics/bundle-metrics.json ]]; then
             BASELINE_TOTAL=$(jq '.total_size' baseline-metrics/bundle-metrics.json)
@@ -154,8 +154,8 @@ jobs:
 
   performance-analysis:
     name: '⚡ Análise de Performance'
-    runs-on: self-hosted
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'performance-only'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'performance-only'
 
     steps:
     - name: 📥 Checkout código
@@ -249,13 +249,13 @@ jobs:
         fi
 
     - name: 📈 Comparar Performance com Baseline
-      if: github.event.inputs.baseline_comparison == true
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.baseline_comparison == true
       run: |
         echo "📈 Comparando performance com baseline..."
 
         # Baixar métricas de performance da main
-        if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
-          gh run download --repo ${{ github.repository }} --name performance-metrics -D baseline-performance/ || echo "Baseline não encontrada"
+        if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+          gh run download --repo $GITHUB_REPOSITORY --name performance-metrics -D baseline-performance/ || echo "Baseline não encontrada"
 
           if [[ -f baseline-performance/performance-metrics.json ]]; then
             BASELINE_SCORE=$(jq '.performance_score' baseline-performance/performance-metrics.json)
@@ -285,8 +285,8 @@ jobs:
 
   build-optimizations:
     name: '🔧 Otimizações de Build'
-    runs-on: self-hosted
-    if: github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'optimization-only'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'optimization-only'
 
     steps:
     - name: 📥 Checkout código
@@ -394,7 +394,7 @@ jobs:
 
   performance-dashboard:
     name: '📊 Dashboard de Performance'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [bundle-analysis, performance-analysis, build-optimizations]
     if: always()
 
@@ -475,20 +475,30 @@ jobs:
       run: |
         echo "💬 Comentando performance no PR..."
 
-        # Comentar no PR sobre performance
-        gh pr comment ${{ github.event.number }} --body |
-          ## ⚡ Análise de Performance
+        # Criar comentário
+        COMMENT="## ⚡ Análise de Performance
 
-          **Status:** ${{ env.STATUS }}
+        **Status:** $STATUS
 
-          ### 📊 Métricas Principais
-          - **Performance Score:** $SCORE
-          - **Bundle Size:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)
-          - **LCP:** ${LCP}ms
+        ### 📊 Métricas Principais
+        - **Performance Score:** $SCORE
+        - **Bundle Size:** $(numfmt --to=iec-i --suffix=B $TOTAL_SIZE)
+        - **LCP:** ${LCP}ms"
 
-          $(if [[ "${{ env.STATUS }}" != "success" ]]; then echo "**⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**"; fi)
+        # Adicionar aviso se houver oportunidades de otimização
+        if [[ "$STATUS" != "success" ]]; then
+          COMMENT="$COMMENT
 
-          Verifique os relatórios completos nos artefatos do workflow.
+        **⚠️  Oportunidades de otimização identificadas. Verifique os artefatos para detalhes.**"
+        fi
+
+        COMMENT="$COMMENT
+
+        Verifique os relatórios completos nos artefatos do workflow."
+
+        # Comentar no PR
+        PR_NUMBER=${{ github.event.number }}
+        echo "$COMMENT" | gh pr comment $PR_NUMBER --body-file -
 
     - name: 📤 Upload Dashboard de Performance
       uses: actions/upload-artifact@v4
@@ -502,7 +512,7 @@ jobs:
 
   performance-notifications:
     name: '📢 Notificações de Performance'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: performance-dashboard
     if: always()
 
@@ -512,7 +522,7 @@ jobs:
         echo "📢 Preparando notificações de performance..."
 
         # Criar notificação baseada no status
-        if [[ "${{ env.STATUS }}" == "success" ]]; then
+        if [[ "$STATUS" == "success" ]]; then
           TITLE="✅ Performance Otimizada"
           MESSAGE="Análise de performance concluída com sucesso. Bundle e performance dentro dos parâmetros."
           PRIORITY="normal"

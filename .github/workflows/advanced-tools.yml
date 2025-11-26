@@ -1,4 +1,4 @@
-name: Ferramentas Especializadas - Self-Hosted
+name: Ferramentas Especializadas
 
 on:
   schedule:
@@ -27,7 +27,7 @@ jobs:
 
   bundle-analysis:
     name: '📦 Bundle Analysis Avançado'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'bundle-analyzer'
 
     steps:
@@ -85,7 +85,7 @@ jobs:
 
   lighthouse-advanced:
     name: '🏃 Lighthouse Performance Avançado'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'lighthouse'
 
     steps:
@@ -163,7 +163,7 @@ jobs:
 
   security-advanced:
     name: '🔒 Auditoria de Segurança Avançada'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'security-audit'
 
     steps:
@@ -232,7 +232,7 @@ jobs:
 
   performance-monitor:
     name: '⚡ Monitoramento de Performance'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'performance-monitor'
 
     steps:
@@ -303,7 +303,7 @@ jobs:
 
   accessibility-audit:
     name: '♿ Auditoria de Acessibilidade'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'accessibility'
 
     steps:
@@ -366,7 +366,7 @@ jobs:
 
   seo-analysis:
     name: '🔍 Análise SEO Avançada'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'seo-analysis'
 
     steps:
@@ -433,7 +433,7 @@ jobs:
 
   generate-reports-dashboard:
     name: '📊 Dashboard de Relatórios'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [bundle-analysis, lighthouse-advanced, security-advanced, performance-monitor, accessibility-audit, seo-analysis]
     if: always()
 

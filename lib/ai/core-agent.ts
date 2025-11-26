@@ -32,13 +32,13 @@ export interface ToolContext {
   traceId?: string; // Para correlacionar logs distribuídos
   agentId?: string;
   sessionId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Tool {
   name: string;
   description: string;
-  run: (args: any, ctx: GlobalToolContext) => Promise<any>;
+  run: (args: Record<string, unknown>, ctx: GlobalToolContext) => Promise<unknown>;
 }
 
 export interface MemoryStore {
@@ -169,9 +169,12 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       const raw = await this.opts.llm.chat(messages);
       const stepDuration = Date.now() - stepStart;
 
-      let parsed: any;
+      // Garantir que raw seja uma string válida
+      const rawContent = typeof raw === 'string' ? raw : JSON.stringify(raw);
+
+      let parsed: Record<string, unknown>;
       try {
-        parsed = JSON.parse(raw);
+        parsed = JSON.parse(rawContent);
       } catch {
         // força correção
         traces.push({
@@ -183,7 +186,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
           error: 'JSON parsing failed',
         });
         
-        messages.push({ role: "assistant", content: raw });
+        messages.push({ role: "assistant", content: rawContent });
         messages.push({
           role: "user",
           content:
@@ -196,24 +199,26 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
         const answer = parsed.answer ?? "";
 
         // FINAL: Resposta final do agente
+        const answerContent = typeof answer === 'string' ? answer : JSON.stringify(answer);
+
         traces.push({
           timestamp: new Date().toISOString(),
           step,
           type: 'final',
-          content: answer,
+          content: answerContent,
           duration: stepDuration,
         });
 
         const newHistory: ChatMessage[] = [
           ...history,
           { role: "user", content: userInput },
-          { role: "assistant", content: answer },
+          { role: "assistant", content: answerContent },
         ];
         await this.memoryStore.save(this.sessionId, newHistory);
 
-        return { 
-          answer, 
-          steps: step + 1, 
+        return {
+          answer: answerContent,
+          steps: step + 1,
           usedTools,
           traces,
           totalDuration: Date.now() - startTime,
@@ -221,8 +226,8 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       }
 
       if (parsed.action === "tool") {
-        const toolName: string = parsed.tool;
-        const toolArgs = parsed.args ?? {};
+        const toolName: string = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
+        const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
         const tool = this.allowedTools().find((t) => t.name === toolName);
 
         if (!tool) {
@@ -252,7 +257,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
           toolUsed: toolName,
         });
 
-        let result: any;
+        let result: unknown;
         const toolStart = Date.now();
         
         try {
@@ -276,20 +281,21 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
             toolUsed: toolName,
             duration: Date.now() - toolStart,
           });
-        } catch (e: any) {
+        } catch (e: unknown) {
+          const error = e instanceof Error ? e : new Error(String(e));
           result = {
             error: true,
-            message: e?.message ?? String(e),
+            message: error.message,
           };
           
           traces.push({
             timestamp: new Date().toISOString(),
             step,
             type: 'observation',
-            content: `Erro: ${e.message}`,
+            content: `Erro: ${error.message}`,
             toolUsed: toolName,
             duration: Date.now() - toolStart,
-            error: e.message,
+            error: error.message,
           });
         }
 

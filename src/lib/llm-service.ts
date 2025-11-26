@@ -6,9 +6,12 @@
  * - Model serving and optimization
  * - Unified governance and observability
  * - Advanced NLP processing capabilities
+ * 
+ * Integrated with OpenTelemetry-compatible tracing
  */
 
 import * as spark from '@github/spark/llm'
+import { tracingService, type LLMSpan } from './tracing'
 
 // LLM Models supported
 export type LLMModel = 'gpt-4o' | 'gpt-4' | 'gpt-3.5-turbo'
@@ -94,6 +97,18 @@ export class LLMService {
     const model = config.model || 'gpt-4o'
     const promptHash = this.hashPrompt(prompt)
 
+    // Start tracing span
+    const span = tracingService.startLLMSpan(model, {
+      temperature: config.temperature,
+      maxTokens: config.maxTokens,
+      attributes: {
+        'llm.request_id': requestId,
+        'llm.feature': config.feature || 'unknown',
+        'llm.cache_enabled': config.useCache !== false,
+        'llm.prompt_hash': promptHash
+      }
+    })
+
     try {
       // Check cache first
       if (config.useCache !== false) {
@@ -150,11 +165,26 @@ export class LLMService {
         this.addToCache(promptHash, response, model)
       }
 
+      // End tracing span with success
+      await tracingService.endLLMSpan(span, {
+        promptTokens: Math.floor(estimatedTokens * 0.6),
+        completionTokens: Math.floor(estimatedTokens * 0.4),
+        success: true
+      })
+
       return response
 
     } catch (error) {
       const latencyMs = Date.now() - startTime
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+      // End tracing span with error
+      await tracingService.endLLMSpan(span, {
+        promptTokens: 0,
+        completionTokens: 0,
+        success: false,
+        error: error instanceof Error ? error : new Error(errorMessage)
+      })
 
       // Record failure metrics
       this.recordMetrics({

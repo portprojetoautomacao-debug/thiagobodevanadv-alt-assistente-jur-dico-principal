@@ -77,9 +77,16 @@ fi
 # 2. Verificar sintaxe YAML
 echo ""
 echo "2️⃣ Validando sintaxe YAML..."
-python3 -c "
-import yaml
+python3 - <<'PY'
+import importlib
 import os
+import sys
+
+try:
+    yaml = importlib.import_module('yaml')
+except ModuleNotFoundError:
+    print("❌ Módulo PyYAML não encontrado. Instale com 'pip install pyyaml'.")
+    sys.exit(1)
 
 yaml_files = [
     '.gitlab/templates/security/security-component.yml',
@@ -90,31 +97,29 @@ yaml_files = [
     '.gitlab/templates/backup/backup-component.yml',
     '.gitlab/templates/container-deploy/container-deploy-component.yml',
     '.gitlab/templates/notifications/notifications-component.yml',
-    '.gitlab-ci.yml'
+    '.gitlab-ci.yml',
 ]
 
 all_valid = True
 for filepath in yaml_files:
     if os.path.exists(filepath):
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                yaml.safe_load(f)
+            with open(filepath, 'r', encoding='utf-8') as handle:
+                yaml.safe_load(handle.read())
             print(f'✅ {filepath}')
-        except Exception as e:
-            print(f'❌ {filepath}: {e}')
+        except Exception as exc:
+            print(f'❌ {filepath}: {exc}')
             all_valid = False
     else:
         print(f'⚠️  {filepath}: ARQUIVO NÃO ENCONTRADO')
         all_valid = False
 
 if all_valid:
-    print('')
-    print('🎉 Todos os arquivos YAML são válidos!')
+    print('\n🎉 Todos os arquivos YAML são válidos!')
 else:
-    print('')
-    print('❌ Alguns arquivos têm erros de sintaxe.')
-    exit(1)
-"
+    print('\n❌ Alguns arquivos têm erros de sintaxe.')
+    sys.exit(1)
+PY
 
 # 3. Verificar se o .gitlab-ci.yml usa os componentes
 echo ""
@@ -129,13 +134,13 @@ fi
 # 4. Verificar se há tags criadas
 echo ""
 echo "4️⃣ Verificando tags do repositório..."
-if git tag -l | grep -q "1\.0\.0"; then
-    echo "✅ Tag 1.0.0 existe"
+if git tag -l | grep -q "1\.1\.0"; then
+    echo "✅ Tag 1.1.0 existe"
 else
-    echo "⚠️  Tag 1.0.0 não encontrada. Criando..."
-    git tag -a 1.0.0 -m "Release 1.0.0 - CI/CD Catalog Components"
-    git push origin 1.0.0
-    echo "✅ Tag 1.0.0 criada e enviada"
+    echo "⚠️  Tag 1.1.0 não encontrada. Criando..."
+    git tag -a 1.1.0 -m "Release 1.1.0 - Componentes CI/CD Expandidos"
+    git push origin 1.1.0
+    echo "✅ Tag 1.1.0 criada e enviada"
 fi
 
 echo ""
@@ -151,14 +156,14 @@ echo ""
 echo "3. 📁 Configure o 'Base path' como: templates/"
 echo ""
 echo "4. 🏷️ Configure as tags dos componentes:"
-echo "   - security-component: 1.0.0"
-echo "   - testing-component: 1.0.0"
-echo "   - deployment-component: 1.0.0"
-echo "   - monitoring-component: 1.0.0"
-echo "   - api-testing-component: 1.0.0"
-echo "   - backup-component: 1.0.0"
-echo "   - container-deploy-component: 1.0.0"
-echo "   - notifications-component: 1.0.0"
+echo "   - security-component: 1.1.0"
+echo "   - testing-component: 1.1.0"
+echo "   - deployment-component: 1.1.0"
+echo "   - monitoring-component: 1.1.0"
+echo "   - api-testing-component: 1.1.0"
+echo "   - backup-component: 1.1.0"
+echo "   - container-deploy-component: 1.1.0"
+echo "   - notifications-component: 1.1.0"
 echo ""
 echo "5. 💾 Clique em 'Save changes'"
 echo ""

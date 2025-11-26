@@ -49,7 +49,7 @@ export function GitLabAuthButton({ onSuccess, onError }: GitLabAuthButtonProps) 
 
     try {
       const clientId = config.gitlab.oauthClientId
-      const redirectUri = config.google.redirectUri
+      const redirectUri = config.gitlab.redirectUri
 
       // GitLab OAuth URL
       const gitlabUrl = new URL('https://gitlab.com/oauth/authorize')

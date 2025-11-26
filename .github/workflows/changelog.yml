@@ -38,9 +38,9 @@ jobs:
     - name: Get version info
       id: version
       run: |
-        if [ -n "${{ github.event.inputs.version }}" ]; then
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
           VERSION="${{ github.event.inputs.version }}"
-        elif [ -n "${{ github.event.release.tag_name }}" ]; then
+        elif [ "${{ github.event_name }}" = "release" ] && [ -n "${{ github.event.release.tag_name }}" ]; then
           VERSION="${{ github.event.release.tag_name }}"
         else
           VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")

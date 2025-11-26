@@ -31,7 +31,7 @@ jobs:
   deploy-staging:
     name: '🚀 Deploy Staging'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || github.event.inputs.environment == 'staging'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     outputs:
       url: ${{ steps.deploy-staging.outputs.url }}
     environment:
@@ -51,18 +51,18 @@ jobs:
     - name: 📦 Instalar dependências
       run: npm ci
 
-    - name: 📊 Verificar limites Serverless (Hobby)
+    - name: 📊 Verificar limites Serverless (Pro)
       run: |
         FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
-        LIMIT=12
+        LIMIT=100  # Pro plan limit
         echo "📊 Serverless functions detected: $FUNCTION_COUNT"
 
         if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
-          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT)."
+          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Pro limit ($LIMIT)."
         fi
-        
+
         echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
-        echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total functions:** $FUNCTION_COUNT/100 (Pro)" >> $GITHUB_STEP_SUMMARY
 
     - name: 🤖 Verificar arquivos dos Agentes
       run: |
@@ -94,17 +94,60 @@ jobs:
         npm run build
         echo "📦 Build staging concluído"
 
+    - name: 🔐 Verificar configuração do Vercel
+      run: |
+        echo "🔐 Verificando secrets do Vercel..."
+        MISSING=0
+        
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+          echo "❌ VERCEL_TOKEN não configurado"
+          MISSING=$((MISSING + 1))
+        else
+          echo "✅ VERCEL_TOKEN configurado"
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+          echo "❌ VERCEL_ORG_ID não configurado"
+          MISSING=$((MISSING + 1))
+        else
+          echo "✅ VERCEL_ORG_ID configurado"
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+          echo "❌ VERCEL_PROJECT_ID não configurado"
+          MISSING=$((MISSING + 1))
+        else
+          echo "✅ VERCEL_PROJECT_ID configurado"
+        fi
+        
+        if [ $MISSING -gt 0 ]; then
+          echo ""
+          echo "📖 Configure os secrets em: Settings → Secrets and variables → Actions"
+          echo "   Veja: CONFIGURACAO_VERCEL_TOKEN.md para instruções"
+          exit 1
+        fi
+
+    - name: 🔧 Configurar projeto Vercel
+      run: |
+        mkdir -p .vercel
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+        cat .vercel/project.json
+
     - name: 🚀 Deploy para Vercel Staging
       id: deploy-staging
       run: |
         echo "🚀 Deploy para Vercel Staging..."
-        npx vercel --prod=false --yes
-        echo "url=https://$(npx vercel ls | grep staging | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+        DEPLOY_URL=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Falha ao obter URL do deploy"
+          exit 1
+        fi
+        echo "✅ Deploy staging concluído: $DEPLOY_URL"
+        echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_II }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🧪 Testes de smoke no staging
       run: |
@@ -125,7 +168,7 @@ jobs:
     name: '🎯 Deploy Production com Rollback'
     runs-on: ubuntu-latest
     needs: deploy-staging
-    if: (github.ref == 'refs/heads/main' && needs.deploy-staging.result == 'success') || github.event.inputs.environment == 'production'
+    if: (github.ref == 'refs/heads/main' && needs.deploy-staging.result == 'success') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     outputs:
       url: ${{ steps.deploy-production.outputs.url }}
     environment:
@@ -167,17 +210,26 @@ jobs:
         echo "BACKUP_VERSION=$VERSION" >> $GITHUB_ENV
         echo "✅ Backup criado: $VERSION"
 
+    - name: 🔧 Configurar projeto Vercel (Production)
+      run: |
+        mkdir -p .vercel
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+
     - name: 🚀 Deploy para Vercel Production
       id: deploy-production
       run: |
         echo "🚀 Deploy para Vercel Production..."
-        npx vercel --prod --yes
-        echo "url=https://$(npx vercel ls | grep production | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+        DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Falha ao obter URL do deploy"
+          exit 1
+        fi
+        echo "✅ Deploy production concluído: $DEPLOY_URL"
+        echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_II }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🧪 Testes de produção
       id: production-tests
@@ -291,16 +343,21 @@ jobs:
         echo "🔄 Fazendo rollback para: $PREVIOUS_TAG"
         git checkout $PREVIOUS_TAG
 
+    - name: 🔧 Configurar projeto Vercel (Rollback)
+      run: |
+        mkdir -p .vercel
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+
     - name: 🚀 Deploy versão anterior
       run: |
         echo "🚀 Deploy versão anterior..."
         npm ci
         npm run build
-        npx vercel --prod --yes
+        npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
       env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_II }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 📢 Notificar rollback
       run: |
@@ -379,4 +436,4 @@ jobs:
       run: |
         echo "📱 Enviando notificação via webhook..."
         # Implementar notificação para Microsoft Teams, Discord, etc.
-        echo "Notificação enviada com status: ${{ env.STATUS }}"
+        echo "Notificação enviada com status: $STATUS"

@@ -56,8 +56,12 @@ jobs:
         run: |
           echo "=== GitHub CLI Repository Metrics ==="
           
+          # Extract repo name from github.repository (format: owner/repo)
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          
           # Get open issues count
-          numOpenIssues="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=${{ github.event.repository.name }} -f query='
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          numOpenIssues="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
               repository(owner: $owner, name: $name) {
                 issues(states:OPEN){
@@ -71,7 +75,7 @@ jobs:
           echo 'NUM_OPEN_ISSUES='$numOpenIssues >> $GITHUB_ENV
           
           # Get open PRs count
-          numOpenPRs="$(gh api graphql -F owner=${{ github.repository_owner }} -F name=${{ github.event.repository.name }} -f query='
+          numOpenPRs="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
               repository(owner: $owner, name: $name) {
                 pullRequests(states:OPEN){
@@ -84,23 +88,17 @@ jobs:
           echo "Open PRs: $numOpenPRs"
           echo 'NUM_OPEN_PRS='$numOpenPRs >> $GITHUB_ENV
 
-      - name: Create summary issue (if needed)
+      - name: Create summary (in step summary instead of issue)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: env.NUM_OPEN_ISSUES > 5 || env.NUM_OPEN_PRS > 3
+        if: always()
         run: |
-          gh issue create \
-            --title "📊 Daily Report: ${{ github.event.repository.name }}" \
-            --body "## Repository Status
-          
-          **Open Issues:** ${{ env.NUM_OPEN_ISSUES }}
-          **Open PRs:** ${{ env.NUM_OPEN_PRS }}
-          
-          Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          
-          Workflow: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
-            --label "report" \
-            --assignee ${{ github.repository_owner }}
+          echo "## 📊 Repository Status Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Open Issues:** ${NUM_OPEN_ISSUES:-N/A}" >> $GITHUB_STEP_SUMMARY
+          echo "**Open PRs:** ${NUM_OPEN_PRS:-N/A}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
 
       - name: List recent commits
         env:

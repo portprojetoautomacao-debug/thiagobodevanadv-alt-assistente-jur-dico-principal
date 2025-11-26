@@ -56,8 +56,8 @@ export class HttpLlmClient implements LlmClient {
         }
 
         return String(content);
-      } catch (e: any) {
-        lastError = e;
+      } catch (e: unknown) {
+        lastError = e instanceof Error ? e : new Error(String(e));
         
         // Se for erro de timeout ou rede, tenta novamente
         if (attempt < this.maxRetries) {

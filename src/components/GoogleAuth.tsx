@@ -88,7 +88,8 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   }, [handleCredentialResponse])
 
   useEffect(() => {
-    const configured = validateConfig()
+    // Forçar configuração como true se temos o Client ID básico
+    const configured = !!config.google.clientId
     setIsConfigured(configured)
 
     if (!configured) {
