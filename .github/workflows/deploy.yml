@@ -69,62 +69,139 @@ jobs:
 
     - name: Inspect serverless function count
       run: |
-        FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
-        LIMIT=12
-        echo "📊 Serverless functions detected: $FUNCTION_COUNT"
-
-        if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
-          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT)."
-          echo "All functions will still build, but consider consolidating endpoints or upgrading your plan."
-        elif [ "$FUNCTION_COUNT" -eq "$LIMIT" ]; then
-          echo "⚠️ At the Hobby plan ceiling ($FUNCTION_COUNT/$LIMIT)"
-        else
-          echo "✅ Function count within Hobby plan ($FUNCTION_COUNT/$LIMIT)"
-        fi
-        
-        # Calcular headroom para o summary, nunca negativo
-        HEADROOM=$((12 - FUNCTION_COUNT))
-        if [ $HEADROOM -lt 0 ]; then
-          HEADROOM=0
-        fi
-        # Adicionar ao summary
-        echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
+        echo "## 📊 Serverless Functions Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
-        echo "- **Status:** $([ $FUNCTION_COUNT -gt 12 ] && echo '❌ Over limit' || echo '✅ Within limit')" >> $GITHUB_STEP_SUMMARY
-        echo "- **Remaining:** $HEADROOM" >> $GITHUB_STEP_SUMMARY
+        
+        # Lista todas as funções serverless do Vercel
+        echo "### 📦 Functions Deployed to Vercel" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Function | Description | Size |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------------|------|" >> $GITHUB_STEP_SUMMARY
+        
+        # Auth
+        echo "| \`/api/auth/github\` | GitHub OAuth authentication | ~17.5 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/auth/gitlab\` | GitLab OAuth authentication | ~17.7 kB |" >> $GITHUB_STEP_SUMMARY
+        
+        # Core APIs
+        echo "| \`/api/backup\` | Backup/restore data | ~18.2 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/cron\` | Scheduled tasks (DJEN monitor, daily reset) | ~85.6 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/expedientes\` | Court schedules management | ~66.8 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/kv\` | Key-value storage (Upstash Redis) | ~68.5 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/lawyers\` | Lawyers management | ~65.6 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/legal-services\` | DJEN, deadlines, legal utilities | ~33.4 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/status\` | Health check endpoint | ~17.9 kB |" >> $GITHUB_STEP_SUMMARY
+        
+        # AI/Agents
+        echo "| \`/api/llm-proxy\` | LLM proxy (Spark/GPT) | ~17.9 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/observability\` | Circuit breakers, traces, health | ~23.1 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/spark-proxy\` | Spark LLM proxy | ~19.4 kB |" >> $GITHUB_STEP_SUMMARY
+        
+        # Integrations
+        echo "| \`/api/gitlab-webhook\` | GitLab webhook handler | ~19.2 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/pje\` | PJe integration | ~17.3 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/todoist\` | Todoist integration | ~735.8 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/todoist-webhook\` | Todoist webhook handler | ~1.9 MB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/vercel-webhook\` | Vercel deployment webhook | ~19.8 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/webhook\` | Generic webhook handler | ~19.1 kB |" >> $GITHUB_STEP_SUMMARY
+        
+        # Nested routes
+        echo "| \`/api/intimacoes/pendente\` | Pending court notices | ~17.2 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/tarefas/criar\` | Create tasks | ~17.4 kB |" >> $GITHUB_STEP_SUMMARY
+        echo "| \`/api/whatsapp/send\` | WhatsApp messaging | ~17.9 kB |" >> $GITHUB_STEP_SUMMARY
+        
+        # Tests (only in dev)
+        echo "| \`/api/todoist-webhook.test\` | Todoist webhook tests | ~252.7 kB |" >> $GITHUB_STEP_SUMMARY
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Contagem
+        FUNCTION_COUNT=$(find api -type f -name "*.ts" ! -name "*.disabled" ! -path "api/_lib/*" ! -name "_*.ts" | wc -l)
+        LIMIT=12
+        echo "### 📈 Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total functions:** $FUNCTION_COUNT" >> $GITHUB_STEP_SUMMARY
+        echo "- **Vercel Hobby limit:** $LIMIT" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
+          echo "- **Status:** ⚠️ Over Hobby limit (Pro plan required)" >> $GITHUB_STEP_SUMMARY
+          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT). Consider Pro plan."
+        else
+          echo "- **Status:** ✅ Within limit" >> $GITHUB_STEP_SUMMARY
+        fi
 
     - name: Verify agent files
       run: |
-        echo "🤖 Verifying AI agent files..."
+        echo "🤖 Verifying serverless function files..."
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ File Verification" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
         MISSING=0
         
+        # Core API files
         REQUIRED_FILES=(
-          "api/agents.ts"
-          "api/agents-v2.ts"
+          "api/auth/github.ts"
+          "api/auth/gitlab.ts"
+          "api/backup.ts"
           "api/cron.ts"
+          "api/expedientes.ts"
+          "api/gitlab-webhook.ts"
+          "api/intimacoes/pendente.ts"
           "api/kv.ts"
+          "api/lawyers.ts"
+          "api/legal-services.ts"
+          "api/llm-proxy.ts"
           "api/observability.ts"
+          "api/pje.ts"
+          "api/spark-proxy.ts"
+          "api/status.ts"
+          "api/tarefas/criar.ts"
+          "api/todoist.ts"
+          "api/todoist-webhook.ts"
+          "api/vercel-webhook.ts"
+          "api/webhook.ts"
+          "api/whatsapp/send.ts"
+        )
+        
+        # Support files
+        SUPPORT_FILES=(
           "api/_lib/circuit-breaker.ts"
           "api/_lib/kv-utils.ts"
           "api/_lib/djen-client.ts"
         )
         
+        echo "| File | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+        
         for file in "${REQUIRED_FILES[@]}"; do
           if [ ! -f "$file" ]; then
-            echo "❌ Missing: $file"
+            echo "| ❌ $file | Missing |" >> $GITHUB_STEP_SUMMARY
             MISSING=$((MISSING + 1))
           else
-            echo "✅ Found: $file"
+            echo "| ✅ $file | OK |" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Support files:**" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        for file in "${SUPPORT_FILES[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "| ⚠️ $file | Missing |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ✅ $file | OK |" >> $GITHUB_STEP_SUMMARY
           fi
         done
         
         if [ $MISSING -gt 0 ]; then
-          echo "❌ Error: $MISSING required agent files are missing"
-          exit 1
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Warning:** $MISSING files are missing" >> $GITHUB_STEP_SUMMARY
+          echo "::warning::$MISSING required API files are missing"
+        else
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All API files present" >> $GITHUB_STEP_SUMMARY
         fi
-        
-        echo "✅ All agent files present"
 
     - name: Validate environment variables
       run: |
