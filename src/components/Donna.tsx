@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import * as spark from '@github/spark/llm'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,9 @@ import {
   Briefcase,
   Bell,
   CurrencyCircleDollar,
+  Warning,
 } from '@phosphor-icons/react'
+import type { Process } from '@/types'
 
 interface Message {
   id: string
@@ -25,44 +27,61 @@ interface Message {
 }
 
 interface Insight {
-  type: 'statistics' | 'alert' | 'trend' | 'suggestion'
+  type: 'statistics' | 'alert' | 'trend' | 'suggestion' | 'info'
   title: string
   value?: string
   description: string
   action?: string
 }
 
+interface FinancialRecord {
+  id: string
+  type: 'receita' | 'despesa'
+  description: string
+  value: number
+  date: string
+  category?: string
+}
+
+interface Task {
+  id: string
+  title: string
+  status: 'pending' | 'in_progress' | 'completed'
+  assignee?: string
+  dueDate?: string
+}
+
 const SAMPLE_QUESTIONS = [
-  "Mostre a performance da equipe",
-  "Quais são as próximas intimações?",
-  "Tarefas pendentes por colaborador",
-  "Análise financeira do mês",
+  "Status dos meus processos",
+  "Quais são os prazos urgentes?",
+  "Resumo financeiro",
+  "O que posso fazer?",
 ]
 
 const QUICK_INSIGHTS = [
   {
     icon: ChartBar,
-    title: 'Performance',
-    description: 'Performance da equipe',
-    query: 'Mostre a performance da equipe',
-  },
-  {
-    icon: Briefcase,
     title: 'Processos',
-    description: 'Status do acervo',
-    query: 'Status dos processos',
+    description: 'Ver meus processos',
+    query: 'Status dos meus processos',
   },
   {
     icon: Bell,
     title: 'Prazos',
-    description: 'Intimações urgentes',
-    query: 'Quais são as próximas intimações?',
+    description: 'Prazos urgentes',
+    query: 'Quais são os prazos urgentes?',
   },
   {
     icon: CurrencyCircleDollar,
     title: 'Financeiro',
-    description: 'Análise financeira',
-    query: 'Análise financeira do mês',
+    description: 'Resumo financeiro',
+    query: 'Resumo financeiro',
+  },
+  {
+    icon: Briefcase,
+    title: 'Ajuda',
+    description: 'O que posso fazer',
+    query: 'O que você pode fazer?',
   },
 ]
 
@@ -71,6 +90,76 @@ export default function HarveySpecter() {
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  
+  // Buscar dados REAIS do KV storage
+  const [processes] = useKV<Process[]>('processes', [])
+  const [financialRecords] = useKV<FinancialRecord[]>('financial-records', [])
+  const [tasks] = useKV<Task[]>('tasks', [])
+
+  // Calcular estatísticas REAIS
+  const realStats = useMemo(() => {
+    const now = new Date()
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000)
+    const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    
+    // Processos
+    const totalProcesses = processes?.length || 0
+    const processesByStatus = {
+      'Em Andamento': processes?.filter(p => p.status === 'ativo').length || 0,
+      'Aguardando': processes?.filter(p => p.status === 'suspenso').length || 0,
+      'Concluído': processes?.filter(p => p.status === 'concluido').length || 0,
+      'Arquivado': processes?.filter(p => p.status === 'arquivado').length || 0,
+    }
+    
+    // Prazos urgentes (próximas 48h) - baseado nos prazos dos processos
+    const urgentDeadlines = processes?.reduce((count, p) => {
+      const urgentPrazos = p.prazos?.filter(prazo => {
+        if (prazo.concluido) return false
+        const deadline = new Date(prazo.dataFinal)
+        return deadline <= in48h && deadline >= now
+      }).length || 0
+      return count + urgentPrazos
+    }, 0) || 0
+    
+    // Prazos próximos (7 dias)
+    const upcomingDeadlines = processes?.reduce((count, p) => {
+      const upcomingPrazos = p.prazos?.filter(prazo => {
+        if (prazo.concluido) return false
+        const deadline = new Date(prazo.dataFinal)
+        return deadline <= in7days && deadline >= now
+      }).length || 0
+      return count + upcomingPrazos
+    }, 0) || 0
+    
+    // Financeiro
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    const monthlyRecords = financialRecords?.filter(r => {
+      const date = new Date(r.date)
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear
+    }) || []
+    
+    const receita = monthlyRecords.filter(r => r.type === 'receita').reduce((sum, r) => sum + r.value, 0)
+    const despesas = monthlyRecords.filter(r => r.type === 'despesa').reduce((sum, r) => sum + r.value, 0)
+    const margem = receita > 0 ? ((receita - despesas) / receita * 100).toFixed(1) : '0'
+    
+    // Tarefas
+    const pendingTasks = tasks?.filter(t => t.status === 'pending').length || 0
+    const inProgressTasks = tasks?.filter(t => t.status === 'in_progress').length || 0
+    
+    return {
+      totalProcesses,
+      processesByStatus,
+      urgentDeadlines,
+      upcomingDeadlines,
+      receita,
+      despesas,
+      margem,
+      pendingTasks,
+      inProgressTasks,
+      hasData: totalProcesses > 0 || financialRecords?.length > 0 || tasks?.length > 0,
+    }
+  }, [processes, financialRecords, tasks])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -84,86 +173,101 @@ export default function HarveySpecter() {
   const getInsights = (query: string): Insight[] => {
     const lowerQuery = query.toLowerCase()
     
-    if (lowerQuery.includes('performance') || lowerQuery.includes('equipe')) {
+    // Aviso se não há dados
+    if (!realStats.hasData) {
       return [
         {
-          type: 'statistics',
-          title: 'Tarefas Concluídas',
-          value: '40',
-          description: 'Total na semana',
-        },
-        {
-          type: 'trend',
-          title: 'Melhor Desempenho',
-          value: '18',
-          description: 'Marcos Oliveira',
-        },
-        {
-          type: 'alert',
-          title: 'Atenção Necessária',
-          value: '8',
-          description: 'João Santos abaixo da meta',
+          type: 'info',
+          title: 'Sem Dados Cadastrados',
+          description: 'Cadastre processos, financeiro ou tarefas para ver estatísticas reais.',
         },
       ]
     }
     
-    if (lowerQuery.includes('processo') || lowerQuery.includes('acervo')) {
-      return [
+    if (lowerQuery.includes('processo') || lowerQuery.includes('acervo') || lowerQuery.includes('status')) {
+      const insights: Insight[] = [
         {
           type: 'statistics',
           title: 'Processos Ativos',
-          value: '127',
-          description: 'Total em andamento',
-        },
-        {
-          type: 'trend',
-          title: 'Em Contestação',
-          value: '45',
-          description: 'Processos aguardando contestação',
-        },
-        {
-          type: 'suggestion',
-          title: 'Ação Sugerida',
-          description: 'Priorizar 12 processos próximos ao prazo',
+          value: String(realStats.totalProcesses),
+          description: 'Total cadastrado no sistema',
         },
       ]
+      
+      if (realStats.processesByStatus['Em Andamento'] > 0) {
+        insights.push({
+          type: 'trend',
+          title: 'Em Andamento',
+          value: String(realStats.processesByStatus['Em Andamento']),
+          description: 'Processos ativos',
+        })
+      }
+      
+      if (realStats.urgentDeadlines > 0) {
+        insights.push({
+          type: 'alert',
+          title: 'Prazos Urgentes',
+          value: String(realStats.urgentDeadlines),
+          description: 'Nas próximas 48h',
+        })
+      }
+      
+      return insights
     }
     
-    if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo')) {
+    if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent')) {
       return [
         {
           type: 'alert',
           title: 'Prazos Urgentes',
-          value: '3',
-          description: 'Prazos fatais nas próximas 48h',
+          value: String(realStats.urgentDeadlines),
+          description: 'Nas próximas 48h',
         },
         {
           type: 'statistics',
-          title: 'Intimações Pendentes',
-          value: '18',
-          description: 'Total aguardando análise',
+          title: 'Próximos 7 dias',
+          value: String(realStats.upcomingDeadlines),
+          description: 'Total de prazos',
         },
       ]
     }
     
-    if (lowerQuery.includes('financ') || lowerQuery.includes('receita')) {
+    if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
       return [
         {
           type: 'statistics',
           title: 'Receita do Mês',
-          value: 'R$ 87.450',
-          description: 'Total recebido em honorários',
+          value: `R$ ${realStats.receita.toLocaleString('pt-BR')}`,
+          description: 'Total recebido',
         },
         {
           type: 'trend',
           title: 'Despesas',
-          value: 'R$ 34.200',
-          description: 'Total de custos operacionais',
+          value: `R$ ${realStats.despesas.toLocaleString('pt-BR')}`,
+          description: 'Total de custos',
         },
         {
-          type: 'alert',
-          title: 'Inadimplência',
-          description: '5 clientes sem cobranças há 60+ dias',
+          type: 'statistics',
+          title: 'Margem',
+          value: `${realStats.margem}%`,
+          description: 'Lucro líquido',
+        },
+      ]
+    }
+    
+    if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente') || lowerQuery.includes('equipe')) {
+      return [
+        {
+          type: 'statistics',
+          title: 'Tarefas Pendentes',
+          value: String(realStats.pendingTasks),
+          description: 'Aguardando execução',
+        },
+        {
+          type: 'trend',
+          title: 'Em Progresso',
+          value: String(realStats.inProgressTasks),
+          description: 'Sendo executadas',
         },
       ]
     }
@@ -172,7 +276,7 @@ export default function HarveySpecter() {
       {
         type: 'suggestion',
         title: 'Experimente Perguntar',
-        description: 'Performance da equipe, Status de processos, Prazos urgentes, ou Análise financeira',
+        description: 'Status dos processos, Prazos urgentes, Resumo financeiro, ou Tarefas pendentes',
       },
     ]
   }
@@ -183,19 +287,35 @@ export default function HarveySpecter() {
         throw new Error('Spark SDK not available')
       }
 
+      // Construir contexto com dados REAIS
+      const contextData = realStats.hasData 
+        ? `Contexto REAL do escritório (dados do sistema):
+- ${realStats.totalProcesses} processos cadastrados
+  - Em Andamento: ${realStats.processesByStatus['Em Andamento']}
+  - Aguardando: ${realStats.processesByStatus['Aguardando']}
+  - Concluídos: ${realStats.processesByStatus['Concluído']}
+  - Arquivados: ${realStats.processesByStatus['Arquivado']}
+- ${realStats.urgentDeadlines} prazos urgentes (próximas 48h)
+- ${realStats.upcomingDeadlines} prazos nos próximos 7 dias
+- Receita do mês: R$ ${realStats.receita.toLocaleString('pt-BR')}
+- Despesas do mês: R$ ${realStats.despesas.toLocaleString('pt-BR')}
+- Margem: ${realStats.margem}%
+- ${realStats.pendingTasks} tarefas pendentes
+- ${realStats.inProgressTasks} tarefas em progresso`
+        : `Contexto: O sistema ainda não possui dados cadastrados. O usuário precisa cadastrar processos, registros financeiros e tarefas para ter informações reais.`
+
       const prompt = `Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
 
-Contexto do escritório:
-- 127 processos ativos (45 em contestação, 25 em recurso, 57 aguardando sentença)
-- Equipe: Marcos Oliveira (18 tarefas/semana), Maria Silva (14 tarefas/semana), João Santos (8 tarefas/semana)
-- 3 prazos urgentes nas próximas 48h
-- 18 intimações pendentes de análise
-- Receita mensal: R$ 87.450 | Despesas: R$ 34.200 | Margem: 61%
-- 5 clientes com inadimplência 60+ dias
+${contextData}
+
+IMPORTANTE: 
+- Use APENAS os dados fornecidos acima. NÃO invente dados.
+- Se não houver dados, informe que o usuário precisa cadastrar informações.
+- Seja honesto sobre a situação real do sistema.
 
 Pergunta do usuário: ${userQuery}
 
-Responda de forma profissional, objetiva e com insights estratégicos. Use markdown para formatação e emojis quando apropriado. Seja direto e forneça recomendações acionáveis quando relevante.`
+Responda de forma profissional, objetiva e com insights estratégicos baseados nos dados REAIS. Use markdown para formatação. Seja direto e forneça recomendações acionáveis quando relevante.`
 
       const response = await Promise.race([
         spark.llm(prompt, 'gpt-4o-mini'),
@@ -208,110 +328,96 @@ Responda de forma profissional, objetiva e com insights estratégicos. Use markd
     } catch (error) {
       console.error('LLM Error:', error)
       
+      // Fallback com dados REAIS
       const lowerQuery = userQuery.toLowerCase()
       
-      if (lowerQuery.includes('performance') || lowerQuery.includes('equipe')) {
-        return `**Análise de Performance da Equipe - ${new Date().toLocaleDateString('pt-BR')}**
+      if (!realStats.hasData) {
+        return `**Sistema sem dados cadastrados**
 
-**Destaques:**
-• Marcos Oliveira manteve excelência com 18 tarefas concluídas (vs. média de 12)
-• Maria Silva equilibrada com 14 tarefas (dentro da meta)
-• João Santos apresentou queda de produtividade (apenas 8 tarefas concluídas)
+Ainda não há processos, registros financeiros ou tarefas cadastrados no sistema.
 
-**Recomendações:**
-1. Reconhecer publicamente o desempenho de Marcos
-2. Investigar possíveis bloqueios com João Santos
-3. Redistribuir carga se necessário`
+**Para começar:**
+1. Acesse **Acervo (CRM)** para cadastrar processos
+2. Use **Financeiro** para registrar receitas e despesas
+3. Gerencie tarefas em **Expedientes**
+
+Assim que houver dados, poderei fornecer análises e insights reais sobre seu escritório.`
       }
       
-      if (lowerQuery.includes('processo') || lowerQuery.includes('acervo')) {
-        return `**Status do Acervo de Processos**
+      if (lowerQuery.includes('processo') || lowerQuery.includes('acervo') || lowerQuery.includes('status')) {
+        return `**Status dos Processos**
 
-• 127 processos em andamento
-• 45 em fase de contestação
-• 25 em fase recursal
-• 57 aguardando sentença
+📊 **Total cadastrado:** ${realStats.totalProcesses} processos
 
-⚡ **Ações Prioritárias:**
-1. 12 processos com prazos críticos (< 7 dias)
-2. Revisar 8 processos sem movimentação há 30+ dias`
+**Por status:**
+• Em Andamento: ${realStats.processesByStatus['Em Andamento']}
+• Aguardando: ${realStats.processesByStatus['Aguardando']}
+• Concluídos: ${realStats.processesByStatus['Concluído']}
+• Arquivados: ${realStats.processesByStatus['Arquivado']}
+
+${realStats.urgentDeadlines > 0 ? `⚠️ **Atenção:** ${realStats.urgentDeadlines} processo(s) com prazo nas próximas 48h` : '✅ Nenhum prazo urgente nas próximas 48h'}`
       }
       
-      if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo')) {
-        return `**Prazos e Intimações - Visão Geral**
+      if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent')) {
+        return `**Prazos e Deadlines**
 
-⚠️ **URGENTE - Próximas 48h:**
-• Processo 0001234-56.2024.8.02.0001 - Contestação (vence amanhã)
-• Processo 0003456-78.2024.8.02.0001 - Recurso (vence em 2 dias)
+${realStats.urgentDeadlines > 0 
+  ? `⚠️ **URGENTE:** ${realStats.urgentDeadlines} prazo(s) nas próximas 48h`
+  : '✅ Nenhum prazo urgente nas próximas 48h'}
 
-⚠️ **Próximos 7 dias:**
-• 8 audiências agendadas
-• 15 prazos para manifestação`
+📅 **Próximos 7 dias:** ${realStats.upcomingDeadlines} prazo(s)
+
+${realStats.urgentDeadlines > 0 
+  ? '**Recomendação:** Acesse o CRM para verificar os processos com prazos urgentes.'
+  : 'Situação tranquila em relação a prazos.'}`
       }
       
-      if (lowerQuery.includes('financ') || lowerQuery.includes('receita')) {
-        return `**Análise Financeira - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**
+      if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
+        const lucro = realStats.receita - realStats.despesas
+        return `**Resumo Financeiro - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**
 
-📊 **Receita:**
-• Total recebido: R$ 87.450
-• Honorários êxito: R$ 18.900
-• Honorários contratuais: R$ 68.550
+📊 **Receita:** R$ ${realStats.receita.toLocaleString('pt-BR')}
+💰 **Despesas:** R$ ${realStats.despesas.toLocaleString('pt-BR')}
+💎 **Lucro:** R$ ${lucro.toLocaleString('pt-BR')} (${realStats.margem}% margem)
 
-💰 **Despesas:**
-• Total: R$ 34.200
-• Infraestrutura: R$ 12.800
-• Pessoal: R$ 21.400
-
-💎 **Resultado:**
-• Lucro líquido: R$ 53.250 (61% margem)
-
-���️ **Alertas:**
-• 5 clientes com pendências há 60+ dias`
+${realStats.receita === 0 && realStats.despesas === 0 
+  ? '⚠️ Nenhum registro financeiro neste mês. Cadastre receitas e despesas em **Financeiro**.'
+  : lucro > 0 ? '✅ Resultado positivo no mês.' : '⚠️ Despesas maiores que receitas.'}`
       }
       
-      if (lowerQuery.includes('cliente')) {
-        return `**Top 5 Clientes por Volume de Processos**
+      if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente') || lowerQuery.includes('equipe')) {
+        return `**Tarefas**
 
-1. XYZ Transportadora - 28 processos ativos
-2. ABC Comércio - 15 processos ativos
-3. João da Silva - 13 processos ativos
-4. DEF Indústria - 12 processos ativos
-5. GHI Serviços - 9 processos ativos
+📋 **Pendentes:** ${realStats.pendingTasks}
+🔄 **Em progresso:** ${realStats.inProgressTasks}
 
-**Observações:**
-• XYZ Transportadora: Principal cliente, necessita atenção especial
-• João da Silva: 90% taxa de sucesso (excelente relacionamento)`
+${realStats.pendingTasks + realStats.inProgressTasks === 0 
+  ? 'Nenhuma tarefa cadastrada. Use **Expedientes** para gerenciar tarefas.'
+  : 'Acesse **Expedientes** para gerenciar suas tarefas.'}`
       }
       
-      if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente')) {
-        return `**Tarefas Pendentes por Colaborador**
+      if (lowerQuery.includes('ajuda') || lowerQuery.includes('fazer') || lowerQuery.includes('oi') || lowerQuery.includes('olá')) {
+        return `Olá! Sou o Harvey Specter, seu assistente jurídico. 
 
-**Marcos Oliveira:**
-• 5 contestações aguardando redação
-• 2 recursos para revisar
-• 3 audiências para preparar
+**Posso ajudar com:**
+• Status dos seus processos cadastrados
+• Alertas de prazos urgentes
+• Resumo financeiro do mês
+• Visão geral de tarefas
 
-**Maria Silva:**
-• 4 petições iniciais para elaborar
-• 6 intimações para analisar
-• 1 acordo para negociar
-
-**João Santos:**
-• 3 pesquisas jurídicas pendentes
-• 2 pareceres para finalizar
-• 4 processos para atualizar`
-      }
-      
-      return `Olá! Sou o Harvey Specter, seu assistente jurídico inteligente. 
-
-Posso ajudar você com:
-• Análise de performance da equipe
-• Status e gerenciamento de processos
-• Monitoramento de prazos e intimações
-• Relatórios financeiros
-• Gestão de tarefas e colaboradores
+**Dica:** Quanto mais dados você cadastrar no sistema, mais úteis serão minhas análises!
 
 O que você gostaria de saber?`
+      }
+      
+      return `Olá! Sou o Harvey Specter, seu assistente jurídico.
+
+**Seu escritório agora:**
+• ${realStats.totalProcesses} processos cadastrados
+• ${realStats.urgentDeadlines} prazos urgentes
+• Receita do mês: R$ ${realStats.receita.toLocaleString('pt-BR')}
+
+Como posso ajudar?`
     }
   }
 
@@ -430,6 +536,8 @@ O que você gostaria de saber?`
         return <ChartBar className="w-5 h-5" weight="fill" />
       case 'suggestion':
         return <Briefcase className="w-5 h-5" weight="fill" />
+      case 'info':
+        return <Warning className="w-5 h-5" weight="fill" />
       default:
         return <ChartBar className="w-5 h-5" weight="fill" />
     }
@@ -445,6 +553,8 @@ O que você gostaria de saber?`
         return 'text-accent bg-accent/10'
       case 'suggestion':
         return 'text-secondary bg-secondary/10'
+      case 'info':
+        return 'text-amber-600 bg-amber-100 dark:bg-amber-900/20'
       default:
         return 'text-primary bg-primary/10'
     }
