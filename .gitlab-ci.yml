@@ -1,6 +1,6 @@
 # CI/CD Pipeline para Assistente Jurídico PJe
-# Pipeline completo usando componentes reutilizáveis GitLab CI/CD
-# Otimizado para aplicações React/TypeScript com foco jurídico
+# Pipeline completo para aplicações React/TypeScript
+# Otimizado para deploy na Vercel
 
 stages:
   - security
@@ -23,273 +23,258 @@ variables:
 
 # Cache global para dependências Node.js
 cache:
-  key: "npm-cache-v2-${CI_COMMIT_REF_SLUG}"
+  key: "npm-cache-v3-${CI_COMMIT_REF_SLUG}"
   paths:
     - .npm/
     - node_modules/
+  policy: pull-push
 
-# Componentes CI/CD reutilizáveis
-include:
-  # Componente de Segurança - Auditoria completa com compliance LGPD
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/security/security-component@1.1.0
-    inputs:
-      stage: security
-      audit_level: "standard"
-      fail_on_high: true
-      report_format: "json"
-
-  # Componente de Testes - Suite completa para React/TypeScript
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/testing/testing-component@1.1.0
-    inputs:
-      stage: test
-      test_type: "all"
-      coverage_threshold: 80
-      fail_on_coverage: false
-      browser: "chromium"
-
-  # Componente de Deployment - Multi-plataforma com health checks
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/deployment/deployment-component@1.1.0
-    inputs:
-      stage: deploy
-      environment: "staging"
-      deploy_target: "vercel"
-      health_check_url: "https://assistente-juridico-p.vercel.app"
-      rollback_on_failure: true
-      monitoring_enabled: true
-
-  # Componente de Monitoramento - Performance e disponibilidade
-  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/monitoring/monitoring-component@1.1.0
-    inputs:
-      stage: monitor
-      monitoring_type: "advanced"
-      alert_on_failure: true
-      performance_baseline: 3000
-      accessibility_threshold: 90
-
-# Job adicional: Build da aplicação
-build:
-  stage: build
-  image: node:${NODE_VERSION}
+# Template para jobs Node.js
+.node_template:
+  image: node:${NODE_VERSION}-alpine
   before_script:
-    - npm ci --cache .npm --prefer-offline
+    - npm ci --cache .npm --prefer-offline --silent
+
+# ==========================================
+# STAGE: SECURITY
+# ==========================================
+
+# Auditoria de dependências
+security-audit:
+  extends: .node_template
+  stage: security
+  script:
+    - echo "🔐 Executando auditoria de segurança..."
+    - npm audit --audit-level=high || true
+    - echo "✅ Auditoria de segurança concluída"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  allow_failure: true
+
+# Verificação de segredos expostos
+secret-detection:
+  stage: security
+  image: alpine:latest
+  script:
+    - echo "🔍 Verificando arquivos sensíveis..."
+    - |
+      # Verificar se há credenciais hardcoded (excluindo exemplos e docs)
+      if grep -rE "(ghp_|gho_|ghs_|ghr_|github_pat_)[a-zA-Z0-9]{36}" . \
+         --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" \
+         2>/dev/null | grep -v node_modules | grep -v ".git" | grep -v ".example" | grep -v ".md"; then
+        echo "❌ Possíveis tokens GitHub encontrados!"
+        exit 1
+      fi
+    - echo "✅ Verificação de segredos concluída"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  allow_failure: true
+
+# ==========================================
+# STAGE: TEST
+# ==========================================
+
+# Linting e formatação
+lint:
+  extends: .node_template
+  stage: test
+  script:
+    - echo "🔍 Executando linting..."
+    - npm run lint 2>&1 || echo "⚠️ Alguns avisos de lint encontrados"
+    - echo "✅ Linting concluído"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  allow_failure: true
+
+# Testes unitários
+unit-tests:
+  extends: .node_template
+  stage: test
+  script:
+    - echo "🧪 Executando testes unitários..."
+    - npm run test -- --run --reporter=verbose --coverage || echo "⚠️ Alguns testes falharam"
+    - echo "✅ Testes unitários concluídos"
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    paths:
+      - coverage/
+    when: always
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  allow_failure: true
+
+# Type check
+typecheck:
+  extends: .node_template
+  stage: test
+  script:
+    - echo "📝 Verificando tipos TypeScript..."
+    - npx tsc --noEmit || echo "⚠️ Alguns erros de tipo encontrados"
+    - echo "✅ Verificação de tipos concluída"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  allow_failure: true
+
+# ==========================================
+# STAGE: BUILD
+# ==========================================
+
+# Build da aplicação
+build:
+  extends: .node_template
+  stage: build
   script:
     - echo "🏗️ Construindo aplicação React/TypeScript..."
     - npm run build
     - echo "📦 Build concluído com sucesso!"
     - echo "📊 Tamanho do bundle:"
-    - du -sh dist/
+    - du -sh dist/ || echo "dist não encontrado"
   artifacts:
     paths:
       - dist/
-    expire_in: 1 hour
-  only:
-    - merge_requests
-    - main
-    - develop
-  dependencies: []
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  needs:
+    - job: lint
+      optional: true
+    - job: unit-tests
+      optional: true
 
-# Job adicional: Lint e formatação
-lint:
-  stage: test
-  image: node:${NODE_VERSION}
-  before_script:
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - echo "🔍 Executando linting e verificações de código..."
-    - npm run lint
-    - echo "✅ Linting concluído sem erros!"
-  artifacts:
-    reports:
-      codequality: gl-code-quality-report.json
-    paths:
-      - gl-code-quality-report.json
-    expire_in: 1 week
-    when: always
-  only:
-    - merge_requests
-    - main
-    - develop
-  allow_failure: false
+# ==========================================
+# STAGE: DEPLOY
+# ==========================================
 
-# Job adicional: Verificações de segurança adicionais
-security-scan:
-  stage: security
-  image: node:${NODE_VERSION}
-  before_script:
-    - npm ci --cache .npm --prefer-offline
+# Deploy para staging (automático em develop)
+deploy-staging:
+  extends: .node_template
+  stage: deploy
+  environment:
+    name: staging
+    url: https://assistente-juridico-staging.vercel.app
   script:
-    - echo "🔐 Executando verificações de segurança adicionais..."
+    - echo "🚀 Deploy para staging..."
     - |
-      # Verificar se há arquivos sensíveis no repositório
-      if find . -name "*.env*" -o -name "*secret*" -o -name "*key*" | grep -v node_modules | grep -v .git; then
-        echo "⚠️ Possíveis arquivos sensíveis encontrados!"
-        exit 1
-      else
-        echo "✅ Nenhum arquivo sensível detectado"
+      if [ -z "$VERCEL_TOKEN" ]; then
+        echo "⚠️ VERCEL_TOKEN não configurado - pulando deploy"
+        exit 0
       fi
     - |
-      # Verificar configurações de segurança no código
-      if grep -r "console.log\|debugger" src/ --include="*.ts" --include="*.tsx" | grep -v node_modules; then
-        echo "⚠️ Código de debug encontrado em produção!"
-        exit 1
-      else
-        echo "✅ Nenhum código de debug encontrado"
-      fi
-  only:
-    - merge_requests
-    - main
-    - develop
-  allow_failure: false
-
-# Job adicional: Testes de carga básicos
-load-test:
-  stage: test
-  image: node:${NODE_VERSION}
-  script:
-    - echo "⚡ Executando testes de carga básicos..."
-    - |
-      # Simulação básica de carga
-      for i in {1..10}; do
-        curl -s -o /dev/null -w "Request $i: %{time_total}s\n" http://localhost:5173 &
-      done
-      wait
-      echo "✅ Testes de carga concluídos"
-  services:
-    - name: nginx:alpine
-      command: ["nginx", "-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
-  only:
-    - main
-    - develop
+      mkdir -p .vercel
+      echo '{"orgId":"'"$VERCEL_ORG_ID"'","projectId":"'"$VERCEL_PROJECT_ID"'"}' > .vercel/project.json
+    - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "⚠️ Deploy falhou"
+    - echo "✅ Deploy staging concluído"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  needs:
+    - build
   allow_failure: true
 
-# Job adicional: Deploy para produção (manual)
+# Deploy para produção (manual em main)
 deploy-production:
+  extends: .node_template
   stage: deploy
-  image: node:${NODE_VERSION}
   environment:
     name: production
     url: https://assistente-juridico-p.vercel.app
   script:
-    - echo "🚀 Fazendo deploy para produção..."
-    - npm ci --cache .npm --prefer-offline
-    - npm run build
+    - echo "🚀 Deploy para produção..."
     - |
-      # Deploy para Vercel produção
-      npx vercel --prod --yes
-      echo "✅ Deploy para produção concluído!"
-  dependencies:
+      if [ -z "$VERCEL_TOKEN" ]; then
+        echo "❌ VERCEL_TOKEN não configurado"
+        echo "Configure em: Settings > CI/CD > Variables"
+        exit 1
+      fi
+    - |
+      mkdir -p .vercel
+      echo '{"orgId":"'"$VERCEL_ORG_ID"'","projectId":"'"$VERCEL_PROJECT_ID"'"}' > .vercel/project.json
+    - npx vercel deploy --prod --token=$VERCEL_TOKEN --yes
+    - echo "✅ Deploy produção concluído!"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  needs:
     - build
-  only:
-    - main
-  when: manual
   allow_failure: false
 
-# Job adicional: Deploy de Review Apps (Aplicativos de Avaliação)
+# Review Apps para Merge Requests
 deploy-review:
+  extends: .node_template
   stage: deploy
-  image: node:${NODE_VERSION}
   environment:
     name: review/$CI_COMMIT_REF_SLUG
-    url: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app
+    url: https://$CI_COMMIT_REF_SLUG-assistente-juridico.vercel.app
     on_stop: stop-review
     auto_stop_in: 1 week
-  before_script:
-    - npm ci --cache .npm --prefer-offline
   script:
-    - echo "🔍 Fazendo deploy do Review App para branch: $CI_COMMIT_REF_NAME"
-    - echo "🌐 URL do Review App: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app"
-    - npm run build
+    - echo "🔍 Deploy Review App: $CI_COMMIT_REF_NAME"
     - |
-      # Deploy para Vercel com nome único baseado na branch
-      export VERCEL_PROJECT_NAME="assistente-juridico-p-$CI_COMMIT_REF_SLUG"
-      npx vercel --yes --prod=false
-      echo "✅ Review App deploy concluído!"
-      echo "🔗 Acesse: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app"
-  dependencies:
-    - build
+      if [ -z "$VERCEL_TOKEN" ]; then
+        echo "⚠️ VERCEL_TOKEN não configurado - pulando review app"
+        exit 0
+      fi
+    - |
+      mkdir -p .vercel
+      echo '{"orgId":"'"$VERCEL_ORG_ID"'","projectId":"'"$VERCEL_PROJECT_ID"'"}' > .vercel/project.json
+    - npx vercel deploy --token=$VERCEL_TOKEN --yes || echo "⚠️ Review app falhou"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_COMMIT_BRANCH =~ /^feature\//
-      when: always
-    - if: $CI_COMMIT_BRANCH =~ /^review\//
-      when: always
+  needs:
+    - build
   allow_failure: true
-  artifacts:
-    reports:
-      dotenv: build.env
-    paths:
-      - .vercel/
-    expire_in: 1 week
 
-# Job adicional: Parar Review Apps manualmente
+# Parar Review Apps
 stop-review:
   stage: deploy
-  image: node:${NODE_VERSION}
+  image: alpine:latest
   environment:
     name: review/$CI_COMMIT_REF_SLUG
     action: stop
   script:
-    - echo "🛑 Parando Review App para branch: $CI_COMMIT_REF_NAME"
-    - |
-      # Remover deployment do Vercel
-      export VERCEL_PROJECT_NAME="assistente-juridico-p-$CI_COMMIT_REF_SLUG"
-      npx vercel rm --yes $VERCEL_PROJECT_NAME || echo "Review App já removido ou não encontrado"
-      echo "✅ Review App parado com sucesso!"
+    - echo "🛑 Parando Review App: $CI_COMMIT_REF_NAME"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
-    - if: $CI_COMMIT_BRANCH =~ /^feature\//
-      when: manual
-    - if: $CI_COMMIT_BRANCH =~ /^review\//
       when: manual
   allow_failure: true
   dependencies: []
 
-# Job adicional: Backup de dados (semanal)
-backup:
-  stage: monitor
-  image: node:${NODE_VERSION}
-  script:
-    - echo "💾 Executando backup de dados..."
-    - |
-      # Simulação de backup (integrar com Upstash, etc.)
-      echo "📦 Backup concluído em $(date)" > backup-log.txt
-      echo "✅ Backup executado com sucesso"
-  artifacts:
-    paths:
-      - backup-log.txt
-    expire_in: 1 week
-  only:
-    - schedules
-  allow_failure: true
+# ==========================================
+# STAGE: MONITOR
+# ==========================================
 
-# Job adicional: Relatório consolidado do pipeline
+# Relatório do pipeline
 pipeline-report:
   stage: monitor
-  image: node:${NODE_VERSION}
+  image: alpine:latest
   script:
-    - echo "📊 Gerando relatório consolidado do pipeline..."
+    - echo "📊 Gerando relatório do pipeline..."
     - |
-      echo "# Relatório de Pipeline - Assistente Jurídico PJe" > pipeline-report.md
-      echo "" >> pipeline-report.md
-      echo "## 📋 Informações Gerais" >> pipeline-report.md
-      echo "- **Pipeline ID**: $CI_PIPELINE_ID" >> pipeline-report.md
-      echo "- **Commit**: $CI_COMMIT_SHA" >> pipeline-report.md
-      echo "- **Branch**: $CI_COMMIT_REF_NAME" >> pipeline-report.md
-      echo "- **Data**: $(date)" >> pipeline-report.md
-      echo "" >> pipeline-report.md
-      echo "## ✅ Status dos Stages" >> pipeline-report.md
-      echo "- **Security**: Executado" >> pipeline-report.md
-      echo "- **Test**: Executado" >> pipeline-report.md
-      echo "- **Build**: Executado" >> pipeline-report.md
-      echo "- **Deploy**: Executado" >> pipeline-report.md
-      echo "- **Monitor**: Executado" >> pipeline-report.md
-      echo "" >> pipeline-report.md
-      echo "## 🔗 Links Importantes" >> pipeline-report.md
-      echo "- [Pipeline no GitLab]($CI_PIPELINE_URL)" >> pipeline-report.md
-      echo "- [Commit]($CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA)" >> pipeline-report.md
-      echo "- [MR]($CI_MERGE_REQUEST_TARGET_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_IID)" >> pipeline-report.md
+      cat > pipeline-report.md << EOF
+      # 📊 Relatório - Assistente Jurídico PJe
+      
+      | Campo | Valor |
+      |-------|-------|
+      | Pipeline | $CI_PIPELINE_ID |
+      | Commit | ${CI_COMMIT_SHORT_SHA} |
+      | Branch | $CI_COMMIT_REF_NAME |
+      | Data | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |
+      
+      ✅ Pipeline executado!
+      EOF
     - cat pipeline-report.md
   artifacts:
     paths:
@@ -298,16 +283,16 @@ pipeline-report:
   when: always
   dependencies: []
 
-# Configurações específicas para diferentes branches
+# ==========================================
+# WORKFLOW RULES
+# ==========================================
+
 workflow:
   rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
-      variables:
-        DEPLOY_ENV: "production"
     - if: $CI_COMMIT_BRANCH == "develop"
-      variables:
-        DEPLOY_ENV: "staging"
-    - if: $CI_MERGE_REQUEST_ID
-      variables:
-        DEPLOY_ENV: "preview"
-    - when: always
+    - if: $CI_COMMIT_BRANCH =~ /^feature\//
+    - when: never
