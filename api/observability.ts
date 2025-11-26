@@ -3,7 +3,7 @@
 // Monitora: circuit breakers, traces, health das APIs
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { CircuitBreakerRegistry } from '../lib/ai/circuit-breaker';
+import { CircuitBreakerRegistry } from './_lib/circuit-breaker';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
