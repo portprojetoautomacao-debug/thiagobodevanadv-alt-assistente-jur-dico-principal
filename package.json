@@ -9,7 +9,7 @@
     "scripts": {
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
-        "build": "tsc -p tsconfig.build.json && vite build",
+        "build": "tsc && vite build",
         "start": "serve -s dist -l 10000",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150",
         "lint:sarif": "eslint . --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
@@ -142,4 +142,3 @@
         }
     }
 }
-Wed Nov 26 02:05:17 UTC 2025
