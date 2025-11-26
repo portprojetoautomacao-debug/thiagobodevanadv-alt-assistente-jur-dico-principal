@@ -94,17 +94,54 @@ jobs:
         npm run build
         echo "📦 Build staging concluído"
 
+    - name: 🔐 Verificar configuração do Vercel
+      run: |
+        echo "🔐 Verificando secrets do Vercel..."
+        MISSING=0
+        
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+          echo "❌ VERCEL_TOKEN não configurado"
+          MISSING=$((MISSING + 1))
+        else
+          echo "✅ VERCEL_TOKEN configurado"
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+          echo "❌ VERCEL_ORG_ID não configurado"
+          MISSING=$((MISSING + 1))
+        else
+          echo "✅ VERCEL_ORG_ID configurado"
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+          echo "❌ VERCEL_PROJECT_ID não configurado"
+          MISSING=$((MISSING + 1))
+        else
+          echo "✅ VERCEL_PROJECT_ID configurado"
+        fi
+        
+        if [ $MISSING -gt 0 ]; then
+          echo ""
+          echo "📖 Configure os secrets em: Settings → Secrets and variables → Actions"
+          echo "   Veja: CONFIGURACAO_VERCEL_TOKEN.md para instruções"
+          exit 1
+        fi
+
     - name: 🚀 Deploy para Vercel Staging
       id: deploy-staging
       run: |
         echo "🚀 Deploy para Vercel Staging..."
-        npx vercel --prod=false --yes
-        echo "url=https://$(npx vercel ls | grep staging | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+        DEPLOY_URL=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Falha ao obter URL do deploy"
+          exit 1
+        fi
+        echo "✅ Deploy staging concluído: $DEPLOY_URL"
+        echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🧪 Testes de smoke no staging
       run: |
@@ -171,13 +208,17 @@ jobs:
       id: deploy-production
       run: |
         echo "🚀 Deploy para Vercel Production..."
-        npx vercel --prod --yes
-        echo "url=https://$(npx vercel ls | grep production | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+        DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Falha ao obter URL do deploy"
+          exit 1
+        fi
+        echo "✅ Deploy production concluído: $DEPLOY_URL"
+        echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🧪 Testes de produção
       id: production-tests
@@ -296,11 +337,11 @@ jobs:
         echo "🚀 Deploy versão anterior..."
         npm ci
         npm run build
-        npx vercel --prod --yes
+        npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_NEW }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_NEW }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 📢 Notificar rollback
       run: |
@@ -379,4 +420,4 @@ jobs:
       run: |
         echo "📱 Enviando notificação via webhook..."
         # Implementar notificação para Microsoft Teams, Discord, etc.
-        echo "Notificação enviada com status: ${{ env.STATUS }}"
+        echo "Notificação enviada com status: $STATUS"
