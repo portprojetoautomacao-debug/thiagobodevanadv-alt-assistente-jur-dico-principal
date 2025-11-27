@@ -12,6 +12,50 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 - 💰 **Gestão Financeira**: Controle de custos e honorários
 - ⚡ **7 Agentes Autônomos**: Trabalhando 24/7
 
+---
+
+## 📢 DJEN - API GRATUITA DO CNJ (DICA IMPORTANTE!)
+
+> **💡 Você NÃO precisa pagar "robôs" privados para monitorar suas intimações!**
+
+O **Conselho Nacional de Justiça (CNJ)** disponibiliza uma **API pública e gratuita** para acessar os dados do DJEN (Diário de Justiça Eletrônico Nacional).
+
+### 🔗 Como Acessar Manualmente
+
+Basta abrir no seu navegador (Chrome, Firefox, etc):
+
+```
+https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab={SEU_NUMERO_OAB}&ufOab={SIGLA_ESTADO}&meio=D
+```
+
+**Exemplo prático:**
+```
+https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=12345&ufOab=SP&meio=D
+```
+
+### 📝 Parâmetros
+
+| Parâmetro | Descrição | Exemplo |
+|-----------|-----------|---------|
+| `numeroOab` | Número da sua OAB (apenas números) | `12345` |
+| `ufOab` | Sigla do estado da OAB | `SP`, `PR`, `MG`, `RJ` |
+| `meio` | Tipo de diário (`D` = Digital, `E` = Eletrônico) | `D` |
+
+### 💾 Salvando os Resultados
+
+1. Acesse a URL no navegador
+2. O resultado aparecerá em formato JSON
+3. Clique com botão direito → "Salvar como..." → `intimacoes.json`
+
+### 📚 Documentação Oficial
+
+- **Swagger**: https://comunicaapi.pje.jus.br/swagger/index.html
+- **CNJ**: https://www.cnj.jus.br/tecnologia-da-informacao-e-comunicacao/djen/
+
+> ⚠️ **Nota**: Esta API é pública e pode ter limitações de rate limit. Use com moderação.
+
+---
+
 ## 🏗️ Arquitetura Técnica
 
 - **Frontend**: React 19 + TypeScript + Vite 6
