@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash } from '@phosphor-icons/react'
+import { Progress } from '@/components/ui/progress'
+import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash, CheckCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
 import {
@@ -26,6 +27,11 @@ function needsReanalysis(exp: Expediente): boolean {
     !exp.summary
 }
 
+// Verifica se um expediente precisa ser analisado
+function needsAnalysis(exp: Expediente): boolean {
+  return !exp.analyzed || needsReanalysis(exp)
+}
+
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
@@ -35,6 +41,11 @@ export default function ExpedientePanel() {
   const [loading, setLoading] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [lawyersCount, setLawyersCount] = useState(0)
+
+  // Estado para análise automática
+  const [autoAnalyzing, setAutoAnalyzing] = useState(false)
+  const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 })
+  const autoAnalysisRanRef = useRef(false)
 
   // Função para buscar expedientes da API
   const fetchExpedientes = useCallback(async () => {
@@ -82,7 +93,142 @@ export default function ExpedientePanel() {
     return map[priority.toLowerCase()] || 'medium'
   }
 
-  // Análise com IA real via API Gemini direta
+  // Função para analisar um único expediente (retorna o expediente analisado)
+  const analyzeExpediente = async (exp: Expediente): Promise<Expediente> => {
+    try {
+      const response = await fetch('/_spark/llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gemini',
+          messages: [
+            {
+              role: 'system',
+              content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
+Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
+{
+  "summary": "Resumo claro da intimação em 2-3 frases",
+  "documentType": "Tipo do documento (intimação, citação, despacho, etc)",
+  "priority": "alta" | "média" | "baixa",
+  "deadline": {
+    "days": número de dias do prazo,
+    "type": "úteis" | "corridos",
+    "endDate": "data limite no formato DD/MM/YYYY"
+  },
+  "suggestedActions": ["lista de ações recomendadas"],
+  "nextSteps": ["próximos passos a seguir"]
+}
+Responda APENAS com o JSON, sem texto adicional.`
+            },
+            {
+              role: 'user',
+              content: `Analise esta intimação:
+
+PROCESSO: ${exp.numeroProcesso || 'Não informado'}
+TRIBUNAL: ${exp.tribunal || 'Não informado'}
+DATA: ${exp.receivedAt || exp.dataRecebimento || 'Não informada'}
+
+CONTEÚDO:
+${exp.content || exp.teor || 'Sem conteúdo'}`
+            }
+          ]
+        })
+      })
+
+      const data = await response.json()
+      const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
+
+      let analysisData
+      try {
+        const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        analysisData = JSON.parse(jsonText)
+      } catch {
+        analysisData = {
+          summary: responseText || 'Análise concluída',
+          documentType: exp.type || 'Intimação',
+          priority: 'média',
+          deadline: { days: 15, type: 'úteis', endDate: 'Verificar' },
+          suggestedActions: ['Verificar prazo processual', 'Analisar providências'],
+          nextSteps: ['Revisar intimação', 'Preparar resposta se necessário']
+        }
+      }
+
+      return {
+        ...exp,
+        analyzed: true,
+        summary: analysisData.summary || 'Análise concluída pela Mrs. Justin-e',
+        suggestedAction: analysisData.suggestedActions?.[0] || 'Verificar prazo',
+        pendingDocs: analysisData.nextSteps || [],
+        deadline: analysisData.deadline,
+        priority: mapPriority(analysisData.priority),
+        draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
+          `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
+          `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
+          `🚨 PRIORIDADE: ${analysisData.priority || 'média'}\n\n` +
+          `📅 PRAZO: ${analysisData.deadline?.days || 'N/A'} dias ${analysisData.deadline?.type || ''}\n` +
+          `   Data limite: ${analysisData.deadline?.endDate || 'N/A'}\n\n` +
+          `✅ AÇÕES SUGERIDAS:\n${(analysisData.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
+          `📝 PRÓXIMOS PASSOS:\n${(analysisData.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
+      }
+    } catch (error) {
+      console.error('Erro ao analisar expediente:', error)
+      throw error
+    }
+  }
+
+  // Análise automática de todos os expedientes pendentes
+  const runAutoAnalysis = useCallback(async () => {
+    const pending = safeExpedientes.filter(needsAnalysis)
+    if (pending.length === 0) return
+
+    setAutoAnalyzing(true)
+    setAnalysisProgress({ current: 0, total: pending.length })
+
+    toast.info(`🤖 Mrs. Justin-e iniciando análise automática de ${pending.length} intimação(ões)...`)
+
+    let analyzed = 0
+    for (const exp of pending) {
+      try {
+        const result = await analyzeExpediente(exp)
+        setExpedientes((current) =>
+          (current || []).map(e => e.id === exp.id ? result : e)
+        )
+        analyzed++
+        setAnalysisProgress({ current: analyzed, total: pending.length })
+
+        // Pequeno delay entre análises para não sobrecarregar a API
+        if (analyzed < pending.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      } catch (error) {
+        console.error(`Erro ao analisar expediente ${exp.id}:`, error)
+      }
+    }
+
+    setAutoAnalyzing(false)
+    if (analyzed > 0) {
+      toast.success(`✅ Mrs. Justin-e analisou ${analyzed} intimação(ões) automaticamente!`)
+    }
+  }, [safeExpedientes, setExpedientes])
+
+  // Dispara análise automática quando expedientes são carregados
+  useEffect(() => {
+    // Só executa uma vez por sessão e se houver expedientes pendentes
+    if (autoAnalysisRanRef.current) return
+    if (safeExpedientes.length === 0) return
+    if (loading) return
+
+    const pending = safeExpedientes.filter(needsAnalysis)
+    if (pending.length > 0) {
+      autoAnalysisRanRef.current = true
+      // Delay de 2 segundos para garantir que a UI já carregou
+      setTimeout(() => {
+        runAutoAnalysis()
+      }, 2000)
+    }
+  }, [safeExpedientes, loading, runAutoAnalysis])
+
+  // Análise com IA real via API Gemini direta (mantida para uso manual)
   const handleAnalyze = async (exp: Expediente) => {
     setAnalyzing(true)
     setSelectedExp(exp)
@@ -347,6 +493,47 @@ Crie o workflow de controladoria para esta tarefa.`
             </Button>
           </div>
         </div>
+
+        {/* Barra de progresso da análise automática */}
+        {autoAnalyzing && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <Brain className="w-8 h-8 text-primary animate-pulse" weight="fill" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-foreground">
+                      🤖 Mrs. Justin-e analisando intimações automaticamente...
+                    </p>
+                    <span className="text-sm text-muted-foreground">
+                      {analysisProgress.current}/{analysisProgress.total}
+                    </span>
+                  </div>
+                  <Progress
+                    value={(analysisProgress.current / analysisProgress.total) * 100}
+                    className="h-2"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Status de análises concluídas */}
+        {!autoAnalyzing && safeExpedientes.length > 0 && safeExpedientes.every(e => e.analyzed && !needsReanalysis(e)) && (
+          <Card className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
+            <CardContent className="py-3">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600" weight="fill" />
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  ✅ Todas as {safeExpedientes.length} intimações foram analisadas automaticamente pela Mrs. Justin-e
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">

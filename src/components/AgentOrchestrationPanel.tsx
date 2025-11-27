@@ -424,8 +424,8 @@ export default function AgentOrchestrationPanel() {
                                 trace.type === 'final'
                                   ? 'default'
                                   : trace.type === 'action'
-                                  ? 'secondary'
-                                  : 'outline'
+                                    ? 'secondary'
+                                    : 'outline'
                               }
                             >
                               {trace.type.toUpperCase()}
