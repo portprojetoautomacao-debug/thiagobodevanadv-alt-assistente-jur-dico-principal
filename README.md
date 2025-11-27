@@ -56,6 +56,185 @@ https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=12345&ufOab=SP&meio=
 
 ---
 
+## ✅ DJEN - Implementação Técnica (Funcionando!)
+
+> **Status**: ✅ **OPERACIONAL** - Testado com sucesso em 27/11/2025
+
+Este sistema implementa o monitoramento automatizado do DJEN usando a API oficial do CNJ. Abaixo está a documentação técnica completa.
+
+### 🔧 Arquitetura da Integração
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
+│  Frontend React │────▶│  Vercel API      │────▶│  API DJEN (CNJ)             │
+│  (Widget DJEN)  │     │  /api/djen-sync  │     │  comunicaapi.pje.jus.br     │
+└─────────────────┘     └──────────────────┘     └─────────────────────────────┘
+        │                       │                           │
+        │                       ▼                           │
+        │               ┌──────────────────┐                │
+        │               │  Upstash Redis   │◀───────────────┘
+        │               │  (KV Storage)    │   Armazena publicações
+        │               └──────────────────┘
+        │                       │
+        └───────────────────────┘
+              Exibe publicações
+```
+
+### 📡 Endpoint Utilizado
+
+```http
+GET https://comunicaapi.pje.jus.br/api/v1/comunicacao
+```
+
+**Query Parameters obrigatórios:**
+
+| Parâmetro | Valor | Descrição |
+|-----------|-------|-----------|
+| `numeroOab` | `184404` | Número OAB (apenas dígitos) |
+| `ufOab` | `MG` | UF da OAB (sigla maiúscula) |
+| `meio` | `D` | **OBRIGATÓRIO** - Tipo de diário (D=Digital) |
+
+**Exemplo de chamada bem-sucedida:**
+```bash
+curl "https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=184404&ufOab=MG&meio=D"
+```
+
+### 📦 Estrutura da Resposta (JSON)
+
+```json
+{
+  "count": 3,
+  "items": [
+    {
+      "id": "123456789",
+      "siglaTribunal": "TJMG",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ºJD da Comarca de Divinópolis",
+      "numeroProcesso": "5005240-57.2020.8.13.0223",
+      "dataDisponibilizacao": "2025-11-19T00:00:00",
+      "dataPublicacao": "2025-11-20T00:00:00",
+      "texto": "PODER JUDICIÁRIO DO ESTADO DE MINAS GERAIS...",
+      "destinatarios": [
+        {
+          "nome": "THIAGO BODEVAN VEIGA",
+          "polo": "AUTOR"
+        }
+      ],
+      "advogados": [
+        {
+          "nome": "THIAGO BODEVAN VEIGA",
+          "numeroOAB": "184404",
+          "ufOAB": "MG"
+        }
+      ],
+      "meio": "D",
+      "link": "https://..."
+    }
+  ]
+}
+```
+
+### 🔑 Configuração Necessária (Vercel)
+
+Variáveis de ambiente obrigatórias:
+
+```env
+# Upstash Redis (obrigatório para armazenamento)
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=xxx
+
+# IA para análise (opcional)
+VITE_GOOGLE_API_KEY=xxx  # ou GEMINI_API_KEY
+
+# Email (opcional)
+RESEND_API_KEY=xxx
+NOTIFICATION_EMAIL=seu@email.com
+```
+
+### 📂 Arquivos da Implementação
+
+| Arquivo | Função |
+|---------|--------|
+| `api/djen-sync.ts` | Endpoint público para sincronização manual |
+| `api/cron.ts` | Cron job diário (11:00 BRT) |
+| `api/expedientes.ts` | Lista publicações armazenadas |
+| `api/lawyers.ts` | Gerencia advogados monitorados |
+| `src/components/DJENPublicationsWidget.tsx` | Widget do dashboard |
+| `src/components/ExpedientePanel.tsx` | Painel completo de expedientes |
+
+### 🕐 Cron Automatizado
+
+Configurado no `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron?action=djen-monitor",
+      "schedule": "0 14 * * *"
+    }
+  ]
+}
+```
+
+**Horário**: `0 14 * * *` = 14:00 UTC = **11:00 BRT** (horário de Brasília)
+
+### 🧪 Testando a Integração
+
+**1. Verificar status:**
+```bash
+curl https://seu-app.vercel.app/api/status
+```
+
+**2. Sincronizar manualmente:**
+```bash
+curl -X POST https://seu-app.vercel.app/api/djen-sync
+```
+
+**3. Listar publicações:**
+```bash
+curl https://seu-app.vercel.app/api/expedientes
+```
+
+### ⚠️ Detalhes Técnicos Importantes
+
+1. **Parâmetro `meio=D` é OBRIGATÓRIO**
+   - Sem ele, a API retorna erro ou resultados vazios
+   - `D` = Diário Digital (padrão dos tribunais)
+
+2. **Região do Vercel deve ser `gru1` (São Paulo)**
+   - A API DJEN bloqueia requests de fora do Brasil
+   - Configure em `vercel.json`:
+   ```json
+   {
+     "regions": ["gru1"]
+   }
+   ```
+
+3. **Rate Limit**
+   - A API do CNJ pode ter limitações
+   - O sistema implementa cache de 5 minutos entre chamadas
+
+4. **Formato do número OAB**
+   - Apenas números, sem pontos ou traços
+   - Exemplo: `184404` (não `184.404`)
+
+### 🏆 Caso de Sucesso
+
+**Advogado monitorado:** Thiago Bodevan Veiga - OAB/MG 184.404
+
+**Tribunais configurados:** TJMG, TRT3, TST, STJ, TRF1, TRF6
+
+**Resultado em 27/11/2025:**
+- ✅ 3 intimações capturadas automaticamente
+- ✅ Widget exibindo corretamente no dashboard
+- ✅ Processos identificados:
+  - `5005240-57.2020.8.13.0223` - Execução de Título Extrajudicial
+  - `5005573-67.2024.8.13.0223` - Intimação
+  - `0012850-68.2024.8.13.0338` - Intimação
+
+---
+
 ## 🏗️ Arquitetura Técnica
 
 - **Frontend**: React 19 + TypeScript + Vite 6
