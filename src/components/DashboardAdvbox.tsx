@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 // import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
-import { 
-  CheckCircle, 
-  Clock, 
+import {
+  CheckCircle,
+  Clock,
   Trophy,
   CaretLeft,
   CaretRight,
@@ -26,7 +26,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
 
   const stats = useMemo(() => {
     const processesList = processes || []
-    
+
     const todosPrazos: (Prazo & { processoTitulo: string })[] = []
     processesList.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
@@ -55,7 +55,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
   const performanceData = useMemo(() => {
     const processesList = processes || []
     const monthlyStats: { [key: string]: { entradas: number; meta: number; tarefas: number } } = {}
-    
+
     // Generate last 6 months of data
     const months: string[] = []
     for (let i = 5; i >= 0; i--) {
@@ -70,7 +70,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
     processesList.forEach(p => {
       const monthKey = new Date(p.createdAt).toLocaleDateString('pt-BR', { month: 'short' })
       if (monthlyStats[monthKey]) {
-        monthlyStats[monthKey].entradas += 15 // Simulated value
+        monthlyStats[monthKey].entradas += 1 // Real count: 1 process per entry
         monthlyStats[monthKey].tarefas += p.prazos?.length || 0
       }
     })
@@ -215,29 +215,29 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                   <LineChart data={performanceData}>
                     <defs>
                       <linearGradient id="colorEste" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#52b788" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#52b788" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#52b788" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#52b788" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorMetas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#48cae4" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#48cae4" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#48cae4" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#48cae4" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" strokeOpacity={0.5} />
-                    <XAxis 
-                      dataKey="month" 
+                    <XAxis
+                      dataKey="month"
                       stroke="#6b7280"
                       tick={{ fill: '#9ca3af', fontSize: 13, fontWeight: 500 }}
                       axisLine={{ stroke: '#2a2d3e' }}
                     />
-                    <YAxis 
+                    <YAxis
                       stroke="#6b7280"
                       tick={{ fill: '#9ca3af', fontSize: 13, fontWeight: 500 }}
                       axisLine={{ stroke: '#2a2d3e' }}
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1a1d29', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1a1d29',
                         border: '1px solid #00b4d8',
                         borderRadius: '12px',
                         color: '#e8eaed',
@@ -245,32 +245,32 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                       }}
                       cursor={{ stroke: '#00b4d8', strokeWidth: 1, strokeDasharray: '3 3' }}
                     />
-                    <Legend 
+                    <Legend
                       wrapperStyle={{ color: '#e8eaed', fontWeight: 600 }}
                       iconType="circle"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="ESTE MÊS" 
-                      stroke="#52b788" 
+                    <Line
+                      type="monotone"
+                      dataKey="ESTE MÊS"
+                      stroke="#52b788"
                       strokeWidth={3}
                       dot={{ fill: '#52b788', r: 5, strokeWidth: 2, stroke: '#0f1117' }}
                       activeDot={{ r: 7, fill: '#52b788', stroke: '#0f1117', strokeWidth: 3 }}
                       fill="url(#colorEste)"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="METAS/OUTROS" 
-                      stroke="#48cae4" 
+                    <Line
+                      type="monotone"
+                      dataKey="METAS/OUTROS"
+                      stroke="#48cae4"
                       strokeWidth={3}
                       dot={{ fill: '#48cae4', r: 5, strokeWidth: 2, stroke: '#0f1117' }}
                       activeDot={{ r: 7, fill: '#48cae4', stroke: '#0f1117', strokeWidth: 3 }}
                       fill="url(#colorMetas)"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="META" 
-                      stroke="#6b7280" 
+                    <Line
+                      type="monotone"
+                      dataKey="META"
+                      stroke="#6b7280"
                       strokeWidth={2}
                       strokeDasharray="8 4"
                       dot={false}
@@ -312,13 +312,12 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                 {calendarDays.map((day, index) => (
                   <div
                     key={index}
-                    className={`aspect-square flex items-center justify-center text-sm rounded-lg font-semibold transition-all ${
-                      day === null
+                    className={`aspect-square flex items-center justify-center text-sm rounded-lg font-semibold transition-all ${day === null
                         ? 'text-transparent pointer-events-none'
                         : day === new Date().getDate() && selectedMonth.getMonth() === new Date().getMonth()
-                        ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110'
-                        : 'text-foreground hover:bg-gradient-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
-                    }`}
+                          ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110'
+                          : 'text-foreground hover:bg-gradient-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
+                      }`}
                   >
                     {day}
                   </div>
@@ -376,7 +375,7 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Badge 
+                  <Badge
                     variant={item.atrasado ? "destructive" : "secondary"}
                     className="text-xs"
                   >
