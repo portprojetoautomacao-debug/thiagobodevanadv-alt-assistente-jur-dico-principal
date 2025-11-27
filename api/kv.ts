@@ -11,7 +11,6 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
-import { requireAuth, sendAuthError } from './lib/auth.js';
 import { rateLimitMiddleware } from './lib/rate-limit.js';
 import { handleError, withErrorHandler } from './lib/error-handler.js';
 import { SafeLogger } from './lib/safe-logger.js';
@@ -47,8 +46,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Análise de relevância'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.92,
       },
       {
         id: 'agent-deadline-calculator',
@@ -63,8 +60,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Análise de urgência'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.88,
       },
       {
         id: 'agent-document-analyzer',
@@ -79,8 +74,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Resumo automático'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.85,
       },
       {
         id: 'agent-legal-writer',
@@ -95,8 +88,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Revisão jurídica'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.78,
       },
       {
         id: 'agent-jurisprudence-researcher',
@@ -111,8 +102,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Recomendações estratégicas'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.82,
       },
       {
         id: 'agent-strategic-advisor',
@@ -127,8 +116,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Sugestões táticas'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.75,
       },
       {
         id: 'agent-calendar-sync',
@@ -143,8 +130,6 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
           'Alertas de audiências'
         ],
         lastActivity: null,
-        tasksCompleted: 0,
-        autonomyLevel: 0.90,
       },
     ];
 
@@ -200,12 +185,19 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
 
 
 export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) => {
-  // Apply authentication
-  const authResult = await requireAuth(req, res);
-  if (!authResult.authenticated) {
-    sendAuthError(res, authResult);
+  // Handle CORS preflight requests first
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).end();
     return;
   }
+
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   // Apply rate limiting
   const clientIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
@@ -232,28 +224,8 @@ export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) 
   logger.info('KV API request', {
     method: req.method,
     url: req.url,
-    userId: authResult.userId,
     ip: clientIP
   });
-
-  logger.info('KV API request', {
-    method: req.method,
-    url: req.url,
-    userId: authResult.userId
-  });
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(200).end();
-    return;
-  }
-
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Special action: Initialize configuration
   const action = req.query.action as string | undefined;
