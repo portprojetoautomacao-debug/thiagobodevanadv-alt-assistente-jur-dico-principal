@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/react';
 import { setUserContext, clearUserContext, setErrorTag } from '../services/error-tracking';
 
@@ -22,14 +21,21 @@ export function useUserTracking(userId?: string, email?: string, username?: stri
  * Útil para entender fluxo do usuário
  */
 export function usePageTracking() {
-  const location = useLocation();
+  const [pathname, setPathname] = useState(window.location.pathname);
 
   useEffect(() => {
-    setErrorTag('current_page', location.pathname);
+    // Atualizar quando a URL mudar
+    const handleLocationChange = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  useEffect(() => {
+    setErrorTag('current_page', pathname);
     
     // Iniciar breadcrumb
-    Sentry.captureMessage(`Navigated to ${location.pathname}`, 'debug');
-  }, [location.pathname]);
+    Sentry.captureMessage(`Navigated to ${pathname}`, 'debug');
+  }, [pathname]);
 }
 
 /**
