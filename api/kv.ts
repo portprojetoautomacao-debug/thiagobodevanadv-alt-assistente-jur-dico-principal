@@ -291,7 +291,7 @@ export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) 
               pipeline.get(k);
             }
             const results = await pipeline.exec();
-            
+
             for (let i = 0; i < validKeys.length; i++) {
               values[validKeys[i]] = results[i] ?? null;
             }
