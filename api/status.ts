@@ -44,10 +44,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Health Check Logic (Default)
   // Verificar variáveis de ambiente
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
+  
   const checks = {
     // AI Providers (pelo menos um deve estar configurado)
     openai_api_key: !!process.env.OPENAI_API_KEY,
-    gemini_api_key: !!process.env.GEMINI_API_KEY,
+    gemini_api_key: !!geminiKey,
     // Outras variáveis
     google_client_id: !!process.env.VITE_GOOGLE_CLIENT_ID,
     app_env: !!process.env.VITE_APP_ENV,
@@ -57,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Qual provedor de IA está ativo
   const aiProvider = process.env.OPENAI_API_KEY
     ? 'OpenAI'
-    : process.env.GEMINI_API_KEY
+    : geminiKey
       ? 'Gemini'
       : 'none';
 
@@ -67,8 +69,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ai_configured: aiProvider !== 'none',
     openai_key_preview: process.env.OPENAI_API_KEY
       ? `sk-...${process.env.OPENAI_API_KEY.slice(-4)}` : 'not set',
-    gemini_key_preview: process.env.GEMINI_API_KEY
-      ? `...${process.env.GEMINI_API_KEY.slice(-4)}` : 'not set',
+    gemini_key_preview: geminiKey
+      ? `...${geminiKey.slice(-4)}` : 'not set',
+    gemini_var_source: geminiKey 
+      ? (process.env.GEMINI_API_KEY ? 'GEMINI_API_KEY' : 'VITE_GOOGLE_API_KEY')
+      : 'none',
     app_env: process.env.VITE_APP_ENV || 'not set',
     node_env: process.env.NODE_ENV || 'not set',
   };
