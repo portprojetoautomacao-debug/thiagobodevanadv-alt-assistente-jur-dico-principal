@@ -103,21 +103,54 @@ export default function AgentOrchestrationPanel() {
   // Execute agent
   const executeAgent = async (agentId: string, message?: string) => {
     setLoading(true);
+    setSelectedAgent(agentId);
     try {
-      const response = await fetch('/api/agents-v2', {
+      const response = await fetch('/api/agents?action=process-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agentId,
-          message: message || 'Execute sua rotina automática',
-          sessionId: `session-${Date.now()}`,
+          task: {
+            id: `task-${Date.now()}`,
+            agentId,
+            type: 'analyze_document',
+            priority: 'medium',
+            status: 'queued',
+            createdAt: new Date().toISOString(),
+            data: {
+              message: message || 'Execute sua rotina automática',
+              sessionId: `session-${Date.now()}`,
+            }
+          },
+          agent: {
+            id: agentId,
+            name: agents.find(a => a.id === agentId)?.name || agentId,
+            type: 'analyzer',
+            status: 'active',
+            enabled: true
+          }
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setExecution(data);
-        toast.success(`${data.agentName} executado com sucesso!`);
+        setExecution({
+          agentId,
+          agentName: agents.find(a => a.id === agentId)?.name || agentId,
+          steps: 1,
+          usedTools: data.result?.toolsUsed || ['gemini-2.5-pro'],
+          answer: data.result?.analysis || data.result?.message || 'Tarefa executada com sucesso',
+          traces: [{
+            timestamp: new Date().toISOString(),
+            step: 1,
+            type: 'final',
+            content: data.result?.analysis || 'Processamento concluído',
+            duration: data.processingTime || 0
+          }],
+          totalDuration: data.processingTime || 0,
+          executionTimeMs: data.processingTime || 0,
+          timestamp: new Date().toISOString()
+        });
+        toast.success(`${agents.find(a => a.id === agentId)?.name || agentId} executado com sucesso!`);
       } else {
         const error = await response.json();
         toast.error(`Erro: ${error.error || 'Falha na execução'}`);
