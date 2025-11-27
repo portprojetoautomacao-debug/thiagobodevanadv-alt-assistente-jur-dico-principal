@@ -114,11 +114,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Authorization': `Bearer ${key}`,
       }),
     },
-    // 2. Google Gemini
+    // 2. Google Gemini (aceita GEMINI_API_KEY ou VITE_GOOGLE_API_KEY)
     {
       name: 'Gemini',
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY,
       headers: () => ({
         'Content-Type': 'application/json',
       }),
