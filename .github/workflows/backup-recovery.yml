@@ -45,8 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'full' || github.event_name == 'schedule'
     outputs:
-      backup_id: ${{ steps.backup.outputs.backup_id }}
-      backup_size: ${{ steps.backup.outputs.backup_size }}
+      backup_id: ${{ steps.compression.outputs.backup_id }}
+      backup_size: ${{ steps.compression.outputs.backup_size }}
 
     strategy:
       matrix:
@@ -172,6 +172,7 @@ jobs:
           echo "📋 Logs e métricas incluídos"
 
       - name: 🗜️  Compressão do Backup
+        id: compression
         run: |
           echo "🗜️  Comprimindo backup..."
 
