@@ -45,36 +45,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Health Check Logic (Default)
   // Verificar variáveis de ambiente
   const checks = {
-    github_token: !!process.env.GITHUB_TOKEN,
-    runtime_name: !!process.env.GITHUB_RUNTIME_PERMANENT_NAME,
-    api_url: !!process.env.GITHUB_API_URL,
+    // AI Providers (pelo menos um deve estar configurado)
+    openai_api_key: !!process.env.OPENAI_API_KEY,
+    gemini_api_key: !!process.env.GEMINI_API_KEY,
+    // Outras variáveis
     google_client_id: !!process.env.VITE_GOOGLE_CLIENT_ID,
     app_env: !!process.env.VITE_APP_ENV,
+    upstash_redis: !!process.env.UPSTASH_REDIS_REST_URL,
   };
+
+  // Qual provedor de IA está ativo
+  const aiProvider = process.env.OPENAI_API_KEY 
+    ? 'OpenAI' 
+    : process.env.GEMINI_API_KEY 
+      ? 'Gemini' 
+      : 'none';
 
   // Informações adicionais (sem expor valores sensíveis)
   const info = {
-    runtime_name_set: process.env.GITHUB_RUNTIME_PERMANENT_NAME ? 
-      `${process.env.GITHUB_RUNTIME_PERMANENT_NAME.substring(0, 4)}...` : 'not set',
-    api_url: process.env.GITHUB_API_URL || 'not set (using default)',
+    ai_provider: aiProvider,
+    ai_configured: aiProvider !== 'none',
+    openai_key_preview: process.env.OPENAI_API_KEY 
+      ? `sk-...${process.env.OPENAI_API_KEY.slice(-4)}` : 'not set',
+    gemini_key_preview: process.env.GEMINI_API_KEY 
+      ? `...${process.env.GEMINI_API_KEY.slice(-4)}` : 'not set',
     app_env: process.env.VITE_APP_ENV || 'not set',
     node_env: process.env.NODE_ENV || 'not set',
   };
 
-  // Verificar se todas as checks críticas passaram
-  const criticalChecks = {
-    github_token: checks.github_token,
-    runtime_name: checks.runtime_name,
-  };
-
-  const allCriticalOk = Object.values(criticalChecks).every(v => v);
-  const allOk = Object.values(checks).every(v => v);
+  // Verificar se IA está configurada (crítico para funcionalidade)
+  const aiConfigured = checks.openai_api_key || checks.gemini_api_key;
 
   // Status code baseado nas checks
-  const statusCode = allCriticalOk ? 200 : 500;
+  const statusCode = aiConfigured ? 200 : 500;
 
   const response = {
-    status: allOk ? 'healthy' : allCriticalOk ? 'partially_healthy' : 'unhealthy',
+    status: aiConfigured ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
     checks,
     info,
