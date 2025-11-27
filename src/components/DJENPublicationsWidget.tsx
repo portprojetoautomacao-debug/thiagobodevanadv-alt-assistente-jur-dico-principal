@@ -19,9 +19,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { 
-  Newspaper, 
-  ArrowsClockwise, 
+import {
+  Newspaper,
+  ArrowsClockwise,
   CheckCircle,
   Clock,
   Bell,
@@ -69,10 +69,10 @@ interface DJENPublicationsWidgetProps {
   maxItems?: number
 }
 
-export default function DJENPublicationsWidget({ 
-  onViewAll, 
+export default function DJENPublicationsWidget({
+  onViewAll,
   compact = false,
-  maxItems = 5 
+  maxItems = 5
 }: DJENPublicationsWidgetProps) {
   const [publications, setPublications] = useState<DJENPublication[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,17 +88,17 @@ export default function DJENPublicationsWidget({
     try {
       setLoading(true)
       setError(null)
-      
+
       const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
       const statusParam = filter === 'unread' ? '&status=unread' : ''
       const response = await fetch(`${baseUrl}/api/expedientes?limit=${maxItems * 2}${statusParam}`)
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
-      
+
       const data: ExpedientesResponse = await response.json()
-      
+
       if (data.success) {
         setPublications(data.expedientes.slice(0, maxItems))
         setLastCheck(data.lastCheck)
@@ -119,26 +119,37 @@ export default function DJENPublicationsWidget({
     try {
       setSyncing(true)
       setError(null)
-      
+
       const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-      const response = await fetch(`${baseUrl}/api/cron?action=djen-monitor`, {
+      const response = await fetch(`${baseUrl}/api/djen-sync`, {
         method: 'POST'
       })
-      
+
+      // Tratar rate limit
+      if (response.status === 429) {
+        const data = await response.json()
+        toast.warning('Aguarde antes de sincronizar', {
+          description: data.message || 'Tente novamente em alguns segundos'
+        })
+        return
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
-      
+
       const result = await response.json()
-      
+
       if (result.ok) {
         toast.success('Sincronização concluída', {
-          description: `${result.result?.publicationsFound || 0} novas publicações encontradas`
+          description: result.result?.newPublications > 0
+            ? `${result.result.newPublications} novas publicações encontradas`
+            : 'Nenhuma nova publicação'
         })
         // Recarrega publicações após sync
         await fetchPublications()
       } else {
-        throw new Error(result.message || 'Erro na sincronização')
+        throw new Error(result.error || result.message || 'Erro na sincronização')
       }
     } catch (err) {
       console.error('[DJENWidget] Sync error:', err)
@@ -168,7 +179,7 @@ export default function DJENPublicationsWidget({
     const diffMs = now.getTime() - date.getTime()
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-    
+
     if (diffHours < 1) return 'Agora mesmo'
     if (diffHours < 24) return `${diffHours}h atrás`
     if (diffDays === 1) return 'Ontem'
@@ -226,9 +237,9 @@ export default function DJENPublicationsWidget({
             <Warning size={16} />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchPublications}
             className="mt-3 w-full"
           >
@@ -253,7 +264,7 @@ export default function DJENPublicationsWidget({
               </Badge>
             )}
           </CardTitle>
-          
+
           <div className="flex items-center gap-1">
             <TooltipProvider>
               <Tooltip>
@@ -264,8 +275,8 @@ export default function DJENPublicationsWidget({
                     onClick={() => setFilter(f => f === 'all' ? 'unread' : 'all')}
                     className="h-8 w-8 p-0"
                   >
-                    <Funnel 
-                      size={16} 
+                    <Funnel
+                      size={16}
                       weight={filter === 'unread' ? 'fill' : 'regular'}
                       className={filter === 'unread' ? 'text-primary' : ''}
                     />
@@ -276,7 +287,7 @@ export default function DJENPublicationsWidget({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -287,8 +298,8 @@ export default function DJENPublicationsWidget({
                     disabled={syncing}
                     className="h-8 w-8 p-0"
                   >
-                    <ArrowsClockwise 
-                      size={16} 
+                    <ArrowsClockwise
+                      size={16}
                       className={syncing ? 'animate-spin' : ''}
                     />
                   </Button>
@@ -298,7 +309,7 @@ export default function DJENPublicationsWidget({
             </TooltipProvider>
           </div>
         </div>
-        
+
         {/* Status bar */}
         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
           {lastCheck && (
@@ -315,7 +326,7 @@ export default function DJENPublicationsWidget({
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-2">
         {publications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -324,13 +335,13 @@ export default function DJENPublicationsWidget({
               Nenhuma publicação encontrada
             </p>
             <p className="text-xs text-muted-foreground">
-              {lawyersCount === 0 
+              {lawyersCount === 0
                 ? 'Configure advogados para monitorar'
                 : 'O monitoramento está ativo'}
             </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleSync}
               className="mt-4"
               disabled={syncing}
@@ -366,16 +377,16 @@ export default function DJENPublicationsWidget({
                           </Badge>
                         )}
                       </div>
-                      
+
                       <p className="text-xs font-medium truncate">
                         {pub.tipo || 'Intimação'}
                       </p>
-                      
+
                       <p className="text-[11px] text-muted-foreground truncate">
                         {pub.numeroProcesso && `Processo: ${pub.numeroProcesso}`}
                       </p>
                     </div>
-                    
+
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <span className="text-[10px] text-muted-foreground">
                         {formatRelativeDate(pub.createdAt)}
@@ -387,7 +398,7 @@ export default function DJENPublicationsWidget({
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Conteúdo expandido */}
                   {expanded === pub.id && (
                     <div className="mt-3 pt-3 border-t space-y-2">
@@ -398,12 +409,12 @@ export default function DJENPublicationsWidget({
                           {pub.teor.length > 500 && '...'}
                         </p>
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                         <span>Advogado: {pub.lawyerName}</span>
                         <span>Data: {new Date(pub.data).toLocaleDateString('pt-BR')}</span>
                       </div>
-                      
+
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
@@ -423,8 +434,8 @@ export default function DJENPublicationsWidget({
                           className="h-7 text-xs flex-1"
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.stopPropagation()
-                            toast.info('Em desenvolvimento', { 
-                              description: 'Visualização detalhada em breve' 
+                            toast.info('Em desenvolvimento', {
+                              description: 'Visualização detalhada em breve'
                             })
                           }}
                         >
@@ -439,14 +450,14 @@ export default function DJENPublicationsWidget({
             </div>
           </ScrollArea>
         )}
-        
+
         {/* Footer com ações */}
         {publications.length > 0 && onViewAll && (
           <>
             <Separator className="my-3" />
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onViewAll}
               className="w-full hover:button-gradient hover:text-primary-foreground"
             >
