@@ -121,13 +121,13 @@ class RateLimiter {
 // Instâncias globais de rate limiters
 export const globalRateLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minuto
-  maxRequests: 100, // 100 requests por minuto
+  maxRequests: 200, // 200 requests por minuto (aumentado para acomodar transição)
   keyPrefix: 'ratelimit:global:'
 });
 
 export const apiRateLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minuto
-  maxRequests: 100, // 100 requests por minuto por IP (aumentado para suportar batching inicial)
+  maxRequests: 200, // 200 requests por minuto por IP (aumentado para suportar batching inicial)
   keyPrefix: 'ratelimit:api:'
 });
 
