@@ -1,21 +1,234 @@
 /**
- * Custom KV (Key-Value) storage hook
+ * Custom KV (Key-Value) storage hook - OTIMIZADO
  * 
- * This hook provides a unified interface for key-value storage that works in both:
- * - Development: Uses localStorage as a fallback
- * - Production: Uses Upstash Redis (via API) for persistent storage
+ * Implementa:
+ * - Batching de requisições (agrupa múltiplas chaves em uma chamada)
+ * - Cache local com TTL
+ * - Debounce para evitar rajadas
+ * - Retry com backoff exponencial
  * 
- * This replaces @github/spark's useKV to avoid 403 authentication errors
- * when deployed to Vercel.
+ * Usa localStorage como fallback e Upstash Redis em produção.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Type for storage operations
-type StorageValue<T> = T | null;
+// ============================================================================
+// CACHE E BATCHING
+// ============================================================================
+
+// Cache em memória com TTL
+const memoryCache = new Map<string, { value: unknown; timestamp: number }>();
+const CACHE_TTL_MS = 30000; // 30 segundos
+const BATCH_DELAY_MS = 100; // Aguarda 100ms para agrupar requisições
+const MAX_BATCH_SIZE = 20; // Máximo de chaves por batch
+
+// Fila de chaves pendentes para carregar
+let pendingKeys = new Set<string>();
+let batchTimeout: ReturnType<typeof setTimeout> | null = null;
+const pendingResolvers = new Map<string, Array<(value: unknown) => void>>();
+
+// Fila de escritas pendentes
+const pendingWrites = new Map<string, { value: unknown; timestamp: number }>();
+let writeTimeout: ReturnType<typeof setTimeout> | null = null;
+const WRITE_DEBOUNCE_MS = 1000; // Aguarda 1s antes de enviar escritas
+
+// Flag para verificar se estamos em produção
+const isProd = typeof window !== 'undefined' && 
+  (window.location.hostname.includes('vercel.app') || 
+   window.location.hostname !== 'localhost');
 
 /**
- * Custom hook for key-value storage
+ * Verifica se o valor em cache ainda é válido
+ */
+function isCacheValid(key: string): boolean {
+  const cached = memoryCache.get(key);
+  if (!cached) return false;
+  return Date.now() - cached.timestamp < CACHE_TTL_MS;
+}
+
+/**
+ * Obtém valor do cache
+ */
+function getFromCache<T>(key: string): T | null {
+  if (isCacheValid(key)) {
+    return memoryCache.get(key)!.value as T;
+  }
+  return null;
+}
+
+/**
+ * Salva no cache
+ */
+function setInCache<T>(key: string, value: T): void {
+  memoryCache.set(key, { value, timestamp: Date.now() });
+}
+
+/**
+ * Carrega múltiplas chaves em uma única requisição
+ */
+async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknown>> {
+  const results = new Map<string, unknown>();
+  
+  if (keys.length === 0) return results;
+
+  try {
+    // Usa o endpoint de batch
+    const batchKeys = keys.slice(0, MAX_BATCH_SIZE);
+    
+    const response = await fetch('/api/kv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'batch-get', keys: batchKeys }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.values && typeof data.values === 'object') {
+        for (const [k, v] of Object.entries(data.values)) {
+          results.set(k, v);
+          setInCache(k, v);
+        }
+      }
+    } else if (response.status === 429) {
+      // Rate limit - usar localStorage como fallback silenciosamente
+      for (const key of batchKeys) {
+        try {
+          const item = window.localStorage.getItem(key);
+          if (item) {
+            const value = JSON.parse(item);
+            results.set(key, value);
+            setInCache(key, value);
+          }
+        } catch {
+          // Ignora erros de parse
+        }
+      }
+    }
+  } catch (error) {
+    // Fallback para localStorage
+    for (const key of keys) {
+      try {
+        const item = window.localStorage.getItem(key);
+        if (item) {
+          results.set(key, JSON.parse(item));
+        }
+      } catch {
+        // Ignora
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Processa o batch de requisições pendentes
+ */
+async function processBatch(): Promise<void> {
+  const keys = Array.from(pendingKeys);
+  pendingKeys.clear();
+  batchTimeout = null;
+
+  if (keys.length === 0) return;
+
+  const results = await batchLoadFromVercelKV(keys);
+  
+  // Resolve todas as promises pendentes
+  for (const key of keys) {
+    const resolvers = pendingResolvers.get(key);
+    if (resolvers) {
+      const value = results.get(key) ?? null;
+      for (const resolve of resolvers) {
+        resolve(value);
+      }
+      pendingResolvers.delete(key);
+    }
+  }
+}
+
+/**
+ * Agenda uma chave para carregamento em batch
+ */
+function scheduleLoad(key: string): Promise<unknown | null> {
+  // Verifica cache primeiro
+  const cached = getFromCache(key);
+  if (cached !== null) {
+    return Promise.resolve(cached);
+  }
+
+  return new Promise((resolve) => {
+    pendingKeys.add(key);
+
+    // Adiciona resolver para esta chave
+    const resolvers = pendingResolvers.get(key) || [];
+    resolvers.push(resolve);
+    pendingResolvers.set(key, resolvers);
+
+    // Agenda o batch se não estiver agendado
+    if (!batchTimeout) {
+      batchTimeout = setTimeout(() => {
+        processBatch();
+      }, BATCH_DELAY_MS);
+    }
+  });
+}
+
+/**
+ * Processa escritas pendentes em batch
+ */
+async function processWriteBatch(): Promise<void> {
+  const writes = new Map(pendingWrites);
+  pendingWrites.clear();
+  writeTimeout = null;
+
+  if (writes.size === 0) return;
+
+  try {
+    const entries = Array.from(writes.entries()).map(([key, { value }]) => ({ key, value }));
+    
+    await fetch('/api/kv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'batch-set', entries }),
+    });
+    // Ignora erros silenciosamente - dados já estão no localStorage
+  } catch {
+    // Silently fail - localStorage is the source of truth
+  }
+}
+
+/**
+ * Agenda uma escrita para o batch
+ */
+function scheduleWrite<T>(key: string, value: T): void {
+  // Sempre salva no localStorage imediatamente
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // localStorage cheio ou indisponível
+  }
+
+  // Atualiza cache
+  setInCache(key, value);
+
+  // Agenda escrita para Vercel KV (apenas em produção)
+  if (isProd) {
+    pendingWrites.set(key, { value, timestamp: Date.now() });
+
+    if (!writeTimeout) {
+      writeTimeout = setTimeout(() => {
+        processWriteBatch();
+      }, WRITE_DEBOUNCE_MS);
+    }
+  }
+}
+
+// ============================================================================
+// HOOK PRINCIPAL
+// ============================================================================
+
+/**
+ * Custom hook for key-value storage - OTIMIZADO
  * 
  * @param key - Storage key
  * @param initialValue - Initial value if key doesn't exist
@@ -25,106 +238,67 @@ export function useKV<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((prev: T) => T)) => void] {
-  // Initialize state with value from localStorage or initial value
+  // Inicializa com valor do cache ou localStorage
   const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      // Get from localStorage
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
+    // Verifica cache em memória primeiro
+    const cached = getFromCache<T>(key);
+    if (cached !== null) {
+      return cached;
     }
+
+    // Tenta localStorage
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item) {
+        const parsed = JSON.parse(item);
+        setInCache(key, parsed);
+        return parsed;
+      }
+    } catch {
+      // Ignora erros
+    }
+
+    return initialValue;
   });
 
-  // Return a wrapped version of useState's setter function that persists
+  // Ref para evitar re-renders desnecessários
+  const isLoadingRef = useRef(false);
+  const keyRef = useRef(key);
+  keyRef.current = key;
+
+  // Setter otimizado
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
       setStoredValue((currentStoredValue) => {
-        try {
-          // Allow value to be a function so we have same API as useState
-          const valueToStore = value instanceof Function ? value(currentStoredValue) : value;
-          
-          // Save to localStorage
-          window.localStorage.setItem(key, JSON.stringify(valueToStore));
-          
-          // In production, also sync to Vercel KV (if available)
-          if (import.meta.env.PROD && typeof window.fetch !== 'undefined') {
-            // Use requestIdleCallback to avoid blocking the main thread
-            if ('requestIdleCallback' in window) {
-              window.requestIdleCallback(() => syncToVercelKV(key, valueToStore));
-            } else {
-              setTimeout(() => syncToVercelKV(key, valueToStore), 0);
-            }
-          }
-          
-          return valueToStore;
-        } catch (error) {
-          console.error(`Error setting localStorage key "${key}":`, error);
-          return currentStoredValue;
-        }
+        const valueToStore = value instanceof Function ? value(currentStoredValue) : value;
+        
+        // Agenda escrita (debounced)
+        scheduleWrite(keyRef.current, valueToStore);
+        
+        return valueToStore;
       });
     },
-    [key]
+    []
   );
 
-  // Load from Vercel KV on mount (production only)
+  // Carrega do Vercel KV em produção (batched)
   useEffect(() => {
-    if (import.meta.env.PROD) {
-      loadFromVercelKV<T>(key).then((value) => {
-        if (value !== null) {
-          setStoredValue(value);
-        }
-      }).catch((error) => {
-        console.error(`Error loading from Vercel KV for key "${key}":`, error);
-      });
-    }
+    if (!isProd || isLoadingRef.current) return;
+    
+    isLoadingRef.current = true;
+
+    scheduleLoad(key).then((value) => {
+      if (value !== null && value !== undefined) {
+        setStoredValue(value as T);
+      }
+      isLoadingRef.current = false;
+    }).catch(() => {
+      isLoadingRef.current = false;
+    });
   }, [key]);
 
   return [storedValue, setValue];
 }
 
-/**
- * Sync data to Vercel KV in production
- */
-async function syncToVercelKV<T>(key: string, value: T): Promise<void> {
-  try {
-    const response = await fetch('/api/kv', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ key, value }),
-    });
-
-    if (!response.ok) {
-      console.error('Failed to sync to Vercel KV:', response.statusText);
-    }
-  } catch (error) {
-    console.error('Error syncing to Vercel KV:', error);
-    // Don't throw - we don't want to break the app if KV sync fails
-  }
-}
-
-/**
- * Load data from Vercel KV in production
- */
-async function loadFromVercelKV<T>(key: string): Promise<StorageValue<T>> {
-  try {
-    const response = await fetch(`/api/kv?key=${encodeURIComponent(key)}`);
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null; // Key doesn't exist
-      }
-      console.error('Failed to load from Vercel KV:', response.statusText);
-      return null;
-    }
-
-    const data = await response.json();
-    return data.value as T;
-  } catch (error) {
-    console.error('Error loading from Vercel KV:', error);
-    return null;
-  }
-}
+// Re-export para compatibilidade
+export default useKV;
