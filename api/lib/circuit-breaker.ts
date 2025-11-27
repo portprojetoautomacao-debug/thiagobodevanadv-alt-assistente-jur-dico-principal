@@ -3,7 +3,7 @@
  * Protege contra falhas em cascata em serviços externos
  */
 
-import { SafeLogger } from './safe-logger.js';
+import { SafeLogger } from './safe-logger';
 
 const logger = new SafeLogger('CircuitBreaker');
 

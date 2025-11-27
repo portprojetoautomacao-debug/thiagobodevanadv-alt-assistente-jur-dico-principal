@@ -2,37 +2,39 @@ name: Agents Integration Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'api/agents.ts'
-      - 'api/agents-v2.ts'
-      - 'api/cron.ts'
-      - 'api/observability.ts'
-      - 'api/legal-services.ts'
-      - 'api/_lib/**'
-      - 'lib/serverless/**'
-      - 'lib/ai/**'
-      - 'src/hooks/use-autonomous-agents.ts'
-      - 'tests/integration/**'
-      - 'src/lib/agents/todoist-agent.ts'
-      - 'src/lib/todoist-integration.ts'
-      - 'api/todoist-webhook.ts'
+      - "api/agents.ts"
+      - "api/agents-v2.ts"
+      - "api/cron.ts"
+      - "api/observability.ts"
+      - "api/legal-services.ts"
+      - "api/_lib/**"
+      - "lib/serverless/**"
+      - "lib/ai/**"
+      - "src/hooks/use-autonomous-agents.ts"
+      - "tests/integration/**"
+      - "api/tests/**"
+      - "src/lib/agents/todoist-agent.ts"
+      - "src/lib/todoist-integration.ts"
+      - "api/todoist-webhook.ts"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'api/agents.ts'
-      - 'api/agents-v2.ts'
-      - 'api/cron.ts'
-      - 'api/observability.ts'
-      - 'api/legal-services.ts'
-      - 'api/_lib/**'
-      - 'lib/serverless/**'
-      - 'lib/ai/**'
-      - 'src/hooks/use-autonomous-agents.ts'
-      - 'tests/integration/**'
-      - 'src/lib/agents/todoist-agent.ts'
-      - 'src/lib/todoist-integration.ts'
-      - 'api/todoist-webhook.ts'
+      - "api/agents.ts"
+      - "api/agents-v2.ts"
+      - "api/cron.ts"
+      - "api/observability.ts"
+      - "api/legal-services.ts"
+      - "api/_lib/**"
+      - "lib/serverless/**"
+      - "lib/ai/**"
+      - "src/hooks/use-autonomous-agents.ts"
+      - "tests/integration/**"
+      - "api/tests/**"
+      - "src/lib/agents/todoist-agent.ts"
+      - "src/lib/todoist-integration.ts"
+      - "api/todoist-webhook.ts"
   workflow_dispatch:
 
 concurrency:
@@ -47,57 +49,57 @@ jobs:
       contents: read
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run Agent Integration Tests
-      run: |
-        echo "Running integration tests for Agent Flow..."
+      - name: Run Agent Integration Tests
+        run: |
+          echo "Running integration tests for Agent Flow..."
 
-        # Check if test file exists
-        if [ -f "tests/integration/djen-agent-flow.test.ts" ]; then
-          npx vitest run tests/integration/djen-agent-flow.test.ts --reporter=verbose
-        else
-          echo "⚠️ Test file not found, skipping integration tests"
-          echo "Expected: tests/integration/djen-agent-flow.test.ts"
-          exit 0
-        fi
-      env:
-        CI: true
+          # Check if test file exists in new location
+          if [ -f "api/tests/djen-agent-flow.test.ts" ]; then
+            npx vitest run api/tests/djen-agent-flow.test.ts --config vitest.config.api.ts --reporter=verbose
+          else
+            echo "⚠️ Test file not found, skipping integration tests"
+            echo "Expected: api/tests/djen-agent-flow.test.ts"
+            exit 0
+          fi
+        env:
+          CI: true
 
-    - name: Run Todoist Agent Tests
-      run: |
-        echo "Running Todoist Agent tests..."
-        # Lista de arquivos de teste existentes
-        TEST_FILES=""
-        
-        # Verificar cada arquivo de teste antes de adicionar
-        if [ -f "src/lib/agents/todoist-agent.test.ts" ]; then
-          TEST_FILES="$TEST_FILES src/lib/agents/todoist-agent.test.ts"
-        fi
-        
-        if [ -f "src/lib/todoist-integration.test.ts" ]; then
-          TEST_FILES="$TEST_FILES src/lib/todoist-integration.test.ts"
-        fi
-        
-        if [ -f "api/todoist-webhook.test.ts" ]; then
-          TEST_FILES="$TEST_FILES api/todoist-webhook.test.ts"
-        fi
-        
-        if [ -n "$TEST_FILES" ]; then
-          echo "Running tests:$TEST_FILES"
-          npx vitest run $TEST_FILES --reporter=verbose
-        else
-          echo "⚠️ No Todoist test files found, skipping"
-        fi
-      env:
-        CI: true
+      - name: Run Todoist Agent Tests
+        run: |
+          echo "Running Todoist Agent tests..."
+          # Lista de arquivos de teste existentes
+          TEST_FILES=""
+
+          # Verificar cada arquivo de teste antes de adicionar
+          if [ -f "src/lib/agents/todoist-agent.test.ts" ]; then
+            TEST_FILES="$TEST_FILES src/lib/agents/todoist-agent.test.ts"
+          fi
+
+          if [ -f "src/lib/todoist-integration.test.ts" ]; then
+            TEST_FILES="$TEST_FILES src/lib/todoist-integration.test.ts"
+          fi
+
+          if [ -f "api/todoist-webhook.test.ts" ]; then
+            TEST_FILES="$TEST_FILES api/todoist-webhook.test.ts"
+          fi
+
+          if [ -n "$TEST_FILES" ]; then
+            echo "Running tests:$TEST_FILES"
+            npx vitest run $TEST_FILES --reporter=verbose
+          else
+            echo "⚠️ No Todoist test files found, skipping"
+          fi
+        env:
+          CI: true

@@ -11,10 +11,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
-import { requireAuth, sendAuthError } from './lib/auth.js';
-import { rateLimitMiddleware } from './lib/rate-limit.js';
-import { handleError, withErrorHandler } from './lib/error-handler.js';
-import { SafeLogger } from './lib/safe-logger.js';
+import { requireAuth, sendAuthError } from './lib/auth';
+import { rateLimitMiddleware } from './lib/rate-limit';
+import { handleError, withErrorHandler } from './lib/error-handler';
+import { SafeLogger } from './lib/safe-logger';
 
 // Initialize Redis client (supports both Upstash and Vercel KV)
 // Prefer Upstash explicit configuration if available
@@ -209,8 +209,8 @@ export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) 
 
   // Apply rate limiting
   const clientIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-                   (req.headers['x-real-ip'] as string) ||
-                   'unknown';
+    (req.headers['x-real-ip'] as string) ||
+    'unknown';
 
   const rateLimitResult = await rateLimitMiddleware(clientIP);
   if (!rateLimitResult.allowed) {

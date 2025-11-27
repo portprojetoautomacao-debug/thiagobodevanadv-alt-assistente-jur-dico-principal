@@ -3,7 +3,7 @@
  * Centraliza toda a lógica de integração com a API do DJEN
  */
 
-import { SafeLogger } from './safe-logger.js';
+import { SafeLogger } from './safe-logger';
 
 const logger = new SafeLogger('DJEN');
 
@@ -364,7 +364,7 @@ export async function downloadCadernoDJEN(
   url: string; // URL temporária válida por 5 minutos
 } | null> {
   const url = `https://comunicaapi.pje.jus.br/api/v1/caderno/${siglaTribunal}/${data}/${meio}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -380,7 +380,7 @@ export async function downloadCadernoDJEN(
 
     const caderno = await response.json();
     console.log(`[DJEN] Caderno disponível: ${caderno.total_comunicacoes} comunicações, ${caderno.numero_paginas} páginas`);
-    
+
     return caderno;
   } catch (error) {
     console.error(`[DJEN] Erro ao baixar caderno:`, error);
