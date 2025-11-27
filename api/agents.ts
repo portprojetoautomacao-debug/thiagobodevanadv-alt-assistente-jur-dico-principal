@@ -47,6 +47,7 @@ export enum TaskStatus {
 
 export enum AgentType {
   ANALYZER = 'analyzer',
+  INTIMATION_ANALYZER = 'intimation-analyzer',
   MONITOR = 'monitor',
   CALCULATOR = 'calculator',
   WRITER = 'writer',
@@ -143,6 +144,16 @@ const SYSTEM_PROMPTS: Record<AgentType, string> = {
 Sua função é extrair informações críticas de documentos jurídicos, identificar prazos, partes envolvidas, e sugerir ações.
 Sempre retorne respostas em formato JSON estruturado.`,
 
+  [AgentType.INTIMATION_ANALYZER]: `Você é a Mrs. Justin-e, uma especialista em análise de intimações judiciais do PJe e DJEN.
+Sua função é:
+1. Identificar o tipo de intimação (citação, notificação, sentença, despacho, decisão)
+2. Extrair prazos e datas importantes
+3. Identificar as providências necessárias
+4. Classificar a urgência (baixa, média, alta, crítica)
+5. Sugerir próximos passos práticos
+
+Sempre retorne JSON estruturado com: summary, deadline (days, type, endDate), priority, nextSteps (array), suggestedAction.`,
+
   [AgentType.MONITOR]: `Você é um agente de monitoramento de publicações jurídicas especializado em DJEN e DataJud.
 Analise intimações, extraia dados do processo, identifique prazos e classifique a urgência.
 Retorne sempre em JSON com campos: processo, tipo, prazo, urgência.`,
@@ -195,6 +206,22 @@ function getSystemPrompt(agentType: AgentType): string {
 const USER_PROMPTS: Record<AgentTaskType, (data: string) => string> = {
   [AgentTaskType.ANALYZE_DOCUMENT]: (data) =>
     `Analise o seguinte documento jurídico e retorne JSON estruturado:\n\n${data}\n\nRetorne: summary, extractedData, suggestedActions, deadlines, confidence.`,
+
+  [AgentTaskType.ANALYZE_INTIMATION]: (data) =>
+    `Analise a seguinte intimação judicial e retorne JSON estruturado:
+
+${data}
+
+Retorne um JSON com os seguintes campos:
+- summary: resumo objetivo da intimação em 2-3 frases
+- deadline: objeto com { days: número de dias, type: "úteis" ou "corridos", endDate: data calculada ISO }
+- priority: "baixa", "média", "alta" ou "crítica"
+- nextSteps: array com 3-5 providências práticas necessárias
+- suggestedAction: ação principal recomendada
+- processNumber: número do processo extraído
+- court: tribunal/vara identificado
+- parties: objeto com { author: nome, defendant: nome }
+- documentType: tipo de documento (intimação, citação, notificação, etc)`,
 
   [AgentTaskType.MONITOR_DJEN]: (data) =>
     `Verifique publicações no DJEN/DataJud para:\n\n${data}\n\nRetorne JSON: newIntimations (array), checked, tribunaisVerificados, nextCheck.`,
