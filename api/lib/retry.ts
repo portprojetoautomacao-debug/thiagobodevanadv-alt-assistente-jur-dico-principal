@@ -3,7 +3,7 @@
  * Para operações que podem falhar temporariamente
  */
 
-import { SafeLogger } from './safe-logger.js';
+import { SafeLogger } from './safe-logger';
 
 const logger = new SafeLogger('Retry');
 
@@ -164,8 +164,8 @@ export const apiRetryConfig: Partial<RetryConfig> = {
   retryCondition: (error) => {
     // Retry para erros de rede e HTTP 5xx
     return isRetryableError(error) ||
-           error.message.includes('fetch failed') ||
-           error.message.includes('network error');
+      error.message.includes('fetch failed') ||
+      error.message.includes('network error');
   }
 };
 
@@ -181,8 +181,8 @@ export const djenRetryConfig: Partial<RetryConfig> = {
   retryCondition: (error) => {
     // Retry apenas para timeouts e erros 5xx
     return error.name === 'TimeoutError' ||
-           error.message.includes('timeout') ||
-           ((error as any).statusCode >= 500 && (error as any).statusCode < 600);
+      error.message.includes('timeout') ||
+      ((error as any).statusCode >= 500 && (error as any).statusCode < 600);
   }
 };
 

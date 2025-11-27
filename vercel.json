@@ -5,9 +5,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.ts": {
-      "maxDuration": 30,
-      "includeFiles": "api/lib/**",
-      "excludeFiles": "api/tests/**"
+      "maxDuration": 30
     }
   },
   "regions": ["iad1"],
