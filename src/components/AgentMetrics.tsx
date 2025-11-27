@@ -168,18 +168,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <ChartLine className="w-4 h-4 text-primary" weight="fill" />
-              Autonomia Média
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">{averageAutonomy}%</div>
-            <p className="text-xs text-muted-foreground">Nível médio de autonomia dos agentes</p>
-          </CardContent>
-        </Card>
+
 
         <Card>
           <CardHeader className="pb-3">
