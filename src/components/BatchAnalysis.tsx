@@ -4,9 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Sparkle, Download } from '@phosphor-icons/react'
+import { Sparkle, Download, WarningCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
+
+/**
+ * BatchAnalysis - Análise em lote de documentos jurídicos
+ * 
+ * Este componente usa IA REAL (Gemini) para extrair informações estruturadas
+ * de múltiplos expedientes. NÃO há dados simulados.
+ */
 
 interface ExtractedData {
   cnj: string
@@ -20,6 +27,7 @@ export default function BatchAnalysis() {
   const [inputText, setInputText] = useState('')
   const [extractedData, setExtractedData] = useState<ExtractedData[]>([])
   const [analyzing, setAnalyzing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleAnalyze = async () => {
     if (!inputText.trim()) {
@@ -28,51 +36,98 @@ export default function BatchAnalysis() {
     }
 
     setAnalyzing(true)
+    setError(null)
 
-    setTimeout(() => {
-      const mockData: ExtractedData[] = [
-        {
-          cnj: '0001234-56.2023.5.02.0001',
-          parties: 'João Silva vs Empresa XYZ Ltda',
-          deadline: '15 dias - ' + new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          type: 'Intimação para Alegações Finais'
-        },
-        {
-          cnj: '0002345-67.2023.5.02.0001',
-          parties: 'Maria Santos vs ABC Comércio',
-          deadline: '10 dias - ' + new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          type: 'Intimação para Contestação'
-        },
-        {
-          cnj: '0003456-78.2023.5.02.0001',
-          parties: 'Pedro Oliveira vs DEF Indústria',
-          deadline: '5 dias - ' + new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-          type: 'Despacho - Regularização'
+    try {
+      // Chama a API real do Gemini via proxy
+      const response = await fetch('/_spark/llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `Você é um assistente jurídico especializado em extração de dados de expedientes.
+Analise o texto e extraia informações estruturadas de cada processo/expediente mencionado.
+
+Retorne um JSON com array "expedientes" contendo objetos com:
+- cnj: número do processo no formato CNJ (0000000-00.0000.0.00.0000)
+- parties: partes do processo (autor vs réu)
+- deadline: prazo identificado (ex: "15 dias")
+- type: tipo do documento (intimação, citação, despacho, etc)
+
+Se não encontrar expedientes claros, retorne { "expedientes": [], "error": "mensagem" }.
+Responda APENAS com JSON válido.`
+            },
+            {
+              role: 'user',
+              content: `Extraia os expedientes do seguinte texto:\n\n${inputText}`
+            }
+          ],
+          temperature: 0.2
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const content = data.response || data.choices?.[0]?.message?.content || ''
+
+      // Parse do JSON
+      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+
+        if (parsed.error && (!parsed.expedientes || parsed.expedientes.length === 0)) {
+          setError(parsed.error || 'Nenhum expediente encontrado no texto')
+          toast.warning('Nenhum expediente identificado')
+          setExtractedData([])
+          return
         }
-      ]
 
-      const newExpedientes: Expediente[] = mockData.map((data) => ({
-        id: crypto.randomUUID(),
-        processId: data.cnj,
-        tipo: data.type.includes('Intimação') ? 'intimacao' : data.type.includes('Citação') ? 'citacao' : 'outro',
-        titulo: data.type,
-        type: data.type,
-        conteudo: inputText,
-        content: inputText,
-        dataRecebimento: new Date().toISOString(),
-        receivedAt: new Date().toISOString(),
-        prazoFatal: data.deadline.split(' - ')[1],
-        deadline: data.deadline.split(' - ')[1],
-        lido: false,
-        arquivado: false,
-        analyzed: false
-      }))
+        const expedientes: ExtractedData[] = parsed.expedientes || []
 
-      setExpedientes((current) => [...(current || []), ...newExpedientes])
-      setExtractedData(mockData)
+        if (expedientes.length === 0) {
+          setError('Nenhum expediente com dados estruturados foi encontrado')
+          toast.warning('Nenhum expediente identificado')
+          return
+        }
+
+        // Salva os expedientes extraídos
+        const newExpedientes: Expediente[] = expedientes.map((data) => ({
+          id: crypto.randomUUID(),
+          processId: data.cnj || 'CNJ não identificado',
+          tipo: data.type?.toLowerCase().includes('intimação') ? 'intimacao'
+            : data.type?.toLowerCase().includes('citação') ? 'citacao'
+              : 'outro',
+          titulo: data.type || 'Documento',
+          type: data.type || 'Documento',
+          conteudo: inputText,
+          content: inputText,
+          dataRecebimento: new Date().toISOString(),
+          receivedAt: new Date().toISOString(),
+          prazoFatal: data.deadline || 'Não identificado',
+          deadline: data.deadline || 'Não identificado',
+          lido: false,
+          arquivado: false,
+          analyzed: true
+        }))
+
+        setExpedientes((current) => [...(current || []), ...newExpedientes])
+        setExtractedData(expedientes)
+        toast.success(`${expedientes.length} expediente(s) extraído(s) com IA Gemini`)
+      } else {
+        throw new Error('Resposta da IA não contém JSON válido')
+      }
+    } catch (err) {
+      console.error('Erro na análise em lote:', err)
+      setError('Erro ao analisar com IA. Verifique a conexão.')
+      toast.error('Erro na análise com IA')
+    } finally {
       setAnalyzing(false)
-      toast.success(`${mockData.length} expedientes extraídos e salvos com sucesso`)
-    }, 2500)
+    }
   }
 
   const handleExport = () => {

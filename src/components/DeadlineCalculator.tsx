@@ -36,7 +36,7 @@ export default function DeadlineCalculator() {
     ],
   }
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     if (!baseDate) {
       toast.error('Selecione a data base')
       return
@@ -44,7 +44,7 @@ export default function DeadlineCalculator() {
 
     setCalculating(true)
 
-    setTimeout(() => {
+    try {
       const selectedDeadline = deadlineTypes[procedureType].find(d => d.value === deadlineType)
       const days = selectedDeadline?.days || 15
 
@@ -60,22 +60,15 @@ export default function DeadlineCalculator() {
       reasoning.push('')
       reasoning.push('Cálculo passo a passo:')
 
-      const mockHolidays = [
-        new Date(2024, 0, 1).toDateString(),
-        new Date(2024, 3, 21).toDateString(),
-        new Date(2024, 4, 1).toDateString(),
-        new Date(2024, 8, 7).toDateString(),
-        new Date(2024, 9, 12).toDateString(),
-        new Date(2024, 10, 15).toDateString(),
-        new Date(2024, 10, 20).toDateString(),
-        new Date(2024, 11, 25).toDateString(),
-      ]
+      // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
+      // TODO: Integrar com API de feriados real ou permitir configuração por tribunal
+      const nationalHolidays = getNationalHolidays(base.getFullYear())
 
       while (workingDays < days) {
         currentDate.setDate(currentDate.getDate() + 1)
         const dayOfWeek = currentDate.getDay()
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-        const isHoliday = mockHolidays.includes(currentDate.toDateString())
+        const isHoliday = nationalHolidays.includes(currentDate.toDateString())
 
         if (isWeekend) {
           reasoning.push(`${currentDate.toLocaleDateString('pt-BR')} - Final de semana (ignorado)`)
@@ -96,9 +89,29 @@ export default function DeadlineCalculator() {
         reasoning,
         holidays,
       })
-      setCalculating(false)
       toast.success('Cálculo concluído com sucesso')
-    }, 1500)
+    } catch (error) {
+      console.error('Erro no cálculo:', error)
+      toast.error('Erro ao calcular prazo')
+    } finally {
+      setCalculating(false)
+    }
+  }
+
+  // Retorna feriados nacionais do Brasil
+  // Em produção, isso deveria vir de uma API ou banco de dados
+  function getNationalHolidays(year: number): string[] {
+    return [
+      new Date(year, 0, 1).toDateString(),   // Confraternização Universal
+      new Date(year, 3, 21).toDateString(),  // Tiradentes
+      new Date(year, 4, 1).toDateString(),   // Dia do Trabalho
+      new Date(year, 8, 7).toDateString(),   // Independência
+      new Date(year, 9, 12).toDateString(),  // Nossa Senhora Aparecida
+      new Date(year, 10, 2).toDateString(),  // Finados
+      new Date(year, 10, 15).toDateString(), // Proclamação da República
+      new Date(year, 10, 20).toDateString(), // Dia da Consciência Negra (alguns estados)
+      new Date(year, 11, 25).toDateString(), // Natal
+    ]
   }
 
   return (

@@ -47,12 +47,12 @@ export async function processTaskWithRealAI(
  */
 export async function fetchPendingTasks(agentId?: string): Promise<AgentTask[]> {
   try {
-    const url = agentId 
+    const url = agentId
       ? `/api/agents/tasks?agentId=${agentId}&status=queued`
       : '/api/agents/tasks?status=queued';
 
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch tasks: ${response.statusText}`);
     }
@@ -149,30 +149,17 @@ export async function calculateRealDeadline(
 
 /**
  * Verifica se o modo de agentes reais está habilitado
+ * SEMPRE retorna true - não há mais modo simulado
  */
 export function isRealAgentsEnabled(): boolean {
-  // Verifica se há configuração no localStorage ou variável de ambiente
-  if (typeof window !== 'undefined') {
-    const enabled = localStorage.getItem('real-agents-enabled');
-    return enabled === 'true';
-  }
-  return false;
+  // Agentes SEMPRE usam IA real - não há mais modo simulado
+  return true;
 }
 
 /**
- * Habilita/desabilita modo de agentes reais
+ * @deprecated Modo simulado foi removido. Agentes sempre usam IA real.
  */
-export function setRealAgentsMode(enabled: boolean): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('real-agents-enabled', enabled.toString());
-    
-    // Recarrega a página para aplicar mudanças
-    if (window.confirm(
-      enabled 
-        ? 'Modo de agentes reais será ativado. Os agentes usarão IA real (Spark LLM) e APIs externas. Continuar?'
-        : 'Modo de agentes simulados será ativado. Os agentes voltarão a usar dados fictícios. Continuar?'
-    )) {
-      window.location.reload();
-    }
-  }
+export function setRealAgentsMode(_enabled: boolean): void {
+  console.warn('[DEPRECATED] setRealAgentsMode: Modo simulado foi removido. Agentes sempre usam IA real.');
+  // Função mantida apenas para compatibilidade - não faz nada
 }
