@@ -31,7 +31,7 @@ export default function ExpedientePanel() {
     try {
       const response = await fetch('/api/expedientes')
       const data = await response.json()
-      
+
       if (data.success && data.expedientes?.length > 0) {
         setExpedientes(data.expedientes)
         setLastSync(data.lastCheck)
@@ -59,58 +59,161 @@ export default function ExpedientePanel() {
   // Ensure expedientes is always an array to prevent runtime errors
   const safeExpedientes = Array.isArray(expedientes) ? expedientes : []
 
+  // Análise com IA real via API
   const handleAnalyze = async (exp: Expediente) => {
     setAnalyzing(true)
     setSelectedExp(exp)
 
-    setTimeout(() => {
+    try {
+      // Chama API de processamento com IA real
+      const response = await fetch('/api/agents/process-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task: {
+            id: crypto.randomUUID(),
+            agentId: 'justine',
+            type: 'analyze_intimation',
+            priority: 'high',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            data: {
+              publicationId: exp.id,
+              text: exp.content || exp.teor,
+              processNumber: exp.numeroProcesso,
+              tribunal: exp.tribunal,
+              type: exp.type || 'Intimação'
+            }
+          },
+          agent: {
+            id: 'justine',
+            type: 'intimation-analyzer',
+            name: 'Mrs. Justin-e'
+          }
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.result?.success) {
+        const analysisData = data.result.data
+        const analyzed: Expediente = {
+          ...exp,
+          analyzed: true,
+          summary: analysisData?.summary || 'Análise concluída',
+          suggestedAction: analysisData?.suggestedActions?.[0] || 'Revisar documento',
+          pendingDocs: analysisData?.nextSteps || [],
+          deadline: analysisData?.deadline,
+          priority: analysisData?.priority,
+          draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
+            `📋 RESUMO:\n${analysisData?.summary || 'N/A'}\n\n` +
+            `⚖️ TIPO: ${analysisData?.documentType || exp.type}\n` +
+            `🚨 PRIORIDADE: ${analysisData?.priority || 'média'}\n\n` +
+            `📅 PRAZO: ${analysisData?.deadline?.days || 'N/A'} dias ${analysisData?.deadline?.type || ''}\n` +
+            `   Data limite: ${analysisData?.deadline?.endDate || 'N/A'}\n\n` +
+            `✅ AÇÕES SUGERIDAS:\n${(analysisData?.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
+            `📝 PRÓXIMOS PASSOS:\n${(analysisData?.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
+        }
+
+        setExpedientes((current) =>
+          (current || []).map(e => e.id === exp.id ? analyzed : e)
+        )
+        setSelectedExp(analyzed)
+        toast.success('Mrs. Justin-e concluiu a análise!')
+      } else {
+        throw new Error(data.result?.error || 'Erro na análise')
+      }
+    } catch (error) {
+      console.error('Erro na análise:', error)
+      // Fallback para análise básica
       const analyzed: Expediente = {
         ...exp,
         analyzed: true,
-        summary: 'Intimação para apresentação de alegações finais no prazo de 15 dias. Processo em fase de instrução.',
-        suggestedAction: 'Elaborar alegações finais destacando os pontos favoráveis da instrução probatória',
-        pendingDocs: ['Alegações Finais', 'Memorial descritivo'],
-        draftPetition: 'EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO...\n\n[Modelo de petição gerado por IA]'
+        summary: 'Análise automática indisponível. Revise manualmente.',
+        suggestedAction: 'Verificar prazo e providências necessárias',
+        pendingDocs: ['Revisar documento manualmente']
       }
-
       setExpedientes((current) =>
         (current || []).map(e => e.id === exp.id ? analyzed : e)
       )
       setSelectedExp(analyzed)
+      toast.error('Erro na análise com IA. Análise básica aplicada.')
+    } finally {
       setAnalyzing(false)
-      toast.success('Análise concluída com sucesso')
-    }, 2000)
+    }
   }
 
   const handleActivateMichaelRoss = () => {
     setShowMichaelRossDialog(true)
   }
 
-  const handleSelectTask = (task: string) => {
+  // Análise com Mrs. Justin-e (tarefa específica)
+  const handleSelectTask = async (task: string) => {
     setSelectedTask(task)
     setAnalyzing(true)
-    
-    setTimeout(() => {
+
+    try {
       if (selectedExp) {
+        const response = await fetch('/api/agents/process-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task: {
+              id: crypto.randomUUID(),
+              agentId: 'justine',
+              type: 'analyze_intimation',
+              priority: 'high',
+              status: 'pending',
+              createdAt: new Date().toISOString(),
+              data: {
+                publicationId: selectedExp.id,
+                text: selectedExp.content || selectedExp.teor,
+                processNumber: selectedExp.numeroProcesso,
+                tribunal: selectedExp.tribunal,
+                type: selectedExp.type || 'Intimação',
+                selectedTask: task
+              }
+            },
+            agent: {
+              id: 'justine',
+              type: 'intimation-analyzer',
+              name: 'Mrs. Justin-e'
+            }
+          })
+        })
+
+        const data = await response.json()
+        const analysisData = data.result?.data
+
         const analyzed: Expediente = {
           ...selectedExp,
           analyzed: true,
-          summary: `Mrs. Michael Ross analisou a intimação e identificou: ${task}. Prazo de 15 dias corridos iniciando em D+1 da intimação.`,
-          suggestedAction: `Executar tarefa: ${task}. Workflow de controladoria criado automaticamente.`,
-          pendingDocs: ['Documento Principal', 'Comprovantes'],
-          draftPetition: 'EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO...\n\n[Minuta gerada por Mrs. Michael Ross]'
+          summary: analysisData?.summary || `Mrs. Justin-e analisou a intimação para: ${task}`,
+          suggestedAction: `Executar: ${task}`,
+          pendingDocs: analysisData?.nextSteps || ['Documento Principal', 'Comprovantes'],
+          deadline: analysisData?.deadline,
+          priority: analysisData?.priority,
+          draftPetition: `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
+            `🎯 TAREFA: ${task}\n\n` +
+            `📋 RESUMO:\n${analysisData?.summary || 'Análise em processamento'}\n\n` +
+            `📅 PRAZO: ${analysisData?.deadline?.days || 15} dias ${analysisData?.deadline?.type || 'úteis'}\n` +
+            `   Data limite: ${analysisData?.deadline?.endDate || 'Calcular'}\n\n` +
+            `✅ CHECKLIST:\n${(analysisData?.nextSteps || ['Verificar prazo', 'Elaborar documento', 'Protocolar']).map((s: string, i: number) => `☐ ${i + 1}. ${s}`).join('\n')}`
         }
 
         setExpedientes((current) =>
           (current || []).map(e => e.id === selectedExp.id ? analyzed : e)
         )
         setSelectedExp(analyzed)
+        toast.success('Mrs. Justin-e criou o workflow de controladoria!')
       }
-      
+    } catch (error) {
+      console.error('Erro no workflow:', error)
+      toast.error('Erro ao criar workflow. Tente novamente.')
+    } finally {
       setAnalyzing(false)
       setShowMichaelRossDialog(false)
-      toast.success('Mrs. Michael Ross concluiu a análise e criou o workflow!')
-    }, 2500)
+    }
   }
 
   const suggestedTasks = [
@@ -138,8 +241,8 @@ export default function ExpedientePanel() {
               )}
             </p>
           </div>
-          <Button 
-            onClick={fetchExpedientes} 
+          <Button
+            onClick={fetchExpedientes}
             disabled={loading}
             variant="outline"
             size="sm"
@@ -169,7 +272,7 @@ export default function ExpedientePanel() {
                     <p className="text-xs text-muted-foreground">
                       O monitor DJEN verifica automaticamente às 9h (UTC)
                     </p>
-                    <Button 
+                    <Button
                       onClick={fetchExpedientes}
                       disabled={loading}
                       variant="outline"
@@ -184,11 +287,10 @@ export default function ExpedientePanel() {
                   safeExpedientes.map((exp) => (
                     <div
                       key={exp.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedExp?.id === exp.id
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedExp?.id === exp.id
                           ? 'bg-primary/10 border-primary'
                           : 'bg-card border-border hover:bg-muted'
-                      }`}
+                        }`}
                       onClick={() => setSelectedExp(exp)}
                     >
                       <div className="flex items-start justify-between gap-2">
