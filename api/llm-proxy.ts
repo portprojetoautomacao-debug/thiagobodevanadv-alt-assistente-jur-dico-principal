@@ -30,16 +30,16 @@ const MODEL_MAPPING: Record<string, Record<string, string>> = {
     'gpt-3.5-turbo': 'gpt-3.5-turbo',
   },
   gemini: {
-    'gpt-4o': 'gemini-2.0-flash',
-    'gpt-4o-mini': 'gemini-2.0-flash',
-    'gpt-4': 'gemini-2.0-flash',
-    'gpt-3.5-turbo': 'gemini-2.0-flash',
-    'gemini': 'gemini-2.0-flash',
-    'gemini-pro': 'gemini-2.0-flash',
-    'gemini-1.5-pro': 'gemini-2.0-flash',
-    'gemini-1.5-flash': 'gemini-2.0-flash',
-    'gemini-2.0-flash': 'gemini-2.0-flash',
-    'gemini-2.5-pro': 'gemini-2.0-flash',
+    'gpt-4o': 'gemini-2.5-pro',
+    'gpt-4o-mini': 'gemini-2.5-pro',
+    'gpt-4': 'gemini-2.5-pro',
+    'gpt-3.5-turbo': 'gemini-2.5-pro',
+    'gemini': 'gemini-2.5-pro',
+    'gemini-pro': 'gemini-2.5-pro',
+    'gemini-1.5-pro': 'gemini-2.5-pro',
+    'gemini-1.5-flash': 'gemini-2.5-pro',
+    'gemini-2.0-flash': 'gemini-2.5-pro',
+    'gemini-2.5-pro': 'gemini-2.5-pro',
   }
 };
 
@@ -75,7 +75,7 @@ function transformFromGemini(data: any): any {
     id: `gemini-${Date.now()}`,
     object: 'chat.completion',
     created: Math.floor(Date.now() / 1000),
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-pro',
     choices: [{
       index: 0,
       message: {
@@ -161,7 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (provider.name === 'Gemini') {
       // Mapear modelo e construir URL específica do Gemini
-      const geminiModel = MODEL_MAPPING.gemini[requestedModel] || 'gemini-2.0-flash';
+      const geminiModel = MODEL_MAPPING.gemini[requestedModel] || 'gemini-2.5-pro';
       targetUrl = `${provider.baseUrl}/${geminiModel}:generateContent?key=${provider.apiKey}`;
       requestBody = provider.transformRequest!(body);
     } else if (provider.name === 'OpenAI') {
