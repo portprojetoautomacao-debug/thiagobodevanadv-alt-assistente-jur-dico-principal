@@ -108,6 +108,7 @@ async function consultarDJEN(params: {
     nomeAdvogado?: string;
     dataInicio?: string;
     dataFim?: string;
+    meio?: 'D' | 'E';
 }): Promise<DJENResponse | null> {
     const queryParts: string[] = [];
 
@@ -117,6 +118,7 @@ async function consultarDJEN(params: {
     if (params.dataInicio) queryParts.push(`dataDisponibilizacaoInicio=${params.dataInicio}`);
     if (params.dataFim) queryParts.push(`dataDisponibilizacaoFim=${params.dataFim}`);
     queryParts.push('itensPorPagina=50');
+    queryParts.push(`meio=${params.meio || 'D'}`); // D = Digital (intimações eletrônicas)
 
     const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryParts.join('&')}`;
 
