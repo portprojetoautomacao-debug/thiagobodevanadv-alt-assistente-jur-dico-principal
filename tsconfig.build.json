@@ -15,6 +15,7 @@
     "src/components/archive",
     "src/examples",
     "src/hooks/useErrorTracking.ts",
+    "api/tests",
     "node_modules"
   ]
 }
