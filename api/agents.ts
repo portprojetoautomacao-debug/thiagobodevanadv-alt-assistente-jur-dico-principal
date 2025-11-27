@@ -14,6 +14,7 @@ import { addTaskToQueue as _addTaskToQueue } from '../lib/api/kv-utils.js';
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
   ANALYZE_DOCUMENT = 'analyze_document',
+  ANALYZE_INTIMATION = 'analyze_intimation',
   MONITOR_DJEN = 'monitor_djen',
   CALCULATE_DEADLINE = 'calculate_deadline',
   DRAFT_PETITION = 'draft_petition',

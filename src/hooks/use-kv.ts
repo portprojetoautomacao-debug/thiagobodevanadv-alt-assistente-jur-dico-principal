@@ -49,7 +49,7 @@ const isProd = typeof window !== 'undefined' &&
  */
 function isCircuitOpen(): boolean {
   if (!circuitBreakerTripped) return false;
-  
+
   // Verifica se o cooldown passou
   if (Date.now() > circuitBreakerResetTime) {
     circuitBreakerTripped = false;
@@ -57,7 +57,7 @@ function isCircuitOpen(): boolean {
     console.log('[KV] Circuit breaker reset - tentando API novamente');
     return false;
   }
-  
+
   return true;
 }
 
@@ -113,7 +113,7 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
   const results = new Map<string, unknown>();
 
   if (keys.length === 0) return results;
-  
+
   // Se circuit breaker estiver ativo, use localStorage
   if (isCircuitOpen()) {
     for (const key of keys) {
@@ -247,7 +247,7 @@ async function processWriteBatch(): Promise<void> {
   writeTimeout = null;
 
   if (writes.size === 0) return;
-  
+
   // Se circuit breaker estiver ativo, não envia para API
   if (isCircuitOpen()) {
     return;
@@ -261,7 +261,7 @@ async function processWriteBatch(): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'batch-set', entries }),
     });
-    
+
     if (response.ok) {
       recordApiSuccess();
     } else if (response.status === 429) {
