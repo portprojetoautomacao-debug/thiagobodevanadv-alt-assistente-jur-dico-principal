@@ -7,7 +7,55 @@ import * as kvUtils from '../../lib/api/kv-utils';
 
 // Mock dependencies
 vi.mock('../../lib/api/djen-client');
-vi.mock('../../lib/api/kv-utils');
+vi.mock('../../lib/api/kv-utils', () => ({
+  getMonitoredLawyers: vi.fn(),
+  storePublication: vi.fn(),
+  queueNotification: vi.fn(),
+  updateLastDJENCheck: vi.fn(),
+  getLastDJENCheck: vi.fn(),
+  getAgents: vi.fn(),
+  updateAgents: vi.fn(),
+  getCompletedTasks: vi.fn(),
+  updateCompletedTasks: vi.fn(),
+  addTaskToQueue: vi.fn()
+}));
+vi.mock('../../api/_lib/rate-limit', () => ({
+  rateLimitMiddleware: vi.fn().mockResolvedValue({ 
+    allowed: true, 
+    headers: {} 
+  }),
+  apiRateLimiter: {
+    check: vi.fn().mockResolvedValue({ success: true }),
+    report: vi.fn()
+  }
+}));
+vi.mock('../../api/_lib/auth', () => ({
+  requireAuth: vi.fn(),
+  sendAuthError: vi.fn()
+}));
+vi.mock('../../api/_lib/safe-logger', () => {
+  return {
+    SafeLogger: class {
+      constructor() {
+        return {
+          info: vi.fn(),
+          error: vi.fn(),
+          warn: vi.fn(),
+          debug: vi.fn()
+        };
+      }
+    }
+  };
+});
+vi.mock('../../api/_lib/cache', () => ({
+  sparkCache: {
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    clear: vi.fn().mockResolvedValue(undefined)
+  },
+  cachedOperation: vi.fn((fn) => fn)
+}));
 vi.mock('../../lib/api/llm-proxy', () => ({
   generateText: vi.fn().mockResolvedValue(JSON.stringify({
     summary: "Publicação analisada com sucesso",
@@ -39,13 +87,13 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup KV mocks
     (kvUtils.getMonitoredLawyers as any).mockResolvedValue([mockLawyer]);
     (kvUtils.storePublication as any).mockResolvedValue(undefined);
     (kvUtils.queueNotification as any).mockResolvedValue(undefined);
     (kvUtils.updateLastDJENCheck as any).mockResolvedValue(undefined);
-    
+
     // Setup DJEN mock
     (djenClient.consultarDJENForLawyer as any).mockResolvedValue({
       resultados: [mockPublication],
@@ -65,10 +113,10 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
 
     expect(res._getStatusCode()).toBe(200);
     const data = JSON.parse(res._getData());
-    
+
     expect(data.result.publicationsFound).toBe(1);
     expect(data.result.lawyersChecked).toBe(1);
-    
+
     // Verify DJEN was called with correct parameters
     expect(djenClient.consultarDJENForLawyer).toHaveBeenCalledWith(
       ['TJMG'],
@@ -107,15 +155,15 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     // But in this test we are mocking the module, so we can just mock the exported functions if they were used
     // However, agentsHandler uses getKv internally.
     // Let's look at how we mocked kvUtils.
-    
+
     // Re-mock kvUtils for this specific test case to return our task
     // We need to mock the implementation of getKv if it was exported, but it's not.
     // But wait, agentsHandler imports getAgents, updateAgents etc.
     // Let's see what agentsHandler uses.
-    
+
     // agentsHandler uses:
     // import { getAgents, updateAgents, getTaskQueue, updateTaskQueue, ... } from '../lib/api/kv-utils';
-    
+
     // So we should mock getTaskQueue and updateTaskQueue
     // (kvUtils.getTaskQueue as any) = vi.fn().mockResolvedValue([taskData]);
     // (kvUtils.updateTaskQueue as any) = vi.fn().mockResolvedValue(undefined);
@@ -134,16 +182,20 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        choices: [{ message: { content: JSON.stringify({
-          summary: "Sentença proferida. Necessário comunicar cliente e analisar riscos.",
-          deadlines: [{ date: "2025-12-01", description: "Prazo recursal" }],
-          suggestedActions: [
-            "Calcular prazo recursal", 
-            "Comunicar cliente sobre sentença", 
-            "Analisar riscos da decisão",
-            "Verificar andamento no DataJud"
-          ]
-        }) } }],
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              summary: "Sentença proferida. Necessário comunicar cliente e analisar riscos.",
+              deadlines: [{ date: "2025-12-01", description: "Prazo recursal" }],
+              suggestedActions: [
+                "Calcular prazo recursal",
+                "Comunicar cliente sobre sentença",
+                "Analisar riscos da decisão",
+                "Verificar andamento no DataJud"
+              ]
+            })
+          }
+        }],
         usage: { total_tokens: 150 }
       })
     } as any);
@@ -151,7 +203,7 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     const { req, res } = createMocks({
       method: 'POST',
       query: { action: 'process-task' },
-      body: { 
+      body: {
         task: taskData,
         agent: {
           id: 'analyzer-agent',
@@ -171,13 +223,13 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
 
     expect(result.ok).toBe(true);
     expect(result.result).toBeDefined();
-    
+
     // Verify AI analysis result
     const analysis = result.result;
     expect(analysis.summary).toBe("Sentença proferida. Necessário comunicar cliente e analisar riscos.");
     expect(analysis.deadlines).toHaveLength(1);
   });
-  
+
   it('Step 3: Agent Queue Processing should chain new tasks based on analysis', async () => {
     const taskData = {
       id: 'task-chain-test',
@@ -193,35 +245,39 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     global.fetch = vi.fn().mockImplementation((url, options) => {
       // 1. GET Task Queue
       if (url.toString().includes('/_spark/kv/agent-task-queue') && (!options || options.method === 'GET' || !options.method)) {
-        return Promise.resolve({ 
-          ok: true, 
-          json: async () => ({ value: [taskData] }) 
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ value: [taskData] })
         });
       }
-      
+
       // 2. GET Agents
       if (url.toString().includes('/_spark/kv/autonomous-agents')) {
-        return Promise.resolve({ 
-          ok: true, 
-          json: async () => ({ value: [{ id: 'analyzer-agent', enabled: true, type: 'analyzer', name: 'Analyzer' }] }) 
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ value: [{ id: 'analyzer-agent', enabled: true, type: 'analyzer', name: 'Analyzer' }] })
         });
       }
-      
+
       // 3. LLM Call
       if (url.toString().includes('/_spark/llm')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            choices: [{ message: { content: JSON.stringify({
-              suggestedActions: [
-                "Pagar custas processuais",
-                "Arquivar documento na pasta do processo",
-                "Verificar compliance LGPD",
-                "Traduzir termos para linguagem simples",
-                "Revisar minuta de contrato",
-                "Definir estratégia do caso"
-              ]
-            }) } }],
+            choices: [{
+              message: {
+                content: JSON.stringify({
+                  suggestedActions: [
+                    "Pagar custas processuais",
+                    "Arquivar documento na pasta do processo",
+                    "Verificar compliance LGPD",
+                    "Traduzir termos para linguagem simples",
+                    "Revisar minuta de contrato",
+                    "Definir estratégia do caso"
+                  ]
+                })
+              }
+            }],
             usage: { total_tokens: 150 }
           })
         });
@@ -244,26 +300,26 @@ describe('Integration: DJEN Monitor -> Agent Workflow', () => {
     await agentsHandler(req as any, res as any);
 
     expect(res._getStatusCode()).toBe(200);
-    
+
     // Verify that the queue update was called with the new chained tasks
-    const putCall = (global.fetch as any).mock.calls.find((call: any[]) => 
+    const putCall = (global.fetch as any).mock.calls.find((call: any[]) =>
       call[0].toString().includes('/_spark/kv/agent-task-queue') && call[1].method === 'PUT'
     );
-    
+
     expect(putCall).toBeDefined();
     const body = JSON.parse(putCall[1].body);
     const updatedQueue = body.value;
-    
+
     // Original task should be completed (or we are just checking the pushed tasks)
     // The code pushes new tasks to the queue array.
-    
+
     // Check for Billing Analyst task (if exists)
     const billingTask = updatedQueue.find((t: any) => t.type === AgentTaskType.BILLING_ANALYSIS || t.agentId === 'billing-analyst');
     if (billingTask) {
       expect(billingTask).toBeDefined();
       expect(billingTask.agentId).toBe('billing-analyst');
     }
-    
+
     // Check for Organizer task (if exists)
     const organizerTask = updatedQueue.find((t: any) => t.type === AgentTaskType.ORGANIZE_FILES || t.agentId === 'document-organizer');
     if (organizerTask) {
