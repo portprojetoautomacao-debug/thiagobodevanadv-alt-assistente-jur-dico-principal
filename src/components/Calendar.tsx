@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CalendarDots, Plus, CaretLeft, CaretRight, GoogleLogo, CloudArrowDown, CloudArrowUp, Link as LinkIcon, Trash, Warning, Info } from '@phosphor-icons/react'
+import { CalendarDots, Plus, CaretLeft, CaretRight, GoogleLogo, CloudArrowDown, CloudArrowUp, Link as LinkIcon, Trash, Warning, Info, ArrowsClockwise, CheckCircle, XCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { googleCalendarService } from '@/lib/google-calendar-service'
 import type { Appointment } from '@/types'
@@ -40,6 +40,8 @@ export default function Calendar() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [isGoogleConnected, setIsGoogleConnected] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
   const [syncEnabled, setSyncEnabled] = useKV<boolean>('calendar-sync-enabled', false)
   const [newAppointment, setNewAppointment] = useState({
     title: '',
@@ -51,8 +53,37 @@ export default function Calendar() {
     location: '',
   })
 
+  // Verificar status do serviço ao montar
   useEffect(() => {
-    setIsGoogleConnected(googleCalendarService.isAuthenticated())
+    const checkStatus = () => {
+      const status = googleCalendarService.getStatus()
+      setIsGoogleConnected(status.authenticated)
+      if (status.lastError) {
+        setConnectionError(status.lastError)
+      }
+    }
+    checkStatus()
+  }, [])
+
+  // Inicializar o serviço Google Calendar automaticamente
+  useEffect(() => {
+    if (isGoogleConfigured && !googleCalendarService.isInitialized()) {
+      setIsInitializing(true)
+      googleCalendarService.initialize()
+        .then((success) => {
+          console.log('[Calendar] Google Calendar initialized:', success)
+          if (!success) {
+            setConnectionError(googleCalendarService.getLastError())
+          }
+        })
+        .catch((err) => {
+          console.error('[Calendar] Failed to initialize:', err)
+          setConnectionError(err.message)
+        })
+        .finally(() => {
+          setIsInitializing(false)
+        })
+    }
   }, [])
 
   const year = currentDate.getFullYear()
@@ -116,16 +147,33 @@ export default function Calendar() {
   }
 
   const handleConnectGoogle = async () => {
+    setConnectionError(null)
+    setIsInitializing(true)
+
     try {
+      console.log('[Calendar] Starting Google authentication...')
+      toast.info('Conectando ao Google Calendar...', { duration: 3000 })
+
       const authenticated = await googleCalendarService.authenticate()
+
       if (authenticated) {
         setIsGoogleConnected(true)
-        toast.success('Conectado ao Google Calendar')
+        setConnectionError(null)
+        toast.success('Conectado ao Google Calendar com sucesso!')
+        console.log('[Calendar] Successfully authenticated')
       } else {
-        toast.error('Falha ao conectar ao Google Calendar')
+        const error = googleCalendarService.getLastError() || 'Falha na autenticação'
+        setConnectionError(error)
+        toast.error(error)
+        console.error('[Calendar] Authentication failed:', error)
       }
     } catch (error) {
-      toast.error('Erro ao conectar ao Google Calendar')
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
+      setConnectionError(errorMsg)
+      toast.error(`Erro ao conectar: ${errorMsg}`)
+      console.error('[Calendar] Connection error:', error)
+    } finally {
+      setIsInitializing(false)
     }
   }
 
@@ -331,18 +379,54 @@ export default function Calendar() {
                 <CardDescription>
                   {!isGoogleConfigured
                     ? 'Configure as credenciais do Google para habilitar a sincronização'
-                    : isGoogleConnected
-                      ? 'Conectado - seus eventos podem ser sincronizados'
-                      : 'Conecte sua conta do Google para sincronizar eventos'}
+                    : isInitializing
+                      ? 'Inicializando conexão...'
+                      : isGoogleConnected
+                        ? 'Conectado - seus eventos podem ser sincronizados'
+                        : 'Conecte sua conta do Google para sincronizar eventos'}
                 </CardDescription>
               </div>
             </div>
-            <Badge variant={isGoogleConnected ? 'default' : isGoogleConfigured ? 'secondary' : 'destructive'}>
-              {isGoogleConnected ? 'Conectado' : isGoogleConfigured ? 'Desconectado' : 'Não Configurado'}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {isInitializing && (
+                <ArrowsClockwise className="w-5 h-5 text-blue-600 animate-spin" />
+              )}
+              <Badge variant={isGoogleConnected ? 'default' : isGoogleConfigured ? 'secondary' : 'destructive'}>
+                {isGoogleConnected ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Conectado
+                  </span>
+                ) : isGoogleConfigured ? (
+                  'Desconectado'
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <XCircle className="w-3 h-3" /> Não Configurado
+                  </span>
+                )}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Mostrar erro de conexão se houver */}
+          {connectionError && (
+            <Alert className="border-red-500 bg-red-50 dark:bg-red-950/20">
+              <XCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                <strong>Erro de Conexão</strong>
+                <p className="mt-1 text-sm">{connectionError}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => setConnectionError(null)}
+                >
+                  Fechar
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {!isGoogleConfigured ? (
             <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
               <Warning className="h-4 w-4 text-amber-600" />
@@ -365,6 +449,21 @@ export default function Calendar() {
             </Alert>
           ) : (
             <>
+              {/* Info box com dicas de configuração */}
+              {!isGoogleConnected && !connectionError && (
+                <Alert className="border-blue-300 bg-blue-50 dark:bg-blue-950/20">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
+                    <strong>Dicas para conectar:</strong>
+                    <ul className="mt-1 list-disc list-inside space-y-1">
+                      <li>Certifique-se de que pop-ups não estão bloqueados</li>
+                      <li>A origem <code>{window.location.origin}</code> deve estar autorizada no Google Cloud Console</li>
+                      <li>A API do Google Calendar deve estar habilitada no projeto</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label htmlFor="sync-toggle" className="text-sm font-medium">
@@ -384,9 +483,22 @@ export default function Calendar() {
 
               <div className="flex flex-wrap gap-2">
                 {!isGoogleConnected && (
-                  <Button onClick={handleConnectGoogle} variant="default">
-                    <GoogleLogo className="w-4 h-4 mr-2" />
-                    Conectar ao Google
+                  <Button
+                    onClick={handleConnectGoogle}
+                    variant="default"
+                    disabled={isInitializing}
+                  >
+                    {isInitializing ? (
+                      <>
+                        <ArrowsClockwise className="w-4 h-4 mr-2 animate-spin" />
+                        Conectando...
+                      </>
+                    ) : (
+                      <>
+                        <GoogleLogo className="w-4 h-4 mr-2" />
+                        Conectar ao Google
+                      </>
+                    )}
                   </Button>
                 )}
 
