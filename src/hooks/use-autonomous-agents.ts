@@ -21,7 +21,7 @@ function getAgentActivity(agent: Agent): string {
 }
 
 // Version flag to force data reset when demo data is detected
-const AGENTS_DATA_VERSION = 2
+const AGENTS_DATA_VERSION = 3
 
 export function useAutonomousAgents() {
   const [dataVersion, setDataVersion] = useKV<number>('agents-data-version', 0)
