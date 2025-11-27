@@ -1,11 +1,11 @@
 /**
- * Custom KV (Key-Value) storage hook - OTIMIZADO
+ * Custom KV (Key-Value) storage hook - OTIMIZADO V2
  * 
  * Implementa:
  * - Batching de requisições (agrupa múltiplas chaves em uma chamada)
  * - Cache local com TTL
  * - Debounce para evitar rajadas
- * - Retry com backoff exponencial
+ * - Circuit breaker para desabilitar API em caso de muitos erros
  * 
  * Usa localStorage como fallback e Upstash Redis em produção.
  */
@@ -18,9 +18,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Cache em memória com TTL
 const memoryCache = new Map<string, { value: unknown; timestamp: number }>();
-const CACHE_TTL_MS = 30000; // 30 segundos
-const BATCH_DELAY_MS = 100; // Aguarda 100ms para agrupar requisições
-const MAX_BATCH_SIZE = 20; // Máximo de chaves por batch
+const CACHE_TTL_MS = 60000; // 60 segundos (aumentado para reduzir requests)
+const BATCH_DELAY_MS = 150; // Aguarda 150ms para agrupar requisições (aumentado)
+const MAX_BATCH_SIZE = 50; // Máximo de chaves por batch (aumentado)
 
 // Fila de chaves pendentes para carregar
 let pendingKeys = new Set<string>();
@@ -30,12 +30,55 @@ const pendingResolvers = new Map<string, Array<(value: unknown) => void>>();
 // Fila de escritas pendentes
 const pendingWrites = new Map<string, { value: unknown; timestamp: number }>();
 let writeTimeout: ReturnType<typeof setTimeout> | null = null;
-const WRITE_DEBOUNCE_MS = 1000; // Aguarda 1s antes de enviar escritas
+const WRITE_DEBOUNCE_MS = 2000; // Aguarda 2s antes de enviar escritas (aumentado)
+
+// Circuit breaker para desabilitar API temporariamente
+let circuitBreakerTripped = false;
+let circuitBreakerResetTime = 0;
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 3;
+const CIRCUIT_BREAKER_COOLDOWN = 60000; // 60 segundos de cooldown
 
 // Flag para verificar se estamos em produção
-const isProd = typeof window !== 'undefined' && 
-  (window.location.hostname.includes('vercel.app') || 
-   window.location.hostname !== 'localhost');
+const isProd = typeof window !== 'undefined' &&
+  (window.location.hostname.includes('vercel.app') ||
+    window.location.hostname !== 'localhost');
+
+/**
+ * Verifica se o circuit breaker está ativo
+ */
+function isCircuitOpen(): boolean {
+  if (!circuitBreakerTripped) return false;
+  
+  // Verifica se o cooldown passou
+  if (Date.now() > circuitBreakerResetTime) {
+    circuitBreakerTripped = false;
+    consecutiveErrors = 0;
+    console.log('[KV] Circuit breaker reset - tentando API novamente');
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Registra um erro e ativa circuit breaker se necessário
+ */
+function recordApiError(): void {
+  consecutiveErrors++;
+  if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+    circuitBreakerTripped = true;
+    circuitBreakerResetTime = Date.now() + CIRCUIT_BREAKER_COOLDOWN;
+    console.warn('[KV] Circuit breaker ativado - usando localStorage por 60s');
+  }
+}
+
+/**
+ * Registra sucesso e reseta contador
+ */
+function recordApiSuccess(): void {
+  consecutiveErrors = 0;
+}
 
 /**
  * Verifica se o valor em cache ainda é válido
@@ -68,13 +111,30 @@ function setInCache<T>(key: string, value: T): void {
  */
 async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknown>> {
   const results = new Map<string, unknown>();
-  
+
   if (keys.length === 0) return results;
+  
+  // Se circuit breaker estiver ativo, use localStorage
+  if (isCircuitOpen()) {
+    for (const key of keys) {
+      try {
+        const item = window.localStorage.getItem(key);
+        if (item) {
+          const value = JSON.parse(item);
+          results.set(key, value);
+          setInCache(key, value);
+        }
+      } catch {
+        // Ignora erros de parse
+      }
+    }
+    return results;
+  }
 
   try {
     // Usa o endpoint de batch
     const batchKeys = keys.slice(0, MAX_BATCH_SIZE);
-    
+
     const response = await fetch('/api/kv', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -82,6 +142,7 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
     });
 
     if (response.ok) {
+      recordApiSuccess();
       const data = await response.json();
       if (data.values && typeof data.values === 'object') {
         for (const [k, v] of Object.entries(data.values)) {
@@ -90,6 +151,7 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
         }
       }
     } else if (response.status === 429) {
+      recordApiError();
       // Rate limit - usar localStorage como fallback silenciosamente
       for (const key of batchKeys) {
         try {
@@ -103,8 +165,11 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
           // Ignora erros de parse
         }
       }
+    } else {
+      recordApiError();
     }
   } catch (error) {
+    recordApiError();
     // Fallback para localStorage
     for (const key of keys) {
       try {
@@ -132,7 +197,7 @@ async function processBatch(): Promise<void> {
   if (keys.length === 0) return;
 
   const results = await batchLoadFromVercelKV(keys);
-  
+
   // Resolve todas as promises pendentes
   for (const key of keys) {
     const resolvers = pendingResolvers.get(key);
@@ -182,18 +247,28 @@ async function processWriteBatch(): Promise<void> {
   writeTimeout = null;
 
   if (writes.size === 0) return;
+  
+  // Se circuit breaker estiver ativo, não envia para API
+  if (isCircuitOpen()) {
+    return;
+  }
 
   try {
     const entries = Array.from(writes.entries()).map(([key, { value }]) => ({ key, value }));
-    
-    await fetch('/api/kv', {
+
+    const response = await fetch('/api/kv', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'batch-set', entries }),
     });
-    // Ignora erros silenciosamente - dados já estão no localStorage
+    
+    if (response.ok) {
+      recordApiSuccess();
+    } else if (response.status === 429) {
+      recordApiError();
+    }
   } catch {
-    // Silently fail - localStorage is the source of truth
+    recordApiError();
   }
 }
 
@@ -271,10 +346,10 @@ export function useKV<T>(
     (value: T | ((prev: T) => T)) => {
       setStoredValue((currentStoredValue) => {
         const valueToStore = value instanceof Function ? value(currentStoredValue) : value;
-        
+
         // Agenda escrita (debounced)
         scheduleWrite(keyRef.current, valueToStore);
-        
+
         return valueToStore;
       });
     },
@@ -284,7 +359,7 @@ export function useKV<T>(
   // Carrega do Vercel KV em produção (batched)
   useEffect(() => {
     if (!isProd || isLoadingRef.current) return;
-    
+
     isLoadingRef.current = true;
 
     scheduleLoad(key).then((value) => {
