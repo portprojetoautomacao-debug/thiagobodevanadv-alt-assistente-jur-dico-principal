@@ -737,8 +737,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             // Create analysis task for the new publication
             await addTaskToQueue({
               id: crypto.randomUUID(),
-              agentId: 'doc-analyzer', // ID do agente de análise
-              type: 'analyze_document',
+              agentId: 'justine', // Mrs. Justin-e - especialista em análise de intimações
+              type: 'analyze_intimation',
               priority: 'high',
               status: 'pending',
               createdAt: new Date().toISOString(),

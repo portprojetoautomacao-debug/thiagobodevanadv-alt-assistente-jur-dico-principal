@@ -93,7 +93,13 @@ export interface Expediente {
   dataRecebimento: string
   receivedAt?: string
   prazoFatal?: string
-  deadline?: string
+  deadline?: string | {
+    days?: number
+    type?: 'úteis' | 'corridos'
+    startDate?: string
+    endDate?: string
+    description?: string
+  }
   lido?: boolean
   arquivado?: boolean
   analyzed?: boolean
@@ -102,6 +108,7 @@ export interface Expediente {
   suggestedAction?: string
   pendingDocs?: string[]
   draftPetition?: string
+  priority?: 'low' | 'medium' | 'high' | 'urgent'
   // Campos do DJEN
   tribunal?: string
   numeroProcesso?: string
@@ -111,6 +118,7 @@ export interface Expediente {
   matchType?: 'nome' | 'oab' | 'ambos'
   source?: string
   createdAt?: string
+  data?: string
 }
 
 export interface Appointment {

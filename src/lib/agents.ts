@@ -466,12 +466,14 @@ export const DEFAULT_AGENTS: Agent[] = [
  * Version 2: Force reset fake demo data
  */
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
-  // Force clean start - always use defaults with zero counters
-  // This removes any fake demo data that was stored
+  // Inicializa agentes com configuração padrão
+  // Agentes essenciais são habilitados automaticamente
+  const essentialAgents = ['harvey', 'justine', 'analise-documental', 'monitor-djen', 'gestao-prazos'];
+
   return DEFAULT_AGENTS.map(agent => ({
     ...agent,
     status: 'idle' as const,
-    enabled: false,
-    lastActivity: 'Aguardando ativação'
+    enabled: essentialAgents.includes(agent.id), // Habilita agentes essenciais
+    lastActivity: essentialAgents.includes(agent.id) ? 'Pronto para análise' : 'Aguardando ativação'
   }))
 }
