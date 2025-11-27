@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown } from '@phosphor-icons/react'
+import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
 import {
@@ -14,6 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+
+// Verifica se um expediente precisa de re-análise (tem mensagem de erro/placeholder)
+function needsReanalysis(exp: Expediente): boolean {
+  if (!exp.analyzed) return false
+  const summary = exp.summary?.toLowerCase() || ''
+  return summary.includes('indisponível') ||
+    summary.includes('manualmente') ||
+    summary.includes('revisar documento') ||
+    summary === '' ||
+    !exp.summary
+}
 
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
@@ -58,6 +69,18 @@ export default function ExpedientePanel() {
 
   // Ensure expedientes is always an array to prevent runtime errors
   const safeExpedientes = Array.isArray(expedientes) ? expedientes : []
+
+  // Helper para mapear prioridade PT -> EN
+  const mapPriority = (priority: string | undefined): 'low' | 'medium' | 'high' | 'urgent' | undefined => {
+    if (!priority) return 'medium'
+    const map: Record<string, 'low' | 'medium' | 'high' | 'urgent'> = {
+      'baixa': 'low', 'low': 'low',
+      'média': 'medium', 'media': 'medium', 'medium': 'medium',
+      'alta': 'high', 'high': 'high',
+      'urgente': 'urgent', 'urgent': 'urgent'
+    }
+    return map[priority.toLowerCase()] || 'medium'
+  }
 
   // Análise com IA real via API Gemini direta
   const handleAnalyze = async (exp: Expediente) => {
@@ -135,7 +158,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
         suggestedAction: analysisData.suggestedActions?.[0] || 'Verificar prazo',
         pendingDocs: analysisData.nextSteps || [],
         deadline: analysisData.deadline,
-        priority: analysisData.priority,
+        priority: mapPriority(analysisData.priority),
         draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
           `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
           `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
@@ -233,7 +256,7 @@ Crie o workflow de controladoria para esta tarefa.`
           suggestedAction: `Executar: ${task}`,
           pendingDocs: analysisData.checklist || analysisData.nextSteps || ['Documento Principal'],
           deadline: analysisData.deadline,
-          priority: 'alta',
+          priority: 'high',
           draftPetition: `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
             `🎯 TAREFA: ${task}\n\n` +
             `📋 RESUMO:\n${analysisData.summary || 'Workflow em processamento'}\n\n` +
@@ -256,6 +279,24 @@ Crie o workflow de controladoria para esta tarefa.`
       setAnalyzing(false)
       setShowMichaelRossDialog(false)
     }
+  }
+
+  // Limpar análises antigas com erro para permitir re-análise
+  const handleClearFailedAnalysis = () => {
+    const needsReanalysisList = safeExpedientes.filter(needsReanalysis)
+    if (needsReanalysisList.length === 0) {
+      toast.info('Nenhum expediente com análise inválida encontrado')
+      return
+    }
+
+    setExpedientes((current) =>
+      (current || []).map(exp =>
+        needsReanalysis(exp)
+          ? { ...exp, analyzed: false, summary: undefined, suggestedAction: undefined, pendingDocs: undefined }
+          : exp
+      )
+    )
+    toast.success(`${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`)
   }
 
   const suggestedTasks = [
@@ -283,15 +324,28 @@ Crie o workflow de controladoria para esta tarefa.`
               )}
             </p>
           </div>
-          <Button
-            onClick={fetchExpedientes}
-            disabled={loading}
-            variant="outline"
-            size="sm"
-          >
-            <ArrowClockwise className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Atualizando...' : 'Atualizar'}
-          </Button>
+          <div className="flex gap-2">
+            {safeExpedientes.some(needsReanalysis) && (
+              <Button
+                onClick={handleClearFailedAnalysis}
+                variant="outline"
+                size="sm"
+                title="Limpar análises com erro para permitir re-análise"
+              >
+                <Trash className="w-4 h-4 mr-2" />
+                Limpar Análises Inválidas
+              </Button>
+            )}
+            <Button
+              onClick={fetchExpedientes}
+              disabled={loading}
+              variant="outline"
+              size="sm"
+            >
+              <ArrowClockwise className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Atualizando...' : 'Atualizar'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -379,7 +433,7 @@ Crie o workflow de controladoria para esta tarefa.`
                         </Button>
                       </div>
                     )}
-                    {selectedExp.analyzed && (selectedExp.summary?.includes('indisponível') || selectedExp.summary?.includes('manualmente')) && (
+                    {selectedExp.analyzed && needsReanalysis(selectedExp) && (
                       <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline" size="sm">
                         <ArrowClockwise className={`w-4 h-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
                         {analyzing ? 'Re-analisando...' : 'Re-analisar com IA'}
