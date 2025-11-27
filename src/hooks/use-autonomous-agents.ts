@@ -1,17 +1,13 @@
 import { useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import {
-  processTaskWithRealAI,
-  isRealAgentsEnabled
+  processTaskWithRealAI
 } from '@/lib/real-agent-client'
 import {
   type Agent,
   type AgentTask,
-  type AgentTaskGenerator,
-  processTaskWithAI,
   shouldPauseForHuman,
   canResumeAfterHuman,
-  createTaskGenerator,
   initializeAgents
 } from '@/lib/agents'
 
@@ -20,7 +16,7 @@ function getAgentActivity(agent: Agent): string {
   return 'Aguardando tarefas'
 }
 
-// Version flag to force data reset when demo data is detected
+// Version flag to force data reset when structure changes
 const AGENTS_DATA_VERSION = 3
 
 export function useAutonomousAgents() {
@@ -35,24 +31,20 @@ export function useAutonomousAgents() {
     action: string
     result: 'success' | 'warning' | 'error'
   }>>('agent-activity-log', [])
-  const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-tasks', false)
-  const [useRealAI, setUseRealAI] = useKV<boolean>('use-real-ai', true) // Habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set())
-  const taskGeneratorRef = useRef<AgentTaskGenerator | null>(null)
 
-  // Force reset if data version is outdated (removes fake demo data)
+  // Force reset if data version is outdated (clears old data from previous versions)
   useEffect(() => {
     if (dataVersion < AGENTS_DATA_VERSION) {
-      console.log('Resetting agent data to remove demo values...')
+      console.log('Resetting agent data for new version...')
       setAgents(initializeAgents())
       setTaskQueue([])
       setCompletedTasks([])
       setActivityLog([])
-      setAutoGenerateEnabled(false)
       setDataVersion(AGENTS_DATA_VERSION)
     }
-  }, [dataVersion, setDataVersion, setAgents, setTaskQueue, setCompletedTasks, setActivityLog, setAutoGenerateEnabled])
+  }, [dataVersion, setDataVersion, setAgents, setTaskQueue, setCompletedTasks, setActivityLog])
 
   const addTask = useCallback((task: AgentTask) => {
     setTaskQueue((current) => {
@@ -285,95 +277,15 @@ export function useAutonomousAgents() {
     )
   }, [setTaskQueue])
 
-  const toggleAutoGenerate = useCallback(() => {
-    setAutoGenerateEnabled((current) => !current)
-  }, [setAutoGenerateEnabled])
-
-  const toggleRealAI = useCallback(() => {
-    setUseRealAI((current) => {
-      const newValue = !current
-      if (newValue && !isRealAgentsEnabled()) {
-        // Mostrar aviso sobre uso de IA real
-        const confirmed = window.confirm(
-          'Ativar modo de IA Real?\n\n' +
-          '✓ Os agentes usarão Spark LLM (GPT-4) para processar tarefas\n' +
-          '✓ Respostas mais precisas e contextualizadas\n' +
-          '✓ Integração com APIs externas (DJEN, DataJud)\n' +
-          '✗ Maior consumo de recursos\n' +
-          '✗ Pode ter custos associados\n\n' +
-          'Continuar?'
-        )
-        if (!confirmed) return current
-      }
-      return newValue
-    })
-  }, [setUseRealAI])
-
-  useEffect(() => {
-    if (!taskGeneratorRef.current && agents && agents.length > 0) {
-      const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
-
-      if (enabledAgentIds.length === 0) return
-
-      const generator = createTaskGenerator({
-        enabled: autoGenerateEnabled,
-        intervalMinutes: 2,
-        maxTasksPerInterval: 3,
-        agentIds: enabledAgentIds
-      }, (task) => {
-        addTask(task)
-        const agent = agents.find(a => a.id === task.agentId)
-        if (agent) {
-          logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
-        }
-      })
-
-      if (autoGenerateEnabled) {
-        generator.start()
-      }
-
-      taskGeneratorRef.current = generator
-    }
-
-    return () => {
-      if (taskGeneratorRef.current) {
-        taskGeneratorRef.current.stop()
-      }
-    }
-  }, [agents, autoGenerateEnabled, addTask, logActivity])
-
-  useEffect(() => {
-    if (taskGeneratorRef.current && agents) {
-      const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
-
-      taskGeneratorRef.current.setOnTaskGenerated((task) => {
-        addTask(task)
-        const agent = agents.find(a => a.id === task.agentId)
-        if (agent) {
-          logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
-        }
-      })
-
-      taskGeneratorRef.current.updateConfig({
-        enabled: autoGenerateEnabled,
-        agentIds: enabledAgentIds
-      })
-    }
-  }, [agents, autoGenerateEnabled, addTask, logActivity])
-
   return {
     agents: agents || [],
     taskQueue: taskQueue || [],
     completedTasks: completedTasks || [],
     activityLog: activityLog || [],
-    autoGenerateEnabled,
-    useRealAI,
     addTask,
     toggleAgent,
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
-    toggleAutoGenerate,
-    toggleRealAI,
     setAgents,
   }
 }

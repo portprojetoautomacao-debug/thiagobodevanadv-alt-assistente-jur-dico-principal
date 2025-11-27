@@ -25,7 +25,7 @@ async function getKv(): Promise<Redis> {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     throw new Error('Upstash Redis not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN');
   }
-  
+
   return new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL.trim(),
     token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -76,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
 
       const lawyers = await kv.get<MonitoredLawyer[]>(KV_KEY) || [];
-      
+
       // Verifica se já existe
       const exists = lawyers.some(l => l.oab === oab);
       if (exists) {
@@ -99,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // DELETE - Remove advogado
     if (req.method === 'DELETE') {
       const { id } = req.query;
-      
+
       if (!id || typeof id !== 'string') {
         return res.status(400).json({
           success: false,
@@ -109,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const lawyers = await kv.get<MonitoredLawyer[]>(KV_KEY) || [];
       const filtered = lawyers.filter(l => l.id !== id);
-      
+
       if (filtered.length === lawyers.length) {
         return res.status(404).json({
           success: false,
