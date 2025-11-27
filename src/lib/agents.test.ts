@@ -34,8 +34,6 @@ describe('AI Agents System', () => {
         status: 'idle',
         enabled: true,
         lastActivity: '',
-        tasksCompleted: 0,
-        tasksToday: 0,
         continuousMode: true
       }
 
@@ -65,8 +63,6 @@ describe('AI Agents System', () => {
         status: 'idle',
         enabled: true,
         lastActivity: '',
-        tasksCompleted: 0,
-        tasksToday: 0,
         continuousMode: true
       }
 
@@ -96,8 +92,6 @@ describe('AI Agents System', () => {
         status: 'idle',
         enabled: true,
         lastActivity: '',
-        tasksCompleted: 0,
-        tasksToday: 0,
         continuousMode: true
       }
 
@@ -118,8 +112,6 @@ describe('AI Agents System', () => {
       status: 'idle',
       enabled: true,
       lastActivity: '',
-      tasksCompleted: 0,
-      tasksToday: 0,
       continuousMode: true
     }
 
@@ -317,8 +309,6 @@ describe('AI Agents System', () => {
           status: 'idle',
           enabled: false, // User disabled it
           lastActivity: 'Custom activity',
-          tasksCompleted: 10,
-          tasksToday: 2,
           continuousMode: false
         }
       ]

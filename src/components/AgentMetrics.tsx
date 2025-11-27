@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { 
-  TrendUp, 
-  Clock, 
-  CheckCircle, 
+import {
+  TrendUp,
+  Clock,
+  CheckCircle,
   Lightning,
   ChartLine,
   Timer,
@@ -55,11 +55,11 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
     return () => clearInterval(interval)
   }, [])
 
-  const totalTasks = agents.reduce((sum, a) => sum + a.tasksCompleted, 0)
-  const totalToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
-  const averageAutonomy = agents.length > 0
-    ? Math.round(agents.reduce((sum, a) => sum + (a.autonomyLevel || 0), 0) / agents.length)
-    : 0
+  const totalTasks = completedTasks.length
+  const totalToday = completedTasks.filter(t => {
+    const today = new Date().toDateString()
+    return t.completedAt && new Date(t.completedAt).toDateString() === today
+  }).length
 
   const successRate = activityLog.length > 0
     ? Math.round((activityLog.filter(log => log.result === 'success').length / activityLog.length) * 100)
@@ -71,7 +71,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
 
   const getTasksLast24Hours = () => {
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    return completedTasks.filter(task => 
+    return completedTasks.filter(task =>
       task.completedAt && new Date(task.completedAt) > last24h
     ).length
   }
@@ -274,21 +274,9 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
                     <span className="text-xs font-medium text-green-600">{agentSuccessRate}%</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <p className="text-muted-foreground">Hoje</p>
-                    <p className="font-semibold text-foreground">{agent.tasksToday}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total</p>
-                    <p className="font-semibold text-foreground">{agent.tasksCompleted}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Autonomia</p>
-                    <p className="font-semibold text-foreground">{agent.autonomyLevel}%</p>
-                  </div>
+                <div className="text-xs text-muted-foreground">
+                  <p>Taxa de sucesso: {agentSuccessRate}%</p>
                 </div>
-                <Progress value={agent.autonomyLevel} className="h-1 mt-2" />
               </div>
             )
           })}
