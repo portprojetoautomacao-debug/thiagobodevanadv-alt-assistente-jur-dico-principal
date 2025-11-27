@@ -14,8 +14,6 @@
 @import '@radix-ui/colors/amber.css' layer(base);
 @import '@radix-ui/colors/amber-dark.css' layer(base);
 
-@import "tw-animate-css";
-
 /* Theme Base Styles (from theme.css) */
 @layer base {
   *,

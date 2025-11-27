@@ -10,6 +10,9 @@ on:
       - opened
       - synchronize
       - reopened
+  issues:
+    types:
+      - opened
   schedule:
     # Daily at 8:20 UTC
     - cron: '20 8 * * *'

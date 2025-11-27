@@ -1,12 +1,12 @@
 const getEnvVar = (key: string, defaultValue?: string, logError: boolean = true): string => {
-  const value = import.meta.env[key] || defaultValue
+  const value = import.meta.env[key]
 
   // Only log error if no value and no default provided AND logging is enabled
-  if (!value && !defaultValue && logError) {
+  if ((!value || value === '') && !defaultValue && logError) {
     console.error(`Missing required environment variable: ${key}`)
   }
 
-  return value || ''
+  return (typeof value === 'string' ? value : '') || defaultValue || ''
 }
 
 export const config = {

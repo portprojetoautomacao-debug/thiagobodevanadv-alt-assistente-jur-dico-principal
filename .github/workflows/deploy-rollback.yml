@@ -98,22 +98,22 @@ jobs:
       run: |
         echo "🔐 Verificando secrets do Vercel..."
         MISSING=0
-        
-        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+
+        if [ -z "$VERCEL_TOKEN" ]; then
           echo "❌ VERCEL_TOKEN não configurado"
           MISSING=$((MISSING + 1))
         else
           echo "✅ VERCEL_TOKEN configurado"
         fi
-        
-        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+
+        if [ -z "$VERCEL_ORG_ID" ]; then
           echo "❌ VERCEL_ORG_ID não configurado"
           MISSING=$((MISSING + 1))
         else
           echo "✅ VERCEL_ORG_ID configurado"
         fi
-        
-        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+
+        if [ -z "$VERCEL_PROJECT_ID" ]; then
           echo "❌ VERCEL_PROJECT_ID não configurado"
           MISSING=$((MISSING + 1))
         else
@@ -126,11 +126,15 @@ jobs:
           echo "   Veja: CONFIGURACAO_VERCEL_TOKEN.md para instruções"
           exit 1
         fi
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🔧 Configurar projeto Vercel
       run: |
         mkdir -p .vercel
-        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+        echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
         cat .vercel/project.json
 
     - name: 🚀 Deploy para Vercel Staging
@@ -147,7 +151,7 @@ jobs:
           echo "Tentativa $attempt de $MAX_RETRIES..."
           
           # Executar deploy e capturar saída completa
-          DEPLOY_OUTPUT=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          DEPLOY_OUTPUT=$(npx vercel deploy --token=$VERCEL_TOKEN --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
           
           echo "=== Output do deploy ==="
@@ -316,7 +320,11 @@ jobs:
     - name: 🔧 Configurar projeto Vercel (Production)
       run: |
         mkdir -p .vercel
-        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+        echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🚀 Deploy para Vercel Production
       id: deploy-production
@@ -332,7 +340,7 @@ jobs:
           echo "Tentativa $attempt de $MAX_RETRIES..."
           
           # Executar deploy e capturar saída completa
-          DEPLOY_OUTPUT=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          DEPLOY_OUTPUT=$(npx vercel deploy --prod --token=$VERCEL_TOKEN --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
           
           echo "=== Output do deploy ==="
@@ -571,14 +579,14 @@ jobs:
     - name: 🔧 Configurar projeto Vercel (Rollback)
       run: |
         mkdir -p .vercel
-        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+        echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
 
     - name: 🚀 Deploy versão anterior
       run: |
         echo "🚀 Deploy versão anterior..."
         npm ci
         npm run build
-        npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        npx vercel --prod --token=$VERCEL_TOKEN --yes
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

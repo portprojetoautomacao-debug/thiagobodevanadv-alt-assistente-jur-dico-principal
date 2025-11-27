@@ -409,7 +409,7 @@ export default function DJENPublicationsWidget({
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs flex-1"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.stopPropagation()
                             handleCopy(pub.teor)
                           }}
@@ -421,7 +421,7 @@ export default function DJENPublicationsWidget({
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs flex-1"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.stopPropagation()
                             toast.info('Em desenvolvimento', { 
                               description: 'Visualização detalhada em breve' 

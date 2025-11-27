@@ -1,3 +1,5 @@
+/// <reference path="../vite-env.d.ts" />
+
 /*
  * Wraps window.spark.kv methods to add robust JSON detection and improved errors
  * when the runtime or proxy returns HTML (eg. index.html / login page / 404 HTML)
@@ -80,15 +82,19 @@ export function applySparkClientFixes() {
 
   try {
     // Se spark não existir, cria um mock seguro para evitar crash
+    // @ts-expect-error - Spark types are defined in vite-env.d.ts
     if (!w.spark) {
+      // @ts-expect-error - Spark types are defined in vite-env.d.ts
       w.spark = {} as any;
     }
     
-    // Se kv não existir, cria um mock
+    // @ts-expect-error - Spark types are defined in vite-env.d.ts
     if (!w.spark.kv) {
+      // @ts-expect-error - Spark types are defined in vite-env.d.ts
       w.spark.kv = {} as any;
     }
 
+    // @ts-expect-error - Spark types are defined in vite-env.d.ts
     const original = { ...w.spark.kv };
 
     async function parseJSONSafely(response: Response | ResponseLike | null): Promise<unknown> {
@@ -140,6 +146,7 @@ export function applySparkClientFixes() {
           // Prefer calling the original if available (it may throw in plugin), otherwise implement ourselves
           if (typeof original.get === 'function') {
             try {
+              // @ts-expect-error - Original function may not be typed
               return await original.get<T>(key);
             } catch (err) {
               // if plugin throws failed-to-parse, try to fetch directly to provide more context
@@ -190,6 +197,7 @@ export function applySparkClientFixes() {
       async set<T>(key: string, value: T): Promise<void> {
         if (typeof original.set === 'function') {
           try {
+            // @ts-expect-error - Original function may not be typed
             return await original.set<T>(key, value);
           } catch (err) {
             // fallback
@@ -224,12 +232,14 @@ export function applySparkClientFixes() {
 
     // Keep other properties of kv that might be used (events etc.)
     for (const k of Object.keys(original)) {
+      // @ts-expect-error - Spark types are defined in vite-env.d.ts
       if (!(k in w.spark.kv)) {
-        // @ts-expect-error - Ignorando erros de tipo para compatibilidade
+        // @ts-expect-error - Spark types are defined in vite-env.d.ts
         w.spark.kv[k] = original[k];
       }
     }
 
+    // @ts-expect-error - Spark types are defined in vite-env.d.ts
     w.spark.kv = patchedKV;
 
     console.info('Applied spark client fixes: kv methods patched for improved error handling and diagnostics');
@@ -241,10 +251,13 @@ export function applySparkClientFixes() {
 export function applySparkLLMFixes() {
   if (typeof window === 'undefined') return;
   const w = window;
+  // @ts-expect-error - Spark types are defined in vite-env.d.ts
   if (!w.spark?.llm) return;
 
   try {
+    // @ts-expect-error - Spark types are defined in vite-env.d.ts
     const originalLlm = w.spark.llm;
+    // @ts-expect-error - Spark types are defined in vite-env.d.ts
     w.spark.llm = async function (prompt: string, model?: string, jsonResponse?: boolean): Promise<string> {
       try {
         // Call original first
