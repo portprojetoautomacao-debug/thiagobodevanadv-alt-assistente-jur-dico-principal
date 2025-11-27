@@ -20,9 +20,9 @@ vi.mock('../../lib/api/kv-utils', () => ({
   addTaskToQueue: vi.fn()
 }));
 vi.mock('../../api/_lib/rate-limit', () => ({
-  rateLimitMiddleware: vi.fn().mockResolvedValue({ 
-    allowed: true, 
-    headers: {} 
+  rateLimitMiddleware: vi.fn().mockResolvedValue({
+    allowed: true,
+    headers: {}
   }),
   apiRateLimiter: {
     check: vi.fn().mockResolvedValue({ success: true }),
