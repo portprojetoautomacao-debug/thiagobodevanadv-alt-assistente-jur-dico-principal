@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -33,10 +34,14 @@ import {
   Copy,
   CaretDown,
   CaretUp,
-  Funnel
+  Funnel,
+  Plus,
+  Robot,
+  Sparkle
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import type { Process, Expediente } from '@/types'
 
 // Tipos
 interface DJENPublication {
@@ -82,6 +87,11 @@ export default function DJENPublicationsWidget({
   const [lawyersCount, setLawyersCount] = useState(0)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [autoRegistering, setAutoRegistering] = useState(false)
+  
+  // KV storage para processos e expedientes
+  const [processes, setProcesses] = useKV<Process[]>('processes', [])
+  const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
 
   // Busca publicações da API
   const fetchPublications = useCallback(async () => {
@@ -165,6 +175,170 @@ export default function DJENPublicationsWidget({
   const handleCopy = (teor: string) => {
     navigator.clipboard.writeText(teor)
     toast.success('Copiado!', { description: 'Teor copiado para a área de transferência' })
+  }
+
+  // Verifica se publicação já está cadastrada no Acervo
+  const isAlreadyRegistered = useCallback((pub: DJENPublication) => {
+    if (!pub.numeroProcesso) return false
+    const currentProcesses = processes || []
+    return currentProcesses.some(p => 
+      p.numeroCNJ === pub.numeroProcesso || 
+      p.numeroCNJ.replace(/\D/g, '') === pub.numeroProcesso?.replace(/\D/g, '')
+    )
+  }, [processes])
+
+  // Cadastra uma publicação individual no Acervo
+  const handleRegisterProcess = async (pub: DJENPublication) => {
+    if (!pub.numeroProcesso) {
+      toast.error('Processo sem número CNJ', {
+        description: 'Não é possível cadastrar sem número do processo'
+      })
+      return
+    }
+
+    // Verifica se já existe
+    if (isAlreadyRegistered(pub)) {
+      toast.info('Processo já cadastrado', {
+        description: `O processo ${pub.numeroProcesso} já está no Acervo`
+      })
+      return
+    }
+
+    const now = new Date().toISOString()
+    
+    // Cria o novo processo baseado na publicação
+    const newProcess: Process = {
+      id: crypto.randomUUID(),
+      numeroCNJ: pub.numeroProcesso,
+      titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
+      autor: '', // Será preenchido após análise ou manualmente
+      reu: '',
+      comarca: pub.orgao || '',
+      vara: pub.tribunal || '',
+      status: 'ativo',
+      fase: 'Inicial',
+      dataDistribuicao: pub.data || now.split('T')[0],
+      dataUltimaMovimentacao: now,
+      notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}\n\nTeor da intimação:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''}`,
+      prazos: [],
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    // Também cria expediente vinculado
+    const newExpediente: Expediente = {
+      id: crypto.randomUUID(),
+      processId: newProcess.id,
+      tipo: pub.tipo || 'intimacao',
+      titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
+      conteudo: pub.teor,
+      content: pub.teor,
+      teor: pub.teor,
+      dataRecebimento: now,
+      receivedAt: now,
+      lido: false,
+      arquivado: false,
+      analyzed: false,
+      tribunal: pub.tribunal,
+      numeroProcesso: pub.numeroProcesso,
+      orgao: pub.orgao,
+      lawyerName: pub.lawyerName,
+      matchType: pub.matchType,
+      source: pub.source,
+      createdAt: pub.createdAt,
+      data: pub.data,
+      priority: 'high', // Intimações são sempre prioridade alta
+    }
+
+    // Adiciona aos KV storages
+    setProcesses(current => [...(current || []), newProcess])
+    setExpedientes(current => [...(current || []), newExpediente])
+
+    toast.success('Processo cadastrado!', {
+      description: `${pub.numeroProcesso} adicionado ao Acervo`
+    })
+  }
+
+  // Cadastra TODAS as publicações não registradas automaticamente
+  const handleAutoRegisterAll = async () => {
+    setAutoRegistering(true)
+    
+    const unregisteredPubs = publications.filter(pub => 
+      pub.numeroProcesso && !isAlreadyRegistered(pub)
+    )
+
+    if (unregisteredPubs.length === 0) {
+      toast.info('Nenhuma publicação nova', {
+        description: 'Todas as publicações já estão no Acervo'
+      })
+      setAutoRegistering(false)
+      return
+    }
+
+    let registered = 0
+    const now = new Date().toISOString()
+    const newProcesses: Process[] = []
+    const newExpedientes: Expediente[] = []
+
+    for (const pub of unregisteredPubs) {
+      if (!pub.numeroProcesso) continue
+
+      const processId = crypto.randomUUID()
+      
+      newProcesses.push({
+        id: processId,
+        numeroCNJ: pub.numeroProcesso,
+        titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
+        autor: '',
+        reu: '',
+        comarca: pub.orgao || '',
+        vara: pub.tribunal || '',
+        status: 'ativo',
+        fase: 'Inicial',
+        dataDistribuicao: pub.data || now.split('T')[0],
+        dataUltimaMovimentacao: now,
+        notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}\n\nTeor:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''}`,
+        prazos: [],
+        createdAt: now,
+        updatedAt: now,
+      })
+
+      newExpedientes.push({
+        id: crypto.randomUUID(),
+        processId: processId,
+        tipo: pub.tipo || 'intimacao',
+        titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
+        conteudo: pub.teor,
+        content: pub.teor,
+        teor: pub.teor,
+        dataRecebimento: now,
+        receivedAt: now,
+        lido: false,
+        arquivado: false,
+        analyzed: false,
+        tribunal: pub.tribunal,
+        numeroProcesso: pub.numeroProcesso,
+        orgao: pub.orgao,
+        lawyerName: pub.lawyerName,
+        matchType: pub.matchType,
+        source: pub.source,
+        createdAt: pub.createdAt,
+        data: pub.data,
+        priority: 'high',
+      })
+
+      registered++
+    }
+
+    // Adiciona todos de uma vez
+    setProcesses(current => [...(current || []), ...newProcesses])
+    setExpedientes(current => [...(current || []), ...newExpedientes])
+
+    toast.success(`${registered} processo(s) cadastrado(s)!`, {
+      description: 'As intimações foram adicionadas ao Acervo e Expedientes'
+    })
+
+    setAutoRegistering(false)
   }
 
   // Carrega publicações ao montar
@@ -431,18 +605,29 @@ export default function DJENPublicationsWidget({
                           Copiar
                         </Button>
                         <Button
-                          variant="outline"
+                          variant={isAlreadyRegistered(pub) ? "ghost" : "default"}
                           size="sm"
-                          className="h-7 text-xs flex-1"
+                          className={cn(
+                            "h-7 text-xs flex-1",
+                            !isAlreadyRegistered(pub) && "button-gradient"
+                          )}
+                          disabled={isAlreadyRegistered(pub)}
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.stopPropagation()
-                            toast.info('Em desenvolvimento', {
-                              description: 'Visualização detalhada em breve'
-                            })
+                            handleRegisterProcess(pub)
                           }}
                         >
-                          <Eye size={12} />
-                          Detalhes
+                          {isAlreadyRegistered(pub) ? (
+                            <>
+                              <CheckCircle size={12} />
+                              No Acervo
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={12} />
+                              Cadastrar
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -454,18 +639,48 @@ export default function DJENPublicationsWidget({
         )}
 
         {/* Footer com ações */}
-        {publications.length > 0 && onViewAll && (
+        {publications.length > 0 && (
           <>
             <Separator className="my-3" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onViewAll}
-              className="w-full hover:button-gradient hover:text-primary-foreground"
-            >
-              Ver todas as publicações
-              <ArrowRight size={14} />
-            </Button>
+            <div className="flex gap-2">
+              {/* Botão para cadastrar todas automaticamente */}
+              {publications.some(pub => pub.numeroProcesso && !isAlreadyRegistered(pub)) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleAutoRegisterAll}
+                        disabled={autoRegistering}
+                        className="flex-1 button-gradient"
+                      >
+                        <Robot size={14} className={autoRegistering ? 'animate-pulse' : ''} />
+                        {autoRegistering ? 'Cadastrando...' : 'Cadastrar Todas'}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Cadastra automaticamente todas as intimações no Acervo
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              {onViewAll && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onViewAll}
+                  className={cn(
+                    "hover:button-gradient hover:text-primary-foreground",
+                    publications.some(pub => pub.numeroProcesso && !isAlreadyRegistered(pub)) ? "flex-1" : "w-full"
+                  )}
+                >
+                  Ver todas
+                  <ArrowRight size={14} />
+                </Button>
+              )}
+            </div>
           </>
         )}
       </CardContent>
