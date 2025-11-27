@@ -2,22 +2,20 @@ import { useMemo, lazy } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import type { Process, Prazo, ViewType } from '@/types'
 import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
-import DataInitializer from '@/components/DataInitializer'
-import DataManager from '@/components/DataManager'
 import DJENPublicationsWidget from '@/components/DJENPublicationsWidget'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Gavel, 
-  CheckCircle, 
-  Clock, 
-  WarningCircle, 
-  Upload, 
-  ChartPie, 
-  TrendUp, 
-  ArrowRight, 
-  CalendarCheck 
+import {
+  Gavel,
+  CheckCircle,
+  Clock,
+  WarningCircle,
+  Upload,
+  ChartPie,
+  TrendUp,
+  ArrowRight,
+  CalendarCheck
 } from '@phosphor-icons/react'
 
 // Lazy load dashboard sections for better code splitting
@@ -37,7 +35,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     const processesList = processes || []
     const ativos = processesList.filter(p => p.status === 'ativo').length
     const concluidos = processesList.filter(p => p.status === 'concluido').length
-    
+
     const todosPrazos: (Prazo & { processoTitulo: string })[] = []
     processesList.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
@@ -98,7 +96,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   const chartData = useMemo(() => {
     const processesList = processes || []
-    
+
     const statusData = [
       { name: 'Ativo', value: processesList.filter(p => p.status === 'ativo').length, color: 'oklch(0.75 0.25 190)' },
       { name: 'Concluído', value: processesList.filter(p => p.status === 'concluido').length, color: 'oklch(0.70 0.26 300)' },
@@ -134,21 +132,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     return { statusData, varaChartData, trendData }
   }, [processes])
 
-  const handleDataGenerated = (generatedProcesses: Process[]) => {
-    setProcesses(() => generatedProcesses)
-  }
 
-  const handleAddProcesses = (newProcesses: Process[]) => {
-    setProcesses(current => [...(current || []), ...newProcesses])
-  }
-
-  const handleClearAll = () => {
-    setProcesses(() => [])
-  }
-
-  if (!processes || processes.length === 0) {
-    return <DataInitializer onDataGenerated={handleDataGenerated} />
-  }
 
   return (
     <div className="p-4 lg:p-8 flex flex-col gap-6">
@@ -158,11 +142,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
             <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
           </div>
-          <DataManager 
-            currentProcesses={processes}
-            onAddProcesses={handleAddProcesses}
-            onClearAll={handleClearAll}
-          />
+
         </div>
       </div>
 
@@ -242,8 +222,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   Salva automaticamente
                 </Badge>
               </div>
-              <Button 
-                onClick={() => onNavigate('upload-pdf')} 
+              <Button
+                onClick={() => onNavigate('upload-pdf')}
                 className="button-gradient w-full sm:w-auto"
                 size="lg"
               >
@@ -253,8 +233,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardContent>
           </Card>
         </div>
-        
-        <DJENPublicationsWidget 
+
+        <DJENPublicationsWidget
           onViewAll={() => onNavigate('expedientes')}
           compact={true}
           maxItems={4}
@@ -334,10 +314,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         </p>
                       </div>
                       <Badge variant={urgente ? 'destructive' : 'default'} className={`shrink-0 ${urgente ? 'neon-glow' : ''}`}>
-                        {diasRestantes < 0 ? 'Vencido' : 
-                         diasRestantes === 0 ? 'Hoje' : 
-                         diasRestantes === 1 ? 'Amanhã' :
-                         `${diasRestantes} dias`}
+                        {diasRestantes < 0 ? 'Vencido' :
+                          diasRestantes === 0 ? 'Hoje' :
+                            diasRestantes === 1 ? 'Amanhã' :
+                              `${diasRestantes} dias`}
                       </Badge>
                     </div>
                   )
@@ -374,12 +354,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         {process.numeroCNJ}
                       </p>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={
                         process.status === 'ativo' ? 'default' :
-                        process.status === 'concluido' ? 'secondary' :
-                        process.status === 'suspenso' ? 'outline' : 'destructive'
-                      } 
+                          process.status === 'concluido' ? 'secondary' :
+                            process.status === 'suspenso' ? 'outline' : 'destructive'
+                      }
                       className="shrink-0"
                     >
                       {process.status}
