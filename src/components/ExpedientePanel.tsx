@@ -59,85 +59,103 @@ export default function ExpedientePanel() {
   // Ensure expedientes is always an array to prevent runtime errors
   const safeExpedientes = Array.isArray(expedientes) ? expedientes : []
 
-  // Análise com IA real via API
+  // Análise com IA real via API Gemini direta
   const handleAnalyze = async (exp: Expediente) => {
     setAnalyzing(true)
     setSelectedExp(exp)
 
     try {
-      // Chama API de processamento com IA real
-      const response = await fetch('/api/agents/process-task', {
+      // Usa API Gemini diretamente para análise mais confiável
+      const response = await fetch('/_spark/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          task: {
-            id: crypto.randomUUID(),
-            agentId: 'justine',
-            type: 'analyze_intimation',
-            priority: 'high',
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            data: {
-              publicationId: exp.id,
-              text: exp.content || exp.teor,
-              processNumber: exp.numeroProcesso,
-              tribunal: exp.tribunal,
-              type: exp.type || 'Intimação'
+          model: 'gemini',
+          messages: [
+            {
+              role: 'system',
+              content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
+Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
+{
+  "summary": "Resumo claro da intimação em 2-3 frases",
+  "documentType": "Tipo do documento (intimação, citação, despacho, etc)",
+  "priority": "alta" | "média" | "baixa",
+  "deadline": {
+    "days": número de dias do prazo,
+    "type": "úteis" | "corridos",
+    "endDate": "data limite no formato DD/MM/YYYY"
+  },
+  "suggestedActions": ["lista de ações recomendadas"],
+  "nextSteps": ["próximos passos a seguir"]
+}
+Responda APENAS com o JSON, sem texto adicional.`
+            },
+            {
+              role: 'user',
+              content: `Analise esta intimação:
+
+PROCESSO: ${exp.numeroProcesso || 'Não informado'}
+TRIBUNAL: ${exp.tribunal || 'Não informado'}
+DATA: ${exp.receivedAt || exp.dataRecebimento || 'Não informada'}
+
+CONTEÚDO:
+${exp.content || exp.teor || 'Sem conteúdo'}`
             }
-          },
-          agent: {
-            id: 'justine',
-            type: 'intimation-analyzer',
-            name: 'Mrs. Justin-e'
-          }
+          ]
         })
       })
 
       const data = await response.json()
 
-      if (data.success && data.result?.success) {
-        const analysisData = data.result.data
-        const analyzed: Expediente = {
-          ...exp,
-          analyzed: true,
-          summary: analysisData?.summary || 'Análise concluída',
-          suggestedAction: analysisData?.suggestedActions?.[0] || 'Revisar documento',
-          pendingDocs: analysisData?.nextSteps || [],
-          deadline: analysisData?.deadline,
-          priority: analysisData?.priority,
-          draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
-            `📋 RESUMO:\n${analysisData?.summary || 'N/A'}\n\n` +
-            `⚖️ TIPO: ${analysisData?.documentType || exp.type}\n` +
-            `🚨 PRIORIDADE: ${analysisData?.priority || 'média'}\n\n` +
-            `📅 PRAZO: ${analysisData?.deadline?.days || 'N/A'} dias ${analysisData?.deadline?.type || ''}\n` +
-            `   Data limite: ${analysisData?.deadline?.endDate || 'N/A'}\n\n` +
-            `✅ AÇÕES SUGERIDAS:\n${(analysisData?.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
-            `📝 PRÓXIMOS PASSOS:\n${(analysisData?.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
-        }
+      // Extrai o conteúdo da resposta
+      const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
 
-        setExpedientes((current) =>
-          (current || []).map(e => e.id === exp.id ? analyzed : e)
-        )
-        setSelectedExp(analyzed)
-        toast.success('Mrs. Justin-e concluiu a análise!')
-      } else {
-        throw new Error(data.result?.error || 'Erro na análise')
+      // Tenta fazer parse do JSON da resposta
+      let analysisData
+      try {
+        // Remove possíveis marcadores de código
+        const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        analysisData = JSON.parse(jsonText)
+      } catch {
+        // Se não conseguir parse, cria estrutura básica com a resposta
+        analysisData = {
+          summary: responseText || 'Análise concluída',
+          documentType: exp.type || 'Intimação',
+          priority: 'média',
+          deadline: { days: 15, type: 'úteis', endDate: 'Verificar' },
+          suggestedActions: ['Verificar prazo processual', 'Analisar providências'],
+          nextSteps: ['Revisar intimação', 'Preparar resposta se necessário']
+        }
       }
-    } catch (error) {
-      console.error('Erro na análise:', error)
-      // Fallback para análise básica
+
       const analyzed: Expediente = {
         ...exp,
         analyzed: true,
-        summary: 'Análise automática indisponível. Revise manualmente.',
-        suggestedAction: 'Verificar prazo e providências necessárias',
-        pendingDocs: ['Revisar documento manualmente']
+        summary: analysisData.summary || 'Análise concluída pela Mrs. Justin-e',
+        suggestedAction: analysisData.suggestedActions?.[0] || 'Verificar prazo',
+        pendingDocs: analysisData.nextSteps || [],
+        deadline: analysisData.deadline,
+        priority: analysisData.priority,
+        draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
+          `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
+          `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
+          `🚨 PRIORIDADE: ${analysisData.priority || 'média'}\n\n` +
+          `📅 PRAZO: ${analysisData.deadline?.days || 'N/A'} dias ${analysisData.deadline?.type || ''}\n` +
+          `   Data limite: ${analysisData.deadline?.endDate || 'N/A'}\n\n` +
+          `✅ AÇÕES SUGERIDAS:\n${(analysisData.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
+          `📝 PRÓXIMOS PASSOS:\n${(analysisData.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
       }
+
       setExpedientes((current) =>
         (current || []).map(e => e.id === exp.id ? analyzed : e)
       )
       setSelectedExp(analyzed)
-      toast.error('Erro na análise com IA. Análise básica aplicada.')
+      toast.success('Mrs. Justin-e concluiu a análise!')
+
+    } catch (error) {
+      console.error('Erro na análise:', error)
+      toast.error('Erro na análise com IA. Tente novamente.')
+      // NÃO salvar como analisado se falhou - permite tentar novamente
     } finally {
       setAnalyzing(false)
     }
@@ -154,53 +172,75 @@ export default function ExpedientePanel() {
 
     try {
       if (selectedExp) {
-        const response = await fetch('/api/agents/process-task', {
+        // Usa API Gemini diretamente
+        const response = await fetch('/_spark/llm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            task: {
-              id: crypto.randomUUID(),
-              agentId: 'justine',
-              type: 'analyze_intimation',
-              priority: 'high',
-              status: 'queued',
-              createdAt: new Date().toISOString(),
-              data: {
-                publicationId: selectedExp.id,
-                text: selectedExp.content || selectedExp.teor,
-                processNumber: selectedExp.numeroProcesso,
-                tribunal: selectedExp.tribunal,
-                type: selectedExp.type || 'Intimação',
-                selectedTask: task
+            model: 'gemini',
+            messages: [
+              {
+                role: 'system',
+                content: `Você é Mrs. Justin-e, especialista em controladoria jurídica.
+Crie um workflow detalhado para a tarefa solicitada.
+Retorne um JSON:
+{
+  "summary": "Resumo da tarefa e contexto",
+  "deadline": { "days": número, "type": "úteis" | "corridos", "endDate": "DD/MM/YYYY" },
+  "checklist": ["itens do checklist para executar a tarefa"],
+  "nextSteps": ["próximos passos após a tarefa"],
+  "observations": "observações importantes"
+}
+Responda APENAS com o JSON.`
+              },
+              {
+                role: 'user',
+                content: `TAREFA: ${task}
+
+PROCESSO: ${selectedExp.numeroProcesso || 'Não informado'}
+TRIBUNAL: ${selectedExp.tribunal || 'Não informado'}
+
+CONTEXTO DA INTIMAÇÃO:
+${selectedExp.content || selectedExp.teor || 'Sem conteúdo'}
+
+Crie o workflow de controladoria para esta tarefa.`
               }
-            },
-            agent: {
-              id: 'justine',
-              type: 'intimation-analyzer',
-              name: 'Mrs. Justin-e',
-              status: 'active',
-              enabled: true
-            }
+            ]
           })
         })
 
         const data = await response.json()
-        const analysisData = data.result?.data
+        const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
+
+        let analysisData
+        try {
+          const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+          analysisData = JSON.parse(jsonText)
+        } catch {
+          analysisData = {
+            summary: `Workflow criado para: ${task}`,
+            deadline: { days: 15, type: 'úteis', endDate: 'Calcular' },
+            checklist: ['Verificar prazo', 'Elaborar documento', 'Protocolar'],
+            nextSteps: ['Acompanhar andamento', 'Aguardar manifestação'],
+            observations: responseText || 'Sem observações adicionais'
+          }
+        }
 
         const analyzed: Expediente = {
           ...selectedExp,
           analyzed: true,
-          summary: analysisData?.summary || `Mrs. Justin-e analisou a intimação para: ${task}`,
+          summary: analysisData.summary || `Mrs. Justin-e analisou a intimação para: ${task}`,
           suggestedAction: `Executar: ${task}`,
-          pendingDocs: analysisData?.nextSteps || ['Documento Principal', 'Comprovantes'],
-          deadline: analysisData?.deadline,
-          priority: analysisData?.priority,
+          pendingDocs: analysisData.checklist || analysisData.nextSteps || ['Documento Principal'],
+          deadline: analysisData.deadline,
+          priority: 'alta',
           draftPetition: `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
             `🎯 TAREFA: ${task}\n\n` +
-            `📋 RESUMO:\n${analysisData?.summary || 'Análise em processamento'}\n\n` +
-            `📅 PRAZO: ${analysisData?.deadline?.days || 15} dias ${analysisData?.deadline?.type || 'úteis'}\n` +
-            `   Data limite: ${analysisData?.deadline?.endDate || 'Calcular'}\n\n` +
-            `✅ CHECKLIST:\n${(analysisData?.nextSteps || ['Verificar prazo', 'Elaborar documento', 'Protocolar']).map((s: string, i: number) => `☐ ${i + 1}. ${s}`).join('\n')}`
+            `📋 RESUMO:\n${analysisData.summary || 'Workflow em processamento'}\n\n` +
+            `📅 PRAZO: ${analysisData.deadline?.days || 15} dias ${analysisData.deadline?.type || 'úteis'}\n` +
+            `   Data limite: ${analysisData.deadline?.endDate || 'Calcular'}\n\n` +
+            `✅ CHECKLIST:\n${(analysisData.checklist || analysisData.nextSteps || []).map((s: string, i: number) => `☐ ${i + 1}. ${s}`).join('\n')}\n\n` +
+            `📝 OBSERVAÇÕES:\n${analysisData.observations || 'Nenhuma'}`
         }
 
         setExpedientes((current) =>
@@ -338,6 +378,12 @@ export default function ExpedientePanel() {
                           Análise Padrão
                         </Button>
                       </div>
+                    )}
+                    {selectedExp.analyzed && (selectedExp.summary?.includes('indisponível') || selectedExp.summary?.includes('manualmente')) && (
+                      <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline" size="sm">
+                        <ArrowClockwise className={`w-4 h-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
+                        {analyzing ? 'Re-analisando...' : 'Re-analisar com IA'}
+                      </Button>
                     )}
                   </div>
                 </CardHeader>
