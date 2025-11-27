@@ -74,9 +74,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     taskQueue,
     completedTasks,
     activityLog,
-    autoGenerateEnabled,
     toggleAgent,
-    toggleAutoGenerate,
     setAgents,
   } = useAutonomousAgents()
 
@@ -658,30 +656,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </Card>
       )}
 
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Modo de Demonstração Automática</CardTitle>
-              <CardDescription>
-                Gera tarefas automaticamente para demonstrar o funcionamento contínuo dos agentes
-              </CardDescription>
-            </div>
-            <Switch
-              checked={autoGenerateEnabled}
-              onCheckedChange={toggleAutoGenerate}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {autoGenerateEnabled
-              ? 'Agentes ativos receberão tarefas de demonstração a cada 2 minutos. Mais rápido e eficiente.'
-              : 'Ative para que os agentes recebam tarefas de demonstração automaticamente e vejam o sistema em ação.'}
-          </p>
-        </CardContent>
-      </Card>
-
       <Tabs defaultValue="agents" className="space-y-4">
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
@@ -692,10 +666,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           <TabsTrigger value="orchestration">
             <Robot className="w-4 h-4 mr-2" />
             Orquestração V2
-          </TabsTrigger>
-          <TabsTrigger value="collaboration">
-            <ArrowsLeftRight className="w-4 h-4 mr-2" />
-            Demo Colaboração
           </TabsTrigger>
           <TabsTrigger value="activity">
             <ListChecks className="w-4 h-4 mr-2" />
@@ -830,13 +800,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
-
-        <TabsContent value="collaboration" className="space-y-4">
-          <HumanAgentCollaboration
-            agentName="Mrs. Justin-e"
-            taskDescription="Análise de intimação judicial"
-          />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">
