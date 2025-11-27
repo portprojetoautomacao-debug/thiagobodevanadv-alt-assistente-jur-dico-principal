@@ -32,7 +32,7 @@ export function usePageTracking() {
 
   useEffect(() => {
     setErrorTag('current_page', pathname);
-    
+
     // Iniciar breadcrumb
     Sentry.captureMessage(`Navigated to ${pathname}`, 'debug');
   }, [pathname]);
@@ -44,7 +44,7 @@ export function usePageTracking() {
 export function useErrorHandler(componentName: string) {
   return (error: Error, info: { componentStack: string }) => {
     setErrorTag('error_boundary', componentName);
-    
+
     Sentry.captureException(error, {
       contexts: {
         react: {
