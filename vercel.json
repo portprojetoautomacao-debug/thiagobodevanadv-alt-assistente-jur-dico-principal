@@ -4,8 +4,44 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/**/*.ts": {
+    "api/kv.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/backup.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/expedientes.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/legal-services.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/llm-proxy.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/cron.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/spark-proxy.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/agents.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
+    },
+    "api/status.ts": {
       "maxDuration": 30
+    },
+    "api/**/*.ts": {
+      "maxDuration": 30,
+      "includeFiles": "api/lib/**"
     }
   },
   "regions": ["iad1"],
