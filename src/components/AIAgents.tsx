@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { 
-  Robot, 
-  Lightning, 
-  CheckCircle, 
+import {
+  Robot,
+  Lightning,
+  CheckCircle,
   Calendar,
   Database,
   Brain,
@@ -79,17 +79,17 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     toggleAutoGenerate,
     setAgents,
   } = useAutonomousAgents()
-  
+
   const [user] = useKV<User | null>('user', null)
   const userId = user?.email || 'default-user'
-  
+
   // Sistema de backup automático
   const { createBackup, restoreBackup } = useAgentBackup({
     userId,
     autoBackupInterval: 5, // Backup a cada 5 minutos
     enableAutoBackup: true
   })
-  
+
   const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
   const [backupStatus, setBackupStatus] = useState<'idle' | 'saving' | 'restoring'>('idle')
   const [useV2Architecture, setUseV2Architecture] = useState(true) // Nova arquitetura ativada por padrão
@@ -139,11 +139,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         name: 'Harvey Specter',
         description: 'Assistente jurídico inteligente que analisa performance, processos, prazos e finanças com insights estratégicos',
         type: 'strategic',
-        status: 'active',
-        enabled: true,
-        lastActivity: 'Pronto para análises estratégicas',
-        tasksCompleted: 312,
-        tasksToday: 18,
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 0,
+        tasksToday: 0,
         autonomyLevel: 98,
         capabilities: [
           'Análise de Performance',
@@ -165,11 +165,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         name: 'Mrs. Justin-e',
         description: 'Analiso intimações com 95% de precisão em menos de 1 minuto, economizando 50 horas a cada 150 intimações',
         type: 'analyzer',
-        status: 'active',
-        enabled: true,
-        lastActivity: 'Aguardando intimações para análise',
-        tasksCompleted: 178,
-        tasksToday: 15,
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 0,
+        tasksToday: 0,
         autonomyLevel: 95,
         capabilities: [
           'Interpreta intimações',
@@ -191,11 +191,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         name: 'Agente de Análise Documental',
         description: 'Analisa automaticamente expedientes, intimações e documentos do PJe 24/7',
         type: 'analyzer',
-        status: 'active',
-        enabled: true,
-        lastActivity: 'Aguardando documentos para análise',
-        tasksCompleted: 167,
-        tasksToday: 9,
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 0,
+        tasksToday: 0,
         autonomyLevel: 95,
         capabilities: ['Extração de dados', 'Sumarização', 'Classificação de documentos', 'Detecção de prazos'],
         nextScheduledRun: 'Contínuo',
@@ -208,11 +208,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         name: 'Agente de Monitoramento DJEN',
         description: 'Monitora automaticamente o Diário de Justiça Eletrônico Nacional',
         type: 'monitor',
-        status: 'active',
-        enabled: true,
-        lastActivity: 'Verificando novas publicações',
-        tasksCompleted: 256,
-        tasksToday: 21,
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 0,
+        tasksToday: 0,
         autonomyLevel: 92,
         capabilities: ['Monitoramento 24/7', 'Detecção de publicações', 'Alertas em tempo real', 'Análise de relevância'],
         nextScheduledRun: 'Contínuo',
@@ -225,11 +225,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         name: 'Agente de Gestão de Prazos',
         description: 'Calcula e acompanha prazos processuais automaticamente',
         type: 'calculator',
-        status: 'active',
-        enabled: true,
-        lastActivity: 'Verificando prazos próximos',
-        tasksCompleted: 213,
-        tasksToday: 17,
+        status: 'idle',
+        enabled: false,
+        lastActivity: 'Aguardando ativação',
+        tasksCompleted: 0,
+        tasksToday: 0,
         autonomyLevel: 98,
         capabilities: ['Cálculo automático', 'Alertas de vencimento', 'Calendário processual', 'Análise de urgências'],
         nextScheduledRun: 'A cada hora',
@@ -245,7 +245,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 67,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 85,
         capabilities: ['Redação assistida', 'Modelos jurisprudenciais', 'Revisão gramatical', 'Formatação automática'],
@@ -262,7 +262,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 54,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 88,
         capabilities: ['Classificação automática', 'Renomeação inteligente', 'Detecção de duplicatas', 'Indexação'],
@@ -279,7 +279,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 42,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 90,
         capabilities: ['Pesquisa em tribunais superiores', 'Análise de relevância', 'Consolidação de teses', 'Extração de ementas'],
@@ -296,7 +296,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 38,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 87,
         capabilities: ['Análise de viabilidade', 'Probabilidade de êxito', 'Avaliação financeira', 'Identificação de riscos'],
@@ -313,7 +313,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 29,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 91,
         capabilities: ['Análise de cláusulas', 'Verificação de compliance', 'Detecção de ambiguidades', 'Sugestões de melhoria'],
@@ -330,7 +330,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 156,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 84,
         capabilities: ['Relatórios de andamento', 'E-mails personalizados', 'Alertas de prazos', 'Follow-ups automáticos'],
@@ -347,7 +347,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 87,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 93,
         capabilities: ['Análise de faturamento', 'Controle de recebíveis', 'Projeções financeiras', 'Alertas de inadimplência'],
@@ -364,7 +364,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 63,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 89,
         capabilities: ['Análise estratégica', 'Probabilidade de sucesso', 'Alternativas processuais', 'Gestão de recursos'],
@@ -381,7 +381,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 71,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 86,
         capabilities: ['Simplificação de linguagem', 'Glossário técnico', 'Adaptação de público', 'Clareza comunicativa'],
@@ -398,7 +398,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         status: 'idle',
         enabled: false,
         lastActivity: 'Aguardando ativação',
-        tasksCompleted: 45,
+        tasksCompleted: 0,
         tasksToday: 0,
         autonomyLevel: 94,
         capabilities: ['Verificação LGPD', 'Código de Ética OAB', 'Normas regulatórias', 'Auditorias automáticas'],
@@ -411,7 +411,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
     // Check for missing agents and add them
     const missingAgents = initialAgents.filter(
-      initAgent => !agents.some(existingAgent => 
+      initAgent => !agents.some(existingAgent =>
         existingAgent.id === initAgent.id || existingAgent.name === initAgent.name
       )
     )
@@ -433,8 +433,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     const agent = agents.find(a => a.id === agentId)
     if (!agent) return null
     toggleAgent(agentId)
-    toast.success(agent.enabled 
-      ? `${agent.name} desativado` 
+    toast.success(agent.enabled
+      ? `${agent.name} desativado`
       : `${agent.name} ativado`
     )
   }
@@ -448,7 +448,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </p>
       </div>
 
-      <MrsJustinEModal 
+      <MrsJustinEModal
         open={showMrsJustinEModal}
         onOpenChange={setShowMrsJustinEModal}
         onActivate={() => {
@@ -675,7 +675,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            {autoGenerateEnabled 
+            {autoGenerateEnabled
               ? 'Agentes ativos receberão tarefas de demonstração a cada 2 minutos. Mais rápido e eficiente.'
               : 'Ative para que os agentes recebam tarefas de demonstração automaticamente e vejam o sistema em ação.'}
           </p>
@@ -722,9 +722,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agents.map((agent) => {
               const IconComponent = agentIcons[agent.id] || Robot
-              const statusColor = agent.enabled 
-                ? agent.status === 'processing' 
-                  ? 'text-accent' 
+              const statusColor = agent.enabled
+                ? agent.status === 'processing'
+                  ? 'text-accent'
                   : 'text-green-600'
                 : 'text-muted-foreground'
 
@@ -833,7 +833,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </TabsContent>
 
         <TabsContent value="collaboration" className="space-y-4">
-          <HumanAgentCollaboration 
+          <HumanAgentCollaboration
             agentName="Mrs. Justin-e"
             taskDescription="Análise de intimação judicial"
           />
@@ -855,7 +855,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     {activityLog.map((log) => {
                       const agent = agents.find(a => a.id === log.agentId)
                       const IconComponent = agentIcons[log.agentId] || Robot
-                      
+
                       return (
                         <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
                           <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
@@ -895,7 +895,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     {taskQueue.map((task) => {
                       const agent = agents.find(a => a.id === task.agentId)
                       const IconComponent = agentIcons[task.agentId] || Robot
-                      
+
                       return (
                         <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
                           <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
@@ -906,11 +906,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                               Criada em: {new Date(task.createdAt).toLocaleString('pt-BR')}
                             </p>
                           </div>
-                          <Badge 
+                          <Badge
                             variant={
                               task.status === 'processing' ? 'default' :
-                              task.status === 'queued' ? 'secondary' :
-                              'destructive'
+                                task.status === 'queued' ? 'secondary' :
+                                  'destructive'
                             }
                             className="flex-shrink-0"
                           >
@@ -946,7 +946,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     {completedTasks.map((task) => {
                       const agent = agents.find(a => a.id === task.agentId)
                       const IconComponent = agentIcons[task.agentId] || Robot
-                      
+
                       return (
                         <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
                           <IconComponent className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" weight="fill" />
