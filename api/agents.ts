@@ -9,7 +9,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { addTaskToQueue as _addTaskToQueue } from '../lib/api/kv-utils';
+import { addTaskToQueue as _addTaskToQueue } from '../lib/api/kv-utils.js';
 
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
@@ -95,7 +95,7 @@ interface Agent {
 function validateAgentTask(task: unknown): task is AgentTask {
   if (!task || typeof task !== 'object') return false
   const t = task as Record<string, unknown>
-  
+
   return !!(
     typeof t.id === 'string' &&
     typeof t.agentId === 'string' &&
@@ -110,7 +110,7 @@ function validateAgentTask(task: unknown): task is AgentTask {
 function validateAgent(agent: unknown): agent is Agent {
   if (!agent || typeof agent !== 'object') return false
   const a = agent as Record<string, unknown>
-  
+
   return !!(
     typeof a.id === 'string' &&
     typeof a.name === 'string' &&
@@ -181,57 +181,57 @@ Retorne JSON com: messageText, tone, channels, urgency.`,
 
 function getSystemPrompt(agentType: AgentType): string {
   const prompt = SYSTEM_PROMPTS[agentType]
-  
+
   if (!prompt) {
     logger.warn(`System prompt not found for agent type: ${agentType}`)
     return 'Você é um assistente jurídico inteligente.'
   }
-  
+
   return prompt
 }
 
 // ✨ Prompts de usuário com enum keys
 const USER_PROMPTS: Record<AgentTaskType, (data: string) => string> = {
-  [AgentTaskType.ANALYZE_DOCUMENT]: (data) => 
+  [AgentTaskType.ANALYZE_DOCUMENT]: (data) =>
     `Analise o seguinte documento jurídico e retorne JSON estruturado:\n\n${data}\n\nRetorne: summary, extractedData, suggestedActions, deadlines, confidence.`,
-  
-  [AgentTaskType.MONITOR_DJEN]: (data) => 
+
+  [AgentTaskType.MONITOR_DJEN]: (data) =>
     `Verifique publicações no DJEN/DataJud para:\n\n${data}\n\nRetorne JSON: newIntimations (array), checked, tribunaisVerificados, nextCheck.`,
-  
-  [AgentTaskType.CALCULATE_DEADLINE]: (data) => 
+
+  [AgentTaskType.CALCULATE_DEADLINE]: (data) =>
     `Calcule prazo processual:\n\n${data}\n\nRetorne JSON: deadline (ISO), businessDays, reasoning (array), holidays, alerts.`,
-  
-  [AgentTaskType.DRAFT_PETITION]: (data) => 
+
+  [AgentTaskType.DRAFT_PETITION]: (data) =>
     `Redija peça processual:\n\n${data}\n\nRetorne JSON: draft (texto completo), confidence, needsReview, suggestions, metadata.`,
-  
-  [AgentTaskType.CHECK_DATAJUD]: (data) => 
+
+  [AgentTaskType.CHECK_DATAJUD]: (data) =>
     `Consulte DataJud:\n\n${data}\n\nRetorne JSON: processosEncontrados, ultimaAtualizacao, movimentacoes, status, partes.`,
-  
-  [AgentTaskType.ORGANIZE_FILES]: (data) => 
+
+  [AgentTaskType.ORGANIZE_FILES]: (data) =>
     `Organize arquivos:\n\n${data}\n\nRetorne JSON: filesOrganized, categoriesCreated, duplicatesFound, spaceSaved.`,
-  
-  [AgentTaskType.RESEARCH_PRECEDENTS]: (data) => 
+
+  [AgentTaskType.RESEARCH_PRECEDENTS]: (data) =>
     `Pesquise precedentes:\n\n${data}\n\nRetorne JSON: precedentsFound, relevantCases, thematicAnalysis, recommendation.`,
-  
-  [AgentTaskType.RISK_ANALYSIS]: (data) => 
+
+  [AgentTaskType.RISK_ANALYSIS]: (data) =>
     `Análise de risco:\n\n${data}\n\nRetorne JSON: riskLevel, riskScore, factors, recommendations, probabilitySuccess.`,
-  
-  [AgentTaskType.CONTRACT_REVIEW]: (data) => 
+
+  [AgentTaskType.CONTRACT_REVIEW]: (data) =>
     `Revise contrato:\n\n${data}\n\nRetorne JSON: contractAnalysis, findings, compliance, riskAssessment.`,
-  
-  [AgentTaskType.CLIENT_COMMUNICATION]: (data) => 
+
+  [AgentTaskType.CLIENT_COMMUNICATION]: (data) =>
     `Comunique ao cliente:\n\n${data}\n\nRetorne JSON: messageGenerated, template, tone, urgency, channels.`,
-  
-  [AgentTaskType.BILLING_ANALYSIS]: (data) => 
+
+  [AgentTaskType.BILLING_ANALYSIS]: (data) =>
     `Analise faturamento:\n\n${data}\n\nRetorne JSON: periodAnalyzed, totalBilled, pendingInvoices, insights.`,
-  
-  [AgentTaskType.CASE_STRATEGY]: (data) => 
+
+  [AgentTaskType.CASE_STRATEGY]: (data) =>
     `Estratégia para caso:\n\n${data}\n\nRetorne JSON: strategyAnalysis, recommendedActions, successProbability.`,
-  
-  [AgentTaskType.LEGAL_TRANSLATION]: (data) => 
+
+  [AgentTaskType.LEGAL_TRANSLATION]: (data) =>
     `Simplifique texto jurídico:\n\n${data}\n\nRetorne JSON: translationCompleted, simplifiedText, keyTermsGlossary.`,
-  
-  [AgentTaskType.COMPLIANCE_CHECK]: (data) => 
+
+  [AgentTaskType.COMPLIANCE_CHECK]: (data) =>
     `Verifique compliance:\n\n${data}\n\nRetorne JSON: complianceStatus, checksPerformed, violations, recommendations.`,
 };
 
@@ -239,18 +239,18 @@ function getUserPrompt(task: AgentTask): string {
   const data = task.data
   const taskData = JSON.stringify(data, null, 2)
   const promptGenerator = USER_PROMPTS[task.type]
-  
+
   if (!promptGenerator) {
     logger.warn(`User prompt generator not found for task type: ${task.type}`)
     return `Processe:\n\n${taskData}`
   }
-  
+
   return promptGenerator(taskData)
 }
 
 async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<string, unknown>> {
   const startTime = Date.now()
-  
+
   // Validar entrada
   if (!validateAgentTask(task)) {
     const error = new Error('Invalid agent task structure')
@@ -303,11 +303,11 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
         throw new Error(`Spark LLM error: ${sparkResponse.statusText}`)
       }
 
-      const sparkData = await sparkResponse.json() as { 
-        choices?: Array<{ message?: { content?: string } }>, 
-        usage?: { total_tokens?: number } 
+      const sparkData = await sparkResponse.json() as {
+        choices?: Array<{ message?: { content?: string } }>,
+        usage?: { total_tokens?: number }
       };
-      
+
       const aiContent = sparkData.choices?.[0]?.message?.content || ''
 
       if (!aiContent) {
@@ -347,7 +347,7 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
   } catch (error) {
     const processingTimeMs = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : String(error)
-    
+
     logger.error('Task processing failed', error, {
       taskId: task.id,
       agentId: agent.id,
@@ -367,7 +367,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers.authorization
   const isVercelCron = authHeader?.startsWith('Bearer ')
   const isLocalTest = process.env.NODE_ENV === 'development'
-  
+
   if (!isVercelCron && !isLocalTest && !req.headers['x-api-key']) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
@@ -376,7 +376,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ✨ PROCESS QUEUE (cron job)
     if (action === 'process-queue' && req.method === 'POST') {
       const kvEndpoint = '/_spark/kv/agent-task-queue'
-      
+
       try {
         const tasksResponse = await fetch(kvEndpoint, {
           headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
@@ -388,7 +388,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const kvData = await tasksResponse.json() as { value?: unknown[] }
         const taskQueue = kvData.value || []
-        
+
         // Validar tarefas
         const validTasks = taskQueue.filter(t => validateAgentTask(t)) as AgentTask[]
         const pendingTasks = validTasks.filter((t: AgentTask) => t.status === TaskStatus.QUEUED)
@@ -630,7 +630,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             logger.error(`Error processing task ${task.id}`, error)
             task.status = TaskStatus.FAILED
             task.error = error instanceof Error ? error.message : 'Unknown error'
-            
+
             results.push({
               taskId: task.id,
               status: 'failed',
@@ -667,21 +667,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ✨ PROCESS TASK (individual)
     if (action === 'process-task' && req.method === 'POST') {
-      const { task, agent } = req.body as { 
-        task: unknown; 
-        agent: unknown 
+      const { task, agent } = req.body as {
+        task: unknown;
+        agent: unknown
       }
 
       // Validar entrada
       if (!validateAgentTask(task)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Invalid task structure',
           timestamp: new Date().toISOString()
         })
       }
 
       if (!validateAgent(agent)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Invalid agent structure',
           timestamp: new Date().toISOString()
         })
@@ -701,14 +701,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Invalid action. Use: process-queue or process-task',
       timestamp: new Date().toISOString()
     })
 
   } catch (error) {
     logger.error('Handler error', error)
-    
+
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : 'Unknown error',
