@@ -10,14 +10,14 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { SafeLogger } from './_lib/safe-logger';
-import { rateLimitMiddleware, apiRateLimiter } from './_lib/rate-limit';
-import { requireAuth, sendAuthError } from './_lib/auth';
-import { validateProcessQueueRequest, validateProcessTaskRequest } from './_lib/validation';
-import { withErrorHandler, addCorsHeaders, handleOptions, sendSuccess, AppError, handleError } from './_lib/error-handler';
-import { sparkCircuitBreaker, withCircuitBreaker } from './_lib/circuit-breaker';
-import { sparkCache, cachedOperation } from './_lib/cache';
-import { withRetry, sparkRetryConfig } from './_lib/retry';
+import { SafeLogger } from './lib/safe-logger';
+import { rateLimitMiddleware, apiRateLimiter } from './lib/rate-limit';
+import { requireAuth, sendAuthError } from './lib/auth';
+import { validateProcessQueueRequest, validateProcessTaskRequest } from './lib/validation';
+import { withErrorHandler, addCorsHeaders, handleOptions, sendSuccess, AppError, handleError } from './lib/error-handler';
+import { sparkCircuitBreaker, withCircuitBreaker } from './lib/circuit-breaker';
+import { sparkCache, cachedOperation } from './lib/cache';
+import { withRetry, sparkRetryConfig } from './lib/retry';
 
 const logger = new SafeLogger('AgentsAPI');
 

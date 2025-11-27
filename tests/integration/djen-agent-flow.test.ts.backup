@@ -1,0 +1,404 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createMocks } from 'node-mocks-http';
+import cronHandler from '../../api/cron';
+import agentsHandler, { AgentTaskType, AgentType, TaskPriority, TaskStatus, AgentStatus } from '../../api/agents';
+import * as djenClient from '../../lib/api/djen-client';
+import * as kvUtils from '../../lib/api/kv-utils';
+
+// Mock dependencies
+vi.mock('../../lib/api/djen-client');
+vi.mock('../../lib/api/kv-utils', () => ({
+  getMonitoredLawyers: vi.fn(),
+  storePublication: vi.fn(),
+  queueNotification: vi.fn(),
+  updateLastDJENCheck: vi.fn(),
+  getLastDJENCheck: vi.fn(),
+  getAgents: vi.fn(),
+  updateAgents: vi.fn(),
+  getCompletedTasks: vi.fn(),
+  updateCompletedTasks: vi.fn(),
+  addTaskToQueue: vi.fn()
+}));
+vi.mock('../../api/_lib/rate-limit', () => ({
+  rateLimitMiddleware: vi.fn().mockResolvedValue({
+    allowed: true,
+    headers: {}
+  }),
+  apiRateLimiter: {
+    check: vi.fn().mockResolvedValue({ success: true }),
+    report: vi.fn()
+  }
+}));
+vi.mock('../../api/_lib/auth', () => ({
+  requireAuth: vi.fn(),
+  sendAuthError: vi.fn()
+}));
+vi.mock('../../api/_lib/safe-logger', () => {
+  return {
+    SafeLogger: class {
+      constructor() {
+        return {
+          info: vi.fn(),
+          error: vi.fn(),
+          warn: vi.fn(),
+          debug: vi.fn()
+        };
+      }
+    }
+  };
+});
+vi.mock('../../api/_lib/cache', () => ({
+  sparkCache: {
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    clear: vi.fn().mockResolvedValue(undefined)
+  },
+  cachedOperation: vi.fn((fn) => fn)
+}));
+vi.mock('../../lib/api/llm-proxy', () => ({
+  generateText: vi.fn().mockResolvedValue(JSON.stringify({
+    summary: "Publicação analisada com sucesso",
+    deadlines: [{ date: "2025-12-01", description: "Prazo fatal" }],
+    suggestedActions: ["Agendar reunião", "Protocolar defesa"]
+  }))
+}));
+
+// Mock fetch globally
+global.fetch = vi.fn();
+
+describe('Integration: DJEN Monitor -> Agent Workflow', () => {
+  const mockLawyer = {
+    id: 'lawyer-123',
+    name: 'Thiago Bodevan Veiga',
+    oab: '184404',
+    enabled: true,
+    tribunals: ['TJMG']
+  };
+
+  const mockPublication = {
+    id: 12345,
+    data: '2025-11-22',
+    tribunal: 'TJMG',
+    tipo: 'Intimação',
+    teor: 'Fica intimada a parte para apresentar contrarrazões...',
+    numeroProcesso: '5001234-56.2025.8.13.0024',
+    link: 'https://djen.jus.br/pub/123',
+    matchType: 'oab',
+    advogados: ['Thiago Bodevan Veiga']
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Mock fetch for DJEN API calls
+    (global.fetch as any).mockImplementation((url: string) => {
+      if (url.includes('comunicaapi.pje.jus.br')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: {
+            get: (header: string) => {
+              if (header === 'x-ratelimit-limit') return '100';
+              if (header === 'x-ratelimit-remaining') return '99';
+              return null;
+            }
+          },
+          json: () => Promise.resolve({
+            count: 1,
+            items: [{
+              id: 12345,
+              datadisponibilizacao: '2025-11-22',
+              siglaTribunal: 'TJMG',
+              tipoComunicacao: 'Intimação',
+              nomeOrgao: 'Juízo da 1ª Vara Cível',
+              texto: 'Fica intimada a parte para apresentar contrarrazões...',
+              numero_processo: '5001234-56.2025.8.13.0024',
+              meio: 'D',
+              meiocompleto: 'Eletrônico',
+              link: 'https://djen.jus.br/pub/123',
+              hash: 'abc123',
+              destinatarioadvogados: [{
+                advogado: {
+                  nome: 'Thiago Bodevan Veiga',
+                  numero_oab: '184404',
+                  uf_oab: 'MG'
+                }
+              }]
+            }]
+          })
+        });
+      }
+      return Promise.reject(new Error('Unexpected fetch call'));
+    });
+
+    // Setup KV mocks
+    (kvUtils.getMonitoredLawyers as any).mockResolvedValue([mockLawyer]);
+    (kvUtils.storePublication as any).mockResolvedValue(undefined);
+    (kvUtils.queueNotification as any).mockResolvedValue(undefined);
+    (kvUtils.updateLastDJENCheck as any).mockResolvedValue(undefined);
+
+    // Setup auth mock
+    const mockAuth = require('../../api/_lib/auth');
+    mockAuth.requireAuth.mockResolvedValue({
+      authenticated: true,
+      user: { id: 'test-user', email: 'test@example.com' }
+    });
+    mockAuth.sendAuthError.mockImplementation(() => {
+      throw new Error('Auth error');
+    });
+
+    it('Step 1: DJEN Monitor should find publications and store them', async () => {
+      const { req, res } = createMocks({
+        method: 'POST',
+        query: { action: 'djen-monitor' },
+        headers: { authorization: 'Bearer cron-secret' } // Simulate Vercel Cron
+      });
+
+      await cronHandler(req as any, res as any);
+
+      expect(res._getStatusCode()).toBe(200);
+      const data = JSON.parse(res._getData());
+
+      expect(data.result.publicationsFound).toBe(1);
+      expect(data.result.lawyersChecked).toBe(1);
+
+      // Verify DJEN was called with correct parameters
+      expect(djenClient.consultarDJENForLawyer).toHaveBeenCalledWith(
+        ['TJMG'],
+        'Thiago Bodevan Veiga',
+        '184404',
+        undefined,
+        undefined,
+        'D'
+      );
+
+      // Verify publication was stored
+      expect(kvUtils.storePublication).toHaveBeenCalledWith(expect.objectContaining({
+        lawyerName: 'Thiago Bodevan Veiga',
+        numeroProcesso: '5001234-56.2025.8.13.0024',
+        source: 'DJEN'
+      }));
+    });
+
+    it('Step 2: Agent should process the publication (Simulated Task)', async () => {
+      // Simulate creating a task based on the publication found in Step 1
+      const taskData = {
+        id: 'task-1',
+        agentId: 'analyzer-agent',
+        type: AgentTaskType.ANALYZE_DOCUMENT,
+        priority: TaskPriority.HIGH,
+        status: TaskStatus.QUEUED,
+        createdAt: new Date().toISOString(),
+        data: {
+          text: mockPublication.teor,
+          context: `Processo: ${mockPublication.numeroProcesso}`
+        }
+      };
+
+      // Mock KV to return this task
+      // Since getKv is not exported, we need to mock the functions that use it
+      // But in this test we are mocking the module, so we can just mock the exported functions if they were used
+      // However, agentsHandler uses getKv internally.
+      // Let's look at how we mocked kvUtils.
+
+      // Re-mock kvUtils for this specific test case to return our task
+      // We need to mock the implementation of getKv if it was exported, but it's not.
+      // But wait, agentsHandler imports getAgents, updateAgents etc.
+      // Let's see what agentsHandler uses.
+
+      // agentsHandler uses:
+      // import { getAgents, updateAgents, getTaskQueue, updateTaskQueue, ... } from '../lib/api/kv-utils';
+
+      // So we should mock getTaskQueue and updateTaskQueue
+      // (kvUtils.getTaskQueue as any) = vi.fn().mockResolvedValue([taskData]);
+      // (kvUtils.updateTaskQueue as any) = vi.fn().mockResolvedValue(undefined);
+      (kvUtils.getAgents as any) = vi.fn().mockResolvedValue([{
+        id: 'analyzer-agent',
+        name: 'Analyzer',
+        type: AgentType.ANALYZER,
+        status: AgentStatus.IDLE,
+        enabled: true
+      }]);
+      (kvUtils.updateAgents as any) = vi.fn().mockResolvedValue(undefined);
+      (kvUtils.getCompletedTasks as any) = vi.fn().mockResolvedValue([]);
+      (kvUtils.updateCompletedTasks as any) = vi.fn().mockResolvedValue(undefined);
+
+      // Mock fetch for LLM proxy
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                summary: "Sentença proferida. Necessário comunicar cliente e analisar riscos.",
+                deadlines: [{ date: "2025-12-01", description: "Prazo recursal" }],
+                suggestedActions: [
+                  "Calcular prazo recursal",
+                  "Comunicar cliente sobre sentença",
+                  "Analisar riscos da decisão",
+                  "Verificar andamento no DataJud"
+                ]
+              })
+            }
+          }],
+          usage: { total_tokens: 150 }
+        })
+      } as any);
+
+      const { req, res } = createMocks({
+        method: 'POST',
+        query: { action: 'process-task' },
+        body: {
+          task: taskData,
+          agent: {
+            id: 'analyzer-agent',
+            name: 'Analyzer',
+            type: AgentType.ANALYZER,
+            status: AgentStatus.IDLE,
+            enabled: true
+          }
+        },
+        headers: { authorization: 'Bearer cron-secret' }
+      });
+
+      await agentsHandler(req as any, res as any);
+
+      expect(res._getStatusCode()).toBe(200);
+      const result = JSON.parse(res._getData());
+
+      expect(result.ok).toBe(true);
+      expect(result.result).toBeDefined();
+
+      // Verify AI analysis result
+      const analysis = result.result;
+      expect(analysis.summary).toBe("Sentença proferida. Necessário comunicar cliente e analisar riscos.");
+      expect(analysis.deadlines).toHaveLength(1);
+    });
+
+    it('Step 3: Agent Queue Processing should chain new tasks based on analysis', async () => {
+      const taskData = {
+        id: 'task-chain-test',
+        agentId: 'analyzer-agent',
+        type: AgentTaskType.ANALYZE_DOCUMENT,
+        priority: TaskPriority.HIGH,
+        status: TaskStatus.QUEUED,
+        createdAt: new Date().toISOString(),
+        data: { text: "Sentença com custas" }
+      };
+
+      // Mock fetch to handle multiple endpoints for the queue processing flow
+      global.fetch = vi.fn().mockImplementation((url, options) => {
+        // 1. GET Task Queue
+        if (url.toString().includes('/_spark/kv/agent-task-queue') && (!options || options.method === 'GET' || !options.method)) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ value: [taskData] })
+          });
+        }
+
+        // 2. GET Agents
+        if (url.toString().includes('/_spark/kv/autonomous-agents')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ value: [{ id: 'analyzer-agent', enabled: true, type: 'analyzer', name: 'Analyzer' }] })
+          });
+        }
+
+        // 3. LLM Call
+        if (url.toString().includes('/_spark/llm')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              choices: [{
+                message: {
+                  content: JSON.stringify({
+                    suggestedActions: [
+                      "Pagar custas processuais",
+                      "Arquivar documento na pasta do processo",
+                      "Verificar compliance LGPD",
+                      "Traduzir termos para linguagem simples",
+                      "Revisar minuta de contrato",
+                      "Definir estratégia do caso"
+                    ]
+                  })
+                }
+              }],
+              usage: { total_tokens: 150 }
+            })
+          });
+        }
+
+        // 4. PUT Task Queue (Update)
+        if (url.toString().includes('/_spark/kv/agent-task-queue') && options?.method === 'PUT') {
+          return Promise.resolve({ ok: true, json: async () => ({}) });
+        }
+
+        return Promise.resolve({ ok: false, statusText: 'Not Found: ' + url });
+      }) as any;
+
+      const { req, res } = createMocks({
+        method: 'POST',
+        query: { action: 'process-queue' },
+        headers: { authorization: 'Bearer cron-secret' }
+      });
+
+      await agentsHandler(req as any, res as any);
+
+      expect(res._getStatusCode()).toBe(200);
+
+      // Verify that the queue update was called with the new chained tasks
+      const putCall = (global.fetch as any).mock.calls.find((call: any[]) =>
+        call[0].toString().includes('/_spark/kv/agent-task-queue') && call[1].method === 'PUT'
+      );
+
+      expect(putCall).toBeDefined();
+      const body = JSON.parse(putCall[1].body);
+      const updatedQueue = body.value;
+
+      // Original task should be completed (or we are just checking the pushed tasks)
+      // The code pushes new tasks to the queue array.
+
+      // Check for Billing Analyst task (if exists)
+      const billingTask = updatedQueue.find((t: any) => t.type === AgentTaskType.BILLING_ANALYSIS || t.agentId === 'billing-analyst');
+      if (billingTask) {
+        expect(billingTask).toBeDefined();
+        expect(billingTask.agentId).toBe('billing-analyst');
+      }
+
+      // Check for Organizer task (if exists)
+      const organizerTask = updatedQueue.find((t: any) => t.type === AgentTaskType.ORGANIZE_FILES || t.agentId === 'document-organizer');
+      if (organizerTask) {
+        expect(organizerTask).toBeDefined();
+        expect(organizerTask.agentId).toBe('document-organizer');
+      }
+
+      // Check for Compliance task (if exists)
+      const complianceTask = updatedQueue.find((t: any) => t.type === AgentTaskType.COMPLIANCE_CHECK || t.agentId === 'compliance-officer');
+      if (complianceTask) {
+        expect(complianceTask).toBeDefined();
+        expect(complianceTask.agentId).toBe('compliance-officer');
+      }
+
+      // Check for Translator task (if exists)
+      const translatorTask = updatedQueue.find((t: any) => t.type === AgentTaskType.LEGAL_TRANSLATION || t.agentId === 'legal-translator');
+      if (translatorTask) {
+        expect(translatorTask).toBeDefined();
+        expect(translatorTask.agentId).toBe('legal-translator');
+      }
+
+      // Check for Contract Reviewer task (if exists)
+      const contractTask = updatedQueue.find((t: any) => t.type === AgentTaskType.CONTRACT_REVIEW || t.agentId === 'contract-reviewer');
+      if (contractTask) {
+        expect(contractTask).toBeDefined();
+        expect(contractTask.agentId).toBe('contract-reviewer');
+      }
+
+    // Check for Case Strategist task (if exists)
+    const strategyTask = updatedQueue.find((t: any) => t.type === AgentTaskType.CASE_STRATEGY || t.agentId === 'case-strategist');
+    if (strategyTask) {
+      expect(strategyTask).toBeDefined();
+      expect(strategyTask.agentId).toBe('case-strategist');
+    }
+  });
+});

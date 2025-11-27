@@ -11,10 +11,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
-import { requireAuth, sendAuthError } from './_lib/auth';
-import { rateLimitMiddleware } from './_lib/rate-limit';
-import { handleError, withErrorHandler } from './_lib/error-handler';
-import { SafeLogger } from './_lib/safe-logger';
+import { requireAuth, sendAuthError } from './lib/auth';
+import { rateLimitMiddleware } from './lib/rate-limit';
+import { handleError, withErrorHandler } from './lib/error-handler';
+import { SafeLogger } from './lib/safe-logger';
 
 // Initialize Redis client (supports both Upstash and Vercel KV)
 // Prefer Upstash explicit configuration if available
