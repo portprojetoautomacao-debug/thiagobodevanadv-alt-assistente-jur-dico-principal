@@ -17,7 +17,9 @@ function getAgentActivity(agent: Agent): string {
 }
 
 // Version flag to force data reset when structure changes
-const AGENTS_DATA_VERSION = 3
+// INCREMENTADO para v4: força reset de agentes para usar IDs corretos de agents.ts
+// Agentes essenciais são habilitados automaticamente
+const AGENTS_DATA_VERSION = 4
 
 export function useAutonomousAgents() {
   const [dataVersion, setDataVersion] = useKV<number>('agents-data-version', 0)

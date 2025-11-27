@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { MicrophoneStage, Stop, Upload, Sparkle } from '@phosphor-icons/react'
+import { MicrophoneStage, Stop, Upload, Sparkle, WarningCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+
+/**
+ * AudioTranscription - Componente para transcrição de áudio com IA REAL
+ * 
+ * IMPORTANTE: Este componente usa APIs reais para transcrição:
+ * - Web Speech API para gravação em tempo real
+ * - API Gemini para análise e sumarização do texto transcrito
+ * 
+ * NÃO há dados simulados ou mock neste componente.
+ */
+
+interface TranscriptionAnalysis {
+  summary: string
+  actionItems: string[]
+}
 
 export default function AudioTranscription() {
   const [isRecording, setIsRecording] = useState(false)
@@ -12,59 +27,160 @@ export default function AudioTranscription() {
   const [summary, setSummary] = useState('')
   const [actionItems, setActionItems] = useState<string[]>([])
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const audioFileRef = useRef<File | null>(null)
+
+  // Verifica suporte a Web Speech API
+  const isSpeechSupported = typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
 
   const handleStartRecording = () => {
-    setIsRecording(true)
-    toast.success('Gravação iniciada')
-    
-    setTimeout(() => {
+    if (!isSpeechSupported) {
+      toast.error('Seu navegador não suporta gravação de áudio')
+      setError('Web Speech API não suportada. Use Chrome ou Edge.')
+      return
+    }
+
+    setError(null)
+    setTranscription('')
+    setSummary('')
+    setActionItems([])
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const recognition = new SpeechRecognitionClass() as SpeechRecognition
+
+    recognition.lang = 'pt-BR'
+    recognition.continuous = true
+    recognition.interimResults = true
+
+    let finalTranscript = ''
+
+    recognition.onresult = (event) => {
+      let interimTranscript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript + ' '
+        } else {
+          interimTranscript += result[0].transcript
+        }
+      }
+
+      setTranscription(finalTranscript + interimTranscript)
+    }
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+      setError(`Erro na gravação: ${event.error}`)
+      toast.error('Erro na gravação de áudio')
       setIsRecording(false)
-      handleProcessAudio()
-    }, 3000)
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+      if (finalTranscript.trim()) {
+        analyzeTranscription(finalTranscript.trim())
+      }
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsRecording(true)
+    toast.success('Gravação iniciada - fale agora')
   }
 
   const handleStopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+    }
     setIsRecording(false)
-    handleProcessAudio()
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      toast.success(`Arquivo ${file.name} selecionado`)
-      handleProcessAudio()
+    if (!file) return
+
+    audioFileRef.current = file
+    toast.info(`Arquivo "${file.name}" selecionado`)
+
+    // Para arquivos de áudio, informamos que precisaria de um serviço de transcrição
+    setError('Transcrição de arquivos de áudio requer integração com serviço de Speech-to-Text (ex: Google Cloud Speech, Azure Speech). Use a gravação em tempo real ou cole o texto manualmente.')
+    toast.warning('Upload de arquivos ainda não implementado com API real')
+  }
+
+  const analyzeTranscription = async (text: string) => {
+    if (!text.trim()) {
+      toast.error('Nenhum texto para analisar')
+      return
+    }
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      // Chama a API real do Gemini via proxy
+      const response = await fetch('/_spark/llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `Você é um assistente jurídico especializado em análise de audiências e reuniões.
+Analise a transcrição fornecida e retorne um JSON com:
+- summary: resumo executivo em 2-3 frases
+- actionItems: array de 3-5 itens de ação específicos identificados
+
+Responda APENAS com JSON válido, sem texto adicional.`
+            },
+            {
+              role: 'user',
+              content: `Analise esta transcrição de audiência/reunião jurídica:\n\n${text}`
+            }
+          ],
+          temperature: 0.3
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const content = data.response || data.choices?.[0]?.message?.content || ''
+
+      // Parse do JSON da resposta
+      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const analysis: TranscriptionAnalysis = JSON.parse(jsonMatch[0])
+        setSummary(analysis.summary || 'Não foi possível gerar sumário')
+        setActionItems(analysis.actionItems || [])
+        toast.success('Análise concluída com IA Gemini')
+      } else {
+        // Se não retornou JSON, usa o texto como sumário
+        setSummary(content)
+        setActionItems([])
+        toast.success('Análise concluída')
+      }
+    } catch (err) {
+      console.error('Erro ao analisar transcrição:', err)
+      setError('Erro ao analisar com IA. Verifique a conexão.')
+      toast.error('Erro na análise com IA')
+    } finally {
+      setProcessing(false)
     }
   }
 
-  const handleProcessAudio = () => {
-    setProcessing(true)
-
-    setTimeout(() => {
-      const mockTranscription = `Audiência de conciliação realizada em ${new Date().toLocaleDateString('pt-BR')}. Presentes: Autor, Réu e seus respectivos advogados.
-
-Primeira proposta: Réu oferece pagamento de R$ 10.000,00 em parcela única.
-Autor recusa a proposta inicial.
-
-Segunda proposta: Réu aumenta para R$ 15.000,00, sendo R$ 5.000,00 à vista e R$ 10.000,00 em 10 parcelas.
-Autor solicita prazo para análise.
-
-Juiz suspende audiência e concede prazo de 5 dias para manifestação das partes sobre a proposta.`
-
-      const mockSummary = 'Audiência de conciliação com duas propostas apresentadas pelo réu. Primeira: R$ 10.000 em parcela única (recusada). Segunda: R$ 15.000 parcelados (análise pendente). Prazo: 5 dias para manifestação.'
-
-      const mockActions = [
-        'Analisar proposta de R$ 15.000,00 com o cliente',
-        'Preparar manifestação no prazo de 5 dias',
-        'Calcular benefícios da proposta vs. sentença estimada',
-        'Agendar reunião com cliente para decisão'
-      ]
-
-      setTranscription(mockTranscription)
-      setSummary(mockSummary)
-      setActionItems(mockActions)
-      setProcessing(false)
-      toast.success('Transcrição e análise concluídas')
-    }, 2500)
+  // Permite análise manual de texto colado
+  const handleManualAnalysis = () => {
+    if (transcription.trim()) {
+      analyzeTranscription(transcription.trim())
+    } else {
+      toast.error('Cole ou digite um texto para analisar')
+    }
   }
 
   return (
@@ -72,15 +188,29 @@ Juiz suspende audiência e concede prazo de 5 dias para manifestação das parte
       <div>
         <h1 className="text-3xl font-bold text-foreground">Transcrição de Áudio</h1>
         <p className="text-muted-foreground mt-1">
-          Transcreva audiências e reuniões com análise inteligente
+          Transcreva audiências e reuniões com análise inteligente (IA Real - Gemini)
         </p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
+          <WarningCircle className="w-5 h-5 flex-shrink-0" />
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
+      {!isSpeechSupported && (
+        <div className="flex items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400">
+          <WarningCircle className="w-5 h-5 flex-shrink-0" />
+          <p className="text-sm">Gravação em tempo real não disponível neste navegador. Cole o texto manualmente na área de transcrição.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Captura de Áudio</CardTitle>
-            <CardDescription>Grave em tempo real ou envie arquivo</CardDescription>
+            <CardDescription>Grave em tempo real ou cole texto</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col items-center gap-4 py-8">
@@ -101,7 +231,7 @@ Juiz suspende audiência e concede prazo de 5 dias para manifestação das parte
                 size="lg"
                 variant={isRecording ? 'destructive' : 'default'}
                 onClick={isRecording ? handleStopRecording : handleStartRecording}
-                disabled={processing}
+                disabled={processing || !isSpeechSupported}
                 className="w-full"
               >
                 {isRecording ? (
@@ -153,32 +283,33 @@ Juiz suspende audiência e concede prazo de 5 dias para manifestação das parte
                 )}
               </CardTitle>
               <CardDescription>
-                Texto convertido do áudio
+                Texto convertido do áudio ou colado manualmente
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {processing ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <Sparkle className="w-16 h-16 text-accent animate-pulse mb-4" weight="fill" />
-                  <p className="text-lg font-medium text-foreground">Processando áudio...</p>
+                  <p className="text-lg font-medium text-foreground">Analisando com IA Gemini...</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Aguarde enquanto transcrevemos e analisamos
+                    Aguarde enquanto processamos o texto
                   </p>
                 </div>
-              ) : transcription ? (
-                <Textarea
-                  value={transcription}
-                  className="min-h-[300px] document-content"
-                  readOnly
-                />
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <MicrophoneStage className="w-16 h-16 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-foreground">Aguardando áudio</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Grave ou envie um arquivo para transcrever
-                  </p>
-                </div>
+                <>
+                  <Textarea
+                    value={transcription}
+                    onChange={(e) => setTranscription(e.target.value)}
+                    className="min-h-[250px] document-content"
+                    placeholder="Cole aqui o texto da audiência ou reunião para análise, ou use a gravação em tempo real..."
+                  />
+                  {transcription && (
+                    <Button onClick={handleManualAnalysis} className="w-full">
+                      <Sparkle className="w-4 h-4 mr-2" />
+                      Analisar com IA
+                    </Button>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

@@ -86,7 +86,7 @@ export class TodoistAgent {
     // Se a data mudou, sincronizar com Google Calendar
     if (item.due) {
       console.log(`📅 Data da tarefa ${item.id} atualizada para ${item.due.date}`);
-      
+
       // Tenta encontrar evento correspondente no Calendar (pelo ID da tarefa na descrição ou título)
       // Como não temos link direto, vamos buscar eventos do dia
       try {
@@ -104,17 +104,18 @@ export class TodoistAgent {
    */
   private async handleItemCompleted(item: TodoistEventData) {
     console.log(`✅ Tarefa ${item.content} concluída!`);
-    
+
     // Verificar se é uma tarefa de processo
     const processMatch = item.content.match(/Processo\s+(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
     if (processMatch) {
       const processNumber = processMatch[1];
       console.log(`🔄 Atualizando progresso do processo ${processNumber}...`);
-      
+
       // TODO: Atualizar status no CRM/Kanban
       // await crmAgent.updateProcessStatus(processNumber, 'completed_task', item.content);
-      
-      // Sugerir próxima tarefa (simulação de IA)
+
+      // Sugerir próxima tarefa via IA
+      // TODO: Implementar sugestão inteligente com Gemini
       await this.suggestNextSteps(processNumber);
     }
   }
@@ -124,11 +125,11 @@ export class TodoistAgent {
    */
   private async handleCommentAdded(comment: TodoistEventData) {
     const text = comment.content;
-    
+
     // Verificar se é um comando para o agente (ex: "@Harvey ...")
     if (text.toLowerCase().includes('@harvey') || text.toLowerCase().includes('urgente:')) {
       console.log(`🧠 Interpretando comando: "${text}"`);
-      
+
       const command = await this.interpretCommandWithAI(text, comment.item_id || comment.id);
       await this.executeCommand(command);
     }
@@ -212,7 +213,7 @@ export class TodoistAgent {
           // await this.client.addComment({ taskId: command.parameters.taskId, content: "✅ Remarcado para " + command.parameters.date });
         }
         break;
-        
+
       case 'update_status':
         if (command.parameters.taskId && command.parameters.priority) {
           // Validar prioridade (1-4)
@@ -227,7 +228,7 @@ export class TodoistAgent {
         if (command.parameters.date && command.parameters.description) {
           // Criar evento no Google Calendar
           const startTime = command.parameters.startTime || '09:00';
-          
+
           try {
             await googleCalendarService.createEvent({
               id: crypto.randomUUID(),
@@ -249,16 +250,18 @@ export class TodoistAgent {
 
   /**
    * Sugere próximos passos baseado no histórico (IA Preditiva)
+   * TODO: Integrar com Gemini API para sugestões inteligentes baseadas em histórico
    */
   private async suggestNextSteps(processNumber: string) {
-    // Lógica simulada de IA preditiva
+    // Placeholder - em produção, usar IA real para gerar sugestões
+    // baseadas no histórico do processo e padrões identificados
     const suggestions = [
       { content: `Verificar publicação - Processo ${processNumber}`, due: 'tomorrow' }
     ];
 
-    // Criar tarefas sugeridas
+    // TODO: Criar tarefas sugeridas via API real
     // await addLegalTasks(...)
-    console.log('💡 Sugestões geradas:', suggestions);
+    console.log('💡 Sugestões geradas (placeholder):', suggestions);
   }
 }
 

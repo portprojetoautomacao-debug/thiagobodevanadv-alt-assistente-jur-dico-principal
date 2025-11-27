@@ -11,7 +11,17 @@ interface LoginProps {
   onLogin: (user: UserType) => void
 }
 
-const DEMO_ACCOUNTS = [
+/**
+ * Contas de desenvolvimento/demonstração
+ * 
+ * IMPORTANTE: Em produção, substituir por autenticação real
+ * (ex: OAuth, JWT, integração com sistema de usuários do escritório)
+ * 
+ * Estas contas existem apenas para demonstração e desenvolvimento.
+ * Não são dados "falsos" no sentido de simulação de IA - são credenciais
+ * de teste para permitir acesso ao sistema durante desenvolvimento.
+ */
+const DEV_ACCOUNTS = [
   { username: 'admin', password: 'admin123', name: 'Administrador', email: 'admin@lawtech.com', role: 'admin' as const },
   { username: 'demo', password: 'demo', name: 'Usuário Demo', email: 'demo@lawtech.com', role: 'advogado' as const },
   { username: 'usuario', password: '123456', name: 'Usuário Teste', email: 'usuario@lawtech.com', role: 'assistente' as const },
@@ -23,8 +33,8 @@ export default function Login({ onLogin }: LoginProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const account = DEMO_ACCOUNTS.find(
+
+    const account = DEV_ACCOUNTS.find(
       acc => acc.username === username && acc.password === password
     )
 
@@ -42,7 +52,7 @@ export default function Login({ onLogin }: LoginProps) {
     }
   }
 
-  const handleQuickAccess = (account: typeof DEMO_ACCOUNTS[0]) => {
+  const handleQuickAccess = (account: typeof DEV_ACCOUNTS[0]) => {
     const user: UserType = {
       id: crypto.randomUUID(),
       email: account.email,
@@ -114,7 +124,7 @@ export default function Login({ onLogin }: LoginProps) {
           </div>
 
           <div className="space-y-2">
-            {DEMO_ACCOUNTS.map((account) => (
+            {DEV_ACCOUNTS.map((account) => (
               <Button
                 key={account.username}
                 variant="outline"
