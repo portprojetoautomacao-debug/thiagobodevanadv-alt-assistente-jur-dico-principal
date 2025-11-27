@@ -88,7 +88,7 @@ export default function DJENPublicationsWidget({
   const [expanded, setExpanded] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [autoRegistering, setAutoRegistering] = useState(false)
-  
+
   // KV storage para processos e expedientes
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
@@ -181,8 +181,8 @@ export default function DJENPublicationsWidget({
   const isAlreadyRegistered = useCallback((pub: DJENPublication) => {
     if (!pub.numeroProcesso) return false
     const currentProcesses = processes || []
-    return currentProcesses.some(p => 
-      p.numeroCNJ === pub.numeroProcesso || 
+    return currentProcesses.some(p =>
+      p.numeroCNJ === pub.numeroProcesso ||
       p.numeroCNJ.replace(/\D/g, '') === pub.numeroProcesso?.replace(/\D/g, '')
     )
   }, [processes])
@@ -205,7 +205,7 @@ export default function DJENPublicationsWidget({
     }
 
     const now = new Date().toISOString()
-    
+
     // Cria o novo processo baseado na publicação
     const newProcess: Process = {
       id: crypto.randomUUID(),
@@ -262,8 +262,8 @@ export default function DJENPublicationsWidget({
   // Cadastra TODAS as publicações não registradas automaticamente
   const handleAutoRegisterAll = async () => {
     setAutoRegistering(true)
-    
-    const unregisteredPubs = publications.filter(pub => 
+
+    const unregisteredPubs = publications.filter(pub =>
       pub.numeroProcesso && !isAlreadyRegistered(pub)
     )
 
@@ -284,7 +284,7 @@ export default function DJENPublicationsWidget({
       if (!pub.numeroProcesso) continue
 
       const processId = crypto.randomUUID()
-      
+
       newProcesses.push({
         id: processId,
         numeroCNJ: pub.numeroProcesso,
@@ -665,7 +665,7 @@ export default function DJENPublicationsWidget({
                   </Tooltip>
                 </TooltipProvider>
               )}
-              
+
               {onViewAll && (
                 <Button
                   variant="ghost"

@@ -9,10 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
-import { CalendarDots, Plus, CaretLeft, CaretRight, GoogleLogo, CloudArrowDown, CloudArrowUp, Link as LinkIcon, Trash } from '@phosphor-icons/react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CalendarDots, Plus, CaretLeft, CaretRight, GoogleLogo, CloudArrowDown, CloudArrowUp, Link as LinkIcon, Trash, Warning, Info } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { googleCalendarService } from '@/lib/google-calendar-service'
 import type { Appointment } from '@/types'
+
+// Verificar se as credenciais do Google estão configuradas
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
+const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -132,11 +138,11 @@ export default function Calendar() {
     setIsSyncing(true)
     try {
       toast.info('Sincronização automática em desenvolvimento')
-      
+
       // const startOfMonth = new Date(year, month, 1)
       // const endOfMonth = new Date(year, month + 1, 0)
       // const googleEvents = await googleCalendarService.syncEvents(startOfMonth, endOfMonth)
-      
+
       // const mergedAppointments = [...(appointments || [])]
       // let newCount = 0
 
@@ -146,7 +152,7 @@ export default function Calendar() {
       //     apt.time === event.time && 
       //     apt.title === event.title
       //   )
-        
+
       //   if (!exists) {
       //     mergedAppointments.push(event)
       //     newCount++
@@ -171,7 +177,7 @@ export default function Calendar() {
     setIsSyncing(true)
     try {
       let syncedCount = 0
-      
+
       for (const appointment of appointments || []) {
         const result = await googleCalendarService.createEvent(appointment)
         if (result) {
@@ -189,11 +195,11 @@ export default function Calendar() {
 
   const handleDeleteAppointment = async (appointment: Appointment) => {
     setAppointments((current) => (current || []).filter(apt => apt.id !== appointment.id))
-    
+
     if (syncEnabled && isGoogleConnected && appointment.id) {
       await googleCalendarService.deleteEvent(appointment.id)
     }
-    
+
     toast.success('Compromisso removido')
     setShowDetailsDialog(false)
   }
@@ -323,73 +329,99 @@ export default function Calendar() {
               <div>
                 <CardTitle>Integração Google Calendar</CardTitle>
                 <CardDescription>
-                  {isGoogleConnected 
-                    ? 'Conectado - seus eventos podem ser sincronizados'
-                    : 'Conecte sua conta do Google para sincronizar eventos'}
+                  {!isGoogleConfigured
+                    ? 'Configure as credenciais do Google para habilitar a sincronização'
+                    : isGoogleConnected
+                      ? 'Conectado - seus eventos podem ser sincronizados'
+                      : 'Conecte sua conta do Google para sincronizar eventos'}
                 </CardDescription>
               </div>
             </div>
-            <Badge variant={isGoogleConnected ? 'default' : 'secondary'}>
-              {isGoogleConnected ? 'Conectado' : 'Desconectado'}
+            <Badge variant={isGoogleConnected ? 'default' : isGoogleConfigured ? 'secondary' : 'destructive'}>
+              {isGoogleConnected ? 'Conectado' : isGoogleConfigured ? 'Desconectado' : 'Não Configurado'}
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="sync-toggle" className="text-sm font-medium">
-                Sincronização Automática
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Novos eventos serão enviados automaticamente ao Google Calendar
-              </p>
-            </div>
-            <Switch
-              id="sync-toggle"
-              checked={syncEnabled}
-              onCheckedChange={handleToggleSync}
-              disabled={!isGoogleConnected}
-            />
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {!isGoogleConnected && (
-              <Button onClick={handleConnectGoogle} variant="default">
-                <GoogleLogo className="w-4 h-4 mr-2" />
-                Conectar ao Google
-              </Button>
-            )}
-            
-            {isGoogleConnected && (
-              <>
-                <Button 
-                  onClick={handleSyncFromGoogle} 
-                  variant="outline"
-                  disabled={isSyncing}
-                >
-                  <CloudArrowDown className="w-4 h-4 mr-2" />
-                  {isSyncing ? 'Sincronizando...' : 'Importar do Google'}
-                </Button>
-                
-                <Button 
-                  onClick={handleSyncToGoogle} 
-                  variant="outline"
-                  disabled={isSyncing}
-                >
-                  <CloudArrowUp className="w-4 h-4 mr-2" />
-                  {isSyncing ? 'Sincronizando...' : 'Enviar ao Google'}
-                </Button>
+          {!isGoogleConfigured ? (
+            <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+              <Warning className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <strong>Configuração necessária</strong>
+                <p className="mt-2 text-sm">
+                  Para usar a integração com Google Calendar, configure as seguintes variáveis no arquivo <code>.env</code>:
+                </p>
+                <ul className="mt-2 text-sm list-disc list-inside space-y-1">
+                  <li><code>VITE_GOOGLE_CLIENT_ID</code> {GOOGLE_CLIENT_ID ? '✓ Configurado' : '✗ Faltando'}</li>
+                  <li><code>VITE_GOOGLE_API_KEY</code> {GOOGLE_API_KEY ? '✓ Configurado' : '✗ Faltando'}</li>
+                </ul>
+                <p className="mt-2 text-sm">
+                  Obtenha as credenciais em: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Google Cloud Console</a>
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Veja <code>OAUTH_SETUP.md</code> para instruções detalhadas.
+                </p>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="sync-toggle" className="text-sm font-medium">
+                    Sincronização Automática
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Novos eventos serão enviados automaticamente ao Google Calendar
+                  </p>
+                </div>
+                <Switch
+                  id="sync-toggle"
+                  checked={syncEnabled}
+                  onCheckedChange={handleToggleSync}
+                  disabled={!isGoogleConnected}
+                />
+              </div>
 
-                <Button 
-                  onClick={() => window.open('https://calendar.google.com', '_blank')} 
-                  variant="outline"
-                >
-                  <LinkIcon className="w-4 h-4 mr-2" />
-                  Abrir Google Calendar
-                </Button>
-              </>
-            )}
-          </div>
+              <div className="flex flex-wrap gap-2">
+                {!isGoogleConnected && (
+                  <Button onClick={handleConnectGoogle} variant="default">
+                    <GoogleLogo className="w-4 h-4 mr-2" />
+                    Conectar ao Google
+                  </Button>
+                )}
+
+                {isGoogleConnected && (
+                  <>
+                    <Button
+                      onClick={handleSyncFromGoogle}
+                      variant="outline"
+                      disabled={isSyncing}
+                    >
+                      <CloudArrowDown className="w-4 h-4 mr-2" />
+                      {isSyncing ? 'Sincronizando...' : 'Importar do Google'}
+                    </Button>
+
+                    <Button
+                      onClick={handleSyncToGoogle}
+                      variant="outline"
+                      disabled={isSyncing}
+                    >
+                      <CloudArrowUp className="w-4 h-4 mr-2" />
+                      {isSyncing ? 'Sincronizando...' : 'Enviar ao Google'}
+                    </Button>
+
+                    <Button
+                      onClick={() => window.open('https://calendar.google.com', '_blank')}
+                      variant="outline"
+                    >
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Abrir Google Calendar
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -420,13 +452,12 @@ export default function Calendar() {
               return (
                 <div
                   key={idx}
-                  className={`min-h-24 p-2 border rounded-lg ${
-                    day === null
-                      ? 'bg-muted/30'
-                      : isToday(day)
+                  className={`min-h-24 p-2 border rounded-lg ${day === null
+                    ? 'bg-muted/30'
+                    : isToday(day)
                       ? 'bg-primary/10 border-primary'
                       : 'bg-card hover:bg-muted/50'
-                  }`}
+                    }`}
                 >
                   {day && (
                     <>
@@ -435,8 +466,8 @@ export default function Calendar() {
                       </div>
                       <div className="space-y-1">
                         {dayAppointments.slice(0, 2).map((apt) => (
-                          <div 
-                            key={apt.id} 
+                          <div
+                            key={apt.id}
                             className={`text-xs p-1 rounded border ${EVENT_COLORS[apt.type]} truncate cursor-pointer hover:opacity-80`}
                             onClick={() => handleViewDetails(apt)}
                           >
@@ -477,8 +508,8 @@ export default function Calendar() {
                 .sort((a, b) => new Date(a.date + 'T' + a.time).getTime() - new Date(b.date + 'T' + b.time).getTime())
                 .slice(0, 5)
                 .map((apt) => (
-                  <div 
-                    key={apt.id} 
+                  <div
+                    key={apt.id}
                     className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => handleViewDetails(apt)}
                   >
@@ -516,15 +547,15 @@ export default function Calendar() {
                 <Label className="text-xs text-muted-foreground">Título</Label>
                 <p className="text-lg font-semibold">{selectedAppointment.title}</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-xs text-muted-foreground">Data</Label>
                   <p className="font-medium">
-                    {new Date(selectedAppointment.date).toLocaleDateString('pt-BR', { 
-                      day: '2-digit', 
-                      month: 'long', 
-                      year: 'numeric' 
+                    {new Date(selectedAppointment.date).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric'
                     })}
                   </p>
                 </div>
@@ -558,8 +589,8 @@ export default function Calendar() {
               )}
 
               <div className="flex justify-between pt-4 border-t">
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={() => handleDeleteAppointment(selectedAppointment)}
                 >
                   <Trash className="w-4 h-4 mr-2" />

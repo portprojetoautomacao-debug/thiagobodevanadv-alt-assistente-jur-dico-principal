@@ -8,20 +8,27 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  FileText, 
-  GoogleLogo, 
-  Plus, 
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  FileText,
+  GoogleLogo,
+  Plus,
   ArrowsClockwise,
   Trash,
   Eye,
   PencilSimple,
   DownloadSimple,
-  Clock
+  Clock,
+  Warning
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { googleDocsService } from '@/lib/google-docs-service'
 import type { Minuta, Process } from '@/types'
+
+// Verificar se as credenciais do Google estão configuradas
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
+const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY
 
 export default function MinutasManager() {
   const [minutas, setMinutas] = useKV<Minuta[]>('minutas', [])
@@ -30,7 +37,7 @@ export default function MinutasManager() {
   const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null)
   const [isSyncing, setIsSyncing] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     titulo: '',
     processId: '_none',
@@ -76,7 +83,7 @@ export default function MinutasManager() {
     }
 
     setMinutas((current = []) => [...current, novaMinuta])
-    
+
     setFormData({
       titulo: '',
       processId: '_none',
@@ -84,7 +91,7 @@ export default function MinutasManager() {
       conteudo: '',
     })
     setIsDialogOpen(false)
-    
+
     toast.success('Minuta criada com sucesso!')
   }
 
@@ -98,13 +105,13 @@ export default function MinutasManager() {
       current.map((m) =>
         m.id === editingMinuta.id
           ? {
-              ...m,
-              titulo: formData.titulo,
-              processId: formData.processId !== '_none' ? formData.processId : undefined,
-              tipo: formData.tipo,
-              conteudo: formData.conteudo,
-              atualizadoEm: new Date().toISOString(),
-            }
+            ...m,
+            titulo: formData.titulo,
+            processId: formData.processId !== '_none' ? formData.processId : undefined,
+            tipo: formData.tipo,
+            conteudo: formData.conteudo,
+            atualizadoEm: new Date().toISOString(),
+          }
           : m
       )
     )
@@ -146,21 +153,21 @@ export default function MinutasManager() {
 
     try {
       const result = await googleDocsService.createDocument(minuta)
-      
+
       if (result) {
         setMinutas((current = []) =>
           current.map((m) =>
             m.id === minuta.id
               ? {
-                  ...m,
-                  googleDocsId: result.docId,
-                  googleDocsUrl: result.url,
-                  ultimaSincronizacao: new Date().toISOString(),
-                }
+                ...m,
+                googleDocsId: result.docId,
+                googleDocsUrl: result.url,
+                ultimaSincronizacao: new Date().toISOString(),
+              }
               : m
           )
         )
-        
+
         googleDocsService.openDocument(result.url)
         toast.success('Documento criado no Google Docs!')
       } else {
@@ -179,20 +186,20 @@ export default function MinutasManager() {
     }
 
     setIsSyncing(minuta.id)
-    
+
     try {
       const content = await googleDocsService.syncDocument(minuta.googleDocsId)
-      
+
       if (content !== null) {
         setMinutas((current = []) =>
           current.map((m) =>
             m.id === minuta.id
               ? {
-                  ...m,
-                  conteudo: content,
-                  atualizadoEm: new Date().toISOString(),
-                  ultimaSincronizacao: new Date().toISOString(),
-                }
+                ...m,
+                conteudo: content,
+                atualizadoEm: new Date().toISOString(),
+                ultimaSincronizacao: new Date().toISOString(),
+              }
               : m
           )
         )
@@ -265,9 +272,14 @@ export default function MinutasManager() {
             Gerencie suas minutas com sincronização automática no Google Docs
           </p>
         </div>
-        
+
         <div className="flex gap-3">
-          {!isAuthenticated ? (
+          {!isGoogleConfigured ? (
+            <Badge variant="destructive" className="px-4 py-2">
+              <Warning className="mr-2 h-4 w-4" />
+              Google não configurado
+            </Badge>
+          ) : !isAuthenticated ? (
             <Button onClick={handleAuthGoogle} variant="outline">
               <GoogleLogo className="mr-2" weight="bold" />
               Conectar Google Docs
@@ -278,7 +290,7 @@ export default function MinutasManager() {
               Google Conectado
             </Badge>
           )}
-          
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => {
@@ -289,7 +301,7 @@ export default function MinutasManager() {
                 Nova Minuta
               </Button>
             </DialogTrigger>
-            
+
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -299,7 +311,7 @@ export default function MinutasManager() {
                   Preencha os dados da minuta. Você pode abrir no Google Docs depois.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4 mt-4">
                 <div>
                   <Label htmlFor="titulo">Título</Label>
@@ -310,7 +322,7 @@ export default function MinutasManager() {
                     placeholder="Ex: Petição Inicial - Ação de Cobrança"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="processo">Processo (opcional)</Label>
                   <Select
@@ -330,7 +342,7 @@ export default function MinutasManager() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="tipo">Tipo</Label>
                   <Select
@@ -349,7 +361,7 @@ export default function MinutasManager() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="conteudo">Conteúdo</Label>
                   <Textarea
@@ -361,7 +373,7 @@ export default function MinutasManager() {
                     className="font-mono text-sm"
                   />
                 </div>
-                
+
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
@@ -382,6 +394,25 @@ export default function MinutasManager() {
         </div>
       </div>
 
+      {!isGoogleConfigured && (
+        <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+          <Warning className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 dark:text-amber-200">
+            <strong>Configuração Google Docs necessária</strong>
+            <p className="mt-2 text-sm">
+              Para sincronizar minutas com Google Docs, configure as variáveis no arquivo <code>.env</code>:
+            </p>
+            <ul className="mt-2 text-sm list-disc list-inside space-y-1">
+              <li><code>VITE_GOOGLE_CLIENT_ID</code> {GOOGLE_CLIENT_ID ? '✓ Configurado' : '✗ Faltando'}</li>
+              <li><code>VITE_GOOGLE_API_KEY</code> {GOOGLE_API_KEY ? '✓ Configurado' : '✗ Faltando'}</li>
+            </ul>
+            <p className="mt-2 text-sm">
+              Obtenha as credenciais em: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Google Cloud Console</a>
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {(minutas || []).length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -397,7 +428,7 @@ export default function MinutasManager() {
         <div className="grid gap-4">
           {(minutas || []).map((minuta) => {
             const processo = (processes || []).find((p) => p.id === minuta.processId)
-            
+
             return (
               <Card key={minuta.id}>
                 <CardHeader>
@@ -427,14 +458,14 @@ export default function MinutasManager() {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent>
                   <div className="space-y-4">
                     <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg max-h-32 overflow-y-auto">
                       {minuta.conteudo.substring(0, 300)}
                       {minuta.conteudo.length > 300 && '...'}
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock weight="bold" />
                       <span>
@@ -450,7 +481,7 @@ export default function MinutasManager() {
                         </>
                       )}
                     </div>
-                    
+
                     <div className="flex gap-2 flex-wrap">
                       <Button
                         size="sm"
@@ -460,7 +491,7 @@ export default function MinutasManager() {
                         <PencilSimple className="mr-2" weight="bold" />
                         Editar
                       </Button>
-                      
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -470,7 +501,7 @@ export default function MinutasManager() {
                         <GoogleLogo className="mr-2" weight="bold" />
                         {minuta.googleDocsUrl ? 'Abrir no' : 'Criar no'} Google Docs
                       </Button>
-                      
+
                       {minuta.googleDocsId && (
                         <Button
                           size="sm"
@@ -486,7 +517,7 @@ export default function MinutasManager() {
                           Sincronizar
                         </Button>
                       )}
-                      
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -495,7 +526,7 @@ export default function MinutasManager() {
                         <DownloadSimple className="mr-2" weight="bold" />
                         Exportar
                       </Button>
-                      
+
                       <Button
                         size="sm"
                         variant="outline"
