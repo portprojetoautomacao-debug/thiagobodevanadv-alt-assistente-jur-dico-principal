@@ -34,7 +34,7 @@ export async function traceAgentTask<T>(
       'task.type': task.type,
       'task.priority': task.priority,
       'agent.type': agent.type,
-      'agent.autonomy_level': agent.autonomyLevel || 0
+      'agent.autonomy_level': 0
     }
   })
 
