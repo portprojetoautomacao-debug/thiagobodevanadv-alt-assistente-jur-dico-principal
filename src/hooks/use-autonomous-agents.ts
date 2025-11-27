@@ -17,9 +17,9 @@ function getAgentActivity(agent: Agent): string {
 }
 
 // Version flag to force data reset when structure changes
-// INCREMENTADO para v6: força reset de agentes para usar apenas os 15 agentes do agents.ts
-// Remove agentes duplicados/antigos que estavam salvos no KV storage
-const AGENTS_DATA_VERSION = 6
+// INCREMENTADO para v7: habilita 9 agentes essenciais por padrão
+// Inclui: Redação, Pesquisa Juris, Análise Risco, Estratégia Processual
+const AGENTS_DATA_VERSION = 7
 
 // Verifica a versão no localStorage ANTES de inicializar
 // Isso garante que dados antigos sejam limpos imediatamente
