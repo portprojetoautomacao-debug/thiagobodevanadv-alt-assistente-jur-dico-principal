@@ -17,7 +17,6 @@ import {
 
 function getAgentActivity(agent: Agent): string {
   if (agent.status === 'processing') return 'Processando tarefa...'
-  if (agent.status === 'idle' && agent.tasksToday > 0) return `${agent.tasksToday} tarefas concluídas hoje`
   return 'Aguardando tarefas'
 }
 
@@ -157,8 +156,6 @@ export function useAutonomousAgents() {
           a.id === agent.id
             ? {
               ...a,
-              tasksCompleted: a.tasksCompleted + 1,
-              tasksToday: a.tasksToday + 1,
               lastActivity: `Concluído: ${task.type}`,
             }
             : a
@@ -233,7 +230,6 @@ export function useAutonomousAgents() {
         setAgents((current) =>
           (current || []).map(agent => ({
             ...agent,
-            tasksToday: 0
           }))
         )
 
@@ -241,7 +237,6 @@ export function useAutonomousAgents() {
           setAgents((current) =>
             (current || []).map(agent => ({
               ...agent,
-              tasksToday: 0
             }))
           )
         }, 24 * 60 * 60 * 1000)

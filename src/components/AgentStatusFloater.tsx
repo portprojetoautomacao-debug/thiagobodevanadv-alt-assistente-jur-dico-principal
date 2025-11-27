@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  Robot, 
+import {
+  Robot,
   X,
   CaretDown,
   CaretUp,
@@ -18,10 +18,10 @@ export default function AgentStatusFloater() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
 
-  const activeAgents = agents.filter(a => 
+  const activeAgents = agents.filter(a =>
     a.enabled && (a.status === 'active' || a.status === 'processing')
   )
-  
+
   const processingAgents = agents.filter(a => a.currentTask !== undefined)
   const recentActivity = activityLog.slice(0, 3)
 
@@ -133,10 +133,10 @@ export default function AgentStatusFloater() {
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">
-                          Total de tarefas hoje
+                          Agentes ativos
                         </span>
                         <Badge variant="secondary">
-                          {agents.reduce((sum, a) => sum + a.tasksToday, 0)}
+                          {agents.filter(a => a.enabled).length}/{agents.length}
                         </Badge>
                       </div>
                     </div>
@@ -148,7 +148,7 @@ export default function AgentStatusFloater() {
                 <div className="flex items-center justify-between text-xs pt-2 border-t">
                   <span className="text-muted-foreground">Clique para ver detalhes</span>
                   <Badge variant="secondary" className="text-xs">
-                    {agents.reduce((sum, a) => sum + a.tasksToday, 0)} hoje
+                    {agents.filter(a => a.enabled).length} ativos
                   </Badge>
                 </div>
               )}
