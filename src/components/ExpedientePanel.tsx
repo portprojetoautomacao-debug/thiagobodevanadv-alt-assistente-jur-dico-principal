@@ -6,10 +6,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
-import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash, CheckCircle, Robot } from '@phosphor-icons/react'
+import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash, CheckCircle, Robot, CalendarDots } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import type { Expediente } from '@/types'
+import type { Expediente, Appointment } from '@/types'
 import type { AgentTask } from '@/lib/agents'
+import { createLocalAppointmentFromAnalysis, syncDeadlineToGoogleCalendar, type IntimationAnalysisResult } from '@/lib/deadline-calendar-integration'
 import {
   Dialog,
   DialogContent,
@@ -158,6 +159,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
 
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
+  const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
@@ -170,6 +172,7 @@ export default function ExpedientePanel() {
   const [autoAnalyzing, setAutoAnalyzing] = useState(false)
   const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 })
   const [tasksCreated, setTasksCreated] = useState(0)
+  const [deadlinesCreated, setDeadlinesCreated] = useState(0)
   const autoAnalysisRanRef = useRef(false)
 
   // Hook dos agentes autônomos para criar tarefas
@@ -325,6 +328,58 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
         setTasksCreated(prev => prev + createdTasks)
       }
 
+      // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
+      if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
+        try {
+          const analysisResult: IntimationAnalysisResult = {
+            summary: analysisData.summary || 'Intimação analisada',
+            deadline: analysisData.deadline,
+            priority: (analysisData.priority?.toLowerCase() || 'média') as 'baixa' | 'média' | 'alta' | 'crítica',
+            nextSteps: analysisData.nextSteps || analysisData.suggestedActions,
+            suggestedAction: analysisData.suggestedActions?.[0],
+            processNumber: exp.numeroProcesso,
+            court: exp.tribunal,
+            documentType: analysisData.documentType || exp.type
+          }
+
+          // Calcular data limite se não estiver presente
+          if (!analysisResult.deadline?.endDate && analysisResult.deadline?.days) {
+            const hoje = new Date()
+            const diasParaAdicionar = analysisResult.deadline.days
+            const dataLimite = new Date(hoje)
+            dataLimite.setDate(dataLimite.getDate() + diasParaAdicionar)
+            analysisResult.deadline.endDate = dataLimite.toISOString()
+          }
+
+          const localAppointment = createLocalAppointmentFromAnalysis(
+            analysisResult,
+            `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
+          )
+
+          if (localAppointment) {
+            // Verificar se já existe
+            const existingAppt = (appointments || []).find(apt =>
+              apt.date === localAppointment.date &&
+              apt.title.includes(exp.numeroProcesso?.substring(0, 15) || '')
+            )
+
+            if (!existingAppt) {
+              setAppointments(current => [...(current || []), localAppointment])
+              setDeadlinesCreated(prev => prev + 1)
+              console.log('[ExpedientePanel] Prazo adicionado ao calendário:', localAppointment.title)
+
+              // Tentar sincronizar com Google Calendar em background
+              syncDeadlineToGoogleCalendar(
+                analysisResult,
+                `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
+              ).catch(err => console.warn('[ExpedientePanel] Sync com Google Calendar falhou:', err))
+            }
+          }
+        } catch (calendarError) {
+          console.warn('[ExpedientePanel] Erro ao criar prazo no calendário:', calendarError)
+        }
+      }
+
       return analyzedExp
     } catch (error) {
       console.error('Erro ao analisar expediente:', error)
@@ -364,12 +419,13 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
     setAutoAnalyzing(false)
     if (analyzed > 0) {
+      const deadlineMsg = deadlinesCreated > 0 ? ` e criou ${deadlinesCreated} prazo(s) na agenda` : ''
       toast.success(
-        `✅ Mrs. Justin-e analisou ${analyzed} intimação(ões) e distribuiu tarefas para os agentes!`,
+        `✅ Mrs. Justin-e analisou ${analyzed} intimação(ões)${deadlineMsg} e distribuiu tarefas para os agentes!`,
         { duration: 5000 }
       )
     }
-  }, [safeExpedientes, setExpedientes, addTask, agents])
+  }, [safeExpedientes, setExpedientes, addTask, agents, appointments, setAppointments])
 
   // Dispara análise automática quando expedientes são carregados
   useEffect(() => {
@@ -679,6 +735,12 @@ Crie o workflow de controladoria para esta tarefa.`
                     <p className="text-xs text-muted-foreground mt-2">
                       <Robot className="w-3 h-3 inline mr-1" />
                       {tasksCreated} tarefa(s) distribuída(s) para agentes
+                      {deadlinesCreated > 0 && (
+                        <span className="ml-2">
+                          <CalendarDots className="w-3 h-3 inline mr-1" />
+                          {deadlinesCreated} prazo(s) na agenda
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>
@@ -702,6 +764,12 @@ Crie o workflow de controladoria para esta tarefa.`
                   <Badge variant="secondary" className="bg-blue-100 text-blue-700">
                     <Robot className="w-3 h-3 mr-1" />
                     {tasksCreated} tarefas na fila dos agentes
+                  </Badge>
+                )}
+                {deadlinesCreated > 0 && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <CalendarDots className="w-3 h-3 mr-1" />
+                    {deadlinesCreated} prazos na agenda
                   </Badge>
                 )}
               </div>
