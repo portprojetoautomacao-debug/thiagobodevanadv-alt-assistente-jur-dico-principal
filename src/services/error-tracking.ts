@@ -97,7 +97,7 @@ export async function initErrorTracking() {
       maxBreadcrumbs: 50,
 
       // Before send hook para filtrar erros
-      beforeSend: (event: Sentry.Event, hint: Sentry.EventHint) => {
+      beforeSend: (event: Sentry.ErrorEvent, hint: Sentry.EventHint) => {
         // Filtrar erros de rede relacionados ao Sentry/GitLab
         if (hint.originalException &&
           hint.originalException instanceof Error &&

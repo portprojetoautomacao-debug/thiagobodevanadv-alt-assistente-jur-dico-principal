@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../vite-env.d.ts" />
 
 /*
@@ -34,10 +35,10 @@ interface ResponseLike {
  */
 export function patchSparkLocalization() {
   if (typeof window === 'undefined') return;
-  
+
   // Intercept console errors to suppress RegisterClientLocalizationsError
   const originalError = console.error;
-  console.error = function(...args: unknown[]) {
+  console.error = function (...args: unknown[]) {
     const firstArg = args[0];
     if (firstArg && typeof firstArg === 'object' && 'name' in firstArg) {
       if (firstArg.name === 'RegisterClientLocalizationsError') {
@@ -53,7 +54,7 @@ export function patchFileReader() {
   if (typeof window === 'undefined') return;
 
   const originalReadAsText = FileReader.prototype.readAsText;
-  FileReader.prototype.readAsText = function(blob, encoding) {
+  FileReader.prototype.readAsText = function (blob, encoding) {
     if (!(blob instanceof Blob)) {
       console.warn('FileReader.readAsText called with non-Blob argument:', blob);
       // Evita o crash chamando o callback de erro ou apenas retornando
@@ -70,13 +71,13 @@ export function patchFileReader() {
 
 export function applySparkClientFixes() {
   if (typeof window === 'undefined') return;
-  
+
   // Apply localization patch first
   patchSparkLocalization();
-  
+
   // Apply FileReader patch to prevent crashes
   patchFileReader();
-  
+
   const w = window;
   // if (!w.spark?.kv) return; // REMOVIDO: Não podemos depender de w.spark existir
 
@@ -87,7 +88,7 @@ export function applySparkClientFixes() {
       // @ts-expect-error - Spark types are defined in vite-env.d.ts
       w.spark = {} as any;
     }
-    
+
     // @ts-expect-error - Spark types are defined in vite-env.d.ts
     if (!w.spark.kv) {
       // @ts-expect-error - Spark types are defined in vite-env.d.ts
