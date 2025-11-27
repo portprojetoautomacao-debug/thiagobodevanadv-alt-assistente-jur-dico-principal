@@ -10,14 +10,14 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { SafeLogger } from './lib/safe-logger';
-import { rateLimitMiddleware, apiRateLimiter } from './lib/rate-limit';
-import { requireAuth, sendAuthError } from './lib/auth';
-import { validateProcessQueueRequest, validateProcessTaskRequest } from './lib/validation';
-import { withErrorHandler, addCorsHeaders, handleOptions, sendSuccess, AppError, handleError } from './lib/error-handler';
-import { sparkCircuitBreaker, withCircuitBreaker } from './lib/circuit-breaker';
-import { sparkCache, cachedOperation } from './lib/cache';
-import { withRetry, sparkRetryConfig } from './lib/retry';
+import { SafeLogger } from './lib/safe-logger.js';
+import { rateLimitMiddleware, apiRateLimiter } from './lib/rate-limit.js';
+import { requireAuth, sendAuthError } from './lib/auth.js';
+import { validateProcessQueueRequest, validateProcessTaskRequest } from './lib/validation.js';
+import { withErrorHandler, addCorsHeaders, handleOptions, sendSuccess, AppError, handleError } from './lib/error-handler.js';
+import { sparkCircuitBreaker, withCircuitBreaker } from './lib/circuit-breaker.js';
+import { sparkCache, cachedOperation } from './lib/cache.js';
+import { withRetry, sparkRetryConfig } from './lib/retry.js';
 
 const logger = new SafeLogger('AgentsAPI');
 
@@ -105,7 +105,7 @@ interface Agent {
 function validateAgentTask(task: unknown): task is AgentTask {
   if (!task || typeof task !== 'object') return false
   const t = task as Record<string, unknown>
-  
+
   return !!(
     typeof t.id === 'string' &&
     typeof t.agentId === 'string' &&
@@ -120,7 +120,7 @@ function validateAgentTask(task: unknown): task is AgentTask {
 function validateAgent(agent: unknown): agent is Agent {
   if (!agent || typeof agent !== 'object') return false
   const a = agent as Record<string, unknown>
-  
+
   return !!(
     typeof a.id === 'string' &&
     typeof a.name === 'string' &&
@@ -175,57 +175,57 @@ Retorne JSON com: messageText, tone, channels, urgency.`,
 
 function getSystemPrompt(agentType: AgentType): string {
   const prompt = SYSTEM_PROMPTS[agentType]
-  
+
   if (!prompt) {
     logger.warn(`System prompt not found for agent type: ${agentType}`)
     return 'Você é um assistente jurídico inteligente.'
   }
-  
+
   return prompt
 }
 
 // ✨ Prompts de usuário com enum keys
 const USER_PROMPTS: Record<AgentTaskType, (data: string) => string> = {
-  [AgentTaskType.ANALYZE_DOCUMENT]: (data) => 
+  [AgentTaskType.ANALYZE_DOCUMENT]: (data) =>
     `Analise o seguinte documento jurídico e retorne JSON estruturado:\n\n${data}\n\nRetorne: summary, extractedData, suggestedActions, deadlines, confidence.`,
-  
-  [AgentTaskType.MONITOR_DJEN]: (data) => 
+
+  [AgentTaskType.MONITOR_DJEN]: (data) =>
     `Verifique publicações no DJEN/DataJud para:\n\n${data}\n\nRetorne JSON: newIntimations (array), checked, tribunaisVerificados, nextCheck.`,
-  
-  [AgentTaskType.CALCULATE_DEADLINE]: (data) => 
+
+  [AgentTaskType.CALCULATE_DEADLINE]: (data) =>
     `Calcule prazo processual:\n\n${data}\n\nRetorne JSON: deadline (ISO), businessDays, reasoning (array), holidays, alerts.`,
-  
-  [AgentTaskType.DRAFT_PETITION]: (data) => 
+
+  [AgentTaskType.DRAFT_PETITION]: (data) =>
     `Redija peça processual:\n\n${data}\n\nRetorne JSON: draft (texto completo), confidence, needsReview, suggestions, metadata.`,
-  
-  [AgentTaskType.CHECK_DATAJUD]: (data) => 
+
+  [AgentTaskType.CHECK_DATAJUD]: (data) =>
     `Consulte DataJud:\n\n${data}\n\nRetorne JSON: processosEncontrados, ultimaAtualizacao, movimentacoes, status, partes.`,
-  
-  [AgentTaskType.ORGANIZE_FILES]: (data) => 
+
+  [AgentTaskType.ORGANIZE_FILES]: (data) =>
     `Organize arquivos:\n\n${data}\n\nRetorne JSON: filesOrganized, categoriesCreated, duplicatesFound, spaceSaved.`,
-  
-  [AgentTaskType.RESEARCH_PRECEDENTS]: (data) => 
+
+  [AgentTaskType.RESEARCH_PRECEDENTS]: (data) =>
     `Pesquise precedentes:\n\n${data}\n\nRetorne JSON: precedentsFound, relevantCases, thematicAnalysis, recommendation.`,
-  
-  [AgentTaskType.RISK_ANALYSIS]: (data) => 
+
+  [AgentTaskType.RISK_ANALYSIS]: (data) =>
     `Análise de risco:\n\n${data}\n\nRetorne JSON: riskLevel, riskScore, factors, recommendations, probabilitySuccess.`,
-  
-  [AgentTaskType.CONTRACT_REVIEW]: (data) => 
+
+  [AgentTaskType.CONTRACT_REVIEW]: (data) =>
     `Revise contrato:\n\n${data}\n\nRetorne JSON: contractAnalysis, findings, compliance, riskAssessment.`,
-  
-  [AgentTaskType.CLIENT_COMMUNICATION]: (data) => 
+
+  [AgentTaskType.CLIENT_COMMUNICATION]: (data) =>
     `Comunique ao cliente:\n\n${data}\n\nRetorne JSON: messageGenerated, template, tone, urgency, channels.`,
-  
-  [AgentTaskType.BILLING_ANALYSIS]: (data) => 
+
+  [AgentTaskType.BILLING_ANALYSIS]: (data) =>
     `Analise faturamento:\n\n${data}\n\nRetorne JSON: periodAnalyzed, totalBilled, pendingInvoices, insights.`,
-  
-  [AgentTaskType.CASE_STRATEGY]: (data) => 
+
+  [AgentTaskType.CASE_STRATEGY]: (data) =>
     `Estratégia para caso:\n\n${data}\n\nRetorne JSON: strategyAnalysis, recommendedActions, successProbability.`,
-  
-  [AgentTaskType.LEGAL_TRANSLATION]: (data) => 
+
+  [AgentTaskType.LEGAL_TRANSLATION]: (data) =>
     `Simplifique texto jurídico:\n\n${data}\n\nRetorne JSON: translationCompleted, simplifiedText, keyTermsGlossary.`,
-  
-  [AgentTaskType.COMPLIANCE_CHECK]: (data) => 
+
+  [AgentTaskType.COMPLIANCE_CHECK]: (data) =>
     `Verifique compliance:\n\n${data}\n\nRetorne JSON: complianceStatus, checksPerformed, violations, recommendations.`,
 };
 
@@ -233,18 +233,18 @@ function getUserPrompt(task: AgentTask): string {
   const data = task.data
   const taskData = JSON.stringify(data, null, 2)
   const promptGenerator = USER_PROMPTS[task.type]
-  
+
   if (!promptGenerator) {
     logger.warn(`User prompt generator not found for task type: ${task.type}`)
     return `Processe:\n\n${taskData}`
   }
-  
+
   return promptGenerator(taskData)
 }
 
 async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<string, unknown>> {
   const startTime = Date.now()
-  
+
   // Validar entrada
   if (!validateAgentTask(task)) {
     const error = new AppError('Invalid agent task structure', 'VALIDATION_FAILED', 400)
@@ -304,11 +304,11 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
         throw new AppError(`Spark LLM error: ${sparkResponse.result.statusText}`, 'EXTERNAL_SERVICE_ERROR', 500)
       }
 
-      const sparkData = await sparkResponse.result.json() as { 
-        choices?: Array<{ message?: { content?: string } }>, 
-        usage?: { total_tokens?: number } 
+      const sparkData = await sparkResponse.result.json() as {
+        choices?: Array<{ message?: { content?: string } }>,
+        usage?: { total_tokens?: number }
       };
-      
+
       const aiContent = sparkData.choices?.[0]?.message?.content || ''
 
       if (!aiContent) {
@@ -348,7 +348,7 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
   } catch (error) {
     const processingTimeMs = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : String(error)
-    
+
     logger.error('Task processing failed', error, {
       taskId: task.id,
       agentId: agent.id,
@@ -740,9 +740,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
       }
 
-      const { task, agent } = req.body as { 
-        task: AgentTask; 
-        agent: Agent 
+      const { task, agent } = req.body as {
+        task: AgentTask;
+        agent: Agent
       }
 
       const result = await processTaskWithAI(task, agent)
@@ -758,7 +758,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Invalid action. Use: process-queue or process-task',
       timestamp: new Date().toISOString()
     })
