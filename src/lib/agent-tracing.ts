@@ -33,7 +33,8 @@ export async function traceAgentTask<T>(
       'task.id': task.id,
       'task.type': task.type,
       'task.priority': task.priority,
-      'agent.type': agent.type
+      'agent.type': agent.type,
+      'agent.autonomy_level': agent.autonomyLevel || 0
     }
   })
 
@@ -47,7 +48,7 @@ export async function traceAgentTask<T>(
 
     // Add task completion event
     tracingService.addEvent(span, 'task.completed')
-
+    
     await tracingService.endSpan(span, 'ok')
     return result
 
@@ -89,7 +90,7 @@ export function traceAgentStep(
   attributes?: SpanAttributes
 ): void {
   agentSpan.stepNumber = stepNumber
-
+  
   tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
     'step.description': stepDescription,
     ...attributes
@@ -128,14 +129,14 @@ export async function traceLLMCall<T>(
     return result
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-
+    
     await tracingService.endLLMSpan(llmSpan, {
       promptTokens: promptLength,
       completionTokens: 0,
       success: false,
       error: err
     })
-
+    
     throw error
   }
 }
@@ -319,15 +320,15 @@ export function getAgentMetrics(agentId: string): {
   recentErrors: string[]
 } {
   const traces = tracingService.getTracesByName(`agent.${agentId}`)
-
+  
   const executions = traces.filter(t => t.endTime)
   const successful = executions.filter(t => t.status === 'ok')
   const failed = executions.filter(t => t.status === 'error')
-
+  
   const durations = executions
     .map(t => (t.endTime || 0) - t.startTime)
     .filter(d => d > 0)
-
+  
   const avgDuration = durations.length > 0
     ? durations.reduce((a, b) => a + b, 0) / durations.length
     : 0
@@ -352,8 +353,8 @@ export function getAgentMetrics(agentId: string): {
 
   return {
     totalExecutions: executions.length,
-    successRate: executions.length > 0
-      ? (successful.length / executions.length) * 100
+    successRate: executions.length > 0 
+      ? (successful.length / executions.length) * 100 
       : 0,
     avgDuration,
     toolUsage,
@@ -372,11 +373,11 @@ export function getLLMMetrics(): {
   tokensByModel: Record<string, number>
 } {
   const traces = tracingService.getTracesByName('llm.')
-
+  
   const calls = traces.filter(t => t.endTime)
   const successful = calls.filter(t => t.status === 'ok')
   const failed = calls.filter(t => t.status === 'error')
-
+  
   let totalTokens = 0
   const tokensByModel: Record<string, number> = {}
   const responseTimes: number[] = []
@@ -388,7 +389,7 @@ export function getLLMMetrics(): {
 
     totalTokens += tokens
     tokensByModel[model] = (tokensByModel[model] || 0) + tokens
-
+    
     if (responseTime > 0) {
       responseTimes.push(responseTime)
     }
@@ -402,8 +403,8 @@ export function getLLMMetrics(): {
     totalCalls: calls.length,
     totalTokens,
     avgResponseTime,
-    errorRate: calls.length > 0
-      ? (failed.length / calls.length) * 100
+    errorRate: calls.length > 0 
+      ? (failed.length / calls.length) * 100 
       : 0,
     tokensByModel
   }

@@ -40,14 +40,12 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
-        config-file: ./.github/codeql/codeql-config.yml
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
-      continue-on-error: true
       with:
         category: "/language:${{matrix.language}}"
 
@@ -71,6 +69,7 @@ jobs:
   type-check:
     name: TypeScript Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
 
@@ -90,7 +89,7 @@ jobs:
     - name: Run TypeScript compiler
       run: |
         echo "Running TypeScript type checking..."
-        npx tsc --project tsconfig.build.json --noEmit --pretty || {
+        npx tsc --noEmit --pretty || {
           echo "❌ TypeScript type checking failed"
           echo "Please fix the type errors above"
           exit 1
@@ -170,17 +169,17 @@ jobs:
       run: npm ci
 
     - name: Run ESLint with SARIF output
-      run: |
-        echo "Running ESLint with SARIF formatter..."
-        npm run lint:sarif || {
-          echo "⚠️ ESLint found issues"
-          # Ensure SARIF file exists
-          if [ ! -f "eslint-results.sarif" ]; then
-            echo "Creating empty SARIF file..."
-            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-          fi
-        }
+      id: eslint
+      run: npm run lint:sarif
       continue-on-error: true
+
+    - name: Check if SARIF was generated
+      run: |
+        if [ ! -f "eslint-results.sarif" ]; then
+          echo "❌ SARIF file was not generated - ESLint may have failed"
+          echo "Check ESLint configuration and ensure it can output SARIF format"
+          exit 1
+        fi
 
     - name: Upload SARIF file
       if: always() && hashFiles('eslint-results.sarif') != ''

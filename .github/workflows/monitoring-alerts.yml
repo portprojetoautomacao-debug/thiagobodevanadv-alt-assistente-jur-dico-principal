@@ -46,10 +46,6 @@ jobs:
     name: '🏥 Verificação de Saúde'
     runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'health' || github.event_name == 'schedule'
-    env:
-      PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
-      STAGING_URL: ${{ secrets.STAGING_URL }}
-      UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
 
     strategy:
       matrix:
@@ -69,6 +65,9 @@ jobs:
       run: npm ci
 
     - name: 🏥 Health Check Básico
+      env:
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        STAGING_URL: ${{ secrets.STAGING_URL }}
       run: |
         echo "🏥 Executando health check básico..."
 
@@ -109,6 +108,8 @@ jobs:
         echo "RESPONSE_TIME=$RESPONSE_TIME" >> $GITHUB_ENV
 
     - name: 🔍 Verificação de APIs Críticas
+      env:
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
       run: |
         echo "🔍 Verificando APIs críticas..."
 
@@ -140,8 +141,8 @@ jobs:
 
         # Aqui você pode adicionar verificações específicas do seu banco
         # Por exemplo, verificar se Upstash Redis responde
-        if [[ -n "$UPSTASH_REDIS_REST_URL" ]]; then
-          REDIS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$UPSTASH_REDIS_REST_URL/ping")
+        if [[ -n "${{ secrets.UPSTASH_REDIS_REST_URL }}" ]]; then
+          REDIS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.UPSTASH_REDIS_REST_URL }}/ping")
           if [[ "$REDIS_STATUS" -eq 200 ]]; then
             echo "✅ Redis: OK"
           else
@@ -192,6 +193,8 @@ jobs:
       run: npm ci
 
     - name: 🏃 Lighthouse Performance Audit
+      env:
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
       run: |
         echo "🏃 Executando Lighthouse performance audit..."
 
@@ -302,6 +305,8 @@ jobs:
         fi
 
     - name: 🛡️  Verificação de Headers de Segurança
+      env:
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
       run: |
         echo "🛡️  Verificando headers de segurança..."
 
@@ -333,6 +338,8 @@ jobs:
         fi
 
     - name: 🔐 Verificação de Certificado SSL
+      env:
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
       run: |
         echo "🔐 Verificando certificado SSL..."
 

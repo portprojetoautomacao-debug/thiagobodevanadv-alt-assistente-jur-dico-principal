@@ -2,15 +2,15 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       environment:
-        description: "Deployment environment"
+        description: 'Deployment environment'
         required: true
-        default: "production"
+        default: 'production'
         type: choice
         options:
           - production
@@ -19,7 +19,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: false # Don't cancel deployments in progress
+  cancel-in-progress: false  # Don't cancel deployments in progress
 
 jobs:
   deploy-vercel:
@@ -40,396 +40,302 @@ jobs:
       (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-          cache: "npm"
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            ~/.npm
-          key: ${{ runner.os }}-node-22-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-22-
-            ${{ runner.os }}-node-
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          ~/.npm
+        key: ${{ runner.os }}-node-22-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-22-
+          ${{ runner.os }}-node-
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Run linter
-        run: npm run lint
-        continue-on-error: false
+    - name: Run linter
+      run: npm run lint
+      continue-on-error: false
 
-      - name: Inspect serverless function count
-        run: |
-          echo "## 📊 Serverless Functions Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+    - name: Inspect serverless function count
+      run: |
+        FUNCTION_COUNT=$(find api -type f -name "*.ts" | wc -l)
+        LIMIT=12
+        echo "📊 Serverless functions detected: $FUNCTION_COUNT"
 
-          # Lista todas as funções serverless do Vercel
-          echo "### 📦 Functions Deployed to Vercel" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Function | Description | Size |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|-------------|------|" >> $GITHUB_STEP_SUMMARY
+        if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
+          echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT)."
+          echo "All functions will still build, but consider consolidating endpoints or upgrading your plan."
+        elif [ "$FUNCTION_COUNT" -eq "$LIMIT" ]; then
+          echo "⚠️ At the Hobby plan ceiling ($FUNCTION_COUNT/$LIMIT)"
+        else
+          echo "✅ Function count within Hobby plan ($FUNCTION_COUNT/$LIMIT)"
+        fi
+        
+        # Calcular headroom para o summary, nunca negativo
+        HEADROOM=$((12 - FUNCTION_COUNT))
+        if [ $HEADROOM -lt 0 ]; then
+          HEADROOM=0
+        fi
+        # Adicionar ao summary
+        echo "## 📊 Function Count Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total functions:** $FUNCTION_COUNT/12" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** $([ $FUNCTION_COUNT -gt 12 ] && echo '❌ Over limit' || echo '✅ Within limit')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Remaining:** $HEADROOM" >> $GITHUB_STEP_SUMMARY
 
-          # Auth
-          echo "| \`/api/auth/github\` | GitHub OAuth authentication | ~17.5 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/auth/gitlab\` | GitLab OAuth authentication | ~17.7 kB |" >> $GITHUB_STEP_SUMMARY
-
-          # Core APIs
-          echo "| \`/api/backup\` | Backup/restore data | ~18.2 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/cron\` | Scheduled tasks (DJEN monitor, daily reset) | ~85.6 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/expedientes\` | Court schedules management | ~66.8 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/kv\` | Key-value storage (Upstash Redis) | ~68.5 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/lawyers\` | Lawyers management | ~65.6 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/legal-services\` | DJEN, deadlines, legal utilities | ~33.4 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/status\` | Health check endpoint | ~17.9 kB |" >> $GITHUB_STEP_SUMMARY
-
-          # AI/Agents
-          echo "| \`/api/llm-proxy\` | LLM proxy (Spark/GPT) | ~17.9 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/observability\` | Circuit breakers, traces, health | ~23.1 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/spark-proxy\` | Spark LLM proxy | ~19.4 kB |" >> $GITHUB_STEP_SUMMARY
-
-          # Integrations
-          echo "| \`/api/gitlab-webhook\` | GitLab webhook handler | ~19.2 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/pje\` | PJe integration | ~17.3 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/todoist\` | Todoist integration | ~735.8 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/todoist-webhook\` | Todoist webhook handler | ~1.9 MB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/vercel-webhook\` | Vercel deployment webhook | ~19.8 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/webhook\` | Generic webhook handler | ~19.1 kB |" >> $GITHUB_STEP_SUMMARY
-
-          # Nested routes
-          echo "| \`/api/intimacoes/pendente\` | Pending court notices | ~17.2 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/tarefas/criar\` | Create tasks | ~17.4 kB |" >> $GITHUB_STEP_SUMMARY
-          echo "| \`/api/whatsapp/send\` | WhatsApp messaging | ~17.9 kB |" >> $GITHUB_STEP_SUMMARY
-
-          # Tests (only in dev)
-          echo "| \`/api/todoist-webhook.test\` | Todoist webhook tests | ~252.7 kB |" >> $GITHUB_STEP_SUMMARY
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Contagem
-          FUNCTION_COUNT=$(find api -type f -name "*.ts" ! -name "*.disabled" ! -path "api/_lib/*" ! -name "_*.ts" | wc -l)
-          LIMIT=12
-          echo "### 📈 Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Total functions:** $FUNCTION_COUNT" >> $GITHUB_STEP_SUMMARY
-          echo "- **Vercel Hobby limit:** $LIMIT" >> $GITHUB_STEP_SUMMARY
-
-          if [ "$FUNCTION_COUNT" -gt "$LIMIT" ]; then
-            echo "- **Status:** ⚠️ Over Hobby limit (Pro plan required)" >> $GITHUB_STEP_SUMMARY
-            echo "::warning::Function count ($FUNCTION_COUNT) exceeds the Hobby limit ($LIMIT). Consider Pro plan."
+    - name: Verify agent files
+      run: |
+        echo "🤖 Verifying AI agent files..."
+        MISSING=0
+        
+        REQUIRED_FILES=(
+          "api/agents.ts"
+          "api/cron.ts"
+          "api/kv.ts"
+          "lib/api/djen-client.ts"
+          "lib/api/datajud-client.ts"
+        )
+        
+        for file in "${REQUIRED_FILES[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Missing: $file"
+            MISSING=$((MISSING + 1))
           else
-            echo "- **Status:** ✅ Within limit" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Found: $file"
+          fi
+        done
+        
+        if [ $MISSING -gt 0 ]; then
+          echo "❌ Error: $MISSING required agent files are missing"
+          exit 1
+        fi
+        
+        echo "✅ All agent files present"
+
+    - name: Validate environment variables
+      run: |
+        echo "Validating environment variables..."
+        HAS_ERRORS=0
+        
+        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          # Production/staging deploys require real credentials
+          if [ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]; then
+            echo "❌ VITE_GOOGLE_CLIENT_ID is required for production"
+            HAS_ERRORS=1
+          fi
+          
+          if [ -z "${{ secrets.VITE_GOOGLE_API_KEY }}" ]; then
+            echo "❌ VITE_GOOGLE_API_KEY is required for production"
+            HAS_ERRORS=1
+          fi
+        fi
+        
+        if [ $HAS_ERRORS -eq 1 ]; then
+          exit 1
+        fi
+        
+        echo "✅ Environment variables validated"
+
+    - name: Build application
+      run: npm run build
+      env:
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
+        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
+        VITE_APP_ENV: ${{ github.event_name == 'pull_request' && 'preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'production' }}
+
+    - name: Validate Vercel secrets
+      run: |
+        echo "Validating Vercel configuration..."
+        
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+          echo "❌ Error: VERCEL_TOKEN secret is not configured"
+          echo "Please add your Vercel token to GitHub Secrets"
+          echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+          echo "❌ Error: VERCEL_ORG_ID is not configured"
+          echo "Please add your Organization ID to GitHub Secrets"
+          echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+          echo "❌ Error: VERCEL_PROJECT_ID is not configured"
+          echo "Please add your Project ID to GitHub Secrets"
+          echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+          exit 1
+        fi
+        
+        echo "✅ Vercel token validation passed"
+
+    - name: Deploy to Vercel
+      id: deploy
+      timeout-minutes: 15
+      run: |
+        npm install -g vercel@latest
+        
+        # Determine deployment type
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
+          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
+        elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || '' }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "🚀 Deploying to production"
+          DEPLOY_CMD="vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes"
+        else
+          echo "🚀 Deploying to staging"
+          DEPLOY_CMD="vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes"
+        fi
+        
+        # Deploy with retry logic (max 3 attempts)
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        DEPLOYMENT_URL=""
+        
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+          $DEPLOY_CMD > deploy.log 2>&1
+          DEPLOYMENT_URL=$(grep -o 'https://[^ ]*vercel.app[^ ]*' deploy.log | tail -1)
+
+          if [ -n "$DEPLOYMENT_URL" ]; then
+            echo "✅ Deployment successful on attempt $((RETRY_COUNT + 1))"
+            break
           fi
 
-      - name: Verify agent files
-        run: |
-          echo "🤖 Verifying serverless function files..."
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ✅ File Verification" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          MISSING=0
-
-          # Core API files
-          REQUIRED_FILES=(
-            "api/auth/github.ts"
-            "api/auth/gitlab.ts"
-            "api/backup.ts"
-            "api/cron.ts"
-            "api/expedientes.ts"
-            "api/gitlab-webhook.ts"
-            "api/intimacoes/pendente.ts"
-            "api/kv.ts"
-            "api/lawyers.ts"
-            "api/legal-services.ts"
-            "api/llm-proxy.ts"
-            "api/observability.ts"
-            "api/pje.ts"
-            "api/spark-proxy.ts"
-            "api/status.ts"
-            "api/tarefas/criar.ts"
-            "api/todoist.ts"
-            "api/todoist-webhook.ts"
-            "api/vercel-webhook.ts"
-            "api/webhook.ts"
-            "api/whatsapp/send.ts"
-          )
-
-          # Support files
-          SUPPORT_FILES=(
-            "api/_lib/circuit-breaker.ts"
-            "api/_lib/kv-utils.ts"
-            "api/_lib/djen-client.ts"
-          )
-
-          echo "| File | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-
-          for file in "${REQUIRED_FILES[@]}"; do
-            if [ ! -f "$file" ]; then
-              echo "| ❌ $file | Missing |" >> $GITHUB_STEP_SUMMARY
-              MISSING=$((MISSING + 1))
-            else
-              echo "| ✅ $file | OK |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Support files:**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          for file in "${SUPPORT_FILES[@]}"; do
-            if [ ! -f "$file" ]; then
-              echo "| ⚠️ $file | Missing |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| ✅ $file | OK |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-
-          if [ $MISSING -gt 0 ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ **Warning:** $MISSING files are missing" >> $GITHUB_STEP_SUMMARY
-            echo "::warning::$MISSING required API files are missing"
-          else
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "✅ All API files present" >> $GITHUB_STEP_SUMMARY
+          RETRY_COUNT=$((RETRY_COUNT + 1))
+          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "⚠️ Deployment failed, retrying in 10 seconds..."
+            sleep 10
           fi
+        done
+        
+        # Validate deployment URL
+        if [ -z "$DEPLOYMENT_URL" ]; then
+          echo "❌ Error: Failed to extract deployment URL"
+          echo "Please check Vercel logs for details"
+          exit 1
+        fi
+        
+        echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+        echo "✅ Deployment successful: $DEPLOYMENT_URL"
+        
+        # Clean up log file to prevent secrets leakage
+        rm -f deploy.log
+      env:
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Validate environment variables
-        run: |
-          echo "🔍 Validating environment configuration..."
-          HAS_ERRORS=0
-
-          # For production/staging deploys, check if required secrets are configured
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            # Check if secrets are available (they will be empty strings if not set)
-            if [[ -z "${{ secrets.VITE_GOOGLE_CLIENT_ID }}" ]]; then
-              echo "❌ VITE_GOOGLE_CLIENT_ID is required for production"
-              HAS_ERRORS=1
-            fi
-
-            if [[ -z "${{ secrets.VITE_GOOGLE_API_KEY }}" ]]; then
-              echo "❌ VITE_GOOGLE_API_KEY is required for production"
-              HAS_ERRORS=1
-            fi
-          fi
-
-          if [ $HAS_ERRORS -eq 1 ]; then
-            echo "❌ Secret validation failed. Please configure required secrets in GitHub repository settings."
-            exit 1
-          fi
-
-          echo "✅ Environment variables validated"
-
-      - name: Build application
-        run: |
-          # Export environment variables with fallbacks for missing secrets
-          export VITE_GOOGLE_CLIENT_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}"
-          export VITE_GOOGLE_API_KEY="${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}"
-          export VITE_REDIRECT_URI="${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}"
-          export VITE_APP_ENV="${{ github.event_name == 'pull_request' && 'preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'production' }}"
-          npm run build
-
-      - name: Validate Vercel secrets
-        run: |
-          echo "Validating Vercel configuration..."
-
-          # Export secrets for validation
-          export VERCEL_TOKEN=${{ secrets.VERCEL_TOKEN }}
-          export VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}
-          export VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}
-
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "❌ Error: VERCEL_TOKEN secret is not configured"
-            echo "Please add your Vercel token to GitHub Secrets"
-            echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            exit 1
-          fi
-
-          if [ -z "$VERCEL_ORG_ID" ]; then
-            echo "❌ Error: VERCEL_ORG_ID is not configured"
-            echo "Please add your Organization ID to GitHub Secrets"
-            echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            exit 1
-          fi
-
-          if [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "❌ Error: VERCEL_PROJECT_ID is not configured"
-            echo "Please add your Project ID to GitHub Secrets"
-            echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            exit 1
-          fi
-
-          echo "✅ Vercel token validation passed"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Deploy to Vercel
-        id: deploy
-        timeout-minutes: 15
-        run: |
-          # Export Vercel secrets
-          export VERCEL_TOKEN=${{ secrets.VERCEL_TOKEN }}
-          export VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}
-          export VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}
-
-          npm install -g vercel@latest
-
-          # Determine deployment type
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "🚀 Deploying preview for PR #${{ github.event.pull_request.number }}"
-            DEPLOY_CMD="vercel deploy --token=$VERCEL_TOKEN --yes"
-          elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || '' }}" == "production" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "🚀 Deploying to production"
-            DEPLOY_CMD="vercel deploy --prod --token=$VERCEL_TOKEN --yes"
-          else
-            echo "🚀 Deploying to staging"
-            DEPLOY_CMD="vercel deploy --token=$VERCEL_TOKEN --yes"
-          fi
-
-          # Deploy with retry logic (max 3 attempts)
-          MAX_RETRIES=3
-          RETRY_COUNT=0
-          DEPLOYMENT_URL=""
-
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
-            $DEPLOY_CMD > deploy.log 2>&1
-            DEPLOYMENT_URL=$(grep -o 'https://[^ ]*vercel.app[^ ]*' deploy.log | tail -1)
-
-            if [ -n "$DEPLOYMENT_URL" ]; then
-              echo "✅ Deployment successful on attempt $((RETRY_COUNT + 1))"
-              break
-            fi
-
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "⚠️ Deployment failed, retrying in 10 seconds..."
-              sleep 10
-            fi
-          done
-
-          # Validate deployment URL
-          if [ -z "$DEPLOYMENT_URL" ]; then
-            echo "❌ Error: Failed to extract deployment URL"
-            echo "Please check Vercel logs for details"
-            exit 1
-          fi
-
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "✅ Deployment successful: $DEPLOYMENT_URL"
-
-          # Clean up log file to prevent secrets leakage
-          rm -f deploy.log
-
-      - name: Comment deployment URL on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const deploymentUrl = '${{ steps.deploy.outputs.url }}';
-            const prNumber = context.issue.number;
-            const commitSha = context.sha.substring(0, 7);
-
-            const body = `## 🚀 Deploy Preview Ready!
-
-            **Preview URL:** ${deploymentUrl}
-
-            ### 📋 Deployment Details
-            - **Environment:** Preview
-            - **Commit:** \`${commitSha}\`
-            - **Branch:** \`${{ github.head_ref }}\`
-            - **Deploy Time:** ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
-
-            ### 🔗 Quick Links
-            - 🌐 [View Preview](${deploymentUrl})
-            - 📊 [View Build Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            - ⚙️ [Vercel Dashboard](https://vercel.com)
-
-            ### ℹ️ About Preview Deployments
-            - ✅ This preview will be automatically updated with new commits
-            - 🔍 The GitHub Copilot AI agent can access this URL to test your app
-            - 🚀 Merge to \`main\` to deploy to production
-
-            ---
-            *Powered by Vercel & GitHub Actions*`;
-
-            // Check if there's an existing deployment comment
-            const comments = await github.rest.issues.listComments({
+    - name: Comment deployment URL on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const deploymentUrl = '${{ steps.deploy.outputs.url }}';
+          const prNumber = context.issue.number;
+          const commitSha = context.sha.substring(0, 7);
+          
+          const body = `## 🚀 Deploy Preview Ready!
+          
+          **Preview URL:** ${deploymentUrl}
+          
+          ### 📋 Deployment Details
+          - **Environment:** Preview
+          - **Commit:** \`${commitSha}\`
+          - **Branch:** \`${{ github.head_ref }}\`
+          - **Deploy Time:** ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+          
+          ### 🔗 Quick Links
+          - 🌐 [View Preview](${deploymentUrl})
+          - 📊 [View Build Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - ⚙️ [Vercel Dashboard](https://vercel.com)
+          
+          ### ℹ️ About Preview Deployments
+          - ✅ This preview will be automatically updated with new commits
+          - 🔍 The GitHub Copilot AI agent can access this URL to test your app
+          - 🚀 Merge to \`main\` to deploy to production
+          
+          ---
+          *Powered by Vercel & GitHub Actions*`;
+          
+          // Check if there's an existing deployment comment
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber
+          });
+          
+          const botComment = comments.data.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Deploy Preview Ready')
+          );
+          
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber
+              comment_id: botComment.id,
+              body
             });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });
+          }
 
-            const botComment = comments.data.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('Deploy Preview Ready')
-            );
-
-            if (botComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body
-              });
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body
-              });
-            }
-
-      - name: Add deployment summary
-        if: always()
-        run: |
-          echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+    - name: Add deployment summary
+      if: always()
+      run: |
+        echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ steps.deploy.outcome }}" == "success" ]]; then
+          echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [[ "${{ steps.deploy.outcome }}" == "success" ]]; then
-            echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-            echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'Production' }}" >> $GITHUB_STEP_SUMMARY
-            echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
-            echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Visit the deployment URL to verify" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔍 Check application functionality" >> $GITHUB_STEP_SUMMARY
-            echo "- 📊 Monitor for any runtime errors" >> $GITHUB_STEP_SUMMARY
-            echo "- 🤖 AI agents can now access the preview URL" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🤖 AI Agents Status" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ 7 AI agents configured" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ DJEN monitor: runs daily at 9 AM UTC" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Daily reset: runs at midnight UTC" >> $GITHUB_STEP_SUMMARY
-            echo "- 📡 Monitoring: TJMG, TRT3, TST, STJ" >> $GITHUB_STEP_SUMMARY
-            echo "- 👨‍⚖️ Lawyer: Thiago Bodevan Veiga (OAB/MG 184.404)" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🔧 Troubleshooting" >> $GITHUB_STEP_SUMMARY
-            echo "1. Check the build logs above" >> $GITHUB_STEP_SUMMARY
-            echo "2. Verify all required secrets are configured" >> $GITHUB_STEP_SUMMARY
-            echo "3. Ensure Vercel project is properly linked" >> $GITHUB_STEP_SUMMARY
-            echo "4. Check for TypeScript or build errors" >> $GITHUB_STEP_SUMMARY
-            echo "5. **Review documentation:** [\`CONFIGURACAO_VERCEL_TOKEN.md\`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Visit the deployment URL to verify" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Check application functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Monitor for any runtime errors" >> $GITHUB_STEP_SUMMARY
+          echo "- 🤖 AI agents can now access the preview URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🤖 AI Agents Status" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 7 AI agents configured" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ DJEN monitor: runs daily at 9 AM UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Daily reset: runs at midnight UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- 📡 Monitoring: TJMG, TRT3, TST, STJ" >> $GITHUB_STEP_SUMMARY
+          echo "- 👨‍⚖️ Lawyer: Thiago Bodevan Veiga (OAB/MG 184.404)" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Troubleshooting" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check the build logs above" >> $GITHUB_STEP_SUMMARY
+          echo "2. Verify all required secrets are configured" >> $GITHUB_STEP_SUMMARY
+          echo "3. Ensure Vercel project is properly linked" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check for TypeScript or build errors" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Review documentation:** [\`CONFIGURACAO_VERCEL_TOKEN.md\`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
+        fi
 
   e2e-tests:
     name: Run E2E Tests
@@ -437,47 +343,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: needs.deploy-vercel.result == 'success' && needs.deploy-vercel.outputs.url != ''
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-          cache: "npm"
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
 
-      - name: Verify Playwright configuration
-        run: |
-          if [ ! -f "playwright.config.ts" ]; then
-            echo "⚠️ Playwright config not found, skipping E2E tests"
-            exit 0
-          fi
-          echo "✅ Playwright configuration found"
+    - name: Verify Playwright configuration
+      run: |
+        if [ ! -f "playwright.config.ts" ]; then
+          echo "⚠️ Playwright config not found, skipping E2E tests"
+          exit 0
+        fi
+        echo "✅ Playwright configuration found"
 
-      - name: Run Playwright tests
-        run: |
-          export VERCEL_URL="${{ needs.deploy-vercel.outputs.url }}"
-          export VERCEL_AUTOMATION_BYPASS_SECRET="${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET || '' }}"
-          npx playwright test
-        continue-on-error: true
+    - name: Run Playwright tests
+      run: npx playwright test
+      env:
+        VERCEL_URL: ${{ needs.deploy-vercel.outputs.url }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      continue-on-error: true
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-results
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 7
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-results
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 7
 
   deploy-notification:
     name: Deployment Notification
@@ -488,46 +394,46 @@ jobs:
     if: always()
 
     steps:
-      - name: Notify deployment status
-        run: |
-          echo "## 🔔 Deployment Notification" >> $GITHUB_STEP_SUMMARY
+    - name: Notify deployment status
+      run: |
+        echo "## 🔔 Deployment Notification" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.deploy-vercel.result }}" == "success" ]]; then
+          echo "✅ **All deployment steps completed successfully**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [[ "${{ needs.deploy-vercel.result }}" == "success" ]]; then
-            echo "✅ **All deployment steps completed successfully**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📌 Deployment Information" >> $GITHUB_STEP_SUMMARY
-            echo "- **Status:** Success" >> $GITHUB_STEP_SUMMARY
-            echo "- **Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'Production' }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ✅ Checklist" >> $GITHUB_STEP_SUMMARY
-            echo "- [x] Code checkout completed" >> $GITHUB_STEP_SUMMARY
-            echo "- [x] Dependencies installed" >> $GITHUB_STEP_SUMMARY
-            echo "- [x] Linter passed" >> $GITHUB_STEP_SUMMARY
-            echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
-            echo "- [x] Vercel deployment successful" >> $GITHUB_STEP_SUMMARY
-            echo "- [x] Preview URL available" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Deployment failed**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🔍 Troubleshooting Steps" >> $GITHUB_STEP_SUMMARY
-            echo "1. **Check the build logs** in the deploy-vercel job above" >> $GITHUB_STEP_SUMMARY
-            echo "2. **Verify Vercel secrets** are configured:" >> $GITHUB_STEP_SUMMARY
-            echo "   - VERCEL_TOKEN" >> $GITHUB_STEP_SUMMARY
-            echo "   - VERCEL_ORG_ID" >> $GITHUB_STEP_SUMMARY
-            echo "   - VERCEL_PROJECT_ID" >> $GITHUB_STEP_SUMMARY
-            echo "3. **Verify Google OAuth secrets** are configured:" >> $GITHUB_STEP_SUMMARY
-            echo "   - VITE_GOOGLE_CLIENT_ID" >> $GITHUB_STEP_SUMMARY
-            echo "   - VITE_GOOGLE_API_KEY" >> $GITHUB_STEP_SUMMARY
-            echo "   - VITE_REDIRECT_URI" >> $GITHUB_STEP_SUMMARY
-            echo "4. **Check Vercel project** is properly linked" >> $GITHUB_STEP_SUMMARY
-            echo "5. **Review documentation:** \`CONFIGURACAO_VERCEL_TOKEN.md\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📚 Helpful Resources" >> $GITHUB_STEP_SUMMARY
-            echo "- [Vercel Token Setup Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
-            echo "- [GitHub Actions Deploy Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/GITHUB_ACTIONS_DEPLOY_GUIDE.md)" >> $GITHUB_STEP_SUMMARY
-            echo "- [Vercel Documentation](https://vercel.com/docs)" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+          echo "### 📌 Deployment Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Success" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event_name == 'pull_request' && 'Preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Code checkout completed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Dependencies installed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Linter passed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Vercel deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Preview URL available" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Deployment failed**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Troubleshooting Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Check the build logs** in the deploy-vercel job above" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Verify Vercel secrets** are configured:" >> $GITHUB_STEP_SUMMARY
+          echo "   - VERCEL_TOKEN" >> $GITHUB_STEP_SUMMARY
+          echo "   - VERCEL_ORG_ID" >> $GITHUB_STEP_SUMMARY
+          echo "   - VERCEL_PROJECT_ID" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Verify Google OAuth secrets** are configured:" >> $GITHUB_STEP_SUMMARY
+          echo "   - VITE_GOOGLE_CLIENT_ID" >> $GITHUB_STEP_SUMMARY
+          echo "   - VITE_GOOGLE_API_KEY" >> $GITHUB_STEP_SUMMARY
+          echo "   - VITE_REDIRECT_URI" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Check Vercel project** is properly linked" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Review documentation:** \`CONFIGURACAO_VERCEL_TOKEN.md\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 Helpful Resources" >> $GITHUB_STEP_SUMMARY
+          echo "- [Vercel Token Setup Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CONFIGURACAO_VERCEL_TOKEN.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Actions Deploy Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/GITHUB_ACTIONS_DEPLOY_GUIDE.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Vercel Documentation](https://vercel.com/docs)" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi

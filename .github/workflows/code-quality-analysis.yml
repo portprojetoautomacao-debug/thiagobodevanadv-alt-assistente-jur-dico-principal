@@ -55,17 +55,19 @@ jobs:
       run: |
         echo "🔍 Executando ESLint..."
 
-        # Executar ESLint com formato legível
-        EXIT_CODE=0
-        npm run lint -- --max-warnings 150 || EXIT_CODE=$?
+        # Executar ESLint com saída SARIF para GitHub
+        npm run lint -- --format sarif --output-file eslint-results.sarif
+
+        # Também executar com formato legível
+        npm run lint -- --max-warnings 0 || EXIT_CODE=$?
 
         if [[ $EXIT_CODE -eq 0 ]]; then
-          echo "✅ ESLint passou sem erros críticos"
-        elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_warnings || 'false' }}" == "true" ]]; then
-          echo "❌ ESLint falhou com warnings (fail_on_warnings=true)"
-          exit $EXIT_CODE
+          echo "✅ ESLint passou sem erros ou warnings"
+        elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_warnings || 'true' }}" == "false" ]]; then
+          echo "⚠️  ESLint encontrou warnings, mas continuando..."
         else
-          echo "⚠️ ESLint encontrou warnings, mas continuando..."
+          echo "❌ ESLint falhou"
+          exit $EXIT_CODE
         fi
 
     - name: 📊 Executar TypeScript Check
@@ -492,7 +494,7 @@ jobs:
         path: quality-report.md
 
     - name: 💬 Comentar no PR
-      if: github.event_name == 'pull_request' && (needs.static-analysis.result == 'failure' || needs.complexity-analysis.result == 'failure' || needs.test-coverage.result == 'failure' || needs.security-analysis.result == 'failure')
+      if: github.event_name == 'pull_request' && env.STATUS == 'failure'
       run: |
         echo "💬 Comentando qualidade no PR..."
 
@@ -511,14 +513,13 @@ jobs:
         echo "2. Corrigir problemas críticos antes do merge" >> quality-alert.md
         echo "3. Considerar refatoração para melhorar a qualidade" >> quality-alert.md
 
-        gh pr comment ${{ github.event.pull_request.number }} --body-file quality-alert.md
-      env:
-        GH_TOKEN: ${{ github.token }}
+        gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body-file quality-alert.md
 
     - name: 🚫 Bloquear Merge se Qualidade Baixa
-      if: github.event_name == 'pull_request' && (needs.static-analysis.result == 'failure' || needs.complexity-analysis.result == 'failure')
+      if: github.event_name == 'pull_request' && env.STATUS == 'failure'
       run: |
         echo "🚫 Qualidade insuficiente - merge bloqueado"
+
         # Aqui você pode implementar lógica para bloquear merge
         # usando branch protection rules ou labels
 
@@ -537,14 +538,12 @@ jobs:
       run: |
         echo "📢 Preparando notificações de qualidade..."
 
-        # Determinar status geral
-        if [[ "${{ needs.quality-dashboard.result }}" == "success" ]]; then
-          STATUS="success"
+        # Criar notificação baseada no status
+        if [[ "${{ env.STATUS }}" == "success" ]]; then
           TITLE="✅ Qualidade de Código Aprovada"
           MESSAGE="Todas as verificações de qualidade passaram com sucesso."
           PRIORITY="normal"
         else
-          STATUS="failure"
           TITLE="❌ Problemas de Qualidade Detectados"
           MESSAGE="Algumas verificações de qualidade falharam. Verifique os relatórios."
           PRIORITY="high"
