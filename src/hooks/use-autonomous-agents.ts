@@ -1,8 +1,8 @@
 import { useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import { 
-  processTaskWithRealAI, 
-  isRealAgentsEnabled 
+import {
+  processTaskWithRealAI,
+  isRealAgentsEnabled
 } from '@/lib/real-agent-client'
 import {
   type Agent,
@@ -21,7 +21,11 @@ function getAgentActivity(agent: Agent): string {
   return 'Aguardando tarefas'
 }
 
+// Version flag to force data reset when demo data is detected
+const AGENTS_DATA_VERSION = 2
+
 export function useAutonomousAgents() {
+  const [dataVersion, setDataVersion] = useKV<number>('agents-data-version', 0)
   const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', initializeAgents())
   const [taskQueue, setTaskQueue] = useKV<AgentTask[]>('agent-task-queue', [])
   const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
@@ -32,11 +36,24 @@ export function useAutonomousAgents() {
     action: string
     result: 'success' | 'warning' | 'error'
   }>>('agent-activity-log', [])
-  const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-tasks', true)
+  const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-tasks', false)
   const [useRealAI, setUseRealAI] = useKV<boolean>('use-real-ai', false)
-  
+
   const processingRef = useRef<Set<string>>(new Set())
   const taskGeneratorRef = useRef<AgentTaskGenerator | null>(null)
+
+  // Force reset if data version is outdated (removes fake demo data)
+  useEffect(() => {
+    if (dataVersion < AGENTS_DATA_VERSION) {
+      console.log('Resetting agent data to remove demo values...')
+      setAgents(initializeAgents())
+      setTaskQueue([])
+      setCompletedTasks([])
+      setActivityLog([])
+      setAutoGenerateEnabled(false)
+      setDataVersion(AGENTS_DATA_VERSION)
+    }
+  }, [dataVersion, setDataVersion, setAgents, setTaskQueue, setCompletedTasks, setActivityLog, setAutoGenerateEnabled])
 
   const addTask = useCallback((task: AgentTask) => {
     setTaskQueue((current) => {
@@ -66,16 +83,16 @@ export function useAutonomousAgents() {
     if (processingRef.current.has(agent.id)) return
     if (!agent.enabled || agent.status === 'paused') return
 
-    const queue = (taskQueue || []).filter(t => 
-      t.agentId === agent.id && 
+    const queue = (taskQueue || []).filter(t =>
+      t.agentId === agent.id &&
       t.status === 'queued' &&
       canResumeAfterHuman(t)
     )
 
     if (queue.length === 0) {
-      setAgents((current) => 
-        (current || []).map(a => 
-          a.id === agent.id 
+      setAgents((current) =>
+        (current || []).map(a =>
+          a.id === agent.id
             ? { ...a, status: 'idle', currentTask: undefined }
             : a
         )
@@ -86,9 +103,9 @@ export function useAutonomousAgents() {
     const task = queue[0]
 
     if (shouldPauseForHuman(agent, task)) {
-      setAgents((current) => 
-        (current || []).map(a => 
-          a.id === agent.id 
+      setAgents((current) =>
+        (current || []).map(a =>
+          a.id === agent.id
             ? { ...a, status: 'waiting_human', currentTask: task }
             : a
         )
@@ -98,17 +115,17 @@ export function useAutonomousAgents() {
 
     processingRef.current.add(agent.id)
 
-    setTaskQueue((current) => 
-      (current || []).map(t => 
-        t.id === task.id 
+    setTaskQueue((current) =>
+      (current || []).map(t =>
+        t.id === task.id
           ? { ...t, status: 'processing', startedAt: new Date().toISOString() }
           : t
       )
     )
 
-    setAgents((current) => 
-      (current || []).map(a => 
-        a.id === agent.id 
+    setAgents((current) =>
+      (current || []).map(a =>
+        a.id === agent.id
           ? { ...a, status: 'processing', currentTask: task }
           : a
       )
@@ -127,23 +144,23 @@ export function useAutonomousAgents() {
         result,
       }
 
-      setTaskQueue((current) => 
+      setTaskQueue((current) =>
         (current || []).filter(t => t.id !== task.id)
       )
 
-      setCompletedTasks((current) => 
+      setCompletedTasks((current) =>
         [completedTask, ...(current || [])].slice(0, 500)
       )
 
-      setAgents((current) => 
-        (current || []).map(a => 
-          a.id === agent.id 
-            ? { 
-                ...a, 
-                tasksCompleted: a.tasksCompleted + 1,
-                tasksToday: a.tasksToday + 1,
-                lastActivity: `Concluído: ${task.type}`,
-              }
+      setAgents((current) =>
+        (current || []).map(a =>
+          a.id === agent.id
+            ? {
+              ...a,
+              tasksCompleted: a.tasksCompleted + 1,
+              tasksToday: a.tasksToday + 1,
+              lastActivity: `Concluído: ${task.type}`,
+            }
             : a
         )
       )
@@ -151,9 +168,9 @@ export function useAutonomousAgents() {
       logActivity(agent.id, `Tarefa concluída: ${task.type}`, 'success')
 
     } catch (error) {
-      setTaskQueue((current) => 
-        (current || []).map(t => 
-          t.id === task.id 
+      setTaskQueue((current) =>
+        (current || []).map(t =>
+          t.id === task.id
             ? { ...t, status: 'failed', error: String(error) }
             : t
         )
@@ -209,9 +226,9 @@ export function useAutonomousAgents() {
       const now = new Date()
       const midnight = new Date(now)
       midnight.setHours(24, 0, 0, 0)
-      
+
       const timeUntilMidnight = midnight.getTime() - now.getTime()
-      
+
       const timeout = setTimeout(() => {
         setAgents((current) =>
           (current || []).map(agent => ({
@@ -219,7 +236,7 @@ export function useAutonomousAgents() {
             tasksToday: 0
           }))
         )
-        
+
         const dailyInterval = setInterval(() => {
           setAgents((current) =>
             (current || []).map(agent => ({
@@ -228,18 +245,18 @@ export function useAutonomousAgents() {
             }))
           )
         }, 24 * 60 * 60 * 1000)
-        
+
         return () => clearInterval(dailyInterval)
       }, timeUntilMidnight)
-      
+
       return () => clearTimeout(timeout)
     }
-    
+
     return resetDailyCounters()
   }, [])
 
   const toggleAgent = useCallback((agentId: string) => {
-    setAgents((current) => 
+    setAgents((current) =>
       (current || []).map(agent => {
         if (agent.id === agentId) {
           const newEnabled = !agent.enabled
@@ -256,9 +273,9 @@ export function useAutonomousAgents() {
   }, [setAgents])
 
   const markTaskAsHumanTouched = useCallback((taskId: string) => {
-    setTaskQueue((current) => 
-      (current || []).map(t => 
-        t.id === taskId 
+    setTaskQueue((current) =>
+      (current || []).map(t =>
+        t.id === taskId
           ? { ...t, humanTouchedAt: new Date().toISOString(), status: 'human_intervention' }
           : t
       )
@@ -266,9 +283,9 @@ export function useAutonomousAgents() {
   }, [setTaskQueue])
 
   const resumeTaskAfterHuman = useCallback((taskId: string) => {
-    setTaskQueue((current) => 
-      (current || []).map(t => 
-        t.id === taskId 
+    setTaskQueue((current) =>
+      (current || []).map(t =>
+        t.id === taskId
           ? { ...t, status: 'queued', resumeAfterHuman: true }
           : t
       )
@@ -302,9 +319,9 @@ export function useAutonomousAgents() {
   useEffect(() => {
     if (!taskGeneratorRef.current && agents && agents.length > 0) {
       const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
-      
+
       if (enabledAgentIds.length === 0) return
-      
+
       const generator = createTaskGenerator({
         enabled: autoGenerateEnabled,
         intervalMinutes: 2,
@@ -335,7 +352,7 @@ export function useAutonomousAgents() {
   useEffect(() => {
     if (taskGeneratorRef.current && agents) {
       const enabledAgentIds = agents.filter(a => a.enabled).map(a => a.id)
-      
+
       taskGeneratorRef.current.setOnTaskGenerated((task) => {
         addTask(task)
         const agent = agents.find(a => a.id === task.agentId)
@@ -343,7 +360,7 @@ export function useAutonomousAgents() {
           logActivity(task.agentId, `Nova tarefa gerada: ${task.type}`, 'success')
         }
       })
-      
+
       taskGeneratorRef.current.updateConfig({
         enabled: autoGenerateEnabled,
         agentIds: enabledAgentIds

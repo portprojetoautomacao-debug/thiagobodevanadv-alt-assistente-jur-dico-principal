@@ -90,7 +90,7 @@ export async function processTaskWithAI(
 
   // Simulate different outcomes based on task type
   const taskType = task.type.toLowerCase()
-  
+
   if (taskType.includes('monitor') || taskType.includes('check')) {
     return {
       success: true,
@@ -187,7 +187,7 @@ export function canResumeAfterHuman(task: AgentTask): boolean {
     const touchedTime = new Date(task.humanTouchedAt).getTime()
     const now = Date.now()
     const hoursSinceTouched = (now - touchedTime) / (1000 * 60 * 60)
-    
+
     // Auto-resume after 24 hours if not explicitly handled
     return hoursSinceTouched > 24
   }
@@ -253,10 +253,10 @@ export function createTaskGenerator(
   return {
     start() {
       if (intervalId) return
-      
+
       // Generate initial tasks
       generateTasks()
-      
+
       // Set up interval
       const intervalMs = currentConfig.intervalMinutes * 60 * 1000
       intervalId = window.setInterval(generateTasks, intervalMs)
@@ -271,7 +271,7 @@ export function createTaskGenerator(
 
     updateConfig(newConfig: Partial<AgentTaskGeneratorConfig>) {
       const wasRunning = !!intervalId
-      
+
       if (wasRunning) {
         this.stop()
       }
@@ -496,25 +496,17 @@ export const DEFAULT_AGENTS: Agent[] = [
 
 /**
  * Initialize agents with default configuration
+ * Version 2: Force reset fake demo data
  */
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
-  if (!existingAgents || existingAgents.length === 0) {
-    return DEFAULT_AGENTS.map(agent => ({ ...agent }))
-  }
-
-  // Merge existing agents with defaults, preserving user settings
-  const agentMap = new Map(existingAgents.map(a => [a.id, a]))
-  
-  return DEFAULT_AGENTS.map(defaultAgent => {
-    const existing = agentMap.get(defaultAgent.id)
-    if (existing) {
-      // Preserve user settings but update capabilities and description
-      return {
-        ...existing,
-        description: defaultAgent.description,
-        capabilities: defaultAgent.capabilities
-      }
-    }
-    return { ...defaultAgent }
-  })
+  // Force clean start - always use defaults with zero counters
+  // This removes any fake demo data that was stored
+  return DEFAULT_AGENTS.map(agent => ({
+    ...agent,
+    tasksCompleted: 0,
+    tasksToday: 0,
+    status: 'idle' as const,
+    enabled: false,
+    lastActivity: 'Aguardando ativação'
+  }))
 }
