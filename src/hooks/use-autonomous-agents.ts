@@ -36,7 +36,7 @@ export function useAutonomousAgents() {
     result: 'success' | 'warning' | 'error'
   }>>('agent-activity-log', [])
   const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-tasks', false)
-  const [useRealAI, setUseRealAI] = useKV<boolean>('use-real-ai', false)
+  const [useRealAI, setUseRealAI] = useKV<boolean>('use-real-ai', true) // Habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set())
   const taskGeneratorRef = useRef<AgentTaskGenerator | null>(null)
@@ -131,10 +131,8 @@ export function useAutonomousAgents() {
     )
 
     try {
-      // Usar IA real se habilitado
-      const result = useRealAI && isRealAgentsEnabled()
-        ? await processTaskWithRealAI(task, agent)
-        : await processTaskWithAI(task, agent)
+      // Sempre usar IA real (Gemini/OpenAI) - não usar simulação
+      const result = await processTaskWithRealAI(task, agent)
 
       const completedTask: AgentTask = {
         ...task,
