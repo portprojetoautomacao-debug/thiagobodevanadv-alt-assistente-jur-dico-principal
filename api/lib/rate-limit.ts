@@ -65,10 +65,16 @@ class RateLimiter {
 
       if (currentCount >= this.config.maxRequests) {
         // Calcular quando a janela reseta
-        const oldestRequest = results[2] as [string, number][];
-        const resetTime = oldestRequest.length > 0
-          ? parseInt(oldestRequest[0][1].toString()) + this.config.windowMs
-          : now + this.config.windowMs;
+        const oldestRequest = results[2] as Array<string | number> | null;
+        let resetTime = now + this.config.windowMs;
+
+        // Verifica se há dados válidos antes de acessar
+        if (oldestRequest && Array.isArray(oldestRequest) && oldestRequest.length >= 2) {
+          const score = oldestRequest[1];
+          if (score !== undefined && score !== null) {
+            resetTime = (typeof score === 'number' ? score : parseInt(String(score))) + this.config.windowMs;
+          }
+        }
 
         return {
           allowed: false,
