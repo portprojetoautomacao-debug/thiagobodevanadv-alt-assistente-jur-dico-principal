@@ -420,8 +420,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     }
   }, [agents, setAgents])
 
-  const totalTasksToday = agents.reduce((sum, a) => sum + a.tasksToday, 0)
-
   const activeAgents = agents.filter(a => a.enabled).length
   const queuedTasks = taskQueue.filter(t => t.status === 'queued').length
   const processingTasks = taskQueue.filter(t => t.status === 'processing').length
@@ -458,29 +456,16 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         }}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Agentes Disponíveis</CardTitle>
             <Robot className="w-4 h-4 text-primary" weight="fill" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeAgents}/{agents.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Operando continuamente
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tarefas Hoje</CardTitle>
-            <CheckCircle className="w-4 h-4 text-green-600" weight="fill" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalTasksToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Automações executadas
+              {activeAgents === 0 ? 'Nenhum ativado' : `${activeAgents} ativo(s)`}
             </p>
           </CardContent>
         </Card>
@@ -493,7 +478,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           <CardContent>
             <div className="text-2xl font-bold">{queuedTasks + processingTasks}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {activeAgents === 0 ? 'Nenhum agente ativo' : `${activeAgents} trabalhando agora`}
+              {processingTasks > 0 ? `${processingTasks} em processamento` : 'Aguardando tarefas'}
             </p>
           </CardContent>
         </Card>
@@ -744,19 +729,11 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <div className="text-lg font-bold text-foreground">{agent.tasksToday}</div>
-                        <div className="text-xs text-muted-foreground">Hoje</div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold text-foreground">{agent.tasksCompleted}</div>
-                        <div className="text-xs text-muted-foreground">Total</div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold text-foreground">{agent.autonomyLevel}%</div>
-                        <div className="text-xs text-muted-foreground">Autonomia</div>
-                      </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Status:</span>
+                      <Badge variant={agent.enabled ? 'default' : 'secondary'}>
+                        {agent.enabled ? 'Pronto para uso' : 'Desativado'}
+                      </Badge>
                     </div>
                   </CardContent>
                 </Card>
