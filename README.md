@@ -77,7 +77,7 @@ curl -X POST "https://assistente-juridico-github.vercel.app/api/lawyers" \
 | **Icons** | Phosphor Icons + Lucide | - |
 | **State** | Spark KV (useKV hook) | - |
 | **Forms** | React Hook Form + Zod | - |
-| **AI** | Spark LLM (GPT-4) | - |
+| **AI** | OpenAI GPT / Google Gemini | GPT-4o, Gemini 1.5 |
 | **Database** | Upstash Redis (KV) | - |
 | **Deployment** | Vercel | - |
 | **Email** | Resend API | - |
@@ -215,8 +215,50 @@ curl "https://assistente-juridico-github.vercel.app/api/status"
 | `RESEND_API_KEY` | API Key do Resend para emails | `re_xxx` |
 | `SLACK_WEBHOOK_URL` | Webhook do Slack | `https://hooks.slack.com/...` |
 | `DISCORD_WEBHOOK_URL` | Webhook do Discord | `https://discord.com/api/webhooks/...` |
-| `GITHUB_TOKEN` | Token GitHub para integrações | `ghp_xxx` |
 | `CRON_SECRET` | Secret para proteger cron jobs | `random-string` |
+
+### 🤖 Provedores de IA (LLM)
+
+O sistema suporta dois provedores de IA. Configure **apenas UM** no Vercel:
+
+#### Opção 1: OpenAI GPT (Recomendado) 💰
+
+| Variável | Valor |
+|----------|-------|
+| `OPENAI_API_KEY` | `sk-sua-chave-aqui` |
+
+- **Onde obter:** [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Modelos suportados:** gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
+- **Custo:** ~$0.01 por 1K tokens (gpt-4o-mini)
+
+#### Opção 2: Google Gemini (Gratuito!) 🆓
+
+| Variável | Valor |
+|----------|-------|
+| `GEMINI_API_KEY` | `sua-chave-aqui` |
+
+- **Onde obter:** [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+- **Modelos suportados:** gemini-1.5-pro, gemini-1.5-flash
+- **Limite gratuito:** 15 req/min, 1500 req/dia
+- **Custo:** GRATUITO dentro do limite
+
+#### Prioridade Automática
+
+O sistema detecta automaticamente qual provedor usar:
+
+```
+1️⃣ Se OPENAI_API_KEY existir → usa OpenAI GPT
+2️⃣ Se GEMINI_API_KEY existir → usa Google Gemini
+```
+
+#### Mapeamento de Modelos
+
+| Modelo Solicitado | OpenAI | Gemini |
+|-------------------|--------|--------|
+| `gpt-4o` | gpt-4o | gemini-1.5-pro |
+| `gpt-4o-mini` | gpt-4o-mini | gemini-1.5-flash |
+| `gpt-4` | gpt-4-turbo | gemini-1.5-pro |
+| `gpt-3.5-turbo` | gpt-3.5-turbo | gemini-1.5-flash |
 
 ### Configurar no Vercel
 
