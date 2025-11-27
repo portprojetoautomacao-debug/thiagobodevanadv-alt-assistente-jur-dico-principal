@@ -1,12 +1,15 @@
 /**
  * API consolidada para tarefas cron
  * Endpoints:
- * - POST /api/cron?action=daily-reset - Reset diário de contadores (midnight)
- * - POST /api/cron?action=djen-monitor - Monitor DJEN publicações (9 AM UTC)
+ * - POST /api/cron?action=daily-reset - Reset diário de contadores (midnight UTC)
+ * - POST /api/cron?action=djen-monitor - Monitor DJEN publicações (11 AM BRT / 14 UTC)
  * 
  * Schedule em vercel.json:
  * - daily-reset: "0 0 * * *" (midnight UTC)
- * - djen-monitor: "0 9 * * *" (9 AM UTC)
+ * - djen-monitor: "0 14 * * *" (14:00 UTC = 11:00 BRT - São Paulo)
+ * 
+ * API DJEN: https://comunicaapi.pje.jus.br/api/v1/comunicacao
+ * Documentação: v1.0.3 (29/05/2025)
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
