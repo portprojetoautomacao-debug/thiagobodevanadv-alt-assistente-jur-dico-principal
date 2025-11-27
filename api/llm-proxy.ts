@@ -34,12 +34,6 @@ const MODEL_MAPPING: Record<string, Record<string, string>> = {
     'gpt-4o-mini': 'gemini-1.5-flash',
     'gpt-4': 'gemini-1.5-pro',
     'gpt-3.5-turbo': 'gemini-1.5-flash',
-  },
-  github: {
-    'gpt-4o': 'gpt-4o',
-    'gpt-4o-mini': 'gpt-4o-mini',
-    'gpt-4': 'gpt-4o',
-    'gpt-3.5-turbo': 'gpt-4o-mini',
   }
 };
 
@@ -131,16 +125,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       transformRequest: transformToGemini,
       transformResponse: transformFromGemini,
     },
-    // 3. GitHub Models (gratuito, fallback)
-    {
-      name: 'GitHub Models',
-      baseUrl: 'https://models.inference.ai.azure.com/chat/completions',
-      apiKey: process.env.GITHUB_TOKEN,
-      headers: (key) => ({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`,
-      }),
-    },
   ];
 
   // Encontrar provedor disponível
@@ -153,8 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Configure uma das seguintes variáveis no Vercel:',
       options: [
         { name: 'OPENAI_API_KEY', description: 'API key da OpenAI (recomendado)', url: 'https://platform.openai.com/api-keys' },
-        { name: 'GEMINI_API_KEY', description: 'API key do Google Gemini', url: 'https://aistudio.google.com/app/apikey' },
-        { name: 'GITHUB_TOKEN', description: 'Token GitHub (gratuito, limitado)', url: 'https://github.com/settings/tokens' },
+        { name: 'GEMINI_API_KEY', description: 'API key do Google Gemini (gratuito)', url: 'https://aistudio.google.com/app/apikey' },
       ]
     });
     return;
@@ -178,10 +161,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (provider.name === 'OpenAI') {
       // Mapear modelo OpenAI
       body.model = MODEL_MAPPING.openai[requestedModel] || requestedModel;
-      requestBody = body;
-    } else if (provider.name === 'GitHub Models') {
-      // Mapear modelo GitHub
-      body.model = MODEL_MAPPING.github[requestedModel] || 'gpt-4o-mini';
       requestBody = body;
     }
 
