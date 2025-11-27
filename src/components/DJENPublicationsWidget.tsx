@@ -412,7 +412,9 @@ export default function DJENPublicationsWidget({
 
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                         <span>Advogado: {pub.lawyerName}</span>
-                        <span>Data: {new Date(pub.data).toLocaleDateString('pt-BR')}</span>
+                        <span>Data: {pub.data && !isNaN(new Date(pub.data).getTime())
+                          ? new Date(pub.data).toLocaleDateString('pt-BR')
+                          : 'Data não disponível'}</span>
                       </div>
 
                       <div className="flex gap-2">

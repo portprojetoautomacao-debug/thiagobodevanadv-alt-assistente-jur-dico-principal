@@ -48,7 +48,7 @@ async function getKv(): Promise<Redis> {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     throw new Error('Upstash Redis not configured');
   }
-  
+
   return new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL.trim(),
     token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -70,30 +70,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // GET - Lista expedientes/publicações
     if (req.method === 'GET') {
       const { lawyerId, limit, status } = req.query;
-      
+
       let publications = await kv.get<StoredPublication[]>(KV_KEYS.PUBLICATIONS) || [];
-      
+
       // Filtros
       if (lawyerId && typeof lawyerId === 'string') {
         publications = publications.filter(p => p.lawyerId === lawyerId);
       }
-      
+
       if (status === 'unread') {
         publications = publications.filter(p => !p.notified);
       }
-      
+
       // Ordena por data mais recente
-      publications.sort((a, b) => 
+      publications.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-      
+
       // Limita resultados
       const maxResults = limit ? parseInt(limit as string, 10) : 50;
       publications = publications.slice(0, maxResults);
-      
+
       const lastCheck = await kv.get<string>(KV_KEYS.LAST_CHECK);
       const lawyers = await kv.get<MonitoredLawyer[]>(KV_KEYS.MONITORED_LAWYERS) || [];
-      
+
       // Converter para formato de Expediente do frontend
       const expedientes = publications.map(pub => ({
         id: pub.id,
@@ -101,8 +101,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         tipo: pub.tipo,
         content: pub.teor,
         teor: pub.teor,
-        receivedAt: pub.data,
-        dataRecebimento: pub.data,
+        data: pub.data || pub.createdAt, // Campo usado pelo widget
+        receivedAt: pub.data || pub.createdAt,
+        dataRecebimento: pub.data || pub.createdAt,
         analyzed: false,
         tribunal: pub.tribunal,
         numeroProcesso: pub.numeroProcesso,
@@ -120,8 +121,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         count: publications.length,
         lastCheck,
         lawyersConfigured: lawyers.length,
-        message: lawyers.length === 0 
-          ? 'Nenhum advogado configurado. Use POST /api/lawyers para adicionar.' 
+        message: lawyers.length === 0
+          ? 'Nenhum advogado configurado. Use POST /api/lawyers para adicionar.'
           : `${lawyers.length} advogado(s) monitorado(s)`
       });
     }
@@ -130,16 +131,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'POST' && req.url?.includes('/sync')) {
       // Chama o cron de DJEN manualmente
       const cronUrl = `${process.env.VERCEL_URL || 'http://localhost:3000'}/api/cron?action=djen-monitor`;
-      
+
       const response = await fetch(cronUrl, {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer manual-sync-token'
         }
       });
-      
+
       const result = await response.json();
-      
+
       return res.status(200).json({
         success: true,
         message: 'Sincronizacao iniciada',
