@@ -195,9 +195,9 @@ export const DEFAULT_AGENTS: Agent[] = [
     description: 'Auxilia na criação de petições e documentos jurídicos profissionais com base nos autos e precedentes',
     type: 'writer',
     status: 'idle',
-    enabled: false,
+    enabled: true,
     lastActivity: 'Aguardando tarefas',
-    continuousMode: false,
+    continuousMode: true,
     capabilities: ['document-drafting', 'legal-writing', 'template-generation', 'precedent-integration']
   },
   {
@@ -217,9 +217,9 @@ export const DEFAULT_AGENTS: Agent[] = [
     description: 'Busca e analisa precedentes e jurisprudências relevantes automaticamente em tribunais superiores',
     type: 'researcher',
     status: 'idle',
-    enabled: false,
+    enabled: true,
     lastActivity: 'Aguardando tarefas',
-    continuousMode: false,
+    continuousMode: true,
     capabilities: ['jurisprudence-search', 'precedent-analysis', 'case-law-research', 'trend-analysis']
   },
   {
@@ -228,9 +228,9 @@ export const DEFAULT_AGENTS: Agent[] = [
     description: 'Avalia riscos processuais, financeiros e estratégicos de cada caso com base em dados e precedentes',
     type: 'risk-analyzer',
     status: 'idle',
-    enabled: false,
+    enabled: true,
     lastActivity: 'Aguardando tarefas',
-    continuousMode: false,
+    continuousMode: true,
     capabilities: ['risk-assessment', 'probability-analysis', 'financial-impact', 'mitigation-strategies']
   },
   {
@@ -272,9 +272,9 @@ export const DEFAULT_AGENTS: Agent[] = [
     description: 'Sugere estratégias processuais baseadas em análise de dados, precedentes e probabilidade de sucesso',
     type: 'strategy-advisor',
     status: 'idle',
-    enabled: false,
+    enabled: true,
     lastActivity: 'Aguardando tarefas',
-    continuousMode: false,
+    continuousMode: true,
     capabilities: ['strategic-planning', 'option-analysis', 'cost-benefit', 'success-probability']
   },
   {
@@ -308,7 +308,18 @@ export const DEFAULT_AGENTS: Agent[] = [
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
   // Inicializa agentes com configuração padrão
   // Agentes essenciais são habilitados automaticamente
-  const essentialAgents = ['harvey', 'justine', 'analise-documental', 'monitor-djen', 'gestao-prazos'];
+  // Inclui agentes do fluxo automático de análise de intimações
+  const essentialAgents = [
+    'harvey',              // Assistente estratégico
+    'justine',             // Análise de intimações
+    'analise-documental',  // Análise de documentos
+    'monitor-djen',        // Monitoramento DJEN
+    'gestao-prazos',       // Cálculo de prazos
+    'redacao-peticoes',    // Redação automática
+    'pesquisa-juris',      // Pesquisa de jurisprudência
+    'analise-risco',       // Análise de risco
+    'estrategia-processual' // Estratégia processual automática
+  ];
 
   return DEFAULT_AGENTS.map(agent => ({
     ...agent,

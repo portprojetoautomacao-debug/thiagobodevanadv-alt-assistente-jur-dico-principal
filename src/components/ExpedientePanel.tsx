@@ -135,6 +135,24 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
     })
   }
 
+  // 6. Estratégia Processual - sempre gera sugestão estratégica automaticamente
+  tasks.push({
+    agentId: 'estrategia-processual',
+    type: 'case_strategy',
+    priority: priority === 'alta' || priority === 'urgente' ? 'high' : 'medium',
+    data: {
+      expedienteId: exp.id,
+      processNumber: exp.numeroProcesso,
+      tribunal: exp.tribunal,
+      summary: exp.summary,
+      documentType: analysisData.documentType,
+      priority: priority,
+      deadline: analysisData.deadline,
+      suggestedActions: analysisData.suggestedActions,
+      source: 'auto-analysis'
+    }
+  })
+
   return tasks
 }
 
