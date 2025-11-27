@@ -4,7 +4,7 @@
 import * as Sentry from "@sentry/react";
 
 // Default DSN for GitLab Error Tracking (can be overridden via VITE_SENTRY_DSN)
-const DEFAULT_SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || 
+const DEFAULT_SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN ||
   "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042";
 
 /**
@@ -14,7 +14,7 @@ async function checkSentryConnectivity(): Promise<boolean> {
   try {
     // Minimal valid Sentry envelope for connectivity test
     const envelope = `{"sent_at":"${new Date().toISOString()}"}\n{"type":"check_in"}\n{}`;
-    
+
     const response = await fetch('https://observe.gitlab.com/errortracking/api/v1/projects/76299042/envelope/', {
       method: 'POST',
       headers: {
@@ -49,7 +49,7 @@ export async function initErrorTracking() {
     // Desabilitar em produção quando não estiver no GitLab Pages
     const isGitLabPages = window.location.hostname.includes('gitlab.io');
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
+
     if (!isGitLabPages && !isLocalhost) {
       console.info('Error tracking: Disabled on external hosts (CORS not supported by GitLab)');
       return;
@@ -97,11 +97,11 @@ export async function initErrorTracking() {
       maxBreadcrumbs: 50,
 
       // Before send hook para filtrar erros
-      beforeSend: (event, hint) => {
+      beforeSend: (event: Sentry.Event, hint: Sentry.EventHint) => {
         // Filtrar erros de rede relacionados ao Sentry/GitLab
         if (hint.originalException &&
-            hint.originalException instanceof Error &&
-            hint.originalException.message?.includes('observe.gitlab.com')) {
+          hint.originalException instanceof Error &&
+          hint.originalException.message?.includes('observe.gitlab.com')) {
           console.warn('Sentry: Filtering GitLab Error Tracking network error');
           return null; // Não enviar o erro
         }
@@ -110,8 +110,8 @@ export async function initErrorTracking() {
         if (event.exception) {
           const exceptionValue = event.exception.values?.[0];
           if (exceptionValue?.value?.includes('Failed to fetch') ||
-              exceptionValue?.value?.includes('NetworkError') ||
-              exceptionValue?.value?.includes('observe.gitlab.com')) {
+            exceptionValue?.value?.includes('NetworkError') ||
+            exceptionValue?.value?.includes('observe.gitlab.com')) {
             console.warn('Sentry: Filtering network error');
             return null;
           }
@@ -170,7 +170,7 @@ export function setUserContext(userId: string, email?: string, username?: string
     email: email || undefined,
     username: username || undefined,
   });
-  
+
   console.log(`✅ User context set: ${username || email || userId}`);
 }
 
@@ -196,7 +196,7 @@ export function captureError(error: Error, context?: Record<string, unknown>) {
   Sentry.captureException(error, {
     contexts: context ? { custom: context } : undefined,
   });
-  
+
   console.error("❌ Error captured:", error.message);
 }
 
@@ -205,7 +205,7 @@ export function captureError(error: Error, context?: Record<string, unknown>) {
  */
 export function captureMessage(message: string, level: "fatal" | "error" | "warning" | "info" | "debug" = "info") {
   Sentry.captureMessage(message, level);
-  
+
   console.log(`📝 Message captured [${level}]: ${message}`);
 }
 
@@ -225,7 +225,7 @@ export function captureApiError(
         method,
         url,
         statusCode,
-        responseBody: typeof responseBody === 'string' 
+        responseBody: typeof responseBody === 'string'
           ? responseBody.substring(0, 1000)
           : JSON.stringify(responseBody).substring(0, 1000),
       },
@@ -236,7 +236,7 @@ export function captureApiError(
       http_status: statusCode,
     },
   });
-  
+
   console.error(`❌ API Error captured: ${method} ${url} (${statusCode})`);
 }
 

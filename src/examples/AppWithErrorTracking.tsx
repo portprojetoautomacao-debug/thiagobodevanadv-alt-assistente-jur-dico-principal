@@ -1,8 +1,8 @@
 // Exemplo de como usar Error Tracking no seu App.tsx
 
 import { useEffect } from 'react'
-import { useUserTracking, usePageTracking } from './hooks/useErrorTracking'
-import { captureMessage, setErrorTag } from './services/error-tracking'
+import { useUserTracking, usePageTracking } from '../hooks/useErrorTracking'
+import { captureMessage, setErrorTag } from '../services/error-tracking'
 
 export function AppWithErrorTracking({ user }: { user?: { id: string; email: string } }) {
   // Rastrear usuário logado

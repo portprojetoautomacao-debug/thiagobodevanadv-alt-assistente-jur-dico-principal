@@ -1,57 +1,67 @@
-// api/_lib/circuit-breaker.ts
-// Circuit Breaker Pattern para resiliência de APIs
-// Baseado em: Netflix Hystrix, resilience4j patterns
-// (Cópia para serverless functions - original em lib/ai/circuit-breaker.ts)
+/**
+ * Circuit Breaker Pattern
+ * Protege contra falhas em cascata em serviços externos
+ */
+
+import { SafeLogger } from './safe-logger';
+
+const logger = new SafeLogger('CircuitBreaker');
 
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number;      // Número de falhas para abrir circuito
-  successThreshold: number;      // Sucessos necessários para fechar
-  timeout: number;               // Tempo em ms para tentar HALF_OPEN
-  resetTimeout: number;          // Tempo para resetar contadores
+  failureThreshold: number;    // Número de falhas para abrir o circuito
+  successThreshold: number;    // Número de sucessos para fechar o circuito
+  timeout: number;            // Tempo em ms para tentar novamente quando OPEN
+  resetTimeout: number;       // Tempo em ms para reset automático
+  monitoringPeriod: number;   // Período para monitorar métricas
 }
 
 export interface CircuitBreakerStats {
   state: CircuitState;
   failures: number;
   successes: number;
+  totalRequests: number;
   lastFailureTime?: number;
+  lastSuccessTime?: number;
   lastStateChange: number;
+  uptime: number;
 }
 
-/**
- * Circuit Breaker para proteção de APIs externas
- * Estados: CLOSED (normal) → OPEN (bloqueado) → HALF_OPEN (teste)
- */
 export class CircuitBreaker {
   private state: CircuitState = 'CLOSED';
   private failures = 0;
   private successes = 0;
+  private totalRequests = 0;
   private lastFailureTime?: number;
-  private lastStateChange = Date.now();
+  private lastSuccessTime?: number;
+  private lastStateChange: number;
   private config: CircuitBreakerConfig;
   private name: string;
 
   constructor(name: string, config?: Partial<CircuitBreakerConfig>) {
     this.name = name;
+    this.lastStateChange = Date.now();
     this.config = {
-      failureThreshold: config?.failureThreshold ?? 5,
-      successThreshold: config?.successThreshold ?? 2,
-      timeout: config?.timeout ?? 60000, // 60s
-      resetTimeout: config?.resetTimeout ?? 300000, // 5min
+      failureThreshold: 5,
+      successThreshold: 2,
+      timeout: 60000,        // 1 minuto
+      resetTimeout: 300000,  // 5 minutos
+      monitoringPeriod: 300000, // 5 minutos
+      ...config
     };
   }
 
   /**
-   * Executa função protegida por circuit breaker
+   * Executa operação protegida pelo circuit breaker
    */
   async execute<T>(fn: () => Promise<T>): Promise<T> {
-    // Se circuito está OPEN, rejeitar imediatamente
+    this.totalRequests++;
+
     if (this.state === 'OPEN') {
       // Checar se é hora de tentar HALF_OPEN
       const timeSinceFailure = Date.now() - (this.lastFailureTime ?? 0);
-      
+
       if (timeSinceFailure >= this.config.timeout) {
         this.transitionTo('HALF_OPEN');
       } else {
@@ -75,6 +85,7 @@ export class CircuitBreaker {
   private onSuccess() {
     this.failures = 0;
     this.successes++;
+    this.lastSuccessTime = Date.now();
 
     if (this.state === 'HALF_OPEN' && this.successes >= this.config.successThreshold) {
       this.transitionTo('CLOSED');
@@ -98,98 +109,144 @@ export class CircuitBreaker {
   }
 
   /**
-   * Transição de estado
+   * Transita para novo estado
    */
   private transitionTo(newState: CircuitState) {
     const oldState = this.state;
     this.state = newState;
     this.lastStateChange = Date.now();
 
-    if (newState === 'CLOSED') {
-      this.failures = 0;
+    if (newState === 'HALF_OPEN') {
       this.successes = 0;
+      this.failures = 0;
     }
 
-    console.log(`[CircuitBreaker:${this.name}] ${oldState} → ${newState}`);
+    logger.info(`Circuit breaker [${this.name}] transitioned: ${oldState} -> ${newState}`);
   }
 
   /**
-   * Obtém estatísticas
+   * Retorna estatísticas do circuit breaker
    */
   getStats(): CircuitBreakerStats {
     return {
       state: this.state,
       failures: this.failures,
       successes: this.successes,
+      totalRequests: this.totalRequests,
       lastFailureTime: this.lastFailureTime,
+      lastSuccessTime: this.lastSuccessTime,
       lastStateChange: this.lastStateChange,
+      uptime: Date.now() - this.lastStateChange,
     };
   }
 
   /**
-   * Reseta circuit breaker
+   * Reseta o circuit breaker
    */
   reset() {
     this.state = 'CLOSED';
     this.failures = 0;
     this.successes = 0;
+    this.totalRequests = 0;
     this.lastFailureTime = undefined;
+    this.lastSuccessTime = undefined;
     this.lastStateChange = Date.now();
-    console.log(`[CircuitBreaker:${this.name}] RESET`);
+
+    logger.info(`Circuit breaker [${this.name}] reset`);
   }
 
   /**
    * Verifica se pode executar
    */
   canExecute(): boolean {
-    if (this.state === 'CLOSED') return true;
-    if (this.state === 'HALF_OPEN') return true;
-    
-    // Se OPEN, checar timeout
-    const timeSinceFailure = Date.now() - (this.lastFailureTime ?? 0);
-    return timeSinceFailure >= this.config.timeout;
+    return this.state === 'CLOSED' || this.state === 'HALF_OPEN';
+  }
+
+  /**
+   * Verifica se está aberto
+   */
+  isOpen(): boolean {
+    return this.state === 'OPEN';
+  }
+
+  /**
+   * Verifica se está fechado
+   */
+  isClosed(): boolean {
+    return this.state === 'CLOSED';
+  }
+
+  /**
+   * Verifica se está semi-aberto
+   */
+  isHalfOpen(): boolean {
+    return this.state === 'HALF_OPEN';
   }
 }
 
 /**
- * Registry de circuit breakers para todas as APIs
+ * Registry global para circuit breakers
  */
 export class CircuitBreakerRegistry {
   private static breakers = new Map<string, CircuitBreaker>();
 
-  /**
-   * Obtém ou cria circuit breaker
-   */
-  static get(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
-    let breaker = this.breakers.get(name);
-    
-    if (!breaker) {
-      breaker = new CircuitBreaker(name, config);
-      this.breakers.set(name, breaker);
+  static getBreaker(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
+    if (!this.breakers.has(name)) {
+      this.breakers.set(name, new CircuitBreaker(name, config));
     }
-
-    return breaker;
+    return this.breakers.get(name)!;
   }
 
-  /**
-   * Lista todos os circuit breakers
-   */
-  static getAll(): Map<string, CircuitBreakerStats> {
-    const stats = new Map<string, CircuitBreakerStats>();
-    
-    this.breakers.forEach((breaker, name) => {
-      stats.set(name, breaker.getStats());
-    });
-
-    return stats;
-  }
-
-  /**
-   * Reseta todos os circuit breakers
-   */
   static resetAll() {
     this.breakers.forEach((breaker) => {
       breaker.reset();
     });
+  }
+
+  static getAllStats() {
+    const stats: Record<string, CircuitBreakerStats> = {};
+    this.breakers.forEach((breaker, name) => {
+      stats[name] = breaker.getStats();
+    });
+    return stats;
+  }
+}
+
+// Circuit breakers pré-configurados para serviços comuns
+export const sparkCircuitBreaker = CircuitBreakerRegistry.getBreaker('spark', {
+  failureThreshold: 3,
+  successThreshold: 2,
+  timeout: 30000, // 30s
+});
+
+export const djenCircuitBreaker = CircuitBreakerRegistry.getBreaker('djen', {
+  failureThreshold: 5,
+  successThreshold: 2,
+  timeout: 60000, // 1min
+});
+
+export const redisCircuitBreaker = CircuitBreakerRegistry.getBreaker('redis', {
+  failureThreshold: 3,
+  successThreshold: 2,
+  timeout: 15000, // 15s
+});
+
+/**
+ * Wrapper para operações com circuit breaker
+ */
+export async function withCircuitBreaker<T>(
+  operation: () => Promise<T>,
+  serviceName: string,
+  fallback?: () => Promise<T>
+): Promise<T> {
+  const breaker = CircuitBreakerRegistry.getBreaker(serviceName);
+  try {
+    return await breaker.execute(operation);
+  } catch (error) {
+    if (breaker.isOpen() && fallback) {
+      logger.warn('Circuit breaker open, using fallback', { breaker: breaker.getStats() });
+      return await fallback();
+    }
+    throw error;
   }
 }

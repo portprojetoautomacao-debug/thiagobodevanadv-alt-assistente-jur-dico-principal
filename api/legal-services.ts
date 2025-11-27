@@ -1,222 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth, sendAuthError } from './_lib/auth';
+import { rateLimitMiddleware } from './_lib/rate-limit';
+import { handleError, withErrorHandler } from './_lib/error-handler';
+import { SafeLogger } from './_lib/safe-logger';
+import { consultarDJENForLawyer } from './_lib/djen-client';
 
-// --- DJEN CLIENT (INLINE) ---
+const logger = new SafeLogger('LegalServices');
 
-interface DJENComunicacao {
-  id: number;
-  data_disponibilizacao: string;
-  siglaTribunal: string;
-  tipoComunicacao: string;
-  nomeOrgao: string;
-  texto: string;
-  numero_processo: string;
-  meio: string;
-  link: string;
-  tipoDocumento: string;
-  nomeClasse: string;
-  codigoClasse: string;
-  numeroComunicacao: number;
-  ativo: boolean;
-  hash: string;
-  datadisponibilizacao: string;
-  meiocompleto: string;
-  numeroprocessocommascara: string;
-  destinatarios: Array<{
-    nome: string;
-    polo: string;
-    comunicacao_id: number;
-  }>;
-  destinatarioadvogados: Array<{
-    id: number;
-    comunicacao_id: number;
-    advogado_id: number;
-    created_at: string;
-    updated_at: string;
-    advogado: {
-      id: number;
-      nome: string;
-      numero_oab: string;
-      uf_oab: string;
-    };
-  }>;
-}
 
-interface DJENResponse {
-  status: string;
-  message: string;
-  count: number;
-  items: DJENComunicacao[];
-}
-
-interface DJENFilteredResult {
-  id: number;
-  tribunal: string;
-  data: string;
-  tipo: string;
-  teor: string;
-  numeroProcesso: string;
-  orgao: string;
-  meio: string;
-  link: string;
-  hash: string;
-  matchType: 'nome' | 'oab' | 'ambos';
-  advogados: Array<{
-    nome: string;
-    numero_oab: string;
-    uf_oab: string;
-  }>;
-}
-
-interface DJENQueryParams {
-  numeroOab?: string;
-  ufOab?: string;
-  nomeAdvogado?: string;
-  siglaTribunal?: string;
-  dataDisponibilizacaoInicio?: string;
-  dataDisponibilizacaoFim?: string;
-  pagina?: number;
-  itensPorPagina?: number;
-  meio?: 'E' | 'D';
-}
-
-const DJEN_TIMEOUT = 30000;
-const DJEN_DELAY = 1000;
-
-function normalizeText(text: string): string {
-  return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-}
-
-function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
-  if (!numeroOAB) return {};
-  const value = numeroOAB.trim();
-  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
-  if (matchOABPattern) return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
-  if (matchNumericUF) return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
-  const matchNumeric = value.match(/^(\d+)$/);
-  if (matchNumeric) return { numero: matchNumeric[1] };
-  return {};
-}
-
-function buildDJENQueryString(params: DJENQueryParams): string {
-  const queryParams: string[] = [];
-  if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
-  if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
-  if (params.nomeAdvogado) queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
-  if (params.dataDisponibilizacaoInicio) queryParams.push(`dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`);
-  if (params.dataDisponibilizacaoFim) queryParams.push(`dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`);
-  if (params.siglaTribunal) queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`);
-  if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
-  if (params.itensPorPagina) queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
-  if (params.meio) queryParams.push(`meio=${params.meio}`);
-  return queryParams.join('&');
-}
-
-async function consultarComunicacoes(params: DJENQueryParams): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number } }> {
-  const queryString = buildDJENQueryString(params);
-  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
-
-  try {
-    const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, signal: controller.signal });
-    clearTimeout(timeoutId);
-    const rateLimitInfo = {
-      limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
-      remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
-    };
-    if (response.status === 429) return { response: null, rateLimitInfo };
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json() as DJENResponse;
-    return { response: data, rateLimitInfo };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error(`[DJEN] Error:`, error);
-    return { response: null, rateLimitInfo: {} };
-  }
-}
-
-function formatDJENDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string, numeroOAB?: string, dataInicio?: string, dataFim?: string, meio?: 'D' | 'E'): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
-  if (!nomeAdvogado && !numeroOAB) throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB');
-  
-  const defaultDate = formatDJENDate(new Date());
-  const queryDataInicio = dataInicio || defaultDate;
-  const queryDataFim = dataFim || queryDataInicio;
-  
-  let numeroOabNumerico: string | undefined;
-  let ufOab: string | undefined;
-  if (numeroOAB) {
-    const parsed = parseOAB(numeroOAB);
-    numeroOabNumerico = parsed.numero;
-    ufOab = parsed.uf;
-  }
-
-  const resultados: DJENFilteredResult[] = [];
-  const erros: Array<{ tribunal: string; erro: string }> = [];
-  let rateLimitWarning = false;
-
-  for (const tribunal of tribunais) {
-    try {
-      const queryParams: DJENQueryParams = {
-        siglaTribunal: tribunal,
-        dataDisponibilizacaoInicio: queryDataInicio,
-        dataDisponibilizacaoFim: queryDataFim,
-        itensPorPagina: 100,
-        pagina: 1
-      };
-      if (nomeAdvogado) queryParams.nomeAdvogado = nomeAdvogado;
-      if (numeroOabNumerico) queryParams.numeroOab = numeroOabNumerico;
-      if (ufOab) queryParams.ufOab = ufOab;
-      if (meio) queryParams.meio = meio;
-
-      const { response, rateLimitInfo } = await consultarComunicacoes(queryParams);
-      if (!response) {
-        rateLimitWarning = true;
-        erros.push({ tribunal, erro: 'Rate limit ou erro na consulta' });
-        continue;
-      }
-
-      for (const comunicacao of response.items) {
-        let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
-        const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
-          const matchNome = nomeAdvogado ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) : false;
-          const matchOab = numeroOabNumerico ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab : false;
-          if (matchNome && matchOab) { matchType = 'ambos'; return true; }
-          if (matchOab) { matchType = 'oab'; return true; }
-          if (matchNome) { matchType = 'nome'; return true; }
-          return false;
-        }) || false;
-
-        if (temAdvogado) {
-          resultados.push({
-            id: comunicacao.id,
-            tribunal: comunicacao.siglaTribunal,
-            data: comunicacao.data_disponibilizacao,
-            tipo: comunicacao.tipoComunicacao,
-            teor: comunicacao.texto,
-            numeroProcesso: comunicacao.numero_processo,
-            orgao: comunicacao.nomeOrgao,
-            meio: comunicacao.meiocompleto || comunicacao.meio,
-            link: comunicacao.link,
-            hash: comunicacao.hash,
-            matchType,
-            advogados: comunicacao.destinatarioadvogados?.map(dest => ({ nome: dest.advogado.nome, numero_oab: dest.advogado.numero_oab, uf_oab: dest.advogado.uf_oab })) || []
-          });
-        }
-      }
-
-      if (tribunais.indexOf(tribunal) < tribunais.length - 1) await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
-    } catch (error) {
-      erros.push({ tribunal, erro: error instanceof Error ? error.message : 'Erro desconhecido' });
-    }
-  }
-
-  return { resultados, erros, rateLimitWarning: rateLimitWarning ? true : undefined };
-}
 
 // --- DEADLINE CALCULATION LOGIC ---
 
@@ -416,7 +207,7 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
     }
 
     // Converter mapa para array
-    resultadosFormatados.push(...tribunaisMap.values());
+    resultadosFormatados.push(...Array.from(tribunaisMap.values()));
 
     // Adicionar tribunais sem publicações
     for (const tribunal of tribunais) {
@@ -514,20 +305,59 @@ async function handleDeadlineCalculation(req: VercelRequest, res: VercelResponse
 
 // --- MAIN HANDLER ---
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) => {
+  // Apply authentication
+  const authResult = await requireAuth(req, res);
+  if (!authResult.authenticated) {
+    sendAuthError(res, authResult);
+    return;
+  }
+
+  // Apply rate limiting
+  const clientIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+                   (req.headers['x-real-ip'] as string) ||
+                   'unknown';
+
+  const rateLimitResult = await rateLimitMiddleware(clientIP);
+  if (!rateLimitResult.allowed) {
+    res.setHeader('Retry-After', Math.ceil((Date.now() + 60000) / 1000).toString());
+    Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    res.status(429).json({
+      error: rateLimitResult.error || 'Rate limit exceeded'
+    });
+    return;
+  }
+
+  // Set rate limit headers
+  Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  logger.info('Legal services request', {
+    method: req.method,
+    service: req.query.service,
+    userId: authResult.userId,
+    ip: clientIP
+  });
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   const service = req.query.service as string;
 
   if (service === 'djen') {
-    return handleDJENCheck(req, res);
+    handleDJENCheck(req, res);
+    return;
   }
 
   if (service === 'deadline') {
-    return handleDeadlineCalculation(req, res);
+    handleDeadlineCalculation(req, res);
+    return;
   }
 
-  return res.status(400).json({ error: 'Invalid service specified. Use ?service=djen or ?service=deadline' });
-}
+  res.status(400).json({ error: 'Invalid service specified. Use ?service=djen or ?service=deadline' });
+});

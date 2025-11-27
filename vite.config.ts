@@ -3,8 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import { defineConfig, PluginOption } from "vite";
 import { VitePWA } from 'vite-plugin-pwa';
 
-import sparkPlugin from "@github/spark/spark-vite-plugin";
-import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
 import { phosphorIconOptimizer } from './vite-icon-optimizer';
 import { resolve } from 'path'
 
@@ -16,8 +14,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     phosphorIconOptimizer(),
-    createIconImportProxy() as PluginOption,
-    sparkPlugin() as PluginOption,
+    // createIconImportProxy() as PluginOption, // REMOVIDO: depende de @github/spark
+    // sparkPlugin() as PluginOption, // REMOVIDO: depende de @github/spark
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['robots.txt', 'sitemap.xml', '*.svg', '*.png'],
@@ -73,7 +71,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(projectRoot, 'src'),
-      '@doist/todoist-api-typescript': resolve(projectRoot, 'src/lib/todoist-stub.ts')
+      '@doist/todoist-api-typescript': resolve(projectRoot, 'src/lib/todoist-stub.ts'),
+      '@github/spark/llm': resolve(projectRoot, 'src/lib/spark-llm-mock.ts')
     }
   },
   optimizeDeps: {
@@ -109,63 +108,58 @@ export default defineConfig({
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'react-vendor';
           }
-          
+
           // Radix UI components - separar em chunks menores
           if (id.includes('@radix-ui')) {
             return 'ui-vendor';
           }
-          
+
           // D3 separately to avoid conflicts
           if (id.includes('d3')) {
             return 'd3-vendor';
           }
-          
+
           // Form libraries
           if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform/resolvers')) {
             return 'forms';
           }
-          
+
           // Phosphor icons
           if (id.includes('@phosphor-icons/react')) {
             return 'icons';
           }
-          
-          // GitHub Spark
-          if (id.includes('@github/spark')) {
-            return 'spark';
-          }
-          
+
           // Framer Motion
           if (id.includes('framer-motion')) {
             return 'animation';
           }
-          
+
           // Three.js
           if (id.includes('three')) {
             return 'three';
           }
-          
+
           // Recharts (gráficos) - chunk separado REMOVIDO para evitar ReferenceError
           // if (id.includes('recharts')) {
           //   return 'charts';
           // }
-          
+
           // DnD Kit (drag and drop para Kanban)
           if (id.includes('@dnd-kit')) {
             return 'dnd';
           }
-          
+
           // PDF e upload de arquivos
           if (id.includes('pdf') || id.includes('file-upload')) {
             return 'files';
           }
-          
+
           // Other utilities
-          if (id.includes('date-fns') || id.includes('clsx') || 
-              id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
+          if (id.includes('date-fns') || id.includes('clsx') ||
+            id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
             return 'utils';
           }
-          
+
           // Sample data (usado apenas em desenvolvimento/demo)
           if (id.includes('sample-data')) {
             return 'sample-data';

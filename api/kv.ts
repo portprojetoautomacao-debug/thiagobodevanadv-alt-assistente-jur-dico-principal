@@ -1,16 +1,20 @@
 /**
  * KV API endpoint
- * 
+ *
  * Handles GET and POST requests for key-value storage
  * - GET: Retrieve value by key
  * - POST: Set value for key
  * - POST ?action=init: Initialize configuration with agents and lawyer data
- * 
+ *
  * Supports both Upstash Redis and Vercel KV
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
+import { requireAuth, sendAuthError } from './_lib/auth';
+import { rateLimitMiddleware } from './_lib/rate-limit';
+import { handleError, withErrorHandler } from './_lib/error-handler';
+import { SafeLogger } from './_lib/safe-logger';
 
 // Initialize Redis client (supports both Upstash and Vercel KV)
 // Prefer Upstash explicit configuration if available
@@ -21,6 +25,8 @@ const redis = (redisUrl && redisToken) ? new Redis({
   url: redisUrl,
   token: redisToken,
 }) : null;
+
+const logger = new SafeLogger('KV');
 
 /**
  * Initialize configuration with default agents and lawyer data
@@ -193,7 +199,48 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse) {
 }
 
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) => {
+  // Apply authentication
+  const authResult = await requireAuth(req, res);
+  if (!authResult.authenticated) {
+    sendAuthError(res, authResult);
+    return;
+  }
+
+  // Apply rate limiting
+  const clientIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+                   (req.headers['x-real-ip'] as string) ||
+                   'unknown';
+
+  const rateLimitResult = await rateLimitMiddleware(clientIP);
+  if (!rateLimitResult.allowed) {
+    res.setHeader('Retry-After', Math.ceil((Date.now() + 60000) / 1000).toString());
+    Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    res.status(429).json({
+      error: rateLimitResult.error || 'Rate limit exceeded'
+    });
+    return;
+  }
+
+  // Set rate limit headers
+  Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  logger.info('KV API request', {
+    method: req.method,
+    url: req.url,
+    userId: authResult.userId,
+    ip: clientIP
+  });
+
+  logger.info('KV API request', {
+    method: req.method,
+    url: req.url,
+    userId: authResult.userId
+  });
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -211,7 +258,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Special action: Initialize configuration
   const action = req.query.action as string | undefined;
   if (action === 'init' && req.method === 'POST') {
-    return handleInitConfig(req, res);
+    handleInitConfig(req, res);
+    return;
   }
 
   // Parse body if needed
@@ -274,10 +322,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
   } catch (error) {
-    console.error('KV API Error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      details: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('KV API Error', error);
+    return handleError(error, res);
   }
-}
+});

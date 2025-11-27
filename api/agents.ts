@@ -10,6 +10,17 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+import { SafeLogger } from './_lib/safe-logger';
+import { rateLimitMiddleware, apiRateLimiter } from './_lib/rate-limit';
+import { requireAuth, sendAuthError } from './_lib/auth';
+import { validateProcessQueueRequest, validateProcessTaskRequest } from './_lib/validation';
+import { withErrorHandler, addCorsHeaders, handleOptions, sendSuccess, AppError, handleError } from './_lib/error-handler';
+import { sparkCircuitBreaker, withCircuitBreaker } from './_lib/circuit-breaker';
+import { sparkCache, cachedOperation } from './_lib/cache';
+import { withRetry, sparkRetryConfig } from './_lib/retry';
+
+const logger = new SafeLogger('AgentsAPI');
+
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
   ANALYZE_DOCUMENT = 'analyze_document',
@@ -117,22 +128,6 @@ function validateAgent(agent: unknown): agent is Agent {
     Object.values(AgentStatus).includes(a.status as AgentStatus) &&
     typeof a.enabled === 'boolean'
   )
-}
-
-// ✨ Logger estruturado
-const logger = {
-  info: (message: string, context?: Record<string, unknown>) => {
-    console.log(`[Agents] ${message}`, context ? JSON.stringify(context) : '')
-  },
-  error: (message: string, error?: unknown, context?: Record<string, unknown>) => {
-    console.error(`[Agents] ERROR: ${message}`, {
-      error: error instanceof Error ? error.message : String(error),
-      ...context
-    })
-  },
-  warn: (message: string, context?: Record<string, unknown>) => {
-    console.warn(`[Agents] WARNING: ${message}`, context ? JSON.stringify(context) : '')
-  }
 }
 
 // ✨ Cache de prompts com enum keys
@@ -252,13 +247,13 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
   
   // Validar entrada
   if (!validateAgentTask(task)) {
-    const error = new Error('Invalid agent task structure')
+    const error = new AppError('Invalid agent task structure', 'VALIDATION_FAILED', 400)
     logger.error('Task validation failed', error, { task })
     throw error
   }
 
   if (!validateAgent(agent)) {
-    const error = new Error('Invalid agent structure')
+    const error = new AppError('Invalid agent structure', 'VALIDATION_FAILED', 400)
     logger.error('Agent validation failed', error, { agent })
     throw error
   }
@@ -282,27 +277,34 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
     )
 
     try {
-      const sparkResponse = await fetch('/_spark/llm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 2000,
-          temperature: 0.7,
-        }),
-        signal: controller.signal as RequestInit['signal'],
-      });
+      // Usar circuit breaker e retry para Spark LLM
+      const sparkResponse = await withRetry(
+        () => withCircuitBreaker(
+          () => fetch('/_spark/llm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              max_tokens: 2000,
+              temperature: 0.7,
+            }),
+            signal: controller.signal as RequestInit['signal'],
+          }),
+          'spark'
+        ),
+        sparkRetryConfig
+      )
 
-      if (!sparkResponse.ok) {
-        throw new Error(`Spark LLM error: ${sparkResponse.statusText}`)
+      if (!sparkResponse.result.ok) {
+        throw new AppError(`Spark LLM error: ${sparkResponse.result.statusText}`, 'EXTERNAL_SERVICE_ERROR', 500)
       }
 
-      const sparkData = await sparkResponse.json() as { 
+      const sparkData = await sparkResponse.result.json() as { 
         choices?: Array<{ message?: { content?: string } }>, 
         usage?: { total_tokens?: number } 
       };
@@ -310,7 +312,7 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
       const aiContent = sparkData.choices?.[0]?.message?.content || ''
 
       if (!aiContent) {
-        throw new Error('Empty response from AI')
+        throw new AppError('Empty response from AI', 'EXTERNAL_SERVICE_ERROR', 500)
       }
 
       // Parse JSON from AI response
@@ -360,34 +362,76 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { action } = req.query
+  // Adicionar headers CORS
+  addCorsHeaders(res)
 
-  // Verificar autenticação (cron ou API key)
-  const authHeader = req.headers.authorization
-  const isVercelCron = authHeader?.startsWith('Bearer ')
-  const isLocalTest = process.env.NODE_ENV === 'development'
-  
-  if (!isVercelCron && !isLocalTest && !req.headers['x-api-key']) {
-    return res.status(401).json({ error: 'Unauthorized' })
+  // Tratar OPTIONS
+  if (req.method === 'OPTIONS') {
+    return handleOptions(res)
+  }
+
+  // Aplicar rate limiting
+  const rateLimitResult = await rateLimitMiddleware(`${req.method}:${req.url}`, apiRateLimiter)
+  if (!rateLimitResult.allowed) {
+    res.setHeader('Retry-After', Math.ceil((Date.now() + 60000) / 1000).toString())
+    Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+      res.setHeader(key, value)
+    })
+    return res.status(429).json({
+      ok: false,
+      error: rateLimitResult.error || 'Rate limit exceeded',
+      timestamp: new Date().toISOString()
+    })
+  }
+
+  // Adicionar headers de rate limit na resposta
+  Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+    res.setHeader(key, value)
+  })
+
+  // Aplicar autenticação
+  const authResult = await requireAuth(req, res)
+  if (!authResult.authenticated) {
+    return sendAuthError(res, authResult)
   }
 
   try {
+    const { action } = req.query
+
     // ✨ PROCESS QUEUE (cron job)
     if (action === 'process-queue' && req.method === 'POST') {
-      const kvEndpoint = '/_spark/kv/agent-task-queue'
-      
-      try {
-        const tasksResponse = await fetch(kvEndpoint, {
-          headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
+      // Validar entrada
+      const validation = validateProcessQueueRequest(req.body)
+      if (!validation.success) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Validation failed',
+          details: validation.error,
+          timestamp: new Date().toISOString()
         })
+      }
 
-        if (!tasksResponse.ok) {
-          throw new Error(`KV fetch failed: ${tasksResponse.statusText}`)
+      const kvEndpoint = '/_spark/kv/agent-task-queue'
+
+      try {
+        // Usar circuit breaker e retry para KV
+        const kvResponse = await withRetry(
+          () => withCircuitBreaker(
+            () => fetch(kvEndpoint, {
+              headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
+            }),
+            'spark'
+          ),
+          sparkRetryConfig
+        )
+
+        if (!kvResponse.result.ok) {
+          throw new AppError(`KV fetch failed: ${kvResponse.result.statusText}`, 'EXTERNAL_SERVICE_ERROR', 500)
         }
 
-        const kvData = await tasksResponse.json() as { value?: unknown[] }
+        const kvData = await kvResponse.result.json() as { value?: unknown[] }
         const taskQueue = kvData.value || []
-        
+
         // Validar tarefas
         const validTasks = taskQueue.filter(t => validateAgentTask(t)) as AgentTask[]
         const pendingTasks = validTasks.filter((t: AgentTask) => t.status === TaskStatus.QUEUED)
@@ -395,8 +439,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         logger.info(`Found ${pendingTasks.length} pending tasks`)
 
         if (pendingTasks.length === 0) {
-          return res.status(200).json({
-            ok: true,
+          return sendSuccess(res, {
             message: 'No pending tasks',
             processed: 0,
             timestamp: new Date().toISOString(),
@@ -409,17 +452,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         for (const task of tasksToProcess) {
           try {
-            const agentsResponse = await fetch('/_spark/kv/autonomous-agents', {
-              headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
-            })
+            // Usar cache para agentes
+            const agentsData: Agent[] = await cachedOperation(
+              sparkCache,
+              'agents-list',
+              async (): Promise<Agent[]> => {
+                const agentsResponse = await withRetry(
+                  () => withCircuitBreaker(
+                    () => fetch('/_spark/kv/autonomous-agents', {
+                      headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
+                    }),
+                    'spark'
+                  ),
+                  sparkRetryConfig
+                )
 
-            if (!agentsResponse.ok) {
-              throw new Error(`Agents KV fetch failed: ${agentsResponse.statusText}`)
-            }
+                if (!agentsResponse.result.ok) {
+                  throw new AppError(`Agents KV fetch failed: ${agentsResponse.result.statusText}`, 'EXTERNAL_SERVICE_ERROR', 500)
+                }
 
-            const agentsData = await agentsResponse.json() as { value?: unknown[] }
-            const agents = (agentsData.value || []).filter(a => validateAgent(a)) as Agent[]
-            const agent = agents.find((a: Agent) => a.id === task.agentId)
+                const agentsData = await agentsResponse.result.json() as { value?: unknown[] }
+                return (agentsData.value || []).filter(a => validateAgent(a)) as Agent[]
+              },
+              300 // 5 minutos cache
+            )
+
+            const agent = agentsData.find((a: Agent) => a.id === task.agentId)
 
             if (!agent) {
               logger.info(`Skipping task ${task.id} - agent not found`)
@@ -629,7 +687,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             logger.error(`Error processing task ${task.id}`, error)
             task.status = TaskStatus.FAILED
             task.error = error instanceof Error ? error.message : 'Unknown error'
-            
+
             results.push({
               taskId: task.id,
               status: 'failed',
@@ -638,20 +696,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
-        // Atualizar fila no KV
-        await fetch(kvEndpoint, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-          },
-          body: JSON.stringify({ value: taskQueue }),
-        })
+        // Atualizar fila no KV com circuit breaker e retry
+        await withRetry(
+          () => withCircuitBreaker(
+            () => fetch(kvEndpoint, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+              },
+              body: JSON.stringify({ value: taskQueue }),
+            }),
+            'spark'
+          ),
+          sparkRetryConfig
+        )
 
         logger.info(`Processed ${results.length} tasks`)
 
-        return res.status(200).json({
-          ok: true,
+        return sendSuccess(res, {
           message: 'Tasks processed',
           processed: results.filter(r => r.status === 'completed').length,
           failed: results.filter(r => r.status === 'failed').length,
@@ -666,30 +729,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ✨ PROCESS TASK (individual)
     if (action === 'process-task' && req.method === 'POST') {
-      const { task, agent } = req.body as { 
-        task: unknown; 
-        agent: unknown 
-      }
-
       // Validar entrada
-      if (!validateAgentTask(task)) {
-        return res.status(400).json({ 
-          error: 'Invalid task structure',
+      const validation = validateProcessTaskRequest(req.body)
+      if (!validation.success) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Validation failed',
+          details: validation.error,
           timestamp: new Date().toISOString()
         })
       }
 
-      if (!validateAgent(agent)) {
-        return res.status(400).json({ 
-          error: 'Invalid agent structure',
-          timestamp: new Date().toISOString()
-        })
+      const { task, agent } = req.body as { 
+        task: AgentTask; 
+        agent: Agent 
       }
 
       const result = await processTaskWithAI(task, agent)
 
-      return res.status(200).json({
-        ok: true,
+      return sendSuccess(res, {
         result,
         metadata: {
           tokensUsed: result.tokensUsed,
@@ -706,12 +764,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
   } catch (error) {
-    logger.error('Handler error', error)
-    
-    return res.status(500).json({
-      ok: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    })
+    handleError(error, res, 'AgentsAPI')
   }
 }
