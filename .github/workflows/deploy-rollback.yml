@@ -98,22 +98,22 @@ jobs:
       run: |
         echo "🔐 Verificando secrets do Vercel..."
         MISSING=0
-
-        if [ -z "$VERCEL_TOKEN" ]; then
+        
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
           echo "❌ VERCEL_TOKEN não configurado"
           MISSING=$((MISSING + 1))
         else
           echo "✅ VERCEL_TOKEN configurado"
         fi
-
-        if [ -z "$VERCEL_ORG_ID" ]; then
+        
+        if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
           echo "❌ VERCEL_ORG_ID não configurado"
           MISSING=$((MISSING + 1))
         else
           echo "✅ VERCEL_ORG_ID configurado"
         fi
-
-        if [ -z "$VERCEL_PROJECT_ID" ]; then
+        
+        if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
           echo "❌ VERCEL_PROJECT_ID não configurado"
           MISSING=$((MISSING + 1))
         else
@@ -126,89 +126,22 @@ jobs:
           echo "   Veja: CONFIGURACAO_VERCEL_TOKEN.md para instruções"
           exit 1
         fi
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: 🔧 Configurar projeto Vercel
       run: |
         mkdir -p .vercel
-        echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
         cat .vercel/project.json
 
     - name: 🚀 Deploy para Vercel Staging
       id: deploy-staging
       run: |
         echo "🚀 Deploy para Vercel Staging..."
-        set +e  # Não falhar imediatamente
-        
-        # Retry logic para erros temporários do Vercel
-        MAX_RETRIES=3
-        RETRY_DELAY=30
-        
-        for attempt in $(seq 1 $MAX_RETRIES); do
-          echo "Tentativa $attempt de $MAX_RETRIES..."
-          
-          # Executar deploy e capturar saída completa
-          DEPLOY_OUTPUT=$(npx vercel deploy --token=$VERCEL_TOKEN --yes 2>&1)
-          DEPLOY_EXIT_CODE=$?
-          
-          echo "=== Output do deploy ==="
-          echo "$DEPLOY_OUTPUT"
-          echo "========================"
-          echo "Exit code: $DEPLOY_EXIT_CODE"
-          
-          # Se sucesso, sair do loop
-          if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
-            break
-          fi
-          
-          # Verificar erros recuperáveis vs permanentes
-          if echo "$DEPLOY_OUTPUT" | grep -qi "internal error\|unexpected error\|timeout"; then
-            echo "⚠️ Erro temporário detectado, aguardando ${RETRY_DELAY}s antes de retry..."
-            sleep $RETRY_DELAY
-            RETRY_DELAY=$((RETRY_DELAY * 2))
-            continue
-          fi
-          
-          # Erro permanente - não fazer retry
-          break
-        done
-        
-        # Verificar se o deploy falhou
-        if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
-          echo "❌ Deploy falhou com código $DEPLOY_EXIT_CODE"
-          # Verificar erros comuns
-          if echo "$DEPLOY_OUTPUT" | grep -qi "not authorized\|unauthorized\|permission denied"; then
-            echo "⚠️ Erro de autorização - verifique VERCEL_TOKEN"
-          fi
-          if echo "$DEPLOY_OUTPUT" | grep -qi "project not found\|invalid project"; then
-            echo "⚠️ Projeto não encontrado - verifique VERCEL_PROJECT_ID"
-          fi
+        DEPLOY_URL=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Falha ao obter URL do deploy"
           exit 1
         fi
-        
-        # Extrair URL - tentar múltiplos padrões
-        DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9_-]+\.vercel\.app' | head -1)
-        
-        # Se não encontrou, tentar padrão alternativo com subdomínios
-        if [ -z "$DEPLOY_URL" ]; then
-          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | head -1)
-        fi
-        
-        # Se ainda não encontrou, tentar pegar qualquer URL https
-        if [ -z "$DEPLOY_URL" ]; then
-          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[^ ]+' | grep vercel | head -1)
-        fi
-        
-        if [ -z "$DEPLOY_URL" ]; then
-          echo "❌ Não foi possível extrair URL do deploy"
-          echo "Output completo para debug:"
-          echo "$DEPLOY_OUTPUT" | cat -v
-          exit 1
-        fi
-        
         echo "✅ Deploy staging concluído: $DEPLOY_URL"
         echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
@@ -219,39 +152,8 @@ jobs:
     - name: 🧪 Testes de smoke no staging
       run: |
         echo "🧪 Executando testes de smoke..."
-        DEPLOY_URL="${{ steps.deploy-staging.outputs.url }}"
-        echo "URL de staging: $DEPLOY_URL"
-        
-        # Aguardar deploy estar disponível (com retry)
-        MAX_RETRIES=5
-        RETRY_DELAY=15
-        
-        for i in $(seq 1 $MAX_RETRIES); do
-          echo "Tentativa $i de $MAX_RETRIES..."
-          sleep $RETRY_DELAY
-          
-          # Usar -L para seguir redirects e aceitar códigos 200-399
-          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" "$DEPLOY_URL" || echo "000")
-          echo "HTTP Status: $HTTP_CODE"
-          
-          # Aceitar 200, 301, 302, 307 (redirects) e 401 (proteção de preview)
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "307" ]; then
-            echo "✅ Staging responde com status $HTTP_CODE"
-            exit 0
-          fi
-          
-          # 401 pode indicar proteção de preview do Vercel (esperado para staging)
-          if [ "$HTTP_CODE" = "401" ]; then
-            echo "⚠️ Deploy protegido por senha (esperado para staging)"
-            echo "✅ Staging está acessível (requer autenticação)"
-            exit 0
-          fi
-          
-          echo "⏳ Aguardando deploy ficar disponível..."
-        done
-        
-        echo "❌ Staging não respondeu após $MAX_RETRIES tentativas"
-        exit 1
+        sleep 30  # Aguardar deploy
+        curl -f ${{ steps.deploy-staging.outputs.url }} > /dev/null && echo "✅ Staging responde" || exit 1
 
     - name: 🏷️  Criar tag de staging
       run: |
@@ -286,21 +188,12 @@ jobs:
     - name: 📦 Instalar dependências
       run: npm ci
 
-    - name: 🧪 Testes unitários antes do deploy
+    - name: 🧪 Testes completos antes do deploy
       run: |
-        echo "🧪 Executando testes unitários..."
-        npm run test -- --run --coverage || echo "⚠️ Alguns testes falharam"
-        echo "✅ Testes unitários concluídos"
-      env:
-        VITE_GITHUB_OAUTH_CLIENT_ID: mock_client_id
-        GITHUB_OAUTH_CLIENT_SECRET: mock_secret
-        VITE_GOOGLE_CLIENT_ID: mock_google_client
-        VITE_GOOGLE_API_KEY: mock_google_api_key
-        VITE_APP_ENV: test
-      continue-on-error: true
-    
-    # Nota: Testes E2E são executados no CI.yml separadamente
-    # O deploy de produção depende dos testes de staging terem passado
+        echo "🧪 Executando testes completos..."
+        npm run test -- --run --coverage || exit 1
+        npm run test:e2e || exit 1
+        echo "✅ Todos os testes passaram"
 
     - name: 🏗️  Build production otimizado
       run: |
@@ -320,81 +213,17 @@ jobs:
     - name: 🔧 Configurar projeto Vercel (Production)
       run: |
         mkdir -p .vercel
-        echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
 
     - name: 🚀 Deploy para Vercel Production
       id: deploy-production
       run: |
         echo "🚀 Deploy para Vercel Production..."
-        set +e  # Não falhar imediatamente
-        
-        # Retry logic para erros temporários do Vercel
-        MAX_RETRIES=3
-        RETRY_DELAY=30
-        
-        for attempt in $(seq 1 $MAX_RETRIES); do
-          echo "Tentativa $attempt de $MAX_RETRIES..."
-          
-          # Executar deploy e capturar saída completa
-          DEPLOY_OUTPUT=$(npx vercel deploy --prod --token=$VERCEL_TOKEN --yes 2>&1)
-          DEPLOY_EXIT_CODE=$?
-          
-          echo "=== Output do deploy ==="
-          echo "$DEPLOY_OUTPUT"
-          echo "========================"
-          echo "Exit code: $DEPLOY_EXIT_CODE"
-          
-          # Se sucesso, sair do loop
-          if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
-            break
-          fi
-          
-          # Verificar erros recuperáveis vs permanentes
-          if echo "$DEPLOY_OUTPUT" | grep -qi "internal error\|unexpected error\|timeout"; then
-            echo "⚠️ Erro temporário detectado, aguardando ${RETRY_DELAY}s antes de retry..."
-            sleep $RETRY_DELAY
-            RETRY_DELAY=$((RETRY_DELAY * 2))
-            continue
-          fi
-          
-          # Erro permanente - não fazer retry
-          break
-        done
-        
-        # Verificar se o deploy falhou após todos os retries
-        if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
-          echo "❌ Deploy falhou com código $DEPLOY_EXIT_CODE após $MAX_RETRIES tentativas"
-          if echo "$DEPLOY_OUTPUT" | grep -qi "not authorized\|unauthorized\|permission denied"; then
-            echo "⚠️ Erro de autorização - verifique VERCEL_TOKEN"
-          fi
-          if echo "$DEPLOY_OUTPUT" | grep -qi "project not found\|invalid project"; then
-            echo "⚠️ Projeto não encontrado - verifique VERCEL_PROJECT_ID"
-          fi
+        DEPLOY_URL=$(npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee /dev/stderr | grep -E "^https://" | tail -1)
+        if [ -z "$DEPLOY_URL" ]; then
+          echo "❌ Falha ao obter URL do deploy"
           exit 1
         fi
-        
-        # Extrair URL - tentar múltiplos padrões
-        DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9_-]+\.vercel\.app' | head -1)
-        
-        if [ -z "$DEPLOY_URL" ]; then
-          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | head -1)
-        fi
-        
-        if [ -z "$DEPLOY_URL" ]; then
-          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[^ ]+' | grep vercel | head -1)
-        fi
-        
-        if [ -z "$DEPLOY_URL" ]; then
-          echo "❌ Não foi possível extrair URL do deploy"
-          echo "Output completo para debug:"
-          echo "$DEPLOY_OUTPUT" | cat -v
-          exit 1
-        fi
-        
         echo "✅ Deploy production concluído: $DEPLOY_URL"
         echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
       env:
@@ -406,37 +235,18 @@ jobs:
       id: production-tests
       run: |
         echo "🧪 Executando testes de produção..."
-        DEPLOY_URL="${{ steps.deploy-production.outputs.url }}"
-        echo "URL de produção: $DEPLOY_URL"
-        
-        # Aguardar deploy com retry
-        MAX_RETRIES=5
-        RETRY_DELAY=20
-        
-        for i in $(seq 1 $MAX_RETRIES); do
-          echo "Tentativa $i de $MAX_RETRIES..."
-          sleep $RETRY_DELAY
-          
-          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 "$DEPLOY_URL" || echo "000")
-          echo "HTTP Status: $HTTP_CODE"
-          
-          # 200 = OK, 401 = Protected (Vercel Password Protection), ambos indicam deploy OK
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
-            echo "✅ Produção responde com status $HTTP_CODE"
-            if [ "$HTTP_CODE" = "401" ]; then
-              echo "ℹ️  Deploy protegido por senha (Vercel Password Protection)"
-            fi
-            break
-          fi
-          
-          if [ "$i" = "$MAX_RETRIES" ]; then
-            echo "❌ Produção não respondeu após $MAX_RETRIES tentativas (status: $HTTP_CODE)"
-            exit 1
-          fi
-          
-          echo "⏳ Aguardando produção ficar disponível..."
-        done
-        
+        sleep 60  # Aguardar deploy completo
+
+        # Teste básico de conectividade
+        if curl -f --max-time 30 ${{ steps.deploy-production.outputs.url }} > /dev/null; then
+          echo "✅ Aplicação responde"
+        else
+          echo "❌ Aplicação não responde"
+          exit 1
+        fi
+
+        # Teste de funcionalidades críticas
+        # Adicione mais testes conforme necessário
         echo "✅ Testes de produção passaram"
 
     - name: 📊 Health check avançado
@@ -473,55 +283,28 @@ jobs:
       run: |
         echo "📊 Iniciando monitoramento pós-deploy..."
         PRODUCTION_URL="${{ needs.deploy-production.outputs.url }}"
-        
-        if [ -z "$PRODUCTION_URL" ]; then
-          echo "⚠️ URL de produção não disponível, pulando monitoramento"
-          exit 0
-        fi
 
         # Verificar uptime nos primeiros minutos
-        for i in {1..3}; do
-          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 "$PRODUCTION_URL" || echo "000")
-          echo "Minuto $i - HTTP Status: $HTTP_CODE"
-          
-          # Aceitar códigos de sucesso (2xx, 3xx) e 401 (proteção de preview)
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "401" ]; then
-            echo "✅ Minuto $i: OK (status $HTTP_CODE)"
+        for i in {1..5}; do
+          if curl -f --max-time 10 $PRODUCTION_URL > /dev/null; then
+            echo "✅ Minuto $i: OK"
           else
-            echo "⚠️ Minuto $i: Status inesperado ($HTTP_CODE)"
+            echo "❌ Minuto $i: FALHA"
+            exit 1
           fi
-          
-          if [ $i -lt 3 ]; then
-            sleep 30
-          fi
+          sleep 60
         done
 
         echo "✅ Monitoramento inicial concluído"
-      continue-on-error: true
 
     - name: 🏃 Lighthouse pós-deploy
       run: |
         echo "🏃 Executando Lighthouse pós-deploy..."
-        PRODUCTION_URL="${{ needs.deploy-production.outputs.url }}"
-        
-        if [ -z "$PRODUCTION_URL" ]; then
-          echo "⚠️ URL de produção não disponível, pulando Lighthouse"
-          exit 0
-        fi
-        
-        # Verificar se URL está acessível antes de rodar Lighthouse
-        HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "$PRODUCTION_URL" || echo "000")
-        if [ "$HTTP_CODE" = "401" ]; then
-          echo "⚠️ URL protegida por senha, pulando Lighthouse"
-          exit 0
-        fi
-        
-        npx lighthouse "$PRODUCTION_URL" \
+        npx lighthouse ${{ needs.deploy-production.outputs.url }} \
           --output=json \
           --output-path=./post-deploy-lighthouse.json \
           --only-categories=performance \
-          --chrome-flags="--headless --disable-gpu --no-sandbox" || echo "⚠️ Lighthouse falhou, continuando..."
-      continue-on-error: true
+          --chrome-flags="--headless --disable-gpu --no-sandbox"
 
     - name: 📤 Upload relatórios de monitoramento
       uses: actions/upload-artifact@v4
@@ -550,43 +333,27 @@ jobs:
         echo "🔙 Iniciando rollback automático..."
         echo "❌ Deploy falhou, executando rollback"
 
-        # Buscar todas as tags
-        git fetch --tags
-        
         # Identificar versão anterior estável
         PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E "^release-" | head -2 | tail -1)
-        
-        # Se não houver tags de release, tentar usar commits anteriores
         if [ -z "$PREVIOUS_TAG" ]; then
-          echo "⚠️ Nenhuma tag de release encontrada"
-          echo "📝 Criando tag da versão atual antes do rollback..."
-          
-          # Verificar se há commits anteriores
-          PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || echo "")
-          if [ -z "$PREV_COMMIT" ]; then
-            echo "⚠️ Não há commits anteriores para rollback"
-            echo "ℹ️ Este pode ser o primeiro deploy - nenhuma ação de rollback necessária"
-            exit 0
-          fi
-          
-          echo "🔄 Fazendo rollback para commit anterior: $PREV_COMMIT"
-          git checkout $PREV_COMMIT
-        else
-          echo "🔄 Fazendo rollback para: $PREVIOUS_TAG"
-          git checkout $PREVIOUS_TAG
+          echo "❌ Nenhuma versão anterior encontrada para rollback"
+          exit 1
         fi
+
+        echo "🔄 Fazendo rollback para: $PREVIOUS_TAG"
+        git checkout $PREVIOUS_TAG
 
     - name: 🔧 Configurar projeto Vercel (Rollback)
       run: |
         mkdir -p .vercel
-        echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
+        echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
 
     - name: 🚀 Deploy versão anterior
       run: |
         echo "🚀 Deploy versão anterior..."
         npm ci
         npm run build
-        npx vercel --prod --token=$VERCEL_TOKEN --yes
+        npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

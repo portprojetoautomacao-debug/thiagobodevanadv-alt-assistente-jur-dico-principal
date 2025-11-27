@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, copilot/**]
+    branches: [ main, develop, copilot/** ]
   pull_request:
-    branches: [main, develop]
+    branches: [ main, develop ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,127 +19,126 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ["22.x"]
+        node-version: ['22.x']
         # Node 18.x removido - package.json especifica 22.x
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
 
-      - name: Cache build artifacts
-        uses: actions/cache@v4
-        with:
-          path: |
-            dist
-            .vite
-          key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*', 'vite.config.ts', 'package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ matrix.node-version }}-
-            ${{ runner.os }}-build-
+    - name: Cache build artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist
+          .vite
+        key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*', 'vite.config.ts', 'package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ matrix.node-version }}-
+          ${{ runner.os }}-build-
 
-      - name: Install dependencies
-        run: npm ci --include=dev
+    - name: Install dependencies
+      run: npm ci --include=dev
 
-      - name: Run linter
-        run: |
-          echo "Running ESLint..."
-          # Run lint with a higher warning threshold for CI
-          # Warnings are acceptable, errors are not
-          if ! npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150; then
-            echo "❌ Linting failed (too many warnings or errors)"
-            echo "Please fix the linting issues before proceeding"
+    - name: Run linter
+      run: |
+        echo "Running ESLint..."
+        if ! npm run lint; then
+          echo "❌ Linting failed"
+          echo "Please fix the linting errors before proceeding"
+          exit 1
+        fi
+        echo "✅ Linting passed"
+      continue-on-error: false
+
+    - name: Build application
+      run: |
+        echo "Building application..."
+        npm run build || {
+          echo "❌ Build failed"
+          echo "Please fix the build errors before proceeding"
+          exit 1
+        }
+        echo "✅ Build successful"
+      env:
+        # Use dummy values for build-time environment variables
+        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
+        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
+        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
+        VITE_APP_ENV: 'ci'
+
+    - name: Run tests
+      run: |
+        echo "Running all tests..."
+        npm run test:all
+      if: success()
+
+    - name: Check package.json sync
+      run: |
+        if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package.json"; then
+          if ! git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package-lock.json"; then
+            echo "❌ package.json changed but package-lock.json didn't!"
             exit 1
           fi
-          echo "✅ Linting passed"
-        continue-on-error: false
+        fi
+      if: github.event_name == 'pull_request'
 
-      - name: Build application
-        run: |
-          export VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
-          export VITE_GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
-          export VITE_REDIRECT_URI=${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
-          export VITE_APP_ENV='ci'
-          echo "Building application..."
-          npm run build || {
-            echo "❌ Build failed"
-            echo "Please fix the build errors before proceeding"
-            exit 1
-          }
-          echo "✅ Build successful"
-        if: success()
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
 
-      - name: Run tests
-        run: |
-          echo "Running all tests..."
-          npm run test:all
-        if: success()
+    - name: Start development server
+      run: PORT=5000 npm run dev &
+      env:
+        PORT: 5000
+        VITE_APP_ENV: 'test'
 
-      - name: Check package.json sync
-        run: |
-          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package.json"; then
-            if ! git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package-lock.json"; then
-              echo "❌ package.json changed but package-lock.json didn't!"
-              exit 1
-            fi
-          fi
-        if: github.event_name == 'pull_request'
+    - name: Wait for server to be ready
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:5000 > /dev/null 2>&1; do sleep 1; done'
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+    - name: Run E2E tests
+      run: npm run test:e2e || echo "⚠️ Some E2E tests failed - this is expected in CI environment"
+      continue-on-error: true
+      env:
+        CI: true
 
-      - name: Start development server
-        run: PORT=5000 npm run dev &
-        env:
-          PORT: 5000
-          VITE_APP_ENV: "test"
+    - name: Build summary
+      if: always()
+      run: |
+        echo "## 🏗️ CI Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Node Version:** ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**OS:** ubuntu-latest" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ Completed Steps" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Code checkout" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Node.js setup" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Dependencies installed" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Linting completed" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Tests executed" >> $GITHUB_STEP_SUMMARY
+        echo "- [x] Artifacts uploaded" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Hit:** Check cache step logs above" >> $GITHUB_STEP_SUMMARY
 
-      - name: Wait for server to be ready
-        run: |
-          timeout 60 bash -c 'until curl -f http://localhost:5000 > /dev/null 2>&1; do sleep 1; done'
-
-      - name: Run E2E tests
-        run: npm run test:e2e || echo "⚠️ Some E2E tests failed - this is expected in CI environment"
-        continue-on-error: true
-        env:
-          CI: true
-
-      - name: Build summary
-        if: always()
-        run: |
-          echo "## 🏗️ CI Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Node Version:** ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
-          echo "**OS:** ubuntu-latest" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ✅ Completed Steps" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Code checkout" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Node.js setup" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Dependencies installed" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Linting completed" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Tests executed" >> $GITHUB_STEP_SUMMARY
-          echo "- [x] Artifacts uploaded" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
-          echo "- **Cache Hit:** Check cache step logs above" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: build-${{ matrix.node-version }}
-          path: dist/
-          retention-days: 7
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: build-${{ matrix.node-version }}
+        path: dist/
+        retention-days: 7
 
   lint-security:
     name: Security & Quality Checks
@@ -149,65 +148,65 @@ jobs:
       security-events: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-          cache: "npm"
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Run npm audit
-        run: |
-          echo "Running npm audit..."
-          npm audit --audit-level=moderate || {
-            echo "⚠️ Security vulnerabilities found"
-            echo "Please review and fix when possible"
-          }
+    - name: Run npm audit
+      run: |
+        echo "Running npm audit..."
+        npm audit --audit-level=moderate || {
+          echo "⚠️ Security vulnerabilities found"
+          echo "Please review and fix when possible"
+        }
 
-      - name: Security audit summary
-        run: |
-          echo "## 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Running security audit with moderate threshold..." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          npm audit --audit-level=moderate 2>&1 | head -50 >> $GITHUB_STEP_SUMMARY || true
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📝 Notes" >> $GITHUB_STEP_SUMMARY
-          echo "- Review vulnerabilities and update dependencies when possible" >> $GITHUB_STEP_SUMMARY
-          echo "- Some vulnerabilities may be in transitive dependencies" >> $GITHUB_STEP_SUMMARY
-          echo "- Use \`npm audit fix\` to attempt automatic fixes" >> $GITHUB_STEP_SUMMARY
-        continue-on-error: true
+    - name: Security audit summary
+      run: |
+        echo "## 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Running security audit with moderate threshold..." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        npm audit --audit-level=moderate 2>&1 | head -50 >> $GITHUB_STEP_SUMMARY || true
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📝 Notes" >> $GITHUB_STEP_SUMMARY
+        echo "- Review vulnerabilities and update dependencies when possible" >> $GITHUB_STEP_SUMMARY
+        echo "- Some vulnerabilities may be in transitive dependencies" >> $GITHUB_STEP_SUMMARY
+        echo "- Use \`npm audit fix\` to attempt automatic fixes" >> $GITHUB_STEP_SUMMARY
+      continue-on-error: true
 
-      - name: Check for outdated dependencies
-        run: npm outdated || true
-        continue-on-error: true
+    - name: Check for outdated dependencies
+      run: npm outdated || true
+      continue-on-error: true
 
-      - name: Run ESLint with SARIF output
-        run: |
-          echo "Running ESLint with SARIF formatter..."
-          npm run lint:sarif || {
-            echo "⚠️ ESLint completed with warnings/errors"
-            # Ensure SARIF file exists even on failure
-            if [ ! -f "eslint-results.sarif" ]; then
-              echo "Creating empty SARIF file..."
-              echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-            fi
-          }
-          echo "✅ SARIF report generated"
-        continue-on-error: true
+    - name: Run ESLint with SARIF output
+      run: |
+        echo "Running ESLint with SARIF formatter..."
+        npm run lint:sarif || {
+          echo "⚠️ ESLint completed with warnings/errors"
+          # Ensure SARIF file exists even on failure
+          if [ ! -f "eslint-results.sarif" ]; then
+            echo "Creating empty SARIF file..."
+            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
+          fi
+        }
+        echo "✅ SARIF report generated"
+      continue-on-error: true
 
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v4
-        if: always() && hashFiles('eslint-results.sarif') != ''
-        with:
-          sarif_file: eslint-results.sarif
-          category: eslint-ci
-        continue-on-error: true
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v4
+      if: always() && hashFiles('eslint-results.sarif') != ''
+      with:
+        sarif_file: eslint-results.sarif
+        category: eslint-ci
+      continue-on-error: true
 
   build-matrix-status:
     name: Build Matrix Status
@@ -218,12 +217,12 @@ jobs:
     if: always()
 
     steps:
-      - name: Check build status
-        run: |
-          if [[ "${{ needs.build-and-test.result }}" == "success" ]]; then
-            echo "✅ Build and test passed"
-            exit 0
-          else
-            echo "❌ Build and test failed"
-            exit 1
-          fi
+    - name: Check build status
+      run: |
+        if [[ "${{ needs.build-and-test.result }}" == "success" ]]; then
+          echo "✅ Build and test passed"
+          exit 0
+        else
+          echo "❌ Build and test failed"
+          exit 1
+        fi
