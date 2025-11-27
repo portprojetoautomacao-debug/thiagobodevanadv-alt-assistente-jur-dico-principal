@@ -118,25 +118,25 @@ async function storePublication(publication: StoredPublication): Promise<void> {
     const kv = await getKv();
     const key = `${KV_KEYS.PUBLICATIONS}:${publication.lawyerId}`;
     const existing = (await kv.get(key) as StoredPublication[]) || [];
-    
+
     // Check duplicate using hash for better performance
     const pubHash = publication.hash || `${publication.tribunal}-${publication.data}-${publication.numeroProcesso}`;
     const isDuplicate = existing.some(p => {
       const existingHash = p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso}`;
       return existingHash === pubHash;
     });
-    
+
     if (!isDuplicate) {
       existing.unshift(publication);
       // Use pipeline for atomic operations
       await kv.set(key, existing.slice(0, 1000));
-      
+
       // Update hash index for fast duplicate checking
       const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${publication.lawyerId}`;
       const hashes = (await kv.get(hashKey) as string[]) || [];
       hashes.unshift(pubHash);
       await kv.set(hashKey, hashes.slice(0, 2000));
-      
+
       console.log(`[KV] Stored publication: ${pubHash}`);
     } else {
       console.log(`[KV] Skipped duplicate: ${pubHash}`);
@@ -224,10 +224,10 @@ async function queueNotification(notification: { type: 'publication' | 'agent' |
 // Send real-time notification via webhooks
 async function sendRealTimeNotification(notification: { type: string; title: string; message: string; priority?: string; metadata?: Record<string, unknown> }): Promise<void> {
   try {
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
-    
+
     await fetch(`${baseUrl}/api/notifications/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -382,15 +382,15 @@ async function consultarComunicacoes(params: DJENQueryParams, retryOnRateLimit =
     console.log(`[DJEN] Consultando: ${url}`);
     const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, signal: controller.signal });
     clearTimeout(timeoutId);
-    
+
     // Captura headers de rate limit conforme documentação DJEN
     const rateLimitInfo = {
       limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
       remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
     };
-    
+
     console.log(`[DJEN] Rate Limit - Limit: ${rateLimitInfo.limit}, Remaining: ${rateLimitInfo.remaining}`);
-    
+
     // Erro 429 - Conforme doc: aguardar 1 minuto para retomar
     if (response.status === 429) {
       console.warn(`[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.`);
@@ -401,16 +401,16 @@ async function consultarComunicacoes(params: DJENQueryParams, retryOnRateLimit =
       }
       return { response: null, rateLimitInfo, rateLimitHit: true };
     }
-    
+
     // Erro 422 - Erro negocial (parâmetros inválidos)
     if (response.status === 422) {
       const errorBody = await response.text();
       console.error(`[DJEN] Erro negocial (422): ${errorBody}`);
       throw new Error(`Erro negocial DJEN: ${errorBody}`);
     }
-    
+
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
+
     const data = await response.json() as DJENResponse;
     console.log(`[DJEN] Consulta retornou ${data.count || data.items?.length || 0} comunicações`);
     return { response: data, rateLimitInfo };
@@ -427,11 +427,11 @@ function formatDJENDate(date: Date): string {
 
 async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string, numeroOAB?: string, dataInicio?: string, dataFim?: string, meio?: 'D' | 'E'): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
   if (!nomeAdvogado && !numeroOAB) throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB');
-  
+
   const defaultDate = formatDJENDate(new Date());
   const queryDataInicio = dataInicio || defaultDate;
   const queryDataFim = dataFim || queryDataInicio;
-  
+
   let numeroOabNumerico: string | undefined;
   let ufOab: string | undefined;
   if (numeroOAB) {
@@ -460,12 +460,12 @@ async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string
       if (meio) queryParams.meio = meio;
 
       const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
-      
+
       // Log rate limit info para monitoramento
       if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
         console.warn(`[DJEN] Atenção: apenas ${rateLimitInfo.remaining} requisições restantes na janela`);
       }
-      
+
       if (!response) {
         rateLimitWarning = rateLimitHit || rateLimitWarning;
         erros.push({ tribunal, erro: rateLimitHit ? 'Rate limit atingido (429) - aguarde 1 minuto' : 'Erro na consulta' });
@@ -473,10 +473,10 @@ async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string
       }
 
       // API DJEN pode retornar array direto ou objeto com items
-      const comunicacoes: DJENComunicacao[] = Array.isArray(response) 
-        ? response 
+      const comunicacoes: DJENComunicacao[] = Array.isArray(response)
+        ? response
         : (response.items || []);
-      
+
       console.log(`[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`);
 
       for (const comunicacao of comunicacoes) {
@@ -493,7 +493,7 @@ async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string
         if (temAdvogado) {
           // Usa datadisponibilizacao (oficial) ou data_disponibilizacao (alias)
           const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || '';
-          
+
           resultados.push({
             id: comunicacao.id,
             tribunal: comunicacao.siglaTribunal,
@@ -559,9 +559,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const cronSecret = process.env.CRON_SECRET;
   const isValidSecret = cronSecret && secret === cronSecret;
   const isLocalTest = process.env.NODE_ENV === 'development';
-  
+
   if (!isVercelCron && !isValidSecret && !isLocalTest) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Unauthorized - Use Vercel Cron Jobs or provide valid secret',
       hint: 'Add ?secret=YOUR_CRON_SECRET for manual testing'
     });
@@ -600,18 +600,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Archive old completed tasks (>30 days)
       const completedTasks = (await getCompletedTasks()) as CompletedTask[];
       console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
-      
+
       if (completedTasks.length > 0) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - 30);
-        
+
         const tasksToKeep = completedTasks.filter((task) => {
           if (!task.completedAt) return true;
           return new Date(task.completedAt) >= cutoffDate;
         });
-      
+
         result.tasksArchived = completedTasks.length - tasksToKeep.length;
-      
+
         if (result.tasksArchived > 0) {
           await updateCompletedTasks(tasksToKeep);
           console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
@@ -673,13 +673,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         result.lawyersChecked++;
-        const tribunais = lawyer.tribunals && lawyer.tribunals.length > 0 
-          ? lawyer.tribunals 
+        const tribunais = lawyer.tribunals && lawyer.tribunals.length > 0
+          ? lawyer.tribunals
           : defaultTribunais;
 
         try {
           console.log(`[Cron DJEN Monitor] Checking ${lawyer.name} (${lawyer.oab}) in ${tribunais.length} tribunais`);
-          
+
           // Consultar DJEN usando API /api/v1/comunicacao (endpoint oficial)
           const { resultados, erros, rateLimitWarning } = await consultarDJENForLawyer(
             tribunais,
@@ -701,14 +701,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           for (const comunicacao of resultados) {
             // Generate hash for deduplication
             const pubHash = comunicacao.hash || `${comunicacao.tribunal}-${comunicacao.data}-${comunicacao.numeroProcesso}-${comunicacao.id}`;
-            
+
             // Fast duplicate check using hash index
             const exists = await publicationExists(lawyer.id, pubHash);
             if (exists) {
               console.log(`[Cron DJEN Monitor] Skipping duplicate: ${pubHash}`);
               continue;
             }
-            
+
             const storedPub = {
               id: crypto.randomUUID(),
               djenId: comunicacao.id,
@@ -813,6 +813,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         result.errors.push('ATENÇÃO: Rate limit da API DJEN atingido. Algumas consultas foram adiadas.');
       }
 
+      // Enviar email de relatório diário (mesmo se não encontrar publicações)
+      const notificationEmail = process.env.NOTIFICATION_EMAIL;
+      if (notificationEmail) {
+        const dataHoje = new Date().toLocaleDateString('pt-BR', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'America/Sao_Paulo'
+        });
+
+        if (result.publicationsFound === 0) {
+          // Notificar que não encontrou publicações
+          await queueNotification({
+            type: 'system',
+            title: `📭 DJEN - Nenhuma publicação encontrada`,
+            message: `Relatório diário de ${dataHoje}:\n\n` +
+              `✅ Monitoramento executado com sucesso\n` +
+              `👤 Advogados verificados: ${result.lawyersChecked}\n` +
+              `📋 Publicações encontradas: 0\n` +
+              `🏛️ Tribunais consultados: TJMG, TRT3, TST, STJ, TRF1, TRF6\n\n` +
+              (result.errors.length > 0 ? `⚠️ Erros: ${result.errors.join(', ')}\n\n` : '') +
+              `Próxima verificação: amanhã às 11:00 BRT`,
+            recipientEmail: notificationEmail
+          });
+          console.log(`[Cron DJEN Monitor] Email de relatório enviado para ${notificationEmail}`);
+        } else {
+          // Resumo quando encontrou publicações
+          await queueNotification({
+            type: 'system',
+            title: `📬 DJEN - ${result.publicationsFound} publicação(ões) encontrada(s)`,
+            message: `Relatório diário de ${dataHoje}:\n\n` +
+              `✅ Monitoramento executado com sucesso\n` +
+              `👤 Advogados verificados: ${result.lawyersChecked}\n` +
+              `📋 Publicações encontradas: ${result.publicationsFound}\n\n` +
+              `Acesse o sistema para ver os detalhes.`,
+            recipientEmail: notificationEmail
+          });
+          console.log(`[Cron DJEN Monitor] Email de resumo enviado para ${notificationEmail}`);
+        }
+      }
+
       return res.status(200).json({
         ok: true,
         message: 'DJEN monitor cron executed successfully',
@@ -820,13 +862,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return res.status(400).json({ 
-      error: 'Invalid action. Use: daily-reset or djen-monitor' 
+    return res.status(400).json({
+      error: 'Invalid action. Use: daily-reset or djen-monitor'
     });
 
   } catch (error) {
     console.error('[Cron API] Fatal error:', error);
-    
+
     return res.status(500).json({
       ok: false,
       error: 'Internal server error',
