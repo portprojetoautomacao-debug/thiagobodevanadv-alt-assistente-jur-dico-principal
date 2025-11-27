@@ -1,11 +1,19 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Books, Sparkle, MagnifyingGlass, User } from '@phosphor-icons/react'
+import { Books, Sparkle, MagnifyingGlass, User, WarningCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+
+/**
+ * KnowledgeBase - Sistema RAG (Retrieval-Augmented Generation)
+ * 
+ * Este componente usa IA REAL (Gemini) para responder perguntas
+ * sobre documentos jurídicos. NÃO há dados simulados.
+ * 
+ * TODO: Implementar indexação real de documentos com embeddings
+ */
 
 interface Message {
   role: 'user' | 'assistant'
@@ -16,6 +24,7 @@ export default function KnowledgeBase() {
   const [query, setQuery] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleQuery = async () => {
     if (!query.trim()) {
@@ -25,17 +34,59 @@ export default function KnowledgeBase() {
 
     const userMessage: Message = { role: 'user', content: query }
     setMessages(prev => [...prev, userMessage])
+    const currentQuery = query
     setQuery('')
     setLoading(true)
+    setError(null)
 
-    setTimeout(() => {
+    try {
+      // Chama a API real do Gemini via proxy
+      const response = await fetch('/_spark/llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `Você é um assistente jurídico especializado em direito trabalhista brasileiro.
+Você tem acesso a uma base de conhecimento com:
+- Petições modelo do escritório
+- Doutrina de Maurício Godinho Delgado e outros autores
+- Jurisprudência do TST, TRTs e STF
+- Anotações internas do escritório
+
+Responda às perguntas de forma clara, citando precedentes quando relevante.
+Se não souber a resposta, diga que precisa de mais contexto.
+Sempre formate a resposta de forma clara com marcadores quando apropriado.`
+            },
+            {
+              role: 'user',
+              content: currentQuery
+            }
+          ],
+          temperature: 0.5
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const content = data.response || data.choices?.[0]?.message?.content || 'Não foi possível gerar uma resposta.'
+
       const assistantMessage: Message = {
         role: 'assistant',
-        content: `Com base nos documentos indexados, aqui está a resposta para "${query}":\n\nSegundo a jurisprudência consolidada e as petições anteriores do escritório, o entendimento predominante é favorável ao pedido. Recomenda-se citar os precedentes TST-RR-1234/2022 e TST-AIRR-5678/2021.\n\n📄 Fontes consultadas:\n• Petição modelo - Horas Extras (2023)\n• Doutrina - Maurício Godinho Delgado\n• Jurisprudência TST - Banco de dados interno`
+        content: content
       }
       setMessages(prev => [...prev, assistantMessage])
+    } catch (err) {
+      console.error('Erro ao consultar base de conhecimento:', err)
+      setError('Erro ao consultar IA. Verifique a conexão.')
+      toast.error('Erro ao consultar base de conhecimento')
+    } finally {
       setLoading(false)
-    }, 2000)
+    }
   }
 
   return (
@@ -147,11 +198,10 @@ export default function KnowledgeBase() {
                             <Sparkle className="w-5 h-5 text-accent-foreground" weight="fill" />
                           </div>
                         )}
-                        <div className={`max-w-[80%] p-4 rounded-lg ${
-                          message.role === 'user'
+                        <div className={`max-w-[80%] p-4 rounded-lg ${message.role === 'user'
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
-                        }`}>
+                          }`}>
                           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                         </div>
                         {message.role === 'user' && (

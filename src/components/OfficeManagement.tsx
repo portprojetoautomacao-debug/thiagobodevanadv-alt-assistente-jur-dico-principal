@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -12,8 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
-import { Users, Clock, CurrencyDollar, TrendUp } from '@phosphor-icons/react'
-import type { Process } from '@/types'
+import { Users, Clock, CurrencyDollar, TrendUp, Warning } from '@phosphor-icons/react'
+import type { Process, FinancialEntry } from '@/types'
 
 interface SafraData {
   ano: number
@@ -26,58 +26,142 @@ interface SafraData {
   perdido: number
 }
 
-const safrasData: SafraData[] = [
-  { ano: 2015, fechamentos: 2, emProducao: 2, transitoJulgado: 0, emExecucao: 0, concluidos: 0, ganho: 0, perdido: 0 },
-  { ano: 2017, fechamentos: 2, emProducao: 1, transitoJulgado: 1, emExecucao: 1, concluidos: 0, ganho: 0, perdido: 0 },
-  { ano: 2018, fechamentos: 5, emProducao: 5, transitoJulgado: 0, emExecucao: 0, concluidos: 0, ganho: 0, perdido: 0 },
-  { ano: 2019, fechamentos: 3, emProducao: 3, transitoJulgado: 0, emExecucao: 0, concluidos: 0, ganho: 0, perdido: 0 },
-  { ano: 2020, fechamentos: 305, emProducao: 239, transitoJulgado: 66, emExecucao: 64, concluidos: 2, ganho: 1, perdido: 1 },
-  { ano: 2021, fechamentos: 330, emProducao: 281, transitoJulgado: 58, emExecucao: 58, concluidos: 0, ganho: 0, perdido: 0 },
-]
+// Componente para exibir quando não há dados
+function NoDataMessage({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <Warning size={48} className="text-muted-foreground/50 mb-4" />
+      <p className="text-muted-foreground">{message}</p>
+      <p className="text-sm text-muted-foreground/70 mt-2">
+        Adicione dados através do sistema para visualizar as estatísticas
+      </p>
+    </div>
+  )
+}
 
 export default function OfficeManagement() {
-  const [activeTab, setActiveTab] = useState('safra')
+  const [activeTab, setActiveTab] = useState('produtividade')
   const [processes] = useKV<Process[]>('processes', [])
+  const [financialRecords] = useKV<FinancialEntry[]>('financialEntries', [])
 
+  // Calcular dados de produtividade a partir dos processos REAIS
   const produtividadeData = useMemo(() => {
     const processesList = processes || []
     return {
       totalProcessos: processesList.length,
       processosAtivos: processesList.filter(p => p.status === 'ativo').length,
       processosConcluidos: processesList.filter(p => p.status === 'concluido').length,
-      taxa: processesList.length > 0 
+      processosArquivados: processesList.filter(p => p.status === 'arquivado').length,
+      processosSuspensos: processesList.filter(p => p.status === 'suspenso').length,
+      taxa: processesList.length > 0
         ? Math.round((processesList.filter(p => p.status === 'concluido').length / processesList.length) * 100)
         : 0
     }
   }, [processes])
 
+  // Calcular dados de estoque/status a partir dos processos REAIS
   const estoqueData = useMemo(() => {
-    return [
-      { name: 'Prospectados', value: 45, color: '#00b4d8' },
-      { name: 'Em Negociação', value: 32, color: '#48cae4' },
-      { name: 'Convertidos', value: 23, color: '#52b788' },
-    ]
-  }, [])
+    const processesList = processes || []
+    if (processesList.length === 0) return []
 
-  const tempoData = useMemo(() => {
     return [
-      { mes: 'Jan', horas: 120, honorarios: 15000 },
-      { mes: 'Fev', horas: 135, honorarios: 18000 },
-      { mes: 'Mar', horas: 150, honorarios: 20000 },
-      { mes: 'Abr', horas: 128, honorarios: 16500 },
-      { mes: 'Mai', horas: 145, honorarios: 19000 },
-      { mes: 'Jun', horas: 160, honorarios: 22000 },
-    ]
-  }, [])
+      { name: 'Ativos', value: processesList.filter(p => p.status === 'ativo').length, color: '#00b4d8' },
+      { name: 'Suspensos', value: processesList.filter(p => p.status === 'suspenso').length, color: '#fbbf24' },
+      { name: 'Concluídos', value: processesList.filter(p => p.status === 'concluido').length, color: '#52b788' },
+      { name: 'Arquivados', value: processesList.filter(p => p.status === 'arquivado').length, color: '#6b7280' },
+    ].filter(item => item.value > 0)
+  }, [processes])
 
+  // Calcular dados financeiros mensais a partir das entradas REAIS
+  const financeiroData = useMemo(() => {
+    const records = financialRecords || []
+    if (records.length === 0) return []
+
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    const currentYear = new Date().getFullYear()
+
+    const byMonth: { [key: number]: { receita: number, despesa: number } } = {}
+
+    records.forEach(record => {
+      const date = new Date(record.date)
+      if (date.getFullYear() === currentYear) {
+        const month = date.getMonth()
+        if (!byMonth[month]) {
+          byMonth[month] = { receita: 0, despesa: 0 }
+        }
+        if (record.type === 'income') {
+          byMonth[month].receita += record.amount
+        } else {
+          byMonth[month].despesa += record.amount
+        }
+      }
+    })
+
+    return Object.entries(byMonth)
+      .map(([month, data]) => ({
+        mes: meses[parseInt(month)],
+        receita: data.receita,
+        despesa: data.despesa,
+        saldo: data.receita - data.despesa
+      }))
+      .sort((a, b) => meses.indexOf(a.mes) - meses.indexOf(b.mes))
+  }, [financialRecords])
+
+  // Calcular resumo de custos por categoria a partir das despesas REAIS
   const custosData = useMemo(() => {
-    return [
-      { categoria: 'Salários', valor: 45000, percentual: 60 },
-      { categoria: 'Infraestrutura', valor: 15000, percentual: 20 },
-      { categoria: 'Marketing', valor: 7500, percentual: 10 },
-      { categoria: 'Outros', valor: 7500, percentual: 10 },
-    ]
-  }, [])
+    const records = financialRecords || []
+    const despesas = records.filter(r => r.type === 'expense')
+
+    if (despesas.length === 0) return []
+
+    const byCategory: { [key: string]: number } = {}
+
+    despesas.forEach(record => {
+      const categoria = record.category || 'Outros'
+      byCategory[categoria] = (byCategory[categoria] || 0) + record.amount
+    })
+
+    const total = Object.values(byCategory).reduce((sum, val) => sum + val, 0)
+
+    return Object.entries(byCategory)
+      .map(([categoria, valor]) => ({
+        categoria,
+        valor,
+        percentual: total > 0 ? Math.round((valor / total) * 100) : 0
+      }))
+      .sort((a, b) => b.valor - a.valor)
+  }, [financialRecords])
+
+  // Calcular dados de "safra" (processos por ano) a partir dos processos REAIS
+  const safrasData: SafraData[] = useMemo(() => {
+    const processesList = processes || []
+    if (processesList.length === 0) return []
+
+    const byYear: { [key: number]: Process[] } = {}
+
+    processesList.forEach(process => {
+      // Usar dataDistribuicao ou createdAt como data de referência
+      const year = new Date(process.dataDistribuicao || process.createdAt || Date.now()).getFullYear()
+      if (!byYear[year]) {
+        byYear[year] = []
+      }
+      byYear[year].push(process)
+    })
+
+    return Object.entries(byYear)
+      .map(([year, procs]) => ({
+        ano: parseInt(year),
+        fechamentos: procs.length,
+        emProducao: procs.filter(p => p.status === 'ativo').length,
+        transitoJulgado: procs.filter(p => p.fase === 'transitoJulgado').length,
+        emExecucao: procs.filter(p => p.fase === 'execucao').length,
+        concluidos: procs.filter(p => p.status === 'concluido').length,
+        // Resultado não está no tipo Process, então sempre 0 por enquanto
+        ganho: 0,
+        perdido: 0,
+      }))
+      .sort((a, b) => b.ano - a.ano)
+  }, [processes])
 
   return (
     <div className="p-4 lg:p-6 flex flex-col gap-6 h-full overflow-y-auto">
@@ -86,7 +170,7 @@ export default function OfficeManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestão do escritório</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Análise de produtividade e qualidade dos processos
+            Análise de produtividade e qualidade dos processos (dados reais)
           </p>
         </div>
       </div>
@@ -95,12 +179,13 @@ export default function OfficeManagement() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="produtividade">Produtividade</TabsTrigger>
-          <TabsTrigger value="estoque">Estoque e Prospecção</TabsTrigger>
-          <TabsTrigger value="tempo">Tempo e Honorários</TabsTrigger>
-          <TabsTrigger value="custos">Custos</TabsTrigger>
-          <TabsTrigger value="safra">Safra e Qualidade</TabsTrigger>
+          <TabsTrigger value="estoque">Status dos Processos</TabsTrigger>
+          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+          <TabsTrigger value="custos">Despesas</TabsTrigger>
+          <TabsTrigger value="safra">Safra por Ano</TabsTrigger>
         </TabsList>
 
+        {/* Tab: Produtividade */}
         <TabsContent value="produtividade" className="mt-6">
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -163,12 +248,128 @@ export default function OfficeManagement() {
 
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">Produtividade por Mês</CardTitle>
+                <CardTitle className="text-lg">Fluxo Financeiro Mensal</CardTitle>
+                <CardDescription>Receitas e despesas do ano atual</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
+                {financeiroData.length === 0 ? (
+                  <NoDataMessage message="Nenhum registro financeiro encontrado" />
+                ) : (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="99%" height="100%">
+                      <BarChart data={financeiroData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
+                        <XAxis dataKey="mes" stroke="#6b7280" />
+                        <YAxis stroke="#6b7280" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e2130',
+                            border: '1px solid #2a2d3e',
+                            borderRadius: '8px',
+                          }}
+                          formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
+                        />
+                        <Legend />
+                        <Bar dataKey="receita" fill="#52b788" name="Receita" />
+                        <Bar dataKey="despesa" fill="#ef4444" name="Despesa" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Tab: Status dos Processos */}
+        <TabsContent value="estoque" className="mt-6">
+          <div className="space-y-6">
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg">Distribuição de Processos por Status</CardTitle>
+                <CardDescription>Visão geral do status atual dos processos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {estoqueData.length === 0 ? (
+                  <NoDataMessage message="Nenhum processo cadastrado" />
+                ) : (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="99%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={estoqueData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {estoqueData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e2130',
+                            border: '1px solid #2a2d3e',
+                            borderRadius: '8px',
+                          }}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {estoqueData.length > 0 && (
+              <Card className="bg-card border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg">Detalhamento por Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Quantidade</TableHead>
+                        <TableHead className="text-right">Percentual</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {estoqueData.map((item) => (
+                        <TableRow key={item.name}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell className="text-right">{item.value}</TableCell>
+                          <TableCell className="text-right">
+                            {Math.round((item.value / estoqueData.reduce((sum, i) => sum + i.value, 0)) * 100)}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Tab: Financeiro */}
+        <TabsContent value="financeiro" className="mt-6">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg">Receita x Despesa</CardTitle>
+              <CardDescription>Comparativo mensal do fluxo financeiro</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {financeiroData.length === 0 ? (
+                <NoDataMessage message="Nenhum registro financeiro encontrado" />
+              ) : (
+                <div className="h-[400px]">
                   <ResponsiveContainer width="99%" height="100%">
-                    <BarChart data={tempoData}>
+                    <BarChart data={financeiroData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
                       <XAxis dataKey="mes" stroke="#6b7280" />
                       <YAxis stroke="#6b7280" />
@@ -178,277 +379,173 @@ export default function OfficeManagement() {
                           border: '1px solid #2a2d3e',
                           borderRadius: '8px',
                         }}
+                        formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
                       />
-                      <Bar dataKey="horas" fill="#00b4d8" name="Horas Trabalhadas" />
+                      <Legend />
+                      <Bar dataKey="receita" fill="#52b788" name="Receita (R$)" />
+                      <Bar dataKey="despesa" fill="#ef4444" name="Despesa (R$)" />
+                      <Bar dataKey="saldo" fill="#00b4d8" name="Saldo (R$)" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="estoque" className="mt-6">
-          <div className="space-y-6">
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-lg">Funil de Prospecção</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="99%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={estoqueData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {estoqueData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#1e2130',
-                          border: '1px solid #2a2d3e',
-                          borderRadius: '8px',
-                        }}
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-lg">Detalhamento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead className="text-right">Quantidade</TableHead>
-                      <TableHead className="text-right">Percentual</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {estoqueData.map((item) => (
-                      <TableRow key={item.name}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell className="text-right">{item.value}</TableCell>
-                        <TableCell className="text-right">
-                          {Math.round((item.value / estoqueData.reduce((sum, i) => sum + i.value, 0)) * 100)}%
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="tempo" className="mt-6">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg">Tempo x Honorários</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="99%" height="100%">
-                  <BarChart data={tempoData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
-                    <XAxis dataKey="mes" stroke="#6b7280" />
-                    <YAxis yAxisId="left" stroke="#6b7280" />
-                    <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1e2130',
-                        border: '1px solid #2a2d3e',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value: number, name: string) => {
-                        if (name === 'Honorários (R$)') {
-                          return `R$ ${value.toLocaleString('pt-BR')}`
-                        }
-                        return value
-                      }}
-                    />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="horas" fill="#00b4d8" name="Horas" />
-                    <Bar yAxisId="right" dataKey="honorarios" fill="#52b788" name="Honorários (R$)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Tab: Despesas */}
         <TabsContent value="custos" className="mt-6">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Distribuição de Custos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[250px]">
-                    <ResponsiveContainer width="99%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={custosData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          dataKey="valor"
-                        >
-                          {custosData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={['#00b4d8', '#48cae4', '#52b788', '#fbbf24'][index % 4]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#1e2130',
-                            border: '1px solid #2a2d3e',
-                            borderRadius: '8px',
-                          }}
-                          formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+          {custosData.length === 0 ? (
+            <Card className="bg-card border-border">
+              <CardContent className="pt-6">
+                <NoDataMessage message="Nenhuma despesa registrada" />
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Distribuição de Despesas por Categoria</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[250px]">
+                      <ResponsiveContainer width="99%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={custosData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ categoria, percentual }) => `${categoria} ${percentual}%`}
+                            outerRadius={80}
+                            dataKey="valor"
+                            nameKey="categoria"
+                          >
+                            {custosData.map((_entry, index) => (
+                              <Cell key={`cell-${index}`} fill={['#ef4444', '#f97316', '#fbbf24', '#84cc16', '#22c55e', '#14b8a6'][index % 6]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#1e2130',
+                              border: '1px solid #2a2d3e',
+                              borderRadius: '8px',
+                            }}
+                            formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Total de Custos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {custosData.map((item) => (
-                      <div key={item.categoria} className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{item.categoria}</p>
-                          <p className="text-sm text-muted-foreground">{item.percentual}% do total</p>
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Total de Despesas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {custosData.map((item) => (
+                        <div key={item.categoria} className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{item.categoria}</p>
+                            <p className="text-sm text-muted-foreground">{item.percentual}% do total</p>
+                          </div>
+                          <p className="text-lg font-bold">R$ {item.valor.toLocaleString('pt-BR')}</p>
                         </div>
-                        <p className="text-lg font-bold">R$ {item.valor.toLocaleString('pt-BR')}</p>
-                      </div>
-                    ))}
-                    <div className="pt-4 border-t border-border">
-                      <div className="flex items-center justify-between">
-                        <p className="font-bold">Total</p>
-                        <p className="text-xl font-bold text-primary">
-                          R$ {custosData.reduce((sum, item) => sum + item.valor, 0).toLocaleString('pt-BR')}
-                        </p>
+                      ))}
+                      <div className="pt-4 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <p className="font-bold">Total</p>
+                          <p className="text-xl font-bold text-primary">
+                            R$ {custosData.reduce((sum, item) => sum + item.valor, 0).toLocaleString('pt-BR')}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
 
+        {/* Tab: Safra por Ano */}
         <TabsContent value="safra" className="mt-6">
           <div className="space-y-6">
-            {/* Safras de Processos Table */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">Safras de processos</CardTitle>
+                <CardTitle className="text-lg">Safras de Processos por Ano</CardTitle>
+                <CardDescription>Processos agrupados pelo ano de abertura</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border hover:bg-transparent">
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold">ANO</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">FECHAMENTOS</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">EM PRODUÇÃO</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">TRÂNSITO JULGADO</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">EM EXECUÇÃO</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">CONCLUÍDOS</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">GANHO (%)</TableHead>
-                        <TableHead className="bg-[#2a5a6f] text-white font-semibold text-center">PERDIDO (%)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {safrasData.map((safra, index) => (
-                        <TableRow 
-                          key={safra.ano}
-                          className={`border-border ${index % 2 === 0 ? 'bg-[#1a3d4d]' : 'bg-[#1e4555]'} hover:bg-[#234a5c]`}
-                        >
-                          <TableCell className="font-medium text-white">{safra.ano}</TableCell>
-                          <TableCell className="text-center text-white">{safra.fechamentos}</TableCell>
-                          <TableCell className="text-center text-white">{safra.emProducao}</TableCell>
-                          <TableCell className="text-center text-white">{safra.transitoJulgado}</TableCell>
-                          <TableCell className="text-center text-white">{safra.emExecucao}</TableCell>
-                          <TableCell className="text-center text-white">{safra.concluidos}</TableCell>
-                          <TableCell className="text-center text-white">
-                            {safra.ganho > 0 ? `${safra.ganho} (${Math.round((safra.ganho / safra.fechamentos) * 100)}%)` : '0 (0%)'}
-                          </TableCell>
-                          <TableCell className="text-center text-white">
-                            {safra.perdido > 0 ? `${safra.perdido} (${Math.round((safra.perdido / safra.fechamentos) * 100)}%)` : '0 (0%)'}
-                          </TableCell>
+                {safrasData.length === 0 ? (
+                  <NoDataMessage message="Nenhum processo cadastrado" />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border hover:bg-transparent">
+                          <TableHead className="bg-primary/20 font-semibold">ANO</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">TOTAL</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">ATIVOS</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">TR. JULGADO</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">EXECUÇÃO</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">CONCLUÍDOS</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">GANHOS</TableHead>
+                          <TableHead className="bg-primary/20 font-semibold text-center">PERDIDOS</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {safrasData.map((safra, index) => (
+                          <TableRow
+                            key={safra.ano}
+                            className={`border-border ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'} hover:bg-muted/50`}
+                          >
+                            <TableCell className="font-medium">{safra.ano}</TableCell>
+                            <TableCell className="text-center">{safra.fechamentos}</TableCell>
+                            <TableCell className="text-center">{safra.emProducao}</TableCell>
+                            <TableCell className="text-center">{safra.transitoJulgado}</TableCell>
+                            <TableCell className="text-center">{safra.emExecucao}</TableCell>
+                            <TableCell className="text-center">{safra.concluidos}</TableCell>
+                            <TableCell className="text-center text-green-500">
+                              {safra.ganho > 0 ? `${safra.ganho} (${Math.round((safra.ganho / safra.fechamentos) * 100)}%)` : '-'}
+                            </TableCell>
+                            <TableCell className="text-center text-red-500">
+                              {safra.perdido > 0 ? `${safra.perdido} (${Math.round((safra.perdido / safra.fechamentos) * 100)}%)` : '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Relatórios Section */}
+            {/* Filtros para relatório detalhado */}
             <Card className="bg-card border-border">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">RELATÓRIOS</CardTitle>
+                  <CardTitle className="text-lg">Filtrar Processos</CardTitle>
                   <div className="flex items-center gap-2">
                     <select className="px-3 py-1 bg-background border border-border rounded text-sm">
-                      <option>Safra</option>
-                    </select>
-                    <select className="px-3 py-1 bg-background border border-border rounded text-sm">
-                      <option>2021</option>
-                      <option>2020</option>
-                      <option>2019</option>
+                      <option>Todos os anos</option>
+                      {safrasData.map(s => (
+                        <option key={s.ano} value={s.ano}>{s.ano}</option>
+                      ))}
                     </select>
                     <Button variant="outline" size="sm">
-                      + MAIS FILTROS
+                      Aplicar Filtro
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border">
-                        <TableHead>PARTES</TableHead>
-                        <TableHead>TIPO DE AÇÃO</TableHead>
-                        <TableHead>ORIGEM DE AÇÃO</TableHead>
-                        <TableHead>FASE</TableHead>
-                        <TableHead>SITUAÇÃO</TableHead>
-                        <TableHead>CARACTERÍSTICA</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow className="border-border">
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          Nenhum processo encontrado com os filtros selecionados
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Use os filtros acima para visualizar processos específicos por ano.
+                </p>
               </CardContent>
             </Card>
           </div>
