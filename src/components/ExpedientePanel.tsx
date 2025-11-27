@@ -163,7 +163,7 @@ export default function ExpedientePanel() {
               agentId: 'justine',
               type: 'analyze_intimation',
               priority: 'high',
-              status: 'pending',
+              status: 'queued',
               createdAt: new Date().toISOString(),
               data: {
                 publicationId: selectedExp.id,
@@ -177,7 +177,9 @@ export default function ExpedientePanel() {
             agent: {
               id: 'justine',
               type: 'intimation-analyzer',
-              name: 'Mrs. Justin-e'
+              name: 'Mrs. Justin-e',
+              status: 'active',
+              enabled: true
             }
           })
         })
@@ -288,8 +290,8 @@ export default function ExpedientePanel() {
                     <div
                       key={exp.id}
                       className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedExp?.id === exp.id
-                          ? 'bg-primary/10 border-primary'
-                          : 'bg-card border-border hover:bg-muted'
+                        ? 'bg-primary/10 border-primary'
+                        : 'bg-card border-border hover:bg-muted'
                         }`}
                       onClick={() => setSelectedExp(exp)}
                     >
