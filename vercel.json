@@ -44,7 +44,7 @@
       "includeFiles": "api/lib/**"
     }
   },
-  "regions": ["iad1"],
+  "regions": ["gru1"],
   "redirects": [
     {
       "source": "/:path*",
