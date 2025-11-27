@@ -17,13 +17,52 @@ function getAgentActivity(agent: Agent): string {
 }
 
 // Version flag to force data reset when structure changes
-// INCREMENTADO para v5: força reset de agentes para usar apenas os 15 agentes do agents.ts
+// INCREMENTADO para v6: força reset de agentes para usar apenas os 15 agentes do agents.ts
 // Remove agentes duplicados/antigos que estavam salvos no KV storage
-const AGENTS_DATA_VERSION = 5
+const AGENTS_DATA_VERSION = 6
+
+// Verifica a versão no localStorage ANTES de inicializar
+// Isso garante que dados antigos sejam limpos imediatamente
+function getInitialAgents(): Agent[] {
+  if (typeof window === 'undefined') return initializeAgents()
+
+  try {
+    const storedVersion = window.localStorage.getItem('agents-data-version')
+    const version = storedVersion ? JSON.parse(storedVersion) : 0
+
+    if (version < AGENTS_DATA_VERSION) {
+      // Limpa dados antigos imediatamente
+      console.log('[Agents] Versão desatualizada, limpando dados antigos...')
+      window.localStorage.removeItem('autonomous-agents')
+      window.localStorage.removeItem('agent-task-queue')
+      window.localStorage.removeItem('completed-agent-tasks')
+      window.localStorage.removeItem('agent-activity-log')
+      window.localStorage.setItem('agents-data-version', JSON.stringify(AGENTS_DATA_VERSION))
+      return initializeAgents()
+    }
+
+    // Carrega agentes existentes se versão estiver correta
+    const storedAgents = window.localStorage.getItem('autonomous-agents')
+    if (storedAgents) {
+      const parsed = JSON.parse(storedAgents)
+      // Valida se tem o número correto de agentes (15)
+      if (Array.isArray(parsed) && parsed.length === 15) {
+        return parsed
+      }
+      // Se não tem 15, reinicializa
+      console.log('[Agents] Número incorreto de agentes, reinicializando...')
+      return initializeAgents()
+    }
+  } catch (e) {
+    console.error('[Agents] Erro ao carregar agentes:', e)
+  }
+
+  return initializeAgents()
+}
 
 export function useAutonomousAgents() {
-  const [dataVersion, setDataVersion] = useKV<number>('agents-data-version', 0)
-  const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', initializeAgents())
+  const [dataVersion, setDataVersion] = useKV<number>('agents-data-version', AGENTS_DATA_VERSION)
+  const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', getInitialAgents())
   const [taskQueue, setTaskQueue] = useKV<AgentTask[]>('agent-task-queue', [])
   const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
   const [activityLog, setActivityLog] = useKV<Array<{
@@ -36,17 +75,13 @@ export function useAutonomousAgents() {
 
   const processingRef = useRef<Set<string>>(new Set())
 
-  // Force reset if data version is outdated (clears old data from previous versions)
+  // Validação adicional: garante que sempre temos exatamente 15 agentes
   useEffect(() => {
-    if (dataVersion < AGENTS_DATA_VERSION) {
-      console.log('Resetting agent data for new version...')
+    if (agents && agents.length !== 15) {
+      console.log('[Agents] Corrigindo número de agentes:', agents.length, '-> 15')
       setAgents(initializeAgents())
-      setTaskQueue([])
-      setCompletedTasks([])
-      setActivityLog([])
-      setDataVersion(AGENTS_DATA_VERSION)
     }
-  }, [dataVersion, setDataVersion, setAgents, setTaskQueue, setCompletedTasks, setActivityLog])
+  }, [agents, setAgents])
 
   const addTask = useCallback((task: AgentTask) => {
     setTaskQueue((current) => {
