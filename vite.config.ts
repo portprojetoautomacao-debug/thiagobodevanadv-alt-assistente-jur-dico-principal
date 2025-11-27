@@ -72,7 +72,7 @@ export default defineConfig({
     alias: {
       '@': resolve(projectRoot, 'src'),
       '@doist/todoist-api-typescript': resolve(projectRoot, 'src/lib/todoist-stub.ts'),
-      '@github/spark/llm': resolve(projectRoot, 'src/lib/spark-llm-mock.ts')
+      '@github/spark/llm': resolve(projectRoot, 'src/lib/llm-client.ts')
     }
   },
   optimizeDeps: {
