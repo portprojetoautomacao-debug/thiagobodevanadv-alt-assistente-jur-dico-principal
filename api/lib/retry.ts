@@ -3,7 +3,7 @@
  * Para operações que podem falhar temporariamente
  */
 
-import { SafeLogger } from './safe-logger';
+import { SafeLogger } from './safe-logger.js';
 
 const logger = new SafeLogger('Retry');
 

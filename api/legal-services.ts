@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth, sendAuthError } from './lib/auth';
-import { rateLimitMiddleware } from './lib/rate-limit';
-import { handleError, withErrorHandler } from './lib/error-handler';
-import { SafeLogger } from './lib/safe-logger';
-import { consultarDJENForLawyer } from './lib/djen-client';
+import { requireAuth, sendAuthError } from './lib/auth.js';
+import { rateLimitMiddleware } from './lib/rate-limit.js';
+import { handleError, withErrorHandler } from './lib/error-handler.js';
+import { SafeLogger } from './lib/safe-logger.js';
+import { consultarDJENForLawyer } from './lib/djen-client.js';
 
 const logger = new SafeLogger('LegalServices');
 
@@ -44,19 +44,19 @@ function isWeekend(date: Date): boolean {
 
 function isFeriado(date: Date, tribunalCode?: string): boolean {
   const dateStr = date.toISOString().split('T')[0];
-  
+
   // Feriados nacionais
   if (feriadosNacionais2025.includes(dateStr)) {
     return true;
   }
-  
+
   // Feriados específicos por tribunal
   if (tribunalCode?.includes('DF') || tribunalCode?.includes('TJDFT')) {
     if (feriadosDF2025.includes(dateStr)) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -103,9 +103,9 @@ function calcularPrazo(
       const reason = isWeekend(currentDate)
         ? 'Final de semana'
         : isFeriado(currentDate, tribunalCode)
-        ? 'Feriado'
-        : 'Recesso forense';
-      
+          ? 'Feriado'
+          : 'Recesso forense';
+
       holidays.push(`${currentDate.toLocaleDateString('pt-BR')} - ${reason}`);
       reasoning.push(`Dia ${currentDate.toLocaleDateString('pt-BR')} desconsiderado (${reason})`);
     }
@@ -160,7 +160,7 @@ interface DJENResult {
 
 async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
   try {
-    const { 
+    const {
       tribunais = ['TJMG', 'TRT3', 'TST', 'STJ'],
       oab = '184404',
       ufOab = 'MG',
@@ -245,7 +245,7 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
 
   } catch (error) {
     console.error('[DJEN Check API] Error:', error);
-    
+
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -272,7 +272,7 @@ async function handleDeadlineCalculation(req: VercelRequest, res: VercelResponse
     }
 
     const start = new Date(startDate);
-    
+
     if (isNaN(start.getTime())) {
       return res.status(400).json({
         error: 'Invalid startDate format',
@@ -295,7 +295,7 @@ async function handleDeadlineCalculation(req: VercelRequest, res: VercelResponse
 
   } catch (error) {
     console.error('[Deadline Calculate API] Error:', error);
-    
+
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -315,8 +315,8 @@ export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) 
 
   // Apply rate limiting
   const clientIP = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-                   (req.headers['x-real-ip'] as string) ||
-                   'unknown';
+    (req.headers['x-real-ip'] as string) ||
+    'unknown';
 
   const rateLimitResult = await rateLimitMiddleware(clientIP);
   if (!rateLimitResult.allowed) {
