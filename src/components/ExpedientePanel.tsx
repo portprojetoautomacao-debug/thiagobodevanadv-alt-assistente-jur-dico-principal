@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
-import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash, CheckCircle } from '@phosphor-icons/react'
+import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash, CheckCircle, Robot } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
+import type { AgentTask } from '@/lib/agents'
 import {
   Dialog,
   DialogContent,
@@ -32,6 +34,110 @@ function needsAnalysis(exp: Expediente): boolean {
   return !exp.analyzed || needsReanalysis(exp)
 }
 
+// Determina quais agentes devem receber tarefas com base na análise
+function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
+  priority?: string
+  deadline?: { days?: number; type?: string; endDate?: string }
+  suggestedActions?: string[]
+  documentType?: string
+}): Partial<AgentTask>[] {
+  const tasks: Partial<AgentTask>[] = []
+  const priority = analysisData.priority?.toLowerCase() || 'média'
+  const hasPrazo = analysisData.deadline?.days && analysisData.deadline.days > 0
+
+  // 1. Gestão de Prazos - sempre que há prazo identificado
+  if (hasPrazo) {
+    tasks.push({
+      agentId: 'gestao-prazos',
+      type: 'calculate_deadline',
+      priority: priority === 'alta' || priority === 'urgente' ? 'high' : 'medium',
+      data: {
+        expedienteId: exp.id,
+        processNumber: exp.numeroProcesso,
+        deadlineDays: analysisData.deadline?.days,
+        deadlineType: analysisData.deadline?.type,
+        deadlineDate: analysisData.deadline?.endDate,
+        source: 'auto-analysis'
+      }
+    })
+  }
+
+  // 2. Monitor DJEN - registrar que foi processado
+  tasks.push({
+    agentId: 'monitor-djen',
+    type: 'monitor_djen',
+    priority: 'low',
+    data: {
+      expedienteId: exp.id,
+      processNumber: exp.numeroProcesso,
+      tribunal: exp.tribunal,
+      action: 'register-processed',
+      source: 'auto-analysis'
+    }
+  })
+
+  // 3. Análise de Risco - para prioridades altas
+  if (priority === 'alta' || priority === 'urgente') {
+    tasks.push({
+      agentId: 'analise-risco',
+      type: 'risk_analysis',
+      priority: 'high',
+      data: {
+        expedienteId: exp.id,
+        processNumber: exp.numeroProcesso,
+        summary: exp.summary,
+        priority: priority,
+        source: 'auto-analysis'
+      }
+    })
+  }
+
+  // 4. Redação de Petições - se ações sugerem resposta
+  const needsResponse = analysisData.suggestedActions?.some(a =>
+    a.toLowerCase().includes('resposta') ||
+    a.toLowerCase().includes('manifestar') ||
+    a.toLowerCase().includes('petição') ||
+    a.toLowerCase().includes('contestar') ||
+    a.toLowerCase().includes('recurso')
+  )
+  if (needsResponse) {
+    tasks.push({
+      agentId: 'redacao-peticoes',
+      type: 'draft_petition',
+      priority: priority === 'alta' ? 'high' : 'medium',
+      data: {
+        expedienteId: exp.id,
+        processNumber: exp.numeroProcesso,
+        documentType: analysisData.documentType,
+        suggestedActions: analysisData.suggestedActions,
+        source: 'auto-analysis'
+      }
+    })
+  }
+
+  // 5. Pesquisa de Jurisprudência - para casos complexos
+  const needsResearch = analysisData.suggestedActions?.some(a =>
+    a.toLowerCase().includes('jurisprudência') ||
+    a.toLowerCase().includes('precedente') ||
+    a.toLowerCase().includes('pesquisar')
+  )
+  if (needsResearch || priority === 'alta') {
+    tasks.push({
+      agentId: 'pesquisa-juris',
+      type: 'research_precedents',
+      priority: 'medium',
+      data: {
+        expedienteId: exp.id,
+        processNumber: exp.numeroProcesso,
+        summary: exp.summary,
+        source: 'auto-analysis'
+      }
+    })
+  }
+
+  return tasks
+}
+
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
@@ -45,7 +151,11 @@ export default function ExpedientePanel() {
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false)
   const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 })
+  const [tasksCreated, setTasksCreated] = useState(0)
   const autoAnalysisRanRef = useRef(false)
+
+  // Hook dos agentes autônomos para criar tarefas
+  const { addTask, agents } = useAutonomousAgents()
 
   // Função para buscar expedientes da API
   const fetchExpedientes = useCallback(async () => {
@@ -153,7 +263,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
         }
       }
 
-      return {
+      const analyzedExp: Expediente = {
         ...exp,
         analyzed: true,
         summary: analysisData.summary || 'Análise concluída pela Mrs. Justin-e',
@@ -170,6 +280,34 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
           `✅ AÇÕES SUGERIDAS:\n${(analysisData.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
           `📝 PRÓXIMOS PASSOS:\n${(analysisData.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
       }
+
+      // Criar tarefas para outros agentes com base na análise
+      const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData)
+      let createdTasks = 0
+
+      for (const taskData of agentTasks) {
+        // Só cria tarefa se o agente estiver habilitado
+        const agent = agents.find(a => a.id === taskData.agentId)
+        if (agent?.enabled) {
+          const task: AgentTask = {
+            id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            agentId: taskData.agentId!,
+            type: taskData.type!,
+            priority: taskData.priority as 'low' | 'medium' | 'high' | 'critical',
+            status: 'queued',
+            createdAt: new Date().toISOString(),
+            data: taskData.data as Record<string, unknown>
+          }
+          addTask(task)
+          createdTasks++
+        }
+      }
+
+      if (createdTasks > 0) {
+        setTasksCreated(prev => prev + createdTasks)
+      }
+
+      return analyzedExp
     } catch (error) {
       console.error('Erro ao analisar expediente:', error)
       throw error
@@ -183,6 +321,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
     setAutoAnalyzing(true)
     setAnalysisProgress({ current: 0, total: pending.length })
+    setTasksCreated(0)
 
     toast.info(`🤖 Mrs. Justin-e iniciando análise automática de ${pending.length} intimação(ões)...`)
 
@@ -207,9 +346,12 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
     setAutoAnalyzing(false)
     if (analyzed > 0) {
-      toast.success(`✅ Mrs. Justin-e analisou ${analyzed} intimação(ões) automaticamente!`)
+      toast.success(
+        `✅ Mrs. Justin-e analisou ${analyzed} intimação(ões) e distribuiu tarefas para os agentes!`,
+        { duration: 5000 }
+      )
     }
-  }, [safeExpedientes, setExpedientes])
+  }, [safeExpedientes, setExpedientes, addTask, agents])
 
   // Dispara análise automática quando expedientes são carregados
   useEffect(() => {
@@ -505,7 +647,7 @@ Crie o workflow de controladoria para esta tarefa.`
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-foreground">
-                      🤖 Mrs. Justin-e analisando intimações automaticamente...
+                      🤖 Mrs. Justin-e analisando intimações e distribuindo tarefas...
                     </p>
                     <span className="text-sm text-muted-foreground">
                       {analysisProgress.current}/{analysisProgress.total}
@@ -515,6 +657,12 @@ Crie o workflow de controladoria para esta tarefa.`
                     value={(analysisProgress.current / analysisProgress.total) * 100}
                     className="h-2"
                   />
+                  {tasksCreated > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      <Robot className="w-3 h-3 inline mr-1" />
+                      {tasksCreated} tarefa(s) distribuída(s) para agentes
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -525,11 +673,19 @@ Crie o workflow de controladoria para esta tarefa.`
         {!autoAnalyzing && safeExpedientes.length > 0 && safeExpedientes.every(e => e.analyzed && !needsReanalysis(e)) && (
           <Card className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
             <CardContent className="py-3">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600" weight="fill" />
-                <p className="text-sm text-green-700 dark:text-green-400">
-                  ✅ Todas as {safeExpedientes.length} intimações foram analisadas automaticamente pela Mrs. Justin-e
-                </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600" weight="fill" />
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    ✅ Todas as {safeExpedientes.length} intimações analisadas pela Mrs. Justin-e
+                  </p>
+                </div>
+                {tasksCreated > 0 && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <Robot className="w-3 h-3 mr-1" />
+                    {tasksCreated} tarefas na fila dos agentes
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
