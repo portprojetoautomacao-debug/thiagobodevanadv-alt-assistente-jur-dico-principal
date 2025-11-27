@@ -55,19 +55,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   // Qual provedor de IA está ativo
-  const aiProvider = process.env.OPENAI_API_KEY 
-    ? 'OpenAI' 
-    : process.env.GEMINI_API_KEY 
-      ? 'Gemini' 
+  const aiProvider = process.env.OPENAI_API_KEY
+    ? 'OpenAI'
+    : process.env.GEMINI_API_KEY
+      ? 'Gemini'
       : 'none';
 
   // Informações adicionais (sem expor valores sensíveis)
   const info = {
     ai_provider: aiProvider,
     ai_configured: aiProvider !== 'none',
-    openai_key_preview: process.env.OPENAI_API_KEY 
+    openai_key_preview: process.env.OPENAI_API_KEY
       ? `sk-...${process.env.OPENAI_API_KEY.slice(-4)}` : 'not set',
-    gemini_key_preview: process.env.GEMINI_API_KEY 
+    gemini_key_preview: process.env.GEMINI_API_KEY
       ? `...${process.env.GEMINI_API_KEY.slice(-4)}` : 'not set',
     app_env: process.env.VITE_APP_ENV || 'not set',
     node_env: process.env.NODE_ENV || 'not set',
