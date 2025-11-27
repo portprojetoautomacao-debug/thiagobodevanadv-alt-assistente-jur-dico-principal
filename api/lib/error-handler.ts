@@ -4,7 +4,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { SafeLogger } from './safe-logger';
+import { SafeLogger } from './safe-logger.js';
 
 const logger = new SafeLogger('ErrorHandler');
 
