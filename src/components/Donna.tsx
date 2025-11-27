@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import * as spark from '@github/spark/llm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -86,7 +85,7 @@ export default function HarveySpecter() {
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  
+
   // Buscar dados REAIS do KV storage (usando as MESMAS chaves dos outros componentes)
   const [processes] = useKV<Process[]>('processes', [])
   const [financialRecords] = useKV<FinancialEntry[]>('financialEntries', [])  // CORRIGIDO: era 'financial-records'
@@ -98,7 +97,7 @@ export default function HarveySpecter() {
     const now = new Date()
     const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000)
     const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-    
+
     // Processos
     const totalProcesses = processes?.length || 0
     const processesByStatus = {
@@ -107,7 +106,7 @@ export default function HarveySpecter() {
       'Concluído': processes?.filter(p => p.status === 'concluido').length || 0,
       'Arquivado': processes?.filter(p => p.status === 'arquivado').length || 0,
     }
-    
+
     // Prazos urgentes (próximas 48h) - baseado nos prazos dos processos
     const urgentDeadlines = processes?.reduce((count, p) => {
       const urgentPrazos = p.prazos?.filter(prazo => {
@@ -117,7 +116,7 @@ export default function HarveySpecter() {
       }).length || 0
       return count + urgentPrazos
     }, 0) || 0
-    
+
     // Prazos próximos (7 dias)
     const upcomingDeadlines = processes?.reduce((count, p) => {
       const upcomingPrazos = p.prazos?.filter(prazo => {
@@ -127,7 +126,7 @@ export default function HarveySpecter() {
       }).length || 0
       return count + upcomingPrazos
     }, 0) || 0
-    
+
     // Financeiro - CORRIGIDO: usar 'income'/'expense' (tipo real do FinancialEntry)
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
@@ -135,16 +134,16 @@ export default function HarveySpecter() {
       const date = new Date(r.date)
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear
     }) || []
-    
+
     const receita = monthlyRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0)
     const despesas = monthlyRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0)
     const margem = receita > 0 ? ((receita - despesas) / receita * 100).toFixed(1) : '0'
-    
+
     // Tarefas dos Agentes - CORRIGIDO: usar taskQueue e completedTasks
     const pendingTasks = taskQueue?.filter(t => t.status === 'pending').length || 0
     const inProgressTasks = taskQueue?.filter(t => t.status === 'in_progress').length || 0
     const totalCompletedTasks = completedTasks?.length || 0
-    
+
     return {
       totalProcesses,
       processesByStatus,
@@ -171,7 +170,7 @@ export default function HarveySpecter() {
 
   const getInsights = (query: string): Insight[] => {
     const lowerQuery = query.toLowerCase()
-    
+
     // Aviso se não há dados
     if (!realStats.hasData) {
       return [
@@ -182,7 +181,7 @@ export default function HarveySpecter() {
         },
       ]
     }
-    
+
     if (lowerQuery.includes('processo') || lowerQuery.includes('acervo') || lowerQuery.includes('status')) {
       const insights: Insight[] = [
         {
@@ -192,7 +191,7 @@ export default function HarveySpecter() {
           description: 'Total cadastrado no sistema',
         },
       ]
-      
+
       if (realStats.processesByStatus['Em Andamento'] > 0) {
         insights.push({
           type: 'trend',
@@ -201,7 +200,7 @@ export default function HarveySpecter() {
           description: 'Processos ativos',
         })
       }
-      
+
       if (realStats.urgentDeadlines > 0) {
         insights.push({
           type: 'alert',
@@ -210,10 +209,10 @@ export default function HarveySpecter() {
           description: 'Nas próximas 48h',
         })
       }
-      
+
       return insights
     }
-    
+
     if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent')) {
       return [
         {
@@ -230,7 +229,7 @@ export default function HarveySpecter() {
         },
       ]
     }
-    
+
     if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
       return [
         {
@@ -253,7 +252,7 @@ export default function HarveySpecter() {
         },
       ]
     }
-    
+
     if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente') || lowerQuery.includes('equipe')) {
       return [
         {
@@ -270,7 +269,7 @@ export default function HarveySpecter() {
         },
       ]
     }
-    
+
     return [
       {
         type: 'suggestion',
@@ -282,12 +281,8 @@ export default function HarveySpecter() {
 
   const generateResponse = async (userQuery: string): Promise<string> => {
     try {
-      if (typeof spark === 'undefined' || !spark.llm) {
-        throw new Error('Spark SDK not available')
-      }
-
       // Construir contexto com dados REAIS
-      const contextData = realStats.hasData 
+      const contextData = realStats.hasData
         ? `Contexto REAL do escritório (dados do sistema):
 - ${realStats.totalProcesses} processos cadastrados
   - Em Andamento: ${realStats.processesByStatus['Em Andamento']}
@@ -303,7 +298,7 @@ export default function HarveySpecter() {
 - ${realStats.inProgressTasks} tarefas em progresso`
         : `Contexto: O sistema ainda não possui dados cadastrados. O usuário precisa cadastrar processos, registros financeiros e tarefas para ter informações reais.`
 
-      const prompt = `Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
+      const systemPrompt = `Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
 
 ${contextData}
 
@@ -311,25 +306,50 @@ IMPORTANTE:
 - Use APENAS os dados fornecidos acima. NÃO invente dados.
 - Se não houver dados, informe que o usuário precisa cadastrar informações.
 - Seja honesto sobre a situação real do sistema.
+- Responda de forma profissional, objetiva e com insights estratégicos baseados nos dados REAIS.
+- Use markdown para formatação. Seja direto e forneça recomendações acionáveis quando relevante.`
 
-Pergunta do usuário: ${userQuery}
+      // Chamada via fetch para /_spark/llm (proxy para Gemini/OpenAI)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 25000)
 
-Responda de forma profissional, objetiva e com insights estratégicos baseados nos dados REAIS. Use markdown para formatação. Seja direto e forneça recomendações acionáveis quando relevante.`
+      try {
+        const response = await fetch('/_spark/llm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userQuery }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+          }),
+          signal: controller.signal
+        })
 
-      const response = await Promise.race([
-        spark.llm(prompt, 'gpt-4o-mini'),
-        new Promise<string>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 25000)
-        )
-      ])
+        clearTimeout(timeout)
 
-      return response
+        if (!response.ok) {
+          throw new Error(`LLM API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        const content = data.choices?.[0]?.message?.content
+
+        if (!content) {
+          throw new Error('Empty response from LLM')
+        }
+
+        return content
+      } finally {
+        clearTimeout(timeout)
+      }
     } catch (error) {
-      console.error('LLM Error:', error)
-      
-      // Fallback com dados REAIS
+      console.error('LLM Error:', error)      // Fallback com dados REAIS
       const lowerQuery = userQuery.toLowerCase()
-      
+
       if (!realStats.hasData) {
         return `**Sistema sem dados cadastrados**
 
@@ -342,7 +362,7 @@ Ainda não há processos, registros financeiros ou tarefas cadastrados no sistem
 
 Assim que houver dados, poderei fornecer análises e insights reais sobre seu escritório.`
       }
-      
+
       if (lowerQuery.includes('processo') || lowerQuery.includes('acervo') || lowerQuery.includes('status')) {
         return `**Status dos Processos**
 
@@ -356,21 +376,21 @@ Assim que houver dados, poderei fornecer análises e insights reais sobre seu es
 
 ${realStats.urgentDeadlines > 0 ? `⚠️ **Atenção:** ${realStats.urgentDeadlines} processo(s) com prazo nas próximas 48h` : '✅ Nenhum prazo urgente nas próximas 48h'}`
       }
-      
+
       if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent')) {
         return `**Prazos e Deadlines**
 
-${realStats.urgentDeadlines > 0 
-  ? `⚠️ **URGENTE:** ${realStats.urgentDeadlines} prazo(s) nas próximas 48h`
-  : '✅ Nenhum prazo urgente nas próximas 48h'}
+${realStats.urgentDeadlines > 0
+            ? `⚠️ **URGENTE:** ${realStats.urgentDeadlines} prazo(s) nas próximas 48h`
+            : '✅ Nenhum prazo urgente nas próximas 48h'}
 
 📅 **Próximos 7 dias:** ${realStats.upcomingDeadlines} prazo(s)
 
-${realStats.urgentDeadlines > 0 
-  ? '**Recomendação:** Acesse o CRM para verificar os processos com prazos urgentes.'
-  : 'Situação tranquila em relação a prazos.'}`
+${realStats.urgentDeadlines > 0
+            ? '**Recomendação:** Acesse o CRM para verificar os processos com prazos urgentes.'
+            : 'Situação tranquila em relação a prazos.'}`
       }
-      
+
       if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
         const lucro = realStats.receita - realStats.despesas
         return `**Resumo Financeiro - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**
@@ -379,22 +399,22 @@ ${realStats.urgentDeadlines > 0
 💰 **Despesas:** R$ ${realStats.despesas.toLocaleString('pt-BR')}
 💎 **Lucro:** R$ ${lucro.toLocaleString('pt-BR')} (${realStats.margem}% margem)
 
-${realStats.receita === 0 && realStats.despesas === 0 
-  ? '⚠️ Nenhum registro financeiro neste mês. Cadastre receitas e despesas em **Financeiro**.'
-  : lucro > 0 ? '✅ Resultado positivo no mês.' : '⚠️ Despesas maiores que receitas.'}`
+${realStats.receita === 0 && realStats.despesas === 0
+            ? '⚠️ Nenhum registro financeiro neste mês. Cadastre receitas e despesas em **Financeiro**.'
+            : lucro > 0 ? '✅ Resultado positivo no mês.' : '⚠️ Despesas maiores que receitas.'}`
       }
-      
+
       if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente') || lowerQuery.includes('equipe')) {
         return `**Tarefas**
 
 📋 **Pendentes:** ${realStats.pendingTasks}
 🔄 **Em progresso:** ${realStats.inProgressTasks}
 
-${realStats.pendingTasks + realStats.inProgressTasks === 0 
-  ? 'Nenhuma tarefa cadastrada. Use **Expedientes** para gerenciar tarefas.'
-  : 'Acesse **Expedientes** para gerenciar suas tarefas.'}`
+${realStats.pendingTasks + realStats.inProgressTasks === 0
+            ? 'Nenhuma tarefa cadastrada. Use **Expedientes** para gerenciar tarefas.'
+            : 'Acesse **Expedientes** para gerenciar suas tarefas.'}`
       }
-      
+
       if (lowerQuery.includes('ajuda') || lowerQuery.includes('fazer') || lowerQuery.includes('oi') || lowerQuery.includes('olá')) {
         return `Olá! Sou o Harvey Specter, seu assistente jurídico. 
 
@@ -408,7 +428,7 @@ ${realStats.pendingTasks + realStats.inProgressTasks === 0
 
 O que você gostaria de saber?`
       }
-      
+
       return `Olá! Sou o Harvey Specter, seu assistente jurídico.
 
 **Seu escritório agora:**
@@ -451,18 +471,18 @@ Como posso ajudar?`
       setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
     } catch (error) {
       console.error('Error sending message:', error)
-      
+
       const isTimeout = error instanceof Error && error.message === 'Timeout'
-      
+
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: isTimeout 
+        content: isTimeout
           ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
           : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
         timestamp: new Date().toISOString(),
       }
-      
+
       setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
       toast.error('Erro ao processar mensagem')
     } finally {
@@ -479,7 +499,7 @@ Como posso ajudar?`
 
   const handleQuickQuestion = async (question: string) => {
     if (isProcessing) return
-    
+
     setIsProcessing(true)
 
     const userMessage: Message = {
@@ -506,18 +526,18 @@ Como posso ajudar?`
       setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
     } catch (error) {
       console.error('Error sending message:', error)
-      
+
       const isTimeout = error instanceof Error && error.message === 'Timeout'
-      
+
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: isTimeout 
+        content: isTimeout
           ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
           : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
         timestamp: new Date().toISOString(),
       }
-      
+
       setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
       toast.error('Erro ao processar mensagem')
     } finally {
@@ -581,63 +601,63 @@ Como posso ajudar?`
         <div className="flex-1 overflow-hidden" ref={scrollRef}>
           <ScrollArea className="h-full px-6 py-4">
             {!messages || messages.length === 0 ? (
-            <div className="space-y-6">
-              <div className="text-center py-8">
-                <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Bem-vindo ao Harvey Specter
-                </h2>
-                <p className="text-muted-foreground">
-                  Seu assistente jurídico inteligente para gestão completa do escritório
-                </p>
-              </div>
+              <div className="space-y-6">
+                <div className="text-center py-8">
+                  <h2 className="text-xl font-semibold text-foreground mb-2">
+                    Bem-vindo ao Harvey Specter
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Seu assistente jurídico inteligente para gestão completa do escritório
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {QUICK_INSIGHTS.map((insight, index) => {
-                  const Icon = insight.icon
-                  return (
-                    <Card
-                      key={index}
-                      className="p-4 hover:bg-accent/5 cursor-pointer transition-colors"
-                      onClick={() => handleQuickQuestion(insight.query)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <Icon className="w-5 h-5 text-primary" weight="fill" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {QUICK_INSIGHTS.map((insight, index) => {
+                    const Icon = insight.icon
+                    return (
+                      <Card
+                        key={index}
+                        className="p-4 hover:bg-accent/5 cursor-pointer transition-colors"
+                        onClick={() => handleQuickQuestion(insight.query)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <Icon className="w-5 h-5 text-primary" weight="fill" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">{insight.title}</h3>
+                            <p className="text-sm text-muted-foreground">{insight.description}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{insight.title}</h3>
-                          <p className="text-sm text-muted-foreground">{insight.description}</p>
-                        </div>
-                      </div>
-                    </Card>
-                  )
-                })}
-              </div>
+                      </Card>
+                    )
+                  })}
+                </div>
 
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">
-                  Perguntas Sugeridas:
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {SAMPLE_QUESTIONS.map((question, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickQuestion(question)}
-                      className="text-sm"
-                    >
-                      {question}
-                    </Button>
-                  ))}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Perguntas Sugeridas:
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {SAMPLE_QUESTIONS.map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickQuestion(question)}
+                        className="text-sm"
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-6 pb-4">
-              {(messages || []).map((message) => (
-                <div
-                  key={message.id}
+            ) : (
+              <div className="space-y-6 pb-4">
+                {(messages || []).map((message) => (
+                  <div
+                    key={message.id}
                   >
                     <Card
                       className={cn(
@@ -651,7 +671,7 @@ Como posso ajudar?`
                         {message.content}
                       </div>
                     </Card>
-                    
+
                     {message.insights && message.insights.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                         {message.insights.map((insight, idx) => (
@@ -691,26 +711,26 @@ Como posso ajudar?`
                       })}
                     </span>
                   </div>
-              ))}
-              
-              {isProcessing && (
-                <div className="flex gap-3">
-                  <Card className="p-4 bg-card">
-                    <div className="flex gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </Card>
-                </div>
-              )}
-            </div>
-          )}
+                ))}
+
+                {isProcessing && (
+                  <div className="flex gap-3">
+                    <Card className="p-4 bg-card">
+                      <div className="flex gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            )}
           </ScrollArea>
         </div>
 
         <Separator />
-        
+
         <div className="p-4 bg-card">
           <div className="flex gap-2">
             <Input
@@ -721,7 +741,7 @@ Como posso ajudar?`
               disabled={isProcessing}
               className="flex-1"
             />
-            <Button 
+            <Button
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
               size="icon"
