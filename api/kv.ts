@@ -277,7 +277,49 @@ export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) 
 
         res.status(200).json({ key, value });
       } else if (req.method === 'POST') {
-        const { key, value } = body || {};
+        const { key, value, action: bodyAction, keys, entries } = body || {};
+
+        // Handle batch-get action (multiple keys in one request)
+        if (bodyAction === 'batch-get' && Array.isArray(keys)) {
+          const validKeys = keys.filter((k: unknown) => typeof k === 'string').slice(0, 50);
+          const values: Record<string, unknown> = {};
+
+          // Use pipeline for efficient batch read
+          if (validKeys.length > 0) {
+            const pipeline = redis.pipeline();
+            for (const k of validKeys) {
+              pipeline.get(k);
+            }
+            const results = await pipeline.exec();
+            
+            for (let i = 0; i < validKeys.length; i++) {
+              values[validKeys[i]] = results[i] ?? null;
+            }
+          }
+
+          res.status(200).json({ success: true, values });
+          return;
+        }
+
+        // Handle batch-set action (multiple key-value pairs)
+        if (bodyAction === 'batch-set' && Array.isArray(entries)) {
+          const validEntries = entries
+            .filter((e: unknown) => e && typeof e === 'object' && 'key' in e && 'value' in e)
+            .slice(0, 50);
+
+          if (validEntries.length > 0) {
+            const pipeline = redis.pipeline();
+            for (const entry of validEntries) {
+              pipeline.set(entry.key, entry.value);
+            }
+            await pipeline.exec();
+          }
+
+          res.status(200).json({ success: true, count: validEntries.length });
+          return;
+        }
+
+        // Regular single key-value set
         if (!key || typeof key !== 'string') {
           res.status(400).json({ error: 'Key is required in request body' });
           return;

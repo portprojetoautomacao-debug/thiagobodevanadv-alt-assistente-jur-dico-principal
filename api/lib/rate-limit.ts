@@ -127,13 +127,13 @@ export const globalRateLimiter = new RateLimiter({
 
 export const apiRateLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minuto
-  maxRequests: 30, // 30 requests por minuto por IP
+  maxRequests: 100, // 100 requests por minuto por IP (aumentado para suportar batching inicial)
   keyPrefix: 'ratelimit:api:'
 });
 
 export const authRateLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  maxRequests: 5, // 5 tentativas de auth por 15 min
+  maxRequests: 10, // 10 tentativas de auth por 15 min
   keyPrefix: 'ratelimit:auth:'
 });
 
