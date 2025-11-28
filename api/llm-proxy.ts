@@ -152,21 +152,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log(`Using LLM provider: ${provider.name}`);
 
   try {
-    const parsedBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const requestedModel: string = parsedBody.model || 'gpt-4o';
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const requestedModel = body.model || 'gpt-4o';
 
     // Construir URL e body baseado no provedor
     let targetUrl = provider.baseUrl;
-    let requestBody = parsedBody;
+    let requestBody = body;
 
     if (provider.name === 'Gemini') {
       // Mapear modelo e construir URL específica do Gemini
       const geminiModel = MODEL_MAPPING.gemini[requestedModel] || 'gemini-2.5-pro';
       targetUrl = `${provider.baseUrl}/${geminiModel}:generateContent?key=${provider.apiKey}`;
-      requestBody = provider.transformRequest!(parsedBody);
+      requestBody = provider.transformRequest!(body);
     } else if (provider.name === 'OpenAI') {
       // Mapear modelo OpenAI
-      requestBody = { ...parsedBody, model: MODEL_MAPPING.openai[requestedModel] || requestedModel };
+      body.model = MODEL_MAPPING.openai[requestedModel] || requestedModel;
+      requestBody = body;
     }
 
     // Fazer requisição

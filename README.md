@@ -318,6 +318,21 @@ const {
 } = useAutoMinuta()
 ```
 
+### 📚 Documentação Completa
+
+Para documentação técnica detalhada do sistema de minutas automáticas, consulte:
+
+📖 **[docs/FLUXO_MINUTAS_AUTOMATICAS.md](docs/FLUXO_MINUTAS_AUTOMATICAS.md)**
+
+Conteúdo da documentação:
+- Arquitetura completa com diagramas ASCII
+- Fluxo detalhado das 7 etapas (DJEN → Aprovação)
+- Tipos TypeScript (`Minuta`, `AgentTask`, `DocumentTemplate`)
+- 8 templates jurídicos com sistema de variáveis `{{}}`
+- Integração Google Docs
+- Exemplos de código práticos
+- Troubleshooting e métricas
+
 ---
 
 ## 📢 DJEN - API GRATUITA DO CNJ (DICA IMPORTANTE!)
