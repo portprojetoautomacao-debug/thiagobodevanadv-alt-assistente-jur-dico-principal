@@ -1,33 +1,19 @@
-```ts
 /**
  * API consolidada para tarefas cron
  * Endpoints:
- * - POST /api/cron?action=daily-reset        - Reset diário de contadores (midnight UTC)
- * - POST /api/cron?action=djen-monitor       - Monitor DJEN publicações (11 AM BRT / 14 UTC)
- * - POST /api/cron?action=process-agent-queue  - Processar fila de agentes
- * - POST /api/cron?action=process-notifications - Processar fila de notificações
- * - POST /api/cron?action=calendar-sync      - Sincronizar prazos com Google Agenda
- * - POST /api/cron?action=backup             - Backup diário do KV
- * - POST /api/cron?action=datajud-monitor    - Monitorar DataJud
- * - POST /api/cron?action=deadline-alerts    - Alertas de prazos
- *
- * Schedule em vercel.json (exemplo):
- * - daily-reset:         "0 0 * * *"      (midnight UTC)
- * - djen-monitor:        "0 14 * * *"     (14:00 UTC = 11:00 BRT - São Paulo)
- * - process-agent-queue: "*/15 * * * *"   (a cada 15 min)
- * - process-notifications: "*/5 * * * *"  (a cada 5 min)
- * - calendar-sync:       "0 */2 * * *"    (a cada 2h)
- * - backup:              "0 3 * * *"      (3 AM UTC)
- * - datajud-monitor:     "0 16 * * *"     (16h UTC = 13h BRT)
- * - deadline-alerts:     "0 12 * * *"     (12h UTC = 9h BRT)
- *
+ * - POST /api/cron?action=daily-reset - Reset diário de contadores (midnight UTC)
+ * - POST /api/cron?action=djen-monitor - Monitor DJEN publicações (11 AM BRT / 14 UTC)
+ * 
+ * Schedule em vercel.json:
+ * - daily-reset: "0 0 * * *" (midnight UTC)
+ * - djen-monitor: "0 14 * * *" (14:00 UTC = 11:00 BRT - São Paulo)
+ * 
  * API DJEN: https://comunicaapi.pje.jus.br/api/v1/comunicacao
  * Documentação: v1.0.3 (29/05/2025)
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
-import crypto from 'crypto';
 
 // ================= KV UTILS (INLINE) =================
 
@@ -133,29 +119,30 @@ async function getMonitoredLawyers(): Promise<MonitoredLawyer[]> {
 async function storePublication(publication: StoredPublication): Promise<void> {
   try {
     const kv = await getKv();
-    const key = `${ KV_KEYS.PUBLICATIONS }:${ publication.lawyerId } `;
+    const key = `${KV_KEYS.PUBLICATIONS}:${publication.lawyerId}`;
     const existing = (await kv.get(key) as StoredPublication[]) || [];
 
     // Check duplicate using hash for better performance
-    const pubHash = publication.hash || `${ publication.tribunal } -${ publication.data } -${ publication.numeroProcesso } `;
+    const pubHash = publication.hash || `${publication.tribunal}-${publication.data}-${publication.numeroProcesso}`;
     const isDuplicate = existing.some(p => {
-      const existingHash = p.hash || `${ p.tribunal } -${ p.data } -${ p.numeroProcesso } `;
+      const existingHash = p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso}`;
       return existingHash === pubHash;
     });
 
     if (!isDuplicate) {
       existing.unshift(publication);
+      // Use pipeline for atomic operations
       await kv.set(key, existing.slice(0, 1000));
 
       // Update hash index for fast duplicate checking
-      const hashKey = `${ KV_KEYS.PUBLICATION_HASHES }:${ publication.lawyerId } `;
+      const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${publication.lawyerId}`;
       const hashes = (await kv.get(hashKey) as string[]) || [];
       hashes.unshift(pubHash);
       await kv.set(hashKey, hashes.slice(0, 2000));
 
-      console.log(`[KV] Stored publication: ${ pubHash } `);
+      console.log(`[KV] Stored publication: ${pubHash}`);
     } else {
-      console.log(`[KV] Skipped duplicate: ${ pubHash } `);
+      console.log(`[KV] Skipped duplicate: ${pubHash}`);
     }
   } catch (error) {
     console.error('[KV] Error storing publication:', error);
@@ -167,7 +154,7 @@ async function storePublication(publication: StoredPublication): Promise<void> {
 async function publicationExists(lawyerId: string, hash: string): Promise<boolean> {
   try {
     const kv = await getKv();
-    const hashKey = `${ KV_KEYS.PUBLICATION_HASHES }:${ lawyerId } `;
+    const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${lawyerId}`;
     const hashes = (await kv.get(hashKey) as string[]) || [];
     return hashes.includes(hash);
   } catch {
@@ -226,33 +213,11 @@ async function updateCompletedTasks(tasks: unknown[]): Promise<void> {
   }
 }
 
-async function queueNotification(notification: {
-  type: 'publication' | 'agent' | 'system';
-  title: string;
-  message: string;
-  data?: unknown;
-  recipientEmail?: string;
-}): Promise<void> {
+async function queueNotification(notification: { type: 'publication' | 'agent' | 'system'; title: string; message: string; data?: unknown; recipientEmail?: string }): Promise<void> {
   try {
     const kv = await getKv();
-    const queue = (await kv.get(KV_KEYS.NOTIFICATION_QUEUE) as Array<{
-      id: string;
-      type: string;
-      title: string;
-      message: string;
-      data?: unknown;
-      recipientEmail?: string;
-      createdAt: string;
-      sent: boolean;
-    }>) || [];
-
-    queue.push({
-      ...notification,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      sent: false
-    });
-
+    const queue = (await kv.get(KV_KEYS.NOTIFICATION_QUEUE) as Array<{ id: string; type: string; title: string; message: string; data?: unknown; recipientEmail?: string; createdAt: string; sent: boolean }>) || [];
+    queue.push({ ...notification, id: crypto.randomUUID(), createdAt: new Date().toISOString(), sent: false });
     await kv.set(KV_KEYS.NOTIFICATION_QUEUE, queue);
   } catch (error) {
     console.error('[KV] Error queuing notification:', error);
@@ -260,29 +225,23 @@ async function queueNotification(notification: {
 }
 
 // Send real-time notification via webhooks
-async function sendRealTimeNotification(notification: {
-  type: string;
-  title: string;
-  message: string;
-  priority?: string;
-  metadata?: Record<string, unknown>;
-}): Promise<void> {
+async function sendRealTimeNotification(notification: { type: string; title: string; message: string; priority?: string; metadata?: Record<string, unknown> }): Promise<void> {
   try {
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
 
-await fetch(`${baseUrl}/api/notifications/send`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    ...notification,
-    priority: notification.priority || 'normal'
-  })
-});
+    await fetch(`${baseUrl}/api/notifications/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...notification,
+        priority: notification.priority || 'normal'
+      })
+    });
   } catch (error) {
-  console.error('[Notification] Failed to send real-time notification:', error);
-}
+    console.error('[Notification] Failed to send real-time notification:', error);
+  }
 }
 
 async function addTaskToQueue(task: AgentTask): Promise<void> {
@@ -390,20 +349,15 @@ function normalizeText(text: string): string {
 function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
   if (!numeroOAB) return {};
   const value = numeroOAB.trim();
-
   const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
   if (matchOABPattern) return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-
   const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
   if (matchNumericUF) return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
-
   const matchNumeric = value.match(/^(\d+)$/);
   if (matchNumeric) return { numero: matchNumeric[1] };
-
   // Handle MG184404 format
   const matchUFNum = value.match(/^([A-Z]{2})(\d+)$/i);
   if (matchUFNum) return { uf: matchUFNum[1].toUpperCase(), numero: matchUFNum[2] };
-
   return {};
 }
 
@@ -421,10 +375,7 @@ function buildDJENQueryString(params: DJENQueryParams): string {
   return queryParams.join('&');
 }
 
-async function consultarComunicacoes(
-  params: DJENQueryParams,
-  retryOnRateLimit = true
-): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number }; rateLimitHit?: boolean }> {
+async function consultarComunicacoes(params: DJENQueryParams, retryOnRateLimit = true): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number }; rateLimitHit?: boolean }> {
   const queryString = buildDJENQueryString(params);
   const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`;
   const controller = new AbortController();
@@ -432,31 +383,24 @@ async function consultarComunicacoes(
 
   try {
     console.log(`[DJEN] Consultando: ${url}`);
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      signal: controller.signal
-    });
+    const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, signal: controller.signal });
     clearTimeout(timeoutId);
 
+    // Captura headers de rate limit conforme documentação DJEN
     const rateLimitInfo = {
-      limit: response.headers.get('x-ratelimit-limit')
-        ? parseInt(response.headers.get('x-ratelimit-limit')!, 10)
-        : undefined,
-      remaining: response.headers.get('x-ratelimit-remaining')
-        ? parseInt(response.headers.get('x-ratelimit-remaining')!, 10)
-        : undefined
+      limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
+      remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
     };
 
     console.log(`[DJEN] Rate Limit - Limit: ${rateLimitInfo.limit}, Remaining: ${rateLimitInfo.remaining}`);
 
     // Erro 429 - Conforme doc: aguardar 1 minuto para retomar
     if (response.status === 429) {
-      console.warn('[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.');
+      console.warn(`[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.`);
       if (retryOnRateLimit) {
         console.log(`[DJEN] Aguardando ${DJEN_RATE_LIMIT_WAIT / 1000}s antes de retry...`);
         await new Promise(resolve => setTimeout(resolve, DJEN_RATE_LIMIT_WAIT));
-        return consultarComunicacoes(params, false);
+        return consultarComunicacoes(params, false); // Tenta novamente sem retry
       }
       return { response: null, rateLimitInfo, rateLimitHit: true };
     }
@@ -475,7 +419,7 @@ async function consultarComunicacoes(
     return { response: data, rateLimitInfo };
   } catch (error) {
     clearTimeout(timeoutId);
-    console.error('[DJEN] Error:', error);
+    console.error(`[DJEN] Error:`, error);
     return { response: null, rateLimitInfo: {}, rateLimitHit: false };
   }
 }
@@ -484,14 +428,7 @@ function formatDJENDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-async function consultarDJENForLawyer(
-  tribunais: string[],
-  nomeAdvogado?: string,
-  numeroOAB?: string,
-  dataInicio?: string,
-  dataFim?: string,
-  meio?: 'D' | 'E'
-): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
+async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string, numeroOAB?: string, dataInicio?: string, dataFim?: string, meio?: 'D' | 'E'): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
   if (!nomeAdvogado && !numeroOAB) throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB');
 
   const defaultDate = formatDJENDate(new Date());
@@ -527,19 +464,18 @@ async function consultarDJENForLawyer(
 
       const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
 
+      // Log rate limit info para monitoramento
       if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
         console.warn(`[DJEN] Atenção: apenas ${rateLimitInfo.remaining} requisições restantes na janela`);
       }
 
       if (!response) {
         rateLimitWarning = rateLimitHit || rateLimitWarning;
-        erros.push({
-          tribunal,
-          erro: rateLimitHit ? 'Rate limit atingido (429) - aguarde 1 minuto' : 'Erro na consulta'
-        });
+        erros.push({ tribunal, erro: rateLimitHit ? 'Rate limit atingido (429) - aguarde 1 minuto' : 'Erro na consulta' });
         continue;
       }
 
+      // API DJEN pode retornar array direto ou objeto com items
       const comunicacoes: DJENComunicacao[] = Array.isArray(response)
         ? response
         : (response.items || []);
@@ -548,16 +484,9 @@ async function consultarDJENForLawyer(
 
       for (const comunicacao of comunicacoes) {
         let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
-
         const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
-          const matchNome = nomeAdvogado
-            ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado))
-            : false;
-
-          const matchOab = numeroOabNumerico
-            ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab
-            : false;
-
+          const matchNome = nomeAdvogado ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) : false;
+          const matchOab = numeroOabNumerico ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab : false;
           if (matchNome && matchOab) { matchType = 'ambos'; return true; }
           if (matchOab) { matchType = 'oab'; return true; }
           if (matchNome) { matchType = 'nome'; return true; }
@@ -565,6 +494,7 @@ async function consultarDJENForLawyer(
         }) || false;
 
         if (temAdvogado) {
+          // Usa datadisponibilizacao (oficial) ou data_disponibilizacao (alias)
           const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || '';
 
           resultados.push({
@@ -579,18 +509,12 @@ async function consultarDJENForLawyer(
             link: comunicacao.link,
             hash: comunicacao.hash,
             matchType,
-            advogados: comunicacao.destinatarioadvogados?.map(dest => ({
-              nome: dest.advogado.nome,
-              numero_oab: dest.advogado.numero_oab,
-              uf_oab: dest.advogado.uf_oab
-            })) || []
+            advogados: comunicacao.destinatarioadvogados?.map(dest => ({ nome: dest.advogado.nome, numero_oab: dest.advogado.numero_oab, uf_oab: dest.advogado.uf_oab })) || []
           });
         }
       }
 
-      if (tribunais.indexOf(tribunal) < tribunais.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
-      }
+      if (tribunais.indexOf(tribunal) < tribunais.length - 1) await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
     } catch (error) {
       erros.push({ tribunal, erro: error instanceof Error ? error.message : 'Erro desconhecido' });
     }
@@ -661,6 +585,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         errors: []
       };
 
+      // Reset agent counters
       const agents = await getAgents();
       console.log(`[Cron Daily Reset] Found ${agents.length} agents`);
 
@@ -675,6 +600,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.log(`[Cron Daily Reset] Reset counters for ${agents.length} agents`);
       }
 
+      // Archive old completed tasks (>30 days)
       const completedTasks = (await getCompletedTasks()) as CompletedTask[];
       console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
 
@@ -682,7 +608,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - 30);
 
-        const tasksToKeep = completedTasks.filter(task => {
+        const tasksToKeep = completedTasks.filter((task) => {
           if (!task.completedAt) return true;
           return new Date(task.completedAt) >= cutoffDate;
         });
@@ -695,7 +621,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      console.log('[Cron Daily Reset] Completed successfully');
+      console.log(`[Cron Daily Reset] Completed successfully`);
 
       return res.status(200).json({
         ok: true,
@@ -704,15 +630,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // DJEN MONITOR
+    // DJEN MONITOR (9 AM UTC)
     if (action === 'djen-monitor') {
       console.log(`[Cron DJEN Monitor] Starting execution at ${timestamp}`);
 
       const defaultTribunais = process.env.DJEN_TRIBUNAIS?.split(',') || [
-        'TJMG', 'TRT3', 'TST', 'STJ', 'TRF1'
+        'TJMG', 'TRT3', 'TST', 'STJ', 'TRF1' // Tribunais do advogado Thiago Bodevan
       ];
 
-      const defaultLawyer: MonitoredLawyer = {
+      // Advogado padrão fixo - Thiago Bodevan Veiga
+      const defaultLawyer = {
         id: 'lawyer-thiago-bodevan',
         name: 'Thiago Bodevan Veiga',
         oab: 'MG184404',
@@ -731,14 +658,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rateLimitWarning: false
       };
 
+      // Get monitored lawyers ou usa o padrão
       let lawyers = await getMonitoredLawyers();
       console.log(`[Cron DJEN Monitor] Found ${lawyers.length} monitored lawyers`);
 
+      // Se não houver advogados configurados, usa o advogado padrão
       if (lawyers.length === 0) {
         console.log(`[Cron DJEN Monitor] Using default lawyer: ${defaultLawyer.name}`);
         lawyers = [defaultLawyer];
       }
 
+      // Query DJEN for each enabled lawyer
       for (const lawyer of lawyers) {
         if (!lawyer.enabled) {
           console.log(`[Cron DJEN Monitor] Skipping disabled lawyer: ${lawyer.name}`);
@@ -753,13 +683,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           console.log(`[Cron DJEN Monitor] Checking ${lawyer.name} (${lawyer.oab}) in ${tribunais.length} tribunais`);
 
+          // Consultar DJEN usando API /api/v1/comunicacao (endpoint oficial)
           const { resultados, erros, rateLimitWarning } = await consultarDJENForLawyer(
             tribunais,
             lawyer.name,
             lawyer.oab,
-            undefined,
-            undefined,
-            'D'
+            undefined, // dataInicio (padrão: hoje)
+            undefined, // dataFim (padrão: dataInicio)
+            'D' // Diário Eletrônico
           );
 
           if (rateLimitWarning) {
@@ -769,16 +700,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           console.log(`[Cron DJEN Monitor] Found ${resultados.length} communications for ${lawyer.name}`);
 
+          // Store publications
           for (const comunicacao of resultados) {
+            // Generate hash for deduplication
             const pubHash = comunicacao.hash || `${comunicacao.tribunal}-${comunicacao.data}-${comunicacao.numeroProcesso}-${comunicacao.id}`;
 
+            // Fast duplicate check using hash index
             const exists = await publicationExists(lawyer.id, pubHash);
             if (exists) {
               console.log(`[Cron DJEN Monitor] Skipping duplicate: ${pubHash}`);
               continue;
             }
 
-            const storedPub: StoredPublication = {
+            const storedPub = {
               id: crypto.randomUUID(),
               djenId: comunicacao.id,
               tribunal: comunicacao.tribunal,
@@ -803,9 +737,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             await storePublication(storedPub);
             result.publicationsFound++;
 
+            // Create analysis task for the new publication
             await addTaskToQueue({
               id: crypto.randomUUID(),
-              agentId: 'justine',
+              agentId: 'justine', // Mrs. Justin-e - especialista em análise de intimações
               type: 'analyze_intimation',
               priority: 'high',
               status: 'pending',
@@ -820,6 +755,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               }
             });
 
+            // Send real-time notification via webhooks (Slack/Discord/Teams)
             await sendRealTimeNotification({
               type: 'new_publication',
               title: `📋 Nova Publicação DJEN - ${comunicacao.tribunal}`,
@@ -836,6 +772,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               }
             });
 
+            // Queue email notification
             const emailToNotify = lawyer.email || process.env.NOTIFICATION_EMAIL;
             if (emailToNotify) {
               await queueNotification({
@@ -856,6 +793,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           }
 
+          // Log errors
           for (const erro of erros) {
             const errorMsg = `DJEN ${erro.tribunal}: ${erro.erro}`;
             result.errors.push(errorMsg);
@@ -869,6 +807,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
+      // Update last check timestamp
       await updateLastDJENCheck();
 
       console.log(`[Cron DJEN Monitor] Completed: ${result.publicationsFound} communications found`);
@@ -877,6 +816,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         result.errors.push('ATENÇÃO: Rate limit da API DJEN atingido. Algumas consultas foram adiadas.');
       }
 
+      // Enviar email de relatório diário (mesmo se não encontrar publicações)
       const notificationEmail = process.env.NOTIFICATION_EMAIL;
       if (notificationEmail) {
         const dataHoje = new Date().toLocaleDateString('pt-BR', {
@@ -888,30 +828,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
         if (result.publicationsFound === 0) {
+          // Notificar que não encontrou publicações
           await queueNotification({
             type: 'system',
-            title: '📭 DJEN - Nenhuma publicação encontrada',
-            message:
-              `Relatório diário de ${dataHoje}:\n\n` +
-              '✅ Monitoramento executado com sucesso\n' +
+            title: `📭 DJEN - Nenhuma publicação encontrada`,
+            message: `Relatório diário de ${dataHoje}:\n\n` +
+              `✅ Monitoramento executado com sucesso\n` +
               `👤 Advogados verificados: ${result.lawyersChecked}\n` +
-              '📋 Publicações encontradas: 0\n' +
-              '🏛️ Tribunais consultados: TJMG, TRT3, TST, STJ, TRF1, TRF6\n\n' +
+              `📋 Publicações encontradas: 0\n` +
+              `🏛️ Tribunais consultados: TJMG, TRT3, TST, STJ, TRF1, TRF6\n\n` +
               (result.errors.length > 0 ? `⚠️ Erros: ${result.errors.join(', ')}\n\n` : '') +
-              'Próxima verificação: amanhã às 11:00 BRT',
+              `Próxima verificação: amanhã às 11:00 BRT`,
             recipientEmail: notificationEmail
           });
           console.log(`[Cron DJEN Monitor] Email de relatório enviado para ${notificationEmail}`);
         } else {
+          // Resumo quando encontrou publicações
           await queueNotification({
             type: 'system',
             title: `📬 DJEN - ${result.publicationsFound} publicação(ões) encontrada(s)`,
-            message:
-              `Relatório diário de ${dataHoje}:\n\n` +
-              '✅ Monitoramento executado com sucesso\n' +
+            message: `Relatório diário de ${dataHoje}:\n\n` +
+              `✅ Monitoramento executado com sucesso\n` +
               `👤 Advogados verificados: ${result.lawyersChecked}\n` +
               `📋 Publicações encontradas: ${result.publicationsFound}\n\n` +
-              'Acesse o sistema para ver os detalhes.',
+              `Acesse o sistema para ver os detalhes.`,
             recipientEmail: notificationEmail
           });
           console.log(`[Cron DJEN Monitor] Email de resumo enviado para ${notificationEmail}`);
@@ -960,11 +900,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
 
+        // Process up to 10 tasks per execution
         const tasksToProcess = pendingTasks.slice(0, 10);
         const agents = await getAgents();
 
         for (const task of tasksToProcess) {
-          const taskIndex = taskQueue.findIndex(t => t.id === task.id);
           try {
             const agent = agents.find(a => a.id === task.agentId);
 
@@ -973,11 +913,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               continue;
             }
 
+            // Update task status
             task.status = 'in_progress';
+            const taskIndex = taskQueue.findIndex(t => t.id === task.id);
             if (taskIndex >= 0) {
               taskQueue[taskIndex] = task;
             }
 
+            // Call agent processing endpoint
             const baseUrl = process.env.VERCEL_URL
               ? `https://${process.env.VERCEL_URL}`
               : 'http://localhost:3000';
@@ -999,6 +942,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               result.errors.push(`Task ${task.id} failed`);
             }
 
+            // Update task in queue
             if (taskIndex >= 0) {
               taskQueue[taskIndex] = task;
             }
@@ -1010,14 +954,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // Save updated queue
         await kv.set('agent-task-queue', taskQueue);
 
+        // Move completed tasks to completed list
         const completedTasks = taskQueue.filter(t => t.status === 'completed');
         if (completedTasks.length > 0) {
           const existingCompleted = (await kv.get(KV_KEYS.COMPLETED_TASKS) as AgentTask[]) || [];
           existingCompleted.unshift(...completedTasks);
           await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
 
+          // Remove completed from queue
           const remainingQueue = taskQueue.filter(t => t.status !== 'completed');
           await kv.set('agent-task-queue', remainingQueue);
         }
@@ -1080,10 +1027,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
 
+        // Process up to 20 notifications per execution
         const toProcess = pendingNotifications.slice(0, 20);
 
         for (const notification of toProcess) {
           try {
+            // Send via webhook if configured
             const webhookUrl = process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
             if (webhookUrl) {
               await sendRealTimeNotification({
@@ -1095,6 +1044,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               result.webhooksSent++;
             }
 
+            // Send email if Resend is configured
             const resendApiKey = process.env.RESEND_API_KEY;
             const recipientEmail = notification.recipientEmail || process.env.NOTIFICATION_EMAIL;
 
@@ -1128,6 +1078,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               }
             }
 
+            // Mark as sent
             notification.sent = true;
             const idx = notificationQueue.findIndex(n => n.id === notification.id);
             if (idx >= 0) {
@@ -1139,6 +1090,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // Save updated queue (keep last 500)
         await kv.set(KV_KEYS.NOTIFICATION_QUEUE, notificationQueue.slice(0, 500));
 
         console.log(`[Cron Notifications] Completed: ${result.emailsSent} emails, ${result.webhooksSent} webhooks`);
@@ -1180,6 +1132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const kv = await getKv();
 
+        // Get all processes with deadlines
         const processes = (await kv.get('processes') as Array<{
           id: string;
           numeroCNJ: string;
@@ -1196,6 +1149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
 
+        // Get calendar sync settings
         const calendarSettings = await kv.get('calendar-settings') as {
           enabled?: boolean;
           accessToken?: string;
@@ -1204,7 +1158,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } | null;
 
         if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
-          console.log('[Cron Calendar Sync] Calendar sync not configured or disabled');
+          console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);
           return res.status(200).json({
             ok: true,
             message: 'Calendar sync skipped - not configured',
@@ -1212,6 +1166,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
 
+        // Process deadlines not yet synced
         for (const processo of processes) {
           if (!processo.prazos) continue;
 
@@ -1219,6 +1174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (prazo.syncedToCalendar) continue;
 
             try {
+              // Create calendar event via Google Calendar API
               const eventResponse = await fetch(
                 `https://www.googleapis.com/calendar/v3/calendars/${calendarSettings.calendarId || 'primary'}/events`,
                 {
@@ -1229,9 +1185,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   },
                   body: JSON.stringify({
                     summary: `⚖️ PRAZO: ${prazo.descricao}`,
-                    description:
-                      `Processo: ${processo.numeroCNJ}\n${processo.titulo}\n\n` +
-                      'Prazo cadastrado automaticamente pelo Assistente Jurídico.',
+                    description: `Processo: ${processo.numeroCNJ}\n${processo.titulo}\n\nPrazo cadastrado automaticamente pelo Assistente Jurídico.`,
                     start: {
                       date: prazo.dataFinal.split('T')[0],
                       timeZone: 'America/Sao_Paulo'
@@ -1243,12 +1197,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     reminders: {
                       useDefault: false,
                       overrides: [
-                        { method: 'email', minutes: 1440 },
-                        { method: 'popup', minutes: 60 },
-                        { method: 'popup', minutes: 2880 }
+                        { method: 'email', minutes: 1440 }, // 1 day before
+                        { method: 'popup', minutes: 60 },   // 1 hour before
+                        { method: 'popup', minutes: 2880 }  // 2 days before
                       ]
                     },
-                    colorId: prazo.urgente ? '11' : '9'
+                    colorId: prazo.urgente ? '11' : '9' // Red for urgent, Blue for normal
                   })
                 }
               );
@@ -1270,10 +1224,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // Save updated processes
         if (result.eventsCreated > 0) {
           await kv.set('processes', processes);
         }
 
+        // Update last sync time
         await kv.set('calendar-last-sync', timestamp);
 
         console.log(`[Cron Calendar Sync] Completed: ${result.eventsCreated} events created`);
@@ -1313,6 +1269,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const kv = await getKv();
 
+        // Keys to backup
         const keysToBackup = [
           'processes',
           'publications',
@@ -1341,6 +1298,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // Also backup lawyer-specific publications
         const lawyers = (await kv.get(KV_KEYS.MONITORED_LAWYERS) as MonitoredLawyer[]) || [];
         for (const lawyer of lawyers) {
           const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
@@ -1352,14 +1310,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               totalBytes += JSON.stringify(pubs).length;
             }
           } catch {
-            // Ignore individual errors
+            // Ignore errors for individual lawyer publications
           }
         }
 
+        // Calculate size
         result.totalSize = totalBytes > 1024 * 1024
           ? `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
           : `${(totalBytes / 1024).toFixed(2)} KB`;
 
+        // Store backup with timestamp
         const backupKey = `backup:${new Date().toISOString().split('T')[0]}`;
         await kv.set(backupKey, {
           timestamp,
@@ -1368,6 +1328,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           sizeBytes: totalBytes
         });
 
+        // Keep only last 7 backups
+        // Clean old backups (we'll keep track in a list)
         const backupList = (await kv.get('backup-list') as string[]) || [];
         backupList.unshift(backupKey);
         const keysToKeep = backupList.slice(0, 7);
@@ -1377,7 +1339,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           try {
             await kv.del(oldKey);
           } catch {
-            // Ignore
+            // Ignore delete errors
           }
         }
 
@@ -1420,25 +1382,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const kv = await getKv();
 
+        // Get all active processes
         const processes = (await kv.get('processes') as Array<{
           id: string;
           numeroCNJ: string;
           titulo: string;
           status: string;
           ultimaAtualizacao?: string;
-          movimentos?: Array<{ data: string; descricao: string }>;
+          movimentos?: Array<{
+            data: string;
+            descricao: string;
+          }>;
         }>) || [];
 
         const activeProcesses = processes.filter(p => p.status === 'ativo' || p.status === 'em_andamento');
         console.log(`[Cron DataJud Monitor] Found ${activeProcesses.length} active processes`);
 
+        // DataJud API key (optional - public API has rate limits)
         const datajudApiKey = process.env.DATAJUD_API_KEY;
 
-        for (const processo of activeProcesses.slice(0, 20)) {
+        for (const processo of activeProcesses.slice(0, 20)) { // Limit to 20 per execution
           try {
             result.processesChecked++;
 
-            const datajudUrl = 'https://api-publica.datajud.cnj.jus.br/api_publica_tjmg/_search';
+            // Query DataJud API
+            const datajudUrl = `https://api-publica.datajud.cnj.jus.br/api_publica_tjmg/_search`;
             const query = {
               query: {
                 match: {
@@ -1452,7 +1420,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               'Content-Type': 'application/json'
             };
             if (datajudApiKey) {
-              headers.Authorization = `ApiKey ${datajudApiKey}`;
+              headers['Authorization'] = `ApiKey ${datajudApiKey}`;
             }
 
             const response = await fetch(datajudUrl, {
@@ -1485,21 +1453,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               const source = hits[0]._source;
               const movimentos = source?.movimentos || [];
 
+              // Check for new movements
               const lastCheck = processo.ultimaAtualizacao ? new Date(processo.ultimaAtualizacao) : new Date(0);
               const newMovimentos = movimentos.filter(m => new Date(m.dataHora) > lastCheck);
 
               if (newMovimentos.length > 0) {
                 result.updatesFound++;
 
+                // Update process
                 processo.ultimaAtualizacao = new Date().toISOString();
                 processo.movimentos = [
                   ...newMovimentos.map(m => ({
                     data: m.dataHora,
-                    descricao: `${m.nome}${m.complemento ? `: ${m.complemento}` : ''}`
+                    descricao: `${m.nome}${m.complemento ? ': ' + m.complemento : ''}`
                   })),
                   ...(processo.movimentos || [])
                 ].slice(0, 100);
 
+                // Create task for analysis
                 await addTaskToQueue({
                   id: crypto.randomUUID(),
                   agentId: 'analise-documental',
@@ -1515,6 +1486,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   }
                 });
 
+                // Send notification
                 await sendRealTimeNotification({
                   type: 'new_movement',
                   title: `📋 Nova Movimentação - ${processo.numeroCNJ}`,
@@ -1528,6 +1500,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               }
             }
 
+            // Rate limit - wait 500ms between requests
             await new Promise(resolve => setTimeout(resolve, 500));
 
           } catch (processError) {
@@ -1535,10 +1508,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // Save updated processes
         if (result.updatesFound > 0) {
           await kv.set('processes', processes);
         }
 
+        // Update last check
         await kv.set('datajud-last-check', timestamp);
 
         console.log(`[Cron DataJud Monitor] Completed: ${result.processesChecked} checked, ${result.updatesFound} updates`);
@@ -1580,6 +1555,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const kv = await getKv();
 
+        // Get all processes
         const processes = (await kv.get('processes') as Array<{
           id: string;
           numeroCNJ: string;
@@ -1596,6 +1572,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const in3Days = new Date(today);
+        in3Days.setDate(in3Days.getDate() + 3);
+
+        const in7Days = new Date(today);
+        in7Days.setDate(in7Days.getDate() + 7);
+
         const urgentDeadlines: Array<{ processo: string; prazo: string; dataFinal: string; diasRestantes: number }> = [];
         const upcomingDeadlines: Array<{ processo: string; prazo: string; dataFinal: string; diasRestantes: number }> = [];
 
@@ -1607,9 +1592,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             deadline.setHours(0, 0, 0, 0);
 
             const diasRestantes = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            if (diasRestantes < 0) continue;
+
+            if (diasRestantes < 0) continue; // Skip past deadlines
 
             if (diasRestantes <= 1) {
+              // URGENT: Today or tomorrow
               result.urgentDeadlines++;
               urgentDeadlines.push({
                 processo: processo.numeroCNJ,
@@ -1618,6 +1605,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 diasRestantes
               });
             } else if (diasRestantes <= 7) {
+              // Upcoming: within 7 days
               result.upcomingDeadlines++;
               upcomingDeadlines.push({
                 processo: processo.numeroCNJ,
@@ -1629,6 +1617,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
 
+        // Send urgent alerts
         if (urgentDeadlines.length > 0) {
           const urgentMessage = urgentDeadlines.map(d =>
             `🚨 ${d.processo}\n   ${d.prazo}\n   ${d.diasRestantes === 0 ? 'HOJE!' : 'AMANHÃ!'}`
@@ -1645,6 +1634,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           });
 
+          // Queue email
           const notificationEmail = process.env.NOTIFICATION_EMAIL;
           if (notificationEmail) {
             await queueNotification({
@@ -1658,6 +1648,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           result.alertsSent++;
         }
 
+        // Send daily summary if there are upcoming deadlines
         if (upcomingDeadlines.length > 0) {
           const summaryMessage = upcomingDeadlines.slice(0, 10).map(d =>
             `📅 ${d.processo}\n   ${d.prazo}\n   Em ${d.diasRestantes} dia(s)`
@@ -1680,7 +1671,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       } catch (error) {
         result.success = false;
-        result.errors.push(error instanceof Error ? error.message : 'Unknown error';
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
       }
 
       return res.status(200).json({
@@ -1691,8 +1682,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(400).json({
-      error:
-        'Invalid action. Use: daily-reset, djen-monitor, process-agent-queue, process-notifications, calendar-sync, backup, datajud-monitor, deadline-alerts'
+      error: 'Invalid action. Use: daily-reset, djen-monitor, process-agent-queue, process-notifications, calendar-sync, backup, datajud-monitor, deadline-alerts'
     });
 
   } catch (error) {
@@ -1706,4 +1696,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 }
-```

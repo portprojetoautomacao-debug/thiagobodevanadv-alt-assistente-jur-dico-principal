@@ -1,3 +1,10 @@
+/**
+ * Tipos globais para Google APIs (Calendar + Docs)
+ * Compatível com ambiente browser (Vercel) sem backend.
+ */
+
+/* ----------------------- AUTENTICAÇÃO ----------------------- */
+
 export interface GoogleAuthResponse {
   access_token?: string
   expires_in?: number
@@ -10,6 +17,8 @@ export interface TokenClient {
   requestAccessToken: (opts?: { prompt?: string }) => void
 }
 
+/* ----------------------- CALENDAR API ----------------------- */
+
 export interface CalendarEventsApi {
   list?: (params: Record<string, unknown>) => Promise<unknown>
   insert?: (params: Record<string, unknown>) => Promise<unknown>
@@ -20,6 +29,8 @@ export interface CalendarEventsApi {
 export interface CalendarClient {
   events?: CalendarEventsApi
 }
+
+/* ----------------------- GOOGLE DOCS API ----------------------- */
 
 export interface DocsClient {
   documents?: {
@@ -62,19 +73,30 @@ export interface DocsBatchUpdateResponse {
   result?: unknown
 }
 
+/* ----------------------- GAPI (Google API JS SDK) ----------------------- */
+
 export interface GapiGlobal {
   load: (module: string, cb: () => void) => void
   client?: {
     init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>
+
+    // IMPORTANTE: gapi.client.calendar e gapi.client.docs podem existir
     calendar?: CalendarClient
     docs?: DocsClient
   }
 }
 
+/* ----------------------- GIS (Google Identity Services) ----------------------- */
+
 export interface GoogleGisGlobal {
   accounts: {
     oauth2: {
-      initTokenClient: (opts: { client_id: string; scope: string; callback: (resp: GoogleAuthResponse) => void }) => TokenClient
+      initTokenClient: (opts: {
+        client_id: string
+        scope: string
+        callback: (resp: GoogleAuthResponse) => void
+      }) => TokenClient
+
       revoke: (token: string) => void
     }
   }

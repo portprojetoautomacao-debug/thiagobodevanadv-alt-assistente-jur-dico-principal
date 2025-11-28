@@ -2,23 +2,30 @@
 // Provides integration with Google Calendar API
 // v2.0 - Enhanced with better error handling and debugging
 
-import { Appointment } from '@/types'
-import type { GoogleAuthResponse, TokenClient, GapiGlobal, GoogleGisGlobal, CalendarClient } from './google-types'
+import { type Appointment } from '@/types'
+import type {
+  GoogleAuthResponse,
+  TokenClient,
+  GapiGlobal,
+  GoogleGisGlobal,
+  CalendarClient,
+} from './google-types'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
-const CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar'
+const CALENDAR_SCOPES =
+  'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar'
 
 // Debug helper
 const debug = (message: string, data?: unknown) => {
-  console.log(`[GoogleCalendar] ${message}`, data || '')
+  console.log(`[GoogleCalendar] ${message}`, data ?? '')
 }
 
 const debugError = (message: string, error?: unknown) => {
-  console.error(`[GoogleCalendar] ERROR: ${message}`, error || '')
+  console.error(`[GoogleCalendar] ERROR: ${message}`, error ?? '')
 }
 
-interface GoogleCalendarEvent {
+export interface GoogleCalendarEvent {
   id?: string
   summary: string
   description?: string
@@ -45,11 +52,11 @@ interface GoogleCalendarEvent {
 export interface DeadlineEvent {
   title: string
   description?: string
-  deadline: string // ISO date string
+  deadline: string // ISO date string (YYYY-MM-DD ou ISO completo)
   processNumber?: string
   type: 'prazo' | 'audiencia' | 'reuniao' | 'outro'
   priority?: 'baixa' | 'media' | 'alta' | 'critica'
-  reminders?: number[] // minutes before
+  reminders?: number[] // minutos antes
 }
 
 class GoogleCalendarService {
@@ -61,12 +68,17 @@ class GoogleCalendarService {
   private lastError: string | null = null
 
   // Status público para UI
-  getStatus(): { configured: boolean; initialized: boolean; authenticated: boolean; lastError: string | null } {
+  getStatus(): {
+    configured: boolean
+    initialized: boolean
+    authenticated: boolean
+    lastError: string | null
+  } {
     return {
       configured: !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY,
       initialized: this.gapiInited && this.gisInited,
       authenticated: !!this.accessToken,
-      lastError: this.lastError
+      lastError: this.lastError,
     }
   }
 
@@ -75,11 +87,12 @@ class GoogleCalendarService {
     debug('Config:', {
       hasClientId: !!GOOGLE_CLIENT_ID,
       hasApiKey: !!GOOGLE_API_KEY,
-      clientIdPrefix: GOOGLE_CLIENT_ID?.substring(0, 20) + '...'
+      clientIdPrefix: GOOGLE_CLIENT_ID?.substring(0, 20) + '...',
     })
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
-      this.lastError = 'Credenciais do Google não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.'
+      this.lastError =
+        'Credenciais do Google não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.'
       debugError(this.lastError)
       return false
     }
@@ -111,9 +124,13 @@ class GoogleCalendarService {
       await this.loadGoogleScripts()
       await this.initializeGapi()
       this.initializeGis()
-      debug('Initialization complete', { gapiInited: this.gapiInited, gisInited: this.gisInited })
+      debug('Initialization complete', {
+        gapiInited: this.gapiInited,
+        gisInited: this.gisInited,
+      })
     } catch (error) {
-      this.lastError = `Falha na inicialização: ${error instanceof Error ? error.message : String(error)}`
+      this.lastError = `Falha na inicialização: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError('Initialization failed', error)
     }
   }
@@ -122,10 +139,10 @@ class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       debug('Loading Google scripts...')
 
-      // Verificar se já carregados
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
       const googleWindow = window as unknown as { google?: GoogleGisGlobal }
 
+      // Já carregados
       if (gapiWindow.gapi && googleWindow.google) {
         debug('Scripts already loaded')
         resolve()
@@ -154,7 +171,7 @@ class GoogleCalendarService {
           clearTimeout(timeout)
           resolve()
         }
-        gisScript.onerror = (e) => {
+        gisScript.onerror = () => {
           clearTimeout(timeout)
           reject(new Error('Failed to load Google Identity Services script'))
         }
@@ -175,7 +192,7 @@ class GoogleCalendarService {
         debug('GAPI script loaded')
         loadGis()
       }
-      gapiScript.onerror = (e) => {
+      gapiScript.onerror = () => {
         clearTimeout(timeout)
         reject(new Error('Failed to load Google API script'))
       }
@@ -198,7 +215,11 @@ class GoogleCalendarService {
       gapiWindow.gapi.load('client', async () => {
         debug('GAPI client module loaded')
 
-        const clientInit = (gapiWindow.gapi?.client as { init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void> })?.init
+        const clientInit = (
+          gapiWindow.gapi?.client as {
+            init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>
+          }
+        )?.init
 
         if (typeof clientInit !== 'function') {
           this.lastError = 'Google API client init not available'
@@ -210,13 +231,16 @@ class GoogleCalendarService {
         try {
           await clientInit({
             apiKey: GOOGLE_API_KEY,
-            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+            discoveryDocs: [
+              'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest',
+            ],
           })
           this.gapiInited = true
           debug('GAPI client initialized successfully')
           resolve()
         } catch (err) {
-          this.lastError = `Erro ao inicializar Google API: ${err instanceof Error ? err.message : String(err)}`
+          this.lastError = `Erro ao inicializar Google API: ${err instanceof Error ? err.message : String(err)
+            }`
           debugError(this.lastError, err)
           reject(err)
         }
@@ -246,7 +270,8 @@ class GoogleCalendarService {
       this.gisInited = true
       debug('GIS initialized successfully')
     } catch (err) {
-      this.lastError = `Erro ao inicializar GIS: ${err instanceof Error ? err.message : String(err)}`
+      this.lastError = `Erro ao inicializar GIS: ${err instanceof Error ? err.message : String(err)
+        }`
       debugError(this.lastError, err)
     }
   }
@@ -269,14 +294,18 @@ class GoogleCalendarService {
     return new Promise((resolve) => {
       // Timeout de 60 segundos para autenticação
       const timeout = setTimeout(() => {
-        this.lastError = 'Timeout na autenticação (60s) - popup pode ter sido bloqueado'
+        this.lastError =
+          'Timeout na autenticação (60s) - popup pode ter sido bloqueado'
         debugError(this.lastError)
         resolve(false)
       }, 60000)
 
       this.tokenClient!.callback = (resp: GoogleAuthResponse) => {
         clearTimeout(timeout)
-        debug('Auth callback received', { hasError: !!resp.error, hasToken: !!resp.access_token })
+        debug('Auth callback received', {
+          hasError: !!resp.error,
+          hasToken: !!resp.access_token,
+        })
 
         if (resp.error !== undefined) {
           this.lastError = `Erro de autenticação: ${resp.error}`
@@ -300,7 +329,8 @@ class GoogleCalendarService {
         }
       } catch (err) {
         clearTimeout(timeout)
-        this.lastError = `Erro ao solicitar token: ${err instanceof Error ? err.message : String(err)}`
+        this.lastError = `Erro ao solicitar token: ${err instanceof Error ? err.message : String(err)
+          }`
         debugError(this.lastError, err)
         resolve(false)
       }
@@ -334,7 +364,9 @@ class GoogleCalendarService {
       }
 
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
-      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      const eventsApi = (gapiWindow.gapi?.client as {
+        calendar?: CalendarClient
+      }).calendar?.events
 
       if (!eventsApi || typeof eventsApi.list !== 'function') {
         this.lastError = 'Calendar API não disponível'
@@ -342,12 +374,15 @@ class GoogleCalendarService {
         return []
       }
 
-      const response = (await eventsApi.list(params)) as unknown as { result?: { items?: GoogleCalendarEvent[] } }
+      const response = (await eventsApi.list(params)) as unknown as {
+        result?: { items?: GoogleCalendarEvent[] }
+      }
       const events = response.result?.items || []
       debug(`Found ${events.length} events`)
       return events
     } catch (error) {
-      this.lastError = `Erro ao listar eventos: ${error instanceof Error ? error.message : String(error)}`
+      this.lastError = `Erro ao listar eventos: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return []
     }
@@ -366,7 +401,9 @@ class GoogleCalendarService {
 
     try {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
-      const endDateTime = new Date(startDateTime.getTime() + (appointment.duration || 60) * 60000)
+      const endDateTime = new Date(
+        startDateTime.getTime() + (appointment.duration || 60) * 60000
+      )
 
       const event: GoogleCalendarEvent = {
         summary: appointment.title,
@@ -390,7 +427,9 @@ class GoogleCalendarService {
       }
 
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
-      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      const eventsApi = (gapiWindow.gapi?.client as {
+        calendar?: CalendarClient
+      }).calendar?.events
 
       if (!eventsApi || typeof eventsApi.insert !== 'function') {
         this.lastError = 'Calendar API insert não disponível'
@@ -407,7 +446,8 @@ class GoogleCalendarService {
       debug('Event created successfully', { eventId })
       return eventId
     } catch (error) {
-      this.lastError = `Erro ao criar evento: ${error instanceof Error ? error.message : String(error)}`
+      this.lastError = `Erro ao criar evento: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return null
     }
@@ -418,26 +458,43 @@ class GoogleCalendarService {
    * Usado pela integração com Gestão de Prazos
    */
   async createDeadlineEvent(deadline: DeadlineEvent): Promise<string | null> {
-    debug('Creating deadline event...', { title: deadline.title, deadline: deadline.deadline })
+    debug('Creating deadline event...', {
+      title: deadline.title,
+      deadline: deadline.deadline,
+    })
 
-    // Converter para formato de Appointment
-    const deadlineDate = new Date(deadline.deadline)
+    const raw = deadline.deadline
+    const deadlineDate = new Date(raw)
+
+    if (Number.isNaN(deadlineDate.getTime())) {
+      this.lastError = `Data de prazo inválida recebida: "${raw}"`
+      debugError(this.lastError)
+      return null
+    }
+
     const appointment: Appointment = {
       id: crypto.randomUUID(),
       title: `⚠️ PRAZO: ${deadline.title}`,
       description: [
         deadline.description || '',
         deadline.processNumber ? `Processo: ${deadline.processNumber}` : '',
-        deadline.priority ? `Prioridade: ${deadline.priority.toUpperCase()}` : ''
-      ].filter(Boolean).join('\n'),
-      type: deadline.type === 'prazo' ? 'prazo' :
-        deadline.type === 'audiencia' ? 'audiencia' :
-          deadline.type === 'reuniao' ? 'reuniao' : 'outro',
+        deadline.priority ? `Prioridade: ${deadline.priority.toUpperCase()}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      type:
+        deadline.type === 'prazo'
+          ? 'prazo'
+          : deadline.type === 'audiencia'
+            ? 'audiencia'
+            : deadline.type === 'reuniao'
+              ? 'reuniao'
+              : 'outro',
       date: deadlineDate.toISOString().split('T')[0],
       time: '09:00', // Padrão manhã para prazos
       duration: 60,
       location: '',
-      reminders: deadline.reminders || [60, 1440, 2880] // 1h, 1 dia, 2 dias antes
+      reminders: deadline.reminders || [60, 1440, 2880], // 1h, 1 dia, 2 dias antes
     }
 
     return this.createEvent(appointment)
@@ -453,7 +510,9 @@ class GoogleCalendarService {
 
     try {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
-      const endDateTime = new Date(startDateTime.getTime() + (appointment.duration || 60) * 60000)
+      const endDateTime = new Date(
+        startDateTime.getTime() + (appointment.duration || 60) * 60000
+      )
 
       const event: GoogleCalendarEvent = {
         summary: appointment.title,
@@ -477,18 +536,22 @@ class GoogleCalendarService {
       }
 
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
-      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      const eventsApi = (gapiWindow.gapi?.client as {
+        calendar?: CalendarClient
+      }).calendar?.events
       if (!eventsApi || typeof eventsApi.update !== 'function') return false
+
       await eventsApi.update({
         calendarId: 'primary',
-        eventId: eventId,
+        eventId,
         resource: event,
       })
 
       debug('Event updated successfully')
       return true
     } catch (error) {
-      this.lastError = `Erro ao atualizar evento: ${error instanceof Error ? error.message : String(error)}`
+      this.lastError = `Erro ao atualizar evento: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return false
     }
@@ -504,17 +567,21 @@ class GoogleCalendarService {
 
     try {
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
-      const eventsApi = (gapiWindow.gapi?.client as { calendar?: CalendarClient }).calendar?.events
+      const eventsApi = (gapiWindow.gapi?.client as {
+        calendar?: CalendarClient
+      }).calendar?.events
       if (!eventsApi || typeof eventsApi.delete !== 'function') return false
+
       await eventsApi.delete({
         calendarId: 'primary',
-        eventId: eventId,
+        eventId,
       })
 
       debug('Event deleted successfully')
       return true
     } catch (error) {
-      this.lastError = `Erro ao deletar evento: ${error instanceof Error ? error.message : String(error)}`
+      this.lastError = `Erro ao deletar evento: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return false
     }
@@ -566,4 +633,3 @@ class GoogleCalendarService {
 }
 
 export const googleCalendarService = new GoogleCalendarService()
-export type { GoogleCalendarEvent }

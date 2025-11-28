@@ -1,18 +1,22 @@
 /**
  * Agent Tracing Integration
- * 
- * Integrates OpenTelemetry-compatible tracing with the AI Agents system.
- * Provides automatic instrumentation for agent execution and task processing.
+ *
+ * Integração de tracing compatível com OpenTelemetry com o sistema de Agentes IA.
+ * Fornece instrumentação automática para execução de agentes e processamento de tarefas.
  */
 
 import {
   tracingService,
-  type Span,
-  type AgentSpan,
-  type TraceContext,
-  type SpanAttributes,
   withTracing
 } from './tracing'
+
+import type {
+  Span,
+  AgentSpan,
+  TraceContext,
+  SpanAttributes
+} from './tracing'
+
 import type { Agent, AgentTask, AgentTaskResult } from './agents'
 
 // ============================================================================
@@ -20,7 +24,7 @@ import type { Agent, AgentTask, AgentTaskResult } from './agents'
 // ============================================================================
 
 /**
- * Trace agent task execution
+ * Trace da execução de uma tarefa de agente
  */
 export async function traceAgentTask<T>(
   agent: Agent,
@@ -39,19 +43,23 @@ export async function traceAgentTask<T>(
   })
 
   try {
-    // Add task start event
-    tracingService.addEvent(span, 'task.started', {
-      'task.data': JSON.stringify(task.data)
-    })
+    // Evento de início da tarefa
+    try {
+      tracingService.addEvent(span, 'task.started', {
+        'task.data': JSON.stringify(task.data)
+      })
+    } catch {
+      // ignora erro de stringify circular
+      tracingService.addEvent(span, 'task.started')
+    }
 
     const result = await executor(span)
 
-    // Add task completion event
+    // Evento de conclusão
     tracingService.addEvent(span, 'task.completed')
 
     await tracingService.endSpan(span, 'ok')
     return result
-
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
     tracingService.recordException(span, err)
@@ -61,7 +69,7 @@ export async function traceAgentTask<T>(
 }
 
 /**
- * Trace agent tool usage
+ * Trace de uso de ferramenta pelo agente
  */
 export function traceToolUsage(
   agentSpan: AgentSpan,
@@ -69,19 +77,37 @@ export function traceToolUsage(
   toolInput: unknown,
   toolOutput: unknown
 ): void {
+  let safeInput = ''
+  let safeOutput = ''
+
+  try {
+    safeInput = JSON.stringify(toolInput).substring(0, 500)
+  } catch {
+    safeInput = '[unserializable input]'
+  }
+
+  try {
+    safeOutput = JSON.stringify(toolOutput).substring(0, 500)
+  } catch {
+    safeOutput = '[unserializable output]'
+  }
+
   tracingService.addEvent(agentSpan, 'tool.used', {
     'tool.name': toolName,
-    'tool.input': JSON.stringify(toolInput).substring(0, 500),
-    'tool.output': JSON.stringify(toolOutput).substring(0, 500)
+    'tool.input': safeInput,
+    'tool.output': safeOutput
   })
 
-  if (agentSpan.toolsUsed) {
-    agentSpan.toolsUsed.push(toolName)
+  const spanAny = agentSpan as any
+  if (Array.isArray(spanAny.toolsUsed)) {
+    spanAny.toolsUsed.push(toolName)
+  } else {
+    spanAny.toolsUsed = [toolName]
   }
 }
 
 /**
- * Trace agent step
+ * Trace de passo de agente
  */
 export function traceAgentStep(
   agentSpan: AgentSpan,
@@ -89,11 +115,12 @@ export function traceAgentStep(
   stepDescription: string,
   attributes?: SpanAttributes
 ): void {
-  agentSpan.stepNumber = stepNumber
+  const spanAny = agentSpan as any
+  spanAny.stepNumber = stepNumber
 
   tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
     'step.description': stepDescription,
-    ...attributes
+    ...(attributes || {})
   })
 }
 
@@ -102,7 +129,7 @@ export function traceAgentStep(
 // ============================================================================
 
 /**
- * Trace LLM call within agent execution
+ * Trace de chamada ao LLM dentro da execução do agente
  */
 export async function traceLLMCall<T>(
   parentSpan: Span,
@@ -110,8 +137,10 @@ export async function traceLLMCall<T>(
   promptLength: number,
   executor: () => Promise<{ result: T; tokens: { prompt: number; completion: number } }>
 ): Promise<T> {
+  const parentContext = (parentSpan as any).context
+
   const llmSpan = tracingService.startLLMSpan(model, {
-    parentContext: parentSpan.context,
+    parentContext,
     attributes: {
       'llm.prompt_length': promptLength
     }
@@ -146,7 +175,7 @@ export async function traceLLMCall<T>(
 // ============================================================================
 
 /**
- * Record task result in span
+ * Registra o resultado da tarefa no span
  */
 export function traceTaskResult(
   span: AgentSpan,
@@ -178,7 +207,7 @@ export function traceTaskResult(
 // ============================================================================
 
 /**
- * Trace agent state change
+ * Trace de mudança de estado do agente
  */
 export function traceAgentStateChange(
   agentId: string,
@@ -202,7 +231,7 @@ export function traceAgentStateChange(
 }
 
 /**
- * Trace agent enabled/disabled
+ * Trace de ativação/desativação de agente
  */
 export function traceAgentToggle(
   agentId: string,
@@ -227,7 +256,7 @@ export function traceAgentToggle(
 // ============================================================================
 
 /**
- * Trace task added to queue
+ * Trace de tarefa adicionada à fila
  */
 export function traceTaskQueued(task: AgentTask): void {
   const span = tracingService.startSpan('task.queued', {
@@ -244,7 +273,7 @@ export function traceTaskQueued(task: AgentTask): void {
 }
 
 /**
- * Trace task dequeued for processing
+ * Trace de tarefa retirada da fila para processamento
  */
 export function traceTaskDequeued(task: AgentTask, agentId: string): void {
   const span = tracingService.startSpan('task.dequeued', {
@@ -265,7 +294,7 @@ export function traceTaskDequeued(task: AgentTask, agentId: string): void {
 // ============================================================================
 
 /**
- * Trace human intervention request
+ * Trace de solicitação de intervenção humana
  */
 export function traceHumanInterventionRequired(
   task: AgentTask,
@@ -285,7 +314,7 @@ export function traceHumanInterventionRequired(
 }
 
 /**
- * Trace human intervention completed
+ * Trace de conclusão de intervenção humana
  */
 export function traceHumanInterventionCompleted(
   taskId: string,
@@ -310,7 +339,7 @@ export function traceHumanInterventionCompleted(
 // ============================================================================
 
 /**
- * Get agent execution metrics from traces
+ * Métricas de execução do agente a partir dos traces
  */
 export function getAgentMetrics(agentId: string): {
   totalExecutions: number
@@ -319,43 +348,43 @@ export function getAgentMetrics(agentId: string): {
   toolUsage: Record<string, number>
   recentErrors: string[]
 } {
-  const traces = tracingService.getTracesByName(`agent.${agentId}`)
+  const traces = tracingService.getTracesByName(`agent.${agentId}`) as any[]
 
   const executions = traces.filter(t => t.endTime)
   const successful = executions.filter(t => t.status === 'ok')
   const failed = executions.filter(t => t.status === 'error')
 
   const durations = executions
-    .map(t => (t.endTime || 0) - t.startTime)
+    .map(t => ((t.endTime as number | undefined) ?? 0) - ((t.startTime as number | undefined) ?? 0))
     .filter(d => d > 0)
 
-  const avgDuration = durations.length > 0
-    ? durations.reduce((a, b) => a + b, 0) / durations.length
-    : 0
+  const avgDuration =
+    durations.length > 0
+      ? durations.reduce((a: number, b: number) => a + b, 0) / durations.length
+      : 0
 
-  // Count tool usage
   const toolUsage: Record<string, number> = {}
+
   executions.forEach(t => {
-    t.events
+    const events = (t.events as any[]) || []
+    events
       .filter(e => e.name === 'tool.used')
       .forEach(e => {
-        const tool = e.attributes?.['tool.name'] as string
+        const tool = e.attributes?.['tool.name'] as string | undefined
         if (tool) {
           toolUsage[tool] = (toolUsage[tool] || 0) + 1
         }
       })
   })
 
-  // Get recent errors
   const recentErrors = failed
     .slice(-5)
-    .map(t => t.statusMessage || 'Unknown error')
+    .map(t => (t.statusMessage as string | undefined) || 'Unknown error')
 
   return {
     totalExecutions: executions.length,
-    successRate: executions.length > 0
-      ? (successful.length / executions.length) * 100
-      : 0,
+    successRate:
+      executions.length > 0 ? (successful.length / executions.length) * 100 : 0,
     avgDuration,
     toolUsage,
     recentErrors
@@ -363,7 +392,7 @@ export function getAgentMetrics(agentId: string): {
 }
 
 /**
- * Get LLM metrics from traces
+ * Métricas de uso do LLM a partir dos traces
  */
 export function getLLMMetrics(): {
   totalCalls: number
@@ -372,7 +401,7 @@ export function getLLMMetrics(): {
   errorRate: number
   tokensByModel: Record<string, number>
 } {
-  const traces = tracingService.getTracesByName('llm.')
+  const traces = tracingService.getTracesByName('llm.') as any[]
 
   const calls = traces.filter(t => t.endTime)
   const successful = calls.filter(t => t.status === 'ok')
@@ -383,9 +412,9 @@ export function getLLMMetrics(): {
   const responseTimes: number[] = []
 
   calls.forEach(t => {
-    const tokens = (t.attributes['llm.total_tokens'] as number) || 0
-    const model = (t.attributes['llm.model'] as string) || 'unknown'
-    const responseTime = (t.attributes['llm.response_time_ms'] as number) || 0
+    const tokens = (t.attributes?.['llm.total_tokens'] as number | undefined) ?? 0
+    const model = (t.attributes?.['llm.model'] as string | undefined) || 'unknown'
+    const responseTime = (t.attributes?.['llm.response_time_ms'] as number | undefined) ?? 0
 
     totalTokens += tokens
     tokensByModel[model] = (tokensByModel[model] || 0) + tokens
@@ -395,17 +424,16 @@ export function getLLMMetrics(): {
     }
   })
 
-  const avgResponseTime = responseTimes.length > 0
-    ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
-    : 0
+  const avgResponseTime =
+    responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      : 0
 
   return {
     totalCalls: calls.length,
     totalTokens,
     avgResponseTime,
-    errorRate: calls.length > 0
-      ? (failed.length / calls.length) * 100
-      : 0,
+    errorRate: calls.length > 0 ? (failed.length / calls.length) * 100 : 0,
     tokensByModel
   }
 }
@@ -414,10 +442,5 @@ export function getLLMMetrics(): {
 // EXPORTS
 // ============================================================================
 
-export {
-  tracingService,
-  withTracing,
-  type Span,
-  type AgentSpan,
-  type TraceContext
-} from './tracing'
+export { tracingService, withTracing }
+export type { Span, AgentSpan, TraceContext }

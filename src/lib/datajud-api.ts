@@ -1,18 +1,24 @@
 /**
  * DataJud API Integration
- * 
+ *
  * API Pública do CNJ para consulta de processos judiciais
  * Documentação: https://www.cnj.jus.br/sistemas/datajud/api-publica/
  * Base URL: https://api-publica.datajud.cnj.jus.br/
- * 
+ *
  * Requer autenticação via API Key (cadastro obrigatório no site do DataJud)
+ *
+ * IMPORTANTE:
+ * - Consultas automáticas recomendadas: DIÁRIAS (cron 1x/dia por tribunal ou carteira)
+ * - Este módulo foi pensado para:
+ *    a) consulta pontual por número CNJ
+ *    b) varredura diária de atualizações recentes (consultarAtualizacoesRecentesDatajud)
  */
 
 export interface DatajudMovimento {
   codigo: number
   nome: string
   dataHora: string
-  complementosTabelados?: Array<{ 
+  complementosTabelados?: Array<{
     nome: string
     valor?: string
     codigo?: number
@@ -71,20 +77,20 @@ export interface TribunalInfo {
  * Referência: https://api-publica.datajud.cnj.jus.br/api_publica
  */
 export const TRIBUNAIS_DATAJUD: Record<string, TribunalInfo> = {
-  'tjsp': { alias: 'api_publica_tjsp', nome: 'Tribunal de Justiça de São Paulo', codigo: '8.26' },
-  'tjrj': { alias: 'api_publica_tjrj', nome: 'Tribunal de Justiça do Rio de Janeiro', codigo: '8.19' },
-  'tjmg': { alias: 'api_publica_tjmg', nome: 'Tribunal de Justiça de Minas Gerais', codigo: '8.13' },
-  'tjrs': { alias: 'api_publica_tjrs', nome: 'Tribunal de Justiça do Rio Grande do Sul', codigo: '8.21' },
-  'tjpr': { alias: 'api_publica_tjpr', nome: 'Tribunal de Justiça do Paraná', codigo: '8.16' },
-  'tjsc': { alias: 'api_publica_tjsc', nome: 'Tribunal de Justiça de Santa Catarina', codigo: '8.24' },
-  'trf1': { alias: 'api_publica_trf1', nome: 'Tribunal Regional Federal da 1ª Região', codigo: '4.01' },
-  'trf2': { alias: 'api_publica_trf2', nome: 'Tribunal Regional Federal da 2ª Região', codigo: '4.02' },
-  'trf3': { alias: 'api_publica_trf3', nome: 'Tribunal Regional Federal da 3ª Região', codigo: '4.03' },
-  'trf4': { alias: 'api_publica_trf4', nome: 'Tribunal Regional Federal da 4ª Região', codigo: '4.04' },
-  'trt2': { alias: 'api_publica_trt2', nome: 'Tribunal Regional do Trabalho da 2ª Região', codigo: '5.02' },
-  'tst': { alias: 'api_publica_tst', nome: 'Tribunal Superior do Trabalho', codigo: 'TST' },
-  'stj': { alias: 'api_publica_stj', nome: 'Superior Tribunal de Justiça', codigo: 'STJ' },
-  'stf': { alias: 'api_publica_stf', nome: 'Supremo Tribunal Federal', codigo: 'STF' },
+  tjsp: { alias: 'api_publica_tjsp', nome: 'Tribunal de Justiça de São Paulo', codigo: '8.26' },
+  tjrj: { alias: 'api_publica_tjrj', nome: 'Tribunal de Justiça do Rio de Janeiro', codigo: '8.19' },
+  tjmg: { alias: 'api_publica_tjmg', nome: 'Tribunal de Justiça de Minas Gerais', codigo: '8.13' },
+  tjrs: { alias: 'api_publica_tjrs', nome: 'Tribunal de Justiça do Rio Grande do Sul', codigo: '8.21' },
+  tjpr: { alias: 'api_publica_tjpr', nome: 'Tribunal de Justiça do Paraná', codigo: '8.16' },
+  tjsc: { alias: 'api_publica_tjsc', nome: 'Tribunal de Justiça de Santa Catarina', codigo: '8.24' },
+  trf1: { alias: 'api_publica_trf1', nome: 'Tribunal Regional Federal da 1ª Região', codigo: '4.01' },
+  trf2: { alias: 'api_publica_trf2', nome: 'Tribunal Regional Federal da 2ª Região', codigo: '4.02' },
+  trf3: { alias: 'api_publica_trf3', nome: 'Tribunal Regional Federal da 3ª Região', codigo: '4.03' },
+  trf4: { alias: 'api_publica_trf4', nome: 'Tribunal Regional Federal da 4ª Região', codigo: '4.04' },
+  trt2: { alias: 'api_publica_trt2', nome: 'Tribunal Regional do Trabalho da 2ª Região', codigo: '5.02' },
+  tst: { alias: 'api_publica_tst', nome: 'Tribunal Superior do Trabalho', codigo: 'TST' },
+  stj: { alias: 'api_publica_stj', nome: 'Superior Tribunal de Justiça', codigo: 'STJ' },
+  stf: { alias: 'api_publica_stf', nome: 'Supremo Tribunal Federal', codigo: 'STF' }
 }
 
 const DEFAULT_BASE_URL = 'https://api-publica.datajud.cnj.jus.br'
@@ -108,13 +114,12 @@ export class DatajudAPIError extends Error {
  * A API Key deve ser configurada no arquivo .env como VITE_DATAJUD_API_KEY
  */
 function getApiKey(configApiKey?: string): string | null {
-  // Tenta obter da configuração passada ou das variáveis de ambiente
   const apiKey = configApiKey || import.meta.env.VITE_DATAJUD_API_KEY
-  
+
   if (!apiKey || apiKey === 'your-datajud-api-key-here') {
     return null
   }
-  
+
   return apiKey
 }
 
@@ -123,12 +128,10 @@ function getApiKey(configApiKey?: string): string | null {
  * Formato: NNNNNNN-DD.AAAA.J.TR.OOOO
  */
 export function validarNumeroCNJ(numero: string): boolean {
-  // Remove espaços e caracteres especiais
   const numeroLimpo = numero.replace(/[^\d.-]/g, '')
-  
-  // Formato CNJ: 7 dígitos - 2 dígitos . 4 dígitos . 1 dígito . 2 dígitos . 4 dígitos
+
   const regex = /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/
-  
+
   return regex.test(numeroLimpo)
 }
 
@@ -141,15 +144,15 @@ export function extrairTribunalDoCNJ(numeroCNJ: string): string | null {
   if (!validarNumeroCNJ(numeroCNJ)) {
     return null
   }
-  
+
   const partes = numeroCNJ.split('.')
   if (partes.length < 4) {
     return null
   }
-  
+
   const segmento = partes[2] // J
-  const tribunal = partes[3]  // TR
-  
+  const tribunal = partes[3] // TR
+
   return `${segmento}.${tribunal}`
 }
 
@@ -158,36 +161,37 @@ export function extrairTribunalDoCNJ(numeroCNJ: string): string | null {
  */
 export function determinarAliasTribunal(tribunalInput: string): string | null {
   const tribunalLower = tribunalInput.toLowerCase().trim()
-  
+
   // Verifica se é uma chave direta
   if (TRIBUNAIS_DATAJUD[tribunalLower]) {
     return TRIBUNAIS_DATAJUD[tribunalLower].alias
   }
-  
-  // Procura pelo código do tribunal
+
+  // Procura pelo código do tribunal ou parte do nome
   for (const [, info] of Object.entries(TRIBUNAIS_DATAJUD)) {
     if (info.codigo === tribunalInput || info.nome.toLowerCase().includes(tribunalLower)) {
       return info.alias
     }
   }
-  
+
   return null
 }
 
 /**
  * Consulta um processo no DataJud pelo número CNJ
+ * Uso principal: consulta pontual (ex.: ao abrir o processo no painel)
  */
 export async function consultarProcessoDatajud(
   params: DatajudQueryParams,
   config?: DatajudConfig
 ): Promise<DatajudProcesso> {
   const { numeroProcesso, tribunal } = params
-  const { 
-    apiKey: configApiKey, 
-    baseUrl = DEFAULT_BASE_URL, 
-    timeout = DEFAULT_TIMEOUT 
+  const {
+    apiKey: configApiKey,
+    baseUrl = DEFAULT_BASE_URL,
+    timeout = DEFAULT_TIMEOUT
   } = config || {}
-  
+
   // Valida número CNJ
   if (!validarNumeroCNJ(numeroProcesso)) {
     throw new DatajudAPIError(
@@ -197,7 +201,7 @@ export async function consultarProcessoDatajud(
       numeroProcesso
     )
   }
-  
+
   // Obtém API Key
   const apiKey = getApiKey(configApiKey)
   if (!apiKey) {
@@ -208,7 +212,7 @@ export async function consultarProcessoDatajud(
       numeroProcesso
     )
   }
-  
+
   // Determina alias do tribunal
   const tribunalAlias = determinarAliasTribunal(tribunal)
   if (!tribunalAlias) {
@@ -219,40 +223,36 @@ export async function consultarProcessoDatajud(
       numeroProcesso
     )
   }
-  
-  // Remove caracteres especiais do número do processo para a URL
+
   const numeroProcessoLimpo = numeroProcesso.replace(/[^\d]/g, '')
-  
-  // Monta URL da requisição
   const url = `${baseUrl}/${tribunalAlias}/_search`
-  
-  // Configuração do timeout
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
-  
+
   try {
-    // Corpo da requisição com query do Elasticsearch
     const body = {
       query: {
         match: {
           numeroProcesso: numeroProcessoLimpo
         }
-      }
+      },
+      size: 1
     }
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `APIKey ${apiKey}`,
+        Authorization: `APIKey ${apiKey}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       },
       body: JSON.stringify(body),
       signal: controller.signal
     })
-    
+
     clearTimeout(timeoutId)
-    
+
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         throw new DatajudAPIError(
@@ -262,7 +262,7 @@ export async function consultarProcessoDatajud(
           numeroProcesso
         )
       }
-      
+
       if (response.status === 404) {
         throw new DatajudAPIError(
           'Processo não encontrado no tribunal especificado',
@@ -271,7 +271,7 @@ export async function consultarProcessoDatajud(
           numeroProcesso
         )
       }
-      
+
       throw new DatajudAPIError(
         `Erro HTTP ${response.status}: ${response.statusText}`,
         response.status,
@@ -279,10 +279,9 @@ export async function consultarProcessoDatajud(
         numeroProcesso
       )
     }
-    
+
     const data = await response.json()
-    
-    // A API do DataJud retorna resultados em hits.hits
+
     if (!data.hits || !data.hits.hits || data.hits.hits.length === 0) {
       throw new DatajudAPIError(
         'Processo não encontrado',
@@ -291,11 +290,9 @@ export async function consultarProcessoDatajud(
         numeroProcesso
       )
     }
-    
-    // Pega o primeiro resultado (deve ser único por número CNJ)
+
     const processo = data.hits.hits[0]._source as DatajudProcesso
-    
-    // Ordena movimentos por data (mais recentes primeiro)
+
     if (processo.movimentos && Array.isArray(processo.movimentos)) {
       processo.movimentos.sort((a, b) => {
         const dateA = new Date(a.dataHora).getTime()
@@ -303,16 +300,15 @@ export async function consultarProcessoDatajud(
         return dateB - dateA
       })
     }
-    
+
     return processo
-    
   } catch (error) {
     clearTimeout(timeoutId)
-    
+
     if (error instanceof DatajudAPIError) {
       throw error
     }
-    
+
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         throw new DatajudAPIError(
@@ -322,7 +318,7 @@ export async function consultarProcessoDatajud(
           numeroProcesso
         )
       }
-      
+
       throw new DatajudAPIError(
         `Erro de rede: ${error.message}`,
         0,
@@ -331,12 +327,182 @@ export async function consultarProcessoDatajud(
         error
       )
     }
-    
+
     throw new DatajudAPIError(
       'Erro desconhecido ao consultar DataJud',
       0,
       tribunal,
       numeroProcesso,
+      error
+    )
+  }
+}
+
+/**
+ * Configuração para varredura diária automática
+ * - Pensado para rodar 1x/dia por tribunal (cron)
+ */
+export interface DatajudDailyScanParams {
+  tribunal: string              // ex: 'tjmg', 'tjsp', 'trf1' (aceita alias, código ou parte do nome)
+  dias?: number                 // quantos dias para trás (default: 1 → DIÁRIO)
+  maxResultados?: number        // limite de processos retornados (default: 100)
+}
+
+/**
+ * Varre o DataJud em busca de processos ATUALIZADOS recentemente
+ * - Uso típico: job DIÁRIO / AUTOMÁTICO → monitoramento 24/7
+ * - Filtra por dataHoraUltimaAtualizacao em um range (últimos N dias)
+ *
+ * Estratégia sugerida:
+ * - Rodar 1x/dia por tribunal de interesse
+ * - Relacionar resultados com sua carteira via número CNJ (join com sua base)
+ */
+export async function consultarAtualizacoesRecentesDatajud(
+  params: DatajudDailyScanParams,
+  config?: DatajudConfig
+): Promise<DatajudProcesso[]> {
+  const {
+    tribunal,
+    dias = 1,
+    maxResultados = 100
+  } = params
+
+  const {
+    apiKey: configApiKey,
+    baseUrl = DEFAULT_BASE_URL,
+    timeout = DEFAULT_TIMEOUT
+  } = config || {}
+
+  const apiKey = getApiKey(configApiKey)
+  if (!apiKey) {
+    throw new DatajudAPIError(
+      'API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env',
+      401,
+      tribunal
+    )
+  }
+
+  const tribunalAlias = determinarAliasTribunal(tribunal)
+  if (!tribunalAlias) {
+    throw new DatajudAPIError(
+      `Tribunal não suportado ou não reconhecido: ${tribunal}`,
+      400,
+      tribunal
+    )
+  }
+
+  // Calcula intervalo (últimos N dias)
+  const agora = new Date()
+  const fim = agora.toISOString()
+  const inicioDate = new Date(agora.getTime() - dias * 24 * 60 * 60 * 1000)
+  const inicio = inicioDate.toISOString()
+
+  const url = `${baseUrl}/${tribunalAlias}/_search`
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    const body = {
+      size: maxResultados,
+      sort: [
+        {
+          dataHoraUltimaAtualizacao: {
+            order: 'desc'
+          }
+        }
+      ],
+      query: {
+        range: {
+          dataHoraUltimaAtualizacao: {
+            gte: inicio,
+            lte: fim
+          }
+        }
+      }
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `APIKey ${apiKey}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new DatajudAPIError(
+          'API Key inválida ou sem permissão. Verifique suas credenciais no site do DataJud',
+          response.status,
+          tribunal
+        )
+      }
+
+      throw new DatajudAPIError(
+        `Erro HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        tribunal
+      )
+    }
+
+    const data = await response.json()
+
+    if (!data.hits || !data.hits.hits || data.hits.hits.length === 0) {
+      // Para varredura diária, não tratar como erro: apenas "nada novo"
+      return []
+    }
+
+    const processos: DatajudProcesso[] = data.hits.hits.map((hit: any) => {
+      const proc = hit._source as DatajudProcesso
+
+      if (proc.movimentos && Array.isArray(proc.movimentos)) {
+        proc.movimentos.sort((a, b) => {
+          const dateA = new Date(a.dataHora).getTime()
+          const dateB = new Date(b.dataHora).getTime()
+          return dateB - dateA
+        })
+      }
+
+      return proc
+    })
+
+    return processos
+  } catch (error) {
+    clearTimeout(timeoutId)
+
+    if (error instanceof DatajudAPIError) {
+      throw error
+    }
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new DatajudAPIError(
+          `Timeout após ${timeout}ms aguardando resposta do DataJud (varredura diária)`,
+          408,
+          tribunal
+        )
+      }
+
+      throw new DatajudAPIError(
+        `Erro de rede na varredura diária: ${error.message}`,
+        0,
+        tribunal,
+        undefined,
+        error
+      )
+    }
+
+    throw new DatajudAPIError(
+      'Erro desconhecido na varredura diária do DataJud',
+      0,
+      tribunal,
+      undefined,
       error
     )
   }
@@ -363,13 +529,14 @@ export function isApiKeyConfigured(): boolean {
  * Formata o número CNJ para exibição
  */
 export function formatarNumeroCNJ(numero: string): string {
-  // Remove tudo que não é dígito
   const digitos = numero.replace(/\D/g, '')
-  
-  // Aplica a máscara NNNNNNN-DD.AAAA.J.TR.OOOO
+
   if (digitos.length === 20) {
-    return `${digitos.slice(0, 7)}-${digitos.slice(7, 9)}.${digitos.slice(9, 13)}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(16, 20)}`
+    return `${digitos.slice(0, 7)}-${digitos.slice(7, 9)}.${digitos.slice(
+      9,
+      13
+    )}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(16, 20)}`
   }
-  
+
   return numero
 }

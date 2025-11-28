@@ -1,18 +1,23 @@
 /**
  * Agent Communication System
- * 
- * Enables agents to share information, request help from other agents,
- * and maintain shared context
+ *
+ * Permite que agentes:
+ * - troquem mensagens (request/response/notification/alert)
+ * - peçam ajuda uns aos outros
+ * - compartilhem contexto estruturado
  */
 
 import type { Agent, AgentTask } from './agents'
 
+export type AgentMessageType = 'request' | 'response' | 'notification' | 'alert'
+export type AgentMessagePriority = 'low' | 'medium' | 'high' | 'critical'
+
 export interface AgentMessage {
   id: string
   fromAgentId: string
-  toAgentId?: string // undefined means broadcast
-  type: 'request' | 'response' | 'notification' | 'alert'
-  priority: 'low' | 'medium' | 'high' | 'critical'
+  toAgentId?: string // undefined = broadcast
+  type: AgentMessageType
+  priority: AgentMessagePriority
   content: string
   data?: Record<string, unknown>
   timestamp: string
@@ -26,7 +31,7 @@ export interface SharedContext {
   createdBy: string
   createdAt: string
   updatedAt: string
-  accessibleBy: string[] // Agent IDs that can access this context
+  accessibleBy: string[] // IDs de agentes que podem acessar este contexto (ou '*')
 }
 
 class AgentCommunicationHub {
@@ -35,30 +40,30 @@ class AgentCommunicationHub {
   private subscribers: Map<string, Set<(message: AgentMessage) => void>> = new Map()
 
   /**
-   * Sends a message from one agent to another (or broadcast)
+   * Envia uma mensagem de um agente para outro (ou broadcast)
    */
   sendMessage(message: Omit<AgentMessage, 'id' | 'timestamp'>): AgentMessage {
     const fullMessage: AgentMessage = {
       ...message,
       id: crypto.randomUUID(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
 
     this.messages.push(fullMessage)
 
-    // Keep only last 1000 messages
+    // Mantém apenas as últimas 1000 mensagens
     if (this.messages.length > 1000) {
       this.messages = this.messages.slice(-1000)
     }
 
-    // Notify subscribers
+    // Notifica inscritos
     if (message.toAgentId) {
       const subscribers = this.subscribers.get(message.toAgentId)
-      subscribers?.forEach(callback => callback(fullMessage))
+      subscribers?.forEach((callback) => callback(fullMessage))
     } else {
-      // Broadcast to all subscribers
-      this.subscribers.forEach(subscribers => {
-        subscribers.forEach(callback => callback(fullMessage))
+      // Broadcast para todos
+      this.subscribers.forEach((subscribers) => {
+        subscribers.forEach((callback) => callback(fullMessage))
       })
     }
 
@@ -66,7 +71,8 @@ class AgentCommunicationHub {
   }
 
   /**
-   * Subscribes an agent to receive messages
+   * Inscreve um agente para receber mensagens destinadas a ele
+   * Retorna função de unsubscribe
    */
   subscribe(agentId: string, callback: (message: AgentMessage) => void): () => void {
     if (!this.subscribers.has(agentId)) {
@@ -75,7 +81,7 @@ class AgentCommunicationHub {
 
     this.subscribers.get(agentId)!.add(callback)
 
-    // Return unsubscribe function
+    // Função de cleanup
     return () => {
       const subscribers = this.subscribers.get(agentId)
       if (subscribers) {
@@ -88,36 +94,44 @@ class AgentCommunicationHub {
   }
 
   /**
-   * Gets messages for a specific agent
+   * Retorna mensagens recentes relevantes para um agente:
+   * - mensagens diretamente endereçadas a ele
+   * - mensagens de broadcast
    */
   getMessages(agentId: string, limit: number = 50): AgentMessage[] {
     return this.messages
-      .filter(m => m.toAgentId === agentId || !m.toAgentId)
+      .filter((m) => m.toAgentId === agentId || !m.toAgentId)
       .slice(-limit)
   }
 
   /**
-   * Creates or updates shared context
+   * Cria ou atualiza um contexto compartilhado
+   * - mesma combinação (type + createdBy) é considerada "o mesmo contexto"
    */
-  setContext(context: Omit<SharedContext, 'id' | 'createdAt' | 'updatedAt'>): SharedContext {
-    const existingContext = Array.from(this.contexts.values())
-      .find(c => c.type === context.type && c.createdBy === context.createdBy)
+  setContext(
+    context: Omit<SharedContext, 'id' | 'createdAt' | 'updatedAt'>
+  ): SharedContext {
+    const existingContext = Array.from(this.contexts.values()).find(
+      (c) => c.type === context.type && c.createdBy === context.createdBy
+    )
 
     if (existingContext) {
       const updated: SharedContext = {
         ...existingContext,
         data: { ...existingContext.data, ...context.data },
-        updatedAt: new Date().toISOString()
+        accessibleBy: context.accessibleBy ?? existingContext.accessibleBy,
+        updatedAt: new Date().toISOString(),
       }
       this.contexts.set(updated.id, updated)
       return updated
     }
 
+    const now = new Date().toISOString()
     const newContext: SharedContext = {
       ...context,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now,
     }
 
     this.contexts.set(newContext.id, newContext)
@@ -125,18 +139,21 @@ class AgentCommunicationHub {
   }
 
   /**
-   * Gets shared context accessible by an agent
+   * Retorna contextos compartilhados acessíveis por um agente
+   * - acessível se `accessibleBy` contém o agentId ou '*'
+   * - opcionalmente filtra por tipo
    */
   getContext(agentId: string, type?: string): SharedContext[] {
     return Array.from(this.contexts.values())
-      .filter(c => 
-        c.accessibleBy.includes(agentId) || c.accessibleBy.includes('*')
+      .filter(
+        (c) =>
+          c.accessibleBy.includes(agentId) || c.accessibleBy.includes('*')
       )
-      .filter(c => !type || c.type === type)
+      .filter((c) => !type || c.type === type)
   }
 
   /**
-   * Requests help from another agent
+   * Cria uma mensagem de "pedido de ajuda" entre agentes
    */
   requestHelp(
     fromAgent: Agent,
@@ -148,19 +165,19 @@ class AgentCommunicationHub {
       fromAgentId: fromAgent.id,
       toAgentId,
       type: 'request',
-      priority: task.priority,
+      priority: task.priority as AgentMessagePriority,
       content: `Help requested: ${reason}`,
       data: {
         task,
         reason,
-        requestType: 'help'
+        requestType: 'help',
       },
-      relatedTaskId: task.id
+      relatedTaskId: task.id,
     })
   }
 
   /**
-   * Broadcasts an alert to all agents
+   * Broadcast de alerta para todos os agentes
    */
   broadcastAlert(
     fromAgentId: string,
@@ -172,22 +189,22 @@ class AgentCommunicationHub {
       type: 'alert',
       priority: 'high',
       content: message,
-      data
+      data,
     })
   }
 
   /**
-   * Clears old messages and contexts
+   * Limpa mensagens e contextos antigos
    */
   cleanup(olderThanHours: number = 24): void {
-    const cutoffTime = Date.now() - (olderThanHours * 60 * 60 * 1000)
+    const cutoffTime = Date.now() - olderThanHours * 60 * 60 * 1000
 
-    // Clean messages
-    this.messages = this.messages.filter(m => 
-      new Date(m.timestamp).getTime() > cutoffTime
+    // Mensagens
+    this.messages = this.messages.filter(
+      (m) => new Date(m.timestamp).getTime() > cutoffTime
     )
 
-    // Clean contexts
+    // Contextos
     Array.from(this.contexts.entries()).forEach(([id, context]) => {
       if (new Date(context.updatedAt).getTime() < cutoffTime) {
         this.contexts.delete(id)
@@ -196,17 +213,22 @@ class AgentCommunicationHub {
   }
 
   /**
-   * Gets communication statistics
+   * Estatísticas simples de comunicação
    */
   getStats(): {
     totalMessages: number
-    messagesByType: Record<string, number>
+    messagesByType: Record<AgentMessageType, number>
     activeContexts: number
     subscribedAgents: number
   } {
-    const messagesByType: Record<string, number> = {}
-    
-    this.messages.forEach(m => {
+    const messagesByType = {
+      request: 0,
+      response: 0,
+      notification: 0,
+      alert: 0,
+    } satisfies Record<AgentMessageType, number>
+
+    this.messages.forEach((m) => {
       messagesByType[m.type] = (messagesByType[m.type] || 0) + 1
     })
 
@@ -214,18 +236,18 @@ class AgentCommunicationHub {
       totalMessages: this.messages.length,
       messagesByType,
       activeContexts: this.contexts.size,
-      subscribedAgents: this.subscribers.size
+      subscribedAgents: this.subscribers.size,
     }
   }
 }
 
 /**
- * Global communication hub instance
+ * Instância global do hub de comunicação entre agentes
  */
 export const communicationHub = new AgentCommunicationHub()
 
 /**
- * Helper function to create a notification message
+ * Helper: notificar agentes (broadcast) com uma mensagem simples
  */
 export function notifyAgents(
   fromAgentId: string,
@@ -237,12 +259,12 @@ export function notifyAgents(
     type: 'notification',
     priority: 'medium',
     content: message,
-    data
+    data,
   })
 }
 
 /**
- * Helper function to share context between agents
+ * Helper: compartilhar contexto entre agentes
  */
 export function shareContext(
   agentId: string,
@@ -254,6 +276,6 @@ export function shareContext(
     type,
     data,
     createdBy: agentId,
-    accessibleBy
+    accessibleBy,
   })
 }
