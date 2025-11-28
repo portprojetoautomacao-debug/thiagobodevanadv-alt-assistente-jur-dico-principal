@@ -63,7 +63,7 @@ export default async function handler(
         try {
           body = JSON.parse(req.body) as BackupRequestBody
         } catch (e) {
-          // eslint-disable-next-line no-console
+           
           console.warn('[api/backup] Failed to parse request body as JSON:', e)
           body = undefined
         }
@@ -99,7 +99,7 @@ export default async function handler(
         return
       }
 
-      // eslint-disable-next-line no-console
+       
       console.log(
         `[api/backup] Backup validated for user ${userId}: ${(backupSize / 1024).toFixed(2)} KB`
       )
@@ -162,7 +162,7 @@ export default async function handler(
 
     res.status(405).json({ error: 'Method not allowed' })
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[api/backup] Backup API error:', error)
 
     res.status(500).json({

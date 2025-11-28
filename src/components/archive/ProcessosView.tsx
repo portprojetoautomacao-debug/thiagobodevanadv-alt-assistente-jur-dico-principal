@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import * as spark from '@github/spark/llm'
+import { llm } from '@/lib/llm-client'
 import { useProcesses } from '@/hooks/use-processes'
 import type { Process } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,7 +27,7 @@ export default function ProcessosView() {
 
     if (search) {
       const searchLower = search.toLowerCase()
-      results = results.filter(p => 
+      results = results.filter(p =>
         p.numeroCNJ.toLowerCase().includes(searchLower) ||
         p.titulo.toLowerCase().includes(searchLower) ||
         p.autor.toLowerCase().includes(searchLower) ||
@@ -81,7 +81,7 @@ export default function ProcessosView() {
 
   const handleAIAnalysis = async (process: Process) => {
     setAnalyzingProcess(process.id)
-    
+
     try {
       const prompt = `Você é um assistente jurídico especializado. Analise o seguinte processo e forneça insights estratégicos:
 
@@ -102,12 +102,12 @@ Por favor, forneça:
 
 Seja objetivo e prático, focando em insights acionáveis para o advogado.`
 
-      const analysis = await spark.llm(prompt, 'gpt-4o')
-      
+      const analysis = await llm(prompt, 'gpt-4o')
+
       const updatedNotes = `${process.notas || ''}\n\n--- ANÁLISE IA (${new Date().toLocaleString('pt-BR')}) ---\n${analysis}`
-      
+
       updateProcess(process.id, { notas: updatedNotes })
-      
+
       toast.success('Análise IA concluída! Verifique as notas do processo.')
     } catch (error) {
       console.error('Erro na análise IA:', error)
@@ -192,7 +192,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`
               {search ? 'Nenhum processo encontrado' : 'Nenhum processo cadastrado'}
             </h3>
             <p className="text-muted-foreground text-center max-w-md">
-              {search 
+              {search
                 ? 'Tente ajustar os filtros ou termo de busca.'
                 : 'Adicione seu primeiro processo clicando no botão "Novo Processo" acima.'}
             </p>

@@ -70,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       timestamp: new Date().toISOString()
     })
   } catch (err: unknown) {
-    // eslint-disable-next-line no-console
+     
     console.error('[api/tarefas/criar] Erro:', err)
 
     return res.status(500).json({

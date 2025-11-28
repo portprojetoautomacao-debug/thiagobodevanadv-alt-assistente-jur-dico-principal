@@ -139,7 +139,7 @@ async function consultarDJEN(params: DJENQueryParams): Promise<DJENResponse | nu
   const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT)
 
   try {
-    // eslint-disable-next-line no-console
+     
     console.log(
       '[DJEN-Sync] Consultando:',
       url.replace(/numeroOab=[^&]*/, 'numeroOab=***')
@@ -157,13 +157,13 @@ async function consultarDJEN(params: DJENQueryParams): Promise<DJENResponse | nu
     clearTimeout(timeoutId)
 
     if (response.status === 429) {
-      // eslint-disable-next-line no-console
+       
       console.warn('[DJEN-Sync] Rate limit atingido')
       return null
     }
 
     if (response.status === 403) {
-      // eslint-disable-next-line no-console
+       
       console.error('[DJEN-Sync] Acesso bloqueado (403) - possível bloqueio geográfico')
       throw new Error('API DJEN bloqueou acesso - verifique se a função está rodando no Brasil (gru1)')
     }
@@ -177,7 +177,7 @@ async function consultarDJEN(params: DJENQueryParams): Promise<DJENResponse | nu
     clearTimeout(timeoutId)
 
     if (error instanceof Error && error.name === 'AbortError') {
-      // eslint-disable-next-line no-console
+       
       console.error('[DJEN-Sync] Timeout na consulta')
       throw new Error('Timeout na consulta DJEN')
     }
@@ -256,7 +256,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { numero, uf } = parseOAB(lawyer.oab)
 
         if (!numero) {
-          // eslint-disable-next-line no-console
+           
           console.warn(`[DJEN-Sync] OAB inválida para ${lawyer.name}: ${lawyer.oab}`)
           continue
         }
@@ -316,7 +316,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
         errors.push(`${lawyer.name}: ${errorMsg}`)
-        // eslint-disable-next-line no-console
+         
         console.error(`[DJEN-Sync] Erro para ${lawyer.name}:`, error)
       }
     }
@@ -346,7 +346,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     })
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[DJEN-Sync] Error:', error)
     return res.status(500).json({
       ok: false,

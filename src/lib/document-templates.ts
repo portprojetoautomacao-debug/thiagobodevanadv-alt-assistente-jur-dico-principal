@@ -482,7 +482,7 @@ export function extractUnfilledVariables(content: string): string[] {
   const matches: string[] = []
   let match: RegExpExecArray | null
 
-  // eslint-disable-next-line no-cond-assign
+   
   while ((match = regex.exec(content)) !== null) {
     const variable = match[1].trim()
     if (!matches.includes(variable)) {

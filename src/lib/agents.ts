@@ -289,7 +289,7 @@ export function recuperarTarefaTravada(task: AgentTask): AgentTask {
   const maxRetries = task.maxRetries ?? 3
   const nowIso = new Date().toISOString()
 
-  // eslint-disable-next-line no-console
+   
   console.warn(`[TaskEngine] Tarefa travada detectada: ${task.id} (${task.type})`)
 
   if (retryCount <= maxRetries) {

@@ -106,7 +106,7 @@ export class RateLimiter {
         totalRequests: currentCount + 1
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('[RateLimit] Erro:', error)
       // Em caso de erro, permite o request (fail-open)
       return {

@@ -102,7 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       timestamp: new Date().toISOString()
     })
   } catch (err: unknown) {
-    // eslint-disable-next-line no-console
+     
     console.error('[api/agents/log] Erro:', err)
     res.status(500).json({
       ok: false,

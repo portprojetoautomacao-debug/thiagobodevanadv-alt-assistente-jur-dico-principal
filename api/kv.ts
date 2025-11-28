@@ -181,7 +181,7 @@ async function handleInitConfig(req: VercelRequest, res: VercelResponse): Promis
       }
     })
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('Error initializing config:', error)
     res.status(500).json({
       ok: false,
@@ -252,7 +252,7 @@ export default withErrorHandler(
       try {
         body = JSON.parse(body)
       } catch (e) {
-        // eslint-disable-next-line no-console
+         
         console.warn('Failed to parse request body:', e)
       }
     }
@@ -261,7 +261,7 @@ export default withErrorHandler(
 
     // Se não houver KV configurado, responde em modo "fallback"
     if (!redis) {
-      // eslint-disable-next-line no-console
+       
       console.warn('No KV storage available')
       if (req.method === 'GET') {
         res.status(200).json({ key: req.query.key, value: null, fallback: true })
