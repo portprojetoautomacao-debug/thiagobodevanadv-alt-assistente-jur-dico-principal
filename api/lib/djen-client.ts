@@ -243,7 +243,7 @@ export async function consultarDJENForLawyer(
       if (ufOab) queryParams.ufOab = ufOab;
       if (meio) queryParams.meio = meio;
 
-      const { response, rateLimitInfo, retryAfter } = await consultarComunicacoes(queryParams);
+      const { response, rateLimitInfo: _rateLimitInfo, retryAfter } = await consultarComunicacoes(queryParams);
 
       if (!response) {
         if (retryAfter) {

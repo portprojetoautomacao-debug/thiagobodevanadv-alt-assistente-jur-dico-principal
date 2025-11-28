@@ -29,7 +29,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const [processes, setProcesses] = useKV<Process[]>('processes', [])
+  const [processes] = useKV<Process[]>('processes', [])
 
   const stats = useMemo(() => {
     const processesList = processes || []

@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Sparkle, Download, WarningCircle } from '@phosphor-icons/react'
+import { Sparkle, Download } from '@phosphor-icons/react'
+// WarningCircle disponível para indicação de erros
 import { toast } from 'sonner'
 import type { Expediente } from '@/types'
 
@@ -27,7 +28,7 @@ export default function BatchAnalysis() {
   const [inputText, setInputText] = useState('')
   const [extractedData, setExtractedData] = useState<ExtractedData[]>([])
   const [analyzing, setAnalyzing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, setError] = useState<string | null>(null)
 
   const handleAnalyze = async () => {
     if (!inputText.trim()) {

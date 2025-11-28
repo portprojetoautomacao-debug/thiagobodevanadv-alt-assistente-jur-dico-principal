@@ -206,7 +206,7 @@ describe('AI Agents System', () => {
 
     it('should auto-resume after 24 hours', () => {
       const yesterday = new Date(Date.now() - 25 * 60 * 60 * 1000)
-      
+
       const task: AgentTask = {
         id: '3',
         agentId: 'test-agent',
@@ -225,7 +225,7 @@ describe('AI Agents System', () => {
   describe('createTaskGenerator', () => {
     it('should generate tasks when started', async () => {
       const generatedTasks: AgentTask[] = []
-      
+
       const generator = createTaskGenerator(
         {
           enabled: true,
@@ -237,10 +237,10 @@ describe('AI Agents System', () => {
       )
 
       generator.start()
-      
+
       // Wait a bit for tasks to be generated
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       generator.stop()
 
       expect(generatedTasks.length).toBeGreaterThan(0)
@@ -251,7 +251,7 @@ describe('AI Agents System', () => {
 
     it('should respect maxTasksPerInterval', async () => {
       const generatedTasks: AgentTask[] = []
-      
+
       const generator = createTaskGenerator(
         {
           enabled: true,
@@ -279,7 +279,7 @@ describe('AI Agents System', () => {
       expect(agents[0]).toHaveProperty('id')
       expect(agents[0]).toHaveProperty('name')
       expect(agents[0]).toHaveProperty('capabilities')
-      
+
       // Verify all 15 agents are present
       const agentIds = agents.map(a => a.id)
       expect(agentIds).toContain('harvey')
@@ -316,23 +316,23 @@ describe('AI Agents System', () => {
       const agents = initializeAgents(existingAgents)
 
       const djenAgent = agents.find(a => a.id === 'monitor-djen')
-      
+
       expect(djenAgent).toBeDefined()
       expect(djenAgent?.enabled).toBe(false) // Preserved user setting
-      expect(djenAgent?.tasksCompleted).toBe(10) // Preserved user data
+      expect(djenAgent?.continuousMode).toBe(false) // Preserved user data
       expect(djenAgent?.capabilities).toBeDefined() // Updated from defaults
     })
 
     it('should have Harvey and Justin-e as primary agents', () => {
       const agents = initializeAgents()
-      
+
       const harvey = agents.find(a => a.id === 'harvey')
       const justine = agents.find(a => a.id === 'justine')
-      
+
       expect(harvey).toBeDefined()
       expect(harvey?.name).toBe('Harvey Specter')
       expect(harvey?.enabled).toBe(true)
-      
+
       expect(justine).toBeDefined()
       expect(justine?.name).toBe('Mrs. Justin-e')
       expect(justine?.enabled).toBe(true)

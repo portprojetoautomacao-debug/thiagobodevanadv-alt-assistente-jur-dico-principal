@@ -61,7 +61,7 @@ function getInitialAgents(): Agent[] {
 }
 
 export function useAutonomousAgents() {
-  const [dataVersion, setDataVersion] = useKV<number>('agents-data-version', AGENTS_DATA_VERSION)
+  const [_dataVersion, _setDataVersion] = useKV<number>('agents-data-version', AGENTS_DATA_VERSION)
   const [agents, setAgents] = useKV<Agent[]>('autonomous-agents', getInitialAgents())
   const [taskQueue, setTaskQueue] = useKV<AgentTask[]>('agent-task-queue', [])
   const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
@@ -275,6 +275,7 @@ export function useAutonomousAgents() {
     }
 
     return resetDailyCounters()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const toggleAgent = useCallback((agentId: string) => {

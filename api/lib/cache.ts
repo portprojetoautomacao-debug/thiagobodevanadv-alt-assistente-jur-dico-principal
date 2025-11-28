@@ -4,7 +4,7 @@
  */
 
 import { Redis } from '@upstash/redis';
-import { redisCircuitBreaker, withCircuitBreaker } from './circuit-breaker.js';
+import { redisCircuitBreaker as _redisCircuitBreaker, withCircuitBreaker } from './circuit-breaker.js';
 import { SafeLogger } from './safe-logger.js';
 
 const logger = new SafeLogger('Cache');

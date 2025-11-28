@@ -304,11 +304,10 @@ export const DEFAULT_AGENTS: Agent[] = [
 /**
  * Initialize agents with default configuration
  * Sets essential agents as enabled by default
+ * Merges with existing agents if provided, preserving user settings
  */
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
-  // Inicializa agentes com configuração padrão
   // Agentes essenciais são habilitados automaticamente
-  // Inclui agentes do fluxo automático de análise de intimações
   const essentialAgents = [
     'harvey',              // Assistente estratégico
     'justine',             // Análise de intimações
@@ -321,10 +320,186 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
     'estrategia-processual' // Estratégia processual automática
   ];
 
-  return DEFAULT_AGENTS.map(agent => ({
-    ...agent,
-    status: 'idle' as const,
-    enabled: essentialAgents.includes(agent.id), // Habilita agentes essenciais
-    lastActivity: essentialAgents.includes(agent.id) ? 'Pronto para análise' : 'Aguardando ativação'
-  }))
+  // Se não há agentes existentes, retorna defaults
+  if (!existingAgents || existingAgents.length === 0) {
+    return DEFAULT_AGENTS.map(agent => ({
+      ...agent,
+      status: 'idle' as const,
+      enabled: essentialAgents.includes(agent.id),
+      lastActivity: essentialAgents.includes(agent.id) ? 'Pronto para análise' : 'Aguardando ativação'
+    }))
+  }
+
+  // Merge: preserva settings do usuário, atualiza capabilities dos defaults
+  return DEFAULT_AGENTS.map(defaultAgent => {
+    const existing = existingAgents.find(a => a.id === defaultAgent.id)
+
+    if (existing) {
+      // Preserva configurações do usuário, atualiza capabilities do default
+      return {
+        ...defaultAgent,
+        ...existing,
+        capabilities: defaultAgent.capabilities, // Sempre usa capabilities atualizados
+        description: defaultAgent.description    // Sempre usa description atualizada
+      }
+    }
+
+    // Agente não existe no existingAgents, usa default
+    return {
+      ...defaultAgent,
+      status: 'idle' as const,
+      enabled: essentialAgents.includes(defaultAgent.id),
+      lastActivity: essentialAgents.includes(defaultAgent.id) ? 'Pronto para análise' : 'Aguardando ativação'
+    }
+  })
+}
+
+// ============================================================================
+// TASK PROCESSING
+// ============================================================================
+
+/**
+ * Process a task using AI capabilities
+ * Simulates AI processing based on agent type and task requirements
+ */
+export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<AgentTaskResult> {
+  // Simulate processing delay
+  await new Promise(resolve => setTimeout(resolve, 10))
+
+  const taskType = task.type.toLowerCase()
+
+  // Monitor tasks (DJEN, DataJud, etc)
+  if (taskType.includes('monitor') || agent.type === 'monitor') {
+    return {
+      success: true,
+      message: 'Monitoramento concluído com sucesso',
+      data: {
+        publicationsFound: Math.floor(Math.random() * 10),
+        lastChecked: new Date().toISOString(),
+        source: 'DJEN/DataJud'
+      },
+      suggestions: ['Verificar publicações encontradas', 'Atualizar filtros de busca']
+    }
+  }
+
+  // Analysis tasks (documents, contracts, etc)
+  if (taskType.includes('analy') || taskType.includes('analise') || agent.type === 'analyzer') {
+    return {
+      success: true,
+      message: 'Análise concluída com sucesso',
+      data: {
+        confidence: 0.85 + Math.random() * 0.1,
+        entities: ['partes', 'valores', 'datas'],
+        summary: 'Documento analisado com alta confiança'
+      },
+      suggestions: ['Revisar entidades extraídas', 'Validar classificação']
+    }
+  }
+
+  // Deadline calculation tasks
+  if (taskType.includes('deadline') || taskType.includes('prazo') || agent.type === 'calculator') {
+    const businessDays = (task.data?.businessDays as number) || 15
+    const deadline = new Date()
+    deadline.setDate(deadline.getDate() + Math.ceil(businessDays * 1.4)) // Aproximação para dias úteis
+
+    return {
+      success: true,
+      message: 'Cálculo de prazo concluído',
+      data: {
+        deadline: deadline.toISOString(),
+        businessDays,
+        holidays: [],
+        urgency: businessDays <= 5 ? 'high' : 'normal'
+      },
+      nextSteps: ['Adicionar ao calendário', 'Configurar alertas']
+    }
+  }
+
+  // Default processing for other task types
+  return {
+    success: true,
+    message: `Tarefa ${task.type} processada com sucesso`,
+    data: {
+      processedAt: new Date().toISOString(),
+      agentId: agent.id
+    }
+  }
+}
+
+// ============================================================================
+// TASK GENERATOR
+// ============================================================================
+
+/**
+ * Creates a task generator that automatically creates tasks at regular intervals
+ */
+export function createTaskGenerator(
+  config: AgentTaskGeneratorConfig,
+  onTaskGenerated: (task: AgentTask) => void
+): AgentTaskGenerator {
+  let intervalId: ReturnType<typeof setInterval> | null = null
+  let currentConfig = { ...config }
+  let taskCallback = onTaskGenerated
+  let tasksGeneratedInInterval = 0
+
+  const generateTask = (): AgentTask => {
+    const agentId = currentConfig.agentIds[Math.floor(Math.random() * currentConfig.agentIds.length)]
+    const taskTypes = ['monitor-check', 'analyze-queue', 'deadline-review', 'status-update']
+    const priorities: TaskPriority[] = ['low', 'medium', 'high']
+
+    return {
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      agentId,
+      type: taskTypes[Math.floor(Math.random() * taskTypes.length)],
+      priority: priorities[Math.floor(Math.random() * priorities.length)],
+      status: 'queued',
+      createdAt: new Date().toISOString(),
+      data: {
+        autoGenerated: true,
+        generatorConfig: currentConfig
+      }
+    }
+  }
+
+  const tick = () => {
+    if (!currentConfig.enabled) return
+
+    if (tasksGeneratedInInterval < currentConfig.maxTasksPerInterval) {
+      const task = generateTask()
+      taskCallback(task)
+      tasksGeneratedInInterval++
+    }
+  }
+
+  return {
+    start() {
+      if (intervalId) return
+      tasksGeneratedInInterval = 0
+
+      // Generate first task immediately
+      tick()
+
+      // Then continue at intervals
+      const intervalMs = currentConfig.intervalMinutes * 60 * 1000
+      intervalId = setInterval(() => {
+        tasksGeneratedInInterval = 0
+        tick()
+      }, intervalMs)
+    },
+
+    stop() {
+      if (intervalId) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
+    },
+
+    updateConfig(newConfig: Partial<AgentTaskGeneratorConfig>) {
+      currentConfig = { ...currentConfig, ...newConfig }
+    },
+
+    setOnTaskGenerated(callback: (task: AgentTask) => void) {
+      taskCallback = callback
+    }
+  }
 }
