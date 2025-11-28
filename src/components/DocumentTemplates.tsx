@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, Upload, Trash2 } from 'lucide-react';
+import { File, DownloadSimple, UploadSimple, Trash } from '@phosphor-icons/react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Template {
@@ -102,7 +102,7 @@ export function DocumentTemplates() {
           </p>
         </div>
         <Button onClick={handleUpload}>
-          <Upload className="mr-2 h-4 w-4" />
+          <UploadSimple className="mr-2 h-4 w-4" />
           Upload Template
         </Button>
       </div>
@@ -112,7 +112,7 @@ export function DocumentTemplates() {
           <Card key={template.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <FileText className="h-8 w-8 text-primary mb-2" />
+                <File className="h-8 w-8 text-primary mb-2" />
                 <span className="text-xs bg-secondary px-2 py-1 rounded uppercase">
                   {template.type}
                 </span>
@@ -127,7 +127,7 @@ export function DocumentTemplates() {
                   className="flex-1"
                   onClick={() => handleDownload(template)}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <DownloadSimple className="mr-2 h-4 w-4" />
                   Baixar
                 </Button>
                 <Button
@@ -135,7 +135,7 @@ export function DocumentTemplates() {
                   variant="destructive"
                   onClick={() => handleDelete(template.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>

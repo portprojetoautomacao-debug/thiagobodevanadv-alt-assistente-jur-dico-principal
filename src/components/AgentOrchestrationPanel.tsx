@@ -14,21 +14,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 // Progress - disponível para indicadores de carregamento
 // import { Progress } from '@/components/ui/progress';
 import {
-  Activity,
-  AlertCircle,
+  Pulse,
+  WarningCircle,
   CheckCircle,
   Clock,
   Cpu,
   GitBranch,
-  // Layers, // disponível se necessário
   PlayCircle,
-  RefreshCw,
-  // TrendingUp, // disponível se necessário
+  ArrowsClockwise,
   XCircle,
-  Zap,
-  Users,
-  Network,
-} from 'lucide-react';
+  Lightning,
+  UsersThree,
+  Graph,
+} from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 interface CircuitBreakerStatus {
@@ -190,11 +188,11 @@ export default function AgentOrchestrationPanel() {
       case 'CLOSED':
         return <CheckCircle className="h-4 w-4" />;
       case 'HALF_OPEN':
-        return <AlertCircle className="h-4 w-4" />;
+        return <WarningCircle className="h-4 w-4" />;
       case 'OPEN':
         return <XCircle className="h-4 w-4" />;
       default:
-        return <Activity className="h-4 w-4" />;
+        return <Pulse className="h-4 w-4" />;
     }
   };
 
@@ -204,7 +202,7 @@ export default function AgentOrchestrationPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Network className="h-6 w-6 text-primary" />
+            <Graph className="h-6 w-6 text-primary" />
             Orquestração de Agentes
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -217,11 +215,11 @@ export default function AgentOrchestrationPanel() {
             size="sm"
             onClick={() => setAutoRefresh(!autoRefresh)}
           >
-            <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`} />
+            <ArrowsClockwise className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`} />
             {autoRefresh ? 'Auto-refresh' : 'Manual'}
           </Button>
           <Button onClick={fetchMetrics} size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <ArrowsClockwise className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
         </div>
@@ -230,11 +228,11 @@ export default function AgentOrchestrationPanel() {
       <Tabs defaultValue="agents" className="w-full">
         <TabsList>
           <TabsTrigger value="agents">
-            <Users className="h-4 w-4 mr-2" />
+            <UsersThree className="h-4 w-4 mr-2" />
             Agentes
           </TabsTrigger>
           <TabsTrigger value="circuit-breakers">
-            <Zap className="h-4 w-4 mr-2" />
+            <Lightning className="h-4 w-4 mr-2" />
             Circuit Breakers
           </TabsTrigger>
           <TabsTrigger value="traces">
@@ -304,7 +302,7 @@ export default function AgentOrchestrationPanel() {
                 <Card className="border-yellow-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-yellow-600 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
+                      <WarningCircle className="h-4 w-4" />
                       Degradadas
                     </CardTitle>
                   </CardHeader>
