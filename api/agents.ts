@@ -202,6 +202,21 @@ function getSystemPrompt(agentType: AgentType): string {
   return prompt
 }
 
+// ✨ Helper para determinar tipo de minuta baseado no documentType
+function determineMinutaTipo(documentType?: string): 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro' {
+  if (!documentType) return 'peticao'
+
+  const type = documentType.toLowerCase()
+
+  if (type.includes('contrato') || type.includes('acordo')) return 'contrato'
+  if (type.includes('parecer') || type.includes('opinião')) return 'parecer'
+  if (type.includes('recurso') || type.includes('apelação') || type.includes('agravo') || type.includes('embargos')) return 'recurso'
+  if (type.includes('procuração') || type.includes('mandato')) return 'procuracao'
+  if (type.includes('petição') || type.includes('contestação') || type.includes('manifestação') || type.includes('defesa')) return 'peticao'
+
+  return 'outro'
+}
+
 // ✨ Prompts de usuário com enum keys
 const USER_PROMPTS: Record<AgentTaskType, (data: string) => string> = {
   [AgentTaskType.ANALYZE_DOCUMENT]: (data) =>
@@ -649,6 +664,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   logger.info(`Chaining task: ${nextTask.type} for ${nextTask.agentId}`)
                   taskQueue.push(nextTask as AgentTask)
                 }
+              }
+            }
+
+            // ✨ AUTO-CREATE MINUTA when DRAFT_PETITION completes
+            if (task.type === AgentTaskType.DRAFT_PETITION && result.draft) {
+              const minutaId = crypto.randomUUID()
+              const minuta = {
+                id: minutaId,
+                titulo: `[Agente] ${(task.data as Record<string, unknown>).documentType || 'Petição'} - ${(task.data as Record<string, unknown>).processNumber || 'Novo'}`,
+                processId: (task.data as Record<string, unknown>).processId as string || undefined,
+                tipo: determineMinutaTipo((task.data as Record<string, unknown>).documentType as string),
+                conteudo: String(result.draft),
+                status: 'pendente-revisao' as const,
+                criadoEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString(),
+                autor: 'Agente IA',
+                criadoPorAgente: true,
+                agenteId: task.agentId,
+                expedienteId: (task.data as Record<string, unknown>).expedienteId as string || undefined,
+                variaveis: {},
+              }
+
+              // Salvar minuta no KV
+              try {
+                const minutasEndpoint = `https://api.github.com/spark/kv/minutas?sparkId=${process.env.SPARK_ID || 'spark-default'}`
+                const minutasResponse = await fetch(minutasEndpoint, {
+                  headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` }
+                })
+                const minutasData = minutasResponse.ok ? await minutasResponse.json() : { value: [] }
+                const existingMinutas = minutasData.value || []
+
+                await fetch(minutasEndpoint, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                  },
+                  body: JSON.stringify({ value: [...existingMinutas, minuta] }),
+                })
+
+                logger.info(`Auto-created minuta: ${minutaId}`, { titulo: minuta.titulo, agentId: task.agentId })
+              } catch (kvError) {
+                logger.error('Failed to save auto-generated minuta', kvError)
               }
             }
 

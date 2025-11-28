@@ -4,6 +4,7 @@ import { GoogleAuthButton } from '@/components/GoogleAuth'
 import type { GoogleUser } from '@/components/GoogleAuth'
 import Sidebar from '@/components/Sidebar'
 import { useKV } from '@/hooks/use-kv'
+import { useAutoMinuta } from '@/hooks/use-auto-minuta'
 import type { ViewType, User } from '@/types'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
@@ -42,6 +43,9 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
   const [user, setUser] = useKV<User | null>('user', null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // ✨ Auto-criação de minutas quando agentes completam tarefas de redação
+  useAutoMinuta()
 
   useEffect(() => {
     setIsAuthenticated(!!user)
@@ -188,7 +192,7 @@ function App() {
               Sistema inteligente de gestão jurídica com IA
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <GoogleAuthButton
               onSuccess={handleAuthSuccess}
