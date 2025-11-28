@@ -40,7 +40,6 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || (github.event.inputs.environment || 'production') }}
-      url: ${{ steps.deploy.outputs.url }}
     if: |
       github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
