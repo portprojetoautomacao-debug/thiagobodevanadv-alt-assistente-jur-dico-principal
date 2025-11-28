@@ -4,16 +4,12 @@
  * Este arquivo fornece funções wrapper para usar o cliente Todoist
  * no contexto do assistente jurídico, permitindo gerenciar tarefas relacionadas
  * a processos judiciais, prazos e atividades jurídicas.
+ * 
+ * @note Este módulo usa o stub do Todoist para compatibilidade client-side.
+ * As chamadas reais ao Todoist devem ser feitas via endpoints /api/todoist-*.
  */
 
-import { TodoistApi, type Task } from '@doist/todoist-api-typescript'
-import {
-  findTasksByDate,
-  addTasks,
-  findTasks,
-  updateTasks,
-  completeTasks,
-} from '@doist/todoist-ai'
+import { TodoistApi, type Task } from '@/lib/todoist-stub'
 
 // Prioridade no Todoist: 4 (Vermelho/Urgente) a 1 (Branco/Normal)
 type Priority = 1 | 2 | 3 | 4
@@ -214,9 +210,8 @@ export async function createProcessTasks(processData: {
 }) {
   const tasks: LegalTaskInput[] = processData.deadlines.map(deadline => ({
     content: `${deadline.type} - Processo ${processData.number}`,
-    description: `${deadline.description || ''}\n\nProcesso: ${
-      processData.number
-    }\nTipo: ${processData.type}`,
+    description: `${deadline.description || ''}\n\nProcesso: ${processData.number
+      }\nTipo: ${processData.type}`,
     dueDate: deadline.date,
     priority: 4 as Priority,
     labels: ['processo', 'prazo', deadline.type.toLowerCase()],
@@ -246,24 +241,32 @@ export async function getUrgentTasks() {
  * Exporta as ferramentas configuradas para uso com LLMs
  * (compatível com Vercel AI SDK e similares)
  */
-export function getTodoistTools(client: TodoistApi) {
-  // Helper para empacotar as tools com o client
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function wrapTool(tool: any) {
-    return {
-      ...tool,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      execute(args: any) {
-        return tool.execute(args, client)
-      },
+/**
+ * Ferramentas do Todoist para integração com agentes IA.
+ * 
+ * @note As funções do @doist/todoist-ai não estão disponíveis no client-side.
+ * Use os endpoints /api/todoist-* para operações reais.
+ * 
+ * @param _client Cliente TodoistApi (não utilizado no stub)
+ * @returns Objeto com ferramentas mockadas
+ */
+export function getTodoistTools(_client: TodoistApi) {
+  // No browser, retorna stubs que lançam erro orientando para usar a API
+  const createStub = (name: string) => ({
+    name,
+    execute: () => {
+      throw new Error(
+        `[Todoist] A função ${name} não está disponível no browser. ` +
+        `Use os endpoints /api/todoist-* para operações com o Todoist.`
+      )
     }
-  }
+  })
 
   return {
-    findTasksByDate: wrapTool(findTasksByDate),
-    addTasks: wrapTool(addTasks),
-    findTasks: wrapTool(findTasks),
-    updateTasks: wrapTool(updateTasks),
-    completeTasks: wrapTool(completeTasks),
+    findTasksByDate: createStub('findTasksByDate'),
+    addTasks: createStub('addTasks'),
+    findTasks: createStub('findTasks'),
+    updateTasks: createStub('updateTasks'),
+    completeTasks: createStub('completeTasks'),
   }
 }

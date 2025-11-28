@@ -11,11 +11,7 @@
  * - Publications and notifications
  */
 
-import type { 
-  UnifiedPublication, 
-  PublicationSearchParams,
-  PublicationSourceConfig 
-} from './publication-sources-types'
+import type { UnifiedPublication, PublicationSearchParams, PublicationSourceConfig } from './publication-sources-types'
 
 export interface PJeConfig extends PublicationSourceConfig {
   source: 'pje_direct'
@@ -58,6 +54,7 @@ export interface PJePublicacao {
   advogados?: string[]
 }
 
+// Map of tribunals and their URLs
 const PJE_TRIBUNAL_URLS: Record<string, string> = {
   'trf1': 'https://pje1g.trf1.jus.br/pje',
   'trf2': 'https://pje2.trf2.jus.br/pje',
@@ -94,6 +91,7 @@ const PJE_TRIBUNAL_URLS: Record<string, string> = {
   'tjto': 'https://pje.tjto.jus.br/pje',
 }
 
+// Custom error for PJe API issues
 export class PJeAPIError extends Error {
   constructor(
     message: string,
@@ -107,50 +105,55 @@ export class PJeAPIError extends Error {
 }
 
 /**
- * Note: PJe requires authentication and many tribunals restrict API access
- * This is a framework implementation. Actual usage requires:
- * 1. Credentials from the tribunal
- * 2. VPN/whitelist access in some cases
- * 3. Specific API documentation from each tribunal
+ * Check if PJe integration is enabled
+ */
+export function isPJeEnabled(config?: PJeConfig): boolean {
+  return config?.enabled ?? false
+}
+
+/**
+ * Consult publications in PJe system
  */
 export async function consultarPublicacoesPJe(
   params: PublicationSearchParams,
   config?: PJeConfig
 ): Promise<UnifiedPublication[]> {
   const publications: UnifiedPublication[] = []
-  
-  // Check if configured
-  if (!config?.enabled) {
+
+  // Check if PJe is enabled
+  if (!isPJeEnabled(config)) {
     throw new PJeAPIError('PJe integration not enabled')
   }
-  
+
   const tribunals = params.tribunals || ['trf1']
-  
+
   for (const tribunal of tribunals) {
     const baseUrl = PJE_TRIBUNAL_URLS[tribunal.toLowerCase()]
-    
+
     if (!baseUrl) {
       console.warn(`PJe URL not configured for tribunal: ${tribunal}`)
       continue
     }
-    
+
     try {
-      // This is a placeholder - actual implementation requires:
-      // 1. Authentication endpoint call
-      // 2. Session token management
-      // 3. Specific API endpoints per tribunal
-      
-      // Example endpoint (varies by tribunal):
-      // const url = `${baseUrl}/api/v1/publicacoes`
-      
-      // For now, return a note that this requires configuration
-      console.info(`PJe integration for ${tribunal} requires specific tribunal credentials`)
-      
+      const response = await fetch(`${baseUrl}/api/v1/publicacoes`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Basic ${btoa(`${config?.username || ''}:${config?.password || ''}`)}`, // Basic Authentication
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PJe publications: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      publications.push(...data.publications)
     } catch (error) {
       console.error(`Error consulting PJe for ${tribunal}:`, error)
     }
   }
-  
+
   return publications
 }
 

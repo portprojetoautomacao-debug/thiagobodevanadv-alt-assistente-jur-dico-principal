@@ -1,6 +1,6 @@
 /**
  * Tracing Service - OpenTelemetry Compatible
- * 
+ *
  * Provides distributed tracing for AI agents and LLM operations.
  * Compatible with:
  * - OpenTelemetry
@@ -8,7 +8,7 @@
  * - Azure Monitor / Application Insights
  * - Microsoft Foundry
  * - Datadog
- * 
+ *
  * @author Assistente Jurídico PJe
  */
 
@@ -185,13 +185,13 @@ class TracingService {
   private exporters: TraceExporter[] = []
   private activeSpans: Map<string, Span> = new Map()
   private memoryExporter: MemoryExporter
-  private enabled: boolean = true
-  private samplingRate: number = 1.0 // 100% by default
+  private enabled = true
+  private samplingRate = 1.0 // 100% by default
 
   constructor() {
     this.memoryExporter = new MemoryExporter()
     this.exporters.push(this.memoryExporter)
-    
+
     // Add console exporter in development
     if (import.meta.env.DEV) {
       this.exporters.push(new ConsoleExporter())
@@ -202,7 +202,7 @@ class TracingService {
    * Generate unique trace ID (W3C compatible)
    */
   generateTraceId(): string {
-    return Array.from({ length: 32 }, () => 
+    return Array.from({ length: 32 }, () =>
       Math.floor(Math.random() * 16).toString(16)
     ).join('')
   }
@@ -211,7 +211,7 @@ class TracingService {
    * Generate unique span ID
    */
   generateSpanId(): string {
-    return Array.from({ length: 16 }, () => 
+    return Array.from({ length: 16 }, () =>
       Math.floor(Math.random() * 16).toString(16)
     ).join('')
   }
@@ -240,6 +240,11 @@ class TracingService {
       links?: SpanLink[]
     } = {}
   ): Span {
+    // Tracing desabilitado => span no-op
+    if (!this.enabled) {
+      return this.createNoOpSpan(name)
+    }
+
     // Sampling check
     if (Math.random() > this.samplingRate) {
       // Return a no-op span
@@ -247,7 +252,7 @@ class TracingService {
     }
 
     const context = this.createTraceContext(options.parentContext)
-    
+
     const span: Span = {
       name,
       kind: options.kind || 'internal',
@@ -265,7 +270,7 @@ class TracingService {
   }
 
   /**
-   * Create no-op span for unsampled traces
+   * Create no-op span for unsampled/disabled traces
    */
   private createNoOpSpan(name: string): Span {
     return {
@@ -288,8 +293,9 @@ class TracingService {
    * End a span
    */
   async endSpan(span: Span, status?: SpanStatus, statusMessage?: string): Promise<void> {
+    // No-op span (não amostrado ou tracing off)
     if (span.context.traceFlags === 0) {
-      return // No-op span
+      return
     }
 
     span.endTime = Date.now()
@@ -300,8 +306,8 @@ class TracingService {
 
     // Export to all exporters
     await Promise.all(
-      this.exporters.map(exporter => 
-        exporter.export([span]).catch(err => 
+      this.exporters.map(exporter =>
+        exporter.export([span]).catch(err =>
           console.error(`[Tracing] ${exporter.name} export failed:`, err)
         )
       )
@@ -549,15 +555,15 @@ export function withTracing<T>(
   }
 ): Promise<T> {
   const span = tracingService.startSpan(name, options)
-  
+
   return fn(span)
     .then(result => {
       tracingService.endSpan(span, 'ok')
       return result
     })
     .catch(error => {
-      tracingService.recordException(span, error)
-      tracingService.endSpan(span, 'error', error.message)
+      tracingService.recordException(span, error as Error)
+      tracingService.endSpan(span, 'error', (error as Error).message)
       throw error
     })
 }
@@ -569,9 +575,12 @@ export function injectTraceContext(
   span: Span,
   headers: Record<string, string>
 ): Record<string, string> {
+  const flagsHex = span.context.traceFlags.toString(16).padStart(2, '0')
+
   return {
     ...headers,
-    traceparent: `00-${span.context.traceId}-${span.context.spanId}-0${span.context.traceFlags}`,
+    // W3C traceparent: version-traceId-spanId-flags
+    traceparent: `00-${span.context.traceId}-${span.context.spanId}-${flagsHex}`,
     tracestate: span.context.traceState || ''
   }
 }

@@ -1,6 +1,6 @@
 // Google Calendar Service
 // Provides integration with Google Calendar API
-// v2.0 - Enhanced with better error handling and debugging
+// v2.1 - Enhanced with better error handling, SSR safety and token wiring
 
 import { type Appointment } from '@/types'
 import type {
@@ -84,6 +84,14 @@ class GoogleCalendarService {
 
   async initialize(): Promise<boolean> {
     debug('Initializing Google Calendar Service...')
+
+    // Segurança para SSR / Node (Vercel server functions)
+    if (typeof window === 'undefined') {
+      this.lastError = 'Google Calendar só pode ser inicializado no ambiente de browser.'
+      debugError(this.lastError)
+      return false
+    }
+
     debug('Config:', {
       hasClientId: !!GOOGLE_CLIENT_ID,
       hasApiKey: !!GOOGLE_API_KEY,
@@ -139,6 +147,11 @@ class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       debug('Loading Google scripts...')
 
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        reject(new Error('Google scripts só podem ser carregados no browser'))
+        return
+      }
+
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
       const googleWindow = window as unknown as { google?: GoogleGisGlobal }
 
@@ -155,7 +168,11 @@ class GoogleCalendarService {
       }, 15000)
 
       const loadGis = () => {
-        if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+        if (
+          document.querySelector(
+            'script[src*="accounts.google.com/gsi/client"]',
+          )
+        ) {
           debug('GIS script already exists')
           clearTimeout(timeout)
           resolve()
@@ -173,7 +190,9 @@ class GoogleCalendarService {
         }
         gisScript.onerror = () => {
           clearTimeout(timeout)
-          reject(new Error('Failed to load Google Identity Services script'))
+          reject(
+            new Error('Failed to load Google Identity Services script'),
+          )
         }
         document.head.appendChild(gisScript)
       }
@@ -217,7 +236,10 @@ class GoogleCalendarService {
 
         const clientInit = (
           gapiWindow.gapi?.client as {
-            init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>
+            init?: (opts: {
+              apiKey: string
+              discoveryDocs: string[]
+            }) => Promise<void>
           }
         )?.init
 
@@ -316,6 +338,28 @@ class GoogleCalendarService {
 
         this.accessToken = resp.access_token ?? null
         this.lastError = null
+
+        // Importante: conectar GIS com gapi (setar token no client)
+        const gapiWindow = window as unknown as {
+          gapi?: GapiGlobal & {
+            client?: { setToken?: (token: { access_token: string }) => void }
+          }
+        }
+
+        if (this.accessToken && gapiWindow.gapi?.client) {
+          try {
+            ; (gapiWindow.gapi.client as any).setToken?.({
+              access_token: this.accessToken,
+            })
+            debug('gapi client token set from GIS access_token')
+          } catch (err) {
+            debugError(
+              'Failed to set gapi client token (non-fatal)',
+              err,
+            )
+          }
+        }
+
         debug('Authentication successful')
         resolve(true)
       }
@@ -402,7 +446,7 @@ class GoogleCalendarService {
     try {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
       const endDateTime = new Date(
-        startDateTime.getTime() + (appointment.duration || 60) * 60000
+        startDateTime.getTime() + (appointment.duration || 60) * 60000,
       )
 
       const event: GoogleCalendarEvent = {
@@ -511,7 +555,7 @@ class GoogleCalendarService {
     try {
       const startDateTime = new Date(`${appointment.date}T${appointment.time}`)
       const endDateTime = new Date(
-        startDateTime.getTime() + (appointment.duration || 60) * 60000
+        startDateTime.getTime() + (appointment.duration || 60) * 60000,
       )
 
       const event: GoogleCalendarEvent = {
@@ -622,6 +666,7 @@ class GoogleCalendarService {
   }
 
   openGoogleCalendar(): void {
+    if (typeof window === 'undefined') return
     window.open('https://calendar.google.com', '_blank')
   }
 

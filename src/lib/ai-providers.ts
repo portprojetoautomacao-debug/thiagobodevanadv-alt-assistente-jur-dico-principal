@@ -1,22 +1,69 @@
 /**
  * Multi-Provider AI Integration
+ * 
+ * Sistema unificado de integração com múltiplos provedores de IA para o
+ * Assistente Jurídico PJe. Implementa padrão de fallback automático.
  *
- * Provedores suportados:
- * - Gemini 2.5 Pro (principal)
- * - Azure OpenAI (quando assinatura ativa)
- * - Hugging Face Inference API (free tier)
- * - GitHub Models (free com conta GitHub)
+ * @module ai-providers
+ * @version 2.0.0
+ * @since 2025-11-28
+ * 
+ * Provedores suportados (em ordem de prioridade):
+ * 1. Gemini 2.5 Pro (principal) - Google AI
+ * 2. GitHub Models (free tier) - Azure-hosted
+ * 3. Hugging Face Inference API (free tier)
+ * 4. Azure OpenAI (quando assinatura ativa)
+ * 
+ * Funcionalidades:
+ * - Fallback automático entre provedores
+ * - Retry com exponential backoff
+ * - Validação centralizada de API keys
+ * - Logging detalhado para debug
+ * 
+ * @example
+ * ```typescript
+ * import { aiClient } from '@/lib/ai-providers'
+ * 
+ * const result = await aiClient.chat([
+ *   { role: 'user', content: 'Analise este contrato...' }
+ * ], { provider: 'gemini', model: 'gemini-2.5-pro' })
+ * ```
  */
 
 // ============================================================================
 // CONFIG TYPES
 // ============================================================================
 
+/** Configuração de modelo de IA */
 export interface AIModelConfig {
+  /** Provedor de IA a ser utilizado */
   provider: 'gemini' | 'azure' | 'huggingface' | 'github'
+  /** Nome/ID do modelo */
   model: string
+  /** Chave de API (opcional, usa env vars por padrão) */
   apiKey?: string
+  /** Endpoint customizado (opcional) */
   endpoint?: string
+}
+
+/** Configuração de retry para chamadas de API */
+export interface RetryConfig {
+  /** Número máximo de tentativas (default: 3) */
+  maxRetries: number
+  /** Delay inicial em ms (default: 1000) */
+  initialDelay: number
+  /** Fator de multiplicação do delay (default: 2) */
+  backoffFactor: number
+  /** Delay máximo em ms (default: 10000) */
+  maxDelay: number
+}
+
+/** Configuração padrão de retry */
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  initialDelay: 1000,
+  backoffFactor: 2,
+  maxDelay: 10000
 }
 
 // Azure AI Configuration (quando assinatura ativa)
@@ -55,21 +102,135 @@ export const GITHUB_MODELS_CONFIG = {
 }
 
 // ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Executa uma função com retry e exponential backoff.
+ * Útil para lidar com falhas temporárias de API.
+ * 
+ * @param fn - Função assíncrona a ser executada
+ * @param config - Configuração de retry (opcional)
+ * @returns Resultado da função ou lança erro após todas as tentativas
+ * 
+ * @example
+ * ```typescript
+ * const result = await withRetry(
+ *   () => fetch('https://api.example.com/data'),
+ *   { maxRetries: 3, initialDelay: 1000 }
+ * )
+ * ```
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  config: Partial<RetryConfig> = {}
+): Promise<T> {
+  const { maxRetries, initialDelay, backoffFactor, maxDelay } = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config
+  }
+
+  let lastError: Error | null = null
+  let delay = initialDelay
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+
+      // Não faz retry se for erro de autenticação ou configuração
+      if (
+        lastError.message.includes('API key') ||
+        lastError.message.includes('não configurada') ||
+        lastError.message.includes('401') ||
+        lastError.message.includes('403')
+      ) {
+        throw lastError
+      }
+
+      if (attempt < maxRetries) {
+        console.warn(
+          `[AI Provider] Tentativa ${attempt}/${maxRetries} falhou. ` +
+          `Retry em ${delay}ms. Erro: ${lastError.message}`
+        )
+        await new Promise(resolve => setTimeout(resolve, delay))
+        delay = Math.min(delay * backoffFactor, maxDelay)
+      }
+    }
+  }
+
+  throw lastError || new Error('Todas as tentativas falharam')
+}
+
+/**
+ * Valida se uma string parece ser uma API key válida.
+ * Verifica padrões comuns de chaves de API.
+ * 
+ * @param key - String a ser validada
+ * @param provider - Provedor para validação específica
+ * @returns true se a chave parece válida
+ */
+export function isValidApiKey(key: string | null | undefined, provider?: string): boolean {
+  if (!key || key.length < 10) return false
+
+  // Validações específicas por provedor
+  switch (provider) {
+    case 'gemini':
+      // Chaves Gemini: AIza... ou GEM-...
+      return /^(AIza[0-9A-Za-z\-_]{20,}|GEM-[0-9A-Za-z\-_]{16,}|[A-Za-z0-9_\-]{32,})$/.test(key)
+    case 'github':
+      // Tokens GitHub: ghp_... ou gho_...
+      return /^(ghp_|gho_|github_pat_)[A-Za-z0-9_]{20,}$/.test(key) || key.length >= 20
+    case 'huggingface':
+      // Tokens HuggingFace: hf_...
+      return /^hf_[A-Za-z0-9]{20,}$/.test(key) || key.length >= 20
+    case 'azure':
+      // Chaves Azure: 32 caracteres hex
+      return /^[a-f0-9]{32}$/i.test(key) || key.length >= 20
+    default:
+      // Validação genérica: pelo menos 20 caracteres alfanuméricos
+      return key.length >= 20
+  }
+}
+
+// ============================================================================
 // GEMINI CLIENT (PRINCIPAL)
 // ============================================================================
 
 /**
- * Gemini Client — usa Gemini 2.5 Pro como modelo principal
- *
- * Observação importante:
- * - Idealmente o acesso à API Gemini deve ficar no backend
- * - Aqui usamos import.meta.env para pegar a key em ambiente bundlado (Vite/Spark)
+ * Cliente para API do Google Gemini (Gemini 2.5 Pro)
+ * 
+ * Responsável por toda comunicação com a API Generative Language do Google.
+ * Implementa retry automático e validação de API key.
+ * 
+ * @class GeminiClient
+ * 
+ * Observações importantes:
+ * - Idealmente o acesso à API deve ficar no backend para segurança
+ * - Aqui usamos import.meta.env para ambiente bundlado (Vite)
+ * - Suporta múltiplas variáveis de ambiente para flexibilidade
+ * 
+ * @example
+ * ```typescript
+ * const gemini = new GeminiClient()
+ * if (gemini.isConfigured()) {
+ *   const response = await gemini.chat('gemini-2.5-pro', messages)
+ * }
+ * ```
  */
 export class GeminiClient {
   private apiKey: string | null
   private baseUrl = 'https://generativelanguage.googleapis.com/v1/models'
+  private retryConfig: RetryConfig
 
-  constructor(apiKey?: string) {
+  /**
+   * Cria uma instância do GeminiClient.
+   * 
+   * @param apiKey - Chave de API (opcional, usa env vars por padrão)
+   * @param retryConfig - Configuração de retry (opcional)
+   */
+  constructor(apiKey?: string, retryConfig?: Partial<RetryConfig>) {
     // Tenta pegar API key de forma flexível
     this.apiKey =
       apiKey ||
@@ -80,14 +241,40 @@ export class GeminiClient {
           '')
         : '') ||
       null
-  }
 
-  isConfigured(): boolean {
-    return !!this.apiKey
+    this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig }
+
+    // Valida a chave no construtor (apenas warning, não bloqueia)
+    if (this.apiKey && !isValidApiKey(this.apiKey, 'gemini')) {
+      console.warn('[GeminiClient] API key pode estar em formato inválido')
+    }
   }
 
   /**
-   * Chat com Gemini (default: gemini-2.5-pro)
+   * Verifica se o cliente está configurado com uma API key.
+   * @returns true se há uma API key configurada
+   */
+  isConfigured(): boolean {
+    return !!this.apiKey && isValidApiKey(this.apiKey, 'gemini')
+  }
+
+  /**
+   * Envia uma conversa para o modelo Gemini e retorna a resposta.
+   * Implementa retry automático com exponential backoff.
+   * 
+   * @param model - ID do modelo (default: gemini-2.5-pro)
+   * @param messages - Array de mensagens no formato OpenAI-style
+   * @param options - Opções de geração (maxTokens, temperature)
+   * @returns Texto da resposta do modelo
+   * @throws Error se a API key não estiver configurada ou após todas as tentativas
+   * 
+   * @example
+   * ```typescript
+   * const response = await gemini.chat('gemini-2.5-pro', [
+   *   { role: 'system', content: 'Você é um assistente jurídico.' },
+   *   { role: 'user', content: 'Analise este contrato...' }
+   * ], { temperature: 0.7 })
+   * ```
    */
   async chat(
     model: string,
@@ -95,7 +282,10 @@ export class GeminiClient {
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     if (!this.apiKey) {
-      throw new Error('Gemini API key não configurada (VITE_GOOGLE_API_KEY / VITE_GEMINI_API_KEY).')
+      throw new Error(
+        'Gemini API key não configurada. ' +
+        'Configure uma das variáveis: VITE_GOOGLE_API_KEY, VITE_GEMINI_API_KEY ou VITE_GEMINI_API_KEY_BACKEND'
+      )
     }
 
     const modelId = model || 'gemini-2.5-pro'
