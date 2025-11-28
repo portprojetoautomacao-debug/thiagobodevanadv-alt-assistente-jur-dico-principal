@@ -57,10 +57,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== GitHub CLI Repository Metrics ==="
+<<<<<<< Updated upstream:.github/workflows-archived/github-cli-config.yml
 
           # Extract repo name from github.repository (format: owner/repo)
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
 
+=======
+          
+          # Extract repo name from github.repository (format: owner/repo)
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          
+>>>>>>> Stashed changes:.github/workflows/github-cli-config.yml
           # Get open issues count
           OWNER="${GITHUB_REPOSITORY%%/*}"
           numOpenIssues="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='

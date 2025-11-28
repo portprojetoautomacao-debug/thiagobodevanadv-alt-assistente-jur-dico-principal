@@ -36,8 +36,52 @@ cache:
     - node_modules/
   policy: pull-push
 
+<<<<<<< Updated upstream
 # Template base para jobs Node.js
 .node-base:
+=======
+# Componentes CI/CD reutilizáveis
+include:
+  # Componente de Segurança - Auditoria completa com compliance LGPD
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/security/security-component@1.1.0
+    inputs:
+      stage: security
+      audit_level: "standard"
+      fail_on_high: true
+      report_format: "json"
+
+  # Componente de Testes - Suite completa para React/TypeScript
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/testing/testing-component@1.1.0
+    inputs:
+      stage: test
+      test_type: "all"
+      coverage_threshold: 80
+      fail_on_coverage: false
+      browser: "chromium"
+
+  # Componente de Deployment - Multi-plataforma com health checks
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/deployment/deployment-component@1.1.0
+    inputs:
+      stage: deploy
+      environment: "staging"
+      deploy_target: "vercel"
+      health_check_url: "https://assistente-juridico-p.vercel.app"
+      rollback_on_failure: true
+      monitoring_enabled: true
+
+  # Componente de Monitoramento - Performance e disponibilidade
+  - component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/templates/monitoring/monitoring-component@1.1.0
+    inputs:
+      stage: monitor
+      monitoring_type: "advanced"
+      alert_on_failure: true
+      performance_baseline: 3000
+      accessibility_threshold: 90
+
+# Job adicional: Build da aplicação
+build:
+  stage: build
+>>>>>>> Stashed changes
   image: node:${NODE_VERSION}
   before_script:
     - npm ci --cache .npm --prefer-offline --no-audit
@@ -262,11 +306,78 @@ stop-review:
   allow_failure: true
   dependencies: []
 
+<<<<<<< Updated upstream
 # =============================================================================
 # STAGE: MONITOR
 # =============================================================================
 
 health-check:
+=======
+# Job adicional: Deploy de Review Apps (Aplicativos de Avaliação)
+deploy-review:
+  stage: deploy
+  image: node:${NODE_VERSION}
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app
+    on_stop: stop-review
+    auto_stop_in: 1 week
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Fazendo deploy do Review App para branch: $CI_COMMIT_REF_NAME"
+    - echo "🌐 URL do Review App: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app"
+    - npm run build
+    - |
+      # Deploy para Vercel com nome único baseado na branch
+      export VERCEL_PROJECT_NAME="assistente-juridico-p-$CI_COMMIT_REF_SLUG"
+      npx vercel --yes --prod=false
+      echo "✅ Review App deploy concluído!"
+      echo "🔗 Acesse: https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app"
+  dependencies:
+    - build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_COMMIT_BRANCH =~ /^feature\//
+      when: always
+    - if: $CI_COMMIT_BRANCH =~ /^review\//
+      when: always
+  allow_failure: true
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .vercel/
+    expire_in: 1 week
+
+# Job adicional: Parar Review Apps manualmente
+stop-review:
+  stage: deploy
+  image: node:${NODE_VERSION}
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  script:
+    - echo "🛑 Parando Review App para branch: $CI_COMMIT_REF_NAME"
+    - |
+      # Remover deployment do Vercel
+      export VERCEL_PROJECT_NAME="assistente-juridico-p-$CI_COMMIT_REF_SLUG"
+      npx vercel rm --yes $VERCEL_PROJECT_NAME || echo "Review App já removido ou não encontrado"
+      echo "✅ Review App parado com sucesso!"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+    - if: $CI_COMMIT_BRANCH =~ /^feature\//
+      when: manual
+    - if: $CI_COMMIT_BRANCH =~ /^review\//
+      when: manual
+  allow_failure: true
+  dependencies: []
+
+# Job adicional: Backup de dados (semanal)
+backup:
+>>>>>>> Stashed changes
   stage: monitor
   image: curlimages/curl:latest
   script:

@@ -48,7 +48,12 @@
       "includeFiles": "api/lib/**"
     }
   },
+<<<<<<< Updated upstream
   "regions": ["gru1"],
+=======
+  "regions": ["iad1"],
+  "maxLambdaSize": "50mb",
+>>>>>>> Stashed changes
   "redirects": [
     {
       "source": "/:path*",
