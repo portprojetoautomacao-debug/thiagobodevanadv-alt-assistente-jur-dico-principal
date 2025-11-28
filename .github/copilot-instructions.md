@@ -1011,6 +1011,7 @@ manualChunks: {
 - `TODOS_OS_15_AGENTES.md` - Complete agents documentation (15 agentes)
 - `AGENTS_SYSTEM.md` - Technical agents documentation
 - `AGENTS_IMPROVEMENTS_SUMMARY.md` - Agents improvements summary
+- `docs/FLUXO_MINUTAS_AUTOMATICAS.md` - **Fluxo completo de minutas automáticas** (Editor Tiptap, Templates, IA)
 
 ## Making Changes
 
