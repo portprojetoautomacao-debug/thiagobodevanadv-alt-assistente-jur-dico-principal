@@ -88,6 +88,18 @@ function mapPriority(
 }
 
 /**
+ * Função de feedback visual para o usuário durante o processo
+ */
+function giveUserFeedback(message: string, isError: boolean = false) {
+  // Aqui você pode substituir esse log por um sistema real de feedback para o usuário
+  if (isError) {
+    console.error(`[Erro]: ${message}`)
+  } else {
+    console.log(`[Sucesso]: ${message}`)
+  }
+}
+
+/**
  * Agente principal:
  * - Gera minuta com Gemini
  * - Opcionalmente salva no Google Docs
@@ -117,6 +129,7 @@ export async function criarMinutaComAgenteIA(
     if (geminiResponse.error || !geminiResponse.text) {
       const msg = geminiResponse.error || 'Gemini retornou texto vazio na geração da minuta'
       errors.push(msg)
+      giveUserFeedback(msg, true)
       return {
         success: false,
         provider: 'gemini-2.5-pro',
@@ -161,6 +174,7 @@ export async function criarMinutaComAgenteIA(
           docsUrl = docsResult.url
         } else {
           errors.push('Não foi possível criar o documento no Google Docs')
+          giveUserFeedback('Erro ao salvar no Google Docs', true)
         }
       } catch (err) {
         console.error('[MinutaAgent] Erro ao criar documento no Google Docs:', err)
@@ -169,6 +183,7 @@ export async function criarMinutaComAgenteIA(
             ? `Erro ao criar documento no Google Docs: ${err.message}`
             : 'Erro desconhecido ao criar documento no Google Docs'
         )
+        giveUserFeedback('Erro ao salvar no Google Docs', true)
       }
     }
 
@@ -213,6 +228,7 @@ export async function criarMinutaComAgenteIA(
           calendarEventId = eventId
         } else {
           errors.push('Não foi possível criar o evento de prazo no Google Calendar')
+          giveUserFeedback('Erro ao criar evento no Google Calendar', true)
         }
       } catch (err) {
         console.error('[MinutaAgent] Erro ao criar evento de prazo no Calendar:', err)
@@ -221,8 +237,11 @@ export async function criarMinutaComAgenteIA(
             ? `Erro ao criar evento no Google Calendar: ${err.message}`
             : 'Erro desconhecido ao criar evento no Google Calendar'
         )
+        giveUserFeedback('Erro ao criar evento no Google Calendar', true)
       }
     }
+
+    giveUserFeedback('Minuta gerada com sucesso', false)
 
     return {
       success: errors.length === 0,
@@ -241,6 +260,7 @@ export async function criarMinutaComAgenteIA(
         ? `Falha inesperada: ${error.message}`
         : 'Falha inesperada ao executar o agente de minuta'
     )
+    giveUserFeedback('Erro inesperado na execução', true)
 
     return {
       success: false,

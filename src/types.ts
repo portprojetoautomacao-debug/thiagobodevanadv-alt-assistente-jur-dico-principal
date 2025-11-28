@@ -99,7 +99,9 @@ export interface Expediente {
   dataRecebimento: string
   receivedAt?: string
   prazoFatal?: string
-  deadline?: string | {
+  deadline?:
+  | string
+  | {
     days?: number
     type?: 'úteis' | 'corridos'
     startDate?: string
@@ -136,7 +138,16 @@ export interface Appointment {
   duration: number
   processId?: string
   location?: string
-  type: 'audiencia' | 'reuniao' | 'prazo' | 'outro'
+  // Aceita tanto pt-BR quanto inglês para compatibilidade com componentes existentes
+  type:
+  | 'audiencia'
+  | 'reuniao'
+  | 'prazo'
+  | 'outro'
+  | 'hearing'
+  | 'meeting'
+  | 'deadline'
+  | 'other'
   reminders?: number[]
   googleEventId?: string
 }
@@ -191,4 +202,40 @@ export interface PDFUploadHistory {
   errorMessage?: string
 }
 
-export type ViewType = 'dashboard' | 'upload-pdf' | 'cadastrar-cliente' | 'clientes' | 'processos' | 'processes' | 'prazos' | 'calculadora' | 'calculator' | 'assistente' | 'agentes' | 'minutas' | 'financeiro' | 'financial' | 'conhecimento' | 'knowledge' | 'crm' | 'consultas' | 'queries' | 'analytics' | 'ai-document-summarizer' | 'ai-contract-analyzer' | 'ai-legal-research' | 'ai-email-drafter' | 'fluent-animations' | 'gestao' | 'intimacoes' | 'expedientes' | 'batch' | 'audio' | 'datajud' | 'agenda' | 'calendar' | 'calendario' | 'donna' | 'ai-agents'
+export type ViewType =
+  | 'dashboard'
+  | 'upload-pdf'
+  | 'cadastrar-cliente'
+  | 'clientes'
+  | 'processos'
+  | 'processes'
+  | 'prazos'
+  | 'calculadora'
+  | 'calculator'
+  | 'assistente'
+  | 'agentes'
+  | 'minutas'
+  | 'financeiro'
+  | 'financial'
+  | 'conhecimento'
+  | 'knowledge'
+  | 'crm'
+  | 'consultas'
+  | 'queries'
+  | 'analytics'
+  | 'ai-document-summarizer'
+  | 'ai-contract-analyzer'
+  | 'ai-legal-research'
+  | 'ai-email-drafter'
+  | 'fluent-animations'
+  | 'gestao'
+  | 'intimacoes'
+  | 'expedientes'
+  | 'batch'
+  | 'audio'
+  | 'datajud'
+  | 'agenda'
+  | 'calendar'
+  | 'calendario'
+  | 'donna'
+  | 'ai-agents'

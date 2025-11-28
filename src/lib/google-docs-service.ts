@@ -51,6 +51,13 @@ class GoogleDocsService {
   async initialize(): Promise<void> {
     debug('Initializing Google Docs Service...')
 
+    // Segurança para SSR / Vercel serverless
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      this.lastError = 'Google Docs Service só pode ser inicializado no browser.'
+      debugError(this.lastError)
+      return
+    }
+
     if (!GOOGLE_DOCS_CLIENT_ID || !GOOGLE_DOCS_API_KEY) {
       this.lastError =
         'Credenciais do Google Docs não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.'
@@ -100,6 +107,11 @@ class GoogleDocsService {
     return new Promise((resolve, reject) => {
       debug('Loading Google scripts for Docs...')
 
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        reject(new Error('Google scripts só podem ser carregados no browser'))
+        return
+      }
+
       const gapiWindow = window as unknown as { gapi?: GapiGlobal }
       const googleWindow = window as unknown as { google?: GoogleGisGlobal }
 
@@ -116,7 +128,11 @@ class GoogleDocsService {
       }, 15000)
 
       const loadGis = () => {
-        if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+        if (
+          document.querySelector(
+            'script[src*="accounts.google.com/gsi/client"]',
+          )
+        ) {
           debug('GIS script already exists')
           clearTimeout(timeout)
           resolve()
@@ -134,7 +150,9 @@ class GoogleDocsService {
         }
         gisScript.onerror = () => {
           clearTimeout(timeout)
-          reject(new Error('Failed to load Google Identity Services script'))
+          reject(
+            new Error('Failed to load Google Identity Services script'),
+          )
         }
         document.head.appendChild(gisScript)
       }
@@ -179,7 +197,10 @@ class GoogleDocsService {
 
         const clientInit = (
           gapiWindow.gapi?.client as {
-            init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>
+            init?: (opts: {
+              apiKey: string
+              discoveryDocs: string[]
+            }) => Promise<void>
           }
         )?.init
 
@@ -274,6 +295,28 @@ class GoogleDocsService {
 
         this.accessToken = resp.access_token ?? null
         this.lastError = null
+
+        // Conectar token do GIS com gapi.client (igual ao Calendar)
+        const gapiWindow = window as unknown as {
+          gapi?: GapiGlobal & {
+            client?: { setToken?: (token: { access_token: string }) => void }
+          }
+        }
+
+        if (this.accessToken && gapiWindow.gapi?.client) {
+          try {
+            ;(gapiWindow.gapi.client as any).setToken?.({
+              access_token: this.accessToken,
+            })
+            debug('gapi client token set from Docs GIS access_token')
+          } catch (err) {
+            debugError(
+              'Failed to set gapi client token for Docs (non-fatal)',
+              err,
+            )
+          }
+        }
+
         debug('Docs authentication successful')
         resolve(true)
       }
@@ -295,7 +338,9 @@ class GoogleDocsService {
     })
   }
 
-  async createDocument(minuta: Minuta): Promise<{ docId: string; url: string } | null> {
+  async createDocument(
+    minuta: Minuta,
+  ): Promise<{ docId: string; url: string } | null> {
     debug('Creating Docs document from minuta...', { titulo: minuta.titulo })
 
     if (!this.accessToken) {
@@ -428,16 +473,20 @@ class GoogleDocsService {
       if (doc?.body?.content) {
         doc.body.content.forEach((element: DocumentElement) => {
           if (element.paragraph?.elements) {
-            element.paragraph.elements.forEach((paragraphElement: ParagraphElement) => {
-              if (paragraphElement.textRun?.content) {
-                text += paragraphElement.textRun.content
-              }
-            })
+            element.paragraph.elements.forEach(
+              (paragraphElement: ParagraphElement) => {
+                if (paragraphElement.textRun?.content) {
+                  text += paragraphElement.textRun.content
+                }
+              },
+            )
           }
         })
       }
 
-      debug('Docs document content fetched successfully', { length: text.length })
+      debug('Docs document content fetched successfully', {
+        length: text.length,
+      })
       return text
     } catch (error) {
       this.lastError = `Erro ao buscar conteúdo do Docs: ${
@@ -453,6 +502,7 @@ class GoogleDocsService {
   }
 
   openDocument(url: string): void {
+    if (typeof window === 'undefined') return
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 

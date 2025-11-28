@@ -4,6 +4,9 @@
  * instead of the expected JSON payload.
  * 
  * Also patches Spark initialization to handle localization errors gracefully.
+ * 
+ * @deprecated Este módulo é legado do Spark. O sistema agora usa Gemini 2.5 Pro.
+ * Mantido apenas para compatibilidade com código existente.
  */
 
 // TypeScript interfaces for Spark global objects
@@ -19,6 +22,16 @@ interface SparkLLM {
   (prompt: string, modelName?: string, jsonMode?: boolean): Promise<string>
 }
 
+// Extend Window interface to include spark
+declare global {
+  interface Window {
+    spark?: {
+      kv?: SparkKV
+      llm?: SparkLLM
+    }
+  }
+}
+
 interface ResponseLike {
   text: () => Promise<string>
   json?: () => Promise<unknown>
@@ -32,10 +45,10 @@ interface ResponseLike {
  */
 export function patchSparkLocalization() {
   if (typeof window === 'undefined') return;
-  
+
   // Intercept console errors to suppress RegisterClientLocalizationsError
   const originalError = console.error;
-  console.error = function(...args: unknown[]) {
+  console.error = function (...args: unknown[]) {
     const firstArg = args[0];
     if (firstArg && typeof firstArg === 'object' && 'name' in firstArg) {
       if (firstArg.name === 'RegisterClientLocalizationsError') {
@@ -51,7 +64,7 @@ export function patchFileReader() {
   if (typeof window === 'undefined') return;
 
   const originalReadAsText = FileReader.prototype.readAsText;
-  FileReader.prototype.readAsText = function(blob, encoding) {
+  FileReader.prototype.readAsText = function (blob, encoding) {
     if (!(blob instanceof Blob)) {
       console.warn('FileReader.readAsText called with non-Blob argument:', blob);
       // Evita o crash chamando o callback de erro ou apenas retornando
@@ -68,28 +81,29 @@ export function patchFileReader() {
 
 export function applySparkClientFixes() {
   if (typeof window === 'undefined') return;
-  
+
   // Apply localization patch first
   patchSparkLocalization();
-  
+
   // Apply FileReader patch to prevent crashes
   patchFileReader();
-  
-  const w = window;
+
+  const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
   // if (!w.spark?.kv) return; // REMOVIDO: Não podemos depender de w.spark existir
 
   try {
     // Se spark não existir, cria um mock seguro para evitar crash
     if (!w.spark) {
-      w.spark = {} as any;
-    }
-    
-    // Se kv não existir, cria um mock
-    if (!w.spark.kv) {
-      w.spark.kv = {} as any;
+      w.spark = {} as { kv?: SparkKV; llm?: SparkLLM };
     }
 
-    const original = { ...w.spark.kv };
+    // Se kv não existir, cria um mock
+    if (!w.spark.kv) {
+      w.spark.kv = {} as SparkKV;
+    }
+
+    const spark = w.spark;
+    const original = { ...spark.kv };
 
     async function parseJSONSafely(response: Response | ResponseLike | null): Promise<unknown> {
       if (!response) return undefined;
@@ -224,13 +238,12 @@ export function applySparkClientFixes() {
 
     // Keep other properties of kv that might be used (events etc.)
     for (const k of Object.keys(original)) {
-      if (!(k in w.spark.kv)) {
-        // @ts-ignore - Ignorando erros de tipo para compatibilidade
-        w.spark.kv[k] = original[k];
+      if (spark.kv && !(k in spark.kv)) {
+        (spark.kv as Record<string, unknown>)[k] = original[k];
       }
     }
 
-    w.spark.kv = patchedKV;
+    spark.kv = patchedKV;
 
     console.info('Applied spark client fixes: kv methods patched for improved error handling and diagnostics');
   } catch (err) {
@@ -240,7 +253,7 @@ export function applySparkClientFixes() {
 
 export function applySparkLLMFixes() {
   if (typeof window === 'undefined') return;
-  const w = window;
+  const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
   if (!w.spark?.llm) return;
 
   try {

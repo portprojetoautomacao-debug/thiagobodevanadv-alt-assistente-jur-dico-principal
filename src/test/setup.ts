@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom'
-import { cleanup } from '@testing-library/react'
-import { afterEach, vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
 
 // Cleanup após cada teste
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
 // Mock de variáveis de ambiente
 vi.mock('process', () => ({
@@ -14,7 +14,7 @@ vi.mock('process', () => ({
     VITE_GOOGLE_CLIENT_ID: 'test-client-id',
     VITE_GOOGLE_CLIENT_SECRET: 'test-client-secret',
   },
-}))
+}));
 
 // Mock do window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -29,7 +29,7 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+});
 
 // Mock do IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -37,10 +37,10 @@ global.IntersectionObserver = class IntersectionObserver {
   disconnect() {}
   observe() {}
   takeRecords() {
-    return []
+    return [];
   }
   unobserve() {}
-} as any
+} as any;
 
 // Mock do ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -48,5 +48,4 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-} as any
-
+} as any;

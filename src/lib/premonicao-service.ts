@@ -5,14 +5,7 @@ export async function generatePremonicaoJuridica(
   processData?: Process
 ): Promise<PremonicaoJuridica> {
   const processInfo = processData
-    ? `
-**Título:** ${processData.titulo}
-**Autor:** ${processData.autor}
-**Réu:** ${processData.reu}
-**Status Atual:** ${processData.status}
-**Comarca:** ${processData.comarca}
-**Vara:** ${processData.vara}
-`
+    ? `**Título:** ${processData.titulo}\n**Autor:** ${processData.autor}\n**Réu:** ${processData.reu}\n**Status Atual:** ${processData.status}\n**Comarca:** ${processData.comarca}\n**Vara:** ${processData.vara}\n`
     : ''
 
   const promptText = `Você é um assistente jurídico especializado em análise preditiva de processos judiciais brasileiros.

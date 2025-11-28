@@ -37,32 +37,31 @@
         ::before {
             box-sizing: border-box;
             border-width: 0;
-            border-style: solid
+            border-style: solid;
         }
 
         html {
             line-height: 1.5;
             -webkit-text-size-adjust: 100%;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            /* ✅ Otimização: font-display swap para evitar FOIT */
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
             margin: 0;
             line-height: inherit;
             background-color: hsl(var(--background));
-            color: hsl(var(--foreground))
+            color: hsl(var(--foreground));
         }
 
         #root {
             min-height: 100vh;
             display: flex;
-            flex-direction: column
+            flex-direction: column;
         }
 
-        /* ✅ Otimização: Estilos do loading spinner visíveis imediatamente */
+        /* Loading Spinner */
         .loading-container {
             min-height: 100vh;
             display: flex;
@@ -70,7 +69,7 @@
             justify-content: center;
             flex-direction: column;
             gap: 1rem;
-            padding: 1rem
+            padding: 1rem;
         }
 
         .loading-spinner {
@@ -79,137 +78,89 @@
             border-radius: 9999px;
             border: 2px solid transparent;
             border-bottom-color: hsl(var(--primary));
-            animation: spin 1s linear infinite
+            animation: spin 1s linear infinite;
         }
 
         .loading-text {
             font-size: 0.875rem;
-            color: hsl(var(--muted-foreground))
+            color: hsl(var(--muted-foreground));
         }
 
         .loading-title {
             font-size: 1.5rem;
             font-weight: 700;
             color: hsl(var(--foreground));
-            margin-bottom: 0.5rem
+            margin-bottom: 0.5rem;
         }
 
         @keyframes spin {
             to {
-                transform: rotate(360deg)
+                transform: rotate(360deg);
             }
         }
 
+        /* Utility classes */
         .min-h-screen {
-            min-height: 100vh
+            min-height: 100vh;
         }
 
         .flex {
-            display: flex
+            display: flex;
         }
 
         .items-center {
-            align-items: center
+            align-items: center;
         }
 
         .justify-center {
-            justify-content: center
+            justify-content: center;
         }
 
         .text-center {
-            text-align: center
+            text-align: center;
         }
 
         .text-3xl {
             font-size: 1.875rem;
-            line-height: 2.25rem
+            line-height: 2.25rem;
         }
 
         .font-bold {
-            font-weight: 700
-        }
-
-        .animate-spin {
-            animation: spin 1s linear infinite
+            font-weight: 700;
         }
 
         .rounded-full {
-            border-radius: 9999px
+            border-radius: 9999px;
         }
 
         .h-12 {
-            height: 3rem
+            height: 3rem;
         }
 
         .w-12 {
-            width: 3rem
+            width: 3rem;
         }
 
-        .border-b-2 {
-            border-bottom-width: 2px
-        }
-
-        .border-primary {
-            border-color: hsl(var(--primary))
-        }
-
-        .text-sm {
-            font-size: .875rem;
-            line-height: 1.25rem
-        }
-
-        .text-muted-foreground {
-            color: hsl(var(--muted-foreground))
-        }
-
-        .gap-4 {
-            gap: 1rem
-        }
-
-        .flex-col {
-            flex-direction: column
-        }
-
-        .p-4 {
-            padding: 1rem
-        }
-
-        .space-y-6>:not([hidden])~:not([hidden]) {
-            margin-top: 1.5rem
-        }
-
-        .max-w-md {
-            max-width: 28rem
-        }
-
-        .w-full {
-            width: 100%
-        }
-
-        .mb-2 {
-            margin-bottom: .5rem
-        }
-
-        /* ✅ Otimização: Conteúdo principal styled para LCP rápido */
+        /* Background & Card */
         .bg-background {
-            background-color: hsl(var(--background))
+            background-color: hsl(var(--background));
         }
 
         .bg-card {
-            background-color: hsl(var(--card))
+            background-color: hsl(var(--card));
         }
 
         .border {
             border-width: 1px;
-            border-color: hsl(var(--border))
+            border-color: hsl(var(--border));
         }
 
         .rounded-lg {
-            border-radius: 0.5rem
+            border-radius: 0.5rem;
         }
 
         .shadow-sm {
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
 
         @media(prefers-color-scheme:dark) {
@@ -218,7 +169,7 @@
                 --foreground: 0 0% 98%;
                 --muted-foreground: 240 5% 64.9%;
                 --card: 240 10% 3.9%;
-                --border: 240 3.7% 15.9%
+                --border: 240 3.7% 15.9%;
             }
         }
     </style>
@@ -249,7 +200,6 @@
 </head>
 
 <body class="notranslate" translate="no">
-    <!-- ✅ OTIMIZAÇÃO LCP: Conteúdo inicial styled para LCP rápido -->
     <div id="root">
         <div class="loading-container">
             <h1 class="loading-title">Assistente Jurídico PJe</h1>
@@ -257,7 +207,6 @@
             <p class="loading-text">Carregando sistema...</p>
         </div>
     </div>
-    <!-- ✅ OTIMIZAÇÃO: modulepreload para chunks críticos -->
     <script type="module" src="/src/main.tsx"></script>
 </body>
 
