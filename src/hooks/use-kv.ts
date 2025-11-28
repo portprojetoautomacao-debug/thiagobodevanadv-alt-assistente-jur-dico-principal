@@ -23,7 +23,7 @@ const BATCH_DELAY_MS = 150; // Aguarda 150ms para agrupar requisições (aumenta
 const MAX_BATCH_SIZE = 50; // Máximo de chaves por batch (aumentado)
 
 // Fila de chaves pendentes para carregar
-let pendingKeys = new Set<string>();
+const pendingKeys = new Set<string>();
 let batchTimeout: ReturnType<typeof setTimeout> | null = null;
 const pendingResolvers = new Map<string, Array<(value: unknown) => void>>();
 

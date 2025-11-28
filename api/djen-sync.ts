@@ -91,7 +91,7 @@ async function getKv(): Promise<Redis> {
 
 function parseOAB(oab: string): { numero?: string; uf?: string } {
     if (!oab) return {};
-    const match = oab.match(/(\d+)\s*[\/\-]?\s*([A-Z]{2})/i);
+    const match = oab.match(/(\d+)\s*[/|-]?\s*([A-Z]{2})/i);
     if (match) return { numero: match[1], uf: match[2].toUpperCase() };
     const numOnly = oab.match(/^(\d+)$/);
     if (numOnly) return { numero: numOnly[1] };
