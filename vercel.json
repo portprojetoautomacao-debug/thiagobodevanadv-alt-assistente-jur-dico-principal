@@ -71,6 +71,30 @@
     {
       "path": "/api/cron?action=daily-reset",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron?action=process-agent-queue",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron?action=process-notifications",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron?action=calendar-sync",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron?action=backup",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron?action=datajud-monitor",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron?action=deadline-alerts",
+      "schedule": "0 12 * * *"
     }
   ],
   "rewrites": [
