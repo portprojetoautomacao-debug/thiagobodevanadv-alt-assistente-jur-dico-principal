@@ -89,23 +89,8 @@ export default defineConfig({
     cssCodeSplit: true,
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
-    minify: 'terser',
+    minify: 'esbuild', // Usar esbuild ao invés de terser para evitar problemas de inicialização
     target: 'es2020', // Modern browsers only - reduz polyfills
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info'],
-        passes: 2,
-        ecma: 2020, // Modern syntax compression
-      },
-      mangle: {
-        safari10: true,
-      },
-      format: {
-        ecma: 2020,
-      },
-    },
     rollupOptions: {
       output: {
         // Otimiza nomes de chunks para melhor caching
