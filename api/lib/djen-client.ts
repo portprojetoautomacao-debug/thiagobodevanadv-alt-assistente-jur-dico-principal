@@ -1,199 +1,243 @@
+```ts
 /**
  * Cliente DJEN compartilhado
  * Centraliza toda a lógica de integração com a API do DJEN
  */
 
-import { SafeLogger } from './safe-logger.js';
+import { SafeLogger } from './safe-logger.js'
 
-const logger = new SafeLogger('DJEN');
+const logger = new SafeLogger('DJEN')
 
 export interface DJENComunicacao {
-  id: number;
-  data_disponibilizacao: string;
-  siglaTribunal: string;
-  tipoComunicacao: string;
-  nomeOrgao: string;
-  texto: string;
-  numero_processo: string;
-  meio: string;
-  link: string;
-  tipoDocumento: string;
-  nomeClasse: string;
-  codigoClasse: string;
-  numeroComunicacao: number;
-  ativo: boolean;
-  hash: string;
-  datadisponibilizacao: string;
-  meiocompleto: string;
-  numeroprocessocommascara: string;
+  id: number
+  data_disponibilizacao: string
+  siglaTribunal: string
+  tipoComunicacao: string
+  nomeOrgao: string
+  texto: string
+  numero_processo: string
+  meio: string
+  link: string
+  tipoDocumento: string
+  nomeClasse: string
+  codigoClasse: string
+  numeroComunicacao: number
+  ativo: boolean
+  hash: string
+  datadisponibilizacao: string
+  meiocompleto: string
+  numeroprocessocommascara: string
   destinatarios: Array<{
-    nome: string;
-    polo: string;
-    comunicacao_id: number;
-  }>;
+    nome: string
+    polo: string
+    comunicacao_id: number
+  }>
   destinatarioadvogados: Array<{
-    id: number;
-    comunicacao_id: number;
-    advogado_id: number;
-    created_at: string;
-    updated_at: string;
+    id: number
+    comunicacao_id: number
+    advogado_id: number
+    created_at: string
+    updated_at: string
     advogado: {
-      id: number;
-      nome: string;
-      numero_oab: string;
-      uf_oab: string;
-    };
-  }>;
+      id: number
+      nome: string
+      numero_oab: string
+      uf_oab: string
+    }
+  }>
 }
 
 export interface DJENResponse {
-  status: string;
-  message: string;
-  count: number;
-  items: DJENComunicacao[];
+  status: string
+  message: string
+  count: number
+  items: DJENComunicacao[]
 }
 
 export interface DJENFilteredResult {
-  id: number;
-  tribunal: string;
-  data: string;
-  tipo: string;
-  teor: string;
-  numeroProcesso: string;
-  orgao: string;
-  meio: string;
-  link: string;
-  hash: string;
-  matchType: 'nome' | 'oab' | 'ambos';
+  id: number
+  tribunal: string
+  data: string
+  tipo: string
+  teor: string
+  numeroProcesso: string
+  orgao: string
+  meio: string
+  link: string
+  hash: string
+  matchType: 'nome' | 'oab' | 'ambos'
   advogados: Array<{
-    nome: string;
-    numero_oab: string;
-    uf_oab: string;
-  }>;
+    nome: string
+    numero_oab: string
+    uf_oab: string
+  }>
 }
 
 export interface DJENQueryParams {
-  numeroOab?: string;
-  ufOab?: string;
-  nomeAdvogado?: string;
-  siglaTribunal?: string;
-  dataDisponibilizacaoInicio?: string;
-  dataDisponibilizacaoFim?: string;
-  pagina?: number;
-  itensPorPagina?: number;
-  meio?: 'E' | 'D';
+  numeroOab?: string
+  ufOab?: string
+  nomeAdvogado?: string
+  siglaTribunal?: string
+  dataDisponibilizacaoInicio?: string
+  dataDisponibilizacaoFim?: string
+  pagina?: number
+  itensPorPagina?: number
+  meio?: 'E' | 'D'
+}
+
+export interface DJENCadernoMeta {
+  tribunal: string
+  sigla_tribunal: string
+  meio: string
+  status: string
+  versao: string
+  data: string
+  total_comunicacoes: number
+  numero_paginas: number
+  hash: string
+  url: string // URL temporária válida por 5 minutos
 }
 
 // Constantes
-const DJEN_TIMEOUT = 10000; // Reduzido para 10s
-const DJEN_DELAY = 500; // Reduzido para 500ms
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+const DJEN_TIMEOUT = 10_000 // 10s
+const DJEN_DELAY = 500 // 500ms entre tribunais
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1_000 // base para backoff (ms)
 
 /**
  * Utilitários de texto
  */
 export function normalizeText(text: string): string {
-  return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
 }
 
 export function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
-  if (!numeroOAB) return {};
-  const value = numeroOAB.trim();
-  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
-  if (matchOABPattern) return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
-  if (matchNumericUF) return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
-  const matchNumeric = value.match(/^(\d+)$/);
-  if (matchNumeric) return { numero: matchNumeric[1] };
-  return {};
+  if (!numeroOAB) return {}
+  const value = numeroOAB.trim()
+
+  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i)
+  if (matchOABPattern) {
+    return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() }
+  }
+
+  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i)
+  if (matchNumericUF) {
+    return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() }
+  }
+
+  const matchNumeric = value.match(/^(\d+)$/)
+  if (matchNumeric) {
+    return { numero: matchNumeric[1] }
+  }
+
+  return {}
 }
 
 /**
  * Constrói query string para API DJEN
  */
 export function buildDJENQueryString(params: DJENQueryParams): string {
-  const queryParams: string[] = [];
-  if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
-  if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
-  if (params.nomeAdvogado) queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
-  if (params.dataDisponibilizacaoInicio) queryParams.push(`dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`);
-  if (params.dataDisponibilizacaoFim) queryParams.push(`dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`);
-  if (params.siglaTribunal) queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`);
-  if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
-  if (params.itensPorPagina) queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
-  if (params.meio) queryParams.push(`meio=${params.meio}`);
-  return queryParams.join('&');
+  const queryParams: string[] = []
+
+  if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`)
+  if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`)
+  if (params.nomeAdvogado) queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`)
+  if (params.dataDisponibilizacaoInicio) queryParams.push(`dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`)
+  if (params.dataDisponibilizacaoFim) queryParams.push(`dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`)
+  if (params.siglaTribunal) queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`)
+  if (typeof params.pagina === 'number') queryParams.push(`pagina=${params.pagina}`)
+  if (typeof params.itensPorPagina === 'number') queryParams.push(`itensPorPagina=${params.itensPorPagina}`)
+  if (params.meio) queryParams.push(`meio=${params.meio}`)
+
+  return queryParams.join('&')
 }
 
 /**
- * Executa consulta à API DJEN com retry e circuit breaker
+ * Executa consulta à API DJEN com retry e timeout
  */
 export async function consultarComunicacoes(
   params: DJENQueryParams,
   retryCount: number = 0
-): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number }; retryAfter?: number }> {
-  const queryString = buildDJENQueryString(params);
-  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`;
+): Promise<{
+  response: DJENResponse | null
+  rateLimitInfo: { limit?: number; remaining?: number }
+  retryAfter?: number // em segundos
+}> {
+  const queryString = buildDJENQueryString(params)
+  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT)
 
   try {
-    logger.debug('Consultando DJEN', { url: url.replace(/numeroOab=[^&]*/, 'numeroOab=***') });
+    logger.debug('Consultando DJEN', {
+      url: url.replace(/numeroOab=[^&]*/i, 'numeroOab=***')
+    })
 
     const response = await fetch(url, {
       method: 'GET',
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: 'application/json' },
       signal: controller.signal
-    });
+    })
 
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
+
+    const limitHeader = response.headers.get('x-ratelimit-limit')
+    const remainingHeader = response.headers.get('x-ratelimit-remaining')
 
     const rateLimitInfo = {
-      limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
-      remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
-    };
+      limit: limitHeader ? parseInt(limitHeader, 10) : undefined,
+      remaining: remainingHeader ? parseInt(remainingHeader, 10) : undefined
+    }
 
     // Rate limit atingido
     if (response.status === 429) {
-      const retryAfter = response.headers.get('retry-after');
-      logger.warn('Rate limit DJEN atingido', { retryAfter, retryCount });
+      const retryAfterHeader = response.headers.get('retry-after')
+      logger.warn('Rate limit DJEN atingido', { retryAfterHeader, retryCount })
+
+      // HTTP Retry-After é em segundos; fallback de backoff também em segundos
+      const retryAfterSeconds = retryAfterHeader
+        ? parseInt(retryAfterHeader, 10)
+        : Math.round((RETRY_DELAY * Math.pow(2, retryCount)) / 1000)
+
       return {
         response: null,
         rateLimitInfo,
-        retryAfter: retryAfter ? parseInt(retryAfter) : RETRY_DELAY * Math.pow(2, retryCount)
-      };
+        retryAfter: retryAfterSeconds
+      }
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data = await response.json() as DJENResponse;
-    logger.debug('Consulta DJEN bem-sucedida', { count: data.count });
+    const data = (await response.json()) as DJENResponse
+    logger.debug('Consulta DJEN bem-sucedida', { count: data.count })
 
-    return { response: data, rateLimitInfo };
-
+    return { response: data, rateLimitInfo }
   } catch (error) {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
 
     if (error instanceof Error && error.name === 'AbortError') {
-      logger.error('Timeout na consulta DJEN', { retryCount });
+      logger.error('Timeout na consulta DJEN', { retryCount })
     } else {
-      logger.error('Erro na consulta DJEN', error, { retryCount });
+      logger.error('Erro na consulta DJEN', error, { retryCount })
     }
 
-    // Retry logic
+    // Retry com backoff exponencial
     if (retryCount < MAX_RETRIES) {
-      const delay = RETRY_DELAY * Math.pow(2, retryCount);
-      logger.info(`Tentando novamente em ${delay}ms`, { retryCount: retryCount + 1 });
+      const delay = RETRY_DELAY * Math.pow(2, retryCount)
+      logger.info(`Tentando novamente em ${delay}ms`, { retryCount: retryCount + 1 })
 
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return consultarComunicacoes(params, retryCount + 1);
+      await new Promise(resolve => setTimeout(resolve, delay))
+      return consultarComunicacoes(params, retryCount + 1)
     }
 
-    return { response: null, rateLimitInfo: {} };
+    return { response: null, rateLimitInfo: {} }
   }
 }
 
@@ -207,26 +251,31 @@ export async function consultarDJENForLawyer(
   dataInicio?: string,
   dataFim?: string,
   meio?: 'D' | 'E'
-): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
+): Promise<{
+  resultados: DJENFilteredResult[]
+  erros: Array<{ tribunal: string; erro: string }>
+  rateLimitWarning?: boolean
+}> {
   if (!nomeAdvogado && !numeroOAB) {
-    throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB');
+    throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB')
   }
 
-  const defaultDate = new Date().toISOString().split('T')[0];
-  const queryDataInicio = dataInicio || defaultDate;
-  const queryDataFim = dataFim || queryDataInicio;
+  const defaultDate = new Date().toISOString().split('T')[0]
+  const queryDataInicio = dataInicio || defaultDate
+  const queryDataFim = dataFim || queryDataInicio
 
-  let numeroOabNumerico: string | undefined;
-  let ufOab: string | undefined;
+  let numeroOabNumerico: string | undefined
+  let ufOab: string | undefined
+
   if (numeroOAB) {
-    const parsed = parseOAB(numeroOAB);
-    numeroOabNumerico = parsed.numero;
-    ufOab = parsed.uf;
+    const parsed = parseOAB(numeroOAB)
+    numeroOabNumerico = parsed.numero
+    ufOab = parsed.uf
   }
 
-  const resultados: DJENFilteredResult[] = [];
-  const erros: Array<{ tribunal: string; erro: string }> = [];
-  let rateLimitWarning = false;
+  const resultados: DJENFilteredResult[] = []
+  const erros: Array<{ tribunal: string; erro: string }> = []
+  let rateLimitWarning = false
 
   for (const tribunal of tribunais) {
     try {
@@ -236,35 +285,53 @@ export async function consultarDJENForLawyer(
         dataDisponibilizacaoFim: queryDataFim,
         itensPorPagina: 100,
         pagina: 1
-      };
+      }
 
-      if (nomeAdvogado) queryParams.nomeAdvogado = nomeAdvogado;
-      if (numeroOabNumerico) queryParams.numeroOab = numeroOabNumerico;
-      if (ufOab) queryParams.ufOab = ufOab;
-      if (meio) queryParams.meio = meio;
+      if (nomeAdvogado) queryParams.nomeAdvogado = nomeAdvogado
+      if (numeroOabNumerico) queryParams.numeroOab = numeroOabNumerico
+      if (ufOab) queryParams.ufOab = ufOab
+      if (meio) queryParams.meio = meio
 
-      const { response, rateLimitInfo: _rateLimitInfo, retryAfter } = await consultarComunicacoes(queryParams);
+      const { response, rateLimitInfo: _rateLimitInfo, retryAfter } = await consultarComunicacoes(queryParams)
 
       if (!response) {
         if (retryAfter) {
-          rateLimitWarning = true;
-          erros.push({ tribunal, erro: `Rate limit - tentar novamente em ${retryAfter}s` });
+          rateLimitWarning = true
+          erros.push({ tribunal, erro: `Rate limit - tentar novamente em ${retryAfter}s` })
         } else {
-          erros.push({ tribunal, erro: 'Erro na consulta ou timeout' });
+          erros.push({ tribunal, erro: 'Erro na consulta ou timeout' })
         }
-        continue;
+        continue
       }
 
       for (const comunicacao of response.items) {
-        let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
-        const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
-          const matchNome = nomeAdvogado ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) : false;
-          const matchOab = numeroOabNumerico ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab : false;
-          if (matchNome && matchOab) { matchType = 'ambos'; return true; }
-          if (matchOab) { matchType = 'oab'; return true; }
-          if (matchNome) { matchType = 'nome'; return true; }
-          return false;
-        }) || false;
+        let matchType: 'nome' | 'oab' | 'ambos' = 'nome'
+
+        const temAdvogado =
+          comunicacao.destinatarioadvogados?.some(dest => {
+            const matchNome = nomeAdvogado
+              ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado))
+              : false
+
+            const matchOab = numeroOabNumerico
+              ? dest.advogado.numero_oab === numeroOabNumerico &&
+                (!ufOab || dest.advogado.uf_oab === ufOab)
+              : false
+
+            if (matchNome && matchOab) {
+              matchType = 'ambos'
+              return true
+            }
+            if (matchOab) {
+              matchType = 'oab'
+              return true
+            }
+            if (matchNome) {
+              matchType = 'nome'
+              return true
+            }
+            return false
+          }) || false
 
         if (temAdvogado) {
           resultados.push({
@@ -279,70 +346,42 @@ export async function consultarDJENForLawyer(
             link: comunicacao.link,
             hash: comunicacao.hash,
             matchType,
-            advogados: comunicacao.destinatarioadvogados?.map(dest => ({
-              nome: dest.advogado.nome,
-              numero_oab: dest.advogado.numero_oab,
-              uf_oab: dest.advogado.uf_oab
-            })) || []
-          });
+            advogados:
+              comunicacao.destinatarioadvogados?.map(dest => ({
+                nome: dest.advogado.nome,
+                numero_oab: dest.advogado.numero_oab,
+                uf_oab: dest.advogado.uf_oab
+              })) || []
+          })
         }
       }
 
-      // Delay entre tribunais
+      // Delay entre tribunais para evitar rate limit
       if (tribunais.indexOf(tribunal) < tribunais.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
+        await new Promise(resolve => setTimeout(resolve, DJEN_DELAY))
       }
-
     } catch (error) {
       erros.push({
         tribunal,
         erro: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      })
     }
   }
 
-  return { resultados, erros, rateLimitWarning: rateLimitWarning ? true : undefined };
+  return {
+    resultados,
+    erros,
+    rateLimitWarning: rateLimitWarning ? true : undefined
+  }
 }
-
-export interface DJENResponse {
-  status: string;
-  message: string;
-  count: number;
-  items: DJENComunicacao[];
-}
-
-export interface DJENFilteredResult {
-  id: number;
-  tribunal: string;
-  data: string;
-  tipo: string;
-  teor: string;
-  numeroProcesso: string;
-  orgao: string;
-  meio: string;
-  link: string;
-  hash: string;
-  matchType: 'nome' | 'oab' | 'ambos';
-  advogados: Array<{
-    nome: string;
-    numero_oab: string;
-    uf_oab: string;
-  }>;
-}
-
-
-
-
-
-
 
 /**
  * Download de caderno completo do DJEN (arquivo compactado)
  * Endpoint: GET /api/v1/caderno/{sigla_tribunal}/{data}/{meio}
- * 
+ *
  * ATENÇÃO: Este endpoint retorna metadados e URL temporária (5 minutos) para download
  * Os cadernos do dia atual são disponibilizados a partir das 02:00
- * 
+ *
  * @param siglaTribunal - Sigla do tribunal (ex: 'TJMG', 'TRT3')
  * @param data - Data no formato AAAA-MM-DD
  * @param meio - 'E' para Edital, 'D' para Diário Eletrônico
@@ -351,39 +390,34 @@ export async function downloadCadernoDJEN(
   siglaTribunal: string,
   data: string,
   meio: 'E' | 'D' = 'D'
-): Promise<{
-  tribunal: string;
-  sigla_tribunal: string;
-  meio: string;
-  status: string;
-  versao: string;
-  data: string;
-  total_comunicacoes: number;
-  numero_paginas: number;
-  hash: string;
-  url: string; // URL temporária válida por 5 minutos
-} | null> {
-  const url = `https://comunicaapi.pje.jus.br/api/v1/caderno/${siglaTribunal}/${data}/${meio}`;
+): Promise<DJENCadernoMeta | null> {
+  const url = `https://comunicaapi.pje.jus.br/api/v1/caderno/${siglaTribunal}/${data}/${meio}`
 
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-    });
+    })
 
     if (!response.ok) {
-      console.error(`[DJEN] Erro ao baixar caderno: HTTP ${response.status}`);
-      return null;
+      logger.error('[DJEN] Erro ao baixar caderno', { status: response.status, statusText: response.statusText })
+      return null
     }
 
-    const caderno = await response.json();
-    console.log(`[DJEN] Caderno disponível: ${caderno.total_comunicacoes} comunicações, ${caderno.numero_paginas} páginas`);
+    const caderno = (await response.json()) as DJENCadernoMeta
+    logger.info('[DJEN] Caderno disponível', {
+      tribunal: caderno.sigla_tribunal,
+      data: caderno.data,
+      total_comunicacoes: caderno.total_comunicacoes,
+      numero_paginas: caderno.numero_paginas
+    })
 
-    return caderno;
+    return caderno
   } catch (error) {
-    console.error(`[DJEN] Erro ao baixar caderno:`, error);
-    return null;
+    logger.error('[DJEN] Erro ao baixar caderno', error, { siglaTribunal, data, meio })
+    return null
   }
 }
+```

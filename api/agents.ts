@@ -3,13 +3,13 @@
  * Endpoints:
  * - POST /api/agents?action=process-queue - Processa fila de tarefas (cron)
  * - POST /api/agents?action=process-task - Processa tarefa individual
- * 
- * Usa Spark LLM real para processamento com IA
+ *
+ * Usa Google Gemini para processamento com IA
  * ✨ Refatorado com Enums, validação e tratamento de erros robusto
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { addTaskToQueue as _addTaskToQueue } from '../lib/api/kv-utils.js';
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { randomUUID } from 'node:crypto'
 
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
@@ -105,7 +105,8 @@ function validateAgentTask(task: unknown): task is AgentTask {
     Object.values(TaskPriority).includes(t.priority as TaskPriority) &&
     Object.values(TaskStatus).includes(t.status as TaskStatus) &&
     typeof t.createdAt === 'string' &&
-    typeof t.data === 'object' && t.data !== null
+    typeof t.data === 'object' &&
+    t.data !== null
   )
 }
 
@@ -125,16 +126,24 @@ function validateAgent(agent: unknown): agent is Agent {
 // ✨ Logger estruturado
 const logger = {
   info: (message: string, context?: Record<string, unknown>) => {
-    console.log(`[Agents] ${message}`, context ? JSON.stringify(context) : '')
+    if (context) {
+      console.log(`[Agents] ${message}`, JSON.stringify(context))
+    } else {
+      console.log(`[Agents] ${message}`)
+    }
   },
   error: (message: string, error?: unknown, context?: Record<string, unknown>) => {
     console.error(`[Agents] ERROR: ${message}`, {
       error: error instanceof Error ? error.message : String(error),
-      ...context
+      ...(context || {})
     })
   },
   warn: (message: string, context?: Record<string, unknown>) => {
-    console.warn(`[Agents] WARNING: ${message}`, context ? JSON.stringify(context) : '')
+    if (context) {
+      console.warn(`[Agents] WARNING: ${message}`, JSON.stringify(context))
+    } else {
+      console.warn(`[Agents] WARNING: ${message}`)
+    }
   }
 }
 
@@ -188,8 +197,8 @@ Retorne JSON com: simplifiedText, glossary, readabilityScore.`,
 
   [AgentType.COMMUNICATOR]: `Você é um especialista em comunicação com clientes jurídicos.
 Redija comunicações claras, empáticas e profissionais.
-Retorne JSON com: messageText, tone, channels, urgency.`,
-};
+Retorne JSON com: messageText, tone, channels, urgency.`
+}
 
 function getSystemPrompt(agentType: AgentType): string {
   const prompt = SYSTEM_PROMPTS[agentType]
@@ -203,16 +212,27 @@ function getSystemPrompt(agentType: AgentType): string {
 }
 
 // ✨ Helper para determinar tipo de minuta baseado no documentType
-function determineMinutaTipo(documentType?: string): 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro' {
+function determineMinutaTipo(
+  documentType?: string
+): 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro' {
   if (!documentType) return 'peticao'
 
   const type = documentType.toLowerCase()
 
   if (type.includes('contrato') || type.includes('acordo')) return 'contrato'
   if (type.includes('parecer') || type.includes('opinião')) return 'parecer'
-  if (type.includes('recurso') || type.includes('apelação') || type.includes('agravo') || type.includes('embargos')) return 'recurso'
+  if (type.includes('recurso') || type.includes('apelação') || type.includes('agravo') || type.includes('embargos')) {
+    return 'recurso'
+  }
   if (type.includes('procuração') || type.includes('mandato')) return 'procuracao'
-  if (type.includes('petição') || type.includes('contestação') || type.includes('manifestação') || type.includes('defesa')) return 'peticao'
+  if (
+    type.includes('petição') ||
+    type.includes('contestação') ||
+    type.includes('manifestação') ||
+    type.includes('defesa')
+  ) {
+    return 'peticao'
+  }
 
   return 'outro'
 }
@@ -275,8 +295,8 @@ Retorne um JSON com os seguintes campos:
     `Simplifique texto jurídico:\n\n${data}\n\nRetorne JSON: translationCompleted, simplifiedText, keyTermsGlossary.`,
 
   [AgentTaskType.COMPLIANCE_CHECK]: (data) =>
-    `Verifique compliance:\n\n${data}\n\nRetorne JSON: complianceStatus, checksPerformed, violations, recommendations.`,
-};
+    `Verifique compliance:\n\n${data}\n\nRetorne JSON: complianceStatus, checksPerformed, violations, recommendations.`
+}
 
 function getUserPrompt(task: AgentTask): string {
   const data = task.data
@@ -291,6 +311,7 @@ function getUserPrompt(task: AgentTask): string {
   return promptGenerator(taskData)
 }
 
+// 🔁 Agora usando Google Gemini no lugar do Spark
 async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<string, unknown>> {
   const startTime = Date.now()
 
@@ -307,91 +328,113 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
     throw error
   }
 
+  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    const error = new Error('Missing GOOGLE_API_KEY / GEMINI_API_KEY env var')
+    logger.error('Gemini API key not configured', error)
+    throw error
+  }
+
   try {
     const systemPrompt = getSystemPrompt(agent.type)
     const userPrompt = getUserPrompt(task)
 
-    logger.info('Processing task with AI', {
+    logger.info('Processing task with Gemini', {
       taskId: task.id,
       agentId: agent.id,
       taskType: task.type,
       timeout: task.timeout || 30000
     })
 
-    // Timeout protection
     const controller = new AbortController()
-    const timeout = setTimeout(
-      () => controller.abort(),
-      task.timeout || 30000
-    )
+    const timeoutMs = task.timeout || 30000
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
     try {
-      const sparkResponse = await fetch('/_spark/llm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 2000,
-          temperature: 0.7,
-        }),
-        signal: controller.signal as RequestInit['signal'],
-      });
+      const fullPrompt = [
+        '# Instruções do agente (system):',
+        systemPrompt,
+        '',
+        '# Tarefa específica (user):',
+        userPrompt
+      ].join('\n')
 
-      if (!sparkResponse.ok) {
-        throw new Error(`Spark LLM error: ${sparkResponse.statusText}`)
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: fullPrompt }]
+              }
+            ],
+            generationConfig: {
+              maxOutputTokens: 2000,
+              temperature: 0.7
+            }
+          }),
+          signal: controller.signal
+        }
+      )
+
+      if (!geminiResponse.ok) {
+        const text = await geminiResponse.text().catch(() => '')
+        throw new Error(`Gemini error: ${geminiResponse.status} ${geminiResponse.statusText} ${text}`)
       }
 
-      const sparkData = await sparkResponse.json() as {
-        choices?: Array<{ message?: { content?: string } }>,
-        usage?: { total_tokens?: number }
-      };
+      const geminiData = (await geminiResponse.json()) as {
+        candidates?: Array<{
+          content?: { parts?: Array<{ text?: string }> }
+        }>
+        usageMetadata?: { totalTokenCount?: number }
+      }
 
-      const aiContent = sparkData.choices?.[0]?.message?.content || ''
+      const parts = geminiData.candidates?.[0]?.content?.parts || []
+      const aiContent = parts.map((p) => p.text || '').join('\n').trim()
 
       if (!aiContent) {
-        throw new Error('Empty response from AI')
+        throw new Error('Empty response from Gemini')
       }
 
-      // Parse JSON from AI response
-      let result: Record<string, unknown>
+      let result: Record<string, any>
       try {
         const jsonMatch = aiContent.match(/\{[\s\S]*\}/)
         result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent }
       } catch (parseError) {
-        logger.warn('Failed to parse AI JSON response', { error: parseError, content: aiContent })
+        logger.warn('Failed to parse Gemini JSON response', {
+          error: parseError instanceof Error ? parseError.message : String(parseError),
+          contentPreview: aiContent.slice(0, 500)
+        })
         result = { rawResponse: aiContent }
       }
 
-      // Enrich result with metadata
       result.processedAt = new Date().toISOString()
       result.agentId = agent.id
       result.taskType = task.type
-      result.tokensUsed = sparkData.usage?.total_tokens
+      result.tokensUsed = geminiData.usageMetadata?.totalTokenCount
       result.processingTimeMs = Date.now() - startTime
 
-      logger.info('Task processed successfully', {
+      logger.info('Task processed successfully (Gemini)', {
         taskId: task.id,
         agentId: agent.id,
-        tokensUsed: sparkData.usage?.total_tokens,
+        tokensUsed: result.tokensUsed,
         processingTimeMs: result.processingTimeMs
       })
 
       return result
-
     } finally {
-      clearTimeout(timeout)
+      clearTimeout(timeoutId)
     }
-
   } catch (error) {
     const processingTimeMs = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : String(error)
 
-    logger.error('Task processing failed', error, {
+    logger.error('Task processing failed (Gemini)', error, {
       taskId: task.id,
       agentId: agent.id,
       taskType: task.type,
@@ -404,9 +447,9 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { action } = req.query
+  const actionParam = req.query.action
+  const action = Array.isArray(actionParam) ? actionParam[0] : actionParam
 
-  // Verificar autenticação (cron ou API key)
   const authHeader = req.headers.authorization
   const isVercelCron = authHeader?.startsWith('Bearer ')
   const isLocalTest = process.env.NODE_ENV === 'development'
@@ -422,19 +465,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       try {
         const tasksResponse = await fetch(kvEndpoint, {
-          headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
+          headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
         })
 
         if (!tasksResponse.ok) {
           throw new Error(`KV fetch failed: ${tasksResponse.statusText}`)
         }
 
-        const kvData = await tasksResponse.json() as { value?: unknown[] }
-        const taskQueue = kvData.value || []
+        const kvData = (await tasksResponse.json()) as { value?: AgentTask[] }
+        const taskQueue: AgentTask[] = kvData.value ?? []
 
-        // Validar tarefas
-        const validTasks = taskQueue.filter(t => validateAgentTask(t)) as AgentTask[]
-        const pendingTasks = validTasks.filter((t: AgentTask) => t.status === TaskStatus.QUEUED)
+        const validTasks = taskQueue.filter((t) => validateAgentTask(t))
+        const pendingTasks = validTasks.filter((t) => t.status === TaskStatus.QUEUED)
 
         logger.info(`Found ${pendingTasks.length} pending tasks`)
 
@@ -443,27 +485,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ok: true,
             message: 'No pending tasks',
             processed: 0,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString()
           })
         }
 
-        // Processar até 5 tarefas por execução
         const tasksToProcess = pendingTasks.slice(0, 5)
         const results: Array<{ taskId: string; status: 'completed' | 'failed'; error?: string }> = []
 
         for (const task of tasksToProcess) {
           try {
             const agentsResponse = await fetch('/_spark/kv/autonomous-agents', {
-              headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` },
+              headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
             })
 
             if (!agentsResponse.ok) {
               throw new Error(`Agents KV fetch failed: ${agentsResponse.statusText}`)
             }
 
-            const agentsData = await agentsResponse.json() as { value?: unknown[] }
-            const agents = (agentsData.value || []).filter(a => validateAgent(a)) as Agent[]
-            const agent = agents.find((a: Agent) => a.id === task.agentId)
+            const agentsData = (await agentsResponse.json()) as { value?: Agent[] }
+            const agents: Agent[] = (agentsData.value ?? []).filter((a) => validateAgent(a))
+
+            const agent = agents.find((a) => a.id === task.agentId)
 
             if (!agent) {
               logger.info(`Skipping task ${task.id} - agent not found`)
@@ -484,15 +526,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             task.completedAt = new Date().toISOString()
             task.result = result
 
-            // ✨ Chain tasks based on analysis (keep existing logic)
-            if (task.type === AgentTaskType.ANALYZE_DOCUMENT && result.suggestedActions && Array.isArray(result.suggestedActions)) {
-              for (const action of result.suggestedActions) {
-                const actionStr = String(action).toLowerCase()
+            if (
+              task.type === AgentTaskType.ANALYZE_DOCUMENT &&
+              (result as any).suggestedActions &&
+              Array.isArray((result as any).suggestedActions)
+            ) {
+              for (const actionText of (result as any).suggestedActions as unknown[]) {
+                const actionStr = String(actionText).toLowerCase()
                 let nextTask: AgentTask | null = null
 
                 if (actionStr.includes('prazo') || actionStr.includes('deadline')) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'deadline-tracker',
                     type: AgentTaskType.CALCULATE_DEADLINE,
                     priority: TaskPriority.HIGH,
@@ -500,13 +545,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('petição') || actionStr.includes('defesa') || actionStr.includes('recurso') || actionStr.includes('manifestação')) {
+                } else if (
+                  actionStr.includes('petição') ||
+                  actionStr.includes('peticao') ||
+                  actionStr.includes('defesa') ||
+                  actionStr.includes('recurso') ||
+                  actionStr.includes('manifestação') ||
+                  actionStr.includes('manifestacao')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'petition-writer',
                     type: AgentTaskType.DRAFT_PETITION,
                     priority: TaskPriority.MEDIUM,
@@ -514,13 +566,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('pesquisa') || actionStr.includes('jurisprudência')) {
+                } else if (actionStr.includes('pesquisa') || actionStr.includes('jurisprudência') || actionStr.includes('jurisprudencia')) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'precedent-researcher',
                     type: AgentTaskType.RESEARCH_PRECEDENTS,
                     priority: TaskPriority.LOW,
@@ -528,13 +580,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('avisar') || actionStr.includes('comunicar') || actionStr.includes('informar') || actionStr.includes('cliente')) {
+                } else if (
+                  actionStr.includes('avisar') ||
+                  actionStr.includes('comunicar') ||
+                  actionStr.includes('informar') ||
+                  actionStr.includes('cliente')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'client-communicator',
                     type: AgentTaskType.CLIENT_COMMUNICATION,
                     priority: TaskPriority.MEDIUM,
@@ -542,13 +599,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('datajud') || actionStr.includes('andamento') || actionStr.includes('autos') || actionStr.includes('movimentação')) {
+                } else if (
+                  actionStr.includes('datajud') ||
+                  actionStr.includes('andamento') ||
+                  actionStr.includes('autos') ||
+                  actionStr.includes('movimentação') ||
+                  actionStr.includes('movimentacao')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'datajud-query',
                     type: AgentTaskType.CHECK_DATAJUD,
                     priority: TaskPriority.MEDIUM,
@@ -556,13 +619,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('sentença') || actionStr.includes('decisão') || actionStr.includes('acórdão') || actionStr.includes('risco')) {
+                } else if (
+                  actionStr.includes('sentença') ||
+                  actionStr.includes('sentenca') ||
+                  actionStr.includes('decisão') ||
+                  actionStr.includes('decisao') ||
+                  actionStr.includes('acórdão') ||
+                  actionStr.includes('acordao') ||
+                  actionStr.includes('risco')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'risk-analyst',
                     type: AgentTaskType.RISK_ANALYSIS,
                     priority: TaskPriority.HIGH,
@@ -570,13 +641,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('custas') || actionStr.includes('honorários') || actionStr.includes('depósito') || actionStr.includes('guia') || actionStr.includes('pagamento')) {
+                } else if (
+                  actionStr.includes('custas') ||
+                  actionStr.includes('honorários') ||
+                  actionStr.includes('honorarios') ||
+                  actionStr.includes('depósito') ||
+                  actionStr.includes('deposito') ||
+                  actionStr.includes('guia') ||
+                  actionStr.includes('pagamento')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'billing-analyst',
                     type: AgentTaskType.BILLING_ANALYSIS,
                     priority: TaskPriority.HIGH,
@@ -584,13 +663,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('arquivar') || actionStr.includes('salvar') || actionStr.includes('pasta') || actionStr.includes('organizar')) {
+                } else if (
+                  actionStr.includes('arquivar') ||
+                  actionStr.includes('salvar') ||
+                  actionStr.includes('pasta') ||
+                  actionStr.includes('organizar')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'document-organizer',
                     type: AgentTaskType.ORGANIZE_FILES,
                     priority: TaskPriority.LOW,
@@ -598,13 +682,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('lgpd') || actionStr.includes('sigilo') || actionStr.includes('segredo') || actionStr.includes('ética') || actionStr.includes('compliance')) {
+                } else if (
+                  actionStr.includes('lgpd') ||
+                  actionStr.includes('sigilo') ||
+                  actionStr.includes('segredo') ||
+                  actionStr.includes('ética') ||
+                  actionStr.includes('etica') ||
+                  actionStr.includes('compliance')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'compliance-officer',
                     type: AgentTaskType.COMPLIANCE_CHECK,
                     priority: TaskPriority.HIGH,
@@ -612,13 +703,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('explicar') || actionStr.includes('simplificar') || actionStr.includes('traduzir') || actionStr.includes('leigo')) {
+                } else if (
+                  actionStr.includes('explicar') ||
+                  actionStr.includes('simplificar') ||
+                  actionStr.includes('traduzir') ||
+                  actionStr.includes('leigo')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'legal-translator',
                     type: AgentTaskType.LEGAL_TRANSLATION,
                     priority: TaskPriority.MEDIUM,
@@ -626,13 +722,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('contrato') || actionStr.includes('minuta') || actionStr.includes('aditivo') || actionStr.includes('cláusula') || actionStr.includes('rescisão')) {
+                } else if (
+                  actionStr.includes('contrato') ||
+                  actionStr.includes('minuta') ||
+                  actionStr.includes('aditivo') ||
+                  actionStr.includes('cláusula') ||
+                  actionStr.includes('clausula') ||
+                  actionStr.includes('rescisão') ||
+                  actionStr.includes('rescissao')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'contract-reviewer',
                     type: AgentTaskType.CONTRACT_REVIEW,
                     priority: TaskPriority.HIGH,
@@ -640,13 +744,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
-                } else if (actionStr.includes('estratégia') || actionStr.includes('plano') || actionStr.includes('probabilidade') || actionStr.includes('tese') || actionStr.includes('linha de defesa')) {
+                } else if (
+                  actionStr.includes('estratégia') ||
+                  actionStr.includes('estrategia') ||
+                  actionStr.includes('plano') ||
+                  actionStr.includes('probabilidade') ||
+                  actionStr.includes('tese') ||
+                  actionStr.includes('linha de defesa')
+                ) {
                   nextTask = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     agentId: 'case-strategist',
                     type: AgentTaskType.CASE_STRATEGY,
                     priority: TaskPriority.HIGH,
@@ -654,7 +765,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     createdAt: new Date().toISOString(),
                     data: {
                       ...task.data,
-                      instruction: action,
+                      instruction: actionText,
                       sourceTask: task.id
                     }
                   }
@@ -662,56 +773,61 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                 if (nextTask) {
                   logger.info(`Chaining task: ${nextTask.type} for ${nextTask.agentId}`)
-                  taskQueue.push(nextTask as AgentTask)
+                  taskQueue.push(nextTask)
                 }
               }
             }
 
-            // ✨ AUTO-CREATE MINUTA when DRAFT_PETITION completes
-            if (task.type === AgentTaskType.DRAFT_PETITION && result.draft) {
-              const minutaId = crypto.randomUUID()
+            if (task.type === AgentTaskType.DRAFT_PETITION && (result as any).draft) {
+              const data = task.data as Record<string, unknown>
+
               const minuta = {
-                id: minutaId,
-                titulo: `[Agente] ${(task.data as Record<string, unknown>).documentType || 'Petição'} - ${(task.data as Record<string, unknown>).processNumber || 'Novo'}`,
-                processId: (task.data as Record<string, unknown>).processId as string || undefined,
-                tipo: determineMinutaTipo((task.data as Record<string, unknown>).documentType as string),
-                conteudo: String(result.draft),
+                id: randomUUID(),
+                titulo: `[Agente] ${(data.documentType as string) || 'Petição'} - ${(data.processNumber as string) || 'Novo'}`,
+                processId: (data.processId as string) || undefined,
+                tipo: determineMinutaTipo(data.documentType as string),
+                conteudo: String((result as any).draft),
                 status: 'pendente-revisao' as const,
                 criadoEm: new Date().toISOString(),
                 atualizadoEm: new Date().toISOString(),
                 autor: 'Agente IA',
                 criadoPorAgente: true,
                 agenteId: task.agentId,
-                expedienteId: (task.data as Record<string, unknown>).expedienteId as string || undefined,
-                variaveis: {},
+                expedienteId: (data.expedienteId as string) || undefined,
+                variaveis: {}
               }
 
-              // Salvar minuta no KV
               try {
-                const minutasEndpoint = `https://api.github.com/spark/kv/minutas?sparkId=${process.env.SPARK_ID || 'spark-default'}`
+                const sparkId = process.env.SPARK_ID || 'spark-default'
+                const minutasEndpoint = `https://api.github.com/spark/kv/minutas?sparkId=${sparkId}`
+
                 const minutasResponse = await fetch(minutasEndpoint, {
-                  headers: { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` }
+                  headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
                 })
+
                 const minutasData = minutasResponse.ok ? await minutasResponse.json() : { value: [] }
-                const existingMinutas = minutasData.value || []
+                const existingMinutas = (minutasData as any).value || []
 
                 await fetch(minutasEndpoint, {
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                    Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
                   },
-                  body: JSON.stringify({ value: [...existingMinutas, minuta] }),
+                  body: JSON.stringify({ value: [...existingMinutas, minuta] })
                 })
 
-                logger.info(`Auto-created minuta: ${minutaId}`, { titulo: minuta.titulo, agentId: task.agentId })
+                logger.info('Auto-created minuta', {
+                  id: minuta.id,
+                  titulo: minuta.titulo,
+                  agentId: task.agentId
+                })
               } catch (kvError) {
                 logger.error('Failed to save auto-generated minuta', kvError)
               }
             }
 
             results.push({ taskId: task.id, status: 'completed' })
-
           } catch (error) {
             logger.error(`Error processing task ${task.id}`, error)
             task.status = TaskStatus.FAILED
@@ -720,19 +836,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             results.push({
               taskId: task.id,
               status: 'failed',
-              error: task.error,
+              error: task.error
             })
           }
         }
 
-        // Atualizar fila no KV
         await fetch(kvEndpoint, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
           },
-          body: JSON.stringify({ value: taskQueue }),
+          body: JSON.stringify({ value: taskQueue })
         })
 
         logger.info(`Processed ${results.length} tasks`)
@@ -740,10 +855,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json({
           ok: true,
           message: 'Tasks processed',
-          processed: results.filter(r => r.status === 'completed').length,
-          failed: results.filter(r => r.status === 'failed').length,
+          processed: results.filter((r) => r.status === 'completed').length,
+          failed: results.filter((r) => r.status === 'failed').length,
           results,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         })
       } catch (error) {
         logger.error('Queue processing error', error)
@@ -754,11 +869,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ✨ PROCESS TASK (individual)
     if (action === 'process-task' && req.method === 'POST') {
       const { task, agent } = req.body as {
-        task: unknown;
+        task: unknown
         agent: unknown
       }
 
-      // Validar entrada
       if (!validateAgentTask(task)) {
         return res.status(400).json({
           error: 'Invalid task structure',
@@ -773,17 +887,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
       }
 
-      const result = await processTaskWithAI(task, agent)
+      const result = await processTaskWithAI(task as AgentTask, agent as Agent)
 
       return res.status(200).json({
         ok: true,
         result,
         metadata: {
-          tokensUsed: result.tokensUsed,
-          processingTimeMs: result.processingTimeMs,
-          processedAt: result.processedAt,
+          tokensUsed: (result as any).tokensUsed,
+          processingTimeMs: (result as any).processingTimeMs,
+          processedAt: (result as any).processedAt
         },
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       })
     }
 
@@ -791,14 +905,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Invalid action. Use: process-queue or process-task',
       timestamp: new Date().toISOString()
     })
-
   } catch (error) {
     logger.error('Handler error', error)
 
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     })
   }
 }

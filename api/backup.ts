@@ -40,7 +40,7 @@ export default async function handler(
           console.warn('Failed to parse request body:', e);
         }
       }
-      
+
       const { userId, data } = body || {};
 
       if (!userId) {
@@ -57,7 +57,7 @@ export default async function handler(
       // Validar tamanho do backup
       const backupSize = JSON.stringify(backup).length;
       if (backupSize > 1024 * 1024) { // 1MB limit
-        return res.status(413).json({ 
+        return res.status(413).json({
           error: 'Backup too large',
           size: backupSize,
           limit: 1024 * 1024

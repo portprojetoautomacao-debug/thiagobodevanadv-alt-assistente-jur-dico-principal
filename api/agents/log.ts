@@ -2,65 +2,112 @@
 // Wrapper endpoint que alinha com modelo de referência
 // Delega para /api/kv internamente
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+type LogRequestBody = {
+  agentId?: string
+  event?: string
+  payload?: unknown
+}
+
+// Wrapper simples em torno de globalThis.fetch para evitar erro de tipos
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const runtimeFetch = async (...args: any[]): Promise<any> => {
+  const f = (globalThis as any).fetch
+  if (typeof f !== 'function') {
+    throw new Error('fetch não está disponível no ambiente de execução')
+  }
+  return f(...args)
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  if (req.method !== 'POST') {
+    res.status(405).json({ ok: false, error: 'Method not allowed' })
+    return
   }
 
-  const { agentId, event, payload } = req.body || {};
+  const { agentId, event, payload }: LogRequestBody = (req.body as LogRequestBody) || {}
 
   if (!agentId || !event) {
-    return res.status(400).json({
+    res.status(400).json({
       ok: false,
-      error: "Parâmetros 'agentId' e 'event' são obrigatórios.",
-    });
+      error: "Parâmetros 'agentId' e 'event' são obrigatórios."
+    })
+    return
   }
 
   try {
-    // Delega para implementação interna (kv)
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    // Descobre baseUrl para chamar o próprio backend
+    const vercelUrl = process.env.VERCEL_URL?.trim()
+    const hostHeader = typeof req.headers.host === 'string' ? req.headers.host.trim() : ''
 
-    const response = await fetch(`${baseUrl}/api/kv`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const baseUrl =
+      vercelUrl && vercelUrl.length > 0
+        ? `https://${vercelUrl}`
+        : process.env.NODE_ENV === 'production' && hostHeader
+          ? `https://${hostHeader}`
+          : 'http://localhost:3000'
+
+    const response = await runtimeFetch(`${baseUrl}/api/kv`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Hint opcional para o /api/kv saber que é chamada interna
+        'X-Internal-Caller': 'api/agents/log'
+      },
       body: JSON.stringify({
-        action: "log-agent",
+        action: 'log-agent',
         payload: {
           agentId,
           event,
           data: payload ?? null,
-          timestamp: new Date().toISOString(),
-        },
-      }),
-    });
+          timestamp: new Date().toISOString()
+        }
+      })
+    })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return res.status(response.status).json({
+      let errorData: { error?: string; [key: string]: unknown } = {}
+      try {
+        errorData = (await response.json()) as { error?: string; [key: string]: unknown }
+      } catch {
+        // se não for JSON, mantemos errorData vazio
+      }
+
+      res.status(response.status).json({
         ok: false,
-        error: errorData.error || "Erro ao registrar log",
-        detalhes: errorData,
-      });
+        error: errorData.error || 'Erro ao registrar log',
+        detalhes: errorData
+      })
+      return
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      log?: unknown
+      id?: string
+      [key: string]: unknown
+    }
 
-    return res.status(200).json({
+    const logObj = data.log ?? data
+    const logId =
+      data.id ||
+      (typeof logObj === 'object' && logObj && 'id' in logObj
+        ? (logObj as { id?: string }).id
+        : undefined)
+
+    res.status(200).json({
       ok: true,
-      log: data.log || data,
-      logId: data.id || data.log?.id,
-      timestamp: new Date().toISOString(),
-    });
+      log: logObj,
+      logId,
+      timestamp: new Date().toISOString()
+    })
   } catch (err: unknown) {
-    console.error("[api/agents/log] Erro:", err);
-    return res.status(500).json({
+    // eslint-disable-next-line no-console
+    console.error('[api/agents/log] Erro:', err)
+    res.status(500).json({
       ok: false,
-      error: "Erro ao registrar log",
-      message: err instanceof Error ? err.message : 'Unknown error',
-    });
+      error: 'Erro ao registrar log',
+      message: err instanceof Error ? err.message : 'Unknown error'
+    })
   }
 }
