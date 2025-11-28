@@ -1,26 +1,55 @@
+/**
+ * Utilidades para obter e validar a API Key do Gemini
+ * Compatível com Vite + Vercel + Google AI (Gemini 2.5 Pro)
+ */
+
 export const getGeminiApiKey = (): string => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
-  
-  if (!apiKey || apiKey === 'your-gemini-api-key-here') {
+  // Tenta múltiplas variáveis (flexível para diferentes ambientes)
+  const apiKey =
+    import.meta.env.VITE_GEMINI_API_KEY ||
+    import.meta.env.VITE_GOOGLE_GEMINI_KEY ||
+    import.meta.env.VITE_GOOGLE_API_KEY ||
+    ''
+
+  if (!apiKey) {
     throw new Error(
-      'VITE_GEMINI_API_KEY não configurada. ' +
-      'Configure a chave da API do Gemini no arquivo .env. ' +
-      'Consulte GEMINI_API_SETUP.md para instruções.'
+      'A variável VITE_GEMINI_API_KEY não está configurada.\n' +
+        '➡ Adicione sua chave Gemini no arquivo .env:\n' +
+        '    VITE_GEMINI_API_KEY="SUA_CHAVE_AQUI"\n\n' +
+        'As chaves Gemini começam com "AIza..." ou "GEM-...".'
     )
   }
-  
+
   return apiKey
 }
 
+/**
+ * Verifica se existe chave válida no ambiente
+ */
 export const isGeminiConfigured = (): boolean => {
   try {
-    getGeminiApiKey()
-    return true
+    const key = getGeminiApiKey()
+    return validateGeminiApiKey(key)
   } catch {
     return false
   }
 }
 
+/**
+ * Validação robusta para chaves Gemini:
+ * - Aceita chaves padrão (AIza...)
+ * - Aceita chaves enterprise (GEM-XXXX)
+ * - Aceita chaves longas usadas no Gemini Studio
+ */
 export const validateGeminiApiKey = (apiKey: string): boolean => {
-  return apiKey.startsWith('AIza') && apiKey.length > 30
+  if (!apiKey || apiKey.length < 20) return false
+
+  // Padrões possíveis:
+  const patterns = [
+    /^AIza[0-9A-Za-z\-_]{20,}$/, // Gemini padrão
+    /^GEM-[0-9A-Za-z\-_]{16,}$/, // Gemini Enterprise / Studio
+    /^[A-Za-z0-9_\-]{32,}$/, // fallback para chaves longas
+  ]
+
+  return patterns.some((regex) => regex.test(apiKey))
 }

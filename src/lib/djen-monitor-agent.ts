@@ -6,9 +6,17 @@ export interface DJENMonitorConfig {
     nome?: string
     oab?: string
   }>
+  /**
+   * Intervalo em horas entre execuções automáticas.
+   * Default: 24h → modo diário.
+   */
   intervaloHoras?: number
   maxRetries?: number
   retryDelayMs?: number
+  /**
+   * Callback para integração com o agente de IA / notificações.
+   * Ex.: enfileirar tarefas para o AgentTaskQueue.
+   */
   notificarCallback?: (publicacoes: DJENFilteredResult[]) => void
   logCallback?: (message: string, level: 'info' | 'warn' | 'error') => void
 }
@@ -26,12 +34,12 @@ export interface DJENMonitorTask {
 export class DJENMonitorAgent {
   private config: DJENMonitorConfig
   private task: DJENMonitorTask
-  private intervalId?: number
+  private intervalId?: ReturnType<typeof setInterval>
   private isRunning: boolean = false
 
   constructor(config: DJENMonitorConfig) {
     this.config = {
-      intervaloHoras: 1,
+      intervaloHoras: 24, // diário por padrão
       maxRetries: 3,
       retryDelayMs: 5000,
       ...config
@@ -56,7 +64,7 @@ export class DJENMonitorAgent {
 
   private calcularProximaExecucao(): Date {
     const agora = new Date()
-    const intervaloMs = (this.config.intervaloHoras || 1) * 60 * 60 * 1000
+    const intervaloMs = (this.config.intervaloHoras || 24) * 60 * 60 * 1000
     return new Date(agora.getTime() + intervaloMs)
   }
 
@@ -64,17 +72,20 @@ export class DJENMonitorAgent {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  private async consultarComRetry(configConsulta: DJENConfig, advogado: { nome?: string; oab?: string }): Promise<any> {
+  private async consultarComRetry(
+    configConsulta: DJENConfig,
+    advogado: { nome?: string; oab?: string }
+  ): Promise<any> {
     const maxRetries = this.config.maxRetries || 3
     const retryDelay = this.config.retryDelayMs || 5000
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const resultado = await consultarDJEN(configConsulta)
         return resultado
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-        
+
         if (attempt === maxRetries) {
           this.log(
             `Falha após ${maxRetries} tentativas para ${advogado.nome || advogado.oab}: ${errorMessage}`,
@@ -82,16 +93,16 @@ export class DJENMonitorAgent {
           )
           throw error
         }
-        
+
         this.log(
-          `Tentativa ${attempt}/${maxRetries} falhou para ${advogado.nome || advogado.oab}. Tentando novamente em ${retryDelay}ms...`,
+          `Tentativa ${attempt}/${maxRetries} falhou para ${advogado.nome || advogado.oab}. Tentando novamente em ${retryDelay * attempt}ms...`,
           'warn'
         )
-        
-        await this.sleep(retryDelay * attempt) // Exponential backoff
+
+        await this.sleep(retryDelay * attempt) // backoff incremental
       }
     }
-    
+
     throw new Error('Max retries exceeded')
   }
 
@@ -99,21 +110,26 @@ export class DJENMonitorAgent {
     if (!this.isRunning) return
 
     this.task.status = 'running'
-    this.log('Iniciando consulta ao DJEN...')
+    this.log('Iniciando consulta ao DJEN (modo diário automático, janela = hoje)...')
 
-    const dataHoje = new Date().toISOString().split('T')[0]
     const todasPublicacoes: DJENFilteredResult[] = []
 
     for (const advogado of this.config.advogados) {
+      // Se não tiver nome nem OAB, ignora
+      if (!advogado.nome && !advogado.oab) {
+        this.log('Advogado sem nome e sem OAB ignorado na consulta', 'warn')
+        continue
+      }
+
       try {
+        // NÃO passamos dataInicio/dataFim:
+        // o consultarDJEN vai usar a data de hoje como default
         const configConsulta: DJENConfig = {
           tribunais: this.config.tribunais,
           searchTerms: {
             nomeAdvogado: advogado.nome,
             numeroOAB: advogado.oab
           },
-          dataInicio: dataHoje,
-          dataFim: dataHoje,
           timeout: 60000,
           delayBetweenRequests: 1500
         }
@@ -130,14 +146,16 @@ export class DJENMonitorAgent {
 
         if (resultado.erros.length > 0) {
           this.log(
-            `Erros ao consultar tribunais: ${resultado.erros.map((e: any) => e.tribunal).join(', ')}`,
+            `Erros ao consultar tribunais para ${advogado.nome || advogado.oab}: ${resultado.erros
+              .map((e: any) => e.tribunal)
+              .join(', ')}`,
             'warn'
           )
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
         this.log(`Erro ao consultar advogado ${advogado.nome || advogado.oab}: ${errorMessage}`, 'error')
-        
+
         this.task.erros.push({
           timestamp: new Date().toISOString(),
           message: errorMessage
@@ -155,13 +173,18 @@ export class DJENMonitorAgent {
 
       if (this.config.notificarCallback) {
         try {
+          // Aqui normalmente você integra com seu AgentTaskEngine:
+          // notificarCallback cria TarefasSistema para cada publicação relevante.
           this.config.notificarCallback(todasPublicacoes)
         } catch (error) {
           this.log('Erro ao executar callback de notificação', 'error')
         }
       }
 
-      this.log(`Total de ${todasPublicacoes.length} publicação(ões) relevante(s) encontrada(s)`, 'info')
+      this.log(
+        `Total de ${todasPublicacoes.length} publicação(ões) relevante(s) encontrada(s) nesta execução`,
+        'info'
+      )
     } else {
       this.log('Nenhuma publicação relevante encontrada nesta execução', 'info')
     }
@@ -181,13 +204,14 @@ export class DJENMonitorAgent {
 
     this.isRunning = true
     this.task.status = 'running'
-    this.log('Monitor DJEN iniciado')
+    this.log('Monitor DJEN iniciado (modo automático)')
 
-    this.executarConsulta()
+    // Primeira rodada imediata
+    void this.executarConsulta()
 
-    const intervaloMs = (this.config.intervaloHoras || 1) * 60 * 60 * 1000
-    this.intervalId = window.setInterval(() => {
-      this.executarConsulta()
+    const intervaloMs = (this.config.intervaloHoras || 24) * 60 * 60 * 1000
+    this.intervalId = setInterval(() => {
+      void this.executarConsulta()
     }, intervaloMs)
 
     this.task.nextRun = this.calcularProximaExecucao().toISOString()
@@ -201,7 +225,7 @@ export class DJENMonitorAgent {
 
     this.isRunning = false
     this.task.status = 'paused'
-    
+
     if (this.intervalId !== undefined) {
       clearInterval(this.intervalId)
       this.intervalId = undefined
@@ -237,8 +261,8 @@ export class DJENMonitorAgent {
       return
     }
 
-    this.log('Executando consulta manual...')
-    this.executarConsulta()
+    this.log('Executando consulta manual agora...')
+    void this.executarConsulta()
   }
 
   public limparHistorico(): void {
@@ -259,7 +283,7 @@ export class DJENMonitorAgent {
       ...novaConfig
     }
 
-    this.log('Configuração atualizada')
+    this.log('Configuração do Monitor DJEN atualizada')
 
     if (estaRodando) {
       this.retomar()

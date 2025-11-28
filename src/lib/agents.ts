@@ -272,6 +272,7 @@ export function recuperarTarefaTravada(task: AgentTask): AgentTask {
   const retryCount = (task.retryCount || 0) + 1
   const maxRetries = task.maxRetries || 3
 
+  // eslint-disable-next-line no-console
   console.warn(`[TaskEngine] Tarefa travada detectada: ${task.id} (${task.type})`)
 
   if (retryCount <= maxRetries) {
@@ -338,7 +339,7 @@ export function shouldPauseForHuman(agent: Agent, task: AgentTask): boolean {
     return true
   }
 
-  // Opcional: modos especiais de agente
+  // Modo estrito de interação humana
   if (agent.humanInteractionMode === 'strict') {
     return true
   }
@@ -565,15 +566,15 @@ export const DEFAULT_AGENTS: Agent[] = [
  */
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
   const essentialAgents: AgentId[] = [
-    'harvey', // Assistente estratégico
-    'justine', // Análise de intimações
-    'analise-documental', // Análise de documentos
-    'monitor-djen', // Monitoramento DJEN
-    'gestao-prazos', // Cálculo de prazos
-    'redacao-peticoes', // Redação automática
-    'pesquisa-juris', // Pesquisa de jurisprudência
-    'analise-risco', // Análise de risco
-    'estrategia-processual' // Estratégia processual automática
+    'harvey',
+    'justine',
+    'analise-documental',
+    'monitor-djen',
+    'gestao-prazos',
+    'redacao-peticoes',
+    'pesquisa-juris',
+    'analise-risco',
+    'estrategia-processual'
   ]
 
   // Sem agentes existentes → usa defaults
@@ -618,8 +619,7 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
 
 /**
  * Processa tarefa usando uma simulação de IA
- * Hoje você usa a IA real via real-agent-client;
- * isso aqui fica como fallback/ambiente de teste.
+ * Hoje o fluxo real usa a IA via outro cliente; isto aqui é fallback/ambiente de teste.
  */
 export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<AgentTaskResult> {
   await new Promise(resolve => setTimeout(resolve, 10))

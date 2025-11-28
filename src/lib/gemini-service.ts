@@ -17,9 +17,9 @@ export interface GeminiResponse {
 }
 
 const DEFAULT_CONFIG: GeminiConfig = {
-  model: 'gemini-pro',
+  model: 'gemini-2.5-pro',
   temperature: 0.7,
-  maxOutputTokens: 2048,
+  maxOutputTokens: 4096,
 }
 
 export async function callGemini(
@@ -29,7 +29,8 @@ export async function callGemini(
   if (!isGeminiConfigured()) {
     return {
       text: '',
-      error: 'API do Gemini não configurada. Configure VITE_GEMINI_API_KEY no arquivo .env',
+      error:
+        'API do Gemini não configurada. Configure VITE_GEMINI_API_KEY no arquivo .env',
     }
   }
 
@@ -38,7 +39,9 @@ export async function callGemini(
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${finalConfig.model}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/${finalConfig.model}:generateContent?key=${encodeURIComponent(
+        apiKey
+      )}`,
       {
         method: 'POST',
         headers: {
@@ -63,19 +66,40 @@ export async function callGemini(
     )
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error?.message || 'Erro ao chamar API do Gemini')
+      let errorMessage = 'Erro ao chamar API do Gemini'
+
+      try {
+        const errorBody = await response.json()
+        errorMessage =
+          errorBody.error?.message ||
+          `${errorMessage} (HTTP ${response.status}: ${response.statusText})`
+      } catch {
+        const text = await response.text()
+        if (text) {
+          errorMessage = `${errorMessage} (HTTP ${response.status}): ${text}`
+        } else {
+          errorMessage = `${errorMessage} (HTTP ${response.status}: ${response.statusText})`
+        }
+      }
+
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+    // Junta todos os parts.text do primeiro candidato
+    const text =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((p: { text?: string }) => p.text || '')
+        .join('\n')
+        .trim() || ''
 
     return { text }
   } catch (error) {
     console.error('Erro na chamada do Gemini:', error)
     return {
       text: '',
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      error: error instanceof Error ? error.message : 'Erro desconhecido ao chamar Gemini',
     }
   }
 }
