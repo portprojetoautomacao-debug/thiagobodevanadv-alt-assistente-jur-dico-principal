@@ -164,18 +164,18 @@ export class SafeLogger {
   }
 
   info(message: string, ...args: unknown[]): void {
-    // eslint-disable-next-line no-console
+     
     console.log(`[${this.context}] ${message}`, ...this.sanitizeArgs(args))
   }
 
   warn(message: string, ...args: unknown[]): void {
-    // eslint-disable-next-line no-console
+     
     console.warn(`[${this.context}] ${message}`, ...this.sanitizeArgs(args))
   }
 
   error(message: string, error?: unknown, ...args: unknown[]): void {
     const sanitizedError = error ? sanitizeError(error) : undefined
-    // eslint-disable-next-line no-console
+     
     console.error(
       `[${this.context}] ${message}`,
       sanitizedError,
@@ -185,7 +185,7 @@ export class SafeLogger {
 
   debug(message: string, ...args: unknown[]): void {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
+       
       console.debug(`[${this.context}] ${message}`, ...this.sanitizeArgs(args))
     }
   }

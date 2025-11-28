@@ -31,7 +31,7 @@ export class TodoistApi {
   /**
    * SDK oficial: getTasks({ projectId?, label?, filter? }): Promise<Task[]>
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   async getTasks(_args?: { projectId?: string; label?: string; filter?: string }): Promise<Task[]> {
     throw new Error(
       'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
@@ -42,7 +42,7 @@ export class TodoistApi {
    * Método auxiliar para compatibilidade — não existe no SDK oficial,
    * mas alguns wrappers podem usar getTasksByFilter.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   async getTasksByFilter(_args?: { query?: string; cursor?: string; limit?: number }): Promise<Task[]> {
     throw new Error(
       'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'

@@ -1,16 +1,17 @@
 /**
  * Unified LLM Service Layer
  * 
- * Inspired by Databricks Spark LLM API features:
+ * Features:
  * - LLM lifecycle management (LLMOps)
  * - Model serving and optimization
  * - Unified governance and observability
  * - Advanced NLP processing capabilities
  * 
+ * Now using Gemini 2.5 Pro via llm-client.ts
  * Integrated with OpenTelemetry-compatible tracing
  */
 
-import * as spark from '@github/spark/llm'
+import { llm as llmCall } from './llm-client'
 import { tracingService, type LLMSpan } from './tracing'
 
 // LLM Models supported
@@ -233,11 +234,11 @@ export class LLMService {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const response = await spark.llm(prompt, model)
+        const response = await llmCall(prompt, model)
         return response
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error')
-        
+
         // Wait before retry (exponential backoff)
         if (attempt < maxAttempts) {
           const waitMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
@@ -261,9 +262,9 @@ export class LLMService {
     const model = config.model || 'gpt-4o'
 
     try {
-      const sparkPrompt = prompt
-      const response = await spark.llm(sparkPrompt, model, true)
-      
+      const jsonPrompt = prompt
+      const response = await llmCall(jsonPrompt, model, true)
+
       const latencyMs = Date.now() - startTime
       const estimatedTokens = this.estimateTokens(prompt, JSON.stringify(response))
       const cost = this.calculateCost(estimatedTokens, model)
@@ -455,7 +456,7 @@ export class LLMService {
     if (!timeRangeMs) return this.metrics
 
     const cutoff = Date.now() - timeRangeMs
-    return this.metrics.filter(m => 
+    return this.metrics.filter(m =>
       new Date(m.timestamp).getTime() > cutoff
     )
   }
@@ -465,7 +466,7 @@ export class LLMService {
    */
   getAggregatedMetrics(timeRangeMs: number = 24 * 60 * 60 * 1000) {
     const metrics = this.getMetrics(timeRangeMs)
-    
+
     if (metrics.length === 0) {
       return {
         totalRequests: 0,
@@ -481,7 +482,7 @@ export class LLMService {
 
     const successCount = metrics.filter(m => m.success).length
     const cacheHits = metrics.filter(m => m.totalTokens === 0 && m.success).length
-    
+
     const requestsByModel = metrics.reduce((acc, m) => {
       acc[m.model] = (acc[m.model] || 0) + 1
       return acc

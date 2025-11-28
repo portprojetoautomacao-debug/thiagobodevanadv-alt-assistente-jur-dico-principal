@@ -82,8 +82,7 @@ export default defineConfig({
         projectRoot,
         'src/lib/todoist-stub.ts',
       ),
-      // Spark LLM apontando para o seu cliente de IA unificado
-      '@github/spark/llm': resolve(projectRoot, 'src/lib/llm-client.ts'),
+      // REMOVIDO: @github/spark - agora usando Gemini 2.5 Pro diretamente
     },
   },
   optimizeDeps: {

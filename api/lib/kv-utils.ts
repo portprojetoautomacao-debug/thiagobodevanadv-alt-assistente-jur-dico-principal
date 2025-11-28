@@ -101,7 +101,7 @@ export async function getMonitoredLawyers(): Promise<MonitoredLawyer[]> {
     const lawyers = await kv.get<MonitoredLawyer[]>(KV_KEYS.MONITORED_LAWYERS)
     return lawyers ?? []
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error getting monitored lawyers:', error)
     return []
   }
@@ -132,7 +132,7 @@ export async function storePublication(publication: StoredPublication): Promise<
       await kv.set(key, trimmed)
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error storing publication:', error)
     throw error
   }
@@ -145,7 +145,7 @@ export async function getPublications(lawyerId: string): Promise<StoredPublicati
     const publications = await kv.get<StoredPublication[]>(key)
     return publications ?? []
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error getting publications:', error)
     return []
   }
@@ -160,7 +160,7 @@ export async function updateLastDJENCheck(): Promise<void> {
     const kv = await getKv()
     await kv.set(KV_KEYS.LAST_DJEN_CHECK, new Date().toISOString())
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error updating last DJEN check:', error)
   }
 }
@@ -171,7 +171,7 @@ export async function getLastDJENCheck(): Promise<string | null> {
     const value = await kv.get<string>(KV_KEYS.LAST_DJEN_CHECK)
     return value ?? null
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error getting last DJEN check:', error)
     return null
   }
@@ -187,7 +187,7 @@ export async function getAgents(): Promise<Agent[]> {
     const agents = await kv.get<Agent[]>(KV_KEYS.AGENTS)
     return agents ?? []
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error getting agents:', error)
     return []
   }
@@ -198,7 +198,7 @@ export async function updateAgents(agents: Agent[]): Promise<void> {
     const kv = await getKv()
     await kv.set(KV_KEYS.AGENTS, agents)
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error updating agents:', error)
     throw error
   }
@@ -214,7 +214,7 @@ export async function getCompletedTasks(): Promise<AgentTask[]> {
     const tasks = await kv.get<AgentTask[]>(KV_KEYS.COMPLETED_TASKS)
     return tasks ?? []
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error getting completed tasks:', error)
     return []
   }
@@ -225,7 +225,7 @@ export async function updateCompletedTasks(tasks: AgentTask[]): Promise<void> {
     const kv = await getKv()
     await kv.set(KV_KEYS.COMPLETED_TASKS, tasks)
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error updating completed tasks:', error)
     throw error
   }
@@ -268,7 +268,7 @@ export async function queueNotification(notification: {
     currentQueue.push(entry)
     await kv.set(KV_KEYS.NOTIFICATION_QUEUE, currentQueue)
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error queuing notification:', error)
   }
 }
@@ -285,7 +285,7 @@ export async function addTaskToQueue(task: AgentTask): Promise<void> {
     queue.push(task)
     await kv.set(queueKey, queue)
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[KV] Error adding task to queue:', error)
   }
 }

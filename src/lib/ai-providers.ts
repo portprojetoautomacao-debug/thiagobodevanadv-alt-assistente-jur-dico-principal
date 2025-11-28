@@ -153,7 +153,7 @@ export async function withRetry<T>(
       }
 
       if (attempt < maxRetries) {
-        // eslint-disable-next-line no-console
+         
         console.warn(
           `[AI Provider] Tentativa ${attempt}/${maxRetries} falhou. ` +
             `Retry em ${delay}ms. Erro: ${msg}`
@@ -231,7 +231,7 @@ export class GeminiClient {
 
     // Valida a chave no construtor (apenas warning, não bloqueia)
     if (this.apiKey && !isValidApiKey(this.apiKey, 'gemini')) {
-      // eslint-disable-next-line no-console
+       
       console.warn('[GeminiClient] API key pode estar em formato inválido')
     }
   }
@@ -701,7 +701,7 @@ export class UnifiedAIClient {
             continue
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
+         
         console.warn(`Provider ${p} failed:`, error)
         continue
       }

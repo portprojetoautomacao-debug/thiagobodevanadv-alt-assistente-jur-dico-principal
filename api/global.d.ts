@@ -189,7 +189,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(405).json({ error: 'Method not allowed' })
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[API Expedientes] Error:', error)
     return res.status(500).json({
       success: false,
