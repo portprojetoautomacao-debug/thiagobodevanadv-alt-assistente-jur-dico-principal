@@ -1,11 +1,17 @@
 /**
  * Advanced NLP Processing Dashboard
- * 
+ *
  * Interface for advanced NLP operations inspired by Databricks Spark NLP
  */
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,20 +27,28 @@ import {
   Lightning,
   CheckCircle,
   Copy,
-  Download
+  Download,
 } from '@phosphor-icons/react'
-import { nlpPipeline, type NamedEntity, type SentimentAnalysis, type DocumentClassification, type ExtractedInformation } from '@/lib/nlp-pipeline'
+import {
+  nlpPipeline,
+  type NamedEntity,
+  type SentimentAnalysis,
+  type DocumentClassification,
+  type ExtractedInformation,
+} from '@/lib/nlp-pipeline'
 import { toast } from 'sonner'
 
 export default function AdvancedNLPDashboard() {
   const [inputText, setInputText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  
+
   // Results state
   const [entities, setEntities] = useState<NamedEntity[]>([])
   const [sentiment, setSentiment] = useState<SentimentAnalysis | null>(null)
-  const [classification, setClassification] = useState<DocumentClassification | null>(null)
-  const [extraction, setExtraction] = useState<ExtractedInformation | null>(null)
+  const [classification, setClassification] =
+    useState<DocumentClassification | null>(null)
+  const [extraction, setExtraction] =
+    useState<ExtractedInformation | null>(null)
 
   const handleExtractEntities = async () => {
     if (!inputText.trim()) {
@@ -121,18 +135,23 @@ export default function AdvancedNLPDashboard() {
     setIsProcessing(true)
     try {
       // Run all analyses in parallel
-      const [entitiesResult, sentimentResult, classificationResult, extractionResult] = await Promise.all([
+      const [
+        entitiesResult,
+        sentimentResult,
+        classificationResult,
+        extractionResult,
+      ] = await Promise.all([
         nlpPipeline.extractEntities(inputText),
         nlpPipeline.analyzeSentiment(inputText),
         nlpPipeline.classifyDocument(inputText),
-        nlpPipeline.extractInformation(inputText)
+        nlpPipeline.extractInformation(inputText),
       ])
 
       setEntities(entitiesResult)
       setSentiment(sentimentResult)
       setClassification(classificationResult)
       setExtraction(extractionResult)
-      
+
       toast.success('Análise completa concluída')
     } catch (error) {
       toast.error('Erro ao processar documento')
@@ -143,20 +162,47 @@ export default function AdvancedNLPDashboard() {
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success('Copiado para área de transferência')
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard) {
+        toast.error('Copiar para a área de transferência não é suportado neste ambiente')
+        return
+      }
+      void navigator.clipboard.writeText(text)
+      toast.success('Copiado para área de transferência')
+    } catch (error) {
+      console.error(error)
+      toast.error('Não foi possível copiar o texto')
+    }
   }
 
-  const downloadAsJSON = (data: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation | null, filename: string) => {
-    const json = JSON.stringify(data, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Arquivo baixado')
+  const downloadAsJSON = (
+    data:
+      | NamedEntity[]
+      | SentimentAnalysis
+      | DocumentClassification
+      | ExtractedInformation
+      | null,
+    filename: string,
+  ) => {
+    try {
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        toast.error('Download não é suportado neste ambiente')
+        return
+      }
+
+      const json = JSON.stringify(data, null, 2)
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Arquivo baixado')
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao gerar arquivo para download')
+    }
   }
 
   const getEntityColor = (type: string) => {
@@ -168,7 +214,7 @@ export default function AdvancedNLPDashboard() {
       MONETARY_VALUE: 'bg-pink-500/20 text-pink-400 border-pink-500/50',
       LEGAL_REFERENCE: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50',
       PROCESS_NUMBER: 'bg-orange-500/20 text-orange-400 border-orange-500/50',
-      LAW_ARTICLE: 'bg-red-500/20 text-red-400 border-red-500/50'
+      LAW_ARTICLE: 'bg-red-500/20 text-red-400 border-red-500/50',
     }
     return colors[type] || 'bg-gray-500/20 text-gray-400 border-gray-500/50'
   }
@@ -177,7 +223,7 @@ export default function AdvancedNLPDashboard() {
     const colors: Record<string, string> = {
       positive: 'text-green-500',
       negative: 'text-red-500',
-      neutral: 'text-gray-400'
+      neutral: 'text-gray-400',
     }
     return colors[sentiment] || 'text-gray-400'
   }
@@ -187,7 +233,11 @@ export default function AdvancedNLPDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold gradient-text flex items-center gap-2">
-          <Brain size={32} weight="duotone" className="text-primary neon-glow" />
+          <Brain
+            size={32}
+            weight="duotone"
+            className="text-primary neon-glow"
+          />
           Processamento NLP Avançado
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -261,7 +311,7 @@ export default function AdvancedNLPDashboard() {
                 <Lightning size={16} className="animate-pulse" />
                 Processando com IA...
               </div>
-              <Progress value={undefined} className="w-full" />
+              <Progress className="w-full" />
             </div>
           )}
         </CardContent>
@@ -296,7 +346,8 @@ export default function AdvancedNLPDashboard() {
                       Entidades Nomeadas ({entities.length})
                     </CardTitle>
                     <CardDescription>
-                      Pessoas, organizações, localizações e outras entidades identificadas
+                      Pessoas, organizações, localizações e outras entidades
+                      identificadas
                     </CardDescription>
                   </div>
                   <Button
@@ -328,7 +379,10 @@ export default function AdvancedNLPDashboard() {
                             </span>
                           </div>
                         </div>
-                        <Progress value={entity.confidence * 100} className="h-1" />
+                        <Progress
+                          value={entity.confidence * 100}
+                          className="h-1"
+                        />
                       </div>
                     ))}
                   </div>
@@ -340,7 +394,9 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="py-12 text-center text-muted-foreground">
                 <Tag size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma entidade extraída ainda</p>
-                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
+                <p className="text-sm mt-2">
+                  Execute a análise para ver os resultados
+                </p>
               </CardContent>
             </Card>
           )}
@@ -364,7 +420,9 @@ export default function AdvancedNLPDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadAsJSON(sentiment, 'sentiment.json')}
+                    onClick={() =>
+                      downloadAsJSON(sentiment, 'sentiment.json')
+                    }
                   >
                     <Download size={16} />
                     Download
@@ -374,8 +432,14 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="space-y-6">
                 {/* Overall Sentiment */}
                 <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-                  <div className="text-sm text-muted-foreground mb-2">Sentimento Geral</div>
-                  <div className={`text-4xl font-bold capitalize mb-2 ${getSentimentColor(sentiment.sentiment)}`}>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Sentimento Geral
+                  </div>
+                  <div
+                    className={`text-4xl font-bold capitalize mb-2 ${getSentimentColor(
+                      sentiment.sentiment,
+                    )}`}
+                  >
                     {sentiment.sentiment === 'positive' && '😊 Positivo'}
                     {sentiment.sentiment === 'negative' && '😟 Negativo'}
                     {sentiment.sentiment === 'neutral' && '😐 Neutro'}
@@ -383,7 +447,10 @@ export default function AdvancedNLPDashboard() {
                   <div className="text-2xl font-bold gradient-text mb-4">
                     Score: {sentiment.score.toFixed(2)}
                   </div>
-                  <Progress value={(sentiment.confidence * 100)} className="mb-2" />
+                  <Progress
+                    value={sentiment.confidence * 100}
+                    className="mb-2"
+                  />
                   <div className="text-xs text-muted-foreground">
                     {(sentiment.confidence * 100).toFixed(1)}% de confiança
                   </div>
@@ -392,7 +459,9 @@ export default function AdvancedNLPDashboard() {
                 {/* Aspects */}
                 {sentiment.aspects && sentiment.aspects.length > 0 && (
                   <div>
-                    <h4 className="font-semibold mb-3">Análise por Aspectos</h4>
+                    <h4 className="font-semibold mb-3">
+                      Análise por Aspectos
+                    </h4>
                     <div className="space-y-3">
                       {sentiment.aspects.map((aspect, index) => (
                         <div
@@ -400,14 +469,18 @@ export default function AdvancedNLPDashboard() {
                           className="p-3 rounded-lg border border-border"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">{aspect.aspect}</span>
-                            <Badge className={getSentimentColor(aspect.sentiment)}>
+                            <span className="font-medium">
+                              {aspect.aspect}
+                            </span>
+                            <Badge
+                              className={getSentimentColor(aspect.sentiment)}
+                            >
                               {aspect.sentiment}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Progress 
-                              value={(aspect.score + 1) * 50} 
+                            <Progress
+                              value={(aspect.score + 1) * 50}
                               className="flex-1"
                             />
                             <span className="text-sm text-muted-foreground">
@@ -426,7 +499,9 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="py-12 text-center text-muted-foreground">
                 <ChartBar size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma análise de sentimento ainda</p>
-                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
+                <p className="text-sm mt-2">
+                  Execute a análise para ver os resultados
+                </p>
               </CardContent>
             </Card>
           )}
@@ -450,7 +525,9 @@ export default function AdvancedNLPDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadAsJSON(classification, 'classification.json')}
+                    onClick={() =>
+                      downloadAsJSON(classification, 'classification.json')
+                    }
                   >
                     <Download size={16} />
                     Download
@@ -459,7 +536,9 @@ export default function AdvancedNLPDashboard() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-                  <div className="text-sm text-muted-foreground mb-2">Categoria Principal</div>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Categoria Principal
+                  </div>
                   <div className="text-3xl font-bold gradient-text mb-2">
                     {classification.category}
                   </div>
@@ -468,7 +547,10 @@ export default function AdvancedNLPDashboard() {
                       {classification.subcategory}
                     </div>
                   )}
-                  <Progress value={classification.confidence * 100} className="mb-2" />
+                  <Progress
+                    value={classification.confidence * 100}
+                    className="mb-2"
+                  />
                   <div className="text-xs text-muted-foreground">
                     {(classification.confidence * 100).toFixed(1)}% de confiança
                   </div>
@@ -491,9 +573,14 @@ export default function AdvancedNLPDashboard() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                <MagnifyingGlass size={48} className="mx-auto mb-4 opacity-50" />
+                <MagnifyingGlass
+                  size={48}
+                  className="mx-auto mb-4 opacity-50"
+                />
                 <p>Nenhuma classificação ainda</p>
-                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
+                <p className="text-sm mt-2">
+                  Execute a análise para ver os resultados
+                </p>
               </CardContent>
             </Card>
           )}
@@ -517,7 +604,9 @@ export default function AdvancedNLPDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadAsJSON(extraction, 'extraction.json')}
+                    onClick={() =>
+                      downloadAsJSON(extraction, 'extraction.json')
+                    }
                   >
                     <Download size={16} />
                     Download
@@ -532,12 +621,14 @@ export default function AdvancedNLPDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(extraction.summary)}
+                      onClick={() =>
+                        copyToClipboard(extraction.summary ?? '')
+                      }
                     >
                       <Copy size={16} />
                     </Button>
                   </div>
-                  <div className="p-4 rounded-lg border border-border bg-card/50">
+                  <div className="p-4 rounded-lg border border-border bg-card/50 whitespace-pre-wrap">
                     {extraction.summary}
                   </div>
                 </div>
@@ -552,7 +643,11 @@ export default function AdvancedNLPDashboard() {
                           key={index}
                           className="flex items-start gap-2 p-3 rounded-lg border border-border"
                         >
-                          <CheckCircle size={20} className="text-primary flex-shrink-0 mt-0.5" weight="fill" />
+                          <CheckCircle
+                            size={20}
+                            className="text-primary flex-shrink-0 mt-0.5"
+                            weight="fill"
+                          />
                           <span>{point}</span>
                         </div>
                       ))}
@@ -567,7 +662,10 @@ export default function AdvancedNLPDashboard() {
                       <h5 className="font-semibold mb-2">Datas</h5>
                       <div className="space-y-1">
                         {extraction.dates.map((date, index) => (
-                          <div key={index} className="text-sm text-muted-foreground">
+                          <div
+                            key={index}
+                            className="text-sm text-muted-foreground"
+                          >
                             • {date}
                           </div>
                         ))}
@@ -575,38 +673,55 @@ export default function AdvancedNLPDashboard() {
                     </div>
                   )}
 
-                  {extraction.monetaryValues && extraction.monetaryValues.length > 0 && (
-                    <div className="p-4 rounded-lg border border-border">
-                      <h5 className="font-semibold mb-2">Valores Monetários</h5>
-                      <div className="space-y-1">
-                        {extraction.monetaryValues.map((value, index) => (
-                          <div key={index} className="text-sm text-muted-foreground">
-                            • {value}
-                          </div>
-                        ))}
+                  {extraction.monetaryValues &&
+                    extraction.monetaryValues.length > 0 && (
+                      <div className="p-4 rounded-lg border border-border">
+                        <h5 className="font-semibold mb-2">
+                          Valores Monetários
+                        </h5>
+                        <div className="space-y-1">
+                          {extraction.monetaryValues.map((value, index) => (
+                            <div
+                              key={index}
+                              className="text-sm text-muted-foreground"
+                            >
+                              • {value}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {extraction.legalReferences && extraction.legalReferences.length > 0 && (
-                    <div className="p-4 rounded-lg border border-border">
-                      <h5 className="font-semibold mb-2">Referências Legais</h5>
-                      <div className="space-y-1">
-                        {extraction.legalReferences.map((ref, index) => (
-                          <div key={index} className="text-sm text-muted-foreground">
-                            • {ref}
-                          </div>
-                        ))}
+                  {extraction.legalReferences &&
+                    extraction.legalReferences.length > 0 && (
+                      <div className="p-4 rounded-lg border border-border">
+                        <h5 className="font-semibold mb-2">
+                          Referências Legais
+                        </h5>
+                        <div className="space-y-1">
+                          {extraction.legalReferences.map((ref, index) => (
+                            <div
+                              key={index}
+                              className="text-sm text-muted-foreground"
+                            >
+                              • {ref}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {extraction.parties && extraction.parties.length > 0 && (
                     <div className="p-4 rounded-lg border border-border">
-                      <h5 className="font-semibold mb-2">Partes Envolvidas</h5>
+                      <h5 className="font-semibold mb-2">
+                        Partes Envolvidas
+                      </h5>
                       <div className="space-y-1">
                         {extraction.parties.map((party, index) => (
-                          <div key={index} className="text-sm text-muted-foreground">
+                          <div
+                            key={index}
+                            className="text-sm text-muted-foreground"
+                          >
                             • {party}
                           </div>
                         ))}
@@ -621,7 +736,9 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="py-12 text-center text-muted-foreground">
                 <Brain size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma informação extraída ainda</p>
-                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
+                <p className="text-sm mt-2">
+                  Execute a análise para ver os resultados
+                </p>
               </CardContent>
             </Card>
           )}
