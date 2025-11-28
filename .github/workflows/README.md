@@ -3,7 +3,7 @@
 Este documento descreve os workflows do GitHub Actions do projeto **Assistente Jurídico PJe**.
 
 > **Última atualização:** 2025-11-28  
-> **Total de workflows ativos:** 23
+> **Total de workflows ativos:** 21
 
 ---
 
@@ -27,6 +27,44 @@ Este documento descreve os workflows do GitHub Actions do projeto **Assistente J
 | **agents-health-check.yml** | 6h, Push em agentes | Monitora os 15 agentes IA |
 | **agents-integration.yml** | Push/PR em agentes | Testes de integração dos agentes |
 
+### Arquivos Monitorados pelos Workflows de Agentes
+
+```
+api/
+├── agents.ts                    # Core dos agentes
+├── agents/
+│   ├── log.ts                   # Logging de agentes
+│   └── process-task.ts          # Processamento de tarefas
+├── cron.ts                      # Jobs agendados (8 ações)
+├── djen-sync.ts                 # Sincronização DJEN
+├── expedientes.ts               # Gestão de expedientes
+├── intimacoes/pendente.ts       # Intimações pendentes
+├── lib/
+│   ├── auth.ts                  # Autenticação
+│   ├── cache.ts                 # Cache
+│   ├── circuit-breaker.ts       # Circuit breaker
+│   ├── djen-client.ts           # Cliente DJEN
+│   ├── error-handler.ts         # Handler de erros
+│   ├── kv-utils.ts              # Utilitários KV
+│   ├── rate-limit.ts            # Rate limiting
+│   ├── retry.ts                 # Retry logic
+│   ├── safe-logger.ts           # Logger seguro
+│   └── validation.ts            # Validações
+
+src/lib/
+├── agents.ts                    # Definição dos 15 agentes
+├── agent-schemas.ts             # Schemas Zod para validação
+├── agent-tracing.ts             # Rastreamento de agentes
+├── auto-pilot-djen-prazos-minutas.ts  # Auto-pilot completo
+├── djen-monitor-agent.ts        # Agente monitor DJEN
+├── minuta-agent.ts              # Agente de minutas
+├── real-agent-client.ts         # Cliente real para agentes
+├── google-services-hub.ts       # Hub de serviços Google
+
+src/hooks/
+└── use-autonomous-agents.ts     # Hook React para agentes
+```
+
 ---
 
 ## 🧹 Workflows de Manutenção
@@ -45,7 +83,7 @@ Este documento descreve os workflows do GitHub Actions do projeto **Assistente J
 | Workflow | Trigger | Descrição |
 |----------|---------|-----------|
 | **code-quality-analysis.yml** | Push/PR | Análise de código (SonarCloud, etc) |
-| **code-integrity-check.yml** | Push/PR | Detecta dados mock/simulados |
+| **code-integrity-check.yml** | Push/PR | Detecta dados mock/simulados, verifica integrações |
 | **performance-optimization.yml** | Semanal, Manual | Lighthouse, accessibility |
 | **dependency-health.yml** | Semanal, PR deps | Saúde das dependências |
 

@@ -1,4 +1,4 @@
-import { TodoistApi } from '@/lib/todoist-stub'
+import { TodoistApi } from '@doist/todoist-api-typescript'
 import { config } from './config'
 
 /**
@@ -9,7 +9,7 @@ export class TodoistClient {
   private api: TodoistApi | null = null
 
   constructor() {
-    const apiKey = config.todoist.apiKey
+    const apiKey = config.todoist?.apiKey
     if (apiKey) {
       this.api = new TodoistApi(apiKey)
     }
@@ -23,7 +23,7 @@ export class TodoistClient {
   }
 
   /**
-   * Obtém a API do Todoist
+   * Obtém a instância bruta da API do Todoist
    */
   getApi(): TodoistApi | null {
     return this.api
@@ -41,7 +41,9 @@ export class TodoistClient {
     labels?: string[]
   }) {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
     return await this.api.addTask({
@@ -56,6 +58,8 @@ export class TodoistClient {
 
   /**
    * Lista tarefas
+   * - Se `filter` for fornecido, ele é passado diretamente para a API
+   * - Caso contrário, filtra por `projectId` e/ou `label`
    */
   async getTasks(params?: {
     projectId?: string
@@ -63,20 +67,19 @@ export class TodoistClient {
     filter?: string
   }) {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
-    // Se filter for fornecido, usar getTasksByFilter
-    if (params?.filter) {
-      return await this.api.getTasksByFilter({
-        query: params.filter,
-      })
-    }
-
-    // Caso contrário, usar getTasks com projectId e label
     return await this.api.getTasks({
       projectId: params?.projectId,
       label: params?.label,
+      filter: params?.filter,
+    } as {
+      projectId?: string
+      label?: string
+      filter?: string
     })
   }
 
@@ -85,7 +88,9 @@ export class TodoistClient {
    */
   async getProjects() {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
     return await this.api.getProjects()
@@ -96,7 +101,9 @@ export class TodoistClient {
    */
   async createProject(name: string, color?: string) {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
     return await this.api.addProject({
@@ -106,11 +113,13 @@ export class TodoistClient {
   }
 
   /**
-   * Completa uma tarefa
+   * Marca uma tarefa como concluída
    */
   async completeTask(taskId: string) {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
     return await this.api.closeTask(taskId)
@@ -119,15 +128,20 @@ export class TodoistClient {
   /**
    * Atualiza uma tarefa
    */
-  async updateTask(taskId: string, params: {
-    content?: string
-    description?: string
-    dueString?: string
-    priority?: number
-    labels?: string[]
-  }) {
+  async updateTask(
+    taskId: string,
+    params: {
+      content?: string
+      description?: string
+      dueString?: string
+      priority?: number
+      labels?: string[]
+    }
+  ) {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
     return await this.api.updateTask(taskId, {
@@ -144,7 +158,9 @@ export class TodoistClient {
    */
   async deleteTask(taskId: string) {
     if (!this.api) {
-      throw new Error('Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env')
+      throw new Error(
+        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
+      )
     }
 
     return await this.api.deleteTask(taskId)
