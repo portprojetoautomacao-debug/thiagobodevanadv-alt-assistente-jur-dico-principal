@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
+// ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
+import { PieChart, Pie, Cell } from 'recharts'
 import { Users, Clock, CurrencyDollar, TrendUp, Warning } from '@phosphor-icons/react'
 import type { Process, FinancialEntry } from '@/types'
 

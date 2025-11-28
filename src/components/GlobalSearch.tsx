@@ -307,8 +307,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                                 key={cat.id}
                                 onClick={() => setCategory(cat.id)}
                                 className={`px-3 py-1 text-sm rounded-full transition-colors ${category === cat.id
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'hover:bg-muted text-muted-foreground'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'hover:bg-muted text-muted-foreground'
                                     }`}
                             >
                                 {cat.label}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, memo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Plus, TrendUp, TrendDown, Paperclip, X, File } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+// ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
 import type { FinancialEntry } from '@/types'
 import { formatCurrency } from '@/lib/utils'
@@ -128,7 +129,7 @@ export default function FinancialManagementAdvbox() {
       description: '',
       date: new Date().toISOString().split('T')[0],
     })
-    
+
     if (attachments.length > 0) {
       toast.success(`Lançamento adicionado com ${attachments.length} anexo(s)`)
     } else {
@@ -240,7 +241,7 @@ export default function FinancialManagementAdvbox() {
                   className="bg-background border-border"
                 />
               </div>
-              
+
               {/* File Attachments */}
               <div>
                 <Label>Anexar Documentos</Label>
@@ -263,7 +264,7 @@ export default function FinancialManagementAdvbox() {
                     Escolher Arquivos
                   </Button>
                 </div>
-                
+
                 {/* Attachment List */}
                 {attachments.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -294,7 +295,7 @@ export default function FinancialManagementAdvbox() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex gap-2">
                 <Button onClick={handleAddEntry} className="flex-1">
                   Adicionar
@@ -365,25 +366,25 @@ export default function FinancialManagementAdvbox() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6b7280"
                   tick={{ fill: '#6b7280', fontSize: 12 }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6b7280"
                   tick={{ fill: '#6b7280', fontSize: 12 }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e2130', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1e2130',
                     border: '1px solid #2a2d3e',
                     borderRadius: '8px',
                     color: '#e8eaed'
                   }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
-                <Legend 
+                <Legend
                   wrapperStyle={{ color: '#e8eaed' }}
                 />
                 <Bar dataKey="Receitas" fill="#52b788" radius={[8, 8, 0, 0]} />
@@ -423,9 +424,8 @@ export default function FinancialManagementAdvbox() {
                         {new Date(entry.date).toLocaleDateString('pt-BR')}
                       </span>
                       <span
-                        className={`font-semibold ${
-                          entry.type === 'income' ? 'text-green-500' : 'text-red-500'
-                        }`}
+                        className={`font-semibold ${entry.type === 'income' ? 'text-green-500' : 'text-red-500'
+                          }`}
                       >
                         {entry.type === 'income' ? '+' : '-'} {formatCurrency(entry.amount)}
                       </span>
