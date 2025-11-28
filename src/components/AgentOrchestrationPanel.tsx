@@ -1,18 +1,22 @@
 /**
  * Agent Orchestration Panel
- * 
+ *
  * Painel de monitoramento e controle da orquestração de múltiplos agentes
  * Conecta com a arquitetura V2: ReAct, Circuit Breakers, Traces
  */
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-// Progress - disponível para indicadores de carregamento
-// import { Progress } from '@/components/ui/progress';
+import { useState, useEffect } from 'react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Pulse,
   WarningCircle,
@@ -26,83 +30,118 @@ import {
   Lightning,
   UsersThree,
   Graph,
-} from '@phosphor-icons/react';
-import { toast } from 'sonner';
+} from '@phosphor-icons/react'
+import { toast } from 'sonner'
 
 interface CircuitBreakerStatus {
-  name: string;
-  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
-  failures: number;
-  successes: number;
-  isHealthy: boolean;
-  timeSinceLastFailure: number | null;
+  name: string
+  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN'
+  failures: number
+  successes: number
+  isHealthy: boolean
+  timeSinceLastFailure: number | null
 }
 
 interface AgentTrace {
-  timestamp: string;
-  step: number;
-  type: 'thought' | 'action' | 'observation' | 'final';
-  content: string;
-  toolUsed?: string;
-  duration?: number;
-  error?: string;
+  timestamp: string
+  step: number
+  type: 'thought' | 'action' | 'observation' | 'final'
+  content: string
+  toolUsed?: string
+  duration?: number
+  error?: string
 }
 
 interface AgentExecution {
-  agentId: string;
-  agentName: string;
-  steps: number;
-  usedTools: string[];
-  answer: string;
-  traces: AgentTrace[];
-  totalDuration: number;
-  executionTimeMs: number;
-  timestamp: string;
+  agentId: string
+  agentName: string
+  steps: number
+  usedTools: string[]
+  answer: string
+  traces: AgentTrace[]
+  totalDuration: number
+  executionTimeMs: number
+  timestamp: string
 }
 
 interface OrchestrationMetrics {
   summary: {
-    total: number;
-    healthy: number;
-    degraded: number;
-    down: number;
-  };
-  breakers: CircuitBreakerStatus[];
-  timestamp: string;
+    total: number
+    healthy: number
+    degraded: number
+    down: number
+  }
+  breakers: CircuitBreakerStatus[]
+  timestamp: string
 }
 
 export default function AgentOrchestrationPanel() {
-  const [metrics, setMetrics] = useState<OrchestrationMetrics | null>(null);
-  const [selectedAgent, setSelectedAgent] = useState<string>('justine');
-  const [execution, setExecution] = useState<AgentExecution | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [metrics, setMetrics] = useState<OrchestrationMetrics | null>(null)
+  const [selectedAgent, setSelectedAgent] = useState<string>('justine')
+  const [execution, setExecution] = useState<AgentExecution | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
 
   const agents = [
-    { id: 'harvey', name: 'Harvey Specter', icon: '👨‍⚖️', color: 'text-purple-600' },
-    { id: 'justine', name: 'Mrs. Justin-e', icon: '🤖', color: 'text-blue-600' },
-    { id: 'monitor-djen', name: 'Monitor DJEN', icon: '📰', color: 'text-green-600' },
-    { id: 'gestao-prazos', name: 'Gestão Prazos', icon: '⏰', color: 'text-orange-600' },
-    { id: 'analise-risco', name: 'Análise Risco', icon: '⚠️', color: 'text-red-600' },
-  ];
+    {
+      id: 'harvey',
+      name: 'Harvey Specter',
+      icon: '👨‍⚖️',
+      color: 'text-purple-600',
+    },
+    {
+      id: 'justine',
+      name: 'Mrs. Justin-e',
+      icon: '🤖',
+      color: 'text-blue-600',
+    },
+    {
+      id: 'monitor-djen',
+      name: 'Monitor DJEN',
+      icon: '📰',
+      color: 'text-green-600',
+    },
+    {
+      id: 'gestao-prazos',
+      name: 'Gestão Prazos',
+      icon: '⏰',
+      color: 'text-orange-600',
+    },
+    {
+      id: 'analise-risco',
+      name: 'Análise Risco',
+      icon: '⚠️',
+      color: 'text-red-600',
+    },
+  ]
 
   // Fetch circuit breakers status
-  const fetchMetrics = async () => {
+  const fetchMetrics = async (): Promise<void> => {
     try {
-      const response = await fetch('/api/observability?action=circuit-breakers');
-      if (response.ok) {
-        const data = await response.json();
-        setMetrics(data);
+      const response = await fetch('/api/observability?action=circuit-breakers')
+      if (!response.ok) return
+
+      const data = (await response.json()) as unknown
+
+      // Validação mínima de shape para evitar quebrar a UI se o backend mudar
+      if (
+        data &&
+        typeof data === 'object' &&
+        'summary' in data &&
+        'breakers' in data &&
+        Array.isArray((data as OrchestrationMetrics).breakers)
+      ) {
+        setMetrics(data as OrchestrationMetrics)
       }
     } catch (error) {
-      console.error('Erro ao buscar métricas:', error);
+      console.error('Erro ao buscar métricas:', error)
     }
-  };
+  }
 
   // Execute agent
   const executeAgent = async (agentId: string, message?: string) => {
-    setLoading(true);
-    setSelectedAgent(agentId);
+    setLoading(true)
+    setSelectedAgent(agentId)
     try {
       const response = await fetch('/api/agents?action=process-task', {
         method: 'POST',
@@ -118,83 +157,105 @@ export default function AgentOrchestrationPanel() {
             data: {
               message: message || 'Execute sua rotina automática',
               sessionId: `session-${Date.now()}`,
-            }
+            },
           },
           agent: {
             id: agentId,
-            name: agents.find(a => a.id === agentId)?.name || agentId,
+            name: agents.find((a) => a.id === agentId)?.name || agentId,
             type: 'analyzer',
             status: 'active',
-            enabled: true
-          }
+            enabled: true,
+          },
         }),
-      });
+      })
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json()
+
+        const agentName = agents.find((a) => a.id === agentId)?.name || agentId
+        const processingTime = data.processingTime ?? 0
+        const toolsUsed =
+          data.result?.toolsUsed && Array.isArray(data.result.toolsUsed)
+            ? data.result.toolsUsed
+            : ['gemini-2.5-pro']
+
+        const answer =
+          data.result?.analysis ||
+          data.result?.message ||
+          'Tarefa executada com sucesso'
+
         setExecution({
           agentId,
-          agentName: agents.find(a => a.id === agentId)?.name || agentId,
+          agentName,
           steps: 1,
-          usedTools: data.result?.toolsUsed || ['gemini-2.5-pro'],
-          answer: data.result?.analysis || data.result?.message || 'Tarefa executada com sucesso',
-          traces: [{
-            timestamp: new Date().toISOString(),
-            step: 1,
-            type: 'final',
-            content: data.result?.analysis || 'Processamento concluído',
-            duration: data.processingTime || 0
-          }],
-          totalDuration: data.processingTime || 0,
-          executionTimeMs: data.processingTime || 0,
-          timestamp: new Date().toISOString()
-        });
-        toast.success(`${agents.find(a => a.id === agentId)?.name || agentId} executado com sucesso!`);
+          usedTools: toolsUsed,
+          answer,
+          traces: [
+            {
+              timestamp: new Date().toISOString(),
+              step: 1,
+              type: 'final',
+              content: data.result?.analysis || 'Processamento concluído',
+              duration: processingTime,
+            },
+          ],
+          totalDuration: processingTime,
+          executionTimeMs: processingTime,
+          timestamp: new Date().toISOString(),
+        })
+
+        toast.success(`${agentName} executado com sucesso!`)
       } else {
-        const error = await response.json();
-        toast.error(`Erro: ${error.error || 'Falha na execução'}`);
+        let errorMessage = 'Falha na execução'
+        try {
+          const error = await response.json()
+          errorMessage = error.error || errorMessage
+        } catch {
+          // ignora parse error, usa mensagem padrão
+        }
+        toast.error(`Erro: ${errorMessage}`)
       }
     } catch (error) {
-      toast.error('Erro ao executar agente');
-      console.error(error);
+      toast.error('Erro ao executar agente')
+      console.error(error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchMetrics();
-    const interval = autoRefresh ? setInterval(fetchMetrics, 10000) : null;
+    fetchMetrics()
+    const interval = autoRefresh ? setInterval(fetchMetrics, 10000) : null
     return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoRefresh]);
+      if (interval) clearInterval(interval)
+    }
+  }, [autoRefresh])
 
-  const getStateColor = (state: string) => {
+  const getStateColor = (state: CircuitBreakerStatus['state'] | string) => {
     switch (state) {
       case 'CLOSED':
-        return 'text-green-600 bg-green-100 dark:bg-green-900/20';
+        return 'text-green-600 bg-green-100 dark:bg-green-900/20'
       case 'HALF_OPEN':
-        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
+        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20'
       case 'OPEN':
-        return 'text-red-600 bg-red-100 dark:bg-red-900/20';
+        return 'text-red-600 bg-red-100 dark:bg-red-900/20'
       default:
-        return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
+        return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20'
     }
-  };
+  }
 
-  const getStateIcon = (state: string) => {
+  const getStateIcon = (state: CircuitBreakerStatus['state'] | string) => {
     switch (state) {
       case 'CLOSED':
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className="h-4 w-4" />
       case 'HALF_OPEN':
-        return <WarningCircle className="h-4 w-4" />;
+        return <WarningCircle className="h-4 w-4" />
       case 'OPEN':
-        return <XCircle className="h-4 w-4" />;
+        return <XCircle className="h-4 w-4" />
       default:
-        return <Pulse className="h-4 w-4" />;
+        return <Pulse className="h-4 w-4" />
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -213,9 +274,11 @@ export default function AgentOrchestrationPanel() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setAutoRefresh(!autoRefresh)}
+            onClick={() => setAutoRefresh((prev) => !prev)}
           >
-            <ArrowsClockwise className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`} />
+            <ArrowsClockwise
+              className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`}
+            />
             {autoRefresh ? 'Auto-refresh' : 'Manual'}
           </Button>
           <Button onClick={fetchMetrics} size="sm">
@@ -245,7 +308,10 @@ export default function AgentOrchestrationPanel() {
         <TabsContent value="agents" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent) => (
-              <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={agent.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <span className="text-2xl">{agent.icon}</span>
@@ -260,7 +326,9 @@ export default function AgentOrchestrationPanel() {
                     className="w-full"
                   >
                     <PlayCircle className="h-4 w-4 mr-2" />
-                    {loading && selectedAgent === agent.id ? 'Executando...' : 'Executar'}
+                    {loading && selectedAgent === agent.id
+                      ? 'Executando...'
+                      : 'Executar'}
                   </Button>
                 </CardContent>
               </Card>
@@ -281,7 +349,9 @@ export default function AgentOrchestrationPanel() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{metrics.summary.total}</div>
+                    <div className="text-3xl font-bold">
+                      {metrics.summary.total}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -352,13 +422,18 @@ export default function AgentOrchestrationPanel() {
                             <div>
                               <p className="font-medium">{breaker.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                Falhas: {breaker.failures} | Sucessos: {breaker.successes}
+                                Falhas: {breaker.failures} | Sucessos:{' '}
+                                {breaker.successes}
                               </p>
                             </div>
                           </div>
                           {breaker.timeSinceLastFailure !== null && (
                             <div className="text-sm text-muted-foreground">
-                              Última falha: {Math.floor(breaker.timeSinceLastFailure / 1000)}s atrás
+                              Última falha:{' '}
+                              {Math.floor(
+                                breaker.timeSinceLastFailure / 1000,
+                              )}
+                              s atrás
                             </div>
                           )}
                         </div>
@@ -384,19 +459,24 @@ export default function AgentOrchestrationPanel() {
                   </Badge>
                 </CardTitle>
                 <CardDescription>
-                  {execution.steps} passos | {execution.usedTools.length} ferramentas usadas
+                  {execution.steps} passos | {execution.usedTools.length}{' '}
+                  ferramentas usadas
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Answer */}
                 <div className="p-4 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-2">Resposta Final:</p>
-                  <p className="text-sm">{execution.answer}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {execution.answer}
+                  </p>
                 </div>
 
                 {/* Tools Used */}
                 <div>
-                  <p className="text-sm font-medium mb-2">Ferramentas Utilizadas:</p>
+                  <p className="text-sm font-medium mb-2">
+                    Ferramentas Utilizadas:
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {execution.usedTools.map((tool, idx) => (
                       <Badge key={idx} variant="secondary">
@@ -409,7 +489,9 @@ export default function AgentOrchestrationPanel() {
 
                 {/* Traces Timeline */}
                 <div>
-                  <p className="text-sm font-medium mb-3">Timeline de Execução (ReAct):</p>
+                  <p className="text-sm font-medium mb-3">
+                    Timeline de Execução (ReAct):
+                  </p>
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
                       {execution.traces.map((trace, idx) => (
@@ -431,18 +513,24 @@ export default function AgentOrchestrationPanel() {
                             </Badge>
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm">{trace.content}</p>
+                            <p className="text-sm whitespace-pre-wrap">
+                              {trace.content}
+                            </p>
                             {trace.toolUsed && (
                               <p className="text-xs text-muted-foreground mt-1">
                                 🔧 {trace.toolUsed}
                               </p>
                             )}
                             {trace.error && (
-                              <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>
+                              <p className="text-xs text-red-600 mt-1">
+                                ❌ {trace.error}
+                              </p>
                             )}
                           </div>
                           <div className="flex-shrink-0 text-xs text-muted-foreground">
-                            {trace.duration}ms
+                            {typeof trace.duration === 'number'
+                              ? `${trace.duration}ms`
+                              : '-- ms'}
                           </div>
                         </div>
                       ))}
@@ -464,5 +552,5 @@ export default function AgentOrchestrationPanel() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

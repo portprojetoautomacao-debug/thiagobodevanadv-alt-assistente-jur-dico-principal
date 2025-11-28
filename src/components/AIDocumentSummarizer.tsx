@@ -1,12 +1,25 @@
 import { useState } from 'react'
-import * as spark from '@github/spark/llm'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileText, Sparkle, Copy, Download } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { geminiGenerateJSON } from '@/lib/gemini-client'
+
+interface SummarizerResult {
+  summary: string
+  keyPoints: string[]
+  deadlines: string[]
+  actions: string[]
+}
 
 export default function AIDocumentSummarizer() {
   const [documentText, setDocumentText] = useState('')
@@ -35,41 +48,79 @@ Analise o seguinte texto e forneça:
 Documento:
 ${documentText}
 
-Retorne a resposta em JSON no formato:
+Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes ou depois), no seguinte formato:
+
 {
-"summary": "resumo executivo aqui",
-"keyPoints": ["ponto 1", "ponto 2", ...],
-"deadlines": ["prazo 1", "prazo 2", ...],
-"actions": ["ação 1", "ação 2", ...]
+  "summary": "resumo executivo aqui",
+  "keyPoints": ["ponto 1", "ponto 2"],
+  "deadlines": ["prazo 1", "prazo 2"],
+  "actions": ["ação 1", "ação 2"]
 }`
 
-      const response = await spark.llm(prompt, 'gpt-4o', true)
-      const result = JSON.parse(response)
+      const result = await geminiGenerateJSON<SummarizerResult>(prompt)
 
-      setSummary(result.summary)
+      const safeSummary = result.summary ?? ''
+      const safeKeyPoints = Array.isArray(result.keyPoints) ? result.keyPoints : []
+      const safeDeadlines = Array.isArray(result.deadlines) ? result.deadlines : []
+      const safeActions = Array.isArray(result.actions) ? result.actions : []
+
+      setSummary(safeSummary)
       setKeyPoints([
-        ...result.keyPoints,
-        ...(result.deadlines.length > 0 ? ['--- PRAZOS ---', ...result.deadlines] : []),
-        ...(result.actions.length > 0 ? ['--- AÇÕES RECOMENDADAS ---', ...result.actions] : [])
+        ...safeKeyPoints,
+        ...(safeDeadlines.length > 0
+          ? ['--- PRAZOS ---', ...safeDeadlines]
+          : []),
+        ...(safeActions.length > 0
+          ? ['--- AÇÕES RECOMENDADAS ---', ...safeActions]
+          : []),
       ])
 
       toast.success('Documento resumido com sucesso!')
     } catch (error) {
       console.error('Erro ao resumir documento:', error)
-      toast.error('Falha ao resumir documento')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Falha ao resumir documento',
+      )
     } finally {
       setIsProcessing(false)
     }
   }
 
   const handleCopySummary = () => {
-    const fullText = `RESUMO:\n${summary}\n\nPONTOS-CHAVE:\n${keyPoints.join('\n')}`
-    navigator.clipboard.writeText(fullText)
-    toast.success('Resumo copiado para área de transferência')
+    if (!summary) {
+      toast.info('Nenhum resumo para copiar ainda')
+      return
+    }
+
+    const fullText = `RESUMO:\n${summary}\n\nPONTOS-CHAVE:\n${keyPoints.join(
+      '\n',
+    )}`
+    navigator.clipboard
+      .writeText(fullText)
+      .then(() => {
+        toast.success('Resumo copiado para área de transferência')
+      })
+      .catch(() => {
+        toast.error('Não foi possível copiar para a área de transferência')
+      })
   }
 
   const handleDownload = () => {
-    const fullText = `RESUMO DO DOCUMENTO\n${'='.repeat(50)}\n\n${summary}\n\nPONTOS-CHAVE:\n${keyPoints.map((p, i) => `${i + 1}. ${p}`).join('\n')}\n\nGerado em: ${new Date().toLocaleString('pt-BR')}`
+    if (!summary) {
+      toast.info('Nenhum resumo para baixar ainda')
+      return
+    }
+
+    const fullText =
+      `RESUMO DO DOCUMENTO\n${'='.repeat(50)}\n\n` +
+      `${summary}\n\n` +
+      `PONTOS-CHAVE:\n${keyPoints
+        .map((p, i) => `${i + 1}. ${p}`)
+        .join('\n')}\n\n` +
+      `Gerado em: ${new Date().toLocaleString('pt-BR')}`
+
     const blob = new Blob([fullText], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -80,11 +131,17 @@ Retorne a resposta em JSON no formato:
     toast.success('Resumo baixado com sucesso')
   }
 
+  const approxTokens = Math.ceil(documentText.length / 4)
+
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <FileText size={32} weight="duotone" className="text-primary neon-glow" />
+          <FileText
+            size={32}
+            weight="duotone"
+            className="text-primary neon-glow"
+          />
           Resumidor de Documentos IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -96,7 +153,9 @@ Retorne a resposta em JSON no formato:
         <Card className="glassmorphic">
           <CardHeader>
             <CardTitle>Documento Original</CardTitle>
-            <CardDescription>Cole o texto do documento para análise</CardDescription>
+            <CardDescription>
+              Cole o texto do documento para análise
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
@@ -107,14 +166,17 @@ Retorne a resposta em JSON no formato:
             />
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                {documentText.length} caracteres · {Math.ceil(documentText.length / 4)} tokens aprox.
+                {documentText.length} caracteres · {approxTokens} tokens aprox.
               </p>
-              <Button 
-                onClick={handleSummarize} 
+              <Button
+                onClick={handleSummarize}
                 disabled={isProcessing || !documentText.trim()}
                 className="button-gradient"
               >
-                <Sparkle size={20} className={isProcessing ? 'animate-spin' : ''} />
+                <Sparkle
+                  size={20}
+                  className={isProcessing ? 'animate-spin' : ''}
+                />
                 {isProcessing ? 'Analisando...' : 'Resumir com IA'}
               </Button>
             </div>
@@ -127,7 +189,11 @@ Retorne a resposta em JSON no formato:
               <span>Resumo Executivo</span>
               {summary && (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={handleCopySummary}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopySummary}
+                  >
                     <Copy size={16} />
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleDownload}>
@@ -141,7 +207,11 @@ Retorne a resposta em JSON no formato:
           <CardContent>
             {!summary ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Sparkle size={48} className="text-muted-foreground mb-4" weight="duotone" />
+                <Sparkle
+                  size={48}
+                  className="text-muted-foreground mb-4"
+                  weight="duotone"
+                />
                 <p className="text-muted-foreground">
                   O resumo aparecerá aqui após processar o documento
                 </p>
@@ -153,7 +223,9 @@ Retorne a resposta em JSON no formato:
                     <h3 className="font-semibold mb-2 flex items-center gap-2">
                       <Badge variant="outline">Resumo</Badge>
                     </h3>
-                    <p className="text-sm leading-relaxed">{summary}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">
+                      {summary}
+                    </p>
                   </div>
 
                   {keyPoints.length > 0 && (
@@ -165,7 +237,9 @@ Retorne a resposta em JSON no formato:
                         {keyPoints.map((point, index) => (
                           <li key={index} className="text-sm flex gap-2">
                             {point.startsWith('---') ? (
-                              <span className="font-bold text-primary mt-2">{point}</span>
+                              <span className="font-bold text-primary mt-2">
+                                {point}
+                              </span>
                             ) : (
                               <>
                                 <span className="text-primary shrink-0">•</span>
@@ -192,7 +266,10 @@ Retorne a resposta em JSON no formato:
           <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <li className="flex gap-2">
               <span className="text-primary">•</span>
-              <span>Funciona com petições, sentenças, contratos e documentos jurídicos</span>
+              <span>
+                Funciona com petições, sentenças, contratos e documentos
+                jurídicos
+              </span>
             </li>
             <li className="flex gap-2">
               <span className="text-primary">•</span>
