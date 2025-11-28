@@ -4,6 +4,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
+    "api/llm-stream.ts": {
+      "maxDuration": 60,
+      "memory": 512
+    },
     "api/djen-sync.ts": {
       "maxDuration": 60,
       "memory": 1024,

@@ -31,7 +31,7 @@ const FinancialManagement = lazy(() => import('@/components/FinancialManagement'
 const CalculadoraPrazos = lazy(() => import('@/components/CalculadoraPrazos'))
 const PDFUploader = lazy(() => import('@/components/PDFUploader'))
 const MinutasManager = lazy(() => import('@/components/MinutasManager'))
-const Donna = lazy(() => import('@/components/Donna'))
+const HarveySpecterChat = lazy(() => import('@/components/HarveySpecterChat'))
 const AIAgents = lazy(() => import('@/components/AIAgents'))
 const AnalyticsDashboard = lazy(() => import('@/components/AnalyticsDashboard'))
 const ExpedientePanel = lazy(() => import('@/components/ExpedientePanel'))
@@ -130,8 +130,8 @@ function App() {
       case 'donna':
       case 'assistente':
         return (
-          <Suspense key="donna" fallback={<LoadingFallback />}>
-            <Donna />
+          <Suspense key="harvey" fallback={<LoadingFallback />}>
+            <HarveySpecterChat />
           </Suspense>
         )
       case 'ai-agents':
