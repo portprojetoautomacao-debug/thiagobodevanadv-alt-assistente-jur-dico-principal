@@ -3,7 +3,8 @@
  * This runs before all tests
  */
 
-import { chromium } from '@playwright/test';
+// chromium available for browser launch if needed
+// import { chromium } from '@playwright/test';
 
 async function globalSetup() {
   // Any global setup can go here

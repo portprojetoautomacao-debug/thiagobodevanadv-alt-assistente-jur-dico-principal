@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -209,7 +209,7 @@ export default function Calendar() {
 
       // setAppointments(mergedAppointments)
       // toast.success(`Sincronização concluída: ${newCount} novos eventos importados`)
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao sincronizar com Google Calendar')
     } finally {
       setIsSyncing(false)
@@ -234,7 +234,7 @@ export default function Calendar() {
       }
 
       toast.success(`${syncedCount} eventos enviados ao Google Calendar`)
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao enviar eventos ao Google Calendar')
     } finally {
       setIsSyncing(false)

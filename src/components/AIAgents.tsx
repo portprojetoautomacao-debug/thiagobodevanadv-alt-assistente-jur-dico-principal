@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,12 +29,13 @@ import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { useAgentBackup } from '@/hooks/use-agent-backup'
 import { useKV } from '@/hooks/use-kv'
 import AgentMetrics from '@/components/AgentMetrics'
-import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
+// HumanAgentCollaboration - disponível para uso futuro
+// import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
 import AgentStatusFloater from '@/components/AgentStatusFloater'
 import MrsJustinEModal from '@/components/MrsJustinEModal'
 import AgentOrchestrationPanel from '@/components/AgentOrchestrationPanel'
 import { toast } from 'sonner'
-import type { Agent } from '@/lib/agents'
+// Agent type from lib/agents - used via useAutonomousAgents hook
 import type { ViewType, User } from '@/types'
 import type { IconProps } from '@phosphor-icons/react'
 
@@ -75,7 +76,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     completedTasks,
     activityLog,
     toggleAgent,
-    setAgents,
+    setAgents: _setAgents,
   } = useAutonomousAgents()
 
   const [user] = useKV<User | null>('user', null)

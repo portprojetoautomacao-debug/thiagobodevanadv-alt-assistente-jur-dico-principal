@@ -3,6 +3,8 @@ import { Toaster } from '@/components/ui/sonner'
 import { GoogleAuthButton } from '@/components/GoogleAuth'
 import type { GoogleUser } from '@/components/GoogleAuth'
 import Sidebar from '@/components/Sidebar'
+import GlobalSearch from '@/components/GlobalSearch'
+import NotificationCenter from '@/components/NotificationCenter'
 import { useKV } from '@/hooks/use-kv'
 import { useAutoMinuta } from '@/hooks/use-auto-minuta'
 import type { ViewType, User } from '@/types'
@@ -68,6 +70,11 @@ function App() {
     setUser(null)
     setIsAuthenticated(false)
     setCurrentView('dashboard')
+  }
+
+  // Handler de navegação para componentes que passam string como view
+  const handleNavigate = (view: string, _data?: unknown) => {
+    setCurrentView(view as ViewType)
   }
 
   const renderContent = () => {
@@ -214,11 +221,25 @@ function App() {
         user={user}
         onLogout={handleLogout}
       />
-      <main id="main-content" role="main" aria-label="Conteúdo principal" className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto p-6">
-          {renderContent()}
-        </div>
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar com Busca Global e Notificações */}
+        <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 shrink-0">
+          <div className="flex items-center gap-2">
+            <GlobalSearch onNavigate={handleNavigate} />
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              Pressione <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">/</kbd> para buscar
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <NotificationCenter onNavigate={handleNavigate} />
+          </div>
+        </header>
+        <main id="main-content" role="main" aria-label="Conteúdo principal" className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto p-6">
+            {renderContent()}
+          </div>
+        </main>
+      </div>
       <Toaster />
       <SpeedInsights />
     </div>

@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import type { Cliente } from '@/types'
 
 export default function CadastrarCliente() {
-  const [clientes, setClientes] = useKV<Cliente[]>('clientes', [])
+  const [_clientes, setClientes] = useKV<Cliente[]>('clientes', [])
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [formData, setFormData] = useState({

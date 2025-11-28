@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Progress } from '@/components/ui/progress';
+// Progress - disponível para indicadores de carregamento
+// import { Progress } from '@/components/ui/progress';
 import {
   Activity,
   AlertCircle,
@@ -19,10 +20,10 @@ import {
   Clock,
   Cpu,
   GitBranch,
-  Layers,
+  // Layers, // disponível se necessário
   PlayCircle,
   RefreshCw,
-  TrendingUp,
+  // TrendingUp, // disponível se necessário
   XCircle,
   Zap,
   Users,

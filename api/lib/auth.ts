@@ -95,7 +95,7 @@ export async function validateAuthToken(token: string): Promise<AuthResult> {
  */
 export async function requireAuth(
   req: VercelRequest,
-  res: VercelResponse
+  _res: VercelResponse
 ): Promise<AuthResult> {
   const token = extractToken(req);
 

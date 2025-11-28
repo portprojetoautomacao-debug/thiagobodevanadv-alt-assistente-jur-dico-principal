@@ -44,9 +44,9 @@ const KV_KEYS = {
   PUBLICATION_HASHES: 'publication-hashes'
 } as const;
 
-// Cache configuration
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
-const MAX_CACHE_SIZE = 500; // Max cached publications
+// Cache configuration (prefixed with _ as currently unused but may be needed)
+const _CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const _MAX_CACHE_SIZE = 500; // Max cached publications
 
 interface MonitoredLawyer {
   id: string;
@@ -1329,7 +1329,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
         // Keep only last 7 backups
-        const allBackupKeys: string[] = [];
         // Clean old backups (we'll keep track in a list)
         const backupList = (await kv.get('backup-list') as string[]) || [];
         backupList.unshift(backupKey);

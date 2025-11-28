@@ -13,7 +13,7 @@ import {
   Newspaper, 
   CheckCircle, 
   Warning, 
-  X,
+  // X - disponível para botões de fechar
   Copy,
   Download,
   Spinner
@@ -50,7 +50,7 @@ export default function DJENConsulta() {
   const [resultados, setResultados] = useState<DJENFilteredResult[]>([])
   const [erros, setErros] = useState<Array<{ tribunal: string; erro: string }>>([])
   const [totalConsultado, setTotalConsultado] = useState(0)
-  const [searchHistory, setSearchHistory] = useKV<DJENSearchHistory[]>('djen-search-history', [])
+  const [_searchHistory, setSearchHistory] = useKV<DJENSearchHistory[]>('djen-search-history', [])
 
   const toggleTribunal = (tribunal: string) => {
     setTribunaisSelecionados(current =>
