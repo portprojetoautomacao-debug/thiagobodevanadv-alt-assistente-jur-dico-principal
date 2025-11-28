@@ -34,9 +34,64 @@ interface KeyboardShortcutsDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export default function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcutsDialogProps) {
-  const isMac = navigator.platform.toUpperCase().includes('MAC')
-  const ctrlKey = isMac ? '⌘' : 'Ctrl'
+type ShortcutConfig = {
+  keys: string[]
+  description: string
+}
+
+type ShortcutGroup = {
+  title: string
+  items: ShortcutConfig[]
+}
+
+// Grupos de atalhos configuráveis (mais fácil de manter/evoluir)
+const NAVIGATION_SHORTCUTS: ShortcutConfig[] = [
+  { keys: ['{CTRL}', 'D'], description: 'Ir para Dashboard' },
+  { keys: ['{CTRL}', 'P'], description: 'Ir para Processos' },
+  { keys: ['{CTRL}', 'K'], description: 'Buscar processos' },
+]
+
+const QUICK_ACTION_SHORTCUTS: ShortcutConfig[] = [
+  { keys: ['{CTRL}', 'N'], description: 'Novo processo (mostra dica)' },
+  { keys: ['{CTRL}', 'Shift', 'C'], description: 'Abrir Calculadora de Prazos' },
+]
+
+const GENERAL_SHORTCUTS: ShortcutConfig[] = [
+  { keys: ['Esc'], description: 'Fechar diálogos' },
+  { keys: ['Tab'], description: 'Navegar entre campos' },
+  { keys: ['Shift', 'Tab'], description: 'Navegar para trás' },
+]
+
+const SHORTCUT_GROUPS: ShortcutGroup[] = [
+  {
+    title: 'Navegação',
+    items: NAVIGATION_SHORTCUTS,
+  },
+  {
+    title: 'Ações Rápidas',
+    items: QUICK_ACTION_SHORTCUTS,
+  },
+  {
+    title: 'Geral',
+    items: GENERAL_SHORTCUTS,
+  },
+]
+
+export default function KeyboardShortcutsDialog({
+  open,
+  onOpenChange,
+}: KeyboardShortcutsDialogProps) {
+  // SSR-safe: navigator pode não existir no build / server
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    typeof navigator.platform === 'string' &&
+    navigator.platform.toUpperCase().includes('MAC')
+
+  const ctrlKeyLabel = isMac ? '⌘' : 'Ctrl'
+
+  // Substitui marcador {CTRL} pela tecla apropriada
+  const resolveKeys = (keys: string[]) =>
+    keys.map((key) => (key === '{CTRL}' ? ctrlKeyLabel : key))
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,48 +102,36 @@ export default function KeyboardShortcutsDialog({ open, onOpenChange }: Keyboard
             Atalhos de Teclado
           </DialogTitle>
           <DialogDescription>
-            Use estes atalhos para navegar mais rapidamente pelo sistema
+            Use estes atalhos para navegar mais rapidamente pelo sistema.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold mb-2">Navegação</h3>
-            <div className="space-y-1">
-              <ShortcutItem keys={[ctrlKey, 'D']} description="Ir para Dashboard" />
-              <ShortcutItem keys={[ctrlKey, 'P']} description="Ir para Processos" />
-              <ShortcutItem keys={[ctrlKey, 'K']} description="Buscar processos" />
+          {SHORTCUT_GROUPS.map((group, idx) => (
+            <div key={group.title}>
+              <h3 className="text-sm font-semibold mb-2">{group.title}</h3>
+              <div className="space-y-1">
+                {group.items.map((item, itemIdx) => (
+                  <ShortcutItem
+                    key={`${group.title}-${itemIdx}`}
+                    keys={resolveKeys(item.keys)}
+                    description={item.description}
+                  />
+                ))}
+              </div>
+              {idx < SHORTCUT_GROUPS.length - 1 && <Separator className="mt-4" />}
             </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <h3 className="text-sm font-semibold mb-2">Ações Rápidas</h3>
-            <div className="space-y-1">
-              <ShortcutItem keys={[ctrlKey, 'N']} description="Novo processo (mostra dica)" />
-              <ShortcutItem keys={[ctrlKey, 'Shift', 'C']} description="Abrir Calculadora de Prazos" />
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <h3 className="text-sm font-semibold mb-2">Geral</h3>
-            <div className="space-y-1">
-              <ShortcutItem keys={['Esc']} description="Fechar diálogos" />
-              <ShortcutItem keys={['Tab']} description="Navegar entre campos" />
-              <ShortcutItem keys={['Shift', 'Tab']} description="Navegar para trás" />
-            </div>
-          </div>
+          ))}
 
           <Separator />
 
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-xs text-muted-foreground">
               <strong>Dica:</strong> Você pode pressionar{' '}
-              <Badge variant="outline" className="font-mono mx-1">?</Badge>
-              {' '}a qualquer momento para ver esta lista de atalhos.
+              <Badge variant="outline" className="font-mono mx-1">
+                ?
+              </Badge>{' '}
+              a qualquer momento para ver esta lista de atalhos.
             </p>
           </div>
         </div>

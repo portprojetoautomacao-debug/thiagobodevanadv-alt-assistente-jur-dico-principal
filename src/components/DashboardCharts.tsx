@@ -1,8 +1,20 @@
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
-// Economia estimada: ~50-80KB de código não utilizado
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
-import { LineChart, Line, Legend } from 'recharts'
+// (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  LineChart,
+  Line,
+  Legend,
+} from 'recharts'
 import { ChartPie, Gavel, TrendUp } from '@phosphor-icons/react'
 import { memo } from 'react'
 
@@ -38,7 +50,9 @@ export const StatusChart = memo(function StatusChart({ chartData }: DashboardCha
             outerRadius={80}
             fill="#8884d8"
             dataKey="value"
-            label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+            label={({ name, percent }) =>
+              `${name} ${((percent || 0) * 100).toFixed(0)}%`
+            }
           >
             {chartData.statusData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -73,17 +87,31 @@ export const VaraChart = memo(function VaraChart({ chartData }: DashboardChartsP
     return (
       <ResponsiveContainer width="99%" height={250}>
         <BarChart data={chartData.varaChartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
-          <XAxis dataKey="name" stroke="oklch(0.65 0.08 180)" fontSize={12} />
-          <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="oklch(0.25 0.06 240 / 0.3)"
+          />
+          <XAxis
+            dataKey="name"
+            stroke="oklch(0.65 0.08 180)"
+            fontSize={12}
+          />
+          <YAxis
+            stroke="oklch(0.65 0.08 180)"
+            fontSize={12}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: 'oklch(0.16 0.04 240)',
               border: '1px solid oklch(0.25 0.06 240)',
-              borderRadius: '8px'
+              borderRadius: '8px',
             }}
           />
-          <Bar dataKey="value" fill="oklch(0.75 0.25 190)" radius={[8, 8, 0, 0]} />
+          <Bar
+            dataKey="value"
+            fill="oklch(0.75 0.25 190)"
+            radius={[8, 8, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     )
@@ -112,19 +140,41 @@ export const TrendChart = memo(function TrendChart({ chartData }: DashboardChart
     return (
       <ResponsiveContainer width="99%" height={250}>
         <LineChart data={chartData.trendData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.06 240 / 0.3)" />
-          <XAxis dataKey="month" stroke="oklch(0.65 0.08 180)" fontSize={12} />
-          <YAxis stroke="oklch(0.65 0.08 180)" fontSize={12} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="oklch(0.25 0.06 240 / 0.3)"
+          />
+          <XAxis
+            dataKey="month"
+            stroke="oklch(0.65 0.08 180)"
+            fontSize={12}
+          />
+          <YAxis
+            stroke="oklch(0.65 0.08 180)"
+            fontSize={12}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: 'oklch(0.16 0.04 240)',
               border: '1px solid oklch(0.25 0.06 240)',
-              borderRadius: '8px'
+              borderRadius: '8px',
             }}
           />
           <Legend />
-          <Line type="monotone" dataKey="ativos" stroke="oklch(0.75 0.25 190)" strokeWidth={2} name="Ativos" />
-          <Line type="monotone" dataKey="concluidos" stroke="oklch(0.70 0.26 300)" strokeWidth={2} name="Concluídos" />
+          <Line
+            type="monotone"
+            dataKey="ativos"
+            stroke="oklch(0.75 0.25 190)"
+            strokeWidth={2}
+            name="Ativos"
+          />
+          <Line
+            type="monotone"
+            dataKey="concluidos"
+            stroke="oklch(0.70 0.26 300)"
+            strokeWidth={2}
+            name="Concluídos"
+          />
         </LineChart>
       </ResponsiveContainer>
     )

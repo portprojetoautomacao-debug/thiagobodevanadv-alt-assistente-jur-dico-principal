@@ -105,7 +105,24 @@ export function initErrorTracking(): void {
           maskAllInputs: true, // Mascara todos os inputs
           blockAllMedia: false, // Permite mídia
         }),
+
+        // Console logging integration - captura console.error automaticamente
+        Sentry.consoleLoggingIntegration({
+          levels: ['error', 'warn']
+        }),
       ],
+
+      // Trace propagation - propaga traces para suas APIs
+      tracePropagationTargets: [
+        'localhost',
+        /^https:\/\/assistente-juridico.*\.vercel\.app\/api/,
+        /^https:\/\/api\.datajud\.cnj\.jus\.br/,
+      ],
+
+      // Habilita logs do Sentry (feature experimental)
+      _experiments: {
+        enableLogs: true,
+      },
 
       // Sample rates
       // Performance: 10% em prod, 100% em dev
@@ -353,3 +370,88 @@ export async function flushErrors(timeout: number = 2000) {
     console.warn("Error flushing Sentry - may have already been closed");
   }
 }
+
+// ============================================
+// MÉTRICAS CUSTOMIZADAS
+// ============================================
+
+/**
+ * Incrementa um contador de métrica usando Sentry.metrics.count
+ * @example trackMetric('button_clicks', 1, { button: 'submit' })
+ */
+export function trackMetric(name: string, value: number = 1, _tags?: Record<string, string>) {
+  try {
+    // Usa a API mais recente do Sentry
+    Sentry.metrics.count(name, value);
+  } catch {
+    // Silently fail if metrics not available
+  }
+}
+
+/**
+ * Registra uma distribuição de valores (latência, tamanhos, etc)
+ * @example trackDistribution('api_latency_ms', 150)
+ */
+export function trackDistribution(name: string, value: number, _tags?: Record<string, string>) {
+  try {
+    Sentry.metrics.distribution(name, value);
+  } catch {
+    // Silently fail if metrics not available
+  }
+}
+
+/**
+ * Registra um gauge (valor pontual no tempo)
+ * @example trackGauge('active_users', 42)
+ */
+export function trackGauge(name: string, value: number, _tags?: Record<string, string>) {
+  try {
+    Sentry.metrics.gauge(name, value);
+  } catch {
+    // Silently fail if metrics not available
+  }
+}
+
+// ============================================
+// SPANS CUSTOMIZADOS (Performance)
+// ============================================
+
+/**
+ * Executa uma operação com span de performance
+ * @example 
+ * const result = await withSpan('fetch_processos', 'http.client', async () => {
+ *   return await fetch('/api/processos');
+ * });
+ */
+export async function withSpan<T>(
+  name: string,
+  op: string,
+  callback: () => Promise<T>,
+  attributes?: Record<string, string | number>
+): Promise<T> {
+  return Sentry.startSpan(
+    { name, op, attributes },
+    async () => callback()
+  );
+}
+
+/**
+ * Cria um span síncrono
+ */
+export function withSyncSpan<T>(
+  name: string,
+  op: string,
+  callback: () => T,
+  attributes?: Record<string, string | number>
+): T {
+  return Sentry.startSpan(
+    { name, op, attributes },
+    () => callback()
+  );
+}
+
+// ============================================
+// RE-EXPORT do Sentry para uso direto
+// ============================================
+
+export { Sentry };

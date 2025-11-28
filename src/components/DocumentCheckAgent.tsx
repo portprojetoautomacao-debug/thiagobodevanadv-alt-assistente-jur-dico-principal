@@ -1,11 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Switch } from '@/components/ui/switch'
 import {
   FileText,
   Warning,
@@ -13,7 +20,6 @@ import {
   Clock,
   Robot,
   Bell,
-  FilePlus,
   Info
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
@@ -42,13 +48,22 @@ export default function DocumentCheckAgent({ processes }: DocumentCheckAgentProp
   const [lastCheck, setLastCheck] = useKV<string | null>('last-document-check', null)
   const [autoCheckEnabled, setAutoCheckEnabled] = useKV<boolean>('auto-document-check', true)
 
-  const analyzeProcessDocuments = async () => {
-    if (processes.length === 0) return null
+  const normalizeUrgency = (value: string | undefined | null): MissingDocument['urgency'] => {
+    const v = (value || '').toLowerCase()
+    if (v === 'high' || v === 'alta') return 'high'
+    if (v === 'low' || v === 'baixa') return 'low'
+    return 'medium'
+  }
+
+  const analyzeProcessDocuments = useCallback(async () => {
+    if (!processes || processes.length === 0) {
+      return null
+    }
 
     setIsAnalyzing(true)
 
     try {
-      const processesToAnalyze = processes.filter(p => p.status === 'ativo')
+      const processesToAnalyze = processes.filter((p) => p.status === 'ativo')
       const newMissingDocs: MissingDocument[] = []
 
       for (const processo of processesToAnalyze) {
@@ -66,7 +81,7 @@ Status: ${processo.status}
 Data de Distribuição: ${processo.dataDistribuicao}
 Notas: ${processo.notas || 'Nenhuma nota'}
 
-Com base nessas informações, identifique até 3 documentos que podem estar faltando para dar andamento adequado ao processo.
+Com base nessas informações, identifique documentos que podem estar faltando para dar andamento adequado ao processo. 
 Para cada documento faltante, informe:
 1. Nome do documento
 2. Motivo pelo qual é necessário
@@ -74,26 +89,29 @@ Para cada documento faltante, informe:
 
 Retorne um objeto JSON com a seguinte estrutura:
 {
-"missingDocuments": [
-{
-"documentType": "Nome do documento",
-"reason": "Por que é necessário",
-"urgency": "high"
-}
-]
+  "missingDocuments": [
+    {
+      "documentType": "Nome do documento",
+      "reason": "Por que é necessário",
+      "urgency": "high"
+    }
+  ]
 }`
 
-        const result = await geminiGenerateJSON<{ missingDocuments: Array<{ documentType: string; reason: string; urgency: string }> }>(prompt)
+        const result = await geminiGenerateJSON<{
+          missingDocuments: Array<{ documentType: string; reason: string; urgency?: string }>
+        }>(prompt)
 
         if (result.missingDocuments && Array.isArray(result.missingDocuments)) {
-          result.missingDocuments.forEach((doc: any) => {
+          result.missingDocuments.forEach((doc) => {
+            const urgency = normalizeUrgency(doc.urgency)
             newMissingDocs.push({
               id: crypto.randomUUID(),
               processId: processo.id,
               processNumber: processo.numeroCNJ,
               documentType: doc.documentType,
               reason: doc.reason,
-              urgency: doc.urgency || 'medium',
+              urgency,
               detectedAt: new Date().toISOString(),
               notified: false,
               resolved: false
@@ -104,28 +122,28 @@ Retorne um objeto JSON com a seguinte estrutura:
 
       setMissingDocs((current) => {
         const existing = current || []
-        const existingIds = new Set(existing.map(d => `${d.processId}-${d.documentType}`))
+        const existingIds = new Set(existing.map((d) => `${d.processId}-${d.documentType}`))
 
         const uniqueNew = newMissingDocs.filter(
-          doc => !existingIds.has(`${doc.processId}-${doc.documentType}`) && !doc.resolved
+          (doc) => !existingIds.has(`${doc.processId}-${doc.documentType}`) && !doc.resolved
         )
 
-        return [...existing.filter(d => !d.resolved), ...uniqueNew]
+        // Mantém apenas não resolvidos + novos únicos
+        return [...existing.filter((d) => !d.resolved), ...uniqueNew]
       })
 
       setLastCheck(new Date().toISOString())
 
-      const unresolvedCount = newMissingDocs.filter(d => !d.resolved).length
+      const unresolvedCount = newMissingDocs.filter((d) => !d.resolved).length
       if (unresolvedCount > 0) {
-        toast.info(`Encontrados ${unresolvedCount} documentos faltantes`, {
+        toast.info(`Encontrados ${unresolvedCount} documentos possivelmente faltantes`, {
           description: 'Verifique a lista de documentos pendentes'
         })
       } else {
         toast.success('Análise concluída', {
-          description: 'Todos os processos estão com documentação adequada'
+          description: 'Nenhum novo documento faltante identificado'
         })
       }
-
     } catch (error) {
       console.error('Erro ao analisar documentos:', error)
       toast.error('Erro na análise', {
@@ -134,18 +152,18 @@ Retorne um objeto JSON com a seguinte estrutura:
     } finally {
       setIsAnalyzing(false)
     }
-  }
+  }, [processes, setMissingDocs, setLastCheck])
 
   const notifyMissingDocument = (docId: string) => {
     setMissingDocs((current) =>
-      (current || []).map(doc =>
+      (current || []).map((doc) =>
         doc.id === docId ? { ...doc, notified: true } : doc
       )
     )
 
-    const doc = missingDocs?.find(d => d.id === docId)
+    const doc = missingDocs?.find((d) => d.id === docId)
     if (doc) {
-      toast.warning('Notificação enviada', {
+      toast.warning('Notificação registrada', {
         description: `Lembrete criado para juntar "${doc.documentType}" no processo ${doc.processNumber}`
       })
     }
@@ -153,7 +171,7 @@ Retorne um objeto JSON com a seguinte estrutura:
 
   const markAsResolved = (docId: string) => {
     setMissingDocs((current) =>
-      (current || []).map(doc =>
+      (current || []).map((doc) =>
         doc.id === docId ? { ...doc, resolved: true } : doc
       )
     )
@@ -161,35 +179,45 @@ Retorne um objeto JSON com a seguinte estrutura:
   }
 
   useEffect(() => {
-    if (autoCheckEnabled && processes.length > 0) {
-      const interval = setInterval(() => {
-        analyzeProcessDocuments()
-      }, 60 * 60 * 1000)
+    if (!autoCheckEnabled || !processes || processes.length === 0) return
 
-      return () => clearInterval(interval)
-    }
-  }, [autoCheckEnabled, processes])
+    const interval = setInterval(() => {
+      analyzeProcessDocuments()
+    }, 60 * 60 * 1000) // a cada 1h
 
-  const unresolvedDocs = (missingDocs || []).filter(d => !d.resolved)
-  const highUrgency = unresolvedDocs.filter(d => d.urgency === 'high').length
-  const mediumUrgency = unresolvedDocs.filter(d => d.urgency === 'medium').length
-  const lowUrgency = unresolvedDocs.filter(d => d.urgency === 'low').length
+    return () => clearInterval(interval)
+  }, [autoCheckEnabled, processes, analyzeProcessDocuments])
 
-  const getUrgencyColor = (urgency: string) => {
+  const unresolvedDocs = (missingDocs || []).filter((d) => !d.resolved)
+  const highUrgency = unresolvedDocs.filter((d) => d.urgency === 'high').length
+  const mediumUrgency = unresolvedDocs.filter((d) => d.urgency === 'medium').length
+  const lowUrgency = unresolvedDocs.filter((d) => d.urgency === 'low').length
+
+  const getUrgencyColor = (
+    urgency: MissingDocument['urgency']
+  ): 'default' | 'destructive' | 'secondary' => {
     switch (urgency) {
-      case 'high': return 'destructive'
-      case 'medium': return 'default'
-      case 'low': return 'secondary'
-      default: return 'default'
+      case 'high':
+        return 'destructive'
+      case 'medium':
+        return 'default'
+      case 'low':
+        return 'secondary'
+      default:
+        return 'default'
     }
   }
 
-  const getUrgencyLabel = (urgency: string) => {
+  const getUrgencyLabel = (urgency: MissingDocument['urgency']) => {
     switch (urgency) {
-      case 'high': return 'Alta'
-      case 'medium': return 'Média'
-      case 'low': return 'Baixa'
-      default: return 'Média'
+      case 'high':
+        return 'Alta'
+      case 'medium':
+        return 'Média'
+      case 'low':
+        return 'Baixa'
+      default:
+        return 'Média'
     }
   }
 
@@ -197,7 +225,7 @@ Retorne um objeto JSON com a seguinte estrutura:
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Robot className="w-6 h-6 text-primary" weight="fill" />
@@ -209,23 +237,35 @@ Retorne um objeto JSON com a seguinte estrutura:
                 </CardDescription>
               </div>
             </div>
-            <Button
-              onClick={analyzeProcessDocuments}
-              disabled={isAnalyzing || processes.length === 0}
-              size="sm"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Clock className="animate-spin" />
-                  Analisando...
-                </>
-              ) : (
-                <>
-                  <FileText />
-                  Analisar Processos
-                </>
-              )}
-            </Button>
+
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Auto-verificação (1h)</span>
+                <Switch
+                  id="auto-check"
+                  checked={autoCheckEnabled}
+                  onCheckedChange={setAutoCheckEnabled}
+                  disabled={processes.length === 0}
+                />
+              </div>
+              <Button
+                onClick={analyzeProcessDocuments}
+                disabled={isAnalyzing || processes.length === 0}
+                size="sm"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-1 animate-spin" />
+                    Analisando...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4 mr-1" />
+                    Analisar Processos
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -279,9 +319,12 @@ Retorne um objeto JSON com a seguinte estrutura:
             </Card>
           </div>
 
+          <Separator />
+
           {lastCheck && (
             <div className="text-sm text-muted-foreground">
-              Última verificação: {new Date(lastCheck).toLocaleString('pt-BR')}
+              Última verificação:{' '}
+              {new Date(lastCheck).toLocaleString('pt-BR')}
             </div>
           )}
         </CardContent>
@@ -292,9 +335,8 @@ Retorne um objeto JSON com a seguinte estrutura:
           <CheckCircle className="w-4 h-4" weight="fill" />
           <AlertDescription>
             {processes.length === 0
-              ? 'Nenhum processo cadastrado para análise'
-              : 'Nenhum documento faltante identificado. Todos os processos estão com documentação adequada.'
-            }
+              ? 'Nenhum processo cadastrado para análise.'
+              : 'Nenhum documento faltante identificado. Todos os processos estão com documentação adequada.'}
           </AlertDescription>
         </Alert>
       ) : (
@@ -310,15 +352,26 @@ Retorne um objeto JSON com a seguinte estrutura:
               <div className="space-y-4">
                 {unresolvedDocs
                   .sort((a, b) => {
-                    const urgencyOrder = { high: 0, medium: 1, low: 2 }
+                    const urgencyOrder: Record<MissingDocument['urgency'], number> = {
+                      high: 0,
+                      medium: 1,
+                      low: 2
+                    }
                     return urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
                   })
                   .map((doc) => (
-                    <Card key={doc.id} className="border-l-4" style={{
-                      borderLeftColor: doc.urgency === 'high' ? 'hsl(var(--destructive))' :
-                        doc.urgency === 'medium' ? 'hsl(var(--primary))' :
-                          'hsl(var(--muted-foreground))'
-                    }}>
+                    <Card
+                      key={doc.id}
+                      className="border-l-4"
+                      style={{
+                        borderLeftColor:
+                          doc.urgency === 'high'
+                            ? 'hsl(var(--destructive))'
+                            : doc.urgency === 'medium'
+                            ? 'hsl(var(--primary))'
+                            : 'hsl(var(--muted-foreground))'
+                      }}
+                    >
                       <CardContent className="pt-6">
                         <div className="space-y-3">
                           <div className="flex items-start justify-between gap-4">
@@ -326,7 +379,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                               <div className="flex items-center gap-2 mb-2">
                                 <FileText className="w-4 h-4 text-primary" />
                                 <h4 className="font-semibold">{doc.documentType}</h4>
-                                <Badge variant={getUrgencyColor(doc.urgency) as any}>
+                                <Badge variant={getUrgencyColor(doc.urgency)}>
                                   {getUrgencyLabel(doc.urgency)}
                                 </Badge>
                                 {doc.notified && (
@@ -341,7 +394,8 @@ Retorne um objeto JSON com a seguinte estrutura:
                               </p>
                               <p className="text-sm">{doc.reason}</p>
                               <p className="text-xs text-muted-foreground mt-2">
-                                Detectado em: {new Date(doc.detectedAt).toLocaleString('pt-BR')}
+                                Detectado em:{' '}
+                                {new Date(doc.detectedAt).toLocaleString('pt-BR')}
                               </p>
                             </div>
                             <div className="flex flex-col gap-2">
@@ -351,7 +405,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                                   variant="outline"
                                   onClick={() => notifyMissingDocument(doc.id)}
                                 >
-                                  <Bell />
+                                  <Bell className="w-4 h-4 mr-1" />
                                   Notificar
                                 </Button>
                               )}
@@ -360,7 +414,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                                 variant="default"
                                 onClick={() => markAsResolved(doc.id)}
                               >
-                                <CheckCircle />
+                                <CheckCircle className="w-4 h-4 mr-1" />
                                 Juntado
                               </Button>
                             </div>
@@ -378,7 +432,11 @@ Retorne um objeto JSON com a seguinte estrutura:
       <Alert>
         <Info className="w-4 h-4" />
         <AlertDescription>
-          <strong>Como funciona:</strong> O agente analisa automaticamente os processos ativos e identifica documentos que podem estar faltando com base no tipo de ação, partes envolvidas e informações do processo. Você pode notificar os responsáveis e marcar como resolvido quando o documento for juntado.
+          <strong>Como funciona:</strong> o agente analisa automaticamente os
+          processos ativos e identifica documentos que podem estar faltando com
+          base no tipo de ação, partes envolvidas e informações do processo. Você
+          pode registrar uma notificação e marcar como resolvido quando o
+          documento for juntado.
         </AlertDescription>
       </Alert>
     </div>

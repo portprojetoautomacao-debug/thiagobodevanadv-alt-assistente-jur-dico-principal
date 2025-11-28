@@ -101,7 +101,7 @@ export function DocumentTemplates() {
             Gerencie modelos de petições e documentos jurídicos (armazenados via Git LFS)
           </p>
         </div>
-        <Button onClick={handleUpload}>
+        <Button onClick={handleUpload} aria-label="Upload de Template">
           <UploadSimple className="mr-2 h-4 w-4" />
           Upload Template
         </Button>
@@ -126,6 +126,7 @@ export function DocumentTemplates() {
                   size="sm"
                   className="flex-1"
                   onClick={() => handleDownload(template)}
+                  aria-label={`Baixar template ${template.name}`}
                 >
                   <DownloadSimple className="mr-2 h-4 w-4" />
                   Baixar
@@ -134,6 +135,7 @@ export function DocumentTemplates() {
                   size="sm"
                   variant="destructive"
                   onClick={() => handleDelete(template.id)}
+                  aria-label={`Excluir template ${template.name}`}
                 >
                   <Trash className="h-4 w-4" />
                 </Button>

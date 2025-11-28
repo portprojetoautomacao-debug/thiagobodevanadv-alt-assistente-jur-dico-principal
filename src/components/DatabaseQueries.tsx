@@ -1,12 +1,23 @@
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Database, MagnifyingGlass, Spinner, Warning } from '@phosphor-icons/react'
+import {
+  Database,
+  MagnifyingGlass,
+  Warning,
+  CircleNotch
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import DJENConsulta from '@/components/DJENConsulta'
 import MultiSourcePublications from '@/components/MultiSourcePublications'
@@ -27,19 +38,25 @@ export default function DatabaseQueries() {
   const apiKeyConfigured = isApiKeyConfigured()
 
   const handleDatajudQuery = async () => {
-    if (!cnjQuery.trim()) {
+    const raw = cnjQuery.trim()
+
+    if (!raw) {
       toast.error('Digite um número CNJ válido')
       return
     }
 
-    if (!validarNumeroCNJ(cnjQuery)) {
+    const normalized = raw.replace(/\s/g, '')
+
+    if (!validarNumeroCNJ(normalized)) {
       toast.error('Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO')
       return
     }
 
     if (!apiKeyConfigured) {
-      setError('API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env')
-      toast.error('Configure a API Key do DataJud no arquivo .env')
+      const msg =
+        'API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env'
+      setError(msg)
+      toast.error(msg)
       return
     }
 
@@ -49,7 +66,7 @@ export default function DatabaseQueries() {
 
     try {
       // Extrai o código do tribunal do número CNJ
-      const codigoTribunal = extrairTribunalDoCNJ(cnjQuery)
+      const codigoTribunal = extrairTribunalDoCNJ(normalized)
       if (!codigoTribunal) {
         throw new Error('Não foi possível identificar o tribunal do número CNJ')
       }
@@ -68,14 +85,15 @@ export default function DatabaseQueries() {
       }
 
       const resultado = await consultarProcessoDatajud({
-        numeroProcesso: cnjQuery,
+        numeroProcesso: normalized,
         tribunal: tribunalKey
       })
 
       setDatajudResult(resultado)
       toast.success('Processo encontrado no DataJud')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao consultar DataJud'
+      const message =
+        err instanceof Error ? err.message : 'Erro ao consultar DataJud'
       setError(message)
       toast.error(message)
       console.error('Erro ao consultar DataJud:', err)
@@ -84,10 +102,19 @@ export default function DatabaseQueries() {
     }
   }
 
+  const formatDateSafe = (value?: string | null) => {
+    if (!value) return '—'
+    const d = new Date(value)
+    if (Number.isNaN(d.getTime())) return '—'
+    return d.toLocaleDateString('pt-BR')
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Consultas a Bases de Dados</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Consultas a Bases de Dados
+        </h1>
         <p className="text-muted-foreground mt-1">
           DataJud, DJEN e múltiplas fontes oficiais de publicações jurídicas
         </p>
@@ -131,7 +158,7 @@ export default function DatabaseQueries() {
                   <Button onClick={handleDatajudQuery} disabled={loading}>
                     {loading ? (
                       <>
-                        <Spinner className="w-4 h-4 mr-2 animate-spin" />
+                        <CircleNotch className="w-4 h-4 mr-2 animate-spin" />
                         Consultando...
                       </>
                     ) : (
@@ -148,11 +175,16 @@ export default function DatabaseQueries() {
                 <Alert variant="destructive">
                   <Warning className="h-4 w-4" />
                   <AlertDescription>
-                    API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env para usar este recurso.
+                    API Key do DataJud não configurada. Configure
+                    <code className="mx-1 px-1 py-0.5 rounded bg-muted text-xs">
+                      VITE_DATAJUD_API_KEY
+                    </code>
+                    no arquivo <code className="px-1 py-0.5 rounded bg-muted text-xs">.env</code>{' '}
+                    para usar este recurso.
                     <br />
-                    <a 
-                      href="https://www.cnj.jus.br/sistemas/datajud/api-publica/" 
-                      target="_blank" 
+                    <a
+                      href="https://www.cnj.jus.br/sistemas/datajud/api-publica/"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-sm mt-1 inline-block"
                     >
@@ -174,60 +206,90 @@ export default function DatabaseQueries() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">CNJ</p>
-                      <p className="text-sm font-mono">{datajudResult.numeroProcesso}</p>
+                      <p className="text-sm font-mono">
+                        {datajudResult.numeroProcesso}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Tribunal</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Tribunal
+                      </p>
                       <p className="text-sm">{datajudResult.tribunal}</p>
                     </div>
                     {datajudResult.classe && (
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Classe</p>
-                        <p className="text-sm">{datajudResult.classe.nome}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Classe
+                        </p>
+                        <p className="text-sm">
+                          {datajudResult.classe.nome}
+                        </p>
                       </div>
                     )}
                     {datajudResult.dataAjuizamento && (
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Distribuição</p>
-                        <p className="text-sm">{new Date(datajudResult.dataAjuizamento).toLocaleDateString('pt-BR')}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Distribuição
+                        </p>
+                        <p className="text-sm">
+                          {formatDateSafe(datajudResult.dataAjuizamento)}
+                        </p>
                       </div>
                     )}
-                    {datajudResult.assuntos && datajudResult.assuntos.length > 0 && (
-                      <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">Assunto</p>
-                        <p className="text-sm">{datajudResult.assuntos.map(a => a.nome).join(', ')}</p>
-                      </div>
-                    )}
+                    {datajudResult.assuntos &&
+                      datajudResult.assuntos.length > 0 && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            Assunto
+                          </p>
+                          <p className="text-sm">
+                            {datajudResult.assuntos
+                              .map((a) => a.nome)
+                              .join(', ')}
+                          </p>
+                        </div>
+                      )}
                     {datajudResult.orgaoJulgador && (
                       <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">Órgão Julgador</p>
-                        <p className="text-sm">{datajudResult.orgaoJulgador.nome}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Órgão Julgador
+                        </p>
+                        <p className="text-sm">
+                          {datajudResult.orgaoJulgador.nome}
+                        </p>
                       </div>
                     )}
                   </div>
 
-                  {datajudResult.movimentos && datajudResult.movimentos.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3">Movimentações</h3>
-                      <div className="space-y-2">
-                        {datajudResult.movimentos.slice(0, 10).map((mov, idx) => (
-                          <div key={idx} className="flex gap-3 p-3 bg-muted rounded-lg">
-                            <div className="flex-shrink-0 w-32">
-                              <Badge variant="outline">
-                                {new Date(mov.dataHora).toLocaleDateString('pt-BR')}
-                              </Badge>
+                  {datajudResult.movimentos &&
+                    datajudResult.movimentos.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3">
+                          Movimentações
+                        </h3>
+                        <div className="space-y-2">
+                          {datajudResult.movimentos.slice(0, 10).map((mov, idx) => (
+                            <div
+                              key={idx}
+                              className="flex gap-3 p-3 bg-muted rounded-lg"
+                            >
+                              <div className="flex-shrink-0 w-32">
+                                <Badge variant="outline">
+                                  {formatDateSafe(mov.dataHora)}
+                                </Badge>
+                              </div>
+                              <p className="text-sm flex-1">{mov.nome}</p>
                             </div>
-                            <p className="text-sm flex-1">{mov.nome}</p>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                        {datajudResult.movimentos.length > 10 && (
+                          <p className="text-xs text-muted-foreground mt-2 text-center">
+                            Mostrando os 10 movimentos mais recentes de{' '}
+                            {datajudResult.movimentos.length} total
+                          </p>
+                        )}
                       </div>
-                      {datajudResult.movimentos.length > 10 && (
-                        <p className="text-xs text-muted-foreground mt-2 text-center">
-                          Mostrando os 10 movimentos mais recentes de {datajudResult.movimentos.length} total
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </CardContent>

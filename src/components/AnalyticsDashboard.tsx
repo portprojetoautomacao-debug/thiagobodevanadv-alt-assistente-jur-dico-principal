@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { useAnalytics } from '@/hooks/use-analytics'
 import { ChartBar, Eye, MouseSimple, Warning, Trash } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useMemo } from 'react'
 
 export default function AnalyticsDashboard() {
   const { getAnalytics, clearEvents, events } = useAnalytics()
@@ -13,11 +14,34 @@ export default function AnalyticsDashboard() {
     toast.success('Dados de análise limpos com sucesso')
   }
 
-  const sortedPages = analytics.last24h.popularPages
-  const sortedActions = analytics.last24h.topActions
+  // Garantir estrutura segura mesmo se o hook ainda não tiver dados
+  const safeAnalytics = useMemo(() => {
+    const baseLast = {
+      total: 0,
+      pageViews: 0,
+      actions: 0,
+      errors: 0,
+      popularPages: [] as Array<[string, number]>,
+      topActions: [] as Array<[string, number]>,
+    }
+
+    const last24h = analytics?.last24h ?? baseLast
+    const last7d = analytics?.last7d ?? { ...baseLast, popularPages: [], topActions: [] }
+
+    return { last24h, last7d }
+  }, [analytics])
+
+  const sortedPages = safeAnalytics.last24h.popularPages ?? []
+  const sortedActions = safeAnalytics.last24h.topActions ?? []
+
+  const pageMaxCount = sortedPages.length > 0 ? sortedPages[0][1] || 1 : 1
+  const actionMaxCount = sortedActions.length > 0 ? sortedActions[0][1] || 1 : 1
+
+  const safeEvents = events ?? []
 
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold gradient-text">Analytics</h1>
@@ -35,6 +59,7 @@ export default function AnalyticsDashboard() {
         </Button>
       </div>
 
+      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -42,9 +67,11 @@ export default function AnalyticsDashboard() {
             <ChartBar size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold gradient-text">{analytics.last24h.total}</div>
+            <div className="text-2xl font-bold gradient-text">
+              {safeAnalytics.last24h.total}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {analytics.last7d.total} nos últimos 7 dias
+              {safeAnalytics.last7d.total} nos últimos 7 dias
             </p>
           </CardContent>
         </Card>
@@ -55,9 +82,11 @@ export default function AnalyticsDashboard() {
             <Eye size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-secondary">{analytics.last24h.pageViews}</div>
+            <div className="text-2xl font-bold text-secondary">
+              {safeAnalytics.last24h.pageViews}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {analytics.last24h.total} eventos totais
+              {safeAnalytics.last24h.total} eventos totais
             </p>
           </CardContent>
         </Card>
@@ -68,7 +97,9 @@ export default function AnalyticsDashboard() {
             <MouseSimple size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-accent">{analytics.last24h.actions}</div>
+            <div className="text-2xl font-bold text-accent">
+              {safeAnalytics.last24h.actions}
+            </div>
             <p className="text-xs text-muted-foreground">
               Interações do usuário
             </p>
@@ -81,7 +112,9 @@ export default function AnalyticsDashboard() {
             <Warning size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{analytics.last24h.errors}</div>
+            <div className="text-2xl font-bold text-destructive">
+              {safeAnalytics.last24h.errors}
+            </div>
             <p className="text-xs text-muted-foreground">
               Erros registrados
             </p>
@@ -89,6 +122,7 @@ export default function AnalyticsDashboard() {
         </Card>
       </div>
 
+      {/* Top pages / actions */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="glassmorphic border-border/50">
           <CardHeader>
@@ -114,7 +148,7 @@ export default function AnalyticsDashboard() {
                         <div
                           className="h-full button-gradient"
                           style={{
-                            width: `${(count / sortedPages[0][1]) * 100}%`,
+                            width: `${Math.max(5, (count / pageMaxCount) * 100)}%`,
                           }}
                         />
                       </div>
@@ -153,7 +187,7 @@ export default function AnalyticsDashboard() {
                         <div
                           className="h-full bg-gradient-to-r from-secondary to-accent"
                           style={{
-                            width: `${(count / sortedActions[0][1]) * 100}%`,
+                            width: `${Math.max(5, (count / actionMaxCount) * 100)}%`,
                           }}
                         />
                       </div>
@@ -169,51 +203,58 @@ export default function AnalyticsDashboard() {
         </Card>
       </div>
 
+      {/* Recent events */}
       <Card className="glassmorphic border-border/50">
         <CardHeader>
           <CardTitle>Eventos Recentes</CardTitle>
           <CardDescription>Últimos 20 eventos registrados</CardDescription>
         </CardHeader>
         <CardContent>
-          {!events || events.length === 0 ? (
+          {safeEvents.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               Nenhum evento registrado ainda
             </p>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {events.slice(-20).reverse().map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-card/50 transition-colors"
-                >
+              {safeEvents
+                .slice(-20)
+                .reverse()
+                .map((event) => (
                   <div
-                    className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                      event.type === 'pageview'
-                        ? 'bg-secondary'
-                        : event.type === 'action'
-                        ? 'bg-accent'
-                        : 'bg-destructive'
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium capitalize">
-                        {event.type === 'pageview' && `Visualização: ${event.data.path}`}
-                        {event.type === 'action' && `Ação: ${event.data.action}`}
-                        {event.type === 'error' && `Erro: ${event.data.error}`}
-                      </p>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(event.timestamp).toLocaleTimeString('pt-BR')}
-                      </span>
+                    key={event.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-card/50 transition-colors"
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                        event.type === 'pageview'
+                          ? 'bg-secondary'
+                          : event.type === 'action'
+                          ? 'bg-accent'
+                          : 'bg-destructive'
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium capitalize">
+                          {event.type === 'pageview' &&
+                            `Visualização: ${event.data?.path ?? '-'}`}
+                          {event.type === 'action' &&
+                            `Ação: ${event.data?.action ?? '-'}`}
+                          {event.type === 'error' &&
+                            `Erro: ${event.data?.error ?? '-'}`}
+                        </p>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(event.timestamp).toLocaleTimeString('pt-BR')}
+                        </span>
+                      </div>
+                      {event.data?.category && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Categoria: {event.data.category}
+                        </p>
+                      )}
                     </div>
-                    {event.data.category && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Categoria: {event.data.category}
-                      </p>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </CardContent>
