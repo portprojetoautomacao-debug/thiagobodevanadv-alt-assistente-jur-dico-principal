@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -163,10 +163,10 @@ export default function ExpedientePanel() {
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<string | null>(null)
+  const [_selectedTask, setSelectedTask] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
-  const [lawyersCount, setLawyersCount] = useState(0)
+  const [_lawyersCount, setLawyersCount] = useState(0)
 
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false)
@@ -210,7 +210,7 @@ export default function ExpedientePanel() {
   }, [fetchExpedientes])
 
   // Ensure expedientes is always an array to prevent runtime errors
-  const safeExpedientes = Array.isArray(expedientes) ? expedientes : []
+  const safeExpedientes = useMemo(() => Array.isArray(expedientes) ? expedientes : [], [expedientes])
 
   // Helper para mapear prioridade PT -> EN
   const mapPriority = (priority: string | undefined): 'low' | 'medium' | 'high' | 'urgent' | undefined => {
@@ -425,7 +425,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
         { duration: 5000 }
       )
     }
-  }, [safeExpedientes, setExpedientes, addTask, agents, appointments, setAppointments])
+  }, [safeExpedientes, setExpedientes, analyzeExpediente, deadlinesCreated])
 
   // Dispara análise automática quando expedientes são carregados
   useEffect(() => {
