@@ -81,6 +81,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     completedTasks,
     activityLog,
     toggleAgent,
+    streamingContent,
+    isStreamingEnabled,
+    toggleStreaming,
     setAgents: _setAgents, // mantido para compatibilidade futura
   } = useAutonomousAgents()
 
@@ -449,36 +452,76 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
         {/* Agents */}
         <TabsContent value="agents" className="space-y-4">
+          {/* Toggle de Streaming Global */}
+          <Card className="border-accent/30 bg-accent/5">
+            <CardContent className="flex items-center justify-between py-3">
+              <div className="flex items-center gap-3">
+                <Lightning className="w-5 h-5 text-accent" weight="fill" />
+                <div>
+                  <p className="font-medium text-sm">Modo Streaming</p>
+                  <p className="text-xs text-muted-foreground">
+                    Veja respostas da IA em tempo real
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={isStreamingEnabled}
+                onCheckedChange={toggleStreaming}
+              />
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agents.map((agent) => {
               const IconComponent = agentIcons[agent.id] || Robot
+              const isStreaming = !!streamingContent[agent.id]
+              const streamPreview = streamingContent[agent.id]?.slice(-100) || ''
               const statusColor = agent.enabled
-                ? agent.status === 'processing'
-                  ? 'text-accent'
-                  : 'text-green-600'
+                ? isStreaming
+                  ? 'text-purple-500'
+                  : agent.status === 'processing'
+                    ? 'text-accent'
+                    : 'text-green-600'
                 : 'text-muted-foreground'
 
               return (
                 <Card
                   key={agent.id}
-                  className={agent.enabled ? 'border-primary/30' : ''}
+                  className={`transition-all duration-300 ${isStreaming
+                    ? 'border-purple-500/50 shadow-lg shadow-purple-500/10'
+                    : agent.enabled
+                      ? 'border-primary/30'
+                      : ''
+                    }`}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
                         <div
-                          className={`p-2 rounded-lg ${
-                            agent.enabled ? 'bg-primary/10' : 'bg-muted'
-                          }`}
+                          className={`p-2 rounded-lg relative ${isStreaming
+                            ? 'bg-purple-500/20 animate-pulse'
+                            : agent.enabled
+                              ? 'bg-primary/10'
+                              : 'bg-muted'
+                            }`}
                         >
                           <IconComponent
                             className={`w-6 h-6 ${statusColor}`}
                             weight="fill"
                           />
+                          {isStreaming && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-ping" />
+                          )}
                         </div>
                         <div>
-                          <CardTitle className="text-base">
+                          <CardTitle className="text-base flex items-center gap-2">
                             {agent.name}
+                            {isStreaming && (
+                              <Badge className="bg-purple-500/20 text-purple-500 border-purple-500/30 text-xs animate-pulse">
+                                <Lightning className="w-3 h-3 mr-1" weight="fill" />
+                                Gerando...
+                              </Badge>
+                            )}
                           </CardTitle>
                           <CardDescription className="text-xs mt-1">
                             {agent.description}
@@ -490,14 +533,33 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                         onCheckedChange={() => handleToggleAgent(agent.id)}
                       />
                     </div>
+
+                    {/* Streaming Preview */}
+                    {isStreaming && streamPreview && (
+                      <div className="mt-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                          <span className="text-xs text-purple-400 font-medium">Streaming em tempo real</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-mono line-clamp-2">
+                          {streamPreview}
+                          <span className="animate-pulse">▊</span>
+                        </p>
+                      </div>
+                    )}
+
                     <div className="pt-2">
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                         <span>Capacidades:</span>
                         <Badge
-                          variant={agent.enabled ? 'default' : 'secondary'}
-                          className="text-xs"
+                          variant={isStreaming ? 'default' : agent.enabled ? 'default' : 'secondary'}
+                          className={`text-xs ${isStreaming ? 'bg-purple-500 text-white' : ''}`}
                         >
-                          {agent.enabled ? 'Ativo' : 'Pausado'}
+                          {isStreaming ? 'Streaming' : agent.enabled ? 'Ativo' : 'Pausado'}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -522,7 +584,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                       <span className="text-muted-foreground text-xs">
                         Última atividade:
                       </span>
-                      <span className="text-foreground text-xs">
+                      <span className={`text-xs ${isStreaming ? 'text-purple-400' : 'text-foreground'}`}>
                         {agent.lastActivity}
                       </span>
                     </div>
@@ -531,9 +593,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Status:</span>
                       <Badge
-                        variant={agent.enabled ? 'default' : 'secondary'}
+                        variant={isStreaming ? 'default' : agent.enabled ? 'default' : 'secondary'}
+                        className={isStreaming ? 'bg-purple-500' : ''}
                       >
-                        {agent.enabled ? 'Pronto para uso' : 'Desativado'}
+                        {isStreaming ? '⚡ Gerando resposta...' : agent.enabled ? 'Pronto para uso' : 'Desativado'}
                       </Badge>
                     </div>
                   </CardContent>
@@ -743,8 +806,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                               Concluída em:{' '}
                               {task.completedAt
                                 ? new Date(
-                                    task.completedAt,
-                                  ).toLocaleString('pt-BR')
+                                  task.completedAt,
+                                ).toLocaleString('pt-BR')
                                 : '-'}
                             </p>
                             <div className="flex items-center gap-2 mt-2">

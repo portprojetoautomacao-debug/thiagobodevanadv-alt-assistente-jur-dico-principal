@@ -56,6 +56,11 @@ interface TiptapEditorProps {
     className?: string
     readOnly?: boolean
     onAIGenerate?: (prompt: string) => Promise<string>
+    onAIStream?: (prompt: string, callbacks: {
+        onChunk: (chunk: string) => void
+        onComplete: () => void
+        onError: (error: Error) => void
+    }) => Promise<void>
     variables?: Record<string, string>
 }
 
@@ -74,9 +79,12 @@ export function TiptapEditor({
     className,
     readOnly = false,
     onAIGenerate,
+    onAIStream,
     variables = {},
 }: TiptapEditorProps) {
     const [isAILoading, setIsAILoading] = useState(false)
+    const [isStreaming, setIsStreaming] = useState(false)
+    const [streamingText, setStreamingText] = useState('')
     const [aiPrompt, setAiPrompt] = useState('')
     const [showAIPopover, setShowAIPopover] = useState(false)
     const [wordCount, setWordCount] = useState(0)
@@ -143,9 +151,54 @@ export function TiptapEditor({
         return result
     }, [variables])
 
-    // Handler para IA
+    // Handler para IA (com suporte a streaming)
     const handleAIGenerate = useCallback(async () => {
-        if (!aiPrompt.trim() || !onAIGenerate || !editor) return
+        if (!aiPrompt.trim() || !editor) return
+
+        // Prefer streaming if available
+        if (onAIStream) {
+            setIsStreaming(true)
+            setStreamingText('')
+
+            // Salvar posição inicial para inserção
+            const insertPos = editor.state.selection.from
+
+            try {
+                await onAIStream(aiPrompt, {
+                    onChunk: (chunk) => {
+                        setStreamingText(prev => {
+                            const newText = prev + chunk
+                            // Atualizar editor em tempo real
+                            editor.commands.setContent(content + `<div class="streaming-content animate-pulse">${replaceVariables(newText)}<span class="animate-pulse">▊</span></div>`)
+                            return newText
+                        })
+                    },
+                    onComplete: () => {
+                        // Finalizar com texto completo sem animação
+                        const finalText = replaceVariables(streamingText)
+                        editor.commands.setContent(content + finalText)
+                        setStreamingText('')
+                        setIsStreaming(false)
+                        setAiPrompt('')
+                        setShowAIPopover(false)
+                        toast.success('Texto gerado com streaming!')
+                    },
+                    onError: (error) => {
+                        console.error('Erro no streaming:', error)
+                        toast.error('Erro no streaming de IA')
+                        setIsStreaming(false)
+                        setStreamingText('')
+                    }
+                })
+            } catch (error) {
+                console.error('Erro ao iniciar streaming:', error)
+                setIsStreaming(false)
+            }
+            return
+        }
+
+        // Fallback para geração sem streaming
+        if (!onAIGenerate) return
 
         setIsAILoading(true)
         try {
@@ -166,7 +219,7 @@ export function TiptapEditor({
         } finally {
             setIsAILoading(false)
         }
-    }, [aiPrompt, onAIGenerate, editor, replaceVariables])
+    }, [aiPrompt, onAIGenerate, onAIStream, editor, replaceVariables, content, streamingText])
 
     // Comandos de IA rápidos
     const aiQuickCommands = [
@@ -177,7 +230,7 @@ export function TiptapEditor({
     ]
 
     const handleQuickAI = useCallback(async (command: typeof aiQuickCommands[0]) => {
-        if (!editor || !onAIGenerate) return
+        if (!editor || (!onAIGenerate && !onAIStream)) return
 
         const selectedText = editor.state.selection.empty
             ? editor.getText()
@@ -192,10 +245,63 @@ export function TiptapEditor({
             return
         }
 
+        const fullPrompt = `${command.prompt}\n\n"${selectedText}"`
+
+        // Prefer streaming if available
+        if (onAIStream) {
+            setIsStreaming(true)
+            setStreamingText('')
+            let accumulatedText = ''
+
+            try {
+                await onAIStream(fullPrompt, {
+                    onChunk: (chunk) => {
+                        accumulatedText += chunk
+                        setStreamingText(accumulatedText)
+
+                        // Mostrar preview em tempo real
+                        if (!editor.state.selection.empty) {
+                            // Substituir seleção com texto sendo gerado
+                            const from = editor.state.selection.from
+                            const to = editor.state.selection.to
+                            editor.chain()
+                                .focus()
+                                .setTextSelection({ from, to })
+                                .deleteSelection()
+                                .insertContent(`<span class="text-purple-500">${accumulatedText}<span class="animate-pulse">▊</span></span>`)
+                                .run()
+                        }
+                    },
+                    onComplete: () => {
+                        // Finalizar com texto limpo
+                        const finalText = replaceVariables(accumulatedText)
+                        if (!editor.state.selection.empty) {
+                            editor.chain().focus().deleteSelection().insertContent(finalText).run()
+                        } else {
+                            editor.commands.setContent(finalText)
+                        }
+                        setIsStreaming(false)
+                        setStreamingText('')
+                        toast.success(`Texto ${command.label.toLowerCase()} com streaming!`)
+                    },
+                    onError: (error) => {
+                        console.error('Erro no streaming:', error)
+                        toast.error('Erro ao processar com streaming')
+                        setIsStreaming(false)
+                        setStreamingText('')
+                    }
+                })
+            } catch (error) {
+                console.error('Erro ao iniciar streaming:', error)
+                setIsStreaming(false)
+            }
+            return
+        }
+
+        // Fallback sem streaming
         setIsAILoading(true)
         try {
-            const fullPrompt = `${command.prompt}\n\n"${selectedText}"`
-            const generatedText = await onAIGenerate(fullPrompt)
+            const generatedText = await onAIGenerate!(fullPrompt)
 
             if (!editor.state.selection.empty) {
                 // Substituir seleção
@@ -212,7 +318,7 @@ export function TiptapEditor({
         } finally {
             setIsAILoading(false)
         }
-    }, [editor, onAIGenerate])
+    }, [editor, onAIGenerate, onAIStream, replaceVariables])
 
     // Link handler
     const setLink = useCallback(() => {
@@ -497,26 +603,56 @@ export function TiptapEditor({
                 <div className="flex-1" />
 
                 {/* IA */}
-                {onAIGenerate && (
+                {(onAIGenerate || onAIStream) && (
                     <>
+                        {/* Indicador de Streaming */}
+                        {isStreaming && (
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 animate-pulse">
+                                <div className="flex gap-1">
+                                    <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
+                                <span className="text-xs text-purple-400 font-medium">Streaming...</span>
+                            </div>
+                        )}
+
                         <Popover open={showAIPopover} onOpenChange={setShowAIPopover}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="gap-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20 hover:border-purple-500/40"
-                                    disabled={isAILoading}
+                                    className={cn(
+                                        "gap-2 border-purple-500/20 hover:border-purple-500/40",
+                                        isStreaming
+                                            ? "bg-purple-500/20 animate-pulse"
+                                            : "bg-gradient-to-r from-purple-500/10 to-blue-500/10"
+                                    )}
+                                    disabled={isAILoading || isStreaming}
                                 >
-                                    {isAILoading ? (
+                                    {isAILoading || isStreaming ? (
                                         <SpinnerGap className="h-4 w-4 animate-spin" />
                                     ) : (
                                         <Robot className="h-4 w-4" weight="fill" />
                                     )}
-                                    IA
+                                    {isStreaming ? 'Gerando...' : 'IA'}
+                                    {onAIStream && !isStreaming && (
+                                        <Badge variant="secondary" className="text-[10px] px-1 py-0 bg-purple-500/20 text-purple-400">
+                                            Stream
+                                        </Badge>
+                                    )}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-96 p-4" align="end">
                                 <div className="space-y-4">
+                                    {/* Indicador de modo streaming */}
+                                    {onAIStream && (
+                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                            <Lightning className="h-4 w-4 text-purple-500" weight="fill" />
+                                            <span className="text-xs text-purple-400">Modo Streaming ativo - texto gerado em tempo real</span>
+                                        </div>
+                                    )}
+
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">Comandos rápidos</label>
                                         <div className="flex flex-wrap gap-2">
@@ -526,7 +662,7 @@ export function TiptapEditor({
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleQuickAI(cmd)}
-                                                    disabled={isAILoading}
+                                                    disabled={isAILoading || isStreaming}
                                                 >
                                                     <cmd.icon className="h-3 w-3 mr-1" />
                                                     {cmd.label}
@@ -544,20 +680,31 @@ export function TiptapEditor({
                                             value={aiPrompt}
                                             onChange={(e) => setAiPrompt(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                                            disabled={isStreaming}
                                         />
                                         <Button
                                             className="w-full gap-2"
                                             onClick={handleAIGenerate}
-                                            disabled={!aiPrompt.trim() || isAILoading}
+                                            disabled={!aiPrompt.trim() || isAILoading || isStreaming}
                                         >
-                                            {isAILoading ? (
+                                            {isAILoading || isStreaming ? (
                                                 <SpinnerGap className="h-4 w-4 animate-spin" />
                                             ) : (
                                                 <Lightning className="h-4 w-4" weight="fill" />
                                             )}
-                                            Gerar Texto
+                                            {isStreaming ? 'Gerando...' : onAIStream ? 'Gerar com Streaming' : 'Gerar Texto'}
                                         </Button>
                                     </div>
+
+                                    {/* Preview de streaming */}
+                                    {isStreaming && streamingText && (
+                                        <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 max-h-40 overflow-y-auto">
+                                            <p className="text-xs text-muted-foreground font-mono">
+                                                {streamingText.slice(-200)}
+                                                <span className="animate-pulse text-purple-400">▊</span>
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </PopoverContent>
                         </Popover>
