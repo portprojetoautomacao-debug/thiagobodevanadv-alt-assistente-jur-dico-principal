@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, memo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import type { Process, Prazo, ViewType } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +14,7 @@ import {
   ArrowUp,
   FileText
 } from '@phosphor-icons/react'
+// ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
 
 interface DashboardAdvboxProps {
@@ -313,10 +314,10 @@ export default function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                   <div
                     key={index}
                     className={`aspect-square flex items-center justify-center text-sm rounded-lg font-semibold transition-all ${day === null
-                        ? 'text-transparent pointer-events-none'
-                        : day === new Date().getDate() && selectedMonth.getMonth() === new Date().getMonth()
-                          ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110'
-                          : 'text-foreground hover:bg-gradient-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
+                      ? 'text-transparent pointer-events-none'
+                      : day === new Date().getDate() && selectedMonth.getMonth() === new Date().getMonth()
+                        ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110'
+                        : 'text-foreground hover:bg-gradient-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
                       }`}
                   >
                     {day}

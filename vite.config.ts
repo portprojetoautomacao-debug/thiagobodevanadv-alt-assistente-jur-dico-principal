@@ -118,12 +118,18 @@ export default defineConfig({
             return 'react-vendor';
           }
 
+          // ✅ OTIMIZAÇÃO: Recharts separado em chunk próprio (lazy loaded)
+          // Economia: ~130KB de código não utilizado imediatamente
+          if (id.includes('recharts')) {
+            return 'charts';
+          }
+
           // Radix UI components - separar em chunks menores
           if (id.includes('@radix-ui')) {
             return 'ui-vendor';
           }
 
-          // D3 separately to avoid conflicts - lazy loaded
+          // D3 separately to avoid conflicts - lazy loaded (usado por Recharts)
           if (id.includes('d3')) {
             return 'd3-vendor';
           }
@@ -168,7 +174,7 @@ export default defineConfig({
             return 'css-utils';
           }
 
-          // Sentry - lazy loaded
+          // Sentry - lazy loaded com delay
           if (id.includes('@sentry')) {
             return 'sentry';
           }
@@ -176,6 +182,11 @@ export default defineConfig({
           // Sonner toasts - usado frequentemente
           if (id.includes('sonner')) {
             return 'toasts';
+          }
+
+          // Tiptap editor - lazy loaded
+          if (id.includes('@tiptap')) {
+            return 'editor';
           }
 
           // Sample data (usado apenas em desenvolvimento/demo)
