@@ -42,6 +42,7 @@ import {
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useClientesManager } from '@/hooks/use-clientes-manager'
 import type { Process, Expediente } from '@/types'
 
 // Tipos
@@ -93,6 +94,9 @@ export default function DJENPublicationsWidget({
   // KV storage para processos e expedientes
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
+
+  // Hook centralizado para cadastro de clientes
+  const { createOrUpdateFromDjenIntimacao } = useClientesManager()
 
   // Busca publicações da API
   const fetchPublications = useCallback(async () => {
@@ -213,6 +217,16 @@ export default function DJENPublicationsWidget({
     })
     const parties = await extractPartiesWithFallback(pub.teor)
 
+    // Cadastra/atualiza cliente automaticamente a partir da parte autor
+    if (parties.autor && parties.autor !== 'Não identificado') {
+      createOrUpdateFromDjenIntimacao({
+        nomeCliente: parties.autor,
+        cidade: pub.orgao?.split('/')[0] || '',
+        estado: pub.orgao?.split('/')[1] || '',
+        processo: pub.numeroProcesso
+      })
+    }
+
     // Cria o novo processo baseado na publicação
     const newProcess: Process = {
       id: crypto.randomUUID(),
@@ -296,6 +310,16 @@ export default function DJENPublicationsWidget({
 
       // Extrai partes (autor/réu) do teor usando IA
       const parties = await extractPartiesWithFallback(pub.teor)
+
+      // Cadastra/atualiza cliente automaticamente a partir da parte autor
+      if (parties.autor && parties.autor !== 'Não identificado') {
+        createOrUpdateFromDjenIntimacao({
+          nomeCliente: parties.autor,
+          cidade: pub.orgao?.split('/')[0] || '',
+          estado: pub.orgao?.split('/')[1] || '',
+          processo: pub.numeroProcesso
+        })
+      }
 
       const processId = crypto.randomUUID()
 

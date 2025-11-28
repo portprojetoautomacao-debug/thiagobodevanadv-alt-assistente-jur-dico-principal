@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Upload, FilePdf, CheckCircle, XCircle, SpinnerGap, Clock, User, Trash } from '@phosphor-icons/react'
 import { geminiGenerateJSON } from '@/lib/gemini-client'
+import { useClientesManager } from '@/hooks/use-clientes-manager'
 import type { Cliente, PDFUploadHistory } from '@/types'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -35,8 +36,10 @@ export default function PDFUploader() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null)
   const [extractionStatus, setExtractionStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
-  const [clientes, setClientes] = useKV<Cliente[]>('clientes', [])
   const [uploadHistory, setUploadHistory] = useKV<PDFUploadHistory[]>('pdf-upload-history', [])
+
+  // Hook centralizado para cadastro de clientes
+  const { clientes, createOrUpdateFromDocumento } = useClientesManager()
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -209,18 +212,14 @@ Retorne APENAS o JSON válido, sem explicações.`
       return
     }
 
+    // Verifica se já existe (o hook também faz upsert, mas é bom informar)
     const existingClient = clientes?.find(
       (c) => c.cpfCnpj === extractedData.cpfCnpj
     )
 
-    if (existingClient) {
-      toast.error('Cliente já cadastrado com este CPF/CNPJ')
-      return
-    }
-
-    const newClient: Cliente = {
-      id: `cliente-${Date.now()}`,
-      nome: extractedData.nome,
+    // Usa o hook centralizado para criar/atualizar cliente
+    createOrUpdateFromDocumento({
+      nomeCliente: extractedData.nome,
       cpfCnpj: extractedData.cpfCnpj,
       email: extractedData.email || '',
       telefone: extractedData.telefone || '',
@@ -228,28 +227,25 @@ Retorne APENAS o JSON válido, sem explicações.`
       cidade: extractedData.cidade || '',
       estado: extractedData.estado || '',
       cep: extractedData.cep || '',
-      tipo: extractedData.tipo || 'fisica',
-      status: 'ativo',
-      observacoes: extractedData.observacoes,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+      tipoPessoa: extractedData.tipo || 'fisica',
+      observacoes: extractedData.observacoes || `Extraído de documento: ${selectedFile?.name || 'PDF'}${extractedData.numeroProcesso ? ` - Processo: ${extractedData.numeroProcesso}` : ''}`
+    })
 
-    setClientes((current) => [...(current || []), newClient])
+    const action = existingClient ? 'atualizado' : 'cadastrado'
+    toast.success(`Cliente ${extractedData.nome} ${action} com sucesso!`)
 
+    // Atualiza histórico com referência ao cliente
     const currentHistory = uploadHistory || []
     const latestUpload = currentHistory.find((h) => h.extractedData === extractedData)
     if (latestUpload) {
       setUploadHistory((current) =>
         (current || []).map((item) =>
           item.id === latestUpload.id
-            ? { ...item, clienteId: newClient.id }
+            ? { ...item, clienteId: existingClient?.id || `cliente-${extractedData.cpfCnpj}` }
             : item
         )
       )
     }
-
-    toast.success(`Cliente ${newClient.nome} cadastrado com sucesso!`)
 
     setSelectedFile(null)
     setExtractedData(null)
