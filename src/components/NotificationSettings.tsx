@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 // Microsoft Teams icon
 const TeamsIcon = ({ size = 20 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
-    <path d="M20.625 8.5h-3.75V6.875c0-.69.56-1.25 1.25-1.25h1.25c.69 0 1.25.56 1.25 1.25V8.5zm-.938 1.25c-.865 0-1.562-.697-1.562-1.562V6.875c0-1.381 1.119-2.5 2.5-2.5h1.25c1.381 0 2.5 1.119 2.5 2.5v4.375c0 2.071-1.679 3.75-3.75 3.75h-.625V19c0 .69-.56 1.25-1.25 1.25H4.25c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25h4.375V5.75c0-.69.56-1.25 1.25-1.25h5c.69 0 1.25.56 1.25 1.25v2.75h3.562z"/>
+    <path d="M20.625 8.5h-3.75V6.875c0-.69.56-1.25 1.25-1.25h1.25c.69 0 1.25.56 1.25 1.25V8.5zm-.938 1.25c-.865 0-1.562-.697-1.562-1.562V6.875c0-1.381 1.119-2.5 2.5-2.5h1.25c1.381 0 2.5 1.119 2.5 2.5v4.375c0 2.071-1.679 3.75-3.75 3.75h-.625V19c0 .69-.56 1.25-1.25 1.25H4.25c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25h4.375V5.75c0-.69.56-1.25 1.25-1.25h5c.69 0 1.25.56 1.25 1.25v2.75h3.562z" />
   </svg>
 )
 
@@ -37,7 +37,7 @@ interface WebhookConfig {
 
 export default function NotificationSettings() {
   const { preferences, setPreferences, requestPermission, testNotification, isSupported, permission } = useNotifications()
-  
+
   // Webhook state
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([])
   const [loadingWebhooks, setLoadingWebhooks] = useState(true)
@@ -149,7 +149,7 @@ export default function NotificationSettings() {
     }
 
     const result = await requestPermission()
-    
+
     if (result === 'granted') {
       toast.success('Notificações ativadas com sucesso!')
       testNotification()
@@ -242,7 +242,7 @@ export default function NotificationSettings() {
                   Ativar Notificações
                 </Button>
               )}
-              
+
               {permission === 'granted' && (
                 <Button
                   onClick={testNotification}
@@ -414,10 +414,10 @@ export default function NotificationSettings() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">{wh.name}</span>
-                          <Badge variant="outline" className="text-[10px] px-1">{wh.type}</Badge>
-                          {wh.enabled && <Badge className="bg-green-500/20 text-green-600 text-[10px] px-1"><CheckCircle size={8} className="mr-0.5" />Ativo</Badge>}
+                          <Badge variant="outline" className="text-xs px-1">{wh.type}</Badge>
+                          {wh.enabled && <Badge className="bg-green-500/20 text-green-600 text-xs px-1"><CheckCircle size={8} className="mr-0.5" />Ativo</Badge>}
                         </div>
-                        <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{wh.url.substring(0, 40)}...</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{wh.url.substring(0, 40)}...</p>
                       </div>
                     </div>
                     <div className="flex gap-1">

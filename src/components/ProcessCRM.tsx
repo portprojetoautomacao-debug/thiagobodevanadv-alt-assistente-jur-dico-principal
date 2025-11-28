@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, MagnifyingGlass, Sparkle } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, Sparkle, Robot } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import PremonicaoModal from '@/components/PremonicaoModal'
 import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
 import { createProcessTasks, initializeTodoistClient } from '@/lib/todoist-integration'
+import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
 import { config } from '@/lib/config'
-import type { Process, PremonicaoJuridica } from '@/types'
+import type { Process, PremonicaoJuridica, Expediente } from '@/types'
 
 const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
 const STATUS_COLORS = {
@@ -25,9 +26,11 @@ const STATUS_COLORS = {
 
 export default function ProcessCRM() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
+  const [expedientes] = useKV<Expediente[]>('expedientes', [])
   const [filter, setFilter] = useState('')
   const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [showDialog, setShowDialog] = useState(false)
+  const [updatingParties, setUpdatingParties] = useState(false)
   const [newProcess, setNewProcess] = useState({
     numeroCNJ: '',
     titulo: '',
@@ -36,20 +39,26 @@ export default function ProcessCRM() {
     advogado: '',
     fase: 'Inicial',
   })
-  
+
   const [premonicaoOpen, setPremonicaoOpen] = useState(false)
   const [premonicaoLoading, setPremonicaoLoading] = useState(false)
   const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null)
   const [premonicaoError, setPremonicaoError] = useState<string | null>(null)
 
+  // Conta processos sem autor/réu preenchidos
+  const incompleteProcesses = (processes || []).filter(p =>
+    !p.autor || p.autor === '' || p.autor === 'Não identificado' ||
+    !p.reu || p.reu === '' || p.reu === 'Não identificado'
+  )
+
   const filteredProcesses = (processes || []).filter(p => {
-    const matchesFilter = filter === '' || 
+    const matchesFilter = filter === '' ||
       p.numeroCNJ.toLowerCase().includes(filter.toLowerCase()) ||
       p.titulo.toLowerCase().includes(filter.toLowerCase()) ||
       p.autor.toLowerCase().includes(filter.toLowerCase())
-    
+
     const matchesStage = !selectedStage || p.fase === selectedStage
-    
+
     return matchesFilter && matchesStage
   })
 
@@ -107,9 +116,9 @@ export default function ProcessCRM() {
   }
 
   const handleStatusChange = (processId: string, newStatus: Process['status']) => {
-    setProcesses((current) => 
-      (current || []).map(p => 
-        p.id === processId 
+    setProcesses((current) =>
+      (current || []).map(p =>
+        p.id === processId
           ? { ...p, status: newStatus, updatedAt: new Date().toISOString() }
           : p
       )
@@ -134,6 +143,72 @@ export default function ProcessCRM() {
     }
   }
 
+  // Atualiza partes (autor/réu) de processos incompletos usando IA
+  const handleUpdateIncompleteParties = async () => {
+    if (incompleteProcesses.length === 0) {
+      toast.info('Todos os processos já têm autor e réu preenchidos')
+      return
+    }
+
+    setUpdatingParties(true)
+    toast.info(`Atualizando ${incompleteProcesses.length} processos...`, {
+      description: 'Extraindo partes dos expedientes com IA'
+    })
+
+    let updated = 0
+    const updatedProcesses = [...(processes || [])]
+
+    for (const process of incompleteProcesses) {
+      // Busca expediente vinculado ao processo para extrair o teor
+      const expediente = (expedientes || []).find(e =>
+        e.processId === process.id ||
+        e.numeroProcesso === process.numeroCNJ ||
+        e.numeroProcesso?.replace(/\D/g, '') === process.numeroCNJ.replace(/\D/g, '')
+      )
+
+      const teor = expediente?.teor || expediente?.content || expediente?.conteudo || process.notas || ''
+
+      if (!teor) {
+        console.log(`[UpdateParties] Sem teor para extrair partes do processo ${process.numeroCNJ}`)
+        continue
+      }
+
+      try {
+        const parties = await extractPartiesWithFallback(teor)
+
+        // Só atualiza se encontrou algo diferente de "Não identificado"
+        if (parties.autor && parties.autor !== 'Não identificado' ||
+          parties.reu && parties.reu !== 'Não identificado') {
+          const idx = updatedProcesses.findIndex(p => p.id === process.id)
+          if (idx >= 0) {
+            updatedProcesses[idx] = {
+              ...updatedProcesses[idx],
+              autor: parties.autor || updatedProcesses[idx].autor || 'Não identificado',
+              reu: parties.reu || updatedProcesses[idx].reu || 'Não identificado',
+              updatedAt: new Date().toISOString()
+            }
+            updated++
+          }
+        }
+      } catch (error) {
+        console.error(`[UpdateParties] Erro no processo ${process.numeroCNJ}:`, error)
+      }
+    }
+
+    setProcesses(updatedProcesses)
+    setUpdatingParties(false)
+
+    if (updated > 0) {
+      toast.success(`${updated} processo(s) atualizado(s)!`, {
+        description: 'As partes foram extraídas com sucesso'
+      })
+    } else {
+      toast.warning('Nenhum processo foi atualizado', {
+        description: 'Não foi possível extrair partes dos expedientes'
+      })
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -143,183 +218,195 @@ export default function ProcessCRM() {
             Gestão visual CRM do fluxo de processos
           </p>
         </div>
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Processo
+        <div className="flex gap-2">
+          {incompleteProcesses.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleUpdateIncompleteParties}
+              disabled={updatingParties}
+            >
+              <Robot className="w-4 h-4 mr-2" />
+              {updatingParties ? 'Atualizando...' : `Completar ${incompleteProcesses.length} processo(s)`}
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Adicionar Novo Processo</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do processo para adicionar ao acervo
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="numeroCNJ">Número CNJ *</Label>
-                <Input
-                  id="numeroCNJ"
-                  placeholder="0000000-00.0000.0.00.0000"
-                  value={newProcess.numeroCNJ}
-                  onChange={(e) => setNewProcess({ ...newProcess, numeroCNJ: e.target.value })}
-                />
+          )}
+          <Dialog open={showDialog} onOpenChange={setShowDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Processo
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Processo</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados do processo para adicionar ao acervo
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4 py-4">
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="numeroCNJ">Número CNJ *</Label>
+                  <Input
+                    id="numeroCNJ"
+                    placeholder="0000000-00.0000.0.00.0000"
+                    value={newProcess.numeroCNJ}
+                    onChange={(e) => setNewProcess({ ...newProcess, numeroCNJ: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="titulo">Título do Processo *</Label>
+                  <Input
+                    id="titulo"
+                    placeholder="Ex: Ação Trabalhista - Horas Extras"
+                    value={newProcess.titulo}
+                    onChange={(e) => setNewProcess({ ...newProcess, titulo: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="autor">Autor</Label>
+                  <Input
+                    id="autor"
+                    placeholder="Nome do autor"
+                    value={newProcess.autor}
+                    onChange={(e) => setNewProcess({ ...newProcess, autor: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reu">Réu</Label>
+                  <Input
+                    id="reu"
+                    placeholder="Nome do réu"
+                    value={newProcess.reu}
+                    onChange={(e) => setNewProcess({ ...newProcess, reu: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="advogado">Advogado Responsável</Label>
+                  <Input
+                    id="advogado"
+                    placeholder="Nome do advogado"
+                    value={newProcess.advogado}
+                    onChange={(e) => setNewProcess({ ...newProcess, advogado: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fase">Fase Processual</Label>
+                  <Select value={newProcess.fase} onValueChange={(value) => setNewProcess({ ...newProcess, fase: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROCESS_STAGES.map((stage) => (
+                        <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="titulo">Título do Processo *</Label>
-                <Input
-                  id="titulo"
-                  placeholder="Ex: Ação Trabalhista - Horas Extras"
-                  value={newProcess.titulo}
-                  onChange={(e) => setNewProcess({ ...newProcess, titulo: e.target.value })}
-                />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddProcess}>
+                  Adicionar Processo
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="autor">Autor</Label>
-                <Input
-                  id="autor"
-                  placeholder="Nome do autor"
-                  value={newProcess.autor}
-                  onChange={(e) => setNewProcess({ ...newProcess, autor: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reu">Réu</Label>
-                <Input
-                  id="reu"
-                  placeholder="Nome do réu"
-                  value={newProcess.reu}
-                  onChange={(e) => setNewProcess({ ...newProcess, reu: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="advogado">Advogado Responsável</Label>
-                <Input
-                  id="advogado"
-                  placeholder="Nome do advogado"
-                  value={newProcess.advogado}
-                  onChange={(e) => setNewProcess({ ...newProcess, advogado: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fase">Fase Processual</Label>
-                <Select value={newProcess.fase} onValueChange={(value) => setNewProcess({ ...newProcess, fase: value })}>
-                  <SelectTrigger>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="flex gap-4">
+          <div className="relative flex-1">
+            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por CNJ, título ou parte..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={selectedStage || 'all'} onValueChange={(value) => setSelectedStage(value === 'all' ? null : value)}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Todas as fases" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as fases</SelectItem>
+              {PROCESS_STAGES.map((stage) => (
+                <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredProcesses.map((process) => (
+            <Card key={process.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>
+                  <Badge className={STATUS_COLORS[process.status] || 'bg-gray-100 text-gray-800 border-gray-300'}>
+                    {process.status}
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs">{process.numeroCNJ}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-sm">
+                  <p className="text-muted-foreground text-xs mb-1">Autor:</p>
+                  <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
+                </div>
+                <div className="text-sm">
+                  <p className="text-muted-foreground text-xs mb-1">Réu:</p>
+                  <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
+                </div>
+                <div className="text-sm">
+                  <p className="text-muted-foreground text-xs mb-1">Fase:</p>
+                  <Badge variant="outline">{process.fase || 'N/A'}</Badge>
+                </div>
+                <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PROCESS_STAGES.map((stage) => (
-                      <SelectItem key={stage} value={stage}>{stage}</SelectItem>
-                    ))}
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="suspenso">Suspenso</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="arquivado">Arquivado</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddProcess}>
-                Adicionar Processo
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por CNJ, título ou parte..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="pl-10"
-          />
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => handlePremonicao(process)}
+                >
+                  <Sparkle className="w-4 h-4" weight="fill" />
+                  Premonição Jurídica
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Select value={selectedStage || 'all'} onValueChange={(value) => setSelectedStage(value === 'all' ? null : value)}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Todas as fases" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as fases</SelectItem>
-            {PROCESS_STAGES.map((stage) => (
-              <SelectItem key={stage} value={stage}>{stage}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredProcesses.map((process) => (
-          <Card key={process.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>
-                <Badge className={STATUS_COLORS[process.status] || 'bg-gray-100 text-gray-800 border-gray-300'}>
-                  {process.status}
-                </Badge>
-              </div>
-              <CardDescription className="text-xs">{process.numeroCNJ}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-sm">
-                <p className="text-muted-foreground text-xs mb-1">Autor:</p>
-                <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
-              </div>
-              <div className="text-sm">
-                <p className="text-muted-foreground text-xs mb-1">Réu:</p>
-                <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
-              </div>
-              <div className="text-sm">
-                <p className="text-muted-foreground text-xs mb-1">Fase:</p>
-                <Badge variant="outline">{process.fase || 'N/A'}</Badge>
-              </div>
-              <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="suspenso">Suspenso</SelectItem>
-                  <SelectItem value="concluido">Concluído</SelectItem>
-                  <SelectItem value="arquivado">Arquivado</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => handlePremonicao(process)}
-              >
-                <Sparkle className="w-4 h-4" weight="fill" />
-                Premonição Jurídica
-              </Button>
+        {filteredProcesses.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Plus className="w-16 h-16 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium text-foreground">Nenhum processo encontrado</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {filter || selectedStage ? 'Tente ajustar os filtros' : 'Adicione seu primeiro processo'}
+              </p>
             </CardContent>
           </Card>
-        ))}
+        )}
+
+        <PremonicaoModal
+          isOpen={premonicaoOpen}
+          onClose={() => setPremonicaoOpen(false)}
+          isLoading={premonicaoLoading}
+          data={premonicaoData}
+          error={premonicaoError}
+        />
       </div>
-
-      {filteredProcesses.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Plus className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-foreground">Nenhum processo encontrado</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {filter || selectedStage ? 'Tente ajustar os filtros' : 'Adicione seu primeiro processo'}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      <PremonicaoModal
-        isOpen={premonicaoOpen}
-        onClose={() => setPremonicaoOpen(false)}
-        isLoading={premonicaoLoading}
-        data={premonicaoData}
-        error={premonicaoError}
-      />
     </div>
   )
 }

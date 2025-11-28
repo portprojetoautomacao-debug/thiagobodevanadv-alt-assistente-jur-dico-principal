@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useKV } from '@/hooks/use-kv'
+import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -206,20 +207,26 @@ export default function DJENPublicationsWidget({
 
     const now = new Date().toISOString()
 
+    // Extrai partes (autor/réu) do teor usando IA
+    toast.info('Extraindo partes do processo...', {
+      description: 'Analisando teor da publicação com IA'
+    })
+    const parties = await extractPartiesWithFallback(pub.teor)
+
     // Cria o novo processo baseado na publicação
     const newProcess: Process = {
       id: crypto.randomUUID(),
       numeroCNJ: pub.numeroProcesso,
       titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
-      autor: '', // Será preenchido após análise ou manualmente
-      reu: '',
+      autor: parties.autor || 'Não identificado',
+      reu: parties.reu || 'Não identificado',
       comarca: pub.orgao || '',
       vara: pub.tribunal || '',
       status: 'ativo',
       fase: 'Inicial',
       dataDistribuicao: pub.data || now.split('T')[0],
       dataUltimaMovimentacao: now,
-      notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}\n\nTeor da intimação:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''}`,
+      notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''}${parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''}\n\nTeor da intimação:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''}`,
       prazos: [],
       createdAt: now,
       updatedAt: now,
@@ -255,7 +262,7 @@ export default function DJENPublicationsWidget({
     setExpedientes(current => [...(current || []), newExpediente])
 
     toast.success('Processo cadastrado!', {
-      description: `${pub.numeroProcesso} adicionado ao Acervo`
+      description: `${pub.numeroProcesso} adicionado ao Acervo${parties.autor !== 'Não identificado' ? ` - ${parties.autor} x ${parties.reu}` : ''}`
     })
   }
 
@@ -280,8 +287,15 @@ export default function DJENPublicationsWidget({
     const newProcesses: Process[] = []
     const newExpedientes: Expediente[] = []
 
+    toast.info(`Processando ${unregisteredPubs.length} publicações...`, {
+      description: 'Extraindo partes dos processos com IA'
+    })
+
     for (const pub of unregisteredPubs) {
       if (!pub.numeroProcesso) continue
+
+      // Extrai partes (autor/réu) do teor usando IA
+      const parties = await extractPartiesWithFallback(pub.teor)
 
       const processId = crypto.randomUUID()
 
@@ -289,15 +303,15 @@ export default function DJENPublicationsWidget({
         id: processId,
         numeroCNJ: pub.numeroProcesso,
         titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
-        autor: '',
-        reu: '',
+        autor: parties.autor || 'Não identificado',
+        reu: parties.reu || 'Não identificado',
         comarca: pub.orgao || '',
         vara: pub.tribunal || '',
         status: 'ativo',
         fase: 'Inicial',
         dataDistribuicao: pub.data || now.split('T')[0],
         dataUltimaMovimentacao: now,
-        notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}\n\nTeor:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''}`,
+        notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''}${parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''}\n\nTeor:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''}`,
         prazos: [],
         createdAt: now,
         updatedAt: now,
@@ -448,11 +462,13 @@ export default function DJENPublicationsWidget({
                     size="sm"
                     onClick={() => setFilter(f => f === 'all' ? 'unread' : 'all')}
                     className="h-8 w-8 p-0"
+                    aria-label={filter === 'all' ? 'Filtrar: mostrar apenas não lidas' : 'Filtrar: mostrar todas'}
                   >
                     <Funnel
                       size={16}
                       weight={filter === 'unread' ? 'fill' : 'regular'}
                       className={filter === 'unread' ? 'text-primary' : ''}
+                      aria-hidden="true"
                     />
                   </Button>
                 </TooltipTrigger>
@@ -471,10 +487,12 @@ export default function DJENPublicationsWidget({
                     onClick={handleSync}
                     disabled={syncing}
                     className="h-8 w-8 p-0"
+                    aria-label="Sincronizar publicações agora"
                   >
                     <ArrowsClockwise
                       size={16}
                       className={syncing ? 'animate-spin' : ''}
+                      aria-hidden="true"
                     />
                   </Button>
                 </TooltipTrigger>
@@ -540,12 +558,12 @@ export default function DJENPublicationsWidget({
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <Badge variant="outline" className="text-[10px] px-1.5">
+                        <Badge variant="outline" className="text-xs px-1.5">
                           {pub.tribunal}
                         </Badge>
                         <MatchBadge type={pub.matchType} />
                         {!pub.notified && (
-                          <Badge className="bg-primary/20 text-primary text-[10px] px-1.5">
+                          <Badge className="bg-primary/20 text-primary text-xs px-1.5">
                             <BellRinging size={10} className="mr-1" />
                             Novo
                           </Badge>
@@ -556,13 +574,13 @@ export default function DJENPublicationsWidget({
                         {pub.tipo || 'Intimação'}
                       </p>
 
-                      <p className="text-[11px] text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {pub.numeroProcesso && `Processo: ${pub.numeroProcesso}`}
                       </p>
                     </div>
 
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {formatRelativeDate(pub.createdAt)}
                       </span>
                       {expanded === pub.id ? (
@@ -578,13 +596,13 @@ export default function DJENPublicationsWidget({
                     <div className="mt-3 pt-3 border-t space-y-2">
                       <div className="bg-muted/50 p-2 rounded text-xs">
                         <p className="font-medium mb-1 text-muted-foreground">Teor:</p>
-                        <p className="whitespace-pre-wrap text-[11px] max-h-32 overflow-y-auto">
+                        <p className="whitespace-pre-wrap text-xs max-h-32 overflow-y-auto">
                           {pub.teor.substring(0, 500)}
                           {pub.teor.length > 500 && '...'}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Advogado: {pub.lawyerName}</span>
                         <span>Data: {pub.data && !isNaN(new Date(pub.data).getTime())
                           ? new Date(pub.data).toLocaleDateString('pt-BR')
