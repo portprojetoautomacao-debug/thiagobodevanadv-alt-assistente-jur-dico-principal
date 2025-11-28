@@ -49,7 +49,6 @@
     }
   },
   "regions": ["gru1"],
-  "maxLambdaSize": "50mb",
   "redirects": [
     {
       "source": "/:path*",
