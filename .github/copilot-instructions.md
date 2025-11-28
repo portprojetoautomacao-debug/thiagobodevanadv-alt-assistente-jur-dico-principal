@@ -1,17 +1,99 @@
 # Copilot Instructions for Assistente Jurídico PJe
 
-This repository contains a legal management system built with React, TypeScript, and Vite. These instructions guide GitHub Copilot on how to work effectively with this codebase.
+Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar efetivamente com o repositório **Assistente Jurídico PJe**.
 
-## Project Overview
+---
 
-**Assistente Jurídico PJe** is an intelligent legal management system for law offices, featuring:
-- AI-powered legal assistant (Harvey Specter chatbot)
-- Process management with Kanban board
-- Deadline calculator for legal proceedings
-- Google Calendar integration
-- DJEN/DataJud integration for publication monitoring
-- Financial management
-- 7 autonomous AI agents working 24/7
+## 📋 Visão Geral do Projeto
+
+**Assistente Jurídico PJe** é um sistema inteligente e completo de gestão jurídica para escritórios de advocacia, construído com React, TypeScript e Vite.
+
+### 🌐 URLs de Produção
+- **App Principal**: https://assistente-juridico-p.vercel.app/
+- **App Alternativo**: https://assistente-juridico-github.vercel.app/
+- **API Health**: https://assistente-juridico-p.vercel.app/api/health
+
+### 🎯 Objetivo Principal: Automação 100% com Supervisão Humana
+
+O sistema foi projetado para operar de forma **100% automática, 24/7, sem necessidade de intervenção humana constante**, porém oferece ferramentas completas para que operadores humanos possam **revisar, editar e aprovar** todo o trabalho realizado pelos agentes de IA.
+
+#### ⚙️ Filosofia de Automação
+- **Zero Touch Operation**: O sistema monitora, analisa, identifica e executa tarefas automaticamente
+- **Human-in-the-Loop**: Operadores podem intervir a qualquer momento para revisar ou modificar
+- **Transparência Total**: Todas as ações dos agentes são registradas e auditáveis
+- **Notificações Inteligentes**: Alertas para itens que requerem atenção ou aprovação humana
+
+#### 🔄 Fluxos de Colaboração Humano-Agente
+
+| Cenário | Descrição | Comportamento do Sistema |
+|---------|-----------|--------------------------|
+| **Agente conclui → Humano revisa** | Agente finaliza uma manifestação/petição e notifica o operador | O documento fica em status "Pendente Revisão". Operador pode editar livremente e depois aprovar para protocolo |
+| **Humano inicia → Agente continua** | Operador começa a redigir uma petição mas não finaliza | Agente detecta documento incompleto, continua a redação e notifica quando concluir. Operador revisa e ajusta |
+| **Agente detecta → Humano decide** | Agente identifica nova intimação com prazo | Agente sugere ação (contestar, manifestar, etc.) e prepara minuta. Operador aprova ou altera estratégia |
+| **Revisão colaborativa** | Múltiplas versões de um documento | Sistema mantém histórico de versões. Agente pode sugerir melhorias. Operador tem controle final |
+| **Urgência detectada** | Prazo crítico identificado (ex: 24h) | Agente prioriza automaticamente, prepara resposta e envia notificação urgente ao operador |
+| **Correção pós-protocolo** | Erro identificado após agente protocolar | Operador pode cancelar/retificar via sistema. Agente aprende com a correção |
+
+#### 🛠️ Ferramentas para Operador Humano
+
+1. **Editor de Documentos Integrado**
+   - Editar petições/manifestações criadas pelos agentes
+   - Aceitar/rejeitar sugestões de IA
+   - Adicionar notas e comentários internos
+
+2. **Painel de Aprovação**
+   - Fila de documentos pendentes de revisão
+   - Aprovar, rejeitar ou solicitar alterações
+   - Marcar como "Auto-aprovar" para tipos específicos
+
+3. **Histórico e Auditoria**
+   - Ver todas as ações executadas por agentes
+   - Comparar versões de documentos
+   - Rastrear quem aprovou cada ação
+
+4. **Configurações de Autonomia**
+   - Definir níveis de autonomia por tipo de tarefa
+   - Ex: "Monitoramento DJEN = 100% automático, Protocolo = Requer aprovação"
+   - Configurar regras de auto-aprovação
+
+5. **Intervenção Manual**
+   - Pausar/retomar agentes a qualquer momento
+   - Assumir controle de tarefas em andamento
+   - Desfazer ações recentes dos agentes
+
+#### 📊 Status de Automação por Funcionalidade
+
+| Funcionalidade | Nível Automação | Intervenção Humana |
+|----------------|-----------------|---------------------|
+| Monitoramento DJEN/DataJud | 🟢 100% | Opcional - revisar publicações |
+| Análise de intimações | 🟢 100% | Opcional - confirmar classificação |
+| Cálculo de prazos | 🟢 100% | Opcional - ajustar feriados locais |
+| Geração de tarefas | 🟢 100% | Opcional - editar prioridades |
+| Redação de petições | 🟡 80% | **Recomendado** - revisar antes de protocolar |
+| Estratégia processual | 🟡 70% | **Recomendado** - aprovar estratégia |
+| Protocolo no PJe | 🔴 Manual | **Obrigatório** - validar e protocolar |
+| Comunicação com cliente | 🟡 80% | **Recomendado** - revisar mensagem |
+| Gestão financeira | 🟡 70% | **Recomendado** - aprovar lançamentos |
+
+> **Nota**: Os níveis de autonomia são configuráveis. O objetivo é permitir operação 100% automática quando desejado, mas sempre com ferramentas de supervisão disponíveis.
+
+### ✨ Funcionalidades Principais
+- 🤖 **15 Agentes de IA Autônomos** trabalhando 24/7
+- 💬 **Assistente Jurídico IA** (Harvey Specter chatbot com Donna)
+- 📊 **Dashboard Inteligente** com métricas em tempo real
+- 📁 **CRM de Processos** com Kanban drag-and-drop (@dnd-kit)
+- ⏰ **Calculadora de Prazos** com feriados nacionais/estaduais/municipais
+- 📅 **Google Calendar** integração bidirecional
+- 📰 **DJEN/DataJud** monitoramento automático de publicações
+- 💰 **Gestão Financeira** com relatórios e analytics
+- 📝 **Minutas e Documentos** com templates e Google Docs
+- 🔔 **Sistema de Notificações** para prazos urgentes
+- 🎨 **PWA** com suporte offline e instalação
+- 📱 **Design Responsivo** mobile-first
+- ✏️ **Edição Colaborativa** humano + agentes IA
+- 🔐 **Controle de Autonomia** configurável por funcionalidade
+
+---
 
 ## Autonomous Agents System
 
@@ -132,6 +214,33 @@ O sistema inclui 15 agentes de IA especializados, cada um com funções específ
 - **Capacidades**: compliance-check, lgpd-verification, ethics-review, regulatory-audit
 - **Uso**: Verificar conformidade LGPD, revisar questões éticas
 
+### 📊 Status dos Agentes por Padrão
+
+#### ✅ 9 Agentes Ativos Automaticamente (24/7)
+| # | ID | Nome | Função |
+|---|-----|------|--------|
+| 1 | `harvey` | Harvey Specter | Estrategista-chefe |
+| 2 | `justine` | Mrs. Justin-e | Análise de intimações |
+| 3 | `analise-documental` | Analisador de Documentos | Análise de expedientes |
+| 4 | `monitor-djen` | Monitor DJEN | Monitoramento publicações |
+| 5 | `gestao-prazos` | Gestão de Prazos | Cálculo de prazos |
+| 6 | `redacao-peticoes` | Redator de Petições | Criação de documentos |
+| 7 | `pesquisa-juris` | Pesquisador Jurisprudência | Busca precedentes |
+| 8 | `analise-risco` | Análise de Risco | Avaliação de viabilidade |
+| 9 | `estrategia-processual` | Estratégia Processual | Planejamento estratégico |
+
+#### ⏸️ 6 Agentes Desativados (Ativar manualmente)
+| # | ID | Nome | Motivo |
+|---|-----|------|--------|
+| 10 | `organizacao-arquivos` | Organizador de Arquivos | Sob demanda |
+| 11 | `revisao-contratual` | Revisor Contratual | Sob demanda |
+| 12 | `comunicacao-clientes` | Comunicação com Clientes | Sob demanda |
+| 13 | `financeiro` | Análise Financeira | Sob demanda |
+| 14 | `traducao-juridica` | Tradutor Jurídico | Sob demanda |
+| 15 | `compliance` | Compliance | Sob demanda |
+
+> **Nota**: Os 9 agentes ativos formam o **fluxo automático de análise de intimações** - desde a detecção no DJEN até a sugestão de estratégia processual.
+
 ### 🔧 Como Usar os Agentes
 
 #### Ativando/Desativando Agentes
@@ -165,80 +274,152 @@ addTask(task)
 - ⏸️ **10 agentes especializados** (ativar quando necessário)
 - 📊 **100% implementados** e testados
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-- **Framework**: React 19 with TypeScript
-- **Build Tool**: Vite 6
-- **Node Version**: 22.x (required)
-- **Styling**: Tailwind CSS v4
-- **UI Components**: shadcn/ui v4, Radix UI
-- **Icons**: Phosphor Icons, Lucide React
-- **State Management**: Spark KV (useKV hook from @github/spark)
-- **Forms**: React Hook Form + Zod validation
-- **Charts**: Recharts
-- **Animation**: Framer Motion
-- **AI**: Spark LLM (GPT-4)
-- **OAuth**: Google OAuth 2.0 for authentication
-- **Database**: Upstash Redis (KV storage)
-- **Monitoring**: Sentry (error tracking)
-- **PWA**: vite-plugin-pwa
-- **Testing**: Vitest + Playwright (E2E)
-- **Deployment**: Vercel (with cron jobs and serverless functions)
+### Frontend
+| Tecnologia | Versão | Uso |
+|------------|--------|-----|
+| React | 19.0.0 | Framework principal |
+| TypeScript | 5.5.0 | Tipagem estática |
+| Vite | 6.3.5 | Build tool e dev server |
+| Tailwind CSS | 4.1.11 | Estilização utility-first |
+| shadcn/ui | v4 | Componentes UI (Radix-based) |
+| Framer Motion | 12.6.2 | Animações fluidas |
+| Recharts | 2.15.1 | Gráficos e visualizações |
+| React Hook Form | 7.54.2 | Gerenciamento de formulários |
+| Zod | 3.25.76 | Validação de schemas |
+| @dnd-kit | 6.3.1 | Drag and drop (Kanban) |
+| Phosphor Icons | 2.1.7 | Ícones principais |
+| Lucide React | 0.484.0 | Ícones secundários |
+| @tanstack/react-query | 5.83.1 | Data fetching e cache |
 
-## Project Structure
+### Backend (Vercel Serverless)
+| Tecnologia | Versão | Uso |
+|------------|--------|-----|
+| Node.js | 22.x | Runtime (obrigatório) |
+| Vercel Functions | - | API serverless |
+| Upstash Redis | 1.35.6 | KV storage persistente |
+| @vercel/node | 5.5.6 | Runtime serverless |
+
+### Integrações Externas
+| Serviço | Propósito |
+|---------|-----------|
+| Google OAuth 2.0 | Autenticação de usuários |
+| Google Calendar API | Sincronização de eventos/prazos |
+| Google Docs API | Edição de minutas |
+| DJEN/DataJud API | Monitoramento de publicações jurídicas |
+| Sentry | Error tracking e monitoring |
+| Vercel Speed Insights | Performance monitoring |
+
+### DevOps & CI/CD
+| Ferramenta | Uso |
+|------------|-----|
+| GitHub Actions | 35+ workflows automatizados |
+| GitLab CI/CD | Pipeline secundário |
+| Playwright | Testes E2E |
+| Vitest | Testes unitários |
+| ESLint 9 | Linting com flat config |
+| Prettier | Formatação de código |
+
+## 📁 Project Structure
 
 ```
-src/
-├── components/          # React components
-│   ├── ui/             # shadcn UI components (DO NOT MODIFY - generated)
-│   ├── Dashboard.tsx   # Main dashboard
-│   ├── ProcessCRM.tsx  # Kanban process management
-│   ├── AIAgents.tsx    # AI agents panel
-│   ├── GoogleAuth.tsx  # Google OAuth authentication
-│   └── ...             # Other feature components
-├── hooks/              # Custom React hooks
-│   └── use-autonomous-agents.ts  # AI agents logic
-├── lib/
-│   ├── config.ts       # Centralized configuration (environment variables)
-│   ├── utils.ts        # Utility functions
-│   └── djen-api.test.ts # API tests
-├── types.ts            # TypeScript type definitions
-├── App.tsx             # Main application component
-└── main.tsx            # Application entry point
+assistente-juridico-p/
+├── .github/
+│   ├── copilot-instructions.md  # Este arquivo
+│   └── workflows/               # 35+ GitHub Actions
+│       ├── ci.yml               # CI principal
+│       ├── deploy.yml           # Deploy Vercel
+│       ├── e2e.yml              # Testes E2E
+│       ├── security-scan.yml    # Scans de segurança
+│       └── ...
+├── api/                         # Vercel Serverless Functions
+│   ├── agents.ts                # Gerenciamento de agentes
+│   ├── backup.ts                # Backup de dados
+│   ├── cron.ts                  # Jobs agendados (DJEN monitor)
+│   ├── djen-sync.ts             # Sync DJEN (60s timeout)
+│   ├── expedientes.ts           # Gestão de expedientes/intimações
+│   ├── kv.ts                    # KV storage proxy
+│   ├── legal-services.ts        # Serviços jurídicos (prazos, etc)
+│   ├── llm-proxy.ts             # Proxy para LLM
+│   ├── spark-proxy.ts           # Proxy Spark
+│   ├── status.ts                # Health check
+│   └── lib/                     # Libs compartilhadas
+├── src/
+│   ├── components/              # 60+ componentes React
+│   │   ├── ui/                  # shadcn/ui (NÃO MODIFICAR)
+│   │   ├── Dashboard.tsx        # Dashboard principal
+│   │   ├── ProcessCRM.tsx       # CRM com Kanban
+│   │   ├── AIAgents.tsx         # Painel de agentes IA
+│   │   ├── CalculadoraPrazos.tsx # Calculadora de prazos
+│   │   ├── Calendar.tsx         # Agenda com Google Calendar
+│   │   ├── FinancialManagement.tsx # Gestão financeira
+│   │   ├── DJENPublicationsWidget.tsx # Widget publicações
+│   │   ├── ExpedientePanel.tsx  # Painel de expedientes
+│   │   ├── Donna.tsx            # Chatbot IA
+│   │   ├── MinutasManager.tsx   # Gestão de minutas
+│   │   └── ...
+│   ├── hooks/                   # Custom hooks
+│   │   ├── use-autonomous-agents.ts  # Lógica dos agentes IA
+│   │   ├── use-kv.ts            # KV storage
+│   │   ├── use-processes.ts     # Gerenciamento de processos
+│   │   ├── use-notifications.ts # Notificações
+│   │   ├── use-analytics.ts     # Analytics
+│   │   └── ...
+│   ├── lib/                     # Utilitários e serviços
+│   │   ├── agents.ts            # Core dos agentes (15 agentes)
+│   │   ├── config.ts            # Configurações centralizadas
+│   │   ├── datajud-api.ts       # API DataJud
+│   │   ├── djen-api.ts          # API DJEN
+│   │   ├── google-calendar-service.ts # Serviço Google Calendar
+│   │   ├── premonicao-service.ts # Premonição jurídica (IA)
+│   │   ├── prazos.ts            # Cálculo de prazos
+│   │   ├── llm-client.ts        # Cliente LLM
+│   │   └── utils.ts             # Utilitários gerais
+│   ├── services/
+│   │   └── error-tracking.ts    # Sentry
+│   ├── types.ts                 # Tipos TypeScript
+│   ├── App.tsx                  # App principal (lazy loading)
+│   ├── main.tsx                 # Entry point
+│   └── index.css                # Estilos globais + Tailwind
+├── public/                      # Assets estáticos
+├── tests/                       # Testes E2E (Playwright)
+├── vercel.json                  # Config Vercel completa
+├── vite.config.ts               # Config Vite otimizada
+├── package.json
+├── tsconfig.json
+└── tailwind.config.js
 ```
 
-## Development Commands
+## 💻 Development Commands
 
 ```bash
-# Install dependencies
+# Instalação
 npm install
 
-# Start development server
-npm run dev              # Runs on http://localhost:5173
+# Desenvolvimento
+npm run dev              # http://localhost:5173
 
-# Build for production
-npm run build            # TypeScript compilation + Vite build
+# Build
+npm run build            # TypeScript + Vite build
+npm run preview          # Preview do build
 
-# Preview production build
-npm run preview
+# Testes
+npm run test             # Vitest watch mode
+npm run test:run         # Rodar testes uma vez
+npm run test:ui          # Interface visual de testes
+npm run test:coverage    # Relatório de cobertura
+npm run test:api         # Testes de API
+npm run test:all         # Todos os testes
+npm run test:e2e         # Playwright E2E
 
-# Lint code
-npm run lint             # Run ESLint
+# Qualidade de código
+npm run lint             # ESLint (max 150 warnings)
+npm run format           # Prettier
 
-# Optimize dependencies
-npm run optimize
-
-# Testing
-npm run test             # Run unit tests (Vitest)
-npm run test:ui          # Run tests with UI
-npm run test:run         # Run tests once
-npm run test:coverage    # Run tests with coverage
-npm run test:api         # Run API tests
-npm run test:all         # Run all tests
-npm run test:e2e         # Run E2E tests (Playwright)
-
-# Formatting
-npm run format           # Format code with Prettier
+# Utilitários
+npm run optimize         # Otimizar dependências
+npm run kill             # Kill porta 5000
 ```
 
 ## Code Style and Conventions
@@ -451,6 +632,33 @@ const form = useForm({
 - **Security Headers**: HSTS, CSP, CORS configured
 - **Environment**: Production builds optimized
 
+### Cron Jobs Configurados
+| Job | Schedule (UTC) | Horário BRT | Função |
+|-----|----------------|-------------|--------|
+| DJEN Monitor | `0 14 * * *` | 11:00 | Verifica publicações diárias |
+| Daily Reset | `0 0 * * *` | 21:00 | Reset de contadores |
+
+### API Endpoints (Vercel Functions)
+| Endpoint | Método | Timeout | Função |
+|----------|--------|---------|--------|
+| `/api/status` | GET | 30s | Health check |
+| `/api/kv` | GET/POST/DELETE | 30s | KV storage CRUD |
+| `/api/expedientes` | GET | 30s | Lista expedientes |
+| `/api/djen-sync` | POST | 60s | Força sync DJEN |
+| `/api/cron` | GET | 30s | Jobs agendados |
+| `/api/agents` | GET/POST | 30s | Gerenciar agentes |
+| `/api/legal-services` | GET/POST | 30s | Serviços jurídicos |
+| `/api/llm-proxy` | POST | 30s | Proxy para LLM |
+| `/api/backup` | GET/POST | 30s | Backup de dados |
+
+### Rewrites (Proxy)
+```
+/_spark/llm         → /api/llm-proxy
+/_spark/kv/:key*    → /api/kv
+/api/health         → /api/status?type=health
+/api/deadline/calculate → /api/legal-services?service=deadline
+```
+
 ### GitLab CI/CD
 - **Agents**: 7 autonomous agents for development workflow
 - **Kubernetes**: Minikube cluster with RBAC
@@ -485,6 +693,68 @@ SENTRY_DSN=
 RESEND_API_KEY=
 ```
 
+## Performance & Lighthouse Optimizations
+
+### Scores Atuais (Lighthouse CI)
+| Categoria | Score | Meta |
+|-----------|-------|------|
+| Performance | 85+ | 90+ |
+| Accessibility | 94+ | 100 |
+| Best Practices | 79+ | 85+ |
+| SEO | 92+ | 95+ |
+| PWA | ✅ | ✅ |
+
+### Otimizações Implementadas
+
+#### Critical CSS Inline
+- CSS crítico inline no `index.html` para First Contentful Paint (FCP)
+- Loader animado visível imediatamente
+- Reduz render-blocking resources
+
+#### Code Splitting Otimizado
+```typescript
+// vite.config.ts - Chunks nomeados
+manualChunks: {
+  'vendor': ['react', 'react-dom', 'react-router-dom'],
+  'ui': ['@radix-ui/...', 'framer-motion'],
+  'charts': ['recharts'],
+  'date-utils': ['date-fns', 'date-fns-tz'],
+  'sentry': ['@sentry/react'],
+  'toasts': ['sonner']
+}
+```
+
+#### Lazy Loading
+- **Sentry**: Carregado dinamicamente, não bloqueia o bundle principal
+- **Componentes pesados**: React.lazy() para AIAgents, CalculadoraPrazos, etc.
+- **Imagens**: Loading="lazy" em todas as imagens
+
+#### Preconnect & DNS Prefetch
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://api.datajud.cnj.jus.br">
+```
+
+#### CSP Seguro (sem unsafe-eval)
+```json
+"Content-Security-Policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; ..."
+```
+- Removido `unsafe-eval` para melhorar Best Practices score
+- Adicionado `base-uri 'self'` e `form-action 'self'`
+- `upgrade-insecure-requests` habilitado
+
+#### Acessibilidade
+- Todos os botões de ícone têm `aria-label` + `title` fallback
+- Estrutura semântica HTML5
+- Suporte a navegação por teclado
+- Contraste de cores adequado (WCAG AA)
+
+### Ferramentas de Monitoramento
+- **Vercel Speed Insights**: Métricas de Core Web Vitals
+- **Sentry**: Error tracking e performance monitoring
+- **Lighthouse CI**: Testes automatizados no CI/CD
+
 ## Documentation Files
 
 - `PRD.md` - Product requirements
@@ -497,7 +767,7 @@ RESEND_API_KEY=
 - `GITLAB_DUO_SETUP_COMPLETE.md` - GitLab Duo configuration
 - `QUICKSTART.md` - Quick start guide
 - `VERCEL_DEPLOYMENT_GUIDE.md` - Vercel deployment details
-- `TODOS_OS_15_AGENTES.md` - Complete agents documentation
+- `TODOS_OS_15_AGENTES.md` - Complete agents documentation (15 agentes)
 - `AGENTS_SYSTEM.md` - Technical agents documentation
 - `AGENTS_IMPROVEMENTS_SUMMARY.md` - Agents improvements summary
 

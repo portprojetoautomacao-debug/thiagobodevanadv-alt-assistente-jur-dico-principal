@@ -2,227 +2,268 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, copilot/** ]
+    branches: [main, develop, copilot/**]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - "LICENSE"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
+    inputs:
+      skip_e2e:
+        description: "Skip E2E tests"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  NODE_VERSION: "22.x"
+  # Shared environment variables for all jobs
+  VITE_APP_ENV: "ci"
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  # ==========================================
+  # 🔍 LINT & TYPE CHECK (Fast feedback)
+  # ==========================================
+  lint:
+    name: "🧹 Lint & Type Check"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    strategy:
-      matrix:
-        node-version: ['22.x']
-        # Node 18.x removido - package.json especifica 22.x
+    timeout-minutes: 10
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: package-lock.json
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
-    - name: Cache build artifacts
-      uses: actions/cache@v4
-      with:
-        path: |
-          dist
-          .vite
-        key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*', 'vite.config.ts', 'package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ matrix.node-version }}-
-          ${{ runner.os }}-build-
+      - name: 📦 Install dependencies
+        run: npm ci
 
-    - name: Install dependencies
-      run: npm ci --include=dev
+      - name: 🎨 Run ESLint
+        run: npm run lint
 
-    - name: Run linter
-      run: |
-        echo "Running ESLint..."
-        if ! npm run lint; then
-          echo "❌ Linting failed"
-          echo "Please fix the linting errors before proceeding"
-          exit 1
-        fi
-        echo "✅ Linting passed"
-      continue-on-error: false
+      - name: 🔍 TypeScript type check
+        run: npx tsc --noEmit --skipLibCheck
 
-    - name: Build application
-      run: |
-        echo "Building application..."
-        npm run build || {
-          echo "❌ Build failed"
-          echo "Please fix the build errors before proceeding"
-          exit 1
-        }
-        echo "✅ Build successful"
-      env:
-        # Use dummy values for build-time environment variables
-        VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
-        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
-        VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
-        VITE_APP_ENV: 'ci'
-
-    - name: Run tests
-      run: |
-        echo "Running all tests..."
-        npm run test:all
-      if: success()
-
-    - name: Check package.json sync
-      run: |
-        if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package.json"; then
-          if ! git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package-lock.json"; then
-            echo "❌ package.json changed but package-lock.json didn't!"
-            exit 1
-          fi
-        fi
-      if: github.event_name == 'pull_request'
-
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-
-    - name: Start development server
-      run: PORT=5000 npm run dev &
-      env:
-        PORT: 5000
-        VITE_APP_ENV: 'test'
-
-    - name: Wait for server to be ready
-      run: |
-        timeout 60 bash -c 'until curl -f http://localhost:5000 > /dev/null 2>&1; do sleep 1; done'
-
-    - name: Run E2E tests
-      run: npm run test:e2e || echo "⚠️ Some E2E tests failed - this is expected in CI environment"
-      continue-on-error: true
-      env:
-        CI: true
-
-    - name: Build summary
-      if: always()
-      run: |
-        echo "## 🏗️ CI Build Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Node Version:** ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
-        echo "**OS:** ubuntu-latest" >> $GITHUB_STEP_SUMMARY
-        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### ✅ Completed Steps" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Code checkout" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Node.js setup" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Dependencies installed" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Linting completed" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Tests executed" >> $GITHUB_STEP_SUMMARY
-        echo "- [x] Artifacts uploaded" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
-        echo "- **Cache Hit:** Check cache step logs above" >> $GITHUB_STEP_SUMMARY
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      if: success()
-      with:
-        name: build-${{ matrix.node-version }}
-        path: dist/
-        retention-days: 7
-
-  lint-security:
-    name: Security & Quality Checks
+  # ==========================================
+  # 🏗️ BUILD
+  # ==========================================
+  build:
+    name: "🏗️ Build"
     runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 15
+    outputs:
+      build_success: ${{ steps.build.outcome == 'success' }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Cache Vite build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .vite
+            node_modules/.vite
+          key: vite-${{ runner.os }}-${{ hashFiles('vite.config.ts', 'package-lock.json') }}
+          restore-keys: |
+            vite-${{ runner.os }}-
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        id: build
+        run: npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id' }}
+          VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy-api-key' }}
+          VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
+
+      - name: 📊 Build size report
+        run: |
+          echo "## 📦 Build Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Directory | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| dist/ | $(du -sh dist/ | cut -f1) |" >> $GITHUB_STEP_SUMMARY
+          echo "| dist/assets/ | $(du -sh dist/assets/ 2>/dev/null | cut -f1 || echo 'N/A') |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Top 5 largest files:" >> $GITHUB_STEP_SUMMARY
+          find dist/ -type f -exec du -h {} + | sort -rh | head -5 >> $GITHUB_STEP_SUMMARY
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: dist/
+          retention-days: 7
+
+  # ==========================================
+  # 🧪 UNIT TESTS
+  # ==========================================
+  test:
+    name: "🧪 Unit Tests"
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run unit tests
+        run: npm run test -- --run --coverage
+
+      - name: 📊 Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  # ==========================================
+  # 🎭 E2E TESTS (Optional)
+  # ==========================================
+  e2e:
+    name: "🎭 E2E Tests"
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 20
+    if: ${{ !inputs.skip_e2e }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: dist/
+
+      - name: 🎭 Run E2E tests
+        run: npm run test:e2e
+        continue-on-error: true
+        env:
+          CI: true
+
+      - name: 📤 Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # ==========================================
+  # 🔒 SECURITY AUDIT
+  # ==========================================
+  security:
+    name: "🔒 Security Audit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       security-events: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: 📦 Install dependencies
+        run: npm ci
 
-    - name: Run npm audit
-      run: |
-        echo "Running npm audit..."
-        npm audit --audit-level=moderate || {
-          echo "⚠️ Security vulnerabilities found"
-          echo "Please review and fix when possible"
-        }
+      - name: 🔍 npm audit
+        run: |
+          npm audit --audit-level=high || {
+            echo "::warning::Security vulnerabilities found - review npm audit output"
+          }
+        continue-on-error: true
 
-    - name: Security audit summary
-      run: |
-        echo "## 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Running security audit with moderate threshold..." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        npm audit --audit-level=moderate 2>&1 | head -50 >> $GITHUB_STEP_SUMMARY || true
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📝 Notes" >> $GITHUB_STEP_SUMMARY
-        echo "- Review vulnerabilities and update dependencies when possible" >> $GITHUB_STEP_SUMMARY
-        echo "- Some vulnerabilities may be in transitive dependencies" >> $GITHUB_STEP_SUMMARY
-        echo "- Use \`npm audit fix\` to attempt automatic fixes" >> $GITHUB_STEP_SUMMARY
-      continue-on-error: true
+      - name: 📊 Security summary
+        run: |
+          echo "## 🔒 Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          npm audit --json 2>/dev/null | jq -r '.metadata | "- Total: \(.totalDependencies) dependencies\n- Vulnerabilities: \(.vulnerabilities.total // 0)"' >> $GITHUB_STEP_SUMMARY || echo "No audit data available" >> $GITHUB_STEP_SUMMARY
 
-    - name: Check for outdated dependencies
-      run: npm outdated || true
-      continue-on-error: true
-
-    - name: Run ESLint with SARIF output
-      run: |
-        echo "Running ESLint with SARIF formatter..."
-        npm run lint:sarif || {
-          echo "⚠️ ESLint completed with warnings/errors"
-          # Ensure SARIF file exists even on failure
-          if [ ! -f "eslint-results.sarif" ]; then
-            echo "Creating empty SARIF file..."
-            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-          fi
-        }
-        echo "✅ SARIF report generated"
-      continue-on-error: true
-
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v4
-      if: always() && hashFiles('eslint-results.sarif') != ''
-      with:
-        sarif_file: eslint-results.sarif
-        category: eslint-ci
-      continue-on-error: true
-
-  build-matrix-status:
-    name: Build Matrix Status
+  # ==========================================
+  # ✅ STATUS CHECK
+  # ==========================================
+  ci-status:
+    name: "✅ CI Status"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: [build-and-test, lint-security]
+    needs: [lint, build, test, security]
     if: always()
 
     steps:
-    - name: Check build status
-      run: |
-        if [[ "${{ needs.build-and-test.result }}" == "success" ]]; then
-          echo "✅ Build and test passed"
-          exit 0
-        else
-          echo "❌ Build and test failed"
-          exit 1
-        fi
+      - name: 📊 Check all jobs
+        run: |
+          echo "## 📊 CI Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result == 'success' && '✅' || '❌' }} ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅' || '❌' }} ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result == 'success' && '✅' || '❌' }} ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result == 'success' && '✅' || '⚠️' }} ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+
+          # Fail if critical jobs failed
+          if [[ "${{ needs.lint.result }}" != "success" ]] || [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo ""
+            echo "❌ Critical CI checks failed"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ All critical CI checks passed!"

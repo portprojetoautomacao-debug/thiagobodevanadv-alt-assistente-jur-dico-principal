@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
-import { defineConfig, PluginOption } from "vite";
+import { defineConfig } from "vite";
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { phosphorIconOptimizer } from './vite-icon-optimizer';
