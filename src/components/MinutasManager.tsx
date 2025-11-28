@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
+// Separator - disponível se necessário
+// import { Separator } from '@/components/ui/separator'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   FileText,
@@ -31,16 +32,16 @@ import {
   CheckCircle,
   Eye,
   Copy,
-  ListBullets,
+  // ListBullets, // disponível se necessário
   CaretDown,
-  X,
+  // X, // disponível se necessário
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { googleDocsService } from '@/lib/google-docs-service'
 import { TiptapEditor } from '@/components/editor/TiptapEditor'
 import {
   documentTemplates,
-  getTemplateById,
+  // getTemplateById, // disponível se necessário
   replaceTemplateVariables,
   extractUnfilledVariables,
   type DocumentTemplate
@@ -100,7 +101,7 @@ export default function MinutasManager() {
   const [activeTab, setActiveTab] = useState('editor')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null)
-  const [showTemplateDialog, setShowTemplateDialog] = useState(false)
+  const [_showTemplateDialog, setShowTemplateDialog] = useState(false)
   const [variableValues, setVariableValues] = useState<Record<string, string>>({})
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterTipo, setFilterTipo] = useState<string>('all')
