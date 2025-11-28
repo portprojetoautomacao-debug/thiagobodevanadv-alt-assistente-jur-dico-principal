@@ -1,28 +1,29 @@
+```ts
 /**
  * Tratamento padronizado de erros
  * Centraliza formatação e logging de erros
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { SafeLogger } from './safe-logger.js';
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { SafeLogger } from './safe-logger.js'
 
-const logger = new SafeLogger('ErrorHandler');
+const logger = new SafeLogger('ErrorHandler')
 
 export interface ErrorResponse {
-  ok: false;
-  error: string;
-  code?: string;
-  details?: unknown;
-  timestamp: string;
-  requestId?: string;
+  ok: false
+  error: string
+  code?: string
+  details?: unknown
+  timestamp: string
+  requestId?: string
 }
 
 export interface SuccessResponse<T = unknown> {
-  ok: true;
-  data?: T;
-  message?: string;
-  timestamp: string;
-  metadata?: Record<string, unknown>;
+  ok: true
+  data?: T
+  message?: string
+  timestamp: string
+  metadata?: Record<string, unknown>
 }
 
 /**
@@ -65,17 +66,17 @@ export const ErrorCodes = {
   AGENT_NOT_FOUND: 'AGENT_NOT_FOUND',
   AGENT_BUSY: 'AGENT_BUSY',
   TASK_FAILED: 'TASK_FAILED'
-} as const;
+} as const
 
-export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
 
 /**
  * Classe base para erros da aplicação
  */
 export class AppError extends Error {
-  public readonly code: ErrorCode;
-  public readonly statusCode: number;
-  public readonly details?: unknown;
+  public readonly code: ErrorCode
+  public readonly statusCode: number
+  public readonly details?: unknown
 
   constructor(
     message: string,
@@ -83,11 +84,11 @@ export class AppError extends Error {
     statusCode: number = 500,
     details?: unknown
   ) {
-    super(message);
-    this.name = 'AppError';
-    this.code = code;
-    this.statusCode = statusCode;
-    this.details = details;
+    super(message)
+    this.name = 'AppError'
+    this.code = code
+    this.statusCode = statusCode
+    this.details = details
   }
 }
 
@@ -96,36 +97,36 @@ export class AppError extends Error {
  */
 export class ValidationError extends AppError {
   constructor(message: string, details?: unknown) {
-    super(message, ErrorCodes.VALIDATION_FAILED, 400, details);
-    this.name = 'ValidationError';
+    super(message, ErrorCodes.VALIDATION_FAILED, 400, details)
+    this.name = 'ValidationError'
   }
 }
 
 export class AuthenticationError extends AppError {
   constructor(message: string = 'Autenticação obrigatória') {
-    super(message, ErrorCodes.AUTH_REQUIRED, 401);
-    this.name = 'AuthenticationError';
+    super(message, ErrorCodes.AUTH_REQUIRED, 401)
+    this.name = 'AuthenticationError'
   }
 }
 
 export class AuthorizationError extends AppError {
   constructor(message: string = 'Acesso negado') {
-    super(message, ErrorCodes.FORBIDDEN, 403);
-    this.name = 'AuthorizationError';
+    super(message, ErrorCodes.FORBIDDEN, 403)
+    this.name = 'AuthorizationError'
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(resource: string) {
-    super(`${resource} não encontrado`, ErrorCodes.NOT_FOUND, 404);
-    this.name = 'NotFoundError';
+    super(`${resource} não encontrado`, ErrorCodes.NOT_FOUND, 404)
+    this.name = 'NotFoundError'
   }
 }
 
 export class RateLimitError extends AppError {
   constructor(message: string = 'Rate limit excedido', retryAfter?: number) {
-    super(message, ErrorCodes.RATE_LIMIT_EXCEEDED, 429, { retryAfter });
-    this.name = 'RateLimitError';
+    super(message, ErrorCodes.RATE_LIMIT_EXCEEDED, 429, { retryAfter })
+    this.name = 'RateLimitError'
   }
 }
 
@@ -136,9 +137,26 @@ export class ExternalServiceError extends AppError {
       ErrorCodes.EXTERNAL_SERVICE_ERROR,
       502,
       details
-    );
-    this.name = 'ExternalServiceError';
+    )
+    this.name = 'ExternalServiceError'
   }
+}
+
+/**
+ * Extrai um possível requestId do request (header ou query/body)
+ */
+function extractRequestId(req?: VercelRequest): string | undefined {
+  if (!req) return undefined
+  const fromHeader = req.headers['x-request-id'] || req.headers['x-correlation-id']
+  if (typeof fromHeader === 'string') return fromHeader
+  if (Array.isArray(fromHeader)) return fromHeader[0]
+  if (req.query?.requestId && typeof req.query.requestId === 'string') {
+    return req.query.requestId
+  }
+  if (req.body?.requestId && typeof req.body.requestId === 'string') {
+    return req.body.requestId
+  }
+  return undefined
 }
 
 /**
@@ -147,12 +165,13 @@ export class ExternalServiceError extends AppError {
 export function handleError(
   error: unknown,
   res: VercelResponse,
-  context?: string
+  context?: string,
+  req?: VercelRequest
 ): void {
-  let appError: AppError;
+  let appError: AppError
 
   if (error instanceof AppError) {
-    appError = error;
+    appError = error
   } else if (error instanceof Error) {
     // Erro genérico
     appError = new AppError(
@@ -160,7 +179,7 @@ export function handleError(
       ErrorCodes.INTERNAL_ERROR,
       500,
       { originalError: error.name }
-    );
+    )
   } else {
     // Erro desconhecido
     appError = new AppError(
@@ -168,19 +187,22 @@ export function handleError(
       ErrorCodes.INTERNAL_ERROR,
       500,
       { originalError: String(error) }
-    );
+    )
   }
+
+  const requestId = extractRequestId(req)
 
   // Log do erro
   logger.error(
-    `Erro ${context ? `em ${context}` : ''}: ${appError.message}`,
+    `Erro${context ? ` em ${context}` : ''}: ${appError.message}`,
     appError,
     {
       code: appError.code,
       statusCode: appError.statusCode,
-      details: appError.details
+      details: appError.details,
+      requestId
     }
-  );
+  )
 
   // Resposta de erro
   const errorResponse: ErrorResponse = {
@@ -188,10 +210,11 @@ export function handleError(
     error: appError.message,
     code: appError.code,
     details: process.env.NODE_ENV === 'development' ? appError.details : undefined,
-    timestamp: new Date().toISOString()
-  };
+    timestamp: new Date().toISOString(),
+    requestId
+  }
 
-  res.status(appError.statusCode).json(errorResponse);
+  res.status(appError.statusCode).json(errorResponse)
 }
 
 /**
@@ -203,11 +226,11 @@ export function withErrorHandler(
 ) {
   return async (req: VercelRequest, res: VercelResponse): Promise<void> => {
     try {
-      await handler(req, res);
+      await handler(req, res)
     } catch (error) {
-      handleError(error, res, context);
+      handleError(error, res, context, req)
     }
-  };
+  }
 }
 
 /**
@@ -224,7 +247,7 @@ export function createSuccessResponse<T = unknown>(
     message,
     timestamp: new Date().toISOString(),
     metadata
-  };
+  }
 }
 
 /**
@@ -237,23 +260,24 @@ export function sendSuccess<T = unknown>(
   statusCode: number = 200,
   metadata?: Record<string, unknown>
 ): void {
-  res.status(statusCode).json(createSuccessResponse(data, message, metadata));
+  res.status(statusCode).json(createSuccessResponse(data, message, metadata))
 }
 
 /**
  * Middleware de CORS padronizado
  */
 export function addCorsHeaders(res: VercelResponse): void {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+  res.setHeader('Access-Control-Max-Age', '86400') // 24 horas
 }
 
 /**
  * Trata requests OPTIONS (CORS preflight)
  */
 export function handleOptions(res: VercelResponse): void {
-  addCorsHeaders(res);
-  res.status(200).end();
+  addCorsHeaders(res)
+  res.status(200).end()
 }
+```

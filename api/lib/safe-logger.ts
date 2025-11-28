@@ -3,16 +3,16 @@
  * Remove informações confidenciais antes do logging
  */
 
-interface SanitizeOptions {
-  maxLength?: number;
-  maskFields?: string[];
-  removeFields?: string[];
+export interface SanitizeOptions {
+  maxLength?: number
+  maskFields?: string[]
+  removeFields?: string[]
 }
 
 /**
  * Campos sensíveis que devem ser mascarados ou removidos
  */
-const SENSITIVE_FIELDS = [
+const SENSITIVE_FIELDS: string[] = [
   'password',
   'token',
   'secret',
@@ -30,12 +30,12 @@ const SENSITIVE_FIELDS = [
   'bearer',
   'x-api-key',
   'x-auth-token'
-];
+]
 
 /**
- * Campos que contêm dados pessoais
+ * Campos que contêm dados pessoais (PII)
  */
-const PII_FIELDS = [
+const PII_FIELDS: string[] = [
   'email',
   'cpf',
   'cnpj',
@@ -48,134 +48,145 @@ const PII_FIELDS = [
   'data_nascimento',
   'numero_oab',
   'uf_oab'
-];
+]
 
 /**
  * Mascara uma string sensível
  */
 export function maskSensitive(value: string, visibleChars: number = 4): string {
   if (value.length <= visibleChars * 2) {
-    return '*'.repeat(value.length);
+    return '*'.repeat(value.length)
   }
 
-  const start = value.substring(0, visibleChars);
-  const end = value.substring(value.length - visibleChars);
-  const masked = '*'.repeat(value.length - visibleChars * 2);
+  const start = value.substring(0, visibleChars)
+  const end = value.substring(value.length - visibleChars)
+  const masked = '*'.repeat(value.length - visibleChars * 2)
 
-  return `${start}${masked}${end}`;
+  return `${start}${masked}${end}`
 }
 
 /**
- * Sanitiza um objeto removendo ou mascarando campos sensíveis
+ * Sanitiza um valor removendo ou mascarando campos sensíveis
  */
 export function sanitizeObject(
-  obj: any,
+  obj: unknown,
   options: SanitizeOptions = {}
-): any {
+): unknown {
   if (obj === null || obj === undefined) {
-    return obj;
+    return obj
   }
 
   if (typeof obj === 'string') {
-    // Máscara strings que parecem tokens ou chaves
-    if (obj.length > 20 && /^[A-Za-z0-9+/=.-]+$/.test(obj)) {
-      return maskSensitive(obj);
+    // Máscara strings que parecem tokens ou chaves (compridas e com charset típico)
+    if (obj.length > 20 && /^[A-Za-z0-9+/=.\-_]+$/.test(obj)) {
+      return maskSensitive(obj)
     }
-    return obj;
+    return obj
   }
 
   if (typeof obj === 'number' || typeof obj === 'boolean') {
-    return obj;
+    return obj
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeObject(item, options));
+    return obj.map(item => sanitizeObject(item, options))
   }
 
   if (typeof obj === 'object') {
-    const sanitized: any = {};
+    const input = obj as Record<string, unknown>
+    const sanitized: Record<string, unknown> = {}
 
-    for (const [key, value] of Object.entries(obj)) {
-      const lowerKey = key.toLowerCase();
+    for (const [key, value] of Object.entries(input)) {
+      const lowerKey = key.toLowerCase()
 
       // Remove campos completamente
-      if (options.removeFields?.includes(lowerKey) ||
-          SENSITIVE_FIELDS.some(field => lowerKey.includes(field))) {
-        continue;
+      if (
+        options.removeFields?.includes(lowerKey) ||
+        SENSITIVE_FIELDS.some(field => lowerKey.includes(field))
+      ) {
+        continue
       }
 
       // Máscara campos PII
       if (PII_FIELDS.some(field => lowerKey.includes(field))) {
         if (typeof value === 'string') {
-          sanitized[key] = maskSensitive(value);
+          sanitized[key] = maskSensitive(value)
         } else {
-          sanitized[key] = '[REDACTED]';
+          sanitized[key] = '[REDACTED]'
         }
-        continue;
+        continue
       }
 
-      // Máscara campos especificados
+      // Máscara campos especificados explicitamente
       if (options.maskFields?.includes(lowerKey)) {
         if (typeof value === 'string') {
-          sanitized[key] = maskSensitive(value);
+          sanitized[key] = maskSensitive(value)
         } else {
-          sanitized[key] = value;
+          sanitized[key] = value
         }
-        continue;
+        continue
       }
 
       // Sanitiza recursivamente
-      sanitized[key] = sanitizeObject(value, options);
+      sanitized[key] = sanitizeObject(value, options)
     }
 
-    return sanitized;
+    return sanitized
   }
 
-  return obj;
+  return obj
 }
 
 /**
  * Sanitiza uma mensagem de erro
  */
-export function sanitizeError(error: Error | any): any {
-  if (!error) return error;
+export function sanitizeError(error: unknown): unknown {
+  if (!error) return error
 
   return sanitizeObject(error, {
     removeFields: ['stack', 'cause'],
     maskFields: ['message']
-  });
+  })
 }
 
 /**
  * Logger seguro que sanitiza automaticamente
  */
 export class SafeLogger {
-  private context: string;
+  private readonly context: string
 
   constructor(context: string) {
-    this.context = context;
+    this.context = context
   }
 
-  private sanitizeArgs(args: any[]): any[] {
-    return args.map(arg => sanitizeObject(arg));
+  private sanitizeArgs(args: unknown[]): unknown[] {
+    return args.map(arg => sanitizeObject(arg))
   }
 
-  info(message: string, ...args: any[]): void {
-    console.log(`[${this.context}] ${message}`, ...this.sanitizeArgs(args));
+  info(message: string, ...args: unknown[]): void {
+    // eslint-disable-next-line no-console
+    console.log(`[${this.context}] ${message}`, ...this.sanitizeArgs(args))
   }
 
-  warn(message: string, ...args: any[]): void {
-    console.warn(`[${this.context}] ${message}`, ...this.sanitizeArgs(args));
+  warn(message: string, ...args: unknown[]): void {
+    // eslint-disable-next-line no-console
+    console.warn(`[${this.context}] ${message}`, ...this.sanitizeArgs(args))
   }
 
-  error(message: string, error?: Error | any, ...args: any[]): void {
-    const sanitizedError = error ? sanitizeError(error) : undefined;
-    console.error(`[${this.context}] ${message}`, sanitizedError, ...this.sanitizeArgs(args));
+  error(message: string, error?: unknown, ...args: unknown[]): void {
+    const sanitizedError = error ? sanitizeError(error) : undefined
+    // eslint-disable-next-line no-console
+    console.error(
+      `[${this.context}] ${message}`,
+      sanitizedError,
+      ...this.sanitizeArgs(args)
+    )
   }
 
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`[${this.context}] ${message}`, ...this.sanitizeArgs(args));
+      // eslint-disable-next-line no-console
+      console.debug(`[${this.context}] ${message}`, ...this.sanitizeArgs(args))
     }
   }
 }
@@ -183,20 +194,22 @@ export class SafeLogger {
 /**
  * Sanitiza headers HTTP
  */
-export function sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
-  const sanitized: Record<string, string> = {};
+export function sanitizeHeaders(
+  headers: Record<string, string>
+): Record<string, string> {
+  const sanitized: Record<string, string> = {}
 
   for (const [key, value] of Object.entries(headers)) {
-    const lowerKey = key.toLowerCase();
+    const lowerKey = key.toLowerCase()
 
     if (SENSITIVE_FIELDS.some(field => lowerKey.includes(field))) {
-      sanitized[key] = maskSensitive(value);
+      sanitized[key] = maskSensitive(value)
     } else {
-      sanitized[key] = value;
+      sanitized[key] = value
     }
   }
 
-  return sanitized;
+  return sanitized
 }
 
 /**
@@ -204,17 +217,18 @@ export function sanitizeHeaders(headers: Record<string, string>): Record<string,
  */
 export function sanitizeUrl(url: string): string {
   try {
-    const urlObj = new URL(url);
-    const params = urlObj.searchParams;
+    const urlObj = new URL(url)
+    const params = urlObj.searchParams
 
     params.forEach((value, param) => {
       if (SENSITIVE_FIELDS.some(field => param.toLowerCase().includes(field))) {
-        params.set(param, maskSensitive(value || ''));
+        params.set(param, maskSensitive(value || ''))
       }
-    });
+    })
 
-    return urlObj.toString();
+    return urlObj.toString()
   } catch {
-    return url;
+    // Se não for uma URL válida, devolve como veio
+    return url
   }
 }

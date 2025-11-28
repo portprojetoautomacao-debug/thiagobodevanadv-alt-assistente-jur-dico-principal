@@ -2,62 +2,81 @@
 // Wrapper endpoint que alinha com modelo de referência
 // Delega para /api/todoist internamente
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+
+interface CreateTaskRequestBody {
+  descricao?: string
+  dueDate?: string
+  priority?: number
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ ok: false, error: 'Method not allowed' })
   }
 
-  const { descricao, dueDate, priority } = req.body || {};
+  const { descricao, dueDate, priority }: CreateTaskRequestBody = (req.body as CreateTaskRequestBody) || {}
 
-  if (!descricao || typeof descricao !== "string") {
+  if (!descricao || typeof descricao !== 'string') {
     return res.status(400).json({
       ok: false,
-      error: "Parâmetro 'descricao' é obrigatório e deve ser texto.",
-    });
+      error: "Parâmetro 'descricao' é obrigatório e deve ser texto."
+    })
   }
 
   try {
-    // Delega para implementação interna (todoist)
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    // Descobre baseUrl para chamar o próprio backend
+    const baseUrl =
+      process.env.VERCEL_URL && process.env.VERCEL_URL.trim().length > 0
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.NODE_ENV === 'production' && req.headers.host
+          ? `https://${req.headers.host}`
+          : 'http://localhost:3000'
 
     const response = await fetch(`${baseUrl}/api/todoist`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Caller': 'api/tarefas/criar'
+      },
       body: JSON.stringify({
-        action: "create-task",
+        action: 'create-task',
         descricao,
         dueDate: dueDate || undefined,
-        priority: priority ?? 1,
-      }),
-    });
+        priority: priority ?? 1
+      })
+    })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = (await response.json().catch(() => ({}))) as { error?: string; [key: string]: unknown }
+
       return res.status(response.status).json({
         ok: false,
-        error: errorData.error || "Erro ao criar tarefa",
-        detalhes: errorData,
-      });
+        error: errorData.error || 'Erro ao criar tarefa',
+        detalhes: errorData
+      })
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      tarefa?: { id?: string; [key: string]: unknown }
+      id?: string
+      [key: string]: unknown
+    }
 
     return res.status(200).json({
       ok: true,
       tarefa: data.tarefa || data,
       id: data.id || data.tarefa?.id,
-      timestamp: new Date().toISOString(),
-    });
+      timestamp: new Date().toISOString()
+    })
   } catch (err: unknown) {
-    console.error("[api/tarefas/criar] Erro:", err);
+    // eslint-disable-next-line no-console
+    console.error('[api/tarefas/criar] Erro:', err)
+
     return res.status(500).json({
       ok: false,
-      error: "Erro ao criar tarefa",
-      message: err instanceof Error ? err.message : 'Unknown error',
-    });
+      error: 'Erro ao criar tarefa',
+      message: err instanceof Error ? err.message : 'Unknown error'
+    })
   }
 }

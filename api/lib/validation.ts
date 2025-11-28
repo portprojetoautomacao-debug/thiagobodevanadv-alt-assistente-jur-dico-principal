@@ -3,7 +3,7 @@
  * Centraliza todas as validações de API
  */
 
-import { z } from 'zod';
+import { z } from 'zod'
 
 // --- Tipos de Agente ---
 
@@ -20,10 +20,11 @@ export const AgentTaskTypeSchema = z.enum([
   'LEGAL_TRANSLATION',
   'CONTRACT_REVIEW',
   'CASE_STRATEGY'
-]);
+])
 
-export const TaskPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
-export const TaskStatusSchema = z.enum(['QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED']);
+export const TaskPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])
+
+export const TaskStatusSchema = z.enum(['QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED'])
 
 export const AgentTaskSchema = z.object({
   id: z.string().uuid(),
@@ -36,7 +37,7 @@ export const AgentTaskSchema = z.object({
   error: z.string().optional(),
   completedAt: z.string().datetime().optional(),
   processingTimeMs: z.number().optional()
-});
+})
 
 export const AgentSchema = z.object({
   id: z.string().min(1),
@@ -45,7 +46,7 @@ export const AgentSchema = z.object({
   capabilities: z.array(z.string()),
   status: z.enum(['ACTIVE', 'INACTIVE', 'MAINTENANCE']),
   lastActive: z.string().datetime().optional()
-});
+})
 
 // --- Validações de API ---
 
@@ -53,12 +54,12 @@ const ProcessQueueRequestSchema = z.object({
   maxTasks: z.number().min(1).max(50).optional().default(10),
   priority: TaskPrioritySchema.optional(),
   agentId: z.string().optional()
-});
+})
 
 const ProcessTaskRequestSchema = z.object({
   task: AgentTaskSchema,
   agent: AgentSchema
-});
+})
 
 // --- Utilitários ---
 
@@ -66,36 +67,36 @@ export function handleValidationError(error: z.ZodError) {
   const issues = error.issues.map(issue => ({
     field: issue.path.join('.'),
     message: issue.message
-  }));
+  }))
 
   return {
     ok: false,
     error: 'Validation failed',
     issues,
     timestamp: new Date().toISOString()
-  };
+  }
 }
 
 export function validateProcessQueueRequest(data: unknown) {
   try {
-    const result = ProcessQueueRequestSchema.parse(data);
-    return { success: true, ...result };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { success: false, error: handleValidationError(error) };
+    const parsed = ProcessQueueRequestSchema.parse(data)
+    return { success: true, ...parsed }
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return { success: false, error: handleValidationError(err) }
     }
-    return { success: false, error: { ok: false, error: 'Unknown validation error' } };
+    return { success: false, error: { ok: false, error: 'Unknown validation error' } }
   }
 }
 
 export function validateProcessTaskRequest(data: unknown) {
   try {
-    const result = ProcessTaskRequestSchema.parse(data);
-    return { success: true, task: result.task, agent: result.agent };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { success: false, error: handleValidationError(error) };
+    const parsed = ProcessTaskRequestSchema.parse(data)
+    return { success: true, task: parsed.task, agent: parsed.agent }
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return { success: false, error: handleValidationError(err) }
     }
-    return { success: false, error: { ok: false, error: 'Unknown validation error' } };
+    return { success: false, error: { ok: false, error: 'Unknown validation error' } }
   }
 }
