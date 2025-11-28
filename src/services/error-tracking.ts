@@ -1,163 +1,241 @@
-// GitLab Error Tracking Integration
-// Configure DSN via environment variable VITE_SENTRY_DSN
+/**
+ * Sentry.io Error Tracking Integration
+ * 
+ * Este módulo fornece integração completa com Sentry.io para:
+ * - Captura automática de erros
+ * - Performance monitoring
+ * - Session replay
+ * - User identification
+ * 
+ * Configuração:
+ * - VITE_SENTRY_DSN: DSN do projeto Sentry.io (obrigatório para funcionar)
+ * - VITE_APP_VERSION: Versão da aplicação para releases
+ * 
+ * @see https://docs.sentry.io/platforms/javascript/guides/react/
+ */
 
 import * as Sentry from "@sentry/react";
 
-// Default DSN for GitLab Error Tracking (can be overridden via VITE_SENTRY_DSN)
-const DEFAULT_SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN ||
-  "https://glet_11997d8fcca1f917be020f0d22aa5175@observe.gitlab.com:443/errortracking/api/v1/projects/76299042";
+// Configuração
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || '';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
+const APP_ENVIRONMENT = import.meta.env.MODE || 'development';
+
+// Estado
+let isInitialized = false;
 
 /**
- * Check if Sentry DSN is valid and reachable
+ * Verifica se o DSN é válido (formato Sentry.io)
  */
-async function checkSentryConnectivity(): Promise<boolean> {
-  try {
-    // Minimal valid Sentry envelope for connectivity test
-    const envelope = `{"sent_at":"${new Date().toISOString()}"}\n{"type":"check_in"}\n{}`;
+function isValidSentryDSN(dsn: string): boolean {
+  if (!dsn) return false;
 
-    const response = await fetch('https://observe.gitlab.com/errortracking/api/v1/projects/76299042/envelope/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-sentry-envelope',
-      },
-      body: envelope,
-      signal: AbortSignal.timeout(5000), // 5 second timeout
-    });
+  // DSN do Sentry.io: https://<key>@<org>.ingest.sentry.io/<project>
+  // ou https://<key>@sentry.io/<project>
+  const sentryPattern = /^https:\/\/[a-f0-9]+@([a-z0-9-]+\.)?ingest\.sentry\.io\/\d+$/i;
+  const sentryPatternAlt = /^https:\/\/[a-f0-9]+@sentry\.io\/\d+$/i;
+  const sentryPatternOrg = /^https:\/\/[a-f0-9]+@[a-z0-9-]+\.ingest\.sentry\.io\/\d+$/i;
 
-    // Consider reachable if we get any HTTP response (2xx, 4xx are fine - means server is up)
-    // Only 5xx or network errors should be considered unreachable
-    return response.status < 500;
-  } catch {
-    console.warn('Sentry connectivity check failed - service may be unreachable');
-    return false;
-  }
+  // Também aceita DSN com formato mais flexível
+  const genericPattern = /^https:\/\/[a-f0-9]+@.+\.sentry\.io\/\d+$/i;
+
+  return sentryPattern.test(dsn) ||
+    sentryPatternAlt.test(dsn) ||
+    sentryPatternOrg.test(dsn) ||
+    genericPattern.test(dsn);
 }
 
 /**
- * Initialize Sentry for Error Tracking
+ * Inicializa o Sentry para Error Tracking
  *
  * Features:
  * - Automatic error capture
- * - Performance monitoring
+ * - Performance monitoring (tracing)
+ * - Session replay
  * - User identification
- * - Session tracking
  * - Source maps support
+ * - Breadcrumbs
  */
-export async function initErrorTracking() {
+export function initErrorTracking(): void {
+  // Evita inicialização duplicada
+  if (isInitialized) {
+    console.info('🔴 Sentry: Já inicializado');
+    return;
+  }
+
+  // Verifica se DSN está configurado
+  if (!SENTRY_DSN) {
+    console.info('🔴 Sentry: Não configurado (VITE_SENTRY_DSN não definido)');
+    console.info('   Para habilitar, adicione VITE_SENTRY_DSN ao .env');
+    console.info('   Obtenha seu DSN em: https://sentry.io/settings/projects/');
+    return;
+  }
+
+  // Valida formato do DSN
+  if (!isValidSentryDSN(SENTRY_DSN)) {
+    console.warn('⚠️ Sentry: DSN inválido ou não é do Sentry.io');
+    console.info('   DSN esperado: https://<key>@<org>.ingest.sentry.io/<project>');
+    console.info('   DSN recebido:', SENTRY_DSN.substring(0, 50) + '...');
+    return;
+  }
+
   try {
-    // GitLab Error Tracking não suporta CORS de domínios externos (Vercel, Netlify, etc.)
-    // Desabilitar em produção quando não estiver no GitLab Pages
-    const isGitLabPages = window.location.hostname.includes('gitlab.io');
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    if (!isGitLabPages && !isLocalhost) {
-      console.info('Error tracking: Disabled on external hosts (CORS not supported by GitLab)');
-      return;
-    }
-
-    // Check connectivity first (only in production)
-    if (import.meta.env.MODE === "production") {
-      const isReachable = await checkSentryConnectivity();
-      if (!isReachable) {
-        console.warn('Sentry: GitLab Error Tracking not reachable, skipping initialization');
-        return;
-      }
-    }
-
     Sentry.init({
-      // GitLab Error Tracking DSN (configurable via VITE_SENTRY_DSN)
-      dsn: DEFAULT_SENTRY_DSN,
+      // DSN do projeto Sentry.io
+      dsn: SENTRY_DSN,
 
-      // Environment
-      environment: import.meta.env.MODE || "development",
+      // Ambiente (development, staging, production)
+      environment: APP_ENVIRONMENT,
 
-      // Release version
-      release: import.meta.env.VITE_APP_VERSION || "unknown",
+      // Versão da aplicação para tracking de releases
+      release: `assistente-juridico@${APP_VERSION}`,
 
-      // Integrations - Atualizado para Sentry v10
+      // Integrações
       integrations: [
-        Sentry.replayIntegration({
-          maskAllText: true,
-          blockAllMedia: true,
+        // Browser Tracing para performance monitoring
+        Sentry.browserTracingIntegration({
+          // Rastreia navegação e interações
+          enableInp: true,
         }),
-        Sentry.browserTracingIntegration(),
+
+        // Session Replay para reprodução de sessões com erro
+        Sentry.replayIntegration({
+          // Mascara dados sensíveis
+          maskAllText: false, // Não mascara todo texto, apenas inputs
+          maskAllInputs: true, // Mascara todos os inputs
+          blockAllMedia: false, // Permite mídia
+        }),
       ],
 
-      // Performance monitoring - Atualizado para v10
-      tracesSampleRate: import.meta.env.MODE === "production" ? 0.1 : 1.0,
+      // Sample rates
+      // Performance: 10% em prod, 100% em dev
+      tracesSampleRate: APP_ENVIRONMENT === 'production' ? 0.1 : 1.0,
 
-      // Replay sample rate
-      replaysSessionSampleRate: import.meta.env.MODE === "production" ? 0.1 : 0.0,
+      // Replay: 10% das sessões normais, 100% das sessões com erro
+      replaysSessionSampleRate: APP_ENVIRONMENT === 'production' ? 0.1 : 0,
       replaysOnErrorSampleRate: 1.0,
 
-      // Debug mode
-      debug: import.meta.env.MODE !== "production",
+      // Debug mode apenas em desenvolvimento
+      debug: APP_ENVIRONMENT === 'development',
 
-      // Capture breadcrumbs
-      maxBreadcrumbs: 50,
+      // Máximo de breadcrumbs
+      maxBreadcrumbs: 100,
 
-      // Before send hook para filtrar erros
-      beforeSend: (event: Sentry.ErrorEvent, hint: Sentry.EventHint) => {
-        // Filtrar erros de rede relacionados ao Sentry/GitLab
-        if (hint.originalException &&
-          hint.originalException instanceof Error &&
-          hint.originalException.message?.includes('observe.gitlab.com')) {
-          console.warn('Sentry: Filtering GitLab Error Tracking network error');
-          return null; // Não enviar o erro
+      // Anexa stack traces a mensagens
+      attachStacktrace: true,
+
+      // Normaliza profundidade de objetos
+      normalizeDepth: 5,
+
+      // Envia default PII (Personally Identifiable Information)
+      sendDefaultPii: false,
+
+      // Before send hook - filtra eventos antes de enviar
+      beforeSend(event, hint) {
+        // Filtra erros de extensões do navegador
+        if (event.exception?.values?.[0]?.stacktrace?.frames?.some(
+          frame => frame.filename?.includes('extension')
+        )) {
+          return null;
         }
 
-        // Filtrar outros erros de rede
-        if (event.exception) {
-          const exceptionValue = event.exception.values?.[0];
-          if (exceptionValue?.value?.includes('Failed to fetch') ||
-            exceptionValue?.value?.includes('NetworkError') ||
-            exceptionValue?.value?.includes('observe.gitlab.com')) {
-            console.warn('Sentry: Filtering network error');
-            return null;
-          }
+        // Filtra erros de rede genéricos (já esperados)
+        const errorMessage = hint.originalException instanceof Error
+          ? hint.originalException.message
+          : String(hint.originalException);
+
+        if (errorMessage?.includes('Failed to fetch') &&
+          !errorMessage.includes('api/')) {
+          // Ignora fetch failures que não são de nossas APIs
+          return null;
+        }
+
+        // Filtra erros do ResizeObserver (comum e inofensivo)
+        if (errorMessage?.includes('ResizeObserver')) {
+          return null;
         }
 
         return event;
       },
 
-      // Ignore errors
+      // Before breadcrumb - filtra breadcrumbs
+      beforeBreadcrumb(breadcrumb) {
+        // Remove breadcrumbs de console.log em produção
+        if (breadcrumb.category === 'console' &&
+          APP_ENVIRONMENT === 'production' &&
+          breadcrumb.level === 'log') {
+          return null;
+        }
+
+        // Remove URLs sensíveis
+        if (breadcrumb.data?.url?.includes('token') ||
+          breadcrumb.data?.url?.includes('password')) {
+          breadcrumb.data.url = '[REDACTED]';
+        }
+
+        return breadcrumb;
+      },
+
+      // Erros a ignorar
       ignoreErrors: [
-        // Browser extensions
-        "top.GLOBALS",
-        // Random plugins/extensions
-        "originalCreateNotification",
-        "canvas.contentDocument",
-        "MyApp_RemoveAllHighlights",
-        // See http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
-        "Can't find variable: ZiteReader",
-        "jigsaw is not defined",
-        "ComboSearch is not defined",
-        // Network errors
-        "Failed to fetch",
-        "NetworkError",
-        "observe.gitlab.com",
-        // React DevTools
-        "React DevTools",
-        // Vite HMR
-        "vite",
-        // Spark related
-        "_spark",
+        // Erros de rede comuns
+        'Network request failed',
+        'Failed to fetch',
+        'NetworkError',
+        'Load failed',
+        'ChunkLoadError',
+
+        // Erros de navegador
+        'ResizeObserver loop',
+        'ResizeObserver loop limit exceeded',
+
+        // Extensões
+        'top.GLOBALS',
+        'originalCreateNotification',
+        'canvas.contentDocument',
+
+        // React específicos
+        'Minified React error',
+
+        // Erros de cancelamento
+        'AbortError',
+        'The operation was aborted',
+
+        // Erros de autenticação (esperados)
+        'User not authenticated',
+        'Session expired',
       ],
 
-      // Deny URLs
+      // URLs a negar (não rastrear erros dessas origens)
       denyUrls: [
-        /observe\.gitlab\.com/,
+        // Extensões do navegador
         /extensions\//i,
         /^chrome:\/\//i,
+        /^chrome-extension:\/\//i,
         /^moz-extension:\/\//i,
         /^safari-extension:\/\//i,
+        /^safari-web-extension:\/\//i,
+
+        // Scripts de terceiros que podem dar erro
+        /googletagmanager\.com/i,
+        /google-analytics\.com/i,
+        /vercel\.live/i,
+      ],
+
+      // URLs permitidas (apenas rastrear erros dessas origens)
+      allowUrls: [
+        window.location.origin,
+        /^https:\/\/.*\.vercel\.app/,
       ],
     });
 
-    console.log("✅ Sentry Error Tracking initialized");
-  } catch (initError) {
-    console.error("❌ Failed to initialize Sentry:", initError);
-    // Não lançar erro para não quebrar a aplicação
+    isInitialized = true;
+    console.log('✅ Sentry Error Tracking inicializado');
+    console.log(`   Environment: ${APP_ENVIRONMENT}`);
+    console.log(`   Release: assistente-juridico@${APP_VERSION}`);
+
+  } catch (error) {
+    console.error('❌ Falha ao inicializar Sentry:', error);
   }
 }
 

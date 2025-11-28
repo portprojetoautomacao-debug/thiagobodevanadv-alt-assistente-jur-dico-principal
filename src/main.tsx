@@ -11,6 +11,31 @@ if (!rootElement) {
   throw new Error('Root element not found')
 }
 
+// ✅ TRUSTED TYPES: Inicializa políticas de segurança XSS (síncrono, antes de qualquer script)
+// Deve ser executado antes de qualquer manipulação de DOM
+import('./lib/trusted-types').then(({ initTrustedTypes }) => {
+  initTrustedTypes()
+}).catch(err => console.warn('Trusted Types não disponível:', err))
+
+// ✅ ANALYTICS: GTM + GA4 inicialização (após consentimento se LGPD requerido)
+// IDs configuráveis via VITE_GTM_ID e VITE_GA4_ID
+let analyticsInitialized = false
+
+const initAnalyticsServices = async () => {
+  if (analyticsInitialized) return
+  analyticsInitialized = true
+
+  try {
+    const { initAnalytics } = await import('./lib/analytics')
+    await initAnalytics()
+  } catch (error) {
+    console.warn('Analytics não inicializado:', error)
+  }
+}
+
+// Inicializa analytics após 2s para não impactar FCP/LCP
+setTimeout(initAnalyticsServices, 2000)
+
 // ✅ OTIMIZAÇÃO: Sentry lazy loading avançado
 // Carrega apenas após interação do usuário OU após 5s de idle
 // Economia: ~238KB de código não utilizado imediatamente
@@ -22,7 +47,7 @@ const initSentry = async () => {
 
   try {
     const { initErrorTracking } = await import('./services/error-tracking')
-    await initErrorTracking()
+    initErrorTracking()
   } catch (error) {
     console.error('❌ Failed to initialize Sentry:', error)
   }

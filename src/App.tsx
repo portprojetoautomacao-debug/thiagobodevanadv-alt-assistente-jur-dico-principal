@@ -55,14 +55,14 @@ function App() {
 
   const handleAuthSuccess = (authUser: GoogleUser) => {
     // Normalize user data for Google provider
-    const user: User = {
+    const normalizedUser: User = {
       id: authUser.id,
       email: authUser.email,
       name: authUser.name,
       avatarUrl: authUser.picture,
-      role: authUser.role || 'advogado' // Valor padrão para advogados
+      role: authUser.role || 'advogado', // Valor padrão para advogados
     }
-    setUser(user)
+    setUser(normalizedUser)
     setIsAuthenticated(true)
   }
 
@@ -183,7 +183,12 @@ function App() {
           </Suspense>
         )
       default:
-        return <Dashboard onNavigate={setCurrentView} />
+        // Garante que mesmo em view desconhecida, o Dashboard lazy seja carregado sob Suspense
+        return (
+          <Suspense key="dashboard-fallback" fallback={<LoadingFallback />}>
+            <Dashboard onNavigate={setCurrentView} />
+          </Suspense>
+        )
     }
   }
 
