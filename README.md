@@ -10,7 +10,313 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 - 🔗 **Integração Google Calendar**: Sincronização automática
 - 📊 **DJEN/DataJud**: Monitoramento de publicações
 - 💰 **Gestão Financeira**: Controle de custos e honorários
-- ⚡ **7 Agentes Autônomos**: Trabalhando 24/7
+- ⚡ **15 Agentes Autônomos**: Trabalhando 24/7
+- ✏️ **Editor Tiptap com IA**: Redação automática de minutas
+- 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
+
+---
+
+## ✏️ Editor Tiptap com IA - Redação Automática de Minutas
+
+> **Status**: ✅ **OPERACIONAL** - Implementado em 28/11/2025
+
+O sistema inclui um **editor de texto rico profissional (Tiptap)** com integração de IA, permitindo que os agentes autônomos **redijam minutas automaticamente** e que operadores humanos possam revisar e editar antes do protocolo.
+
+### 🎯 Filosofia: 100% Automático com Supervisão Humana
+
+O editor foi projetado para operar em dois modos:
+
+| Modo | Descrição |
+|------|-----------|
+| **Automático** | Agentes IA criam minutas automaticamente baseadas em intimações |
+| **Manual** | Operador pode criar, editar ou refinar minutas usando o editor |
+
+### 🔧 Arquitetura da Integração
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FLUXO AUTOMÁTICO DE CRIAÇÃO DE MINUTAS                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐     ┌─────────────────┐     ┌───────────────────────┐     │
+│  │ Monitor DJEN│────▶│ Mrs. Justin-e   │────▶│ Expediente criado     │     │
+│  │ (24/7)      │     │ (Análise)       │     │ (com ações sugeridas) │     │
+│  └─────────────┘     └─────────────────┘     └───────────┬───────────┘     │
+│                                                          │                  │
+│                                                          ▼                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  ExpedientePanel detecta: "manifestar", "contestar", "recurso"      │   │
+│  │  → Cria tarefa DRAFT_PETITION para agente 'redacao-peticoes'        │   │
+│  └─────────────────────────────────────────────────────┬───────────────┘   │
+│                                                        │                    │
+│                                                        ▼                    │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │  Agente 'redacao-peticoes' processa tarefa com IA (Gemini/GPT)       │  │
+│  │  → Gera texto jurídico formal seguindo templates                     │  │
+│  │  → Retorna { draft: "conteúdo HTML", confidence: 0.95 }              │  │
+│  └─────────────────────────────────────────────────────┬────────────────┘  │
+│                                                        │                    │
+│                           ┌────────────────────────────┼──────────────┐     │
+│                           │                            │              │     │
+│                           ▼                            ▼              │     │
+│  ┌─────────────────────────────────┐  ┌────────────────────────────┐ │     │
+│  │  Backend (api/agents.ts)        │  │  Frontend (use-auto-minuta)│ │     │
+│  │  → Salva minuta no KV           │  │  → Detecta tarefa completa │ │     │
+│  │  → Status: 'pendente-revisao'   │  │  → Cria minuta localmente  │ │     │
+│  │  → criadoPorAgente: true        │  │  → Exibe toast de notif.   │ │     │
+│  └─────────────────────────────────┘  └────────────────────────────┘ │     │
+│                                                        │              │     │
+│                                                        ▼              │     │
+│                           ┌────────────────────────────────────────┐ │     │
+│                           │  MinutasManager (Editor Tiptap)        │ │     │
+│                           │  → Lista minutas com tag [Agente]      │ │     │
+│                           │  → Operador pode revisar/editar        │ │     │
+│                           │  → Aprovar → Status 'finalizada'       │ │     │
+│                           └────────────────────────────────────────┘ │     │
+│                                                                      │     │
+└──────────────────────────────────────────────────────────────────────┴─────┘
+```
+
+### 📦 Componentes Implementados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `src/components/editor/TiptapEditor.tsx` | Editor WYSIWYG completo com toolbar e IA |
+| `src/lib/document-templates.ts` | 8 templates jurídicos pré-definidos |
+| `src/hooks/use-auto-minuta.ts` | Hook para criação automática de minutas |
+| `src/components/MinutasManager.tsx` | Painel de gestão de minutas com Tiptap |
+| `api/agents.ts` | Backend que salva minutas quando agente termina |
+
+### ✨ Funcionalidades do Editor Tiptap
+
+#### Formatação de Texto
+| Recurso | Atalho | Descrição |
+|---------|--------|-----------|
+| **Negrito** | Ctrl+B | Texto em negrito |
+| **Itálico** | Ctrl+I | Texto em itálico |
+| **Sublinhado** | Ctrl+U | Texto sublinhado |
+| **Tachado** | - | Texto riscado |
+| **Destaque** | - | Marca-texto (highlight) |
+
+#### Estrutura
+| Recurso | Descrição |
+|---------|-----------|
+| **Títulos H1-H3** | Hierarquia de títulos |
+| **Parágrafos** | Texto normal |
+| **Lista com marcadores** | Bullets |
+| **Lista numerada** | 1, 2, 3... |
+| **Citação** | Blockquote |
+| **Código** | Bloco de código |
+
+#### Alinhamento
+| Recurso | Descrição |
+|---------|-----------|
+| **Esquerda** | Alinhamento padrão |
+| **Centro** | Centralizado |
+| **Direita** | Alinhamento à direita |
+| **Justificado** | Texto justificado |
+
+#### Cores e Mídia
+| Recurso | Descrição |
+|---------|-----------|
+| **19 cores de texto** | Paleta de cores |
+| **Links** | URLs clicáveis |
+| **Imagens** | Inserir via URL |
+| **Desfazer/Refazer** | Histórico de edições |
+
+#### Contadores
+- 📊 **Contador de palavras** em tempo real
+- 📊 **Contador de caracteres** em tempo real
+- 🏷️ **Badge de variáveis** disponíveis
+
+### 🤖 Integração com IA
+
+O editor possui comandos de IA integrados:
+
+| Comando | Função |
+|---------|--------|
+| **Expandir** | Desenvolve texto de forma mais detalhada |
+| **Resumir** | Condensa texto de forma concisa |
+| **Formalizar** | Reescreve em linguagem jurídica formal |
+| **Corrigir** | Corrige gramática e ortografia |
+| **Gerar Texto** | Cria conteúdo a partir de prompt livre |
+
+**Exemplo de uso:**
+1. Selecione um trecho de texto
+2. Clique no botão "IA" na toolbar
+3. Escolha "Formalizar"
+4. O texto é substituído pela versão formal
+
+### 📝 Templates Jurídicos Pré-Definidos
+
+O sistema inclui **8 templates** prontos para uso:
+
+| Template | Tipo | Variáveis |
+|----------|------|-----------|
+| **Petição Inicial** | `peticao` | autor, reu, processo, comarca, vara, fatos, pedidos |
+| **Contestação** | `peticao` | autor, reu, processo, vara, defesa |
+| **Manifestação Processual** | `peticao` | autor, reu, processo, manifestacao |
+| **Contrato de Honorários** | `contrato` | advogado, cliente, valor, objeto |
+| **Procuração Ad Judicia** | `procuracao` | outorgante, outorgado, poderes |
+| **Procuração Poderes Especiais** | `procuracao` | outorgante, outorgado, poderes_especiais |
+| **Recurso de Apelação** | `recurso` | apelante, apelado, processo, razoes |
+| **Parecer Jurídico** | `parecer` | consulente, materia, conclusao |
+
+#### Sistema de Variáveis
+
+Templates usam sintaxe `{{variavel}}` para substituição automática:
+
+```html
+<p>Exmo. Sr. Dr. Juiz de Direito da {{vara}} da Comarca de {{comarca}}</p>
+<p><strong>{{autor.nome}}</strong>, já qualificado nos autos...</p>
+<p>Processo nº {{processo.numero}}</p>
+```
+
+**Variáveis automáticas quando vinculado a processo:**
+- `{{processo.numero}}` - Número CNJ
+- `{{processo.titulo}}` - Título do processo
+- `{{autor.nome}}` - Nome do autor
+- `{{reu.nome}}` - Nome do réu
+- `{{comarca}}` - Comarca
+- `{{vara}}` - Vara
+
+### 🔄 Fluxo de Criação Automática
+
+1. **Detecção**: Monitor DJEN encontra intimação
+2. **Análise**: Mrs. Justin-e identifica "contestar em 15 dias"
+3. **Tarefa**: Sistema cria `DRAFT_PETITION` para agente
+4. **Redação**: Agente usa IA para gerar minuta completa
+5. **Salvamento**: 
+   - Backend salva no KV com `criadoPorAgente: true`
+   - Frontend detecta via `use-auto-minuta` hook
+6. **Notificação**: Toast "📝 Nova minuta criada!"
+7. **Revisão**: Operador abre minuta no editor Tiptap
+8. **Edição**: Ajusta conforme necessário
+9. **Aprovação**: Muda status para 'finalizada'
+
+### 🎨 Interface Visual
+
+**Notificação de nova minuta:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  📝 Nova minuta criada pelo Agente de Redação!              │
+│  [Agente] Contestação - Processo 1234567-89.2024.5.02.0999 │
+│                                                   [Ver Minutas] │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Lista de minutas:**
+```
+┌────────────────────────────────────────────────────────────────┐
+│  🤖 [Agente] Contestação - Processo 1234567-89...             │
+│  Status: ⏸️ Pendente Revisão    Criado: Há 5 minutos          │
+│  Criado por: Agente Redação (IA)   Tipo: Petição              │
+│                                                                │
+│  [👁️ Visualizar]  [✏️ Editar]  [✅ Aprovar]  [🗑️ Excluir]    │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### 📊 Tipos e Status de Minutas
+
+**Tipos disponíveis:**
+- `peticao` - Petições, contestações, manifestações
+- `contrato` - Contratos, acordos
+- `parecer` - Pareceres jurídicos
+- `recurso` - Apelações, agravos, embargos
+- `procuracao` - Procurações
+- `outro` - Outros documentos
+
+**Status de workflow:**
+- `rascunho` - Em elaboração
+- `em-revisao` - Sendo revisado
+- `pendente-revisao` - Criado por agente, aguarda humano
+- `finalizada` - Pronto para protocolo
+- `arquivada` - Arquivado
+
+### 🔧 Configuração Técnica
+
+**Dependências Tiptap instaladas (75 pacotes):**
+```json
+{
+  "@tiptap/react": "^2.x",
+  "@tiptap/starter-kit": "^2.x",
+  "@tiptap/extension-placeholder": "^2.x",
+  "@tiptap/extension-highlight": "^2.x",
+  "@tiptap/extension-typography": "^2.x",
+  "@tiptap/extension-text-align": "^2.x",
+  "@tiptap/extension-underline": "^2.x",
+  "@tiptap/extension-link": "^2.x",
+  "@tiptap/extension-image": "^2.x",
+  "@tiptap/extension-color": "^2.x",
+  "@tiptap/extension-text-style": "^2.x"
+}
+```
+
+**Tipo Minuta atualizado:**
+```typescript
+interface Minuta {
+  id: string
+  titulo: string
+  processId?: string
+  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro'
+  conteudo: string
+  status: 'rascunho' | 'em-revisao' | 'pendente-revisao' | 'finalizada' | 'arquivada'
+  criadoEm: string
+  atualizadoEm: string
+  autor: string
+  googleDocsId?: string
+  googleDocsUrl?: string
+  // Campos para integração com agentes IA
+  criadoPorAgente?: boolean
+  agenteId?: string
+  templateId?: string
+  expedienteId?: string
+  variaveis?: Record<string, string>
+}
+```
+
+### 🧪 Testando a Integração
+
+**1. Verificar agente de redação ativo:**
+```bash
+curl https://seu-app.vercel.app/api/agents?action=status
+```
+
+**2. Criar tarefa de teste:**
+```javascript
+// No console do navegador
+const task = {
+  id: crypto.randomUUID(),
+  agentId: 'redacao-peticoes',
+  type: 'draft_petition',
+  priority: 'medium',
+  status: 'queued',
+  data: {
+    processNumber: '1234567-89.2024.5.02.0999',
+    documentType: 'contestação',
+    summary: 'Elaborar contestação para ação de cobrança'
+  }
+}
+// Adicionar à fila via hook useAutonomousAgents
+```
+
+**3. Verificar minuta criada:**
+- Acesse painel de Minutas no app
+- Procure por minutas com tag `[Agente]`
+- Status deve ser `pendente-revisao`
+
+### 📈 Estatísticas do Hook use-auto-minuta
+
+O hook retorna estatísticas úteis:
+
+```typescript
+const {
+  minutasTotal,           // Total de minutas no sistema
+  minutasPendentesRevisao, // Aguardando revisão humana
+  minutasCriadasPorAgente, // Criadas automaticamente
+  processedTasksCount      // Tarefas de redação processadas
+} = useAutoMinuta()
+```
 
 ---
 
