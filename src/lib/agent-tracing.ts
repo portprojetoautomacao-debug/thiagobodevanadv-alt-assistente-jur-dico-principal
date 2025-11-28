@@ -34,11 +34,7 @@ export async function traceAgentTask<T>(
       'task.type': task.type,
       'task.priority': task.priority,
       'agent.type': agent.type,
-<<<<<<< Updated upstream
       'agent.autonomy_level': 0
-=======
-      'agent.autonomy_level': agent.autonomyLevel || 0
->>>>>>> Stashed changes
     }
   })
 
@@ -52,11 +48,7 @@ export async function traceAgentTask<T>(
 
     // Add task completion event
     tracingService.addEvent(span, 'task.completed')
-<<<<<<< Updated upstream
 
-=======
-    
->>>>>>> Stashed changes
     await tracingService.endSpan(span, 'ok')
     return result
 
@@ -98,11 +90,7 @@ export function traceAgentStep(
   attributes?: SpanAttributes
 ): void {
   agentSpan.stepNumber = stepNumber
-<<<<<<< Updated upstream
 
-=======
-  
->>>>>>> Stashed changes
   tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
     'step.description': stepDescription,
     ...attributes
@@ -141,22 +129,14 @@ export async function traceLLMCall<T>(
     return result
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-<<<<<<< Updated upstream
 
-=======
-    
->>>>>>> Stashed changes
     await tracingService.endLLMSpan(llmSpan, {
       promptTokens: promptLength,
       completionTokens: 0,
       success: false,
       error: err
     })
-<<<<<<< Updated upstream
 
-=======
-    
->>>>>>> Stashed changes
     throw error
   }
 }
@@ -340,7 +320,6 @@ export function getAgentMetrics(agentId: string): {
   recentErrors: string[]
 } {
   const traces = tracingService.getTracesByName(`agent.${agentId}`)
-<<<<<<< Updated upstream
 
   const executions = traces.filter(t => t.endTime)
   const successful = executions.filter(t => t.status === 'ok')
@@ -350,17 +329,6 @@ export function getAgentMetrics(agentId: string): {
     .map(t => (t.endTime || 0) - t.startTime)
     .filter(d => d > 0)
 
-=======
-  
-  const executions = traces.filter(t => t.endTime)
-  const successful = executions.filter(t => t.status === 'ok')
-  const failed = executions.filter(t => t.status === 'error')
-  
-  const durations = executions
-    .map(t => (t.endTime || 0) - t.startTime)
-    .filter(d => d > 0)
-  
->>>>>>> Stashed changes
   const avgDuration = durations.length > 0
     ? durations.reduce((a, b) => a + b, 0) / durations.length
     : 0
@@ -385,13 +353,8 @@ export function getAgentMetrics(agentId: string): {
 
   return {
     totalExecutions: executions.length,
-<<<<<<< Updated upstream
     successRate: executions.length > 0
       ? (successful.length / executions.length) * 100
-=======
-    successRate: executions.length > 0 
-      ? (successful.length / executions.length) * 100 
->>>>>>> Stashed changes
       : 0,
     avgDuration,
     toolUsage,
@@ -410,19 +373,11 @@ export function getLLMMetrics(): {
   tokensByModel: Record<string, number>
 } {
   const traces = tracingService.getTracesByName('llm.')
-<<<<<<< Updated upstream
 
   const calls = traces.filter(t => t.endTime)
   const successful = calls.filter(t => t.status === 'ok')
   const failed = calls.filter(t => t.status === 'error')
 
-=======
-  
-  const calls = traces.filter(t => t.endTime)
-  const successful = calls.filter(t => t.status === 'ok')
-  const failed = calls.filter(t => t.status === 'error')
-  
->>>>>>> Stashed changes
   let totalTokens = 0
   const tokensByModel: Record<string, number> = {}
   const responseTimes: number[] = []
@@ -434,11 +389,7 @@ export function getLLMMetrics(): {
 
     totalTokens += tokens
     tokensByModel[model] = (tokensByModel[model] || 0) + tokens
-<<<<<<< Updated upstream
 
-=======
-    
->>>>>>> Stashed changes
     if (responseTime > 0) {
       responseTimes.push(responseTime)
     }
@@ -452,13 +403,8 @@ export function getLLMMetrics(): {
     totalCalls: calls.length,
     totalTokens,
     avgResponseTime,
-<<<<<<< Updated upstream
     errorRate: calls.length > 0
       ? (failed.length / calls.length) * 100
-=======
-    errorRate: calls.length > 0 
-      ? (failed.length / calls.length) * 100 
->>>>>>> Stashed changes
       : 0,
     tokensByModel
   }

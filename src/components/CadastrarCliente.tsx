@@ -13,7 +13,7 @@ import type { Cliente } from '@/types'
 export default function CadastrarCliente() {
   const [_clientes, setClientes] = useKV<Cliente[]>('clientes', [])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     nome: '',
     cpfCnpj: '',
@@ -54,9 +54,9 @@ export default function CadastrarCliente() {
       }
 
       setClientes((current = []) => [...current, novoCliente])
-      
+
       toast.success('Cliente cadastrado com sucesso!')
-      
+
       setFormData({
         nome: '',
         cpfCnpj: '',

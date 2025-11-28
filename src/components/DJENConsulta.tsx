@@ -8,11 +8,11 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  MagnifyingGlass, 
-  Newspaper, 
-  CheckCircle, 
-  Warning, 
+import {
+  MagnifyingGlass,
+  Newspaper,
+  CheckCircle,
+  Warning,
   // X - disponível para botões de fechar
   Copy,
   Download,
@@ -195,7 +195,7 @@ export default function DJENConsulta() {
         <Card className="lg:col-span-1 p-6 space-y-6">
           <div>
             <h2 className="text-lg font-semibold mb-4">Parâmetros de Busca</h2>
-            
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nome-advogado">Nome do Advogado</Label>
@@ -249,7 +249,7 @@ export default function DJENConsulta() {
                   : 'Selecionar todos'}
               </Button>
             </div>
-            
+
             <div className="space-y-2">
               {getTribunaisDisponiveis().map((tribunal) => (
                 <div key={tribunal} className="flex items-center space-x-2">
