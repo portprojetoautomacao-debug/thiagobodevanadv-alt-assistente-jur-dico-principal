@@ -93,6 +93,7 @@ export interface Agent {
   type: string
   status: AgentStatus
   enabled: boolean
+  /** Status/activity para exibir no UI (não é ISO) */
   lastActivity: string
   continuousMode: boolean
   currentTask?: AgentTask
@@ -100,10 +101,10 @@ export interface Agent {
   config?: Record<string, unknown>
   nextScheduledRun?: string
   workQueue?: AgentTask[]
-  humanInteractionMode?: string
+  humanInteractionMode?: 'auto' | 'strict' | 'relaxed' | string
   /** Contador de falhas recentes para circuit breaker */
   recentFailures?: number
-  /** Timestamp da última falha */
+  /** Timestamp da última falha (ISO) */
   lastFailureAt?: string
 }
 
@@ -133,7 +134,7 @@ export interface AgentTask {
   nextRunAt?: string
 
   // FASE 1: Timeout de tarefa
-  /** Timeout em ms (default: 30000) */
+  /** Timeout em ms (default: 10 min via DEFAULT_TASK_TIMEOUT_MS) */
   timeout?: number
 
   // FASE 1: Rastreabilidade
@@ -179,7 +180,7 @@ export interface AgentTaskGeneratorConfig {
   enabled: boolean
   intervalMinutes: number
   maxTasksPerInterval: number
-  agentIds: string[]
+  agentIds: (AgentId | string)[]
 }
 
 export interface AgentTaskGenerator {
@@ -202,10 +203,11 @@ export interface AgentTaskGenerator {
  */
 export function calcularAtrasoRetry(
   retryCount: number,
-  baseMs: number = 10000,
-  maxMs: number = 10 * 60 * 1000
+  baseMs: number = 10_000,
+  maxMs: number = 10 * 60 * 1_000
 ): number {
-  const expo = Math.pow(2, retryCount)
+  const safeRetry = Math.max(0, retryCount)
+  const expo = Math.pow(2, safeRetry)
   const jitter = Math.random() * 0.3 + 0.85 // 0.85–1.15
   return Math.min(baseMs * expo * jitter, maxMs)
 }
@@ -214,15 +216,16 @@ export function calcularAtrasoRetry(
  * Agenda retry de uma tarefa com backoff exponencial
  */
 export function agendarRetryTarefa(task: AgentTask): AgentTask {
-  const retryCount = (task.retryCount || 0) + 1
-  const maxRetries = task.maxRetries || 3
+  const retryCount = (task.retryCount ?? 0) + 1
+  const maxRetries = task.maxRetries ?? 3
+  const nowIso = new Date().toISOString()
 
   if (retryCount > maxRetries) {
     return {
       ...task,
       status: 'failed',
       retryCount,
-      atualizadoEm: new Date().toISOString(),
+      atualizadoEm: nowIso,
       error: `Máximo de ${maxRetries} tentativas excedido`
     }
   }
@@ -235,7 +238,7 @@ export function agendarRetryTarefa(task: AgentTask): AgentTask {
     status: 'pending_retry',
     retryCount,
     nextRunAt,
-    atualizadoEm: new Date().toISOString()
+    atualizadoEm: nowIso
   }
 }
 
@@ -246,7 +249,25 @@ export function agendarRetryTarefa(task: AgentTask): AgentTask {
 /**
  * Timeout padrão para tarefas (10 minutos)
  */
-export const DEFAULT_TASK_TIMEOUT_MS = 10 * 60 * 1000
+export const DEFAULT_TASK_TIMEOUT_MS = 10 * 60 * 1_000
+
+/**
+ * Verifica se uma tarefa estourou o timeout (baseado em startedAt + timeout/default)
+ */
+export function isTaskTimedOut(
+  task: AgentTask,
+  nowMs: number = Date.now(),
+  defaultTimeoutMs: number = DEFAULT_TASK_TIMEOUT_MS
+): boolean {
+  if (!task.startedAt) return false
+  if (task.status !== 'processing') return false
+
+  const timeoutMs = task.timeout ?? defaultTimeoutMs
+  const startedMs = new Date(task.startedAt).getTime()
+  if (Number.isNaN(startedMs)) return false
+
+  return nowMs - startedMs > timeoutMs
+}
 
 /**
  * Detecta tarefas que estão travadas (status = processing por muito tempo)
@@ -257,20 +278,16 @@ export function detectarTarefasTravadas(
 ): AgentTask[] {
   const agora = Date.now()
 
-  return tarefas.filter(
-    t =>
-      t.status === 'processing' &&
-      t.startedAt &&
-      agora - new Date(t.startedAt).getTime() > limiteMs
-  )
+  return tarefas.filter(t => isTaskTimedOut(t, agora, limiteMs))
 }
 
 /**
  * Recupera tarefa travada (reenfileira ou marca como falha)
  */
 export function recuperarTarefaTravada(task: AgentTask): AgentTask {
-  const retryCount = (task.retryCount || 0) + 1
-  const maxRetries = task.maxRetries || 3
+  const retryCount = (task.retryCount ?? 0) + 1
+  const maxRetries = task.maxRetries ?? 3
+  const nowIso = new Date().toISOString()
 
   // eslint-disable-next-line no-console
   console.warn(`[TaskEngine] Tarefa travada detectada: ${task.id} (${task.type})`)
@@ -278,6 +295,7 @@ export function recuperarTarefaTravada(task: AgentTask): AgentTask {
   if (retryCount <= maxRetries) {
     return agendarRetryTarefa({
       ...task,
+      retryCount,
       error: `Tarefa travada - tentativa ${retryCount} de ${maxRetries}`
     })
   }
@@ -286,8 +304,8 @@ export function recuperarTarefaTravada(task: AgentTask): AgentTask {
     ...task,
     status: 'failed',
     retryCount,
-    completedAt: new Date().toISOString(),
-    atualizadoEm: new Date().toISOString(),
+    completedAt: nowIso,
+    atualizadoEm: nowIso,
     error: 'Tarefa travada após múltiplas tentativas'
   }
 }
@@ -302,6 +320,7 @@ export function tarefaProntaParaExecucao(task: AgentTask): boolean {
     return new Date(task.nextRunAt).getTime() <= Date.now()
   }
 
+  // Fila normal
   return task.status === 'queued'
 }
 
@@ -319,8 +338,13 @@ export function shouldPauseForHuman(agent: Agent, task: AgentTask): boolean {
     return true
   }
 
+  // Confiança baixa (se fornecida) força humano
+  if (typeof task.confidence === 'number' && task.confidence < 0.6) {
+    return true
+  }
+
   // Tarefas que já bateram o limite de tentativas
-  if (task.retryCount && task.retryCount >= (task.maxRetries || 3)) {
+  if ((task.retryCount ?? 0) >= (task.maxRetries ?? 3)) {
     return true
   }
 
@@ -359,6 +383,10 @@ export function canResumeAfterHuman(task: AgentTask): boolean {
   // Tarefa em modo humana mas tocada há mais de 24h → auto-resume
   if (task.status === 'human_intervention' && task.humanTouchedAt) {
     const touchedTime = new Date(task.humanTouchedAt).getTime()
+    if (Number.isNaN(touchedTime)) {
+      return false
+    }
+
     const now = Date.now()
     const hoursSinceTouched = (now - touchedTime) / (1000 * 60 * 60)
 
@@ -597,6 +625,7 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
       return {
         ...defaultAgent,
         ...existing,
+        // Sempre atualiza descrição/capabilities do "catálogo"
         capabilities: defaultAgent.capabilities,
         description: defaultAgent.description
       }
@@ -622,6 +651,7 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
  * Hoje o fluxo real usa a IA via outro cliente; isto aqui é fallback/ambiente de teste.
  */
 export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<AgentTaskResult> {
+  // Simula latência mínima
   await new Promise(resolve => setTimeout(resolve, 10))
 
   const taskType = String(task.type).toLowerCase()
@@ -641,7 +671,12 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
   }
 
   // Análise (documentos, contratos, etc)
-  if (taskType.includes('analy') || taskType.includes('analise') || agent.type === 'analyzer') {
+  if (
+    taskType.includes('analy') ||
+    taskType.includes('analise') ||
+    taskType.includes('análise') ||
+    agent.type === 'analyzer'
+  ) {
     return {
       success: true,
       message: 'Análise concluída com sucesso',
@@ -673,7 +708,7 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
     }
   }
 
-  // Default
+  // Default genérico
   return {
     success: true,
     message: `Tarefa ${task.type} processada com sucesso`,
@@ -690,23 +725,27 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
 
 /**
  * Cria um gerador de tarefas automáticas em intervalo fixo
+ * (para modo demo / teste de orquestrador)
  */
 export function createTaskGenerator(
   config: AgentTaskGeneratorConfig,
   onTaskGenerated: (task: AgentTask) => void
 ): AgentTaskGenerator {
   let intervalId: ReturnType<typeof setInterval> | null = null
-  let currentConfig = { ...config }
+  let currentConfig: AgentTaskGeneratorConfig = { ...config }
   let taskCallback = onTaskGenerated
   let tasksGeneratedInInterval = 0
 
   const generateTask = (): AgentTask => {
-    const agentId = currentConfig.agentIds[Math.floor(Math.random() * currentConfig.agentIds.length)]
+    const agentsPool = currentConfig.agentIds
+    const agentId =
+      agentsPool[Math.floor(Math.random() * Math.max(agentsPool.length, 1))] ?? 'harvey'
+
     const taskTypes = ['monitor-check', 'analyze-queue', 'deadline-review', 'status-update']
     const priorities: TaskPriority[] = ['low', 'medium', 'high']
 
     return {
-      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       agentId,
       type: taskTypes[Math.floor(Math.random() * taskTypes.length)],
       priority: priorities[Math.floor(Math.random() * priorities.length)],

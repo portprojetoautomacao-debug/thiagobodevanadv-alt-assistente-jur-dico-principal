@@ -1,49 +1,82 @@
 /**
  * Vite Plugin: Phosphor Icon Optimizer
- * 
- * Reduces bundle size by only including icons that are actually used
- * instead of loading all 1500+ icons from @phosphor-icons/react
+ *
+ * Faz análise estática dos imports de @phosphor-icons/react e
+ * registra no build quantos ícones estão sendo usados.
+ *
+ * Útil para:
+ *  - Monitorar se o bundle está crescendo demais por excesso de ícones
+ *  - Ajudar a identificar oportunidades de refatorar para imports mais enxutos
  */
 
 import type { Plugin } from 'vite'
+
 export function phosphorIconOptimizer(): Plugin {
   const usedIcons = new Set<string>()
-  const iconPattern = /from\s+['"]@phosphor-icons\/react['"]/g
-  const importPattern = /import\s+\{([^}]+)\}\s+from\s+['"]@phosphor-icons\/react['"]/g
+
+  // Sem flag "g" aqui para não ter problema com lastIndex em múltiplos .test()
+  const iconPattern = /from\s+['"]@phosphor-icons\/react['"]/
+  const importPattern =
+    /import\s+\{([^}]+)\}\s+from\s+['"]@phosphor-icons\/react['"]/g
 
   return {
     name: 'phosphor-icon-optimizer',
-    
+
     enforce: 'pre',
-    
+
     transform(code: string, id: string) {
-      // Only process TypeScript/JavaScript files
-      if (!id.match(/\.(tsx?|jsx?)$/)) return null
-      
-      // Check if file imports from @phosphor-icons/react
+      // Ignorar arquivos externos irrelevantes
+      if (
+        !/\.(?:[cm]?[jt]sx?)$/.test(id) || // js, jsx, ts, tsx, mjs, cjs
+        id.includes('node_modules') ||
+        id.includes('dist')
+      ) {
+        return null
+      }
+
+      // Se não importar @phosphor-icons/react, ignora
       if (!iconPattern.test(code)) return null
-      
-      // Extract icon names from imports
-      let match
+
+      let match: RegExpExecArray | null
       while ((match = importPattern.exec(code)) !== null) {
         const imports = match[1]
+
         const iconNames = imports
           .split(',')
-          .map(name => name.trim())
-          .filter(name => name && !name.includes('type'))
-        
-        iconNames.forEach(name => usedIcons.add(name))
+          .map((name) => name.trim())
+          .filter((name) => !!name && name !== 'default')
+
+        for (const name of iconNames) {
+          usedIcons.add(name)
+        }
       }
-      
+
       return null
     },
-    
+
     buildEnd() {
-      if (usedIcons.size > 0) {
-        console.log(`\n📦 Phosphor Icons Optimizer:`)
-        console.log(`   Used icons: ${usedIcons.size}`)
-        console.log(`   Estimated savings: ~${Math.round((1514 - usedIcons.size) / 1514 * 100)}% of icon bundle`)
+      if (usedIcons.size === 0) {
+        console.log('\n📦 Phosphor Icons Optimizer: nenhum ícone nomeado detectado.')
+        return
       }
-    }
+
+      const TOTAL_ICONS_ESTIMATE = 1514
+      const savings =
+        ((TOTAL_ICONS_ESTIMATE - usedIcons.size) / TOTAL_ICONS_ESTIMATE) * 100
+
+      console.log('\n📦 Phosphor Icons Optimizer:')
+      console.log(`   Ícones utilizados: ${usedIcons.size}`)
+      console.log(
+        `   Estimativa de economia potencial: ~${Math.max(
+          0,
+          Math.round(savings),
+        )}% do bundle de ícones`,
+      )
+      console.log(
+        `   Exemplos: ${[...usedIcons].slice(0, 10).join(', ')}${
+          usedIcons.size > 10 ? '…' : ''
+        }`,
+      )
+    },
   }
 }

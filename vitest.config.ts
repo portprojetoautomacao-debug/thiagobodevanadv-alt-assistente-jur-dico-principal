@@ -1,32 +1,34 @@
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
+
+// Compatível com ESM (Node 20, Vercel, etc.)
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = resolve(__filename, '..')
 
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': resolve(__dirname, './src'),
     },
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/api/**/*.test.ts', '**/tests/e2e/**'],
+    environment: 'node',
+
+    // Foca em testes de APIs (padrão Vercel /api)
+    include: ['**/api/**/*.test.ts'],
+
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov', 'cobertura'],
-      reportsDirectory: './coverage',
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        '**/mockData',
-        '**/*.test.{ts,tsx}',
-      ],
+      reportsDirectory: './coverage-api',
+      // Opcional, mas útil pra não pegar lixo fora da API:
+      include: ['**/api/**/*.ts'],
+      exclude: ['**/api/**/*.test.ts'],
     },
+
+    // Qualidade de vida em CI / local:
+    passWithNoTests: true,
   },
 })

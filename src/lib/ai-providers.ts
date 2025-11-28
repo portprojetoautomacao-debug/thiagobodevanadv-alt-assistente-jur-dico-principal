@@ -1,43 +1,57 @@
 /**
  * Multi-Provider AI Integration
- * 
+ *
  * Sistema unificado de integração com múltiplos provedores de IA para o
  * Assistente Jurídico PJe. Implementa padrão de fallback automático.
  *
  * @module ai-providers
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2025-11-28
- * 
+ *
  * Provedores suportados (em ordem de prioridade):
  * 1. Gemini 2.5 Pro (principal) - Google AI
  * 2. GitHub Models (free tier) - Azure-hosted
  * 3. Hugging Face Inference API (free tier)
  * 4. Azure OpenAI (quando assinatura ativa)
- * 
+ *
  * Funcionalidades:
  * - Fallback automático entre provedores
  * - Retry com exponential backoff
  * - Validação centralizada de API keys
  * - Logging detalhado para debug
- * 
+ *
  * @example
  * ```typescript
  * import { aiClient } from '@/lib/ai-providers'
- * 
- * const result = await aiClient.chat([
- *   { role: 'user', content: 'Analise este contrato...' }
- * ], { provider: 'gemini', model: 'gemini-2.5-pro' })
+ *
+ * const result = await aiClient.chat(
+ *   [
+ *     { role: 'user', content: 'Analise este contrato...' }
+ *   ],
+ *   { provider: 'gemini', model: 'gemini-2.5-pro' }
+ * )
  * ```
  */
 
 // ============================================================================
-// CONFIG TYPES
+// TYPES & CONFIG
 // ============================================================================
+
+/** Mensagens em formato OpenAI-style */
+export type AIChatRole = 'system' | 'user' | 'assistant'
+
+export interface AIChatMessage {
+  role: AIChatRole | string
+  content: string
+}
+
+/** Provedores suportados */
+export type AIProvider = 'gemini' | 'azure' | 'huggingface' | 'github'
 
 /** Configuração de modelo de IA */
 export interface AIModelConfig {
   /** Provedor de IA a ser utilizado */
-  provider: 'gemini' | 'azure' | 'huggingface' | 'github'
+  provider: AIProvider
   /** Nome/ID do modelo */
   model: string
   /** Chave de API (opcional, usa env vars por padrão) */
@@ -108,18 +122,6 @@ export const GITHUB_MODELS_CONFIG = {
 /**
  * Executa uma função com retry e exponential backoff.
  * Útil para lidar com falhas temporárias de API.
- * 
- * @param fn - Função assíncrona a ser executada
- * @param config - Configuração de retry (opcional)
- * @returns Resultado da função ou lança erro após todas as tentativas
- * 
- * @example
- * ```typescript
- * const result = await withRetry(
- *   () => fetch('https://api.example.com/data'),
- *   { maxRetries: 3, initialDelay: 1000 }
- * )
- * ```
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
@@ -140,19 +142,21 @@ export async function withRetry<T>(
       lastError = error instanceof Error ? error : new Error(String(error))
 
       // Não faz retry se for erro de autenticação ou configuração
+      const msg = lastError.message || ''
       if (
-        lastError.message.includes('API key') ||
-        lastError.message.includes('não configurada') ||
-        lastError.message.includes('401') ||
-        lastError.message.includes('403')
+        msg.includes('API key') ||
+        msg.includes('não configurada') ||
+        msg.includes('401') ||
+        msg.includes('403')
       ) {
         throw lastError
       }
 
       if (attempt < maxRetries) {
+        // eslint-disable-next-line no-console
         console.warn(
           `[AI Provider] Tentativa ${attempt}/${maxRetries} falhou. ` +
-          `Retry em ${delay}ms. Erro: ${lastError.message}`
+            `Retry em ${delay}ms. Erro: ${msg}`
         )
         await new Promise(resolve => setTimeout(resolve, delay))
         delay = Math.min(delay * backoffFactor, maxDelay)
@@ -166,10 +170,6 @@ export async function withRetry<T>(
 /**
  * Valida se uma string parece ser uma API key válida.
  * Verifica padrões comuns de chaves de API.
- * 
- * @param key - String a ser validada
- * @param provider - Provedor para validação específica
- * @returns true se a chave parece válida
  */
 export function isValidApiKey(key: string | null | undefined, provider?: string): boolean {
   if (!key || key.length < 10) return false
@@ -195,29 +195,14 @@ export function isValidApiKey(key: string | null | undefined, provider?: string)
 }
 
 // ============================================================================
-// GEMINI CLIENT (PRINCIPAL)
+// GEMINI CLIENT (PRINCIPAL - GEMINI 2.5 PRO)
 // ============================================================================
 
 /**
  * Cliente para API do Google Gemini (Gemini 2.5 Pro)
- * 
+ *
  * Responsável por toda comunicação com a API Generative Language do Google.
  * Implementa retry automático e validação de API key.
- * 
- * @class GeminiClient
- * 
- * Observações importantes:
- * - Idealmente o acesso à API deve ficar no backend para segurança
- * - Aqui usamos import.meta.env para ambiente bundlado (Vite)
- * - Suporta múltiplas variáveis de ambiente para flexibilidade
- * 
- * @example
- * ```typescript
- * const gemini = new GeminiClient()
- * if (gemini.isConfigured()) {
- *   const response = await gemini.chat('gemini-2.5-pro', messages)
- * }
- * ```
  */
 export class GeminiClient {
   private apiKey: string | null
@@ -226,7 +211,7 @@ export class GeminiClient {
 
   /**
    * Cria uma instância do GeminiClient.
-   * 
+   *
    * @param apiKey - Chave de API (opcional, usa env vars por padrão)
    * @param retryConfig - Configuração de retry (opcional)
    */
@@ -236,9 +221,9 @@ export class GeminiClient {
       apiKey ||
       (typeof import.meta !== 'undefined'
         ? (import.meta.env.VITE_GOOGLE_API_KEY ||
-          import.meta.env.VITE_GEMINI_API_KEY ||
-          import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
-          '')
+            import.meta.env.VITE_GEMINI_API_KEY ||
+            import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
+            '')
         : '') ||
       null
 
@@ -246,108 +231,129 @@ export class GeminiClient {
 
     // Valida a chave no construtor (apenas warning, não bloqueia)
     if (this.apiKey && !isValidApiKey(this.apiKey, 'gemini')) {
+      // eslint-disable-next-line no-console
       console.warn('[GeminiClient] API key pode estar em formato inválido')
     }
   }
 
   /**
    * Verifica se o cliente está configurado com uma API key.
-   * @returns true se há uma API key configurada
    */
   isConfigured(): boolean {
     return !!this.apiKey && isValidApiKey(this.apiKey, 'gemini')
   }
 
   /**
-   * Envia uma conversa para o modelo Gemini e retorna a resposta.
-   * Implementa retry automático com exponential backoff.
-   * 
-   * @param model - ID do modelo (default: gemini-2.5-pro)
-   * @param messages - Array de mensagens no formato OpenAI-style
-   * @param options - Opções de geração (maxTokens, temperature)
-   * @returns Texto da resposta do modelo
-   * @throws Error se a API key não estiver configurada ou após todas as tentativas
-   * 
-   * @example
-   * ```typescript
-   * const response = await gemini.chat('gemini-2.5-pro', [
-   *   { role: 'system', content: 'Você é um assistente jurídico.' },
-   *   { role: 'user', content: 'Analise este contrato...' }
-   * ], { temperature: 0.7 })
-   * ```
+   * Converte mensagens OpenAI-style em um texto único com rótulos.
+   * Mantém o contexto sistema/usuário/assistente.
+   */
+  private buildPromptFromMessages(messages: AIChatMessage[]): string {
+    return messages
+      .map(m => {
+        const role = m.role as AIChatRole
+        if (role === 'system') return `# Sistema\n${m.content}`
+        if (role === 'user') return `# Usuário\n${m.content}`
+        return `# Assistente\n${m.content}`
+      })
+      .join('\n\n')
+  }
+
+  /**
+   * Envia uma conversa para o modelo Gemini e retorna a resposta (texto).
+   *
+   * - Default de modelo: gemini-2.5-pro
+   * - Usa endpoint oficial: v1/models/gemini-2.5-pro:generateContent
+   * - Extrai texto de candidates[0].content.parts[].text
    */
   async chat(
     model: string,
-    messages: Array<{ role: string; content: string }>,
+    messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     if (!this.apiKey) {
       throw new Error(
         'Gemini API key não configurada. ' +
-        'Configure uma das variáveis: VITE_GOOGLE_API_KEY, VITE_GEMINI_API_KEY ou VITE_GEMINI_API_KEY_BACKEND'
+          'Configure uma das variáveis: VITE_GOOGLE_API_KEY, VITE_GEMINI_API_KEY ou VITE_GEMINI_API_KEY_BACKEND'
       )
     }
 
     const modelId = model || 'gemini-2.5-pro'
-
-    // Converte mensagens estilo OpenAI para um prompt único
-    const prompt = messages
-      .map(m => {
-        if (m.role === 'system') return `# Sistema\n${m.content}`
-        if (m.role === 'user') return `# Usuário\n${m.content}`
-        return `# Assistente\n${m.content}`
-      })
-      .join('\n\n')
+    const prompt = this.buildPromptFromMessages(messages)
 
     const url = `${this.baseUrl}/${modelId}:generateContent?key=${encodeURIComponent(this.apiKey)}`
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ],
-        generationConfig: {
-          maxOutputTokens: options.maxTokens || 1024,
-          temperature: options.temperature ?? 0.7
-        }
-      })
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '')
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText} ${errorText}`)
-    }
-
-    const data = await response.json() as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
-    }
-
-    const parts = data.candidates?.[0]?.content?.parts || []
-    const text = parts.map(p => p.text || '').join('\n').trim()
-
-    return text
-  }
-
-  async isAvailable(): Promise<boolean> {
-    if (!this.apiKey) return false
-    try {
-      const url = `${this.baseUrl}/gemini-2.5-pro:generateContent?key=${encodeURIComponent(this.apiKey)}`
-      const resp = await fetch(url, {
+    const doRequest = async () => {
+      const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
-          generationConfig: { maxOutputTokens: 1, temperature: 0 }
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }]
+            }
+          ],
+          generationConfig: {
+            maxOutputTokens: options.maxTokens || 1024,
+            temperature: options.temperature ?? 0.7
+          }
         })
       })
-      return resp.ok
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '')
+        throw new Error(
+          `Gemini API error: ${response.status} ${response.statusText} ${errorText}`
+        )
+      }
+
+      const data = (await response.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+      }
+
+      const parts = data.candidates?.[0]?.content?.parts || []
+      const text = parts.map(p => p.text || '').join('\n').trim()
+
+      if (!text) {
+        throw new Error('Gemini retornou resposta vazia')
+      }
+
+      return text
+    }
+
+    return withRetry(doRequest, this.retryConfig)
+  }
+
+  /**
+   * Verifica disponibilidade básica do modelo gemini-2.5-pro
+   * com uma chamada "ping" barata.
+   */
+  async isAvailable(): Promise<boolean> {
+    if (!this.apiKey) return false
+
+    const url = `${this.baseUrl}/gemini-2.5-pro:generateContent?key=${encodeURIComponent(
+      this.apiKey
+    )}`
+
+    try {
+      const ok = await withRetry(
+        async () => {
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+              generationConfig: { maxOutputTokens: 1, temperature: 0 }
+            })
+          })
+          return resp.ok
+        },
+        { maxRetries: 2, initialDelay: 500, maxDelay: 1500 }
+      )
+
+      return ok
     } catch {
       return false
     }
@@ -377,7 +383,7 @@ export class HuggingFaceClient {
 
   async chat(
     model: string,
-    messages: Array<{ role: string; content: string }>,
+    messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     const modelId =
@@ -394,37 +400,42 @@ export class HuggingFaceClient {
     const prompt =
       messages
         .map(m => {
-          if (m.role === 'system') return `<|system|>\n${m.content}`
-          if (m.role === 'user') return `<|user|>\n${m.content}`
+          const role = m.role as AIChatRole
+          if (role === 'system') return `<|system|>\n${m.content}`
+          if (role === 'user') return `<|user|>\n${m.content}`
           return `<|assistant|>\n${m.content}`
         })
         .join('\n') + '\n<|assistant|>\n'
 
-    const response = await fetch(`${this.baseUrl}/${modelId}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: options.maxTokens || 1024,
-          temperature: options.temperature ?? 0.7,
-          return_full_text: false
-        }
+    const doRequest = async () => {
+      const response = await fetch(`${this.baseUrl}/${modelId}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: options.maxTokens || 1024,
+            temperature: options.temperature ?? 0.7,
+            return_full_text: false
+          }
+        })
       })
-    })
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`HuggingFace API error: ${error}`)
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`HuggingFace API error: ${error}`)
+      }
+
+      const result = await response.json()
+
+      if (Array.isArray(result)) {
+        return result[0]?.generated_text || ''
+      }
+
+      return result.generated_text || ''
     }
 
-    const result = await response.json()
-
-    if (Array.isArray(result)) {
-      return result[0]?.generated_text || ''
-    }
-
-    return result.generated_text || ''
+    return withRetry(doRequest, { maxRetries: 2, initialDelay: 1000 })
   }
 
   async isAvailable(): Promise<boolean> {
@@ -468,7 +479,7 @@ export class GitHubModelsClient {
 
   async chat(
     model: string,
-    messages: Array<{ role: string; content: string }>,
+    messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     if (!this.apiKey) {
@@ -478,27 +489,31 @@ export class GitHubModelsClient {
     const modelId =
       GITHUB_MODELS_CONFIG.models[model as keyof typeof GITHUB_MODELS_CONFIG.models] || model
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: modelId,
-        messages,
-        max_tokens: options.maxTokens || 1024,
-        temperature: options.temperature ?? 0.7
+    const doRequest = async () => {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages,
+          max_tokens: options.maxTokens || 1024,
+          temperature: options.temperature ?? 0.7
+        })
       })
-    })
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`GitHub Models API error: ${error}`)
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`GitHub Models API error: ${error}`)
+      }
+
+      const result = await response.json()
+      return result.choices?.[0]?.message?.content || ''
     }
 
-    const result = await response.json()
-    return result.choices?.[0]?.message?.content || ''
+    return withRetry(doRequest, { maxRetries: 2, initialDelay: 1000 })
   }
 }
 
@@ -532,7 +547,7 @@ export class AzureOpenAIClient {
    */
   async chat(
     deploymentOrAlias: string,
-    messages: Array<{ role: string; content: string }>,
+    messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     if (!this.apiKey) {
@@ -545,26 +560,30 @@ export class AzureOpenAIClient {
 
     const url = `${this.endpoint}openai/deployments/${deployment}/chat/completions?api-version=${this.apiVersion}`
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': this.apiKey
-      },
-      body: JSON.stringify({
-        messages,
-        max_tokens: options.maxTokens || 1024,
-        temperature: options.temperature ?? 0.7
+    const doRequest = async () => {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': this.apiKey
+        },
+        body: JSON.stringify({
+          messages,
+          max_tokens: options.maxTokens || 1024,
+          temperature: options.temperature ?? 0.7
+        })
       })
-    })
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Azure OpenAI API error: ${error}`)
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`Azure OpenAI API error: ${error}`)
+      }
+
+      const result = await response.json()
+      return result.choices?.[0]?.message?.content || ''
     }
 
-    const result = await response.json()
-    return result.choices?.[0]?.message?.content || ''
+    return withRetry(doRequest, { maxRetries: 2, initialDelay: 1000 })
   }
 
   async isAvailable(): Promise<boolean> {
@@ -619,7 +638,7 @@ export class UnifiedAIClient {
   }
 
   async chat(
-    messages: Array<{ role: string; content: string }>,
+    messages: AIChatMessage[],
     options: {
       model?: string
       provider?: AIModelConfig['provider']
@@ -702,10 +721,7 @@ export class UnifiedAIClient {
       available.push('huggingface')
     }
 
-    if (
-      typeof import.meta !== 'undefined' &&
-      !!import.meta.env.VITE_GITHUB_TOKEN
-    ) {
+    if (typeof import.meta !== 'undefined' && !!import.meta.env.VITE_GITHUB_TOKEN) {
       available.push('github')
     }
 
