@@ -1,7 +1,13 @@
-import { useState } from 'react'
+import { useState, type ComponentType } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -23,7 +29,7 @@ import {
   ArrowsLeftRight,
   ChatCircle,
   CloudArrowUp,
-  ClockCounterClockwise
+  ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { useAgentBackup } from '@/hooks/use-agent-backup'
@@ -35,11 +41,10 @@ import AgentStatusFloater from '@/components/AgentStatusFloater'
 import MrsJustinEModal from '@/components/MrsJustinEModal'
 import AgentOrchestrationPanel from '@/components/AgentOrchestrationPanel'
 import { toast } from 'sonner'
-// Agent type from lib/agents - used via useAutonomousAgents hook
 import type { ViewType, User } from '@/types'
 import type { IconProps } from '@phosphor-icons/react'
 
-const agentIcons: Record<string, React.ComponentType<IconProps>> = {
+const agentIcons: Record<string, ComponentType<IconProps>> = {
   'djen-monitor': Database,
   'agent-djen-monitor': Database,
   'mrs-justin-e': Brain,
@@ -76,7 +81,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     completedTasks,
     activityLog,
     toggleAgent,
-    setAgents: _setAgents,
+    setAgents: _setAgents, // mantido para compatibilidade futura
   } = useAutonomousAgents()
 
   const [user] = useKV<User | null>('user', null)
@@ -86,75 +91,85 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
   const { createBackup, restoreBackup } = useAgentBackup({
     userId,
     autoBackupInterval: 5, // Backup a cada 5 minutos
-    enableAutoBackup: true
+    enableAutoBackup: true,
   })
 
   const [showMrsJustinEModal, setShowMrsJustinEModal] = useState(false)
-  const [backupStatus, setBackupStatus] = useState<'idle' | 'saving' | 'restoring'>('idle')
+  const [backupStatus, setBackupStatus] = useState<
+    'idle' | 'saving' | 'restoring'
+  >('idle')
   const [useV2Architecture, setUseV2Architecture] = useState(true) // Nova arquitetura ativada por padrão
 
-  // Manual backup handler
+  // Backup manual
   const handleManualBackup = async () => {
     setBackupStatus('saving')
     try {
       await createBackup()
       toast.success('Backup criado com sucesso', {
-        description: 'Seus dados foram salvos no servidor'
+        description: 'Seus dados foram salvos no servidor',
       })
-    } catch (_error) {
-      console.error('Erro ao criar backup:', _error)
+    } catch (error) {
+      console.error('Erro ao criar backup:', error)
       toast.error('Erro ao criar backup', {
-        description: 'Tente novamente mais tarde'
+        description: 'Tente novamente mais tarde',
       })
     } finally {
       setBackupStatus('idle')
     }
   }
 
-  // Manual restore handler
+  // Restore manual
   const handleManualRestore = async () => {
     setBackupStatus('restoring')
     try {
       const backup = await restoreBackup()
       if (backup) {
         toast.success('Dados restaurados com sucesso', {
-          description: `Backup de ${new Date(backup.timestamp).toLocaleString()}`
+          description: `Backup de ${new Date(
+            backup.timestamp,
+          ).toLocaleString()}`,
         })
       } else {
         toast.info('Nenhum backup encontrado')
       }
-    } catch (_error) {
-      console.error('Erro ao restaurar backup:', _error)
+    } catch (error) {
+      console.error('Erro ao restaurar backup:', error)
       toast.error('Erro ao restaurar backup')
     } finally {
       setBackupStatus('idle')
     }
   }
 
-  // Os agentes são inicializados pelo hook useAutonomousAgents usando initializeAgents() de src/lib/agents.ts
-  // NÃO adicionar lista duplicada de agentes aqui - isso causava conflitos de IDs e configurações
-
-  const activeAgents = agents.filter(a => a.enabled).length
-  const queuedTasks = taskQueue.filter(t => t.status === 'queued').length
-  const processingTasks = taskQueue.filter(t => t.status === 'processing').length
-  const humanInterventionTasks = taskQueue.filter(t => t.status === 'human_intervention').length
+  // Métricas básicas
+  const activeAgents = agents.filter((a) => a.enabled).length
+  const queuedTasks = taskQueue.filter((t) => t.status === 'queued').length
+  const processingTasks = taskQueue.filter(
+    (t) => t.status === 'processing',
+  ).length
+  const humanInterventionTasks = taskQueue.filter(
+    (t) => t.status === 'human_intervention',
+  ).length
 
   const handleToggleAgent = (agentId: string) => {
-    const agent = agents.find(a => a.id === agentId)
-    if (!agent) return null
+    const agent = agents.find((a) => a.id === agentId)
+    if (!agent) return
     toggleAgent(agentId)
-    toast.success(agent.enabled
-      ? `${agent.name} desativado`
-      : `${agent.name} ativado`
+    toast.success(
+      agent.enabled
+        ? `${agent.name} desativado`
+        : `${agent.name} ativado`,
     )
   }
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Agentes de IA Autônomos</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Agentes de IA Autônomos
+        </h1>
         <p className="text-muted-foreground mt-2">
-          Equipe de inteligência artificial trabalhando 24/7 para automatizar tarefas jurídicas
+          Equipe de inteligência artificial trabalhando 24/7 para automatizar
+          tarefas jurídicas
         </p>
       </div>
 
@@ -162,7 +177,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         open={showMrsJustinEModal}
         onOpenChange={setShowMrsJustinEModal}
         onActivate={() => {
-          const agent = agents.find(a => a.id === 'mrs-justin-e')
+          const agent = agents.find((a) => a.id === 'mrs-justin-e')
           if (agent && !agent.enabled) {
             handleToggleAgent('mrs-justin-e')
           }
@@ -170,42 +185,59 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         }}
       />
 
+      {/* Cards principais de status */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agentes Disponíveis</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Agentes Disponíveis
+            </CardTitle>
             <Robot className="w-4 h-4 text-primary" weight="fill" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeAgents}/{agents.length}</div>
+            <div className="text-2xl font-bold">
+              {activeAgents}/{agents.length}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {activeAgents === 0 ? 'Nenhum ativado' : `${activeAgents} ativo(s)`}
+              {activeAgents === 0
+                ? 'Nenhum ativado'
+                : `${activeAgents} ativo(s)`}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fila de Trabalho</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Fila de Trabalho
+            </CardTitle>
             <Clock className="w-4 h-4 text-accent" weight="fill" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{queuedTasks + processingTasks}</div>
+            <div className="text-2xl font-bold">
+              {queuedTasks + processingTasks}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {processingTasks > 0 ? `${processingTasks} em processamento` : 'Aguardando tarefas'}
+              {processingTasks > 0
+                ? `${processingTasks} em processamento`
+                : 'Aguardando tarefas'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Backup Local</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Backup Local
+            </CardTitle>
             <CloudArrowUp className="w-4 h-4 text-blue-600" weight="fill" />
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-semibold text-green-600">Ativo</div>
+                <div className="text-sm font-semibold text-green-600">
+                  Ativo
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   A cada 5 min
                 </p>
@@ -235,6 +267,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </Card>
       </div>
 
+      {/* Harvey */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -245,7 +278,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               <div>
                 <CardTitle className="text-xl">Harvey Specter</CardTitle>
                 <CardDescription className="mt-1">
-                  Seu assistente jurídico estratégico com análises completas do escritório
+                  Seu assistente jurídico estratégico com análises completas do
+                  escritório
                 </CardDescription>
               </div>
             </div>
@@ -260,7 +294,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <ChartLine className="w-5 h-5 text-accent" weight="fill" />
-                <h4 className="font-semibold text-foreground">Análises Inteligentes</h4>
+                <h4 className="font-semibold text-foreground">
+                  Análises Inteligentes
+                </h4>
               </div>
               <p className="text-sm text-muted-foreground">
                 Performance, processos, prazos e finanças em um só lugar
@@ -269,7 +305,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <Brain className="w-5 h-5 text-primary" weight="fill" />
-                <h4 className="font-semibold text-foreground">Insights Estratégicos</h4>
+                <h4 className="font-semibold text-foreground">
+                  Insights Estratégicos
+                </h4>
               </div>
               <p className="text-sm text-muted-foreground">
                 Identifica padrões e sugere otimizações
@@ -278,7 +316,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <Lightning className="w-5 h-5 text-accent" weight="fill" />
-                <h4 className="font-semibold text-foreground">Respostas Rápidas</h4>
+                <h4 className="font-semibold text-foreground">
+                  Respostas Rápidas
+                </h4>
               </div>
               <p className="text-sm text-muted-foreground">
                 Análises complexas em questão de segundos
@@ -288,6 +328,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </CardContent>
       </Card>
 
+      {/* Mrs. Justin-e */}
       <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -312,8 +353,13 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" weight="fill" />
-                <h4 className="font-semibold text-foreground">95% Precisa</h4>
+                <CheckCircle
+                  className="w-5 h-5 text-green-600"
+                  weight="fill"
+                />
+                <h4 className="font-semibold text-foreground">
+                  95% Precisa
+                </h4>
               </div>
               <p className="text-sm text-muted-foreground">
                 Precisão garantida sem esquecer detalhes importantes
@@ -322,7 +368,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-5 h-5 text-primary" weight="fill" />
-                <h4 className="font-semibold text-foreground">Economiza Tempo</h4>
+                <h4 className="font-semibold text-foreground">
+                  Economiza Tempo
+                </h4>
               </div>
               <p className="text-sm text-muted-foreground">
                 50 horas economizadas a cada 150 intimações
@@ -331,7 +379,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <Lightning className="w-5 h-5 text-accent" weight="fill" />
-                <h4 className="font-semibold text-foreground">Análise Rápida</h4>
+                <h4 className="font-semibold text-foreground">
+                  Análise Rápida
+                </h4>
               </div>
               <p className="text-sm text-muted-foreground">
                 Menos de 1 minuto por intimação
@@ -346,15 +396,19 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           <CardHeader>
             <div className="flex items-center gap-2">
               <WarningCircle className="w-5 h-5 text-accent" weight="fill" />
-              <CardTitle className="text-base">Intervenção Humana Necessária</CardTitle>
+              <CardTitle className="text-base">
+                Intervenção Humana Necessária
+              </CardTitle>
             </div>
             <CardDescription>
-              {humanInterventionTasks} tarefa(s) aguardando conclusão da edição humana
+              {humanInterventionTasks} tarefa(s) aguardando conclusão da edição
+              humana
             </CardDescription>
           </CardHeader>
         </Card>
       )}
 
+      {/* Abas principais */}
       <Tabs defaultValue="agents" className="space-y-4">
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
@@ -370,23 +424,30 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <ListChecks className="w-4 h-4 mr-2" />
             Atividade em Tempo Real
             {activityLog.length > 0 && (
-              <Badge variant="secondary" className="ml-2">{activityLog.length}</Badge>
+              <Badge variant="secondary" className="ml-2">
+                {activityLog.length}
+              </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="queue">
             Fila de Tarefas
-            {(queuedTasks + processingTasks) > 0 && (
-              <Badge variant="secondary" className="ml-2">{queuedTasks + processingTasks}</Badge>
+            {queuedTasks + processingTasks > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {queuedTasks + processingTasks}
+              </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="completed">
             Histórico
             {completedTasks.length > 0 && (
-              <Badge variant="secondary" className="ml-2">{completedTasks.length}</Badge>
+              <Badge variant="secondary" className="ml-2">
+                {completedTasks.length}
+              </Badge>
             )}
           </TabsTrigger>
         </TabsList>
 
+        {/* Agents */}
         <TabsContent value="agents" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agents.map((agent) => {
@@ -398,15 +459,27 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                 : 'text-muted-foreground'
 
               return (
-                <Card key={agent.id} className={agent.enabled ? 'border-primary/30' : ''}>
+                <Card
+                  key={agent.id}
+                  className={agent.enabled ? 'border-primary/30' : ''}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${agent.enabled ? 'bg-primary/10' : 'bg-muted'}`}>
-                          <IconComponent className={`w-6 h-6 ${statusColor}`} weight="fill" />
+                        <div
+                          className={`p-2 rounded-lg ${
+                            agent.enabled ? 'bg-primary/10' : 'bg-muted'
+                          }`}
+                        >
+                          <IconComponent
+                            className={`w-6 h-6 ${statusColor}`}
+                            weight="fill"
+                          />
                         </div>
                         <div>
-                          <CardTitle className="text-base">{agent.name}</CardTitle>
+                          <CardTitle className="text-base">
+                            {agent.name}
+                          </CardTitle>
                           <CardDescription className="text-xs mt-1">
                             {agent.description}
                           </CardDescription>
@@ -420,32 +493,46 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     <div className="pt-2">
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                         <span>Capacidades:</span>
-                        <Badge variant={agent.enabled ? 'default' : 'secondary'} className="text-xs">
+                        <Badge
+                          variant={agent.enabled ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
                           {agent.enabled ? 'Ativo' : 'Pausado'}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {agent.capabilities?.slice(0, 4).map((cap, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {cap}
                           </Badge>
                         ))}
-                        {agent.capabilities && agent.capabilities.length > 4 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{agent.capabilities.length - 4}
-                          </Badge>
-                        )}
+                        {agent.capabilities &&
+                          agent.capabilities.length > 4 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{agent.capabilities.length - 4}
+                            </Badge>
+                          )}
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground text-xs">Última atividade:</span>
-                      <span className="text-foreground text-xs">{agent.lastActivity}</span>
+                      <span className="text-muted-foreground text-xs">
+                        Última atividade:
+                      </span>
+                      <span className="text-foreground text-xs">
+                        {agent.lastActivity}
+                      </span>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Status:</span>
-                      <Badge variant={agent.enabled ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={agent.enabled ? 'default' : 'secondary'}
+                      >
                         {agent.enabled ? 'Pronto para uso' : 'Desativado'}
                       </Badge>
                     </div>
@@ -456,6 +543,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           </div>
         </TabsContent>
 
+        {/* Métricas */}
         <TabsContent value="metrics" className="space-y-4">
           <AgentMetrics
             agents={agents}
@@ -464,6 +552,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           />
         </TabsContent>
 
+        {/* Orquestração V2 */}
         <TabsContent value="orchestration" className="space-y-4">
           {useV2Architecture ? (
             <AgentOrchestrationPanel />
@@ -480,7 +569,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                   <div>
                     <h4 className="font-semibold">Ativar Arquitetura V2</h4>
                     <p className="text-sm text-muted-foreground">
-                      Nova arquitetura com ReAct Pattern, Circuit Breakers, Traces e Orquestração
+                      Nova arquitetura com ReAct Pattern, Circuit Breakers,
+                      Traces e Orquestração
                     </p>
                   </div>
                   <Switch
@@ -493,6 +583,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           )}
         </TabsContent>
 
+        {/* Atividade em tempo real */}
         <TabsContent value="activity" className="space-y-4">
           <Card>
             <CardHeader>
@@ -507,15 +598,25 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                 ) : (
                   <div className="space-y-2">
                     {activityLog.map((log) => {
-                      const agent = agents.find(a => a.id === log.agentId)
+                      const agent = agents.find((a) => a.id === log.agentId)
                       const IconComponent = agentIcons[log.agentId] || Robot
 
                       return (
-                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
+                        <div
+                          key={log.id}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
+                        >
+                          <IconComponent
+                            className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
+                            weight="fill"
+                          />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{log.action}</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {agent?.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {log.action}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               {new Date(log.timestamp).toLocaleString('pt-BR')}
                             </p>
@@ -530,6 +631,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           </Card>
         </TabsContent>
 
+        {/* Fila */}
         <TabsContent value="queue" className="space-y-4">
           <Card>
             <CardHeader>
@@ -547,24 +649,40 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                 ) : (
                   <div className="space-y-2">
                     {taskQueue.map((task) => {
-                      const agent = agents.find(a => a.id === task.agentId)
-                      const IconComponent = agentIcons[task.agentId] || Robot
+                      const agent = agents.find((a) => a.id === task.agentId)
+                      const IconComponent =
+                        agentIcons[task.agentId] || Robot
 
                       return (
-                        <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" weight="fill" />
+                        <div
+                          key={task.id}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
+                        >
+                          <IconComponent
+                            className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
+                            weight="fill"
+                          />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {agent?.name}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Criada em: {new Date(task.createdAt).toLocaleString('pt-BR')}
+                              {task.type}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Criada em:{' '}
+                              {new Date(
+                                task.createdAt,
+                              ).toLocaleString('pt-BR')}
                             </p>
                           </div>
                           <Badge
                             variant={
-                              task.status === 'processing' ? 'default' :
-                                task.status === 'queued' ? 'secondary' :
-                                  'destructive'
+                              task.status === 'processing'
+                                ? 'default'
+                                : task.status === 'queued'
+                                  ? 'secondary'
+                                  : 'destructive'
                             }
                             className="flex-shrink-0"
                           >
@@ -580,6 +698,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
           </Card>
         </TabsContent>
 
+        {/* Histórico */}
         <TabsContent value="completed" className="space-y-4">
           <Card>
             <CardHeader>
@@ -593,29 +712,53 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                 {completedTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <CheckCircle className="w-12 h-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Nenhuma tarefa concluída ainda</p>
+                    <p className="text-muted-foreground">
+                      Nenhuma tarefa concluída ainda
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {completedTasks.map((task) => {
-                      const agent = agents.find(a => a.id === task.agentId)
-                      const IconComponent = agentIcons[task.agentId] || Robot
+                      const agent = agents.find((a) => a.id === task.agentId)
+                      const IconComponent =
+                        agentIcons[task.agentId] || Robot
 
                       return (
-                        <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          <IconComponent className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" weight="fill" />
+                        <div
+                          key={task.id}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
+                        >
+                          <IconComponent
+                            className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5"
+                            weight="fill"
+                          />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">{agent?.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {agent?.name}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Concluída em: {task.completedAt ? new Date(task.completedAt).toLocaleString('pt-BR') : '-'}
+                              {task.type}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Concluída em:{' '}
+                              {task.completedAt
+                                ? new Date(
+                                    task.completedAt,
+                                  ).toLocaleString('pt-BR')
+                                : '-'}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              <Badge variant="default" className="text-xs bg-green-600">
+                              <Badge
+                                variant="default"
+                                className="text-xs bg-green-600"
+                              >
                                 Concluído
                               </Badge>
                               <span className="text-xs text-muted-foreground">
-                                {task.completedAt && new Date(task.completedAt).toLocaleString('pt-BR')}
+                                {task.completedAt &&
+                                  new Date(
+                                    task.completedAt,
+                                  ).toLocaleString('pt-BR')}
                               </span>
                             </div>
                           </div>
@@ -630,6 +773,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         </TabsContent>
       </Tabs>
 
+      {/* Floater de status 24/7 */}
       <AgentStatusFloater />
     </div>
   )

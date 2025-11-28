@@ -1,14 +1,29 @@
 import { useState } from 'react'
-import * as spark from '@github/spark/llm'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
-import { FileText, Sparkle, ShieldWarning, CheckCircle, WarningCircle } from '@phosphor-icons/react'
+import {
+  FileText,
+  Sparkle,
+  ShieldWarning,
+  CheckCircle,
+  WarningCircle,
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { geminiGenerateJSON } from '@/lib/gemini-client'
 
+/**
+ * Interface para resultado da análise de risco de contratos
+ */
 interface RiskAnalysis {
   riskLevel: 'low' | 'medium' | 'high'
   riskScore: number
@@ -46,25 +61,26 @@ export default function AIContractAnalyzer() {
 Contrato:
 ${contractText}
 
-Retorne a resposta EXATAMENTE neste formato JSON:
+Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois), seguindo este modelo:
+
 {
-"riskLevel": "low" | "medium" | "high",
-"riskScore": número entre 0 e 100,
-"risks": ["risco 1", "risco 2", ...],
-"protections": ["proteção 1", "proteção 2", ...],
-"recommendations": ["recomendação 1", "recomendação 2", ...],
-"keyTerms": ["termo 1", "termo 2", ...],
-"missingClauses": ["cláusula ausente 1", "cláusula ausente 2", ...]
+  "riskLevel": "low",
+  "riskScore": 42,
+  "risks": ["risco 1", "risco 2"],
+  "protections": ["proteção 1", "proteção 2"],
+  "recommendations": ["recomendação 1", "recomendação 2"],
+  "keyTerms": ["termo 1", "termo 2"],
+  "missingClauses": ["cláusula ausente 1", "cláusula ausente 2"]
 }`
 
-      const response = await spark.llm(prompt, 'gpt-4o', true)
-      const result: RiskAnalysis = JSON.parse(response)
-
+      const result = await geminiGenerateJSON<RiskAnalysis>(prompt)
       setAnalysis(result)
       toast.success('Contrato analisado com sucesso!')
     } catch (error) {
       console.error('Erro ao analisar contrato:', error)
-      toast.error('Falha ao analisar contrato')
+      toast.error(
+        error instanceof Error ? error.message : 'Falha ao analisar contrato',
+      )
     } finally {
       setIsAnalyzing(false)
     }
@@ -72,19 +88,27 @@ Retorne a resposta EXATAMENTE neste formato JSON:
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'low': return 'text-green-500'
-      case 'medium': return 'text-yellow-500'
-      case 'high': return 'text-red-500'
-      default: return 'text-muted-foreground'
+      case 'low':
+        return 'text-green-500'
+      case 'medium':
+        return 'text-yellow-500'
+      case 'high':
+        return 'text-red-500'
+      default:
+        return 'text-muted-foreground'
     }
   }
 
   const getRiskBadgeVariant = (level: string) => {
     switch (level) {
-      case 'low': return 'default'
-      case 'medium': return 'secondary'
-      case 'high': return 'destructive'
-      default: return 'outline'
+      case 'low':
+        return 'default'
+      case 'medium':
+        return 'secondary'
+      case 'high':
+        return 'destructive'
+      default:
+        return 'outline'
     }
   }
 
@@ -92,7 +116,11 @@ Retorne a resposta EXATAMENTE neste formato JSON:
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <ShieldWarning size={32} weight="duotone" className="text-primary neon-glow" />
+          <ShieldWarning
+            size={32}
+            weight="duotone"
+            className="text-primary neon-glow"
+          />
           Analisador de Contratos IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -104,7 +132,9 @@ Retorne a resposta EXATAMENTE neste formato JSON:
         <Card className="glassmorphic">
           <CardHeader>
             <CardTitle>Texto do Contrato</CardTitle>
-            <CardDescription>Cole o contrato para análise de riscos</CardDescription>
+            <CardDescription>
+              Cole o contrato para análise de riscos
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
@@ -117,12 +147,15 @@ Retorne a resposta EXATAMENTE neste formato JSON:
               <p className="text-xs text-muted-foreground">
                 {contractText.length} caracteres
               </p>
-              <Button 
-                onClick={handleAnalyze} 
+              <Button
+                onClick={handleAnalyze}
                 disabled={isAnalyzing || !contractText.trim()}
                 className="button-gradient"
               >
-                <Sparkle size={20} className={isAnalyzing ? 'animate-spin' : ''} />
+                <Sparkle
+                  size={20}
+                  className={isAnalyzing ? 'animate-spin' : ''}
+                />
                 {isAnalyzing ? 'Analisando...' : 'Analisar Riscos'}
               </Button>
             </div>
@@ -133,7 +166,11 @@ Retorne a resposta EXATAMENTE neste formato JSON:
           {!analysis ? (
             <Card className="glassmorphic">
               <CardContent className="flex flex-col items-center justify-center py-24 text-center">
-                <ShieldWarning size={64} className="text-muted-foreground mb-4" weight="duotone" />
+                <ShieldWarning
+                  size={64}
+                  className="text-muted-foreground mb-4"
+                  weight="duotone"
+                />
                 <p className="text-muted-foreground">
                   A análise de riscos aparecerá aqui após processar o contrato
                 </p>
@@ -155,8 +192,14 @@ Retorne a resposta EXATAMENTE neste formato JSON:
                 <CardContent className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Score de Risco</span>
-                      <span className={`text-2xl font-bold ${getRiskColor(analysis.riskLevel)}`}>
+                      <span className="text-sm font-medium">
+                        Score de Risco
+                      </span>
+                      <span
+                        className={`text-2xl font-bold ${getRiskColor(
+                          analysis.riskLevel,
+                        )}`}
+                      >
                         {analysis.riskScore}/100
                       </span>
                     </div>
@@ -165,18 +208,38 @@ Retorne a resposta EXATAMENTE neste formato JSON:
 
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="p-3 bg-destructive/10 rounded-lg">
-                      <WarningCircle size={24} className="mx-auto mb-1 text-destructive" weight="duotone" />
-                      <p className="text-2xl font-bold text-destructive">{analysis.risks.length}</p>
+                      <WarningCircle
+                        size={24}
+                        className="mx-auto mb-1 text-destructive"
+                        weight="duotone"
+                      />
+                      <p className="text-2xl font-bold text-destructive">
+                        {analysis.risks.length}
+                      </p>
                       <p className="text-xs text-muted-foreground">Riscos</p>
                     </div>
                     <div className="p-3 bg-primary/10 rounded-lg">
-                      <CheckCircle size={24} className="mx-auto mb-1 text-primary" weight="duotone" />
-                      <p className="text-2xl font-bold text-primary">{analysis.protections.length}</p>
-                      <p className="text-xs text-muted-foreground">Proteções</p>
+                      <CheckCircle
+                        size={24}
+                        className="mx-auto mb-1 text-primary"
+                        weight="duotone"
+                      />
+                      <p className="text-2xl font-bold text-primary">
+                        {analysis.protections.length}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Proteções
+                      </p>
                     </div>
                     <div className="p-3 bg-secondary/10 rounded-lg">
-                      <FileText size={24} className="mx-auto mb-1 text-secondary" weight="duotone" />
-                      <p className="text-2xl font-bold text-secondary">{analysis.keyTerms.length}</p>
+                      <FileText
+                        size={24}
+                        className="mx-auto mb-1 text-secondary"
+                        weight="duotone"
+                      />
+                      <p className="text-2xl font-bold text-secondary">
+                        {analysis.keyTerms.length}
+                      </p>
                       <p className="text-xs text-muted-foreground">Termos</p>
                     </div>
                   </div>
@@ -198,8 +261,13 @@ Retorne a resposta EXATAMENTE neste formato JSON:
                           </h3>
                           <ul className="space-y-2">
                             {analysis.risks.map((risk, index) => (
-                              <li key={index} className="text-sm flex gap-2 p-2 bg-destructive/5 rounded">
-                                <span className="text-destructive shrink-0">•</span>
+                              <li
+                                key={index}
+                                className="text-sm flex gap-2 p-2 bg-destructive/5 rounded"
+                              >
+                                <span className="text-destructive shrink-0">
+                                  •
+                                </span>
                                 <span>{risk}</span>
                               </li>
                             ))}
@@ -215,8 +283,13 @@ Retorne a resposta EXATAMENTE neste formato JSON:
                           </h3>
                           <ul className="space-y-2">
                             {analysis.protections.map((protection, index) => (
-                              <li key={index} className="text-sm flex gap-2 p-2 bg-primary/5 rounded">
-                                <span className="text-primary shrink-0">•</span>
+                              <li
+                                key={index}
+                                className="text-sm flex gap-2 p-2 bg-primary/5 rounded"
+                              >
+                                <span className="text-primary shrink-0">
+                                  •
+                                </span>
                                 <span>{protection}</span>
                               </li>
                             ))}
@@ -232,7 +305,10 @@ Retorne a resposta EXATAMENTE neste formato JSON:
                           </h3>
                           <ul className="space-y-2">
                             {analysis.recommendations.map((rec, index) => (
-                              <li key={index} className="text-sm flex gap-2 p-2 bg-accent/5 rounded">
+                              <li
+                                key={index}
+                                className="text-sm flex gap-2 p-2 bg-accent/5 rounded"
+                              >
                                 <span className="text-accent shrink-0">•</span>
                                 <span>{rec}</span>
                               </li>
@@ -249,8 +325,13 @@ Retorne a resposta EXATAMENTE neste formato JSON:
                           </h3>
                           <ul className="space-y-2">
                             {analysis.missingClauses.map((clause, index) => (
-                              <li key={index} className="text-sm flex gap-2 p-2 bg-yellow-500/5 rounded">
-                                <span className="text-yellow-500 shrink-0">•</span>
+                              <li
+                                key={index}
+                                className="text-sm flex gap-2 p-2 bg-yellow-500/5 rounded"
+                              >
+                                <span className="text-yellow-500 shrink-0">
+                                  •
+                                </span>
                                 <span>{clause}</span>
                               </li>
                             ))}
@@ -263,7 +344,9 @@ Retorne a resposta EXATAMENTE neste formato JSON:
                           <h3 className="font-semibold mb-3">Termos-Chave</h3>
                           <div className="flex flex-wrap gap-2">
                             {analysis.keyTerms.map((term, index) => (
-                              <Badge key={index} variant="outline">{term}</Badge>
+                              <Badge key={index} variant="outline">
+                                {term}
+                              </Badge>
                             ))}
                           </div>
                         </div>

@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -9,7 +15,7 @@ import {
   ChartLine,
   Timer,
   Pulse,
-  LightningSlash
+  LightningSlash,
 } from '@phosphor-icons/react'
 import { useState, useEffect } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
@@ -26,24 +32,43 @@ interface AgentMetricsProps {
   }>
 }
 
-export default function AgentMetrics({ agents, completedTasks, activityLog }: AgentMetricsProps) {
-  const [circuitBreakers, setCircuitBreakers] = useState<{
-    summary: {
-      healthy: number
-      total: number
-      degraded: number
-      down: number
-    }
-  } | null>(null)
+interface CircuitBreakersMetrics {
+  summary: {
+    healthy: number
+    total: number
+    degraded: number
+    down: number
+  }
+}
+
+export default function AgentMetrics({
+  agents,
+  completedTasks,
+  activityLog,
+}: AgentMetricsProps) {
+  const [circuitBreakers, setCircuitBreakers] =
+    useState<CircuitBreakersMetrics | null>(null)
 
   // Fetch V2 metrics
   useEffect(() => {
     const fetchV2Metrics = async () => {
       try {
-        const response = await fetch('/api/observability?action=circuit-breakers')
-        if (response.ok) {
-          const data = await response.json()
-          setCircuitBreakers(data)
+        const response = await fetch(
+          '/api/observability?action=circuit-breakers',
+        )
+        if (!response.ok) return
+
+        const data = (await response.json()) as unknown
+
+        // Validação básica de shape para evitar runtime estranho
+        if (
+          data &&
+          typeof data === 'object' &&
+          'summary' in data &&
+          data.summary &&
+          typeof (data as CircuitBreakersMetrics).summary.healthy === 'number'
+        ) {
+          setCircuitBreakers(data as CircuitBreakersMetrics)
         }
       } catch (error) {
         console.error('Erro ao buscar métricas V2:', error)
@@ -56,29 +81,39 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
   }, [])
 
   const totalTasks = completedTasks.length
-  const totalToday = completedTasks.filter(t => {
-    const today = new Date().toDateString()
-    return t.completedAt && new Date(t.completedAt).toDateString() === today
+
+  const todayStr = new Date().toDateString()
+  const totalToday = completedTasks.filter((t) => {
+    return (
+      t.completedAt &&
+      new Date(t.completedAt).toDateString() === todayStr
+    )
   }).length
 
-  const successRate = activityLog.length > 0
-    ? Math.round((activityLog.filter(log => log.result === 'success').length / activityLog.length) * 100)
-    : 0
+  const successRate =
+    activityLog.length > 0
+      ? Math.round(
+        (activityLog.filter((log) => log.result === 'success').length /
+          activityLog.length) *
+        100,
+      )
+      : 0
 
-  const estimatedTimeSaved = totalTasks * 10
+  const estimatedTimeSaved = totalTasks * 10 // minutos
   const hoursPerTask = 10 / 60
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1)
 
   const getTasksLast24Hours = () => {
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    return completedTasks.filter(task =>
-      task.completedAt && new Date(task.completedAt) > last24h
+    return completedTasks.filter(
+      (task) =>
+        task.completedAt && new Date(task.completedAt) > last24h,
     ).length
   }
 
   const getAverageProcessingTime = () => {
     const tasksWithTime = completedTasks.filter(
-      task => task.startedAt && task.completedAt
+      (task) => task.startedAt && task.completedAt,
     )
 
     if (tasksWithTime.length === 0) return 0
@@ -89,6 +124,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
       return sum + (end - start)
     }, 0)
 
+    // segundos médios por tarefa
     return Math.round(totalTime / tasksWithTime.length / 1000)
   }
 
@@ -104,34 +140,65 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <LightningSlash className="w-5 h-5 text-blue-600" weight="fill" />
+                  <LightningSlash
+                    className="w-5 h-5 text-blue-600"
+                    weight="fill"
+                  />
                   Circuit Breakers (Arquitetura V2)
                 </CardTitle>
                 <CardDescription>
                   Monitoramento de resiliência das APIs externas
                 </CardDescription>
               </div>
-              <Badge variant={circuitBreakers.summary.down === 0 ? 'default' : 'destructive'}>
-                {circuitBreakers.summary.healthy}/{circuitBreakers.summary.total} APIs Saudáveis
+              <Badge
+                variant={
+                  circuitBreakers.summary.down === 0
+                    ? 'default'
+                    : 'destructive'
+                }
+              >
+                {circuitBreakers.summary.healthy}/
+                {circuitBreakers.summary.total} APIs Saudáveis
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-1" weight="fill" />
-                <div className="text-2xl font-bold text-green-600">{circuitBreakers.summary.healthy}</div>
-                <div className="text-xs text-muted-foreground">Saudáveis</div>
+                <CheckCircle
+                  className="w-6 h-6 text-green-600 mx-auto mb-1"
+                  weight="fill"
+                />
+                <div className="text-2xl font-bold text-green-600">
+                  {circuitBreakers.summary.healthy}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Saudáveis
+                </div>
               </div>
               <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                <Pulse className="w-6 h-6 text-yellow-600 mx-auto mb-1" weight="fill" />
-                <div className="text-2xl font-bold text-yellow-600">{circuitBreakers.summary.degraded}</div>
-                <div className="text-xs text-muted-foreground">Degradadas</div>
+                <Pulse
+                  className="w-6 h-6 text-yellow-600 mx-auto mb-1"
+                  weight="fill"
+                />
+                <div className="text-2xl font-bold text-yellow-600">
+                  {circuitBreakers.summary.degraded}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Degradadas
+                </div>
               </div>
               <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                <Lightning className="w-6 h-6 text-red-600 mx-auto mb-1" weight="fill" />
-                <div className="text-2xl font-bold text-red-600">{circuitBreakers.summary.down}</div>
-                <div className="text-xs text-muted-foreground">Indisponíveis</div>
+                <Lightning
+                  className="w-6 h-6 text-red-600 mx-auto mb-1"
+                  weight="fill"
+                />
+                <div className="text-2xl font-bold text-red-600">
+                  {circuitBreakers.summary.down}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Indisponíveis
+                </div>
               </div>
             </div>
           </CardContent>
@@ -142,15 +209,24 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" weight="fill" />
+              <CheckCircle
+                className="w-4 h-4 text-green-600"
+                weight="fill"
+              />
               Taxa de Sucesso
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">{successRate}%</div>
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {successRate}%
+            </div>
             <Progress value={successRate} className="h-2 mb-2" />
             <p className="text-xs text-muted-foreground">
-              {activityLog.filter(log => log.result === 'success').length} de {activityLog.length} ações bem-sucedidas
+              {
+                activityLog.filter((log) => log.result === 'success')
+                  .length
+              }{' '}
+              de {activityLog.length} ações bem-sucedidas
             </p>
           </CardContent>
         </Card>
@@ -163,12 +239,14 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">{totalToday}</div>
-            <p className="text-xs text-muted-foreground">Tarefas concluídas hoje por todos os agentes</p>
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {totalToday}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Tarefas concluídas hoje por todos os agentes
+            </p>
           </CardContent>
         </Card>
-
-
 
         <Card>
           <CardHeader className="pb-3">
@@ -178,7 +256,9 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">{avgProcessingTime}s</div>
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {avgProcessingTime}s
+            </div>
             <p className="text-xs text-muted-foreground">
               Tempo médio de processamento por tarefa
             </p>
@@ -188,12 +268,17 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Lightning className="w-4 h-4 text-accent" weight="fill" />
+              <Lightning
+                className="w-4 h-4 text-accent"
+                weight="fill"
+              />
               Produtividade
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">{tasks24h}</div>
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {tasks24h}
+            </div>
             <p className="text-xs text-muted-foreground">
               Tarefas completadas nas últimas 24 horas
             </p>
@@ -214,17 +299,26 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Minutos economizados</p>
-              <p className="text-2xl font-bold text-green-600">{estimatedTimeSaved}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Minutos economizados
+              </p>
+              <p className="text-2xl font-bold text-green-600">
+                {estimatedTimeSaved}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Horas totais</p>
-              <p className="text-2xl font-bold text-green-600">{totalHoursSaved}h</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Horas totais
+              </p>
+              <p className="text-2xl font-bold text-green-600">
+                {totalHoursSaved}h
+              </p>
             </div>
           </div>
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
-              Baseado em 10 minutos por tarefa se feita manualmente por humanos
+              Baseado em 10 minutos por tarefa se feita manualmente por
+              humanos
             </p>
           </div>
         </CardContent>
@@ -233,7 +327,10 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <ChartLine className="w-5 h-5 text-primary" weight="fill" />
+            <ChartLine
+              className="w-5 h-5 text-primary"
+              weight="fill"
+            />
             Desempenho por Agente
           </CardTitle>
           <CardDescription>
@@ -242,25 +339,47 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         </CardHeader>
         <CardContent className="space-y-3">
           {agents.map((agent) => {
-            const agentLogs = activityLog.filter(l => l.agentId === agent.id)
-            const agentSuccessRate = agentLogs.length > 0
-              ? Math.round((agentLogs.filter(l => l.result === 'success').length / agentLogs.length) * 100)
-              : 0
+            const agentLogs = activityLog.filter(
+              (l) => l.agentId === agent.id,
+            )
+            const agentSuccessRate =
+              agentLogs.length > 0
+                ? Math.round(
+                  (agentLogs.filter(
+                    (l) => l.result === 'success',
+                  ).length /
+                    agentLogs.length) *
+                  100,
+                )
+                : 0
 
             return (
-              <div key={agent.id} className="p-3 rounded-lg border border-border bg-muted/30">
+              <div
+                key={agent.id}
+                className="p-3 rounded-lg border border-border bg-muted/30"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-foreground">{agent.name}</h4>
+                    <h4 className="text-sm font-semibold text-foreground">
+                      {agent.name}
+                    </h4>
                     {agent.enabled && (
-                      <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-900">
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-900"
+                      >
                         Ativo
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <TrendUp className="w-3 h-3 text-green-600" weight="fill" />
-                    <span className="text-xs font-medium text-green-600">{agentSuccessRate}%</span>
+                    <TrendUp
+                      className="w-3 h-3 text-green-600"
+                      weight="fill"
+                    />
+                    <span className="text-xs font-medium text-green-600">
+                      {agentSuccessRate}%
+                    </span>
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground">
