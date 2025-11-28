@@ -1,367 +1,416 @@
 /**
  * NotificationCenter - Sistema de notificações em tempo real
- * 
+ *
  * Funcionalidades:
  * - Notificações push em tempo real
  * - Badge de contagem na navbar
  * - Lista de notificações com "Limpar todas"
- * - Sons de notificação
- * - Persistência no localStorage
- * - Categorias: prazos, agentes, sistema
+ * - Sons de notificação (hook pronto para integrar)
+ * - Persistência via useKV (localStorage / IndexedDB)
+ * - Categorias: prazos, agentes, sistema etc.
  */
 
+import type { ReactNode } from 'react'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover'
 import {
-    Bell,
-    BellRinging,
-    X,
-    Trash,
-    Clock,
-    Robot,
-    Warning,
-    CheckCircle,
-    Info,
-    FileText,
-    Tray,
+  Bell,
+  BellRinging,
+  X,
+  Trash,
+  Clock,
+  Robot,
+  Warning,
+  CheckCircle,
+  Info,
+  FileText,
+  Tray,
 } from '@phosphor-icons/react'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 // Tipos de notificação
 export type NotificationType =
-    | 'prazo_urgente'      // Prazo vencendo
-    | 'prazo_vencido'      // Prazo vencido
-    | 'agente_tarefa'      // Agente completou tarefa
-    | 'nova_intimacao'     // Nova intimação detectada
-    | 'minuta_criada'      // Nova minuta criada por agente
-    | 'sistema'            // Notificação do sistema
-    | 'sucesso'            // Ação concluída com sucesso
-    | 'erro'               // Erro ocorreu
+  | 'prazo_urgente' // Prazo vencendo
+  | 'prazo_vencido' // Prazo vencido
+  | 'agente_tarefa' // Agente completou tarefa
+  | 'nova_intimacao' // Nova intimação detectada
+  | 'minuta_criada' // Nova minuta criada por agente
+  | 'sistema' // Notificação do sistema
+  | 'sucesso' // Ação concluída com sucesso
+  | 'erro' // Erro ocorreu
 
 export interface Notification {
-    id: string
-    type: NotificationType
-    title: string
-    message: string
-    createdAt: string
-    read: boolean
-    data?: Record<string, unknown>
-    action?: {
-        label: string
-        view: string
-        payload?: unknown
-    }
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  createdAt: string
+  read: boolean
+  data?: Record<string, unknown>
+  action?: {
+    label: string
+    view: string
+    payload?: unknown
+  }
 }
 
 // Configuração de ícones e cores por tipo
-const notificationConfig: Record<NotificationType, {
-    icon: React.ReactNode
+const notificationConfig: Record<
+  NotificationType,
+  {
+    icon: ReactNode
     color: string
     bgColor: string
-}> = {
-    prazo_urgente: {
-        icon: <Clock className="w-4 h-4" weight="fill" />,
-        color: 'text-orange-500',
-        bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-    },
-    prazo_vencido: {
-        icon: <Warning className="w-4 h-4" weight="fill" />,
-        color: 'text-red-500',
-        bgColor: 'bg-red-100 dark:bg-red-900/30',
-    },
-    agente_tarefa: {
-        icon: <Robot className="w-4 h-4" weight="fill" />,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-    },
-    nova_intimacao: {
-        icon: <Tray className="w-4 h-4" weight="fill" />,
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-    },
-    minuta_criada: {
-        icon: <FileText className="w-4 h-4" weight="fill" />,
-        color: 'text-indigo-500',
-        bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
-    },
-    sistema: {
-        icon: <Info className="w-4 h-4" weight="fill" />,
-        color: 'text-gray-500',
-        bgColor: 'bg-gray-100 dark:bg-gray-900/30',
-    },
-    sucesso: {
-        icon: <CheckCircle className="w-4 h-4" weight="fill" />,
-        color: 'text-green-500',
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
-    },
-    erro: {
-        icon: <Warning className="w-4 h-4" weight="fill" />,
-        color: 'text-red-500',
-        bgColor: 'bg-red-100 dark:bg-red-900/30',
-    },
+  }
+> = {
+  prazo_urgente: {
+    icon: <Clock className="w-4 h-4" weight="fill" />,
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+  },
+  prazo_vencido: {
+    icon: <Warning className="w-4 h-4" weight="fill" />,
+    color: 'text-red-500',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+  },
+  agente_tarefa: {
+    icon: <Robot className="w-4 h-4" weight="fill" />,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+  },
+  nova_intimacao: {
+    icon: <Tray className="w-4 h-4" weight="fill" />,
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+  },
+  minuta_criada: {
+    icon: <FileText className="w-4 h-4" weight="fill" />,
+    color: 'text-indigo-500',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+  },
+  sistema: {
+    icon: <Info className="w-4 h-4" weight="fill" />,
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-100 dark:bg-gray-900/30',
+  },
+  sucesso: {
+    icon: <CheckCircle className="w-4 h-4" weight="fill" />,
+    color: 'text-green-500',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
+  },
+  erro: {
+    icon: <Warning className="w-4 h-4" weight="fill" />,
+    color: 'text-red-500',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+  },
 }
 
 interface NotificationCenterProps {
-    onNavigate?: (view: string, data?: unknown) => void
+  onNavigate?: (view: string, data?: unknown) => void
+}
+
+// Fallback seguro para IDs caso crypto.randomUUID não exista
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+  return `notif-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
-    const [isOpen, setIsOpen] = useState(false)
-    const [notifications, setNotifications] = useKV<Notification[]>('notifications', [])
-    const [hasNewNotifications, setHasNewNotifications] = useState(false)
-    const prevCountRef = useRef(0)
+  const [isOpen, setIsOpen] = useState(false)
+  const [notifications, setNotifications] = useKV<Notification[]>('notifications', [])
+  const [hasNewNotifications, setHasNewNotifications] = useState(false)
+  const prevCountRef = useRef(0)
 
-    // Contagem de não lidas
-    const unreadCount = (notifications || []).filter(n => !n.read).length
+  // Contagem de não lidas
+  const unreadCount = (notifications || []).filter((n) => !n.read).length
 
-    // Detectar novas notificações
-    useEffect(() => {
-        const currentCount = notifications?.length || 0
-        if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
-            setHasNewNotifications(true)
-            // Tocar som de notificação (opcional)
-            // playNotificationSound()
-        }
-        prevCountRef.current = currentCount
-    }, [notifications])
+  // Detectar novas notificações
+  useEffect(() => {
+    const currentCount = notifications?.length || 0
+    if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
+      setHasNewNotifications(true)
+      // TODO: integrar som de notificação aqui se quiser
+      // playNotificationSound()
+    }
+    prevCountRef.current = currentCount
+  }, [notifications])
 
-    // Função para adicionar notificação (usada pelo sistema)
-    const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
-        const newNotification: Notification = {
-            ...notification,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-            read: false,
-        }
+  // Função para adicionar notificação (usada pelo sistema)
+  const addNotification = useCallback(
+    (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+      const newNotification: Notification = {
+        ...notification,
+        id: generateId(),
+        createdAt: new Date().toISOString(),
+        read: false,
+      }
 
-        setNotifications(current => [newNotification, ...(current || [])].slice(0, 100))
-    }, [setNotifications])
+      setNotifications((current) =>
+        [newNotification, ...(current || [])].slice(0, 100) // limite de 100 últimas
+      )
+    },
+    [setNotifications]
+  )
 
-    // Marcar como lida
-    const markAsRead = useCallback((id: string) => {
-        setNotifications(current =>
-            (current || []).map(n =>
-                n.id === id ? { ...n, read: true } : n
-            )
-        )
-    }, [setNotifications])
+  // Marcar como lida
+  const markAsRead = useCallback(
+    (id: string) => {
+      setNotifications((current) =>
+        (current || []).map((n) => (n.id === id ? { ...n, read: true } : n))
+      )
+    },
+    [setNotifications]
+  )
 
-    // Marcar todas como lidas
-    const markAllAsRead = useCallback(() => {
-        setNotifications(current =>
-            (current || []).map(n => ({ ...n, read: true }))
-        )
-        setHasNewNotifications(false)
-    }, [setNotifications])
+  // Marcar todas como lidas
+  const markAllAsRead = useCallback(() => {
+    setNotifications((current) => (current || []).map((n) => ({ ...n, read: true })))
+    setHasNewNotifications(false)
+  }, [setNotifications])
 
-    // Remover notificação
-    const removeNotification = useCallback((id: string) => {
-        setNotifications(current =>
-            (current || []).filter(n => n.id !== id)
-        )
-    }, [setNotifications])
+  // Remover notificação
+  const removeNotification = useCallback(
+    (id: string) => {
+      setNotifications((current) => (current || []).filter((n) => n.id !== id))
+    },
+    [setNotifications]
+  )
 
-    // Limpar todas
-    const clearAll = useCallback(() => {
-        setNotifications([])
-        setHasNewNotifications(false)
-    }, [setNotifications])
+  // Limpar todas
+  const clearAll = useCallback(() => {
+    setNotifications([])
+    setHasNewNotifications(false)
+  }, [setNotifications])
 
-    // Handler de clique na notificação
-    const handleClick = (notification: Notification) => {
-        markAsRead(notification.id)
-
-        if (notification.action) {
-            setIsOpen(false)
-            onNavigate?.(notification.action.view, notification.action.payload)
-        }
+  // Handler de clique na notificação
+  const handleClick = (notification: Notification) => {
+    if (!notification.read) {
+      markAsRead(notification.id)
     }
 
-    // Expor função global para adicionar notificações
-    useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).addNotification = addNotification
-        return () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delete (window as any).addNotification
-        }
-    }, [addNotification])
+    if (notification.action) {
+      setIsOpen(false)
+      onNavigate?.(notification.action.view, notification.action.payload)
+    }
+  }
 
-    return (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative"
-                    title={unreadCount > 0 ? `${unreadCount} notificação(ões) não lida(s)` : 'Notificações'}
-                >
-                    {hasNewNotifications || unreadCount > 0 ? (
-                        <BellRinging className="w-5 h-5 animate-pulse" weight="fill" />
-                    ) : (
-                        <Bell className="w-5 h-5" />
+  // Expor função global para adicionar notificações (útil para agentes / websockets)
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(window as any).addNotification = addNotification
+    return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any).addNotification
+    }
+  }, [addNotification])
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          title={
+            unreadCount > 0
+              ? `${unreadCount} notificação(ões) não lida(s)`
+              : 'Notificações'
+          }
+        >
+          {hasNewNotifications || unreadCount > 0 ? (
+            <BellRinging className="w-5 h-5 animate-pulse" weight="fill" />
+          ) : (
+            <Bell className="w-5 h-5" />
+          )}
+
+          {/* Badge de contagem */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent className="w-96 p-0" align="end">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h3 className="font-semibold">Notificações</h3>
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs h-7"
+              >
+                Marcar como lidas
+              </Button>
+            )}
+            {(notifications?.length || 0) > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearAll}
+                className="h-7 w-7"
+                title="Limpar todas"
+              >
+                <Trash className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Lista de notificações */}
+        <ScrollArea className="max-h-[400px]">
+          {!notifications || notifications.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Nenhuma notificação</p>
+              <p className="text-xs mt-1 opacity-70">
+                Você será notificado sobre prazos, intimações e tarefas dos agentes.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {notifications.map((notification) => {
+                const config =
+                  notificationConfig[notification.type] || notificationConfig.sistema
+
+                let relativeTime = ''
+                try {
+                  relativeTime = formatDistanceToNow(
+                    new Date(notification.createdAt),
+                    {
+                      addSuffix: true,
+                      locale: ptBR,
+                    }
+                  )
+                } catch {
+                  relativeTime = ''
+                }
+
+                return (
+                  <div
+                    key={notification.id}
+                    className={`group relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                      !notification.read ? 'bg-muted/30' : ''
+                    }`}
+                    onClick={() => handleClick(notification)}
+                  >
+                    {/* Indicador de não lida */}
+                    {!notification.read && (
+                      <div className="absolute left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full" />
                     )}
 
-                    {/* Badge de contagem */}
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
-                            {unreadCount > 99 ? '99+' : unreadCount}
-                        </span>
-                    )}
-                </Button>
-            </PopoverTrigger>
-
-            <PopoverContent className="w-96 p-0" align="end">
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b">
-                    <h3 className="font-semibold">Notificações</h3>
-                    <div className="flex items-center gap-2">
-                        {unreadCount > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={markAllAsRead}
-                                className="text-xs h-7"
-                            >
-                                Marcar como lidas
-                            </Button>
-                        )}
-                        {(notifications?.length || 0) > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={clearAll}
-                                className="h-7 w-7"
-                                title="Limpar todas"
-                            >
-                                <Trash className="w-4 h-4" />
-                            </Button>
-                        )}
+                    {/* Ícone */}
+                    <div
+                      className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${config.bgColor} ${config.color}`}
+                    >
+                      {config.icon}
                     </div>
-                </div>
 
-                {/* Lista de notificações */}
-                <ScrollArea className="max-h-[400px]">
-                    {!notifications || notifications.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                            <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p className="text-sm">Nenhuma notificação</p>
-                            <p className="text-xs mt-1 opacity-70">
-                                Você será notificado sobre prazos, intimações e tarefas dos agentes
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="divide-y">
-                            {notifications.map((notification) => {
-                                const config = notificationConfig[notification.type] || notificationConfig.sistema
-
-                                return (
-                                    <div
-                                        key={notification.id}
-                                        className={`relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${!notification.read ? 'bg-muted/30' : ''
-                                            }`}
-                                        onClick={() => handleClick(notification)}
-                                    >
-                                        {/* Indicador de não lida */}
-                                        {!notification.read && (
-                                            <div className="absolute left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full" />
-                                        )}
-
-                                        {/* Ícone */}
-                                        <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${config.bgColor} ${config.color}`}>
-                                            {config.icon}
-                                        </div>
-
-                                        {/* Conteúdo */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`text-sm font-medium ${!notification.read ? '' : 'text-muted-foreground'}`}>
-                                                {notification.title}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                                                {notification.message}
-                                            </p>
-                                            <p className="text-[10px] text-muted-foreground/60 mt-1">
-                                                {formatDistanceToNow(new Date(notification.createdAt), {
-                                                    addSuffix: true,
-                                                    locale: ptBR,
-                                                })}
-                                            </p>
-                                        </div>
-
-                                        {/* Botão remover */}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                removeNotification(notification.id)
-                                            }}
-                                            className="flex-shrink-0 p-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity"
-                                        >
-                                            <X className="w-3 h-3 text-muted-foreground" />
-                                        </button>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    )}
-                </ScrollArea>
-
-                {/* Footer */}
-                {(notifications?.length || 0) > 0 && (
-                    <div className="px-4 py-2 border-t bg-muted/30">
-                        <p className="text-xs text-center text-muted-foreground">
-                            {notifications?.length} notificação(ões) • {unreadCount} não lida(s)
+                    {/* Conteúdo */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`text-sm font-medium ${
+                          !notification.read ? '' : 'text-muted-foreground'
+                        }`}
+                      >
+                        {notification.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                        {notification.message}
+                      </p>
+                      {relativeTime && (
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">
+                          {relativeTime}
                         </p>
+                      )}
                     </div>
-                )}
-            </PopoverContent>
-        </Popover>
-    )
+
+                    {/* Botão remover */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeNotification(notification.id)
+                      }}
+                      className="flex-shrink-0 p-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity"
+                    >
+                      <X className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </ScrollArea>
+
+        {/* Footer */}
+        {(notifications?.length || 0) > 0 && (
+          <div className="px-4 py-2 border-t bg-muted/30">
+            <p className="text-xs text-center text-muted-foreground">
+              {notifications?.length} notificação(ões) • {unreadCount} não lida(s)
+            </p>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 // Hook para usar o sistema de notificações em qualquer lugar
 export function useNotifications() {
-    const [notifications, setNotifications] = useKV<Notification[]>('notifications', [])
+  const [notifications, setNotifications] = useKV<Notification[]>('notifications', [])
 
-    const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
-        const newNotification: Notification = {
-            ...notification,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-            read: false,
-        }
+  const addNotification = useCallback(
+    (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+      const newNotification: Notification = {
+        ...notification,
+        id: generateId(),
+        createdAt: new Date().toISOString(),
+        read: false,
+      }
 
-        setNotifications(current => [newNotification, ...(current || [])].slice(0, 100))
+      setNotifications((current) =>
+        [newNotification, ...(current || [])].slice(0, 100)
+      )
 
-        return newNotification.id
-    }, [setNotifications])
+      return newNotification.id
+    },
+    [setNotifications]
+  )
 
-    const markAsRead = useCallback((id: string) => {
-        setNotifications(current =>
-            (current || []).map(n =>
-                n.id === id ? { ...n, read: true } : n
-            )
-        )
-    }, [setNotifications])
+  const markAsRead = useCallback(
+    (id: string) => {
+      setNotifications((current) =>
+        (current || []).map((n) => (n.id === id ? { ...n, read: true } : n))
+      )
+    },
+    [setNotifications]
+  )
 
-    const clearAll = useCallback(() => {
-        setNotifications([])
-    }, [setNotifications])
+  const clearAll = useCallback(() => {
+    setNotifications([])
+  }, [setNotifications])
 
-    return {
-        notifications: notifications || [],
-        unreadCount: (notifications || []).filter(n => !n.read).length,
-        addNotification,
-        markAsRead,
-        clearAll,
-    }
+  return {
+    notifications: notifications || [],
+    unreadCount: (notifications || []).filter((n) => !n.read).length,
+    addNotification,
+    markAsRead,
+    clearAll,
+  }
 }
 
 export default NotificationCenter

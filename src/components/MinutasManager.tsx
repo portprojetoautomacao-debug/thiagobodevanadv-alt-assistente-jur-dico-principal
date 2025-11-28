@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useKV } from '@/hooks/use-kv'
+import { useAIStreaming } from '@/hooks/use-ai-streaming'
 import {
   Card,
   CardContent,
@@ -100,6 +101,27 @@ export default function MinutasManager() {
   const [filterTipo, setFilterTipo] = useState<string>('all')
   const [error, setError] = useState<string | null>(null)
 
+  // Hook de streaming para IA - referência para callbacks dinâmicos
+  const streamCallbacksRef = useRef<{
+    onChunk?: (chunk: string) => void
+    onComplete?: () => void
+    onError?: (error: string) => void
+  }>({})
+
+  const { streamChat, isStreaming: isAIStreaming, streamingContent } = useAIStreaming({
+    onChunk: (chunk) => {
+      streamCallbacksRef.current.onChunk?.(chunk)
+    },
+    onComplete: () => {
+      streamCallbacksRef.current.onComplete?.()
+    },
+    onError: (err) => {
+      console.error('[MinutasManager] Erro no streaming:', err)
+      toast.error('Erro no streaming de IA')
+      streamCallbacksRef.current.onError?.(err)
+    },
+  })
+
   const [formData, setFormData] = useState({
     titulo: '',
     processId: '_none',
@@ -181,14 +203,14 @@ export default function MinutasManager() {
       current.map((m) =>
         m.id === editingMinuta.id
           ? {
-              ...m,
-              titulo: formData.titulo,
-              processId: formData.processId !== '_none' ? formData.processId : undefined,
-              tipo: formData.tipo,
-              conteudo: formData.conteudo,
-              status: formData.status,
-              atualizadoEm: new Date().toISOString(),
-            }
+            ...m,
+            titulo: formData.titulo,
+            processId: formData.processId !== '_none' ? formData.processId : undefined,
+            tipo: formData.tipo,
+            conteudo: formData.conteudo,
+            status: formData.status,
+            atualizadoEm: new Date().toISOString(),
+          }
           : m,
       ),
     )
@@ -244,11 +266,11 @@ export default function MinutasManager() {
           current.map((m) =>
             m.id === minuta.id
               ? {
-                  ...m,
-                  googleDocsId: result.docId,
-                  googleDocsUrl: result.url,
-                  ultimaSincronizacao: new Date().toISOString(),
-                }
+                ...m,
+                googleDocsId: result.docId,
+                googleDocsUrl: result.url,
+                ultimaSincronizacao: new Date().toISOString(),
+              }
               : m,
           ),
         )
@@ -280,11 +302,11 @@ export default function MinutasManager() {
           current.map((m) =>
             m.id === minuta.id
               ? {
-                  ...m,
-                  conteudo: content,
-                  atualizadoEm: new Date().toISOString(),
-                  ultimaSincronizacao: new Date().toISOString(),
-                }
+                ...m,
+                conteudo: content,
+                atualizadoEm: new Date().toISOString(),
+                ultimaSincronizacao: new Date().toISOString(),
+              }
               : m,
           ),
         )
@@ -484,6 +506,42 @@ ${userPrompt}`
       }
     },
     [],
+  )
+
+  // 🎯 Função de streaming para IA no editor (usa SSE para resposta em tempo real)
+  const handleAIStream = useCallback(
+    async (
+      prompt: string,
+      callbacks: {
+        onChunk: (chunk: string) => void
+        onComplete: () => void
+        onError: (error: Error) => void
+      },
+    ) => {
+      // Configura os callbacks dinâmicos no ref
+      streamCallbacksRef.current = {
+        onChunk: callbacks.onChunk,
+        onComplete: callbacks.onComplete,
+        onError: (err) => callbacks.onError(new Error(err)),
+      }
+
+      try {
+        await streamChat([
+          {
+            role: 'system',
+            content: `Você é um assistente jurídico especializado em redação de documentos legais brasileiros.
+Sua função é ajudar na criação, edição e melhoria de petições, contratos, pareceres e outros documentos jurídicos.
+Sempre use linguagem formal e técnica apropriada. Cite legislação e jurisprudência quando relevante.
+Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>, <li>, <blockquote>).`,
+          },
+          { role: 'user', content: prompt },
+        ])
+      } catch (err) {
+        console.error('[MinutasManager] Erro no streaming:', err)
+        callbacks.onError(err instanceof Error ? err : new Error('Erro no streaming'))
+      }
+    },
+    [streamChat],
   )
 
   const getStatusColor = (status: Minuta['status']) => {
@@ -714,6 +772,7 @@ ${userPrompt}`
                         setFormData({ ...formData, conteudo: content })
                       }
                       onAIGenerate={handleAIGenerate}
+                      onAIStream={handleAIStream}
                       variables={variableValues}
                       placeholder="Digite o conteúdo da minuta ou use o botão de IA para gerar com Gemini..."
                       className="h-full max-h-[400px] overflow-auto"
@@ -778,11 +837,10 @@ ${userPrompt}`
                           .map((template) => (
                             <Card
                               key={template.id}
-                              className={`cursor-pointer transition-all hover:border-primary/50 ${
-                                selectedTemplate?.id === template.id
-                                  ? 'border-primary bg-primary/5'
-                                  : ''
-                              }`}
+                              className={`cursor-pointer transition-all hover:border-primary/50 ${selectedTemplate?.id === template.id
+                                ? 'border-primary bg-primary/5'
+                                : ''
+                                }`}
                               onClick={() => handleApplyTemplate(template)}
                             >
                               <CardHeader className="p-4">
@@ -1103,9 +1161,8 @@ ${userPrompt}`
                           disabled={isSyncing === minuta.id}
                         >
                           <ArrowsClockwise
-                            className={`mr-2 h-4 w-4 ${
-                              isSyncing === minuta.id ? 'animate-spin' : ''
-                            }`}
+                            className={`mr-2 h-4 w-4 ${isSyncing === minuta.id ? 'animate-spin' : ''
+                              }`}
                             weight="bold"
                           />
                           Sincronizar
