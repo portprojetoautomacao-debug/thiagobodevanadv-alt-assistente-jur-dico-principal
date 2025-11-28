@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import * as spark from '@github/spark/llm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Upload, FilePdf, CheckCircle, XCircle, SpinnerGap, Clock, User, Trash } from '@phosphor-icons/react'
+import { geminiGenerateJSON } from '@/lib/gemini-client'
 import type { Cliente, PDFUploadHistory } from '@/types'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -60,26 +60,26 @@ export default function PDFUploader() {
   const readPDFAsText = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
-      
+
       reader.onerror = () => reject(new Error('Erro ao ler arquivo'))
-      
+
       reader.onload = async () => {
         try {
           const arrayBuffer = reader.result as ArrayBuffer
           const uint8Array = new Uint8Array(arrayBuffer)
           const text = new TextDecoder('utf-8').decode(uint8Array)
-          
+
           const cleanedText = text
             .replace(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim()
-          
+
           resolve(cleanedText)
         } catch (error) {
           reject(error)
         }
       }
-      
+
       reader.readAsArrayBuffer(file)
     })
   }
@@ -120,8 +120,7 @@ Regras importantes:
 Retorne APENAS o JSON válido, sem explicações.`
 
     try {
-      const result = await spark.llm(prompt, 'gpt-4o', true)
-      const parsed = JSON.parse(result)
+      const parsed = await geminiGenerateJSON<ExtractedData>(prompt)
       return parsed
     } catch (error) {
       console.error('Error parsing AI response:', error)
@@ -150,47 +149,47 @@ Retorne APENAS o JSON válido, sem explicações.`
 
     try {
       const text = await readPDFAsText(selectedFile)
-      
+
       if (!text || text.length < 50) {
         throw new Error('Documento vazio ou muito curto')
       }
 
       const data = await extractDataWithAI(text)
-      
+
       setExtractedData(data)
       setExtractionStatus('success')
-      
+
       setUploadHistory((current) =>
         (current || []).map((item) =>
           item.id === historyId
             ? {
-                ...item,
-                status: 'success' as const,
-                processedAt: new Date().toISOString(),
-                extractedData: data
-              }
+              ...item,
+              status: 'success' as const,
+              processedAt: new Date().toISOString(),
+              extractedData: data
+            }
             : item
         )
       )
-      
+
       toast.success('Dados extraídos com sucesso!')
     } catch (error) {
       console.error('Extraction error:', error)
       setExtractionStatus('error')
-      
+
       setUploadHistory((current) =>
         (current || []).map((item) =>
           item.id === historyId
             ? {
-                ...item,
-                status: 'error' as const,
-                processedAt: new Date().toISOString(),
-                errorMessage: error instanceof Error ? error.message : 'Erro desconhecido'
-              }
+              ...item,
+              status: 'error' as const,
+              processedAt: new Date().toISOString(),
+              errorMessage: error instanceof Error ? error.message : 'Erro desconhecido'
+            }
             : item
         )
       )
-      
+
       toast.error('Erro ao processar documento')
     } finally {
       setIsProcessing(false)
@@ -237,7 +236,7 @@ Retorne APENAS o JSON válido, sem explicações.`
     }
 
     setClientes((current) => [...(current || []), newClient])
-    
+
     const currentHistory = uploadHistory || []
     const latestUpload = currentHistory.find((h) => h.extractedData === extractedData)
     if (latestUpload) {
@@ -251,11 +250,11 @@ Retorne APENAS o JSON válido, sem explicações.`
     }
 
     toast.success(`Cliente ${newClient.nome} cadastrado com sucesso!`)
-    
+
     setSelectedFile(null)
     setExtractedData(null)
     setExtractionStatus('idle')
-    
+
     const fileInput = document.getElementById('pdf-file') as HTMLInputElement
     if (fileInput) fileInput.value = ''
   }
@@ -276,7 +275,7 @@ Retorne APENAS o JSON válido, sem explicações.`
     }
   }
 
-  const sortedHistory = [...(uploadHistory || [])].sort((a, b) => 
+  const sortedHistory = [...(uploadHistory || [])].sort((a, b) =>
     new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
   )
 
@@ -589,7 +588,7 @@ Retorne APENAS o JSON válido, sem explicações.`
                           <p className="text-xs text-muted-foreground">
                             {format(new Date(item.uploadedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {(item.fileSize / 1024).toFixed(2)} KB
                           </p>
-                          
+
                           {item.extractedData && (
                             <div className="mt-2 pt-2 border-t border-border/30">
                               <div className="flex items-center gap-2 text-xs">
@@ -606,13 +605,13 @@ Retorne APENAS o JSON válido, sem explicações.`
                               )}
                             </div>
                           )}
-                          
+
                           {item.errorMessage && (
                             <p className="text-xs text-destructive mt-2">{item.errorMessage}</p>
                           )}
                         </div>
                       </div>
-                      
+
                       <Button
                         variant="ghost"
                         size="icon"

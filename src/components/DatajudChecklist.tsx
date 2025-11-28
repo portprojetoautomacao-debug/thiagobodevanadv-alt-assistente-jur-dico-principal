@@ -1,5 +1,4 @@
 import { useState, FormEvent } from 'react'
-import * as spark from '@github/spark/llm'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +25,7 @@ import {
   CalendarBlank as CalendarIcon,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { geminiGenerateText } from '@/lib/gemini-client'
 import {
   consultarProcessoDatajud,
   validarNumeroCNJ,
@@ -34,7 +34,7 @@ import {
   type DatajudProcesso,
 } from '@/lib/datajud-api'
 
-const TRIBUNAIS = getTribunaisDisponiveis().filter(t => 
+const TRIBUNAIS = getTribunaisDisponiveis().filter(t =>
   ['tjsp', 'tjrj', 'tjmg', 'trf1', 'trf2', 'trf3', 'trf4', 'tst'].includes(t.value)
 )
 
@@ -123,7 +123,7 @@ Forneça uma análise concisa contendo:
 
 Mantenha a resposta objetiva e profissional.`
 
-      const analysisText = await spark.llm(promptText, 'gpt-4o')
+      const analysisText = await geminiGenerateText(promptText)
       setAnalysis(analysisText)
       toast.success('Análise concluída!')
     } catch (err) {
@@ -207,9 +207,9 @@ Mantenha a resposta objetiva e profissional.`
               <AlertDescription>
                 API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env para usar este recurso.
                 <br />
-                <a 
-                  href="https://www.cnj.jus.br/sistemas/datajud/api-publica/" 
-                  target="_blank" 
+                <a
+                  href="https://www.cnj.jus.br/sistemas/datajud/api-publica/"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="underline text-sm mt-1 inline-block"
                 >

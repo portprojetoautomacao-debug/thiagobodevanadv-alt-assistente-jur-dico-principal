@@ -9,7 +9,7 @@
  * @see https://web.dev/trusted-types/
  */
 
-import type { TrustedTypePolicyOptions } from 'trusted-types/lib';
+import type { TrustedTypePolicyOptions as _TrustedTypePolicyOptions } from 'trusted-types/lib';
 
 // Tipo genérico para policy com todas as opções
 type FullTrustedTypePolicy = {
@@ -159,7 +159,7 @@ export function initTrustedTypes(): void {
                 // Sanitiza input
                 return sanitizeHTML(input);
             },
-            createScript: (input: string) => {
+            createScript: (_input: string) => {
                 // Scripts inline geralmente não são permitidos
                 console.warn('🔒 Trusted Types (default): createScript bloqueado');
                 return '';
