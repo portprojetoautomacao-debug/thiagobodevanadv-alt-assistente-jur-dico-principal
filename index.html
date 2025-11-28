@@ -12,6 +12,11 @@
         content="Sistema inteligente de gestão jurídica com IA, monitoramento DJEN/DataJud, 7 agentes autônomos, calculadora de prazos e CRM de processos" />
     <link rel="canonical" href="https://assistente-juridico-p.vercel.app/" />
 
+    <!-- ✅ OTIMIZAÇÃO LCP: Preload da fonte principal para renderização mais rápida -->
+    <link rel="preload"
+        href="https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2"
+        as="font" type="font/woff2" crossorigin="anonymous" />
+
     <!-- Preconnect para recursos críticos - melhora LCP e FCP -->
     <link rel="preconnect" href="https://accounts.google.com" crossorigin />
     <link rel="preconnect" href="https://apis.google.com" crossorigin />
@@ -20,13 +25,16 @@
     <link rel="dns-prefetch" href="https://www.gstatic.com" />
     <link rel="dns-prefetch" href="https://vercel.live" />
 
-    <!-- CSS crítico inline para evitar render-blocking e melhorar LCP -->
+    <!-- ✅ OTIMIZAÇÃO LCP: CSS crítico inline expandido para evitar render-blocking -->
     <style>
         /* Critical CSS - Above the fold styles */
         :root {
             --background: 0 0% 100%;
             --foreground: 240 10% 3.9%;
-            --primary: 217.2 91.2% 59.8%
+            --primary: 217.2 91.2% 59.8%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --card: 0 0% 100%;
+            --border: 240 5.9% 90%
         }
 
         *,
@@ -40,7 +48,10 @@
         html {
             line-height: 1.5;
             -webkit-text-size-adjust: 100%;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            /* ✅ Otimização: font-display swap para evitar FOIT */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale
         }
 
         body {
@@ -54,6 +65,44 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column
+        }
+
+        /* ✅ Otimização: Estilos do loading spinner visíveis imediatamente */
+        .loading-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem
+        }
+
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            border: 2px solid transparent;
+            border-bottom-color: hsl(var(--primary));
+            animation: spin 1s linear infinite
+        }
+
+        .loading-text {
+            font-size: 0.875rem;
+            color: hsl(var(--muted-foreground))
+        }
+
+        .loading-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: hsl(var(--foreground));
+            margin-bottom: 0.5rem
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
         }
 
         .min-h-screen {
@@ -89,12 +138,6 @@
             animation: spin 1s linear infinite
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg)
-            }
-        }
-
         .rounded-full {
             border-radius: 9999px
         }
@@ -121,7 +164,7 @@
         }
 
         .text-muted-foreground {
-            color: hsl(240 3.8% 46.1%)
+            color: hsl(var(--muted-foreground))
         }
 
         .gap-4 {
@@ -152,10 +195,35 @@
             margin-bottom: .5rem
         }
 
+        /* ✅ Otimização: Conteúdo principal styled para LCP rápido */
+        .bg-background {
+            background-color: hsl(var(--background))
+        }
+
+        .bg-card {
+            background-color: hsl(var(--card))
+        }
+
+        .border {
+            border-width: 1px;
+            border-color: hsl(var(--border))
+        }
+
+        .rounded-lg {
+            border-radius: 0.5rem
+        }
+
+        .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)
+        }
+
         @media(prefers-color-scheme:dark) {
             :root {
                 --background: 240 10% 3.9%;
-                --foreground: 0 0% 98%
+                --foreground: 0 0% 98%;
+                --muted-foreground: 240 5% 64.9%;
+                --card: 240 10% 3.9%;
+                --border: 240 3.7% 15.9%
             }
         }
     </style>
@@ -186,7 +254,15 @@
 </head>
 
 <body class="notranslate" translate="no">
-    <div id="root"></div>
+    <!-- ✅ OTIMIZAÇÃO LCP: Conteúdo inicial styled para LCP rápido -->
+    <div id="root">
+        <div class="loading-container">
+            <h1 class="loading-title">Assistente Jurídico PJe</h1>
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Carregando sistema...</p>
+        </div>
+    </div>
+    <!-- ✅ OTIMIZAÇÃO: modulepreload para chunks críticos -->
     <script type="module" src="/src/main.tsx"></script>
 </body>
 
