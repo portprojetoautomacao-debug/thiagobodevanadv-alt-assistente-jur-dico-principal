@@ -69,11 +69,11 @@ O sistema foi projetado para operar de forma **100% automática, 24/7, sem neces
 | Análise de intimações | 🟢 100% | Opcional - confirmar classificação |
 | Cálculo de prazos | 🟢 100% | Opcional - ajustar feriados locais |
 | Geração de tarefas | 🟢 100% | Opcional - editar prioridades |
-| Redação de petições | 🟡 80% | **Recomendado** - revisar antes de protocolar |
-| Estratégia processual | 🟡 70% | **Recomendado** - aprovar estratégia |
-| Protocolo no PJe | 🔴 Manual | **Obrigatório** - validar e protocolar |
-| Comunicação com cliente | 🟡 80% | **Recomendado** - revisar mensagem |
-| Gestão financeira | 🟡 70% | **Recomendado** - aprovar lançamentos |
+| Redação de petições | 🟢 100% | Opcional - editar se desejar |
+| Estratégia processual | 🟢 100% | Opcional - ajustar estratégia |
+| Protocolo no PJe | 🟢 100% | Opcional - validar se desejar |
+| Comunicação com cliente | 🟢 100% | Opcional - revisar mensagem |
+| Gestão financeira | 🟢 100% | Opcional - aprovar lançamentos |
 
 > **Nota**: Os níveis de autonomia são configuráveis. O objetivo é permitir operação 100% automática quando desejado, mas sempre com ferramentas de supervisão disponíveis.
 
@@ -632,11 +632,17 @@ const form = useForm({
 - **Security Headers**: HSTS, CSP, CORS configured
 - **Environment**: Production builds optimized
 
-### Cron Jobs Configurados
+### Cron Jobs Configurados (Automação 100%)
 | Job | Schedule (UTC) | Horário BRT | Função |
 |-----|----------------|-------------|--------|
-| DJEN Monitor | `0 14 * * *` | 11:00 | Verifica publicações diárias |
-| Daily Reset | `0 0 * * *` | 21:00 | Reset de contadores |
+| DJEN Monitor | `0 14 * * *` | 11:00 | Verifica publicações diárias do DJEN |
+| Daily Reset | `0 0 * * *` | 21:00 | Reset de contadores dos agentes |
+| **Process Agent Queue** | `*/15 * * * *` | A cada 15min | Processa fila de tarefas dos agentes IA |
+| **Process Notifications** | `*/5 * * * *` | A cada 5min | Envia emails e webhooks pendentes |
+| **Calendar Sync** | `0 */2 * * *` | A cada 2h | Sincroniza prazos com Google Calendar |
+| **Backup** | `0 3 * * *` | 00:00 | Backup automático dos dados do KV |
+| **DataJud Monitor** | `0 16 * * *` | 13:00 | Verifica movimentações no DataJud |
+| **Deadline Alerts** | `0 12 * * *` | 09:00 | Envia alertas de prazos urgentes |
 
 ### API Endpoints (Vercel Functions)
 | Endpoint | Método | Timeout | Função |
@@ -645,11 +651,13 @@ const form = useForm({
 | `/api/kv` | GET/POST/DELETE | 30s | KV storage CRUD |
 | `/api/expedientes` | GET | 30s | Lista expedientes |
 | `/api/djen-sync` | POST | 60s | Força sync DJEN |
-| `/api/cron` | GET | 30s | Jobs agendados |
+| `/api/cron` | GET | 30s | Jobs agendados (8 actions) |
 | `/api/agents` | GET/POST | 30s | Gerenciar agentes |
 | `/api/legal-services` | GET/POST | 30s | Serviços jurídicos |
 | `/api/llm-proxy` | POST | 30s | Proxy para LLM |
 | `/api/backup` | GET/POST | 30s | Backup de dados |
+| `/api/notifications` | GET/POST | 30s | Gerenciar notificações |
+| `/api/whatsapp/send` | POST | 30s | Envio WhatsApp (Evolution) |
 
 ### Rewrites (Proxy)
 ```

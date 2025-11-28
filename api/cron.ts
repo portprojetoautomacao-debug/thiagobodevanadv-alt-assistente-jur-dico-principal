@@ -22,7 +22,7 @@ interface AgentTask {
   title?: string;
   agentId?: string;
   type: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: string;
   completedAt?: string;
@@ -865,8 +865,825 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // ================= PROCESS AGENT QUEUE (every 15 min) =================
+    if (action === 'process-agent-queue') {
+      console.log(`[Cron Agent Queue] Starting execution at ${timestamp}`);
+
+      interface AgentQueueResult {
+        success: boolean;
+        timestamp: string;
+        tasksProcessed: number;
+        tasksFailed: number;
+        errors: string[];
+      }
+
+      const result: AgentQueueResult = {
+        success: true,
+        timestamp,
+        tasksProcessed: 0,
+        tasksFailed: 0,
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+        const taskQueue = (await kv.get('agent-task-queue') as AgentTask[]) || [];
+        const pendingTasks = taskQueue.filter(t => t.status === 'pending' || t.status === 'queued');
+
+        console.log(`[Cron Agent Queue] Found ${pendingTasks.length} pending tasks`);
+
+        if (pendingTasks.length === 0) {
+          return res.status(200).json({
+            ok: true,
+            message: 'No pending tasks in queue',
+            result
+          });
+        }
+
+        // Process up to 10 tasks per execution
+        const tasksToProcess = pendingTasks.slice(0, 10);
+        const agents = await getAgents();
+
+        for (const task of tasksToProcess) {
+          try {
+            const agent = agents.find(a => a.id === task.agentId);
+            
+            if (!agent || !agent.enabled) {
+              console.log(`[Cron Agent Queue] Skipping task ${task.id} - agent not found or disabled`);
+              continue;
+            }
+
+            // Update task status
+            task.status = 'in_progress';
+            const taskIndex = taskQueue.findIndex(t => t.id === task.id);
+            if (taskIndex >= 0) {
+              taskQueue[taskIndex] = task;
+            }
+
+            // Call agent processing endpoint
+            const baseUrl = process.env.VERCEL_URL
+              ? `https://${process.env.VERCEL_URL}`
+              : 'http://localhost:3000';
+
+            const agentResponse = await fetch(`${baseUrl}/api/agents?action=process-task`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ task, agent })
+            });
+
+            if (agentResponse.ok) {
+              task.status = 'completed';
+              task.completedAt = new Date().toISOString();
+              result.tasksProcessed++;
+              console.log(`[Cron Agent Queue] Task ${task.id} completed`);
+            } else {
+              task.status = 'failed';
+              result.tasksFailed++;
+              result.errors.push(`Task ${task.id} failed`);
+            }
+
+            // Update task in queue
+            if (taskIndex >= 0) {
+              taskQueue[taskIndex] = task;
+            }
+
+          } catch (taskError) {
+            task.status = 'failed';
+            result.tasksFailed++;
+            result.errors.push(`Task ${task.id}: ${taskError instanceof Error ? taskError.message : 'Unknown error'}`);
+          }
+        }
+
+        // Save updated queue
+        await kv.set('agent-task-queue', taskQueue);
+
+        // Move completed tasks to completed list
+        const completedTasks = taskQueue.filter(t => t.status === 'completed');
+        if (completedTasks.length > 0) {
+          const existingCompleted = (await kv.get(KV_KEYS.COMPLETED_TASKS) as AgentTask[]) || [];
+          existingCompleted.unshift(...completedTasks);
+          await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
+
+          // Remove completed from queue
+          const remainingQueue = taskQueue.filter(t => t.status !== 'completed');
+          await kv.set('agent-task-queue', remainingQueue);
+        }
+
+        console.log(`[Cron Agent Queue] Completed: ${result.tasksProcessed} processed, ${result.tasksFailed} failed`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'Agent queue processing completed',
+        result
+      });
+    }
+
+    // ================= PROCESS NOTIFICATIONS (every 5 min) =================
+    if (action === 'process-notifications') {
+      console.log(`[Cron Notifications] Starting execution at ${timestamp}`);
+
+      interface NotificationResult {
+        success: boolean;
+        timestamp: string;
+        emailsSent: number;
+        webhooksSent: number;
+        errors: string[];
+      }
+
+      const result: NotificationResult = {
+        success: true,
+        timestamp,
+        emailsSent: 0,
+        webhooksSent: 0,
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+        const notificationQueue = (await kv.get(KV_KEYS.NOTIFICATION_QUEUE) as Array<{
+          id: string;
+          type: string;
+          title: string;
+          message: string;
+          data?: unknown;
+          recipientEmail?: string;
+          createdAt: string;
+          sent: boolean;
+        }>) || [];
+
+        const pendingNotifications = notificationQueue.filter(n => !n.sent);
+        console.log(`[Cron Notifications] Found ${pendingNotifications.length} pending notifications`);
+
+        if (pendingNotifications.length === 0) {
+          return res.status(200).json({
+            ok: true,
+            message: 'No pending notifications',
+            result
+          });
+        }
+
+        // Process up to 20 notifications per execution
+        const toProcess = pendingNotifications.slice(0, 20);
+
+        for (const notification of toProcess) {
+          try {
+            // Send via webhook if configured
+            const webhookUrl = process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
+            if (webhookUrl) {
+              await sendRealTimeNotification({
+                type: notification.type,
+                title: notification.title,
+                message: notification.message,
+                priority: 'normal'
+              });
+              result.webhooksSent++;
+            }
+
+            // Send email if Resend is configured
+            const resendApiKey = process.env.RESEND_API_KEY;
+            const recipientEmail = notification.recipientEmail || process.env.NOTIFICATION_EMAIL;
+
+            if (resendApiKey && recipientEmail) {
+              const emailResponse = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${resendApiKey}`
+                },
+                body: JSON.stringify({
+                  from: process.env.EMAIL_FROM || 'Assistente Jurídico <noreply@resend.dev>',
+                  to: recipientEmail,
+                  subject: notification.title,
+                  html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                      <h2 style="color: #333;">${notification.title}</h2>
+                      <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replace(/\n/g, '<br>')}</p>
+                      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+                      <p style="color: #999; font-size: 12px;">
+                        Enviado automaticamente pelo Assistente Jurídico PJe<br>
+                        ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+                      </p>
+                    </div>
+                  `
+                })
+              });
+
+              if (emailResponse.ok) {
+                result.emailsSent++;
+              }
+            }
+
+            // Mark as sent
+            notification.sent = true;
+            const idx = notificationQueue.findIndex(n => n.id === notification.id);
+            if (idx >= 0) {
+              notificationQueue[idx] = notification;
+            }
+
+          } catch (notifError) {
+            result.errors.push(`Notification ${notification.id}: ${notifError instanceof Error ? notifError.message : 'Unknown error'}`);
+          }
+        }
+
+        // Save updated queue (keep last 500)
+        await kv.set(KV_KEYS.NOTIFICATION_QUEUE, notificationQueue.slice(0, 500));
+
+        console.log(`[Cron Notifications] Completed: ${result.emailsSent} emails, ${result.webhooksSent} webhooks`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'Notification processing completed',
+        result
+      });
+    }
+
+    // ================= CALENDAR SYNC (every 2 hours) =================
+    if (action === 'calendar-sync') {
+      console.log(`[Cron Calendar Sync] Starting execution at ${timestamp}`);
+
+      interface CalendarSyncResult {
+        success: boolean;
+        timestamp: string;
+        eventsCreated: number;
+        eventsUpdated: number;
+        deadlinesSynced: number;
+        errors: string[];
+      }
+
+      const result: CalendarSyncResult = {
+        success: true,
+        timestamp,
+        eventsCreated: 0,
+        eventsUpdated: 0,
+        deadlinesSynced: 0,
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+
+        // Get all processes with deadlines
+        const processes = (await kv.get('processes') as Array<{
+          id: string;
+          numeroCNJ: string;
+          titulo: string;
+          prazos?: Array<{
+            id: string;
+            descricao: string;
+            dataFinal: string;
+            urgente?: boolean;
+            syncedToCalendar?: boolean;
+            calendarEventId?: string;
+          }>;
+        }>) || [];
+
+        console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
+
+        // Get calendar sync settings
+        const calendarSettings = await kv.get('calendar-settings') as {
+          enabled?: boolean;
+          accessToken?: string;
+          refreshToken?: string;
+          calendarId?: string;
+        } | null;
+
+        if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
+          console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);
+          return res.status(200).json({
+            ok: true,
+            message: 'Calendar sync skipped - not configured',
+            result
+          });
+        }
+
+        // Process deadlines not yet synced
+        for (const processo of processes) {
+          if (!processo.prazos) continue;
+
+          for (const prazo of processo.prazos) {
+            if (prazo.syncedToCalendar) continue;
+
+            try {
+              // Create calendar event via Google Calendar API
+              const eventResponse = await fetch(
+                `https://www.googleapis.com/calendar/v3/calendars/${calendarSettings.calendarId || 'primary'}/events`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${calendarSettings.accessToken}`
+                  },
+                  body: JSON.stringify({
+                    summary: `⚖️ PRAZO: ${prazo.descricao}`,
+                    description: `Processo: ${processo.numeroCNJ}\n${processo.titulo}\n\nPrazo cadastrado automaticamente pelo Assistente Jurídico.`,
+                    start: {
+                      date: prazo.dataFinal.split('T')[0],
+                      timeZone: 'America/Sao_Paulo'
+                    },
+                    end: {
+                      date: prazo.dataFinal.split('T')[0],
+                      timeZone: 'America/Sao_Paulo'
+                    },
+                    reminders: {
+                      useDefault: false,
+                      overrides: [
+                        { method: 'email', minutes: 1440 }, // 1 day before
+                        { method: 'popup', minutes: 60 },   // 1 hour before
+                        { method: 'popup', minutes: 2880 }  // 2 days before
+                      ]
+                    },
+                    colorId: prazo.urgente ? '11' : '9' // Red for urgent, Blue for normal
+                  })
+                }
+              );
+
+              if (eventResponse.ok) {
+                const eventData = await eventResponse.json() as { id: string };
+                prazo.syncedToCalendar = true;
+                prazo.calendarEventId = eventData.id;
+                result.eventsCreated++;
+                result.deadlinesSynced++;
+              } else {
+                const errorText = await eventResponse.text();
+                result.errors.push(`Failed to create event for prazo ${prazo.id}: ${errorText}`);
+              }
+
+            } catch (calError) {
+              result.errors.push(`Calendar error for prazo ${prazo.id}: ${calError instanceof Error ? calError.message : 'Unknown'}`);
+            }
+          }
+        }
+
+        // Save updated processes
+        if (result.eventsCreated > 0) {
+          await kv.set('processes', processes);
+        }
+
+        // Update last sync time
+        await kv.set('calendar-last-sync', timestamp);
+
+        console.log(`[Cron Calendar Sync] Completed: ${result.eventsCreated} events created`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'Calendar sync completed',
+        result
+      });
+    }
+
+    // ================= BACKUP (daily at 3 AM UTC) =================
+    if (action === 'backup') {
+      console.log(`[Cron Backup] Starting execution at ${timestamp}`);
+
+      interface BackupResult {
+        success: boolean;
+        timestamp: string;
+        keysBackedUp: number;
+        totalSize: string;
+        errors: string[];
+      }
+
+      const result: BackupResult = {
+        success: true,
+        timestamp,
+        keysBackedUp: 0,
+        totalSize: '0 KB',
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+
+        // Keys to backup
+        const keysToBackup = [
+          'processes',
+          'publications',
+          'autonomous-agents',
+          'agent-task-queue',
+          'completed-agent-tasks',
+          'monitored-lawyers',
+          'notification-queue',
+          'calendar-settings',
+          'user-settings'
+        ];
+
+        const backupData: Record<string, unknown> = {};
+        let totalBytes = 0;
+
+        for (const key of keysToBackup) {
+          try {
+            const data = await kv.get(key);
+            if (data) {
+              backupData[key] = data;
+              result.keysBackedUp++;
+              totalBytes += JSON.stringify(data).length;
+            }
+          } catch (keyError) {
+            result.errors.push(`Failed to backup ${key}: ${keyError instanceof Error ? keyError.message : 'Unknown'}`);
+          }
+        }
+
+        // Also backup lawyer-specific publications
+        const lawyers = (await kv.get(KV_KEYS.MONITORED_LAWYERS) as MonitoredLawyer[]) || [];
+        for (const lawyer of lawyers) {
+          const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
+          try {
+            const pubs = await kv.get(pubKey);
+            if (pubs) {
+              backupData[pubKey] = pubs;
+              result.keysBackedUp++;
+              totalBytes += JSON.stringify(pubs).length;
+            }
+          } catch {
+            // Ignore errors for individual lawyer publications
+          }
+        }
+
+        // Calculate size
+        result.totalSize = totalBytes > 1024 * 1024
+          ? `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
+          : `${(totalBytes / 1024).toFixed(2)} KB`;
+
+        // Store backup with timestamp
+        const backupKey = `backup:${new Date().toISOString().split('T')[0]}`;
+        await kv.set(backupKey, {
+          timestamp,
+          data: backupData,
+          keysCount: result.keysBackedUp,
+          sizeBytes: totalBytes
+        });
+
+        // Keep only last 7 backups
+        const allBackupKeys: string[] = [];
+        // Clean old backups (we'll keep track in a list)
+        const backupList = (await kv.get('backup-list') as string[]) || [];
+        backupList.unshift(backupKey);
+        const keysToKeep = backupList.slice(0, 7);
+        const keysToDelete = backupList.slice(7);
+
+        for (const oldKey of keysToDelete) {
+          try {
+            await kv.del(oldKey);
+          } catch {
+            // Ignore delete errors
+          }
+        }
+
+        await kv.set('backup-list', keysToKeep);
+
+        console.log(`[Cron Backup] Completed: ${result.keysBackedUp} keys, ${result.totalSize}`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'Backup completed',
+        result
+      });
+    }
+
+    // ================= DATAJUD MONITOR (daily at 4 PM UTC = 1 PM BRT) =================
+    if (action === 'datajud-monitor') {
+      console.log(`[Cron DataJud Monitor] Starting execution at ${timestamp}`);
+
+      interface DataJudResult {
+        success: boolean;
+        timestamp: string;
+        processesChecked: number;
+        updatesFound: number;
+        errors: string[];
+      }
+
+      const result: DataJudResult = {
+        success: true,
+        timestamp,
+        processesChecked: 0,
+        updatesFound: 0,
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+
+        // Get all active processes
+        const processes = (await kv.get('processes') as Array<{
+          id: string;
+          numeroCNJ: string;
+          titulo: string;
+          status: string;
+          ultimaAtualizacao?: string;
+          movimentos?: Array<{
+            data: string;
+            descricao: string;
+          }>;
+        }>) || [];
+
+        const activeProcesses = processes.filter(p => p.status === 'ativo' || p.status === 'em_andamento');
+        console.log(`[Cron DataJud Monitor] Found ${activeProcesses.length} active processes`);
+
+        // DataJud API key (optional - public API has rate limits)
+        const datajudApiKey = process.env.DATAJUD_API_KEY;
+
+        for (const processo of activeProcesses.slice(0, 20)) { // Limit to 20 per execution
+          try {
+            result.processesChecked++;
+
+            // Query DataJud API
+            const datajudUrl = `https://api-publica.datajud.cnj.jus.br/api_publica_tjmg/_search`;
+            const query = {
+              query: {
+                match: {
+                  numeroProcesso: processo.numeroCNJ.replace(/\D/g, '')
+                }
+              },
+              size: 1
+            };
+
+            const headers: Record<string, string> = {
+              'Content-Type': 'application/json'
+            };
+            if (datajudApiKey) {
+              headers['Authorization'] = `ApiKey ${datajudApiKey}`;
+            }
+
+            const response = await fetch(datajudUrl, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify(query)
+            });
+
+            if (!response.ok) {
+              console.warn(`[Cron DataJud Monitor] API returned ${response.status} for ${processo.numeroCNJ}`);
+              continue;
+            }
+
+            const data = await response.json() as {
+              hits?: {
+                hits?: Array<{
+                  _source?: {
+                    movimentos?: Array<{
+                      dataHora: string;
+                      nome: string;
+                      complemento?: string;
+                    }>;
+                  };
+                }>;
+              };
+            };
+
+            const hits = data.hits?.hits || [];
+            if (hits.length > 0) {
+              const source = hits[0]._source;
+              const movimentos = source?.movimentos || [];
+
+              // Check for new movements
+              const lastCheck = processo.ultimaAtualizacao ? new Date(processo.ultimaAtualizacao) : new Date(0);
+              const newMovimentos = movimentos.filter(m => new Date(m.dataHora) > lastCheck);
+
+              if (newMovimentos.length > 0) {
+                result.updatesFound++;
+
+                // Update process
+                processo.ultimaAtualizacao = new Date().toISOString();
+                processo.movimentos = [
+                  ...newMovimentos.map(m => ({
+                    data: m.dataHora,
+                    descricao: `${m.nome}${m.complemento ? ': ' + m.complemento : ''}`
+                  })),
+                  ...(processo.movimentos || [])
+                ].slice(0, 100);
+
+                // Create task for analysis
+                await addTaskToQueue({
+                  id: crypto.randomUUID(),
+                  agentId: 'analise-documental',
+                  type: 'analyze_movement',
+                  priority: 'medium',
+                  status: 'pending',
+                  createdAt: new Date().toISOString(),
+                  data: {
+                    processId: processo.id,
+                    processCNJ: processo.numeroCNJ,
+                    newMovements: newMovimentos,
+                    source: 'DataJud Monitor'
+                  }
+                });
+
+                // Send notification
+                await sendRealTimeNotification({
+                  type: 'new_movement',
+                  title: `📋 Nova Movimentação - ${processo.numeroCNJ}`,
+                  message: `${newMovimentos.length} nova(s) movimentação(ões) detectada(s)\n${newMovimentos[0]?.nome || ''}`,
+                  priority: 'normal',
+                  metadata: {
+                    processCNJ: processo.numeroCNJ,
+                    movementsCount: newMovimentos.length
+                  }
+                });
+              }
+            }
+
+            // Rate limit - wait 500ms between requests
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+          } catch (processError) {
+            result.errors.push(`Process ${processo.numeroCNJ}: ${processError instanceof Error ? processError.message : 'Unknown'}`);
+          }
+        }
+
+        // Save updated processes
+        if (result.updatesFound > 0) {
+          await kv.set('processes', processes);
+        }
+
+        // Update last check
+        await kv.set('datajud-last-check', timestamp);
+
+        console.log(`[Cron DataJud Monitor] Completed: ${result.processesChecked} checked, ${result.updatesFound} updates`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'DataJud monitoring completed',
+        result
+      });
+    }
+
+    // ================= DEADLINE ALERTS (daily at 12 PM UTC = 9 AM BRT) =================
+    if (action === 'deadline-alerts') {
+      console.log(`[Cron Deadline Alerts] Starting execution at ${timestamp}`);
+
+      interface DeadlineAlertResult {
+        success: boolean;
+        timestamp: string;
+        alertsSent: number;
+        urgentDeadlines: number;
+        upcomingDeadlines: number;
+        errors: string[];
+      }
+
+      const result: DeadlineAlertResult = {
+        success: true,
+        timestamp,
+        alertsSent: 0,
+        urgentDeadlines: 0,
+        upcomingDeadlines: 0,
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+
+        // Get all processes
+        const processes = (await kv.get('processes') as Array<{
+          id: string;
+          numeroCNJ: string;
+          titulo: string;
+          prazos?: Array<{
+            id: string;
+            descricao: string;
+            dataFinal: string;
+            urgente?: boolean;
+            alertSent?: boolean;
+          }>;
+        }>) || [];
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const in3Days = new Date(today);
+        in3Days.setDate(in3Days.getDate() + 3);
+
+        const in7Days = new Date(today);
+        in7Days.setDate(in7Days.getDate() + 7);
+
+        const urgentDeadlines: Array<{ processo: string; prazo: string; dataFinal: string; diasRestantes: number }> = [];
+        const upcomingDeadlines: Array<{ processo: string; prazo: string; dataFinal: string; diasRestantes: number }> = [];
+
+        for (const processo of processes) {
+          if (!processo.prazos) continue;
+
+          for (const prazo of processo.prazos) {
+            const deadline = new Date(prazo.dataFinal);
+            deadline.setHours(0, 0, 0, 0);
+
+            const diasRestantes = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diasRestantes < 0) continue; // Skip past deadlines
+
+            if (diasRestantes <= 1) {
+              // URGENT: Today or tomorrow
+              result.urgentDeadlines++;
+              urgentDeadlines.push({
+                processo: processo.numeroCNJ,
+                prazo: prazo.descricao,
+                dataFinal: prazo.dataFinal,
+                diasRestantes
+              });
+            } else if (diasRestantes <= 7) {
+              // Upcoming: within 7 days
+              result.upcomingDeadlines++;
+              upcomingDeadlines.push({
+                processo: processo.numeroCNJ,
+                prazo: prazo.descricao,
+                dataFinal: prazo.dataFinal,
+                diasRestantes
+              });
+            }
+          }
+        }
+
+        // Send urgent alerts
+        if (urgentDeadlines.length > 0) {
+          const urgentMessage = urgentDeadlines.map(d =>
+            `🚨 ${d.processo}\n   ${d.prazo}\n   ${d.diasRestantes === 0 ? 'HOJE!' : 'AMANHÃ!'}`
+          ).join('\n\n');
+
+          await sendRealTimeNotification({
+            type: 'deadline_alert',
+            title: `🚨 URGENTE: ${urgentDeadlines.length} prazo(s) vencendo!`,
+            message: urgentMessage,
+            priority: 'urgent',
+            metadata: {
+              count: urgentDeadlines.length,
+              deadlines: urgentDeadlines
+            }
+          });
+
+          // Queue email
+          const notificationEmail = process.env.NOTIFICATION_EMAIL;
+          if (notificationEmail) {
+            await queueNotification({
+              type: 'system',
+              title: `🚨 URGENTE: ${urgentDeadlines.length} prazo(s) vencendo hoje/amanhã!`,
+              message: urgentMessage,
+              recipientEmail: notificationEmail
+            });
+          }
+
+          result.alertsSent++;
+        }
+
+        // Send daily summary if there are upcoming deadlines
+        if (upcomingDeadlines.length > 0) {
+          const summaryMessage = upcomingDeadlines.slice(0, 10).map(d =>
+            `📅 ${d.processo}\n   ${d.prazo}\n   Em ${d.diasRestantes} dia(s)`
+          ).join('\n\n');
+
+          await sendRealTimeNotification({
+            type: 'deadline_summary',
+            title: `📅 Resumo: ${upcomingDeadlines.length} prazo(s) nos próximos 7 dias`,
+            message: summaryMessage,
+            priority: 'normal',
+            metadata: {
+              count: upcomingDeadlines.length
+            }
+          });
+
+          result.alertsSent++;
+        }
+
+        console.log(`[Cron Deadline Alerts] Completed: ${result.urgentDeadlines} urgent, ${result.upcomingDeadlines} upcoming`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'Deadline alerts completed',
+        result
+      });
+    }
+
     return res.status(400).json({
-      error: 'Invalid action. Use: daily-reset or djen-monitor'
+      error: 'Invalid action. Use: daily-reset, djen-monitor, process-agent-queue, process-notifications, calendar-sync, backup, datajud-monitor, deadline-alerts'
     });
 
   } catch (error) {
