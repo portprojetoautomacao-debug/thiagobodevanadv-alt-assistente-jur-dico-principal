@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useKV } from '@/hooks/use-kv'
+import { useAIStreaming } from '@/hooks/use-ai-streaming'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -14,6 +15,7 @@ import {
   Bell,
   CurrencyCircleDollar,
   Warning,
+  Stop,
 } from '@phosphor-icons/react'
 import type { Process, FinancialEntry } from '@/types'
 
@@ -84,7 +86,29 @@ export default function HarveySpecter() {
   const [messages, setMessages] = useKV<Message[]>('harvey-messages', [])
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Hook de streaming de IA
+  const {
+    streamingContent,
+    isStreaming,
+    streamChat,
+    cancelStream,
+    reset: resetStreaming
+  } = useAIStreaming({
+    onChunk: () => {
+      // Scroll para baixo a cada chunk
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+    },
+    onComplete: (fullContent, provider) => {
+      console.log(`[Harvey] Streaming completo via ${provider}`)
+    },
+    onError: (error) => {
+      console.error('[Harvey] Erro no streaming:', error)
+      toast.error('Erro ao processar resposta')
+    }
+  })
 
   // Buscar dados REAIS do KV storage (usando as MESMAS chaves dos outros componentes)
   const [processes] = useKV<Process[]>('processes', [])
@@ -440,12 +464,42 @@ Como posso ajudar?`
     }
   }
 
+  // Constrói o system prompt com contexto real
+  const buildSystemPrompt = useCallback(() => {
+    const contextData = realStats.hasData
+      ? `Contexto REAL do escritório (dados do sistema):
+- ${realStats.totalProcesses} processos cadastrados
+  - Em Andamento: ${realStats.processesByStatus['Em Andamento']}
+  - Aguardando: ${realStats.processesByStatus['Aguardando']}
+  - Concluídos: ${realStats.processesByStatus['Concluído']}
+  - Arquivados: ${realStats.processesByStatus['Arquivado']}
+- ${realStats.urgentDeadlines} prazos urgentes (próximas 48h)
+- ${realStats.upcomingDeadlines} prazos nos próximos 7 dias
+- Receita do mês: R$ ${realStats.receita.toLocaleString('pt-BR')}
+- Despesas do mês: R$ ${realStats.despesas.toLocaleString('pt-BR')}
+- Margem: ${realStats.margem}%
+- ${realStats.pendingTasks} tarefas pendentes
+- ${realStats.inProgressTasks} tarefas em progresso`
+      : `Contexto: O sistema ainda não possui dados cadastrados.`
+
+    return `Você é Harvey Specter, um assistente jurídico inteligente e estratégico.
+
+${contextData}
+
+IMPORTANTE:
+- Use APENAS os dados fornecidos acima. NÃO invente dados.
+- Seja honesto sobre a situação real do sistema.
+- Responda de forma profissional e objetiva.
+- Use markdown para formatação.`
+  }, [realStats])
+
   const handleSend = async () => {
-    if (!input.trim() || isProcessing) return
+    if (!input.trim() || isProcessing || isStreaming) return
 
     const query = input.trim()
     setInput('')
     setIsProcessing(true)
+    resetStreaming()
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -454,41 +508,75 @@ Como posso ajudar?`
       timestamp: new Date().toISOString(),
     }
 
+    // Adiciona mensagem do usuário
     setMessages((currentMessages) => [...(currentMessages || []), userMessage])
 
+    // Cria mensagem do assistente para streaming
+    const assistantId = `assistant-${Date.now()}`
+    setStreamingMessageId(assistantId)
+
+    const streamingMessage: Message = {
+      id: assistantId,
+      role: 'assistant',
+      content: '', // Será preenchido pelo streaming
+      timestamp: new Date().toISOString(),
+      insights: getInsights(query),
+    }
+
+    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage])
+
     try {
-      const responseContent = await generateResponse(query)
-      const insights = getInsights(query)
+      const systemPrompt = buildSystemPrompt()
 
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: responseContent,
-        timestamp: new Date().toISOString(),
-        insights: insights,
-      }
+      const finalContent = await streamChat([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: query }
+      ])
 
-      setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
+      // Atualiza a mensagem com o conteúdo final
+      setMessages((currentMessages) =>
+        (currentMessages || []).map(msg =>
+          msg.id === assistantId
+            ? { ...msg, content: finalContent }
+            : msg
+        )
+      )
+
     } catch (error) {
       console.error('Error sending message:', error)
 
-      const isTimeout = error instanceof Error && error.message === 'Timeout'
-
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: isTimeout
-          ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
-          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
-        timestamp: new Date().toISOString(),
-      }
-
-      setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
+      // Atualiza com mensagem de erro
+      setMessages((currentMessages) =>
+        (currentMessages || []).map(msg =>
+          msg.id === assistantId
+            ? { ...msg, content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.' }
+            : msg
+        )
+      )
       toast.error('Erro ao processar mensagem')
     } finally {
       setIsProcessing(false)
+      setStreamingMessageId(null)
     }
   }
+
+  // Cancelar streaming
+  const handleCancelStream = useCallback(() => {
+    cancelStream()
+    setIsProcessing(false)
+
+    if (streamingMessageId) {
+      // Mantém o conteúdo parcial já recebido
+      setMessages((currentMessages) =>
+        (currentMessages || []).map(msg =>
+          msg.id === streamingMessageId
+            ? { ...msg, content: streamingContent + '\n\n*[Resposta interrompida]*' }
+            : msg
+        )
+      )
+      setStreamingMessageId(null)
+    }
+  }, [cancelStream, streamingMessageId, streamingContent, setMessages])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -498,9 +586,10 @@ Como posso ajudar?`
   }
 
   const handleQuickQuestion = async (question: string) => {
-    if (isProcessing) return
+    if (isProcessing || isStreaming) return
 
     setIsProcessing(true)
+    resetStreaming()
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -511,37 +600,50 @@ Como posso ajudar?`
 
     setMessages((currentMessages) => [...(currentMessages || []), userMessage])
 
+    // Cria mensagem do assistente para streaming
+    const assistantId = `assistant-${Date.now()}`
+    setStreamingMessageId(assistantId)
+
+    const streamingMessage: Message = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString(),
+      insights: getInsights(question),
+    }
+
+    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage])
+
     try {
-      const responseContent = await generateResponse(question)
-      const insights = getInsights(question)
+      const systemPrompt = buildSystemPrompt()
 
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: responseContent,
-        timestamp: new Date().toISOString(),
-        insights: insights,
-      }
+      const finalContent = await streamChat([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: question }
+      ])
 
-      setMessages((currentMessages) => [...(currentMessages || []), assistantMessage])
+      setMessages((currentMessages) =>
+        (currentMessages || []).map(msg =>
+          msg.id === assistantId
+            ? { ...msg, content: finalContent }
+            : msg
+        )
+      )
+
     } catch (error) {
       console.error('Error sending message:', error)
 
-      const isTimeout = error instanceof Error && error.message === 'Timeout'
-
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: isTimeout
-          ? '⚠️ A requisição demorou mais que o esperado. Gerando resposta com dados locais...\n\nPor favor, tente uma pergunta mais específica ou reformule sua questão.'
-          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
-        timestamp: new Date().toISOString(),
-      }
-
-      setMessages((currentMessages) => [...(currentMessages || []), errorMessage])
+      setMessages((currentMessages) =>
+        (currentMessages || []).map(msg =>
+          msg.id === assistantId
+            ? { ...msg, content: 'Desculpe, ocorreu um erro ao processar sua mensagem.' }
+            : msg
+        )
+      )
       toast.error('Erro ao processar mensagem')
     } finally {
       setIsProcessing(false)
+      setStreamingMessageId(null)
     }
   }
 
@@ -668,7 +770,14 @@ Como posso ajudar?`
                       )}
                     >
                       <div className="whitespace-pre-wrap text-sm">
-                        {message.content}
+                        {/* Mostra streaming content se esta é a mensagem sendo streamada */}
+                        {message.id === streamingMessageId && isStreaming
+                          ? (streamingContent || '▋')
+                          : message.content || (message.id === streamingMessageId ? '▋' : '')}
+                        {/* Cursor piscante durante streaming */}
+                        {message.id === streamingMessageId && isStreaming && (
+                          <span className="animate-pulse">▋</span>
+                        )}
                       </div>
                     </Card>
 
@@ -738,18 +847,35 @@ Como posso ajudar?`
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              disabled={isProcessing}
+              disabled={isProcessing || isStreaming}
               className="flex-1"
             />
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || isProcessing}
-              size="icon"
-              aria-label="Enviar mensagem"
-            >
-              <PaperPlaneTilt className="w-5 h-5" weight="fill" />
-            </Button>
+            {isStreaming ? (
+              <Button
+                onClick={handleCancelStream}
+                variant="destructive"
+                size="icon"
+                aria-label="Parar resposta"
+                title="Parar resposta"
+              >
+                <Stop className="w-5 h-5" weight="fill" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isProcessing}
+                size="icon"
+                aria-label="Enviar mensagem"
+              >
+                <PaperPlaneTilt className="w-5 h-5" weight="fill" />
+              </Button>
+            )}
           </div>
+          {isStreaming && (
+            <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">
+              🤖 Harvey está pensando...
+            </p>
+          )}
         </div>
       </div>
     </div>
