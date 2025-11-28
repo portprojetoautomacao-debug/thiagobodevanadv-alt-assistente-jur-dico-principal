@@ -1,18 +1,19 @@
-import * as spark from '@github/spark/llm'
 import type { PremonicaoJuridica, Process } from '@/types'
 
 export async function generatePremonicaoJuridica(
   cnj: string,
   processData?: Process
 ): Promise<PremonicaoJuridica> {
-  const processInfo = processData ? `
+  const processInfo = processData
+    ? `
 **Título:** ${processData.titulo}
 **Autor:** ${processData.autor}
 **Réu:** ${processData.reu}
 **Status Atual:** ${processData.status}
 **Comarca:** ${processData.comarca}
 **Vara:** ${processData.vara}
-` : ''
+`
+    : ''
 
   const promptText = `Você é um assistente jurídico especializado em análise preditiva de processos judiciais brasileiros.
 
@@ -64,10 +65,57 @@ Sua tarefa é retornar um objeto JSON com a seguinte estrutura EXATA (sem markdo
 Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
 
   try {
-    const response = await spark.llm(promptText, 'gpt-4o', true)
-    
-    const parsed = JSON.parse(response)
-    
+    console.log('[PremonicaoService] Gerando análise preditiva para:', cnj)
+
+    // Usar a API LLM proxy que funciona
+    const response = await fetch('/_spark/llm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gemini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Você é um assistente jurídico especializado em análise preditiva de processos judiciais brasileiros. Sempre responda apenas com JSON válido, sem markdown.',
+          },
+          {
+            role: 'user',
+            content: promptText,
+          },
+        ],
+        max_tokens: 2000,
+        temperature: 0.7,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('[PremonicaoService] Erro na resposta:', response.status, response.statusText)
+      throw new Error(`Erro na API: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
+
+    console.log('[PremonicaoService] Resposta recebida:', responseText.substring(0, 200))
+
+    // Limpar possíveis marcadores de código
+    const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+
+    let parsed
+    try {
+      parsed = JSON.parse(jsonText)
+    } catch (parseError) {
+      console.error('[PremonicaoService] Erro ao fazer parse do JSON:', parseError)
+      // Tentar extrair JSON da resposta
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0])
+      } else {
+        throw new Error('Resposta não contém JSON válido')
+      }
+    }
+
     return {
       processo_cnj: cnj,
       probabilidade_exito: parsed.probabilidade_exito || 50,
@@ -76,7 +124,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
       precedentes_relevantes: parsed.precedentes_relevantes || [],
     }
   } catch (error) {
-    console.error('Erro ao gerar premonição:', error)
+    console.error('[PremonicaoService] Erro ao gerar premonição:', error)
     throw new Error('Não foi possível gerar a análise preditiva. Tente novamente.')
   }
 }
