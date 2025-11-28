@@ -1,9 +1,9 @@
 /**
  * Google Analytics 4 & Google Tag Manager Integration
- * 
+ *
  * Este módulo fornece integração completa com GA4 e GTM para tracking de eventos,
  * pageviews e métricas customizadas do Assistente Jurídico PJe.
- * 
+ *
  * Configuração:
  * - VITE_GTM_ID: ID do Google Tag Manager (ex: GTM-XXXXXXX)
  * - VITE_GA_MEASUREMENT_ID: ID do GA4 (ex: G-XXXXXXXXXX)
@@ -11,70 +11,93 @@
 
 // Tipos para o dataLayer do GTM
 // O dataLayer aceita tanto objetos quanto arrays (para gtag)
-type DataLayerItem = Record<string, unknown> | unknown[];
+type DataLayerItem = Record<string, unknown> | unknown[]
 
 declare global {
-    interface Window {
-        dataLayer: DataLayerItem[];
-        gtag: (...args: unknown[]) => void;
-    }
+  interface Window {
+    dataLayer: DataLayerItem[]
+    gtag: (...args: unknown[]) => void
+  }
+}
+
+// Garante que este arquivo é tratado como módulo (necessário pro declare global)
+export {}
+
+// Helpers
+function isBrowser(): boolean {
+  return typeof window !== 'undefined' && typeof document !== 'undefined'
 }
 
 // Configuração
-const GTM_ID = import.meta.env.VITE_GTM_ID || '';
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || '';
+const GTM_ID = import.meta.env.VITE_GTM_ID || ''
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || ''
 
 // Estado interno
-let isInitialized = false;
-let isGTMLoaded = false;
+let isInitialized = false // GA4 direto
+let isGTMLoaded = false   // GTM foi inicializado (dataLayer pronto + script injetado)
 
 /**
  * Inicializa o Google Tag Manager
  * Carrega o script do GTM e configura o dataLayer
  */
 export function initGTM(): void {
-    if (isGTMLoaded || !GTM_ID) {
-        if (!GTM_ID) {
-            console.info('📊 GTM: Não configurado (VITE_GTM_ID não definido)');
-        }
-        return;
+  if (!isBrowser()) return
+
+  if (isGTMLoaded || !GTM_ID) {
+    if (!GTM_ID) {
+      console.info('📊 GTM: Não configurado (VITE_GTM_ID não definido)')
     }
+    return
+  }
 
-    // Inicializa dataLayer
-    window.dataLayer = window.dataLayer || [];
+  // Inicializa dataLayer se ainda não existir
+  window.dataLayer = window.dataLayer || []
 
-    // Adiciona evento de inicialização
-    window.dataLayer.push({
-        'gtm.start': new Date().getTime(),
-        event: 'gtm.js'
-    });
+  // Adiciona evento de inicialização
+  window.dataLayer.push({
+    'gtm.start': new Date().getTime(),
+    event: 'gtm.js'
+  })
 
-    // Carrega script do GTM
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`;
+  // Marca como "carregado" assim que configuramos dataLayer + script
+  // (pode receber eventos mesmo antes do JS remoto terminar de carregar)
+  isGTMLoaded = true
 
-    script.onload = () => {
-        isGTMLoaded = true;
-        console.log('✅ GTM carregado:', GTM_ID);
-    };
+  // Carrega script do GTM
+  const script = document.createElement('script')
+  script.async = true
+  script.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`
 
-    script.onerror = () => {
-        console.warn('⚠️ GTM: Falha ao carregar script');
-    };
+  script.onload = () => {
+    console.log('✅ GTM carregado:', GTM_ID)
+  }
 
-    document.head.appendChild(script);
+  script.onerror = () => {
+    console.warn('⚠️ GTM: Falha ao carregar script')
+  }
 
-    // Adiciona noscript fallback (iframe) no body
-    const noscript = document.createElement('noscript');
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://www.googletagmanager.com/ns.html?id=${GTM_ID}`;
-    iframe.height = '0';
-    iframe.width = '0';
-    iframe.style.display = 'none';
-    iframe.style.visibility = 'hidden';
-    noscript.appendChild(iframe);
-    document.body.insertBefore(noscript, document.body.firstChild);
+  document.head.appendChild(script)
+
+  // Adiciona noscript fallback (iframe) no body
+  const noscript = document.createElement('noscript')
+  const iframe = document.createElement('iframe')
+  iframe.src = `https://www.googletagmanager.com/ns.html?id=${GTM_ID}`
+  iframe.height = '0'
+  iframe.width = '0'
+  iframe.style.display = 'none'
+  iframe.style.visibility = 'hidden'
+  noscript.appendChild(iframe)
+
+  // Body pode não existir em alguns momentos muito iniciais
+  if (document.body) {
+    document.body.insertBefore(noscript, document.body.firstChild)
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.body) {
+        document.body.insertBefore(noscript, document.body.firstChild)
+      }
+    })
+  }
 }
 
 /**
@@ -82,34 +105,38 @@ export function initGTM(): void {
  * Usado quando não há GTM configurado
  */
 export function initGA4(): void {
-    if (isInitialized || !GA_MEASUREMENT_ID) {
-        if (!GA_MEASUREMENT_ID) {
-            console.info('📊 GA4: Não configurado (VITE_GA_MEASUREMENT_ID não definido)');
-        }
-        return;
+  if (!isBrowser()) return
+
+  if (isInitialized || !GA_MEASUREMENT_ID) {
+    if (!GA_MEASUREMENT_ID) {
+      console.info('📊 GA4: Não configurado (VITE_GA_MEASUREMENT_ID não definido)')
     }
+    return
+  }
 
-    // Carrega gtag.js
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-    document.head.appendChild(script);
+  // Carrega gtag.js
+  const script = document.createElement('script')
+  script.async = true
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`
+  document.head.appendChild(script)
 
-    // Inicializa gtag
-    window.dataLayer = window.dataLayer || [];
-    // Função gtag usando rest parameters para evitar erro de TS com 'arguments'
-    window.gtag = function gtag(...args: unknown[]) {
-        window.dataLayer.push(args);
-    };
-    window.gtag('js', new Date());
-    window.gtag('config', GA_MEASUREMENT_ID, {
-        send_page_view: false, // Controlamos manualmente
-        anonymize_ip: true,
-        cookie_flags: 'SameSite=None;Secure',
-    });
+  // Inicializa gtag
+  window.dataLayer = window.dataLayer || []
 
-    isInitialized = true;
-    console.log('✅ GA4 inicializado:', GA_MEASUREMENT_ID);
+  // Função gtag usando rest parameters
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer.push(args)
+  }
+
+  window.gtag('js', new Date())
+  window.gtag('config', GA_MEASUREMENT_ID, {
+    send_page_view: false, // Controlamos manualmente
+    anonymize_ip: true,
+    cookie_flags: 'SameSite=None;Secure'
+  })
+
+  isInitialized = true
+  console.log('✅ GA4 inicializado:', GA_MEASUREMENT_ID)
 }
 
 /**
@@ -117,79 +144,81 @@ export function initGA4(): void {
  * Prioriza GTM se disponível, caso contrário usa GA4 direto
  */
 export function initAnalytics(): void {
-    // Só inicializa em produção ou se forçado
-    if (import.meta.env.DEV && !import.meta.env.VITE_FORCE_ANALYTICS) {
-        console.info('📊 Analytics: Desabilitado em desenvolvimento');
-        return;
-    }
+  if (!isBrowser()) return
 
-    // Prioriza GTM
-    if (GTM_ID) {
-        initGTM();
-    } else if (GA_MEASUREMENT_ID) {
-        initGA4();
-    } else {
-        console.info('📊 Analytics: Nenhuma configuração encontrada');
-    }
+  // Só inicializa em desenvolvimento se forçado
+  if (import.meta.env.DEV && !import.meta.env.VITE_FORCE_ANALYTICS) {
+    console.info('📊 Analytics: Desabilitado em desenvolvimento')
+    return
+  }
+
+  // Prioriza GTM
+  if (GTM_ID) {
+    initGTM()
+  } else if (GA_MEASUREMENT_ID) {
+    initGA4()
+  } else {
+    console.info('📊 Analytics: Nenhuma configuração encontrada')
+  }
 }
 
 /**
  * Envia um evento para o dataLayer (GTM) ou gtag (GA4)
  */
 export function trackEvent(
-    eventName: string,
-    params?: Record<string, unknown>
+  eventName: string,
+  params?: Record<string, unknown>
 ): void {
-    if (!isGTMLoaded && !isInitialized) {
-        return;
-    }
+  if (!isBrowser()) return
 
-    const eventData = {
-        event: eventName,
-        ...params,
-        timestamp: new Date().toISOString(),
-    };
+  // Se não tem nenhuma config, não faz nada
+  if (!GTM_ID && !GA_MEASUREMENT_ID) return
 
-    // Envia para dataLayer (funciona com GTM e GA4)
-    if (window.dataLayer) {
-        window.dataLayer.push(eventData);
-    }
+  const eventData = {
+    event: eventName,
+    ...params,
+    timestamp: new Date().toISOString()
+  }
 
-    // Se gtag disponível, envia também
-    if (window.gtag && GA_MEASUREMENT_ID) {
-        window.gtag('event', eventName, params);
-    }
+  // Envia para dataLayer (funciona com GTM e GA4)
+  if (window.dataLayer) {
+    window.dataLayer.push(eventData)
+  }
 
-    if (import.meta.env.DEV) {
-        console.log('📊 Event tracked:', eventName, params);
-    }
+  // Se gtag disponível, envia também
+  if (window.gtag && GA_MEASUREMENT_ID) {
+    window.gtag('event', eventName, params)
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('📊 Event tracked:', eventName, params)
+  }
 }
 
 /**
  * Rastreia visualização de página
  */
 export function trackPageView(
-    pagePath: string,
-    pageTitle?: string
+  pagePath: string,
+  pageTitle?: string
 ): void {
-    trackEvent('page_view', {
-        page_path: pagePath,
-        page_title: pageTitle || document.title,
-        page_location: window.location.href,
-    });
+  if (!isBrowser()) return
+
+  trackEvent('page_view', {
+    page_path: pagePath,
+    page_title: pageTitle || document.title,
+    page_location: window.location.href
+  })
 }
 
 /**
  * Rastreia navegação entre seções do app
  */
-export function trackNavigation(
-    from: string,
-    to: string
-): void {
-    trackEvent('navigation', {
-        from_section: from,
-        to_section: to,
-    });
+export function trackNavigation(from: string, to: string): void {
+  trackEvent('navigation', {
+    from_section: from,
+    to_section: to
+  })
 }
 
 // ============================================
@@ -200,170 +229,176 @@ export function trackNavigation(
  * Rastreia ação de processo
  */
 export function trackProcessAction(
-    action: 'view' | 'create' | 'update' | 'delete' | 'move',
-    processId?: string,
-    processType?: string
+  action: 'view' | 'create' | 'update' | 'delete' | 'move',
+  processId?: string,
+  processType?: string
 ): void {
-    trackEvent('process_action', {
-        action,
-        process_id: processId,
-        process_type: processType,
-    });
+  trackEvent('process_action', {
+    action,
+    process_id: processId,
+    process_type: processType
+  })
 }
 
 /**
  * Rastreia interação com agente IA
  */
 export function trackAgentInteraction(
-    agentId: string,
-    action: 'activate' | 'deactivate' | 'task_complete' | 'task_failed',
-    taskType?: string
+  agentId: string,
+  action: 'activate' | 'deactivate' | 'task_complete' | 'task_failed',
+  taskType?: string
 ): void {
-    trackEvent('agent_interaction', {
-        agent_id: agentId,
-        action,
-        task_type: taskType,
-    });
+  trackEvent('agent_interaction', {
+    agent_id: agentId,
+    action,
+    task_type: taskType
+  })
 }
 
 /**
  * Rastreia uso da calculadora de prazos
  */
 export function trackDeadlineCalculation(
-    deadlineType: string,
-    daysCalculated: number
+  deadlineType: string,
+  daysCalculated: number
 ): void {
-    trackEvent('deadline_calculation', {
-        deadline_type: deadlineType,
-        days_calculated: daysCalculated,
-    });
+  trackEvent('deadline_calculation', {
+    deadline_type: deadlineType,
+    days_calculated: daysCalculated
+  })
 }
 
 /**
  * Rastreia busca no DJEN/DataJud
  */
 export function trackDJENSearch(
-    searchType: 'oab' | 'processo' | 'parte',
-    resultsCount: number
+  searchType: 'oab' | 'processo' | 'parte',
+  resultsCount: number
 ): void {
-    trackEvent('djen_search', {
-        search_type: searchType,
-        results_count: resultsCount,
-    });
+  trackEvent('djen_search', {
+    search_type: searchType,
+    results_count: resultsCount
+  })
 }
 
 /**
  * Rastreia criação/edição de minuta
  */
 export function trackMinutaAction(
-    action: 'create' | 'edit' | 'save' | 'export' | 'ai_generate',
-    minutaType?: string,
-    templateUsed?: string
+  action: 'create' | 'edit' | 'save' | 'export' | 'ai_generate',
+  minutaType?: string,
+  templateUsed?: string
 ): void {
-    trackEvent('minuta_action', {
-        action,
-        minuta_type: minutaType,
-        template_used: templateUsed,
-    });
+  trackEvent('minuta_action', {
+    action,
+    minuta_type: minutaType,
+    template_used: templateUsed
+  })
 }
 
 /**
  * Rastreia uso do chat com Donna
  */
 export function trackChatInteraction(
-    messageType: 'user' | 'assistant',
-    tokensUsed?: number
+  messageType: 'user' | 'assistant',
+  tokensUsed?: number
 ): void {
-    trackEvent('chat_interaction', {
-        message_type: messageType,
-        tokens_used: tokensUsed,
-    });
+  trackEvent('chat_interaction', {
+    message_type: messageType,
+    tokens_used: tokensUsed
+  })
 }
 
 /**
  * Rastreia login/logout
  */
 export function trackAuth(
-    action: 'login' | 'logout' | 'login_failed',
-    method?: string
+  action: 'login' | 'logout' | 'login_failed',
+  method?: string
 ): void {
-    trackEvent('auth', {
-        action,
-        method: method || 'google',
-    });
+  trackEvent('auth', {
+    action,
+    method: method || 'google'
+  })
 }
 
 /**
  * Rastreia erros para analytics
  */
 export function trackError(
-    errorType: string,
-    errorMessage: string,
-    errorLocation?: string
+  errorType: string,
+  errorMessage: string,
+  errorLocation?: string
 ): void {
-    trackEvent('error', {
-        error_type: errorType,
-        error_message: errorMessage.substring(0, 200),
-        error_location: errorLocation,
-    });
+  trackEvent('error', {
+    error_type: errorType,
+    error_message: errorMessage.substring(0, 200),
+    error_location: errorLocation
+  })
 }
 
 /**
  * Define propriedades do usuário para segmentação
  */
 export function setUserProperties(properties: {
-    user_type?: 'free' | 'pro' | 'enterprise';
-    processes_count?: number;
-    agents_active?: number;
+  user_type?: 'free' | 'pro' | 'enterprise'
+  processes_count?: number
+  agents_active?: number
 }): void {
-    if (window.gtag && GA_MEASUREMENT_ID) {
-        window.gtag('set', 'user_properties', properties);
-    }
+  if (!isBrowser()) return
 
-    if (window.dataLayer) {
-        window.dataLayer.push({
-            event: 'set_user_properties',
-            ...properties,
-        });
-    }
+  if (window.gtag && GA_MEASUREMENT_ID) {
+    window.gtag('set', 'user_properties', properties)
+  }
+
+  if (window.dataLayer) {
+    window.dataLayer.push({
+      event: 'set_user_properties',
+      ...properties
+    })
+  }
 }
 
 /**
  * Opt-out de analytics (para LGPD)
  */
 export function optOutAnalytics(): void {
-    // Desabilita cookies do GA
-    if (window.gtag) {
-        window.gtag('consent', 'update', {
-            analytics_storage: 'denied',
-        });
+  if (!isBrowser()) return
+
+  // Desabilita cookies do GA
+  if (window.gtag) {
+    window.gtag('consent', 'update', {
+      analytics_storage: 'denied'
+    })
+  }
+
+  // Remove cookies existentes
+  document.cookie.split(';').forEach(cookie => {
+    const name = cookie.split('=')[0].trim()
+    if (name.startsWith('_ga') || name.startsWith('_gid')) {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
     }
+  })
 
-    // Remove cookies existentes
-    document.cookie.split(';').forEach(cookie => {
-        const name = cookie.split('=')[0].trim();
-        if (name.startsWith('_ga') || name.startsWith('_gid')) {
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-        }
-    });
-
-    console.log('✅ Analytics opt-out aplicado');
+  console.log('✅ Analytics opt-out aplicado')
 }
 
 /**
  * Opt-in de analytics (após consentimento LGPD)
  */
 export function optInAnalytics(): void {
-    if (window.gtag) {
-        window.gtag('consent', 'update', {
-            analytics_storage: 'granted',
-        });
-    }
+  if (!isBrowser()) return
 
-    // Reinicializa se necessário
-    if (!isInitialized && !isGTMLoaded) {
-        initAnalytics();
-    }
+  if (window.gtag) {
+    window.gtag('consent', 'update', {
+      analytics_storage: 'granted'
+    })
+  }
 
-    console.log('✅ Analytics opt-in aplicado');
+  // Reinicializa se necessário
+  if (!isInitialized && !isGTMLoaded) {
+    initAnalytics()
+  }
+
+  console.log('✅ Analytics opt-in aplicado')
 }
