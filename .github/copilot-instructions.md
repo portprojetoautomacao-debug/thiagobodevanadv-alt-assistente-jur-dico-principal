@@ -274,6 +274,239 @@ addTask(task)
 - ⏸️ **10 agentes especializados** (ativar quando necessário)
 - 📊 **100% implementados** e testados
 
+---
+
+## ✏️ Editor Tiptap com IA - Redação Automática de Minutas
+
+O sistema inclui um **editor de texto rico profissional (Tiptap)** com integração de IA, permitindo que os agentes autônomos **redijam minutas automaticamente** e que operadores humanos possam revisar e editar.
+
+### 🔧 Arquitetura da Integração
+
+```
+Monitor DJEN → Mrs. Justin-e → Expediente → Tarefa DRAFT_PETITION → Agente 'redacao-peticoes'
+                                                                            ↓
+                                                                    Gera minuta com IA
+                                                                            ↓
+                                              ┌─────────────────────────────┼─────────────────────────────┐
+                                              ↓                                                           ↓
+                                    Backend (api/agents.ts)                              Frontend (use-auto-minuta)
+                                    Salva no KV                                          Detecta e notifica
+                                              ↓                                                           ↓
+                                              └───────────────> MinutasManager (Editor Tiptap) <──────────┘
+                                                                        ↓
+                                                              Operador revisa/aprova
+```
+
+### 📦 Componentes do Editor
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `src/components/editor/TiptapEditor.tsx` | Editor WYSIWYG com toolbar e integração IA |
+| `src/components/editor/index.ts` | Exports do módulo editor |
+| `src/lib/document-templates.ts` | 8 templates jurídicos pré-definidos |
+| `src/hooks/use-auto-minuta.ts` | Hook para criação automática de minutas |
+| `src/components/MinutasManager.tsx` | Painel de gestão de minutas com Tiptap |
+
+### ✨ Funcionalidades do Editor
+
+#### Formatação
+- **Texto**: Negrito, itálico, sublinhado, tachado, destaque
+- **Estrutura**: Títulos H1-H3, parágrafos, listas, citações, código
+- **Alinhamento**: Esquerda, centro, direita, justificado
+- **Cores**: 19 cores de texto disponíveis
+- **Mídia**: Links e imagens
+- **Histórico**: Desfazer/Refazer
+- **Contadores**: Palavras e caracteres em tempo real
+
+#### Comandos de IA
+| Comando | Função |
+|---------|--------|
+| **Expandir** | Desenvolve texto de forma mais detalhada |
+| **Resumir** | Condensa texto de forma concisa |
+| **Formalizar** | Reescreve em linguagem jurídica formal |
+| **Corrigir** | Corrige gramática e ortografia |
+| **Gerar Texto** | Cria conteúdo a partir de prompt livre |
+
+### 📝 Templates Jurídicos Disponíveis
+
+| Template | Tipo | Variáveis Principais |
+|----------|------|----------------------|
+| Petição Inicial | `peticao` | autor, reu, processo, comarca, fatos, pedidos |
+| Contestação | `peticao` | autor, reu, processo, vara, defesa |
+| Manifestação Processual | `peticao` | autor, reu, processo, manifestacao |
+| Contrato de Honorários | `contrato` | advogado, cliente, valor, objeto |
+| Procuração Ad Judicia | `procuracao` | outorgante, outorgado, poderes |
+| Procuração Poderes Especiais | `procuracao` | outorgante, outorgado, poderes_especiais |
+| Recurso de Apelação | `recurso` | apelante, apelado, processo, razoes |
+| Parecer Jurídico | `parecer` | consulente, materia, conclusao |
+
+### 🔄 Sistema de Variáveis
+
+Templates usam sintaxe `{{variavel}}` para substituição automática:
+
+```html
+<p>Exmo. Sr. Dr. Juiz de Direito da {{vara}}</p>
+<p><strong>{{autor.nome}}</strong>, já qualificado nos autos...</p>
+<p>Processo nº {{processo.numero}}</p>
+```
+
+**Variáveis automáticas quando vinculado a processo:**
+- `{{processo.numero}}` - Número CNJ
+- `{{processo.titulo}}` - Título do processo
+- `{{autor.nome}}` - Nome do autor
+- `{{reu.nome}}` - Nome do réu
+- `{{comarca}}` - Comarca
+- `{{vara}}` - Vara
+
+### 🤖 Fluxo de Criação Automática de Minutas
+
+1. **Detecção**: Monitor DJEN encontra intimação
+2. **Análise**: Mrs. Justin-e identifica necessidade de resposta
+3. **Tarefa**: Sistema cria `DRAFT_PETITION` para agente `redacao-peticoes`
+4. **Redação**: Agente usa IA (Gemini/GPT) para gerar minuta
+5. **Salvamento**: 
+   - Backend salva no KV com `criadoPorAgente: true`
+   - Frontend detecta via hook `use-auto-minuta`
+6. **Notificação**: Toast "📝 Nova minuta criada!"
+7. **Revisão**: Operador abre minuta no editor Tiptap
+8. **Aprovação**: Muda status para 'finalizada'
+
+### 📊 Tipos e Status de Minutas
+
+**Tipos disponíveis:**
+```typescript
+tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro'
+```
+
+**Status de workflow:**
+```typescript
+status: 'rascunho' | 'em-revisao' | 'pendente-revisao' | 'finalizada' | 'arquivada'
+```
+
+### 🔧 Tipo Minuta (TypeScript)
+
+```typescript
+interface Minuta {
+  id: string
+  titulo: string
+  processId?: string
+  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro'
+  conteudo: string
+  status: 'rascunho' | 'em-revisao' | 'pendente-revisao' | 'finalizada' | 'arquivada'
+  criadoEm: string
+  atualizadoEm: string
+  autor: string
+  googleDocsId?: string
+  googleDocsUrl?: string
+  // Campos para integração com agentes IA
+  criadoPorAgente?: boolean
+  agenteId?: string
+  templateId?: string
+  expedienteId?: string
+  variaveis?: Record<string, string>
+}
+```
+
+### 💻 Como Usar o Editor
+
+#### Usando o TiptapEditor em um componente:
+```tsx
+import { TiptapEditor } from '@/components/editor/TiptapEditor'
+
+function MyComponent() {
+  const [content, setContent] = useState('<p>Conteúdo inicial</p>')
+  
+  const handleAIGenerate = async (prompt: string) => {
+    const response = await fetch('/api/llm-proxy', {
+      method: 'POST',
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+    })
+    const data = await response.json()
+    return data.choices[0].message.content
+  }
+  
+  return (
+    <TiptapEditor
+      content={content}
+      onChange={setContent}
+      placeholder="Digite ou use /ai para comandos de IA..."
+      onAIGenerate={handleAIGenerate}
+      variables={{ 'processo.numero': '1234567-89.2024' }}
+    />
+  )
+}
+```
+
+#### Usando o hook de auto-minuta:
+```tsx
+import { useAutoMinuta } from '@/hooks/use-auto-minuta'
+
+function Dashboard() {
+  const {
+    minutasTotal,           // Total de minutas no sistema
+    minutasPendentesRevisao, // Aguardando revisão humana
+    minutasCriadasPorAgente, // Criadas automaticamente por IA
+    processedTasksCount      // Tarefas de redação processadas
+  } = useAutoMinuta()
+  
+  return (
+    <div>
+      <p>Total: {minutasTotal}</p>
+      <p>Pendentes: {minutasPendentesRevisao}</p>
+      <p>Criadas por IA: {minutasCriadasPorAgente}</p>
+    </div>
+  )
+}
+```
+
+#### Usando templates:
+```typescript
+import { 
+  documentTemplates, 
+  getTemplateById, 
+  replaceTemplateVariables,
+  extractUnfilledVariables 
+} from '@/lib/document-templates'
+
+// Listar todos os templates
+console.log(documentTemplates)
+
+// Buscar template específico
+const template = getTemplateById('peticao-inicial')
+
+// Substituir variáveis
+const content = replaceTemplateVariables(template.content, {
+  'autor.nome': 'João Silva',
+  'reu.nome': 'Empresa XYZ',
+  'processo.numero': '1234567-89.2024.5.02.0999'
+})
+
+// Ver variáveis não preenchidas
+const unfilled = extractUnfilledVariables(content)
+// ['comarca', 'vara', 'fatos', 'pedidos']
+```
+
+### 📋 Dependências Tiptap Instaladas
+
+```json
+{
+  "@tiptap/react": "^2.x",
+  "@tiptap/starter-kit": "^2.x",
+  "@tiptap/pm": "^2.x",
+  "@tiptap/extension-placeholder": "^2.x",
+  "@tiptap/extension-highlight": "^2.x",
+  "@tiptap/extension-typography": "^2.x",
+  "@tiptap/extension-text-align": "^2.x",
+  "@tiptap/extension-underline": "^2.x",
+  "@tiptap/extension-link": "^2.x",
+  "@tiptap/extension-image": "^2.x",
+  "@tiptap/extension-color": "^2.x",
+  "@tiptap/extension-text-style": "^2.x"
+}
+```
+
+---
+
 ## 🛠️ Technology Stack
 
 ### Frontend
