@@ -103,11 +103,8 @@ export default defineConfig({
             return 'react-vendor';
           }
 
-          // ✅ CORREÇÃO: Recharts + D3 no mesmo chunk para evitar erro de inicialização
-          // D3 é dependência do Recharts, precisam estar juntos
-          if (id.includes('recharts') || id.includes('d3')) {
-            return 'charts';
-          }
+          // ⚠️ NÃO separar Recharts/D3 em chunks - causa erro de inicialização
+          // Deixar no bundle principal para evitar problemas de dependência circular
 
           // Radix UI components - separar em chunks menores
           if (id.includes('@radix-ui')) {
