@@ -6,10 +6,17 @@
   "functions": {
     "api/djen-sync.ts": {
       "maxDuration": 60,
+      "memory": 1024,
       "includeFiles": "api/lib/**"
     },
-    "api/kv.ts": {
-      "maxDuration": 30,
+    "api/agents.ts": {
+      "maxDuration": 45,
+      "memory": 1024,
+      "includeFiles": "api/lib/**"
+    },
+    "api/llm-proxy.ts": {
+      "maxDuration": 40,
+      "memory": 512,
       "includeFiles": "api/lib/**"
     },
     "api/backup.ts": {
@@ -24,19 +31,15 @@
       "maxDuration": 30,
       "includeFiles": "api/lib/**"
     },
-    "api/llm-proxy.ts": {
-      "maxDuration": 30,
-      "includeFiles": "api/lib/**"
-    },
     "api/cron.ts": {
       "maxDuration": 30,
       "includeFiles": "api/lib/**"
     },
-    "api/spark-proxy.ts": {
+    "api/kv.ts": {
       "maxDuration": 30,
       "includeFiles": "api/lib/**"
     },
-    "api/agents.ts": {
+    "api/spark-proxy.ts": {
       "maxDuration": 30,
       "includeFiles": "api/lib/**"
     },
