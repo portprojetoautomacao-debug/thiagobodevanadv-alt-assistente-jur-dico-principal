@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from './ErrorFallback.tsx'
+import App from './App'
 
 import './index.css';
 
@@ -57,14 +58,9 @@ const initOnIdle = () => {
 initOnInteraction()
 initOnIdle()
 
-// Dynamic import of App para reduzir bundle inicial
-import('./App').then(({ default: App }) => {
-  createRoot(rootElement).render(
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <App />
-    </ErrorBoundary>
-  )
-}).catch(err => {
-  console.error('Failed to load App:', err)
-  rootElement.innerHTML = `<div style="color: red; padding: 20px;">Failed to load application: ${err.message}</div>`
-})
+// Render App diretamente (sem dynamic import para evitar problemas de loading)
+createRoot(rootElement).render(
+  <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <App />
+  </ErrorBoundary>
+)
