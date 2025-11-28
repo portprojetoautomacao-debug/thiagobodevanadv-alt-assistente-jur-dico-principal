@@ -118,20 +118,15 @@ export default defineConfig({
             return 'react-vendor';
           }
 
-          // ✅ OTIMIZAÇÃO: Recharts separado em chunk próprio (lazy loaded)
-          // Economia: ~130KB de código não utilizado imediatamente
-          if (id.includes('recharts')) {
+          // ✅ CORREÇÃO: Recharts + D3 no mesmo chunk para evitar erro de inicialização
+          // D3 é dependência do Recharts, precisam estar juntos
+          if (id.includes('recharts') || id.includes('d3')) {
             return 'charts';
           }
 
           // Radix UI components - separar em chunks menores
           if (id.includes('@radix-ui')) {
             return 'ui-vendor';
-          }
-
-          // D3 separately to avoid conflicts - lazy loaded (usado por Recharts)
-          if (id.includes('d3')) {
-            return 'd3-vendor';
           }
 
           // Form libraries - usado apenas em formulários
