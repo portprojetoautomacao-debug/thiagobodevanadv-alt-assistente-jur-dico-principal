@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import * as spark from '@github/spark/llm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  FileText, 
-  Warning, 
-  CheckCircle, 
+import {
+  FileText,
+  Warning,
+  CheckCircle,
   Clock,
   Robot,
   Bell,
@@ -18,6 +17,7 @@ import {
   Info
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { geminiGenerateJSON } from '@/lib/gemini-client'
 import type { Process } from '@/types'
 
 interface MissingDocument {
@@ -46,7 +46,7 @@ export default function DocumentCheckAgent({ processes }: DocumentCheckAgentProp
     if (processes.length === 0) return null
 
     setIsAnalyzing(true)
-    
+
     try {
       const processesToAnalyze = processes.filter(p => p.status === 'ativo')
       const newMissingDocs: MissingDocument[] = []
@@ -83,8 +83,7 @@ Retorne um objeto JSON com a seguinte estrutura:
 ]
 }`
 
-        const response = await spark.llm(prompt, 'gpt-4o', true)
-        const result = JSON.parse(response)
+        const result = await geminiGenerateJSON<{ missingDocuments: Array<{ documentType: string; reason: string; urgency: string }> }>(prompt)
 
         if (result.missingDocuments && Array.isArray(result.missingDocuments)) {
           result.missingDocuments.forEach((doc: any) => {
@@ -106,11 +105,11 @@ Retorne um objeto JSON com a seguinte estrutura:
       setMissingDocs((current) => {
         const existing = current || []
         const existingIds = new Set(existing.map(d => `${d.processId}-${d.documentType}`))
-        
+
         const uniqueNew = newMissingDocs.filter(
           doc => !existingIds.has(`${doc.processId}-${doc.documentType}`) && !doc.resolved
         )
-        
+
         return [...existing.filter(d => !d.resolved), ...uniqueNew]
       })
 
@@ -143,7 +142,7 @@ Retorne um objeto JSON com a seguinte estrutura:
         doc.id === docId ? { ...doc, notified: true } : doc
       )
     )
-    
+
     const doc = missingDocs?.find(d => d.id === docId)
     if (doc) {
       toast.warning('Notificação enviada', {
@@ -292,7 +291,7 @@ Retorne um objeto JSON com a seguinte estrutura:
         <Alert>
           <CheckCircle className="w-4 h-4" weight="fill" />
           <AlertDescription>
-            {processes.length === 0 
+            {processes.length === 0
               ? 'Nenhum processo cadastrado para análise'
               : 'Nenhum documento faltante identificado. Todos os processos estão com documentação adequada.'
             }
@@ -316,9 +315,9 @@ Retorne um objeto JSON com a seguinte estrutura:
                   })
                   .map((doc) => (
                     <Card key={doc.id} className="border-l-4" style={{
-                      borderLeftColor: doc.urgency === 'high' ? 'hsl(var(--destructive))' : 
-                                      doc.urgency === 'medium' ? 'hsl(var(--primary))' : 
-                                      'hsl(var(--muted-foreground))'
+                      borderLeftColor: doc.urgency === 'high' ? 'hsl(var(--destructive))' :
+                        doc.urgency === 'medium' ? 'hsl(var(--primary))' :
+                          'hsl(var(--muted-foreground))'
                     }}>
                       <CardContent className="pt-6">
                         <div className="space-y-3">

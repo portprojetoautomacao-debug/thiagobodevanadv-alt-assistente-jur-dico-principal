@@ -1,12 +1,29 @@
 import { useState } from 'react'
-import * as spark from '@github/spark/llm'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Books, Sparkle, MagnifyingGlass, Scales, Article } from '@phosphor-icons/react'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import {
+  Books,
+  Sparkle,
+  MagnifyingGlass,
+  Scales,
+  Article,
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { geminiGenerateJSON } from '@/lib/gemini-client'
 
 interface Precedent {
   id: string
@@ -47,50 +64,69 @@ export default function AILegalResearch() {
     setIsResearching(true)
 
     try {
-      const prompt = `Você é um pesquisador jurídico especializado. Faça uma pesquisa completa sobre o seguinte tema jurídico:
+      const prompt = `Você é um pesquisador jurídico especializado no ordenamento brasileiro. Faça uma pesquisa completa sobre o seguinte tema jurídico:
 
 Tema: ${query}
 
 Forneça:
+
 1. Lista de precedentes relevantes (mínimo 5, com tribunal, número, data, relator, ementa resumida, tema e explicação de relevância)
 2. Argumentos jurídicos estruturados (com fundamentação, precedentes citados e doutrina)
 3. Palavras-chave relacionadas
 4. Temas relacionados para pesquisas futuras
 
-Retorne EXATAMENTE neste formato JSON:
+IMPORTANTE:
+- Use apenas exemplos plausíveis; se inventar números de processos ou dados, mantenha consistência interna.
+- Seja objetivo, mas tecnicamente fundamentado.
+
+Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes ou depois) exatamente neste formato:
+
 {
-"precedents": [
-{
-"id": "único id",
-"tribunal": "nome do tribunal",
-"numero": "número do processo/recurso",
-"data": "data da decisão",
-"relator": "nome do relator",
-"ementa": "resumo da ementa",
-"tema": "tema principal",
-"relevancia": "por que é relevante para o caso"
-}
-],
-"legalArguments": [
-{
-"titulo": "título do argumento",
-"fundamentacao": "texto detalhado da fundamentação",
-"precedentes": ["precedente 1", "precedente 2"],
-"doutrina": ["autor 1 - obra", "autor 2 - obra"]
-}
-],
-"keywords": ["palavra 1", "palavra 2", ...],
-"relatedThemes": ["tema relacionado 1", "tema relacionado 2", ...]
+  "precedents": [
+    {
+      "id": "único id",
+      "tribunal": "nome do tribunal",
+      "numero": "número do processo/recurso",
+      "data": "data da decisão",
+      "relator": "nome do relator",
+      "ementa": "resumo da ementa",
+      "tema": "tema principal",
+      "relevancia": "por que é relevante para o caso"
+    }
+  ],
+  "legalArguments": [
+    {
+      "titulo": "título do argumento",
+      "fundamentacao": "texto detalhado da fundamentação",
+      "precedentes": ["precedente 1", "precedente 2"],
+      "doutrina": ["autor 1 - obra", "autor 2 - obra"]
+    }
+  ],
+  "keywords": ["palavra 1", "palavra 2"],
+  "relatedThemes": ["tema relacionado 1", "tema relacionado 2"]
 }`
 
-      const response = await spark.llm(prompt, 'gpt-4o', true)
-      const data: ResearchResult = JSON.parse(response)
+      const raw = await geminiGenerateJSON<ResearchResult>(prompt)
 
-      setResult(data)
+      // Hardening contra respostas parcialmente fora do esquema
+      const safeResult: ResearchResult = {
+        precedents: Array.isArray(raw.precedents) ? raw.precedents : [],
+        legalArguments: Array.isArray(raw.legalArguments)
+          ? raw.legalArguments
+          : [],
+        keywords: Array.isArray(raw.keywords) ? raw.keywords : [],
+        relatedThemes: Array.isArray(raw.relatedThemes)
+          ? raw.relatedThemes
+          : [],
+      }
+
+      setResult(safeResult)
       toast.success('Pesquisa concluída!')
     } catch (error) {
       console.error('Erro na pesquisa:', error)
-      toast.error('Falha ao realizar pesquisa')
+      toast.error(
+        error instanceof Error ? error.message : 'Falha ao realizar pesquisa',
+      )
     } finally {
       setIsResearching(false)
     }
@@ -104,23 +140,33 @@ Retorne EXATAMENTE neste formato JSON:
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <Books size={32} weight="duotone" className="text-primary neon-glow" />
+          <Books
+            size={32}
+            weight="duotone"
+            className="text-primary neon-glow"
+          />
           Pesquisa Jurídica IA
         </h1>
         <p className="text-muted-foreground mt-1">
-          Encontre precedentes, argumentos e fundamentação legal instantaneamente
+          Encontre precedentes, argumentos e fundamentação legal
+          instantaneamente
         </p>
       </div>
 
       <Card className="glassmorphic">
         <CardHeader>
           <CardTitle>Nova Pesquisa</CardTitle>
-          <CardDescription>Descreva o tema ou questão jurídica que deseja pesquisar</CardDescription>
+          <CardDescription>
+            Descreva o tema ou questão jurídica que deseja pesquisar
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+              <MagnifyingGlass
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                size={20}
+              />
               <Input
                 placeholder="Ex: Responsabilidade civil por dano moral em relações de consumo"
                 value={query}
@@ -129,24 +175,29 @@ Retorne EXATAMENTE neste formato JSON:
                 className="pl-10"
               />
             </div>
-            <Button 
-              onClick={handleResearch} 
+            <Button
+              onClick={handleResearch}
               disabled={isResearching || !query.trim()}
               className="button-gradient"
             >
-              <Sparkle size={20} className={isResearching ? 'animate-spin' : ''} />
+              <Sparkle
+                size={20}
+                className={isResearching ? 'animate-spin' : ''}
+              />
               {isResearching ? 'Pesquisando...' : 'Pesquisar'}
             </Button>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <p className="text-xs text-muted-foreground w-full">Pesquisas rápidas:</p>
+            <p className="text-xs text-muted-foreground w-full">
+              Pesquisas rápidas:
+            </p>
             {[
               'Prescrição quinquenal trabalhista',
               'Dano moral em acidente de trânsito',
               'Execução fiscal - prescrição intercorrente',
               'Revisão de contrato - teoria da imprevisão',
-              'Guarda compartilhada - interesse do menor'
+              'Guarda compartilhada - interesse do menor',
             ].map((theme) => (
               <Badge
                 key={theme}
@@ -182,11 +233,16 @@ Retorne EXATAMENTE neste formato JSON:
 
           <TabsContent value="precedents" className="space-y-4">
             {result.precedents.map((prec) => (
-              <Card key={prec.id} className="glassmorphic card-glow-hover">
+              <Card
+                key={prec.id}
+                className="glassmorphic card-glow-hover"
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="text-base">{prec.tribunal} - {prec.numero}</CardTitle>
+                      <CardTitle className="text-base">
+                        {prec.tribunal} - {prec.numero}
+                      </CardTitle>
                       <CardDescription className="mt-1">
                         {prec.data} · Rel. {prec.relator}
                       </CardDescription>
@@ -196,37 +252,68 @@ Retorne EXATAMENTE neste formato JSON:
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Ementa</p>
-                    <p className="text-sm leading-relaxed">{prec.ementa}</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Ementa
+                    </p>
+                    <p className="text-sm leading-relaxed">
+                      {prec.ementa}
+                    </p>
                   </div>
                   <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground mb-1">Relevância para o caso</p>
-                    <p className="text-sm text-primary">{prec.relevancia}</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Relevância para o caso
+                    </p>
+                    <p className="text-sm text-primary">
+                      {prec.relevancia}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             ))}
+            {result.precedents.length === 0 && (
+              <Card className="glassmorphic">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Nenhum precedente retornado pela IA.
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="arguments" className="space-y-4">
             {result.legalArguments.map((arg, index) => (
-              <Card key={index} className="glassmorphic card-glow-hover">
+              <Card
+                key={index}
+                className="glassmorphic card-glow-hover"
+              >
                 <CardHeader>
-                  <CardTitle className="text-base">{arg.titulo}</CardTitle>
+                  <CardTitle className="text-base">
+                    {arg.titulo}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-2">Fundamentação</p>
-                    <p className="text-sm leading-relaxed">{arg.fundamentacao}</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Fundamentação
+                    </p>
+                    <p className="text-sm leading-relaxed">
+                      {arg.fundamentacao}
+                    </p>
                   </div>
 
                   {arg.precedentes.length > 0 && (
                     <div className="pt-3 border-t">
-                      <p className="text-xs text-muted-foreground mb-2">Precedentes citados</p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Precedentes citados
+                      </p>
                       <ul className="space-y-1">
                         {arg.precedentes.map((prec, i) => (
-                          <li key={i} className="text-sm flex gap-2">
-                            <span className="text-primary shrink-0">•</span>
+                          <li
+                            key={i}
+                            className="text-sm flex gap-2"
+                          >
+                            <span className="text-primary shrink-0">
+                              •
+                            </span>
                             <span>{prec}</span>
                           </li>
                         ))}
@@ -236,11 +323,18 @@ Retorne EXATAMENTE neste formato JSON:
 
                   {arg.doutrina.length > 0 && (
                     <div className="pt-3 border-t">
-                      <p className="text-xs text-muted-foreground mb-2">Doutrina</p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Doutrina
+                      </p>
                       <ul className="space-y-1">
                         {arg.doutrina.map((doc, i) => (
-                          <li key={i} className="text-sm flex gap-2">
-                            <span className="text-secondary shrink-0">•</span>
+                          <li
+                            key={i}
+                            className="text-sm flex gap-2"
+                          >
+                            <span className="text-secondary shrink-0">
+                              •
+                            </span>
                             <span>{doc}</span>
                           </li>
                         ))}
@@ -250,22 +344,41 @@ Retorne EXATAMENTE neste formato JSON:
                 </CardContent>
               </Card>
             ))}
+            {result.legalArguments.length === 0 && (
+              <Card className="glassmorphic">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Nenhum argumento retornado pela IA.
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="keywords">
             <Card className="glassmorphic">
               <CardHeader>
                 <CardTitle>Palavras-chave Relevantes</CardTitle>
-                <CardDescription>Use essas palavras para refinar sua busca</CardDescription>
+                <CardDescription>
+                  Use essas palavras para refinar sua busca
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {result.keywords.map((keyword, index) => (
-                    <Badge key={index} variant="outline" className="cursor-pointer hover:bg-primary/10">
-                      {keyword}
-                    </Badge>
-                  ))}
-                </div>
+                {result.keywords.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma palavra-chave retornada pela IA.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {result.keywords.map((keyword, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-primary/10"
+                      >
+                        {keyword}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -274,22 +387,33 @@ Retorne EXATAMENTE neste formato JSON:
             <Card className="glassmorphic">
               <CardHeader>
                 <CardTitle>Temas Relacionados</CardTitle>
-                <CardDescription>Explore esses temas para aprofundar sua pesquisa</CardDescription>
+                <CardDescription>
+                  Explore esses temas para aprofundar sua pesquisa
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {result.relatedThemes.map((theme, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className="justify-start h-auto py-3 px-4"
-                      onClick={() => handleQuickSearch(theme)}
-                    >
-                      <Sparkle size={16} className="mr-2 shrink-0" />
-                      <span className="text-left">{theme}</span>
-                    </Button>
-                  ))}
-                </div>
+                {result.relatedThemes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum tema relacionado retornado pela IA.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {result.relatedThemes.map((theme, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        className="justify-start h-auto py-3 px-4"
+                        onClick={() => handleQuickSearch(theme)}
+                      >
+                        <Sparkle
+                          size={16}
+                          className="mr-2 shrink-0"
+                        />
+                        <span className="text-left">{theme}</span>
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -299,10 +423,17 @@ Retorne EXATAMENTE neste formato JSON:
       {!result && !isResearching && (
         <Card className="glassmorphic">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Books size={64} className="text-muted-foreground mb-4" weight="duotone" />
-            <h3 className="text-lg font-semibold mb-2">Pronto para pesquisar</h3>
+            <Books
+              size={64}
+              className="text-muted-foreground mb-4"
+              weight="duotone"
+            />
+            <h3 className="text-lg font-semibold mb-2">
+              Pronto para pesquisar
+            </h3>
             <p className="text-muted-foreground max-w-md">
-              Digite um tema jurídico acima ou clique em uma das pesquisas rápidas para começar
+              Digite um tema jurídico acima ou clique em uma das pesquisas
+              rápidas para começar
             </p>
           </CardContent>
         </Card>

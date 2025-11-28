@@ -1,17 +1,41 @@
 import { useState } from 'react'
-import * as spark from '@github/spark/llm'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { EnvelopeSimple, Sparkle, Copy, PaperPlaneTilt } from '@phosphor-icons/react'
+import {
+  EnvelopeSimple,
+  Sparkle,
+  Copy,
+  PaperPlaneTilt,
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { geminiGenerateJSON } from '@/lib/gemini-client'
 
-type EmailType = 'cliente-inicial' | 'cliente-atualizacao' | 'adversa-negociacao' | 'tribunal-peticao' | 'perito-solicitacao' | 'formal-profissional' | 'informal-cliente'
+type EmailType =
+  | 'cliente-inicial'
+  | 'cliente-atualizacao'
+  | 'adversa-negociacao'
+  | 'tribunal-peticao'
+  | 'perito-solicitacao'
+  | 'formal-profissional'
+  | 'informal-cliente'
 
 interface EmailDraft {
   subject: string
@@ -28,14 +52,14 @@ export default function AIEmailDrafter() {
   const [draft, setDraft] = useState<EmailDraft | null>(null)
   const [isDrafting, setIsDrafting] = useState(false)
 
-  const emailTypes = {
+  const emailTypes: Record<EmailType, string> = {
     'cliente-inicial': 'Cliente - Primeiro Contato',
     'cliente-atualizacao': 'Cliente - Atualização Processual',
     'adversa-negociacao': 'Parte Adversa - Negociação',
     'tribunal-peticao': 'Tribunal - Encaminhamento de Petição',
     'perito-solicitacao': 'Perito - Solicitação de Laudo',
     'formal-profissional': 'Formal Profissional',
-    'informal-cliente': 'Informal Cliente'
+    'informal-cliente': 'Informal Cliente',
   }
 
   const handleDraft = async () => {
@@ -48,7 +72,7 @@ export default function AIEmailDrafter() {
 
     try {
       const typeDescription = emailTypes[emailType]
-      
+
       const prompt = `Você é um assistente de redação de emails jurídicos. Redija um email profissional com as seguintes informações:
 
 Tipo de email: ${typeDescription}
@@ -66,22 +90,31 @@ O email deve:
 6. Se houver número de processo, referenciá-lo adequadamente
 7. Se houver nome do destinatário, usar saudação personalizada
 
-Retorne EXATAMENTE neste formato JSON:
+Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes ou depois), exatamente neste formato:
+
 {
-"subject": "assunto do email",
-"body": "corpo completo do email com quebras de linha (use \\n)",
-"tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
-"type": "${typeDescription}"
+  "subject": "assunto do email",
+  "body": "corpo completo do email com quebras de linha (use \\n)",
+  "tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
+  "type": "${typeDescription}"
 }`
 
-      const response = await spark.llm(prompt, 'gpt-4o', true)
-      const result: EmailDraft = JSON.parse(response)
+      const result = await geminiGenerateJSON<EmailDraft>(prompt)
 
-      setDraft(result)
+      const safeDraft: EmailDraft = {
+        subject: result.subject || 'Assunto do email',
+        body: result.body || '',
+        tone: result.tone || 'formal',
+        type: result.type || typeDescription,
+      }
+
+      setDraft(safeDraft)
       toast.success('Email rascunhado com sucesso!')
     } catch (error) {
       console.error('Erro ao rascunhar email:', error)
-      toast.error('Falha ao gerar rascunho')
+      toast.error(
+        error instanceof Error ? error.message : 'Falha ao gerar rascunho',
+      )
     } finally {
       setIsDrafting(false)
     }
@@ -89,31 +122,53 @@ Retorne EXATAMENTE neste formato JSON:
 
   const handleCopy = () => {
     if (!draft) return
-    
+
     const fullEmail = `Assunto: ${draft.subject}\n\n${draft.body}`
-    navigator.clipboard.writeText(fullEmail)
-    toast.success('Email copiado para área de transferência')
+    navigator.clipboard
+      .writeText(fullEmail)
+      .then(() => {
+        toast.success('Email copiado para área de transferência')
+      })
+      .catch(() => {
+        toast.error('Não foi possível copiar o email')
+      })
   }
 
   const handleCopyBody = () => {
     if (!draft) return
-    
-    navigator.clipboard.writeText(draft.body)
-    toast.success('Corpo do email copiado')
+
+    navigator.clipboard
+      .writeText(draft.body)
+      .then(() => {
+        toast.success('Corpo do email copiado')
+      })
+      .catch(() => {
+        toast.error('Não foi possível copiar o corpo do email')
+      })
   }
 
   const handleCopySubject = () => {
     if (!draft) return
-    
-    navigator.clipboard.writeText(draft.subject)
-    toast.success('Assunto copiado')
+
+    navigator.clipboard
+      .writeText(draft.subject)
+      .then(() => {
+        toast.success('Assunto copiado')
+      })
+      .catch(() => {
+        toast.error('Não foi possível copiar o assunto')
+      })
   }
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <EnvelopeSimple size={32} weight="duotone" className="text-primary neon-glow" />
+          <EnvelopeSimple
+            size={32}
+            weight="duotone"
+            className="text-primary neon-glow"
+          />
           Rascunho de Emails IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -125,14 +180,19 @@ Retorne EXATAMENTE neste formato JSON:
         <Card className="glassmorphic">
           <CardHeader>
             <CardTitle>Informações do Email</CardTitle>
-            <CardDescription>Preencha os detalhes para gerar o rascunho</CardDescription>
+            <CardDescription>
+              Preencha os detalhes para gerar o rascunho
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tipo de Email</Label>
-              <Select value={emailType} onValueChange={(value) => setEmailType(value as EmailType)}>
+              <Select
+                value={emailType}
+                onValueChange={(value) => setEmailType(value as EmailType)}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione o tipo de email" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(emailTypes).map(([key, label]) => (
@@ -175,12 +235,15 @@ Retorne EXATAMENTE neste formato JSON:
               />
             </div>
 
-            <Button 
-              onClick={handleDraft} 
+            <Button
+              onClick={handleDraft}
               disabled={isDrafting || !context.trim()}
               className="w-full button-gradient"
             >
-              <Sparkle size={20} className={isDrafting ? 'animate-spin' : ''} />
+              <Sparkle
+                size={20}
+                className={isDrafting ? 'animate-spin' : ''}
+              />
               {isDrafting ? 'Gerando...' : 'Gerar Rascunho'}
             </Button>
           </CardContent>
@@ -208,7 +271,11 @@ Retorne EXATAMENTE neste formato JSON:
             <CardContent>
               {!draft ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <EnvelopeSimple size={64} className="text-muted-foreground mb-4" weight="duotone" />
+                  <EnvelopeSimple
+                    size={64}
+                    className="text-muted-foreground mb-4"
+                    weight="duotone"
+                  />
                   <p className="text-muted-foreground">
                     O email aparecerá aqui após gerar o rascunho
                   </p>
@@ -218,8 +285,14 @@ Retorne EXATAMENTE neste formato JSON:
                   <div className="space-y-4 pr-4">
                     <div className="p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs text-muted-foreground font-semibold">ASSUNTO</p>
-                        <Button size="sm" variant="ghost" onClick={handleCopySubject}>
+                        <p className="text-xs text-muted-foreground font-semibold">
+                          ASSUNTO
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCopySubject}
+                        >
                           <Copy size={14} />
                         </Button>
                       </div>
@@ -228,14 +301,23 @@ Retorne EXATAMENTE neste formato JSON:
 
                     <div className="p-4 bg-card/50 rounded-lg border border-border/50">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs text-muted-foreground font-semibold">CORPO DO EMAIL</p>
-                        <Button size="sm" variant="ghost" onClick={handleCopyBody}>
+                        <p className="text-xs text-muted-foreground font-semibold">
+                          CORPO DO EMAIL
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCopyBody}
+                        >
                           <Copy size={14} />
                         </Button>
                       </div>
                       <div className="prose prose-sm max-w-none">
                         {draft.body.split('\n').map((line, index) => (
-                          <p key={index} className="text-sm leading-relaxed mb-2">
+                          <p
+                            key={index}
+                            className="text-sm leading-relaxed mb-2"
+                          >
                             {line || <br />}
                           </p>
                         ))}
@@ -267,21 +349,28 @@ Retorne EXATAMENTE neste formato JSON:
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="font-semibold text-sm mb-2">📧 Atualização para Cliente</p>
+              <p className="font-semibold text-sm mb-2">
+                📧 Atualização para Cliente
+              </p>
               <p className="text-xs text-muted-foreground">
-                "Sentença favorável publicada hoje. Aguardando trânsito em julgado. Prazo recursal de 15 dias para parte adversa."
+                "Sentença favorável publicada hoje. Aguardando trânsito em
+                julgado. Prazo recursal de 15 dias para parte adversa."
               </p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="font-semibold text-sm mb-2">🤝 Proposta de Acordo</p>
               <p className="text-xs text-muted-foreground">
-                "Propor acordo extrajudicial de R$ 50.000 parcelados em 10x. Renúncia mútua de honorários."
+                "Propor acordo extrajudicial de R$ 50.000 parcelados em 10x.
+                Renúncia mútua de honorários."
               </p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="font-semibold text-sm mb-2">📋 Solicitação de Documentos</p>
+              <p className="font-semibold text-sm mb-2">
+                📋 Solicitação de Documentos
+              </p>
               <p className="text-xs text-muted-foreground">
-                "Solicitar ao perito envio do laudo até 20/03. Processo em fase de prova pericial técnica."
+                "Solicitar ao perito envio do laudo até 20/03. Processo em fase
+                de prova pericial técnica."
               </p>
             </div>
           </div>
