@@ -1,15 +1,18 @@
 # Backend API - Assistente Jurídico PJe
 
-Backend API em Node.js/TypeScript para o sistema Assistente Jurídico PJe, com foco na proteção das chaves Spark e gerenciamento seguro de recursos.
+Backend API em Node.js/TypeScript para o sistema Assistente Jurídico PJe, com foco em IA jurídica e gerenciamento seguro de recursos.
+
+> **⚠️ Nota de Migração**: O sistema foi migrado do Spark para o **Gemini 2.5 Pro**. Os endpoints e módulos legados do Spark foram mantidos para compatibilidade, mas o motor principal de IA agora é o Gemini.
 
 ## 🚀 Funcionalidades
 
-- **Proteção de Chaves Spark**: Gerenciamento seguro das credenciais Spark
-- **API KV Store**: Armazenamento persistente de chave-valor
-- **Interface LLM**: Comunicação com modelos de linguagem
+- **Motor de IA Gemini 2.5 Pro**: Processamento de linguagem natural para análise jurídica
+- **API KV Store**: Armazenamento persistente via Upstash Redis
+- **Interface LLM**: Comunicação com modelos de linguagem (Gemini)
 - **CORS Configurado**: Suporte para frontend
 - **TypeScript**: Tipagem forte e segura
 - **Health Checks**: Monitoramento de saúde da API
+- **Legado Spark**: Endpoints mantidos para compatibilidade (deprecated)
 
 ## 📦 Instalação
 
@@ -46,12 +49,14 @@ GET /health
 ```
 Retorna status do servidor e ambiente.
 
-### Spark API
+### Spark API (⚠️ Deprecated - Mantido para Compatibilidade)
 ```
-GET  /api/spark/status     - Status do serviço Spark
-POST /api/spark/auth       - Autenticação Spark
-GET  /api/spark/config     - Configuração Spark
+GET  /api/spark/status     - Status do serviço (deprecated)
+POST /api/spark/auth       - Autenticação (deprecated)
+GET  /api/spark/config     - Configuração (deprecated)
 ```
+
+> **Nota**: Use os endpoints LLM com Gemini 2.5 Pro para novas implementações.
 
 ### KV Store API
 ```
@@ -61,9 +66,9 @@ POST   /api/kv/:key        - Armazena valor
 DELETE /api/kv/:key        - Remove chave
 ```
 
-### LLM API
+### LLM API (Gemini 2.5 Pro)
 ```
-POST /api/llm/chat         - Chat com modelo de linguagem
+POST /api/llm/chat         - Chat com Gemini 2.5 Pro
 POST /api/llm/embeddings   - Gera embeddings
 GET  /api/llm/models       - Lista modelos disponíveis
 ```
@@ -71,7 +76,7 @@ GET  /api/llm/models       - Lista modelos disponíveis
 ## 🔒 Segurança
 
 - **CORS**: Configurado para aceitar apenas origens autorizadas
-- **Proteção de Chaves**: Chaves Spark nunca expostas em logs
+- **Proteção de Chaves**: Chaves de API nunca expostas em logs
 - **Validação**: Todos os inputs são validados
 - **Rate Limiting**: Implementado para prevenir abuso
 
@@ -80,6 +85,8 @@ GET  /api/llm/models       - Lista modelos disponíveis
 - **Node.js** 22+
 - **Express.js** - Framework web
 - **TypeScript** - Tipagem forte
+- **Gemini 2.5 Pro** - Motor de IA principal
+- **Upstash Redis** - KV Storage
 - **CORS** - Controle de origem cruzada
 - **Dotenv** - Variáveis de ambiente
 
@@ -89,6 +96,9 @@ GET  /api/llm/models       - Lista modelos disponíveis
 PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
+VITE_GEMINI_API_KEY=sua_chave_gemini
+UPSTASH_REDIS_REST_URL=sua_url_upstash
+UPSTASH_REDIS_REST_TOKEN=seu_token_upstash
 ```
 
 ## 🧪 Testes

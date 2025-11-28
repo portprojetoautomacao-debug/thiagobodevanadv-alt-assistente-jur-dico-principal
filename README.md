@@ -4,7 +4,7 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 
 ## 🚀 Funcionalidades Principais
 
-- 🤖 **IA Jurídica**: Chatbot inteligente com Harvey Specter
+- 🤖 **IA Jurídica**: Chatbot inteligente com Harvey Specter (Gemini 2.5 Pro)
 - 📋 **CRM Jurídico**: Kanban para gestão de processos
 - 📅 **Calculadora de Prazos**: Automação de prazos processuais
 - 🔗 **Integração Google Calendar**: Sincronização automática
@@ -13,6 +13,55 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 - ⚡ **15 Agentes Autônomos**: Trabalhando 24/7
 - ✏️ **Editor Tiptap com IA**: Redação automática de minutas
 - 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
+
+---
+
+## 🧠 Motor de IA - Gemini 2.5 Pro
+
+> **⚠️ Migração Concluída**: O sistema foi migrado do **Spark** para o **Google Gemini 2.5 Pro**.
+
+### 📋 Status da Migração
+
+| Item | Status |
+|------|--------|
+| **Spark (antigo)** | ❌ Descontinuado - Não mais utilizado |
+| **Gemini 2.5 Pro** | ✅ Ativo - Motor principal de IA |
+| **Módulos Legados** | ♻️ Reaproveitados e adaptados |
+
+### 🔄 O que foi Reaproveitado
+
+Os módulos e arquivos do Spark foram **reaproveitados e adaptados** para funcionar com o Gemini 2.5 Pro:
+
+| Arquivo Original | Novo Propósito |
+|------------------|----------------|
+| `spark-client-fixes.ts` | Patches de compatibilidade (legado) |
+| `spark.meta.json` | Configuração de metadados |
+| Hooks de KV/Storage | Migrados para Upstash Redis |
+| Interface LLM | Abstração em `ai-providers.ts` |
+
+### 🆕 Novos Arquivos Gemini
+
+| Arquivo | Função |
+|---------|--------|
+| `src/lib/gemini-service.ts` | Serviço principal do Gemini 2.5 Pro |
+| `src/lib/gemini-config.ts` | Configurações e parâmetros do modelo |
+| `src/lib/ai-providers.ts` | Abstração de provedores de IA |
+| `src/lib/real-agent-client.ts` | Cliente para agentes com Gemini |
+
+### ⚙️ Configuração
+
+```env
+# Variável de ambiente para o Gemini
+VITE_GEMINI_API_KEY=sua_chave_aqui
+```
+
+### 🎯 Capacidades do Gemini 2.5 Pro
+
+- **Análise Jurídica**: Interpretação de documentos legais
+- **Geração de Texto**: Redação de petições e minutas
+- **Classificação**: Categorização de intimações e expedientes
+- **Resumo**: Síntese de peças processuais extensas
+- **Sugestões**: Recomendações de estratégia processual
 
 ---
 

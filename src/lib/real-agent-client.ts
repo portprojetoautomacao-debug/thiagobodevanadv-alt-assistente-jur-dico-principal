@@ -3,7 +3,15 @@
  * Substitui as simulações por chamadas reais à API
  */
 
-import type { AgentTask, Agent, AgentTaskResult } from './agents';
+import type { AgentTask, Agent, AgentTaskResult } from './agents'
+
+interface ProcessTaskAPIResponse {
+  result: AgentTaskResult
+}
+
+interface FetchTasksAPIResponse {
+  tasks?: AgentTask[]
+}
 
 /**
  * Processa uma tarefa usando o backend real (Spark LLM)
@@ -13,32 +21,35 @@ export async function processTaskWithRealAI(
   agent: Agent
 ): Promise<AgentTaskResult> {
   try {
-    // Chama o endpoint serverless que processa com IA real
     const response = await fetch('/api/agents/process-task', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         task,
         agent: {
           id: agent.id,
           type: agent.type,
-          name: agent.name,
-        },
-      }),
-    });
+          name: agent.name
+        }
+      })
+    })
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      throw new Error(`API error: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json();
-    return data.result;
+    const data = (await response.json()) as ProcessTaskAPIResponse
 
+    if (!data || typeof data !== 'object' || !data.result) {
+      throw new Error('Invalid API response: missing result')
+    }
+
+    return data.result
   } catch (error) {
-    console.error('[Real Agent Client] Error processing task:', error);
-    throw error;
+    console.error('[Real Agent Client] Error processing task:', error)
+    throw error
   }
 }
 
@@ -48,21 +59,21 @@ export async function processTaskWithRealAI(
 export async function fetchPendingTasks(agentId?: string): Promise<AgentTask[]> {
   try {
     const url = agentId
-      ? `/api/agents/tasks?agentId=${agentId}&status=queued`
-      : '/api/agents/tasks?status=queued';
+      ? `/api/agents/tasks?agentId=${encodeURIComponent(agentId)}&status=queued`
+      : '/api/agents/tasks?status=queued'
 
-    const response = await fetch(url);
+    const response = await fetch(url)
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+      throw new Error(`Failed to fetch tasks: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json();
-    return data.tasks || [];
+    const data = (await response.json()) as FetchTasksAPIResponse
 
+    return Array.isArray(data.tasks) ? data.tasks : []
   } catch (error) {
-    console.error('[Real Agent Client] Error fetching tasks:', error);
-    return [];
+    console.error('[Real Agent Client] Error fetching tasks:', error)
+    return []
   }
 }
 
@@ -74,18 +85,17 @@ export async function queueTask(task: AgentTask): Promise<void> {
     const response = await fetch('/api/agents/queue-task', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ task }),
-    });
+      body: JSON.stringify({ task })
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to queue task: ${response.statusText}`);
+      throw new Error(`Failed to queue task: ${response.status} ${response.statusText}`)
     }
-
   } catch (error) {
-    console.error('[Real Agent Client] Error queueing task:', error);
-    throw error;
+    console.error('[Real Agent Client] Error queueing task:', error)
+    throw error
   }
 }
 
@@ -97,20 +107,19 @@ export async function monitorDJEN(tribunais: string[]): Promise<any> {
     const response = await fetch('/api/djen/check', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ tribunais }),
-    });
+      body: JSON.stringify({ tribunais })
+    })
 
     if (!response.ok) {
-      throw new Error(`DJEN API error: ${response.statusText}`);
+      throw new Error(`DJEN API error: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json();
-
+    return await response.json()
   } catch (error) {
-    console.error('[Real Agent Client] Error monitoring DJEN:', error);
-    throw error;
+    console.error('[Real Agent Client] Error monitoring DJEN:', error)
+    throw error
   }
 }
 
@@ -126,24 +135,23 @@ export async function calculateRealDeadline(
     const response = await fetch('/api/deadline/calculate', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         startDate: startDate.toISOString(),
         businessDays,
-        tribunalCode,
-      }),
-    });
+        tribunalCode
+      })
+    })
 
     if (!response.ok) {
-      throw new Error(`Deadline API error: ${response.statusText}`);
+      throw new Error(`Deadline API error: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json();
-
+    return await response.json()
   } catch (error) {
-    console.error('[Real Agent Client] Error calculating deadline:', error);
-    throw error;
+    console.error('[Real Agent Client] Error calculating deadline:', error)
+    throw error
   }
 }
 
@@ -153,13 +161,15 @@ export async function calculateRealDeadline(
  */
 export function isRealAgentsEnabled(): boolean {
   // Agentes SEMPRE usam IA real - não há mais modo simulado
-  return true;
+  return true
 }
 
 /**
  * @deprecated Modo simulado foi removido. Agentes sempre usam IA real.
  */
 export function setRealAgentsMode(_enabled: boolean): void {
-  console.warn('[DEPRECATED] setRealAgentsMode: Modo simulado foi removido. Agentes sempre usam IA real.');
+  console.warn(
+    '[DEPRECATED] setRealAgentsMode: Modo simulado foi removido. Agentes sempre usam IA real.'
+  )
   // Função mantida apenas para compatibilidade - não faz nada
 }

@@ -200,6 +200,34 @@ jobs:
             echo "| use-autonomous-agents | API Agents | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
           fi
 
+          # Agent Schemas -> Agents
+          if grep -q "AgentTaskInput\|AgentTaskOutput" src/lib/agents.ts 2>/dev/null; then
+            echo "| agents.ts | agent-schemas.ts | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| agents.ts | agent-schemas.ts | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Auto-Pilot -> DJEN Monitor
+          if grep -q "criarMonitorDJEN\|DJENMonitorConfig" src/lib/auto-pilot-djen-prazos-minutas.ts 2>/dev/null; then
+            echo "| auto-pilot | djen-monitor-agent | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| auto-pilot | djen-monitor-agent | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Google Services Hub -> Auto-Pilot
+          if grep -q "AutoPilotDjenPrazosMinutas\|criarAutoPilotDjenPrazosMinutas" src/lib/google-services-hub.ts 2>/dev/null; then
+            echo "| google-services-hub | auto-pilot | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| google-services-hub | auto-pilot | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Minuta Agent -> Google Docs
+          if grep -q "googleDocsService" src/lib/minuta-agent.ts 2>/dev/null; then
+            echo "| minuta-agent | google-docs-service | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| minuta-agent | google-docs-service | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+          fi
+
           # DJEN Client -> api/legal-services ou api/cron
           if grep -q "djen\|DJEN" api/cron.ts api/legal-services.ts 2>/dev/null; then
             echo "| DJEN Client | API Cron/Legal | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
