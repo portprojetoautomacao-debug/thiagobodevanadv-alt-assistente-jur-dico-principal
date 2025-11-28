@@ -14,8 +14,7 @@ on:
     types:
       - opened
   schedule:
-    # Daily at 8:20 UTC
-    - cron: '20 8 * * *'
+    - cron: "20 8 * * *"
 
 jobs:
   configure-cli:
@@ -44,13 +43,13 @@ jobs:
         run: |
           gh issue comment ${{ github.event.issue.number }} \
             --body "Obrigado por abrir esta issue! 🎉
-          
+
           Este repositório possui um sistema de agentes jurídicos V2 100% alinhado com:
           - ✅ 15 agentes especializados
           - ✅ Endpoints wrappers funcionais
           - ✅ Dados reais integrados
           - ✅ Pronto para produção
-          
+
           Estamos analisando sua contribuição. Por favor, aguarde feedback do time."
 
       - name: Report metrics
@@ -58,10 +57,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== GitHub CLI Repository Metrics ==="
-          
+
           # Extract repo name from github.repository (format: owner/repo)
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          
+
           # Get open issues count
           OWNER="${GITHUB_REPOSITORY%%/*}"
           numOpenIssues="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='
@@ -73,10 +72,10 @@ jobs:
               }
             }
           ' --jq '.data.repository.issues.totalCount')"
-          
+
           echo "Open Issues: $numOpenIssues"
           echo 'NUM_OPEN_ISSUES='$numOpenIssues >> $GITHUB_ENV
-          
+
           # Get open PRs count
           numOpenPRs="$(gh api graphql -F owner=$OWNER -F name=$REPO_NAME -f query='
             query($name: String!, $owner: String!) {
@@ -87,7 +86,7 @@ jobs:
               }
             }
           ' --jq '.data.repository.pullRequests.totalCount')"
-          
+
           echo "Open PRs: $numOpenPRs"
           echo 'NUM_OPEN_PRS='$numOpenPRs >> $GITHUB_ENV
 

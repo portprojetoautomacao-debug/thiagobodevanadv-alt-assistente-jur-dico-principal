@@ -1,27 +1,29 @@
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
-import { initErrorTracking } from './services/error-tracking'
-
-// import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
 
 import './index.css';
 
-// Initialize Sentry Error Tracking FIRST
-(async () => {
-  try {
-    await initErrorTracking()
-  } catch (error) {
-    console.error('❌ Failed to initialize Sentry:', error)
-  }
-})()
-
+// Root element check
 const rootElement = document.getElementById('root')
 if (!rootElement) {
   throw new Error('Root element not found')
 }
 
-// Dynamic import of App to ensure Spark fixes are applied first
+// Initialize Sentry asynchronously (não bloqueia renderização)
+const initSentry = async () => {
+  try {
+    const { initErrorTracking } = await import('./services/error-tracking')
+    await initErrorTracking()
+  } catch (error) {
+    console.error('❌ Failed to initialize Sentry:', error)
+  }
+}
+
+// Inicia Sentry em background sem bloquear
+initSentry()
+
+// Dynamic import of App para reduzir bundle inicial
 import('./App').then(({ default: App }) => {
   createRoot(rootElement).render(
     <ErrorBoundary FallbackComponent={ErrorFallback}>

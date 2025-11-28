@@ -463,6 +463,7 @@ export default function DJENPublicationsWidget({
                     onClick={() => setFilter(f => f === 'all' ? 'unread' : 'all')}
                     className="h-8 w-8 p-0"
                     aria-label={filter === 'all' ? 'Filtrar: mostrar apenas não lidas' : 'Filtrar: mostrar todas'}
+                    title={filter === 'all' ? 'Filtrar: mostrar não lidas' : 'Filtrar: mostrar todas'}
                   >
                     <Funnel
                       size={16}
@@ -488,6 +489,7 @@ export default function DJENPublicationsWidget({
                     disabled={syncing}
                     className="h-8 w-8 p-0"
                     aria-label="Sincronizar publicações agora"
+                    title="Sincronizar publicações"
                   >
                     <ArrowsClockwise
                       size={16}
