@@ -541,8 +541,62 @@ const unfilled = extractUnfilledVariables(content)
 | Google Calendar API | Sincronização de eventos/prazos |
 | Google Docs API | Edição de minutas |
 | DJEN/DataJud API | Monitoramento de publicações jurídicas |
+| Todoist API | Gestão de tarefas (server-side only) |
 | Sentry | Error tracking e monitoring |
 | Vercel Speed Insights | Performance monitoring |
+
+### 🧠 Motor de IA - Gemini 2.5 Pro
+
+> **⚠️ IMPORTANTE**: O sistema foi migrado do **Spark** para o **Gemini 2.5 Pro**.
+
+| Item | Status |
+|------|--------|
+| **Spark (antigo)** | ❌ Descontinuado - Arquivos mantidos para compatibilidade |
+| **Gemini 2.5 Pro** | ✅ Ativo - Motor principal de IA |
+
+**Arquivos do Gemini:**
+- `src/lib/gemini-service.ts` - Serviço principal
+- `src/lib/gemini-config.ts` - Configurações do modelo
+- `src/lib/ai-providers.ts` - Abstração de provedores
+
+**Arquivos Legados (Spark) - NÃO USAR para novas features:**
+- `src/lib/spark-client-fixes.ts` - Patches legados
+- `spark.meta.json` - Metadados antigos
+
+### 📦 Stubs para APIs Server-Side Only
+
+Algumas APIs externas só funcionam no servidor (Vercel Functions). Para evitar erros no browser, usamos **stubs**:
+
+#### Todoist API Stub (`src/lib/todoist-stub.ts`)
+
+O pacote `@doist/todoist-api-typescript` **não funciona no browser**. Usamos um stub que:
+
+1. **Exporta tipos compatíveis** (`Task`, `Project`, `Section`, `Label`, `Comment`)
+2. **Fornece funções utilitárias** (`getTaskUrl`, `getProjectUrl`)
+3. **Lança erros claros** se alguém tentar usar `TodoistApi` no client
+
+```typescript
+// ❌ ERRADO - Não funciona no browser
+import { TodoistApi } from '@doist/todoist-api-typescript'
+const api = new TodoistApi(apiKey) // Error!
+
+// ✅ CORRETO - Use o stub para tipos e utils
+import { Task, Project, getTaskUrl } from '@/lib/todoist-stub'
+
+// ✅ CORRETO - Use API routes para operações
+const tasks = await fetch('/api/todoist-tasks').then(r => r.json())
+```
+
+**Regras para Todoist:**
+- **Client-side**: Use apenas tipos e utils do stub + chamadas a `/api/todoist-*`
+- **Server-side** (`/api/*.ts`): Pode usar `@doist/todoist-api-typescript` diretamente
+
+**Endpoints API disponíveis:**
+| Endpoint | Método | Função |
+|----------|--------|--------|
+| `/api/todoist-tasks` | GET | Lista tarefas |
+| `/api/todoist-tasks` | POST | Cria tarefa |
+| `/api/todoist-projects` | GET | Lista projetos |
 
 ### DevOps & CI/CD
 | Ferramenta | Uso |
