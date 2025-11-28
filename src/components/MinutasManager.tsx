@@ -1,16 +1,34 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   FileText,
@@ -31,64 +49,41 @@ import {
   CheckCircle,
   Eye,
   Copy,
-  ListBullets,
   CaretDown,
-  X,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { googleDocsService } from '@/lib/google-docs-service'
 import { TiptapEditor } from '@/components/editor/TiptapEditor'
 import {
   documentTemplates,
-  getTemplateById,
   replaceTemplateVariables,
   extractUnfilledVariables,
-  type DocumentTemplate
+  type DocumentTemplate,
 } from '@/lib/document-templates'
 import type { Minuta, Process } from '@/types'
+import { callGemini, isGeminiConfigured } from '@/lib/gemini-service'
 
 // Verificar se as credenciais do Google estão configuradas
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
 const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY
 
-// Função para gerar texto com IA
-async function generateWithAI(prompt: string): Promise<string> {
-  try {
-    const response = await fetch('/api/llm-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: 'system',
-            content: `Você é um advogado brasileiro experiente especializado em redação jurídica.
+// Prompt de sistema para a IA do editor
+const AI_EDITOR_SYSTEM_PROMPT = `Você é um advogado brasileiro experiente especializado em redação jurídica.
+
 Suas respostas devem:
 - Usar linguagem jurídica formal e técnica
-- Seguir as normas do Código de Processo Civil (CPC)
-- Citar artigos de lei quando apropriado
+- Seguir as normas do Código de Processo Civil (CPC) e legislação correlata
+- Citar artigos de lei e súmulas quando apropriado
 - Ser claras, objetivas e bem estruturadas
-- Usar formatação HTML para títulos (<h3>), parágrafos (<p>), listas (<ul>/<ol>) e destaques (<strong>)
-Responda apenas com o conteúdo solicitado, sem explicações adicionais.`
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
-    })
+- Utilizar HTML sem CSS para formatação:
+  - Títulos em <h3>
+  - Parágrafos em <p>
+  - Listas em <ul>/<ol> com <li>
+  - Destaques em <strong> e <u> quando necessário
+- Não inclua <html>, <head> ou <body>, apenas o conteúdo da peça
 
-    if (!response.ok) {
-      throw new Error('Falha na comunicação com a IA')
-    }
-
-    const data = await response.json()
-    return data.choices?.[0]?.message?.content || data.content || ''
-  } catch (error) {
-    console.error('Erro ao gerar com IA:', error)
-    throw error
-  }
-}
+Responda apenas com o conteúdo solicitado (trecho ou minuta), sem explicações fora do texto jurídico.`
 
 export default function MinutasManager() {
   const [minutas, setMinutas] = useKV<Minuta[]>('minutas', [])
@@ -100,10 +95,10 @@ export default function MinutasManager() {
   const [activeTab, setActiveTab] = useState('editor')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null)
-  const [showTemplateDialog, setShowTemplateDialog] = useState(false)
   const [variableValues, setVariableValues] = useState<Record<string, string>>({})
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterTipo, setFilterTipo] = useState<string>('all')
+  const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -120,16 +115,16 @@ export default function MinutasManager() {
   // Carregar variáveis do processo selecionado
   useEffect(() => {
     if (formData.processId && formData.processId !== '_none') {
-      const processo = (processes || []).find(p => p.id === formData.processId)
+      const processo = (processes || []).find((p) => p.id === formData.processId)
       if (processo) {
-        setVariableValues(prev => ({
+        setVariableValues((prev) => ({
           ...prev,
           'processo.numero': processo.numeroCNJ || '',
           'processo.titulo': processo.titulo || '',
           'autor.nome': processo.autor || '',
           'reu.nome': processo.reu || '',
-          'comarca': processo.comarca || '',
-          'vara': processo.vara || '',
+          comarca: processo.comarca || '',
+          vara: processo.vara || '',
         }))
       }
     }
@@ -186,22 +181,22 @@ export default function MinutasManager() {
       current.map((m) =>
         m.id === editingMinuta.id
           ? {
-            ...m,
-            titulo: formData.titulo,
-            processId: formData.processId !== '_none' ? formData.processId : undefined,
-            tipo: formData.tipo,
-            conteudo: formData.conteudo,
-            status: formData.status,
-            atualizadoEm: new Date().toISOString(),
-          }
-          : m
-      )
+              ...m,
+              titulo: formData.titulo,
+              processId: formData.processId !== '_none' ? formData.processId : undefined,
+              tipo: formData.tipo,
+              conteudo: formData.conteudo,
+              status: formData.status,
+              atualizadoEm: new Date().toISOString(),
+            }
+          : m,
+      ),
     )
 
     if (editingMinuta.googleDocsId) {
       const success = await googleDocsService.updateDocumentContent(
         editingMinuta.googleDocsId,
-        formData.conteudo
+        formData.conteudo,
       )
       if (success) {
         toast.success('Minuta atualizada localmente e no Google Docs!')
@@ -227,6 +222,7 @@ export default function MinutasManager() {
     })
     setSelectedTemplate(null)
     setVariableValues({})
+    setError(null)
   }
 
   const handleOpenInGoogleDocs = async (minuta: Minuta) => {
@@ -248,13 +244,13 @@ export default function MinutasManager() {
           current.map((m) =>
             m.id === minuta.id
               ? {
-                ...m,
-                googleDocsId: result.docId,
-                googleDocsUrl: result.url,
-                ultimaSincronizacao: new Date().toISOString(),
-              }
-              : m
-          )
+                  ...m,
+                  googleDocsId: result.docId,
+                  googleDocsUrl: result.url,
+                  ultimaSincronizacao: new Date().toISOString(),
+                }
+              : m,
+          ),
         )
 
         googleDocsService.openDocument(result.url)
@@ -284,13 +280,13 @@ export default function MinutasManager() {
           current.map((m) =>
             m.id === minuta.id
               ? {
-                ...m,
-                conteudo: content,
-                atualizadoEm: new Date().toISOString(),
-                ultimaSincronizacao: new Date().toISOString(),
-              }
-              : m
-          )
+                  ...m,
+                  conteudo: content,
+                  atualizadoEm: new Date().toISOString(),
+                  ultimaSincronizacao: new Date().toISOString(),
+                }
+              : m,
+          ),
         )
         toast.success('Minuta sincronizada do Google Docs!')
       } else {
@@ -318,7 +314,9 @@ export default function MinutasManager() {
       conteudo: minuta.conteudo,
       status: minuta.status,
     })
+    setActiveTab('editor')
     setIsDialogOpen(true)
+    setError(null)
   }
 
   const handleDuplicateMinuta = (minuta: Minuta) => {
@@ -342,14 +340,13 @@ export default function MinutasManager() {
       current.map((m) =>
         m.id === id
           ? { ...m, status: 'finalizada' as const, atualizadoEm: new Date().toISOString() }
-          : m
-      )
+          : m,
+      ),
     )
     toast.success('Minuta aprovada!')
   }
 
   const handleExportPDF = async (minuta: Minuta) => {
-    // Criar um iframe invisível para impressão
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
       toast.error('Habilite pop-ups para exportar PDF')
@@ -391,8 +388,9 @@ export default function MinutasManager() {
   }
 
   const handleExportDOCX = (minuta: Minuta) => {
-    // Exportar como HTML que pode ser aberto no Word
-    const blob = new Blob([`
+    const blob = new Blob(
+      [
+        `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' 
             xmlns:w='urn:schemas-microsoft-com:office:word'
             xmlns='http://www.w3.org/TR/REC-html40'>
@@ -407,7 +405,10 @@ export default function MinutasManager() {
           ${minuta.conteudo}
         </body>
       </html>
-    `], { type: 'application/msword' })
+    `,
+      ],
+      { type: 'application/msword' },
+    )
 
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -421,13 +422,12 @@ export default function MinutasManager() {
   // Aplicar template
   const handleApplyTemplate = (template: DocumentTemplate) => {
     setSelectedTemplate(template)
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       titulo: prev.titulo || template.nome,
       tipo: template.tipo as Minuta['tipo'],
       conteudo: template.conteudo,
     }))
-    setShowTemplateDialog(false)
     toast.success(`Template "${template.nome}" aplicado!`)
   }
 
@@ -436,14 +436,55 @@ export default function MinutasManager() {
     if (!selectedTemplate) return
 
     const filledContent = replaceTemplateVariables(formData.conteudo, variableValues)
-    setFormData(prev => ({ ...prev, conteudo: filledContent }))
+    setFormData((prev) => ({ ...prev, conteudo: filledContent }))
     toast.success('Variáveis preenchidas!')
   }
 
-  // Handler para IA gerar conteúdo
-  const handleAIGenerate = useCallback(async (prompt: string): Promise<string> => {
-    return generateWithAI(prompt)
-  }, [])
+  // IA integrada ao Tiptap (usando Gemini 2.5 Pro)
+  const handleAIGenerate = useCallback(
+    async (userPrompt: string): Promise<string> => {
+      if (!userPrompt.trim()) {
+        throw new Error('Prompt vazio')
+      }
+
+      if (!isGeminiConfigured()) {
+        const msg = 'Gemini não está configurado. Verifique VITE_GEMINI_API_KEY no .env.'
+        toast.error(msg)
+        throw new Error(msg)
+      }
+
+      try {
+        const fullPrompt = `${AI_EDITOR_SYSTEM_PROMPT}
+
+Instrução específica do usuário:
+${userPrompt}`
+
+        const response = await callGemini(fullPrompt, {
+          temperature: 0.6,
+          maxOutputTokens: 4096,
+        })
+
+        if (response.error) {
+          console.error('[MinutasManager] Erro Gemini:', response.error)
+          toast.error('Erro ao gerar texto com Gemini.')
+          throw new Error(response.error)
+        }
+
+        const text = response.text?.trim()
+        if (!text) {
+          const msg = 'Gemini retornou resposta vazia.'
+          toast.error(msg)
+          throw new Error(msg)
+        }
+
+        return text
+      } catch (err) {
+        console.error('[MinutasManager] Erro inesperado na IA:', err)
+        throw err
+      }
+    },
+    [],
+  )
 
   const getStatusColor = (status: Minuta['status']) => {
     const colors = {
@@ -480,17 +521,17 @@ export default function MinutasManager() {
   }
 
   // Filtrar minutas
-  const filteredMinutas = (minutas || []).filter(m => {
-    const matchesSearch = searchQuery === '' ||
-      m.titulo.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMinutas = (minutas || []).filter((m) => {
+    const matchesSearch =
+      searchQuery === '' || m.titulo.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = filterStatus === 'all' || m.status === filterStatus
     const matchesTipo = filterTipo === 'all' || m.tipo === filterTipo
     return matchesSearch && matchesStatus && matchesTipo
   })
 
   // Minutas pendentes de revisão (criadas por agentes)
-  const minutasPendentes = (minutas || []).filter(m =>
-    m.status === 'pendente-revisao' || m.criadoPorAgente
+  const minutasPendentes = (minutas || []).filter(
+    (m) => m.status === 'pendente-revisao' || m.criadoPorAgente,
   )
 
   // Variáveis não preenchidas no conteúdo atual
@@ -506,13 +547,16 @@ export default function MinutasManager() {
             Editor de Minutas
           </h1>
           <p className="text-muted-foreground mt-1">
-            Editor rico com IA integrada e sincronização com Google Docs
+            Editor rico com IA (Gemini 2.5 Pro) e sincronização com Google Docs
           </p>
         </div>
 
         <div className="flex gap-3 flex-wrap">
           {!isGoogleConfigured ? (
-            <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
+            <Badge
+              variant="outline"
+              className="px-4 py-2 border-amber-500/50 text-amber-600"
+            >
               <Warning className="mr-2 h-4 w-4" />
               Google não configurado
             </Badge>
@@ -530,10 +574,12 @@ export default function MinutasManager() {
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingMinuta(null)
-                resetForm()
-              }}>
+              <Button
+                onClick={() => {
+                  setEditingMinuta(null)
+                  resetForm()
+                }}
+              >
                 <Plus className="mr-2" weight="bold" />
                 Nova Minuta
               </Button>
@@ -555,18 +601,26 @@ export default function MinutasManager() {
                   )}
                 </DialogTitle>
                 <DialogDescription>
-                  Use o editor rico para criar sua minuta. Pressione o botão IA para gerar conteúdo automaticamente.
+                  Use o editor rico para criar sua minuta. Use o botão de IA para gerar
+                  conteúdo automaticamente com Gemini 2.5 Pro.
                 </DialogDescription>
               </DialogHeader>
 
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="editor">Editor</TabsTrigger>
                   <TabsTrigger value="templates">Templates</TabsTrigger>
                   <TabsTrigger value="variaveis">Variáveis</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="editor" className="flex-1 flex flex-col overflow-hidden mt-4 space-y-4">
+                <TabsContent
+                  value="editor"
+                  className="flex-1 flex flex-col overflow-hidden mt-4 space-y-4"
+                >
                   {/* Metadados */}
                   <div className="grid grid-cols-4 gap-4">
                     <div className="col-span-2">
@@ -574,7 +628,9 @@ export default function MinutasManager() {
                       <Input
                         id="titulo"
                         value={formData.titulo}
-                        onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, titulo: e.target.value })
+                        }
                         placeholder="Ex: Petição Inicial - Ação de Cobrança"
                       />
                     </div>
@@ -583,7 +639,12 @@ export default function MinutasManager() {
                       <Label htmlFor="tipo">Tipo</Label>
                       <Select
                         value={formData.tipo}
-                        onValueChange={(value) => setFormData({ ...formData, tipo: value as Minuta['tipo'] })}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            tipo: value as Minuta['tipo'],
+                          })
+                        }
                       >
                         <SelectTrigger id="tipo">
                           <SelectValue />
@@ -603,7 +664,12 @@ export default function MinutasManager() {
                       <Label htmlFor="status">Status</Label>
                       <Select
                         value={formData.status}
-                        onValueChange={(value) => setFormData({ ...formData, status: value as Minuta['status'] })}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            status: value as Minuta['status'],
+                          })
+                        }
                       >
                         <SelectTrigger id="status">
                           <SelectValue />
@@ -622,7 +688,9 @@ export default function MinutasManager() {
                     <Label htmlFor="processo">Vincular a Processo (opcional)</Label>
                     <Select
                       value={formData.processId}
-                      onValueChange={(value) => setFormData({ ...formData, processId: value })}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, processId: value })
+                      }
                     >
                       <SelectTrigger id="processo">
                         <SelectValue placeholder="Selecione um processo" />
@@ -642,10 +710,12 @@ export default function MinutasManager() {
                   <div className="flex-1 overflow-hidden">
                     <TiptapEditor
                       content={formData.conteudo}
-                      onChange={(content) => setFormData({ ...formData, conteudo: content })}
+                      onChange={(content) =>
+                        setFormData({ ...formData, conteudo: content })
+                      }
                       onAIGenerate={handleAIGenerate}
                       variables={variableValues}
-                      placeholder="Digite o conteúdo da minuta ou use o botão IA para gerar..."
+                      placeholder="Digite o conteúdo da minuta ou use o botão de IA para gerar com Gemini..."
                       className="h-full max-h-[400px] overflow-auto"
                     />
                   </div>
@@ -657,7 +727,8 @@ export default function MinutasManager() {
                       <AlertDescription className="text-amber-800 dark:text-amber-200">
                         <strong>{unfilledVariables.length} variáveis não preenchidas:</strong>{' '}
                         {unfilledVariables.slice(0, 5).join(', ')}
-                        {unfilledVariables.length > 5 && ` e mais ${unfilledVariables.length - 5}`}
+                        {unfilledVariables.length > 5 &&
+                          ` e mais ${unfilledVariables.length - 5}`}
                         <Button
                           variant="link"
                           size="sm"
@@ -667,6 +738,12 @@ export default function MinutasManager() {
                           Preencher variáveis →
                         </Button>
                       </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription className="text-xs">{error}</AlertDescription>
                     </Alert>
                   )}
                 </TabsContent>
@@ -688,16 +765,24 @@ export default function MinutasManager() {
                     <ScrollArea className="flex-1">
                       <div className="grid grid-cols-2 gap-3">
                         {documentTemplates
-                          .filter(t =>
-                            searchQuery === '' ||
-                            t.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            t.categoria.toLowerCase().includes(searchQuery.toLowerCase())
+                          .filter(
+                            (t) =>
+                              searchQuery === '' ||
+                              t.nome
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) ||
+                              t.categoria
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()),
                           )
                           .map((template) => (
                             <Card
                               key={template.id}
-                              className={`cursor-pointer transition-all hover:border-primary/50 ${selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''
-                                }`}
+                              className={`cursor-pointer transition-all hover:border-primary/50 ${
+                                selectedTemplate?.id === template.id
+                                  ? 'border-primary bg-primary/5'
+                                  : ''
+                              }`}
                               onClick={() => handleApplyTemplate(template)}
                             >
                               <CardHeader className="p-4">
@@ -729,25 +814,30 @@ export default function MinutasManager() {
                 <TabsContent value="variaveis" className="flex-1 overflow-hidden mt-4">
                   <div className="space-y-4 h-full flex flex-col">
                     <p className="text-sm text-muted-foreground">
-                      Preencha as variáveis para substituir automaticamente no documento.
-                      Use o formato <code className="bg-muted px-1 rounded">{'{{variavel}}'}</code>.
+                      Preencha as variáveis para substituir automaticamente no documento. Use
+                      o formato{' '}
+                      <code className="bg-muted px-1 rounded">{'{{variavel}}'}</code>.
                     </p>
 
                     <ScrollArea className="flex-1">
                       <div className="grid grid-cols-2 gap-4">
-                        {(selectedTemplate?.variaveis || unfilledVariables).map((variable) => (
-                          <div key={variable}>
-                            <Label className="text-xs">{variable}</Label>
-                            <Input
-                              value={variableValues[variable] || ''}
-                              onChange={(e) => setVariableValues(prev => ({
-                                ...prev,
-                                [variable]: e.target.value
-                              }))}
-                              placeholder={`Valor para ${variable}`}
-                            />
-                          </div>
-                        ))}
+                        {(selectedTemplate?.variaveis || unfilledVariables).map(
+                          (variable) => (
+                            <div key={variable}>
+                              <Label className="text-xs">{variable}</Label>
+                              <Input
+                                value={variableValues[variable] || ''}
+                                onChange={(e) =>
+                                  setVariableValues((prev) => ({
+                                    ...prev,
+                                    [variable]: e.target.value,
+                                  }))
+                                }
+                                placeholder={`Valor para ${variable}`}
+                              />
+                            </div>
+                          ),
+                        )}
                       </div>
                     </ScrollArea>
 
@@ -766,6 +856,7 @@ export default function MinutasManager() {
                   onClick={() => {
                     setIsDialogOpen(false)
                     setEditingMinuta(null)
+                    setError(null)
                   }}
                 >
                   Cancelar
@@ -784,9 +875,10 @@ export default function MinutasManager() {
         <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
           <Robot className="h-4 w-4 text-orange-600" weight="fill" />
           <AlertDescription className="text-orange-800 dark:text-orange-200">
-            <strong>{minutasPendentes.length} minuta(s) pendente(s) de revisão</strong> criada(s) pelos agentes IA.
+            <strong>{minutasPendentes.length} minuta(s) pendente(s) de revisão</strong>{' '}
+            criada(s) pelos agentes IA.
             <div className="flex gap-2 mt-2">
-              {minutasPendentes.slice(0, 3).map(m => (
+              {minutasPendentes.slice(0, 3).map((m) => (
                 <Button
                   key={m.id}
                   variant="outline"
@@ -844,9 +936,7 @@ export default function MinutasManager() {
           </SelectContent>
         </Select>
 
-        <Badge variant="secondary">
-          {filteredMinutas.length} minuta(s)
-        </Badge>
+        <Badge variant="secondary">{filteredMinutas.length} minuta(s)</Badge>
       </div>
 
       {/* Lista de Minutas */}
@@ -857,10 +947,9 @@ export default function MinutasManager() {
             <p className="text-muted-foreground text-center">
               {searchQuery || filterStatus !== 'all' || filterTipo !== 'all'
                 ? 'Nenhuma minuta encontrada com os filtros aplicados.'
-                : 'Nenhuma minuta criada ainda.'
-              }
+                : 'Nenhuma minuta criada ainda.'}
               <br />
-              Clique em "Nova Minuta" para começar.
+              Clique em &quot;Nova Minuta&quot; para começar.
             </p>
           </CardContent>
         </Card>
@@ -870,7 +959,10 @@ export default function MinutasManager() {
             const processo = (processes || []).find((p) => p.id === minuta.processId)
 
             return (
-              <Card key={minuta.id} className={minuta.criadoPorAgente ? 'border-orange-500/30' : ''}>
+              <Card
+                key={minuta.id}
+                className={minuta.criadoPorAgente ? 'border-orange-500/30' : ''}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -890,9 +982,7 @@ export default function MinutasManager() {
                         </Badge>
                         <Badge variant="outline">{getTipoLabel(minuta.tipo)}</Badge>
                         {processo && (
-                          <Badge variant="secondary">
-                            {processo.numeroCNJ}
-                          </Badge>
+                          <Badge variant="secondary">{processo.numeroCNJ}</Badge>
                         )}
                         {minuta.googleDocsId && (
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
@@ -911,7 +1001,9 @@ export default function MinutasManager() {
                     <div
                       className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg max-h-24 overflow-hidden prose prose-sm dark:prose-invert"
                       dangerouslySetInnerHTML={{
-                        __html: minuta.conteudo.substring(0, 500) + (minuta.conteudo.length > 500 ? '...' : '')
+                        __html:
+                          minuta.conteudo.substring(0, 500) +
+                          (minuta.conteudo.length > 500 ? '...' : ''),
                       }}
                     />
 
@@ -919,12 +1011,14 @@ export default function MinutasManager() {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock weight="bold" className="h-3 w-3" />
-                        Atualizado em {new Date(minuta.atualizadoEm).toLocaleString('pt-BR')}
+                        Atualizado em{' '}
+                        {new Date(minuta.atualizadoEm).toLocaleString('pt-BR')}
                       </span>
                       {minuta.ultimaSincronizacao && (
                         <span className="flex items-center gap-1">
                           <ArrowsClockwise className="h-3 w-3" />
-                          Sincronizado em {new Date(minuta.ultimaSincronizacao).toLocaleString('pt-BR')}
+                          Sincronizado em{' '}
+                          {new Date(minuta.ultimaSincronizacao).toLocaleString('pt-BR')}
                         </span>
                       )}
                     </div>
@@ -1009,7 +1103,9 @@ export default function MinutasManager() {
                           disabled={isSyncing === minuta.id}
                         >
                           <ArrowsClockwise
-                            className={`mr-2 h-4 w-4 ${isSyncing === minuta.id ? 'animate-spin' : ''}`}
+                            className={`mr-2 h-4 w-4 ${
+                              isSyncing === minuta.id ? 'animate-spin' : ''
+                            }`}
                             weight="bold"
                           />
                           Sincronizar

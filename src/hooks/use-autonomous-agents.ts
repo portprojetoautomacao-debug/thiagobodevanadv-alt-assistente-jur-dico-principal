@@ -1,7 +1,8 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import {
-  processTaskWithRealAI
+  processTaskWithRealAI,
+  processTaskWithStreamingAI
 } from '@/lib/real-agent-client'
 import {
   type Agent,
@@ -69,6 +70,10 @@ export function useAutonomousAgents() {
       result: 'success' | 'warning' | 'error'
     }>
   >('agent-activity-log', [])
+
+  // Estado para streaming em tempo real
+  const [streamingContent, setStreamingContent] = useState<Record<string, string>>({})
+  const [useStreaming, setUseStreaming] = useState(true) // Streaming habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set())
 
@@ -176,7 +181,45 @@ export function useAutonomousAgents() {
       )
 
       try {
-        const result = await processTaskWithRealAI(task, agent)
+        let result
+
+        if (useStreaming) {
+          // Usar streaming para respostas em tempo real
+          result = await processTaskWithStreamingAI(task, agent, {
+            onChunk: (chunk) => {
+              setStreamingContent(prev => ({
+                ...prev,
+                [agent.id]: (prev[agent.id] || '') + chunk
+              }))
+
+              // Atualizar última atividade com preview
+              setAgents(current =>
+                (current || []).map(a =>
+                  a.id === agent.id
+                    ? {
+                      ...a,
+                      lastActivity: `Gerando: ${chunk.substring(0, 50)}...`
+                    }
+                    : a
+                )
+              )
+            },
+            onComplete: () => {
+              // Limpar streaming content quando completar
+              setStreamingContent(prev => {
+                const { [agent.id]: _, ...rest } = prev
+                return rest
+              })
+            },
+            onError: (error) => {
+              console.error(`[Agent ${agent.id}] Streaming error:`, error)
+              logActivity(agent.id, `Erro streaming: ${error.message}`, 'error')
+            }
+          })
+        } else {
+          // Fallback para processamento sem streaming
+          result = await processTaskWithRealAI(task, agent)
+        }
 
         const completed: AgentTask = {
           ...task,
@@ -291,11 +334,11 @@ export function useAutonomousAgents() {
         (current || []).map(a =>
           a.id === agentId
             ? {
-                ...a,
-                enabled: !a.enabled,
-                status: !a.enabled ? 'active' : 'paused',
-                lastActivity: !a.enabled ? 'Iniciando…' : 'Pausado pelo usuário'
-              }
+              ...a,
+              enabled: !a.enabled,
+              status: !a.enabled ? 'active' : 'paused',
+              lastActivity: !a.enabled ? 'Iniciando…' : 'Pausado pelo usuário'
+            }
             : a
         )
       )
@@ -309,10 +352,10 @@ export function useAutonomousAgents() {
         (current || []).map(t =>
           t.id === taskId
             ? {
-                ...t,
-                humanTouchedAt: new Date().toISOString(),
-                status: 'human_intervention'
-              }
+              ...t,
+              humanTouchedAt: new Date().toISOString(),
+              status: 'human_intervention'
+            }
             : t
         )
       )
@@ -333,13 +376,23 @@ export function useAutonomousAgents() {
     [setTaskQueue]
   )
 
+  // Toggle streaming mode
+  const toggleStreaming = useCallback(() => {
+    setUseStreaming(prev => !prev)
+  }, [])
+
   return {
     agents: agents || [],
     taskQueue: taskQueue || [],
     completedTasks: completedTasks || [],
     activityLog: activityLog || [],
+    // Streaming state
+    streamingContent,
+    isStreamingEnabled: useStreaming,
+    // Actions
     addTask,
     toggleAgent,
+    toggleStreaming,
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
     setAgents
