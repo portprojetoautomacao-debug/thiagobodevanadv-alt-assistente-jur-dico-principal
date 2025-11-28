@@ -62,15 +62,21 @@ export interface Minuta {
   id: string
   titulo: string
   processId?: string
-  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'outro'
+  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro'
   conteudo: string
-  status: 'rascunho' | 'em-revisao' | 'finalizada' | 'arquivada'
+  status: 'rascunho' | 'em-revisao' | 'pendente-revisao' | 'finalizada' | 'arquivada'
   criadoEm: string
   atualizadoEm: string
   autor: string
   googleDocsId?: string
   googleDocsUrl?: string
   ultimaSincronizacao?: string
+  // Campos para integração com agentes IA
+  criadoPorAgente?: boolean
+  agenteId?: string
+  templateId?: string
+  expedienteId?: string
+  variaveis?: Record<string, string>
 }
 
 export interface FinancialEntry {

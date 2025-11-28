@@ -1,0 +1,590 @@
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import Highlight from '@tiptap/extension-highlight'
+import Typography from '@tiptap/extension-typography'
+import TextAlign from '@tiptap/extension-text-align'
+import Underline from '@tiptap/extension-underline'
+import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import { TextStyle, Color } from '@tiptap/extension-text-style'
+import { useState, useCallback, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
+import {
+    TextB,
+    TextItalic,
+    TextUnderline,
+    TextStrikethrough,
+    TextH,
+    TextHOne,
+    TextHTwo,
+    TextHThree,
+    ListBullets,
+    ListNumbers,
+    TextAlignLeft,
+    TextAlignCenter,
+    TextAlignRight,
+    TextAlignJustify,
+    Quotes,
+    Code,
+    Link as LinkIcon,
+    Image as ImageIcon,
+    Highlighter,
+    ArrowCounterClockwise,
+    ArrowClockwise,
+    Eraser,
+    Robot,
+    SpinnerGap,
+    Lightning,
+    MagicWand,
+    Sparkle,
+    ArrowsOut,
+    TextAa,
+    Palette,
+} from '@phosphor-icons/react'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+
+interface TiptapEditorProps {
+    content: string
+    onChange: (content: string) => void
+    placeholder?: string
+    className?: string
+    readOnly?: boolean
+    onAIGenerate?: (prompt: string) => Promise<string>
+    variables?: Record<string, string>
+}
+
+const COLORS = [
+    '#000000', '#374151', '#6B7280', '#9CA3AF',
+    '#DC2626', '#EA580C', '#D97706', '#CA8A04',
+    '#16A34A', '#059669', '#0D9488', '#0891B2',
+    '#2563EB', '#4F46E5', '#7C3AED', '#9333EA',
+    '#C026D3', '#DB2777', '#E11D48',
+]
+
+export function TiptapEditor({
+    content,
+    onChange,
+    placeholder = 'Digite ou use /ai para comandos de IA...',
+    className,
+    readOnly = false,
+    onAIGenerate,
+    variables = {},
+}: TiptapEditorProps) {
+    const [isAILoading, setIsAILoading] = useState(false)
+    const [aiPrompt, setAiPrompt] = useState('')
+    const [showAIPopover, setShowAIPopover] = useState(false)
+    const [wordCount, setWordCount] = useState(0)
+    const [charCount, setCharCount] = useState(0)
+
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({
+                heading: {
+                    levels: [1, 2, 3],
+                },
+            }),
+            Placeholder.configure({
+                placeholder,
+            }),
+            Highlight.configure({
+                multicolor: true,
+            }),
+            Typography,
+            TextAlign.configure({
+                types: ['heading', 'paragraph'],
+            }),
+            Underline,
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-primary underline cursor-pointer',
+                },
+            }),
+            Image.configure({
+                inline: true,
+                allowBase64: true,
+            }),
+            TextStyle,
+            Color,
+        ],
+        content,
+        editable: !readOnly,
+        onUpdate: ({ editor }) => {
+            const html = editor.getHTML()
+            onChange(html)
+
+            // Atualizar contadores
+            const text = editor.getText()
+            setCharCount(text.length)
+            setWordCount(text.split(/\s+/).filter(w => w.length > 0).length)
+        },
+    })
+
+    // Sincronizar conteúdo externo
+    useEffect(() => {
+        if (editor && content !== editor.getHTML()) {
+            editor.commands.setContent(content)
+        }
+    }, [content, editor])
+
+    // Substituir variáveis no conteúdo
+    const replaceVariables = useCallback((text: string) => {
+        let result = text
+        Object.entries(variables).forEach(([key, value]) => {
+            const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g')
+            result = result.replace(regex, value)
+        })
+        return result
+    }, [variables])
+
+    // Handler para IA
+    const handleAIGenerate = useCallback(async () => {
+        if (!aiPrompt.trim() || !onAIGenerate || !editor) return
+
+        setIsAILoading(true)
+        try {
+            const generatedText = await onAIGenerate(aiPrompt)
+
+            // Substituir variáveis no texto gerado
+            const processedText = replaceVariables(generatedText)
+
+            // Inserir no editor na posição atual
+            editor.chain().focus().insertContent(processedText).run()
+
+            setAiPrompt('')
+            setShowAIPopover(false)
+            toast.success('Texto gerado com sucesso!')
+        } catch (error) {
+            console.error('Erro ao gerar texto com IA:', error)
+            toast.error('Erro ao gerar texto com IA')
+        } finally {
+            setIsAILoading(false)
+        }
+    }, [aiPrompt, onAIGenerate, editor, replaceVariables])
+
+    // Comandos de IA rápidos
+    const aiQuickCommands = [
+        { label: 'Expandir', icon: ArrowsOut, prompt: 'Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:' },
+        { label: 'Resumir', icon: TextAa, prompt: 'Resuma o seguinte texto de forma concisa:' },
+        { label: 'Formalizar', icon: MagicWand, prompt: 'Reescreva o seguinte texto em linguagem jurídica formal:' },
+        { label: 'Corrigir', icon: Sparkle, prompt: 'Corrija erros de gramática e ortografia no seguinte texto:' },
+    ]
+
+    const handleQuickAI = useCallback(async (command: typeof aiQuickCommands[0]) => {
+        if (!editor || !onAIGenerate) return
+
+        const selectedText = editor.state.selection.empty
+            ? editor.getText()
+            : editor.state.doc.textBetween(
+                editor.state.selection.from,
+                editor.state.selection.to,
+                ' '
+            )
+
+        if (!selectedText.trim()) {
+            toast.error('Selecione um texto primeiro')
+            return
+        }
+
+        setIsAILoading(true)
+        try {
+            const fullPrompt = `${command.prompt}\n\n"${selectedText}"`
+            const generatedText = await onAIGenerate(fullPrompt)
+
+            if (!editor.state.selection.empty) {
+                // Substituir seleção
+                editor.chain().focus().deleteSelection().insertContent(generatedText).run()
+            } else {
+                // Substituir todo conteúdo
+                editor.commands.setContent(generatedText)
+            }
+
+            toast.success(`Texto ${command.label.toLowerCase()}!`)
+        } catch (error) {
+            console.error('Erro ao processar com IA:', error)
+            toast.error('Erro ao processar com IA')
+        } finally {
+            setIsAILoading(false)
+        }
+    }, [editor, onAIGenerate])
+
+    // Link handler
+    const setLink = useCallback(() => {
+        if (!editor) return
+
+        const previousUrl = editor.getAttributes('link').href
+        const url = window.prompt('URL do link:', previousUrl)
+
+        if (url === null) return
+
+        if (url === '') {
+            editor.chain().focus().extendMarkRange('link').unsetLink().run()
+            return
+        }
+
+        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    }, [editor])
+
+    // Image handler
+    const addImage = useCallback(() => {
+        if (!editor) return
+
+        const url = window.prompt('URL da imagem:')
+        if (url) {
+            editor.chain().focus().setImage({ src: url }).run()
+        }
+    }, [editor])
+
+    if (!editor) return null
+
+    return (
+        <div className={cn('border rounded-lg overflow-hidden bg-background', className)}>
+            {/* Toolbar */}
+            <div className="border-b bg-muted/30 p-2 flex flex-wrap items-center gap-1">
+                {/* Undo/Redo */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().undo().run()}
+                    disabled={!editor.can().undo()}
+                    title="Desfazer"
+                >
+                    <ArrowCounterClockwise className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().redo().run()}
+                    disabled={!editor.can().redo()}
+                    title="Refazer"
+                >
+                    <ArrowClockwise className="h-4 w-4" />
+                </Button>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                {/* Formatação básica */}
+                <Button
+                    variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    title="Negrito (Ctrl+B)"
+                >
+                    <TextB className="h-4 w-4" weight="bold" />
+                </Button>
+                <Button
+                    variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    title="Itálico (Ctrl+I)"
+                >
+                    <TextItalic className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                    title="Sublinhado (Ctrl+U)"
+                >
+                    <TextUnderline className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive('strike') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                    title="Tachado"
+                >
+                    <TextStrikethrough className="h-4 w-4" />
+                </Button>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                {/* Headings */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" title="Títulos">
+                            <TextH className="h-4 w-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                        <div className="flex flex-col gap-1">
+                            <Button
+                                variant={editor.isActive('heading', { level: 1 }) ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                                className="justify-start"
+                            >
+                                <TextHOne className="h-4 w-4 mr-2" /> Título 1
+                            </Button>
+                            <Button
+                                variant={editor.isActive('heading', { level: 2 }) ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                                className="justify-start"
+                            >
+                                <TextHTwo className="h-4 w-4 mr-2" /> Título 2
+                            </Button>
+                            <Button
+                                variant={editor.isActive('heading', { level: 3 }) ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                                className="justify-start"
+                            >
+                                <TextHThree className="h-4 w-4 mr-2" /> Título 3
+                            </Button>
+                            <Button
+                                variant={editor.isActive('paragraph') ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => editor.chain().focus().setParagraph().run()}
+                                className="justify-start"
+                            >
+                                <TextAa className="h-4 w-4 mr-2" /> Parágrafo
+                            </Button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
+                {/* Listas */}
+                <Button
+                    variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    title="Lista com marcadores"
+                >
+                    <ListBullets className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    title="Lista numerada"
+                >
+                    <ListNumbers className="h-4 w-4" />
+                </Button>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                {/* Alinhamento */}
+                <Button
+                    variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                    title="Alinhar à esquerda"
+                >
+                    <TextAlignLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                    title="Centralizar"
+                >
+                    <TextAlignCenter className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive({ textAlign: 'right' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                    title="Alinhar à direita"
+                >
+                    <TextAlignRight className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive({ textAlign: 'justify' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+                    title="Justificar"
+                >
+                    <TextAlignJustify className="h-4 w-4" />
+                </Button>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                {/* Extras */}
+                <Button
+                    variant={editor.isActive('blockquote') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                    title="Citação"
+                >
+                    <Quotes className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                    title="Bloco de código"
+                >
+                    <Code className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={editor.isActive('highlight') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleHighlight().run()}
+                    title="Destacar"
+                >
+                    <Highlighter className="h-4 w-4" />
+                </Button>
+
+                {/* Cor do texto */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" title="Cor do texto">
+                            <Palette className="h-4 w-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                        <div className="grid grid-cols-5 gap-1">
+                            {COLORS.map((color) => (
+                                <button
+                                    key={color}
+                                    className="w-6 h-6 rounded border hover:scale-110 transition-transform"
+                                    style={{ backgroundColor: color }}
+                                    onClick={() => editor.chain().focus().setColor(color).run()}
+                                />
+                            ))}
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-2"
+                            onClick={() => editor.chain().focus().unsetColor().run()}
+                        >
+                            <Eraser className="h-4 w-4 mr-2" /> Remover cor
+                        </Button>
+                    </PopoverContent>
+                </Popover>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                {/* Link, Imagem */}
+                <Button
+                    variant={editor.isActive('link') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={setLink}
+                    title="Link"
+                >
+                    <LinkIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={addImage}
+                    title="Imagem"
+                >
+                    <ImageIcon className="h-4 w-4" />
+                </Button>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                {/* Limpar formatação */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+                    title="Limpar formatação"
+                >
+                    <Eraser className="h-4 w-4" />
+                </Button>
+
+                {/* Spacer */}
+                <div className="flex-1" />
+
+                {/* IA */}
+                {onAIGenerate && (
+                    <>
+                        <Popover open={showAIPopover} onOpenChange={setShowAIPopover}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20 hover:border-purple-500/40"
+                                    disabled={isAILoading}
+                                >
+                                    {isAILoading ? (
+                                        <SpinnerGap className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Robot className="h-4 w-4" weight="fill" />
+                                    )}
+                                    IA
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-96 p-4" align="end">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Comandos rápidos</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {aiQuickCommands.map((cmd) => (
+                                                <Button
+                                                    key={cmd.label}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleQuickAI(cmd)}
+                                                    disabled={isAILoading}
+                                                >
+                                                    <cmd.icon className="h-3 w-3 mr-1" />
+                                                    {cmd.label}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <Separator />
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Gerar com IA</label>
+                                        <Input
+                                            placeholder="Ex: Escreva uma petição inicial sobre..."
+                                            value={aiPrompt}
+                                            onChange={(e) => setAiPrompt(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                                        />
+                                        <Button
+                                            className="w-full gap-2"
+                                            onClick={handleAIGenerate}
+                                            disabled={!aiPrompt.trim() || isAILoading}
+                                        >
+                                            {isAILoading ? (
+                                                <SpinnerGap className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Lightning className="h-4 w-4" weight="fill" />
+                                            )}
+                                            Gerar Texto
+                                        </Button>
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </>
+                )}
+            </div>
+
+            {/* Editor Content */}
+            <EditorContent
+                editor={editor}
+                className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[400px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[400px] [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0"
+            />
+
+            {/* Footer com contadores */}
+            <div className="border-t bg-muted/30 px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-4">
+                    <span>{wordCount} palavras</span>
+                    <span>{charCount} caracteres</span>
+                </div>
+                {Object.keys(variables).length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                        {Object.keys(variables).length} variáveis disponíveis
+                    </Badge>
+                )}
+            </div>
+        </div>
+    )
+}
+
+export default TiptapEditor
