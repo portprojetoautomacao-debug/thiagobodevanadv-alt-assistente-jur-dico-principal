@@ -259,6 +259,44 @@ Para dúvidas ou problemas:
 
 ---
 
-**Versão:** 1.0.0
-**Última atualização:** $(date)
+## ⚠️ Status Atual
+
+> **Importante**: Estes componentes usam a sintaxe `$[[ inputs.xxx ]]` que requer:
+> - GitLab Premium ou Ultimate
+> - CI/CD Catalog configurado e publicado
+
+| Componente | Status | Motivo |
+|------------|--------|--------|
+| `security-component.yml` | 🟡 Não ativo | Requer CI/CD Catalog |
+| `testing-component.yml` | 🟡 Não ativo | Requer CI/CD Catalog |
+| `deployment-component.yml` | 🟡 Não ativo | Requer CI/CD Catalog |
+| `monitoring-component.yml` | 🟡 Não ativo | Requer CI/CD Catalog |
+
+### Pipeline Atual (Self-Contained)
+
+O arquivo `.gitlab-ci.yml` na raiz do projeto foi configurado com **jobs standalone** que funcionam **sem dependência de componentes externos**:
+
+```
+Stages: security → test → build → deploy → monitor
+
+Jobs:
+├── security-audit      (npm audit)
+├── secret-detection    (detecção de segredos)
+├── lgpd-check          (conformidade LGPD)
+├── lint                (ESLint)
+├── unit-tests          (Vitest)
+├── e2e-tests           (Playwright)
+├── build               (Vite build)
+├── deploy-staging      (Vercel preview)
+├── deploy-production   (Vercel prod)
+├── deploy-review       (Review Apps)
+├── health-check        (Verificação pós-deploy)
+├── performance-audit   (Lighthouse)
+└── pipeline-report     (Resumo)
+```
+
+---
+
+**Versão:** 1.0.0  
+**Última atualização:** Janeiro 2025  
 **Mantenedor:** Equipe Assistente Jurídico PJe
