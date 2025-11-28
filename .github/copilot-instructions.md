@@ -13,10 +13,163 @@ This repository contains a legal management system built with React, TypeScript,
 - Financial management
 - 7 autonomous AI agents working 24/7
 
+## Autonomous Agents System
+
+The system includes 7 autonomous AI agents that work continuously:
+
+### Active Agents (4/7 Connected)
+- **assistente-juridico-agent**: Main agent with remote development and CI/CD
+- **agente-cluster**: Cluster management agent
+- **agenterevisor**: Code review agent
+- **agenterevisor2**: Second code review agent
+
+### Pending Agents (3/7)
+- **agente-desenvolvimento**: Development environment with debug and hot reload
+- **agente-qa**: QA environment with automated tests and security
+- **agente-producao**: Production environment with HA and backup
+
+### Infrastructure
+- **Kubernetes**: Isolated namespaces (desenvolvimento, qa, production)
+- **RBAC**: ClusterRoles and ServiceAccounts configured
+- **Network Policies**: Isolation between environments
+- **GitLab Integration**: Agents connected to GitLab for CI/CD automation
+
+## 🤖 Sistema de 15 Agentes IA
+
+O sistema inclui 15 agentes de IA especializados, cada um com funções específicas para automação jurídica:
+
+### 🌟 Agentes Principais (Ativos 24/7)
+
+#### 1. Harvey Specter (`harvey`)
+**Estrategista-chefe do escritório**
+- **Função**: Análise estratégica macro, monitoramento de performance, identificação de riscos
+- **Capacidades**: strategic-analysis, performance-monitoring, risk-identification, data-analysis
+- **Uso**: Visão geral do escritório, recomendações estratégicas
+
+#### 2. Mrs. Justin-e (`justine`)
+**Especialista em intimações e prazos**
+- **Função**: Análise automática de intimações, identificação de prazos, geração de tarefas
+- **Capacidades**: intimation-analysis, deadline-identification, task-generation, priority-assessment
+- **Uso**: Processar intimações, criar tarefas com deadlines
+
+#### 3. Análise Documental (`analise-documental`)
+**Analisador de documentos 24/7**
+- **Função**: Análise automática de expedientes, intimações e documentos do PJe
+- **Capacidades**: document-analysis, text-extraction, entity-recognition, classification
+- **Uso**: Processar documentos, extrair informações estruturadas
+
+#### 4. Monitor DJEN (`monitor-djen`)
+**Monitoramento de publicações**
+- **Função**: Monitoramento contínuo do Diário de Justiça Eletrônico Nacional
+- **Capacidades**: djen-monitoring, publication-detection, notification, datajud-integration
+- **Uso**: Monitorar publicações diárias, detectar intimações novas
+
+#### 5. Gestão de Prazos (`gestao-prazos`)
+**Calculadora e gestor de prazos**
+- **Função**: Cálculo e acompanhamento de prazos processuais, geração de alertas
+- **Capacidades**: deadline-calculation, business-days, holiday-detection, alert-generation
+- **Uso**: Calcular prazos, gerar alertas de vencimento
+
+### 🎯 Agentes Especializados (Ativar quando necessário)
+
+#### 6. Redação de Petições (`redacao-peticoes`)
+**Redator jurídico profissional**
+- **Função**: Criação de petições e documentos jurídicos
+- **Capacidades**: document-drafting, legal-writing, template-generation, precedent-integration
+- **Uso**: Redigir petições, elaborar recursos
+
+#### 7. Organização de Arquivos (`organizacao-arquivos`)
+**Organizador e arquivista digital**
+- **Função**: Organização e categorização de documentos
+- **Capacidades**: file-organization, categorization, indexing, duplicate-detection
+- **Uso**: Organizar documentos por processo, criar índices
+
+#### 8. Pesquisa Jurisprudencial (`pesquisa-juris`)
+**Pesquisador de precedentes**
+- **Função**: Busca e análise de precedentes e jurisprudências
+- **Capacidades**: jurisprudence-search, precedent-analysis, case-law-research, trend-analysis
+- **Uso**: Buscar precedentes STF/STJ, fundamentar petições
+
+#### 9. Análise de Risco (`analise-risco`)
+**Avaliador de riscos processuais**
+- **Função**: Avaliação de riscos processuais e financeiros
+- **Capacidades**: risk-assessment, probability-analysis, financial-impact, mitigation-strategies
+- **Uso**: Avaliar viabilidade de casos, estimar probabilidade de sucesso
+
+#### 10. Revisão Contratual (`revisao-contratual`)
+**Revisor de contratos**
+- **Função**: Análise de contratos, identificação de cláusulas problemáticas
+- **Capacidades**: contract-analysis, clause-review, compliance-check, risk-identification
+- **Uso**: Revisar contratos, identificar cláusulas abusivas
+
+#### 11. Comunicação com Clientes (`comunicacao-clientes`)
+**Comunicador profissional**
+- **Função**: Geração de comunicações personalizadas para clientes
+- **Capacidades**: client-communication, report-generation, language-simplification, personalization
+- **Uso**: Explicar andamentos, gerar relatórios periódicos
+
+#### 12. Análise Financeira (`financeiro`)
+**Analista financeiro**
+- **Função**: Monitoramento de faturamento e rentabilidade
+- **Capacidades**: financial-monitoring, profitability-analysis, receivables-tracking, metrics-calculation
+- **Uso**: Monitorar honorários, analisar rentabilidade por caso
+
+#### 13. Estratégia Processual (`estrategia-processual`)
+**Consultor estratégico processual**
+- **Função**: Sugestão de estratégias processuais baseadas em dados
+- **Capacidades**: strategic-planning, option-analysis, cost-benefit, success-probability
+- **Uso**: Definir estratégia processual, analisar custo vs benefício
+
+#### 14. Tradução Jurídica (`traducao-juridica`)
+**Tradutor jurídico**
+- **Função**: Tradução de termos técnicos jurídicos
+- **Capacidades**: legal-translation, term-explanation, glossary-creation, language-adaptation
+- **Uso**: Explicar termos técnicos, criar glossários
+
+#### 15. Compliance (`compliance`)
+**Auditor de conformidade**
+- **Função**: Verificação de conformidade com LGPD e normas
+- **Capacidades**: compliance-check, lgpd-verification, ethics-review, regulatory-audit
+- **Uso**: Verificar conformidade LGPD, revisar questões éticas
+
+### 🔧 Como Usar os Agentes
+
+#### Ativando/Desativando Agentes
+```typescript
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+
+const { agents, toggleAgent } = useAutonomousAgents()
+// toggleAgent('harvey') - ativa/desativa o agente Harvey
+```
+
+#### Criando Tarefas para Agentes
+```typescript
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+
+const { addTask } = useAutonomousAgents()
+
+const task = {
+  id: crypto.randomUUID(),
+  agentId: 'harvey',
+  type: 'analyze-performance',
+  priority: 'high',
+  status: 'queued',
+  data: { description: 'Analisar performance do escritório' }
+}
+
+addTask(task)
+```
+
+#### Status dos Agentes
+- ✅ **5 agentes ativos** por padrão (Harvey, Justin-e, Análise Documental, Monitor DJEN, Gestão de Prazos)
+- ⏸️ **10 agentes especializados** (ativar quando necessário)
+- 📊 **100% implementados** e testados
+
 ## Technology Stack
 
 - **Framework**: React 19 with TypeScript
 - **Build Tool**: Vite 6
+- **Node Version**: 22.x (required)
 - **Styling**: Tailwind CSS v4
 - **UI Components**: shadcn/ui v4, Radix UI
 - **Icons**: Phosphor Icons, Lucide React
@@ -26,6 +179,11 @@ This repository contains a legal management system built with React, TypeScript,
 - **Animation**: Framer Motion
 - **AI**: Spark LLM (GPT-4)
 - **OAuth**: Google OAuth 2.0 for authentication
+- **Database**: Upstash Redis (KV storage)
+- **Monitoring**: Sentry (error tracking)
+- **PWA**: vite-plugin-pwa
+- **Testing**: Vitest + Playwright (E2E)
+- **Deployment**: Vercel (with cron jobs and serverless functions)
 
 ## Project Structure
 
@@ -69,6 +227,18 @@ npm run lint             # Run ESLint
 
 # Optimize dependencies
 npm run optimize
+
+# Testing
+npm run test             # Run unit tests (Vitest)
+npm run test:ui          # Run tests with UI
+npm run test:run         # Run tests once
+npm run test:coverage    # Run tests with coverage
+npm run test:api         # Run API tests
+npm run test:all         # Run all tests
+npm run test:e2e         # Run E2E tests (Playwright)
+
+# Formatting
+npm run format           # Format code with Prettier
 ```
 
 ## Code Style and Conventions
@@ -166,10 +336,17 @@ export function MyComponent({ title, onAction }: MyComponentProps) {
 - Example: `src/lib/djen-api.test.ts`
 
 ### Running Tests
-Currently minimal test infrastructure. When adding tests:
-- Use a testing library compatible with Vite (e.g., Vitest)
-- Follow existing test patterns in `djen-api.test.ts`
-- Test critical business logic and utilities
+- **Unit Tests**: Vitest with coverage reporting
+- **API Tests**: Separate config for backend functions
+- **E2E Tests**: Playwright for browser automation
+- **UI Tests**: Vitest UI for interactive testing
+
+### Test Commands
+```bash
+npm run test:all         # Run complete test suite
+npm run test:coverage    # Generate coverage reports
+npm run test:e2e         # End-to-end browser tests
+```
 
 ## Building and Linting
 
@@ -265,6 +442,49 @@ const form = useForm({
 - Autonomous agents system
 - See `AIAgents.tsx` and `use-autonomous-agents.ts`
 
+## Deployment & Integrations
+
+### Vercel Deployment
+- **Region**: São Paulo (gru1) for Brazil compliance
+- **Functions**: Serverless API routes with custom timeouts
+- **Cron Jobs**: Automated DJEN monitoring (daily at 11:00 BRT)
+- **Security Headers**: HSTS, CSP, CORS configured
+- **Environment**: Production builds optimized
+
+### GitLab CI/CD
+- **Agents**: 7 autonomous agents for development workflow
+- **Kubernetes**: Minikube cluster with RBAC
+- **Auto DevOps**: Automated pipelines and deployments
+- **Security Scanning**: Integrated vulnerability checks
+
+### External APIs
+- **DJEN/DataJud**: CNJ public API for legal publications
+- **Google Calendar**: Bidirectional synchronization
+- **Upstash Redis**: Serverless KV storage
+- **Sentry**: Error tracking and monitoring
+
+### Environment Variables
+Required for full functionality:
+```env
+# Core
+VITE_GOOGLE_CLIENT_ID=
+VITE_GOOGLE_API_KEY=
+VITE_REDIRECT_URI=
+
+# Storage
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+# AI (optional)
+VITE_SPARK_API_KEY=
+
+# Monitoring
+SENTRY_DSN=
+
+# Email (optional)
+RESEND_API_KEY=
+```
+
 ## Documentation Files
 
 - `PRD.md` - Product requirements
@@ -273,7 +493,13 @@ const form = useForm({
 - `OAUTH_SETUP.md` - OAuth configuration guide
 - `GOOGLE_CALENDAR_INTEGRATION.md` - Calendar integration
 - `DJEN_DOCUMENTATION.md` - DJEN API integration
+- `GUIA_CONFIGURACAO_VERCEL.md` - Vercel deployment guide
+- `GITLAB_DUO_SETUP_COMPLETE.md` - GitLab Duo configuration
 - `QUICKSTART.md` - Quick start guide
+- `VERCEL_DEPLOYMENT_GUIDE.md` - Vercel deployment details
+- `TODOS_OS_15_AGENTES.md` - Complete agents documentation
+- `AGENTS_SYSTEM.md` - Technical agents documentation
+- `AGENTS_IMPROVEMENTS_SUMMARY.md` - Agents improvements summary
 
 ## Making Changes
 

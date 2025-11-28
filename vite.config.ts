@@ -108,8 +108,12 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        // Otimiza nomes de chunks para melhor caching
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
         manualChunks(id) {
-          // React core
+          // React core - crítico, carrega primeiro
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'react-vendor';
           }
@@ -119,50 +123,59 @@ export default defineConfig({
             return 'ui-vendor';
           }
 
-          // D3 separately to avoid conflicts
+          // D3 separately to avoid conflicts - lazy loaded
           if (id.includes('d3')) {
             return 'd3-vendor';
           }
 
-          // Form libraries
+          // Form libraries - usado apenas em formulários
           if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform/resolvers')) {
             return 'forms';
           }
 
-          // Phosphor icons
+          // Phosphor icons - usado em toda app
           if (id.includes('@phosphor-icons/react')) {
             return 'icons';
           }
 
-          // Framer Motion
+          // Framer Motion - lazy loaded
           if (id.includes('framer-motion')) {
             return 'animation';
           }
 
-          // Three.js
+          // Three.js - lazy loaded, pesado
           if (id.includes('three')) {
             return 'three';
           }
 
-          // Recharts (gráficos) - chunk separado REMOVIDO para evitar ReferenceError
-          // if (id.includes('recharts')) {
-          //   return 'charts';
-          // }
-
-          // DnD Kit (drag and drop para Kanban)
+          // DnD Kit (drag and drop para Kanban) - lazy loaded
           if (id.includes('@dnd-kit')) {
             return 'dnd';
           }
 
-          // PDF e upload de arquivos
+          // PDF e upload de arquivos - lazy loaded
           if (id.includes('pdf') || id.includes('file-upload')) {
             return 'files';
           }
 
-          // Other utilities
-          if (id.includes('date-fns') || id.includes('clsx') ||
-            id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
-            return 'utils';
+          // Date utilities - usado frequentemente
+          if (id.includes('date-fns')) {
+            return 'date-utils';
+          }
+
+          // CSS utilities - crítico
+          if (id.includes('clsx') || id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
+            return 'css-utils';
+          }
+
+          // Sentry - lazy loaded
+          if (id.includes('@sentry')) {
+            return 'sentry';
+          }
+
+          // Sonner toasts - usado frequentemente
+          if (id.includes('sonner')) {
+            return 'toasts';
           }
 
           // Sample data (usado apenas em desenvolvimento/demo)
