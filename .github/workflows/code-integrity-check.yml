@@ -244,16 +244,16 @@ jobs:
 
           # ProcessCRM -> useKV
           if grep -q "useKV" src/components/ProcessCRM.tsx 2>/dev/null; then
-            echo "| ProcessCRM | useKV (Spark) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+            echo "| ProcessCRM | useKV (Upstash) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "| ProcessCRM | useKV (Spark) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+            echo "| ProcessCRM | useKV (Upstash) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
           fi
 
           # Dashboard -> useKV
           if grep -q "useKV" src/components/Dashboard.tsx 2>/dev/null; then
-            echo "| Dashboard | useKV (Spark) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+            echo "| Dashboard | useKV (Upstash) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "| Dashboard | useKV (Spark) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+            echo "| Dashboard | useKV (Upstash) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 🧪 Verificar funções exportadas vs usadas

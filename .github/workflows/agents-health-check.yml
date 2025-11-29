@@ -159,7 +159,7 @@ jobs:
 
           # Note: We can't check actual values in CI, but we can check if they're documented
           REQUIRED_VARS=(
-            "GITHUB_TOKEN:Spark LLM API"
+            "GEMINI_API_KEY:Gemini 2.5 Pro LLM API"
             "DATAJUD_API_KEY:DataJud API"
             "VERCEL_AUTOMATION_BYPASS_SECRET:Webhook Bypass"
           )
@@ -334,10 +334,10 @@ jobs:
             echo "⚠️ AI Tools file not found" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Validate Spark KV usage
+      - name: Validate Upstash KV usage
         run: |
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 💾 Spark KV Storage Validation" >> $GITHUB_STEP_SUMMARY
+          echo "## 💾 Upstash KV Storage Validation" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Check for KV keys usage
