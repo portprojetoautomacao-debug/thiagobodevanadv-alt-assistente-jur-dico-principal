@@ -7,5 +7,5 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "vitest.config.node.ts"]
+  "include": ["vite.config.ts", "vitest.config.ts", "vitest.config.node.ts", "vite-icon-optimizer.ts"]
 }
