@@ -10,6 +10,9 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { randomUUID } from 'node:crypto'
+import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from '../src/lib/agent-schemas.js'
+import { agentMonitor } from '../src/lib/agent-monitoring.js'
+import { legalMemory } from '../src/lib/legal-memory.js'
 
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
@@ -83,6 +86,16 @@ interface AgentTask {
   retryCount?: number
   maxRetries?: number
   timeout?: number
+}
+
+interface TaskResult extends Record<string, unknown> {
+  suggestedActions?: string[]
+  draft?: string
+  tokensUsed?: number
+  processingTimeMs?: number
+  processedAt?: string
+  agentId?: string
+  taskType?: AgentTaskType
 }
 
 interface Agent {
@@ -312,138 +325,195 @@ function getUserPrompt(task: AgentTask): string {
 }
 
 // 🔁 Agora usando Google Gemini no lugar do Spark
-async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<Record<string, unknown>> {
-  const startTime = Date.now()
+async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskResult> {
+  // ✨ PLANO MESTRE - FASE 4: Monitoramento
+  return await agentMonitor.trackTaskExecution(
+    task.id,
+    agent.id,
+    task.type,
+    async () => {
+      const startTime = Date.now()
 
-  // Validar entrada
-  if (!validateAgentTask(task)) {
-    const error = new Error('Invalid agent task structure')
-    logger.error('Task validation failed', error, { task })
-    throw error
-  }
+      // Validar entrada
+      if (!validateAgentTask(task)) {
+        const error = new Error('Invalid agent task structure')
+        logger.error('Task validation failed', error, { task })
+        throw error
+      }
 
-  if (!validateAgent(agent)) {
-    const error = new Error('Invalid agent structure')
-    logger.error('Agent validation failed', error, { agent })
-    throw error
-  }
+      if (!validateAgent(agent)) {
+        const error = new Error('Invalid agent structure')
+        logger.error('Agent validation failed', error, { agent })
+        throw error
+      }
 
-  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
-  if (!apiKey) {
-    const error = new Error('Missing GOOGLE_API_KEY / GEMINI_API_KEY env var')
-    logger.error('Gemini API key not configured', error)
-    throw error
-  }
-
-  try {
-    const systemPrompt = getSystemPrompt(agent.type)
-    const userPrompt = getUserPrompt(task)
-
-    logger.info('Processing task with Gemini', {
-      taskId: task.id,
-      agentId: agent.id,
-      taskType: task.type,
-      timeout: task.timeout || 30000
-    })
-
-    const controller = new AbortController()
-    const timeoutMs = task.timeout || 30000
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
-
-    try {
-      const fullPrompt = [
-        '# Instruções do agente (system):',
-        systemPrompt,
-        '',
-        '# Tarefa específica (user):',
-        userPrompt
-      ].join('\n')
-
-      const geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: fullPrompt }]
-              }
-            ],
-            generationConfig: {
-              maxOutputTokens: 2000,
-              temperature: 0.7
-            }
-          }),
-          signal: controller.signal
+      // Validar entrada com Zod Schemas (PLANO MESTRE - FASE 2)
+      if (task.type === AgentTaskType.ANALYZE_INTIMATION) {
+        const validation = AnalyzeIntimationInputSchema.safeParse(task.data)
+        if (!validation.success) {
+          const error = new Error(`Invalid input for ANALYZE_INTIMATION: ${validation.error.message}`)
+          logger.error('Schema validation failed', error, { data: task.data })
+          throw error
         }
-      )
-
-      if (!geminiResponse.ok) {
-        const text = await geminiResponse.text().catch(() => '')
-        throw new Error(`Gemini error: ${geminiResponse.status} ${geminiResponse.statusText} ${text}`)
+      } else if (task.type === AgentTaskType.DRAFT_PETITION) {
+        const validation = DraftPetitionInputSchema.safeParse(task.data)
+        if (!validation.success) {
+          const error = new Error(`Invalid input for DRAFT_PETITION: ${validation.error.message}`)
+          logger.error('Schema validation failed', error, { data: task.data })
+          throw error
+        }
       }
 
-      const geminiData = (await geminiResponse.json()) as {
-        candidates?: Array<{
-          content?: { parts?: Array<{ text?: string }> }
-        }>
-        usageMetadata?: { totalTokenCount?: number }
+      const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
+      if (!apiKey) {
+        const error = new Error('Missing GOOGLE_API_KEY / GEMINI_API_KEY env var')
+        logger.error('Gemini API key not configured', error)
+        throw error
       }
 
-      const parts = geminiData.candidates?.[0]?.content?.parts || []
-      const aiContent = parts.map((p) => p.text || '').join('\n').trim()
-
-      if (!aiContent) {
-        throw new Error('Empty response from Gemini')
-      }
-
-      let result: Record<string, any>
+      // ✨ PLANO MESTRE - FASE 3: Memória Jurídica (Recuperação)
+      let memoryContext = ''
       try {
-        const jsonMatch = aiContent.match(/\{[\s\S]*\}/)
-        result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent }
-      } catch (parseError) {
-        logger.warn('Failed to parse Gemini JSON response', {
-          error: parseError instanceof Error ? parseError.message : String(parseError),
-          contentPreview: aiContent.slice(0, 500)
-        })
-        result = { rawResponse: aiContent }
+        if (task.data && (task.data.description || task.data.query)) {
+          const query = (task.data.description || task.data.query) as string
+          const relevantItems = await legalMemory.search({
+            query,
+            limit: 3
+          })
+
+          if (relevantItems.length > 0) {
+            memoryContext = `\n\n# Contexto Jurídico Relevante (Memória):\n${relevantItems
+              .map((item) => `- ${item.content} (Score: ${item.relevanceScore})`)
+              .join('\n')}`
+            logger.info(`Found ${relevantItems.length} relevant memory items for task ${task.id}`)
+          }
+        }
+      } catch (memError) {
+        logger.warn('Failed to retrieve legal memory', { error: memError })
       }
 
-      result.processedAt = new Date().toISOString()
-      result.agentId = agent.id
-      result.taskType = task.type
-      result.tokensUsed = geminiData.usageMetadata?.totalTokenCount
-      result.processingTimeMs = Date.now() - startTime
+      const systemPrompt = getSystemPrompt(agent.type)
+      const userPrompt = getUserPrompt(task)
 
-      logger.info('Task processed successfully (Gemini)', {
+      logger.info('Processing task with Gemini', {
         taskId: task.id,
         agentId: agent.id,
-        tokensUsed: result.tokensUsed,
-        processingTimeMs: result.processingTimeMs
+        taskType: task.type,
+        timeout: task.timeout || 30000
       })
 
-      return result
-    } finally {
-      clearTimeout(timeoutId)
+      const controller = new AbortController()
+      const timeoutMs = task.timeout || 30000
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+      try {
+        const fullPrompt = [
+          '# Instruções do agente (system):',
+          systemPrompt,
+          memoryContext, // Inserir contexto da memória
+          '',
+          '# Tarefa específica (user):',
+          userPrompt
+        ].join('\n')
+
+        const geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: fullPrompt }]
+                }
+              ],
+              generationConfig: {
+                maxOutputTokens: 2000,
+                temperature: 0.7
+              }
+            }),
+            signal: controller.signal
+          }
+        )
+
+        if (!geminiResponse.ok) {
+          const text = await geminiResponse.text().catch(() => '')
+          throw new Error(`Gemini error: ${geminiResponse.status} ${geminiResponse.statusText} ${text}`)
+        }
+
+        const geminiData = (await geminiResponse.json()) as {
+          candidates?: Array<{
+            content?: { parts?: Array<{ text?: string }> }
+          }>
+          usageMetadata?: { totalTokenCount?: number }
+        }
+
+        const parts = geminiData.candidates?.[0]?.content?.parts || []
+        const aiContent = parts.map((p) => p.text || '').join('\n').trim()
+
+        if (!aiContent) {
+          throw new Error('Empty response from Gemini')
+        }
+
+        let result: TaskResult
+        try {
+          const jsonMatch = aiContent.match(/\{[\s\S]*\}/)
+          result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent }
+        } catch (parseError) {
+          logger.warn('Failed to parse Gemini JSON response', {
+            error: parseError instanceof Error ? parseError.message : String(parseError),
+            contentPreview: aiContent.slice(0, 500)
+          })
+          result = { rawResponse: aiContent }
+        }
+
+        result.processedAt = new Date().toISOString()
+        result.agentId = agent.id
+        result.taskType = task.type
+        result.tokensUsed = geminiData.usageMetadata?.totalTokenCount
+        result.processingTimeMs = Date.now() - startTime
+
+        // ✨ PLANO MESTRE - FASE 3: Memória Jurídica (Armazenamento)
+        try {
+          if (task.type === AgentTaskType.DRAFT_PETITION && result.draft) {
+            await legalMemory.addContext(
+              `Minuta de petição: ${String(result.draft).substring(0, 200)}...`,
+              'peca_processual',
+              { taskId: task.id, agentId: agent.id, fullDraft: result.draft }
+            )
+          } else if (task.type === AgentTaskType.RESEARCH_PRECEDENTS && result.precedentsFound) {
+            await legalMemory.addContext(
+              `Pesquisa de precedentes: ${JSON.stringify(result.precedentsFound)}`,
+              'precedente',
+              { taskId: task.id, agentId: agent.id }
+            )
+          } else if (task.type === AgentTaskType.CASE_STRATEGY && result.strategyAnalysis) {
+            await legalMemory.addContext(
+              `Estratégia processual: ${String(result.strategyAnalysis)}`,
+              'estrategia',
+              { taskId: task.id, agentId: agent.id }
+            )
+          }
+        } catch (memSaveError) {
+          logger.warn('Failed to save to legal memory', { error: memSaveError })
+        }
+
+        logger.info('Task processed successfully (Gemini)', {
+          taskId: task.id,
+          agentId: agent.id,
+          tokensUsed: result.tokensUsed,
+          processingTimeMs: result.processingTimeMs
+        })
+
+        return result
+      } finally {
+        clearTimeout(timeoutId)
+      }
     }
-  } catch (error) {
-    const processingTimeMs = Date.now() - startTime
-    const errorMessage = error instanceof Error ? error.message : String(error)
-
-    logger.error('Task processing failed (Gemini)', error, {
-      taskId: task.id,
-      agentId: agent.id,
-      taskType: task.type,
-      processingTimeMs,
-      errorMessage
-    })
-
-    throw error
-  }
+  )
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -528,10 +598,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (
               task.type === AgentTaskType.ANALYZE_DOCUMENT &&
-              (result as any).suggestedActions &&
-              Array.isArray((result as any).suggestedActions)
+              result.suggestedActions &&
+              Array.isArray(result.suggestedActions)
             ) {
-              for (const actionText of (result as any).suggestedActions as unknown[]) {
+              for (const actionText of result.suggestedActions) {
                 const actionStr = String(actionText).toLowerCase()
                 let nextTask: AgentTask | null = null
 
@@ -778,7 +848,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               }
             }
 
-            if (task.type === AgentTaskType.DRAFT_PETITION && (result as any).draft) {
+            if (task.type === AgentTaskType.DRAFT_PETITION && result.draft) {
               const data = task.data as Record<string, unknown>
 
               const minuta = {
@@ -786,7 +856,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 titulo: `[Agente] ${(data.documentType as string) || 'Petição'} - ${(data.processNumber as string) || 'Novo'}`,
                 processId: (data.processId as string) || undefined,
                 tipo: determineMinutaTipo(data.documentType as string),
-                conteudo: String((result as any).draft),
+                conteudo: String(result.draft),
                 status: 'pendente-revisao' as const,
                 criadoEm: new Date().toISOString(),
                 atualizadoEm: new Date().toISOString(),
@@ -893,12 +963,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ok: true,
         result,
         metadata: {
-          tokensUsed: (result as any).tokensUsed,
-          processingTimeMs: (result as any).processingTimeMs,
-          processedAt: (result as any).processedAt
+          tokensUsed: result.tokensUsed,
+          processingTimeMs: result.processingTimeMs,
+          processedAt: result.processedAt
         },
         timestamp: new Date().toISOString()
       })
+    }
+
+    // ✨ GET LOGS
+    if (action === 'logs' && req.method === 'GET') {
+      const sparkId = process.env.SPARK_ID || 'spark-default'
+      const kvEndpoint = `https://api.github.com/spark/kv/agent-logs?sparkId=${sparkId}`
+
+      const response = await fetch(kvEndpoint, {
+        headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+      })
+
+      if (!response.ok) {
+        return res.status(200).json({ logs: [] })
+      }
+
+      const data = await response.json() as { value?: unknown[] }
+      return res.status(200).json({ logs: data.value || [] })
+    }
+
+    // ✨ GET MEMORY
+    if (action === 'memory' && req.method === 'GET') {
+      const sparkId = process.env.SPARK_ID || 'spark-default'
+      const kvEndpoint = `https://api.github.com/spark/kv/legal-memory?sparkId=${sparkId}`
+
+      const response = await fetch(kvEndpoint, {
+        headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+      })
+
+      if (!response.ok) {
+        return res.status(200).json({ memory: [] })
+      }
+
+      const data = await response.json() as { value?: unknown[] }
+      return res.status(200).json({ memory: data.value || [] })
     }
 
     return res.status(400).json({

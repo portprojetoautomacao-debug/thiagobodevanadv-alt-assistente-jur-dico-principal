@@ -45,8 +45,8 @@ const KV_KEYS = {
 } as const;
 
 // Cache configuration (prefixed with _ as currently unused but may be needed)
-const _CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
-const _MAX_CACHE_SIZE = 500; // Max cached publications
+// const _CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+// const _MAX_CACHE_SIZE = 500; // Max cached publications
 
 interface MonitoredLawyer {
   id: string;
@@ -1677,6 +1677,103 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         ok: result.success,
         message: 'Deadline alerts completed',
+        result
+      });
+    }
+
+    // ================= WATCHDOG (every 30 min) =================
+    if (action === 'watchdog') {
+      console.log(`[Cron Watchdog] Starting execution at ${timestamp}`);
+
+      interface WatchdogResult {
+        success: boolean;
+        timestamp: string;
+        agentsReset: number;
+        tasksTimedOut: number;
+        errors: string[];
+      }
+
+      const result: WatchdogResult = {
+        success: true,
+        timestamp,
+        agentsReset: 0,
+        tasksTimedOut: 0,
+        errors: []
+      };
+
+      try {
+        const kv = await getKv();
+        const agents = await getAgents();
+        const taskQueue = (await kv.get('agent-task-queue') as AgentTask[]) || [];
+
+        // 1. Check stuck agents
+        const STUCK_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
+        const now = Date.now();
+
+        const updatedAgents = agents.map(agent => {
+          if (agent.status === 'processing' && agent.lastActivity) {
+            const lastActivityTime = new Date(agent.lastActivity).getTime();
+            if (now - lastActivityTime > STUCK_THRESHOLD_MS) {
+              console.warn(`[Watchdog] Resetting stuck agent: ${agent.name} (${agent.id})`);
+              result.agentsReset++;
+              return { ...agent, status: 'idle' as const, lastActivity: new Date().toISOString() };
+            }
+          }
+          return agent;
+        });
+
+        if (result.agentsReset > 0) {
+          await updateAgents(updatedAgents);
+        }
+
+        // 2. Check stuck tasks
+        let tasksUpdated = false;
+        const updatedQueue = taskQueue.map(task => {
+          if (task.status === 'in_progress' && task.createdAt) {
+            const startTime = new Date(task.createdAt).getTime();
+            // Timeout de 1 hora para tarefas travadas
+            if (now - startTime > 60 * 60 * 1000) {
+              console.warn(`[Watchdog] Timing out stuck task: ${task.id}`);
+              result.tasksTimedOut++;
+              tasksUpdated = true;
+              return {
+                ...task,
+                status: 'failed' as const,
+                result: 'Watchdog: Task timed out (stuck in progress)',
+                completedAt: new Date().toISOString()
+              };
+            }
+          }
+          return task;
+        });
+
+        if (tasksUpdated) {
+          // Move failed tasks to history
+          const failedTasks = updatedQueue.filter(t => t.status === 'failed' && t.result === 'Watchdog: Task timed out (stuck in progress)');
+
+          if (failedTasks.length > 0) {
+            const existingCompleted = (await kv.get(KV_KEYS.COMPLETED_TASKS) as AgentTask[]) || [];
+            existingCompleted.unshift(...failedTasks);
+            await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
+
+            // Remove from queue
+            const remainingQueue = updatedQueue.filter(t => !(t.status === 'failed' && t.result === 'Watchdog: Task timed out (stuck in progress)'));
+            await kv.set('agent-task-queue', remainingQueue);
+          } else {
+            await kv.set('agent-task-queue', updatedQueue);
+          }
+        }
+
+        console.log(`[Cron Watchdog] Completed: ${result.agentsReset} agents reset, ${result.tasksTimedOut} tasks timed out`);
+
+      } catch (error) {
+        result.success = false;
+        result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      return res.status(200).json({
+        ok: result.success,
+        message: 'Watchdog execution completed',
         result
       });
     }

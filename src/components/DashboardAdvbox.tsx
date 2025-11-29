@@ -28,7 +28,7 @@ interface DashboardAdvboxProps {
   onNavigate: (view: ViewType) => void
 }
 
-function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
+function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
   const [processes] = useKV<Process[]>('processes', [])
   const [selectedMonth, setSelectedMonth] = useState(new Date())
 
@@ -516,7 +516,7 @@ function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
                             ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105'
                             : temPrazo
                               ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105'
-                              : 'text-foreground hover:bg-gradient-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
+                              : 'text-foreground hover:bg-linear-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
                         }`}
                     >
                       {day}
@@ -585,7 +585,7 @@ function DashboardAdvbox({ onNavigate }: DashboardAdvboxProps) {
               return (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-3 px-4 hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent rounded-xl cursor-pointer group transition-all border-b border-border/30 last:border-b-0"
+                  className="flex items-center justify-between py-3 px-4 hover:bg-linear-to-r hover:from-primary/5 hover:to-transparent rounded-xl cursor-pointer group transition-all border-b border-border/30 last:border-b-0"
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <input

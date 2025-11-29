@@ -1,13 +1,14 @@
 /**
- * LLM Client - Real API Implementation (Gemini 2.5 Pro)
+ * LLM Client - Gemini 2.5 Pro Implementation
  * 
- * This module provides a unified interface for LLM operations using Gemini 2.5 Pro.
- * All calls go to the backend proxy at /_spark/llm → /api/llm-proxy → Gemini API.
+ * Este módulo fornece uma interface unificada para operações com Gemini 2.5 Pro.
+ * Todas as chamadas vão para o backend proxy: /api/llm-proxy (não-streaming) ou /api/llm-stream (streaming).
  * 
- * NO SIMULATIONS - All calls go to real AI APIs.
+ * SEM SIMULAÇÕES - Todas as chamadas vão para APIs reais do Google Gemini.
  */
 
-const LLM_PROXY_URL = '/_spark/llm'
+const LLM_PROXY_URL = '/api/llm-proxy'
+const LLM_STREAM_URL = '/api/llm-stream'
 
 export interface LLMMessage {
     role: 'system' | 'user' | 'assistant'
@@ -20,12 +21,18 @@ export interface LLMOptions {
     model?: string
 }
 
+export interface StreamCallbacks {
+    onChunk?: (chunk: string) => void
+    onComplete?: (fullContent: string) => void
+    onError?: (error: Error) => void
+}
+
 /**
- * Call LLM API and get a text response
+ * Call Gemini API and get a text response
  */
 export async function llm(
     prompt: string,
-    model: string = 'gpt-4o',
+    model: string = 'gemini-2.5-pro',
     jsonMode: boolean = false
 ): Promise<string> {
     const messages: LLMMessage[] = [
@@ -52,7 +59,7 @@ export async function llm(
 }
 
 /**
- * Generate text using LLM
+ * Generate text using Gemini
  */
 export async function generateText(
     prompt: string,
@@ -66,17 +73,17 @@ export async function generateText(
 }
 
 /**
- * Generate JSON using LLM
+ * Generate JSON using Gemini
  */
 export async function generateJSON<T = unknown>(
     prompt: string,
     options: LLMOptions = {}
 ): Promise<T> {
-    const systemPrompt = 'You are a helpful assistant that always responds with valid JSON. Never include explanations outside the JSON structure.'
+    const systemPrompt = 'Você é um assistente que sempre responde com JSON válido. Nunca inclua explicações fora da estrutura JSON.'
 
     const messages: LLMMessage[] = [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `${prompt}\n\nRespond with valid JSON only.` }
+        { role: 'user', content: `${prompt}\n\nResponda apenas com JSON válido.` }
     ]
 
     const response = await callLLMProxy(messages, {
@@ -93,32 +100,68 @@ export async function generateJSON<T = unknown>(
         return JSON.parse(response) as T
     } catch (error) {
         console.error('Failed to parse JSON response:', response)
-        throw new Error(`Invalid JSON response from LLM: ${error}`)
+        throw new Error(`Invalid JSON response from Gemini: ${error}`)
     }
 }
 
 /**
- * Stream text from LLM (falls back to non-streaming for now)
+ * Stream text from Gemini 2.5 Pro via SSE (Server-Sent Events)
+ * Usa streaming REAL - não simulado
  */
 export async function* streamText(
     prompt: string,
     options: LLMOptions = {}
 ): AsyncGenerator<string, void, unknown> {
-    // For now, we don't have streaming support in the proxy
-    // So we'll simulate streaming by returning the full response in chunks
-    const response = await generateText(prompt, options)
+    const messages: LLMMessage[] = [
+        { role: 'user', content: prompt }
+    ]
 
-    // Yield the response in chunks to simulate streaming
-    const chunkSize = 10
-    for (let i = 0; i < response.length; i += chunkSize) {
-        yield response.slice(i, i + chunkSize)
-        // Small delay to simulate streaming
-        await new Promise(resolve => setTimeout(resolve, 10))
+    const response = await fetch(LLM_STREAM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messages,
+            model: options.model || 'gemini-2.5-pro',
+            temperature: options.temperature ?? 0.7,
+            max_tokens: options.maxTokens || 4096
+        })
+    })
+
+    if (!response.ok) {
+        throw new Error(`Streaming API error: ${response.status}`)
+    }
+
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('Streaming não suportado')
+
+    yield* processSSEResponse(reader)
+}
+
+/**
+ * Stream text with callbacks (alternativa ao generator)
+ */
+export async function streamTextWithCallbacks(
+    prompt: string,
+    callbacks: StreamCallbacks,
+    options: LLMOptions = {}
+): Promise<string> {
+    let fullContent = ''
+
+    try {
+        for await (const chunk of streamText(prompt, options)) {
+            fullContent += chunk
+            callbacks.onChunk?.(chunk)
+        }
+        callbacks.onComplete?.(fullContent)
+        return fullContent
+    } catch (error) {
+        callbacks.onError?.(error instanceof Error ? error : new Error(String(error)))
+        throw error
     }
 }
 
 /**
- * Chat with LLM using message history
+ * Chat with Gemini using message history
  */
 export async function chat(
     messages: LLMMessage[],
@@ -128,7 +171,35 @@ export async function chat(
 }
 
 /**
- * Internal function to call the LLM proxy
+ * Chat with Gemini using streaming (retorna AsyncGenerator)
+ */
+export async function* chatStream(
+    messages: LLMMessage[],
+    options: LLMOptions = {}
+): AsyncGenerator<string, void, unknown> {
+    const response = await fetch(LLM_STREAM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messages,
+            model: options.model || 'gemini-2.5-pro',
+            temperature: options.temperature ?? 0.7,
+            max_tokens: options.maxTokens || 4096
+        })
+    })
+
+    if (!response.ok) {
+        throw new Error(`Streaming API error: ${response.status}`)
+    }
+
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('Streaming não suportado')
+
+    yield* processSSEResponse(reader)
+}
+
+/**
+ * Internal function to call the LLM proxy (non-streaming)
  */
 async function callLLMProxy(
     messages: LLMMessage[],
@@ -142,15 +213,15 @@ async function callLLMProxy(
             },
             body: JSON.stringify({
                 messages,
-                model: options.model || 'gpt-4o',
+                model: options.model || 'gemini-2.5-pro',
                 temperature: options.temperature ?? 0.7,
-                max_tokens: options.maxTokens || 2000
+                max_tokens: options.maxTokens || 4096
             })
         })
 
         if (!response.ok) {
             const errorText = await response.text()
-            throw new Error(`LLM API error: ${response.status} - ${errorText}`)
+            throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
         }
 
         const data = await response.json()
@@ -169,19 +240,62 @@ async function callLLMProxy(
             return data
         }
 
-        throw new Error('Unexpected response format from LLM API')
+        throw new Error('Unexpected response format from Gemini API')
     } catch (error) {
-        console.error('LLM API call failed:', error)
+        console.error('Gemini API call failed:', error)
         throw error
     }
 }
 
-// Export as spark-compatible namespace
-export const spark = {
+/**
+ * Helper to process SSE response stream
+ */
+async function* processSSEResponse(reader: ReadableStreamDefaultReader<Uint8Array>): AsyncGenerator<string, void, unknown> {
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || ''
+
+            for (const line of lines) {
+                const trimmed = line.trim()
+                if (!trimmed || !trimmed.startsWith('data: ')) continue
+
+                try {
+                    const json = JSON.parse(trimmed.slice(6))
+
+                    if (json.type === 'content' && json.content) {
+                        yield json.content
+                    } else if (json.type === 'error') {
+                        throw new Error(json.message || json.error || 'Erro desconhecido no streaming')
+                    }
+                    // json.type === 'done' → fim do stream
+                } catch (parseError) {
+                    // Log de erro de parse para facilitar depuração
+                    console.warn('Failed to parse SSE line:', trimmed, parseError)
+                }
+            }
+        }
+    } finally {
+        reader.releaseLock()
+    }
+}
+
+// Export como namespace (compatibilidade)
+export const gemini = {
     llm,
     generateText,
     generateJSON,
-    streamText
+    streamText,
+    streamTextWithCallbacks,
+    chat,
+    chatStream
 }
 
-export default spark
+export default gemini

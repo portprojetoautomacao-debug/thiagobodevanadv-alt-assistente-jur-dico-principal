@@ -71,6 +71,10 @@ export function useAutonomousAgents() {
     }>
   >('agent-activity-log', [])
 
+  // Estado para logs do servidor e memória jurídica
+  const [serverLogs, setServerLogs] = useState<any[]>([])
+  const [legalMemory, setLegalMemory] = useState<any[]>([])
+
   // Estado para streaming em tempo real
   const [streamingContent, setStreamingContent] = useState<Record<string, string>>({})
   const [useStreaming, setUseStreaming] = useState(true) // Streaming habilitado por padrão
@@ -84,6 +88,40 @@ export function useAutonomousAgents() {
       setAgents(initializeAgents())
     }
   }, [agents, setAgents])
+
+  // =============================
+  // SYNC COM SERVIDOR (Logs e Memória)
+  // =============================
+  const fetchServerData = useCallback(async () => {
+    try {
+      // Fetch logs
+      const logsRes = await fetch('/api/agents?action=logs')
+      if (logsRes.ok) {
+        const data = await logsRes.json()
+        if (data.logs && Array.isArray(data.logs)) {
+          setServerLogs(data.logs)
+        }
+      }
+
+      // Fetch memory
+      const memoryRes = await fetch('/api/agents?action=memory')
+      if (memoryRes.ok) {
+        const data = await memoryRes.json()
+        if (data.memory && Array.isArray(data.memory)) {
+          setLegalMemory(data.memory)
+        }
+      }
+    } catch (error) {
+      console.error('[Agents] Erro ao buscar dados do servidor:', error)
+    }
+  }, [])
+
+  // Poll de dados do servidor a cada 30s
+  useEffect(() => {
+    fetchServerData()
+    const interval = setInterval(fetchServerData, 30000)
+    return () => clearInterval(interval)
+  }, [fetchServerData])
 
   // =============================
   // TASK QUEUE
@@ -386,6 +424,9 @@ export function useAutonomousAgents() {
     taskQueue: taskQueue || [],
     completedTasks: completedTasks || [],
     activityLog: activityLog || [],
+    serverLogs, // Logs persistentes do servidor
+    legalMemory, // Memória jurídica compartilhada
+    refreshServerData: fetchServerData, // Função para forçar atualização
     // Streaming state
     streamingContent,
     isStreamingEnabled: useStreaming,

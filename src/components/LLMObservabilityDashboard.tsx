@@ -21,7 +21,6 @@ import {
   Database,
   Lightning,
   TrendUp,
-  TrendDown,
   ChartLine,
   Cpu,
   ArrowsClockwise
@@ -160,8 +159,8 @@ export default function LLMObservabilityDashboard() {
             <div className="text-3xl font-bold gradient-text">
               {formatLatency(summary.averageLatency)}
             </div>
-            <Progress 
-              value={Math.min((summary.averageLatency / 5000) * 100, 100)} 
+            <Progress
+              value={Math.min((summary.averageLatency / 5000) * 100, 100)}
               className="mt-2"
             />
           </CardContent>
@@ -306,9 +305,9 @@ export default function LLMObservabilityDashboard() {
                     {formatLatency(cacheStats?.averageAge || 0)}
                   </span>
                 </div>
-                <Button 
-                  onClick={handleClearCache} 
-                  variant="outline" 
+                <Button
+                  onClick={handleClearCache}
+                  variant="outline"
                   className="w-full mt-4"
                 >
                   <Database size={20} />

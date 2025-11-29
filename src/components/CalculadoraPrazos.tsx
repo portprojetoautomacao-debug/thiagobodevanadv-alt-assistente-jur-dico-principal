@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { CalendarCheck, Info } from '@phosphor-icons/react'
+import { Calculator, ArrowRight, Copy, Check, Warning, Info, CalendarCheck } from '@phosphor-icons/react'
 import {
   calcularPrazoCPC,
   calcularPrazoCLT,
@@ -261,8 +261,8 @@ export default function CalculadoraPrazos() {
                       !selectedProcessId
                         ? 'Selecione primeiro um processo'
                         : expedientesDoProcesso.length === 0
-                        ? 'Nenhuma intimação vinculada a este processo'
-                        : 'Selecione uma intimação'
+                          ? 'Nenhuma intimação vinculada a este processo'
+                          : 'Selecione uma intimação'
                     }
                   />
                 </SelectTrigger>
@@ -273,8 +273,8 @@ export default function CalculadoraPrazos() {
                       {e.dataRecebimento
                         ? formatarData(e.dataRecebimento)
                         : e.data
-                        ? formatarData(e.data)
-                        : 'Data não informada'}
+                          ? formatarData(e.data)
+                          : 'Data não informada'}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -132,7 +132,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             console.log('[LLM-Stream] Using Gemini streaming');
 
             const geminiBody = transformToGemini(body);
-            const model = 'gemini-2.0-flash';
+            // Use requested model if it starts with 'gemini', otherwise default to 2.5-pro
+            const model = requestedModel.startsWith('gemini') ? requestedModel : 'gemini-2.5-pro';
 
             const response = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${geminiKey}&alt=sse`,

@@ -2,9 +2,23 @@
   "files.watcherExclude": {
     "**/docs/archive/**": true,
     "**/node_modules/**": true,
-    "**/dist/**": true
+    "**/dist/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.vercel/**": true,
+    "**/coverage/**": true,
+    "**/build/**": true,
+    "**/.next/**": true
   },
-  "typescript.tsserver.maxTsServerMemory": 4096,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/.vercel": true,
+    "**/.next": true,
+    "**/coverage": true
+  },
+  "typescript.tsserver.maxTsServerMemory": 2048,
   "editor.stickyScroll.enabled": true,
   "gitlab.instanceUrl": "https://gitlab.com",
   "gitlab.pipelineGitRemoteName": "gitlab",
@@ -14,5 +28,38 @@
   "gitlab.showMrStatusOnStatusBar": true,
   "gitlab.remoteName": "gitlab",
   "gitlab.debug": false,
-  "workbench.editor.defaultBinaryEditor": "vscode.hexEditor"
+  "workbench.editor.defaultBinaryEditor": "vscode.hexEditor",
+  "node-module-intellisense.scanBuiltinModules": true,
+  "node-module-intellisense.scanDevDependencies": true,
+  "node-module-intellisense.scanFileModules": true,
+  "node-module-intellisense.modulePaths": [],
+  "node-module-intellisense.fileModuleExtensions": [
+    ".js",
+    ".jsx",
+    ".ts",
+    ".d.ts",
+    ".tsx",
+    ".vue",
+    ".json"
+  ],
+  "search-node-modules.path": "node_modules",
+  "search-node-modules.useLastFolder": false,
+
+  // --- Configurações Tailwind CSS IntelliSense (v4 + shadcn/ui) ---
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["clsx\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "css.validate": false,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }

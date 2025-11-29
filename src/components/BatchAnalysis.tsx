@@ -159,7 +159,7 @@ export default function BatchAnalysis() {
           const partiesMatch = data.parties.match(/^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i)
           if (partiesMatch) {
             const autor = partiesMatch[1].trim()
-            const reu = partiesMatch[2].trim()
+            // const reu = partiesMatch[2].trim() // Unused
             // Cadastra o autor como cliente
             if (autor && autor !== 'Não identificado') {
               createOrUpdateFromDjenIntimacao({

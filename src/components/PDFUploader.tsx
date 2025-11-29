@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Upload, FilePdf, CheckCircle, XCircle, SpinnerGap, Clock, User, Trash } from '@phosphor-icons/react'
 import { geminiGenerateJSON } from '@/lib/gemini-client'
 import { useClientesManager } from '@/hooks/use-clientes-manager'
-import type { Cliente, PDFUploadHistory } from '@/types'
+import type { PDFUploadHistory } from '@/types'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -529,7 +529,7 @@ Retorne APENAS o JSON válido, sem explicações.`
                           id="observacoes"
                           value={extractedData.observacoes || ''}
                           onChange={(e) => handleEditField('observacoes', e.target.value)}
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           placeholder="Informações adicionais"
                         />
                       </div>
@@ -575,7 +575,7 @@ Retorne APENAS o JSON válido, sem explicações.`
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <FilePdf className="text-destructive flex-shrink-0 mt-1" size={24} weight="duotone" />
+                        <FilePdf className="text-destructive shrink-0 mt-1" size={24} weight="duotone" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-medium truncate">{item.fileName}</p>
@@ -611,7 +611,7 @@ Retorne APENAS o JSON válido, sem explicações.`
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="flex-shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                        className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => handleDeleteHistory(item.id)}
                         aria-label="Excluir item do histórico"
                       >

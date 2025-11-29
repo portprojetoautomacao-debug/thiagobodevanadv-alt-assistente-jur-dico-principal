@@ -147,13 +147,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     switch (action) {
       case 'circuit-breakers':
         return handleCircuitBreakers(req, res);
-      
+
       case 'health':
         return handleHealth(req, res);
-      
+
       case 'reset-breakers':
         return handleResetBreakers(req, res);
-      
+
       default:
         return res.status(200).json({
           ok: true,
@@ -177,9 +177,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
  * GET /api/observability?action=circuit-breakers
  * Retorna estado de todos os circuit breakers
  */
-function handleCircuitBreakers(req: VercelRequest, res: VercelResponse) {
+function handleCircuitBreakers(_req: VercelRequest, res: VercelResponse) {
   const allBreakers = CircuitBreakerRegistry.getAll();
-  
+
   const breakersData = Array.from(allBreakers.entries()).map(([name, stats]) => ({
     name,
     state: stats.state,
@@ -188,8 +188,8 @@ function handleCircuitBreakers(req: VercelRequest, res: VercelResponse) {
     lastFailureTime: stats.lastFailureTime,
     lastStateChange: stats.lastStateChange,
     isHealthy: stats.state !== 'OPEN',
-    timeSinceLastFailure: stats.lastFailureTime 
-      ? Date.now() - stats.lastFailureTime 
+    timeSinceLastFailure: stats.lastFailureTime
+      ? Date.now() - stats.lastFailureTime
       : null,
   }));
 
@@ -212,9 +212,9 @@ function handleCircuitBreakers(req: VercelRequest, res: VercelResponse) {
  * GET /api/observability?action=health
  * Health check geral do sistema
  */
-async function handleHealth(req: VercelRequest, res: VercelResponse) {
+async function handleHealth(_req: VercelRequest, res: VercelResponse) {
   const allBreakers = CircuitBreakerRegistry.getAll();
-  
+
   const criticalApisDown = Array.from(allBreakers.entries())
     .filter(([_, stats]) => stats.state === 'OPEN')
     .map(([name]) => name);

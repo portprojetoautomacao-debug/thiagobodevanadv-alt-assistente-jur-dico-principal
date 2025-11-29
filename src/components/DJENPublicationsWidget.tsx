@@ -89,7 +89,7 @@ export default function DJENPublicationsWidget({
 
   // KV storage para processos e expedientes
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
-  const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
+  const [, setExpedientes] = useKV<Expediente[]>('expedientes', [])
 
   // Hook centralizado para cadastro de clientes
   const { createOrUpdateFromDjenIntimacao } = useClientesManager()
@@ -245,15 +245,11 @@ export default function DJENPublicationsWidget({
       fase: 'Inicial',
       dataDistribuicao: pub.data || now.split('T')[0],
       dataUltimaMovimentacao: now,
-      notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${
-        pub.matchType
-      }${
-        parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
-      }${
-        parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
-      }\n\nTeor da intimação:\n${pub.teor.substring(0, 500)}${
-        pub.teor.length > 500 ? '...' : ''
-      }`,
+      notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType
+        }${parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
+        }${parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
+        }\n\nTeor da intimação:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''
+        }`,
       prazos: [],
       createdAt: now,
       updatedAt: now,
@@ -289,11 +285,10 @@ export default function DJENPublicationsWidget({
     setExpedientes((current) => [...(current || []), newExpediente])
 
     toast.success('Processo cadastrado!', {
-      description: `${pub.numeroProcesso} adicionado ao Acervo${
-        parties.autor !== 'Não identificado'
+      description: `${pub.numeroProcesso} adicionado ao Acervo${parties.autor !== 'Não identificado'
           ? ` - ${parties.autor} x ${parties.reu}`
           : ''
-      }`,
+        }`,
     })
   }
 
@@ -351,15 +346,11 @@ export default function DJENPublicationsWidget({
           fase: 'Inicial',
           dataDistribuicao: pub.data || now.split('T')[0],
           dataUltimaMovimentacao: now,
-          notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${
-            pub.matchType
-          }${
-            parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
-          }${
-            parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
-          }\n\nTeor:\n${pub.teor.substring(0, 500)}${
-            pub.teor.length > 500 ? '...' : ''
-          }`,
+          notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType
+            }${parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
+            }${parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
+            }\n\nTeor:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''
+            }`,
           prazos: [],
           createdAt: now,
           updatedAt: now,
@@ -696,7 +687,7 @@ export default function DJENPublicationsWidget({
                         <span>
                           Data:{' '}
                           {pub.data &&
-                          !isNaN(new Date(pub.data).getTime())
+                            !isNaN(new Date(pub.data).getTime())
                             ? new Date(pub.data).toLocaleDateString('pt-BR')
                             : 'Data não disponível'}
                         </span>
@@ -758,31 +749,31 @@ export default function DJENPublicationsWidget({
               {publications.some(
                 (pub) => pub.numeroProcesso && !isAlreadyRegistered(pub),
               ) && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={handleAutoRegisterAll}
-                        disabled={autoRegistering}
-                        className="flex-1 button-gradient"
-                      >
-                        <Robot
-                          size={14}
-                          className={autoRegistering ? 'animate-pulse' : ''}
-                        />
-                        {autoRegistering
-                          ? 'Cadastrando...'
-                          : 'Cadastrar Todas'}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Cadastra automaticamente todas as intimações no Acervo
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleAutoRegisterAll}
+                          disabled={autoRegistering}
+                          className="flex-1 button-gradient"
+                        >
+                          <Robot
+                            size={14}
+                            className={autoRegistering ? 'animate-pulse' : ''}
+                          />
+                          {autoRegistering
+                            ? 'Cadastrando...'
+                            : 'Cadastrar Todas'}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Cadastra automaticamente todas as intimações no Acervo
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
 
               {onViewAll && (
                 <Button
