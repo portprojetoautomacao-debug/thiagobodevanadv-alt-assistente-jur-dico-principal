@@ -27,10 +27,12 @@
     <!-- Preconnect para recursos críticos - melhora LCP e FCP -->
     <link rel="preconnect" href="https://accounts.google.com" crossorigin />
     <link rel="preconnect" href="https://apis.google.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fontes hospedadas localmente em /fonts/ - sem necessidade de preconnect externo -->
     <link rel="dns-prefetch" href="https://www.gstatic.com" />
     <link rel="dns-prefetch" href="https://vercel.live" />
+
+    <!-- ✅ PRELOAD: Fonte Inter local para evitar FOIT -->
+    <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 
     <!-- ✅ OTIMIZAÇÃO LCP: CSS crítico inline expandido para evitar render-blocking -->
     <style>

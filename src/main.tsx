@@ -11,11 +11,14 @@ if (!rootElement) {
   throw new Error('Root element not found')
 }
 
-// ✅ TRUSTED TYPES: Inicializa políticas de segurança XSS (síncrono, antes de qualquer script)
-// Deve ser executado antes de qualquer manipulação de DOM
-import('./lib/trusted-types').then(({ initTrustedTypes }) => {
-  initTrustedTypes()
-}).catch(err => console.warn('Trusted Types não disponível:', err))
+// ⚠️ TRUSTED TYPES: DESABILITADO TEMPORARIAMENTE
+// O vite-plugin-pwa gera registerSW.js que não é compatível com Trusted Types
+// causando erro: "This document requires 'TrustedScriptURL' assignment"
+// TODO: Reabilitar quando o plugin PWA suportar Trusted Types nativamente
+// 
+// import('./lib/trusted-types').then(({ initTrustedTypes }) => {
+//   initTrustedTypes()
+// }).catch(err => console.warn('Trusted Types não disponível:', err))
 
 // ✅ ANALYTICS: GTM + GA4 inicialização (após consentimento se LGPD requerido)
 // IDs configuráveis via VITE_GTM_ID e VITE_GA4_ID
