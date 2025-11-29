@@ -19,8 +19,8 @@ export interface RateLimitResult {
 }
 
 export class RateLimiter {
-  private redis: Redis
-  private config: RateLimitConfig
+  private readonly redis: Redis
+  private readonly config: RateLimitConfig
 
   constructor(config: RateLimitConfig) {
     const url = process.env.UPSTASH_REDIS_REST_URL?.trim()
@@ -79,7 +79,7 @@ export class RateLimiter {
           // Pega o score do primeiro par [member, score, ...]
           const score = rawRange[1]
           if (score !== undefined && score !== null && !Number.isNaN(Number(score))) {
-            const firstTs = typeof score === 'number' ? score : parseInt(String(score), 10)
+          const firstTs = typeof score === 'number' ? score : Number.parseInt(String(score), 10)
             resetTime = firstTs + this.config.windowMs
           }
         }

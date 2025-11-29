@@ -3,7 +3,7 @@
 echo "✅ Deployment bem-sucedido!"
 
 # Executar testes de smoke na produção
-if [ -n "$DEPLOYMENT_URL" ]; then
+if [[ -n "$DEPLOYMENT_URL" ]]; then
   echo "🧪 Executando testes de smoke em $DEPLOYMENT_URL..."
 
   # Teste básico de conectividade
@@ -38,7 +38,7 @@ MESSAGE="$ICON **$STATUS**
 _Workflow: ${{ github.workflow }}_"
 
 # Enviar para webhook se configurado
-if [ -n "$NOTIFICATION_WEBHOOK_URL" ]; then
+if [[ -n "$NOTIFICATION_WEBHOOK_URL" ]]; then
   curl -X POST $NOTIFICATION_WEBHOOK_URL \
     -H 'Content-Type: application/json' \
     -d "{\"text\":\"$MESSAGE\"}"

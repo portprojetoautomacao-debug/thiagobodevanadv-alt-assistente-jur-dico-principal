@@ -7,7 +7,7 @@ echo "🔧 Adicionando conta GitLab no VS Code..."
 echo ""
 
 # Carregar token
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
 else
     echo "❌ Arquivo .gitlab-token não encontrado!"

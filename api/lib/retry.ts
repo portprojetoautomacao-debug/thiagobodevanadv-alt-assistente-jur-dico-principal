@@ -227,7 +227,7 @@ export async function httpWithRetry<T>(
 export class RetryableOperation<T> {
   private attempts = 0
   private lastError?: Error
-  private config: RetryConfig
+  private readonly config: RetryConfig
 
   constructor(config: Partial<RetryConfig> = {}) {
     this.config = {

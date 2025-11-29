@@ -6,7 +6,7 @@
  */
 
 import { Redis } from '@upstash/redis'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 // AgentTask type definition (inline para evitar problemas de import em serverless)
 export interface AgentTask {

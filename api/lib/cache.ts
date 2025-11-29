@@ -4,7 +4,7 @@
  */
 
 import { Redis } from '@upstash/redis';
-import { redisCircuitBreaker as _redisCircuitBreaker, withCircuitBreaker } from './circuit-breaker.js';
+import { withCircuitBreaker } from './circuit-breaker.js';
 import { SafeLogger } from './safe-logger.js';
 
 const logger = new SafeLogger('Cache');
@@ -25,10 +25,10 @@ export interface CacheStats {
 }
 
 class RedisCache {
-  private redis: Redis;
-  private config: CacheConfig;
+  private readonly redis: Redis;
+  private readonly config: CacheConfig;
   private stats: CacheStats;
-  private name: string;
+  private readonly name: string;
 
   constructor(name: string, config: CacheConfig) {
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
