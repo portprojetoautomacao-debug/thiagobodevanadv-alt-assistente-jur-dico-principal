@@ -311,7 +311,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
         const agent = agents.find(a => a.id === taskData.agentId)
         if (agent?.enabled) {
           const task: AgentTask = {
-            id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
             agentId: taskData.agentId!,
             type: taskData.type!,
             priority: taskData.priority as 'low' | 'medium' | 'high' | 'critical',

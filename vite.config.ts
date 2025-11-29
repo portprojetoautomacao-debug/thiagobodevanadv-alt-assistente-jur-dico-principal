@@ -125,25 +125,6 @@ export default defineConfig({
             return 'ui-vendor'
           }
 
-          // Form libraries - usado apenas em formulários
-          if (
-            id.includes('react-hook-form') ||
-            id.includes('zod') ||
-            id.includes('@hookform/resolvers')
-          ) {
-            return 'forms'
-          }
-
-          // Phosphor icons - usado em toda app
-          if (id.includes('@phosphor-icons/react')) {
-            return 'icons'
-          }
-
-          // Lucide icons - usado por shadcn/ui
-          if (id.includes('lucide-react')) {
-            return 'lucide-icons'
-          }
-
           // Framer Motion - lazy loaded
           if (id.includes('framer-motion')) {
             return 'animation'
