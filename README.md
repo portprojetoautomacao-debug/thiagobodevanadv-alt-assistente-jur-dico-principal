@@ -1,5 +1,7 @@
 # Assistente Jurídico PJe
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thiagobodevan-a11y_assistente-juridico-p&metric=alert_status&token=f6b2364c458b1c0f3ad4d08e55779f7c8b051e67)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
+
 Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
 
 ## 🚀 Funcionalidades Principais

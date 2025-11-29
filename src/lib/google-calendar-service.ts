@@ -348,7 +348,7 @@ class GoogleCalendarService {
 
         if (this.accessToken && gapiWindow.gapi?.client) {
           try {
-            ; (gapiWindow.gapi.client as any).setToken?.({
+            ; (gapiWindow.gapi.client as { setToken?: (token: { access_token: string }) => void }).setToken?.({
               access_token: this.accessToken,
             })
             debug('gapi client token set from GIS access_token')

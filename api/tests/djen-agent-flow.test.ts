@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createMocks } from 'node-mocks-http';
 
 // Mock dependencies BEFORE importing handlers
 vi.mock('../lib/rate-limit', () => ({
@@ -32,16 +31,12 @@ vi.mock('../_lib/auth', () => ({
 
 vi.mock('../_lib/safe-logger', () => {
   return {
-    SafeLogger: class {
-      constructor() {
-        return {
-          info: vi.fn(),
-          error: vi.fn(),
-          warn: vi.fn(),
-          debug: vi.fn()
-        };
-      }
-    }
+    SafeLogger: vi.fn().mockImplementation(() => ({
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      debug: vi.fn()
+    }))
   };
 });
 
@@ -62,16 +57,14 @@ vi.mock('../lib/cache', () => ({
 }));
 
 // Mock global fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 // Set environment variables
 process.env.UPSTASH_REDIS_REST_URL = 'http://mock-redis.com';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'mock-token';
 
 import cronHandler from '../cron';
-import agentsHandler, { AgentTaskType, AgentType, TaskPriority, TaskStatus, AgentStatus } from '../agents';
-import * as djenClient from '../../lib/api/djen-client';
-import * as kvUtils from '../../lib/api/kv-utils';
+import agentsHandler from '../agents';
 
 describe('Integration: DJEN Monitor -> Agent Workflow', () => {
   it('Step 1: DJEN Monitor should find publications and store them', async () => {

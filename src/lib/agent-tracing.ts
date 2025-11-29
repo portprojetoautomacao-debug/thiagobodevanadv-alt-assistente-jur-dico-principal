@@ -98,7 +98,7 @@ export function traceToolUsage(
     'tool.output': safeOutput
   })
 
-  const spanAny = agentSpan as any
+  const spanAny = agentSpan as AgentSpan & { toolsUsed?: string[] }
   if (Array.isArray(spanAny.toolsUsed)) {
     spanAny.toolsUsed.push(toolName)
   } else {
@@ -115,7 +115,7 @@ export function traceAgentStep(
   stepDescription: string,
   attributes?: SpanAttributes
 ): void {
-  const spanAny = agentSpan as any
+  const spanAny = agentSpan as AgentSpan & { stepNumber?: number }
   spanAny.stepNumber = stepNumber
 
   tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
@@ -137,7 +137,7 @@ export async function traceLLMCall<T>(
   promptLength: number,
   executor: () => Promise<{ result: T; tokens: { prompt: number; completion: number } }>
 ): Promise<T> {
-  const parentContext = (parentSpan as any).context
+  const parentContext = (parentSpan as Span & { context?: unknown }).context
 
   const llmSpan = tracingService.startLLMSpan(model, {
     parentContext,
@@ -348,7 +348,7 @@ export function getAgentMetrics(agentId: string): {
   toolUsage: Record<string, number>
   recentErrors: string[]
 } {
-  const traces = tracingService.getTracesByName(`agent.${agentId}`) as any[]
+  const traces = tracingService.getTracesByName(`agent.${agentId}`) as unknown[]
 
   const executions = traces.filter(t => t.endTime)
   const successful = executions.filter(t => t.status === 'ok')
@@ -366,7 +366,7 @@ export function getAgentMetrics(agentId: string): {
   const toolUsage: Record<string, number> = {}
 
   executions.forEach(t => {
-    const events = (t.events as any[]) || []
+    const events = (t.events as unknown[]) || []
     events
       .filter(e => e.name === 'tool.used')
       .forEach(e => {
@@ -401,7 +401,7 @@ export function getLLMMetrics(): {
   errorRate: number
   tokensByModel: Record<string, number>
 } {
-  const traces = tracingService.getTracesByName('llm.') as any[]
+  const traces = tracingService.getTracesByName('llm.') as unknown[]
 
   const calls = traces.filter(t => t.endTime)
   const successful = calls.filter(t => t.status === 'ok')

@@ -83,7 +83,18 @@ const DEFAULT_TIMEOUT_MS = 25_000
  * Normaliza a resposta do Gemini numa estrutura GeminiResponse.
  */
 function normalizeGeminiResponse(
-  data: any,
+  data: {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{ text?: string }>
+      }
+    }>
+    usageMetadata?: {
+      promptTokenCount?: number
+      candidatesTokenCount?: number
+      totalTokenCount?: number
+    }
+  },
   model: string,
 ): GeminiResponse {
   const rawText =

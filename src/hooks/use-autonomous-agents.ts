@@ -72,8 +72,8 @@ export function useAutonomousAgents() {
   >('agent-activity-log', [])
 
   // Estado para logs do servidor e memória jurídica
-  const [serverLogs, setServerLogs] = useState<any[]>([])
-  const [legalMemory, setLegalMemory] = useState<any[]>([])
+  const [serverLogs, setServerLogs] = useState<unknown[]>([])
+  const [legalMemory, setLegalMemory] = useState<unknown[]>([])
 
   // Estado para streaming em tempo real
   const [streamingContent, setStreamingContent] = useState<Record<string, string>>({})
@@ -133,7 +133,7 @@ export function useAutonomousAgents() {
         const updated = [...(current || []), task]
 
         updated.sort((a, b) => {
-          const order: any = { critical: 0, high: 1, medium: 2, low: 3 }
+          const order: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
           return order[a.priority] - order[b.priority]
         })
 
