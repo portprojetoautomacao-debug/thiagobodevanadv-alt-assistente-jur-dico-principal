@@ -65,17 +65,14 @@ jobs:
         run: npm ci
 
       - name: 🏥 Health Check Básico
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
-          STAGING_URL: ${{ secrets.STAGING_URL }}
         run: |
           echo "🏥 Executando health check básico..."
 
           # Determinar URL baseada no ambiente
           if [[ "${{ matrix.environment }}" == "production" ]]; then
-            APP_URL="${PRODUCTION_URL:-https://assistente-juridico-p.vercel.app}"
+            APP_URL="https://assistente-juridico-p.vercel.app"
           else
-            APP_URL="${STAGING_URL:-https://assistente-juridico-p-staging.vercel.app}"
+            APP_URL="https://assistente-juridico-p-staging.vercel.app"
           fi
 
           echo "🌐 Verificando: $APP_URL"
@@ -108,13 +105,11 @@ jobs:
           echo "RESPONSE_TIME=$RESPONSE_TIME" >> $GITHUB_ENV
 
       - name: 🔍 Verificação de APIs Críticas
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
           echo "🔍 Verificando APIs críticas..."
 
-          # Usar URL padrão se secret não estiver configurado
-          BASE_URL="${PRODUCTION_URL:-https://assistente-juridico-p.vercel.app}"
+          # URL base do app
+          BASE_URL="https://assistente-juridico-p.vercel.app"
 
           # Lista de endpoints críticos para verificar
           ENDPOINTS=(
@@ -194,13 +189,11 @@ jobs:
         run: npm ci
 
       - name: 🏃 Lighthouse Performance Audit
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
           echo "🏃 Executando Lighthouse performance audit..."
 
-          # Usar URL padrão se secret não estiver configurado
-          TARGET_URL="${PRODUCTION_URL:-https://assistente-juridico-p.vercel.app}"
+          # URL alvo de produção
+          TARGET_URL="https://assistente-juridico-p.vercel.app"
 
           # Executar Lighthouse para produção
           npx lighthouse $TARGET_URL \
@@ -306,13 +299,11 @@ jobs:
           fi
 
       - name: 🛡️  Verificação de Headers de Segurança
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
           echo "🛡️  Verificando headers de segurança..."
 
-          # Usar URL padrão se secret não estiver configurado
-          TARGET_URL="${PRODUCTION_URL:-https://assistente-juridico-p.vercel.app}"
+          # URL alvo
+          TARGET_URL="https://assistente-juridico-p.vercel.app"
 
           # Verificar headers importantes
           HEADERS=$(curl -s -I $TARGET_URL)
@@ -339,13 +330,11 @@ jobs:
           fi
 
       - name: 🔐 Verificação de Certificado SSL
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
           echo "🔐 Verificando certificado SSL..."
 
-          # Usar URL padrão se secret não estiver configurado
-          TARGET_URL="${PRODUCTION_URL:-https://assistente-juridico-p.vercel.app}"
+          # URL alvo
+          TARGET_URL="https://assistente-juridico-p.vercel.app"
           DOMAIN=$(echo $TARGET_URL | sed 's|https://||')
 
           # Verificar validade do certificado
