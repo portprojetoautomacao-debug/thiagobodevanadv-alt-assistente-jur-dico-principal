@@ -23,6 +23,9 @@ export default defineConfig({
     // sparkPlugin() as PluginOption, // REMOVIDO: dependia de @github/spark
     VitePWA({
       registerType: 'autoUpdate',
+      // ✅ FIX: Usar 'inline' ao invés do padrão para evitar problemas com CSP
+      // O script de registro será injetado diretamente no HTML ao invés de arquivo separado
+      injectRegister: 'inline',
       includeAssets: ['robots.txt', 'sitemap.xml', '*.svg', '*.png'],
       manifest: {
         name: 'Assistente Jurídico PJe',
@@ -139,6 +142,11 @@ export default defineConfig({
           // Phosphor icons - usado em toda app
           if (id.includes('@phosphor-icons/react')) {
             return 'icons'
+          }
+
+          // Lucide icons - usado por shadcn/ui
+          if (id.includes('lucide-react')) {
+            return 'lucide-icons'
           }
 
           // Framer Motion - lazy loaded

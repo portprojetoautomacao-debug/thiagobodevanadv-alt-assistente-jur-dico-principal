@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { useAIStreaming } from '@/hooks/use-ai-streaming'
 import {
@@ -51,10 +51,13 @@ import {
   Eye,
   Copy,
   CaretDown,
+  SpinnerGap,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { googleDocsService } from '@/lib/google-docs-service'
-import { TiptapEditor } from '@/components/editor/TiptapEditor'
+// ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
+// Isso resolve o erro "Cannot set properties of undefined (setting 'Activity')"
+const TiptapEditor = lazy(() => import('@/components/editor/TiptapEditor').then(m => ({ default: m.TiptapEditor })))
 import {
   documentTemplates,
   replaceTemplateVariables,
@@ -766,17 +769,26 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
 
                   {/* Editor */}
                   <div className="flex-1 overflow-hidden">
-                    <TiptapEditor
-                      content={formData.conteudo}
-                      onChange={(content) =>
-                        setFormData({ ...formData, conteudo: content })
-                      }
-                      onAIGenerate={handleAIGenerate}
-                      onAIStream={handleAIStream}
-                      variables={variableValues}
-                      placeholder="Digite o conteúdo da minuta ou use o botão de IA para gerar com Gemini..."
-                      className="h-full max-h-[400px] overflow-auto"
-                    />
+                    <Suspense fallback={
+                      <div className="h-[400px] flex items-center justify-center bg-muted/30 rounded-lg border">
+                        <div className="flex flex-col items-center gap-2">
+                          <SpinnerGap className="h-8 w-8 animate-spin text-primary" />
+                          <span className="text-sm text-muted-foreground">Carregando editor...</span>
+                        </div>
+                      </div>
+                    }>
+                      <TiptapEditor
+                        content={formData.conteudo}
+                        onChange={(content) =>
+                          setFormData({ ...formData, conteudo: content })
+                        }
+                        onAIGenerate={handleAIGenerate}
+                        onAIStream={handleAIStream}
+                        variables={variableValues}
+                        placeholder="Digite o conteúdo da minuta ou use o botão de IA para gerar com Gemini..."
+                        className="h-full max-h-[400px] overflow-auto"
+                      />
+                    </Suspense>
                   </div>
 
                   {/* Variáveis não preenchidas */}
