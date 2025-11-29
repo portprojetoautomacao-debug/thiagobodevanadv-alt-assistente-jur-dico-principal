@@ -1,3 +1,7 @@
+---
+applyTo: "**"
+---
+
 # Copilot Instructions for Assistente Jurídico PJe
 
 Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar efetivamente com o repositório **Assistente Jurídico PJe**.
@@ -7,6 +11,19 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 ## 📋 Visão Geral do Projeto
 
 **Assistente Jurídico PJe** é um sistema inteligente e completo de gestão jurídica para escritórios de advocacia, construído com React, TypeScript e Vite.
+
+### 🆕 Resumo Operational para Copilot
+- **Arquitetura**: Frontend React 19 + TypeScript + Vite em `src/`, backend serverless em `api/` (Vercel Functions). Persistência principal via Upstash Redis/KV (`api/kv.ts`, `src/hooks/use-kv.ts`).
+- **Fluxo de agentes**: DJEN/DataJud alimenta `expedientes`, `use-autonomous-agents` cria tarefas para 15 agentes descritos em `src/lib/agents.ts`/`TODOS_OS_15_AGENTES.md`. `redacao-peticoes` usa Gemini 2.5 (`src/lib/gemini-service.ts`) e entrega minutas ao `MinutasManager` com campos `criadoPorAgente`, `confidence`, `templateId`, `status`.
+- **Conectividade dos agentes**: Todos os agentes devem manter comunicação por streaming (tempo real) com os serviços centrais; qualquer novo agente precisa expor interface streaming compatível com `use-autonomous-agents`.
+- **Editor/Documentos**: `src/components/editor/TiptapEditor.tsx`, `src/components/MinutasManager.tsx`, `src/lib/document-templates.ts` controlam commandos `/ai` e placeholders `{{variavel}}`. Alterou template? atualize `replaceTemplateVariables` + `docs/FLUXO_MINUTAS_AUTOMATICAS.md`.
+- **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
+- **Cron/automação**: Jobs descritos em `api/cron.ts` e `vercel.json` (DJEN monitor, filas de agentes, backup). Novos jobs exigem atualizar ambos + README.
+- **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Scripts novos precisam refletir em `.github/workflows/*`.
+- **Padrões React/UI**: Apenas components funcionais, props `Props`, hooks no topo, alias `@/`. `src/components/ui/` (shadcn) é imutável. Manter lazy-loading/código dividido alinhado com `App.tsx`, skeleton loaders e `aria-label` em botões.
+- **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Ao adicionar campos, sincronize hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`) e contadores do dashboard.
+- **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`).
+- **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel.
 
 ### 🌐 URLs de Produção
 - **App Principal**: https://assistente-juridico-p.vercel.app/
@@ -1157,4 +1174,4 @@ Already in `.gitignore`:
 - Ao apresentar passos (ex.: rodar build, executar lint, corrigir erros), forneça instruções passo a passo em português.
 - Para mensagens de commit sugeridas ou descrições de PR, gere o texto em português e, opcionalmente, inclua uma tradução curta em inglês somente se solicitado.
 
-> Nota: Para que essas instruções sejam aplicadas automaticamente no Copilot Chat em VS Code, habilite nas configurações do VS Code: "GitHub > Copilot > Copilot Chat: Enable custom instructions to be loaded from .github/copilot-instructions.md files and added to requests".
+> Nota: O VS Code já carrega este arquivo por padrão (configuração "GitHub > Copilot > Copilot Chat: Use Instruction Files"). O front matter `applyTo: "**"` garante que Chat, Coding Agent e Code Review consumam estas instruções sem qualquer ação adicional.
