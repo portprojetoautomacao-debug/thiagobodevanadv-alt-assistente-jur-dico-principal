@@ -94,7 +94,7 @@ const RETRY_DELAY = 1000;
  * Utilitários de texto
  */
 export function normalizeText(text: string): string {
-  return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  return text.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').trim();
 }
 
 export function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
@@ -151,8 +151,8 @@ export async function consultarComunicacoes(
     clearTimeout(timeoutId);
 
     const rateLimitInfo = {
-      limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
-      remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
+      limit: response.headers.get('x-ratelimit-limit') ? Number.parseInt(response.headers.get('x-ratelimit-limit')!, 10) : undefined,
+      remaining: response.headers.get('x-ratelimit-remaining') ? Number.parseInt(response.headers.get('x-ratelimit-remaining')!, 10) : undefined
     };
 
     // Rate limit atingido
@@ -162,7 +162,7 @@ export async function consultarComunicacoes(
       return {
         response: null,
         rateLimitInfo,
-        retryAfter: retryAfter ? parseInt(retryAfter) : RETRY_DELAY * Math.pow(2, retryCount)
+        retryAfter: retryAfter ? Number.parseInt(retryAfter, 10) : RETRY_DELAY * Math.pow(2, retryCount)
       };
     }
 

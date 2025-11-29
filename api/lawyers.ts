@@ -108,9 +108,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
 
       // Verifica se já existe por OAB (case-insensitive, ignorando espaços)
-      const normalizedOab = oab.replace(/\s+/g, '').toUpperCase()
+      const normalizedOab = oab.replaceAll(/\s+/g, '').toUpperCase()
       const exists = lawyers.some(
-        (l) => l.oab.replace(/\s+/g, '').toUpperCase() === normalizedOab
+        (l) => l.oab.replaceAll(/\s+/g, '').toUpperCase() === normalizedOab
       )
 
       if (exists) {

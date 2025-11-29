@@ -9,7 +9,7 @@
 import { llmService, type LLMRequestConfig } from './llm-service'
 
 // Entity types for legal documents
-export type EntityType = 
+export type EntityType =
   | 'PERSON'
   | 'ORGANIZATION'
   | 'LOCATION'

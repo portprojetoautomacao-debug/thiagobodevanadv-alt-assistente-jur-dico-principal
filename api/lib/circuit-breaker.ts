@@ -36,8 +36,8 @@ export class CircuitBreaker {
   private lastFailureTime?: number;
   private lastSuccessTime?: number;
   private lastStateChange: number;
-  private config: CircuitBreakerConfig;
-  private name: string;
+  private readonly config: CircuitBreakerConfig;
+  private readonly name: string;
 
   constructor(name: string, config?: Partial<CircuitBreakerConfig>) {
     this.name = name;
@@ -188,7 +188,7 @@ export class CircuitBreaker {
  * Registry global para circuit breakers
  */
 export class CircuitBreakerRegistry {
-  private static breakers = new Map<string, CircuitBreaker>();
+  private static readonly breakers = new Map<string, CircuitBreaker>();
 
   static getBreaker(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
     if (!this.breakers.has(name)) {

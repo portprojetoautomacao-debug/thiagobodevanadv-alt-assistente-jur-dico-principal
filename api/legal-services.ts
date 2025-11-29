@@ -12,7 +12,7 @@ const logger = new SafeLogger('LegalServices');
 // --- DEADLINE CALCULATION LOGIC ---
 
 // Feriados nacionais fixos
-const feriadosNacionais2025 = [
+const feriadosNacionais2025 = new Set([
   '2025-01-01', // Ano Novo
   '2025-04-18', // Sexta-feira Santa
   '2025-04-21', // Tiradentes
@@ -24,12 +24,12 @@ const feriadosNacionais2025 = [
   '2025-11-15', // Proclamação da República
   '2025-11-20', // Consciência Negra
   '2025-12-25', // Natal
-];
+]);
 
-const feriadosDF2025 = [
+const feriadosDF2025 = new Set([
   '2025-04-21', // Fundação de Brasília
   '2025-11-30', // Dia do Evangélico
-];
+]);
 
 // Recesso forense (CNJ Resolução 298/2019)
 const recessoForense2025 = {
@@ -46,13 +46,13 @@ function isFeriado(date: Date, tribunalCode?: string): boolean {
   const dateStr = date.toISOString().split('T')[0];
 
   // Feriados nacionais
-  if (feriadosNacionais2025.includes(dateStr)) {
+  if (feriadosNacionais2025.has(dateStr)) {
     return true;
   }
 
   // Feriados específicos por tribunal
   if (tribunalCode?.includes('DF') || tribunalCode?.includes('TJDFT')) {
-    if (feriadosDF2025.includes(dateStr)) {
+    if (feriadosDF2025.has(dateStr)) {
       return true;
     }
   }

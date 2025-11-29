@@ -153,8 +153,8 @@ async function processIntimationAnalysis(task: AgentTask): Promise<AnalysisResul
         try {
             // Remove possíveis marcadores de código
             const cleanJson = aiResponse
-                .replace(/```json\n?/g, '')
-                .replace(/```\n?/g, '')
+                .replaceAll(/```json\n?/g, '')
+                .replaceAll(/```\n?/g, '')
                 .trim();
             analysisData = JSON.parse(cleanJson);
         } catch {

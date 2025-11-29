@@ -21,7 +21,7 @@ gh issue create \
   --label "bug,deploy-failure"
 
 # Notificar via webhook se configurado
-if [ -n "$WEBHOOK_URL" ]; then
+if [[ -n "$WEBHOOK_URL" ]]; then
   curl -X POST $WEBHOOK_URL \
     -H 'Content-Type: application/json' \
     -d "{\"text\":\"🚨 Deployment falhou: $DEPLOYMENT_NAME - $DEPLOYMENT_URL\"}"

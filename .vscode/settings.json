@@ -1,4 +1,7 @@
 {
+  // === GitHub Copilot - Aprovação Automática ===
+  "github.copilot.chat.agent.autoApprove": true,
+
   "files.watcherExclude": {
     "**/docs/archive/**": true,
     "**/node_modules/**": true,

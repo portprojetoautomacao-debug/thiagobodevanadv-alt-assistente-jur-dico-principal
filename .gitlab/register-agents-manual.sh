@@ -18,22 +18,30 @@ NC='\033[0m' # No Color
 
 # Função para log
 log() {
-    echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+    local message="$1"
+    echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] ${message}${NC}"
+    return 0
 }
 
 # Função para sucesso
 success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    local message="$1"
+    echo -e "${GREEN}✅ ${message}${NC}"
+    return 0
 }
 
 # Função para aviso
 warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    local message="$1"
+    echo -e "${YELLOW}⚠️  ${message}${NC}"
+    return 0
 }
 
 # Função para erro
 error() {
-    echo -e "${RED}❌ $1${NC}"
+    local message="$1"
+    echo -e "${RED}❌ ${message}${NC}"
+    return 0
 }
 
 log "Verificando configurações dos agentes..."
@@ -50,7 +58,7 @@ for agent_info in "${agents[@]}"; do
     agent_desc=$(echo $agent_info | cut -d: -f2)
 
     config_file=".gitlab/agents/$agent_name/config.yaml"
-    if [ -f "$config_file" ]; then
+    if [[ -f "$config_file" ]]; then
         success "Configuração encontrada: $agent_name ($agent_desc)"
     else
         error "Configuração não encontrada: $config_file"

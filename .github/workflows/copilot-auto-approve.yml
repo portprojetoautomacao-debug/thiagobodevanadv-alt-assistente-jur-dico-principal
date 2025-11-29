@@ -108,7 +108,11 @@ jobs:
             })
 
       - name: Log approval
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
-          echo "✅ PR #${{ github.event.pull_request.number }} approved successfully"
-          echo "Author: ${{ github.event.pull_request.user.login }}"
-          echo "Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "✅ PR #${PR_NUMBER} approved successfully"
+          echo "Author: ${PR_AUTHOR}"
+          echo "Branch: ${PR_BRANCH}"

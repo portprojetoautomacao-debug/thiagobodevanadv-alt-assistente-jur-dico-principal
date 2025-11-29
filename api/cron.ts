@@ -343,7 +343,7 @@ const DJEN_DELAY = 2000; // Delay entre tribunais para evitar rate limit
 const DJEN_RATE_LIMIT_WAIT = 60000; // 1 minuto conforme documentação DJEN para erro 429
 
 function normalizeText(text: string): string {
-  return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  return text.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').trim();
 }
 
 function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
@@ -388,8 +388,8 @@ async function consultarComunicacoes(params: DJENQueryParams, retryOnRateLimit =
 
     // Captura headers de rate limit conforme documentação DJEN
     const rateLimitInfo = {
-      limit: response.headers.get('x-ratelimit-limit') ? parseInt(response.headers.get('x-ratelimit-limit')!) : undefined,
-      remaining: response.headers.get('x-ratelimit-remaining') ? parseInt(response.headers.get('x-ratelimit-remaining')!) : undefined
+      limit: response.headers.get('x-ratelimit-limit') ? Number.parseInt(response.headers.get('x-ratelimit-limit')!, 10) : undefined,
+      remaining: response.headers.get('x-ratelimit-remaining') ? Number.parseInt(response.headers.get('x-ratelimit-remaining')!, 10) : undefined
     };
 
     console.log(`[DJEN] Rate Limit - Limit: ${rateLimitInfo.limit}, Remaining: ${rateLimitInfo.remaining}`);
@@ -1062,7 +1062,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                       <h2 style="color: #333;">${notification.title}</h2>
-                      <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replace(/\n/g, '<br>')}</p>
+                      <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(/\n/g, '<br>')}</p>
                       <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
                       <p style="color: #999; font-size: 12px;">
                         Enviado automaticamente pelo Assistente Jurídico PJe<br>
@@ -1410,7 +1410,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const query = {
               query: {
                 match: {
-                  numeroProcesso: processo.numeroCNJ.replace(/\D/g, '')
+                  numeroProcesso: processo.numeroCNJ.replaceAll(/\D/g, '')
                 }
               },
               size: 1

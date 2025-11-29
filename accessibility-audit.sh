@@ -19,7 +19,7 @@ total_issues=0
 # 1. Verificar botões sem aria-label (icon-only)
 echo "1️⃣ Verificando botões icon-only sem aria-label..."
 icon_buttons=$(grep -rn 'size="icon"' src/ --include="*.tsx" | grep -v 'aria-label' | wc -l)
-if [ $icon_buttons -gt 0 ]; then
+if [[ $icon_buttons -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  Encontrados $icon_buttons botões icon-only sem aria-label${NC}"
   echo "   Arquivos afetados:"
   grep -rn 'size="icon"' src/ --include="*.tsx" | grep -v 'aria-label' | head -5
@@ -33,7 +33,7 @@ echo ""
 # 2. Verificar imagens sem alt
 echo "2️⃣ Verificando imagens sem atributo alt..."
 imgs_no_alt=$(grep -rn '<img' src/ --include="*.tsx" | grep -v 'alt=' | wc -l)
-if [ $imgs_no_alt -gt 0 ]; then
+if [[ $imgs_no_alt -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  Encontradas $imgs_no_alt imagens sem atributo alt${NC}"
   echo "   Arquivos afetados:"
   grep -rn '<img' src/ --include="*.tsx" | grep -v 'alt=' | head -5
@@ -47,7 +47,7 @@ echo ""
 # 3. Verificar inputs sem labels
 echo "3️⃣ Verificando inputs sem labels associados..."
 inputs_no_label=$(grep -rn '<input' src/ --include="*.tsx" | grep -v 'aria-label\|id=' | wc -l)
-if [ $inputs_no_label -gt 0 ]; then
+if [[ $inputs_no_label -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  Encontrados $inputs_no_label inputs sem label ou aria-label${NC}"
   echo "   Nota: Verifique se estão usando React Hook Form com <FormField>"
   total_issues=$((total_issues + inputs_no_label))
@@ -59,7 +59,7 @@ echo ""
 # 4. Verificar links sem texto
 echo "4️⃣ Verificando links sem texto descritivo..."
 links_no_text=$(grep -rn '<a' src/ --include="*.tsx" | grep -c '<a[^>]*href[^>]*>[ ]*<' || true)
-if [ $links_no_text -gt 0 ]; then
+if [[ $links_no_text -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  Encontrados $links_no_text links possivelmente sem texto${NC}"
   total_issues=$((total_issues + links_no_text))
 else
@@ -70,7 +70,7 @@ echo ""
 # 5. Verificar elementos com role sem aria-label
 echo "5️⃣ Verificando elementos com role personalizado..."
 role_elements=$(grep -rn 'role=' src/ --include="*.tsx" | grep -v 'aria-label\|aria-labelledby' | wc -l)
-if [ $role_elements -gt 0 ]; then
+if [[ $role_elements -gt 0 ]]; then
   echo -e "${YELLOW}⚠️  Encontrados $role_elements elementos com role sem aria-label${NC}"
   total_issues=$((total_issues + role_elements))
 else
@@ -81,7 +81,7 @@ echo ""
 # 6. Verificar uso de onClick em divs/spans
 echo "6️⃣ Verificando uso incorreto de onClick em elementos não-interativos..."
 onclick_divs=$(grep -rn 'onClick=' src/ --include="*.tsx" | grep -E '<div|<span' | wc -l)
-if [ $onclick_divs -gt 0 ]; then
+if [[ $onclick_divs -gt 0 ]]; then
   echo -e "${RED}❌ Encontrados $onclick_divs divs/spans com onClick (use <button> ou role/tabindex)${NC}"
   total_issues=$((total_issues + onclick_divs))
 else
@@ -93,7 +93,7 @@ echo ""
 echo "========================================================="
 echo "📊 RESUMO DA AUDITORIA"
 echo "========================================================="
-if [ $total_issues -eq 0 ]; then
+if [[ $total_issues -eq 0 ]]; then
   echo -e "${GREEN}✅ Nenhum problema crítico de acessibilidade encontrado!${NC}"
   echo ""
   echo "Recomendações adicionais:"

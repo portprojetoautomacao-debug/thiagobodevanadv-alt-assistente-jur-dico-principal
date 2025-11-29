@@ -16,22 +16,30 @@ NC='\033[0m' # No Color
 
 # Função para log
 log() {
-    echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+    local message="$1"
+    echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] ${message}${NC}"
+    return 0
 }
 
 # Função para erro
 error() {
-    echo -e "${RED}❌ Erro: $1${NC}"
+    local message="$1"
+    echo -e "${RED}❌ Erro: ${message}${NC}"
+    return 0
 }
 
 # Função para sucesso
 success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    local message="$1"
+    echo -e "${GREEN}✅ ${message}${NC}"
+    return 0
 }
 
 # Função para aviso
 warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    local message="$1"
+    echo -e "${YELLOW}⚠️  ${message}${NC}"
+    return 0
 }
 
 # Verificar se estamos em um repositório Git
@@ -89,7 +97,7 @@ config_files=(
 )
 
 for config_file in "${config_files[@]}"; do
-    if [ ! -f "$config_file" ]; then
+    if [[ ! -f "$config_file" ]]; then
         error "Arquivo de configuração não encontrado: $config_file"
         exit 1
     fi
