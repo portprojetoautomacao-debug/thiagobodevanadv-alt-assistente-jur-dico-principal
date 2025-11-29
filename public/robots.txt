@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://assistente-jurdico-p.vercel.app/sitemap.xml
+Sitemap: https://assistente-juridico-p.vercel.app/sitemap.xml
 
 # Crawl-delay
 Crawl-delay: 1
