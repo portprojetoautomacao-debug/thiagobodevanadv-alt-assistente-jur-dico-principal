@@ -1,10 +1,15 @@
 name: Deploy
 
 on:
-  push:
+  # Deploy automático APÓS CI passar com sucesso
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
+  # Pull requests - deploy de preview
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # Deploy manual
   workflow_dispatch:
     inputs:
       environment:
@@ -34,14 +39,21 @@ jobs:
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
+    # Deploy somente se:
+    # 1. CI passou com sucesso (workflow_run)
+    # 2. É um PR não-draft
+    # 3. É um dispatch manual
     if: |
-      github.event_name == 'push' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Para workflow_run, precisamos do ref correto
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
