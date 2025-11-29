@@ -63,14 +63,9 @@ export default defineConfig({
               expiration: { maxEntries: 50, maxAgeSeconds: 86400 },
             },
           },
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 31536000 },
-            },
-          },
+          // ✅ REMOVIDO: Google Fonts cache rule
+          // Fontes agora são hospedadas localmente em /public/fonts/
+          // Isso elimina erros 404 do fonts.gstatic.com
         ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/_/, /^\/api/],
