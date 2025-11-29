@@ -30,7 +30,7 @@ export const LegalContextItemSchema = z.object({
     id: z.string(),
     type: LegalContextTypeSchema,
     content: z.string(),
-    metadata: z.record(z.string(), z.any()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
     tags: z.array(z.string()).optional(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
@@ -101,7 +101,7 @@ export class LegalMemory {
     public async addContext(
         content: string,
         type: LegalContextType,
-        metadata: Record<string, any> = {},
+        metadata: Record<string, unknown> = {},
         tags: string[] = []
     ): Promise<LegalContextItem> {
         const item: LegalContextItem = {

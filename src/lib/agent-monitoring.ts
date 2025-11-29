@@ -15,7 +15,7 @@ import { trackMetric, captureMessage, captureError, withSpan } from '../services
 export interface AgentActionLog {
     agentId: string
     action: string
-    details?: Record<string, any>
+    details?: Record<string, unknown>
     timestamp: string
     success: boolean
     durationMs?: number
@@ -39,7 +39,7 @@ export class AgentMonitor {
     public async logAction(
         agentId: string,
         action: string,
-        details?: Record<string, any>,
+        details?: Record<string, unknown>,
         success: boolean = true,
         durationMs?: number
     ) {

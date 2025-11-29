@@ -876,7 +876,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 })
 
                 const minutasData = minutasResponse.ok ? await minutasResponse.json() : { value: [] }
-                const existingMinutas = (minutasData as any).value || []
+                const existingMinutas = (minutasData as { value?: unknown[] }).value || []
 
                 await fetch(minutasEndpoint, {
                   method: 'PUT',

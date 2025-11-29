@@ -301,7 +301,7 @@ export class NLPPipeline {
       } else {
         return {
           id: documents[index].id,
-          result: operation === 'entities' ? [] : {} as any,
+          result: operation === 'entities' ? [] : ({} as Record<string, unknown>),
           error: result.reason?.message || 'Unknown error'
         }
       }

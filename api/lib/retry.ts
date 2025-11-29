@@ -40,7 +40,7 @@ export const RETRYABLE_ERRORS: string[] = [
  * Verifica se um erro é retryável
  */
 export function isRetryableError(error: Error): boolean {
-  const errorCode = (error as any).code as string | undefined
+  const errorCode = (error as Error & { code?: string }).code
   const errorName = error.name
 
   // Erros de rede comuns
@@ -50,7 +50,7 @@ export function isRetryableError(error: Error): boolean {
 
   // Erros HTTP 5xx
   if (errorName === 'HTTPError') {
-    const statusCode = (error as any).statusCode as number | undefined
+    const statusCode = (error as Error & { statusCode?: number }).statusCode
     if (typeof statusCode === 'number' && statusCode >= 500 && statusCode < 600) {
       return true
     }
@@ -177,7 +177,7 @@ export const djenRetryConfig: Partial<RetryConfig> = {
   jitter: false, // DJEN não gosta de muitos requests simultâneos
   retryCondition: error => {
     const msg = error.message.toLowerCase()
-    const statusCode = (error as any).statusCode as number | undefined
+    const statusCode = (error as Error & { statusCode?: number }).statusCode
 
     return (
       error.name === 'TimeoutError' ||
@@ -212,7 +212,7 @@ export async function httpWithRetry<T>(
 
     if (!response.ok) {
       const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
-      ;(error as any).statusCode = response.status
+        ; (error as Error & { statusCode: number }).statusCode = response.status
       throw error
     }
 

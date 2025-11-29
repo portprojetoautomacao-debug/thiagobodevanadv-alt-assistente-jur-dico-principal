@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Calculator, ArrowRight, Copy, Check, Warning, Info, CalendarCheck } from '@phosphor-icons/react'
+import { Info } from '@phosphor-icons/react'
 import {
   calcularPrazoCPC,
   calcularPrazoCLT,
@@ -343,7 +343,6 @@ export default function CalculadoraPrazos() {
             </Alert>
 
             <Button onClick={handleCalcular} className="w-full">
-              <CalendarCheck size={20} />
               Calcular Prazo
             </Button>
 

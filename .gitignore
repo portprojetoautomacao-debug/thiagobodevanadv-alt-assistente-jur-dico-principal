@@ -22,6 +22,7 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .vscode/mcp.json
+.vscode/sonar-config.json
 .idea
 .DS_Store
 *.suo

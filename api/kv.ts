@@ -247,7 +247,7 @@ export default withErrorHandler(
     }
 
     // Parse body se vier como string
-    let body: any = req.body
+    let body: unknown = req.body
     if (typeof body === 'string') {
       try {
         body = JSON.parse(body)
@@ -347,7 +347,7 @@ export default withErrorHandler(
                 typeof e === 'object' &&
                 'key' in e &&
                 'value' in e &&
-                typeof (e as any).key === 'string'
+                typeof (e as Record<string, unknown>).key === 'string'
             )
             .slice(0, 50)
 

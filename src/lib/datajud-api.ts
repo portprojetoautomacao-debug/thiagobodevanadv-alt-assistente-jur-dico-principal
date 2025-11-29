@@ -458,8 +458,8 @@ export async function consultarAtualizacoesRecentesDatajud(
       return []
     }
 
-    const processos: DatajudProcesso[] = data.hits.hits.map((hit: any) => {
-      const proc = hit._source as DatajudProcesso
+    const processos: DatajudProcesso[] = data.hits.hits.map((hit: { _source: DatajudProcesso }) => {
+      const proc = hit._source
 
       if (proc.movimentos && Array.isArray(proc.movimentos)) {
         proc.movimentos.sort((a, b) => {

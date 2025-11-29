@@ -96,9 +96,8 @@ class GoogleDocsService {
         gisInited: this.gisInited,
       })
     } catch (err) {
-      this.lastError = `Falha na inicialização: ${
-        err instanceof Error ? err.message : String(err)
-      }`
+      this.lastError = `Falha na inicialização: ${err instanceof Error ? err.message : String(err)
+        }`
       debugError('Initialization failed', err)
     }
   }
@@ -223,9 +222,8 @@ class GoogleDocsService {
           debug('GAPI client initialized successfully for Docs')
           resolve()
         } catch (err) {
-          this.lastError = `Erro ao inicializar Google Docs API: ${
-            err instanceof Error ? err.message : String(err)
-          }`
+          this.lastError = `Erro ao inicializar Google Docs API: ${err instanceof Error ? err.message : String(err)
+            }`
           debugError(this.lastError, err)
           reject(err)
         }
@@ -254,9 +252,8 @@ class GoogleDocsService {
       this.gisInited = true
       debug('GIS initialized successfully for Docs')
     } catch (err) {
-      this.lastError = `Erro ao inicializar GIS (Docs): ${
-        err instanceof Error ? err.message : String(err)
-      }`
+      this.lastError = `Erro ao inicializar GIS (Docs): ${err instanceof Error ? err.message : String(err)
+        }`
       debugError(this.lastError, err)
     }
   }
@@ -305,7 +302,7 @@ class GoogleDocsService {
 
         if (this.accessToken && gapiWindow.gapi?.client) {
           try {
-            ;(gapiWindow.gapi.client as any).setToken?.({
+            ; (gapiWindow.gapi.client as { setToken?: (token: { access_token: string }) => void }).setToken?.({
               access_token: this.accessToken,
             })
             debug('gapi client token set from Docs GIS access_token')
@@ -329,9 +326,8 @@ class GoogleDocsService {
         }
       } catch (err) {
         clearTimeout(timeout)
-        this.lastError = `Erro ao solicitar token Docs: ${
-          err instanceof Error ? err.message : String(err)
-        }`
+        this.lastError = `Erro ao solicitar token Docs: ${err instanceof Error ? err.message : String(err)
+          }`
         debugError(this.lastError, err)
         resolve(false)
       }
@@ -384,9 +380,8 @@ class GoogleDocsService {
 
       return { docId, url }
     } catch (error) {
-      this.lastError = `Erro ao criar documento Docs: ${
-        error instanceof Error ? error.message : String(error)
-      }`
+      this.lastError = `Erro ao criar documento Docs: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return null
     }
@@ -434,9 +429,8 @@ class GoogleDocsService {
       debug('Docs document content updated successfully')
       return true
     } catch (error) {
-      this.lastError = `Erro ao atualizar conteúdo do Docs: ${
-        error instanceof Error ? error.message : String(error)
-      }`
+      this.lastError = `Erro ao atualizar conteúdo do Docs: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return false
     }
@@ -489,9 +483,8 @@ class GoogleDocsService {
       })
       return text
     } catch (error) {
-      this.lastError = `Erro ao buscar conteúdo do Docs: ${
-        error instanceof Error ? error.message : String(error)
-      }`
+      this.lastError = `Erro ao buscar conteúdo do Docs: ${error instanceof Error ? error.message : String(error)
+        }`
       debugError(this.lastError, error)
       return null
     }

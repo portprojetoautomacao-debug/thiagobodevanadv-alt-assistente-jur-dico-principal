@@ -61,5 +61,9 @@
   "css.validate": false,
   "files.associations": {
     "*.css": "tailwindcss"
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "thiagobodevan-a11y",
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
   }
 }

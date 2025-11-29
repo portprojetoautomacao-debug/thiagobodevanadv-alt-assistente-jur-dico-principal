@@ -11,14 +11,47 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+// Tipos para mensagens e dados
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface LLMRequest {
+  model?: string;
+  messages?: ChatMessage[];
+  temperature?: number;
+  max_tokens?: number;
+  [key: string]: unknown;
+}
+
+interface LLMResponse {
+  id?: string;
+  object?: string;
+  created?: number;
+  model?: string;
+  choices?: Array<{
+    index: number;
+    message: ChatMessage;
+    finish_reason: string;
+  }>;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  _provider?: string;
+  [key: string]: unknown;
+}
+
 // Configuração dos provedores
 interface ProviderConfig {
   name: string;
   baseUrl: string;
   apiKey: string | undefined;
   headers: (apiKey: string) => Record<string, string>;
-  transformRequest?: (body: any) => any;
-  transformResponse?: (data: any) => any;
+  transformRequest?: (body: LLMRequest) => unknown;
+  transformResponse?: (data: unknown) => LLMResponse;
 }
 
 // Mapeamento de modelos entre provedores
@@ -44,17 +77,17 @@ const MODEL_MAPPING: Record<string, Record<string, string>> = {
 };
 
 // Transformar request para formato Gemini
-function transformToGemini(body: any): any {
+function transformToGemini(body: LLMRequest): unknown {
   const messages = body.messages || [];
   const contents = messages
-    .filter((m: any) => m.role !== 'system')
-    .map((m: any) => ({
+    .filter((m: ChatMessage) => m.role !== 'system')
+    .map((m: ChatMessage) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
     }));
 
   // Adicionar system instruction se existir
-  const systemMessage = messages.find((m: any) => m.role === 'system');
+  const systemMessage = messages.find((m: ChatMessage) => m.role === 'system');
 
   return {
     contents,
@@ -67,8 +100,20 @@ function transformToGemini(body: any): any {
 }
 
 // Transformar resposta Gemini para formato OpenAI
-function transformFromGemini(data: any): any {
-  const candidate = data.candidates?.[0];
+function transformFromGemini(data: unknown): LLMResponse {
+  const geminiData = data as {
+    candidates?: Array<{
+      content?: { parts?: Array<{ text?: string }> };
+      finishReason?: string;
+    }>;
+    usageMetadata?: {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+      totalTokenCount?: number;
+    };
+  };
+
+  const candidate = geminiData.candidates?.[0];
   const text = candidate?.content?.parts?.[0]?.text || '';
 
   return {
@@ -85,9 +130,9 @@ function transformFromGemini(data: any): any {
       finish_reason: candidate?.finishReason?.toLowerCase() || 'stop',
     }],
     usage: {
-      prompt_tokens: data.usageMetadata?.promptTokenCount || 0,
-      completion_tokens: data.usageMetadata?.candidatesTokenCount || 0,
-      total_tokens: data.usageMetadata?.totalTokenCount || 0,
+      prompt_tokens: geminiData.usageMetadata?.promptTokenCount || 0,
+      completion_tokens: geminiData.usageMetadata?.candidatesTokenCount || 0,
+      total_tokens: geminiData.usageMetadata?.totalTokenCount || 0,
     }
   };
 }

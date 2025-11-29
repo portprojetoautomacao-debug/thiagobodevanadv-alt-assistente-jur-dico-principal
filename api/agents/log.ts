@@ -11,11 +11,10 @@ type LogRequestBody = {
 }
 
 // Wrapper simples em torno de globalThis.fetch para evitar erro de tipos
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const runtimeFetch = async (...args: any[]): Promise<any> => {
-  const f = (globalThis as any).fetch
+const runtimeFetch = async (...args: Parameters<typeof fetch>): Promise<Response> => {
+  const f = globalThis.fetch
   if (typeof f !== 'function') {
-    throw new Error('fetch não está disponível no ambiente de execução')
+    throw new TypeError('fetch não está disponível no ambiente de execução')
   }
   return f(...args)
 }
@@ -67,9 +66,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     })
 
     if (!response.ok) {
-      let errorData: { error?: string; [key: string]: unknown } = {}
+      let errorData: { error?: string;[key: string]: unknown } = {}
       try {
-        errorData = (await response.json()) as { error?: string; [key: string]: unknown }
+        errorData = (await response.json()) as { error?: string;[key: string]: unknown }
       } catch {
         // se não for JSON, mantemos errorData vazio
       }
@@ -102,7 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       timestamp: new Date().toISOString()
     })
   } catch (err: unknown) {
-     
+
     console.error('[api/agents/log] Erro:', err)
     res.status(500).json({
       ok: false,

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
-import { Sparkle, FileText, Download, Brain, Tray, ArrowClockwise, CloudArrowDown, Trash, CheckCircle, Robot, CalendarDots } from '@phosphor-icons/react'
+
 import { toast } from 'sonner'
 import type { Expediente, Appointment } from '@/types'
 import type { AgentTask } from '@/lib/agents'
@@ -163,7 +163,7 @@ export default function ExpedientePanel() {
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
-  const [, setSelectedTask] = useState<string | null>(null)
+  const setSelectedTask = useState<string | null>(null)[1]
   const [loading, setLoading] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [, setLawyersCount] = useState(0)
@@ -225,7 +225,7 @@ export default function ExpedientePanel() {
   }
 
   // Função para analisar um único expediente (retorna o expediente analisado)
-  const analyzeExpediente = async (exp: Expediente): Promise<Expediente> => {
+  const analyzeExpediente = useCallback(async (exp: Expediente): Promise<Expediente> => {
     try {
       const response = await fetch('/_spark/llm', {
         method: 'POST',
@@ -271,7 +271,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
       let analysisData
       try {
-        const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        const jsonText = responseText.replaceAll(/```json\n?/g, '').replaceAll(/```\n?/g, '').trim()
         analysisData = JSON.parse(jsonText)
       } catch {
         analysisData = {
@@ -385,7 +385,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
       console.error('Erro ao analisar expediente:', error)
       throw error
     }
-  }
+  }, [addTask, appointments, setAppointments, setDeadlinesCreated, agents])
 
   // Análise automática de todos os expedientes pendentes
   const runAutoAnalysis = useCallback(async () => {
@@ -694,7 +694,7 @@ Crie o workflow de controladoria para esta tarefa.`
                 size="sm"
                 title="Limpar análises com erro para permitir re-análise"
               >
-                <Trash className="w-4 h-4 mr-2" />
+
                 Limpar Análises Inválidas
               </Button>
             )}
@@ -704,7 +704,7 @@ Crie o workflow de controladoria para esta tarefa.`
               variant="outline"
               size="sm"
             >
-              <ArrowClockwise className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+
               {loading ? 'Atualizando...' : 'Atualizar'}
             </Button>
           </div>
@@ -716,7 +716,7 @@ Crie o workflow de controladoria para esta tarefa.`
             <CardContent className="py-4">
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
-                  <Brain className="w-8 h-8 text-primary animate-pulse" weight="fill" />
+
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
@@ -733,11 +733,11 @@ Crie o workflow de controladoria para esta tarefa.`
                   />
                   {tasksCreated > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      <Robot className="w-3 h-3 inline mr-1" />
+
                       {tasksCreated} tarefa(s) distribuída(s) para agentes
                       {deadlinesCreated > 0 && (
                         <span className="ml-2">
-                          <CalendarDots className="w-3 h-3 inline mr-1" />
+
                           {deadlinesCreated} prazo(s) na agenda
                         </span>
                       )}
@@ -755,20 +755,20 @@ Crie o workflow de controladoria para esta tarefa.`
             <CardContent className="py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" weight="fill" />
+
                   <p className="text-sm text-green-700 dark:text-green-400">
                     ✅ Todas as {safeExpedientes.length} intimações analisadas pela Mrs. Justin-e
                   </p>
                 </div>
                 {tasksCreated > 0 && (
                   <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                    <Robot className="w-3 h-3 mr-1" />
+
                     {tasksCreated} tarefas na fila dos agentes
                   </Badge>
                 )}
                 {deadlinesCreated > 0 && (
                   <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    <CalendarDots className="w-3 h-3 mr-1" />
+
                     {deadlinesCreated} prazos na agenda
                   </Badge>
                 )}
@@ -790,7 +790,7 @@ Crie o workflow de controladoria para esta tarefa.`
               <CardContent className="space-y-2">
                 {safeExpedientes.length === 0 ? (
                   <div className="text-center py-8 space-y-3">
-                    <CloudArrowDown className="w-12 h-12 mx-auto text-muted-foreground/50" />
+
                     <p className="text-sm text-muted-foreground">
                       Nenhuma publicação encontrada
                     </p>
@@ -804,7 +804,7 @@ Crie o workflow de controladoria para esta tarefa.`
                       size="sm"
                       className="mt-2"
                     >
-                      <ArrowClockwise className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+
                       Verificar Agora
                     </Button>
                   </div>
@@ -853,18 +853,18 @@ Crie o workflow de controladoria para esta tarefa.`
                     {!selectedExp.analyzed && (
                       <div className="flex gap-2">
                         <Button onClick={() => handleActivateMichaelRoss()} disabled={analyzing} variant="default">
-                          <Brain className="w-4 h-4 mr-2" weight="fill" />
+
                           {analyzing ? 'Analisando...' : 'Ativar Michael Ross'}
                         </Button>
                         <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline">
-                          <Sparkle className="w-4 h-4 mr-2" weight="fill" />
+
                           Análise Padrão
                         </Button>
                       </div>
                     )}
                     {selectedExp.analyzed && needsReanalysis(selectedExp) && (
                       <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline" size="sm">
-                        <ArrowClockwise className={`w-4 h-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
+
                         {analyzing ? 'Re-analisando...' : 'Re-analisar com IA'}
                       </Button>
                     )}
@@ -882,7 +882,7 @@ Crie o workflow de controladoria para esta tarefa.`
                     <>
                       <div>
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                          <Sparkle className="w-4 h-4 text-accent" weight="fill" />
+
                           Resumo Inteligente
                         </h3>
                         <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
@@ -903,7 +903,7 @@ Crie o workflow de controladoria para esta tarefa.`
                           <div className="flex flex-wrap gap-2">
                             {selectedExp.pendingDocs.map((doc, idx) => (
                               <Badge key={idx} variant="outline">
-                                <FileText className="w-3 h-3 mr-1" />
+
                                 {doc}
                               </Badge>
                             ))}
@@ -915,11 +915,11 @@ Crie o workflow de controladoria para esta tarefa.`
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="text-sm font-semibold flex items-center gap-2">
-                              <Sparkle className="w-4 h-4 text-accent" weight="fill" />
+
                               Minuta de Petição Gerada
                             </h3>
                             <Button variant="outline" size="sm">
-                              <Download className="w-4 h-4 mr-2" />
+
                               Exportar
                             </Button>
                           </div>
@@ -937,7 +937,7 @@ Crie o workflow de controladoria para esta tarefa.`
             ) : (
               <Card key="empty-selection">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <Tray className="w-16 h-16 text-muted-foreground mb-4" />
+
                   <p className="text-lg font-medium text-foreground">Selecione um expediente</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Escolha um expediente da lista para visualizar e analisar
@@ -953,7 +953,7 @@ Crie o workflow de controladoria para esta tarefa.`
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
-              <Brain className="w-7 h-7 text-primary" weight="fill" />
+
               Mrs. Michael Ross - Análise de Intimação
             </DialogTitle>
             <DialogDescription>

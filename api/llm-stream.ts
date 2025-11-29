@@ -10,22 +10,36 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+// Tipos para mensagens e dados
+interface ChatMessage {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}
+
+interface LLMRequest {
+    model?: string;
+    messages?: ChatMessage[];
+    temperature?: number;
+    max_tokens?: number;
+    [key: string]: unknown;
+}
+
 // Configuração de runtime para Edge (suporta streaming melhor)
 export const config = {
     maxDuration: 60,
 };
 
 // Transformar request para formato Gemini
-function transformToGemini(body: any): any {
+function transformToGemini(body: LLMRequest): unknown {
     const messages = body.messages || [];
     const contents = messages
-        .filter((m: any) => m.role !== 'system')
-        .map((m: any) => ({
+        .filter((m: ChatMessage) => m.role !== 'system')
+        .map((m: ChatMessage) => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
         }));
 
-    const systemMessage = messages.find((m: any) => m.role === 'system');
+    const systemMessage = messages.find((m: ChatMessage) => m.role === 'system');
 
     return {
         contents,
@@ -62,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const requestedModel = body.model || 'gpt-4o-mini';
 
     // Helper para enviar SSE
-    const sendEvent = (data: any) => {
+    const sendEvent = (data: { type: string; content?: string; provider?: string; message?: string }) => {
         res.write(`data: ${JSON.stringify(data)}\n\n`);
     };
 
