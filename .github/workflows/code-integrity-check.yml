@@ -1,8 +1,8 @@
 name: Code Integrity & Integration Check
 
 on:
-  push:
-    branches: [main, develop]
+  # Removido: push trigger - CI.yml já faz verificações básicas
+  # Manter apenas em PRs para verificações mais profundas
   pull_request:
     branches: [main, develop]
   schedule:
