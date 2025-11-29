@@ -1,8 +1,8 @@
 /**
- * LLM Client - Real API Implementation
+ * LLM Client - Real API Implementation (Gemini 2.5 Pro)
  * 
- * This module provides a unified interface for LLM operations using real APIs (Gemini/OpenAI).
- * Replaces the mock @github/spark/llm with actual API calls via the backend proxy.
+ * This module provides a unified interface for LLM operations using Gemini 2.5 Pro.
+ * All calls go to the backend proxy at /_spark/llm → /api/llm-proxy → Gemini API.
  * 
  * NO SIMULATIONS - All calls go to real AI APIs.
  */
