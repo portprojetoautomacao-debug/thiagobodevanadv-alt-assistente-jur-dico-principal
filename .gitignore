@@ -52,7 +52,6 @@ serviceAccountKey.json
 packages
 pids
 .file-manifest
-.devcontainer/
 
 .spark-workbench-id
 
