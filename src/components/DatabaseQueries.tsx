@@ -273,7 +273,7 @@ export default function DatabaseQueries() {
                               key={idx}
                               className="flex gap-3 p-3 bg-muted rounded-lg"
                             >
-                              <div className="flex-shrink-0 w-32">
+                              <div className="shrink-0 w-32">
                                 <Badge variant="outline">
                                   {formatDateSafe(mov.dataHora)}
                                 </Badge>

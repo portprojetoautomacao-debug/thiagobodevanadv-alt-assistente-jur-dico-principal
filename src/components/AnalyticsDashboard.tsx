@@ -185,7 +185,7 @@ export default function AnalyticsDashboard() {
                     <div className="flex items-center gap-2 ml-4">
                       <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-secondary to-accent"
+                          className="h-full bg-linear-to-r from-secondary to-accent"
                           style={{
                             width: `${Math.max(5, (count / actionMaxCount) * 100)}%`,
                           }}
@@ -225,7 +225,7 @@ export default function AnalyticsDashboard() {
                     className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-card/50 transition-colors"
                   >
                     <div
-                      className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                      className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                         event.type === 'pageview'
                           ? 'bg-secondary'
                           : event.type === 'action'

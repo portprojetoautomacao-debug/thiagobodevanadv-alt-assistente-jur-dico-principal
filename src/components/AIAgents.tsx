@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Robot,
@@ -43,6 +43,8 @@ import AgentOrchestrationPanel from '@/components/AgentOrchestrationPanel'
 import { toast } from 'sonner'
 import type { ViewType, User } from '@/types'
 import type { IconProps } from '@phosphor-icons/react'
+import { ServerLogsViewer } from '@/components/ServerLogsViewer'
+import { LegalMemoryViewer } from '@/components/LegalMemoryViewer'
 
 const agentIcons: Record<string, ComponentType<IconProps>> = {
   'djen-monitor': Database,
@@ -84,6 +86,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     streamingContent,
     isStreamingEnabled,
     toggleStreaming,
+    serverLogs,
+    legalMemory,
+    refreshServerData,
     setAgents: _setAgents, // mantido para compatibilidade futura
   } = useAutonomousAgents()
 
@@ -332,7 +337,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
       </Card>
 
       {/* Mrs. Justin-e */}
-      <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
+      <Card className="bg-linear-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/30">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
@@ -447,6 +452,12 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                 {completedTasks.length}
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="server-logs">
+            Logs do Servidor
+          </TabsTrigger>
+          <TabsTrigger value="memory">
+            Memória Jurídica
           </TabsTrigger>
         </TabsList>
 
@@ -833,6 +844,26 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               </ScrollArea>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Server Logs */}
+        <TabsContent value="server-logs" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Logs do Servidor</CardTitle>
+              <CardDescription>
+                Monitoramento em tempo real dos logs do servidor
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ServerLogsViewer logs={serverLogs} onRefresh={refreshServerData} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Memory */}
+        <TabsContent value="memory" className="space-y-4">
+          <LegalMemoryViewer memory={legalMemory} onRefresh={refreshServerData} />
         </TabsContent>
       </Tabs>
 

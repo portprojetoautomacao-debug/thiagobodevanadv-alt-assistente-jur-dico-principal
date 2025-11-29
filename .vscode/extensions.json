@@ -1,5 +1,16 @@
 {
     "recommendations": [
-        "teamsdevapp.vscode-ai-foundry"
+        "teamsdevapp.vscode-ai-foundry",
+        "ms-vscode.vscode-typescript-next",
+        "github.codespaces",
+        "timonvs.reactsnippetsstandard",
+        "github.vscode-github-actions",
+        "usernamehw.errorlens",
+        "yoavbls.pretty-ts-errors",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-close-tag",
+        "pkief.material-icon-theme",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
     ]
 }

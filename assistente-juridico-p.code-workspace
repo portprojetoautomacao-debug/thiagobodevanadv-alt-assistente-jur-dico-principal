@@ -1,0 +1,67 @@
+{
+	"folders": [
+		{
+			"name": "assistente-juridico-p",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.watcherExclude": {
+			"**/docs/archive/**": true,
+			"**/node_modules/**": true,
+			"**/dist/**": true,
+			"**/.git/objects/**": true,
+			"**/.git/subtree-cache/**": true,
+			"**/.vercel/**": true,
+			"**/coverage/**": true,
+			"**/build/**": true,
+			"**/.next/**": true
+		},
+		"search.exclude": {
+			"**/node_modules": true,
+			"**/dist": true,
+			"**/.git": true,
+			"**/.vercel": true,
+			"**/.next": true,
+			"**/coverage": true
+		},
+		"typescript.tsserver.maxTsServerMemory": 2048,
+		"editor.stickyScroll.enabled": true,
+		"gitlab.pipelineGitRemoteName": "gitlab",
+		"gitlab.showPipelineUpdateNotifications": true,
+		"gitlab.showStatusBarLinks": true,
+		"gitlab.showIssueLinkOnStatusBar": false,
+		"gitlab.showMrStatusOnStatusBar": true,
+		"gitlab.debug": false,
+		"workbench.editor.defaultBinaryEditor": "vscode.hexEditor",
+		"node-module-intellisense.scanBuiltinModules": true,
+		"node-module-intellisense.scanDevDependencies": true,
+		"node-module-intellisense.scanFileModules": true,
+		"node-module-intellisense.modulePaths": [],
+		"tailwindCSS.includeLanguages": {
+			"typescript": "javascript",
+			"typescriptreact": "javascript"
+		},
+		"tailwindCSS.experimental.classRegex": [
+			[
+				"cva\\(([^)]*)\\)",
+				"[\"'`]([^\"'`]*).*?[\"'`]"
+			],
+			[
+				"cn\\(([^)]*)\\)",
+				"[\"'`]([^\"'`]*).*?[\"'`]"
+			],
+			[
+				"clsx\\(([^)]*)\\)",
+				"[\"'`]([^\"'`]*).*?[\"'`]"
+			]
+		],
+		"editor.quickSuggestions": {
+			"strings": true
+		},
+		"css.validate": false,
+		"files.associations": {
+			"*.css": "tailwindcss"
+		}
+	}
+}

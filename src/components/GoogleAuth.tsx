@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Warning, ArrowSquareOut } from '@phosphor-icons/react'
-import { config, validateConfig } from '@/lib/config'
+import { config } from '@/lib/config'
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
 const PRODUCTION_DOMAIN = 'https://assistente-juridico-github.vercel.app'
@@ -12,9 +12,9 @@ const PRODUCTION_DOMAIN = 'https://assistente-juridico-github.vercel.app'
 const isPreviewEnvironment = (): boolean => {
   const hostname = window.location.hostname
   // Preview deployments têm formato: projeto-hash-account.vercel.app
-  return hostname.includes('vercel.app') && 
-         hostname !== 'assistente-juridico-github.vercel.app' &&
-         !hostname.startsWith('assistente-juridico-github.')
+  return hostname.includes('vercel.app') &&
+    hostname !== 'assistente-juridico-github.vercel.app' &&
+    !hostname.startsWith('assistente-juridico-github.')
 }
 
 export interface GoogleUser {

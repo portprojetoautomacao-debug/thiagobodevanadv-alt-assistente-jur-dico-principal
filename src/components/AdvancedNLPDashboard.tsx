@@ -645,7 +645,7 @@ export default function AdvancedNLPDashboard() {
                         >
                           <CheckCircle
                             size={20}
-                            className="text-primary flex-shrink-0 mt-0.5"
+                            className="text-primary shrink-0 mt-0.5"
                             weight="fill"
                           />
                           <span>{point}</span>
