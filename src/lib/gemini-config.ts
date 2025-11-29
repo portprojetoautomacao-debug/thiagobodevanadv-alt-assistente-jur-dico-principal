@@ -46,9 +46,9 @@ export const validateGeminiApiKey = (apiKey: string): boolean => {
 
   // Padrões possíveis:
   const patterns = [
-    /^AIza[0-9A-Za-z\-_]{20,}$/, // Gemini padrão
-    /^GEM-[0-9A-Za-z\-_]{16,}$/, // Gemini Enterprise / Studio
-    /^[A-Za-z0-9_\-]{32,}$/, // fallback para chaves longas
+    /^AIza[0-9A-Za-z_-]{20,}$/, // Gemini padrão
+    /^GEM-[0-9A-Za-z_-]{16,}$/, // Gemini Enterprise / Studio
+    /^[A-Za-z0-9_-]{32,}$/, // fallback para chaves longas
   ]
 
   return patterns.some((regex) => regex.test(apiKey))
