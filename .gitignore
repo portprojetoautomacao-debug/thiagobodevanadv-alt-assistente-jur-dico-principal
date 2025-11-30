@@ -76,3 +76,11 @@ mcp-server-config.json*
 .env*.local
 eslint-results.sarif
 *.zip
+
+# MCP Server local files
+.mcp/
+
+# Test coverage
+coverage/
+coverage-api/
+*.lcov
