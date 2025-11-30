@@ -1144,7 +1144,7 @@ async function backupLawyerPublications(
 ): Promise<number> {
   let totalBytes = 0;
   const lawyers = (await kv.get(KV_KEYS.MONITORED_LAWYERS) as MonitoredLawyer[]) || [];
-  
+
   for (const lawyer of lawyers) {
     const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
     try {
@@ -1158,7 +1158,7 @@ async function backupLawyerPublications(
       // Ignore errors for individual lawyer publications
     }
   }
-  
+
   return totalBytes;
 }
 
@@ -1210,7 +1210,7 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
     // Calculate and store
     result.totalSize = formatBytes(totalBytes);
     const backupKey = `backup:${new Date().toISOString().split('T')[0]}`;
-    
+
     await kv.set(backupKey, {
       timestamp,
       data: backupData,
