@@ -10,8 +10,71 @@
  */
 
 import { Redis } from '@upstash/redis'
-import { captureError, captureMessage, trackMetric, withSpan } from '../services/error-tracking'
 import { AgentStatus } from './agents'
+
+// ============================================================================
+// TIPOS PARA FUNÇÕES DE MONITORAMENTO
+// ============================================================================
+
+type CaptureErrorFn = (error: Error, context?: Record<string, unknown>) => void
+type CaptureMessageFn = (message: string, level?: string) => void
+type TrackMetricFn = (name: string, value?: number, tags?: Record<string, string>) => void
+type WithSpanFn = <T>(name: string, op: string, callback: () => Promise<T>, attributes?: Record<string, string | number>) => Promise<T>
+
+interface SentryFunctions {
+    captureError: CaptureErrorFn
+    captureMessage: CaptureMessageFn
+    trackMetric: TrackMetricFn
+    withSpan: WithSpanFn
+}
+
+// ============================================================================
+// STUBS PARA AMBIENTE SERVERLESS (Node.js / Vercel Functions)
+// ============================================================================
+
+const isServerSide = typeof window === 'undefined'
+
+// Funções stub para ambiente serverless
+const stubFunctions: SentryFunctions = {
+    captureError: (error: Error, context?: Record<string, unknown>) => {
+        console.error('[AgentMonitor] Error captured:', error.message, context)
+    },
+    captureMessage: (message: string, level: string = 'info') => {
+        console.log(`[AgentMonitor] [${level}] ${message}`)
+    },
+    trackMetric: (_name: string, _value: number = 1, _tags?: Record<string, string>) => {
+        // No-op em serverless - métricas são opcionais
+    },
+    withSpan: async <T>(_name: string, _op: string, callback: () => Promise<T>, _attributes?: Record<string, string | number>): Promise<T> => {
+        return callback()
+    }
+}
+
+// Carrega funções reais do Sentry apenas no browser
+let _sentryFunctions: SentryFunctions | null = null
+
+async function getSentryFunctions(): Promise<SentryFunctions> {
+    if (isServerSide) {
+        return stubFunctions
+    }
+    
+    if (!_sentryFunctions) {
+        try {
+            const errorTracking = await import('../services/error-tracking')
+            _sentryFunctions = {
+                captureError: errorTracking.captureError,
+                captureMessage: errorTracking.captureMessage as CaptureMessageFn,
+                trackMetric: errorTracking.trackMetric,
+                withSpan: errorTracking.withSpan
+            }
+        } catch {
+            // Fallback se o import falhar
+            _sentryFunctions = stubFunctions
+        }
+    }
+    
+    return _sentryFunctions
+}
 
 // ============================================================================
 // REDIS HELPER
@@ -76,15 +139,16 @@ export class AgentMonitor {
         // Log no console (dev)
         console.log(`[AgentMonitor] ${agentId} -> ${action} (${success ? 'OK' : 'FAIL'})`, log)
 
-        // Enviar métrica para Sentry
-        trackMetric('agent_action_count', 1, { agentId, action, success: String(success) })
+        // Enviar métrica para Sentry (apenas no browser)
+        const sentry = await getSentryFunctions()
+        sentry.trackMetric('agent_action_count', 1, { agentId, action, success: String(success) })
 
         if (durationMs) {
-            trackMetric('agent_action_duration', durationMs, { agentId, action })
+            sentry.trackMetric('agent_action_duration', durationMs, { agentId, action })
         }
 
         if (!success) {
-            captureMessage(`Agent Action Failed: ${agentId} - ${action}`, 'warning')
+            sentry.captureMessage(`Agent Action Failed: ${agentId} - ${action}`, 'warning')
         }
 
         // Persistir no Redis (apenas se estiver disponível)
@@ -113,29 +177,30 @@ export class AgentMonitor {
         taskType: string,
         executionFn: () => Promise<T>
     ): Promise<T> {
-        const startTime = performance.now()
+        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
+        const sentry = await getSentryFunctions()
 
         try {
-            // Envolve a execução em um span do Sentry
-            const result = await withSpan(
+            // Envolve a execução em um span
+            const result = await sentry.withSpan(
                 `agent_task_${taskType}`,
                 'agent.task',
                 async () => await executionFn(),
                 { agentId, taskId, taskType }
             )
 
-            const duration = performance.now() - startTime
+            const duration = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
             await this.logAction(agentId, `execute_task_${taskType}`, { taskId }, true, duration)
 
-            trackMetric('agent_task_success', 1, { agentId, taskType })
+            sentry.trackMetric('agent_task_success', 1, { agentId, taskType })
 
             return result
         } catch (error) {
-            const duration = performance.now() - startTime
+            const duration = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
             await this.logAction(agentId, `execute_task_${taskType}`, { taskId, error }, false, duration)
 
-            trackMetric('agent_task_failure', 1, { agentId, taskType })
-            captureError(error instanceof Error ? error : new Error(String(error)), {
+            sentry.trackMetric('agent_task_failure', 1, { agentId, taskType })
+            sentry.captureError(error instanceof Error ? error : new Error(String(error)), {
                 agentId,
                 taskId,
                 taskType
@@ -148,9 +213,10 @@ export class AgentMonitor {
     /**
      * Registra mudança de status do agente
      */
-    public logStatusChange(agentId: string, oldStatus: AgentStatus, newStatus: AgentStatus) {
+    public async logStatusChange(agentId: string, oldStatus: AgentStatus, newStatus: AgentStatus) {
         console.log(`[AgentMonitor] ${agentId}: ${oldStatus} -> ${newStatus}`)
-        trackMetric('agent_status_change', 1, { agentId, from: oldStatus, to: newStatus })
+        const sentry = await getSentryFunctions()
+        sentry.trackMetric('agent_status_change', 1, { agentId, from: oldStatus, to: newStatus })
     }
 }
 
