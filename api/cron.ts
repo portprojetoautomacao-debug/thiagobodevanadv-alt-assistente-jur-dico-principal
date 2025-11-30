@@ -474,13 +474,13 @@ function determineAdvogadoMatchType(
   numeroOabNumerico?: string,
   ufOab?: string
 ): 'nome' | 'oab' | 'ambos' | null {
-  const matchNome = nomeAdvogado 
-    ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) 
+  const matchNome = nomeAdvogado
+    ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado))
     : false;
-  const matchOab = numeroOabNumerico 
-    ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab 
+  const matchOab = numeroOabNumerico
+    ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab
     : false;
-  
+
   if (matchNome && matchOab) return 'ambos';
   if (matchOab) return 'oab';
   if (matchNome) return 'nome';
@@ -584,7 +584,7 @@ async function consultarDJENForLawyer(
 
   const defaultDate = formatDJENDate(new Date());
   const oabInfo = parseOABInfo(numeroOAB);
-  
+
   const ctx: LawyerQueryContext = {
     nomeAdvogado,
     numeroOabNumerico: oabInfo.numero,
@@ -603,7 +603,7 @@ async function consultarDJENForLawyer(
     try {
       const hitRateLimit = await processTribunalQuery(tribunal, ctx, resultados, erros);
       rateLimitWarning = rateLimitWarning || hitRateLimit;
-      
+
       if (i < tribunais.length - 1) {
         await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
       }
@@ -2006,21 +2006,94 @@ async function sendDJENDailyReport(result: DJENMonitorResult): Promise<void> {
   console.log(`[Cron DJEN Monitor] Email de relatório enviado para ${notificationEmail}`);
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { action, secret } = req.query;
+// ===== Action Handlers Registry (reduces cognitive complexity S3776) =====
 
-  // Verificar autorização cron
-  // Aceita:
-  // 1. Vercel Cron Jobs (header Authorization: Bearer ...)
-  // 2. CRON_SECRET via query param para testes manuais
-  // 3. Ambiente de desenvolvimento local
+interface ActionResult {
+  success?: boolean;
+  tasksProcessed?: number;
+  tasksFailed?: number;
+  emailsSent?: number;
+  webhooksSent?: number;
+  eventsCreated?: number;
+  [key: string]: unknown;
+}
+
+interface ActionConfig {
+  handler: (timestamp: string) => Promise<ActionResult>;
+  getMessage: (result: ActionResult) => string;
+  successMessage: string;
+}
+
+const ACTION_HANDLERS: Record<string, ActionConfig> = {
+  'daily-reset': {
+    handler: handleDailyReset,
+    getMessage: () => 'Daily reset cron executed successfully',
+    successMessage: 'Daily reset cron executed successfully'
+  },
+  'djen-monitor': {
+    handler: handleDJENMonitor,
+    getMessage: () => 'DJEN monitor cron executed successfully',
+    successMessage: 'DJEN monitor cron executed successfully'
+  },
+  'process-agent-queue': {
+    handler: handleProcessAgentQueue,
+    getMessage: (result) => result.tasksProcessed === 0 && result.tasksFailed === 0
+      ? 'No pending tasks in queue'
+      : 'Agent queue processing completed',
+    successMessage: 'Agent queue processing completed'
+  },
+  'process-notifications': {
+    handler: handleProcessNotifications,
+    getMessage: (result) => result.emailsSent === 0 && result.webhooksSent === 0
+      ? 'No pending notifications'
+      : 'Notification processing completed',
+    successMessage: 'Notification processing completed'
+  },
+  'calendar-sync': {
+    handler: handleCalendarSync,
+    getMessage: (result) => result.eventsCreated === 0
+      ? 'Calendar sync skipped - no deadlines to sync or not configured'
+      : 'Calendar sync completed',
+    successMessage: 'Calendar sync completed'
+  },
+  'backup': {
+    handler: handleBackup,
+    getMessage: () => 'Backup completed',
+    successMessage: 'Backup completed'
+  },
+  'datajud-monitor': {
+    handler: handleDataJudMonitor,
+    getMessage: () => 'DataJud monitoring completed',
+    successMessage: 'DataJud monitoring completed'
+  },
+  'deadline-alerts': {
+    handler: handleDeadlineAlerts,
+    getMessage: () => 'Deadline alerts completed',
+    successMessage: 'Deadline alerts completed'
+  },
+  'watchdog': {
+    handler: handleWatchdog,
+    getMessage: () => 'Watchdog execution completed',
+    successMessage: 'Watchdog execution completed'
+  }
+};
+
+const VALID_ACTIONS = Object.keys(ACTION_HANDLERS).join(', ');
+
+function isAuthorized(req: VercelRequest, secret: string | string[] | undefined): boolean {
   const authHeader = req.headers.authorization;
   const isVercelCron = authHeader?.startsWith('Bearer ');
   const cronSecret = process.env.CRON_SECRET;
   const isValidSecret = cronSecret && secret === cronSecret;
   const isLocalTest = process.env.NODE_ENV === 'development';
 
-  if (!isVercelCron && !isValidSecret && !isLocalTest) {
+  return !!(isVercelCron || isValidSecret || isLocalTest);
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const { action, secret } = req.query;
+
+  if (!isAuthorized(req, secret)) {
     return res.status(401).json({
       error: 'Unauthorized - Use Vercel Cron Jobs or provide valid secret',
       hint: 'Add ?secret=YOUR_CRON_SECRET for manual testing'
@@ -2028,102 +2101,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const timestamp = new Date().toISOString();
+  const actionStr = typeof action === 'string' ? action : '';
+  const actionConfig = ACTION_HANDLERS[actionStr];
+
+  if (!actionConfig) {
+    return res.status(400).json({
+      error: `Invalid action. Use: ${VALID_ACTIONS}`
+    });
+  }
 
   try {
-    // DAILY RESET (midnight)
-    if (action === 'daily-reset') {
-      const result = await handleDailyReset(timestamp);
-      return res.status(200).json({
-        ok: true,
-        message: 'Daily reset cron executed successfully',
-        result
-      });
-    }
+    const result = await actionConfig.handler(timestamp);
+    const message = actionConfig.getMessage(result);
+    const ok = result.success !== false;
 
-    // DJEN MONITOR (9 AM UTC)
-    if (action === 'djen-monitor') {
-      const result = await handleDJENMonitor(timestamp);
-      return res.status(200).json({
-        ok: true,
-        message: 'DJEN monitor cron executed successfully',
-        result
-      });
-    }
-
-    // ================= PROCESS AGENT QUEUE (every 15 min) =================
-    if (action === 'process-agent-queue') {
-      const result = await handleProcessAgentQueue(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: result.tasksProcessed === 0 && result.tasksFailed === 0 ? 'No pending tasks in queue' : 'Agent queue processing completed',
-        result
-      });
-    }
-
-    // ================= PROCESS NOTIFICATIONS (every 5 min) =================
-    if (action === 'process-notifications') {
-      const result = await handleProcessNotifications(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: result.emailsSent === 0 && result.webhooksSent === 0 ? 'No pending notifications' : 'Notification processing completed',
-        result
-      });
-    }
-
-    // ================= CALENDAR SYNC (every 2 hours) =================
-    if (action === 'calendar-sync') {
-      const result = await handleCalendarSync(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: result.eventsCreated === 0 ? 'Calendar sync skipped - no deadlines to sync or not configured' : 'Calendar sync completed',
-        result
-      });
-    }
-
-    // ================= BACKUP (daily at 3 AM UTC) =================
-    if (action === 'backup') {
-      const result = await handleBackup(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: 'Backup completed',
-        result
-      });
-    }
-
-    // ================= DATAJUD MONITOR (daily at 4 PM UTC = 1 PM BRT) =================
-    if (action === 'datajud-monitor') {
-      const result = await handleDataJudMonitor(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: 'DataJud monitoring completed',
-        result
-      });
-    }
-
-    // ================= DEADLINE ALERTS (daily at 12 PM UTC = 9 AM BRT) =================
-    if (action === 'deadline-alerts') {
-      const result = await handleDeadlineAlerts(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: 'Deadline alerts completed',
-        result
-      });
-    }
-
-    // ================= WATCHDOG (every 30 min) =================
-    if (action === 'watchdog') {
-      const result = await handleWatchdog(timestamp);
-      return res.status(200).json({
-        ok: result.success,
-        message: 'Watchdog execution completed',
-        result
-      });
-    }
-
-    return res.status(400).json({
-      error: 'Invalid action. Use: daily-reset, djen-monitor, process-agent-queue, process-notifications, calendar-sync, backup, datajud-monitor, deadline-alerts'
-    });
-
+    return res.status(200).json({ ok, message, result });
   } catch (error) {
     console.error('[Cron API] Fatal error:', error);
 
