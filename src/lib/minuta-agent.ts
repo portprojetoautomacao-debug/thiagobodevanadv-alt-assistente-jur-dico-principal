@@ -50,11 +50,14 @@ export interface MinutaAgentResult {
   errors: string[]
 }
 
+// ===========================
+// Helper Functions
+// ===========================
+
 /**
  * Normaliza data de prazo para ISO YYYY-MM-DD (sem horário)
  */
 function normalizeDateToISO(dateStr: string): string {
-  // Se já estiver no formato YYYY-MM-DD, mantemos
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return dateStr
   }
@@ -72,32 +75,182 @@ function normalizeDateToISO(dateStr: string): string {
 function mapPriority(
   priority?: MinutaAgentDeadline['priority']
 ): 'baixa' | 'media' | 'alta' | 'critica' | undefined {
-  if (!priority) return undefined
-  switch (priority) {
-    case 'baixa':
-      return 'baixa'
-    case 'média':
-      return 'media'
-    case 'alta':
-      return 'alta'
-    case 'crítica':
-      return 'critica'
-    default:
-      return undefined
+  const PRIORITY_MAP: Record<string, 'baixa' | 'media' | 'alta' | 'critica'> = {
+    'baixa': 'baixa',
+    'média': 'media',
+    'alta': 'alta',
+    'crítica': 'critica',
   }
+  return priority ? PRIORITY_MAP[priority] : undefined
+}
+
+/**
+ * Retorna array de lembretes baseado na prioridade
+ */
+function getRemindersForPriority(priority?: MinutaAgentDeadline['priority']): number[] {
+  const REMINDER_CONFIG: Record<string, number[]> = {
+    'crítica': [60, 240, 1440, 2880, 4320],
+    'alta': [60, 1440, 2880],
+    'média': [60, 1440],
+  }
+  return priority && REMINDER_CONFIG[priority] ? REMINDER_CONFIG[priority] : [60]
 }
 
 /**
  * Função de feedback visual para o usuário durante o processo
  */
-function giveUserFeedback(message: string, isError: boolean = false) {
-  // Aqui você pode substituir esse log por um sistema real de feedback para o usuário
+function logFeedback(message: string, isError = false): void {
   if (isError) {
-    console.error(`[Erro]: ${message}`)
+    console.error(`[MinutaAgent][Erro]: ${message}`)
   } else {
-    console.log(`[Sucesso]: ${message}`)
+    console.log(`[MinutaAgent][OK]: ${message}`)
   }
 }
+
+/**
+ * Cria resultado de erro padrão
+ */
+function createErrorResult(errors: string[], prazo: MinutaAgentDeadline | null): MinutaAgentResult {
+  return {
+    success: false,
+    provider: 'gemini-2.5-pro',
+    minuta: null,
+    docsId: null,
+    docsUrl: null,
+    calendarEventId: null,
+    prazo,
+    errors,
+  }
+}
+
+/**
+ * Gera minuta usando Gemini
+ */
+async function generateMinutaContent(
+  tipoMinuta: string,
+  detalhesCaso: string
+): Promise<{ content: string | null; error: string | null }> {
+  const response = await generatePeticao(tipoMinuta, detalhesCaso)
+  
+  if (response.error || !response.text) {
+    const errorMsg = response.error || 'Gemini retornou texto vazio na geração da minuta'
+    return { content: null, error: errorMsg }
+  }
+  
+  return { content: response.text, error: null }
+}
+
+/**
+ * Monta objeto Minuta
+ */
+function buildMinutaObject(
+  titulo: string | undefined,
+  tipoMinuta: string,
+  numeroProcesso: string | undefined,
+  conteudo: string
+): Minuta {
+  const sufixoProcesso = numeroProcesso ? ` - Proc. ${numeroProcesso}` : ''
+  const tituloMinuta = titulo || `Minuta - ${tipoMinuta}${sufixoProcesso}`
+
+  return {
+    id: crypto.randomUUID(),
+    titulo: tituloMinuta,
+    conteudo,
+  } as Minuta
+}
+
+/**
+ * Salva minuta no Google Docs
+ */
+async function saveToGoogleDocs(
+  minuta: Minuta,
+  errors: string[]
+): Promise<{ docsId: string | null; docsUrl: string | null }> {
+  try {
+    const docsResult = await googleDocsService.createDocument(minuta)
+    if (docsResult?.docId) {
+      return { docsId: docsResult.docId, docsUrl: docsResult.url }
+    }
+    errors.push('Não foi possível criar o documento no Google Docs')
+    logFeedback('Erro ao salvar no Google Docs', true)
+  } catch (err) {
+    const errorMsg = err instanceof Error
+      ? `Erro ao criar documento no Google Docs: ${err.message}`
+      : 'Erro desconhecido ao criar documento no Google Docs'
+    errors.push(errorMsg)
+    logFeedback('Erro ao salvar no Google Docs', true)
+  }
+  return { docsId: null, docsUrl: null }
+}
+
+/**
+ * Cria DeadlineEvent para o Google Calendar
+ */
+function buildDeadlineEvent(
+  tituloMinuta: string,
+  tipoMinuta: string,
+  numeroProcesso: string | undefined,
+  tribunal: string | undefined,
+  prazo: MinutaAgentDeadline,
+  isoDate: string
+): DeadlineEvent {
+  const descriptionParts = [
+    `Minuta: ${tipoMinuta}`,
+    numeroProcesso ? `Processo: ${numeroProcesso}` : '',
+    tribunal ? `Tribunal: ${tribunal}` : '',
+    prazo.description ? `Detalhes do prazo: ${prazo.description}` : '',
+  ]
+
+  return {
+    title: tituloMinuta,
+    description: descriptionParts.filter(Boolean).join('\n'),
+    deadline: isoDate,
+    processNumber: numeroProcesso,
+    type: 'prazo',
+    priority: mapPriority(prazo.priority),
+    reminders: getRemindersForPriority(prazo.priority),
+  }
+}
+
+/**
+ * Cria evento de prazo no Google Calendar
+ */
+async function createCalendarEvent(
+  prazo: MinutaAgentDeadline,
+  tituloMinuta: string,
+  tipoMinuta: string,
+  numeroProcesso: string | undefined,
+  tribunal: string | undefined,
+  errors: string[]
+): Promise<{ eventId: string | null; prazoNormalizado: MinutaAgentDeadline }> {
+  try {
+    const isoDate = normalizeDateToISO(prazo.endDate)
+    const prazoNormalizado = { ...prazo, endDate: isoDate }
+    const deadlineEvent = buildDeadlineEvent(
+      tituloMinuta, tipoMinuta, numeroProcesso, tribunal, prazo, isoDate
+    )
+
+    const eventId = await googleCalendarService.createDeadlineEvent(deadlineEvent)
+    
+    if (!eventId) {
+      errors.push('Não foi possível criar o evento de prazo no Google Calendar')
+      logFeedback('Erro ao criar evento no Google Calendar', true)
+    }
+    
+    return { eventId: eventId || null, prazoNormalizado }
+  } catch (err) {
+    const errorMsg = err instanceof Error
+      ? `Erro ao criar evento no Google Calendar: ${err.message}`
+      : 'Erro desconhecido ao criar evento no Google Calendar'
+    errors.push(errorMsg)
+    logFeedback('Erro ao criar evento no Google Calendar', true)
+    return { eventId: null, prazoNormalizado: prazo }
+  }
+}
+
+// ===========================
+// Main Agent Function
+// ===========================
 
 /**
  * Agente principal:
@@ -123,121 +276,46 @@ export async function criarMinutaComAgenteIA(
   const syncCalendar = sync?.calendar ?? true
 
   try {
-    // 1) Gera a minuta usando Gemini (HTML/Texto da peça)
-    const geminiResponse = await generatePeticao(tipoMinuta, detalhesCaso)
-
-    if (geminiResponse.error || !geminiResponse.text) {
-      const msg = geminiResponse.error || 'Gemini retornou texto vazio na geração da minuta'
-      errors.push(msg)
-      giveUserFeedback(msg, true)
-      return {
-        success: false,
-        provider: 'gemini-2.5-pro',
-        minuta: null,
-        docsId: null,
-        docsUrl: null,
-        calendarEventId: null,
-        prazo: prazo ?? null,
-        errors,
-      }
+    // 1) Gera a minuta usando Gemini
+    const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso)
+    
+    if (geminiError || !content) {
+      errors.push(geminiError || 'Erro ao gerar minuta')
+      logFeedback(geminiError || 'Erro ao gerar minuta', true)
+      return createErrorResult(errors, prazo ?? null)
     }
 
-    const conteudoGerado = geminiResponse.text
-
-    // 2) Monta objeto Minuta (mínimo necessário: id, titulo, conteudo)
-    const sufixoProcesso = numeroProcesso ? ` - Proc. ${numeroProcesso}` : ''
-    const tituloMinuta = titulo || `Minuta - ${tipoMinuta}${sufixoProcesso}`
-
-    const minuta: Minuta = {
-      // compatível com o tipo do seu app (id/titulo/conteudo são seguros)
-      id: crypto.randomUUID(),
-      titulo: tituloMinuta,
-      conteudo: conteudoGerado,
-      // campos extras do seu tipo Minuta (se existirem) ficam opcionais
-      // e podem ser preenchidos pelo restante do app
-    } as Minuta
-
-    let docsId: string | null = null
-    let docsUrl: string | null = null
-    let calendarEventId: string | null = null
+    // 2) Monta objeto Minuta
+    const minuta = buildMinutaObject(titulo, tipoMinuta, numeroProcesso, content)
 
     // 3) Salvar no Google Docs (se habilitado)
+    let docsId: string | null = null
+    let docsUrl: string | null = null
+    
     if (syncDocs) {
-      try {
-        const docsResult = await googleDocsService.createDocument(minuta)
-        if (docsResult?.docId) {
-          docsId = docsResult.docId
-          docsUrl = docsResult.url
-        } else {
-          errors.push('Não foi possível criar o documento no Google Docs')
-          giveUserFeedback('Erro ao salvar no Google Docs', true)
-        }
-      } catch (err) {
-        console.error('[MinutaAgent] Erro ao criar documento no Google Docs:', err)
-        errors.push(
-          err instanceof Error
-            ? `Erro ao criar documento no Google Docs: ${err.message}`
-            : 'Erro desconhecido ao criar documento no Google Docs'
-        )
-        giveUserFeedback('Erro ao salvar no Google Docs', true)
-      }
+      const docsResult = await saveToGoogleDocs(minuta, errors)
+      docsId = docsResult.docsId
+      docsUrl = docsResult.docsUrl
     }
 
-    // 4) Criar prazo no Google Calendar (se houver info de prazo + sync ativo)
+    // 4) Criar prazo no Google Calendar (se houver prazo + sync ativo)
+    let calendarEventId: string | null = null
     let prazoNormalizado: MinutaAgentDeadline | null = prazo ?? null
 
     if (prazo && syncCalendar) {
-      try {
-        const isoDate = normalizeDateToISO(prazo.endDate)
-
-        prazoNormalizado = {
-          ...prazo,
-          endDate: isoDate,
-        }
-
-        const deadlineEvent: DeadlineEvent = {
-          title: tituloMinuta,
-          description: [
-            `Minuta: ${tipoMinuta}`,
-            numeroProcesso ? `Processo: ${numeroProcesso}` : '',
-            tribunal ? `Tribunal: ${tribunal}` : '',
-            prazo.description ? `Detalhes do prazo: ${prazo.description}` : '',
-          ]
-            .filter(Boolean)
-            .join('\n'),
-          deadline: isoDate,
-          processNumber: numeroProcesso,
-          type: 'prazo',
-          priority: mapPriority(prazo.priority),
-          reminders: prazo.priority === 'crítica'
-            ? [60, 240, 1440, 2880, 4320] // mais agressivo pra crítica
-            : prazo.priority === 'alta'
-              ? [60, 1440, 2880]
-              : prazo.priority === 'média'
-                ? [60, 1440]
-                : [60],
-        }
-
-        const eventId = await googleCalendarService.createDeadlineEvent(deadlineEvent)
-
-        if (eventId) {
-          calendarEventId = eventId
-        } else {
-          errors.push('Não foi possível criar o evento de prazo no Google Calendar')
-          giveUserFeedback('Erro ao criar evento no Google Calendar', true)
-        }
-      } catch (err) {
-        console.error('[MinutaAgent] Erro ao criar evento de prazo no Calendar:', err)
-        errors.push(
-          err instanceof Error
-            ? `Erro ao criar evento no Google Calendar: ${err.message}`
-            : 'Erro desconhecido ao criar evento no Google Calendar'
-        )
-        giveUserFeedback('Erro ao criar evento no Google Calendar', true)
-      }
+      const calendarResult = await createCalendarEvent(
+        prazo,
+        minuta.titulo,
+        tipoMinuta,
+        numeroProcesso,
+        tribunal,
+        errors
+      )
+      calendarEventId = calendarResult.eventId
+      prazoNormalizado = calendarResult.prazoNormalizado
     }
 
-    giveUserFeedback('Minuta gerada com sucesso', false)
+    logFeedback('Minuta gerada com sucesso')
 
     return {
       success: errors.length === 0,
@@ -250,23 +328,13 @@ export async function criarMinutaComAgenteIA(
       errors,
     }
   } catch (error) {
-    console.error('[MinutaAgent] Falha inesperada no fluxo do agente de minuta:', error)
-    errors.push(
-      error instanceof Error
-        ? `Falha inesperada: ${error.message}`
-        : 'Falha inesperada ao executar o agente de minuta'
-    )
-    giveUserFeedback('Erro inesperado na execução', true)
+    console.error('[MinutaAgent] Falha inesperada:', error)
+    const errorMsg = error instanceof Error
+      ? `Falha inesperada: ${error.message}`
+      : 'Falha inesperada ao executar o agente de minuta'
+    errors.push(errorMsg)
+    logFeedback('Erro inesperado na execução', true)
 
-    return {
-      success: false,
-      provider: 'gemini-2.5-pro',
-      minuta: null,
-      docsId: null,
-      docsUrl: null,
-      calendarEventId: null,
-      prazo: prazo ?? null,
-      errors,
-    }
+    return createErrorResult(errors, prazo ?? null)
   }
 }
