@@ -194,7 +194,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
 
   // Handler de clique na notificação
   const handleClick = (notification: Notification) => {
-    if (!notification.read) {
+    if (notification.read === false) {
       markAsRead(notification.id)
     }
 
