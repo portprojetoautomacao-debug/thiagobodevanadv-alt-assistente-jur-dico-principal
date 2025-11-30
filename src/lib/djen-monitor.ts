@@ -298,7 +298,7 @@ function buildDJENQueryParams(
     const params = new URLSearchParams()
 
     // Required parameters
-    params.set('numeroOab', numeroOAB.replaceAll(/\D/g, ''))
+    params.set('numeroOab', numeroOAB.replace(/\D/g, ''))
     params.set('ufOab', ufOAB.toUpperCase())
     params.set('meio', 'D') // Diário Eletrônico
 
@@ -934,14 +934,14 @@ export async function analyzePublicationWithAI(
     const prompt = buildAnalysisPrompt(pub)
     const model = options.model || 'gemini-2.5-pro'
 
-    const messages = [
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
         { role: 'system', content: DJEN_AI_SYSTEM_PROMPT },
         { role: 'user', content: prompt }
     ]
 
     // Use streaming if callback provided
     if (options.onStream) {
-        return callAIWithStreaming(messages, model, options.onStream)
+        return callAIWithStreaming(messages as Array<{ role: string; content: string }>, model, options.onStream)
     }
 
     // Non-streaming call

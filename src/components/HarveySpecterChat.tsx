@@ -129,22 +129,22 @@ const SimpleMarkdown = memo(({ content }: { content: string }) => {
 
         return content
             // Headers
-            .replaceAll(/^### (.+)$/gm, '<h3 class="text-base font-bold mt-3 mb-1">$1</h3>')
-            .replaceAll(/^## (.+)$/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
-            .replaceAll(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
+            .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold mt-3 mb-1">$1</h3>')
+            .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
+            .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
             // Bold
-            .replaceAll(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
             // Italic
-            .replaceAll(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
             // Code inline
-            .replaceAll(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-muted rounded text-sm font-mono">$1</code>')
+            .replace(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-muted rounded text-sm font-mono">$1</code>')
             // Lists
-            .replaceAll(/^• (.+)$/gm, '<li class="ml-4">$1</li>')
-            .replaceAll(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
-            .replaceAll(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
+            .replace(/^• (.+)$/gm, '<li class="ml-4">$1</li>')
+            .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+            .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
             // Line breaks
-            .replaceAll('\n\n', '</p><p class="mt-2">')
-            .replaceAll('\n', '<br/>')
+            .replace(/\n\n/g, '</p><p class="mt-2">')
+            .replace(/\n/g, '<br/>')
     }, [content])
 
     return (
@@ -494,7 +494,8 @@ Regras:
         if (!input.trim()) return
         const query = input
         setInput('')
-        void sendMessage(query)
+        // Fire and forget - promise is intentionally not awaited
+        sendMessage(query).catch(console.error)
     }, [input, sendMessage])
 
     const handleCancel = useCallback(() => {

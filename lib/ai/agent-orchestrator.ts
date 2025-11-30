@@ -4,7 +4,7 @@
 
 import type { SimpleAgent } from './core-agent';
 
-export type OrchestrationPattern = 
+export type OrchestrationPattern =
   | 'sequential'      // Agentes executam em sequência
   | 'parallel'        // Agentes executam em paralelo
   | 'hierarchical'    // Agente coordenador delega para outros
@@ -37,8 +37,8 @@ export interface OrchestrationResult {
  * Patterns: Sequential, Parallel, Hierarchical, Collaborative
  */
 export class AgentOrchestrator {
-  private agents: Map<string, SimpleAgent>;
-  private pattern: OrchestrationPattern;
+  private readonly agents: Map<string, SimpleAgent>;
+  private readonly pattern: OrchestrationPattern;
 
   constructor(agents: Map<string, SimpleAgent>, pattern: OrchestrationPattern = 'sequential') {
     this.agents = agents;
@@ -50,7 +50,7 @@ export class AgentOrchestrator {
    */
   async orchestrate(tasks: AgentTask[]): Promise<OrchestrationResult> {
     const startTime = Date.now();
-    
+
     switch (this.pattern) {
       case 'sequential':
         return await this.executeSequential(tasks, startTime);
@@ -93,7 +93,7 @@ export class AgentOrchestrator {
       try {
         const result = await this.executeWithTimeout(agent, task);
         results.set(task.id, result);
-        
+
         traces.push({
           agentId: task.assignedTo,
           taskId: task.id,
@@ -143,7 +143,7 @@ export class AgentOrchestrator {
       try {
         const result = await this.executeWithTimeout(agent, task);
         results.set(task.id, result);
-        
+
         return {
           agentId: task.assignedTo,
           taskId: task.id,
@@ -209,7 +209,7 @@ export class AgentOrchestrator {
       try {
         const result = await this.executeWithTimeout(agent, mainTask);
         votes.push(result);
-        
+
         traces.push({
           agentId,
           taskId: mainTask.id,
@@ -268,7 +268,7 @@ export class AgentOrchestrator {
 
       visiting.add(taskId);
       const task = taskMap.get(taskId);
-      
+
       if (task?.dependencies) {
         for (const dep of task.dependencies) {
           visit(dep);
@@ -296,7 +296,7 @@ export class AgentOrchestrator {
    */
   private findConsensus(votes: unknown[]): unknown {
     if (votes.length === 0) return null;
-    
+
     // Estratégia simples: retorna o primeiro resultado válido
     // Em produção: implementar votação mais sofisticada
     return votes.find((v: unknown) => {

@@ -51,7 +51,7 @@ export function getDefaultConfig(): MultiSourceConfig {
   }
 }
 
-export function getSourceCapabilities(source: PublicationSource): SourceCapabilities {
+export function getSourceCapabilities(_source: PublicationSource): SourceCapabilities {
   return {
     search: true,
     filter: true,
@@ -69,7 +69,7 @@ export interface PublicationSearchResult {
   sources: PublicationSource[]
 }
 
-export async function searchPublications(params: PublicationSearchParams, config?: Partial<MultiSourceConfig>): Promise<PublicationSearchResult> {
+export async function searchPublications(_params: PublicationSearchParams, _config?: Partial<MultiSourceConfig>): Promise<PublicationSearchResult> {
   return {
     publications: [],
     totalFound: 0,

@@ -442,7 +442,7 @@ export function validarFormatoData(data: string): boolean {
   if (!regex.test(data)) return false
 
   const date = new Date(data)
-  if (isNaN(date.getTime())) return false
+  if (Number.isNaN(date.getTime())) return false
 
   // Verifica se a data não foi ajustada (ex: 2025-04-31 vira 2025-05-01)
   const [year, month, day] = data.split('-').map(Number)

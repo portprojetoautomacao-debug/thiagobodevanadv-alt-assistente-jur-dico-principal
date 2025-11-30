@@ -169,8 +169,25 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
       ? parsed.estrategias_recomendadas.filter((e): e is string => typeof e === 'string' && e.trim() !== '')
       : []
 
-    const precedentes: unknown[] = Array.isArray(parsed.precedentes_relevantes)
-      ? parsed.precedentes_relevantes as unknown[]
+    // Type for precedentes from API response
+    type PrecedenteRaw = {
+      id?: string
+      tribunal?: string
+      numero?: string
+      tema?: string
+      resumo_relevancia?: string
+      link?: string
+    }
+
+    const precedentes: PremonicaoJuridica['precedentes_relevantes'] = Array.isArray(parsed.precedentes_relevantes)
+      ? (parsed.precedentes_relevantes as PrecedenteRaw[]).map((p) => ({
+        id: p.id || crypto.randomUUID(),
+        tribunal: p.tribunal || 'N/A',
+        numero: p.numero || 'N/A',
+        tema: p.tema || 'N/A',
+        resumo_relevancia: p.resumo_relevancia || 'N/A',
+        link: p.link || ''
+      }))
       : []
 
     const result: PremonicaoJuridica = {

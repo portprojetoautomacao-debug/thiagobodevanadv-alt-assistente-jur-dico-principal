@@ -1,16 +1,14 @@
 /**
- * DJEN Publications Widget
+ * DJEN Publications Widget - Refatorado
  *
- * Exibe publicações DJEN capturadas pelo monitoramento automático no dashboard.
- * Mostra últimas publicações, status de sincronização e permite ações rápidas.
+ * Versão otimizada com complexidade cognitiva reduzida (S3776)
+ * Separação de responsabilidades em hooks customizados
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@/hooks/use-kv'
-import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
@@ -24,329 +22,19 @@ import {
 import {
   Newspaper,
   ArrowsClockwise,
-  CheckCircle,
   Clock,
-  BellRinging,
-  ArrowRight,
+  CheckCircle,
   Warning,
-  Copy,
-  CaretDown,
-  CaretUp,
-  Funnel,
-  Plus,
+  ArrowRight,
   Robot,
+  Funnel,
 } from '@phosphor-icons/react'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { useClientesManager } from '@/hooks/use-clientes-manager'
+import { useDJENPublications } from '@/hooks/use-djen-publications'
+import { useDJENSync } from '@/hooks/use-djen-sync'
+import { useDJENProcessRegistration } from '@/hooks/use-djen-process-registration'
+import { PublicationItem } from '@/components/PublicationItem'
 import type { Process, Expediente } from '@/types'
-
-// Tipos
-interface DJENPublication {
-  id: string
-  tribunal: string
-  data: string
-  tipo: string
-  teor: string
-  numeroProcesso?: string
-  orgao?: string
-  lawyerName: string
-  matchType: 'nome' | 'oab' | 'ambos'
-  source: string
-  createdAt: string
-  notified?: boolean
-}
-
-interface ExpedientesResponse {
-  success: boolean
-  expedientes: DJENPublication[]
-  count: number
-  lastCheck: string | null
-  lawyersConfigured: number
-  message?: string
-}
-
-interface PartiesResult {
-  autor: string
-  reu: string
-  advogadoAutor?: string
-  advogadoReu?: string
-}
-
-/**
- * Cria um novo processo a partir de uma publicação DJEN
- */
-function createProcessFromPublication(
-  pub: DJENPublication,
-  parties: PartiesResult,
-  now: string
-): Process {
-  return {
-    id: crypto.randomUUID(),
-    numeroCNJ: pub.numeroProcesso!,
-    titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
-    autor: parties.autor || 'Não identificado',
-    reu: parties.reu || 'Não identificado',
-    comarca: pub.orgao || '',
-    vara: pub.tribunal || '',
-    status: 'ativo',
-    fase: 'Inicial',
-    dataDistribuicao: pub.data || now.split('T')[0],
-    dataUltimaMovimentacao: now,
-    notas: buildProcessNotes(pub, parties),
-    prazos: [],
-    createdAt: now,
-    updatedAt: now,
-  }
-}
-
-/**
- * Monta as notas do processo
- */
-function buildProcessNotes(pub: DJENPublication, parties: PartiesResult): string {
-  const advAutor = parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
-  const advReu = parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
-  const teorTruncado = pub.teor.length > 500 ? pub.teor.substring(0, 500) + '...' : pub.teor
-
-  return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`
-}
-
-/**
- * Cria um expediente a partir de uma publicação DJEN
- */
-function createExpedienteFromPublication(
-  pub: DJENPublication,
-  processId: string,
-  now: string
-): Expediente {
-  return {
-    id: crypto.randomUUID(),
-    processId,
-    tipo: pub.tipo || 'intimacao',
-    titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
-    conteudo: pub.teor,
-    content: pub.teor,
-    teor: pub.teor,
-    dataRecebimento: now,
-    receivedAt: now,
-    lido: false,
-    arquivado: false,
-    analyzed: false,
-    tribunal: pub.tribunal,
-    numeroProcesso: pub.numeroProcesso,
-    orgao: pub.orgao,
-    lawyerName: pub.lawyerName,
-    matchType: pub.matchType,
-    source: pub.source,
-    createdAt: pub.createdAt,
-    data: pub.data,
-    priority: 'high', // Intimações são sempre prioridade alta
-  }
-}
-
-// ===== Registration Helpers (reduces S3776 Cognitive Complexity) =====
-
-interface RegistrationContext {
-  createOrUpdateFromDjenIntimacao: (data: {
-    nomeCliente: string
-    cidade: string
-    estado: string
-    processo: string
-  }) => void
-}
-
-/**
- * Extrai cidade e estado do campo orgão
- */
-function parseOrgaoLocation(orgao?: string): { cidade: string; estado: string } {
-  const parts = orgao?.split('/') || []
-  return {
-    cidade: parts[0] || '',
-    estado: parts[1] || '',
-  }
-}
-
-/**
- * Registra cliente a partir das partes extraídas
- */
-function registerClientFromParties(
-  parties: PartiesResult,
-  pub: DJENPublication,
-  ctx: RegistrationContext
-): void {
-  if (!parties.autor || parties.autor === 'Não identificado') return
-
-  const location = parseOrgaoLocation(pub.orgao)
-  ctx.createOrUpdateFromDjenIntimacao({
-    nomeCliente: parties.autor,
-    cidade: location.cidade,
-    estado: location.estado,
-    processo: pub.numeroProcesso || '',
-  })
-}
-
-/**
- * Processa uma única publicação para registro
- */
-async function processPublicationForRegistration(
-  pub: DJENPublication,
-  now: string,
-  ctx: RegistrationContext
-): Promise<{ process: Process; expediente: Expediente } | null> {
-  if (!pub.numeroProcesso) return null
-
-  const parties = await extractPartiesWithFallback(pub.teor)
-  registerClientFromParties(parties, pub, ctx)
-
-  const newProcess = createProcessFromPublication(pub, parties, now)
-  const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
-
-  return { process: newProcess, expediente: newExpediente }
-}
-
-/**
- * Formata descrição das partes para toast
- */
-function formatPartiesDescription(parties: PartiesResult): string {
-  if (parties.autor === 'Não identificado') return ''
-  return ` - ${parties.autor} x ${parties.reu}`
-}
-
-// ===== Sync Helpers (reduces S3776 Cognitive Complexity) =====
-
-interface SyncResult {
-  success: boolean
-  message?: string
-  newPublications?: number
-  rateLimited?: boolean
-}
-
-/**
- * Executa sincronização DJEN via API
- */
-async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
-  const response = await fetch(`${baseUrl}/api/djen-sync`, {
-    method: 'POST',
-  })
-
-  // Rate limit
-  if (response.status === 429) {
-    const data = await response.json()
-    return {
-      success: false,
-      rateLimited: true,
-      message: data.message || 'Tente novamente em alguns segundos'
-    }
-  }
-
-  if (!response.ok) {
-    return { success: false, message: `HTTP ${response.status}` }
-  }
-
-  const result = await response.json()
-
-  if (result.ok) {
-    return {
-      success: true,
-      newPublications: result.result?.newPublications || 0
-    }
-  }
-
-  return {
-    success: false,
-    message: result.error || result.message || 'Erro na sincronização'
-  }
-}
-
-/**
- * Exibe toast apropriado baseado no resultado da sync
- */
-function showSyncToast(result: SyncResult): void {
-  if (result.rateLimited) {
-    toast.warning('Aguarde antes de sincronizar', {
-      description: result.message,
-    })
-    return
-  }
-
-  if (result.success) {
-    toast.success('Sincronização concluída', {
-      description: result.newPublications && result.newPublications > 0
-        ? `${result.newPublications} novas publicações encontradas`
-        : 'Nenhuma nova publicação',
-    })
-    return
-  }
-
-  toast.error('Falha na sincronização', {
-    description: result.message || 'Erro desconhecido',
-  })
-}
-
-// ===== Process Registration Helpers =====
-
-/**
- * Verifica se processo já existe no array de processos
- */
-function checkProcessExists(
-  numeroProcesso: string | undefined,
-  processes: Process[] | null
-): boolean {
-  if (!numeroProcesso) return false
-  const currentProcesses = processes || []
-  return currentProcesses.some(
-    (p) =>
-      p.numeroCNJ === numeroProcesso ||
-      p.numeroCNJ.replaceAll(/\D/g, '') === numeroProcesso.replaceAll(/\D/g, ''),
-  )
-}
-
-// ===== Date Formatting Helpers (reduces S3776) =====
-
-/**
- * Calculates the relative date description from a date string
- */
-function getRelativeDateDescription(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffHours < 1) return 'Agora mesmo'
-  if (diffHours < 24) return `${diffHours}h atrás`
-  if (diffDays === 1) return 'Ontem'
-  if (diffDays < 7) return `${diffDays} dias atrás`
-  return date.toLocaleDateString('pt-BR')
-}
-
-// ===== Match Badge Helpers (reduces S3776) =====
-
-type MatchType = 'nome' | 'oab' | 'ambos'
-
-interface MatchBadgeVariant {
-  label: string
-  className: string
-}
-
-const MATCH_BADGE_VARIANTS: Record<MatchType, MatchBadgeVariant> = {
-  nome: {
-    label: 'Nome',
-    className: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  },
-  oab: {
-    label: 'OAB',
-    className: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  },
-  ambos: {
-    label: 'Nome + OAB',
-    className: 'bg-green-500/20 text-green-400 border-green-500/30',
-  },
-}
-
-function getMatchBadgeVariant(type: MatchType): MatchBadgeVariant {
-  return MATCH_BADGE_VARIANTS[type]
-}
 
 interface DJENPublicationsWidgetProps {
   readonly onViewAll?: () => void
@@ -359,193 +47,53 @@ export default function DJENPublicationsWidget({
   compact = false,
   maxItems = 5,
 }: DJENPublicationsWidgetProps) {
-  const [publications, setPublications] = useState<DJENPublication[]>([])
-  const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [lastCheck, setLastCheck] = useState<string | null>(null)
-  const [lawyersCount, setLawyersCount] = useState(0)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
-  const [autoRegistering, setAutoRegistering] = useState(false)
+
+  // Hooks customizados para reduzir complexidade
+  const {
+    publications,
+    loading,
+    error,
+    lastCheck,
+    lawyersCount,
+    fetchPublications,
+  } = useDJENPublications(maxItems, filter)
+
+  const { syncing, handleSync } = useDJENSync()
 
   // KV storage para processos e expedientes
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [, setExpedientes] = useKV<Expediente[]>('expedientes', [])
 
-  // Hook centralizado para cadastro de clientes
-  const { createOrUpdateFromDjenIntimacao } = useClientesManager()
-
-  // Busca publicações da API
-  const fetchPublications = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-      const statusParam = filter === 'unread' ? '&status=unread' : ''
-      const response = await fetch(
-        `${baseUrl}/api/expedientes?limit=${maxItems * 2}${statusParam}`,
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const data: ExpedientesResponse = await response.json()
-
-      if (data.success) {
-        setPublications(data.expedientes.slice(0, maxItems))
-        setLastCheck(data.lastCheck)
-        setLawyersCount(data.lawyersConfigured)
-      } else {
-        setError(data.message || 'Erro ao carregar publicações')
-      }
-    } catch (err) {
-      console.error('[DJENWidget] Fetch error:', err)
-      setError('Não foi possível conectar ao servidor')
-    } finally {
-      setLoading(false)
-    }
-  }, [maxItems, filter])
-
-  // Força sincronização manual - refatorado para reduzir CC (S3776)
-  const handleSync = async () => {
-    setSyncing(true)
-    setError(null)
-
-    try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-      const result = await executeDJENSync(baseUrl)
-
-      showSyncToast(result)
-
-      if (result.success) {
-        await fetchPublications()
-      }
-    } catch (err) {
-      console.error('[DJENWidget] Sync error:', err)
-      toast.error('Falha na sincronização', {
-        description: err instanceof Error ? err.message : 'Erro desconhecido',
-      })
-    } finally {
-      setSyncing(false)
-    }
-  }
-
-  // Copia teor para clipboard
-  const handleCopy = (teor: string) => {
-    navigator.clipboard.writeText(teor)
-    toast.success('Copiado!', {
-      description: 'Teor copiado para a área de transferência',
-    })
-  }
-
-  // Verifica se publicação já está cadastrada no Acervo - usa helper para reduzir CC
-  const isAlreadyRegistered = useCallback(
-    (pub: DJENPublication) => checkProcessExists(pub.numeroProcesso, processes),
-    [processes],
-  )
-
-  // Cadastra uma publicação individual no Acervo
-  const handleRegisterProcess = async (pub: DJENPublication) => {
-    if (!pub.numeroProcesso) {
-      toast.error('Processo sem número CNJ', {
-        description: 'Não é possível cadastrar sem número do processo',
-      })
-      return
-    }
-
-    if (isAlreadyRegistered(pub)) {
-      toast.info('Processo já cadastrado', {
-        description: `O processo ${pub.numeroProcesso} já está no Acervo`,
-      })
-      return
-    }
-
-    toast.info('Extraindo partes do processo...', {
-      description: 'Analisando teor da publicação com IA',
-    })
-
-    const now = new Date().toISOString()
-    const ctx: RegistrationContext = { createOrUpdateFromDjenIntimacao }
-    const result = await processPublicationForRegistration(pub, now, ctx)
-
-    if (!result) return
-
-    setProcesses((current) => [...(current || []), result.process])
-    setExpedientes((current) => [...(current || []), result.expediente])
-
-    const parties = await extractPartiesWithFallback(pub.teor)
-    toast.success('Processo cadastrado!', {
-      description: `${pub.numeroProcesso} adicionado ao Acervo${formatPartiesDescription(parties)}`,
-    })
-  }
-
-  // Cadastra TODAS as publicações não registradas automaticamente
-  const handleAutoRegisterAll = async () => {
-    if (autoRegistering) return
-    setAutoRegistering(true)
-
-    try {
-      const unregisteredPubs = publications.filter(
-        (pub) => pub.numeroProcesso && !isAlreadyRegistered(pub),
-      )
-
-      if (unregisteredPubs.length === 0) {
-        toast.info('Nenhuma publicação nova', {
-          description: 'Todas as publicações já estão no Acervo',
-        })
-        return
-      }
-
-      const now = new Date().toISOString()
-      const ctx: RegistrationContext = { createOrUpdateFromDjenIntimacao }
-      const newProcesses: Process[] = []
-      const newExpedientes: Expediente[] = []
-
-      toast.info(`Processando ${unregisteredPubs.length} publicações...`, {
-        description: 'Extraindo partes dos processos com IA',
-      })
-
-      for (const pub of unregisteredPubs) {
-        const result = await processPublicationForRegistration(pub, now, ctx)
-        if (result) {
-          newProcesses.push(result.process)
-          newExpedientes.push(result.expediente)
-        }
-      }
-
-      setProcesses((current) => [...(current || []), ...newProcesses])
-      setExpedientes((current) => [...(current || []), ...newExpedientes])
-
-      toast.success(`${newProcesses.length} processo(s) cadastrado(s)!`, {
-        description: 'As intimações foram adicionadas ao Acervo e Expedientes',
-      })
-    } finally {
-      setAutoRegistering(false)
-    }
-  }
+  const {
+    autoRegistering,
+    isAlreadyRegistered,
+    handleRegisterProcess,
+    handleAutoRegisterAll,
+  } = useDJENProcessRegistration(processes, setProcesses, setExpedientes)
 
   // Carrega publicações ao montar
   useEffect(() => {
     fetchPublications()
   }, [fetchPublications])
 
-  // Use extracted helper for relative date formatting
-  const formatRelativeDate = getRelativeDateDescription
+  // Helper para data relativa
+  const getRelativeDateDescription = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  // Badge de tipo de match - uses extracted constants
-  const MatchBadge = ({ type }: { type: 'nome' | 'oab' | 'ambos' }) => {
-    const variant = getMatchBadgeVariant(type)
-    return (
-      <Badge variant="outline" className={variant.className}>
-        {variant.label}
-      </Badge>
-    )
+    if (diffHours < 1) return 'Agora mesmo'
+    if (diffHours < 24) return `${diffHours}h atrás`
+    if (diffDays === 1) return 'Ontem'
+    if (diffDays < 7) return `${diffDays} dias atrás`
+    return date.toLocaleDateString('pt-BR')
   }
 
-  // Skeleton loader
+  // Early return: Loading state
   if (loading) {
     return (
       <Card className={cn('card-glow-hover glassmorphic', compact && 'h-fit')}>
@@ -569,7 +117,7 @@ export default function DJENPublicationsWidget({
     )
   }
 
-  // Estado de erro
+  // Early return: Error state
   if (error && publications.length === 0) {
     return (
       <Card className={cn('card-glow-hover glassmorphic', compact && 'h-fit')}>
@@ -598,6 +146,7 @@ export default function DJENPublicationsWidget({
     )
   }
 
+  // Main render
   return (
     <Card className={cn('card-glow-hover glassmorphic', compact && 'h-fit')}>
       <CardHeader className="pb-2">
@@ -606,9 +155,9 @@ export default function DJENPublicationsWidget({
             <Newspaper size={20} weight="duotone" className="text-primary" />
             Publicações DJEN
             {publications.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Button variant="secondary" className="ml-1 h-5 px-2 text-xs">
                 {publications.length}
-              </Badge>
+              </Button>
             )}
           </CardTitle>
 
@@ -626,17 +175,11 @@ export default function DJENPublicationsWidget({
                         ? 'Filtrar: mostrar apenas não lidas'
                         : 'Filtrar: mostrar todas'
                     }
-                    title={
-                      filter === 'all'
-                        ? 'Filtrar: mostrar não lidas'
-                        : 'Filtrar: mostrar todas'
-                    }
                   >
                     <Funnel
                       size={16}
                       weight={filter === 'unread' ? 'fill' : 'regular'}
                       className={filter === 'unread' ? 'text-primary' : ''}
-                      aria-hidden="true"
                     />
                   </Button>
                 </TooltipTrigger>
@@ -652,16 +195,14 @@ export default function DJENPublicationsWidget({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleSync}
+                    onClick={() => handleSync(fetchPublications)}
                     disabled={syncing}
                     className="h-8 w-8 p-0"
                     aria-label="Sincronizar publicações agora"
-                    title="Sincronizar publicações"
                   >
                     <ArrowsClockwise
                       size={16}
                       className={syncing ? 'animate-spin' : ''}
-                      aria-hidden="true"
                     />
                   </Button>
                 </TooltipTrigger>
@@ -676,7 +217,7 @@ export default function DJENPublicationsWidget({
           {lastCheck && (
             <span className="flex items-center gap-1">
               <Clock size={12} />
-              Última verificação: {formatRelativeDate(lastCheck)}
+              Última verificação: {getRelativeDateDescription(lastCheck)}
             </span>
           )}
           {lawyersCount > 0 && (
@@ -707,14 +248,11 @@ export default function DJENPublicationsWidget({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleSync}
+              onClick={() => handleSync(fetchPublications)}
               className="mt-4"
               disabled={syncing}
             >
-              <ArrowsClockwise
-                size={14}
-                className={syncing ? 'animate-spin' : ''}
-              />
+              <ArrowsClockwise size={14} className={syncing ? 'animate-spin' : ''} />
               Verificar agora
             </Button>
           </div>
@@ -722,126 +260,15 @@ export default function DJENPublicationsWidget({
           <ScrollArea className={compact ? 'h-[250px]' : 'h-[350px]'}>
             <div className="space-y-2 pr-2">
               {publications.map((pub) => (
-                <div
+                <PublicationItem
                   key={pub.id}
-                  className={cn(
-                    'p-3 rounded-lg border transition-all cursor-pointer',
-                    'hover:bg-accent/50 hover:border-primary/30',
-                    expanded === pub.id && 'bg-accent/30 border-primary/50',
-                  )}
-                  onClick={() =>
-                    setExpanded((e) => (e === pub.id ? null : pub.id))
-                  }
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <Badge variant="outline" className="text-xs px-1.5">
-                          {pub.tribunal}
-                        </Badge>
-                        <MatchBadge type={pub.matchType} />
-                        {!pub.notified && (
-                          <Badge className="bg-primary/20 text-primary text-xs px-1.5">
-                            <BellRinging size={10} className="mr-1" />
-                            Novo
-                          </Badge>
-                        )}
-                      </div>
-
-                      <p className="text-xs font-medium truncate">
-                        {pub.tipo || 'Intimação'}
-                      </p>
-
-                      <p className="text-xs text-muted-foreground truncate">
-                        {pub.numeroProcesso &&
-                          `Processo: ${pub.numeroProcesso}`}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-xs text-muted-foreground">
-                        {formatRelativeDate(pub.createdAt)}
-                      </span>
-                      {expanded === pub.id ? (
-                        <CaretUp
-                          size={14}
-                          className="text-muted-foreground"
-                        />
-                      ) : (
-                        <CaretDown
-                          size={14}
-                          className="text-muted-foreground"
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Conteúdo expandido */}
-                  {expanded === pub.id && (
-                    <div className="mt-3 pt-3 border-t space-y-2">
-                      <div className="bg-muted/50 p-2 rounded text-xs">
-                        <p className="font-medium mb-1 text-muted-foreground">
-                          Teor:
-                        </p>
-                        <p className="whitespace-pre-wrap text-xs max-h-32 overflow-y-auto">
-                          {pub.teor.substring(0, 500)}
-                          {pub.teor.length > 500 && '...'}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Advogado: {pub.lawyerName}</span>
-                        <span>
-                          Data:{' '}
-                          {pub.data &&
-                            !isNaN(new Date(pub.data).getTime())
-                            ? new Date(pub.data).toLocaleDateString('pt-BR')
-                            : 'Data não disponível'}
-                        </span>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs flex-1"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleCopy(pub.teor)
-                          }}
-                        >
-                          <Copy size={12} />
-                          Copiar
-                        </Button>
-                        <Button
-                          variant={isAlreadyRegistered(pub) ? 'ghost' : 'default'}
-                          size="sm"
-                          className={cn(
-                            'h-7 text-xs flex-1',
-                            !isAlreadyRegistered(pub) && 'button-gradient',
-                          )}
-                          disabled={isAlreadyRegistered(pub)}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleRegisterProcess(pub)
-                          }}
-                        >
-                          {isAlreadyRegistered(pub) ? (
-                            <>
-                              <CheckCircle size={12} />
-                              No Acervo
-                            </>
-                          ) : (
-                            <>
-                              <Plus size={12} />
-                              Cadastrar
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  pub={pub}
+                  expanded={expanded}
+                  onToggleExpand={setExpanded}
+                  onRegister={handleRegisterProcess}
+                  isAlreadyRegistered={isAlreadyRegistered(pub)}
+                  formatRelativeDate={getRelativeDateDescription}
+                />
               ))}
             </div>
           </ScrollArea>
@@ -862,7 +289,7 @@ export default function DJENPublicationsWidget({
                         <Button
                           variant="default"
                           size="sm"
-                          onClick={handleAutoRegisterAll}
+                          onClick={() => handleAutoRegisterAll(publications)}
                           disabled={autoRegistering}
                           className="flex-1 button-gradient"
                         >

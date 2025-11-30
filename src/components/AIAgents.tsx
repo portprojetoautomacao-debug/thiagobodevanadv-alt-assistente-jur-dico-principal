@@ -1,4 +1,4 @@
-import { useState, type ComponentType } from 'react'
+import { useState, type ComponentType, type ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -112,7 +112,7 @@ function getProcessingText(count: number): string {
 function renderStreamingPreview(
   isStreaming: boolean,
   streamPreview: string
-): JSX.Element | null {
+): ReactNode | null {
   if (!isStreaming || !streamPreview) return null
 
   return (
@@ -136,7 +136,7 @@ function renderStreamingPreview(
 /**
  * Renderiza o indicador de streaming inline no título
  */
-function renderStreamingIndicator(isStreaming: boolean): JSX.Element | null {
+function renderStreamingIndicator(isStreaming: boolean): ReactNode | null {
   if (!isStreaming) return null
 
   return (
@@ -150,7 +150,7 @@ function renderStreamingIndicator(isStreaming: boolean): JSX.Element | null {
 /**
  * Renderiza o ponto pulsante de streaming
  */
-function renderStreamingPingIndicator(isStreaming: boolean): JSX.Element | null {
+function renderStreamingPingIndicator(isStreaming: boolean): ReactNode | null {
   if (!isStreaming) return null
 
   return (

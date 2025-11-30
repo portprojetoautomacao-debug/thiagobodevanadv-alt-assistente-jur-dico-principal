@@ -297,11 +297,14 @@ export class NLPPipeline {
 
     return results.map((result, index) => {
       if (result.status === 'fulfilled') {
-        return result.value
+        return result.value as { id: string; result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation }
       } else {
+        // Create default result based on operation type
+        const defaultResult: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation =
+          operation === 'entities' ? [] : {} as SentimentAnalysis
         return {
           id: documents[index].id,
-          result: operation === 'entities' ? [] : ({} as Record<string, unknown>),
+          result: defaultResult,
           error: result.reason?.message || 'Unknown error'
         }
       }

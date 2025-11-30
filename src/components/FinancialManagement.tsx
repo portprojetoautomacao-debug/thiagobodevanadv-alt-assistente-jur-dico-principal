@@ -43,7 +43,7 @@ export default function FinancialManagement() {
     const entry: FinancialEntry = {
       id: crypto.randomUUID(),
       type: newEntry.type,
-      amount: parseFloat(newEntry.amount),
+      amount: Number.parseFloat(newEntry.amount),
       category: newEntry.category,
       description: newEntry.description,
       date: newEntry.date,
@@ -95,75 +95,75 @@ export default function FinancialManagement() {
               </Button>
             </DialogTrigger>
             <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Lançamento</DialogTitle>
-              <DialogDescription>
-                Registre uma receita ou despesa
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Tipo *</Label>
-                <Select value={newEntry.type} onValueChange={(value) => setNewEntry({ ...newEntry, type: value as 'income' | 'expense' })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="income">Receita</SelectItem>
-                    <SelectItem value="expense">Despesa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <DialogHeader>
+                <DialogTitle>Adicionar Lançamento</DialogTitle>
+                <DialogDescription>
+                  Registre uma receita ou despesa
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Valor *</Label>
+                  <Label htmlFor="type">Tipo *</Label>
+                  <Select value={newEntry.type} onValueChange={(value) => setNewEntry({ ...newEntry, type: value as 'income' | 'expense' })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="income">Receita</SelectItem>
+                      <SelectItem value="expense">Despesa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Valor *</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0,00"
+                      value={newEntry.amount}
+                      onChange={(e) => setNewEntry({ ...newEntry, amount: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Data *</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={newEntry.date}
+                      onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoria *</Label>
                   <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0,00"
-                    value={newEntry.amount}
-                    onChange={(e) => setNewEntry({ ...newEntry, amount: e.target.value })}
+                    id="category"
+                    placeholder="Ex: Honorários, Despesas Processuais, etc."
+                    value={newEntry.category}
+                    onChange={(e) => setNewEntry({ ...newEntry, category: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Data *</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={newEntry.date}
-                    onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })}
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Detalhes sobre o lançamento"
+                    value={newEntry.description}
+                    onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria *</Label>
-                <Input
-                  id="category"
-                  placeholder="Ex: Honorários, Despesas Processuais, etc."
-                  value={newEntry.category}
-                  onChange={(e) => setNewEntry({ ...newEntry, category: e.target.value })}
-                />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddEntry}>
+                  Adicionar
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Detalhes sobre o lançamento"
-                  value={newEntry.description}
-                  onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddEntry}>
-                Adicionar
-              </Button>
-            </div>
-          </DialogContent>
+            </DialogContent>
           </Dialog>
         </div>
       </div>
@@ -235,9 +235,8 @@ export default function FinancialManagement() {
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((entry) => (
                   <div key={entry.id} className="flex items-start gap-4 p-4 border rounded-lg">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      entry.type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${entry.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                      }`}>
                       {entry.type === 'income' ? (
                         <TrendUp className="w-5 h-5 text-green-600" weight="bold" />
                       ) : (
@@ -253,9 +252,8 @@ export default function FinancialManagement() {
                           )}
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className={`text-lg font-bold ${
-                            entry.type === 'income' ? 'text-green-600' : 'text-red-600'
-                          }`}>
+                          <p className={`text-lg font-bold ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'
+                            }`}>
                             {entry.type === 'income' ? '+' : '-'} {formatCurrency(entry.amount)}
                           </p>
                           <Badge variant="outline" className="mt-1">

@@ -81,7 +81,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   if (hasPrazo) {
     tasks.push({
       agentId: 'gestao-prazos',
-      type: 'calculate_deadline',
+      type: 'CALCULATE_DEADLINE',
       priority: getTaskPriority(priority, 'medium'),
       data: {
         expedienteId: exp.id,
@@ -97,7 +97,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   // 2. Monitor DJEN - registrar que foi processado
   tasks.push({
     agentId: 'monitor-djen',
-    type: 'monitor_djen',
+    type: 'MONITOR_DJEN',
     priority: 'low',
     data: {
       expedienteId: exp.id,
@@ -112,7 +112,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   if (getTaskPriority(priority) === 'high') {
     tasks.push({
       agentId: 'analise-risco',
-      type: 'risk_analysis',
+      type: 'RISK_ANALYSIS',
       priority: 'high',
       data: {
         expedienteId: exp.id,
@@ -128,7 +128,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   if (checkNeedsResponse(analysisData.suggestedActions)) {
     tasks.push({
       agentId: 'redacao-peticoes',
-      type: 'draft_petition',
+      type: 'DRAFT_PETITION',
       priority: getTaskPriority(priority, 'medium'),
       data: {
         expedienteId: exp.id,
@@ -144,7 +144,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   if (checkNeedsResearch(analysisData.suggestedActions) || getTaskPriority(priority) === 'high') {
     tasks.push({
       agentId: 'pesquisa-juris',
-      type: 'research_precedents',
+      type: 'RESEARCH_PRECEDENTS',
       priority: 'medium',
       data: {
         expedienteId: exp.id,
@@ -158,7 +158,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   // 6. Estratégia Processual - sempre gera sugestão estratégica automaticamente
   tasks.push({
     agentId: 'estrategia-processual',
-    type: 'case_strategy',
+    type: 'CASE_STRATEGY',
     priority: getTaskPriority(priority, 'medium'),
     data: {
       expedienteId: exp.id,
@@ -183,7 +183,13 @@ interface AnalysisData {
   summary?: string
   documentType?: string
   priority?: string
-  deadline?: { days?: number; type?: string; endDate?: string }
+  deadline?: {
+    days?: number
+    type?: 'úteis' | 'corridos'
+    startDate?: string
+    endDate?: string
+    description?: string
+  }
   suggestedActions?: string[]
   nextSteps?: string[]
 }
@@ -193,7 +199,7 @@ interface AnalysisData {
  */
 function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisData {
   try {
-    const jsonText = responseText.replaceAll(/```json\n?/g, '').replaceAll(/```\n?/g, '').trim()
+    const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     return JSON.parse(jsonText) as AnalysisData
   } catch {
     return {
@@ -233,9 +239,19 @@ function buildCalendarAnalysisResult(
   analysisData: AnalysisData,
   exp: Expediente
 ): IntimationAnalysisResult {
+  // Converter deadline para o formato esperado por IntimationAnalysisResult
+  const deadline = analysisData.deadline && analysisData.deadline.days !== undefined
+    ? {
+      days: analysisData.deadline.days,
+      type: (analysisData.deadline.type || 'úteis') as 'úteis' | 'corridos',
+      endDate: analysisData.deadline.endDate || '',
+      description: analysisData.deadline.description
+    }
+    : undefined
+
   const result: IntimationAnalysisResult = {
     summary: analysisData.summary || 'Intimação analisada',
-    deadline: analysisData.deadline,
+    deadline,
     priority: (analysisData.priority?.toLowerCase() || 'média') as 'baixa' | 'média' | 'alta' | 'crítica',
     nextSteps: analysisData.nextSteps || analysisData.suggestedActions,
     suggestedAction: analysisData.suggestedActions?.[0],
@@ -245,7 +261,7 @@ function buildCalendarAnalysisResult(
   }
 
   // Calcular data limite se não estiver presente
-  if (!result.deadline?.endDate && result.deadline?.days) {
+  if (result.deadline && !result.deadline.endDate && result.deadline.days) {
     const hoje = new Date()
     const diasParaAdicionar = result.deadline.days
     const dataLimite = new Date(hoje)

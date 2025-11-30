@@ -112,9 +112,9 @@ class ConsoleExporter implements TraceExporter {
  * Memory Exporter - Stores traces in memory for querying
  */
 class MemoryExporter implements TraceExporter {
-  name = 'memory'
+  readonly name = 'memory'
   private spans: Span[] = []
-  private maxSpans = 1000
+  private readonly maxSpans = 1000
 
   async export(spans: Span[]): Promise<void> {
     this.spans.push(...spans)
@@ -149,9 +149,9 @@ class MemoryExporter implements TraceExporter {
  * HTTP Exporter - Sends traces to remote endpoint
  */
 class HTTPExporter implements TraceExporter {
-  name = 'http'
-  private endpoint: string
-  private headers: Record<string, string>
+  readonly name = 'http'
+  private readonly endpoint: string
+  private readonly headers: Record<string, string>
 
   constructor(endpoint: string, headers: Record<string, string> = {}) {
     this.endpoint = endpoint
@@ -182,9 +182,9 @@ class HTTPExporter implements TraceExporter {
  * Tracing Service Class
  */
 class TracingService {
-  private exporters: TraceExporter[] = []
-  private activeSpans: Map<string, Span> = new Map()
-  private memoryExporter: MemoryExporter
+  private readonly exporters: TraceExporter[] = []
+  private readonly activeSpans: Map<string, Span> = new Map()
+  private readonly memoryExporter: MemoryExporter
   private enabled = true
   private samplingRate = 1.0 // 100% by default
 
@@ -601,6 +601,6 @@ export function extractTraceContext(
   return {
     traceId: parts[1],
     spanId: parts[2],
-    traceFlags: parseInt(parts[3], 16)
+    traceFlags: Number.parseInt(parts[3], 16)
   }
 }

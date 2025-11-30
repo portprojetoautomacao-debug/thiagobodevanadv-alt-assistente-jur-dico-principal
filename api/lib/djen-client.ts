@@ -94,7 +94,7 @@ const RETRY_DELAY = 1000;
  * Utilitários de texto
  */
 export function normalizeText(text: string): string {
-  return text.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').trim();
+  return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 }
 
 // ===== OAB parsing helpers (reduces S3776) =====

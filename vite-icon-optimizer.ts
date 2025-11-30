@@ -24,19 +24,20 @@ export function phosphorIconOptimizer(): Plugin {
 
     enforce: 'pre',
 
-    transform(code: string, id: string) {
+    transform(code: string, id: string): null {
       // Ignorar arquivos externos irrelevantes
       if (
         !/\.(?:[cm]?[jt]sx?)$/.test(id) || // js, jsx, ts, tsx, mjs, cjs
         id.includes('node_modules') ||
         id.includes('dist')
       ) {
-        return undefined
+        return null
       }
 
       // Se não importar @phosphor-icons/react, ignora
-      if (!iconPattern.test(code)) return undefined
+      if (!iconPattern.test(code)) return null
 
+      // Extrai nomes de ícones dos imports
       let match: RegExpExecArray | null
       while ((match = importPattern.exec(code)) !== null) {
         const imports = match[1]
@@ -51,7 +52,8 @@ export function phosphorIconOptimizer(): Plugin {
         }
       }
 
-      return undefined
+      // Plugin apenas monitora, não transforma o código
+      return null
     },
 
     buildEnd() {

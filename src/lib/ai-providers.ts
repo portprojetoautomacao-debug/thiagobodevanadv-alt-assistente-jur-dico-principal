@@ -205,9 +205,9 @@ export function isValidApiKey(key: string | null | undefined, provider?: string)
  * Implementa retry automático e validação de API key.
  */
 export class GeminiClient {
-  private apiKey: string | null
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1/models'
-  private retryConfig: RetryConfig
+  private readonly apiKey: string | null
+  private readonly baseUrl = 'https://generativelanguage.googleapis.com/v1/models'
+  private readonly retryConfig: RetryConfig
 
   /**
    * Cria uma instância do GeminiClient.
@@ -368,8 +368,8 @@ export class GeminiClient {
  * Free tier: ~30k tokens/mês
  */
 export class HuggingFaceClient {
-  private apiKey: string | null
-  private baseUrl = HUGGINGFACE_CONFIG.baseUrl
+  private readonly apiKey: string | null
+  private readonly baseUrl = HUGGINGFACE_CONFIG.baseUrl
 
   constructor(apiKey?: string) {
     this.apiKey =
@@ -463,8 +463,8 @@ export class HuggingFaceClient {
  * Free com conta GitHub
  */
 export class GitHubModelsClient {
-  private apiKey: string
-  private baseUrl = GITHUB_MODELS_CONFIG.baseUrl
+  private readonly apiKey: string
+  private readonly baseUrl = GITHUB_MODELS_CONFIG.baseUrl
 
   constructor(apiKey?: string) {
     this.apiKey =
@@ -524,9 +524,9 @@ export class GitHubModelsClient {
  * Requer assinatura Azure ativa
  */
 export class AzureOpenAIClient {
-  private endpoint: string
-  private apiKey: string
-  private apiVersion = '2024-02-15-preview'
+  private readonly endpoint: string
+  private readonly apiKey: string
+  private readonly apiVersion = '2024-02-15-preview'
 
   constructor(endpoint?: string, apiKey?: string) {
     this.endpoint = endpoint || AZURE_AI_CONFIG.endpoint
@@ -618,10 +618,10 @@ export class AzureOpenAIClient {
  *   })
  */
 export class UnifiedAIClient {
-  private gemini: GeminiClient
-  private huggingface: HuggingFaceClient
-  private github: GitHubModelsClient
-  private azure: AzureOpenAIClient
+  private readonly gemini: GeminiClient
+  private readonly huggingface: HuggingFaceClient
+  private readonly github: GitHubModelsClient
+  private readonly azure: AzureOpenAIClient
   private preferredProvider: AIModelConfig['provider'] = 'gemini'
 
   constructor() {

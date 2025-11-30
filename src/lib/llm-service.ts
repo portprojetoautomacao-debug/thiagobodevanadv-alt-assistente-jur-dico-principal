@@ -75,7 +75,7 @@ export interface AuditLogEntry {
  * Provides unified interface for all LLM operations with observability
  */
 export class LLMService {
-  private cache: Map<string, CacheEntry> = new Map()
+  private readonly cache: Map<string, CacheEntry> = new Map()
   private metrics: LLMMetrics[] = []
   private auditLog: AuditLogEntry[] = []
   private readonly CACHE_TTL_MS = 1000 * 60 * 60 // 1 hour

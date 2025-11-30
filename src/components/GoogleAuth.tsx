@@ -84,7 +84,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
 
     google.accounts.id.initialize({
       client_id: config.google.clientId,
-      callback: handleCredentialResponse,
+      callback: (resp) => { handleCredentialResponse(resp).catch(console.error) },
     })
 
     const buttonDiv = document.getElementById('google-signin-button')
@@ -112,7 +112,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
     script.async = true
-    script.onload = initializeGoogleSignIn
+    script.onload = () => initializeGoogleSignIn()
     document.body.appendChild(script)
 
     return () => {

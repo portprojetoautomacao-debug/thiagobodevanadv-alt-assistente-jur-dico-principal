@@ -42,19 +42,68 @@ function calculateNextProgress(
   return { next, isComplete: next >= max }
 }
 
-/**
- * Calculates next inactivity time and determines if agent should resume
- */
-function calculateNextInactivity(
-  current: number,
-  isHumanActive: boolean,
-  limit: number
-): { next: number; shouldAgentResume: boolean } {
-  if (isHumanActive) {
-    return { next: 0, shouldAgentResume: false }
+// Helper functions to reduce nesting (S2004 compliance)
+function createProgressInterval(
+  setProgress: (value: React.SetStateAction<number>) => void,
+  onComplete: (() => void) | undefined
+): () => void {
+  let isCancelled = false
+
+  const intervalId = globalThis.setInterval(() => {
+    setProgress((prev) => {
+      if (isCancelled) return prev
+
+      const { next, isComplete } = calculateNextProgress(prev, PROGRESS_STEP, 100)
+
+      if (isComplete) {
+        onComplete?.()
+      }
+
+      return next
+    })
+  }, PROGRESS_INTERVAL_MS)
+
+  return () => {
+    isCancelled = true
+    globalThis.clearInterval(intervalId)
   }
-  const next = current + 1
-  return { next, shouldAgentResume: next >= limit }
+}
+
+function createInactivityInterval(
+  setTimeWithoutActivity: (value: React.SetStateAction<number>) => void,
+  setPhase: (phase: Phase) => void,
+  isHumanActive: boolean
+): () => void {
+  let isCancelled = false
+
+  const intervalId = globalThis.setInterval(() => {
+    if (isCancelled) return
+
+    setTimeWithoutActivity((prev) => {
+      // Early return for human activity
+      if (isHumanActive) {
+        return 0
+      }
+
+      const next = prev + 1
+
+      // Check if agent should resume
+      if (next >= INACTIVITY_LIMIT_SECONDS) {
+        setPhase('agent_resuming')
+        globalThis.setTimeout(() => {
+          setPhase('agent_working')
+        }, RESUME_DELAY_MS)
+        return 0
+      }
+
+      return next
+    })
+  }, 1000)
+
+  return () => {
+    isCancelled = true
+    globalThis.clearInterval(intervalId)
+  }
 }
 
 export default function HumanAgentCollaboration({
@@ -74,26 +123,7 @@ export default function HumanAgentCollaboration({
   useEffect(() => {
     if (phase !== 'agent_working') return
 
-    let isCancelled = false
-    const intervalId = globalThis.setInterval(() => {
-      setProgress((prev) => {
-        if (isCancelled) return prev
-
-        const { next, isComplete } = calculateNextProgress(prev, PROGRESS_STEP, 100)
-
-        if (isComplete) {
-          setPhase('completed')
-          onComplete?.()
-        }
-
-        return next
-      })
-    }, PROGRESS_INTERVAL_MS)
-
-    return () => {
-      isCancelled = true
-      globalThis.clearInterval(intervalId)
-    }
+    return createProgressInterval(setProgress, onComplete)
   }, [phase, onComplete])
 
   // Timer de inatividade durante edição humana
@@ -103,30 +133,7 @@ export default function HumanAgentCollaboration({
       return
     }
 
-    let isCancelled = false
-
-    const intervalId = globalThis.setInterval(() => {
-      if (isCancelled) return
-
-      setTimeWithoutActivity((prev) => {
-        const { next, shouldAgentResume } = calculateNextInactivity(prev, isHumanActive, INACTIVITY_LIMIT_SECONDS)
-
-        if (shouldAgentResume) {
-          setPhase('agent_resuming')
-          globalThis.setTimeout(() => {
-            setPhase('agent_working')
-          }, RESUME_DELAY_MS)
-          return 0
-        }
-
-        return next
-      })
-    }, 1000)
-
-    return () => {
-      isCancelled = true
-      globalThis.clearInterval(intervalId)
-    }
+    return createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
   }, [phase, isHumanActive])
 
   // Limpa timeout de atividade humana ao desmontar

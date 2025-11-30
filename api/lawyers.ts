@@ -93,9 +93,9 @@ async function handlePostLawyer(req: VercelRequest, res: VercelResponse): Promis
   }
 
   const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
-  const normalizedOab = oab.replaceAll(/\s+/g, '').toUpperCase()
+  const normalizedOab = oab.replace(/\s+/g, '').toUpperCase()
   const exists = lawyers.some(
-    (l) => l.oab.replaceAll(/\s+/g, '').toUpperCase() === normalizedOab
+    (l) => l.oab.replace(/\s+/g, '').toUpperCase() === normalizedOab
   )
 
   if (exists) {
