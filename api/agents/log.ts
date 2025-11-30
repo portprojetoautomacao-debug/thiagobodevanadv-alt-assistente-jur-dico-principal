@@ -19,6 +19,39 @@ const runtimeFetch = async (...args: Parameters<typeof fetch>): Promise<Response
   return f(...args)
 }
 
+function getBaseUrl(req: VercelRequest): string {
+  const vercelUrl = process.env.VERCEL_URL?.trim()
+  if (vercelUrl && vercelUrl.length > 0) {
+    return `https://${vercelUrl}`
+  }
+
+  const hostHeader = typeof req.headers.host === 'string' ? req.headers.host.trim() : ''
+  if (process.env.NODE_ENV === 'production' && hostHeader) {
+    return `https://${hostHeader}`
+  }
+
+  return 'http://localhost:3000'
+}
+
+async function parseErrorResponse(response: Response): Promise<{ error?: string; [key: string]: unknown }> {
+  try {
+    return (await response.json()) as { error?: string; [key: string]: unknown }
+  } catch {
+    return {}
+  }
+}
+
+function extractLogId(data: { log?: unknown; id?: string; [key: string]: unknown }): string | undefined {
+  if (data.id) return data.id
+
+  const logObj = data.log ?? data
+  if (typeof logObj === 'object' && logObj && 'id' in logObj) {
+    return (logObj as { id?: string }).id
+  }
+
+  return undefined
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== 'POST') {
     res.status(405).json({ ok: false, error: 'Method not allowed' })
@@ -36,22 +69,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    // Descobre baseUrl para chamar o próprio backend
-    const vercelUrl = process.env.VERCEL_URL?.trim()
-    const hostHeader = typeof req.headers.host === 'string' ? req.headers.host.trim() : ''
-
-    const baseUrl =
-      vercelUrl && vercelUrl.length > 0
-        ? `https://${vercelUrl}`
-        : process.env.NODE_ENV === 'production' && hostHeader
-          ? `https://${hostHeader}`
-          : 'http://localhost:3000'
+    const baseUrl = getBaseUrl(req)
 
     const response = await runtimeFetch(`${baseUrl}/api/kv`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Hint opcional para o /api/kv saber que é chamada interna
         'X-Internal-Caller': 'api/agents/log'
       },
       body: JSON.stringify({
@@ -66,13 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     })
 
     if (!response.ok) {
-      let errorData: { error?: string;[key: string]: unknown } = {}
-      try {
-        errorData = (await response.json()) as { error?: string;[key: string]: unknown }
-      } catch {
-        // se não for JSON, mantemos errorData vazio
-      }
-
+      const errorData = await parseErrorResponse(response)
       res.status(response.status).json({
         ok: false,
         error: errorData.error || 'Erro ao registrar log',
@@ -87,21 +104,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       [key: string]: unknown
     }
 
-    const logObj = data.log ?? data
-    const logId =
-      data.id ||
-      (typeof logObj === 'object' && logObj && 'id' in logObj
-        ? (logObj as { id?: string }).id
-        : undefined)
-
     res.status(200).json({
       ok: true,
-      log: logObj,
-      logId,
+      log: data.log ?? data,
+      logId: extractLogId(data),
       timestamp: new Date().toISOString()
     })
   } catch (err: unknown) {
-
     console.error('[api/agents/log] Erro:', err)
     res.status(500).json({
       ok: false,
