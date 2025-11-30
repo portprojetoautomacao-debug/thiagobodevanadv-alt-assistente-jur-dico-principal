@@ -757,11 +757,11 @@ export default function Calendar() {
               return (
                 <div
                   key={idx}
-                  className={`min-h-24 p-2 border rounded-lg ${!isValidDay
-                    ? 'bg-muted/30'
-                    : isToday(day)
+                  className={`min-h-24 p-2 border rounded-lg ${isValidDay
+                    ? isToday(day)
                       ? 'bg-primary/10 border-primary'
                       : 'bg-card hover:bg-muted/50'
+                    : 'bg-muted/30'
                     }`}
                 >
                   {isValidDay && (
