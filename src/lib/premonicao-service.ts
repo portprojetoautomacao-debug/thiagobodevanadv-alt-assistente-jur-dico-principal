@@ -1,4 +1,4 @@
-import type { PremonicaoJuridica, Process } from '@/types'
+import type { PremonicaoJuridica, Process } from '@/types';
 
 /**
  * Gera a informação do processo formatada
@@ -116,7 +116,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
   try {
     console.log('[PremonicaoService] Gerando análise preditiva para:', cnj)
 
-    const response = await fetch('/_spark/llm', {
+    const response = await fetch('/api/llm-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

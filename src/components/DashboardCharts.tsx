@@ -1,22 +1,22 @@
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
+import { ChartPie, Gavel, TrendUp } from '@phosphor-icons/react';
+import { memo } from 'react';
 import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  CartesianGrid,
-  LineChart,
-  Line,
-  Legend,
-} from 'recharts'
-import { ChartPie, Gavel, TrendUp } from '@phosphor-icons/react'
-import { memo } from 'react'
+} from 'recharts';
 
 interface ChartData {
   statusData: Array<{ name: string; value: number; color: string }>
@@ -89,27 +89,32 @@ export const VaraChart = memo(function VaraChart({ chartData }: DashboardChartsP
         <BarChart data={chartData.varaChartData}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="oklch(0.25 0.06 240 / 0.3)"
+            className="stroke-border/30"
           />
           <XAxis
             dataKey="name"
-            stroke="oklch(0.65 0.08 180)"
+            className="text-muted-foreground"
+            tick={{ fill: 'currentColor' }}
+            stroke="currentColor"
             fontSize={12}
           />
           <YAxis
-            stroke="oklch(0.65 0.08 180)"
+            className="text-muted-foreground"
+            tick={{ fill: 'currentColor' }}
+            stroke="currentColor"
             fontSize={12}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'oklch(0.16 0.04 240)',
-              border: '1px solid oklch(0.25 0.06 240)',
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
+              color: 'hsl(var(--card-foreground))',
             }}
           />
           <Bar
             dataKey="value"
-            fill="oklch(0.75 0.25 190)"
+            fill="#22c55e"
             radius={[8, 8, 0, 0]}
           />
         </BarChart>
@@ -142,36 +147,41 @@ export const TrendChart = memo(function TrendChart({ chartData }: DashboardChart
         <LineChart data={chartData.trendData}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="oklch(0.25 0.06 240 / 0.3)"
+            className="stroke-border/30"
           />
           <XAxis
             dataKey="month"
-            stroke="oklch(0.65 0.08 180)"
+            className="text-muted-foreground"
+            tick={{ fill: 'currentColor' }}
+            stroke="currentColor"
             fontSize={12}
           />
           <YAxis
-            stroke="oklch(0.65 0.08 180)"
+            className="text-muted-foreground"
+            tick={{ fill: 'currentColor' }}
+            stroke="currentColor"
             fontSize={12}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'oklch(0.16 0.04 240)',
-              border: '1px solid oklch(0.25 0.06 240)',
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
+              color: 'hsl(var(--card-foreground))',
             }}
           />
           <Legend />
           <Line
             type="monotone"
             dataKey="ativos"
-            stroke="oklch(0.75 0.25 190)"
+            stroke="hsl(var(--primary))"
             strokeWidth={2}
             name="Ativos"
           />
           <Line
             type="monotone"
             dataKey="concluidos"
-            stroke="oklch(0.70 0.26 300)"
+            stroke="#22c55e"
             strokeWidth={2}
             name="Concluídos"
           />

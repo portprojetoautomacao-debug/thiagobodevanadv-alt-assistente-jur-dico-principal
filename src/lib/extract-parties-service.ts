@@ -17,7 +17,7 @@ export interface ExtractedParties {
 const PARTIES_LLM_ENDPOINT =
   import.meta.env.VITE_LLM_ENDPOINT ||
   import.meta.env.VITE_GEMINI_LLM_ENDPOINT ||
-  '/_spark/llm' // fallback para compatibilidade com projetos Spark antigos
+  '/api/llm-proxy' // endpoint principal do Gemini 2.5 Pro
 
 const PARTIES_LLM_MODEL =
   import.meta.env.VITE_LLM_MODEL ||

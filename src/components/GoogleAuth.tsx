@@ -1,20 +1,45 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Warning, ArrowSquareOut } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { config } from '@/lib/config'
+import { ArrowSquareOut, Warning } from '@phosphor-icons/react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
 const PRODUCTION_DOMAIN = 'https://assistente-juridico-github.vercel.app'
 
-// Detecta se está em ambiente de preview (URL dinâmica da Vercel)
-const isPreviewEnvironment = (): boolean => {
+// Detecta se está em ambiente de desenvolvimento/preview (URL dinâmica)
+const isDevelopmentEnvironment = (): boolean => {
   const hostname = window.location.hostname
-  // Preview deployments têm formato: projeto-hash-account.vercel.app
-  return hostname.includes('vercel.app') &&
+
+  // GitHub Codespaces / DevContainers
+  if (hostname.includes('.app.github.dev') || hostname.includes('.github.dev')) {
+    return true
+  }
+
+  // Gitpod
+  if (hostname.includes('.gitpod.io')) {
+    return true
+  }
+
+  // StackBlitz
+  if (hostname.includes('.stackblitz.io') || hostname.includes('.webcontainer.io')) {
+    return true
+  }
+
+  // Localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return true
+  }
+
+  // Preview deployments da Vercel (formato: projeto-hash-account.vercel.app)
+  if (hostname.includes('vercel.app') &&
     hostname !== 'assistente-juridico-github.vercel.app' &&
-    !hostname.startsWith('assistente-juridico-github.')
+    !hostname.startsWith('assistente-juridico-github.')) {
+    return true
+  }
+
+  return false
 }
 
 export interface GoogleUser {
@@ -122,24 +147,36 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
     }
   }, [initializeGoogleSignIn])
 
-  // Verificação de ambiente de preview - deve vir antes das outras verificações
-  if (isPreviewEnvironment()) {
+  // Verificação de ambiente de desenvolvimento - deve vir antes das outras verificações
+  if (isDevelopmentEnvironment()) {
+    const isCodespace = window.location.hostname.includes('.app.github.dev')
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
     return (
       <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
         <Warning className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800 dark:text-amber-200">
-          <strong>Ambiente de Preview Detectado</strong>
+          <strong>
+            {isCodespace ? 'GitHub Codespace Detectado' :
+              isLocalhost ? 'Ambiente Local Detectado' :
+                'Ambiente de Desenvolvimento Detectado'}
+          </strong>
           <p className="mt-2 text-sm">
-            O login com Google não funciona em ambientes de preview porque cada URL é única e não está autorizada no Google Cloud Console.
+            O login com Google não funciona em {isCodespace ? 'Codespaces' : isLocalhost ? 'localhost' : 'ambientes de desenvolvimento'} porque
+            a origem <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">{window.location.origin}</code> não
+            está autorizada no Google Cloud Console.
+          </p>
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+            💡 Para testar o login, use o ambiente de produção.
           </p>
           <Button
             variant="outline"
             size="sm"
-            className="mt-3 gap-2"
-            onClick={() => window.location.href = PRODUCTION_DOMAIN}
+            className="mt-3 gap-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900"
+            onClick={() => window.open(PRODUCTION_DOMAIN, '_blank')}
           >
             <ArrowSquareOut className="h-4 w-4" />
-            Ir para Produção
+            Abrir em Produção
           </Button>
         </AlertDescription>
       </Alert>

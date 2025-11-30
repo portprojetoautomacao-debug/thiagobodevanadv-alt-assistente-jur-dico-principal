@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { MicrophoneStage, Stop, Upload, Sparkle, WarningCircle } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { MicrophoneStage, Sparkle, Stop, Upload, WarningCircle } from '@phosphor-icons/react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -122,7 +122,7 @@ export default function AudioTranscription() {
 
     try {
       // Chama a API real do Gemini via proxy
-      const response = await fetch('/_spark/llm', {
+      const response = await fetch('/api/llm-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

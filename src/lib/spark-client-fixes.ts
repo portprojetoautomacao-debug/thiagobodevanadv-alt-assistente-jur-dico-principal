@@ -293,7 +293,7 @@ function parseJSONResponse(text: string): string {
 
 async function performDiagnosticFetch(prompt: string, model?: string, jsonResponse?: boolean): Promise<string> {
   const body = buildLLMRequestBody(prompt, model, jsonResponse);
-  const res = await fetch('/_spark/llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  const res = await fetch('/api/llm-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
   const contentType = res.headers.get('content-type') || '';
   const text = await res.text();
 
@@ -303,7 +303,7 @@ async function performDiagnosticFetch(prompt: string, model?: string, jsonRespon
 
   if (isHtmlContentType(contentType)) {
     console.error('LLM endpoint returned HTML. Response (truncated):', text.slice(0, 500));
-    throw new Error('LLM request returned HTML. Check /_spark/llm proxy, credentials, and that the runtime is available.');
+    throw new Error('LLM request returned HTML. Check /api/llm-proxy endpoint and credentials.');
   }
 
   if (contentType.includes('application/json')) {

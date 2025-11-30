@@ -1,54 +1,54 @@
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import Highlight from '@tiptap/extension-highlight'
-import Typography from '@tiptap/extension-typography'
-import TextAlign from '@tiptap/extension-text-align'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import { TextStyle, Color } from '@tiptap/extension-text-style'
-import { useState, useCallback, useEffect } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
-  TextB,
-  TextItalic,
-  TextUnderline,
-  TextStrikethrough,
-  TextH,
-  TextHOne,
-  TextHTwo,
-  TextHThree,
+  ArrowClockwise,
+  ArrowCounterClockwise,
+  ArrowsOut,
+  Code,
+  Eraser,
+  Highlighter,
+  Image as ImageIcon,
+  Lightning,
+  Link as LinkIcon,
   ListBullets,
   ListNumbers,
-  TextAlignLeft,
-  TextAlignCenter,
-  TextAlignRight,
-  TextAlignJustify,
-  Quotes,
-  Code,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  Highlighter,
-  ArrowCounterClockwise,
-  ArrowClockwise,
-  Eraser,
-  Robot,
-  SpinnerGap,
-  Lightning,
   MagicWand,
-  Sparkle,
-  ArrowsOut,
-  TextAa,
   Palette,
   Printer,
+  Quotes,
+  Robot,
+  Sparkle,
+  SpinnerGap,
+  TextAa,
+  TextAlignCenter,
+  TextAlignJustify,
+  TextAlignLeft,
+  TextAlignRight,
+  TextB,
+  TextH,
+  TextHOne,
+  TextHThree,
+  TextHTwo,
+  TextItalic,
+  TextStrikethrough,
+  TextUnderline,
 } from '@phosphor-icons/react'
+import Highlight from '@tiptap/extension-highlight'
+import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
+import TextAlign from '@tiptap/extension-text-align'
+import { Color, TextStyle } from '@tiptap/extension-text-style'
+import Typography from '@tiptap/extension-typography'
+import Underline from '@tiptap/extension-underline'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 
 interface TiptapEditorProps {
   readonly content: string
@@ -944,16 +944,16 @@ export function TiptapEditor({
         )}
       </div>
 
-      {/* Área tipo folha A4 */}
-      <div className="bg-muted/40 px-4 py-4 flex justify-center">
-        <div className="bg-background shadow-sm w-[210mm] min-h-[297mm] px-10 py-10 rounded-sm">
+      {/* Área do editor */}
+      <div className="bg-muted/50 p-4 flex justify-center overflow-auto flex-1">
+        <div className="bg-white dark:bg-slate-900 shadow-md w-full max-w-4xl min-h-[200px] p-6 rounded-md border">
           <EditorContent
             editor={editor}
             className={cn(
               'prose prose-sm dark:prose-invert max-w-none',
-              'min-h-[277mm] focus:outline-none',
+              'min-h-[180px] focus:outline-none',
               '[&_.ProseMirror]:outline-none',
-              '[&_.ProseMirror]:min-h-[277mm]',
+              '[&_.ProseMirror]:min-h-[180px]',
               '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground',
               '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
               '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
@@ -965,7 +965,7 @@ export function TiptapEditor({
       </div>
 
       {/* Footer */}
-      <div className="border-t bg-muted/30 px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
+      <div className="border-t bg-muted px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <span>{wordCount} palavras</span>
           <span>{charCount} caracteres</span>

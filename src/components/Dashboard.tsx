@@ -1,22 +1,22 @@
-import { useMemo, lazy, Suspense } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import type { Process, Prazo, ViewType } from '@/types'
-import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import DJENPublicationsWidget from '@/components/DJENPublicationsWidget'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useKV } from '@/hooks/use-kv'
+import { calcularDiasRestantes, formatarData, isUrgente } from '@/lib/prazos'
+import type { Prazo, Process, ViewType } from '@/types'
 import {
-  Gavel,
+  ArrowRight,
+  CalendarCheck,
+  ChartPie,
   CheckCircle,
   Clock,
-  WarningCircle,
-  Upload,
-  ChartPie,
+  Gavel,
   TrendUp,
-  ArrowRight,
-  CalendarCheck
+  Upload,
+  WarningCircle
 } from '@phosphor-icons/react'
+import { lazy, Suspense, useMemo } from 'react'
 
 // Lazy load dashboard sections for better code splitting
 const StatusChart = lazy(() =>
@@ -132,22 +132,22 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {
         name: 'Ativo',
         value: processesList.filter((p) => p.status === 'ativo').length,
-        color: 'oklch(0.75 0.25 190)'
+        color: '#3b82f6' // blue-500
       },
       {
         name: 'Concluído',
         value: processesList.filter((p) => p.status === 'concluido').length,
-        color: 'oklch(0.70 0.26 300)'
+        color: '#22c55e' // green-500
       },
       {
         name: 'Suspenso',
         value: processesList.filter((p) => p.status === 'suspenso').length,
-        color: 'oklch(0.65 0.08 180)'
+        color: '#f59e0b' // amber-500
       },
       {
         name: 'Arquivado',
         value: processesList.filter((p) => p.status === 'arquivado').length,
-        color: 'oklch(0.55 0.08 180)'
+        color: '#6b7280' // gray-500
       }
     ].filter((item) => item.value > 0)
 

@@ -29,7 +29,11 @@ const getEnvVar = (
 ): string => {
   const value = import.meta.env[key]
 
-  if ((!value || value === '') && !defaultValue && logError) {
+  // Em desenvolvimento, não logar erros para variáveis opcionais
+  const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development'
+  const shouldLogError = logError && !isDevelopment
+
+  if ((!value || value === '') && !defaultValue && shouldLogError) {
     console.error(`Missing required environment variable: ${key}`)
   }
 
@@ -68,6 +72,10 @@ export const config = {
     apiKey: getEnvVar('VITE_TODOIST_API_KEY', '', false),
     webhookSecret: getEnvVar('TODOIST_WEBHOOK_SECRET', '', false),
     icalUrl: getEnvVar('TODOIST_ICAL_URL', '', false)
+  },
+
+  tavily: {
+    apiKey: getEnvVar('VITE_TAVILY_API_KEY', '', false)
   },
 
   app: {

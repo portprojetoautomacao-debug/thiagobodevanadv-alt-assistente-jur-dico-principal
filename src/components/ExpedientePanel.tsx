@@ -1,16 +1,12 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+import { useKV } from '@/hooks/use-kv'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { toast } from 'sonner'
-import type { Expediente, Appointment } from '@/types'
-import type { AgentTask } from '@/lib/agents'
-import { createLocalAppointmentFromAnalysis, syncDeadlineToGoogleCalendar, type IntimationAnalysisResult } from '@/lib/deadline-calendar-integration'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { AgentTask } from '@/lib/agents'
+import { createLocalAppointmentFromAnalysis, syncDeadlineToGoogleCalendar, type IntimationAnalysisResult } from '@/lib/deadline-calendar-integration'
+import type { Appointment, Expediente } from '@/types'
+import { toast } from 'sonner'
 
 // Verifica se um expediente precisa de re-análise (tem mensagem de erro/placeholder)
 function needsReanalysis(exp: Expediente): boolean {
@@ -379,7 +379,7 @@ export default function ExpedientePanel() {
   // Função para analisar um único expediente (retorna o expediente analisado)
   const analyzeExpediente = useCallback(async (exp: Expediente): Promise<Expediente> => {
     try {
-      const response = await fetch('/_spark/llm', {
+      const response = await fetch('/api/llm-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -535,7 +535,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
     try {
       // Usa API Gemini diretamente para análise mais confiável
-      const response = await fetch('/_spark/llm', {
+      const response = await fetch('/api/llm-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -642,7 +642,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
     try {
       if (selectedExp) {
         // Usa API Gemini diretamente
-        const response = await fetch('/_spark/llm', {
+        const response = await fetch('/api/llm-proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
