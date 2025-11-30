@@ -243,10 +243,12 @@ export default function ExpedientePanel() {
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<string | null>(null)
+  // Estado temporário para task selecionada (usado no futuro para UI de detalhes)
+  const [, setSelectedTask] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
-  const [lawyersCount, setLawyersCount] = useState(0)
+  // Contador de advogados configurados (reservado para estatísticas futuras)
+  const [, setLawyersCount] = useState(0)
 
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false)
