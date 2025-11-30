@@ -246,6 +246,82 @@ export function applySparkClientFixes() {
   }
 }
 
+// ===== Helper functions for applySparkLLMFixes (reduced CC) =====
+
+function isParseError(err: unknown): boolean {
+  const errorMessage = err instanceof Error ? err.message : String(err);
+  return errorMessage.includes("Unexpected token '<'") || errorMessage.includes('Failed to parse');
+}
+
+function buildLLMRequestBody(prompt: string, model?: string, jsonResponse?: boolean): string {
+  return JSON.stringify({
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { role: 'user', content: String(prompt) }
+    ],
+    model: model,
+    response_format: jsonResponse ? { type: 'json_object' } : { type: 'text' }
+  });
+}
+
+function isHtmlContentType(contentType: string): boolean {
+  return contentType.includes('text/html') || contentType.trim().startsWith('text/html');
+}
+
+function extractChoicesContent(data: unknown): string | null {
+  if (data && typeof data === 'object' && 'choices' in data) {
+    const choices = (data as { choices: Array<{ message?: { content?: unknown } }> }).choices;
+    const content = choices?.[0]?.message?.content;
+    if (content) return String(content);
+  }
+  return null;
+}
+
+function parseJSONResponse(text: string): string {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error('LLM response claimed JSON but failed to parse: ' + e + ' - ' + text.slice(0, 500));
+  }
+  
+  const choicesContent = extractChoicesContent(data);
+  if (choicesContent) return choicesContent;
+  
+  return JSON.stringify(data);
+}
+
+async function performDiagnosticFetch(prompt: string, model?: string, jsonResponse?: boolean): Promise<string> {
+  const body = buildLLMRequestBody(prompt, model, jsonResponse);
+  const res = await fetch('/_spark/llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  const contentType = res.headers.get('content-type') || '';
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`LLM request failed: ${res.status} ${res.statusText} - ${text.slice(0, 600)}`);
+  }
+
+  if (isHtmlContentType(contentType)) {
+    console.error('LLM endpoint returned HTML. Response (truncated):', text.slice(0, 500));
+    throw new Error('LLM request returned HTML. Check /_spark/llm proxy, credentials, and that the runtime is available.');
+  }
+
+  if (contentType.includes('application/json')) {
+    return parseJSONResponse(text);
+  }
+
+  return text;
+}
+
+function handleDiagnosticError(diagnosticError: unknown, originalError: unknown): never {
+  console.error('LLM diagnostic fetch failed:', diagnosticError);
+  const diagnosticMsg = diagnosticError instanceof Error ? diagnosticError.message : String(diagnosticError);
+  const originalMsg = originalError instanceof Error ? originalError.message : String(originalError);
+  throw new Error(`LLM diagnostic fetch failed: ${diagnosticMsg} | Original error: ${originalMsg}`);
+}
+
+// ===== Main refactored function =====
+
 export function applySparkLLMFixes() {
   if (typeof window === 'undefined') return;
   const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
@@ -255,49 +331,14 @@ export function applySparkLLMFixes() {
     const originalLlm = w.spark.llm;
     w.spark.llm = async function (prompt: string, model?: string, jsonResponse?: boolean): Promise<string> {
       try {
-        // Call original first
         return await originalLlm(prompt, model, jsonResponse);
       } catch (err: unknown) {
-        // If parse error likely caused by HTML, try to detect and provide better diagnostics
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        const isParseError = errorMessage.includes("Unexpected token '<'") || errorMessage.includes('Failed to parse');
-        if (!isParseError) throw err;
+        if (!isParseError(err)) throw err;
 
         try {
-          const body = JSON.stringify({ messages: [{ role: 'system', content: 'You are a helpful assistant.' }, { role: 'user', content: String(prompt) }], model: model, response_format: jsonResponse ? { type: 'json_object' } : { type: 'text' } });
-          const res = await fetch('/_spark/llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
-          const contentType = res.headers.get('content-type') || '';
-          const text = await res.text();
-          if (!res.ok) {
-            throw new Error(`LLM request failed: ${res.status} ${res.statusText} - ${text.slice(0, 600)}`);
-          }
-          if (contentType.includes('text/html') || contentType.trim().startsWith('text/html')) {
-            console.error('LLM endpoint returned HTML. Response (truncated):', text.slice(0, 500));
-            throw new Error('LLM request returned HTML. Check /_spark/llm proxy, credentials, and that the runtime is available.');
-          }
-          if (contentType.includes('application/json')) {
-            let data: unknown;
-            try {
-              data = JSON.parse(text);
-            } catch (e) {
-              throw new Error('LLM response claimed JSON but failed to parse: ' + e + ' - ' + text.slice(0, 500));
-            }
-            // try to extract the expected content if possible
-            if (data && typeof data === 'object' && 'choices' in data) {
-              const choices = data.choices as Array<{ message?: { content?: unknown } }>;
-              if (choices?.[0]?.message?.content) return String(choices[0].message.content);
-            }
-            return JSON.stringify(data);
-          }
-          // if not JSON nor HTML, return text
-          return text;
+          return await performDiagnosticFetch(prompt, model, jsonResponse);
         } catch (e) {
-          console.error('LLM diagnostic fetch failed:', e);
-          const diagnosticMsg = e instanceof Error ? e.message : String(e);
-          const originalMsg = err instanceof Error ? err.message : String(err);
-          throw new Error(
-            `LLM diagnostic fetch failed: ${diagnosticMsg} | Original error: ${originalMsg}`
-          );
+          handleDiagnosticError(e, err);
         }
       }
     };
