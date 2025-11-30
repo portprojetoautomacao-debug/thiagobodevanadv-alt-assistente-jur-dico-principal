@@ -282,6 +282,95 @@ export async function removeMonitoredLawyer(lawyerId: string): Promise<void> {
 // ============================================================================
 
 /**
+ * Builds URL parameters for DJEN API query
+ */
+function buildDJENQueryParams(
+    numeroOAB: string,
+    ufOAB: string,
+    options: {
+        dataInicio?: string
+        dataFim?: string
+        tribunal?: string
+        pagina?: number
+        itensPorPagina?: number
+    }
+): URLSearchParams {
+    const params = new URLSearchParams()
+
+    // Required parameters
+    params.set('numeroOab', numeroOAB.replace(/\D/g, ''))
+    params.set('ufOab', ufOAB.toUpperCase())
+    params.set('meio', 'D') // Diário Eletrônico
+
+    // Optional parameters
+    if (options.dataInicio) {
+        params.set('dataDisponibilizacaoInicio', options.dataInicio)
+    }
+    if (options.dataFim) {
+        params.set('dataDisponibilizacaoFim', options.dataFim)
+    }
+    if (options.tribunal) {
+        params.set('siglaTribunal', options.tribunal)
+    }
+    if (options.pagina) {
+        params.set('pagina', String(options.pagina))
+    }
+    if (options.itensPorPagina) {
+        params.set('itensPorPagina', String(options.itensPorPagina))
+    }
+
+    return params
+}
+
+/**
+ * Logs rate limit info from response headers
+ */
+function logRateLimitInfo(response: Response): void {
+    const remaining = response.headers.get('x-ratelimit-remaining')
+    if (remaining) {
+        console.log(`[DJEN API] Rate limit remaining: ${remaining}`)
+    }
+}
+
+/**
+ * Handles DJEN API error responses
+ */
+async function handleDJENApiError(response: Response): Promise<never> {
+    if (response.status === 429) {
+        throw new Error('Rate limit atingido (429) - aguarde 1 minuto')
+    }
+
+    if (response.status === 422) {
+        const errorBody = await response.text()
+        throw new Error(`Erro negocial DJEN (422): ${errorBody}`)
+    }
+
+    throw new Error(`DJEN API error ${response.status}: ${response.statusText}`)
+}
+
+/**
+ * Normalizes a raw DJEN item to internal format
+ */
+function normalizeRawDJENItem(item: RawDJENItem): NormalizedDJENPublication {
+    return {
+        id: `djen-${item.id}`,
+        djenId: item.id,
+        tribunal: item.siglaTribunal,
+        tipoComunicacao: item.tipoComunicacao,
+        orgao: item.nomeOrgao,
+        numeroProcesso: item.numeroprocessocommascara || item.numero_processo,
+        dataDisponibilizacao: item.datadisponibilizacao || item.data_disponibilizacao || '',
+        dataPublicacao: item.dataPublicacao,
+        texto: item.texto,
+        meio: item.meiocompleto || item.meio,
+        link: item.link,
+        hash: item.hash || `${item.siglaTribunal}-${item.id}-${item.numero_processo}`,
+        destinatarios: item.destinatarios,
+        advogados: item.destinatarioadvogados?.map(d => d.advogado)
+    }
+}
+
+/**
  * Consulta a API pública do CNJ DJEN para uma OAB específica
  * 
  * @param numeroOAB - Número da OAB (apenas dígitos)
@@ -299,37 +388,17 @@ export async function fetchDJENForOAB(
         itensPorPagina?: number
     } = {}
 ): Promise<NormalizedDJENPublication[]> {
-    const url = new URL('https://comunicaapi.pje.jus.br/api/v1/comunicacao')
-
-    // Parâmetros obrigatórios
-    url.searchParams.set('numeroOab', numeroOAB.replace(/\D/g, ''))
-    url.searchParams.set('ufOab', ufOAB.toUpperCase())
-    url.searchParams.set('meio', 'D') // Diário Eletrônico
-
-    // Parâmetros opcionais
-    if (options.dataInicio) {
-        url.searchParams.set('dataDisponibilizacaoInicio', options.dataInicio)
-    }
-    if (options.dataFim) {
-        url.searchParams.set('dataDisponibilizacaoFim', options.dataFim)
-    }
-    if (options.tribunal) {
-        url.searchParams.set('siglaTribunal', options.tribunal)
-    }
-    if (options.pagina) {
-        url.searchParams.set('pagina', String(options.pagina))
-    }
-    if (options.itensPorPagina) {
-        url.searchParams.set('itensPorPagina', String(options.itensPorPagina))
-    }
+    const baseUrl = 'https://comunicaapi.pje.jus.br/api/v1/comunicacao'
+    const params = buildDJENQueryParams(numeroOAB, ufOAB, options)
+    const url = `${baseUrl}?${params.toString()}`
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT)
 
     try {
-        console.log(`[DJEN API] Consultando: ${url.toString()}`)
+        console.log(`[DJEN API] Consultando: ${url}`)
 
-        const response = await fetch(url.toString(), {
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -340,24 +409,10 @@ export async function fetchDJENForOAB(
         })
 
         clearTimeout(timeoutId)
-
-        // Log rate limit info
-        const remaining = response.headers.get('x-ratelimit-remaining')
-        if (remaining) {
-            console.log(`[DJEN API] Rate limit remaining: ${remaining}`)
-        }
-
-        if (response.status === 429) {
-            throw new Error('Rate limit atingido (429) - aguarde 1 minuto')
-        }
-
-        if (response.status === 422) {
-            const errorBody = await response.text()
-            throw new Error(`Erro negocial DJEN (422): ${errorBody}`)
-        }
+        logRateLimitInfo(response)
 
         if (!response.ok) {
-            throw new Error(`DJEN API error ${response.status}: ${response.statusText}`)
+            await handleDJENApiError(response)
         }
 
         const data = await response.json() as RawDJENResponse
@@ -369,22 +424,7 @@ export async function fetchDJENForOAB(
 
         console.log(`[DJEN API] Retornou ${items.length} comunicações`)
 
-        return items.map((item): NormalizedDJENPublication => ({
-            id: `djen-${item.id}`,
-            djenId: item.id,
-            tribunal: item.siglaTribunal,
-            tipoComunicacao: item.tipoComunicacao,
-            orgao: item.nomeOrgao,
-            numeroProcesso: item.numeroprocessocommascara || item.numero_processo,
-            dataDisponibilizacao: item.datadisponibilizacao || item.data_disponibilizacao || '',
-            dataPublicacao: item.dataPublicacao,
-            texto: item.texto,
-            meio: item.meiocompleto || item.meio,
-            link: item.link,
-            hash: item.hash || `${item.siglaTribunal}-${item.id}-${item.numero_processo}`,
-            destinatarios: item.destinatarios,
-            advogados: item.destinatarioadvogados?.map(d => d.advogado)
-        }))
+        return items.map(normalizeRawDJENItem)
     } catch (error) {
         clearTimeout(timeoutId)
         console.error('[DJEN API] Erro:', error)
@@ -747,6 +787,90 @@ Formate sua resposta de forma clara e estruturada. Use marcadores HTML quando ap
 Seja objetivo e direto. Destaque prazos em negrito.`
 
 /**
+ * Builds the prompt for AI analysis
+ */
+function buildAnalysisPrompt(pub: NormalizedDJENPublication): string {
+    return `Analise a seguinte intimação do DJEN:
+
+**Tribunal:** ${pub.tribunal}
+**Órgão:** ${pub.orgao}
+**Processo:** ${pub.numeroProcesso}
+**Tipo:** ${pub.tipoComunicacao}
+**Data Disponibilização:** ${pub.dataDisponibilizacao}
+
+**Texto da Intimação:**
+${pub.texto}
+
+Forneça sua análise conforme as instruções do sistema.`
+}
+
+/**
+ * Processes streaming response from AI
+ */
+async function processStreamingResponse(
+    response: Response,
+    onStream: (chunk: string) => void
+): Promise<string> {
+    if (!response.body) {
+        throw new Error('Response body is null')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let fullContent = ''
+
+    while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+
+            try {
+                const data = JSON.parse(line.slice(6))
+                if (data.type === 'content' && data.content) {
+                    fullContent += data.content
+                    onStream(data.content)
+                }
+            } catch {
+                // Ignora linhas inválidas
+            }
+        }
+    }
+
+    return fullContent
+}
+
+/**
+ * Calls AI with streaming support
+ */
+async function callAIWithStreaming(
+    messages: Array<{ role: string; content: string }>,
+    model: string,
+    onStream: (chunk: string) => void
+): Promise<string> {
+    const response = await fetch('/api/llm-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messages,
+            model,
+            temperature: 0.3,
+            maxTokens: 1000
+        })
+    })
+
+    if (!response.ok) {
+        throw new Error('Erro ao iniciar streaming')
+    }
+
+    return processStreamingResponse(response, onStream)
+}
+
+/**
  * Gera análise de uma publicação DJEN com IA
  * 
  * Pode ser chamado com streaming via callback ou síncrono
@@ -767,75 +891,23 @@ export async function analyzePublicationWithAI(
 ): Promise<string> {
     const { aiClient } = await import('@/lib/ai-providers')
 
-    const prompt = `Analise a seguinte intimação do DJEN:
-
-**Tribunal:** ${pub.tribunal}
-**Órgão:** ${pub.orgao}
-**Processo:** ${pub.numeroProcesso}
-**Tipo:** ${pub.tipoComunicacao}
-**Data Disponibilização:** ${pub.dataDisponibilizacao}
-
-**Texto da Intimação:**
-${pub.texto}
-
-Forneça sua análise conforme as instruções do sistema.`
+    const prompt = buildAnalysisPrompt(pub)
+    const model = options.model || 'gemini-2.5-pro'
 
     const messages = [
         { role: 'system', content: DJEN_AI_SYSTEM_PROMPT },
         { role: 'user', content: prompt }
     ]
 
-    // Se tem callback de streaming, usa endpoint de streaming
+    // Use streaming if callback provided
     if (options.onStream) {
-        // Streaming via SSE - implementar no endpoint /api/llm-stream
-        const response = await fetch('/api/llm-stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                messages,
-                model: options.model || 'gemini-2.5-pro',
-                temperature: 0.3,
-                maxTokens: 1000
-            })
-        })
-
-        if (!response.ok || !response.body) {
-            throw new Error('Erro ao iniciar streaming')
-        }
-
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let fullContent = ''
-
-        while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-
-            const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split('\n')
-
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    try {
-                        const data = JSON.parse(line.slice(6))
-                        if (data.type === 'content' && data.content) {
-                            fullContent += data.content
-                            options.onStream(data.content)
-                        }
-                    } catch {
-                        // Ignora linhas inválidas
-                    }
-                }
-            }
-        }
-
-        return fullContent
+        return callAIWithStreaming(messages, model, options.onStream)
     }
 
-    // Sem streaming - chamada síncrona
+    // Non-streaming call
     const result = await aiClient.chat(messages, {
         provider: options.provider || 'gemini',
-        model: options.model || 'gemini-2.5-pro',
+        model,
         maxTokens: 1000,
         temperature: 0.3
     })
