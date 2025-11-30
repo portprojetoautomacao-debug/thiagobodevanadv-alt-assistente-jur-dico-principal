@@ -334,7 +334,100 @@ function handleFallbackResponse(req: VercelRequest, res: VercelResponse, body: R
   }
 }
 
-// ===== Handler principal =====
+// ===== POST request handlers - Extracted to reduce CC =====
+
+interface PostRequestBody {
+  key?: unknown
+  value?: unknown
+  action?: unknown
+  keys?: unknown
+  entries?: unknown
+}
+
+/**
+ * Processa requisição POST para batch-get
+ */
+async function tryHandleBatchGet(
+  redis: Redis,
+  body: PostRequestBody,
+  res: VercelResponse
+): Promise<boolean> {
+  if (body.action !== 'batch-get' || !Array.isArray(body.keys)) {
+    return false
+  }
+  await handleBatchGet(redis, body.keys, res)
+  return true
+}
+
+/**
+ * Processa requisição POST para batch-set
+ */
+async function tryHandleBatchSet(
+  redis: Redis,
+  body: PostRequestBody,
+  res: VercelResponse
+): Promise<boolean> {
+  if (body.action !== 'batch-set' || !Array.isArray(body.entries)) {
+    return false
+  }
+  await handleBatchSet(redis, body.entries, res)
+  return true
+}
+
+/**
+ * Valida e processa requisição POST para set simples
+ */
+async function tryHandleSimpleSet(
+  redis: Redis,
+  body: PostRequestBody,
+  res: VercelResponse
+): Promise<boolean> {
+  const { key, value } = body
+
+  if (!key || typeof key !== 'string') {
+    res.status(400).json({ error: 'Key is required in request body' })
+    return true // handled (with error)
+  }
+
+  if (value === undefined) {
+    res.status(400).json({ error: 'Value is required in request body' })
+    return true // handled (with error)
+  }
+
+  await handleSetKey(redis, key, value, res)
+  return true
+}
+
+/**
+ * Handler para requisições POST
+ */
+async function handlePostRequest(
+  redis: Redis,
+  body: PostRequestBody,
+  res: VercelResponse
+): Promise<void> {
+  // Tenta cada handler em sequência
+  if (await tryHandleBatchGet(redis, body, res)) return
+  if (await tryHandleBatchSet(redis, body, res)) return
+  await tryHandleSimpleSet(redis, body, res)
+}
+
+/**
+ * Parse body se vier como string
+ */
+function parseRequestBody(body: unknown): Record<string, unknown> | null {
+  if (typeof body === 'string') {
+    try {
+      return JSON.parse(body)
+    } catch {
+      console.warn('Failed to parse request body')
+      return null
+    }
+  }
+  return body as Record<string, unknown> | null
+}
+
+// ===== Handler principal - Refactored =====
 
 export default withErrorHandler(
   async (req: VercelRequest, res: VercelResponse): Promise<void> => {
@@ -366,16 +459,7 @@ export default withErrorHandler(
       return
     }
 
-    // Parse body se vier como string
-    let body: Record<string, unknown> | null = req.body
-    if (typeof body === 'string') {
-      try {
-        body = JSON.parse(body)
-      } catch (e) {
-        console.warn('Failed to parse request body:', e)
-      }
-    }
-
+    const body = parseRequestBody(req.body)
     const redis = getRedisOrNull()
 
     // Se não houver KV configurado, responde em modo "fallback"
@@ -393,37 +477,7 @@ export default withErrorHandler(
 
       // POST /api/kv
       if (req.method === 'POST') {
-        const {
-          key,
-          value,
-          action: bodyAction,
-          keys,
-          entries
-        } = body || {}
-
-        // batch-get: ler várias chaves de uma vez
-        if (bodyAction === 'batch-get' && Array.isArray(keys)) {
-          await handleBatchGet(redis, keys, res)
-          return
-        }
-
-        // batch-set: gravar várias chaves de uma vez
-        if (bodyAction === 'batch-set' && Array.isArray(entries)) {
-          await handleBatchSet(redis, entries, res)
-          return
-        }
-
-        // set simples key/value
-        if (!key || typeof key !== 'string') {
-          res.status(400).json({ error: 'Key is required in request body' })
-          return
-        }
-        if (value === undefined) {
-          res.status(400).json({ error: 'Value is required in request body' })
-          return
-        }
-
-        await handleSetKey(redis, key, value, res)
+        await handlePostRequest(redis, body ?? {}, res)
         return
       }
 
