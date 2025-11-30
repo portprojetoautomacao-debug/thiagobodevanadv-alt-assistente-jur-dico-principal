@@ -173,58 +173,30 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
-<<<<<<< HEAD
 
   // === SonarLint Configuration ===
-  // Path to Node.js executable (required for JS/TS analysis)
   "sonarlint.pathToNodeExecutable": "/usr/bin/node",
-  
-  // Connected Mode - bind to SonarCloud project
-=======
-  "sonarlint.connectedMode.connections.sonarcloud": [
-    {
-      "connectionId": "thiagobodevan-a11y",
-      "organizationKey": "thiagobodevan-a11y"
-    }
-  ],
->>>>>>> fix/sonar-copilot-assistant
-  "sonarlint.connectedMode.project": {
-
-    "connectionId": "thiagobodevan-a11y",
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
-  },
-<<<<<<< HEAD
-  
-  // SonarCloud connection (alternative to sonarqube)
   "sonarlint.connectedMode.connections.sonarcloud": [
     {
       "connectionId": "thiagobodevan-a11y",
       "organizationKey": "thiagobodevan-a11y",
-      "token": "e04da699455ce47ef8caa0cced5d7b9c29c058d0"
+      "token": "8cdc5b237ce10a1592fe7e919a0af1082eab6175"
     }
   ],
-
-  // Path to Java runtime (required for SonarLint Language Server)
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk",
-  "editor.defaultFormatter": "SonarSource.sonarlint-vscode",
-  "editor.formatOnPaste": true,
-  "editor.formatOnSave": true,
-  "files.autoSave": "onFocusChange",
-  "editor.codeActions.triggerOnFocusChange": true,
-  "editor.codeActionsOnSave": {
-
+  "sonarlint.connectedMode.project": {
+    "connectionId": "thiagobodevan-a11y",
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
   },
-  "editor.experimentalGpuAcceleration": "on",
-  "editor.pasteAs.preferences": [
 
-  ],
+  // === SonarQube Insights (Project Status Plus) ===
+  "sonarqubeStatus.project": "thiagobodevan-a11y_assistente-juridico-p",
+  "sonarqubeStatus.sonarURL": "https://sonarcloud.io",
+  "sonarqubeStatus.token": "8cdc5b237ce10a1592fe7e919a0af1082eab6175",
+
+  // === Editor Extras ===
+  "editor.formatOnPaste": true,
+  "editor.experimentalGpuAcceleration": "on",
   "diffEditor.codeLens": true,
-  "editor.suggest.shareSuggestSelections": false
-}
-=======
-  // [EXPERIMENTAL] Esta configuração ativa uma feature experimental do VS Code. Pode mudar ou ser removida em versões futuras.
   "inlineChat.enableV2": true,
-  // [EXPERIMENTAL] Esta configuração ativa uma feature experimental do VS Code. Pode mudar ou ser removida em versões futuras.
   "issueReporter.experimental.webReporter": true
 }
->>>>>>> fix/sonar-copilot-assistant
