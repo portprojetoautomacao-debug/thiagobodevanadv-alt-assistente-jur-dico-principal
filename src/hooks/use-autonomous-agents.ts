@@ -12,9 +12,44 @@ import {
   initializeAgents
 } from '@/lib/agents'
 
+// ===========================
+// Helper Functions
+// ===========================
+
 function getAgentActivity(agent: Agent): string {
   if (agent.status === 'processing') return 'Processando tarefa...'
   return 'Aguardando tarefas'
+}
+
+function sortTasksByPriority(tasks: AgentTask[]): AgentTask[] {
+  const order: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+  return tasks.sort((a, b) => order[a.priority] - order[b.priority])
+}
+
+function updateAgentInList(agents: Agent[], agentId: string, updates: Partial<Agent>): Agent[] {
+  return agents.map(a => a.id === agentId ? { ...a, ...updates } : a)
+}
+
+function updateTaskInQueue(tasks: AgentTask[], taskId: string, updates: Partial<AgentTask>): AgentTask[] {
+  return tasks.map(t => t.id === taskId ? { ...t, ...updates } : t)
+}
+
+function getQueuedTasksForAgent(queue: AgentTask[], agentId: string): AgentTask[] {
+  return queue.filter(
+    t => t.agentId === agentId && t.status === 'queued' && canResumeAfterHuman(t)
+  )
+}
+
+function isDataVersionOutdated(storedVersion: number, currentVersion: number): boolean {
+  return storedVersion < currentVersion
+}
+
+function clearOutdatedLocalStorage(): void {
+  console.log('[Agents] Versão desatualizada → limpando dados locais…')
+  window.localStorage.removeItem('autonomous-agents')
+  window.localStorage.removeItem('agent-task-queue')
+  window.localStorage.removeItem('completed-agent-tasks')
+  window.localStorage.removeItem('agent-activity-log')
 }
 
 /**
@@ -30,12 +65,8 @@ function getInitialAgents(): Agent[] {
     const storedVersion = window.localStorage.getItem('agents-data-version')
     const version = storedVersion ? JSON.parse(storedVersion) : 0
 
-    if (version < AGENTS_DATA_VERSION) {
-      console.log('[Agents] Versão desatualizada → limpando dados locais…')
-      window.localStorage.removeItem('autonomous-agents')
-      window.localStorage.removeItem('agent-task-queue')
-      window.localStorage.removeItem('completed-agent-tasks')
-      window.localStorage.removeItem('agent-activity-log')
+    if (isDataVersionOutdated(version, AGENTS_DATA_VERSION)) {
+      clearOutdatedLocalStorage()
       window.localStorage.setItem('agents-data-version', JSON.stringify(AGENTS_DATA_VERSION))
       return initializeAgents()
     }
@@ -131,13 +162,7 @@ export function useAutonomousAgents() {
     (task: AgentTask) => {
       setTaskQueue(current => {
         const updated = [...(current || []), task]
-
-        updated.sort((a, b) => {
-          const order: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
-          return order[a.priority] - order[b.priority]
-        })
-
-        return updated
+        return sortTasksByPriority(updated)
       })
     },
     [setTaskQueue]
@@ -167,20 +192,11 @@ export function useAutonomousAgents() {
       if (processingRef.current.has(agent.id)) return
       if (!agent.enabled || agent.status === 'paused') return
 
-      const queue = (taskQueue || []).filter(
-        t =>
-          t.agentId === agent.id &&
-          t.status === 'queued' &&
-          canResumeAfterHuman(t)
-      )
+      const queue = getQueuedTasksForAgent(taskQueue || [], agent.id)
 
       if (queue.length === 0) {
         setAgents(current =>
-          (current || []).map(a =>
-            a.id === agent.id
-              ? { ...a, status: 'idle', currentTask: undefined }
-              : a
-          )
+          updateAgentInList(current || [], agent.id, { status: 'idle', currentTask: undefined })
         )
         return
       }
@@ -190,11 +206,7 @@ export function useAutonomousAgents() {
       // Filtro de segurança → não regras de autonomia
       if (shouldPauseForHuman(agent, task)) {
         setAgents(current =>
-          (current || []).map(a =>
-            a.id === agent.id
-              ? { ...a, status: 'waiting_human', currentTask: task }
-              : a
-          )
+          updateAgentInList(current || [], agent.id, { status: 'waiting_human', currentTask: task })
         )
         return
       }
@@ -203,19 +215,11 @@ export function useAutonomousAgents() {
 
       // Status: Processing
       setTaskQueue(current =>
-        (current || []).map(t =>
-          t.id === task.id
-            ? { ...t, status: 'processing', startedAt: new Date().toISOString() }
-            : t
-        )
+        updateTaskInQueue(current || [], task.id, { status: 'processing', startedAt: new Date().toISOString() })
       )
 
       setAgents(current =>
-        (current || []).map(a =>
-          a.id === agent.id
-            ? { ...a, status: 'processing', currentTask: task }
-            : a
-        )
+        updateAgentInList(current || [], agent.id, { status: 'processing', currentTask: task })
       )
 
       try {
@@ -271,21 +275,13 @@ export function useAutonomousAgents() {
         setCompletedTasks(current => [completed, ...(current || [])].slice(0, 500))
 
         setAgents(current =>
-          (current || []).map(a =>
-            a.id === agent.id
-              ? { ...a, lastActivity: `Concluído: ${task.type}` }
-              : a
-          )
+          updateAgentInList(current || [], agent.id, { lastActivity: `Concluído: ${task.type}` })
         )
 
         logActivity(agent.id, `Tarefa concluída: ${task.type}`, 'success')
       } catch (err) {
         setTaskQueue(current =>
-          (current || []).map(t =>
-            t.id === task.id
-              ? { ...t, status: 'failed', error: String(err) }
-              : t
-          )
+          updateTaskInQueue(current || [], task.id, { status: 'failed', error: String(err) })
         )
 
         logActivity(agent.id, `Erro no processamento: ${task.type}`, 'error')
@@ -368,18 +364,17 @@ export function useAutonomousAgents() {
 
   const toggleAgent = useCallback(
     (agentId: string) => {
-      setAgents(current =>
-        (current || []).map(a =>
-          a.id === agentId
-            ? {
-              ...a,
-              enabled: !a.enabled,
-              status: !a.enabled ? 'active' : 'paused',
-              lastActivity: !a.enabled ? 'Iniciando…' : 'Pausado pelo usuário'
-            }
-            : a
-        )
-      )
+      setAgents(current => {
+        const agent = (current || []).find(a => a.id === agentId)
+        if (!agent) return current || []
+
+        const isNowEnabled = !agent.enabled
+        return updateAgentInList(current || [], agentId, {
+          enabled: isNowEnabled,
+          status: isNowEnabled ? 'active' : 'paused',
+          lastActivity: isNowEnabled ? 'Iniciando…' : 'Pausado pelo usuário'
+        })
+      })
     },
     [setAgents]
   )
@@ -387,15 +382,10 @@ export function useAutonomousAgents() {
   const markTaskAsHumanTouched = useCallback(
     (taskId: string) => {
       setTaskQueue(current =>
-        (current || []).map(t =>
-          t.id === taskId
-            ? {
-              ...t,
-              humanTouchedAt: new Date().toISOString(),
-              status: 'human_intervention'
-            }
-            : t
-        )
+        updateTaskInQueue(current || [], taskId, {
+          humanTouchedAt: new Date().toISOString(),
+          status: 'human_intervention'
+        })
       )
     },
     [setTaskQueue]
@@ -404,11 +394,7 @@ export function useAutonomousAgents() {
   const resumeTaskAfterHuman = useCallback(
     (taskId: string) => {
       setTaskQueue(current =>
-        (current || []).map(t =>
-          t.id === taskId
-            ? { ...t, status: 'queued', resumeAfterHuman: true }
-            : t
-        )
+        updateTaskInQueue(current || [], taskId, { status: 'queued', resumeAfterHuman: true })
       )
     },
     [setTaskQueue]
