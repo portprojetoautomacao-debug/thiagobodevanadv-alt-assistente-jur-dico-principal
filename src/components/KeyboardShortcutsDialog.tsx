@@ -30,8 +30,8 @@ function ShortcutItem({ keys, description }: ShortcutItemProps) {
 }
 
 interface KeyboardShortcutsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  readonly open: boolean
+  readonly onOpenChange: (open: boolean) => void
 }
 
 type ShortcutConfig = {

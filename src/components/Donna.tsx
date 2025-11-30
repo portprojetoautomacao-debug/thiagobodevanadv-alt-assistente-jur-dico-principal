@@ -19,6 +19,21 @@ import {
 } from '@phosphor-icons/react'
 import type { Process, FinancialEntry } from '@/types'
 
+// Função auxiliar para conteúdo de streaming
+function getMessageContent(
+  message: { id: string; content: string },
+  streamingMessageId: string | null,
+  isStreaming: boolean,
+  streamingContent: string
+): string {
+  if (message.id === streamingMessageId && isStreaming) {
+    return streamingContent || '▋'
+  }
+  if (message.content) return message.content
+  if (message.id === streamingMessageId) return '▋'
+  return ''
+}
+
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -610,9 +625,7 @@ IMPORTANTE:
                     >
                       <div className="whitespace-pre-wrap text-sm">
                         {/* Mostra streaming content se esta é a mensagem sendo streamada */}
-                        {message.id === streamingMessageId && isStreaming
-                          ? (streamingContent || '▋')
-                          : (message.content || (message.id === streamingMessageId ? '▋' : ''))}
+                        {getMessageContent(message, streamingMessageId, isStreaming, streamingContent)}
                         {/* Cursor piscante durante streaming */}
                         {message.id === streamingMessageId && isStreaming && (
                           <span className="animate-pulse">▋</span>

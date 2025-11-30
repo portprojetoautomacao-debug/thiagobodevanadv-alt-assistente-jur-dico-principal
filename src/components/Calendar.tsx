@@ -83,7 +83,7 @@ const EVENT_COLORS: Record<string, string> = {
 
 // fallback para SSR (evita ReferenceError com window)
 const SAFE_ORIGIN =
-  typeof globalThis.window !== 'undefined' ? globalThis.window.location.origin : 'http://localhost'
+  globalThis.window !== undefined ? globalThis.window.location.origin : 'http://localhost'
 
 export default function Calendar() {
   const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])

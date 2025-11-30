@@ -250,9 +250,8 @@ export class GeminiClient {
   private buildPromptFromMessages(messages: AIChatMessage[]): string {
     return messages
       .map(m => {
-        const role = m.role as AIChatRole
-        if (role === 'system') return `# Sistema\n${m.content}`
-        if (role === 'user') return `# Usuário\n${m.content}`
+        if (m.role === 'system') return `# Sistema\n${m.content}`
+        if (m.role === 'user') return `# Usuário\n${m.content}`
         return `# Assistente\n${m.content}`
       })
       .join('\n\n')
@@ -400,9 +399,8 @@ export class HuggingFaceClient {
     const prompt =
       messages
         .map(m => {
-          const role = m.role as AIChatRole
-          if (role === 'system') return `<|system|>\n${m.content}`
-          if (role === 'user') return `<|user|>\n${m.content}`
+          if (m.role === 'system') return `<|system|>\n${m.content}`
+          if (m.role === 'user') return `<|user|>\n${m.content}`
           return `<|assistant|>\n${m.content}`
         })
         .join('\n') + '\n<|assistant|>\n'

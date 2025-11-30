@@ -52,9 +52,9 @@ const ALLOWED_ATTRS = new Set([
  * Verifica se Trusted Types é suportado pelo navegador
  */
 export function isTrustedTypesSupported(): boolean {
-    return typeof globalThis.window !== 'undefined' &&
+    return globalThis.window !== undefined &&
         globalThis.window.trustedTypes !== undefined &&
-        typeof globalThis.window.trustedTypes.createPolicy === 'function';
+        typeof globalThis.window.trustedTypes?.createPolicy === 'function';
 }
 
 /**

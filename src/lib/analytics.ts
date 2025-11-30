@@ -22,7 +22,7 @@ declare global {
 
 // Helpers
 function isBrowser(): boolean {
-  return typeof globalThis.window !== 'undefined' && typeof globalThis.document !== 'undefined'
+  return globalThis.window !== undefined && globalThis.document !== undefined
 }
 
 // Configuração

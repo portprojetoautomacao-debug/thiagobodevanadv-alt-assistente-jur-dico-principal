@@ -29,6 +29,21 @@ const TrendChart = lazy(() =>
   import('@/components/DashboardCharts').then((m) => ({ default: m.TrendChart }))
 )
 
+// Funções auxiliares para evitar ternários aninhados
+function formatDiasRestantes(diasRestantes: number): string {
+  if (diasRestantes < 0) return 'Vencido'
+  if (diasRestantes === 0) return 'Hoje'
+  if (diasRestantes === 1) return 'Amanhã'
+  return `${diasRestantes} dias`
+}
+
+function getStatusVariant(status: string): 'default' | 'secondary' | 'outline' | 'destructive' {
+  if (status === 'ativo') return 'default'
+  if (status === 'concluido') return 'secondary'
+  if (status === 'suspenso') return 'outline'
+  return 'destructive'
+}
+
 interface DashboardProps {
   onNavigate: (view: ViewType) => void
 }
@@ -451,10 +466,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         variant={urgente ? 'destructive' : 'default'}
                         className={`shrink-0 ${urgente ? 'neon-glow' : ''}`}
                       >
-                        {diasRestantes < 0 ? 'Vencido' :
-                          diasRestantes === 0 ? 'Hoje' :
-                            diasRestantes === 1 ? 'Amanhã' :
-                              `${diasRestantes} dias`}
+                        {formatDiasRestantes(diasRestantes)}
                       </Badge>
                     </div>
                   )
@@ -514,12 +526,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                       </p>
                     </div>
                     <Badge
-                      variant={
-                        process.status === 'ativo' ? 'default' :
-                          process.status === 'concluido' ? 'secondary' :
-                            process.status === 'suspenso' ? 'outline' :
-                              'destructive'
-                      }
+                      variant={getStatusVariant(process.status)}
                       className="shrink-0"
                     >
                       {process.status}
