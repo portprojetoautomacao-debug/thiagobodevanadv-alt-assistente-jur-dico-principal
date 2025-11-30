@@ -7,7 +7,7 @@ echo "🔍 Testando configuração de Review Apps"
 echo "======================================="
 
 # Verificar se o arquivo .gitlab-ci.yml existe
-if [ ! -f ".gitlab-ci.yml" ]; then
+if [[ ! -f ".gitlab-ci.yml" ]]; then
     echo "❌ Arquivo .gitlab-ci.yml não encontrado!"
     exit 1
 fi
@@ -49,7 +49,7 @@ else
 fi
 
 # Verificar route map
-if [ -f ".gitlab/route-map.yml" ]; then
+if [[ -f ".gitlab/route-map.yml" ]]; then
     echo "✅ Arquivo route-map.yml encontrado"
     echo "📊 Mapeamentos encontrados:"
     grep -c "source:" .gitlab/route-map.yml | xargs echo "   - Total de mapeamentos:"

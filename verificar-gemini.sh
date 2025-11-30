@@ -7,7 +7,7 @@ echo "🔍 Verificando configuração da API do Gemini..."
 echo ""
 
 # Verificar se o arquivo .env existe
-if [ ! -f .env ]; then
+if [[ ! -f .env ]]; then
     echo "❌ Arquivo .env não encontrado"
     echo "📝 Crie o arquivo .env a partir do .env.example:"
     echo "   cp .env.example .env"
@@ -21,7 +21,7 @@ if grep -q "VITE_GEMINI_API_KEY=" .env; then
     GEMINI_KEY=$(grep "VITE_GEMINI_API_KEY=" .env | cut -d '=' -f2)
     
     # Verificar se não está vazia ou é o valor padrão
-    if [ -z "$GEMINI_KEY" ] || [ "$GEMINI_KEY" = "your-gemini-api-key-here" ]; then
+    if [[ -z "$GEMINI_KEY" ]] || [[ "$GEMINI_KEY" = "your-gemini-api-key-here" ]]; then
         echo "⚠️  VITE_GEMINI_API_KEY encontrada mas não configurada"
         echo "📝 Edite o arquivo .env e adicione sua chave da API do Gemini"
         echo "   Obtenha sua chave em: https://aistudio.google.com/app/apikey"
@@ -31,7 +31,7 @@ if grep -q "VITE_GEMINI_API_KEY=" .env; then
         echo "✅ VITE_GEMINI_API_KEY encontrada no .env"
         # Mostrar apenas os primeiros e últimos caracteres
         KEY_LENGTH=${#GEMINI_KEY}
-        if [ $KEY_LENGTH -gt 10 ]; then
+        if [[ $KEY_LENGTH -gt 10 ]]; then
             MASKED_KEY="${GEMINI_KEY:0:6}...${GEMINI_KEY: -4}"
             echo "   Chave: $MASKED_KEY"
         fi

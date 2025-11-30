@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}📋 Verificando componentes...${NC}"
 echo ""
 
-if [ -f "src/components/AgentOrchestrationPanel.tsx" ]; then
+if [[ -f "src/components/AgentOrchestrationPanel.tsx" ]]; then
     LINES=$(wc -l < "src/components/AgentOrchestrationPanel.tsx")
     echo -e "  ${GREEN}✅ AgentOrchestrationPanel.tsx${NC} ($LINES linhas)"
 else
@@ -63,7 +63,7 @@ echo ""
 echo -e "${BLUE}🔗 Verificando APIs backend...${NC}"
 echo ""
 
-if [ -f "api/agents-v2.ts" ]; then
+if [[ -f "api/agents-v2.ts" ]]; then
     if grep -q "traces" api/agents-v2.ts; then
         echo -e "  ${GREEN}✅ /api/agents-v2${NC} - Endpoint implementado com traces"
     else
@@ -73,7 +73,7 @@ else
     echo -e "  ${RED}❌ api/agents-v2.ts${NC} - Arquivo não encontrado"
 fi
 
-if [ -f "api/observability.ts" ]; then
+if [[ -f "api/observability.ts" ]]; then
     if grep -q "circuit-breakers" api/observability.ts; then
         echo -e "  ${GREEN}✅ /api/observability${NC} - Endpoint implementado com circuit breakers"
     else
@@ -83,13 +83,13 @@ else
     echo -e "  ${RED}❌ api/observability.ts${NC} - Arquivo não encontrado"
 fi
 
-if [ -f "lib/ai/circuit-breaker.ts" ]; then
+if [[ -f "lib/ai/circuit-breaker.ts" ]]; then
     echo -e "  ${GREEN}✅ Circuit Breaker${NC} - Implementado"
 else
     echo -e "  ${RED}❌ Circuit Breaker${NC} - Não encontrado"
 fi
 
-if [ -f "lib/ai/core-agent.ts" ]; then
+if [[ -f "lib/ai/core-agent.ts" ]]; then
     if grep -q "traces" lib/ai/core-agent.ts; then
         echo -e "  ${GREEN}✅ Core Agent${NC} - Com suporte a traces ReAct"
     else
@@ -133,7 +133,7 @@ echo -e "${BLUE}📁 Verificando estrutura...${NC}"
 echo ""
 
 for dir in "src/components" "src/components/ui" "api" "docs"; do
-    if [ -d "$dir" ]; then
+    if [[ -d "$dir" ]]; then
         echo -e "  ${GREEN}✅ $dir/${NC}"
     else
         echo -e "  ${RED}❌ $dir/${NC} - Não encontrado"

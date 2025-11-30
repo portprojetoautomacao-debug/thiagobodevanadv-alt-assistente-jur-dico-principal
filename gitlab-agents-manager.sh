@@ -69,7 +69,7 @@ check_dependencies() {
         missing_deps+=("git")
     fi
 
-    if [ ${#missing_deps[@]} -ne 0 ]; then
+    if [[ ${#missing_deps[@]} -ne 0 ]]; then
         error "Dependências faltando:"
         for dep in "${missing_deps[@]}"; do
             echo "  • $dep"
@@ -108,7 +108,7 @@ check_authentication() {
         success "Cluster Kubernetes acessível"
     fi
 
-    if [ "$auth_ok" = false ]; then
+    if [[ "$auth_ok" = false ]]; then
         echo ""
         warning "Algumas autenticações estão faltando"
         read -p "Continuar mesmo assim? (y/N): " -n 1 -r
@@ -150,7 +150,7 @@ show_main_menu() {
 
 # Executar script de gerenciamento
 run_management_script() {
-    if [ -f "./manage-gitlab-agents.sh" ]; then
+    if [[ -f "./manage-gitlab-agents.sh" ]]; then
         ./manage-gitlab-agents.sh
     else
         error "Script manage-gitlab-agents.sh não encontrado"
@@ -159,7 +159,7 @@ run_management_script() {
 
 # Executar script de health check
 run_health_check() {
-    if [ -f "./health-check-agents.sh" ]; then
+    if [[ -f "./health-check-agents.sh" ]]; then
         ./health-check-agents.sh
     else
         error "Script health-check-agents.sh não encontrado"
@@ -168,7 +168,7 @@ run_health_check() {
 
 # Executar script de debug
 run_debug_script() {
-    if [ -f "./debug-gitlab-agents.sh" ]; then
+    if [[ -f "./debug-gitlab-agents.sh" ]]; then
         ./debug-gitlab-agents.sh
     else
         error "Script debug-gitlab-agents.sh não encontrado"
@@ -177,7 +177,7 @@ run_debug_script() {
 
 # Executar script de reset de tokens
 run_token_reset() {
-    if [ -f "./reset-agent-tokens.sh" ]; then
+    if [[ -f "./reset-agent-tokens.sh" ]]; then
         ./reset-agent-tokens.sh
     else
         error "Script reset-agent-tokens.sh não encontrado"
@@ -186,7 +186,7 @@ run_token_reset() {
 
 # Executar script de remoção
 run_removal_script() {
-    if [ -f "./remove-gitlab-agents.sh" ]; then
+    if [[ -f "./remove-gitlab-agents.sh" ]]; then
         ./remove-gitlab-agents.sh
     else
         error "Script remove-gitlab-agents.sh não encontrado"
@@ -254,7 +254,7 @@ system_status() {
     info "SCRIPTS:"
     local scripts=("manage-gitlab-agents.sh" "health-check-agents.sh" "debug-gitlab-agents.sh" "reset-agent-tokens.sh" "remove-gitlab-agents.sh")
     for script in "${scripts[@]}"; do
-        if [ -x "$script" ]; then
+        if [[ -x "$script" ]]; then
             echo "  ✅ $script (executável)"
         else
             echo "  ❌ $script (não executável)"
@@ -293,7 +293,7 @@ view_system_logs() {
             info "LOGS DOS PODS DO AGENTE:"
             if kubectl get namespace gitlab-agent &>/dev/null; then
                 pods=$(kubectl get pods -n gitlab-agent --no-headers -o custom-columns=":metadata.name" 2>/dev/null)
-                if [ -n "$pods" ]; then
+                if [[ -n "$pods" ]]; then
                     for pod in $pods; do
                         echo ""
                         echo "📦 Pod: $pod"

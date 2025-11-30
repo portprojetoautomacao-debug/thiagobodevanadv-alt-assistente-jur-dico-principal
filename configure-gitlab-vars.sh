@@ -7,7 +7,7 @@ echo "🔧 Configurando TODAS as variáveis no GitLab CI/CD..."
 echo ""
 
 # Solicitar token do GitLab
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
 else
     echo "❌ Arquivo .gitlab-token não encontrado!"
@@ -32,7 +32,7 @@ create_variable() {
         --data "{\"key\": \"$key\", \"value\": \"$value\", \"protected\": $protected, \"masked\": $masked}" \
         "https://gitlab.com/api/v4/projects/$PROJECT_ID/variables" 2>/dev/null)
 
-    if [ $? -eq 0 ] && [ -n "$response" ]; then
+    if [[ $? -eq 0 ]] && [[ -n "$response" ]]; then
         echo "✅ $key configurada com sucesso"
     else
         echo "❌ Falha ao configurar $key"

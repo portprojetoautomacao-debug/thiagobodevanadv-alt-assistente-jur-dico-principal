@@ -9,7 +9,7 @@ PROJECT_ID="thiagobodevan-a11y%2Fassistente-juridico-p"
 GITLAB_TOKEN_FILE=".gitlab-token"
 
 # Verificar se o token existe
-if [ ! -f "$GITLAB_TOKEN_FILE" ]; then
+if [[ ! -f "$GITLAB_TOKEN_FILE" ]]; then
     echo "❌ Token GitLab não encontrado em $GITLAB_TOKEN_FILE"
     echo ""
     echo "Para verificar a configuração, você precisa:"
@@ -35,7 +35,7 @@ RESPONSE=$(curl -s -w "\n%{http_code}" --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
 HTTP_CODE=$(echo "$RESPONSE" | tail -1)
 BODY=$(echo "$RESPONSE" | sed '$d')
 
-if [ "$HTTP_CODE" != "200" ]; then
+if [[ "$HTTP_CODE" != "200" ]]; then
     echo "❌ Erro ao buscar variáveis (HTTP $HTTP_CODE)"
     echo "$BODY" | jq '.' 2>/dev/null || echo "$BODY"
     exit 1
@@ -73,7 +73,7 @@ PROJECT_INFO=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
 AUTO_DEVOPS_ENABLED=$(echo "$PROJECT_INFO" | jq -r '.auto_devops_enabled')
 AUTO_DEVOPS_DEPLOY_STRATEGY=$(echo "$PROJECT_INFO" | jq -r '.auto_devops_deploy_strategy')
 
-if [ "$AUTO_DEVOPS_ENABLED" = "true" ]; then
+if [[ "$AUTO_DEVOPS_ENABLED" = "true" ]]; then
     echo "✅ Auto DevOps: ATIVO"
     echo "   Estratégia de deploy: $AUTO_DEVOPS_DEPLOY_STRATEGY"
 else
@@ -101,7 +101,7 @@ PIPELINE_ID=$(echo "$PIPELINE_RESPONSE" | jq -r '.[0].id')
 PIPELINE_REF=$(echo "$PIPELINE_RESPONSE" | jq -r '.[0].ref')
 PIPELINE_CREATED=$(echo "$PIPELINE_RESPONSE" | jq -r '.[0].created_at')
 
-if [ "$PIPELINE_STATUS" != "null" ]; then
+if [[ "$PIPELINE_STATUS" != "null" ]]; then
     echo "  Pipeline #$PIPELINE_ID"
     echo "  Branch: $PIPELINE_REF"
     echo "  Status: $PIPELINE_STATUS"

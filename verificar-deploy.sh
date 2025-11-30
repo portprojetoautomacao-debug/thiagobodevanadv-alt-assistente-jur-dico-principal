@@ -54,26 +54,26 @@ echo "1. Verificando Arquivos de Configuração"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verificar package.json
-if [ -f "package.json" ]; then
+if [[ -f "package.json" ]]; then
     log_success "package.json encontrado"
 else
     log_error "package.json não encontrado"
 fi
 
 # Verificar vercel.json
-if [ -f "vercel.json" ]; then
+if [[ -f "vercel.json" ]]; then
     log_success "vercel.json encontrado"
 else
     log_error "vercel.json não encontrado"
 fi
 
 # Verificar runtime.config.json
-if [ -f "runtime.config.json" ]; then
+if [[ -f "runtime.config.json" ]]; then
     log_success "runtime.config.json encontrado"
     
     # Extrair app name
     RUNTIME_NAME=$(cat runtime.config.json | grep -o '"app": *"[^"]*"' | sed 's/"app": *"\([^"]*\)"/\1/')
-    if [ -n "$RUNTIME_NAME" ]; then
+    if [[ -n "$RUNTIME_NAME" ]]; then
         log_info "  Runtime name: $RUNTIME_NAME"
     else
         log_warning "  Não foi possível extrair runtime name"
@@ -83,7 +83,7 @@ else
 fi
 
 # Verificar .env.example
-if [ -f ".env.example" ]; then
+if [[ -f ".env.example" ]]; then
     log_success ".env.example encontrado"
 else
     log_warning ".env.example não encontrado (não é crítico)"
@@ -95,30 +95,30 @@ echo "2. Verificando Estrutura de Diretórios"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verificar diretório src
-if [ -d "src" ]; then
+if [[ -d "src" ]]; then
     log_success "Diretório src/ encontrado"
 else
     log_error "Diretório src/ não encontrado"
 fi
 
 # Verificar diretório api
-if [ -d "api" ]; then
+if [[ -d "api" ]]; then
     log_success "Diretório api/ encontrado"
     
     # Verificar arquivos essenciais da API
-    if [ -f "api/kv.ts" ]; then
+    if [[ -f "api/kv.ts" ]]; then
         log_success "  api/kv.ts encontrado"
     else
         log_error "  api/kv.ts não encontrado"
     fi
     
-    if [ -f "api/llm-proxy.ts" ] || [ -f "api/llm-proxy.js" ]; then
+    if [[ -f "api/llm-proxy.ts" ]] || [[ -f "api/llm-proxy.js" ]]; then
         log_success "  api/llm-proxy encontrado"
     else
         log_error "  api/llm-proxy não encontrado"
     fi
     
-    if [ -f "api/spark-proxy.ts" ] || [ -f "api/spark-proxy.js" ]; then
+    if [[ -f "api/spark-proxy.ts" ]] || [[ -f "api/spark-proxy.js" ]]; then
         log_success "  api/spark-proxy encontrado"
     else
         log_error "  api/spark-proxy não encontrado"
@@ -128,7 +128,7 @@ else
 fi
 
 # Verificar node_modules
-if [ -d "node_modules" ]; then
+if [[ -d "node_modules" ]]; then
     log_success "node_modules/ encontrado (dependências instaladas)"
 else
     log_warning "node_modules/ não encontrado - execute 'npm install'"
@@ -152,7 +152,7 @@ fi
 if grep -q '"engines"' package.json; then
     log_success "Engines definidos"
     NODE_VERSION=$(grep -A 2 '"engines"' package.json | grep '"node"' | sed 's/.*: *"\([^"]*\)".*/\1/')
-    if [ -n "$NODE_VERSION" ]; then
+    if [[ -n "$NODE_VERSION" ]]; then
         log_info "  Node.js: $NODE_VERSION"
     fi
 else
@@ -178,11 +178,11 @@ if npm run build > /tmp/build.log 2>&1; then
     log_success "Build executado com sucesso"
     
     # Verificar se dist foi criado
-    if [ -d "dist" ]; then
+    if [[ -d "dist" ]]; then
         log_success "Diretório dist/ criado"
         
         # Verificar index.html
-        if [ -f "dist/index.html" ]; then
+        if [[ -f "dist/index.html" ]]; then
             log_success "  dist/index.html criado"
         else
             log_error "  dist/index.html não encontrado"
@@ -209,7 +209,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 AUDIT_OUTPUT=$(npm audit --json)
 VULNERABILITIES=$(echo "$AUDIT_OUTPUT" | grep -o '"total":[0-9]*' | tail -1 | sed 's/"total"://')
 
-if [ "$VULNERABILITIES" = "0" ]; then
+if [[ "$VULNERABILITIES" = "0" ]]; then
     log_success "Nenhuma vulnerabilidade encontrada"
 else
     log_warning "$VULNERABILITIES vulnerabilidades encontradas"
@@ -225,7 +225,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 log_info "Variáveis OBRIGATÓRIAS que devem estar na Vercel:"
 echo ""
 echo "  1. GITHUB_RUNTIME_PERMANENT_NAME"
-if [ -n "$RUNTIME_NAME" ]; then
+if [[ -n "$RUNTIME_NAME" ]]; then
     echo "     Valor sugerido: $RUNTIME_NAME"
     echo "     (extraído de runtime.config.json)"
 else
@@ -257,7 +257,7 @@ echo -e "${YELLOW}Avisos:${NC} $WARNINGS"
 echo -e "${RED}Erros:${NC} $ERRORS"
 echo ""
 
-if [ $ERRORS -eq 0 ]; then
+if [[ $ERRORS -eq 0 ]]; then
     echo -e "${GREEN}✓ Projeto pronto para deploy na Vercel!${NC}"
     echo ""
     echo "Próximos passos:"

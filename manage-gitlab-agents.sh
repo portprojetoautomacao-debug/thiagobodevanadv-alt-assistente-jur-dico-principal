@@ -95,14 +95,14 @@ configure_agent() {
 
     read -p "Digite o nome do agente para configurar: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
 
     config_file=".gitlab/agents/$agent_name/config.yaml"
 
-    if [ -f "$config_file" ]; then
+    if [[ -f "$config_file" ]]; then
         echo "📝 Arquivo de configuração encontrado: $config_file"
         echo ""
         echo "Conteúdo atual:"
@@ -137,11 +137,11 @@ view_shared_agents() {
 
     # Listar agentes locais
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
             config_file="$agent_dir/config.yaml"
 
-            if [ -f "$config_file" ]; then
+            if [[ -f "$config_file" ]]; then
                 echo "🤖 $agent_name"
 
                 # Verificar se tem ci_access ou user_access
@@ -208,14 +208,14 @@ debug_agent() {
 
     read -p "Digite o nome do agente para configurar debug: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
 
     config_file=".gitlab/agents/$agent_name/config.yaml"
 
-    if [ -f "$config_file" ]; then
+    if [[ -f "$config_file" ]]; then
         echo "🔍 Verificando configuração atual..."
         if grep -q "observability:" "$config_file" 2>/dev/null; then
             echo "⚙️  Configuração de observabilidade encontrada:"
@@ -310,14 +310,14 @@ remove_agent() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         read -p "Digite o nome do agente para remover: " agent_name
 
-        if [ -z "$agent_name" ]; then
+        if [[ -z "$agent_name" ]]; then
             warning "Operação cancelada"
             return
         fi
 
         # Remover arquivos locais
         agent_dir=".gitlab/agents/$agent_name"
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             echo "🗑️  Removendo arquivos locais..."
             rm -rf "$agent_dir"
             success "Arquivos locais removidos: $agent_dir"
@@ -343,11 +343,11 @@ general_status() {
 
     agent_count=0
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
             config_file="$agent_dir/config.yaml"
 
-            if [ -f "$config_file" ]; then
+            if [[ -f "$config_file" ]]; then
                 echo "✅ $agent_name - Configurado"
                 ((agent_count++))
             else

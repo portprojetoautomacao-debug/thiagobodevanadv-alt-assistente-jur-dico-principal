@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Função para verificar
 check() {
-    if [ $? -eq 0 ]; then
+    if [[ $? -eq 0 ]]; then
         echo -e "${GREEN}✅ $1${NC}"
         return 0
     else
@@ -25,11 +25,11 @@ check() {
 
 # 1. Verificar arquivo de token
 echo "1️⃣  Verificando arquivo .gitlab-token..."
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
     check "Arquivo .gitlab-token existe"
     
-    if [ -n "$GITLAB_TOKEN" ]; then
+    if [[ -n "$GITLAB_TOKEN" ]]; then
         check "Token está definido"
         echo "   Token: ${GITLAB_TOKEN:0:20}..."
     else
@@ -44,7 +44,7 @@ echo ""
 
 # 2. Verificar configuração do VS Code
 echo "2️⃣  Verificando .vscode/settings.json..."
-if [ -f .vscode/settings.json ]; then
+if [[ -f .vscode/settings.json ]]; then
     check "Arquivo settings.json existe"
     
     if grep -q "gitlab.instanceUrl" .vscode/settings.json; then
@@ -74,7 +74,7 @@ echo "4️⃣  Testando conexão com GitLab API..."
 RESPONSE=$(curl -s -w "%{http_code}" --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
   "https://gitlab.com/api/v4/projects/$PROJECT_ID" -o /tmp/gitlab_response.json)
 
-if [ "$RESPONSE" = "200" ]; then
+if [[ "$RESPONSE" = "200" ]]; then
     check "Conexão com API bem-sucedida"
     
     PROJECT_NAME=$(jq -r '.name' /tmp/gitlab_response.json)
@@ -93,7 +93,7 @@ echo "5️⃣  Verificando último pipeline..."
 PIPELINE=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
   "https://gitlab.com/api/v4/projects/$PROJECT_ID/pipelines?per_page=1")
 
-if [ -n "$PIPELINE" ] && [ "$PIPELINE" != "[]" ]; then
+if [[ -n "$PIPELINE" ]] && [ "$PIPELINE" != "[]" ]]; then
     check "Pipeline encontrado"
     
     PIPELINE_ID=$(echo "$PIPELINE" | jq -r '.[0].id')
@@ -126,7 +126,7 @@ echo ""
 echo "📊 RESUMO DA VERIFICAÇÃO"
 echo ""
 
-if [ "$RESPONSE" = "200" ]; then
+if [[ "$RESPONSE" = "200" ]]; then
     echo -e "${GREEN}✅ Tudo configurado corretamente!${NC}"
     echo ""
     echo "🎯 Próximo passo:"

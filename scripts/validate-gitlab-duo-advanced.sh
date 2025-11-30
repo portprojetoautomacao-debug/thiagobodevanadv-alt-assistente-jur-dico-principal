@@ -19,7 +19,7 @@ check_file() {
     local file=$1
     local description=$2
 
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
         echo -e "${GREEN}✅ $description encontrado: $file${NC}"
         return 0
     else

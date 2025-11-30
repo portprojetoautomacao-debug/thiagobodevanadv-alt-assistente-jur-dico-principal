@@ -20,7 +20,7 @@ SUCCESS=0
 
 # Função para verificar arquivo
 check_file() {
-    if [ -f "$1" ]; then
+    if [[ -f "$1" ]]; then
         echo -e "${GREEN}✓${NC} Arquivo encontrado: $1"
         ((SUCCESS++))
         return 0
@@ -69,7 +69,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "🌍 3. Variáveis de Ambiente"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -f ".env" ]; then
+if [[ -f ".env" ]]; then
     echo -e "${GREEN}✓${NC} Arquivo .env encontrado (para desenvolvimento local)"
     ((SUCCESS++))
     
@@ -95,12 +95,12 @@ if npm run build > /tmp/build.log 2>&1; then
     ((SUCCESS++))
     
     # Verificar se a pasta dist foi criada
-    if [ -d "dist" ]; then
+    if [[ -d "dist" ]]; then
         echo -e "${GREEN}✓${NC} Pasta dist/ criada"
         ((SUCCESS++))
         
         # Verificar se index.html existe
-        if [ -f "dist/index.html" ]; then
+        if [[ -f "dist/index.html" ]]; then
             echo -e "${GREEN}✓${NC} dist/index.html encontrado"
             ((SUCCESS++))
         else
@@ -143,7 +143,7 @@ echo -e "${RED}✗${NC} Erros: $ERRORS"
 
 echo ""
 
-if [ $ERRORS -eq 0 ]; then
+if [[ $ERRORS -eq 0 ]]; then
     echo -e "${GREEN}════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✅ TUDO PRONTO PARA DEPLOY!${NC}"
     echo -e "${GREEN}════════════════════════════════════════════════${NC}"

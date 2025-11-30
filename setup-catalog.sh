@@ -15,7 +15,7 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
 fi
 
 # Verificar se o diretório .gitlab existe
-if [ ! -d ".gitlab" ]; then
+if [[ ! -d ".gitlab" ]]; then
     echo "❌ Erro: Diretório .gitlab não encontrado. Execute este script na raiz do projeto."
     exit 1
 fi
@@ -43,12 +43,12 @@ COMPONENTS=(
 # Verificar se todos os componentes existem
 MISSING_COMPONENTS=()
 for component in "${COMPONENTS[@]}"; do
-    if [ ! -f ".gitlab/${component}" ]; then
+    if [[ ! -f ".gitlab/${component}" ]]; then
         MISSING_COMPONENTS+=("${component}")
     fi
 done
 
-if [ ${#MISSING_COMPONENTS[@]} -ne 0 ]; then
+if [[ ${#MISSING_COMPONENTS[@]} -ne 0 ]]; then
     echo "❌ Componentes faltando:"
     for component in "${MISSING_COMPONENTS[@]}"; do
         echo "   - ${component}"
@@ -123,7 +123,7 @@ PY
 echo ""
 echo "🔍 Verificando configuração do pipeline principal..."
 
-if [ ! -f ".gitlab-ci.yml" ]; then
+if [[ ! -f ".gitlab-ci.yml" ]]; then
     echo "❌ Arquivo .gitlab-ci.yml não encontrado"
     exit 1
 fi
