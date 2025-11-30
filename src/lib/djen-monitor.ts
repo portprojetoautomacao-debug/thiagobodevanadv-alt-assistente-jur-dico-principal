@@ -298,7 +298,7 @@ function buildDJENQueryParams(
     const params = new URLSearchParams()
 
     // Required parameters
-    params.set('numeroOab', numeroOAB.replace(/\D/g, ''))
+    params.set('numeroOab', numeroOAB.replaceAll(/\D/g, ''))
     params.set('ufOab', ufOAB.toUpperCase())
     params.set('meio', 'D') // Diário Eletrônico
 
@@ -805,6 +805,23 @@ Forneça sua análise conforme as instruções do sistema.`
 }
 
 /**
+ * Parse a single SSE line and extract content
+ */
+function parseSSELine(line: string): string | null {
+    if (!line.startsWith('data: ')) return null
+    
+    try {
+        const data = JSON.parse(line.slice(6))
+        if (data.type === 'content' && data.content) {
+            return data.content
+        }
+    } catch {
+        // Ignore invalid JSON
+    }
+    return null
+}
+
+/**
  * Processes streaming response from AI
  */
 async function processStreamingResponse(
@@ -824,19 +841,12 @@ async function processStreamingResponse(
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n')
-
-        for (const line of lines) {
-            if (!line.startsWith('data: ')) continue
-
-            try {
-                const data = JSON.parse(line.slice(6))
-                if (data.type === 'content' && data.content) {
-                    fullContent += data.content
-                    onStream(data.content)
-                }
-            } catch {
-                // Ignora linhas inválidas
+        
+        for (const line of chunk.split('\n')) {
+            const content = parseSSELine(line)
+            if (content) {
+                fullContent += content
+                onStream(content)
             }
         }
     }
