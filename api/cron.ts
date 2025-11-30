@@ -618,80 +618,64 @@ async function consultarDJENForLawyer(
 
 // ================= CRON HANDLERS =================
 
-interface DailyResetResult {
+/**
+ * Interface base para todos os resultados de ações cron
+ * Inclui index signature para compatibilidade com ActionResult
+ */
+interface BaseCronResult {
   success: boolean;
   timestamp: string;
-  agentsReset: number;
-  tasksArchived: number;
   errors: string[];
+  [key: string]: unknown;
 }
 
-interface DJENMonitorResult {
-  success: boolean;
-  timestamp: string;
+interface DailyResetResult extends BaseCronResult {
+  agentsReset: number;
+  tasksArchived: number;
+}
+
+interface DJENMonitorResult extends BaseCronResult {
   publicationsFound: number;
   lawyersChecked: number;
   tribunaisChecked: string[];
-  errors: string[];
   rateLimitWarning: boolean;
 }
 
-interface AgentQueueResult {
-  success: boolean;
-  timestamp: string;
+interface AgentQueueResult extends BaseCronResult {
   tasksProcessed: number;
   tasksFailed: number;
-  errors: string[];
 }
 
-interface NotificationResult {
-  success: boolean;
-  timestamp: string;
+interface NotificationResult extends BaseCronResult {
   emailsSent: number;
   webhooksSent: number;
-  errors: string[];
 }
 
-interface CalendarSyncResult {
-  success: boolean;
-  timestamp: string;
+interface CalendarSyncResult extends BaseCronResult {
   eventsCreated: number;
   eventsUpdated: number;
   deadlinesSynced: number;
-  errors: string[];
 }
 
-interface BackupResult {
-  success: boolean;
-  timestamp: string;
+interface BackupResult extends BaseCronResult {
   keysBackedUp: number;
   totalSize: string;
-  errors: string[];
 }
 
-interface DataJudResult {
-  success: boolean;
-  timestamp: string;
+interface DataJudResult extends BaseCronResult {
   processesChecked: number;
   updatesFound: number;
-  errors: string[];
 }
 
-interface DeadlineAlertResult {
-  success: boolean;
-  timestamp: string;
+interface DeadlineAlertResult extends BaseCronResult {
   alertsSent: number;
   urgentDeadlines: number;
   upcomingDeadlines: number;
-  errors: string[];
 }
 
-interface WatchdogResult {
-  success: boolean;
-  timestamp: string;
+interface WatchdogResult extends BaseCronResult {
   agentsReset: number;
   tasksTimedOut: number;
-  errors: string[];
 }
 
 interface CompletedTask {

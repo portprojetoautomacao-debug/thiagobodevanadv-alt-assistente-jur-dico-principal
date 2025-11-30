@@ -440,6 +440,159 @@ function getUserPrompt(task: AgentTask): string {
   return promptGenerator(taskData)
 }
 
+// ===========================
+// Helper functions for processTaskWithAI - Extracted per SonarCloud S3776
+// ===========================
+
+/**
+ * Valida inputs da tarefa usando Zod schemas quando aplicável
+ * @throws Error se validação falhar
+ */
+function validateTaskInputWithSchema(task: AgentTask): void {
+  if (task.type === AgentTaskType.ANALYZE_INTIMATION) {
+    const validation = AnalyzeIntimationInputSchema.safeParse(task.data)
+    if (!validation.success) {
+      const error = new Error(`Invalid input for ANALYZE_INTIMATION: ${validation.error.message}`)
+      logger.error('Schema validation failed', error, { data: task.data })
+      throw error
+    }
+    return
+  }
+
+  if (task.type === AgentTaskType.DRAFT_PETITION) {
+    const validation = DraftPetitionInputSchema.safeParse(task.data)
+    if (!validation.success) {
+      const error = new Error(`Invalid input for DRAFT_PETITION: ${validation.error.message}`)
+      logger.error('Schema validation failed', error, { data: task.data })
+      throw error
+    }
+  }
+}
+
+/**
+ * Recupera contexto relevante da memória jurídica
+ */
+async function retrieveMemoryContext(task: AgentTask): Promise<string> {
+  const query = (task.data?.description || task.data?.query) as string | undefined
+  if (!query) return ''
+
+  try {
+    const relevantItems = await legalMemory.search({ query, limit: 3 })
+    if (relevantItems.length === 0) return ''
+
+    logger.info(`Found ${relevantItems.length} relevant memory items for task ${task.id}`)
+    return `\n\n# Contexto Jurídico Relevante (Memória):\n${relevantItems
+      .map((item) => `- ${item.content} (Score: ${item.relevanceScore})`)
+      .join('\n')}`
+  } catch (memError) {
+    logger.warn('Failed to retrieve legal memory', { error: memError })
+    return ''
+  }
+}
+
+/**
+ * Mapeamento de tipos de tarefa para configuração de salvamento na memória
+ */
+const MEMORY_SAVE_CONFIG: Record<AgentTaskType, {
+  getContent: (result: TaskResult) => string | null
+  category: string
+} | null> = {
+  [AgentTaskType.DRAFT_PETITION]: {
+    getContent: (result) => result.draft ? `Minuta de petição: ${String(result.draft).substring(0, 200)}...` : null,
+    category: 'peca_processual'
+  },
+  [AgentTaskType.RESEARCH_PRECEDENTS]: {
+    getContent: (result) => result.precedentsFound ? `Pesquisa de precedentes: ${JSON.stringify(result.precedentsFound)}` : null,
+    category: 'precedente'
+  },
+  [AgentTaskType.CASE_STRATEGY]: {
+    getContent: (result) => result.strategyAnalysis ? `Estratégia processual: ${String(result.strategyAnalysis)}` : null,
+    category: 'estrategia'
+  },
+  // Tipos que não salvam na memória
+  [AgentTaskType.ANALYZE_DOCUMENT]: null,
+  [AgentTaskType.ANALYZE_INTIMATION]: null,
+  [AgentTaskType.MONITOR_DJEN]: null,
+  [AgentTaskType.CALCULATE_DEADLINE]: null,
+  [AgentTaskType.CHECK_DATAJUD]: null,
+  [AgentTaskType.ORGANIZE_FILES]: null,
+  [AgentTaskType.RISK_ANALYSIS]: null,
+  [AgentTaskType.CONTRACT_REVIEW]: null,
+  [AgentTaskType.CLIENT_COMMUNICATION]: null,
+  [AgentTaskType.BILLING_ANALYSIS]: null,
+  [AgentTaskType.LEGAL_TRANSLATION]: null,
+  [AgentTaskType.COMPLIANCE_CHECK]: null
+}
+
+/**
+ * Salva resultado na memória jurídica quando aplicável
+ */
+async function saveResultToMemory(task: AgentTask, result: TaskResult): Promise<void> {
+  const config = MEMORY_SAVE_CONFIG[task.type]
+  if (!config) return
+
+  const content = config.getContent(result)
+  if (!content) return
+
+  try {
+    await legalMemory.addContext(
+      content,
+      config.category,
+      { taskId: task.id, agentId: result.agentId, fullDraft: result.draft }
+    )
+  } catch (memSaveError) {
+    logger.warn('Failed to save to legal memory', { error: memSaveError })
+  }
+}
+
+/**
+ * Valida estruturas de entrada (task e agent)
+ * @throws Error se validação falhar
+ */
+function validateInputStructures(task: AgentTask, agent: Agent): void {
+  if (!validateAgentTask(task)) {
+    const error = new Error('Invalid agent task structure')
+    logger.error('Task validation failed', error, { task })
+    throw error
+  }
+
+  if (!validateAgent(agent)) {
+    const error = new Error('Invalid agent structure')
+    logger.error('Agent validation failed', error, { agent })
+    throw error
+  }
+}
+
+/**
+ * Obtém API key do Gemini
+ * @throws Error se não configurada
+ */
+function getGeminiApiKey(): string {
+  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    const error = new Error('Missing GOOGLE_API_KEY / GEMINI_API_KEY env var')
+    logger.error('Gemini API key not configured', error)
+    throw error
+  }
+  return apiKey
+}
+
+/**
+ * Parseia resposta JSON do Gemini
+ */
+function parseGeminiResponse(aiContent: string): TaskResult {
+  try {
+    const jsonMatch = aiContent.match(/\{[\s\S]*\}/)
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent }
+  } catch (parseError) {
+    logger.warn('Failed to parse Gemini JSON response', {
+      error: parseError instanceof Error ? parseError.message : String(parseError),
+      contentPreview: aiContent.slice(0, 500)
+    })
+    return { rawResponse: aiContent }
+  }
+}
+
 // 🔁 Agora usando Google Gemini no lugar do Spark
 async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskResult> {
   // ✨ PLANO MESTRE - FASE 4: Monitoramento
@@ -450,63 +603,12 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
     async () => {
       const startTime = Date.now()
 
-      // Validar entrada
-      if (!validateAgentTask(task)) {
-        const error = new Error('Invalid agent task structure')
-        logger.error('Task validation failed', error, { task })
-        throw error
-      }
+      // Validações extraídas para helpers (SonarCloud S3776)
+      validateInputStructures(task, agent)
+      validateTaskInputWithSchema(task)
 
-      if (!validateAgent(agent)) {
-        const error = new Error('Invalid agent structure')
-        logger.error('Agent validation failed', error, { agent })
-        throw error
-      }
-
-      // Validar entrada com Zod Schemas (PLANO MESTRE - FASE 2)
-      if (task.type === AgentTaskType.ANALYZE_INTIMATION) {
-        const validation = AnalyzeIntimationInputSchema.safeParse(task.data)
-        if (!validation.success) {
-          const error = new Error(`Invalid input for ANALYZE_INTIMATION: ${validation.error.message}`)
-          logger.error('Schema validation failed', error, { data: task.data })
-          throw error
-        }
-      } else if (task.type === AgentTaskType.DRAFT_PETITION) {
-        const validation = DraftPetitionInputSchema.safeParse(task.data)
-        if (!validation.success) {
-          const error = new Error(`Invalid input for DRAFT_PETITION: ${validation.error.message}`)
-          logger.error('Schema validation failed', error, { data: task.data })
-          throw error
-        }
-      }
-
-      const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
-      if (!apiKey) {
-        const error = new Error('Missing GOOGLE_API_KEY / GEMINI_API_KEY env var')
-        logger.error('Gemini API key not configured', error)
-        throw error
-      }
-
-      // ✨ PLANO MESTRE - FASE 3: Memória Jurídica (Recuperação)
-      let memoryContext = ''
-      try {
-        if (task.data && (task.data.description || task.data.query)) {
-          const query = (task.data.description || task.data.query) as string
-          const relevantItems = await legalMemory.search({
-            query,
-            limit: 3
-          })
-
-          if (relevantItems.length > 0) {
-            memoryContext = `\n\n# Contexto Jurídico Relevante (Memória):\n${relevantItems
-              .map((item) => `- ${item.content} (Score: ${item.relevanceScore})`)
-              .join('\n')}`
-            logger.info(`Found ${relevantItems.length} relevant memory items for task ${task.id}`)
-          }
-        }
-      } catch (memError) {
-        logger.warn('Failed to retrieve legal memory', { error: memError })
-      }
+      const apiKey = getGeminiApiKey()
+      const memoryContext = await retrieveMemoryContext(task)
 
       const systemPrompt = getSystemPrompt(agent.type)
       const userPrompt = getUserPrompt(task)
@@ -574,48 +676,18 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
           throw new Error('Empty response from Gemini')
         }
 
-        let result: TaskResult
-        try {
-          const jsonMatch = aiContent.match(/\{[\s\S]*\}/)
-          result = jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent }
-        } catch (parseError) {
-          logger.warn('Failed to parse Gemini JSON response', {
-            error: parseError instanceof Error ? parseError.message : String(parseError),
-            contentPreview: aiContent.slice(0, 500)
-          })
-          result = { rawResponse: aiContent }
-        }
+        // Parsear resposta usando helper (SonarCloud S3776)
+        const result = parseGeminiResponse(aiContent)
 
+        // Enriquecer resultado com metadados
         result.processedAt = new Date().toISOString()
         result.agentId = agent.id
         result.taskType = task.type
         result.tokensUsed = geminiData.usageMetadata?.totalTokenCount
         result.processingTimeMs = Date.now() - startTime
 
-        // ✨ PLANO MESTRE - FASE 3: Memória Jurídica (Armazenamento)
-        try {
-          if (task.type === AgentTaskType.DRAFT_PETITION && result.draft) {
-            await legalMemory.addContext(
-              `Minuta de petição: ${String(result.draft).substring(0, 200)}...`,
-              'peca_processual',
-              { taskId: task.id, agentId: agent.id, fullDraft: result.draft }
-            )
-          } else if (task.type === AgentTaskType.RESEARCH_PRECEDENTS && result.precedentsFound) {
-            await legalMemory.addContext(
-              `Pesquisa de precedentes: ${JSON.stringify(result.precedentsFound)}`,
-              'precedente',
-              { taskId: task.id, agentId: agent.id }
-            )
-          } else if (task.type === AgentTaskType.CASE_STRATEGY && result.strategyAnalysis) {
-            await legalMemory.addContext(
-              `Estratégia processual: ${String(result.strategyAnalysis)}`,
-              'estrategia',
-              { taskId: task.id, agentId: agent.id }
-            )
-          }
-        } catch (memSaveError) {
-          logger.warn('Failed to save to legal memory', { error: memSaveError })
-        }
+        // Salvar na memória jurídica usando helper (SonarCloud S3776)
+        await saveResultToMemory(task, result)
 
         logger.info('Task processed successfully (Gemini)', {
           taskId: task.id,
