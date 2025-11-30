@@ -36,6 +36,250 @@ import { useDJENProcessRegistration } from '@/hooks/use-djen-process-registratio
 import { PublicationItem } from '@/components/PublicationItem'
 import type { Process, Expediente } from '@/types'
 
+<<<<<<< HEAD
+=======
+// Tipos
+interface DJENPublication {
+  id: string
+  tribunal: string
+  data: string
+  tipo: string
+  teor: string
+  numeroProcesso?: string
+  orgao?: string
+  lawyerName: string
+  matchType: 'nome' | 'oab' | 'ambos'
+  source: string
+  createdAt: string
+  notified?: boolean
+}
+
+interface ExpedientesResponse {
+  success: boolean
+  expedientes: DJENPublication[]
+  count: number
+  lastCheck: string | null
+  lawyersConfigured: number
+  message?: string
+}
+
+interface PartiesResult {
+  autor: string
+  reu: string
+  advogadoAutor?: string
+  advogadoReu?: string
+}
+
+/**
+ * Cria um novo processo a partir de uma publicação DJEN
+ */
+function createProcessFromPublication(
+  pub: DJENPublication,
+  parties: PartiesResult,
+  now: string
+): Process {
+  return {
+    id: crypto.randomUUID(),
+    numeroCNJ: pub.numeroProcesso!,
+    titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
+    autor: parties.autor || 'Não identificado',
+    reu: parties.reu || 'Não identificado',
+    comarca: pub.orgao || '',
+    vara: pub.tribunal || '',
+    status: 'ativo',
+    fase: 'Inicial',
+    dataDistribuicao: pub.data || now.split('T')[0],
+    dataUltimaMovimentacao: now,
+    notas: buildProcessNotes(pub, parties),
+    prazos: [],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+/**
+ * Monta as notas do processo
+ */
+function buildProcessNotes(pub: DJENPublication, parties: PartiesResult): string {
+  const advAutor = parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
+  const advReu = parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
+  const teorTruncado = pub.teor.length > 500 ? pub.teor.substring(0, 500) + '...' : pub.teor
+
+  return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`
+}
+
+/**
+ * Cria um expediente a partir de uma publicação DJEN
+ */
+function createExpedienteFromPublication(
+  pub: DJENPublication,
+  processId: string,
+  now: string
+): Expediente {
+  return {
+    id: crypto.randomUUID(),
+    processId,
+    tipo: pub.tipo || 'intimacao',
+    titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
+    conteudo: pub.teor,
+    content: pub.teor,
+    teor: pub.teor,
+    dataRecebimento: now,
+    receivedAt: now,
+    lido: false,
+    arquivado: false,
+    analyzed: false,
+    tribunal: pub.tribunal,
+    numeroProcesso: pub.numeroProcesso,
+    orgao: pub.orgao,
+    lawyerName: pub.lawyerName,
+    matchType: pub.matchType,
+    source: pub.source,
+    createdAt: pub.createdAt,
+    data: pub.data,
+    priority: 'high', // Intimações são sempre prioridade alta
+  }
+}
+
+// ===== Registration Helpers (reduces S3776 Cognitive Complexity) =====
+
+interface RegistrationContext {
+  createOrUpdateFromDjenIntimacao: (data: {
+    nomeCliente: string
+    cidade: string
+    estado: string
+    processo: string
+  }) => void
+}
+
+/**
+ * Extrai cidade e estado do campo orgão
+ */
+function parseOrgaoLocation(orgao?: string): { cidade: string; estado: string } {
+  const parts = orgao?.split('/') || []
+  return {
+    cidade: parts[0] || '',
+    estado: parts[1] || '',
+  }
+}
+
+/**
+ * Registra cliente a partir das partes extraídas
+ */
+function registerClientFromParties(
+  parties: PartiesResult,
+  pub: DJENPublication,
+  ctx: RegistrationContext
+): void {
+  if (!parties.autor || parties.autor === 'Não identificado') return
+
+  const location = parseOrgaoLocation(pub.orgao)
+  ctx.createOrUpdateFromDjenIntimacao({
+    nomeCliente: parties.autor,
+    cidade: location.cidade,
+    estado: location.estado,
+    processo: pub.numeroProcesso || '',
+  })
+}
+
+/**
+ * Processa uma única publicação para registro
+ */
+async function processPublicationForRegistration(
+  pub: DJENPublication,
+  now: string,
+  ctx: RegistrationContext
+): Promise<{ process: Process; expediente: Expediente } | null> {
+  if (!pub.numeroProcesso) return null
+
+  const parties = await extractPartiesWithFallback(pub.teor)
+  registerClientFromParties(parties, pub, ctx)
+
+  const newProcess = createProcessFromPublication(pub, parties, now)
+  const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
+
+  return { process: newProcess, expediente: newExpediente }
+}
+
+/**
+ * Formata descrição das partes para toast
+ */
+function formatPartiesDescription(parties: PartiesResult): string {
+  if (parties.autor === 'Não identificado') return ''
+  return ` - ${parties.autor} x ${parties.reu}`
+}
+
+// ===== Sync Helpers (reduces S3776 Cognitive Complexity) =====
+
+interface SyncResult {
+  success: boolean
+  message?: string
+  newPublications?: number
+  rateLimited?: boolean
+}
+
+/**
+ * Executa sincronização DJEN via API
+ */
+async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
+  const response = await fetch(`${baseUrl}/api/djen-sync`, {
+    method: 'POST',
+  })
+
+  // Rate limit
+  if (response.status === 429) {
+    const data = await response.json()
+    return {
+      success: false,
+      rateLimited: true,
+      message: data.message || 'Tente novamente em alguns segundos'
+    }
+  }
+
+  if (!response.ok) {
+    return { success: false, message: `HTTP ${response.status}` }
+  }
+
+  const result = await response.json()
+
+  if (result.ok) {
+    return {
+      success: true,
+      newPublications: result.result?.newPublications || 0
+    }
+  }
+
+  return {
+    success: false,
+    message: result.error || result.message || 'Erro na sincronização'
+  }
+}
+
+/**
+ * Exibe toast apropriado baseado no resultado da sync
+ */
+function showSyncToast(result: SyncResult): void {
+  if (result.rateLimited) {
+    toast.warning('Aguarde antes de sincronizar', {
+      description: result.message,
+    })
+    return
+  }
+
+  if (result.success) {
+    toast.success('Sincronização concluída', {
+      description: result.newPublications && result.newPublications > 0
+        ? `${result.newPublications} novas publicações encontradas`
+        : 'Nenhuma nova publicação',
+    })
+    return
+  }
+
+  toast.error('Falha na sincronização', {
+    description: result.message || 'Erro desconhecido',
+  })
+}
+
 interface DJENPublicationsWidgetProps {
   readonly onViewAll?: () => void
   readonly compact?: boolean
@@ -66,6 +310,7 @@ export default function DJENPublicationsWidget({
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [, setExpedientes] = useKV<Expediente[]>('expedientes', [])
 
+<<<<<<< HEAD
   const {
     autoRegistering,
     isAlreadyRegistered,
