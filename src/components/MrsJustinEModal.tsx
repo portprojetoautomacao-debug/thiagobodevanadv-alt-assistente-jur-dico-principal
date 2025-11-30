@@ -12,9 +12,9 @@ import { useAIStreaming } from '@/hooks/use-ai-streaming'
 import { toast } from 'sonner'
 
 interface MrsJustinEModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onActivate?: () => void
+  readonly open: boolean
+  readonly onOpenChange: (open: boolean) => void
+  readonly onActivate?: () => void
 }
 
 const SKILLS: string[] = [

@@ -29,7 +29,24 @@ import {
   ArrowsLeftRight,
   ChatCircle,
   CloudArrowUp,
-  ClockCounterClockwise,
+
+// Funções auxiliares para evitar ternários aninhados
+function getAgentStatusLabel(isStreaming: boolean, enabled: boolean): string {
+    if (isStreaming) return 'Streaming'
+    return enabled ? 'Ativo' : 'Pausado'
+  }
+
+function getAgentStatusLabelExtended(isStreaming: boolean, enabled: boolean): string {
+  if (isStreaming) return '⚡ Gerando resposta...'
+  return enabled ? 'Pronto para uso' : 'Desativado'
+}
+
+function getTaskStatusVariant(status: string): 'default' | 'secondary' | 'destructive' {
+  if (status === 'processing') return 'default'
+  if (status === 'queued') return 'secondary'
+  return 'destructive'
+}
+ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { useAgentBackup } from '@/hooks/use-agent-backup'
@@ -578,7 +595,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                           variant={isStreaming || agent.enabled ? 'default' : 'secondary'}
                           className={`text-xs ${isStreaming ? 'bg-purple-500 text-white' : ''}`}
                         >
-                          {isStreaming ? 'Streaming' : (agent.enabled ? 'Ativo' : 'Pausado')}
+                          {getAgentStatusLabel(isStreaming, agent.enabled)}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -615,7 +632,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                         variant={isStreaming || agent.enabled ? 'default' : 'secondary'}
                         className={isStreaming ? 'bg-purple-500' : ''}
                       >
-                        {isStreaming ? '⚡ Gerando resposta...' : (agent.enabled ? 'Pronto para uso' : 'Desativado')}
+                        {getAgentStatusLabelExtended(isStreaming, agent.enabled)}
                       </Badge>
                     </div>
                   </CardContent>
@@ -759,10 +776,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                             </p>
                           </div>
                           <Badge
-                            variant={
-                              task.status === 'processing' ? 'default' :
-                                (task.status === 'queued' ? 'secondary' : 'destructive')
-                            }
+                            variant={getTaskStatusVariant(task.status)}
                             className="flex-shrink-0"
                           >
                             {task.status}
