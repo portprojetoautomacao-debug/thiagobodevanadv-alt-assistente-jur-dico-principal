@@ -248,7 +248,36 @@ async function callLLMProxy(
 }
 
 /**
+ * Parse a single SSE line and extract content or throw on error
+ * @returns The content string if valid, null otherwise
+ */
+function parseSSELine(line: string): string | null {
+    const trimmed = line.trim()
+    if (!trimmed || !trimmed.startsWith('data: ')) return null
+
+    try {
+        const json = JSON.parse(trimmed.slice(6))
+
+        if (json.type === 'content' && json.content) {
+            return json.content
+        }
+        if (json.type === 'error') {
+            throw new Error(json.message || json.error || 'Erro desconhecido no streaming')
+        }
+        // json.type === 'done' → fim do stream
+        return null
+    } catch (parseError) {
+        if (parseError instanceof Error && parseError.message.includes('streaming')) {
+            throw parseError // Re-throw SSE errors
+        }
+        console.warn('Failed to parse SSE line:', trimmed, parseError)
+        return null
+    }
+}
+
+/**
  * Helper to process SSE response stream
+ * Refactored to reduce cognitive complexity (S3776)
  */
 async function* processSSEResponse(reader: ReadableStreamDefaultReader<Uint8Array>): AsyncGenerator<string, void, unknown> {
     const decoder = new TextDecoder()
@@ -264,22 +293,8 @@ async function* processSSEResponse(reader: ReadableStreamDefaultReader<Uint8Arra
             buffer = lines.pop() || ''
 
             for (const line of lines) {
-                const trimmed = line.trim()
-                if (!trimmed || !trimmed.startsWith('data: ')) continue
-
-                try {
-                    const json = JSON.parse(trimmed.slice(6))
-
-                    if (json.type === 'content' && json.content) {
-                        yield json.content
-                    } else if (json.type === 'error') {
-                        throw new Error(json.message || json.error || 'Erro desconhecido no streaming')
-                    }
-                    // json.type === 'done' → fim do stream
-                } catch (parseError) {
-                    // Log de erro de parse para facilitar depuração
-                    console.warn('Failed to parse SSE line:', trimmed, parseError)
-                }
+                const content = parseSSELine(line)
+                if (content) yield content
             }
         }
     } finally {
