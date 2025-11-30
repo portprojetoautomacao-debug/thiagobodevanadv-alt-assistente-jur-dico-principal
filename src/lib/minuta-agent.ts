@@ -167,7 +167,7 @@ export async function criarMinutaComAgenteIA(
     if (syncDocs) {
       try {
         const docsResult = await googleDocsService.createDocument(minuta)
-        if (docsResult && docsResult.docId) {
+        if (docsResult?.docId) {
           docsId = docsResult.docId
           docsUrl = docsResult.url
         } else {

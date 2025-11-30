@@ -272,9 +272,9 @@ export default function KnowledgeBase() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {messages.map((message, idx) => (
+                    {messages.map((message) => (
                       <div
-                        key={message.id ?? idx}
+                        key={message.id}
                         className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'
                           }`}
                       >
@@ -288,8 +288,8 @@ export default function KnowledgeBase() {
                         )}
                         <div
                           className={`max-w-[80%] p-4 rounded-lg ${message.role === 'user'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
                             }`}
                         >
                           <p className="text-sm whitespace-pre-wrap">{message.content}</p>

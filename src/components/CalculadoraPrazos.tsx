@@ -142,7 +142,7 @@ export default function CalculadoraPrazos() {
       return
     }
 
-    const dias = parseInt(diasCorridos, 10)
+    const dias = Number.parseInt(diasCorridos, 10)
     if (Number.isNaN(dias) || dias <= 0) {
       toast.error('Dias inválidos', {
         description: 'Informe um número válido de dias'

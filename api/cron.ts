@@ -908,7 +908,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           try {
             const agent = agents.find(a => a.id === task.agentId);
 
-            if (!agent || !agent.enabled) {
+            if (!agent?.enabled) {
               console.log(`[Cron Agent Queue] Skipping task ${task.id} - agent not found or disabled`);
               continue;
             }

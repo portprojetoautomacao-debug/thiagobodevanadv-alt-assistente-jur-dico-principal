@@ -83,7 +83,7 @@ const EVENT_COLORS: Record<string, string> = {
 
 // fallback para SSR (evita ReferenceError com window)
 const SAFE_ORIGIN =
-  typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+  globalThis.window !== undefined ? globalThis.window.location.origin : 'http://localhost'
 
 export default function Calendar() {
   const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
@@ -524,10 +524,10 @@ export default function Calendar() {
                   {!isGoogleConfigured
                     ? 'Configure as credenciais do Google para habilitar a sincronização'
                     : isInitializing
-                    ? 'Inicializando conexão...'
-                    : isGoogleConnected
-                    ? 'Conectado - seus eventos podem ser sincronizados'
-                    : 'Conecte sua conta do Google para sincronizar eventos'}
+                      ? 'Inicializando conexão...'
+                      : isGoogleConnected
+                        ? 'Conectado - seus eventos podem ser sincronizados'
+                        : 'Conecte sua conta do Google para sincronizar eventos'}
                 </CardDescription>
               </div>
             </div>
@@ -540,8 +540,8 @@ export default function Calendar() {
                   isGoogleConnected
                     ? 'default'
                     : isGoogleConfigured
-                    ? 'secondary'
-                    : 'destructive'
+                      ? 'secondary'
+                      : 'destructive'
                 }
               >
                 {isGoogleConnected ? (
@@ -757,20 +757,18 @@ export default function Calendar() {
               return (
                 <div
                   key={idx}
-                  className={`min-h-24 p-2 border rounded-lg ${
-                    !isValidDay
+                  className={`min-h-24 p-2 border rounded-lg ${!isValidDay
                       ? 'bg-muted/30'
                       : isToday(day)
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-card hover:bg-muted/50'
-                  }`}
+                        ? 'bg-primary/10 border-primary'
+                        : 'bg-card hover:bg-muted/50'
+                    }`}
                 >
                   {isValidDay && (
                     <>
                       <div
-                        className={`text-sm font-medium mb-1 ${
-                          isToday(day) ? 'text-primary' : 'text-foreground'
-                        }`}
+                        className={`text-sm font-medium mb-1 ${isToday(day) ? 'text-primary' : 'text-foreground'
+                          }`}
                       >
                         {day}
                       </div>
@@ -778,9 +776,8 @@ export default function Calendar() {
                         {dayAppointments.slice(0, 2).map((apt) => (
                           <div
                             key={apt.id}
-                            className={`text-xs p-1 rounded border ${
-                              EVENT_COLORS[apt.type] || EVENT_COLORS.outro
-                            } truncate cursor-pointer hover:opacity-80`}
+                            className={`text-xs p-1 rounded border ${EVENT_COLORS[apt.type] || EVENT_COLORS.outro
+                              } truncate cursor-pointer hover:opacity-80`}
                             onClick={() => handleViewDetails(apt)}
                           >
                             {apt.time} {apt.title}

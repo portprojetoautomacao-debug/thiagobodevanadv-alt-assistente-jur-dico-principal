@@ -131,7 +131,7 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
 
                 for (const line of lines) {
                     const trimmed = line.trim()
-                    if (!trimmed || !trimmed.startsWith('data: ')) continue
+                    if (!trimmed?.startsWith('data: ')) continue
 
                     try {
                         const event: StreamEvent = JSON.parse(trimmed.slice(6))
