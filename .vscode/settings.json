@@ -187,6 +187,29 @@
     "connectionId": "thiagobodevan-a11y",
     "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
   },
+  
+  // Configurações avançadas do SonarLint (sincronizadas do servidor quando possível)
+  "sonarlint.focusOnNewCode": true,
+  "sonarlint.disableTelemetry": false,
+  "sonarlint.output.showAnalyzerLogs": false,
+  "sonarlint.output.showVerboseLogs": false,
+  "sonarlint.ls.javaHome": "",
+  
+  // Regras customizadas locais (sobrescrevem servidor se definidas)
+  "sonarlint.rules": {
+    // Desabilitar regras específicas se necessário
+    // "typescript:S1234": { "level": "off" }
+  },
+  
+  // Parâmetros do analisador (equivalente a sonar.* properties do scanner)
+  "sonarlint.analyzerProperties": {
+    // Exclusões de arquivos (sincroniza com sonar.exclusions do servidor)
+    // "sonar.exclusions": "**/dist/**,**/node_modules/**,**/coverage/**",
+    // "sonar.test.exclusions": "**/tests/**,**/*.test.ts",
+    
+    // Limites de arquivo (equivalente a sonar.filesize.limit)
+    // "sonar.javascript.maxFileSize": "1000"
+  },
 
   // === SonarQube Insights (Project Status Plus) ===
   "sonarqubeStatus.project": "thiagobodevan-a11y_assistente-juridico-p",
