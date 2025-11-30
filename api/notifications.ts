@@ -576,12 +576,72 @@ async function handleTestNotification(kv: Redis, req: VercelRequest, res: Vercel
   });
 }
 
-// Handler principal
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
+// ===== Route Matching helpers (reduces S3776 Cognitive Complexity) =====
+
+type RouteHandler = (kv: Redis, req: VercelRequest, res: VercelResponse) => Promise<VercelResponse | void>;
+
+interface RouteConfig {
+  method: string;
+  pattern: string | ((path: string) => boolean);
+  handler: RouteHandler;
+  extractParams?: (path: string) => Record<string, string>;
+}
+
+const ROUTES: RouteConfig[] = [
+  {
+    method: 'GET',
+    pattern: '',
+    handler: (kv, _req, res) => handleListNotifications(kv, res)
+  },
+  {
+    method: 'POST',
+    pattern: '/send',
+    handler: handleSendNotification
+  },
+  {
+    method: 'POST',
+    pattern: '/webhook',
+    handler: handleCreateWebhook
+  },
+  {
+    method: 'DELETE',
+    pattern: (path) => path.startsWith('/webhook/'),
+    handler: async (kv, _req, res) => {
+      const url = new URL(_req.url || '', `http://${_req.headers.host}`);
+      const path = url.pathname.replace('/api/notifications', '');
+      const webhookId = path.replace('/webhook/', '');
+      return handleDeleteWebhook(kv, webhookId, res);
+    }
+  },
+  {
+    method: 'PUT',
+    pattern: '/settings',
+    handler: handleUpdateSettings
+  },
+  {
+    method: 'POST',
+    pattern: '/test',
+    handler: handleTestNotification
+  }
+];
+
+function matchRoute(method: string, path: string): RouteConfig | undefined {
+  return ROUTES.find(route => {
+    if (route.method !== method) return false;
+    if (typeof route.pattern === 'string') return route.pattern === path;
+    return route.pattern(path);
+  });
+}
+
+function setupCorsHeaders(res: VercelResponse): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+// Handler principal
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  setupCorsHeaders(res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -592,35 +652,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
     const path = url.pathname.replace('/api/notifications', '');
 
-    // GET /api/notifications - Lista notificações
-    if (req.method === 'GET' && !path) {
-      return handleListNotifications(kv, res);
-    }
-
-    // POST /api/notifications/send - Envia notificação
-    if (req.method === 'POST' && path === '/send') {
-      return handleSendNotification(kv, req, res);
-    }
-
-    // POST /api/notifications/webhook - Configura webhook
-    if (req.method === 'POST' && path === '/webhook') {
-      return handleCreateWebhook(kv, req, res);
-    }
-
-    // DELETE /api/notifications/webhook/:id - Remove webhook
-    if (req.method === 'DELETE' && path.startsWith('/webhook/')) {
-      const webhookId = path.replace('/webhook/', '');
-      return handleDeleteWebhook(kv, webhookId, res);
-    }
-
-    // PUT /api/notifications/settings - Atualiza configurações
-    if (req.method === 'PUT' && path === '/settings') {
-      return handleUpdateSettings(kv, req, res);
-    }
-
-    // POST /api/notifications/test - Testa notificação
-    if (req.method === 'POST' && path === '/test') {
-      return handleTestNotification(kv, req, res);
+    const route = matchRoute(req.method || '', path);
+    if (route) {
+      return route.handler(kv, req, res);
     }
 
     return res.status(404).json({ error: 'Not found' });

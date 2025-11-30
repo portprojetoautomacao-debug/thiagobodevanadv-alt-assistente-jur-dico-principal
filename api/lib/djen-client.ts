@@ -353,6 +353,60 @@ function processComunicacao(
   };
 }
 
+// ===== Tribunal query helpers (reduces S3776) =====
+
+interface TribunalQueryResult {
+  resultados: DJENFilteredResult[];
+  error?: string;
+  rateLimitHit: boolean;
+}
+
+function handleQueryError(retryAfter: number | undefined): { error: string; rateLimitHit: boolean } {
+  const errorMsg = retryAfter
+    ? `Rate limit - tentar novamente em ${retryAfter}s`
+    : 'Erro na consulta ou timeout';
+  return { error: errorMsg, rateLimitHit: !!retryAfter };
+}
+
+function processTribunalResponse(
+  response: DJENResponse,
+  nomeAdvogado: string | undefined,
+  numeroOabNumerico: string | undefined,
+  ufOab: string | undefined
+): DJENFilteredResult[] {
+  const resultados: DJENFilteredResult[] = [];
+  for (const comunicacao of response.items) {
+    const resultado = processComunicacao(comunicacao, nomeAdvogado, numeroOabNumerico, ufOab);
+    if (resultado) resultados.push(resultado);
+  }
+  return resultados;
+}
+
+async function queryTribunal(
+  tribunal: string,
+  queryDataInicio: string,
+  queryDataFim: string,
+  nomeAdvogado: string | undefined,
+  numeroOabNumerico: string | undefined,
+  ufOab: string | undefined,
+  meio: 'D' | 'E' | undefined
+): Promise<TribunalQueryResult> {
+  const queryParams = buildDJENQueryParams(
+    tribunal, queryDataInicio, queryDataFim,
+    nomeAdvogado, numeroOabNumerico, ufOab, meio
+  );
+
+  const { response, retryAfter } = await consultarComunicacoes(queryParams);
+
+  if (!response) {
+    const { error, rateLimitHit } = handleQueryError(retryAfter);
+    return { resultados: [], error, rateLimitHit };
+  }
+
+  const resultados = processTribunalResponse(response, nomeAdvogado, numeroOabNumerico, ufOab);
+  return { resultados, rateLimitHit: false };
+}
+
 /**
  * Consulta comunicações para um advogado específico
  * Refactored to reduce cognitive complexity (S3776)
@@ -373,46 +427,31 @@ export async function consultarDJENForLawyer(
   const queryDataInicio = dataInicio || defaultDate;
   const queryDataFim = dataFim || queryDataInicio;
 
-  let numeroOabNumerico: string | undefined;
-  let ufOab: string | undefined;
-  if (numeroOAB) {
-    const parsed = parseOAB(numeroOAB);
-    numeroOabNumerico = parsed.numero;
-    ufOab = parsed.uf;
-  }
+  const { numero: numeroOabNumerico, uf: ufOab } = numeroOAB ? parseOAB(numeroOAB) : {};
 
   const resultados: DJENFilteredResult[] = [];
   const erros: Array<{ tribunal: string; erro: string }> = [];
   let rateLimitWarning = false;
 
-  for (const tribunal of tribunais) {
+  for (let i = 0; i < tribunais.length; i++) {
+    const tribunal = tribunais[i];
     try {
-      const queryParams = buildDJENQueryParams(
+      const queryResult = await queryTribunal(
         tribunal, queryDataInicio, queryDataFim,
         nomeAdvogado, numeroOabNumerico, ufOab, meio
       );
 
-      const { response, rateLimitInfo: _rateLimitInfo, retryAfter } = await consultarComunicacoes(queryParams);
-
-      if (!response) {
-        const errorMsg = retryAfter
-          ? `Rate limit - tentar novamente em ${retryAfter}s`
-          : 'Erro na consulta ou timeout';
-        if (retryAfter) rateLimitWarning = true;
-        erros.push({ tribunal, erro: errorMsg });
-        continue;
-      }
-
-      for (const comunicacao of response.items) {
-        const resultado = processComunicacao(comunicacao, nomeAdvogado, numeroOabNumerico, ufOab);
-        if (resultado) resultados.push(resultado);
+      if (queryResult.error) {
+        erros.push({ tribunal, erro: queryResult.error });
+        if (queryResult.rateLimitHit) rateLimitWarning = true;
+      } else {
+        resultados.push(...queryResult.resultados);
       }
 
       // Delay entre tribunais
-      if (tribunais.indexOf(tribunal) < tribunais.length - 1) {
+      if (i < tribunais.length - 1) {
         await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
       }
-
     } catch (error) {
       erros.push({
         tribunal,
@@ -421,7 +460,7 @@ export async function consultarDJENForLawyer(
     }
   }
 
-  return { resultados, erros, rateLimitWarning: rateLimitWarning ? true : undefined };
+  return { resultados, erros, rateLimitWarning: rateLimitWarning || undefined };
 }
 
 
