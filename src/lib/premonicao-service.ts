@@ -5,7 +5,7 @@ import type { PremonicaoJuridica, Process } from '@/types'
  */
 function buildProcessInfo(processData?: Process): string {
   if (!processData) return ''
-  
+
   return `**Título:** ${processData.titulo}
 **Autor:** ${processData.autor}
 **Réu:** ${processData.reu}
