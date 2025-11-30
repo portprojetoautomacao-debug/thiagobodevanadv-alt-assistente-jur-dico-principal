@@ -42,8 +42,13 @@ create_variable() {
 echo "🔑 Configurando variáveis ESSENCIAIS..."
 echo ""
 
-# GitHub Integration
-create_variable "GITHUB_TOKEN" "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" true true
+# GitHub Integration - NUNCA hardcode tokens!
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "⚠️ GITHUB_TOKEN não definido. Defina a variável de ambiente antes de executar."
+  echo "   export GITHUB_TOKEN='seu_token_aqui'"
+else
+  create_variable "GITHUB_TOKEN" "$GITHUB_TOKEN" true true
+fi
 create_variable "GITHUB_REPO_OWNER" "thiagobodevan-a11y" false false
 create_variable "GITHUB_REPO_NAME" "assistente-juridico-p" false false
 
