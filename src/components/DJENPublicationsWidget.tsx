@@ -395,8 +395,8 @@ export default function DJENPublicationsWidget({
         return
       }
 
-      let registered = 0
       const now = new Date().toISOString()
+      const ctx: RegistrationContext = { createOrUpdateFromDjenIntimacao }
       const newProcesses: Process[] = []
       const newExpedientes: Expediente[] = []
 
@@ -405,32 +405,17 @@ export default function DJENPublicationsWidget({
       })
 
       for (const pub of unregisteredPubs) {
-        if (!pub.numeroProcesso) continue
-
-        const parties = await extractPartiesWithFallback(pub.teor)
-
-        if (parties.autor && parties.autor !== 'Não identificado') {
-          createOrUpdateFromDjenIntimacao({
-            nomeCliente: parties.autor,
-            cidade: pub.orgao?.split('/')[0] || '',
-            estado: pub.orgao?.split('/')[1] || '',
-            processo: pub.numeroProcesso,
-          })
+        const result = await processPublicationForRegistration(pub, now, ctx)
+        if (result) {
+          newProcesses.push(result.process)
+          newExpedientes.push(result.expediente)
         }
-
-        // Usa funções auxiliares para criar processo e expediente
-        const newProcess = createProcessFromPublication(pub, parties, now)
-        const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
-
-        newProcesses.push(newProcess)
-        newExpedientes.push(newExpediente)
-        registered++
       }
 
       setProcesses((current) => [...(current || []), ...newProcesses])
       setExpedientes((current) => [...(current || []), ...newExpedientes])
 
-      toast.success(`${registered} processo(s) cadastrado(s)!`, {
+      toast.success(`${newProcesses.length} processo(s) cadastrado(s)!`, {
         description: 'As intimações foram adicionadas ao Acervo e Expedientes',
       })
     } finally {
