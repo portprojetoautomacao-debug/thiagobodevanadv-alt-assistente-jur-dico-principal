@@ -25,10 +25,35 @@ const APP_ENVIRONMENT = import.meta.env.MODE || 'development';
 let isInitialized = false;
 
 /**
+ * Verifica se o DSN contém valores dummy/placeholder
+ */
+function isDummySentryDSN(dsn: string): boolean {
+  if (!dsn) return true;
+
+  const dummyPatterns = [
+    'dummy',
+    'placeholder',
+    'your-',
+    'example',
+    'test-key',
+    'fake-',
+    '<key>',
+    '<org>',
+    '<project>'
+  ];
+
+  const lowerDsn = dsn.toLowerCase();
+  return dummyPatterns.some(pattern => lowerDsn.includes(pattern));
+}
+
+/**
  * Verifica se o DSN é válido (formato Sentry.io)
  */
 function isValidSentryDSN(dsn: string): boolean {
   if (!dsn) return false;
+
+  // Rejeita DSNs com valores dummy
+  if (isDummySentryDSN(dsn)) return false;
 
   // DSN do Sentry.io: https://<key>@<org>.ingest.sentry.io/<project>
   // ou https://<key>@sentry.io/<project>
@@ -65,9 +90,21 @@ export function initErrorTracking(): void {
 
   // Verifica se DSN está configurado
   if (!SENTRY_DSN) {
-    console.info('🔴 Sentry: Não configurado (VITE_SENTRY_DSN não definido)');
-    console.info('   Para habilitar, adicione VITE_SENTRY_DSN ao .env');
-    console.info('   Obtenha seu DSN em: https://sentry.io/settings/projects/');
+    if (APP_ENVIRONMENT !== 'development') {
+      console.info('🔴 Sentry: Não configurado (VITE_SENTRY_DSN não definido)');
+      console.info('   Para habilitar, adicione VITE_SENTRY_DSN ao .env');
+      console.info('   Obtenha seu DSN em: https://sentry.io/settings/projects/');
+    }
+    return;
+  }
+
+  // Verifica se é um DSN dummy (comum em desenvolvimento)
+  if (isDummySentryDSN(SENTRY_DSN)) {
+    // Em desenvolvimento, é normal ter DSN dummy - não mostra warning
+    if (APP_ENVIRONMENT !== 'development') {
+      console.info('🔴 Sentry: DSN contém valores placeholder');
+      console.info('   Configure um DSN real do Sentry.io para produção');
+    }
     return;
   }
 

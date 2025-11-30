@@ -1,20 +1,20 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import PremonicaoModal from '@/components/PremonicaoModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, MagnifyingGlass, Sparkle, Robot } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import PremonicaoModal from '@/components/PremonicaoModal'
+import { useKV } from '@/hooks/use-kv'
+import { config } from '@/lib/config'
+import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
 import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
 import { createProcessTasks, initializeTodoistClient } from '@/lib/todoist-integration'
-import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
-import { config } from '@/lib/config'
-import type { Process, PremonicaoJuridica, Expediente } from '@/types'
+import type { Expediente, PremonicaoJuridica, Process } from '@/types'
+import { MagnifyingGlass, Plus, Robot, Sparkle } from '@phosphor-icons/react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
 const STATUS_COLORS: Record<string, string> = {
@@ -245,14 +245,15 @@ export default function ProcessCRM() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header com título e ações */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Acervo de Processos</h1>
           <p className="text-muted-foreground mt-1">
             Gestão visual CRM do fluxo de processos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {incompleteProcesses.length > 0 && (
             <Button
               variant="outline"
@@ -348,57 +349,61 @@ export default function ProcessCRM() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
 
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por CNJ, título ou parte..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={selectedStage || 'all'} onValueChange={(value) => setSelectedStage(value === 'all' ? null : value)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Todas as fases" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as fases</SelectItem>
-              {PROCESS_STAGES.map((stage) => (
-                <SelectItem key={stage} value={stage}>{stage}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Barra de filtros */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por CNJ, título ou parte..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="pl-10"
+          />
         </div>
+        <Select value={selectedStage || 'all'} onValueChange={(value) => setSelectedStage(value === 'all' ? null : value)}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Todas as fases" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as fases</SelectItem>
+            {PROCESS_STAGES.map((stage) => (
+              <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProcesses.map((process) => (
-            <Card key={process.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>
-                  <Badge className={getStatusColorClass(process.status)}>
-                    {process.status}
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">{process.numeroCNJ}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-sm">
-                  <p className="text-muted-foreground text-xs mb-1">Autor:</p>
-                  <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
-                </div>
-                <div className="text-sm">
-                  <p className="text-muted-foreground text-xs mb-1">Réu:</p>
-                  <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
-                </div>
-                <div className="text-sm">
-                  <p className="text-muted-foreground text-xs mb-1">Fase:</p>
-                  <Badge variant="outline">{process.fase || 'N/A'}</Badge>
-                </div>
+      {/* Grid de cards de processos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filteredProcesses.map((process) => (
+          <Card key={process.id} className="hover:shadow-lg transition-shadow flex flex-col">
+            <CardHeader className="space-y-2 pb-3">
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="text-base font-semibold line-clamp-2 flex-1">{process.titulo}</CardTitle>
+                <Badge className={`${getStatusColorClass(process.status)} shrink-0`}>
+                  {process.status}
+                </Badge>
+              </div>
+              <CardDescription className="text-xs font-mono">{process.numeroCNJ}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 flex-1 flex flex-col">
+              <div className="text-sm">
+                <p className="text-muted-foreground text-xs mb-0.5">Autor:</p>
+                <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
+              </div>
+              <div className="text-sm">
+                <p className="text-muted-foreground text-xs mb-0.5">Réu:</p>
+                <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
+              </div>
+              <div className="text-sm">
+                <p className="text-muted-foreground text-xs mb-0.5">Fase:</p>
+                <Badge variant="outline" className="text-xs">{process.fase || 'N/A'}</Badge>
+              </div>
+              <div className="mt-auto pt-3 space-y-2">
                 <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -410,37 +415,40 @@ export default function ProcessCRM() {
                 </Select>
                 <Button
                   variant="outline"
+                  size="sm"
                   className="w-full gap-2"
                   onClick={() => handlePremonicao(process)}
                 >
                   <Sparkle className="w-4 h-4" weight="fill" />
                   Premonição Jurídica
                 </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredProcesses.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Plus className="w-16 h-16 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-foreground">Nenhum processo encontrado</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {filter || selectedStage ? 'Tente ajustar os filtros' : 'Adicione seu primeiro processo'}
-              </p>
+              </div>
             </CardContent>
           </Card>
-        )}
-
-        <PremonicaoModal
-          isOpen={premonicaoOpen}
-          onClose={() => setPremonicaoOpen(false)}
-          isLoading={premonicaoLoading}
-          data={premonicaoData}
-          error={premonicaoError}
-        />
+        ))}
       </div>
+
+      {/* Estado vazio */}
+      {filteredProcesses.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Plus className="w-16 h-16 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium text-foreground">Nenhum processo encontrado</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filter || selectedStage ? 'Tente ajustar os filtros' : 'Adicione seu primeiro processo'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Modal de Premonição */}
+      <PremonicaoModal
+        isOpen={premonicaoOpen}
+        onClose={() => setPremonicaoOpen(false)}
+        isLoading={premonicaoLoading}
+        data={premonicaoData}
+        error={premonicaoError}
+      />
     </div>
   )
 }

@@ -108,6 +108,19 @@ export default defineConfig({
           });
         },
       },
+      // Proxy para endpoints legados /_spark/* -> /api/*
+      '/_spark/llm': {
+        target: 'https://assistente-juridico-github.vercel.app',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/_spark\/llm/, '/api/llm-proxy'),
+      },
+      '/_spark/kv': {
+        target: 'https://assistente-juridico-github.vercel.app',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/_spark\/kv/, '/api/kv'),
+      },
     },
   },
   build: {

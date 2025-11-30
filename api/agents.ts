@@ -1089,10 +1089,12 @@ async function handleGetMemory(res: VercelResponse): Promise<VercelResponse> {
 function isAuthorized(req: VercelRequest): boolean {
   const authHeader = req.headers.authorization
   const isVercelCron = authHeader?.startsWith('Bearer ')
-  const isLocalTest = process.env.NODE_ENV === 'development'
+  // Detectar ambiente de desenvolvimento (localhost/127.0.0.1)
+  const host = req.headers.host || ''
+  const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1') || process.env.NODE_ENV === 'development'
   const hasApiKey = !!req.headers['x-api-key']
 
-  return !!(isVercelCron || isLocalTest || hasApiKey)
+  return !!(isVercelCron || isLocalDev || hasApiKey)
 }
 
 // ===========================

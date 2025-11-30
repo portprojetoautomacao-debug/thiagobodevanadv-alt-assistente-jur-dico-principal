@@ -1,7 +1,8 @@
-import { createRoot } from 'react-dom/client'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from "react-error-boundary";
-import { ErrorFallback } from './ErrorFallback.tsx'
-import App from './App'
+import App from './App';
+import { ErrorFallback } from './ErrorFallback.tsx';
 
 import './index.css';
 
@@ -88,6 +89,8 @@ initOnIdle()
 // Render App diretamente (sem dynamic import para evitar problemas de loading)
 createRoot(rootElement).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <App />
+    <StrictMode>
+      <App />
+    </StrictMode>
   </ErrorBoundary>
 )

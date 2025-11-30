@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { useAIStreaming } from '@/hooks/use-ai-streaming'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -8,10 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +16,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -27,45 +27,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useAIStreaming } from '@/hooks/use-ai-streaming'
+import { useKV } from '@/hooks/use-kv'
 import {
-  FileText,
-  GoogleLogo,
-  Plus,
-  ArrowsClockwise,
-  Trash,
-  PencilSimple,
-  DownloadSimple,
-  Clock,
-  Warning,
-  Robot,
-  FilePdf,
-  FileDoc,
-  MagnifyingGlass,
-  FolderOpen,
-  Sparkle,
-  CheckCircle,
-  Eye,
-  Copy,
-  CaretDown,
-  SpinnerGap,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
+  documentTemplates,
+  extractUnfilledVariables,
+  replaceTemplateVariables,
+  type DocumentTemplate,
+} from '@/lib/document-templates'
+import { callGemini, isGeminiConfigured } from '@/lib/gemini-service'
 import { googleDocsService } from '@/lib/google-docs-service'
+import type { Minuta, Process } from '@/types'
+import {
+  ArrowsClockwise,
+  CaretDown,
+  CheckCircle,
+  Clock,
+  Copy,
+  DownloadSimple,
+  Eye,
+  FileDoc,
+  FilePdf,
+  FileText,
+  FolderOpen,
+  GoogleLogo,
+  MagnifyingGlass,
+  PencilSimple,
+  Plus,
+  Robot,
+  Sparkle,
+  SpinnerGap,
+  Trash,
+  Warning,
+} from '@phosphor-icons/react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 // ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
 // Isso resolve o erro "Cannot set properties of undefined (setting 'Activity')"
 const TiptapEditor = lazy(() => import('@/components/editor/TiptapEditor').then(m => ({ default: m.TiptapEditor })))
-import {
-  documentTemplates,
-  replaceTemplateVariables,
-  extractUnfilledVariables,
-  type DocumentTemplate,
-} from '@/lib/document-templates'
-import type { Minuta, Process } from '@/types'
-import { callGemini, isGeminiConfigured } from '@/lib/gemini-service'
 
 // Verificar se as credenciais do Google estão configuradas
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -768,9 +768,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
 
                   {/* Editor */}
-                  <div className="flex-1 overflow-hidden">
+                  <div className="flex-1 overflow-hidden min-h-[350px]">
                     <Suspense fallback={
-                      <div className="h-[400px] flex items-center justify-center bg-muted/30 rounded-lg border">
+                      <div className="h-[350px] flex items-center justify-center bg-muted rounded-lg border">
                         <div className="flex flex-col items-center gap-2">
                           <SpinnerGap className="h-8 w-8 animate-spin text-primary" />
                           <span className="text-sm text-muted-foreground">Carregando editor...</span>
@@ -778,6 +778,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       </div>
                     }>
                       <TiptapEditor
+                        key={selectedMinuta?.id || 'new-minuta'}
                         content={formData.conteudo}
                         onChange={(content) =>
                           setFormData({ ...formData, conteudo: content })
@@ -786,7 +787,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         onAIStream={handleAIStream}
                         variables={variableValues}
                         placeholder="Digite o conteúdo da minuta ou use o botão de IA para gerar com Gemini..."
-                        className="h-full max-h-[400px] overflow-auto"
+                        className="h-[350px]"
                       />
                     </Suspense>
                   </div>
