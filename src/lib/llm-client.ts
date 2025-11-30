@@ -248,28 +248,43 @@ async function callLLMProxy(
 }
 
 /**
+ * Verifica se um erro é um erro de streaming para re-throw
+ */
+function isStreamingError(error: unknown): boolean {
+    return error instanceof Error && error.message.includes('streaming')
+}
+
+/**
+ * Processa JSON parseado de uma linha SSE
+ * @throws Error se for um erro de streaming
+ */
+function processSSEJson(json: { type?: string; content?: string; message?: string; error?: string }): string | null {
+    if (json.type === 'error') {
+        throw new Error(json.message || json.error || 'Erro desconhecido no streaming')
+    }
+    if (json.type === 'content' && json.content) {
+        return json.content
+    }
+    // json.type === 'done' → fim do stream
+    return null
+}
+
+/**
  * Parse a single SSE line and extract content or throw on error
  * @returns The content string if valid, null otherwise
  */
 function parseSSELine(line: string): string | null {
     const trimmed = line.trim()
-    if (!trimmed || !trimmed.startsWith('data: ')) return null
+
+    // Early return para linhas inválidas (SonarCloud S3776)
+    if (!trimmed) return null
+    if (!trimmed.startsWith('data: ')) return null
 
     try {
         const json = JSON.parse(trimmed.slice(6))
-
-        if (json.type === 'content' && json.content) {
-            return json.content
-        }
-        if (json.type === 'error') {
-            throw new Error(json.message || json.error || 'Erro desconhecido no streaming')
-        }
-        // json.type === 'done' → fim do stream
-        return null
+        return processSSEJson(json)
     } catch (parseError) {
-        if (parseError instanceof Error && parseError.message.includes('streaming')) {
-            throw parseError // Re-throw SSE errors
-        }
+        if (isStreamingError(parseError)) throw parseError
         console.warn('Failed to parse SSE line:', trimmed, parseError)
         return null
     }

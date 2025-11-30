@@ -120,6 +120,48 @@ function getAIButtonClassName(isStreaming: boolean): string {
     : `${base} bg-gradient-to-r from-purple-500/10 to-blue-500/10`
 }
 
+/**
+ * Insere conteúdo no editor na posição especificada
+ * Helper extraído para reduzir CC (SonarCloud S3776)
+ */
+function insertContentAtPosition(
+  editor: ReturnType<typeof useEditor>,
+  content: string,
+  from: number,
+  to: number
+): void {
+  if (!editor) return
+  editor
+    .chain()
+    .focus()
+    .setTextSelection({ from, to })
+    .deleteSelection()
+    .insertContent(content)
+    .run()
+}
+
+/**
+ * Obtém texto selecionado ou todo o texto do editor
+ */
+function getSelectedOrAllText(
+  editor: ReturnType<typeof useEditor>,
+  from: number,
+  to: number
+): string {
+  if (!editor) return ''
+  const hasSelection = from !== to
+  return hasSelection
+    ? editor.state.doc.textBetween(from, to, ' ')
+    : editor.getText()
+}
+
+/**
+ * Mensagem de sucesso para comando de IA
+ */
+function getAISuccessMessage(commandLabel: string): string {
+  return `Texto ${commandLabel.toLowerCase()}!`
+}
+
 // ===========================
 // Toolbar Button Components - Extraídos para reduzir CC
 // ===========================
@@ -609,7 +651,6 @@ export function TiptapEditor({
     if (!editor || !onAIStream) return
 
     const { from, to } = editor.state.selection
-    const hasSelection = from !== to
 
     setIsStreaming(true)
     setStreamingText('')
@@ -624,24 +665,13 @@ export function TiptapEditor({
         },
         onComplete: () => {
           const finalText = replaceVariables(accumulated)
-
-          editor
-            .chain()
-            .focus()
-            .setTextSelection({ from, to })
-            .deleteSelection()
-            .insertContent(finalText)
-            .run()
+          insertContentAtPosition(editor, finalText, from, to)
 
           setIsStreaming(false)
           setStreamingText('')
           setAiPrompt('')
           setShowAIPopover(false)
-          toast.success(
-            hasSelection
-              ? 'Texto atualizado com IA (streaming)!'
-              : 'Texto inserido com IA (streaming)!',
-          )
+          toast.success('Texto inserido com IA (streaming)!')
         },
         onError: (error: Error) => {
           console.error('Erro no streaming:', error)
@@ -661,7 +691,7 @@ export function TiptapEditor({
     if (!aiPrompt.trim() || !editor) return
     const prompt = aiPrompt.trim()
 
-    // Streaming
+    // Streaming - early return para reduzir CC
     if (onAIStream) {
       await runAIStreaming(prompt)
       return
@@ -673,16 +703,9 @@ export function TiptapEditor({
     try {
       const generatedText = await onAIGenerate(prompt)
       const processedText = replaceVariables(generatedText)
-
       const { from, to } = editor.state.selection
 
-      editor
-        .chain()
-        .focus()
-        .setTextSelection({ from, to })
-        .deleteSelection()
-        .insertContent(processedText)
-        .run()
+      insertContentAtPosition(editor, processedText, from, to)
 
       setAiPrompt('')
       setShowAIPopover(false)
@@ -699,11 +722,7 @@ export function TiptapEditor({
     if (!editor || (!onAIGenerate && !onAIStream)) return
 
     const { from, to } = editor.state.selection
-    const hasSelection = from !== to
-
-    const selectedText = hasSelection
-      ? editor.state.doc.textBetween(from, to, ' ')
-      : editor.getText()
+    const selectedText = getSelectedOrAllText(editor, from, to)
 
     if (!selectedText.trim()) {
       toast.error('Selecione um texto ou escreva algo primeiro')
@@ -712,6 +731,7 @@ export function TiptapEditor({
 
     const fullPrompt = `${command.prompt}\n\n"${selectedText}"`
 
+    // Early return para streaming
     if (onAIStream) {
       await runAIStreaming(fullPrompt)
       return
@@ -721,25 +741,15 @@ export function TiptapEditor({
     try {
       const generatedText = await onAIGenerate!(fullPrompt)
       const processedText = replaceVariables(generatedText)
+      const hasSelection = from !== to
 
       if (hasSelection) {
-        editor
-          .chain()
-          .focus()
-          .setTextSelection({ from, to })
-          .deleteSelection()
-          .insertContent(processedText)
-          .run()
+        insertContentAtPosition(editor, processedText, from, to)
       } else {
-        // Sem seleção: insere no cursor (comportamento mais “Word/Docs”)
-        editor
-          .chain()
-          .focus()
-          .insertContent(processedText)
-          .run()
+        editor.chain().focus().insertContent(processedText).run()
       }
 
-      toast.success(`Texto ${command.label.toLowerCase()}!`)
+      toast.success(getAISuccessMessage(command.label))
     } catch (error) {
       console.error('Erro ao processar com IA:', error)
       toast.error('Erro ao processar com IA')
