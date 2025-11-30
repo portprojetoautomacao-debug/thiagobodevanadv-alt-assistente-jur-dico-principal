@@ -799,7 +799,7 @@ Crie o workflow de controladoria para esta tarefa.`
           <Card className="border-primary/50 bg-primary/5">
             <CardContent className="py-4">
               <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
 
                 </div>
                 <div className="flex-1">
@@ -1071,7 +1071,7 @@ Crie o workflow de controladoria para esta tarefa.`
                     className="p-3 text-left rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-primary">{index + 1}</span>
                       </div>
                       <span className="text-sm font-medium text-foreground">{task}</span>

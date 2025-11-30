@@ -594,6 +594,97 @@ function parseGeminiResponse(aiContent: string): TaskResult {
 }
 
 // 🔁 Agora usando Google Gemini no lugar do Spark
+/**
+ * Prepara a requisição para o Gemini
+ */
+function prepareGeminiRequest(
+  fullPrompt: string,
+  timeoutMs: number
+): { requestBody: unknown; controller: AbortController; timeoutId: NodeJS.Timeout } {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  const requestBody = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: fullPrompt }]
+      }
+    ],
+    generationConfig: {
+      maxOutputTokens: 2000,
+      temperature: 0.7
+    }
+  }
+
+  return { requestBody, controller, timeoutId }
+}
+
+/**
+ * Executa a chamada para o Gemini
+ */
+async function callGeminiAPI(
+  apiKey: string,
+  requestBody: unknown,
+  controller: AbortController
+): Promise<{ aiContent: string; tokensUsed?: number }> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    }
+  )
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`Gemini error: ${response.status} ${response.statusText} ${text}`)
+  }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{
+      content?: { parts?: Array<{ text?: string }> }
+    }>
+    usageMetadata?: { totalTokenCount?: number }
+  }
+
+  const parts = data.candidates?.[0]?.content?.parts || []
+  const aiContent = parts.map((p) => p.text || '').join('\n').trim()
+
+  if (!aiContent) {
+    throw new Error('Empty response from Gemini')
+  }
+
+  return {
+    aiContent,
+    tokensUsed: data.usageMetadata?.totalTokenCount
+  }
+}
+
+/**
+ * Enriquecer resultado com metadados
+ */
+function enrichResultWithMetadata(
+  result: TaskResult,
+  agentId: string,
+  taskType: AgentTaskType,
+  tokensUsed: number | undefined,
+  startTime: number
+): TaskResult {
+  return {
+    ...result,
+    processedAt: new Date().toISOString(),
+    agentId,
+    taskType,
+    tokensUsed,
+    processingTimeMs: Date.now() - startTime
+  }
+}
+
 async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskResult> {
   // ✨ PLANO MESTRE - FASE 4: Monitoramento
   return await agentMonitor.trackTaskExecution(
@@ -620,83 +711,44 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
         timeout: task.timeout || 30000
       })
 
-      const controller = new AbortController()
       const timeoutMs = task.timeout || 30000
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+      const fullPrompt = [
+        '# Instruções do agente (system):',
+        systemPrompt,
+        memoryContext, // Inserir contexto da memória
+        '',
+        '# Tarefa específica (user):',
+        userPrompt
+      ].join('\n')
+
+      const { requestBody, controller, timeoutId } = prepareGeminiRequest(fullPrompt, timeoutMs)
 
       try {
-        const fullPrompt = [
-          '# Instruções do agente (system):',
-          systemPrompt,
-          memoryContext, // Inserir contexto da memória
-          '',
-          '# Tarefa específica (user):',
-          userPrompt
-        ].join('\n')
-
-        const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{ text: fullPrompt }]
-                }
-              ],
-              generationConfig: {
-                maxOutputTokens: 2000,
-                temperature: 0.7
-              }
-            }),
-            signal: controller.signal
-          }
-        )
-
-        if (!geminiResponse.ok) {
-          const text = await geminiResponse.text().catch(() => '')
-          throw new Error(`Gemini error: ${geminiResponse.status} ${geminiResponse.statusText} ${text}`)
-        }
-
-        const geminiData = (await geminiResponse.json()) as {
-          candidates?: Array<{
-            content?: { parts?: Array<{ text?: string }> }
-          }>
-          usageMetadata?: { totalTokenCount?: number }
-        }
-
-        const parts = geminiData.candidates?.[0]?.content?.parts || []
-        const aiContent = parts.map((p) => p.text || '').join('\n').trim()
-
-        if (!aiContent) {
-          throw new Error('Empty response from Gemini')
-        }
+        const { aiContent, tokensUsed } = await callGeminiAPI(apiKey, requestBody, controller)
 
         // Parsear resposta usando helper (SonarCloud S3776)
         const result = parseGeminiResponse(aiContent)
 
         // Enriquecer resultado com metadados
-        result.processedAt = new Date().toISOString()
-        result.agentId = agent.id
-        result.taskType = task.type
-        result.tokensUsed = geminiData.usageMetadata?.totalTokenCount
-        result.processingTimeMs = Date.now() - startTime
+        const enrichedResult = enrichResultWithMetadata(
+          result,
+          agent.id,
+          task.type,
+          tokensUsed,
+          startTime
+        )
 
         // Salvar na memória jurídica usando helper (SonarCloud S3776)
-        await saveResultToMemory(task, result)
+        await saveResultToMemory(task, enrichedResult)
 
         logger.info('Task processed successfully (Gemini)', {
           taskId: task.id,
           agentId: agent.id,
-          tokensUsed: result.tokensUsed,
-          processingTimeMs: result.processingTimeMs
+          tokensUsed: enrichedResult.tokensUsed,
+          processingTimeMs: enrichedResult.processingTimeMs
         })
 
-        return result
+        return enrichedResult
       } finally {
         clearTimeout(timeoutId)
       }
@@ -763,6 +815,13 @@ async function saveTaskQueue(taskQueue: AgentTask[]): Promise<void> {
     },
     body: JSON.stringify({ value: taskQueue })
   })
+}
+
+/**
+ * Valida se uma tarefa pode ser processada
+ */
+function canProcessTask(task: AgentTask, agent: Agent): boolean {
+  return agent.enabled && task.status === TaskStatus.QUEUED;
 }
 
 /**
@@ -856,7 +915,7 @@ async function processQueueTask(
     return { taskId: task.id, status: 'failed', error: 'Agent not found' }
   }
 
-  if (!agent.enabled) {
+  if (!canProcessTask(task, agent)) {
     logger.info(`Skipping task ${task.id} - agent disabled`)
     return { taskId: task.id, status: 'failed', error: 'Agent disabled' }
   }
@@ -912,13 +971,16 @@ async function handleProcessQueue(res: VercelResponse): Promise<VercelResponse> 
 
   await saveTaskQueue(taskQueue)
 
-  logger.info(`Processed ${results.length} tasks`)
+  const processedCount = results.filter((r) => r.status === 'completed').length
+  const failedCount = results.filter((r) => r.status === 'failed').length
+
+  logger.info(`Processed ${results.length} tasks: ${processedCount} completed, ${failedCount} failed`)
 
   return res.status(200).json({
     ok: true,
-    message: 'Tasks processed',
-    processed: results.filter((r) => r.status === 'completed').length,
-    failed: results.filter((r) => r.status === 'failed').length,
+    message: `Processed ${processedCount} tasks successfully`,
+    processed: processedCount,
+    failed: failedCount,
     results,
     timestamp: new Date().toISOString()
   })
