@@ -428,100 +428,192 @@ function formatDJENDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-async function consultarDJENForLawyer(tribunais: string[], nomeAdvogado?: string, numeroOAB?: string, dataInicio?: string, dataFim?: string, meio?: 'D' | 'E'): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
-  if (!nomeAdvogado && !numeroOAB) throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB');
+// ===== Helper functions for consultarDJENForLawyer (reduced CC) =====
+
+interface OABParsed {
+  numero?: string;
+  uf?: string;
+}
+
+interface LawyerQueryContext {
+  nomeAdvogado?: string;
+  numeroOabNumerico?: string;
+  ufOab?: string;
+  queryDataInicio: string;
+  queryDataFim: string;
+  meio?: 'D' | 'E';
+}
+
+function parseOABInfo(numeroOAB?: string): OABParsed {
+  if (!numeroOAB) return {};
+  const parsed = parseOAB(numeroOAB);
+  return { numero: parsed.numero, uf: parsed.uf };
+}
+
+function buildDJENQueryParams(
+  tribunal: string,
+  ctx: LawyerQueryContext
+): DJENQueryParams {
+  const params: DJENQueryParams = {
+    siglaTribunal: tribunal,
+    dataDisponibilizacaoInicio: ctx.queryDataInicio,
+    dataDisponibilizacaoFim: ctx.queryDataFim,
+    itensPorPagina: 100,
+    pagina: 1
+  };
+  if (ctx.nomeAdvogado) params.nomeAdvogado = ctx.nomeAdvogado;
+  if (ctx.numeroOabNumerico) params.numeroOab = ctx.numeroOabNumerico;
+  if (ctx.ufOab) params.ufOab = ctx.ufOab;
+  if (ctx.meio) params.meio = ctx.meio;
+  return params;
+}
+
+function determineAdvogadoMatchType(
+  dest: { advogado: { nome: string; numero_oab: string; uf_oab: string } },
+  nomeAdvogado?: string,
+  numeroOabNumerico?: string,
+  ufOab?: string
+): 'nome' | 'oab' | 'ambos' | null {
+  const matchNome = nomeAdvogado 
+    ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) 
+    : false;
+  const matchOab = numeroOabNumerico 
+    ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab 
+    : false;
+  
+  if (matchNome && matchOab) return 'ambos';
+  if (matchOab) return 'oab';
+  if (matchNome) return 'nome';
+  return null;
+}
+
+function findAdvogadoMatch(
+  comunicacao: DJENComunicacao,
+  nomeAdvogado?: string,
+  numeroOabNumerico?: string,
+  ufOab?: string
+): { found: boolean; matchType: 'nome' | 'oab' | 'ambos' } {
+  let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
+  const found = comunicacao.destinatarioadvogados?.some(dest => {
+    const type = determineAdvogadoMatchType(dest, nomeAdvogado, numeroOabNumerico, ufOab);
+    if (type) {
+      matchType = type;
+      return true;
+    }
+    return false;
+  }) || false;
+  return { found, matchType };
+}
+
+function mapComunicacaoToResult(
+  comunicacao: DJENComunicacao,
+  matchType: 'nome' | 'oab' | 'ambos'
+): DJENFilteredResult {
+  const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || '';
+  return {
+    id: comunicacao.id,
+    tribunal: comunicacao.siglaTribunal,
+    data: dataDisp,
+    tipo: comunicacao.tipoComunicacao,
+    teor: comunicacao.texto,
+    numeroProcesso: comunicacao.numeroprocessocommascara || comunicacao.numero_processo,
+    orgao: comunicacao.nomeOrgao,
+    meio: comunicacao.meiocompleto || comunicacao.meio,
+    link: comunicacao.link,
+    hash: comunicacao.hash,
+    matchType,
+    advogados: comunicacao.destinatarioadvogados?.map(dest => ({
+      nome: dest.advogado.nome,
+      numero_oab: dest.advogado.numero_oab,
+      uf_oab: dest.advogado.uf_oab
+    })) || []
+  };
+}
+
+async function processTribunalQuery(
+  tribunal: string,
+  ctx: LawyerQueryContext,
+  resultados: DJENFilteredResult[],
+  erros: Array<{ tribunal: string; erro: string }>
+): Promise<boolean> {
+  console.log(`[DJEN] Consultando ${tribunal} para ${ctx.nomeAdvogado || ctx.numeroOabNumerico}`);
+  const queryParams = buildDJENQueryParams(tribunal, ctx);
+  const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
+
+  if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
+    console.warn(`[DJEN] Atenção: apenas ${rateLimitInfo.remaining} requisições restantes na janela`);
+  }
+
+  if (!response) {
+    const errorMsg = rateLimitHit ? 'Rate limit atingido (429) - aguarde 1 minuto' : 'Erro na consulta';
+    erros.push({ tribunal, erro: errorMsg });
+    return rateLimitHit || false;
+  }
+
+  const comunicacoes: DJENComunicacao[] = Array.isArray(response)
+    ? response
+    : (response.items || []);
+
+  console.log(`[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`);
+
+  for (const comunicacao of comunicacoes) {
+    const { found, matchType } = findAdvogadoMatch(
+      comunicacao, ctx.nomeAdvogado, ctx.numeroOabNumerico, ctx.ufOab
+    );
+    if (found) {
+      resultados.push(mapComunicacaoToResult(comunicacao, matchType));
+    }
+  }
+
+  return false;
+}
+
+// ===== Main refactored function =====
+
+async function consultarDJENForLawyer(
+  tribunais: string[],
+  nomeAdvogado?: string,
+  numeroOAB?: string,
+  dataInicio?: string,
+  dataFim?: string,
+  meio?: 'D' | 'E'
+): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
+  if (!nomeAdvogado && !numeroOAB) {
+    throw new Error('É necessário fornecer pelo menos nomeAdvogado ou numeroOAB');
+  }
 
   const defaultDate = formatDJENDate(new Date());
-  const queryDataInicio = dataInicio || defaultDate;
-  const queryDataFim = dataFim || queryDataInicio;
-
-  let numeroOabNumerico: string | undefined;
-  let ufOab: string | undefined;
-  if (numeroOAB) {
-    const parsed = parseOAB(numeroOAB);
-    numeroOabNumerico = parsed.numero;
-    ufOab = parsed.uf;
-  }
+  const oabInfo = parseOABInfo(numeroOAB);
+  
+  const ctx: LawyerQueryContext = {
+    nomeAdvogado,
+    numeroOabNumerico: oabInfo.numero,
+    ufOab: oabInfo.uf,
+    queryDataInicio: dataInicio || defaultDate,
+    queryDataFim: dataFim || dataInicio || defaultDate,
+    meio
+  };
 
   const resultados: DJENFilteredResult[] = [];
   const erros: Array<{ tribunal: string; erro: string }> = [];
   let rateLimitWarning = false;
 
-  for (const tribunal of tribunais) {
+  for (let i = 0; i < tribunais.length; i++) {
+    const tribunal = tribunais[i];
     try {
-      console.log(`[DJEN] Consultando ${tribunal} para ${nomeAdvogado || numeroOAB}`);
-      const queryParams: DJENQueryParams = {
-        siglaTribunal: tribunal,
-        dataDisponibilizacaoInicio: queryDataInicio,
-        dataDisponibilizacaoFim: queryDataFim,
-        itensPorPagina: 100,
-        pagina: 1
-      };
-      if (nomeAdvogado) queryParams.nomeAdvogado = nomeAdvogado;
-      if (numeroOabNumerico) queryParams.numeroOab = numeroOabNumerico;
-      if (ufOab) queryParams.ufOab = ufOab;
-      if (meio) queryParams.meio = meio;
-
-      const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
-
-      // Log rate limit info para monitoramento
-      if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
-        console.warn(`[DJEN] Atenção: apenas ${rateLimitInfo.remaining} requisições restantes na janela`);
+      const hitRateLimit = await processTribunalQuery(tribunal, ctx, resultados, erros);
+      rateLimitWarning = rateLimitWarning || hitRateLimit;
+      
+      if (i < tribunais.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
       }
-
-      if (!response) {
-        rateLimitWarning = rateLimitHit || rateLimitWarning;
-        erros.push({ tribunal, erro: rateLimitHit ? 'Rate limit atingido (429) - aguarde 1 minuto' : 'Erro na consulta' });
-        continue;
-      }
-
-      // API DJEN pode retornar array direto ou objeto com items
-      const comunicacoes: DJENComunicacao[] = Array.isArray(response)
-        ? response
-        : (response.items || []);
-
-      console.log(`[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`);
-
-      for (const comunicacao of comunicacoes) {
-        let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
-        const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
-          const matchNome = nomeAdvogado ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) : false;
-          const matchOab = numeroOabNumerico ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab : false;
-          if (matchNome && matchOab) { matchType = 'ambos'; return true; }
-          if (matchOab) { matchType = 'oab'; return true; }
-          if (matchNome) { matchType = 'nome'; return true; }
-          return false;
-        }) || false;
-
-        if (temAdvogado) {
-          // Usa datadisponibilizacao (oficial) ou data_disponibilizacao (alias)
-          const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || '';
-
-          resultados.push({
-            id: comunicacao.id,
-            tribunal: comunicacao.siglaTribunal,
-            data: dataDisp,
-            tipo: comunicacao.tipoComunicacao,
-            teor: comunicacao.texto,
-            numeroProcesso: comunicacao.numeroprocessocommascara || comunicacao.numero_processo,
-            orgao: comunicacao.nomeOrgao,
-            meio: comunicacao.meiocompleto || comunicacao.meio,
-            link: comunicacao.link,
-            hash: comunicacao.hash,
-            matchType,
-            advogados: comunicacao.destinatarioadvogados?.map(dest => ({ nome: dest.advogado.nome, numero_oab: dest.advogado.numero_oab, uf_oab: dest.advogado.uf_oab })) || []
-          });
-        }
-      }
-
-      if (tribunais.indexOf(tribunal) < tribunais.length - 1) await new Promise(resolve => setTimeout(resolve, DJEN_DELAY));
     } catch (error) {
       erros.push({ tribunal, erro: error instanceof Error ? error.message : 'Erro desconhecido' });
     }
   }
 
   console.log(`[DJEN] Consulta finalizada: ${resultados.length} comunicações encontradas`);
-  return { resultados, erros, rateLimitWarning: rateLimitWarning ? true : undefined };
+  return { resultados, erros, rateLimitWarning: rateLimitWarning || undefined };
 }
 
 // ================= CRON HANDLERS =================
