@@ -2,7 +2,7 @@ name: SonarCloud Analysis
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, fix/sonar-copilot-assistant]
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, develop]
