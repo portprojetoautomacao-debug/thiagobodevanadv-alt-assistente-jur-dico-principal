@@ -65,8 +65,41 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
+
+  // === SonarLint Configuration ===
+  // Path to Node.js executable (required for JS/TS analysis)
+  "sonarlint.pathToNodeExecutable": "/usr/bin/node",
+  
+  // Connected Mode - bind to SonarCloud project
   "sonarlint.connectedMode.project": {
+
     "connectionId": "thiagobodevan-a11y",
     "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
-  }
+  },
+  
+  // SonarCloud connection (alternative to sonarqube)
+  "sonarlint.connectedMode.connections.sonarcloud": [
+    {
+      "connectionId": "thiagobodevan-a11y",
+      "organizationKey": "thiagobodevan-a11y",
+      "token": "e04da699455ce47ef8caa0cced5d7b9c29c058d0"
+    }
+  ],
+
+  // Path to Java runtime (required for SonarLint Language Server)
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk",
+  "editor.defaultFormatter": "SonarSource.sonarlint-vscode",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "editor.codeActions.triggerOnFocusChange": true,
+  "editor.codeActionsOnSave": {
+
+  },
+  "editor.experimentalGpuAcceleration": "on",
+  "editor.pasteAs.preferences": [
+
+  ],
+  "diffEditor.codeLens": true,
+  "editor.suggest.shareSuggestSelections": false
 }
