@@ -48,6 +48,73 @@ interface UseAIStreamingReturn {
     reset: () => void
 }
 
+/**
+ * Processa uma linha de evento SSE
+ */
+function parseEventLine(line: string): StreamEvent | null {
+    const trimmed = line.trim()
+    if (!trimmed?.startsWith('data: ')) return null
+
+    try {
+        return JSON.parse(trimmed.slice(6)) as StreamEvent
+    } catch {
+        return null
+    }
+}
+
+/**
+ * Processa eventos do stream e atualiza estado
+ */
+function processStreamEvent(
+    event: StreamEvent,
+    contentRef: React.MutableRefObject<string>,
+    setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
+    setProvider: React.Dispatch<React.SetStateAction<string | null>>,
+    onChunk?: (chunk: string) => void,
+    onComplete?: (fullContent: string, provider: string) => void
+): void {
+    if (event.type === 'content' && event.content) {
+        contentRef.current += event.content
+        setStreamingContent(contentRef.current)
+        onChunk?.(event.content)
+    } else if (event.type === 'done') {
+        setProvider(event.provider || null)
+        onComplete?.(contentRef.current, event.provider || 'unknown')
+    } else if (event.type === 'error') {
+        throw new Error(event.message || 'Erro desconhecido')
+    }
+}
+
+/**
+ * Lê o stream de resposta e processa os eventos
+ */
+async function processStreamResponse(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    contentRef: React.MutableRefObject<string>,
+    setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
+    setProvider: React.Dispatch<React.SetStateAction<string | null>>,
+    onChunk?: (chunk: string) => void,
+    onComplete?: (fullContent: string, provider: string) => void
+): Promise<void> {
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+            const event = parseEventLine(line)
+            if (!event) continue
+            processStreamEvent(event, contentRef, setStreamingContent, setProvider, onChunk, onComplete)
+        }
+    }
+}
+
 export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStreamingReturn {
     const [streamingContent, setStreamingContent] = useState('')
     const [isStreaming, setIsStreaming] = useState(false)
@@ -117,40 +184,14 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
                 throw new Error('Streaming não suportado')
             }
 
-            const decoder = new TextDecoder()
-            let buffer = ''
-
-            while (true) {
-                const { done, value } = await reader.read()
-
-                if (done) break
-
-                buffer += decoder.decode(value, { stream: true })
-                const lines = buffer.split('\n')
-                buffer = lines.pop() || ''
-
-                for (const line of lines) {
-                    const trimmed = line.trim()
-                    if (!trimmed?.startsWith('data: ')) continue
-
-                    try {
-                        const event: StreamEvent = JSON.parse(trimmed.slice(6))
-
-                        if (event.type === 'content' && event.content) {
-                            contentRef.current += event.content
-                            setStreamingContent(contentRef.current)
-                            onChunk?.(event.content)
-                        } else if (event.type === 'done') {
-                            setProvider(event.provider || null)
-                            onComplete?.(contentRef.current, event.provider || 'unknown')
-                        } else if (event.type === 'error') {
-                            throw new Error(event.message || 'Erro desconhecido')
-                        }
-                    } catch (parseError) {
-                        // Ignorar linhas inválidas
-                    }
-                }
-            }
+            await processStreamResponse(
+                reader,
+                contentRef,
+                setStreamingContent,
+                setProvider,
+                onChunk,
+                onComplete
+            )
 
             return contentRef.current
 
