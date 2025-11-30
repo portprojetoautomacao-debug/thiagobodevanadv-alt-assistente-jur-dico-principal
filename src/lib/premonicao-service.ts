@@ -161,13 +161,12 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
     const prob = normalizeProbability(parsed.probabilidade_exito)
 
     const analise =
-      typeof parsed.analise_ia === 'string' && (parsed.analise_ia as string).trim()
-        ? (parsed.analise_ia as string).trim()
+      typeof parsed.analise_ia === 'string' && parsed.analise_ia.trim()
+        ? parsed.analise_ia.trim()
         : 'Análise não disponível'
 
     const estrategias: string[] = Array.isArray(parsed.estrategias_recomendadas)
-      ? (parsed.estrategias_recomendadas as unknown[]).filter((e: unknown) => typeof e === 'string' && (e as string).trim())
-        .map(e => e as string)
+      ? parsed.estrategias_recomendadas.filter((e): e is string => typeof e === 'string' && e.trim() !== '')
       : []
 
     const precedentes: unknown[] = Array.isArray(parsed.precedentes_relevantes)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type JSX } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import {
   Card,
@@ -53,6 +53,46 @@ import type { Appointment } from '@/types'
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
 const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY
+
+/**
+ * Retorna a descrição do status da integração Google
+ */
+function getGoogleStatusDescription(configured: boolean, initializing: boolean, connected: boolean): string {
+  if (!configured) return 'Configure as credenciais do Google para habilitar a sincronização'
+  if (initializing) return 'Inicializando conexão...'
+  if (connected) return 'Conectado - seus eventos podem ser sincronizados'
+  return 'Conecte sua conta do Google para sincronizar eventos'
+}
+
+/**
+ * Retorna a variante do badge baseado no status
+ */
+function getGoogleBadgeVariant(connected: boolean, configured: boolean): 'default' | 'secondary' | 'destructive' {
+  if (connected) return 'default'
+  if (configured) return 'secondary'
+  return 'destructive'
+}
+
+/**
+ * Renderiza o conteúdo do badge de status Google
+ */
+function renderGoogleBadgeContent(connected: boolean, configured: boolean): JSX.Element | string {
+  if (connected) {
+    return (
+      <span className="flex items-center gap-1">
+        <CheckCircle className="w-3 h-3" /> Conectado
+      </span>
+    )
+  }
+  if (configured) {
+    return 'Desconectado'
+  }
+  return (
+    <span className="flex items-center gap-1">
+      <XCircle className="w-3 h-3" /> Não Configurado
+    </span>
+  )
+}
 
 const MONTHS = [
   'Janeiro',
@@ -533,13 +573,7 @@ export default function Calendar() {
               <div>
                 <CardTitle>Integração Google Calendar</CardTitle>
                 <CardDescription>
-                  {!isGoogleConfigured
-                    ? 'Configure as credenciais do Google para habilitar a sincronização'
-                    : (isInitializing
-                      ? 'Inicializando conexão...'
-                      : (isGoogleConnected
-                        ? 'Conectado - seus eventos podem ser sincronizados'
-                        : 'Conecte sua conta do Google para sincronizar eventos'))}
+                  {getGoogleStatusDescription(isGoogleConfigured, isInitializing, isGoogleConnected)}
                 </CardDescription>
               </div>
             </div>
@@ -548,25 +582,9 @@ export default function Calendar() {
                 <ArrowsClockwise className="w-5 h-5 text-blue-600 animate-spin" />
               )}
               <Badge
-                variant={
-                  isGoogleConnected
-                    ? 'default'
-                    : (isGoogleConfigured
-                      ? 'secondary'
-                      : 'destructive')
-                }
+                variant={getGoogleBadgeVariant(isGoogleConnected, isGoogleConfigured)}
               >
-                {isGoogleConnected ? (
-                  <span className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> Conectado
-                  </span>
-                ) : (isGoogleConfigured ? (
-                  'Desconectado'
-                ) : (
-                  <span className="flex items-center gap-1">
-                    <XCircle className="w-3 h-3" /> Não Configurado
-                  </span>
-                ))}
+                {renderGoogleBadgeContent(isGoogleConnected, isGoogleConfigured)}
               </Badge>
             </div>
           </div>
