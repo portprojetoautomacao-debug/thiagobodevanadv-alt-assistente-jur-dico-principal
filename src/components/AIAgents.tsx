@@ -77,7 +77,7 @@ function getStatusColor(enabled: boolean, isStreaming: boolean, status?: string)
  * Returns the badge variant based on streaming and enabled state
  * Extraído para evitar ternários aninhados (S3358)
  */
-function getBadgeVariant(isStreaming: boolean, enabled: boolean): 'default' | 'secondary' {
+function _getBadgeVariant(isStreaming: boolean, enabled: boolean): 'default' | 'secondary' {
   if (isStreaming) return 'default'
   return enabled ? 'default' : 'secondary'
 }
@@ -104,6 +104,58 @@ function getActiveAgentsText(count: number): string {
 function getProcessingText(count: number): string {
   if (count > 0) return `${count} em processamento`
   return 'Aguardando tarefas'
+}
+
+/**
+ * Renderiza o preview de streaming de um agente
+ */
+function renderStreamingPreview(
+  isStreaming: boolean,
+  streamPreview: string
+): JSX.Element | null {
+  if (!isStreaming || !streamPreview) return null
+
+  return (
+    <div className="mt-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex gap-1">
+          <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+        <span className="text-xs text-purple-400 font-medium">Streaming em tempo real</span>
+      </div>
+      <p className="text-xs text-muted-foreground font-mono line-clamp-2">
+        {streamPreview}
+        <span className="animate-pulse">▊</span>
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Renderiza o indicador de streaming inline no título
+ */
+function renderStreamingIndicator(isStreaming: boolean): JSX.Element | null {
+  if (!isStreaming) return null
+
+  return (
+    <Badge className="bg-purple-500/20 text-purple-500 border-purple-500/30 text-xs animate-pulse">
+      <Lightning className="w-3 h-3 mr-1" weight="fill" />
+      Gerando...
+    </Badge>
+  )
+}
+
+/**
+ * Renderiza o ponto pulsante de streaming
+ */
+function renderStreamingPingIndicator(isStreaming: boolean): JSX.Element | null {
+  if (!isStreaming) return null
+
+  return (
+    <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-ping" />
+  )
 }
 
 const agentIcons: Record<string, ComponentType<IconProps>> = {
@@ -560,19 +612,12 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                             className={`w-6 h-6 ${statusColor}`}
                             weight="fill"
                           />
-                          {isStreaming && (
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-ping" />
-                          )}
+                          {renderStreamingPingIndicator(isStreaming)}
                         </div>
                         <div>
                           <CardTitle className="text-base flex items-center gap-2">
                             {agent.name}
-                            {isStreaming && (
-                              <Badge className="bg-purple-500/20 text-purple-500 border-purple-500/30 text-xs animate-pulse">
-                                <Lightning className="w-3 h-3 mr-1" weight="fill" />
-                                Gerando...
-                              </Badge>
-                            )}
+                            {renderStreamingIndicator(isStreaming)}
                           </CardTitle>
                           <CardDescription className="text-xs mt-1">
                             {agent.description}
@@ -586,22 +631,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     </div>
 
                     {/* Streaming Preview */}
-                    {isStreaming && streamPreview && (
-                      <div className="mt-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="flex gap-1">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                          </div>
-                          <span className="text-xs text-purple-400 font-medium">Streaming em tempo real</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono line-clamp-2">
-                          {streamPreview}
-                          <span className="animate-pulse">▊</span>
-                        </p>
-                      </div>
-                    )}
+                    {renderStreamingPreview(isStreaming, streamPreview)}
 
                     <div className="pt-2">
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">

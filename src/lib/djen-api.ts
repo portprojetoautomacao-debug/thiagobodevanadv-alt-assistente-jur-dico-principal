@@ -281,6 +281,101 @@ function parsePublicationToResult(
   }
 }
 
+// ===== Query helpers (reduces S3776 Cognitive Complexity) =====
+
+interface QueryDates {
+  queryDataInicio: string
+  queryDataFim: string
+}
+
+function resolveQueryDates(config: DJENConfig): QueryDates {
+  const defaultDate = formatDate(new Date())
+  const queryDataInicio = config.dataInicio || defaultDate
+  const queryDataFim = config.dataFim || config.dataInicio || defaultDate
+  return { queryDataInicio, queryDataFim }
+}
+
+interface OABParsedParams {
+  numeroOAB?: string
+  ufOAB?: string
+}
+
+function resolveOABParams(searchTerms: DJENConfig['searchTerms']): OABParsedParams {
+  if (!searchTerms.numeroOAB) {
+    return {}
+  }
+  const parsed = parseOAB(searchTerms.numeroOAB)
+  return { numeroOAB: parsed.numero, ufOAB: parsed.uf }
+}
+
+/**
+ * Filters and maps publications to results - extracted to reduce CC
+ */
+function filterPublicationsToResults(
+  publicacoes: DJENPublication[],
+  tribunal: string,
+  queryDataInicio: string,
+  searchTerms: DJENConfig['searchTerms']
+): DJENFilteredResult[] {
+  const results: DJENFilteredResult[] = []
+
+  for (const pub of publicacoes) {
+    const pubText = extractPublicationText(pub)
+    const { matches, matchType } = matchesSearchTerms(pubText, searchTerms)
+
+    if (matches && matchType) {
+      results.push(parsePublicationToResult(pub, tribunal, queryDataInicio, matchType))
+    }
+  }
+
+  return results
+}
+
+/**
+ * Handles error from tribunal query - extracted to reduce CC
+ */
+function handleTribunalError(error: unknown, tribunal: string): { tribunal: string; erro: string } {
+  if (error instanceof DJENAPIError) {
+    return { tribunal, erro: error.message }
+  }
+  return { tribunal, erro: 'Erro desconhecido ao processar tribunal' }
+}
+
+/**
+ * Processes a single tribunal query - extracted to reduce CC
+ */
+async function processTribunalQuery(
+  tribunal: string,
+  queryParams: DJENQueryParams,
+  searchTerms: DJENConfig['searchTerms'],
+  timeout: number,
+  delayBetweenRequests: number
+): Promise<{
+  results: DJENFilteredResult[]
+  publicationsCount: number
+  error?: { tribunal: string; erro: string }
+}> {
+  try {
+    const publicacoes = await consultarPublicacoesTribunal(queryParams, timeout)
+    const results = filterPublicationsToResults(publicacoes, tribunal, queryParams.dataInicio, searchTerms)
+
+    if (delayBetweenRequests > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayBetweenRequests))
+    }
+
+    return {
+      results,
+      publicationsCount: publicacoes.length
+    }
+  } catch (error) {
+    return {
+      results: [],
+      publicationsCount: 0,
+      error: handleTribunalError(error, tribunal)
+    }
+  }
+}
+
 export async function consultarDJEN(config: DJENConfig): Promise<{
   resultados: DJENFilteredResult[]
   erros: Array<{ tribunal: string; erro: string }>
@@ -289,8 +384,6 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   const {
     tribunais = DEFAULT_TRIBUNAIS,
     searchTerms,
-    dataInicio,
-    dataFim,
     timeout = DEFAULT_TIMEOUT,
     delayBetweenRequests = DEFAULT_DELAY
   } = config
@@ -299,65 +392,37 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
     throw new Error('É necessário fornecer pelo menos um termo de busca (nome ou OAB)')
   }
 
-  // Use the same date for both inicio and fim if not specified
-  const defaultDate = formatDate(new Date())
-  const queryDataInicio = dataInicio || defaultDate
-  const queryDataFim = dataFim || dataInicio || defaultDate
-
-  // Extract UF and number from OAB if provided
-  let numeroOAB: string | undefined
-  let ufOAB: string | undefined
-
-  if (searchTerms.numeroOAB) {
-    const parsed = parseOAB(searchTerms.numeroOAB)
-    ufOAB = parsed.uf
-    numeroOAB = parsed.numero
-  }
+  // Use extracted helpers to reduce cognitive complexity
+  const { queryDataInicio, queryDataFim } = resolveQueryDates(config)
+  const { numeroOAB, ufOAB } = resolveOABParams(searchTerms)
 
   const resultados: DJENFilteredResult[] = []
   const erros: Array<{ tribunal: string; erro: string }> = []
   let totalPublicacoes = 0
 
   for (const tribunal of tribunais) {
-    try {
-      const publicacoes = await consultarPublicacoesTribunal(
-        {
-          tribunal,
-          dataInicio: queryDataInicio,
-          dataFim: queryDataFim,
-          nomeAdvogado: searchTerms.nomeAdvogado,
-          numeroOAB,
-          ufOAB
-        },
-        timeout
-      )
+    const queryParams: DJENQueryParams = {
+      tribunal,
+      dataInicio: queryDataInicio,
+      dataFim: queryDataFim,
+      nomeAdvogado: searchTerms.nomeAdvogado,
+      numeroOAB,
+      ufOAB
+    }
 
-      totalPublicacoes += publicacoes.length
+    const queryResult = await processTribunalQuery(
+      tribunal,
+      queryParams,
+      searchTerms,
+      timeout,
+      delayBetweenRequests
+    )
 
-      for (const pub of publicacoes) {
-        const pubText = extractPublicationText(pub)
-        const { matches, matchType } = matchesSearchTerms(pubText, searchTerms)
+    resultados.push(...queryResult.results)
+    totalPublicacoes += queryResult.publicationsCount
 
-        if (matches && matchType) {
-          resultados.push(parsePublicationToResult(pub, tribunal, queryDataInicio, matchType))
-        }
-      }
-
-      if (delayBetweenRequests > 0) {
-        await new Promise(resolve => setTimeout(resolve, delayBetweenRequests))
-      }
-    } catch (error) {
-      if (error instanceof DJENAPIError) {
-        erros.push({
-          tribunal,
-          erro: error.message
-        })
-      } else {
-        erros.push({
-          tribunal,
-          erro: 'Erro desconhecido ao processar tribunal'
-        })
-      }
+    if (queryResult.error) {
+      erros.push(queryResult.error)
     }
   }
 

@@ -28,6 +28,35 @@ const PROGRESS_STEP = 1
 const PROGRESS_INTERVAL_MS = 150
 const RESUME_DELAY_MS = 1000
 
+// ===== Helper Functions (extracted to reduce nesting - S2004 compliance) =====
+
+/**
+ * Calculates next progress value and determines if phase should change to completed
+ */
+function calculateNextProgress(
+  current: number,
+  step: number,
+  max: number
+): { next: number; isComplete: boolean } {
+  const next = Math.min(current + step, max)
+  return { next, isComplete: next >= max }
+}
+
+/**
+ * Calculates next inactivity time and determines if agent should resume
+ */
+function calculateNextInactivity(
+  current: number,
+  isHumanActive: boolean,
+  limit: number
+): { next: number; shouldAgentResume: boolean } {
+  if (isHumanActive) {
+    return { next: 0, shouldAgentResume: false }
+  }
+  const next = current + 1
+  return { next, shouldAgentResume: next >= limit }
+}
+
 export default function HumanAgentCollaboration({
   agentName,
   taskDescription,
@@ -39,7 +68,7 @@ export default function HumanAgentCollaboration({
   const [isHumanActive, setIsHumanActive] = useState(false)
 
   // Refs para controlar timers e evitar vazamentos de memória
-  const humanActivityTimeoutRef = useRef<number | null>(null)
+  const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
@@ -50,10 +79,9 @@ export default function HumanAgentCollaboration({
       setProgress((prev) => {
         if (isCancelled) return prev
 
-        const next = Math.min(prev + PROGRESS_STEP, 100)
+        const { next, isComplete } = calculateNextProgress(prev, PROGRESS_STEP, 100)
 
-        if (next >= 100) {
-          // Marca como concluído e dispara callback
+        if (isComplete) {
           setPhase('completed')
           onComplete?.()
         }
@@ -81,23 +109,13 @@ export default function HumanAgentCollaboration({
       if (isCancelled) return
 
       setTimeWithoutActivity((prev) => {
-        // Se há atividade humana, zera contador
-        if (isHumanActive) {
-          return 0
-        }
+        const { next, shouldAgentResume } = calculateNextInactivity(prev, isHumanActive, INACTIVITY_LIMIT_SECONDS)
 
-        const next = prev + 1
-
-        // Se atingiu limite de inatividade, agente retoma
-        if (next >= INACTIVITY_LIMIT_SECONDS) {
+        if (shouldAgentResume) {
           setPhase('agent_resuming')
-          setTimeWithoutActivity(0)
-
           globalThis.setTimeout(() => {
             setPhase('agent_working')
           }, RESUME_DELAY_MS)
-
-          // Limpamos o timeout se o efeito sair antes
           return 0
         }
 
@@ -290,7 +308,7 @@ export default function HumanAgentCollaboration({
         <div className="pt-4 border-t space-y-2">
           <div className="flex items-start gap-2">
             <Sparkle
-              className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+              className="w-4 h-4 text-primary shrink-0 mt-0.5"
               weight="fill"
             />
             <p className="text-xs text-muted-foreground">
@@ -300,7 +318,7 @@ export default function HumanAgentCollaboration({
           </div>
           <div className="flex items-start gap-2">
             <Sparkle
-              className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+              className="w-4 h-4 text-primary shrink-0 mt-0.5"
               weight="fill"
             />
             <p className="text-xs text-muted-foreground">
@@ -310,7 +328,7 @@ export default function HumanAgentCollaboration({
           </div>
           <div className="flex items-start gap-2">
             <Sparkle
-              className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+              className="w-4 h-4 text-primary shrink-0 mt-0.5"
               weight="fill"
             />
             <p className="text-xs text-muted-foreground">

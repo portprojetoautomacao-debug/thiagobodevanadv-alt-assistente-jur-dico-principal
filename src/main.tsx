@@ -30,7 +30,8 @@ const initAnalyticsServices = async () => {
 
   try {
     const { initAnalytics } = await import('./lib/analytics')
-    await initAnalytics()
+    // initAnalytics é síncrono - não precisa de await
+    initAnalytics()
   } catch (error) {
     console.warn('Analytics não inicializado:', error)
   }

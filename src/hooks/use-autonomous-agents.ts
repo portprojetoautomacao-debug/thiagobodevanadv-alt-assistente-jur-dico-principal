@@ -13,12 +13,107 @@ import {
 } from '@/lib/agents'
 
 // ===========================
+// Types for callbacks
+// ===========================
+
+interface StreamingCallbacks {
+  onChunk: (chunk: string) => void
+  onComplete: () => void
+  onError: (error: Error) => void
+}
+
+// ===========================
 // Helper Functions
 // ===========================
 
 function getAgentActivity(agent: Agent): string {
   if (agent.status === 'processing') return 'Processando tarefa...'
   return 'Aguardando tarefas'
+}
+
+/**
+ * Creates streaming callbacks for an agent - extracted to reduce nesting (S2004)
+ */
+function createStreamingCallbacks(
+  agentId: string,
+  setStreamingContent: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+  setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
+  logActivity: (agentId: string, action: string, result: 'success' | 'warning' | 'error') => void
+): StreamingCallbacks {
+  return {
+    onChunk: (chunk: string) => {
+      setStreamingContent(prev => ({
+        ...prev,
+        [agentId]: (prev[agentId] || '') + chunk
+      }))
+
+      // Update last activity with preview
+      setAgents(current =>
+        (current || []).map(a =>
+          a.id === agentId
+            ? {
+              ...a,
+              lastActivity: `Gerando: ${chunk.substring(0, 50)}...`
+            }
+            : a
+        )
+      )
+    },
+    onComplete: () => {
+      // Clear streaming content when complete
+      setStreamingContent(prev => {
+        const { [agentId]: _, ...rest } = prev
+        return rest
+      })
+    },
+    onError: (error: Error) => {
+      console.error(`[Agent ${agentId}] Streaming error:`, error)
+      logActivity(agentId, `Erro streaming: ${error.message}`, 'error')
+    }
+  }
+}
+
+/**
+ * Handles task completion - extracted to reduce nesting (S2004)
+ */
+function handleTaskCompletion(
+  task: AgentTask,
+  result: AgentTask['result'],
+  agentId: string,
+  setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
+  setCompletedTasks: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
+  setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
+  logActivity: (agentId: string, action: string, result: 'success' | 'warning' | 'error') => void
+): void {
+  const completed: AgentTask = {
+    ...task,
+    status: 'completed',
+    completedAt: new Date().toISOString(),
+    result
+  }
+
+  setTaskQueue(current => (current || []).filter(t => t.id !== task.id))
+  setCompletedTasks(current => [completed, ...(current || [])].slice(0, 500))
+  setAgents(current =>
+    updateAgentInList(current || [], agentId, { lastActivity: `Concluído: ${task.type}` })
+  )
+  logActivity(agentId, `Tarefa concluída: ${task.type}`, 'success')
+}
+
+/**
+ * Handles task failure - extracted to reduce nesting (S2004)
+ */
+function handleTaskFailure(
+  task: AgentTask,
+  error: unknown,
+  agentId: string,
+  setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
+  logActivity: (agentId: string, action: string, result: 'success' | 'warning' | 'error') => void
+): void {
+  setTaskQueue(current =>
+    updateTaskInQueue(current || [], task.id, { status: 'failed', error: String(error) })
+  )
+  logActivity(agentId, `Erro no processamento: ${task.type}`, 'error')
 }
 
 function sortTasksByPriority(tasks: AgentTask[]): AgentTask[] {
@@ -226,70 +321,24 @@ export function useAutonomousAgents() {
         let result
 
         if (useStreaming) {
-          // Usar streaming para respostas em tempo real
-          result = await processTaskWithStreamingAI(task, agent, {
-            onChunk: (chunk) => {
-              setStreamingContent(prev => ({
-                ...prev,
-                [agent.id]: (prev[agent.id] || '') + chunk
-              }))
-
-              // Atualizar última atividade com preview
-              setAgents(current =>
-                (current || []).map(a =>
-                  a.id === agent.id
-                    ? {
-                      ...a,
-                      lastActivity: `Gerando: ${chunk.substring(0, 50)}...`
-                    }
-                    : a
-                )
-              )
-            },
-            onComplete: () => {
-              // Limpar streaming content quando completar
-              setStreamingContent(prev => {
-                const { [agent.id]: _, ...rest } = prev
-                return rest
-              })
-            },
-            onError: (error) => {
-              console.error(`[Agent ${agent.id}] Streaming error:`, error)
-              logActivity(agent.id, `Erro streaming: ${error.message}`, 'error')
-            }
-          })
+          // Create callbacks using extracted helper (S2004 compliance)
+          const callbacks = createStreamingCallbacks(agent.id, setStreamingContent, setAgents, logActivity)
+          result = await processTaskWithStreamingAI(task, agent, callbacks)
         } else {
           // Fallback para processamento sem streaming
           result = await processTaskWithRealAI(task, agent)
         }
 
-        const completed: AgentTask = {
-          ...task,
-          status: 'completed',
-          completedAt: new Date().toISOString(),
-          result
-        }
-
-        setTaskQueue(current => (current || []).filter(t => t.id !== task.id))
-
-        setCompletedTasks(current => [completed, ...(current || [])].slice(0, 500))
-
-        setAgents(current =>
-          updateAgentInList(current || [], agent.id, { lastActivity: `Concluído: ${task.type}` })
-        )
-
-        logActivity(agent.id, `Tarefa concluída: ${task.type}`, 'success')
+        // Use extracted helper for completion (S2004 compliance)
+        handleTaskCompletion(task, result, agent.id, setTaskQueue, setCompletedTasks, setAgents, logActivity)
       } catch (err) {
-        setTaskQueue(current =>
-          updateTaskInQueue(current || [], task.id, { status: 'failed', error: String(err) })
-        )
-
-        logActivity(agent.id, `Erro no processamento: ${task.type}`, 'error')
+        // Use extracted helper for failure (S2004 compliance)
+        handleTaskFailure(task, err, agent.id, setTaskQueue, logActivity)
       } finally {
         processingRef.current.delete(agent.id)
       }
     },
-    [taskQueue, setTaskQueue, setAgents, setCompletedTasks, logActivity]
+    [taskQueue, setTaskQueue, setAgents, setCompletedTasks, logActivity, useStreaming]
   )
 
   const processNextTaskRef = useRef(processNextTask)

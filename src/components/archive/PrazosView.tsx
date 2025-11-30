@@ -31,6 +31,39 @@ function formatDiasRestantesBadge(diasRestantes: number): string {
   return `${diasRestantes} dias`
 }
 
+// ===== Process Update Helpers (reduces S2004 nesting) =====
+
+/**
+ * Toggles the concluido status of a prazo within a process
+ */
+function togglePrazoConcluido(prazo: Prazo): Prazo {
+  return { ...prazo, concluido: !prazo.concluido }
+}
+
+/**
+ * Updates prazos array with toggled prazo
+ */
+function updatePrazosWithToggle(prazos: Prazo[], prazoId: string): Prazo[] {
+  return prazos.map(p => p.id === prazoId ? togglePrazoConcluido(p) : p)
+}
+
+/**
+ * Updates a single process with toggled prazo - extracted to reduce nesting (S2004)
+ */
+function updateProcessWithToggledPrazo(
+  process: Process,
+  prazoId: string,
+  prazoProcessId: string
+): Process {
+  if (process.id !== prazoProcessId) return process
+
+  return {
+    ...process,
+    prazos: updatePrazosWithToggle(process.prazos, prazoId),
+    updatedAt: new Date().toISOString()
+  }
+}
+
 interface PrazoComProcesso extends Prazo {
   processo: Process
 }
@@ -78,19 +111,11 @@ export default function PrazosView() {
   }, [prazosComProcesso])
 
   const handleToggleConcluido = (prazo: Prazo & { processo: Process }) => {
+    // Use extracted helper to reduce nesting (S2004 compliance)
     setProcesses(current =>
-      (current || []).map(process => {
-        if (process.id === prazo.processId) {
-          return {
-            ...process,
-            prazos: process.prazos.map(p =>
-              p.id === prazo.id ? { ...p, concluido: !p.concluido } : p
-            ),
-            updatedAt: new Date().toISOString()
-          }
-        }
-        return process
-      })
+      (current || []).map(process =>
+        updateProcessWithToggledPrazo(process, prazo.id, prazo.processId)
+      )
     )
 
     toast.success(prazo.concluido ? 'Prazo marcado como pendente' : 'Prazo concluído')
