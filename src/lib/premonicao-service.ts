@@ -1,12 +1,68 @@
 import type { PremonicaoJuridica, Process } from '@/types'
 
+/**
+ * Gera a informação do processo formatada
+ */
+function buildProcessInfo(processData?: Process): string {
+  if (!processData) return ''
+  
+  return `**Título:** ${processData.titulo}
+**Autor:** ${processData.autor}
+**Réu:** ${processData.reu}
+**Status Atual:** ${processData.status}
+**Comarca:** ${processData.comarca}
+**Vara:** ${processData.vara}\n`
+}
+
+/**
+ * Extrai texto da resposta da API (suporta vários formatos)
+ */
+function extractResponseText(data: Record<string, unknown>): string {
+  return (
+    (data.response as { text?: string })?.text ??
+    (data.response as string) ??
+    (data.choices as Array<{ message?: { content?: string }; text?: string }>)?.[0]?.message?.content ??
+    (data.choices as Array<{ text?: string }>)?.[0]?.text ??
+    (data.message as { content?: string })?.content ??
+    ''
+  )
+}
+
+/**
+ * Limpa e faz parse do JSON da resposta
+ */
+function parseJsonResponse(responseText: string): Record<string, unknown> {
+  const cleaned = responseText
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim()
+
+  try {
+    return JSON.parse(cleaned) as Record<string, unknown>
+  } catch {
+    // Tentar extrair o primeiro bloco JSON da resposta
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]) as Record<string, unknown>
+    }
+    throw new Error('Resposta não contém JSON reconhecível')
+  }
+}
+
+/**
+ * Normaliza a probabilidade para estar entre 0 e 100
+ */
+function normalizeProbability(value: unknown): number {
+  let prob = Number(value)
+  if (!Number.isFinite(prob)) prob = 50
+  return Math.min(100, Math.max(0, prob))
+}
+
 export async function generatePremonicaoJuridica(
   cnj: string,
   processData?: Process
 ): Promise<PremonicaoJuridica> {
-  const processInfo = processData
-    ? `**Título:** ${processData.titulo}\n**Autor:** ${processData.autor}\n**Réu:** ${processData.reu}\n**Status Atual:** ${processData.status}\n**Comarca:** ${processData.comarca}\n**Vara:** ${processData.vara}\n`
-    : ''
+  const processInfo = buildProcessInfo(processData)
 
   const promptText = `Você é um assistente jurídico especializado em análise preditiva de processos judiciais brasileiros.
 
@@ -86,16 +142,9 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
       throw new Error(`Erro na API: ${response.status}`)
     }
 
-    const data = await response.json()
+    const data = await response.json() as Record<string, unknown>
 
-    // Cobrir os formatos mais comuns do proxy Spark/Gemini
-    const responseText: string =
-      data.response?.text ??
-      data.response ??
-      data.choices?.[0]?.message?.content ??
-      data.choices?.[0]?.text ??
-      data.message?.content ??
-      ''
+    const responseText = extractResponseText(data)
 
     console.log(
       '[PremonicaoService] Resposta recebida (preview):',
@@ -106,49 +155,23 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`
       throw new Error('Resposta vazia ou em formato inesperado da API de IA')
     }
 
-    // Limpar possíveis marcadores de código (```json ... ```)
-    const cleaned = responseText
-      .replace(/```json\s*/gi, '')
-      .replace(/```\s*/g, '')
-      .trim()
-
-    let parsed: any
-
-    try {
-      parsed = JSON.parse(cleaned)
-    } catch (parseError) {
-      console.error('[PremonicaoService] Erro ao fazer parse direto do JSON:', parseError)
-
-      // Tentar extrair o primeiro bloco JSON da resposta
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        try {
-          parsed = JSON.parse(jsonMatch[0])
-        } catch (innerError) {
-          console.error('[PremonicaoService] Erro ao fazer parse do JSON extraído:', innerError)
-          throw new Error('Resposta não contém JSON válido (parse falhou)')
-        }
-      } else {
-        throw new Error('Resposta não contém JSON reconhecível')
-      }
-    }
+    const parsed = parseJsonResponse(responseText)
 
     // Normalização defensiva
-    let prob = Number(parsed.probabilidade_exito)
-    if (!Number.isFinite(prob)) prob = 50
-    prob = Math.min(100, Math.max(0, prob))
+    const prob = normalizeProbability(parsed.probabilidade_exito)
 
     const analise =
-      typeof parsed.analise_ia === 'string' && parsed.analise_ia.trim()
-        ? parsed.analise_ia.trim()
+      typeof parsed.analise_ia === 'string' && (parsed.analise_ia as string).trim()
+        ? (parsed.analise_ia as string).trim()
         : 'Análise não disponível'
 
     const estrategias: string[] = Array.isArray(parsed.estrategias_recomendadas)
-      ? parsed.estrategias_recomendadas.filter((e: unknown) => typeof e === 'string' && e.trim())
+      ? (parsed.estrategias_recomendadas as unknown[]).filter((e: unknown) => typeof e === 'string' && (e as string).trim())
+        .map(e => e as string)
       : []
 
-    const precedentes: any[] = Array.isArray(parsed.precedentes_relevantes)
-      ? parsed.precedentes_relevantes
+    const precedentes: unknown[] = Array.isArray(parsed.precedentes_relevantes)
+      ? parsed.precedentes_relevantes as unknown[]
       : []
 
     const result: PremonicaoJuridica = {
