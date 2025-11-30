@@ -64,7 +64,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Verificar runtime.config.json
 if [[ -f "runtime.config.json" ]]; then
     RUNTIME_ID=$(grep -o '"app": "[^"]*"' runtime.config.json | cut -d'"' -f4)
-    if [[ ! -z "$RUNTIME_ID" ]]; then
+    if [[ -n "$RUNTIME_ID" ]]; then
         echo -e "${GREEN}✓${NC} runtime.config.json encontrado"
         echo "  Runtime ID: $RUNTIME_ID"
         
