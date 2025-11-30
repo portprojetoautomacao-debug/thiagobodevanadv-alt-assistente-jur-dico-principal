@@ -106,6 +106,85 @@ export class DJENMonitorAgent {
     throw new Error('Max retries exceeded')
   }
 
+  // ===== Helper methods for executarConsulta (reduced CC) =====
+
+  private isAdvogadoValido(advogado: { nome?: string; oab?: string }): boolean {
+    return !!(advogado.nome || advogado.oab)
+  }
+
+  private buildConsultaConfig(advogado: { nome?: string; oab?: string }): DJENConfig {
+    return {
+      tribunais: this.config.tribunais,
+      searchTerms: {
+        nomeAdvogado: advogado.nome,
+        numeroOAB: advogado.oab
+      },
+      timeout: 60000,
+      delayBetweenRequests: 1500
+    }
+  }
+
+  private getAdvogadoIdentifier(advogado: { nome?: string; oab?: string }): string {
+    return advogado.nome || advogado.oab || 'desconhecido'
+  }
+
+  private handleAdvogadoError(advogado: { nome?: string; oab?: string }, error: unknown): void {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    this.log(`Erro ao consultar advogado ${this.getAdvogadoIdentifier(advogado)}: ${errorMessage}`, 'error')
+
+    this.task.erros.push({
+      timestamp: new Date().toISOString(),
+      message: errorMessage
+    })
+
+    // Limita histórico de erros
+    if (this.task.erros.length > 100) {
+      this.task.erros = this.task.erros.slice(-50)
+    }
+  }
+
+  private processResultado(
+    resultado: { resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string }> },
+    advogado: { nome?: string; oab?: string },
+    todasPublicacoes: DJENFilteredResult[]
+  ): void {
+    const identifier = this.getAdvogadoIdentifier(advogado)
+
+    if (resultado.resultados.length > 0) {
+      this.log(`Encontradas ${resultado.resultados.length} publicação(ões) para ${identifier}`, 'info')
+      todasPublicacoes.push(...resultado.resultados)
+    }
+
+    if (resultado.erros.length > 0) {
+      const tribunais = resultado.erros.map((e) => e.tribunal).join(', ')
+      this.log(`Erros ao consultar tribunais para ${identifier}: ${tribunais}`, 'warn')
+    }
+  }
+
+  private handlePublicacoesEncontradas(todasPublicacoes: DJENFilteredResult[]): void {
+    this.task.totalPublicacoesEncontradas += todasPublicacoes.length
+    this.task.ultimasPublicacoes = todasPublicacoes
+
+    if (this.config.notificarCallback) {
+      try {
+        this.config.notificarCallback(todasPublicacoes)
+      } catch {
+        this.log('Erro ao executar callback de notificação', 'error')
+      }
+    }
+
+    this.log(`Total de ${todasPublicacoes.length} publicação(ões) relevante(s) encontrada(s) nesta execução`, 'info')
+  }
+
+  private finalizarConsulta(): void {
+    this.task.lastRun = new Date().toISOString()
+    this.task.nextRun = this.calcularProximaExecucao().toISOString()
+    this.task.status = 'idle'
+    this.log(`Próxima execução agendada para ${new Date(this.task.nextRun).toLocaleString('pt-BR')}`)
+  }
+
+  // ===== Main refactored method =====
+
   private async executarConsulta(): Promise<void> {
     if (!this.isRunning) return
 
@@ -115,85 +194,27 @@ export class DJENMonitorAgent {
     const todasPublicacoes: DJENFilteredResult[] = []
 
     for (const advogado of this.config.advogados) {
-      // Se não tiver nome nem OAB, ignora
-      if (!advogado.nome && !advogado.oab) {
+      if (!this.isAdvogadoValido(advogado)) {
         this.log('Advogado sem nome e sem OAB ignorado na consulta', 'warn')
         continue
       }
 
       try {
-        // NÃO passamos dataInicio/dataFim:
-        // o consultarDJEN vai usar a data de hoje como default
-        const configConsulta: DJENConfig = {
-          tribunais: this.config.tribunais,
-          searchTerms: {
-            nomeAdvogado: advogado.nome,
-            numeroOAB: advogado.oab
-          },
-          timeout: 60000,
-          delayBetweenRequests: 1500
-        }
-
+        const configConsulta = this.buildConsultaConfig(advogado)
         const resultado = await this.consultarComRetry(configConsulta, advogado)
-
-        if (resultado.resultados.length > 0) {
-          this.log(
-            `Encontradas ${resultado.resultados.length} publicação(ões) para ${advogado.nome || advogado.oab}`,
-            'info'
-          )
-          todasPublicacoes.push(...resultado.resultados)
-        }
-
-        if (resultado.erros.length > 0) {
-          this.log(
-            `Erros ao consultar tribunais para ${advogado.nome || advogado.oab}: ${resultado.erros
-              .map((e: any) => e.tribunal)
-              .join(', ')}`,
-            'warn'
-          )
-        }
+        this.processResultado(resultado, advogado, todasPublicacoes)
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-        this.log(`Erro ao consultar advogado ${advogado.nome || advogado.oab}: ${errorMessage}`, 'error')
-
-        this.task.erros.push({
-          timestamp: new Date().toISOString(),
-          message: errorMessage
-        })
-
-        if (this.task.erros.length > 100) {
-          this.task.erros = this.task.erros.slice(-50)
-        }
+        this.handleAdvogadoError(advogado, error)
       }
     }
 
     if (todasPublicacoes.length > 0) {
-      this.task.totalPublicacoesEncontradas += todasPublicacoes.length
-      this.task.ultimasPublicacoes = todasPublicacoes
-
-      if (this.config.notificarCallback) {
-        try {
-          // Aqui normalmente você integra com seu AgentTaskEngine:
-          // notificarCallback cria TarefasSistema para cada publicação relevante.
-          this.config.notificarCallback(todasPublicacoes)
-        } catch (error) {
-          this.log('Erro ao executar callback de notificação', 'error')
-        }
-      }
-
-      this.log(
-        `Total de ${todasPublicacoes.length} publicação(ões) relevante(s) encontrada(s) nesta execução`,
-        'info'
-      )
+      this.handlePublicacoesEncontradas(todasPublicacoes)
     } else {
       this.log('Nenhuma publicação relevante encontrada nesta execução', 'info')
     }
 
-    this.task.lastRun = new Date().toISOString()
-    this.task.nextRun = this.calcularProximaExecucao().toISOString()
-    this.task.status = 'idle'
-
-    this.log(`Próxima execução agendada para ${new Date(this.task.nextRun).toLocaleString('pt-BR')}`)
+    this.finalizarConsulta()
   }
 
   public iniciar(): void {

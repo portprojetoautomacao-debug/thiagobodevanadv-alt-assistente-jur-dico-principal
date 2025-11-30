@@ -260,7 +260,87 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     }
   }
 
-  // ===== Main run() method - Refactored =====
+  // ===== Additional helpers for run() - Further CC reduction =====
+
+  private handleInvalidJSON(
+    rawContent: string,
+    error: string,
+    step: number,
+    stepDuration: number,
+    messages: ChatMessage[],
+    traces: AgentTrace[]
+  ): void {
+    traces.push(this.createErrorTrace(step, 'Resposta inválida - solicitando correção', stepDuration, error));
+    messages.push({ role: "assistant", content: rawContent });
+    messages.push({ role: "user", content: "Sua resposta não está em JSON válido. Reformule seguindo exatamente o formato especificado." });
+  }
+
+  private handleToolNotFound(
+    toolName: string,
+    raw: string,
+    step: number,
+    stepDuration: number,
+    messages: ChatMessage[],
+    traces: AgentTrace[]
+  ): void {
+    traces.push(this.createErrorTrace(step, `Tool '${toolName}' não disponível`, stepDuration, `Tool not found: ${toolName}`));
+    messages.push({ role: "assistant", content: raw });
+    messages.push({ role: "user", content: `A ferramenta "${toolName}" não está disponível para este agente. Use apenas as ferramentas listadas.` });
+  }
+
+  private handleInvalidAction(
+    raw: string,
+    step: number,
+    stepDuration: number,
+    messages: ChatMessage[],
+    traces: AgentTrace[]
+  ): void {
+    traces.push(this.createErrorTrace(step, 'Formato de resposta inválido', stepDuration, 'Invalid action format'));
+    messages.push({ role: "assistant", content: raw });
+    messages.push({ role: "user", content: 'Sua resposta JSON deve ter "action":"tool" ou "action":"final". Reformule seguindo o formato.' });
+  }
+
+  private async handleToolAction(
+    parsed: Record<string, unknown>,
+    raw: string,
+    step: number,
+    stepDuration: number,
+    messages: ChatMessage[],
+    traces: AgentTrace[],
+    usedTools: string[]
+  ): Promise<boolean> {
+    const toolName = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
+    const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
+    const tool = this.allowedTools().find((t) => t.name === toolName);
+
+    if (!tool) {
+      this.handleToolNotFound(toolName, raw, step, stepDuration, messages, traces);
+      return false;
+    }
+
+    const result = await this.executeTool(tool, toolArgs, toolName, step, traces, usedTools);
+    messages.push({ role: "assistant", content: raw });
+    messages.push({ role: "user", content: `Resultado da ferramenta "${toolName}": ${JSON.stringify(result)}. Agora decida o próximo passo ou finalize a resposta.` });
+    return true;
+  }
+
+  private buildMaxStepsResponse(usedTools: string[], traces: AgentTrace[], startTime: number): {
+    answer: string;
+    steps: number;
+    usedTools: string[];
+    traces: AgentTrace[];
+    totalDuration: number;
+  } {
+    return {
+      answer: "Não consegui concluir a tarefa dentro do limite de passos configurado para o agente.",
+      steps: this.maxSteps,
+      usedTools,
+      traces,
+      totalDuration: Date.now() - startTime,
+    };
+  }
+
+  // ===== Main run() method - Further refactored =====
 
   async run(userInput: string): Promise<{
     answer: string;
@@ -291,48 +371,22 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       const { parsed, error } = this.tryParseJSON(rawContent);
 
       if (!parsed) {
-        traces.push(this.createErrorTrace(step, 'Resposta inválida - solicitando correção', stepDuration, error!));
-        messages.push({ role: "assistant", content: rawContent });
-        messages.push({ role: "user", content: "Sua resposta não está em JSON válido. Reformule seguindo exatamente o formato especificado." });
+        this.handleInvalidJSON(rawContent, error!, step, stepDuration, messages, traces);
         continue;
       }
 
-      // Handle final action
       if (parsed.action === "final") {
         return this.handleFinalAction(parsed, step, stepDuration, history, userInput, traces, usedTools, startTime);
       }
 
-      // Handle tool action
       if (parsed.action === "tool") {
-        const toolName = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
-        const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
-        const tool = this.allowedTools().find((t) => t.name === toolName);
-
-        if (!tool) {
-          traces.push(this.createErrorTrace(step, `Tool '${toolName}' não disponível`, stepDuration, `Tool not found: ${toolName}`));
-          messages.push({ role: "assistant", content: raw });
-          messages.push({ role: "user", content: `A ferramenta "${toolName}" não está disponível para este agente. Use apenas as ferramentas listadas.` });
-          continue;
-        }
-
-        const result = await this.executeTool(tool, toolArgs, toolName, step, traces, usedTools);
-        messages.push({ role: "assistant", content: raw });
-        messages.push({ role: "user", content: `Resultado da ferramenta "${toolName}": ${JSON.stringify(result)}. Agora decida o próximo passo ou finalize a resposta.` });
+        await this.handleToolAction(parsed, raw, step, stepDuration, messages, traces, usedTools);
         continue;
       }
 
-      // Invalid action
-      traces.push(this.createErrorTrace(step, 'Formato de resposta inválido', stepDuration, 'Invalid action format'));
-      messages.push({ role: "assistant", content: raw });
-      messages.push({ role: "user", content: 'Sua resposta JSON deve ter "action":"tool" ou "action":"final". Reformule seguindo o formato.' });
+      this.handleInvalidAction(raw, step, stepDuration, messages, traces);
     }
 
-    return {
-      answer: "Não consegui concluir a tarefa dentro do limite de passos configurado para o agente.",
-      steps: this.maxSteps,
-      usedTools,
-      traces,
-      totalDuration: Date.now() - startTime,
-    };
+    return this.buildMaxStepsResponse(usedTools, traces, startTime);
   }
 }
