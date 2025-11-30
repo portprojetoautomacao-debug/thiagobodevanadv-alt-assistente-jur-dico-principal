@@ -107,6 +107,38 @@ function setInCache<T>(key: string, value: T): void {
 }
 
 /**
+ * Carrega valores do localStorage para as chaves especificadas
+ */
+function loadFromLocalStorage(keys: string[]): Map<string, unknown> {
+  const results = new Map<string, unknown>();
+  for (const key of keys) {
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item) {
+        const value = JSON.parse(item);
+        results.set(key, value);
+        setInCache(key, value);
+      }
+    } catch {
+      // Ignora erros de parse
+    }
+  }
+  return results;
+}
+
+/**
+ * Processa resposta bem sucedida da API
+ */
+function processApiResponse(data: { values?: Record<string, unknown> }, results: Map<string, unknown>): void {
+  if (data.values && typeof data.values === 'object') {
+    for (const [k, v] of Object.entries(data.values)) {
+      results.set(k, v);
+      setInCache(k, v);
+    }
+  }
+}
+
+/**
  * Carrega múltiplas chaves em uma única requisição
  */
 async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknown>> {
@@ -116,19 +148,7 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
 
   // Se circuit breaker estiver ativo, use localStorage
   if (isCircuitOpen()) {
-    for (const key of keys) {
-      try {
-        const item = window.localStorage.getItem(key);
-        if (item) {
-          const value = JSON.parse(item);
-          results.set(key, value);
-          setInCache(key, value);
-        }
-      } catch {
-        // Ignora erros de parse
-      }
-    }
-    return results;
+    return loadFromLocalStorage(keys);
   }
 
   try {
@@ -144,43 +164,18 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
     if (response.ok) {
       recordApiSuccess();
       const data = await response.json();
-      if (data.values && typeof data.values === 'object') {
-        for (const [k, v] of Object.entries(data.values)) {
-          results.set(k, v);
-          setInCache(k, v);
-        }
-      }
+      processApiResponse(data, results);
     } else if (response.status === 429) {
       recordApiError();
       // Rate limit - usar localStorage como fallback silenciosamente
-      for (const key of batchKeys) {
-        try {
-          const item = window.localStorage.getItem(key);
-          if (item) {
-            const value = JSON.parse(item);
-            results.set(key, value);
-            setInCache(key, value);
-          }
-        } catch {
-          // Ignora erros de parse
-        }
-      }
+      return loadFromLocalStorage(batchKeys);
     } else {
       recordApiError();
     }
-  } catch (error) {
+  } catch {
     recordApiError();
     // Fallback para localStorage
-    for (const key of keys) {
-      try {
-        const item = window.localStorage.getItem(key);
-        if (item) {
-          results.set(key, JSON.parse(item));
-        }
-      } catch {
-        // Ignora
-      }
-    }
+    return loadFromLocalStorage(keys);
   }
 
   return results;
