@@ -50,8 +50,7 @@ jobs:
           CI: true
 
       - name: SonarCloud Scan
-        # Usando SHA completo para segurança (githubactions:S7637)
-        uses: SonarSource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e # master
+        uses: SonarSource/sonarcloud-github-action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -62,8 +61,7 @@ jobs:
             -Dsonar.links.ci=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: SonarCloud Quality Gate
-        # Usando SHA completo para segurança (githubactions:S7637)
-        uses: sonarsource/sonarqube-quality-gate-action@cb3ed20f9fec62b4c3b8ad9e77656c6adaade913 # master
+        uses: sonarsource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
