@@ -375,31 +375,56 @@ async function tryHandleBatchSet(
 }
 
 /**
- * Valida e processa requisição POST para set simples
+ * Resultado de validação do POST request
+ */
+interface ValidationResult {
+  valid: boolean
+  key?: string
+  value?: unknown
+  errorMessage?: string
+}
+
+/**
+ * Valida os parâmetros de entrada para set simples
+ * Retorna resultado da validação sem efeitos colaterais
+ */
+function validateSetInput(body: PostRequestBody): ValidationResult {
+  const { key, value } = body
+
+  if (!key || typeof key !== 'string') {
+    return { valid: false, errorMessage: 'Key is required in request body' }
+  }
+
+  if (value === undefined) {
+    return { valid: false, errorMessage: 'Value is required in request body' }
+  }
+
+  return { valid: true, key, value }
+}
+
+/**
+ * Processa requisição POST para set simples
+ * Retorna true se processado com sucesso, false se houve erro de validação
  */
 async function tryHandleSimpleSet(
   redis: Redis,
   body: PostRequestBody,
   res: VercelResponse
 ): Promise<boolean> {
-  const { key, value } = body
+  const validation = validateSetInput(body)
 
-  if (!key || typeof key !== 'string') {
-    res.status(400).json({ error: 'Key is required in request body' })
-    return true // handled (with error)
+  if (!validation.valid) {
+    res.status(400).json({ error: validation.errorMessage })
+    return false // validation error - not successfully handled
   }
 
-  if (value === undefined) {
-    res.status(400).json({ error: 'Value is required in request body' })
-    return true // handled (with error)
-  }
-
-  await handleSetKey(redis, key, value, res)
-  return true
+  await handleSetKey(redis, validation.key!, validation.value, res)
+  return true // success
 }
 
 /**
  * Handler para requisições POST
+ * Tenta handlers na ordem: batch-get, batch-set, set simples
  */
 async function handlePostRequest(
   redis: Redis,
@@ -409,7 +434,13 @@ async function handlePostRequest(
   // Tenta cada handler em sequência
   if (await tryHandleBatchGet(redis, body, res)) return
   if (await tryHandleBatchSet(redis, body, res)) return
-  await tryHandleSimpleSet(redis, body, res)
+
+  // Simple set é o fallback - se validação falhar, a resposta de erro já foi enviada
+  const setResult = await tryHandleSimpleSet(redis, body, res)
+  if (!setResult) {
+    // Validation error response already sent by tryHandleSimpleSet
+    return
+  }
 }
 
 /**

@@ -42,7 +42,7 @@ export default function PrazosView() {
   const prazosComProcesso = useMemo(() => {
     const lista: (Prazo & { processo: Process })[] = []
     const processesList = processes || []
-    
+
     processesList.forEach(process => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach(prazo => {
@@ -57,7 +57,7 @@ export default function PrazosView() {
   const filteredPrazos = useMemo(() => {
     return prazosComProcesso.filter(prazo => {
       const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
-      
+
       if (filter === 'pendentes') return !prazo.concluido
       if (filter === 'concluidos') return prazo.concluido
       if (filter === 'urgentes') return !prazo.concluido && isUrgente(diasRestantes)
@@ -78,12 +78,12 @@ export default function PrazosView() {
   }, [prazosComProcesso])
 
   const handleToggleConcluido = (prazo: Prazo & { processo: Process }) => {
-    setProcesses(current => 
+    setProcesses(current =>
       (current || []).map(process => {
         if (process.id === prazo.processId) {
           return {
             ...process,
-            prazos: process.prazos.map(p => 
+            prazos: process.prazos.map(p =>
               p.id === prazo.id ? { ...p, concluido: !p.concluido } : p
             ),
             updatedAt: new Date().toISOString()
@@ -92,7 +92,7 @@ export default function PrazosView() {
         return process
       })
     )
-    
+
     toast.success(prazo.concluido ? 'Prazo marcado como pendente' : 'Prazo concluído')
   }
 

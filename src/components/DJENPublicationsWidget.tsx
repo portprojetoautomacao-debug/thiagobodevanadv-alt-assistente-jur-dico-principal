@@ -212,6 +212,95 @@ function formatPartiesDescription(parties: PartiesResult): string {
   return ` - ${parties.autor} x ${parties.reu}`
 }
 
+// ===== Sync Helpers (reduces S3776 Cognitive Complexity) =====
+
+interface SyncResult {
+  success: boolean
+  message?: string
+  newPublications?: number
+  rateLimited?: boolean
+}
+
+/**
+ * Executa sincronização DJEN via API
+ */
+async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
+  const response = await fetch(`${baseUrl}/api/djen-sync`, {
+    method: 'POST',
+  })
+
+  // Rate limit
+  if (response.status === 429) {
+    const data = await response.json()
+    return { 
+      success: false, 
+      rateLimited: true,
+      message: data.message || 'Tente novamente em alguns segundos' 
+    }
+  }
+
+  if (!response.ok) {
+    return { success: false, message: `HTTP ${response.status}` }
+  }
+
+  const result = await response.json()
+  
+  if (result.ok) {
+    return { 
+      success: true, 
+      newPublications: result.result?.newPublications || 0 
+    }
+  }
+
+  return { 
+    success: false, 
+    message: result.error || result.message || 'Erro na sincronização' 
+  }
+}
+
+/**
+ * Exibe toast apropriado baseado no resultado da sync
+ */
+function showSyncToast(result: SyncResult): void {
+  if (result.rateLimited) {
+    toast.warning('Aguarde antes de sincronizar', {
+      description: result.message,
+    })
+    return
+  }
+
+  if (result.success) {
+    toast.success('Sincronização concluída', {
+      description: result.newPublications && result.newPublications > 0
+        ? `${result.newPublications} novas publicações encontradas`
+        : 'Nenhuma nova publicação',
+    })
+    return
+  }
+
+  toast.error('Falha na sincronização', {
+    description: result.message || 'Erro desconhecido',
+  })
+}
+
+// ===== Process Registration Helpers =====
+
+/**
+ * Verifica se processo já existe no array de processos
+ */
+function checkProcessExists(
+  numeroProcesso: string | undefined,
+  processes: Process[] | null
+): boolean {
+  if (!numeroProcesso) return false
+  const currentProcesses = processes || []
+  return currentProcesses.some(
+    (p) =>
+      p.numeroCNJ === numeroProcesso ||
+      p.numeroCNJ.replaceAll(/\D/g, '') === numeroProcesso.replaceAll(/\D/g, ''),
+  )
+}
+
 interface DJENPublicationsWidgetProps {
   readonly onViewAll?: () => void
   readonly compact?: boolean
@@ -273,43 +362,19 @@ export default function DJENPublicationsWidget({
     }
   }, [maxItems, filter])
 
-  // Força sincronização manual
+  // Força sincronização manual - refatorado para reduzir CC (S3776)
   const handleSync = async () => {
+    setSyncing(true)
+    setError(null)
+
     try {
-      setSyncing(true)
-      setError(null)
-
       const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-      const response = await fetch(`${baseUrl}/api/djen-sync`, {
-        method: 'POST',
-      })
-
-      // Tratar rate limit
-      if (response.status === 429) {
-        const data = await response.json()
-        toast.warning('Aguarde antes de sincronizar', {
-          description: data.message || 'Tente novamente em alguns segundos',
-        })
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      if (result.ok) {
-        toast.success('Sincronização concluída', {
-          description:
-            result.result?.newPublications > 0
-              ? `${result.result.newPublications} novas publicações encontradas`
-              : 'Nenhuma nova publicação',
-        })
-        // Recarrega publicações após sync
+      const result = await executeDJENSync(baseUrl)
+      
+      showSyncToast(result)
+      
+      if (result.success) {
         await fetchPublications()
-      } else {
-        throw new Error(result.error || result.message || 'Erro na sincronização')
       }
     } catch (err) {
       console.error('[DJENWidget] Sync error:', err)
@@ -329,17 +394,9 @@ export default function DJENPublicationsWidget({
     })
   }
 
-  // Verifica se publicação já está cadastrada no Acervo
+  // Verifica se publicação já está cadastrada no Acervo - usa helper para reduzir CC
   const isAlreadyRegistered = useCallback(
-    (pub: DJENPublication) => {
-      if (!pub.numeroProcesso) return false
-      const currentProcesses = processes || []
-      return currentProcesses.some(
-        (p) =>
-          p.numeroCNJ === pub.numeroProcesso ||
-          p.numeroCNJ.replaceAll(/\D/g, '') === pub.numeroProcesso?.replaceAll(/\D/g, ''),
-      )
-    },
+    (pub: DJENPublication) => checkProcessExists(pub.numeroProcesso, processes),
     [processes],
   )
 
