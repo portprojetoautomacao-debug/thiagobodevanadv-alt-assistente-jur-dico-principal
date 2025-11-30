@@ -487,34 +487,42 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               const IconComponent = agentIcons[agent.id] || Robot
               const isStreaming = !!streamingContent[agent.id]
               const streamPreview = streamingContent[agent.id]?.slice(-100) || ''
-              const statusColor = agent.enabled
-                ? isStreaming
-                  ? 'text-purple-500'
-                  : agent.status === 'processing'
-                    ? 'text-accent'
-                    : 'text-green-600'
-                : 'text-muted-foreground'
+
+              // Função para determinar cor do status
+              const getStatusColor = (): string => {
+                if (!agent.enabled) return 'text-muted-foreground'
+                if (isStreaming) return 'text-purple-500'
+                if (agent.status === 'processing') return 'text-accent'
+                return 'text-green-600'
+              }
+              const statusColor = getStatusColor()
+
+              // Função para determinar classes do Card
+              const getCardClassName = (): string => {
+                const base = 'transition-all duration-300'
+                if (isStreaming) return `${base} border-purple-500/50 shadow-lg shadow-purple-500/10`
+                if (agent.enabled) return `${base} border-primary/30`
+                return base
+              }
+
+              // Função para determinar classes do ícone container
+              const getIconContainerClassName = (): string => {
+                const base = 'p-2 rounded-lg relative'
+                if (isStreaming) return `${base} bg-purple-500/20 animate-pulse`
+                if (agent.enabled) return `${base} bg-primary/10`
+                return `${base} bg-muted`
+              }
 
               return (
                 <Card
                   key={agent.id}
-                  className={`transition-all duration-300 ${isStreaming
-                    ? 'border-purple-500/50 shadow-lg shadow-purple-500/10'
-                    : agent.enabled
-                      ? 'border-primary/30'
-                      : ''
-                    }`}
+                  className={getCardClassName()}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
                         <div
-                          className={`p-2 rounded-lg relative ${isStreaming
-                            ? 'bg-purple-500/20 animate-pulse'
-                            : agent.enabled
-                              ? 'bg-primary/10'
-                              : 'bg-muted'
-                            }`}
+                          className={getIconContainerClassName()}
                         >
                           <IconComponent
                             className={`w-6 h-6 ${statusColor}`}

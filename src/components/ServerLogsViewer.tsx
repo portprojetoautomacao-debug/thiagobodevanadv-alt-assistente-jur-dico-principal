@@ -34,7 +34,7 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
     queryKey: ['server-agent-logs'],
     queryFn: fetchServerLogs,
     refetchInterval: 10000,
-    enabled: !propLogs // Only fetch if logs are not provided via props
+    enabled: propLogs === undefined // Only fetch if logs are not provided via props
   })
 
   const logs = propLogs || fetchedLogs

@@ -163,7 +163,7 @@ export default function ExpedientePanel() {
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
-  const setSelectedTask = useState<string | null>(null)[1]
+  const [, setSelectedTask] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [, setLawyersCount] = useState(0)
