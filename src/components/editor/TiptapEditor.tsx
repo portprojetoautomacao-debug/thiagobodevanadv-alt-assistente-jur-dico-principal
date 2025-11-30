@@ -51,18 +51,18 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 interface TiptapEditorProps {
-  content: string
-  onChange: (content: string) => void
-  placeholder?: string
-  className?: string
-  readOnly?: boolean
-  onAIGenerate?: (prompt: string) => Promise<string>
-  onAIStream?: (prompt: string, callbacks: {
+  readonly content: string
+  readonly onChange: (content: string) => void
+  readonly placeholder?: string
+  readonly className?: string
+  readonly readOnly?: boolean
+  readonly onAIGenerate?: (prompt: string) => Promise<string>
+  readonly onAIStream?: (prompt: string, callbacks: {
     onChunk: (chunk: string) => void
     onComplete: () => void
     onError: (error: Error) => void
   }) => Promise<void>
-  variables?: Record<string, string>
+  readonly variables?: Record<string, string>
 }
 
 const COLORS = [
