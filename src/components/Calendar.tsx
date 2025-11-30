@@ -365,6 +365,18 @@ export default function Calendar() {
     )
   }
 
+  // Helper function para determinar classe CSS do dia (evita ternário aninhado)
+  const getDayClassName = (day: number | null): string => {
+    const baseClass = 'min-h-24 p-2 border rounded-lg'
+    if (day === null) {
+      return `${baseClass} bg-muted/30`
+    }
+    if (isToday(day)) {
+      return `${baseClass} bg-primary/10 border-primary`
+    }
+    return `${baseClass} bg-card hover:bg-muted/50`
+  }
+
   const sortedUpcomingAppointments = useMemo(
     () =>
       (appointments || [])
@@ -757,12 +769,7 @@ export default function Calendar() {
               return (
                 <div
                   key={idx}
-                  className={`min-h-24 p-2 border rounded-lg ${isValidDay
-                    ? isToday(day)
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-card hover:bg-muted/50'
-                    : 'bg-muted/30'
-                    }`}
+                  className={getDayClassName(day)}
                 >
                   {isValidDay && (
                     <>
