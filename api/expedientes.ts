@@ -47,6 +47,9 @@ interface MonitoredLawyer {
   tribunals: string[]
 }
 
+// Type aliases for query parameters (S4323)
+type QueryParamValue = string | string[] | undefined
+
 // Singleton do Redis pra não abrir conexão a cada request
 let _kvClient: Redis | null = null
 
@@ -70,8 +73,8 @@ async function getKv(): Promise<Redis> {
 // ===========================
 function filterPublications(
   publications: StoredPublication[],
-  lawyerId: string | string[] | undefined,
-  status: string | string[] | undefined
+  lawyerId: QueryParamValue,
+  status: QueryParamValue
 ): StoredPublication[] {
   let filtered = [...publications]
 

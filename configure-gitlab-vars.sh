@@ -43,7 +43,7 @@ echo "🔑 Configurando variáveis ESSENCIAIS..."
 echo ""
 
 # GitHub Integration - NUNCA hardcode tokens!
-if [ -z "$GITHUB_TOKEN" ]; then
+if [[ -z "$GITHUB_TOKEN" ]]; then
   echo "⚠️ GITHUB_TOKEN não definido. Defina a variável de ambiente antes de executar."
   echo "   export GITHUB_TOKEN='seu_token_aqui'"
 else

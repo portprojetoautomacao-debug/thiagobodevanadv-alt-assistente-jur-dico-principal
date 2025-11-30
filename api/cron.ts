@@ -1113,6 +1113,66 @@ async function syncDeadlineToCalendar(
 }
 
 /**
+ * Backup a single KV key
+ */
+async function backupSingleKey(
+  kv: Redis,
+  key: string,
+  backupData: Record<string, unknown>,
+  result: BackupResult
+): Promise<number> {
+  try {
+    const data = await kv.get(key);
+    if (data) {
+      backupData[key] = data;
+      result.keysBackedUp++;
+      return JSON.stringify(data).length;
+    }
+  } catch (keyError) {
+    result.errors.push(`Failed to backup ${key}: ${keyError instanceof Error ? keyError.message : 'Unknown'}`);
+  }
+  return 0;
+}
+
+/**
+ * Backup lawyer-specific publications
+ */
+async function backupLawyerPublications(
+  kv: Redis,
+  backupData: Record<string, unknown>,
+  result: BackupResult
+): Promise<number> {
+  let totalBytes = 0;
+  const lawyers = (await kv.get(KV_KEYS.MONITORED_LAWYERS) as MonitoredLawyer[]) || [];
+  
+  for (const lawyer of lawyers) {
+    const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
+    try {
+      const pubs = await kv.get(pubKey);
+      if (pubs) {
+        backupData[pubKey] = pubs;
+        result.keysBackedUp++;
+        totalBytes += JSON.stringify(pubs).length;
+      }
+    } catch {
+      // Ignore errors for individual lawyer publications
+    }
+  }
+  
+  return totalBytes;
+}
+
+/**
+ * Format bytes to human readable size
+ */
+function formatBytes(bytes: number): string {
+  if (bytes > 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+  return `${(bytes / 1024).toFixed(2)} KB`;
+}
+
+/**
  * Handle backup action
  * Creates daily backup of KV data
  */
@@ -1129,59 +1189,28 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
 
   try {
     const kv = await getKv();
-
-    // Keys to backup
-    const keysToBackup = [
-      'processes',
-      'publications',
-      'autonomous-agents',
-      'agent-task-queue',
-      'completed-agent-tasks',
-      'monitored-lawyers',
-      'notification-queue',
-      'calendar-settings',
-      'user-settings'
-    ];
-
     const backupData: Record<string, unknown> = {};
     let totalBytes = 0;
 
+    // Keys to backup
+    const keysToBackup = [
+      'processes', 'publications', 'autonomous-agents', 'agent-task-queue',
+      'completed-agent-tasks', 'monitored-lawyers', 'notification-queue',
+      'calendar-settings', 'user-settings'
+    ];
+
+    // Backup main keys
     for (const key of keysToBackup) {
-      try {
-        const data = await kv.get(key);
-        if (data) {
-          backupData[key] = data;
-          result.keysBackedUp++;
-          totalBytes += JSON.stringify(data).length;
-        }
-      } catch (keyError) {
-        result.errors.push(`Failed to backup ${key}: ${keyError instanceof Error ? keyError.message : 'Unknown'}`);
-      }
+      totalBytes += await backupSingleKey(kv, key, backupData, result);
     }
 
-    // Also backup lawyer-specific publications
-    const lawyers = (await kv.get(KV_KEYS.MONITORED_LAWYERS) as MonitoredLawyer[]) || [];
-    for (const lawyer of lawyers) {
-      const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
-      try {
-        const pubs = await kv.get(pubKey);
-        if (pubs) {
-          backupData[pubKey] = pubs;
-          result.keysBackedUp++;
-          totalBytes += JSON.stringify(pubs).length;
-        }
-      } catch {
-        // Ignore errors for individual lawyer publications
-      }
-    }
+    // Backup lawyer publications
+    totalBytes += await backupLawyerPublications(kv, backupData, result);
 
-    // Calculate size
-    result.totalSize = totalBytes > 1024 * 1024
-      ? `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
-      : `${(totalBytes / 1024).toFixed(2)} KB`;
-
-    // Store backup with timestamp
+    // Calculate and store
+    result.totalSize = formatBytes(totalBytes);
     const backupKey = `backup:${new Date().toISOString().split('T')[0]}`;
+    
     await kv.set(backupKey, {
       timestamp,
       data: backupData,
@@ -1189,9 +1218,7 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
       sizeBytes: totalBytes
     });
 
-    // Keep only last 7 backups
     await cleanOldBackups(kv, backupKey);
-
     console.log(`[Cron Backup] Completed: ${result.keysBackedUp} keys, ${result.totalSize}`);
 
   } catch (error) {
