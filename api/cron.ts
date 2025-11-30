@@ -544,6 +544,64 @@ interface DJENMonitorResult {
   rateLimitWarning: boolean;
 }
 
+interface AgentQueueResult {
+  success: boolean;
+  timestamp: string;
+  tasksProcessed: number;
+  tasksFailed: number;
+  errors: string[];
+}
+
+interface NotificationResult {
+  success: boolean;
+  timestamp: string;
+  emailsSent: number;
+  webhooksSent: number;
+  errors: string[];
+}
+
+interface CalendarSyncResult {
+  success: boolean;
+  timestamp: string;
+  eventsCreated: number;
+  eventsUpdated: number;
+  deadlinesSynced: number;
+  errors: string[];
+}
+
+interface BackupResult {
+  success: boolean;
+  timestamp: string;
+  keysBackedUp: number;
+  totalSize: string;
+  errors: string[];
+}
+
+interface DataJudResult {
+  success: boolean;
+  timestamp: string;
+  processesChecked: number;
+  updatesFound: number;
+  errors: string[];
+}
+
+interface DeadlineAlertResult {
+  success: boolean;
+  timestamp: string;
+  alertsSent: number;
+  urgentDeadlines: number;
+  upcomingDeadlines: number;
+  errors: string[];
+}
+
+interface WatchdogResult {
+  success: boolean;
+  timestamp: string;
+  agentsReset: number;
+  tasksTimedOut: number;
+  errors: string[];
+}
+
 interface CompletedTask {
   completedAt?: string | null;
   [key: string]: unknown;
