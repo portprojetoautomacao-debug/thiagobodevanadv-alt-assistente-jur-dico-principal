@@ -28,6 +28,8 @@ cache:
 include:
   # SAST padrão do GitLab para projetos Node.js
   - template: Security/SAST.gitlab-ci.yml
+  # Auto DevOps opcional (descomente se quiser usar)
+  - local: '.gitlab-ci-auto-devops.yml'
 
 # Job adicional: SAST customizado para React/TypeScript
 sast-custom:

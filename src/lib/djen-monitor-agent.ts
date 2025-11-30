@@ -33,7 +33,7 @@ export interface DJENMonitorTask {
 
 export class DJENMonitorAgent {
   private config: DJENMonitorConfig
-  private task: DJENMonitorTask
+  private readonly task: DJENMonitorTask
   private intervalId?: ReturnType<typeof setInterval>
   private isRunning: boolean = false
 

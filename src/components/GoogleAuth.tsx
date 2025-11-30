@@ -117,7 +117,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
 
     return () => {
       if (document.body.contains(script)) {
-        document.body.removeChild(script)
+        script.remove()
       }
     }
   }, [initializeGoogleSignIn])

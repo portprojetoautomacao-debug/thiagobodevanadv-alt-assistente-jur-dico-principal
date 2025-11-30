@@ -60,7 +60,7 @@ export function DocumentTemplates() {
     link.download = `${template.name}.${template.type}`;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
 
     toast({
       title: 'Download iniciado',

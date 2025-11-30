@@ -52,7 +52,7 @@ interface InterpretedCommand {
  * Agente Todoist
  */
 export class TodoistAgent {
-  private client: TodoistClient;
+  private readonly client: TodoistClient;
 
   constructor() {
     this.client = todoistClient;

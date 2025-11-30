@@ -7,7 +7,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 // Tipos de eventos que processamos do Vercel
 interface VercelWebhookEvent {
