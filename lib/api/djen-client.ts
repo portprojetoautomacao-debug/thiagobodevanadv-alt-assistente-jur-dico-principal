@@ -151,7 +151,7 @@ function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
 
 function buildQueryString(params: DJENQueryParams): string {
   const queryParams: string[] = [];
-  
+
   if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
   if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
   if (params.nomeAdvogado) queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
@@ -164,7 +164,7 @@ function buildQueryString(params: DJENQueryParams): string {
   if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
   if (params.itensPorPagina) queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
   if (params.meio) queryParams.push(`meio=${params.meio}`);
-  
+
   return queryParams.join('&');
 }
 
@@ -187,7 +187,7 @@ async function consultarComunicacoes(
 ): Promise<{ response: DJENResponse | null; rateLimitInfo: { limit?: number; remaining?: number } }> {
   const queryString = buildQueryString(params);
   const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -204,8 +204,8 @@ async function consultarComunicacoes(
 
     // Extrair informações de rate limiting
     const rateLimitInfo = {
-      limit: response.headers.get('x-ratelimit-limit') 
-        ? parseInt(response.headers.get('x-ratelimit-limit')!) 
+      limit: response.headers.get('x-ratelimit-limit')
+        ? parseInt(response.headers.get('x-ratelimit-limit')!)
         : undefined,
       remaining: response.headers.get('x-ratelimit-remaining')
         ? parseInt(response.headers.get('x-ratelimit-remaining')!)
@@ -229,9 +229,9 @@ async function consultarComunicacoes(
     }
 
     const data = await response.json() as DJENResponse;
-    
+
     console.log(`[DJEN] Consulta retornou ${data.count} comunicações. Rate limit: ${rateLimitInfo.remaining}/${rateLimitInfo.limit}`);
-    
+
     return { response: data, rateLimitInfo };
   } catch (error) {
     clearTimeout(timeoutId);
@@ -247,17 +247,131 @@ function formatDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+// ===== Helper functions for consultarDJENForLawyer (reduced CC) =====
+
+interface LawyerQueryContext {
+  nomeAdvogado?: string;
+  numeroOabNumerico?: string;
+  ufOab?: string;
+  queryDataInicio: string;
+  queryDataFim: string;
+  meio?: 'D' | 'E';
+}
+
+function parseOABForQuery(numeroOAB?: string): { numero?: string; uf?: string } {
+  if (!numeroOAB) return {};
+  const parsed = parseOAB(numeroOAB);
+  return { numero: parsed.numero, uf: parsed.uf };
+}
+
+function buildDJENQueryParams(tribunal: string, ctx: LawyerQueryContext): DJENQueryParams {
+  const params: DJENQueryParams = {
+    siglaTribunal: tribunal,
+    dataDisponibilizacaoInicio: ctx.queryDataInicio,
+    dataDisponibilizacaoFim: ctx.queryDataFim,
+    itensPorPagina: 100,
+    pagina: 1
+  };
+  if (ctx.nomeAdvogado) params.nomeAdvogado = ctx.nomeAdvogado;
+  if (ctx.numeroOabNumerico) params.numeroOab = ctx.numeroOabNumerico;
+  if (ctx.ufOab) params.ufOab = ctx.ufOab;
+  if (ctx.meio) params.meio = ctx.meio;
+  return params;
+}
+
+function determineAdvogadoMatch(
+  dest: { advogado: { nome: string; numero_oab: string; uf_oab: string } },
+  ctx: LawyerQueryContext
+): 'nome' | 'oab' | 'ambos' | null {
+  const matchNome = ctx.nomeAdvogado
+    ? normalizeText(dest.advogado.nome).includes(normalizeText(ctx.nomeAdvogado))
+    : false;
+  const matchOab = ctx.numeroOabNumerico
+    ? dest.advogado.numero_oab === ctx.numeroOabNumerico && dest.advogado.uf_oab === ctx.ufOab
+    : false;
+
+  if (matchNome && matchOab) return 'ambos';
+  if (matchOab) return 'oab';
+  if (matchNome) return 'nome';
+  return null;
+}
+
+function findAdvogadoInComunicacao(
+  comunicacao: DJENComunicacao,
+  ctx: LawyerQueryContext
+): { found: boolean; matchType: 'nome' | 'oab' | 'ambos' } {
+  let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
+  const found = comunicacao.destinatarioadvogados.some(dest => {
+    const type = determineAdvogadoMatch(dest, ctx);
+    if (type) {
+      matchType = type;
+      return true;
+    }
+    return false;
+  });
+  return { found, matchType };
+}
+
+function mapComunicacaoToResult(
+  comunicacao: DJENComunicacao,
+  matchType: 'nome' | 'oab' | 'ambos'
+): DJENFilteredResult {
+  return {
+    id: comunicacao.id,
+    tribunal: comunicacao.siglaTribunal,
+    data: comunicacao.data_disponibilizacao,
+    tipo: comunicacao.tipoComunicacao,
+    teor: comunicacao.texto,
+    numeroProcesso: comunicacao.numero_processo,
+    orgao: comunicacao.nomeOrgao,
+    meio: comunicacao.meiocompleto || comunicacao.meio,
+    link: comunicacao.link,
+    hash: comunicacao.hash,
+    matchType,
+    advogados: comunicacao.destinatarioadvogados.map(dest => ({
+      nome: dest.advogado.nome,
+      numero_oab: dest.advogado.numero_oab,
+      uf_oab: dest.advogado.uf_oab
+    }))
+  };
+}
+
+async function processTribunalQuery(
+  tribunal: string,
+  ctx: LawyerQueryContext,
+  resultados: DJENFilteredResult[],
+  erros: Array<{ tribunal: string; erro: string }>
+): Promise<boolean> {
+  console.log(`[DJEN] Consultando ${tribunal} para ${ctx.nomeAdvogado || ctx.numeroOabNumerico}`);
+
+  const queryParams = buildDJENQueryParams(tribunal, ctx);
+  const { response, rateLimitInfo } = await consultarComunicacoes(queryParams, DEFAULT_TIMEOUT);
+
+  if (!response) {
+    console.warn(`[DJEN] Rate limit atingido ou erro na consulta de ${tribunal}`);
+    erros.push({ tribunal, erro: 'Rate limit excedido. Aguarde 1 minuto antes de nova tentativa.' });
+    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_RETRY_DELAY));
+    return true;
+  }
+
+  for (const comunicacao of response.items) {
+    const { found, matchType } = findAdvogadoInComunicacao(comunicacao, ctx);
+    if (found) {
+      resultados.push(mapComunicacaoToResult(comunicacao, matchType));
+    }
+  }
+
+  if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
+    console.warn(`[DJEN] Rate limit baixo: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} requisições restantes`);
+  }
+
+  return false;
+}
+
+// ===== Main refactored function =====
+
 /**
  * Consulta comunicações DJEN para um advogado específico
- * Usa a API oficial /api/v1/comunicacao com filtros adequados
- * 
- * @param tribunais - Array de siglas de tribunais (ex: ['TJMG', 'TRT3', 'STJ'])
- * @param nomeAdvogado - Nome completo do advogado
- * @param numeroOAB - Número da OAB no formato "OAB/UF 123456" ou apenas número
- * @param dataInicio - Data inicial no formato AAAA-MM-DD (opcional, padrão: hoje)
- * @param dataFim - Data final no formato AAAA-MM-DD (opcional, padrão: dataInicio)
- * @param meio - 'D' para Diário, 'E' para Edital (opcional)
- * @returns Resultados filtrados e erros encontrados
  */
 export async function consultarDJENForLawyer(
   tribunais: string[],
@@ -276,141 +390,39 @@ export async function consultarDJENForLawyer(
   }
 
   const defaultDate = formatDate(new Date());
-  const queryDataInicio = dataInicio || defaultDate;
-  const queryDataFim = dataFim || queryDataInicio; // Usar mesma data se não especificado
-  
-  let numeroOabNumerico: string | undefined;
-  let ufOab: string | undefined;
+  const oabInfo = parseOABForQuery(numeroOAB);
 
-  if (numeroOAB) {
-    const parsed = parseOAB(numeroOAB);
-    numeroOabNumerico = parsed.numero;
-    ufOab = parsed.uf;
-  }
+  const ctx: LawyerQueryContext = {
+    nomeAdvogado,
+    numeroOabNumerico: oabInfo.numero,
+    ufOab: oabInfo.uf,
+    queryDataInicio: dataInicio || defaultDate,
+    queryDataFim: dataFim || dataInicio || defaultDate,
+    meio
+  };
 
   const resultados: DJENFilteredResult[] = [];
   const erros: Array<{ tribunal: string; erro: string }> = [];
   let rateLimitWarning = false;
 
-  // Processar tribunais sequencialmente para respeitar rate limiting
-  for (const tribunal of tribunais) {
+  for (let i = 0; i < tribunais.length; i++) {
     try {
-      console.log(`[DJEN] Consultando ${tribunal} para ${nomeAdvogado || numeroOAB}`);
-      
-      // Montar parâmetros de consulta
-      const queryParams: DJENQueryParams = {
-        siglaTribunal: tribunal,
-        dataDisponibilizacaoInicio: queryDataInicio,
-        dataDisponibilizacaoFim: queryDataFim,
-        itensPorPagina: 100, // Máximo permitido
-        pagina: 1
-      };
+      const hitRateLimit = await processTribunalQuery(tribunais[i], ctx, resultados, erros);
+      rateLimitWarning = rateLimitWarning || hitRateLimit;
 
-      // Adicionar filtros opcionais
-      if (nomeAdvogado) {
-        queryParams.nomeAdvogado = nomeAdvogado;
-      }
-      
-      if (numeroOabNumerico) {
-        queryParams.numeroOab = numeroOabNumerico;
-      }
-      
-      if (ufOab) {
-        queryParams.ufOab = ufOab;
-      }
-      
-      if (meio) {
-        queryParams.meio = meio;
-      }
-
-      const { response, rateLimitInfo } = await consultarComunicacoes(queryParams, DEFAULT_TIMEOUT);
-
-      // Verificar rate limiting
-      if (!response) {
-        rateLimitWarning = true;
-        console.warn(`[DJEN] Rate limit atingido ou erro na consulta de ${tribunal}`);
-        erros.push({ 
-          tribunal, 
-          erro: 'Rate limit excedido. Aguarde 1 minuto antes de nova tentativa.' 
-        });
-        
-        // Aguardar 1 minuto conforme documentação
-        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_RETRY_DELAY));
-        continue;
-      }
-
-      // Processar comunicações encontradas
-      for (const comunicacao of response.items) {
-        // Determinar tipo de match
-        let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
-        
-        const temAdvogado = comunicacao.destinatarioadvogados.some(dest => {
-          const matchNome = nomeAdvogado 
-            ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado))
-            : false;
-          const matchOab = numeroOabNumerico
-            ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab
-            : false;
-          
-          if (matchNome && matchOab) {
-            matchType = 'ambos';
-            return true;
-          } else if (matchOab) {
-            matchType = 'oab';
-            return true;
-          } else if (matchNome) {
-            matchType = 'nome';
-            return true;
-          }
-          return false;
-        });
-
-        if (temAdvogado) {
-          resultados.push({
-            id: comunicacao.id,
-            tribunal: comunicacao.siglaTribunal,
-            data: comunicacao.data_disponibilizacao,
-            tipo: comunicacao.tipoComunicacao,
-            teor: comunicacao.texto,
-            numeroProcesso: comunicacao.numero_processo,
-            orgao: comunicacao.nomeOrgao,
-            meio: comunicacao.meiocompleto || comunicacao.meio,
-            link: comunicacao.link,
-            hash: comunicacao.hash,
-            matchType,
-            advogados: comunicacao.destinatarioadvogados.map(dest => ({
-              nome: dest.advogado.nome,
-              numero_oab: dest.advogado.numero_oab,
-              uf_oab: dest.advogado.uf_oab
-            }))
-          });
-        }
-      }
-
-      // Log de rate limiting
-      if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
-        console.warn(`[DJEN] Rate limit baixo: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} requisições restantes`);
-      }
-
-      // Delay entre tribunais para respeitar rate limiting
-      if (tribunais.indexOf(tribunal) < tribunais.length - 1) {
+      if (i < tribunais.length - 1) {
         await new Promise(resolve => setTimeout(resolve, DEFAULT_DELAY));
       }
-      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      erros.push({ tribunal, erro: errorMessage });
-      console.error(`[DJEN] Erro consultando ${tribunal}:`, errorMessage);
+      erros.push({ tribunal: tribunais[i], erro: errorMessage });
+      console.error(`[DJEN] Erro consultando ${tribunais[i]}:`, errorMessage);
     }
   }
 
   console.log(`[DJEN] Consulta finalizada: ${resultados.length} comunicações encontradas em ${tribunais.length} tribunais`);
 
-  return { 
-    resultados, 
-    erros,
-    rateLimitWarning: rateLimitWarning ? true : undefined
-  };
+  return { resultados, erros, rateLimitWarning: rateLimitWarning || undefined };
 }
 
 /**
@@ -441,7 +453,7 @@ export async function downloadCadernoDJEN(
   url: string; // URL temporária válida por 5 minutos
 } | null> {
   const url = `https://comunicaapi.pje.jus.br/api/v1/caderno/${siglaTribunal}/${data}/${meio}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -457,7 +469,7 @@ export async function downloadCadernoDJEN(
 
     const caderno = await response.json();
     console.log(`[DJEN] Caderno disponível: ${caderno.total_comunicacoes} comunicações, ${caderno.numero_paginas} páginas`);
-    
+
     return caderno;
   } catch (error) {
     console.error(`[DJEN] Erro ao baixar caderno:`, error);
