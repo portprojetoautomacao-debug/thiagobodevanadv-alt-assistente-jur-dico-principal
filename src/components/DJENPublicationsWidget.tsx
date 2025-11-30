@@ -67,9 +67,9 @@ interface ExpedientesResponse {
 }
 
 interface DJENPublicationsWidgetProps {
-  onViewAll?: () => void
-  compact?: boolean
-  maxItems?: number
+  readonly onViewAll?: () => void
+  readonly compact?: boolean
+  readonly maxItems?: number
 }
 
 export default function DJENPublicationsWidget({
@@ -191,7 +191,7 @@ export default function DJENPublicationsWidget({
       return currentProcesses.some(
         (p) =>
           p.numeroCNJ === pub.numeroProcesso ||
-          p.numeroCNJ.replace(/\D/g, '') === pub.numeroProcesso?.replace(/\D/g, ''),
+          p.numeroCNJ.replaceAll(/\D/g, '') === pub.numeroProcesso?.replaceAll(/\D/g, ''),
       )
     },
     [processes],
@@ -285,9 +285,9 @@ export default function DJENPublicationsWidget({
     setExpedientes((current) => [...(current || []), newExpediente])
 
     toast.success('Processo cadastrado!', {
-      description: `${pub.numeroProcesso} adicionado ao Acervo${parties.autor !== 'Não identificado'
-          ? ` - ${parties.autor} x ${parties.reu}`
-          : ''
+      description: `${pub.numeroProcesso} adicionado ao Acervo${parties.autor === 'Não identificado'
+        ? ''
+        : ` - ${parties.autor} x ${parties.reu}`
         }`,
     })
   }
