@@ -66,6 +66,84 @@ interface ExpedientesResponse {
   message?: string
 }
 
+interface PartiesResult {
+  autor: string
+  reu: string
+  advogadoAutor?: string
+  advogadoReu?: string
+}
+
+/**
+ * Cria um novo processo a partir de uma publicação DJEN
+ */
+function createProcessFromPublication(
+  pub: DJENPublication,
+  parties: PartiesResult,
+  now: string
+): Process {
+  return {
+    id: crypto.randomUUID(),
+    numeroCNJ: pub.numeroProcesso!,
+    titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
+    autor: parties.autor || 'Não identificado',
+    reu: parties.reu || 'Não identificado',
+    comarca: pub.orgao || '',
+    vara: pub.tribunal || '',
+    status: 'ativo',
+    fase: 'Inicial',
+    dataDistribuicao: pub.data || now.split('T')[0],
+    dataUltimaMovimentacao: now,
+    notas: buildProcessNotes(pub, parties),
+    prazos: [],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+/**
+ * Monta as notas do processo
+ */
+function buildProcessNotes(pub: DJENPublication, parties: PartiesResult): string {
+  const advAutor = parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
+  const advReu = parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
+  const teorTruncado = pub.teor.length > 500 ? pub.teor.substring(0, 500) + '...' : pub.teor
+
+  return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`
+}
+
+/**
+ * Cria um expediente a partir de uma publicação DJEN
+ */
+function createExpedienteFromPublication(
+  pub: DJENPublication,
+  processId: string,
+  now: string
+): Expediente {
+  return {
+    id: crypto.randomUUID(),
+    processId,
+    tipo: pub.tipo || 'intimacao',
+    titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
+    conteudo: pub.teor,
+    content: pub.teor,
+    teor: pub.teor,
+    dataRecebimento: now,
+    receivedAt: now,
+    lido: false,
+    arquivado: false,
+    analyzed: false,
+    tribunal: pub.tribunal,
+    numeroProcesso: pub.numeroProcesso,
+    orgao: pub.orgao,
+    lawyerName: pub.lawyerName,
+    matchType: pub.matchType,
+    source: pub.source,
+    createdAt: pub.createdAt,
+    data: pub.data,
+    priority: 'high', // Intimações são sempre prioridade alta
+  }
+}
+
 interface DJENPublicationsWidgetProps {
   readonly onViewAll?: () => void
   readonly compact?: boolean
@@ -232,63 +310,17 @@ export default function DJENPublicationsWidget({
       })
     }
 
-    // Cria o novo processo baseado na publicação
-    const newProcess: Process = {
-      id: crypto.randomUUID(),
-      numeroCNJ: pub.numeroProcesso,
-      titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
-      autor: parties.autor || 'Não identificado',
-      reu: parties.reu || 'Não identificado',
-      comarca: pub.orgao || '',
-      vara: pub.tribunal || '',
-      status: 'ativo',
-      fase: 'Inicial',
-      dataDistribuicao: pub.data || now.split('T')[0],
-      dataUltimaMovimentacao: now,
-      notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType
-        }${parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
-        }${parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
-        }\n\nTeor da intimação:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''
-        }`,
-      prazos: [],
-      createdAt: now,
-      updatedAt: now,
-    }
-
-    // Também cria expediente vinculado
-    const newExpediente: Expediente = {
-      id: crypto.randomUUID(),
-      processId: newProcess.id,
-      tipo: pub.tipo || 'intimacao',
-      titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
-      conteudo: pub.teor,
-      content: pub.teor,
-      teor: pub.teor,
-      dataRecebimento: now,
-      receivedAt: now,
-      lido: false,
-      arquivado: false,
-      analyzed: false,
-      tribunal: pub.tribunal,
-      numeroProcesso: pub.numeroProcesso,
-      orgao: pub.orgao,
-      lawyerName: pub.lawyerName,
-      matchType: pub.matchType,
-      source: pub.source,
-      createdAt: pub.createdAt,
-      data: pub.data,
-      priority: 'high', // Intimações são sempre prioridade alta
-    }
+    // Usa funções auxiliares para criar processo e expediente
+    const newProcess = createProcessFromPublication(pub, parties, now)
+    const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
 
     // Adiciona aos KV storages
     setProcesses((current) => [...(current || []), newProcess])
     setExpedientes((current) => [...(current || []), newExpediente])
 
+    const partiesDesc = parties.autor === 'Não identificado' ? '' : ` - ${parties.autor} x ${parties.reu}`
     toast.success('Processo cadastrado!', {
-      description: `${pub.numeroProcesso} adicionado ao Acervo${parties.autor === 'Não identificado'
-        ? ''
-        : ` - ${parties.autor} x ${parties.reu}`
-        }`,
+      description: `${pub.numeroProcesso} adicionado ao Acervo${partiesDesc}`,
     })
   }
 
@@ -332,54 +364,12 @@ export default function DJENPublicationsWidget({
           })
         }
 
-        const processId = crypto.randomUUID()
+        // Usa funções auxiliares para criar processo e expediente
+        const newProcess = createProcessFromPublication(pub, parties, now)
+        const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
 
-        newProcesses.push({
-          id: processId,
-          numeroCNJ: pub.numeroProcesso,
-          titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
-          autor: parties.autor || 'Não identificado',
-          reu: parties.reu || 'Não identificado',
-          comarca: pub.orgao || '',
-          vara: pub.tribunal || '',
-          status: 'ativo',
-          fase: 'Inicial',
-          dataDistribuicao: pub.data || now.split('T')[0],
-          dataUltimaMovimentacao: now,
-          notas: `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType
-            }${parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
-            }${parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
-            }\n\nTeor:\n${pub.teor.substring(0, 500)}${pub.teor.length > 500 ? '...' : ''
-            }`,
-          prazos: [],
-          createdAt: now,
-          updatedAt: now,
-        })
-
-        newExpedientes.push({
-          id: crypto.randomUUID(),
-          processId: processId,
-          tipo: pub.tipo || 'intimacao',
-          titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
-          conteudo: pub.teor,
-          content: pub.teor,
-          teor: pub.teor,
-          dataRecebimento: now,
-          receivedAt: now,
-          lido: false,
-          arquivado: false,
-          analyzed: false,
-          tribunal: pub.tribunal,
-          numeroProcesso: pub.numeroProcesso,
-          orgao: pub.orgao,
-          lawyerName: pub.lawyerName,
-          matchType: pub.matchType,
-          source: pub.source,
-          createdAt: pub.createdAt,
-          data: pub.data,
-          priority: 'high',
-        })
-
+        newProcesses.push(newProcess)
+        newExpedientes.push(newExpediente)
         registered++
       }
 
