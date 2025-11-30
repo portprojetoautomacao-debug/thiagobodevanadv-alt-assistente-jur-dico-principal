@@ -644,9 +644,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {agent.capabilities?.slice(0, 4).map((cap, idx) => (
+                        {agent.capabilities?.slice(0, 4).map((cap) => (
                           <Badge
-                            key={idx}
+                            key={cap}
                             variant="outline"
                             className="text-xs"
                           >

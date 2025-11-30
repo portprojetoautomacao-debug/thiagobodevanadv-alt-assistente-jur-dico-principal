@@ -483,9 +483,9 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             </CardHeader>
             <CardContent className="pt-4">
               <div className="grid grid-cols-7 gap-2 mb-3">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
+                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day) => (
                   <div
-                    key={i}
+                    key={day}
                     className="text-center text-xs text-primary/70 font-bold"
                   >
                     {day}
@@ -525,7 +525,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
 
                   return (
                     <div
-                      key={index}
+                      key={`day-${index}-${day || 'null'}`}
                       title={prazoInfo?.descricoes?.join('\n')}
                       className={getDayClassName()}
                     >

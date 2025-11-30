@@ -341,6 +341,41 @@ export default function ExpedientePanel() {
     return map[priority.toLowerCase()] || 'medium'
   }
 
+  /**
+   * Cria prazo no calendário com base na análise do expediente
+   */
+  const createCalendarDeadline = useCallback((exp: Expediente, analysisData: AnalysisData): void => {
+    try {
+      const analysisResult = buildCalendarAnalysisResult(analysisData, exp)
+      const localAppointment = createLocalAppointmentFromAnalysis(
+        analysisResult,
+        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
+      )
+
+      if (!localAppointment) return
+
+      // Verificar se já existe
+      const existingAppt = (appointments || []).find(apt =>
+        apt.date === localAppointment.date &&
+        apt.title.includes(exp.numeroProcesso?.substring(0, 15) || '')
+      )
+
+      if (existingAppt) return
+
+      setAppointments(current => [...(current || []), localAppointment])
+      setDeadlinesCreated(prev => prev + 1)
+      console.log('[ExpedientePanel] Prazo adicionado ao calendário:', localAppointment.title)
+
+      // Tentar sincronizar com Google Calendar em background
+      syncDeadlineToGoogleCalendar(
+        analysisResult,
+        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
+      ).catch(err => console.warn('[ExpedientePanel] Sync com Google Calendar falhou:', err))
+    } catch (calendarError) {
+      console.warn('[ExpedientePanel] Erro ao criar prazo no calendário:', calendarError)
+    }
+  }, [appointments, setAppointments, setDeadlinesCreated])
+
   // Função para analisar um único expediente (retorna o expediente analisado)
   const analyzeExpediente = useCallback(async (exp: Expediente): Promise<Expediente> => {
     try {
@@ -434,42 +469,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
       console.error('Erro ao analisar expediente:', error)
       throw error
     }
-  }, [addTask, appointments, setAppointments, setDeadlinesCreated, agents])
-
-  /**
-   * Cria prazo no calendário com base na análise do expediente
-   */
-  const createCalendarDeadline = useCallback((exp: Expediente, analysisData: AnalysisData): void => {
-    try {
-      const analysisResult = buildCalendarAnalysisResult(analysisData, exp)
-      const localAppointment = createLocalAppointmentFromAnalysis(
-        analysisResult,
-        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
-      )
-
-      if (!localAppointment) return
-
-      // Verificar se já existe
-      const existingAppt = (appointments || []).find(apt =>
-        apt.date === localAppointment.date &&
-        apt.title.includes(exp.numeroProcesso?.substring(0, 15) || '')
-      )
-
-      if (existingAppt) return
-
-      setAppointments(current => [...(current || []), localAppointment])
-      setDeadlinesCreated(prev => prev + 1)
-      console.log('[ExpedientePanel] Prazo adicionado ao calendário:', localAppointment.title)
-
-      // Tentar sincronizar com Google Calendar em background
-      syncDeadlineToGoogleCalendar(
-        analysisResult,
-        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
-      ).catch(err => console.warn('[ExpedientePanel] Sync com Google Calendar falhou:', err))
-    } catch (calendarError) {
-      console.warn('[ExpedientePanel] Erro ao criar prazo no calendário:', calendarError)
-    }
-  }, [appointments, setAppointments, setDeadlinesCreated])
+  }, [addTask, agents, createCalendarDeadline])
 
   // Análise automática de todos os expedientes pendentes
   const runAutoAnalysis = useCallback(async () => {
@@ -989,7 +989,7 @@ Crie o workflow de controladoria para esta tarefa.`
                           <h3 className="text-sm font-semibold mb-2">Documentos Pendentes</h3>
                           <div className="flex flex-wrap gap-2">
                             {selectedExp.pendingDocs.map((doc, idx) => (
-                              <Badge key={idx} variant="outline">
+                              <Badge key={doc} variant="outline">
 
                                 {doc}
                               </Badge>
@@ -1065,7 +1065,7 @@ Crie o workflow de controladoria para esta tarefa.`
               <div className="grid grid-cols-1 gap-2">
                 {suggestedTasks.map((task, index) => (
                   <button
-                    key={index}
+                    key={task}
                     onClick={() => handleSelectTask(task)}
                     disabled={analyzing}
                     className="p-3 text-left rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

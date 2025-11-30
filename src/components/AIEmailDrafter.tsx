@@ -315,7 +315,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                       <div className="prose prose-sm max-w-none">
                         {draft.body.split('\n').map((line, index) => (
                           <p
-                            key={index}
+                            key={`line-${index}-${line.substring(0, 10)}`}
                             className="text-sm leading-relaxed mb-2"
                           >
                             {line || <br />}

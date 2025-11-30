@@ -260,9 +260,9 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                             Riscos Identificados
                           </h3>
                           <ul className="space-y-2">
-                            {analysis.risks.map((risk, index) => (
+                            {analysis.risks.map((risk) => (
                               <li
-                                key={index}
+                                key={risk}
                                 className="text-sm flex gap-2 p-2 bg-destructive/5 rounded"
                               >
                                 <span className="text-destructive shrink-0">
@@ -282,9 +282,9 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                             Proteções Existentes
                           </h3>
                           <ul className="space-y-2">
-                            {analysis.protections.map((protection, index) => (
+                            {analysis.protections.map((protection) => (
                               <li
-                                key={index}
+                                key={protection}
                                 className="text-sm flex gap-2 p-2 bg-primary/5 rounded"
                               >
                                 <span className="text-primary shrink-0">
@@ -304,9 +304,9 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                             Recomendações
                           </h3>
                           <ul className="space-y-2">
-                            {analysis.recommendations.map((rec, index) => (
+                            {analysis.recommendations.map((rec) => (
                               <li
-                                key={index}
+                                key={rec}
                                 className="text-sm flex gap-2 p-2 bg-accent/5 rounded"
                               >
                                 <span className="text-accent shrink-0">•</span>
@@ -324,9 +324,9 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                             Cláusulas Ausentes
                           </h3>
                           <ul className="space-y-2">
-                            {analysis.missingClauses.map((clause, index) => (
+                            {analysis.missingClauses.map((clause) => (
                               <li
-                                key={index}
+                                key={clause}
                                 className="text-sm flex gap-2 p-2 bg-yellow-500/5 rounded"
                               >
                                 <span className="text-yellow-500 shrink-0">
@@ -343,8 +343,8 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                         <div>
                           <h3 className="font-semibold mb-3">Termos-Chave</h3>
                           <div className="flex flex-wrap gap-2">
-                            {analysis.keyTerms.map((term, index) => (
-                              <Badge key={index} variant="outline">
+                            {analysis.keyTerms.map((term) => (
+                              <Badge key={term} variant="outline">
                                 {term}
                               </Badge>
                             ))}

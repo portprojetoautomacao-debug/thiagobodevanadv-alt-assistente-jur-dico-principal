@@ -23,7 +23,7 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
   "remote.portsAttributes": {
     "5000": {
@@ -36,6 +36,11 @@
     }
   },
   "gooseSonarQube.projectBinding": null,
+  "sonarlint.connectedMode.project": {
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-pje",
+    "serverUrl": "https://sonarcloud.io",
+    "organization": "thiagobodevan-a11y"
+  },
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   }

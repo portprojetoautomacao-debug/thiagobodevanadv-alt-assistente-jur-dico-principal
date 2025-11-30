@@ -661,9 +661,9 @@ export default function AdvancedNLPDashboard() {
                     <div className="p-4 rounded-lg border border-border">
                       <h5 className="font-semibold mb-2">Datas</h5>
                       <div className="space-y-1">
-                        {extraction.dates.map((date, index) => (
+                        {extraction.dates.map((date) => (
                           <div
-                            key={index}
+                            key={date}
                             className="text-sm text-muted-foreground"
                           >
                             • {date}
@@ -680,9 +680,9 @@ export default function AdvancedNLPDashboard() {
                           Valores Monetários
                         </h5>
                         <div className="space-y-1">
-                          {extraction.monetaryValues.map((value, index) => (
+                          {extraction.monetaryValues.map((value) => (
                             <div
-                              key={index}
+                              key={value}
                               className="text-sm text-muted-foreground"
                             >
                               • {value}
@@ -699,9 +699,9 @@ export default function AdvancedNLPDashboard() {
                           Referências Legais
                         </h5>
                         <div className="space-y-1">
-                          {extraction.legalReferences.map((ref, index) => (
+                          {extraction.legalReferences.map((ref) => (
                             <div
-                              key={index}
+                              key={ref}
                               className="text-sm text-muted-foreground"
                             >
                               • {ref}
@@ -717,9 +717,9 @@ export default function AdvancedNLPDashboard() {
                         Partes Envolvidas
                       </h5>
                       <div className="space-y-1">
-                        {extraction.parties.map((party, index) => (
+                        {extraction.parties.map((party) => (
                           <div
-                            key={index}
+                            key={party}
                             className="text-sm text-muted-foreground"
                           >
                             • {party}
