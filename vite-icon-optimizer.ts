@@ -31,11 +31,11 @@ export function phosphorIconOptimizer(): Plugin {
         id.includes('node_modules') ||
         id.includes('dist')
       ) {
-        return null
+        return undefined
       }
 
       // Se não importar @phosphor-icons/react, ignora
-      if (!iconPattern.test(code)) return null
+      if (!iconPattern.test(code)) return undefined
 
       let match: RegExpExecArray | null
       while ((match = importPattern.exec(code)) !== null) {
@@ -51,7 +51,7 @@ export function phosphorIconOptimizer(): Plugin {
         }
       }
 
-      return null
+      return undefined
     },
 
     buildEnd() {
