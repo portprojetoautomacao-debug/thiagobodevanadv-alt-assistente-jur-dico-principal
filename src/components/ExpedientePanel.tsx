@@ -896,11 +896,14 @@ Crie o workflow de controladoria para esta tarefa.`
                   safeExpedientes.map((exp) => (
                     <div
                       key={exp.id}
+                      role="button"
+                      tabIndex={0}
                       className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedExp?.id === exp.id
                         ? 'bg-primary/10 border-primary'
                         : 'bg-card border-border hover:bg-muted'
                         }`}
                       onClick={() => setSelectedExp(exp)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedExp(exp); } }}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
