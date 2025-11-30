@@ -232,10 +232,10 @@ async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
   // Rate limit
   if (response.status === 429) {
     const data = await response.json()
-    return { 
-      success: false, 
+    return {
+      success: false,
       rateLimited: true,
-      message: data.message || 'Tente novamente em alguns segundos' 
+      message: data.message || 'Tente novamente em alguns segundos'
     }
   }
 
@@ -244,17 +244,17 @@ async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
   }
 
   const result = await response.json()
-  
+
   if (result.ok) {
-    return { 
-      success: true, 
-      newPublications: result.result?.newPublications || 0 
+    return {
+      success: true,
+      newPublications: result.result?.newPublications || 0
     }
   }
 
-  return { 
-    success: false, 
-    message: result.error || result.message || 'Erro na sincronização' 
+  return {
+    success: false,
+    message: result.error || result.message || 'Erro na sincronização'
   }
 }
 
@@ -370,9 +370,9 @@ export default function DJENPublicationsWidget({
     try {
       const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
       const result = await executeDJENSync(baseUrl)
-      
+
       showSyncToast(result)
-      
+
       if (result.success) {
         await fetchPublications()
       }
