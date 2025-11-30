@@ -636,7 +636,7 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
 // Action Handlers - Extracted to reduce CC (S3776)
 // ===========================
 
-interface ProcessQueueResult {
+interface _ProcessQueueResult {
   ok: boolean
   message: string
   processed: number

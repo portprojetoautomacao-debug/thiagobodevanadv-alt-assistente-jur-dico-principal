@@ -741,7 +741,7 @@ export function createTaskGenerator(
     const agentId =
       agentsPool[Math.floor(Math.random() * Math.max(agentsPool.length, 1))] ?? 'harvey'
 
-    const taskTypes = ['monitor-check', 'analyze-queue', 'deadline-review', 'status-update']
+    const taskTypes: TarefaSistemaTipo[] = ['MONITOR_DJEN', 'ANALYZE_DOCUMENT', 'CALCULATE_DEADLINE', 'ANALYZE_INTIMATION']
     const priorities: TaskPriority[] = ['low', 'medium', 'high']
 
     return {

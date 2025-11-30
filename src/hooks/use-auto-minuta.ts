@@ -78,7 +78,7 @@ export function useAutoMinuta() {
     // Filtrar tarefas de redação completadas que ainda não foram processadas
     const petitionTasks = completedTasks.filter(task =>
       task.agentId === 'redacao-peticoes' &&
-      task.type === 'draft_petition' &&
+      task.type === 'DRAFT_PETITION' &&
       task.status === 'completed' &&
       task.result?.data?.draft &&
       !processedTasksRef.current.has(task.id)

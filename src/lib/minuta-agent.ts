@@ -63,7 +63,7 @@ function normalizeDateToISO(dateStr: string): string {
   }
 
   const date = new Date(dateStr)
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     throw new Error(`Data de prazo inválida: ${dateStr}`)
   }
   return date.toISOString().split('T')[0]
@@ -131,12 +131,12 @@ async function generateMinutaContent(
   detalhesCaso: string
 ): Promise<{ content: string | null; error: string | null }> {
   const response = await generatePeticao(tipoMinuta, detalhesCaso)
-  
+
   if (response.error || !response.text) {
     const errorMsg = response.error || 'Gemini retornou texto vazio na geração da minuta'
     return { content: null, error: errorMsg }
   }
-  
+
   return { content: response.text, error: null }
 }
 
@@ -231,12 +231,12 @@ async function createCalendarEvent(
     )
 
     const eventId = await googleCalendarService.createDeadlineEvent(deadlineEvent)
-    
+
     if (!eventId) {
       errors.push('Não foi possível criar o evento de prazo no Google Calendar')
       logFeedback('Erro ao criar evento no Google Calendar', true)
     }
-    
+
     return { eventId: eventId || null, prazoNormalizado }
   } catch (err) {
     const errorMsg = err instanceof Error
@@ -278,7 +278,7 @@ export async function criarMinutaComAgenteIA(
   try {
     // 1) Gera a minuta usando Gemini
     const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso)
-    
+
     if (geminiError || !content) {
       errors.push(geminiError || 'Erro ao gerar minuta')
       logFeedback(geminiError || 'Erro ao gerar minuta', true)
@@ -291,7 +291,7 @@ export async function criarMinutaComAgenteIA(
     // 3) Salvar no Google Docs (se habilitado)
     let docsId: string | null = null
     let docsUrl: string | null = null
-    
+
     if (syncDocs) {
       const docsResult = await saveToGoogleDocs(minuta, errors)
       docsId = docsResult.docsId

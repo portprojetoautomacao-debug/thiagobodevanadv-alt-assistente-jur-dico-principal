@@ -2,14 +2,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Brain, FileText, Gavel, Lightbulb, Clock } from '@phosphor-icons/react'
-
-interface MemoryItem {
-  id: string
-  content: string
-  type: string
-  metadata: Record<string, any>
-  createdAt: string
-}
+import { type MemoryItem } from '@/hooks/use-autonomous-agents'
 
 interface LegalMemoryViewerProps {
   readonly memory?: MemoryItem[]
@@ -85,12 +78,12 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
 
                       {item.metadata && Object.keys(item.metadata).length > 0 && (
                         <div className="mt-2 flex gap-2 flex-wrap">
-                          {item.metadata.agentId && (
+                          {typeof item.metadata.agentId === 'string' && (
                             <Badge variant="outline" className="text-[10px]">
                               Agente: {item.metadata.agentId}
                             </Badge>
                           )}
-                          {item.metadata.taskId && (
+                          {typeof item.metadata.taskId === 'string' && (
                             <Badge variant="outline" className="text-[10px]">
                               Task: {item.metadata.taskId.substring(0, 8)}...
                             </Badge>

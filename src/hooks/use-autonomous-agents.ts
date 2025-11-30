@@ -12,6 +12,36 @@ import {
   initializeAgents
 } from '@/lib/agents'
 
+// Type alias para log de atividade
+type ActivityLogEntry = {
+  id: string
+  agentId: string
+  timestamp: string
+  action: string
+  result: 'success' | 'warning' | 'error'
+}
+
+// ===========================
+// Types for server data
+// ===========================
+
+export interface AgentActionLog {
+  agentId: string
+  action: string
+  details?: Record<string, unknown>
+  timestamp: string
+  success: boolean
+  durationMs?: number
+}
+
+export interface MemoryItem {
+  id: string
+  type: string
+  content: string
+  createdAt: string
+  metadata?: Record<string, unknown>
+}
+
 // ===========================
 // Types for callbacks
 // ===========================
@@ -154,12 +184,14 @@ function clearOutdatedLocalStorage(): void {
 const AGENTS_DATA_VERSION = 7
 
 function getInitialAgents(): Agent[] {
+  // Early return for server-side rendering
   if (typeof window === 'undefined') return initializeAgents()
 
   try {
     const storedVersion = window.localStorage.getItem('agents-data-version')
     const version = storedVersion ? JSON.parse(storedVersion) : 0
 
+    // Handle outdated data version
     if (isDataVersionOutdated(version, AGENTS_DATA_VERSION)) {
       clearOutdatedLocalStorage()
       window.localStorage.setItem('agents-data-version', JSON.stringify(AGENTS_DATA_VERSION))
@@ -167,8 +199,12 @@ function getInitialAgents(): Agent[] {
     }
 
     const storedAgents = window.localStorage.getItem('autonomous-agents')
+
+    // Handle stored agents
     if (storedAgents) {
       const parsed = JSON.parse(storedAgents)
+
+      // Return valid stored agents
       if (Array.isArray(parsed) && parsed.length === 15) return parsed
 
       console.log('[Agents] Quantidade incorreta de agentes → reinicializando…')
@@ -198,8 +234,8 @@ export function useAutonomousAgents() {
   >('agent-activity-log', [])
 
   // Estado para logs do servidor e memória jurídica
-  const [serverLogs, setServerLogs] = useState<unknown[]>([])
-  const [legalMemory, setLegalMemory] = useState<unknown[]>([])
+  const [serverLogs, setServerLogs] = useState<AgentActionLog[]>([])
+  const [legalMemory, setLegalMemory] = useState<MemoryItem[]>([])
 
   // Estado para streaming em tempo real
   const [streamingContent, setStreamingContent] = useState<Record<string, string>>({})
@@ -253,30 +289,47 @@ export function useAutonomousAgents() {
   // TASK QUEUE
   // =============================
 
+  // Helper para adicionar tarefa à fila (reduz S2004 nesting)
+  const addTaskToQueue = useCallback((current: AgentTask[], task: AgentTask): AgentTask[] => {
+    const updated = [...current, task]
+    return sortTasksByPriority(updated)
+  }, [])
+
   const addTask = useCallback(
     (task: AgentTask) => {
-      setTaskQueue(current => {
-        const updated = [...(current || []), task]
-        return sortTasksByPriority(updated)
-      })
+      setTaskQueue(current => addTaskToQueue(current || [], task))
     },
-    [setTaskQueue]
+    [setTaskQueue, addTaskToQueue]
   )
+
+  // Helper para criar log de atividade (reduz S2004 nesting)
+  const createActivityLog = useCallback((
+    agentId: string,
+    action: string,
+    result: 'success' | 'warning' | 'error' = 'success'
+  ) => {
+    return {
+      id: crypto.randomUUID(),
+      agentId,
+      timestamp: new Date().toISOString(),
+      action,
+      result
+    }
+  }, [])
+
+  // Helper para adicionar log à lista (reduz S2004 nesting)
+  const addLogToActivityList = useCallback((current: ActivityLogEntry[], log: ActivityLogEntry): ActivityLogEntry[] => {
+    return [log, ...(current || [])].slice(0, 100)
+  }, [])
 
   const logActivity = useCallback(
     (agentId: string, action: string, result: 'success' | 'warning' | 'error' = 'success') => {
       setActivityLog(current => {
-        const log = {
-          id: crypto.randomUUID(),
-          agentId,
-          timestamp: new Date().toISOString(),
-          action,
-          result
-        }
-        return [log, ...(current || [])].slice(0, 100)
+        const log = createActivityLog(agentId, action, result)
+        return addLogToActivityList(current || [], log)
       })
     },
-    [setActivityLog]
+    [setActivityLog, createActivityLog, addLogToActivityList]
   )
 
   // =============================
@@ -347,34 +400,72 @@ export function useAutonomousAgents() {
     processNextTaskRef.current = processNextTask
   }, [processNextTask])
 
+  // =============================
+  // LOOP CONTÍNUO DE PROCESSAMENTO
+  // =============================
+
+  // Helper para processar agentes ativos (reduz S2004 nesting)
+  const processActiveAgents = useCallback(() => {
+    const currentAgents = agents || []
+    currentAgents.forEach(agent => {
+      if (agent.enabled && agent.continuousMode) {
+        processNextTaskRef.current(agent)
+      }
+    })
+  }, [agents])
+
+  // Helper para atualizar atividade de um agente individual (reduz S2004 nesting)
+  const updateSingleAgentActivity = useCallback((agent: Agent): Agent => {
+    // Skip disabled or non-continuous agents
+    if (!agent.enabled || !agent.continuousMode) return agent
+
+    const activity = getAgentActivity(agent)
+
+    // Update only if activity changed
+    if (activity !== agent.lastActivity) {
+      return { ...agent, lastActivity: activity }
+    }
+
+    return agent
+  }, [])
+
+  // Helper para atualizar status visual dos agentes (reduz S2004 nesting)
+  const updateAgentsActivityStatus = useCallback(() => {
+    setAgents(current => (current || []).map(updateSingleAgentActivity))
+  }, [setAgents, updateSingleAgentActivity])
+
   // Loop contínuo de processamento
   useEffect(() => {
     const interval = setInterval(() => {
-      const currentAgents = agents || []
-
-      currentAgents.forEach(agent => {
-        if (agent.enabled && agent.continuousMode) {
-          processNextTaskRef.current(agent)
-        }
-      })
-
-      // Atualização visual (status de atividade)
-      setAgents(current =>
-        (current || []).map(a => {
-          if (!a.enabled || !a.continuousMode) return a
-          const activity = getAgentActivity(a)
-          if (activity !== a.lastActivity) return { ...a, lastActivity: activity }
-          return a
-        })
-      )
+      processActiveAgents()
+      updateAgentsActivityStatus()
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [agents, setAgents])
+  }, [processActiveAgents, updateAgentsActivityStatus])
 
   // =============================
   // RESET DIÁRIO (local)
   // =============================
+
+  // Helper para reset diário dos agentes (reduz S2004 nesting)
+  const performDailyReset = useCallback(() => {
+    setAgents(current =>
+      (current || []).map(agent => ({
+        ...agent
+      }))
+    )
+  }, [setAgents])
+
+  // Helper para configurar intervalo diário (reduz S2004 nesting)
+  const setupDailyResetInterval = useCallback(() => {
+    const interval = setInterval(() => {
+      performDailyReset()
+    }, 24 * 60 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [performDailyReset])
+
   useEffect(() => {
     const resetDailyCounters = () => {
       const now = new Date()
@@ -384,48 +475,46 @@ export function useAutonomousAgents() {
       const timeUntilMidnight = midnight.getTime() - now.getTime()
 
       const timeout = setTimeout(() => {
-        setAgents(current =>
-          (current || []).map(agent => ({
-            ...agent
-          }))
-        )
-
-        const interval = setInterval(() => {
-          setAgents(current =>
-            (current || []).map(agent => ({
-              ...agent
-            }))
-          )
-        }, 24 * 60 * 60 * 1000)
-
-        return () => clearInterval(interval)
+        performDailyReset()
+        setupDailyResetInterval()
       }, timeUntilMidnight)
 
       return () => clearTimeout(timeout)
     }
 
     return resetDailyCounters()
-  }, [])
+  }, [performDailyReset, setupDailyResetInterval])
 
   // =============================
   // CONTROLES DO USUÁRIO
   // =============================
 
+  // Helper para encontrar agente por ID (reduz S2004 nesting)
+  const findAgentById = useCallback((agents: Agent[], agentId: string): Agent | undefined => {
+    return agents.find(a => a.id === agentId)
+  }, [])
+
+  // Helper para determinar novo status do agente (reduz S2004 nesting)
+  const getNewAgentStatus = useCallback((agent: Agent): Partial<Agent> => {
+    const isNowEnabled = !agent.enabled
+    return {
+      enabled: isNowEnabled,
+      status: isNowEnabled ? 'active' : 'paused',
+      lastActivity: isNowEnabled ? 'Iniciando…' : 'Pausado pelo usuário'
+    }
+  }, [])
+
   const toggleAgent = useCallback(
     (agentId: string) => {
       setAgents(current => {
-        const agent = (current || []).find(a => a.id === agentId)
+        const agent = findAgentById(current || [], agentId)
         if (!agent) return current || []
 
-        const isNowEnabled = !agent.enabled
-        return updateAgentInList(current || [], agentId, {
-          enabled: isNowEnabled,
-          status: isNowEnabled ? 'active' : 'paused',
-          lastActivity: isNowEnabled ? 'Iniciando…' : 'Pausado pelo usuário'
-        })
+        const newStatus = getNewAgentStatus(agent)
+        return updateAgentInList(current || [], agentId, newStatus)
       })
     },
-    [setAgents]
+    [setAgents, findAgentById, getNewAgentStatus]
   )
 
   const markTaskAsHumanTouched = useCallback(

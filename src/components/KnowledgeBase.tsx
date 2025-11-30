@@ -31,6 +31,7 @@ import { toast } from 'sonner'
  */
 
 interface Message {
+  id: string
   role: 'user' | 'assistant'
   content: string
 }
@@ -77,7 +78,7 @@ export default function KnowledgeBase() {
       return
     }
 
-    const userMessage: Message = { role: 'user', content: raw }
+    const userMessage: Message = { id: crypto.randomUUID(), role: 'user', content: raw }
     setMessages(prev => [...prev, userMessage])
 
     // Se veio de atalho, a caixa de texto pode ficar igual ou ser limpa.
@@ -118,6 +119,7 @@ export default function KnowledgeBase() {
           : 'A IA não retornou nenhum conteúdo útil para esta pergunta.'
 
       const assistantMessage: Message = {
+        id: crypto.randomUUID(),
         role: 'assistant',
         content,
       }

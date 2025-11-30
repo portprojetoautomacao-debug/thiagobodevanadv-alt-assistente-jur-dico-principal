@@ -87,7 +87,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
       comarca: formData.comarca.trim(),
       vara: formData.vara.trim(),
       status: formData.status,
-      valor: formData.valor ? parseFloat(formData.valor) : undefined,
+      valor: formData.valor ? Number.parseFloat(formData.valor) : undefined,
       dataDistribuicao: formData.dataDistribuicao,
       dataUltimaMovimentacao: now,
       notas: formData.notas.trim(),

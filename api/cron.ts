@@ -2008,19 +2008,21 @@ async function sendDJENDailyReport(result: DJENMonitorResult): Promise<void> {
 
 // ===== Action Handlers Registry (reduces cognitive complexity S3776) =====
 
-interface ActionResult {
-  success?: boolean;
-  tasksProcessed?: number;
-  tasksFailed?: number;
-  emailsSent?: number;
-  webhooksSent?: number;
-  eventsCreated?: number;
-  [key: string]: unknown;
-}
+// Base type for all result types
+type CronActionResult =
+  | DailyResetResult
+  | DJENMonitorResult
+  | AgentQueueResult
+  | NotificationResult
+  | CalendarSyncResult
+  | BackupResult
+  | DataJudResult
+  | DeadlineAlertResult
+  | WatchdogResult;
 
 interface ActionConfig {
-  handler: (timestamp: string) => Promise<ActionResult>;
-  getMessage: (result: ActionResult) => string;
+  handler: (timestamp: string) => Promise<CronActionResult>;
+  getMessage: (result: CronActionResult) => string;
   successMessage: string;
 }
 
@@ -2037,23 +2039,32 @@ const ACTION_HANDLERS: Record<string, ActionConfig> = {
   },
   'process-agent-queue': {
     handler: handleProcessAgentQueue,
-    getMessage: (result) => result.tasksProcessed === 0 && result.tasksFailed === 0
-      ? 'No pending tasks in queue'
-      : 'Agent queue processing completed',
+    getMessage: (result) => {
+      const r = result as AgentQueueResult;
+      return r.tasksProcessed === 0 && r.tasksFailed === 0
+        ? 'No pending tasks in queue'
+        : 'Agent queue processing completed';
+    },
     successMessage: 'Agent queue processing completed'
   },
   'process-notifications': {
     handler: handleProcessNotifications,
-    getMessage: (result) => result.emailsSent === 0 && result.webhooksSent === 0
-      ? 'No pending notifications'
-      : 'Notification processing completed',
+    getMessage: (result) => {
+      const r = result as NotificationResult;
+      return r.emailsSent === 0 && r.webhooksSent === 0
+        ? 'No pending notifications'
+        : 'Notification processing completed';
+    },
     successMessage: 'Notification processing completed'
   },
   'calendar-sync': {
     handler: handleCalendarSync,
-    getMessage: (result) => result.eventsCreated === 0
-      ? 'Calendar sync skipped - no deadlines to sync or not configured'
-      : 'Calendar sync completed',
+    getMessage: (result) => {
+      const r = result as CalendarSyncResult;
+      return r.eventsCreated === 0
+        ? 'Calendar sync skipped - no deadlines to sync or not configured'
+        : 'Calendar sync completed';
+    },
     successMessage: 'Calendar sync completed'
   },
   'backup': {

@@ -36,8 +36,8 @@ export interface SharedContext {
 
 class AgentCommunicationHub {
   private messages: AgentMessage[] = []
-  private contexts: Map<string, SharedContext> = new Map()
-  private subscribers: Map<string, Set<(message: AgentMessage) => void>> = new Map()
+  private readonly contexts: Map<string, SharedContext> = new Map()
+  private readonly subscribers: Map<string, Set<(message: AgentMessage) => void>> = new Map()
 
   /**
    * Envia uma mensagem de um agente para outro (ou broadcast)

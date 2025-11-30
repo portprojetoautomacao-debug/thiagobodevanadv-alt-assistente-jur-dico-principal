@@ -24,17 +24,16 @@ if (!rootElement) {
 // IDs configuráveis via VITE_GTM_ID e VITE_GA4_ID
 let analyticsInitialized = false
 
-const initAnalyticsServices = async () => {
+const initAnalyticsServices = () => {
   if (analyticsInitialized) return
   analyticsInitialized = true
 
-  try {
-    const { initAnalytics } = await import('./lib/analytics')
+  import('./lib/analytics').then(({ initAnalytics }) => {
     // initAnalytics é síncrono - não precisa de await
     initAnalytics()
-  } catch (error) {
+  }).catch(error => {
     console.warn('Analytics não inicializado:', error)
-  }
+  })
 }
 
 // Inicializa analytics após 2s para não impactar FCP/LCP
@@ -45,16 +44,15 @@ setTimeout(initAnalyticsServices, 2000)
 // Economia: ~238KB de código não utilizado imediatamente
 let sentryInitialized = false
 
-const initSentry = async () => {
+const initSentry = () => {
   if (sentryInitialized) return
   sentryInitialized = true
 
-  try {
-    const { initErrorTracking } = await import('./services/error-tracking')
+  import('./services/error-tracking').then(({ initErrorTracking }) => {
     initErrorTracking()
-  } catch (error) {
+  }).catch(error => {
     console.error('❌ Failed to initialize Sentry:', error)
-  }
+  })
 }
 
 // Estratégia 1: Carregar Sentry após primeira interação do usuário

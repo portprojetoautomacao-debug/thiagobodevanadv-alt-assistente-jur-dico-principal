@@ -115,7 +115,7 @@ export function applySparkClientFixes() {
             return await response.json();
           }
         }
-      } catch (err) {
+      } catch (_err) {
         // ignore; we'll try other methods
       }
 
@@ -136,7 +136,7 @@ export function applySparkClientFixes() {
       // Otherwise attempt JSON parse
       try {
         return JSON.parse(trimmed);
-      } catch (err) {
+      } catch (_err) {
         console.error('Failed to parse KV key response as JSON. Response body (truncated):', trimmed.slice(0, 120));
         throw new Error('Failed to parse KV key response: not valid JSON');
       }
@@ -150,7 +150,7 @@ export function applySparkClientFixes() {
           if (typeof original.get === 'function') {
             try {
               return await original.get<T>(key);
-            } catch (err) {
+            } catch (_err) {
               // if plugin throws failed-to-parse, try to fetch directly to provide more context
               // continue to fallback
             }
@@ -173,7 +173,7 @@ export function applySparkClientFixes() {
           if (typeof original.keys === 'function') {
             try {
               return await original.keys();
-            } catch (err) {
+            } catch (_err) {
               // fallback to direct fetch
             }
           }
@@ -200,7 +200,7 @@ export function applySparkClientFixes() {
         if (typeof original.set === 'function') {
           try {
             return await original.set<T>(key, value);
-          } catch (err) {
+          } catch (_err) {
             // fallback
           }
         }
@@ -218,7 +218,7 @@ export function applySparkClientFixes() {
         if (typeof original.delete === 'function') {
           try {
             return await original.delete(key);
-          } catch (err) {
+          } catch (_err) {
             // fallback
           }
         }
@@ -284,10 +284,10 @@ function parseJSONResponse(text: string): string {
   } catch (e) {
     throw new Error('LLM response claimed JSON but failed to parse: ' + e + ' - ' + text.slice(0, 500));
   }
-  
+
   const choicesContent = extractChoicesContent(data);
   if (choicesContent) return choicesContent;
-  
+
   return JSON.stringify(data);
 }
 

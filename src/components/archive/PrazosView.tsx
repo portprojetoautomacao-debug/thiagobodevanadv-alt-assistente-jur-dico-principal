@@ -64,10 +64,6 @@ function updateProcessWithToggledPrazo(
   }
 }
 
-interface PrazoComProcesso extends Prazo {
-  processo: Process
-}
-
 export default function PrazosView() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [filter, setFilter] = useState<'todos' | 'pendentes' | 'urgentes' | 'concluidos'>('pendentes')
@@ -101,11 +97,7 @@ export default function PrazosView() {
   const stats = useMemo(() => {
     const pendentes = prazosComProcesso.filter(p => !p.concluido).length
     const concluidos = prazosComProcesso.filter(p => p.concluido).length
-    const urgentes = prazosComProcesso.filter(p => {
-      if (p.concluido) return false
-      const dias = calcularDiasRestantes(p.dataFinal)
-      return isUrgente(dias)
-    }).length
+    const urgentes = prazosComProcesso.filter(p => !p.concluido && isUrgente(calcularDiasRestantes(p.dataFinal))).length
 
     return { pendentes, concluidos, urgentes }
   }, [prazosComProcesso])

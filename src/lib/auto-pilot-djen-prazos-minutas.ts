@@ -86,8 +86,8 @@ export interface AutoPilotStatus {
  */
 export class AutoPilotDjenPrazosMinutas {
   private config: Required<AutoPilotConfig>
-  private monitor: DJENMonitorAgent
-  private stats = {
+  private readonly monitor: DJENMonitorAgent
+  private readonly stats = {
     totalIntimacoesProcessadas: 0,
     totalPrazosCriados: 0,
     totalMinutasCriadas: 0,
@@ -107,7 +107,7 @@ export class AutoPilotDjenPrazosMinutas {
     // Cria o monitor DJEN com callbacks conectados ao Auto-Pilot
     this.monitor = criarMonitorDJEN({
       ...this.config.djen,
-      notificarCallback: (publicacoes) => this.handleNewPublications(publicacoes),
+      notificarCallback: (publicacoes) => { this.handleNewPublications(publicacoes).catch(console.error) },
       logCallback: (msg, level) => this.log(msg, level),
     })
   }
@@ -433,7 +433,7 @@ ${pub.teor}
     // Atualiza o monitor DJEN com as novas configs (callbacks continuam deste Auto-Pilot)
     this.monitor.atualizarConfig({
       ...this.config.djen,
-      notificarCallback: (publicacoes) => this.handleNewPublications(publicacoes),
+      notificarCallback: (publicacoes) => { this.handleNewPublications(publicacoes).catch(console.error) },
       logCallback: (msg, level) => this.log(msg, level),
     })
 

@@ -29,8 +29,8 @@ class CircuitBreaker {
   private successes = 0;
   private lastFailureTime?: number;
   private lastStateChange = Date.now();
-  private config: CircuitBreakerConfig;
-  private name: string;
+  private readonly config: CircuitBreakerConfig;
+  private readonly name: string;
 
   constructor(name: string, config?: Partial<CircuitBreakerConfig>) {
     this.name = name;
@@ -103,7 +103,7 @@ class CircuitBreaker {
 }
 
 class CircuitBreakerRegistry {
-  private static breakers = new Map<string, CircuitBreaker>();
+  private static readonly breakers = new Map<string, CircuitBreaker>();
 
   static get(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
     let breaker = this.breakers.get(name);

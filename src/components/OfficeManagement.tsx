@@ -100,7 +100,7 @@ export default function OfficeManagement() {
 
     return Object.entries(byMonth)
       .map(([month, data]) => ({
-        mes: meses[parseInt(month)],
+        mes: meses[Number.parseInt(month)],
         receita: data.receita,
         despesa: data.despesa,
         saldo: data.receita - data.despesa
@@ -151,7 +151,7 @@ export default function OfficeManagement() {
 
     return Object.entries(byYear)
       .map(([year, procs]) => ({
-        ano: parseInt(year),
+        ano: Number.parseInt(year),
         fechamentos: procs.length,
         emProducao: procs.filter(p => p.status === 'ativo').length,
         transitoJulgado: procs.filter(p => p.fase === 'transitoJulgado').length,

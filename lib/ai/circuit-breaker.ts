@@ -29,8 +29,8 @@ export class CircuitBreaker {
   private successes = 0;
   private lastFailureTime?: number;
   private lastStateChange = Date.now();
-  private config: CircuitBreakerConfig;
-  private name: string;
+  private readonly config: CircuitBreakerConfig;
+  private readonly name: string;
 
   constructor(name: string, config?: Partial<CircuitBreakerConfig>) {
     this.name = name;
@@ -49,7 +49,7 @@ export class CircuitBreaker {
     // Se circuito está OPEN, rejeitar imediatamente
     if (this.state === 'OPEN') {
       const timeSinceLastFailure = Date.now() - (this.lastFailureTime ?? 0);
-      
+
       // Se passou o timeout, tentar HALF_OPEN
       if (timeSinceLastFailure >= this.config.timeout) {
         this.state = 'HALF_OPEN';
@@ -78,7 +78,7 @@ export class CircuitBreaker {
 
     if (this.state === 'HALF_OPEN') {
       this.successes++;
-      
+
       // Se atingiu threshold de sucessos, fechar circuito
       if (this.successes >= this.config.successThreshold) {
         this.state = 'CLOSED';
@@ -149,14 +149,14 @@ export class CircuitBreaker {
  * Registry de circuit breakers para todas as APIs
  */
 export class CircuitBreakerRegistry {
-  private static breakers = new Map<string, CircuitBreaker>();
+  private static readonly breakers = new Map<string, CircuitBreaker>();
 
   /**
    * Obtém ou cria circuit breaker
    */
   static get(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
     let breaker = this.breakers.get(name);
-    
+
     if (!breaker) {
       breaker = new CircuitBreaker(name, config);
       this.breakers.set(name, breaker);
@@ -170,7 +170,7 @@ export class CircuitBreakerRegistry {
    */
   static getAll(): Map<string, CircuitBreakerStats> {
     const stats = new Map<string, CircuitBreakerStats>();
-    
+
     this.breakers.forEach((breaker, name) => {
       stats.set(name, breaker.getStats());
     });

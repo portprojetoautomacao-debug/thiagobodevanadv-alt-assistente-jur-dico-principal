@@ -29,16 +29,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'npm'
+          node-version: "22.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Check for merge conflicts
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git fetch origin ${{ github.base_ref }}
-          if git merge-tree $(git merge-base HEAD origin/${{ github.base_ref }}) HEAD origin/${{ github.base_ref }} | grep -q "<<<<<<< "; then
+          git fetch origin "$BASE_REF"
+          if git merge-tree $(git merge-base HEAD "origin/$BASE_REF") HEAD "origin/$BASE_REF" | grep -q "<<<<<<< "; then
             echo "❌ Merge conflicts detected"
             exit 1
           else

@@ -111,13 +111,13 @@ export function formatCurrency(value: number): string {
 
 export function formatDate(date: string | Date): string {
   const d = new Date(date)
-  if (isNaN(d.getTime())) return ""
+  if (Number.isNaN(d.getTime())) return ""
   return d.toLocaleDateString("pt-BR")
 }
 
 export function formatDateTime(date: string | Date): string {
   const d = new Date(date)
-  if (isNaN(d.getTime())) return ""
+  if (Number.isNaN(d.getTime())) return ""
   return d.toLocaleString("pt-BR")
 }
 
@@ -130,7 +130,7 @@ export function formatDateTz(
   timeZone: string = DEFAULT_TZ
 ): string {
   const d = new Date(date)
-  if (isNaN(d.getTime())) return ""
+  if (Number.isNaN(d.getTime())) return ""
 
   try {
     return new Intl.DateTimeFormat("pt-BR", {
@@ -150,7 +150,7 @@ export function formatDateTimeTz(
   timeZone: string = DEFAULT_TZ
 ): string {
   const d = new Date(date)
-  if (isNaN(d.getTime())) return ""
+  if (Number.isNaN(d.getTime())) return ""
 
   try {
     return new Intl.DateTimeFormat("pt-BR", {
@@ -182,7 +182,7 @@ export function parsePjeDate(dateStr: string): Date | null {
   const year = Number(yyyy)
 
   const d = new Date(year, month, day)
-  if (isNaN(d.getTime())) return null
+  if (Number.isNaN(d.getTime())) return null
   return d
 }
 
@@ -211,7 +211,7 @@ export function parsePjeDateTime(
  */
 export function formatPjeDate(date: string | Date): string {
   const d = new Date(date)
-  if (isNaN(d.getTime())) return ""
+  if (Number.isNaN(d.getTime())) return ""
   const dd = d.getDate().toString().padStart(2, "0")
   const mm = (d.getMonth() + 1).toString().padStart(2, "0")
   const yyyy = d.getFullYear()
@@ -223,7 +223,7 @@ export function formatPjeDate(date: string | Date): string {
  */
 export function formatPjeDateTime(date: string | Date): string {
   const d = new Date(date)
-  if (isNaN(d.getTime())) return ""
+  if (Number.isNaN(d.getTime())) return ""
   const dd = d.getDate().toString().padStart(2, "0")
   const mm = (d.getMonth() + 1).toString().padStart(2, "0")
   const yyyy = d.getFullYear()

@@ -339,6 +339,18 @@ export function traceHumanInterventionCompleted(
 // ============================================================================
 
 /**
+ * Interface para trace básico
+ */
+interface TraceEntry {
+  endTime?: number
+  startTime?: number
+  status?: string
+  statusMessage?: string
+  events?: Array<{ name: string; attributes?: Record<string, unknown> }>
+  attributes?: Record<string, unknown>
+}
+
+/**
  * Métricas de execução do agente a partir dos traces
  */
 export function getAgentMetrics(agentId: string): {
@@ -348,7 +360,7 @@ export function getAgentMetrics(agentId: string): {
   toolUsage: Record<string, number>
   recentErrors: string[]
 } {
-  const traces = tracingService.getTracesByName(`agent.${agentId}`) as unknown[]
+  const traces = tracingService.getTracesByName(`agent.${agentId}`) as TraceEntry[]
 
   const executions = traces.filter(t => t.endTime)
   const successful = executions.filter(t => t.status === 'ok')
@@ -366,7 +378,7 @@ export function getAgentMetrics(agentId: string): {
   const toolUsage: Record<string, number> = {}
 
   executions.forEach(t => {
-    const events = (t.events as unknown[]) || []
+    const events = t.events || []
     events
       .filter(e => e.name === 'tool.used')
       .forEach(e => {
@@ -401,7 +413,7 @@ export function getLLMMetrics(): {
   errorRate: number
   tokensByModel: Record<string, number>
 } {
-  const traces = tracingService.getTracesByName('llm.') as unknown[]
+  const traces = tracingService.getTracesByName('llm.') as TraceEntry[]
 
   const calls = traces.filter(t => t.endTime)
   const failed = calls.filter(t => t.status === 'error')
