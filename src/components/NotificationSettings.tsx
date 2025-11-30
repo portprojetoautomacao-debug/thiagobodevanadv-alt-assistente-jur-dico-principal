@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -6,13 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -20,22 +17,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
+import { useNotifications } from '@/hooks/use-notifications'
+import { cn } from '@/lib/utils'
 import {
   Bell,
   CheckCircle,
-  XCircle,
-  Warning,
-  Plus,
-  Trash,
-  TestTube,
-  SlackLogo,
   DiscordLogo,
   Globe,
+  Plus,
+  SlackLogo,
   Spinner,
+  TestTube,
+  Trash,
+  Warning,
+  XCircle,
 } from '@phosphor-icons/react'
-import { useNotifications } from '@/hooks/use-notifications'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 
 // Microsoft Teams icon
 const TeamsIcon = ({ size = 20 }: { size?: number }) => (
@@ -371,6 +371,7 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="prazo-alerts"
+                aria-label="Ativar alertas de prazos próximos do vencimento (D-7, D-2, D-1)"
                 checked={preferences?.prazoAlerts ?? true}
                 onCheckedChange={(checked) =>
                   setPreferences((current: any) => ({
@@ -397,6 +398,7 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="agent-alerts"
+                aria-label="Ativar alertas quando agentes autônomos completarem tarefas"
                 checked={preferences?.agentAlerts ?? true}
                 onCheckedChange={(checked) =>
                   setPreferences((current: any) => ({
@@ -423,6 +425,7 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 id="financial-alerts"
+                aria-label="Ativar alertas sobre honorários vencidos e pagamentos pendentes"
                 checked={preferences?.financialAlerts ?? true}
                 onCheckedChange={(checked) =>
                   setPreferences((current: any) => ({

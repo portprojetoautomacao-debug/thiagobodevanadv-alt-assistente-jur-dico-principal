@@ -346,6 +346,77 @@ textarea {
 }
 
 /* ========================================
+   ACESSIBILIDADE - Suporte ao Modo de Alto Contraste
+   ======================================== */
+
+/* Suporte ao modo de alto contraste (forced-colors) */
+@media (forced-colors: active) {
+  /* Garantir que elementos interativos mantenham suas cores no modo de alto contraste */
+  button,
+  a[href],
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [role="link"],
+  [role="tab"],
+  [role="menuitem"],
+  [tabindex]:not([tabindex="-1"]) {
+    forced-color-adjust: none;
+  }
+
+  /* Links devem manter indicação visual mesmo no modo de alto contraste */
+  a[href]:not([class]) {
+    text-decoration: underline;
+    forced-color-adjust: none;
+  }
+
+  /* Elementos focados devem ter outline visível */
+  *:focus-visible {
+    outline: 2px solid ButtonText !important;
+    outline-offset: 2px !important;
+    forced-color-adjust: none;
+  }
+
+  /* Cards e containers devem ter bordas visíveis */
+  [class*="card"],
+  [class*="container"],
+  [role="region"],
+  [role="main"],
+  [role="complementary"] {
+    border: 1px solid WindowText;
+    forced-color-adjust: none;
+  }
+
+  /* Ícones devem manter contraste adequado */
+  svg,
+  [class*="icon"],
+  [class*="phosphor"] {
+    forced-color-adjust: none;
+  }
+
+  /* Elementos de navegação */
+  nav a,
+  [role="navigation"] a {
+    forced-color-adjust: none;
+  }
+
+  /* Elementos de formulário */
+  input,
+  select,
+  textarea {
+    border: 1px solid ButtonText;
+    forced-color-adjust: none;
+  }
+
+  /* Botões de ação */
+  button:not([disabled]),
+  [role="button"]:not([aria-disabled="true"]) {
+    forced-color-adjust: none;
+  }
+}
+
+/* ========================================
    TIPTAP EDITOR - Estilos Profissionais
    ======================================== */
 

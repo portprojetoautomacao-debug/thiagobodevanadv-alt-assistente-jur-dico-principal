@@ -94,7 +94,173 @@ O sistema foi projetado para operar de forma **100% automática, 24/7, sem neces
 
 > **Nota**: Os níveis de autonomia são configuráveis. O objetivo é permitir operação 100% automática quando desejado, mas sempre com ferramentas de supervisão disponíveis.
 
-### ✨ Funcionalidades Principais
+---
+
+## 🤖 Sistema Totalmente Automático - Verificação Diária Obrigatória
+
+### ⚡ Recursos Automáticos Configurados
+
+O projeto **Assistente Jurídico PJe** possui um sistema de automação total configurado com os seguintes recursos:
+
+#### 🎯 Inicialização Automática
+- **Ao abrir projeto**: `auto-init.sh` executa automaticamente verificando dependências, iniciando servidor dev e testes
+- **Tasks automáticas**: `auto-dev` (servidor), `auto-watch` (testes), `auto-monitor` (verificação contínua)
+- **Script inteligente**: `/workspaces/assistente-juridico-p/auto-init.sh` - verifica Node.js, npm, TypeScript, instala dependências automaticamente
+
+#### 💾 Salvamento Automático
+- **Format on Save**: Prettier formata automaticamente
+- **ESLint Auto-fix**: Corrige problemas automaticamente
+- **Organize Imports**: Reorganiza imports automaticamente
+- **Type Check**: Verificação TypeScript em tempo real
+
+#### 🔄 Desenvolvimento Contínuo
+- **Hot Reload**: Servidor Vite recarrega automaticamente
+- **Test Watch**: Vitest roda testes automaticamente a cada mudança
+- **Linting Contínuo**: ESLint monitora código em tempo real
+- **SonarLint**: Análise de qualidade em tempo real
+
+#### 📊 Tasks Disponíveis (25+ automáticas)
+- **Desenvolvimento**: `dev`, `build`, `type-check`, `optimize`
+- **Qualidade**: `lint`, `lint:fix`, `format`
+- **Testes**: `test`, `test:run`, `test:ui`, `test:coverage`, `test:api`, `test:all`, `test:e2e`
+- **Workflows**: `full-check`, `build-and-test`, `ci-pipeline`
+- **Utilitários**: `clean`, `install`, `kill`, `preview`, `start`
+
+### 🔍 Verificação Diária Obrigatória do Copilot
+
+**IMPORTANTE**: Todo dia útil, ao iniciar qualquer interação com o projeto, o Copilot DEVE executar uma verificação completa dos recursos automáticos:
+
+#### 📋 Checklist Diário de Verificação
+
+**1. Status dos Arquivos de Configuração:**
+```bash
+# Verificar se arquivos existem e estão atualizados
+- .vscode/tasks.json (25+ tasks automáticas)
+- .vscode/settings.json (configurações automáticas)
+- auto-init.sh (script de inicialização)
+- AUTO_MODE_README.md (documentação)
+```
+
+**2. Funcionamento das Tasks Automáticas:**
+```bash
+# Testar tasks críticas
+- npm run type-check (verificação TypeScript)
+- npm run lint (ESLint)
+- npm run test:run (testes unitários)
+- npm run build (build completo)
+```
+
+**3. Configurações do VS Code:**
+```json
+// Verificar no settings.json
+"task.allowAutomaticTasks": "on"
+"files.autoSave": "afterDelay"
+"editor.formatOnSave": true
+"editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" }
+```
+
+**4. Status dos Scripts do package.json:**
+```json
+// Verificar disponibilidade
+"dev": "vite" ✅
+"build": "tsc && vite build" ✅
+"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150" ✅
+"test": "vitest" ✅
+"format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"" ✅
+```
+
+#### 🚨 Relatório Diário Obrigatório
+
+**ANTES de qualquer resposta ou ação**, o Copilot deve gerar um relatório interno:
+
+```
+📊 RELATÓRIO DIÁRIO - SISTEMA AUTOMÁTICO
+Data: [DATA ATUAL]
+
+✅ ARQUIVOS DE CONFIGURAÇÃO:
+- tasks.json: [STATUS] (25+ tasks)
+- settings.json: [STATUS] (automação ativada)
+- auto-init.sh: [STATUS] (executável)
+- AUTO_MODE_README.md: [STATUS] (documentação)
+
+✅ FUNCIONAMENTO DAS TASKS:
+- type-check: [STATUS]
+- lint: [STATUS]
+- test: [STATUS]
+- build: [STATUS]
+
+✅ CONFIGURAÇÕES VS CODE:
+- Auto-save: [STATUS]
+- Format on save: [STATUS]
+- ESLint auto-fix: [STATUS]
+- Tasks automáticas: [STATUS]
+
+🔧 STATUS GERAL: [OPERACIONAL/NECESSITA ATENÇÃO/CRÍTICO]
+```
+
+#### ⚠️ Ações Corretivas Automáticas
+
+**Se algum item falhar na verificação:**
+
+1. **Tasks não funcionam**: Recriar `tasks.json` com configurações padrão
+2. **Scripts faltam**: Verificar `package.json` e restaurar scripts
+3. **Configurações VS Code**: Aplicar configurações automáticas
+4. **Arquivos corrompidos**: Restaurar do backup/git
+
+**IMPORTANTE**: O Copilot deve informar ao usuário sobre qualquer problema detectado e propor correções automáticas.
+
+### 🎯 Prioridades do Sistema Automático
+
+1. **Manter automação ativa** - Nunca desabilitar recursos automáticos
+2. **Verificar diariamente** - Checklist obrigatório antes de qualquer ação
+3. **Corrigir automaticamente** - Aplicar correções sem perguntar
+4. **Reportar status** - Informar usuário sobre estado do sistema
+5. **Documentar mudanças** - Atualizar documentação quando modificar automação
+
+---
+
+## Making Changes
+
+### ⚡ Sistema Automático - Regras Específicas para Copilot
+
+**ANTES DE QUALQUER AÇÃO**, o Copilot deve:
+
+1. **Executar verificação diária** dos recursos automáticos
+2. **Gerar relatório interno** do status do sistema
+3. **Corrigir automaticamente** qualquer problema detectado
+4. **Informar ao usuário** sobre o status dos recursos automáticos
+
+#### 🔧 Regras para Modificações no Sistema Automático
+
+- **Nunca desabilitar** recursos automáticos sem justificativa técnica
+- **Sempre testar** mudanças nos arquivos de configuração automática
+- **Atualizar documentação** quando modificar automação
+- **Manter compatibilidade** com tasks existentes
+- **Priorizar estabilidade** sobre novas features
+
+#### 📊 Relatórios de Status Automáticos
+
+Quando solicitado ou detectando problemas, o Copilot deve fornecer relatórios como:
+
+```
+🚀 STATUS DO SISTEMA AUTOMÁTICO
+
+✅ OPERACIONAL
+- Tasks automáticas: 25/25 funcionando
+- Auto-save: Ativado (1s delay)
+- Format on save: Ativado
+- ESLint auto-fix: Ativado
+- TypeScript check: OK
+- Testes automáticos: OK
+
+⚠️ ATENÇÃO NECESSÁRIA
+- [Item específico que precisa atenção]
+
+🔧 CORREÇÕES APLICADAS
+- [Correções realizadas automaticamente]
+```
+
+### 📝 Padrões de Desenvolvimento Automático
 - 🤖 **15 Agentes de IA Autônomos** trabalhando 24/7
 - 💬 **Assistente Jurídico IA** (Harvey Specter chatbot com Donna)
 - 📊 **Dashboard Inteligente** com métricas em tempo real
@@ -1114,6 +1280,103 @@ manualChunks: {
 3. Update related documentation
 4. Ensure types remain accurate
 5. Test thoroughly
+
+---
+
+## 🤖 Comportamento do Copilot - Sistema Automático
+
+### 📋 Verificação Diária Obrigatória
+
+**IMPORTANTE**: Todo dia útil, ao iniciar qualquer interação com o projeto, o Copilot DEVE executar uma verificação completa dos recursos automáticos:
+
+#### 📋 Checklist Diário de Verificação
+
+**1. Status dos Arquivos de Configuração:**
+```bash
+# Verificar se arquivos existem e estão atualizados
+- .vscode/tasks.json (25+ tasks automáticas)
+- .vscode/settings.json (configurações automáticas)
+- auto-init.sh (script de inicialização)
+- AUTO_MODE_README.md (documentação)
+```
+
+**2. Funcionamento das Tasks Automáticas:**
+```bash
+# Testar tasks críticas
+- npm run type-check (verificação TypeScript)
+- npm run lint (ESLint)
+- npm run test:run (testes unitários)
+- npm run build (build completo)
+```
+
+**3. Configurações do VS Code:**
+```json
+// Verificar no settings.json
+"task.allowAutomaticTasks": "on"
+"files.autoSave": "afterDelay"
+"editor.formatOnSave": true
+"editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" }
+```
+
+**4. Status dos Scripts do package.json:**
+```json
+// Verificar disponibilidade
+"dev": "vite" ✅
+"build": "tsc && vite build" ✅
+"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150" ✅
+"test": "vitest" ✅
+"format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"" ✅
+```
+
+#### 🚨 Relatório Diário Obrigatório
+
+**ANTES de qualquer resposta ou ação**, o Copilot deve gerar um relatório interno:
+
+```
+📊 RELATÓRIO DIÁRIO - SISTEMA AUTOMÁTICO
+Data: [DATA ATUAL]
+
+✅ ARQUIVOS DE CONFIGURAÇÃO:
+- tasks.json: [STATUS] (25+ tasks)
+- settings.json: [STATUS] (automação ativada)
+- auto-init.sh: [STATUS] (executável)
+- AUTO_MODE_README.md: [STATUS] (documentação)
+
+✅ FUNCIONAMENTO DAS TASKS:
+- type-check: [STATUS]
+- lint: [STATUS]
+- test: [STATUS]
+- build: [STATUS]
+
+✅ CONFIGURAÇÕES VS CODE:
+- Auto-save: [STATUS]
+- Format on save: [STATUS]
+- ESLint auto-fix: [STATUS]
+- Tasks automáticas: [STATUS]
+
+🔧 STATUS GERAL: [OPERACIONAL/NECESSITA ATENÇÃO/CRÍTICO]
+```
+
+#### ⚠️ Ações Corretivas Automáticas
+
+**Se algum item falhar na verificação:**
+
+1. **Tasks não funcionam**: Recriar `tasks.json` com configurações padrão
+2. **Scripts faltam**: Verificar `package.json` e restaurar scripts
+3. **Configurações VS Code**: Aplicar configurações automáticas
+4. **Arquivos corrompidos**: Restaurar do backup/git
+
+**IMPORTANTE**: O Copilot deve informar ao usuário sobre qualquer problema detectado e propor correções automáticas.
+
+### 🎯 Prioridades do Sistema Automático
+
+1. **Manter automação ativa** - Nunca desabilitar recursos automáticos sem justificativa técnica
+2. **Verificar diariamente** - Checklist obrigatório antes de qualquer ação
+3. **Corrigir automaticamente** - Aplicar correções sem perguntar
+4. **Reportar status** - Informar usuário sobre estado do sistema
+5. **Documentar mudanças** - Atualizar documentação quando modificar automação
+
+---
 
 ## Git Workflow
 

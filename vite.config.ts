@@ -1,11 +1,11 @@
 // vite.config.ts
 
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
-import { VitePWA } from 'vite-plugin-pwa'
+import react from '@vitejs/plugin-react-swc'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 import { phosphorIconOptimizer } from './vite-icon-optimizer'
 
@@ -92,6 +92,22 @@ export default defineConfig({
     headers: {
       // Permite usar window.open com preview de PDF / impressão sem quebrar tudo
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
+    proxy: {
+      // Proxy para APIs - desenvolvimento aponta para Vercel produção
+      '/api': {
+        target: 'https://assistente-juridico-github.vercel.app',
+        changeOrigin: true,
+        secure: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying request:', req.method, req.url, '->', proxyReq.getHeader('host') + proxyReq.path);
+          });
+        },
+      },
     },
   },
   build: {

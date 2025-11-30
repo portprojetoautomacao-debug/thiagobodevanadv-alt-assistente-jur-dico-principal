@@ -20,7 +20,7 @@
     }
   ],
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "SonarSource.sonarlint-vscode",
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
@@ -36,12 +36,20 @@
     }
   },
   "gooseSonarQube.projectBinding": null,
-  "sonarlint.connectedMode.project": {
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-pje",
-    "serverUrl": "https://sonarcloud.io",
-    "organization": "thiagobodevan-a11y"
-  },
+  "sonarlint.pathToCompileCommands": "",
+  "sonarlint.disableTelemetry": true,
+  "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js",
+  "sonarlint.analyzerProperties": {
+    "sonar.exclusions": "**/.vscode-remote/extensions/**"
+  }
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "files.watcherExclude": {
+    "**/.vscode-remote/extensions/**": true
+  },
+  "cSpell.ignorePaths": [
+    "**/.vscode-remote/extensions/**"
+  ],
+  "typescript.preferences.includePackageJsonAutoImports": "off"
 }

@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type ReactNode } from 'react'
+import AgentMetrics from '@/components/AgentMetrics'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,43 +8,43 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAgentBackup } from '@/hooks/use-agent-backup'
+import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
+import { useKV } from '@/hooks/use-kv'
 import {
-  Robot,
-  Lightning,
-  CheckCircle,
-  Calendar,
-  Database,
+  ArrowsLeftRight,
   Brain,
-  Clock,
+  Calendar,
   ChartLine,
-  Info,
+  ChatCircle,
+  CheckCircle,
+  Clock,
+  ClockCounterClockwise,
+  CloudArrowUp,
+  Database,
   FileText,
   Gavel,
-  Sparkle,
+  Info,
+  Lightning,
   ListChecks,
+  Robot,
+  Sparkle,
   WarningCircle,
-  ArrowsLeftRight,
-  ChatCircle,
-  CloudArrowUp,
-  ClockCounterClockwise,
 } from '@phosphor-icons/react'
-import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
-import { useAgentBackup } from '@/hooks/use-agent-backup'
-import { useKV } from '@/hooks/use-kv'
-import AgentMetrics from '@/components/AgentMetrics'
+import { useState, type ComponentType, type ReactNode } from 'react'
 // HumanAgentCollaboration - disponível para uso futuro
 // import HumanAgentCollaboration from '@/components/HumanAgentCollaboration'
-import AgentStatusFloater from '@/components/AgentStatusFloater'
-import MrsJustinEModal from '@/components/MrsJustinEModal'
 import AgentOrchestrationPanel from '@/components/AgentOrchestrationPanel'
-import { toast } from 'sonner'
-import type { ViewType, User } from '@/types'
-import type { IconProps } from '@phosphor-icons/react'
-import { ServerLogsViewer } from '@/components/ServerLogsViewer'
+import AgentStatusFloater from '@/components/AgentStatusFloater'
 import { LegalMemoryViewer } from '@/components/LegalMemoryViewer'
+import MrsJustinEModal from '@/components/MrsJustinEModal'
+import { ServerLogsViewer } from '@/components/ServerLogsViewer'
+import type { User, ViewType } from '@/types'
+import type { IconProps } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 
 // ===========================
 // Helper Functions (outside component to avoid re-creation)
@@ -584,6 +584,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                 </div>
               </div>
               <Switch
+                aria-label="Ativar modo streaming para respostas da IA em tempo real"
                 checked={isStreamingEnabled}
                 onCheckedChange={toggleStreaming}
               />
@@ -625,6 +626,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                         </div>
                       </div>
                       <Switch
+                        aria-label={`Ativar ou desativar o agente ${agent.name}`}
                         checked={agent.enabled}
                         onCheckedChange={() => handleToggleAgent(agent.id)}
                       />
@@ -718,6 +720,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     </p>
                   </div>
                   <Switch
+                    aria-label="Ativar arquitetura V2 com ReAct Pattern, Circuit Breakers, Traces e Orquestração"
                     checked={useV2Architecture}
                     onCheckedChange={setUseV2Architecture}
                   />
