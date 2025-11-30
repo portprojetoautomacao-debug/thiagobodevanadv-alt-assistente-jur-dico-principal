@@ -602,6 +602,55 @@ export async function getQueueLength(): Promise<number> {
 // ============================================================================
 
 /**
+ * Processa uma única publicação dentro do sync pipeline
+ * Retorna true se a publicação foi nova e processada, false se já vista
+ */
+async function processPublicationInSync(
+    pub: NormalizedDJENPublication,
+    lawyer: MonitoredLawyer,
+    result: DJENMonitorResult
+): Promise<boolean> {
+    // Contagem por tribunal
+    result.porTribunal[pub.tribunal] = (result.porTribunal[pub.tribunal] || 0) + 1
+
+    // Verificar dedupe
+    const alreadySeen = await isPublicationSeen(pub.hash)
+    if (alreadySeen) {
+        console.log(`[DJEN Monitor] Publicação já vista: ${pub.hash}`)
+        return false
+    }
+
+    result.novasPublicacoes++
+
+    // Marcar como vista
+    await markPublicationAsSeen(pub.hash)
+
+    // Salvar publicação completa
+    await savePublication(pub, lawyer)
+
+    // Criar e enfileirar tarefa para agente
+    const task = buildDJENTaskFromPublication(pub, lawyer)
+    await enqueueAgentTask(task)
+    result.tasksCriadas++
+
+    console.log(`[DJEN Monitor] Nova publicação processada: ${pub.tribunal} - ${pub.numeroProcesso}`)
+    return true
+}
+
+/**
+ * Cria resultado vazio para DJENMonitorResult
+ */
+function createEmptyMonitorResult(): DJENMonitorResult {
+    return {
+        totalPublicacoes: 0,
+        novasPublicacoes: 0,
+        tasksCriadas: 0,
+        porTribunal: {},
+        errors: []
+    }
+}
+
+/**
  * Pipeline completo para UM advogado:
  * 1. Chama DJEN API
  * 2. Dedupe publicações já vistas
@@ -615,54 +664,20 @@ export async function syncDJENForLawyer(
         dataFim?: string
     } = {}
 ): Promise<DJENMonitorResult> {
-    const result: DJENMonitorResult = {
-        totalPublicacoes: 0,
-        novasPublicacoes: 0,
-        tasksCriadas: 0,
-        porTribunal: {},
-        errors: []
-    }
+    const result = createEmptyMonitorResult()
 
     try {
-        // Buscar publicações da API
         const pubs = await fetchDJENForOAB(
             lawyer.numeroOAB,
             lawyer.ufOAB,
-            {
-                dataInicio: options.dataInicio,
-                dataFim: options.dataFim
-            }
+            { dataInicio: options.dataInicio, dataFim: options.dataFim }
         )
 
         result.totalPublicacoes = pubs.length
 
         for (const pub of pubs) {
-            // Contagem por tribunal
-            result.porTribunal[pub.tribunal] = (result.porTribunal[pub.tribunal] || 0) + 1
-
-            // Verificar dedupe
-            const alreadySeen = await isPublicationSeen(pub.hash)
-            if (alreadySeen) {
-                console.log(`[DJEN Monitor] Publicação já vista: ${pub.hash}`)
-                continue
-            }
-
-            result.novasPublicacoes++
-
-            // Marcar como vista
-            await markPublicationAsSeen(pub.hash)
-
-            // Salvar publicação completa
-            await savePublication(pub, lawyer)
-
-            // Criar e enfileirar tarefa para agente
-            const task = buildDJENTaskFromPublication(pub, lawyer)
-            await enqueueAgentTask(task)
-            result.tasksCriadas++
-
-            console.log(`[DJEN Monitor] Nova publicação processada: ${pub.tribunal} - ${pub.numeroProcesso}`)
+            await processPublicationInSync(pub, lawyer, result)
         }
-
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
         result.errors.push(errorMsg)
@@ -690,6 +705,53 @@ const DEFAULT_LAWYER: MonitoredLawyer = {
 }
 
 /**
+ * Processa um único advogado dentro do daily monitor
+ */
+async function processLawyerInDailyMonitor(
+    lawyer: MonitoredLawyer,
+    results: Record<string, DJENMonitorResult>,
+    isLast: boolean
+): Promise<{ novas: number; tasks: number }> {
+    if (!lawyer.ativo) {
+        console.log(`[DJEN Monitor] Advogado desativado: ${lawyer.nome}`)
+        return { novas: 0, tasks: 0 }
+    }
+
+    try {
+        console.log(`[DJEN Monitor] Processando ${lawyer.nome} (OAB ${lawyer.ufOAB} ${lawyer.numeroOAB})`)
+
+        const result = await syncDJENForLawyer(lawyer)
+        results[lawyer.id] = result
+
+        console.log(`[DJEN Monitor] ${lawyer.nome}: ${result.novasPublicacoes} novas de ${result.totalPublicacoes} total`)
+
+        // Delay entre advogados para evitar rate limit
+        if (!isLast) {
+            await new Promise(resolve => setTimeout(resolve, DJEN_DELAY))
+        }
+
+        return { novas: result.novasPublicacoes, tasks: result.tasksCriadas }
+    } catch (error) {
+        console.error(`[DJEN Monitor] Erro ao processar ${lawyer.nome}:`, error)
+        results[lawyer.id] = createEmptyMonitorResult()
+        results[lawyer.id].errors.push(error instanceof Error ? error.message : 'Erro desconhecido')
+        return { novas: 0, tasks: 0 }
+    }
+}
+
+/**
+ * Atualiza timestamp do último check no Redis
+ */
+async function updateLastCheckTimestamp(timestamp: string): Promise<void> {
+    try {
+        const redis = await getRedis()
+        await redis.set(DJEN_REDIS_KEYS.LAST_CHECK, timestamp)
+    } catch {
+        console.warn('[DJEN Monitor] Não foi possível atualizar last-check')
+    }
+}
+
+/**
  * Orquestra o monitoramento DJEN para TODOS os advogados cadastrados
  * 
  * Pensado para ser chamado pelo cron da Vercel:
@@ -701,10 +763,8 @@ export async function runDJENDailyMonitor(): Promise<DJENDailyMonitorResult> {
     const timestamp = new Date().toISOString()
     console.log(`[DJEN Monitor] Iniciando monitoramento diário em ${timestamp}`)
 
-    // Buscar advogados monitorados
     let lawyers = await getMonitoredLawyers()
 
-    // Se não houver advogados, usa o padrão
     if (lawyers.length === 0) {
         console.log('[DJEN Monitor] Nenhum advogado configurado, usando padrão')
         lawyers = [DEFAULT_LAWYER]
@@ -714,47 +774,17 @@ export async function runDJENDailyMonitor(): Promise<DJENDailyMonitorResult> {
     let totalNovas = 0
     let totalTasks = 0
 
-    for (const lawyer of lawyers) {
-        if (!lawyer.ativo) {
-            console.log(`[DJEN Monitor] Advogado desativado: ${lawyer.nome}`)
-            continue
-        }
-
-        try {
-            console.log(`[DJEN Monitor] Processando ${lawyer.nome} (OAB ${lawyer.ufOAB} ${lawyer.numeroOAB})`)
-
-            const result = await syncDJENForLawyer(lawyer)
-            results[lawyer.id] = result
-
-            totalNovas += result.novasPublicacoes
-            totalTasks += result.tasksCriadas
-
-            console.log(`[DJEN Monitor] ${lawyer.nome}: ${result.novasPublicacoes} novas de ${result.totalPublicacoes} total`)
-
-            // Delay entre advogados para evitar rate limit
-            if (lawyers.indexOf(lawyer) < lawyers.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, DJEN_DELAY))
-            }
-
-        } catch (error) {
-            console.error(`[DJEN Monitor] Erro ao processar ${lawyer.nome}:`, error)
-            results[lawyer.id] = {
-                totalPublicacoes: 0,
-                novasPublicacoes: 0,
-                tasksCriadas: 0,
-                porTribunal: {},
-                errors: [error instanceof Error ? error.message : 'Erro desconhecido']
-            }
-        }
+    for (let i = 0; i < lawyers.length; i++) {
+        const { novas, tasks } = await processLawyerInDailyMonitor(
+            lawyers[i],
+            results,
+            i === lawyers.length - 1
+        )
+        totalNovas += novas
+        totalTasks += tasks
     }
 
-    // Atualizar timestamp do último check
-    try {
-        const redis = await getRedis()
-        await redis.set(DJEN_REDIS_KEYS.LAST_CHECK, timestamp)
-    } catch {
-        console.warn('[DJEN Monitor] Não foi possível atualizar last-check')
-    }
+    await updateLastCheckTimestamp(timestamp)
 
     console.log(`[DJEN Monitor] Concluído: ${totalNovas} novas publicações, ${totalTasks} tarefas criadas`)
 

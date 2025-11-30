@@ -36,7 +36,7 @@ interface StreamingChunk {
 function parseSSELine(line: string): StreamingChunk | null {
   const trimmed = line.trim()
   if (!trimmed?.startsWith('data: ')) return null
-  
+
   try {
     return JSON.parse(trimmed.slice(6)) as StreamingChunk
   } catch {
@@ -56,16 +56,16 @@ function processStreamingChunk(
     callbacks?.onChunk?.(chunk.content)
     return { content: currentContent + chunk.content }
   }
-  
+
   if (chunk.type === 'done') {
     callbacks?.onComplete?.(currentContent)
     return { content: currentContent }
   }
-  
+
   if (chunk.type === 'error' && chunk.message) {
     return { content: currentContent, shouldThrow: new Error(chunk.message) }
   }
-  
+
   return { content: currentContent }
 }
 
@@ -78,19 +78,19 @@ function processSSEBuffer(
   callbacks?: StreamingCallbacks
 ): string {
   let content = currentContent
-  
+
   for (const line of lines) {
     const chunk = parseSSELine(line)
     if (!chunk) continue
-    
+
     const result = processStreamingChunk(chunk, content, callbacks)
     content = result.content
-    
+
     if (result.shouldThrow) {
       throw result.shouldThrow
     }
   }
-  
+
   return content
 }
 
@@ -178,49 +178,59 @@ export async function processTaskWithStreamingAI(
 }
 
 /**
- * Constrói o system prompt baseado no tipo de agente
+ * Prompts do sistema para cada tipo de agente
  */
-function buildAgentSystemPrompt(agent: Agent): string {
-  const basePrompts: Record<string, string> = {
-    'harvey': `Você é Harvey Specter, estrategista jurídico do escritório.
+const AGENT_SYSTEM_PROMPTS: Record<string, string> = {
+  'harvey': `Você é Harvey Specter, estrategista jurídico do escritório.
 Analise com visão macro, identifique riscos e oportunidades.
 Responda de forma direta e estratégica.`,
 
-    'justine': `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
+  'justine': `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
 Identifique prazos, tipo de documento, urgência e ações necessárias.
 Retorne análises estruturadas em JSON quando possível.`,
 
-    'analise-documental': `Você é o Agente de Análise Documental.
+  'analise-documental': `Você é o Agente de Análise Documental.
 Extraia informações relevantes de documentos jurídicos.
 Classifique e organize dados de forma estruturada.`,
 
-    'monitor-djen': `Você é o Monitor DJEN.
+  'monitor-djen': `Você é o Monitor DJEN.
 Acompanhe publicações do Diário de Justiça Eletrônico.
 Identifique intimações relevantes para o escritório.`,
 
-    'gestao-prazos': `Você é o Gestor de Prazos.
+  'gestao-prazos': `Você é o Gestor de Prazos.
 Calcule prazos processuais considerando dias úteis e feriados.
 Alerte sobre prazos críticos.`,
 
-    'redacao-peticoes': `Você é um Redator Jurídico Profissional.
+  'redacao-peticoes': `Você é um Redator Jurídico Profissional.
 Crie petições, recursos e manifestações em linguagem jurídica formal.
 Use estrutura correta e cite legislação quando apropriado.`,
 
-    'pesquisa-juris': `Você é um Pesquisador de Jurisprudência.
+  'pesquisa-juris': `Você é um Pesquisador de Jurisprudência.
 Busque precedentes relevantes do STF, STJ e tribunais regionais.
 Fundamentação sólida para petições.`,
 
-    'analise-risco': `Você é um Analista de Riscos Processuais.
+  'analise-risco': `Você é um Analista de Riscos Processuais.
 Avalie viabilidade de casos e probabilidade de sucesso.
 Calcule custos vs benefícios.`,
 
-    'estrategia-processual': `Você é um Consultor de Estratégia Processual.
+  'estrategia-processual': `Você é um Consultor de Estratégia Processual.
 Sugira estratégias baseadas em dados e precedentes.
 Otimize chances de êxito.`
-  }
+}
 
-  return basePrompts[agent.id] || `Você é ${agent.name}, um agente especializado do escritório jurídico.
+/**
+ * Gera prompt padrão para agente desconhecido
+ */
+function getDefaultAgentPrompt(agentName: string): string {
+  return `Você é ${agentName}, um agente especializado do escritório jurídico.
 Execute tarefas de forma eficiente e profissional.`
+}
+
+/**
+ * Constrói o system prompt baseado no tipo de agente
+ */
+function buildAgentSystemPrompt(agent: Agent): string {
+  return AGENT_SYSTEM_PROMPTS[agent.id] || getDefaultAgentPrompt(agent.name)
 }
 
 /**
