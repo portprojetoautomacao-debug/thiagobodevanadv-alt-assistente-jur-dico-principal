@@ -61,5 +61,9 @@
   "gitlab.instanceUrl": "",
   "gitlab.pipelineGitRemoteName": "",
   "gitlab.remoteName": "",
-  "gitlab.acquireVsCodeApi": false
+  "gitlab.acquireVsCodeApi": false,
+  // Desabilitar funcionalidades que causam conflitos
+  "gitlab.aiAssistedCodeSuggestions.enabled": false,
+  "gitlab.duoChat.enabled": false,
+  "gitlab.gitLabWorkflow.enabled": false
 }
