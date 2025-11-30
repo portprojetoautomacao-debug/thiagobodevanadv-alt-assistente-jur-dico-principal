@@ -16,9 +16,9 @@ import {
 } from '@phosphor-icons/react'
 
 interface CollaborationDemoProps {
-  agentName: string
-  taskDescription: string
-  onComplete?: () => void
+  readonly agentName: string
+  readonly taskDescription: string
+  readonly onComplete?: () => void
 }
 
 type Phase = 'agent_working' | 'human_editing' | 'agent_resuming' | 'completed'
