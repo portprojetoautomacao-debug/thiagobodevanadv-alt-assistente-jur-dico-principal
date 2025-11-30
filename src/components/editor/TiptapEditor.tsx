@@ -385,6 +385,141 @@ function ColorPickerPopover({ editor, disabled }: ToolbarButtonProps) {
   )
 }
 
+// ===========================
+// AI Toolbar Section - Extracted to reduce CC
+// ===========================
+
+interface AIToolbarSectionProps {
+  readonly isStreaming: boolean
+  readonly isAILoading: boolean
+  readonly showAIPopover: boolean
+  readonly setShowAIPopover: (open: boolean) => void
+  readonly onAIStream?: TiptapEditorProps['onAIStream']
+  readonly aiPrompt: string
+  readonly setAiPrompt: (prompt: string) => void
+  readonly streamingText: string
+  readonly handleAIGenerate: () => void
+  readonly handleQuickAI: (cmd: typeof AI_QUICK_COMMANDS[number]) => void
+  readonly aiQuickCommands: typeof AI_QUICK_COMMANDS
+}
+
+function AIToolbarSection({
+  isStreaming,
+  isAILoading,
+  showAIPopover,
+  setShowAIPopover,
+  onAIStream,
+  aiPrompt,
+  setAiPrompt,
+  streamingText,
+  handleAIGenerate,
+  handleQuickAI,
+  aiQuickCommands,
+}: AIToolbarSectionProps) {
+  return (
+    <>
+      {isStreaming && (
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 animate-pulse">
+          <div className="flex gap-1">
+            <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+          <span className="text-xs text-purple-400 font-medium">Streaming...</span>
+        </div>
+      )}
+
+      <Popover open={showAIPopover} onOpenChange={setShowAIPopover}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={getAIButtonClassName(isStreaming)}
+            disabled={isAILoading || isStreaming}
+          >
+            {(isAILoading || isStreaming) ? (
+              <SpinnerGap className="h-4 w-4 animate-spin" />
+            ) : (
+              <Robot className="h-4 w-4" weight="fill" />
+            )}
+            {isStreaming ? 'Gerando...' : 'IA'}
+            {onAIStream && !isStreaming && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0 bg-purple-500/20 text-purple-400">
+                Stream
+              </Badge>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-4" align="end">
+          <div className="space-y-4">
+            {onAIStream && (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <Lightning className="h-4 w-4 text-purple-500" weight="fill" />
+                <span className="text-xs text-purple-400">
+                  Modo Streaming ativo – texto gerado em tempo real
+                </span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Comandos rápidos</span>
+              <div className="flex flex-wrap gap-2">
+                {aiQuickCommands.map((cmd) => (
+                  <Button
+                    key={cmd.label}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickAI(cmd)}
+                    disabled={isAILoading || isStreaming}
+                  >
+                    <cmd.icon className="h-3 w-3 mr-1" />
+                    {cmd.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <label htmlFor="ai-prompt-input" className="text-sm font-medium">Gerar com IA</label>
+              <Input
+                id="ai-prompt-input"
+                placeholder="Ex: Escreva uma petição inicial sobre..."
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                disabled={isStreaming}
+              />
+              <Button
+                className="w-full gap-2"
+                onClick={handleAIGenerate}
+                disabled={!aiPrompt.trim() || isAILoading || isStreaming}
+              >
+                {(isAILoading || isStreaming) ? (
+                  <SpinnerGap className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Lightning className="h-4 w-4" weight="fill" />
+                )}
+                {getGenerateButtonText(isStreaming, !!onAIStream)}
+              </Button>
+            </div>
+
+            {isStreaming && streamingText && (
+              <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 max-h-40 overflow-y-auto">
+                <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">
+                  {streamingText.slice(-600)}
+                  <span className="animate-pulse text-purple-400">▊</span>
+                </p>
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  )
+}
+
 export function TiptapEditor({
   content,
   onChange,
@@ -742,7 +877,7 @@ export function TiptapEditor({
         <ExtraFormattingButtons editor={editor} disabled={editingDisabled} />
         <ColorPickerPopover editor={editor} disabled={editingDisabled} />
         <Separator orientation="vertical" className="h-6 mx-1" />
-        
+
         {/* Link, Imagem */}
         <Button
           variant={editor.isActive('link') ? 'secondary' : 'ghost'}

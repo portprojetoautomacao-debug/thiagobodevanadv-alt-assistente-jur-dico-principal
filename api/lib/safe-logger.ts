@@ -65,73 +65,89 @@ export function maskSensitive(value: string, visibleChars: number = 4): string {
   return `${start}${masked}${end}`
 }
 
+// ===== Helper functions for sanitizeObject (reduces S3776) =====
+
+function isPrimitive(obj: unknown): boolean {
+  return obj === null || obj === undefined || 
+         typeof obj === 'number' || typeof obj === 'boolean'
+}
+
+function looksLikeToken(str: string): boolean {
+  return str.length > 20 && /^[A-Za-z0-9+/=.\-_]+$/.test(str)
+}
+
+function sanitizeString(str: string): string {
+  return looksLikeToken(str) ? maskSensitive(str) : str
+}
+
+function shouldRemoveField(key: string, options: SanitizeOptions): boolean {
+  const lowerKey = key.toLowerCase()
+  return (
+    options.removeFields?.includes(lowerKey) ||
+    SENSITIVE_FIELDS.some(field => lowerKey.includes(field))
+  )
+}
+
+function shouldMaskAsPII(key: string): boolean {
+  const lowerKey = key.toLowerCase()
+  return PII_FIELDS.some(field => lowerKey.includes(field))
+}
+
+function shouldMaskExplicitly(key: string, options: SanitizeOptions): boolean {
+  const lowerKey = key.toLowerCase()
+  return options.maskFields?.includes(lowerKey) || false
+}
+
+function sanitizeValue(value: unknown, forPII: boolean): unknown {
+  if (typeof value === 'string') {
+    return maskSensitive(value)
+  }
+  return forPII ? '[REDACTED]' : value
+}
+
+function sanitizeObjectFields(
+  input: Record<string, unknown>,
+  options: SanitizeOptions
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(input)) {
+    if (shouldRemoveField(key, options)) continue
+
+    if (shouldMaskAsPII(key)) {
+      sanitized[key] = sanitizeValue(value, true)
+      continue
+    }
+
+    if (shouldMaskExplicitly(key, options)) {
+      sanitized[key] = sanitizeValue(value, false)
+      continue
+    }
+
+    sanitized[key] = sanitizeObject(value, options)
+  }
+
+  return sanitized
+}
+
 /**
  * Sanitiza um valor removendo ou mascarando campos sensíveis
+ * Refactored to reduce cognitive complexity (S3776)
  */
 export function sanitizeObject(
   obj: unknown,
   options: SanitizeOptions = {}
 ): unknown {
-  if (obj === null || obj === undefined) {
-    return obj
-  }
+  if (isPrimitive(obj)) return obj
 
-  if (typeof obj === 'string') {
-    // Máscara strings que parecem tokens ou chaves (compridas e com charset típico)
-    if (obj.length > 20 && /^[A-Za-z0-9+/=.\-_]+$/.test(obj)) {
-      return maskSensitive(obj)
-    }
-    return obj
-  }
-
-  if (typeof obj === 'number' || typeof obj === 'boolean') {
-    return obj
-  }
+  if (typeof obj === 'string') return sanitizeString(obj)
 
   if (Array.isArray(obj)) {
     return obj.map(item => sanitizeObject(item, options))
   }
 
   if (typeof obj === 'object') {
-    const input = obj as Record<string, unknown>
-    const sanitized: Record<string, unknown> = {}
-
-    for (const [key, value] of Object.entries(input)) {
-      const lowerKey = key.toLowerCase()
-
-      // Remove campos completamente
-      if (
-        options.removeFields?.includes(lowerKey) ||
-        SENSITIVE_FIELDS.some(field => lowerKey.includes(field))
-      ) {
-        continue
-      }
-
-      // Máscara campos PII
-      if (PII_FIELDS.some(field => lowerKey.includes(field))) {
-        if (typeof value === 'string') {
-          sanitized[key] = maskSensitive(value)
-        } else {
-          sanitized[key] = '[REDACTED]'
-        }
-        continue
-      }
-
-      // Máscara campos especificados explicitamente
-      if (options.maskFields?.includes(lowerKey)) {
-        if (typeof value === 'string') {
-          sanitized[key] = maskSensitive(value)
-        } else {
-          sanitized[key] = value
-        }
-        continue
-      }
-
-      // Sanitiza recursivamente
-      sanitized[key] = sanitizeObject(value, options)
-    }
-
-    return sanitized
+    return sanitizeObjectFields(obj as Record<string, unknown>, options)
   }
 
   return obj

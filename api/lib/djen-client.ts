@@ -197,8 +197,99 @@ export async function consultarComunicacoes(
   }
 }
 
+// ===== Helper functions for consultarDJENForLawyer (reduces S3776) =====
+
+interface AdvogadoMatch {
+  matchType: 'nome' | 'oab' | 'ambos';
+  matched: boolean;
+}
+
+function checkAdvogadoMatch(
+  dest: { advogado: { nome: string; numero_oab: string; uf_oab: string } },
+  nomeAdvogado: string | undefined,
+  numeroOabNumerico: string | undefined,
+  ufOab: string | undefined
+): AdvogadoMatch {
+  const matchNome = nomeAdvogado 
+    ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) 
+    : false;
+  const matchOab = numeroOabNumerico 
+    ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab 
+    : false;
+
+  if (matchNome && matchOab) return { matchType: 'ambos', matched: true };
+  if (matchOab) return { matchType: 'oab', matched: true };
+  if (matchNome) return { matchType: 'nome', matched: true };
+  return { matchType: 'nome', matched: false };
+}
+
+function buildDJENQueryParams(
+  tribunal: string,
+  queryDataInicio: string,
+  queryDataFim: string,
+  nomeAdvogado: string | undefined,
+  numeroOabNumerico: string | undefined,
+  ufOab: string | undefined,
+  meio: 'D' | 'E' | undefined
+): DJENQueryParams {
+  const queryParams: DJENQueryParams = {
+    siglaTribunal: tribunal,
+    dataDisponibilizacaoInicio: queryDataInicio,
+    dataDisponibilizacaoFim: queryDataFim,
+    itensPorPagina: 100,
+    pagina: 1
+  };
+
+  if (nomeAdvogado) queryParams.nomeAdvogado = nomeAdvogado;
+  if (numeroOabNumerico) queryParams.numeroOab = numeroOabNumerico;
+  if (ufOab) queryParams.ufOab = ufOab;
+  if (meio) queryParams.meio = meio;
+
+  return queryParams;
+}
+
+function processComunicacao(
+  comunicacao: DJENComunicacao,
+  nomeAdvogado: string | undefined,
+  numeroOabNumerico: string | undefined,
+  ufOab: string | undefined
+): DJENFilteredResult | null {
+  let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
+  
+  const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
+    const result = checkAdvogadoMatch(dest, nomeAdvogado, numeroOabNumerico, ufOab);
+    if (result.matched) {
+      matchType = result.matchType;
+      return true;
+    }
+    return false;
+  }) || false;
+
+  if (!temAdvogado) return null;
+
+  return {
+    id: comunicacao.id,
+    tribunal: comunicacao.siglaTribunal,
+    data: comunicacao.data_disponibilizacao,
+    tipo: comunicacao.tipoComunicacao,
+    teor: comunicacao.texto || 'Ver documento completo',
+    numeroProcesso: comunicacao.numero_processo,
+    orgao: comunicacao.nomeOrgao,
+    meio: comunicacao.meiocompleto || comunicacao.meio,
+    link: comunicacao.link,
+    hash: comunicacao.hash,
+    matchType,
+    advogados: comunicacao.destinatarioadvogados?.map(dest => ({
+      nome: dest.advogado.nome,
+      numero_oab: dest.advogado.numero_oab,
+      uf_oab: dest.advogado.uf_oab
+    })) || []
+  };
+}
+
 /**
  * Consulta comunicações para um advogado específico
+ * Refactored to reduce cognitive complexity (S3776)
  */
 export async function consultarDJENForLawyer(
   tribunais: string[],
@@ -230,62 +321,25 @@ export async function consultarDJENForLawyer(
 
   for (const tribunal of tribunais) {
     try {
-      const queryParams: DJENQueryParams = {
-        siglaTribunal: tribunal,
-        dataDisponibilizacaoInicio: queryDataInicio,
-        dataDisponibilizacaoFim: queryDataFim,
-        itensPorPagina: 100,
-        pagina: 1
-      };
-
-      if (nomeAdvogado) queryParams.nomeAdvogado = nomeAdvogado;
-      if (numeroOabNumerico) queryParams.numeroOab = numeroOabNumerico;
-      if (ufOab) queryParams.ufOab = ufOab;
-      if (meio) queryParams.meio = meio;
+      const queryParams = buildDJENQueryParams(
+        tribunal, queryDataInicio, queryDataFim, 
+        nomeAdvogado, numeroOabNumerico, ufOab, meio
+      );
 
       const { response, rateLimitInfo: _rateLimitInfo, retryAfter } = await consultarComunicacoes(queryParams);
 
       if (!response) {
-        if (retryAfter) {
-          rateLimitWarning = true;
-          erros.push({ tribunal, erro: `Rate limit - tentar novamente em ${retryAfter}s` });
-        } else {
-          erros.push({ tribunal, erro: 'Erro na consulta ou timeout' });
-        }
+        const errorMsg = retryAfter 
+          ? `Rate limit - tentar novamente em ${retryAfter}s` 
+          : 'Erro na consulta ou timeout';
+        if (retryAfter) rateLimitWarning = true;
+        erros.push({ tribunal, erro: errorMsg });
         continue;
       }
 
       for (const comunicacao of response.items) {
-        let matchType: 'nome' | 'oab' | 'ambos' = 'nome';
-        const temAdvogado = comunicacao.destinatarioadvogados?.some(dest => {
-          const matchNome = nomeAdvogado ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado)) : false;
-          const matchOab = numeroOabNumerico ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab : false;
-          if (matchNome && matchOab) { matchType = 'ambos'; return true; }
-          if (matchOab) { matchType = 'oab'; return true; }
-          if (matchNome) { matchType = 'nome'; return true; }
-          return false;
-        }) || false;
-
-        if (temAdvogado) {
-          resultados.push({
-            id: comunicacao.id,
-            tribunal: comunicacao.siglaTribunal,
-            data: comunicacao.data_disponibilizacao,
-            tipo: comunicacao.tipoComunicacao,
-            teor: comunicacao.texto || 'Ver documento completo',
-            numeroProcesso: comunicacao.numero_processo,
-            orgao: comunicacao.nomeOrgao,
-            meio: comunicacao.meiocompleto || comunicacao.meio,
-            link: comunicacao.link,
-            hash: comunicacao.hash,
-            matchType,
-            advogados: comunicacao.destinatarioadvogados?.map(dest => ({
-              nome: dest.advogado.nome,
-              numero_oab: dest.advogado.numero_oab,
-              uf_oab: dest.advogado.uf_oab
-            })) || []
-          });
-        }
+        const resultado = processComunicacao(comunicacao, nomeAdvogado, numeroOabNumerico, ufOab);
+        if (resultado) resultados.push(resultado);
       }
 
       // Delay entre tribunais

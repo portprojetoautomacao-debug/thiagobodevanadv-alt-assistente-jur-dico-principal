@@ -20,6 +20,121 @@ interface StreamingCallbacks {
   onError?: (error: Error) => void
 }
 
+interface StreamingChunk {
+  type: string
+  content?: string
+  message?: string
+}
+
+// ===========================
+// Helper functions - Extracted to reduce CC
+// ===========================
+
+/**
+ * Processa uma linha SSE e retorna a ação a ser tomada
+ */
+function parseSSELine(line: string): StreamingChunk | null {
+  const trimmed = line.trim()
+  if (!trimmed?.startsWith('data: ')) return null
+  
+  try {
+    return JSON.parse(trimmed.slice(6)) as StreamingChunk
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Processa um chunk parseado e atualiza o conteúdo
+ */
+function processStreamingChunk(
+  chunk: StreamingChunk,
+  currentContent: string,
+  callbacks?: StreamingCallbacks
+): { content: string; shouldThrow?: Error } {
+  if (chunk.type === 'content' && chunk.content) {
+    callbacks?.onChunk?.(chunk.content)
+    return { content: currentContent + chunk.content }
+  }
+  
+  if (chunk.type === 'done') {
+    callbacks?.onComplete?.(currentContent)
+    return { content: currentContent }
+  }
+  
+  if (chunk.type === 'error' && chunk.message) {
+    return { content: currentContent, shouldThrow: new Error(chunk.message) }
+  }
+  
+  return { content: currentContent }
+}
+
+/**
+ * Processa todas as linhas do buffer SSE
+ */
+function processSSEBuffer(
+  lines: string[],
+  currentContent: string,
+  callbacks?: StreamingCallbacks
+): string {
+  let content = currentContent
+  
+  for (const line of lines) {
+    const chunk = parseSSELine(line)
+    if (!chunk) continue
+    
+    const result = processStreamingChunk(chunk, content, callbacks)
+    content = result.content
+    
+    if (result.shouldThrow) {
+      throw result.shouldThrow
+    }
+  }
+  
+  return content
+}
+
+/**
+ * Lê o stream e processa chunks
+ */
+async function readStreamContent(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  callbacks?: StreamingCallbacks
+): Promise<string> {
+  const decoder = new TextDecoder()
+  let fullContent = ''
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    fullContent = processSSEBuffer(lines, fullContent, callbacks)
+  }
+
+  return fullContent
+}
+
+/**
+ * Cria o resultado de sucesso para streaming
+ */
+function createStreamingSuccessResult(content: string): AgentTaskResult {
+  return {
+    success: true,
+    message: content || 'Tarefa processada com sucesso',
+    data: { content, streamedAt: new Date().toISOString() },
+    confidence: 0.9
+  }
+}
+
+// ===========================
+// Main streaming function - Refactored
+// ===========================
+
 /**
  * Processa uma tarefa usando o backend real COM STREAMING
  */
@@ -53,45 +168,8 @@ export async function processTaskWithStreamingAI(
     const reader = response.body?.getReader()
     if (!reader) throw new Error('No reader available')
 
-    const decoder = new TextDecoder()
-    let fullContent = ''
-    let buffer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed?.startsWith('data: ')) continue
-
-        try {
-          const json = JSON.parse(trimmed.slice(6))
-
-          if (json.type === 'content' && json.content) {
-            fullContent += json.content
-            callbacks?.onChunk?.(json.content)
-          } else if (json.type === 'done') {
-            callbacks?.onComplete?.(fullContent)
-          } else if (json.type === 'error') {
-            throw new Error(json.message)
-          }
-        } catch (e) {
-          // Ignorar linhas inválidas
-        }
-      }
-    }
-
-    return {
-      success: true,
-      message: fullContent || 'Tarefa processada com sucesso',
-      data: { content: fullContent, streamedAt: new Date().toISOString() },
-      confidence: 0.9
-    }
+    const fullContent = await readStreamContent(reader, callbacks)
+    return createStreamingSuccessResult(fullContent)
   } catch (error) {
     console.error('[Streaming Agent] Error:', error)
     callbacks?.onError?.(error instanceof Error ? error : new Error(String(error)))
