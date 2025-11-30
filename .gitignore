@@ -41,11 +41,19 @@ dist-ssr
 
 # Test output and coverage
 playwright-report/
+playwright-report/**
 test-results/
+test-results/**
 coverage/
+coverage/**
 *.coverage
 Coverage-*.json
 .nyc_output/
+.nyc_output/**
+# HTML coverage reports
+htmlcov/
+lcov.info
+*.lcov
 
 # Credential files (NEVER commit these!)
 credentials.json

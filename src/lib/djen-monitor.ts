@@ -809,7 +809,7 @@ Forneça sua análise conforme as instruções do sistema.`
  */
 function parseSSELine(line: string): string | null {
     if (!line.startsWith('data: ')) return null
-    
+
     try {
         const data = JSON.parse(line.slice(6))
         if (data.type === 'content' && data.content) {
@@ -841,7 +841,7 @@ async function processStreamingResponse(
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        
+
         for (const line of chunk.split('\n')) {
             const content = parseSSELine(line)
             if (content) {
