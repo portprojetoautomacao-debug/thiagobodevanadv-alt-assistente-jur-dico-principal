@@ -10,6 +10,31 @@ import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
 import { toast } from 'sonner'
 import { exportToCSV } from '@/lib/utils'
 
+// ===== Helpers for PrazosView (reduces S3776 Cognitive Complexity) =====
+
+type FilterType = 'todos' | 'pendentes' | 'urgentes' | 'concluidos'
+
+function getEmptyStateMessage(filter: FilterType): string {
+  const messages: Record<FilterType, string> = {
+    pendentes: 'Todos os prazos estão concluídos!',
+    urgentes: 'Nenhum prazo urgente no momento',
+    concluidos: 'Nenhum prazo concluído ainda',
+    todos: 'Adicione prazos aos seus processos'
+  }
+  return messages[filter]
+}
+
+function formatDiasRestantesBadge(diasRestantes: number): string {
+  if (diasRestantes < 0) return 'Vencido'
+  if (diasRestantes === 0) return 'Hoje'
+  if (diasRestantes === 1) return 'Amanhã'
+  return `${diasRestantes} dias`
+}
+
+interface PrazoComProcesso extends Prazo {
+  processo: Process
+}
+
 export default function PrazosView() {
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [filter, setFilter] = useState<'todos' | 'pendentes' | 'urgentes' | 'concluidos'>('pendentes')
@@ -133,7 +158,7 @@ export default function PrazosView() {
         </Card>
       </div>
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
+      <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
         <TabsList>
           <TabsTrigger value="todos">Todos</TabsTrigger>
           <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
@@ -148,10 +173,7 @@ export default function PrazosView() {
                 <CalendarCheck size={64} className="text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Nenhum prazo encontrado</h3>
                 <p className="text-sm text-muted-foreground text-center max-w-md">
-                  {filter === 'pendentes' && 'Todos os prazos estão concluídos!'}
-                  {filter === 'urgentes' && 'Nenhum prazo urgente no momento'}
-                  {filter === 'concluidos' && 'Nenhum prazo concluído ainda'}
-                  {filter === 'todos' && 'Adicione prazos aos seus processos'}
+                  {getEmptyStateMessage(filter)}
                 </p>
               </CardContent>
             </Card>
@@ -178,10 +200,7 @@ export default function PrazosView() {
                             ) : (
                               <>
                                 <Badge variant={urgente ? 'destructive' : 'default'}>
-                                  {diasRestantes < 0 ? 'Vencido' : 
-                                   diasRestantes === 0 ? 'Hoje' : 
-                                   diasRestantes === 1 ? 'Amanhã' : 
-                                   `${diasRestantes} dias`}
+                                  {formatDiasRestantesBadge(diasRestantes)}
                                 </Badge>
                                 {urgente && <Badge variant="outline" className="text-xs">Urgente</Badge>}
                               </>
