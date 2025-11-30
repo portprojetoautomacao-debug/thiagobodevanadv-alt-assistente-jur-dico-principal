@@ -549,14 +549,60 @@ interface CompletedTask {
   [key: string]: unknown;
 }
 
+// ================= ACTION HANDLERS =================
+
+async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
+  console.log(`[Cron Daily Reset] Starting execution at ${timestamp}`);
+
+  const result: DailyResetResult = {
+    success: true,
+    timestamp,
+    agentsReset: 0,
+    tasksArchived: 0,
+    errors: []
+  };
+
+  const agents = await getAgents();
+  console.log(`[Cron Daily Reset] Found ${agents.length} agents`);
+
+  if (agents.length > 0) {
+    const updatedAgents = agents.map(agent => ({
+      ...agent,
+      tasksToday: 0
+    }));
+
+    await updateAgents(updatedAgents);
+    result.agentsReset = agents.length;
+    console.log(`[Cron Daily Reset] Reset counters for ${agents.length} agents`);
+  }
+
+  const completedTasks = (await getCompletedTasks()) as CompletedTask[];
+  console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
+
+  if (completedTasks.length > 0) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 30);
+
+    const tasksToKeep = completedTasks.filter((task) => {
+      if (!task.completedAt) return true;
+      return new Date(task.completedAt) >= cutoffDate;
+    });
+
+    result.tasksArchived = completedTasks.length - tasksToKeep.length;
+
+    if (result.tasksArchived > 0) {
+      await updateCompletedTasks(tasksToKeep);
+      console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
+    }
+  }
+
+  console.log(`[Cron Daily Reset] Completed successfully`);
+  return result;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action, secret } = req.query;
 
-  // Verificar autorização cron
-  // Aceita:
-  // 1. Vercel Cron Jobs (header Authorization: Bearer ...)
-  // 2. CRON_SECRET via query param para testes manuais
-  // 3. Ambiente de desenvolvimento local
   const authHeader = req.headers.authorization;
   const isVercelCron = authHeader?.startsWith('Bearer ');
   const cronSecret = process.env.CRON_SECRET;
@@ -573,56 +619,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const timestamp = new Date().toISOString();
 
   try {
-    // DAILY RESET (midnight)
     if (action === 'daily-reset') {
-      console.log(`[Cron Daily Reset] Starting execution at ${timestamp}`);
-
-      const result: DailyResetResult = {
-        success: true,
-        timestamp,
-        agentsReset: 0,
-        tasksArchived: 0,
-        errors: []
-      };
-
-      // Reset agent counters
-      const agents = await getAgents();
-      console.log(`[Cron Daily Reset] Found ${agents.length} agents`);
-
-      if (agents.length > 0) {
-        const updatedAgents = agents.map(agent => ({
-          ...agent,
-          tasksToday: 0
-        }));
-
-        await updateAgents(updatedAgents);
-        result.agentsReset = agents.length;
-        console.log(`[Cron Daily Reset] Reset counters for ${agents.length} agents`);
-      }
-
-      // Archive old completed tasks (>30 days)
-      const completedTasks = (await getCompletedTasks()) as CompletedTask[];
-      console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
-
-      if (completedTasks.length > 0) {
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - 30);
-
-        const tasksToKeep = completedTasks.filter((task) => {
-          if (!task.completedAt) return true;
-          return new Date(task.completedAt) >= cutoffDate;
-        });
-
-        result.tasksArchived = completedTasks.length - tasksToKeep.length;
-
-        if (result.tasksArchived > 0) {
-          await updateCompletedTasks(tasksToKeep);
-          console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
-        }
-      }
-
-      console.log(`[Cron Daily Reset] Completed successfully`);
-
+      const result = await handleDailyReset(timestamp);
       return res.status(200).json({
         ok: true,
         message: 'Daily reset cron executed successfully',

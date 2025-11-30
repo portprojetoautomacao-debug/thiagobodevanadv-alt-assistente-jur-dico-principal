@@ -186,8 +186,129 @@ async function consultarDJEN(params: DJENQueryParams): Promise<DJENResponse | nu
   }
 }
 
+interface SyncResult {
+  totalPublications: number
+  newPublications: number
+  errors: string[]
+}
+
+function createPublicationFromItem(
+  item: DJENComunicacao,
+  lawyer: MonitoredLawyer,
+  hash: string
+): StoredPublication {
+  return {
+    id: randomUUID(),
+    djenId: item.id,
+    tribunal: item.siglaTribunal,
+    data: item.data_disponibilizacao,
+    tipo: item.tipoComunicacao || 'Intimação',
+    teor: item.texto?.substring(0, 2000) || '',
+    numeroProcesso: item.numero_processo,
+    orgao: item.nomeOrgao,
+    meio: item.meio,
+    link: item.link,
+    hash,
+    matchType: 'oab',
+    lawyerId: lawyer.id,
+    lawyerName: lawyer.name,
+    lawyerOAB: lawyer.oab,
+    advogados: item.destinatarioadvogados?.map(d => d.advogado) ?? [],
+    notified: false,
+    createdAt: new Date().toISOString()
+  }
+}
+
+function getPublicationHash(item: DJENComunicacao): string {
+  return item.hash ||
+    `${item.siglaTribunal}-${item.data_disponibilizacao}-${item.numero_processo}`
+}
+
+async function processLawyerPublications(
+  lawyer: MonitoredLawyer,
+  dataInicio: string,
+  dataFim: string,
+  existingPubs: StoredPublication[],
+  existingHashes: Set<string>
+): Promise<{ totalFound: number; newAdded: number; error?: string }> {
+  const { numero, uf } = parseOAB(lawyer.oab)
+
+  if (!numero) {
+    console.warn(`[DJEN-Sync] OAB inválida para ${lawyer.name}: ${lawyer.oab}`)
+    return { totalFound: 0, newAdded: 0, error: `OAB inválida: ${lawyer.oab}` }
+  }
+
+  const djenResponse = await consultarDJEN({
+    numeroOab: numero,
+    ufOab: uf,
+    dataInicio,
+    dataFim
+  })
+
+  if (!djenResponse?.items) {
+    return { totalFound: 0, newAdded: 0 }
+  }
+
+  let newAdded = 0
+  for (const item of djenResponse.items) {
+    const hash = getPublicationHash(item)
+
+    if (existingHashes.has(hash)) {
+      continue
+    }
+
+    const publication = createPublicationFromItem(item, lawyer, hash)
+    existingPubs.unshift(publication)
+    existingHashes.add(hash)
+    newAdded++
+  }
+
+  return { totalFound: djenResponse.items.length, newAdded }
+}
+
+async function syncAllLawyers(
+  enabledLawyers: MonitoredLawyer[],
+  dataInicio: string,
+  dataFim: string,
+  existingPubs: StoredPublication[],
+  existingHashes: Set<string>
+): Promise<SyncResult> {
+  const result: SyncResult = {
+    totalPublications: 0,
+    newPublications: 0,
+    errors: []
+  }
+
+  for (const lawyer of enabledLawyers) {
+    try {
+      const lawyerResult = await processLawyerPublications(
+        lawyer,
+        dataInicio,
+        dataFim,
+        existingPubs,
+        existingHashes
+      )
+
+      result.totalPublications += lawyerResult.totalFound
+      result.newPublications += lawyerResult.newAdded
+
+      if (lawyerResult.error) {
+        result.errors.push(`${lawyer.name}: ${lawyerResult.error}`)
+      }
+
+      // Delay entre consultas para evitar rate limit
+      await new Promise(resolve => setTimeout(resolve, 500))
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
+      result.errors.push(`${lawyer.name}: ${errorMsg}`)
+      console.error(`[DJEN-Sync] Erro para ${lawyer.name}:`, error)
+    }
+  }
+
+  return result
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -205,7 +326,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const kv = await getKv()
 
-    // Rate limiting - verificar último sync
+    // Rate limiting
     const lastSync = await kv.get<string>(KV_KEYS.LAST_SYNC)
     if (lastSync) {
       const elapsed = Date.now() - new Date(lastSync).getTime()
@@ -220,7 +341,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // Buscar advogados monitorados
     const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEYS.MONITORED_LAWYERS)) ?? []
     const enabledLawyers = lawyers.filter(l => l.enabled)
 
@@ -233,98 +353,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    // Datas para consulta (últimos 7 dias)
     const hoje = new Date()
     const dataFim = formatDate(hoje)
     const dataInicio = formatDate(new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000))
 
-    let totalPublications = 0
-    let newPublications = 0
-    const errors: string[] = []
-
-    // Buscar publicações existentes (hash global simples)
     const existingPubs = (await kv.get<StoredPublication[]>(KV_KEYS.PUBLICATIONS)) ?? []
     const existingHashes = new Set(
-      existingPubs.map(
-        p => p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso ?? ''}`
-      )
+      existingPubs.map(p => p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso ?? ''}`)
     )
 
-    // Consultar DJEN para cada advogado
-    for (const lawyer of enabledLawyers) {
-      try {
-        const { numero, uf } = parseOAB(lawyer.oab)
+    const syncResult = await syncAllLawyers(
+      enabledLawyers,
+      dataInicio,
+      dataFim,
+      existingPubs,
+      existingHashes
+    )
 
-        if (!numero) {
-           
-          console.warn(`[DJEN-Sync] OAB inválida para ${lawyer.name}: ${lawyer.oab}`)
-          continue
-        }
-
-        const djenResponse = await consultarDJEN({
-          numeroOab: numero,
-          ufOab: uf,
-          dataInicio,
-          dataFim
-        })
-
-        if (!djenResponse || !djenResponse.items) {
-          continue
-        }
-
-        totalPublications += djenResponse.items.length
-
-        // Processar cada comunicação
-        for (const item of djenResponse.items) {
-          const hash =
-            item.hash ||
-            `${item.siglaTribunal}-${item.data_disponibilizacao}-${item.numero_processo}`
-
-          // Verificar duplicata
-          if (existingHashes.has(hash)) {
-            continue
-          }
-
-          const publication: StoredPublication = {
-            id: randomUUID(),
-            djenId: item.id,
-            tribunal: item.siglaTribunal,
-            data: item.data_disponibilizacao,
-            tipo: item.tipoComunicacao || 'Intimação',
-            teor: item.texto?.substring(0, 2000) || '',
-            numeroProcesso: item.numero_processo,
-            orgao: item.nomeOrgao,
-            meio: item.meio,
-            link: item.link,
-            hash,
-            matchType: 'oab',
-            lawyerId: lawyer.id,
-            lawyerName: lawyer.name,
-            lawyerOAB: lawyer.oab,
-            advogados: item.destinatarioadvogados?.map(d => d.advogado) ?? [],
-            notified: false,
-            createdAt: new Date().toISOString()
-          }
-
-          existingPubs.unshift(publication)
-          existingHashes.add(hash)
-          newPublications++
-        }
-
-        // Delay entre consultas para evitar rate limit
-        await new Promise(resolve => setTimeout(resolve, 500))
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
-        errors.push(`${lawyer.name}: ${errorMsg}`)
-         
-        console.error(`[DJEN-Sync] Erro para ${lawyer.name}:`, error)
-      }
-    }
-
-    // Salvar publicações (máximo 1000)
     await kv.set(KV_KEYS.PUBLICATIONS, existingPubs.slice(0, 1000))
 
-    // Atualizar timestamps
     const now = new Date().toISOString()
     await kv.set(KV_KEYS.LAST_SYNC, now)
     await kv.set(KV_KEYS.LAST_CHECK, now)
@@ -334,19 +381,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({
       ok: true,
       message:
-        newPublications > 0
-          ? `Encontradas ${newPublications} novas publicações`
+        syncResult.newPublications > 0
+          ? `Encontradas ${syncResult.newPublications} novas publicações`
           : 'Nenhuma nova publicação encontrada',
       result: {
         lawyersChecked: enabledLawyers.length,
-        publicationsFound: totalPublications,
-        newPublications,
+        publicationsFound: syncResult.totalPublications,
+        newPublications: syncResult.newPublications,
         duration: `${duration}ms`,
-        errors: errors.length > 0 ? errors : undefined
+        errors: syncResult.errors.length > 0 ? syncResult.errors : undefined
       }
     })
   } catch (error) {
-     
     console.error('[DJEN-Sync] Error:', error)
     return res.status(500).json({
       ok: false,
