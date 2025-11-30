@@ -20,13 +20,13 @@ const BACKUP_KEY_PREFIX = 'agent-backup';
 
 export function useAgentBackup(options: BackupOptions) {
   const { userId, autoBackupInterval = 5, enableAutoBackup = true } = options;
-  
+
   const [agents] = useKV('autonomous-agents', []);
   const [monitoredLawyers] = useKV('monitored-lawyers', []);
   const [taskQueue] = useKV('agent-task-queue', []);
   const [completedTasks] = useKV('completed-agent-tasks', []);
   const [lastDjenCheck] = useKV('last-djen-check', null);
-  
+
   const lastBackupRef = useRef<number>(0);
 
   // Função para criar backup local
@@ -52,20 +52,20 @@ export function useAgentBackup(options: BackupOptions) {
       const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
       const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
       history.unshift(backupData);
-      
+
       if (history.length > 7) {
         history.splice(7);
       }
-      
+
       localStorage.setItem(historyKey, JSON.stringify(history));
 
       // Salvar timestamp do último backup
       localStorage.setItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`, String(Date.now()));
 
       lastBackupRef.current = backupData.timestamp;
-      
+
       console.log('✅ Backup local criado:', new Date(backupData.timestamp).toLocaleString());
-      
+
       // Validar com servidor (opcional - não bloqueia se falhar)
       try {
         await fetch('/api/backup', {
@@ -73,7 +73,7 @@ export function useAgentBackup(options: BackupOptions) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, data: backupData.data })
         });
-      } catch (apiError) {
+      } catch {
         console.log('ℹ️ Server validation skipped (offline or unavailable)');
       }
 
@@ -90,7 +90,7 @@ export function useAgentBackup(options: BackupOptions) {
     try {
       const backupKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
       const backupStr = localStorage.getItem(backupKey);
-      
+
       if (!backupStr) {
         console.log('ℹ️ Nenhum backup local encontrado');
         return null;
@@ -98,7 +98,7 @@ export function useAgentBackup(options: BackupOptions) {
 
       const backup = JSON.parse(backupStr);
       console.log('✅ Backup local restaurado:', new Date(backup.timestamp).toLocaleString());
-      
+
       return backup;
 
     } catch (error) {
@@ -113,7 +113,7 @@ export function useAgentBackup(options: BackupOptions) {
       const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
       const historyStr = localStorage.getItem(historyKey);
       const history = historyStr ? JSON.parse(historyStr) : [];
-      
+
       const lastBackupStr = localStorage.getItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`);
       const lastBackup = lastBackupStr ? parseInt(lastBackupStr) : null;
 
@@ -136,7 +136,7 @@ export function useAgentBackup(options: BackupOptions) {
     if (!enableAutoBackup || !userId) return;
 
     const intervalMs = autoBackupInterval * 60 * 1000;
-    
+
     // Backup imediato se houver dados e não houver backup recente
     const now = Date.now();
     if (agents.length > 0 && (now - lastBackupRef.current) > intervalMs) {

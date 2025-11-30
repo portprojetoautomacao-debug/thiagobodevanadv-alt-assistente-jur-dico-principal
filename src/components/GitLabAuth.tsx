@@ -30,7 +30,7 @@ export function GitLabAuthButton({ onSuccess, onError }: GitLabAuthButtonProps) 
         validateConfig()
         const clientId = config.gitlab.oauthClientId
         setIsConfigured(!!clientId)
-      } catch (err) {
+      } catch {
         setIsConfigured(false)
       }
     }
@@ -134,7 +134,7 @@ export function GitLabAuthButton({ onSuccess, onError }: GitLabAuthButtonProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.414-.549-.587-.823-.236L12 6.224 4.874.027c-.275-.36-.688-.178-.823.236L1.387 9.452.045 13.587c-.121.37.135.799.549.799h6.342l1.342 4.135c.135.414.549.587.823.236L12 17.776l4.941 6.981c.275.36.688.178.823-.236l1.342-4.135h6.342c.414 0 .67-.429.549-.799z"/>
+            <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.414-.549-.587-.823-.236L12 6.224 4.874.027c-.275-.36-.688-.178-.823.236L1.387 9.452.045 13.587c-.121.37.135.799.549.799h6.342l1.342 4.135c.135.414.549.587.823.236L12 17.776l4.941 6.981c.275.36.688.178.823-.236l1.342-4.135h6.342c.414 0 .67-.429.549-.799z" />
           </svg>
           Entrar com GitLab
         </CardTitle>
@@ -150,7 +150,7 @@ export function GitLabAuthButton({ onSuccess, onError }: GitLabAuthButtonProps) 
           variant="outline"
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.414-.549-.587-.823-.236L12 6.224 4.874.027c-.275-.36-.688-.178-.823.236L1.387 9.452.045 13.587c-.121.37.135.799.549.799h6.342l1.342 4.135c.135.414.549.587.823.236L12 17.776l4.941 6.981c.275.36.688.178.823-.236l1.342-4.135h6.342c.414 0 .67-.429.549-.799z"/>
+            <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.414-.549-.587-.823-.236L12 6.224 4.874.027c-.275-.36-.688-.178-.823.236L1.387 9.452.045 13.587c-.121.37.135.799.549.799h6.342l1.342 4.135c.135.414.549.587.823.236L12 17.776l4.941 6.981c.275.36.688.178.823-.236l1.342-4.135h6.342c.414 0 .67-.429.549-.799z" />
           </svg>
           {isLoading ? 'Conectando...' : 'Continuar com GitLab'}
         </Button>

@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,10 +35,9 @@ import { useDJENPublications } from '@/hooks/use-djen-publications'
 import { useDJENSync } from '@/hooks/use-djen-sync'
 import { useDJENProcessRegistration } from '@/hooks/use-djen-process-registration'
 import { PublicationItem } from '@/components/PublicationItem'
+import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
 import type { Process, Expediente } from '@/types'
 
-<<<<<<< HEAD
-=======
 // Tipos
 interface DJENPublication {
   id: string
@@ -54,7 +54,7 @@ interface DJENPublication {
   notified?: boolean
 }
 
-interface ExpedientesResponse {
+interface _ExpedientesResponse {
   success: boolean
   expedientes: DJENPublication[]
   count: number
@@ -185,7 +185,7 @@ function registerClientFromParties(
 /**
  * Processa uma única publicação para registro
  */
-async function processPublicationForRegistration(
+async function _processPublicationForRegistration(
   pub: DJENPublication,
   now: string,
   ctx: RegistrationContext
@@ -204,7 +204,7 @@ async function processPublicationForRegistration(
 /**
  * Formata descrição das partes para toast
  */
-function formatPartiesDescription(parties: PartiesResult): string {
+function _formatPartiesDescription(parties: PartiesResult): string {
   if (parties.autor === 'Não identificado') return ''
   return ` - ${parties.autor} x ${parties.reu}`
 }
@@ -221,7 +221,7 @@ interface SyncResult {
 /**
  * Executa sincronização DJEN via API
  */
-async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
+async function _executeDJENSync(baseUrl: string): Promise<SyncResult> {
   const response = await fetch(`${baseUrl}/api/djen-sync`, {
     method: 'POST',
   })
@@ -258,7 +258,7 @@ async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
 /**
  * Exibe toast apropriado baseado no resultado da sync
  */
-function showSyncToast(result: SyncResult): void {
+function _showSyncToast(result: SyncResult): void {
   if (result.rateLimited) {
     toast.warning('Aguarde antes de sincronizar', {
       description: result.message,
@@ -310,7 +310,6 @@ export default function DJENPublicationsWidget({
   const [processes, setProcesses] = useKV<Process[]>('processes', [])
   const [, setExpedientes] = useKV<Expediente[]>('expedientes', [])
 
-<<<<<<< HEAD
   const {
     autoRegistering,
     isAlreadyRegistered,
