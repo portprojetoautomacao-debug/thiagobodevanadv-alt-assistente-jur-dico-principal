@@ -268,9 +268,9 @@ export default function DatabaseQueries() {
                           Movimentações
                         </h3>
                         <div className="space-y-2">
-                          {datajudResult.movimentos.slice(0, 10).map((mov, idx) => (
+                          {datajudResult.movimentos.slice(0, 10).map((mov) => (
                             <div
-                              key={idx}
+                              key={`${mov.dataHora}-${mov.nome}`}
                               className="flex gap-3 p-3 bg-muted rounded-lg"
                             >
                               <div className="shrink-0 w-32">

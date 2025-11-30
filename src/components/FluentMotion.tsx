@@ -1,4 +1,4 @@
-import { motion, HTMLMotionProps, Variants, Transition, TargetAndTransition } from 'framer-motion'
+import { motion, HTMLMotionProps, Variants, Transition, TargetAndTransition, MotionProps } from 'framer-motion'
 import { ReactNode } from 'react'
 import { fluentTransitions, fluentVariants } from '@/hooks/use-fluent-motion'
 
@@ -74,7 +74,7 @@ export function FluentMotion({
 export function FluentStaggerItem({
   children,
   ...props
-}: HTMLMotionProps<'div'>) {
+}: MotionProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <motion.div
       variants={{
@@ -92,7 +92,7 @@ export function FluentReveal({
   children,
   direction = 'left',
   ...props
-}: HTMLMotionProps<'div'> & { direction?: 'left' | 'right' | 'up' | 'down' }) {
+}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { direction?: 'left' | 'right' | 'up' | 'down' }) {
   const variants = {
     left: {
       initial: { clipPath: 'inset(0 100% 0 0)' },
@@ -129,7 +129,7 @@ export function FluentFade({
   children,
   delay = 0,
   ...props
-}: HTMLMotionProps<'div'> & { delay?: number }) {
+}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { delay?: number }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -148,7 +148,7 @@ export function FluentSlide({
   direction = 'up',
   delay = 0,
   ...props
-}: HTMLMotionProps<'div'> & { direction?: 'up' | 'down' | 'left' | 'right'; delay?: number }) {
+}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { direction?: 'up' | 'down' | 'left' | 'right'; delay?: number }) {
   const variants = {
     up: { initial: { y: 40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
     down: { initial: { y: -40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
@@ -174,7 +174,7 @@ export function FluentScale({
   children,
   delay = 0,
   ...props
-}: HTMLMotionProps<'div'> & { delay?: number }) {
+}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { delay?: number }) {
   return (
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
@@ -192,7 +192,7 @@ export function FluentHover({
   children,
   scale = 1.02,
   ...props
-}: HTMLMotionProps<'div'> & { scale?: number }) {
+}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { scale?: number }) {
   return (
     <motion.div
       whileHover={{ scale }}

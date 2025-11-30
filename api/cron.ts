@@ -2075,6 +2075,9 @@ const ACTION_HANDLERS: Record<string, ActionConfig> = {
 
 const VALID_ACTIONS = Object.keys(ACTION_HANDLERS).join(', ');
 
+/**
+ * Valida se a requisição está autorizada
+ */
 function isAuthorized(req: VercelRequest, secret: string | string[] | undefined): boolean {
   const authHeader = req.headers.authorization;
   const isVercelCron = authHeader?.startsWith('Bearer ');
@@ -2083,6 +2086,42 @@ function isAuthorized(req: VercelRequest, secret: string | string[] | undefined)
   const isLocalTest = process.env.NODE_ENV === 'development';
 
   return !!(isVercelCron || isValidSecret || isLocalTest);
+}
+
+/**
+ * Valida e obtém a configuração da ação
+ */
+function getActionConfig(action: string | string[] | undefined): ActionConfig | null {
+  const actionStr = typeof action === 'string' ? action : '';
+  return ACTION_HANDLERS[actionStr] || null;
+}
+
+/**
+ * Processa a resposta de sucesso
+ */
+function handleSuccessResponse(
+  res: VercelResponse,
+  result: CronActionResult,
+  actionConfig: ActionConfig
+): VercelResponse {
+  const message = actionConfig.getMessage(result);
+  const ok = result.success !== false;
+
+  return res.status(200).json({ ok, message, result });
+}
+
+/**
+ * Processa resposta de erro
+ */
+function handleErrorResponse(res: VercelResponse, error: unknown, timestamp: string): VercelResponse {
+  console.error('[Cron API] Fatal error:', error);
+
+  return res.status(500).json({
+    ok: false,
+    error: 'Internal server error',
+    message: error instanceof Error ? error.message : 'Unknown error',
+    timestamp
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -2096,8 +2135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const timestamp = new Date().toISOString();
-  const actionStr = typeof action === 'string' ? action : '';
-  const actionConfig = ACTION_HANDLERS[actionStr];
+  const actionConfig = getActionConfig(action);
 
   if (!actionConfig) {
     return res.status(400).json({
@@ -2107,18 +2145,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const result = await actionConfig.handler(timestamp);
-    const message = actionConfig.getMessage(result);
-    const ok = result.success !== false;
-
-    return res.status(200).json({ ok, message, result });
+    return handleSuccessResponse(res, result, actionConfig);
   } catch (error) {
-    console.error('[Cron API] Fatal error:', error);
-
-    return res.status(500).json({
-      ok: false,
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      timestamp
-    });
+    return handleErrorResponse(res, error, timestamp);
   }
 }
