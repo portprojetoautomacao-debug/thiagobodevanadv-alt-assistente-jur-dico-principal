@@ -30,7 +30,7 @@ export function GitHubAuthButton({ onSuccess, onError }: GitHubAuthButtonProps) 
         validateConfig()
         const clientId = config.github.oauthClientId
         setIsConfigured(!!clientId)
-      } catch (err) {
+      } catch {
         setIsConfigured(false)
       }
     }

@@ -12,7 +12,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { randomUUID } from 'node:crypto'
 import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from '../src/lib/agent-schemas.js'
 import { agentMonitor } from '../src/lib/agent-monitoring.js'
-import { legalMemory } from '../src/lib/legal-memory.js'
+import { legalMemory, type LegalContextType } from '../src/lib/legal-memory.js'
 
 // ✨ ENUMS para melhor type safety
 export enum AgentTaskType {
@@ -495,7 +495,7 @@ async function retrieveMemoryContext(task: AgentTask): Promise<string> {
  */
 const MEMORY_SAVE_CONFIG: Record<AgentTaskType, {
   getContent: (result: TaskResult) => string | null
-  category: string
+  category: LegalContextType
 } | null> = {
   [AgentTaskType.DRAFT_PETITION]: {
     getContent: (result) => result.draft ? `Minuta de petição: ${String(result.draft).substring(0, 200)}...` : null,
