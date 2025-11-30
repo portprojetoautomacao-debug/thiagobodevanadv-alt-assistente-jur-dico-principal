@@ -73,8 +73,7 @@ export function phosphorIconOptimizer(): Plugin {
         )}% do bundle de ícones`,
       )
       console.log(
-        `   Exemplos: ${[...usedIcons].slice(0, 10).join(', ')}${
-          usedIcons.size > 10 ? '…' : ''
+        `   Exemplos: ${[...usedIcons].slice(0, 10).join(', ')}${usedIcons.size > 10 ? '…' : ''
         }`,
       )
     },
