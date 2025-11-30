@@ -91,7 +91,7 @@ echo ""
 echo "📊 RESULTADO DA VALIDAÇÃO:"
 echo "=========================="
 
-if [ $ERRORS -eq 0 ]; then
+if [[ $ERRORS -eq 0 ]]; then
     echo "🎉 SUCESSO! Todas as correções foram aplicadas corretamente."
     echo ""
     echo "📋 Resumo das Correções Implementadas:"

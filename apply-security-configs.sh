@@ -50,7 +50,7 @@ fi
 # Aplicar manifests dos namespaces
 log "Aplicando manifests dos namespaces..."
 for env in dev qa production; do
-    if [ -f "k8s/$env/namespace.yaml" ]; then
+    if [[ -f "k8s/$env/namespace.yaml" ]]; then
         kubectl apply -f "k8s/$env/namespace.yaml"
         success "Namespace $env aplicado"
     fi
@@ -59,7 +59,7 @@ done
 # Aplicar network policies
 log "Aplicando Network Policies..."
 for env in dev qa production; do
-    if [ -f "k8s/$env/network-policy.yaml" ]; then
+    if [[ -f "k8s/$env/network-policy.yaml" ]]; then
         kubectl apply -f "k8s/$env/network-policy.yaml"
         success "Network Policy $env aplicada"
     fi
@@ -68,7 +68,7 @@ done
 # Aplicar RBAC específico por ambiente
 log "Aplicando RBAC por ambiente..."
 for env in dev qa production; do
-    if [ -f "k8s/$env/rbac.yaml" ]; then
+    if [[ -f "k8s/$env/rbac.yaml" ]]; then
         kubectl apply -f "k8s/$env/rbac.yaml"
         success "RBAC $env aplicado"
     fi
@@ -76,7 +76,7 @@ done
 
 # Aplicar ConfigMaps compartilhados
 log "Aplicando ConfigMaps..."
-if [ -f "k8s/shared/configmaps.yaml" ]; then
+if [[ -f "k8s/shared/configmaps.yaml" ]]; then
     kubectl apply -f "k8s/shared/configmaps.yaml"
     success "ConfigMaps aplicados"
 fi

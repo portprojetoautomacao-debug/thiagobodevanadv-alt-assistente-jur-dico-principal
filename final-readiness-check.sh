@@ -9,7 +9,7 @@ echo "==============================================="
 echo ""
 
 # Carregar configurações
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
 else
     echo "❌ Arquivo .gitlab-token não encontrado!"
@@ -77,7 +77,7 @@ echo "============================="
 PIPELINE_INFO=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
     "https://gitlab.com/api/v4/projects/$PROJECT_ID/pipelines?per_page=1" | jq -r '.[0] | "\(.status) - \(.created_at)"')
 
-if [ -n "$PIPELINE_INFO" ]; then
+if [[ -n "$PIPELINE_INFO" ]]; then
     echo "📊 $PIPELINE_INFO"
 else
     echo "❌ Nenhum pipeline encontrado"
@@ -89,7 +89,7 @@ echo ""
 echo "⏰ TIMELINE PARA FUNCIONAMENTO COMPLETO:"
 echo "========================================"
 
-if [ $PERCENTAGE -ge 80 ]; then
+if [[ $PERCENTAGE -ge 80 ]]; then
     echo "🎉 STATUS: PRONTO PARA FUNCIONAR!"
     echo ""
     echo "📅 Timeline estimada:"
@@ -102,14 +102,14 @@ if [ $PERCENTAGE -ge 80 ]; then
     echo "⏱️  TOTAL: ~1-2 horas até funcionamento completo"
     echo ""
     echo "🎯 Em 12 horas: 100% funcional com todas as features"
-elif [ $PERCENTAGE -ge 60 ]; then
+elif [[ $PERCENTAGE -ge 60 ]]; then
     echo "⚠️  STATUS: QUASE PRONTO"
     echo ""
     echo "📋 Itens pendentes:"
     if ! grep -q 'init_ai_agents' .gitlab-ci.yml; then
         echo "• Jobs de agentes IA no pipeline"
     fi
-    if [ $(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "https://gitlab.com/api/v4/projects/$PROJECT_ID/variables" | jq -r 'length') -le 5 ]; then
+    if [[ $(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" "https://gitlab.com/api/v4/projects/$PROJECT_ID/variables" | jq -r 'length') -le 5 ]]; then
         echo "• Variáveis GitLab CI/CD"
     fi
     echo ""
@@ -129,7 +129,7 @@ echo ""
 echo "🚀 PRÓXIMOS PASSOS IMEDIATOS:"
 echo "=============================="
 
-if [ $PERCENTAGE -ge 80 ]; then
+if [[ $PERCENTAGE -ge 80 ]]; then
     echo "1. ✅ Fazer commit das mudanças"
     echo "2. ✅ Push para main"
     echo "3. ⏳ Aguardar pipeline executar (~30 min)"

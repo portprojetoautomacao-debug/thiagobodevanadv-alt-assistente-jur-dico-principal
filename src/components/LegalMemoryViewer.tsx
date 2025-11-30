@@ -12,9 +12,9 @@ interface MemoryItem {
 }
 
 interface LegalMemoryViewerProps {
-  memory?: MemoryItem[]
-  isLoading?: boolean
-  onRefresh?: () => void
+  readonly memory?: MemoryItem[]
+  readonly isLoading?: boolean
+  readonly onRefresh?: () => void
 }
 
 const typeIcons: Record<string, any> = {
@@ -59,7 +59,7 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
             <div className="space-y-2">
               {memory.map((item) => {
                 const IconComponent = typeIcons[item.type] || typeIcons['default']
-                
+
                 return (
                   <div
                     key={item.id}
@@ -68,7 +68,7 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
                     <div className="mt-0.5 p-1 rounded-full bg-primary/10 text-primary">
                       <IconComponent className="w-4 h-4" weight="fill" />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <Badge variant="secondary" className="text-[10px]">
@@ -78,11 +78,11 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
                           {new Date(item.createdAt).toLocaleString('pt-BR')}
                         </span>
                       </div>
-                      
+
                       <p className="text-sm text-foreground mt-2 line-clamp-3">
                         {item.content}
                       </p>
-                      
+
                       {item.metadata && Object.keys(item.metadata).length > 0 && (
                         <div className="mt-2 flex gap-2 flex-wrap">
                           {item.metadata.agentId && (

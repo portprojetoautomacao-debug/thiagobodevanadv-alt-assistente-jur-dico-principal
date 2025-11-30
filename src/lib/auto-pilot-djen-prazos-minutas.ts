@@ -354,7 +354,7 @@ ${pub.teor}
         const analysis = await this.analyzeIntimationWithGemini(pub)
 
         // 2) Criação de prazo (Gerente de Prazos + Calendar)
-        if (analysis && analysis.deadline?.endDate) {
+        if (analysis?.deadline?.endDate) {
           await this.createDeadlineFromAnalysisResult(analysis, title)
         }
 

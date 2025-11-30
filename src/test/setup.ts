@@ -32,20 +32,20 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock do IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
+globalThis.IntersectionObserver = class IntersectionObserver {
+  constructor() { /* Mock constructor - intentionally empty */ }
+  disconnect() { /* Mock method - intentionally empty */ }
+  observe() { /* Mock method - intentionally empty */ }
   takeRecords() {
     return [];
   }
-  unobserve() {}
+  unobserve() { /* Mock method - intentionally empty */ }
 } as any;
 
 // Mock do ResizeObserver
-global.ResizeObserver = class ResizeObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
+globalThis.ResizeObserver = class ResizeObserver {
+  constructor() { /* Mock constructor - intentionally empty */ }
+  disconnect() { /* Mock method - intentionally empty */ }
+  observe() { /* Mock method - intentionally empty */ }
+  unobserve() { /* Mock method - intentionally empty */ }
 } as any;

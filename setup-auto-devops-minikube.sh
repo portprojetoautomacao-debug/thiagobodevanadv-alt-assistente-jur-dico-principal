@@ -85,7 +85,7 @@ else
     step "Criando secrets..."
     
     # Obter valores do .env se existir
-    if [ -f .env ]; then
+    if [[ -f .env ]]; then
         source .env
         kubectl create secret generic assistente-juridico-secrets \
             --from-literal=app-env="${VITE_APP_ENV:-production}" \

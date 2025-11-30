@@ -16,9 +16,9 @@ import {
 } from '@phosphor-icons/react'
 
 interface CollaborationDemoProps {
-  agentName: string
-  taskDescription: string
-  onComplete?: () => void
+  readonly agentName: string
+  readonly taskDescription: string
+  readonly onComplete?: () => void
 }
 
 type Phase = 'agent_working' | 'human_editing' | 'agent_resuming' | 'completed'
@@ -46,7 +46,7 @@ export default function HumanAgentCollaboration({
     if (phase !== 'agent_working') return
 
     let isCancelled = false
-    const intervalId = window.setInterval(() => {
+    const intervalId = globalThis.setInterval(() => {
       setProgress((prev) => {
         if (isCancelled) return prev
 
@@ -64,7 +64,7 @@ export default function HumanAgentCollaboration({
 
     return () => {
       isCancelled = true
-      window.clearInterval(intervalId)
+      globalThis.clearInterval(intervalId)
     }
   }, [phase, onComplete])
 
@@ -77,7 +77,7 @@ export default function HumanAgentCollaboration({
 
     let isCancelled = false
 
-    const intervalId = window.setInterval(() => {
+    const intervalId = globalThis.setInterval(() => {
       if (isCancelled) return
 
       setTimeWithoutActivity((prev) => {
@@ -93,7 +93,7 @@ export default function HumanAgentCollaboration({
           setPhase('agent_resuming')
           setTimeWithoutActivity(0)
 
-          const resumeId = window.setTimeout(() => {
+          globalThis.setTimeout(() => {
             setPhase('agent_working')
           }, RESUME_DELAY_MS)
 
@@ -107,7 +107,7 @@ export default function HumanAgentCollaboration({
 
     return () => {
       isCancelled = true
-      window.clearInterval(intervalId)
+      globalThis.clearInterval(intervalId)
     }
   }, [phase, isHumanActive])
 
@@ -115,7 +115,7 @@ export default function HumanAgentCollaboration({
   useEffect(() => {
     return () => {
       if (humanActivityTimeoutRef.current != null) {
-        window.clearTimeout(humanActivityTimeoutRef.current)
+        globalThis.clearTimeout(humanActivityTimeoutRef.current)
       }
     }
   }, [])
@@ -129,9 +129,9 @@ export default function HumanAgentCollaboration({
 
     // Simula uma janela de "atividade" humana por alguns segundos
     if (humanActivityTimeoutRef.current != null) {
-      window.clearTimeout(humanActivityTimeoutRef.current)
+      globalThis.clearTimeout(humanActivityTimeoutRef.current)
     }
-    humanActivityTimeoutRef.current = window.setTimeout(() => {
+    humanActivityTimeoutRef.current = globalThis.setTimeout(() => {
       setIsHumanActive(false)
     }, 3000)
   }
@@ -141,7 +141,7 @@ export default function HumanAgentCollaboration({
     setTimeWithoutActivity(0)
     setPhase('agent_resuming')
 
-    const resumeId = window.setTimeout(() => {
+    const resumeId = globalThis.setTimeout(() => {
       setPhase('agent_working')
     }, RESUME_DELAY_MS)
 
@@ -254,11 +254,10 @@ export default function HumanAgentCollaboration({
         <div className="grid grid-cols-3 gap-4 pt-4 border-t">
           <div className="text-center">
             <Robot
-              className={`w-8 h-8 mx-auto mb-2 ${
-                phase === 'agent_working' || phase === 'agent_resuming'
-                  ? 'text-primary animate-pulse'
-                  : 'text-muted-foreground'
-              }`}
+              className={`w-8 h-8 mx-auto mb-2 ${phase === 'agent_working' || phase === 'agent_resuming'
+                ? 'text-primary animate-pulse'
+                : 'text-muted-foreground'
+                }`}
               weight="fill"
             />
             <p className="text-xs font-medium">Agente de IA</p>
@@ -277,9 +276,8 @@ export default function HumanAgentCollaboration({
 
           <div className="text-center">
             <User
-              className={`w-8 h-8 mx-auto mb-2 ${
-                phase === 'human_editing' ? 'text-accent' : 'text-muted-foreground'
-              }`}
+              className={`w-8 h-8 mx-auto mb-2 ${phase === 'human_editing' ? 'text-accent' : 'text-muted-foreground'
+                }`}
               weight="fill"
             />
             <p className="text-xs font-medium">Você</p>

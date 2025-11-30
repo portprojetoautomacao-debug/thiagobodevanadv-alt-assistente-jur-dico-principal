@@ -8,7 +8,7 @@ echo "🔧 Configurando variáveis críticas do GitLab CI/CD..."
 echo ""
 
 # Carregar token
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
 else
     echo "❌ Arquivo .gitlab-token não encontrado!"
@@ -32,7 +32,7 @@ create_variable() {
         --data "{\"key\": \"$key\", \"value\": \"$value\", \"protected\": $protected, \"masked\": $masked}" \
         "https://gitlab.com/api/v4/projects/$PROJECT_ID/variables" > /dev/null
 
-    if [ $? -eq 0 ]; then
+    if [[ $? -eq 0 ]]; then
         echo "✅ $key configurada"
     else
         echo "❌ Falha ao configurar $key"

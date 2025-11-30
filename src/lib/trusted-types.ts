@@ -9,8 +9,6 @@
  * @see https://web.dev/trusted-types/
  */
 
-import type { TrustedTypePolicyOptions as _TrustedTypePolicyOptions } from 'trusted-types/lib';
-
 // Tipo genérico para policy com todas as opções
 type FullTrustedTypePolicy = {
     readonly name: string;
@@ -33,7 +31,7 @@ const ALLOWED_SCRIPT_ORIGINS = [
     'https://*.vercel.app',
     'https://*.sentry.io',
     // Origem local
-    window.location.origin,
+    globalThis.window?.location?.origin ?? '',
 ];
 
 // Tags HTML permitidas para sanitização
@@ -54,9 +52,8 @@ const ALLOWED_ATTRS = new Set([
  * Verifica se Trusted Types é suportado pelo navegador
  */
 export function isTrustedTypesSupported(): boolean {
-    return typeof window !== 'undefined' &&
-        window.trustedTypes !== undefined &&
-        typeof window.trustedTypes.createPolicy === 'function';
+    return globalThis.window?.trustedTypes !== undefined &&
+        typeof globalThis.window?.trustedTypes?.createPolicy === 'function';
 }
 
 /**

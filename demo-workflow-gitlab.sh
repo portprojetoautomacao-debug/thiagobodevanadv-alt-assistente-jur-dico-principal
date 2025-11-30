@@ -35,7 +35,7 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 read -p "Digite o nome da feature (ex: busca-avancada): " FEATURE_NAME
 
-if [ -z "$FEATURE_NAME" ]; then
+if [[ -z "$FEATURE_NAME" ]]; then
     FEATURE_NAME="demo-feature"
 fi
 
@@ -92,12 +92,12 @@ echo "  chore:    Manutenção"
 echo ""
 
 read -p "Tipo do commit (feat/fix/docs/etc): " COMMIT_TYPE
-if [ -z "$COMMIT_TYPE" ]; then
+if [[ -z "$COMMIT_TYPE" ]]; then
     COMMIT_TYPE="feat"
 fi
 
 read -p "Descrição do commit: " COMMIT_MSG
-if [ -z "$COMMIT_MSG" ]; then
+if [[ -z "$COMMIT_MSG" ]]; then
     COMMIT_MSG="adicionar ${FEATURE_NAME}"
 fi
 

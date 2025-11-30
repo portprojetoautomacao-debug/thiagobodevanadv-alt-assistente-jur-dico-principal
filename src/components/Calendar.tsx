@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type JSX } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import {
   Card,
@@ -54,6 +54,46 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
 const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY
 
+/**
+ * Retorna a descrição do status da integração Google
+ */
+function getGoogleStatusDescription(configured: boolean, initializing: boolean, connected: boolean): string {
+  if (!configured) return 'Configure as credenciais do Google para habilitar a sincronização'
+  if (initializing) return 'Inicializando conexão...'
+  if (connected) return 'Conectado - seus eventos podem ser sincronizados'
+  return 'Conecte sua conta do Google para sincronizar eventos'
+}
+
+/**
+ * Retorna a variante do badge baseado no status
+ */
+function getGoogleBadgeVariant(connected: boolean, configured: boolean): 'default' | 'secondary' | 'destructive' {
+  if (connected) return 'default'
+  if (configured) return 'secondary'
+  return 'destructive'
+}
+
+/**
+ * Renderiza o conteúdo do badge de status Google
+ */
+function renderGoogleBadgeContent(connected: boolean, configured: boolean): JSX.Element | string {
+  if (connected) {
+    return (
+      <span className="flex items-center gap-1">
+        <CheckCircle className="w-3 h-3" /> Conectado
+      </span>
+    )
+  }
+  if (configured) {
+    return 'Desconectado'
+  }
+  return (
+    <span className="flex items-center gap-1">
+      <XCircle className="w-3 h-3" /> Não Configurado
+    </span>
+  )
+}
+
 const MONTHS = [
   'Janeiro',
   'Fevereiro',
@@ -83,7 +123,7 @@ const EVENT_COLORS: Record<string, string> = {
 
 // fallback para SSR (evita ReferenceError com window)
 const SAFE_ORIGIN =
-  typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+  globalThis.window ? globalThis.window.location.origin : 'http://localhost'
 
 export default function Calendar() {
   const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
@@ -365,6 +405,18 @@ export default function Calendar() {
     )
   }
 
+  // Helper function para determinar classe CSS do dia (evita ternário aninhado)
+  const getDayClassName = (day: number | null): string => {
+    const baseClass = 'min-h-24 p-2 border rounded-lg'
+    if (day === null) {
+      return `${baseClass} bg-muted/30`
+    }
+    if (isToday(day)) {
+      return `${baseClass} bg-primary/10 border-primary`
+    }
+    return `${baseClass} bg-card hover:bg-muted/50`
+  }
+
   const sortedUpcomingAppointments = useMemo(
     () =>
       (appointments || [])
@@ -521,13 +573,7 @@ export default function Calendar() {
               <div>
                 <CardTitle>Integração Google Calendar</CardTitle>
                 <CardDescription>
-                  {!isGoogleConfigured
-                    ? 'Configure as credenciais do Google para habilitar a sincronização'
-                    : isInitializing
-                    ? 'Inicializando conexão...'
-                    : isGoogleConnected
-                    ? 'Conectado - seus eventos podem ser sincronizados'
-                    : 'Conecte sua conta do Google para sincronizar eventos'}
+                  {getGoogleStatusDescription(isGoogleConfigured, isInitializing, isGoogleConnected)}
                 </CardDescription>
               </div>
             </div>
@@ -536,25 +582,9 @@ export default function Calendar() {
                 <ArrowsClockwise className="w-5 h-5 text-blue-600 animate-spin" />
               )}
               <Badge
-                variant={
-                  isGoogleConnected
-                    ? 'default'
-                    : isGoogleConfigured
-                    ? 'secondary'
-                    : 'destructive'
-                }
+                variant={getGoogleBadgeVariant(isGoogleConnected, isGoogleConfigured)}
               >
-                {isGoogleConnected ? (
-                  <span className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> Conectado
-                  </span>
-                ) : isGoogleConfigured ? (
-                  'Desconectado'
-                ) : (
-                  <span className="flex items-center gap-1">
-                    <XCircle className="w-3 h-3" /> Não Configurado
-                  </span>
-                )}
+                {renderGoogleBadgeContent(isGoogleConnected, isGoogleConfigured)}
               </Badge>
             </div>
           </div>
@@ -757,20 +787,13 @@ export default function Calendar() {
               return (
                 <div
                   key={idx}
-                  className={`min-h-24 p-2 border rounded-lg ${
-                    !isValidDay
-                      ? 'bg-muted/30'
-                      : isToday(day)
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-card hover:bg-muted/50'
-                  }`}
+                  className={getDayClassName(day)}
                 >
                   {isValidDay && (
                     <>
                       <div
-                        className={`text-sm font-medium mb-1 ${
-                          isToday(day) ? 'text-primary' : 'text-foreground'
-                        }`}
+                        className={`text-sm font-medium mb-1 ${isToday(day) ? 'text-primary' : 'text-foreground'
+                          }`}
                       >
                         {day}
                       </div>
@@ -778,9 +801,8 @@ export default function Calendar() {
                         {dayAppointments.slice(0, 2).map((apt) => (
                           <div
                             key={apt.id}
-                            className={`text-xs p-1 rounded border ${
-                              EVENT_COLORS[apt.type] || EVENT_COLORS.outro
-                            } truncate cursor-pointer hover:opacity-80`}
+                            className={`text-xs p-1 rounded border ${EVENT_COLORS[apt.type] || EVENT_COLORS.outro
+                              } truncate cursor-pointer hover:opacity-80`}
                             onClick={() => handleViewDetails(apt)}
                           >
                             {apt.time} {apt.title}

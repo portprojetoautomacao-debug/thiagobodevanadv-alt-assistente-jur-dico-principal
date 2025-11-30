@@ -15,7 +15,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Carregar token do GitLab
-if [ -f ".gitlab-token" ]; then
+if [[ -f ".gitlab-token" ]]; then
     source .gitlab-token
 else
     echo -e "${RED}❌ Arquivo .gitlab-token não encontrado${NC}"
@@ -32,7 +32,7 @@ check_agent_complete() {
     # Verificar se está registrado no GitLab
     local gitlab_registered=$(curl -s -H "Authorization: Bearer $GITLAB_TOKEN" "https://gitlab.com/api/v4/projects/$PROJECT_ID/cluster_agents" | jq -r ".[] | select(.name == \"$agent_name\") | .name")
 
-    if [ "$gitlab_registered" = "$agent_name" ]; then
+    if [[ "$gitlab_registered" = "$agent_name" ]]; then
         echo -e "  ${GREEN}✅ Registrado no GitLab${NC}"
     else
         echo -e "  ${RED}❌ Não registrado no GitLab${NC}"
@@ -40,7 +40,7 @@ check_agent_complete() {
     fi
 
     # Verificar arquivo de configuração
-    if [ -f "$config_file" ]; then
+    if [[ -f "$config_file" ]]; then
         echo -e "  ${GREEN}✅ Configuração existe${NC}"
 
         # Verificar se tem ci_access
@@ -108,7 +108,7 @@ done
 echo "🎯 STATUS FINAL:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ "$agent_count" -eq 7 ]; then
+if [[ "$agent_count" -eq 7 ]]; then
     echo -e "${GREEN}✅ Todos os 7 agentes estão registrados no GitLab!${NC}"
     echo ""
     echo "📝 PRÓXIMOS PASSOS:"

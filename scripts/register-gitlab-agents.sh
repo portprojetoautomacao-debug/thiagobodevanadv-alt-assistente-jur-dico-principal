@@ -34,11 +34,11 @@ for agent_info in "${AGENTS_TO_REGISTER[@]}"; do
     echo ""
 
     # Verificar se o diretório existe
-    if [ -d ".gitlab/agents/$agent_name" ]; then
+    if [[ -d ".gitlab/agents/$agent_name" ]]; then
         echo "✅ Diretório encontrado: .gitlab/agents/$agent_name"
 
         # Verificar se config.yaml existe
-        if [ -f ".gitlab/agents/$agent_name/config.yaml" ]; then
+        if [[ -f ".gitlab/agents/$agent_name/config.yaml" ]]; then
             echo "✅ Arquivo config.yaml encontrado"
         else
             echo "❌ Arquivo config.yaml não encontrado"

@@ -16,7 +16,7 @@ echo ""
 echo "✅ Teste 1: Verificando se o endpoint está acessível..."
 response=$(curl -s -o /dev/null -w "%{http_code}" "$WEBHOOK_URL")
 
-if [ "$response" = "200" ]; then
+if [[ "$response" = "200" ]]; then
   echo "   ✓ Endpoint respondeu com 200 OK"
 else
   echo "   ✗ Endpoint respondeu com código: $response"
@@ -63,7 +63,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" \
   -d "$push_payload" \
   "$WEBHOOK_URL")
 
-if [ "$response" = "200" ] || [ "$response" = "204" ]; then
+if [[ "$response" = "200" ]] || [[ "$response" = "204" ]]; then
   echo "   ✓ Webhook aceitou o payload (HTTP $response)"
 else
   echo "   ⚠ Webhook respondeu com código: $response"

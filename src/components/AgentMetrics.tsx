@@ -21,9 +21,9 @@ import { useState, useEffect } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 
 interface AgentMetricsProps {
-  agents: Agent[]
-  completedTasks: AgentTask[]
-  activityLog: Array<{
+  readonly agents: Agent[]
+  readonly completedTasks: AgentTask[]
+  readonly activityLog: Array<{
     id: string
     agentId: string
     timestamp: string

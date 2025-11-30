@@ -282,7 +282,7 @@ export async function consultarProcessoDatajud(
 
     const data = await response.json()
 
-    if (!data.hits || !data.hits.hits || data.hits.hits.length === 0) {
+    if (!data.hits?.hits?.length) {
       throw new DatajudAPIError(
         'Processo não encontrado',
         404,
@@ -453,7 +453,7 @@ export async function consultarAtualizacoesRecentesDatajud(
 
     const data = await response.json()
 
-    if (!data.hits || !data.hits.hits || data.hits.hits.length === 0) {
+    if (!data.hits?.hits?.length) {
       // Para varredura diária, não tratar como erro: apenas "nada novo"
       return []
     }

@@ -21,7 +21,7 @@ check_agent() {
 
     echo -e "${BLUE}🔍 Verificando agente: ${agent_name}${NC}"
 
-    if [ -f "$config_file" ]; then
+    if [[ -f "$config_file" ]]; then
         echo -e "  ${GREEN}✅ Configuração existe${NC}"
 
         # Verificar se tem ci_access

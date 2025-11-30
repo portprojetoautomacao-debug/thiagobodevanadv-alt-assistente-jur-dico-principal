@@ -86,7 +86,7 @@ echo ""
 
 read -p "Digite o ID do agente (número da primeira coluna): " agent_id
 
-if [ -z "$agent_id" ]; then
+if [[ -z "$agent_id" ]]; then
     error "ID do agente não fornecido"
     exit 1
 fi

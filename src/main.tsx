@@ -14,7 +14,7 @@ if (!rootElement) {
 // ⚠️ TRUSTED TYPES: DESABILITADO TEMPORARIAMENTE
 // O vite-plugin-pwa gera registerSW.js que não é compatível com Trusted Types
 // causando erro: "This document requires 'TrustedScriptURL' assignment"
-// TODO: Reabilitar quando o plugin PWA suportar Trusted Types nativamente
+// NOTA: Reabilitar quando o plugin PWA suportar Trusted Types nativamente
 // 
 // import('./lib/trusted-types').then(({ initTrustedTypes }) => {
 //   initTrustedTypes()

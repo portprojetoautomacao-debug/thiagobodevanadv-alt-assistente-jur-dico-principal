@@ -28,7 +28,7 @@ error() {
 
 # Teste 1: Verificar se o workflow existe
 log "1. Verificando se o workflow vercel-webhook-automation.yml existe..."
-if [ -f ".github/workflows/vercel-webhook-automation.yml" ]; then
+if [[ -f ".github/workflows/vercel-webhook-automation.yml" ]]; then
     log "✅ Workflow encontrado"
 else
     error "❌ Workflow não encontrado"
@@ -37,7 +37,7 @@ fi
 
 # Teste 2: Verificar se o webhook do Vercel existe
 log "2. Verificando se o handler do webhook existe..."
-if [ -f "api/vercel-webhook.ts" ]; then
+if [[ -f "api/vercel-webhook.ts" ]]; then
     log "✅ Handler do webhook encontrado"
 else
     error "❌ Handler do webhook não encontrado"
@@ -46,7 +46,7 @@ fi
 
 # Teste 3: Verificar se as variáveis de ambiente estão documentadas
 log "3. Verificando documentação das variáveis de ambiente..."
-if [ -f ".env.vercel.example" ]; then
+if [[ -f ".env.vercel.example" ]]; then
     log "✅ Arquivo de exemplo das variáveis encontrado"
 
     # Verificar se contém as variáveis necessárias
@@ -64,7 +64,7 @@ fi
 
 # Teste 4: Verificar se a documentação existe
 log "4. Verificando documentação da integração..."
-if [ -f "docs/VERCEL_WEBHOOK_INTEGRATION.md" ]; then
+if [[ -f "docs/VERCEL_WEBHOOK_INTEGRATION.md" ]]; then
     log "✅ Documentação encontrada"
 else
     error "❌ Documentação não encontrada"

@@ -160,6 +160,122 @@ const logger = {
   }
 }
 
+// ✨ Task mapping para reduzir Cognitive Complexity (SonarCloud S3776)
+interface TaskMapping {
+  keywords: string[]
+  agentId: string
+  type: AgentTaskType
+  priority: TaskPriority
+}
+
+const TASK_MAPPINGS: TaskMapping[] = [
+  {
+    keywords: ['prazo', 'deadline'],
+    agentId: 'deadline-tracker',
+    type: AgentTaskType.CALCULATE_DEADLINE,
+    priority: TaskPriority.HIGH
+  },
+  {
+    keywords: ['petição', 'peticao', 'defesa', 'recurso', 'manifestação', 'manifestacao'],
+    agentId: 'petition-writer',
+    type: AgentTaskType.DRAFT_PETITION,
+    priority: TaskPriority.MEDIUM
+  },
+  {
+    keywords: ['pesquisa', 'jurisprudência', 'jurisprudencia'],
+    agentId: 'precedent-researcher',
+    type: AgentTaskType.RESEARCH_PRECEDENTS,
+    priority: TaskPriority.LOW
+  },
+  {
+    keywords: ['avisar', 'comunicar', 'informar', 'cliente'],
+    agentId: 'client-communicator',
+    type: AgentTaskType.CLIENT_COMMUNICATION,
+    priority: TaskPriority.MEDIUM
+  },
+  {
+    keywords: ['datajud', 'andamento', 'autos', 'movimentação', 'movimentacao'],
+    agentId: 'datajud-query',
+    type: AgentTaskType.CHECK_DATAJUD,
+    priority: TaskPriority.MEDIUM
+  },
+  {
+    keywords: ['sentença', 'sentenca', 'decisão', 'decisao', 'acórdão', 'acordao', 'risco'],
+    agentId: 'risk-analyst',
+    type: AgentTaskType.RISK_ANALYSIS,
+    priority: TaskPriority.HIGH
+  },
+  {
+    keywords: ['custas', 'honorários', 'honorarios', 'depósito', 'deposito', 'guia', 'pagamento'],
+    agentId: 'billing-analyst',
+    type: AgentTaskType.BILLING_ANALYSIS,
+    priority: TaskPriority.HIGH
+  },
+  {
+    keywords: ['arquivar', 'salvar', 'pasta', 'organizar'],
+    agentId: 'document-organizer',
+    type: AgentTaskType.ORGANIZE_FILES,
+    priority: TaskPriority.LOW
+  },
+  {
+    keywords: ['lgpd', 'sigilo', 'segredo', 'ética', 'etica', 'compliance'],
+    agentId: 'compliance-officer',
+    type: AgentTaskType.COMPLIANCE_CHECK,
+    priority: TaskPriority.HIGH
+  },
+  {
+    keywords: ['explicar', 'simplificar', 'traduzir', 'leigo'],
+    agentId: 'legal-translator',
+    type: AgentTaskType.LEGAL_TRANSLATION,
+    priority: TaskPriority.MEDIUM
+  },
+  {
+    keywords: ['contrato', 'minuta', 'aditivo', 'cláusula', 'clausula', 'rescisão', 'rescissao'],
+    agentId: 'contract-reviewer',
+    type: AgentTaskType.CONTRACT_REVIEW,
+    priority: TaskPriority.HIGH
+  },
+  {
+    keywords: ['estratégia', 'estrategia', 'plano', 'probabilidade', 'tese', 'linha de defesa'],
+    agentId: 'case-strategist',
+    type: AgentTaskType.CASE_STRATEGY,
+    priority: TaskPriority.HIGH
+  }
+]
+
+/**
+ * Encontra mapeamento de tarefa com base no texto da ação
+ */
+function findTaskMapping(actionStr: string): TaskMapping | null {
+  const lowerAction = actionStr.toLowerCase()
+  return TASK_MAPPINGS.find(mapping =>
+    mapping.keywords.some(keyword => lowerAction.includes(keyword))
+  ) || null
+}
+
+/**
+ * Cria tarefa encadeada a partir do texto da ação e dados da tarefa origem
+ */
+function createChainedTask(
+  actionText: string,
+  sourceTask: AgentTask,
+  mapping: TaskMapping
+): AgentTask {
+  return {
+    id: randomUUID(),
+    agentId: mapping.agentId,
+    type: mapping.type,
+    priority: mapping.priority,
+    status: TaskStatus.QUEUED,
+    createdAt: new Date().toISOString(),
+    data: {
+      ...sourceTask.data,
+      instruction: actionText,
+      sourceTask: sourceTask.id
+    }
+  }
+}
+
 // ✨ Cache de prompts com enum keys
 const SYSTEM_PROMPTS: Record<AgentType, string> = {
   [AgentType.ANALYZER]: `Você é um assistente jurídico especializado em análise de documentos processuais.
@@ -596,252 +712,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             task.completedAt = new Date().toISOString()
             task.result = result
 
+            // ✨ Usar mapeamento de tarefas para reduzir Cognitive Complexity
             if (
               task.type === AgentTaskType.ANALYZE_DOCUMENT &&
               result.suggestedActions &&
               Array.isArray(result.suggestedActions)
             ) {
               for (const actionText of result.suggestedActions) {
-                const actionStr = String(actionText).toLowerCase()
-                let nextTask: AgentTask | null = null
-
-                if (actionStr.includes('prazo') || actionStr.includes('deadline')) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'deadline-tracker',
-                    type: AgentTaskType.CALCULATE_DEADLINE,
-                    priority: TaskPriority.HIGH,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('petição') ||
-                  actionStr.includes('peticao') ||
-                  actionStr.includes('defesa') ||
-                  actionStr.includes('recurso') ||
-                  actionStr.includes('manifestação') ||
-                  actionStr.includes('manifestacao')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'petition-writer',
-                    type: AgentTaskType.DRAFT_PETITION,
-                    priority: TaskPriority.MEDIUM,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (actionStr.includes('pesquisa') || actionStr.includes('jurisprudência') || actionStr.includes('jurisprudencia')) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'precedent-researcher',
-                    type: AgentTaskType.RESEARCH_PRECEDENTS,
-                    priority: TaskPriority.LOW,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('avisar') ||
-                  actionStr.includes('comunicar') ||
-                  actionStr.includes('informar') ||
-                  actionStr.includes('cliente')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'client-communicator',
-                    type: AgentTaskType.CLIENT_COMMUNICATION,
-                    priority: TaskPriority.MEDIUM,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('datajud') ||
-                  actionStr.includes('andamento') ||
-                  actionStr.includes('autos') ||
-                  actionStr.includes('movimentação') ||
-                  actionStr.includes('movimentacao')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'datajud-query',
-                    type: AgentTaskType.CHECK_DATAJUD,
-                    priority: TaskPriority.MEDIUM,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('sentença') ||
-                  actionStr.includes('sentenca') ||
-                  actionStr.includes('decisão') ||
-                  actionStr.includes('decisao') ||
-                  actionStr.includes('acórdão') ||
-                  actionStr.includes('acordao') ||
-                  actionStr.includes('risco')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'risk-analyst',
-                    type: AgentTaskType.RISK_ANALYSIS,
-                    priority: TaskPriority.HIGH,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('custas') ||
-                  actionStr.includes('honorários') ||
-                  actionStr.includes('honorarios') ||
-                  actionStr.includes('depósito') ||
-                  actionStr.includes('deposito') ||
-                  actionStr.includes('guia') ||
-                  actionStr.includes('pagamento')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'billing-analyst',
-                    type: AgentTaskType.BILLING_ANALYSIS,
-                    priority: TaskPriority.HIGH,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('arquivar') ||
-                  actionStr.includes('salvar') ||
-                  actionStr.includes('pasta') ||
-                  actionStr.includes('organizar')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'document-organizer',
-                    type: AgentTaskType.ORGANIZE_FILES,
-                    priority: TaskPriority.LOW,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('lgpd') ||
-                  actionStr.includes('sigilo') ||
-                  actionStr.includes('segredo') ||
-                  actionStr.includes('ética') ||
-                  actionStr.includes('etica') ||
-                  actionStr.includes('compliance')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'compliance-officer',
-                    type: AgentTaskType.COMPLIANCE_CHECK,
-                    priority: TaskPriority.HIGH,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('explicar') ||
-                  actionStr.includes('simplificar') ||
-                  actionStr.includes('traduzir') ||
-                  actionStr.includes('leigo')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'legal-translator',
-                    type: AgentTaskType.LEGAL_TRANSLATION,
-                    priority: TaskPriority.MEDIUM,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('contrato') ||
-                  actionStr.includes('minuta') ||
-                  actionStr.includes('aditivo') ||
-                  actionStr.includes('cláusula') ||
-                  actionStr.includes('clausula') ||
-                  actionStr.includes('rescisão') ||
-                  actionStr.includes('rescissao')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'contract-reviewer',
-                    type: AgentTaskType.CONTRACT_REVIEW,
-                    priority: TaskPriority.HIGH,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                } else if (
-                  actionStr.includes('estratégia') ||
-                  actionStr.includes('estrategia') ||
-                  actionStr.includes('plano') ||
-                  actionStr.includes('probabilidade') ||
-                  actionStr.includes('tese') ||
-                  actionStr.includes('linha de defesa')
-                ) {
-                  nextTask = {
-                    id: randomUUID(),
-                    agentId: 'case-strategist',
-                    type: AgentTaskType.CASE_STRATEGY,
-                    priority: TaskPriority.HIGH,
-                    status: TaskStatus.QUEUED,
-                    createdAt: new Date().toISOString(),
-                    data: {
-                      ...task.data,
-                      instruction: actionText,
-                      sourceTask: task.id
-                    }
-                  }
-                }
-
-                if (nextTask) {
+                const mapping = findTaskMapping(String(actionText))
+                if (mapping) {
+                  const nextTask = createChainedTask(String(actionText), task, mapping)
                   logger.info(`Chaining task: ${nextTask.type} for ${nextTask.agentId}`)
                   taskQueue.push(nextTask)
                 }

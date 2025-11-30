@@ -52,6 +52,115 @@ function getRedis(): Redis {
   return _redisClient
 }
 
+/**
+ * Handler GET - Lista advogados
+ */
+async function handleGetLawyers(res: VercelResponse): Promise<void> {
+  const kv = getRedis()
+  const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
+
+  res.status(200).json({
+    success: true,
+    lawyers,
+    count: lawyers.length
+  })
+}
+
+/**
+ * Handler POST - Adiciona advogado
+ */
+async function handlePostLawyer(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const kv = getRedis()
+  let body: unknown = req.body
+
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body) as LawyerPayload
+    } catch (e) {
+      console.warn('[API Lawyers] Failed to parse JSON body:', e)
+      body = {}
+    }
+  }
+
+  const { name, oab, email, tribunals } = (body || {}) as LawyerPayload
+
+  if (!name || !oab) {
+    res.status(400).json({
+      success: false,
+      error: 'Nome e OAB sao obrigatorios'
+    })
+    return
+  }
+
+  const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
+  const normalizedOab = oab.replaceAll(/\s+/g, '').toUpperCase()
+  const exists = lawyers.some(
+    (l) => l.oab.replaceAll(/\s+/g, '').toUpperCase() === normalizedOab
+  )
+
+  if (exists) {
+    res.status(400).json({
+      success: false,
+      error: 'Advogado com esta OAB ja cadastrado'
+    })
+    return
+  }
+
+  const newLawyer: MonitoredLawyer = {
+    id: `lawyer-${Date.now()}`,
+    name,
+    oab,
+    email: email || '',
+    enabled: true,
+    tribunals: Array.isArray(tribunals) && tribunals.length > 0
+      ? tribunals
+      : ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1']
+  }
+
+  lawyers.push(newLawyer)
+  await kv.set(KV_KEY, lawyers)
+
+  res.status(201).json({
+    success: true,
+    message: 'Advogado cadastrado com sucesso',
+    lawyer: newLawyer
+  })
+}
+
+/**
+ * Handler DELETE - Remove advogado
+ */
+async function handleDeleteLawyer(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const kv = getRedis()
+  const { id } = req.query
+
+  if (!id || typeof id !== 'string') {
+    res.status(400).json({
+      success: false,
+      error: 'ID do advogado e obrigatorio'
+    })
+    return
+  }
+
+  const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
+  const filtered = lawyers.filter((l) => l.id !== id)
+
+  if (filtered.length === lawyers.length) {
+    res.status(404).json({
+      success: false,
+      error: 'Advogado nao encontrado'
+    })
+    return
+  }
+
+  await kv.set(KV_KEY, filtered)
+
+  res.status(200).json({
+    success: true,
+    message: 'Advogado removido com sucesso'
+  })
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -64,116 +173,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    const kv = getRedis()
-
-    // =========================
-    // GET - Lista advogados
-    // =========================
     if (req.method === 'GET') {
-      const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
-
-      res.status(200).json({
-        success: true,
-        lawyers,
-        count: lawyers.length
-      })
+      await handleGetLawyers(res)
       return
     }
 
-    // =========================
-    // POST - Adiciona advogado
-    // =========================
     if (req.method === 'POST') {
-      let body: unknown = req.body
-
-      if (typeof body === 'string') {
-        try {
-          body = JSON.parse(body) as LawyerPayload
-        } catch (e) {
-          console.warn('[API Lawyers] Failed to parse JSON body:', e)
-          body = {}
-        }
-      }
-
-      const { name, oab, email, tribunals } = (body || {}) as LawyerPayload
-
-      if (!name || !oab) {
-        res.status(400).json({
-          success: false,
-          error: 'Nome e OAB sao obrigatorios'
-        })
-        return
-      }
-
-      const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
-
-      // Verifica se já existe por OAB (case-insensitive, ignorando espaços)
-      const normalizedOab = oab.replaceAll(/\s+/g, '').toUpperCase()
-      const exists = lawyers.some(
-        (l) => l.oab.replaceAll(/\s+/g, '').toUpperCase() === normalizedOab
-      )
-
-      if (exists) {
-        res.status(400).json({
-          success: false,
-          error: 'Advogado com esta OAB ja cadastrado'
-        })
-        return
-      }
-
-      const newLawyer: MonitoredLawyer = {
-        id: `lawyer-${Date.now()}`,
-        name,
-        oab,
-        email: email || '',
-        enabled: true,
-        tribunals: Array.isArray(tribunals) && tribunals.length > 0
-          ? tribunals
-          : ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1']
-      }
-
-      lawyers.push(newLawyer)
-      await kv.set(KV_KEY, lawyers)
-
-      res.status(201).json({
-        success: true,
-        message: 'Advogado cadastrado com sucesso',
-        lawyer: newLawyer
-      })
+      await handlePostLawyer(req, res)
       return
     }
 
-    // =========================
-    // DELETE - Remove advogado
-    // =========================
     if (req.method === 'DELETE') {
-      const { id } = req.query
-
-      if (!id || typeof id !== 'string') {
-        res.status(400).json({
-          success: false,
-          error: 'ID do advogado e obrigatorio'
-        })
-        return
-      }
-
-      const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEY)) ?? []
-      const filtered = lawyers.filter((l) => l.id !== id)
-
-      if (filtered.length === lawyers.length) {
-        res.status(404).json({
-          success: false,
-          error: 'Advogado nao encontrado'
-        })
-        return
-      }
-
-      await kv.set(KV_KEY, filtered)
-
-      res.status(200).json({
-        success: true,
-        message: 'Advogado removido com sucesso'
-      })
+      await handleDeleteLawyer(req, res)
       return
     }
 

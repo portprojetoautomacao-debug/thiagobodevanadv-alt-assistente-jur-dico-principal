@@ -157,16 +157,98 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   return tasks
 }
 
+/**
+ * Tipo para dados de análise do expediente
+ */
+interface AnalysisData {
+  summary?: string
+  documentType?: string
+  priority?: string
+  deadline?: { days?: number; type?: string; endDate?: string }
+  suggestedActions?: string[]
+  nextSteps?: string[]
+}
+
+/**
+ * Faz parse da resposta JSON da análise ou retorna fallback
+ */
+function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisData {
+  try {
+    const jsonText = responseText.replaceAll(/```json\n?/g, '').replaceAll(/```\n?/g, '').trim()
+    return JSON.parse(jsonText) as AnalysisData
+  } catch {
+    return {
+      summary: responseText || 'Análise concluída',
+      documentType: exp.type || 'Intimação',
+      priority: 'média',
+      deadline: { days: 15, type: 'úteis', endDate: 'Verificar' },
+      suggestedActions: ['Verificar prazo processual', 'Analisar providências'],
+      nextSteps: ['Revisar intimação', 'Preparar resposta se necessário']
+    }
+  }
+}
+
+/**
+ * Gera o texto do rascunho de petição
+ */
+function buildDraftPetition(analysisData: AnalysisData, exp: Expediente): string {
+  const actionsText = (analysisData.suggestedActions || [])
+    .map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')
+  const stepsText = (analysisData.nextSteps || [])
+    .map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')
+
+  return `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
+    `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
+    `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
+    `🚨 PRIORIDADE: ${analysisData.priority || 'média'}\n\n` +
+    `📅 PRAZO: ${analysisData.deadline?.days || 'N/A'} dias ${analysisData.deadline?.type || ''}\n` +
+    `   Data limite: ${analysisData.deadline?.endDate || 'N/A'}\n\n` +
+    `✅ AÇÕES SUGERIDAS:\n${actionsText}\n\n` +
+    `📝 PRÓXIMOS PASSOS:\n${stepsText}`
+}
+
+/**
+ * Cria resultado de análise para integração com calendário
+ */
+function buildCalendarAnalysisResult(
+  analysisData: AnalysisData,
+  exp: Expediente
+): IntimationAnalysisResult {
+  const result: IntimationAnalysisResult = {
+    summary: analysisData.summary || 'Intimação analisada',
+    deadline: analysisData.deadline,
+    priority: (analysisData.priority?.toLowerCase() || 'média') as 'baixa' | 'média' | 'alta' | 'crítica',
+    nextSteps: analysisData.nextSteps || analysisData.suggestedActions,
+    suggestedAction: analysisData.suggestedActions?.[0],
+    processNumber: exp.numeroProcesso,
+    court: exp.tribunal,
+    documentType: analysisData.documentType || exp.type
+  }
+
+  // Calcular data limite se não estiver presente
+  if (!result.deadline?.endDate && result.deadline?.days) {
+    const hoje = new Date()
+    const diasParaAdicionar = result.deadline.days
+    const dataLimite = new Date(hoje)
+    dataLimite.setDate(dataLimite.getDate() + diasParaAdicionar)
+    result.deadline.endDate = dataLimite.toISOString()
+  }
+
+  return result
+}
+
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
   const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
-  const setSelectedTask = useState<string | null>(null)[1]
+  // Estado temporário para task selecionada (usado no futuro para UI de detalhes)
+  const [selectedTask, setSelectedTask] = useState<string | null>(null) // NOSONAR - value reserved for future UI
   const [loading, setLoading] = useState(false)
   const [lastSync, setLastSync] = useState<string | null>(null)
-  const [, setLawyersCount] = useState(0)
+  // Contador de advogados configurados (reservado para estatísticas futuras)
+  const [lawyersCount, setLawyersCount] = useState(0) // NOSONAR - value reserved for future statistics
 
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false)
@@ -268,21 +350,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
       const data = await response.json()
       const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
-
-      let analysisData
-      try {
-        const jsonText = responseText.replaceAll(/```json\n?/g, '').replaceAll(/```\n?/g, '').trim()
-        analysisData = JSON.parse(jsonText)
-      } catch {
-        analysisData = {
-          summary: responseText || 'Análise concluída',
-          documentType: exp.type || 'Intimação',
-          priority: 'média',
-          deadline: { days: 15, type: 'úteis', endDate: 'Verificar' },
-          suggestedActions: ['Verificar prazo processual', 'Analisar providências'],
-          nextSteps: ['Revisar intimação', 'Preparar resposta se necessário']
-        }
-      }
+      const analysisData = parseAnalysisResponse(responseText, exp)
 
       const analyzedExp: Expediente = {
         ...exp,
@@ -292,14 +360,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
         pendingDocs: analysisData.nextSteps || [],
         deadline: analysisData.deadline,
         priority: mapPriority(analysisData.priority),
-        draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
-          `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
-          `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
-          `🚨 PRIORIDADE: ${analysisData.priority || 'média'}\n\n` +
-          `📅 PRAZO: ${analysisData.deadline?.days || 'N/A'} dias ${analysisData.deadline?.type || ''}\n` +
-          `   Data limite: ${analysisData.deadline?.endDate || 'N/A'}\n\n` +
-          `✅ AÇÕES SUGERIDAS:\n${(analysisData.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
-          `📝 PRÓXIMOS PASSOS:\n${(analysisData.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
+        draftPetition: buildDraftPetition(analysisData, exp)
       }
 
       // Criar tarefas para outros agentes com base na análise
@@ -330,54 +391,7 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
 
       // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
       if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
-        try {
-          const analysisResult: IntimationAnalysisResult = {
-            summary: analysisData.summary || 'Intimação analisada',
-            deadline: analysisData.deadline,
-            priority: (analysisData.priority?.toLowerCase() || 'média') as 'baixa' | 'média' | 'alta' | 'crítica',
-            nextSteps: analysisData.nextSteps || analysisData.suggestedActions,
-            suggestedAction: analysisData.suggestedActions?.[0],
-            processNumber: exp.numeroProcesso,
-            court: exp.tribunal,
-            documentType: analysisData.documentType || exp.type
-          }
-
-          // Calcular data limite se não estiver presente
-          if (!analysisResult.deadline?.endDate && analysisResult.deadline?.days) {
-            const hoje = new Date()
-            const diasParaAdicionar = analysisResult.deadline.days
-            const dataLimite = new Date(hoje)
-            dataLimite.setDate(dataLimite.getDate() + diasParaAdicionar)
-            analysisResult.deadline.endDate = dataLimite.toISOString()
-          }
-
-          const localAppointment = createLocalAppointmentFromAnalysis(
-            analysisResult,
-            `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
-          )
-
-          if (localAppointment) {
-            // Verificar se já existe
-            const existingAppt = (appointments || []).find(apt =>
-              apt.date === localAppointment.date &&
-              apt.title.includes(exp.numeroProcesso?.substring(0, 15) || '')
-            )
-
-            if (!existingAppt) {
-              setAppointments(current => [...(current || []), localAppointment])
-              setDeadlinesCreated(prev => prev + 1)
-              console.log('[ExpedientePanel] Prazo adicionado ao calendário:', localAppointment.title)
-
-              // Tentar sincronizar com Google Calendar em background
-              syncDeadlineToGoogleCalendar(
-                analysisResult,
-                `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
-              ).catch(err => console.warn('[ExpedientePanel] Sync com Google Calendar falhou:', err))
-            }
-          }
-        } catch (calendarError) {
-          console.warn('[ExpedientePanel] Erro ao criar prazo no calendário:', calendarError)
-        }
+        createCalendarDeadline(exp, analysisData)
       }
 
       return analyzedExp
@@ -386,6 +400,41 @@ ${exp.content || exp.teor || 'Sem conteúdo'}`
       throw error
     }
   }, [addTask, appointments, setAppointments, setDeadlinesCreated, agents])
+
+  /**
+   * Cria prazo no calendário com base na análise do expediente
+   */
+  const createCalendarDeadline = useCallback((exp: Expediente, analysisData: AnalysisData): void => {
+    try {
+      const analysisResult = buildCalendarAnalysisResult(analysisData, exp)
+      const localAppointment = createLocalAppointmentFromAnalysis(
+        analysisResult,
+        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
+      )
+
+      if (!localAppointment) return
+
+      // Verificar se já existe
+      const existingAppt = (appointments || []).find(apt =>
+        apt.date === localAppointment.date &&
+        apt.title.includes(exp.numeroProcesso?.substring(0, 15) || '')
+      )
+
+      if (existingAppt) return
+
+      setAppointments(current => [...(current || []), localAppointment])
+      setDeadlinesCreated(prev => prev + 1)
+      console.log('[ExpedientePanel] Prazo adicionado ao calendário:', localAppointment.title)
+
+      // Tentar sincronizar com Google Calendar em background
+      syncDeadlineToGoogleCalendar(
+        analysisResult,
+        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
+      ).catch(err => console.warn('[ExpedientePanel] Sync com Google Calendar falhou:', err))
+    } catch (calendarError) {
+      console.warn('[ExpedientePanel] Erro ao criar prazo no calendário:', calendarError)
+    }
+  }, [appointments, setAppointments, setDeadlinesCreated])
 
   // Análise automática de todos os expedientes pendentes
   const runAutoAnalysis = useCallback(async () => {

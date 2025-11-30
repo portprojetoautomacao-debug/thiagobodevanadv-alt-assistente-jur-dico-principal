@@ -19,6 +19,21 @@ import {
 } from '@phosphor-icons/react'
 import type { Process, FinancialEntry } from '@/types'
 
+// Função auxiliar para conteúdo de streaming
+function getMessageContent(
+  message: { id: string; content: string },
+  streamingMessageId: string | null,
+  isStreaming: boolean,
+  streamingContent: string
+): string {
+  if (message.id === streamingMessageId && isStreaming) {
+    return streamingContent || '▋'
+  }
+  if (message.content) return message.content
+  if (message.id === streamingMessageId) return '▋'
+  return ''
+}
+
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -302,168 +317,6 @@ export default function HarveySpecter() {
       },
     ]
   }
-
-  // Unused function
-  // const generateResponse = async (userQuery: string): Promise<string> => {
-  //   try {
-  //     // Construir contexto com dados REAIS
-  //     const contextData = realStats.hasData
-  //       ? `Contexto REAL do escritório (dados do sistema):
-  // - ${realStats.totalProcesses} processos cadastrados
-  //   - Em Andamento: ${realStats.processesByStatus['Em Andamento']}
-  //   - Aguardando: ${realStats.processesByStatus['Aguardando']}
-  //   - Concluídos: ${realStats.processesByStatus['Concluído']}
-  //   - Arquivados: ${realStats.processesByStatus['Arquivado']}
-  // - ${realStats.urgentDeadlines} prazos urgentes (próximas 48h)
-  // - ${realStats.upcomingDeadlines} prazos nos próximos 7 dias
-  // - Receita do mês: R$ ${realStats.receita.toLocaleString('pt-BR')}
-  // - Despesas do mês: R$ ${realStats.despesas.toLocaleString('pt-BR')}
-  // - Margem: ${realStats.margem}%
-  // - ${realStats.pendingTasks} tarefas pendentes
-  // - ${realStats.inProgressTasks} tarefas em progresso`
-  //       : `Contexto: O sistema ainda não possui dados cadastrados. O usuário precisa cadastrar processos, registros financeiros e tarefas para ter informações reais.`
-
-  //     const systemPrompt = `Você é Harvey Specter, um assistente jurídico inteligente e estratégico de um escritório de advocacia.
-
-  // ${contextData}
-
-  // IMPORTANTE: 
-  // - Use APENAS os dados fornecidos acima. NÃO invente dados.
-  // - Se não houver dados, informe que o usuário precisa cadastrar informações.
-  // - Seja honesto sobre a situação real do sistema.
-  // - Responda de forma profissional, objetiva e com insights estratégicos baseados nos dados REAIS.
-  // - Use markdown para formatação. Seja direto e forneça recomendações acionáveis quando relevante.`
-
-  //     // Chamada via fetch para /_spark/llm (proxy para Gemini/OpenAI)
-  //     const controller = new AbortController()
-  //     const timeout = setTimeout(() => controller.abort(), 25000)
-
-  //     try {
-  //       const response = await fetch('/_spark/llm', {
-  //         method: 'POST',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify({
-  //           model: 'gpt-4o-mini',
-  //           messages: [
-  //             { role: 'system', content: systemPrompt },
-  //             { role: 'user', content: userQuery }
-  //           ],
-  //           temperature: 0.7,
-  //           max_tokens: 2000
-  //         }),
-  //         signal: controller.signal
-  //       })
-
-  //       clearTimeout(timeout)
-
-  //       if (!response.ok) {
-  //         throw new Error(`LLM API error: ${response.status}`)
-  //       }
-
-  //       const data = await response.json()
-  //       const content = data.choices?.[0]?.message?.content
-
-  //       if (!content) {
-  //         throw new Error('Empty response from LLM')
-  //       }
-
-  //       return content
-  //     } finally {
-  //       clearTimeout(timeout)
-  //     }
-  //   } catch (error) {
-  //     console.error('LLM Error:', error)      // Fallback com dados REAIS
-  //     const lowerQuery = userQuery.toLowerCase()
-
-  //     if (!realStats.hasData) {
-  //       return `**Sistema sem dados cadastrados**
-
-  // Ainda não há processos, registros financeiros ou tarefas cadastrados no sistema.
-
-  // **Para começar:**
-  // 1. Acesse **Acervo (CRM)** para cadastrar processos
-  // 2. Use **Financeiro** para registrar receitas e despesas
-  // 3. Gerencie tarefas em **Expedientes**
-
-  // Assim que houver dados, poderei fornecer análises e insights reais sobre seu escritório.`
-  //     }
-
-  //     if (lowerQuery.includes('processo') || lowerQuery.includes('acervo') || lowerQuery.includes('status')) {
-  //       return `**Status dos Processos**
-
-  // 📊 **Total cadastrado:** ${realStats.totalProcesses} processos
-
-  // **Por status:**
-  // • Em Andamento: ${realStats.processesByStatus['Em Andamento']}
-  // • Aguardando: ${realStats.processesByStatus['Aguardando']}
-  // • Concluídos: ${realStats.processesByStatus['Concluído']}
-  // • Arquivados: ${realStats.processesByStatus['Arquivado']}
-
-  // ${realStats.urgentDeadlines > 0 ? `⚠️ **Atenção:** ${realStats.urgentDeadlines} processo(s) com prazo nas próximas 48h` : '✅ Nenhum prazo urgente nas próximas 48h'}`
-  //     }
-
-  //     if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent')) {
-  //       return `**Prazos e Deadlines**
-
-  // ${realStats.urgentDeadlines > 0
-  //           ? `⚠️ **URGENTE:** ${realStats.urgentDeadlines} prazo(s) nas próximas 48h`
-  //           : '✅ Nenhum prazo urgente nas próximas 48h'}
-
-  // 📅 **Próximos 7 dias:** ${realStats.upcomingDeadlines} prazo(s)
-
-  // ${realStats.urgentDeadlines > 0
-  //           ? '**Recomendação:** Acesse o CRM para verificar os processos com prazos urgentes.'
-  //           : 'Situação tranquila em relação a prazos.'}`
-  //     }
-
-  //     if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
-  //       const lucro = realStats.receita - realStats.despesas
-  //       return `**Resumo Financeiro - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**
-
-  // 📊 **Receita:** R$ ${realStats.receita.toLocaleString('pt-BR')}
-  // 💰 **Despesas:** R$ ${realStats.despesas.toLocaleString('pt-BR')}
-  // 💎 **Lucro:** R$ ${lucro.toLocaleString('pt-BR')} (${realStats.margem}% margem)
-
-  // ${realStats.receita === 0 && realStats.despesas === 0
-  //           ? '⚠️ Nenhum registro financeiro neste mês. Cadastre receitas e despesas em **Financeiro**.'
-  //           : lucro > 0 ? '✅ Resultado positivo no mês.' : '⚠️ Despesas maiores que receitas.'}`
-  //     }
-
-  //     if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente') || lowerQuery.includes('equipe')) {
-  //       return `**Tarefas**
-
-  // 📋 **Pendentes:** ${realStats.pendingTasks}
-  // 🔄 **Em progresso:** ${realStats.inProgressTasks}
-
-  // ${realStats.pendingTasks + realStats.inProgressTasks === 0
-  //           ? 'Nenhuma tarefa cadastrada. Use **Expedientes** para gerenciar tarefas.'
-  //           : 'Acesse **Expedientes** para gerenciar suas tarefas.'}`
-  //     }
-
-  //     if (lowerQuery.includes('ajuda') || lowerQuery.includes('fazer') || lowerQuery.includes('oi') || lowerQuery.includes('olá')) {
-  //       return `Olá! Sou o Harvey Specter, seu assistente jurídico. 
-
-  // **Posso ajudar com:**
-  // • Status dos seus processos cadastrados
-  // • Alertas de prazos urgentes
-  // • Resumo financeiro do mês
-  // • Visão geral de tarefas
-
-  // **Dica:** Quanto mais dados você cadastrar no sistema, mais úteis serão minhas análises!
-
-  // O que você gostaria de saber?`
-  //     }
-
-  //     return `Olá! Sou o Harvey Specter, seu assistente jurídico.
-
-  // **Seu escritório agora:**
-  // • ${realStats.totalProcesses} processos cadastrados
-  // • ${realStats.urgentDeadlines} prazos urgentes
-  // • Receita do mês: R$ ${realStats.receita.toLocaleString('pt-BR')}
-
-  // Como posso ajudar?`
-  //   }
-  // }
 
   // Constrói o system prompt com contexto real
   const buildSystemPrompt = useCallback(() => {
@@ -772,9 +625,7 @@ IMPORTANTE:
                     >
                       <div className="whitespace-pre-wrap text-sm">
                         {/* Mostra streaming content se esta é a mensagem sendo streamada */}
-                        {message.id === streamingMessageId && isStreaming
-                          ? (streamingContent || '▋')
-                          : message.content || (message.id === streamingMessageId ? '▋' : '')}
+                        {getMessageContent(message, streamingMessageId, isStreaming, streamingContent)}
                         {/* Cursor piscante durante streaming */}
                         {message.id === streamingMessageId && isStreaming && (
                           <span className="animate-pulse">▋</span>

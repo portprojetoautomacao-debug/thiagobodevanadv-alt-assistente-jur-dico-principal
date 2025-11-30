@@ -14,7 +14,7 @@ echo "   $SETTINGS_FILE"
 echo ""
 
 # Verificar se o arquivo existe
-if [ ! -f "$SETTINGS_FILE" ]; then
+if [[ ! -f "$SETTINGS_FILE" ]]; then
     echo "❌ Arquivo de configurações não encontrado!"
     echo "   Criando arquivo com configurações padrão..."
     mkdir -p "$(dirname "$SETTINGS_FILE")"

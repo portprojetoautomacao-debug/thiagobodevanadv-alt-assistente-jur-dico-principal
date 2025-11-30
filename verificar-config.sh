@@ -22,8 +22,8 @@ check_env() {
     local var_value=${!var_name}
     local is_required=${2:-true}
     
-    if [ -z "$var_value" ]; then
-        if [ "$is_required" = true ]; then
+    if [[ -z "$var_value" ]]; then
+        if [[ "$is_required" = true ]]; then
             echo -e "${RED}✗${NC} $var_name: ${RED}NÃO CONFIGURADA${NC} (obrigatória)"
             ((ERRORS++))
         else
@@ -62,14 +62,14 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verificar runtime.config.json
-if [ -f "runtime.config.json" ]; then
+if [[ -f "runtime.config.json" ]]; then
     RUNTIME_ID=$(grep -o '"app": "[^"]*"' runtime.config.json | cut -d'"' -f4)
-    if [ ! -z "$RUNTIME_ID" ]; then
+    if [[ ! -z "$RUNTIME_ID" ]]; then
         echo -e "${GREEN}✓${NC} runtime.config.json encontrado"
         echo "  Runtime ID: $RUNTIME_ID"
         
         # Comparar com variável de ambiente
-        if [ ! -z "$GITHUB_RUNTIME_PERMANENT_NAME" ] && [ "$GITHUB_RUNTIME_PERMANENT_NAME" != "$RUNTIME_ID" ]; then
+        if [[ ! -z "$GITHUB_RUNTIME_PERMANENT_NAME" ]] && [ "$GITHUB_RUNTIME_PERMANENT_NAME" != "$RUNTIME_ID" ]]; then
             echo -e "${YELLOW}⚠${NC} AVISO: GITHUB_RUNTIME_PERMANENT_NAME ($GITHUB_RUNTIME_PERMANENT_NAME) diferente do runtime.config.json ($RUNTIME_ID)"
             ((WARNINGS++))
         fi
@@ -84,14 +84,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Resumo
-if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
+if [[ $ERRORS -eq 0 ]] && [ $WARNINGS -eq 0 ]]; then
     echo -e "${GREEN}✅ Todas as configurações estão corretas!${NC}"
     echo ""
     echo "Próximos passos:"
     echo "1. Adicione estas variáveis no Vercel (Settings → Environment Variables)"
     echo "2. Faça o redeploy do aplicativo"
     exit 0
-elif [ $ERRORS -eq 0 ]; then
+elif [[ $ERRORS -eq 0 ]]; then
     echo -e "${YELLOW}⚠️  Configuração completa com $WARNINGS aviso(s)${NC}"
     echo ""
     echo "As variáveis obrigatórias estão configuradas, mas há avisos."

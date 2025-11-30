@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Carregar token do GitLab
-if [ -f ".gitlab-token" ]; then
+if [[ -f ".gitlab-token" ]]; then
     source .gitlab-token
 else
     echo -e "${RED}❌ Arquivo .gitlab-token não encontrado${NC}"
@@ -38,7 +38,7 @@ create_agent_token() {
 
     # Verificar se foi criado com sucesso
     local token=$(echo "$response" | jq -r '.token // empty')
-    if [ -n "$token" ]; then
+    if [[ -n "$token" ]]; then
         echo -e "  ${GREEN}✅ Token criado com sucesso${NC}"
 
         # Salvar token em arquivo seguro
