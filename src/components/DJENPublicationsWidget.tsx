@@ -175,7 +175,7 @@ function registerClientFromParties(
   ctx: RegistrationContext
 ): void {
   if (!parties.autor || parties.autor === 'Não identificado') return
-  
+
   const location = parseOrgaoLocation(pub.orgao)
   ctx.createOrUpdateFromDjenIntimacao({
     nomeCliente: parties.autor,
