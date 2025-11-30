@@ -593,7 +593,7 @@ export const DEFAULT_AGENTS: Agent[] = [
  * - se existir estado anterior, faz merge preservando preferências do usuário
  */
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
-  const essentialAgents: AgentId[] = [
+  const essentialAgents = new Set<AgentId>([
     'harvey',
     'justine',
     'analise-documental',
@@ -603,15 +603,15 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
     'pesquisa-juris',
     'analise-risco',
     'estrategia-processual'
-  ]
+  ])
 
   // Sem agentes existentes → usa defaults
   if (!existingAgents || existingAgents.length === 0) {
     return DEFAULT_AGENTS.map(agent => ({
       ...agent,
       status: 'idle' as const,
-      enabled: essentialAgents.includes(agent.id as AgentId),
-      lastActivity: essentialAgents.includes(agent.id as AgentId)
+      enabled: essentialAgents.has(agent.id as AgentId),
+      lastActivity: essentialAgents.has(agent.id as AgentId)
         ? 'Pronto para análise'
         : 'Aguardando ativação'
     }))
@@ -634,8 +634,8 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
     return {
       ...defaultAgent,
       status: 'idle' as const,
-      enabled: essentialAgents.includes(defaultAgent.id as AgentId),
-      lastActivity: essentialAgents.includes(defaultAgent.id as AgentId)
+      enabled: essentialAgents.has(defaultAgent.id as AgentId),
+      lastActivity: essentialAgents.has(defaultAgent.id as AgentId)
         ? 'Pronto para análise'
         : 'Aguardando ativação'
     }

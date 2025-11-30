@@ -25,6 +25,16 @@ const debugError = (message: string, error?: unknown) => {
   console.error(`[GoogleCalendar] ERROR: ${message}`, error ?? '')
 }
 
+/**
+ * Get appointment type from deadline type
+ */
+function getAppointmentType(type?: string): 'prazo' | 'audiencia' | 'reuniao' | 'outro' {
+  if (type === 'prazo') return 'prazo'
+  if (type === 'audiencia') return 'audiencia'
+  if (type === 'reuniao') return 'reuniao'
+  return 'outro'
+}
+
 export interface GoogleCalendarEvent {
   id?: string
   summary: string
@@ -526,14 +536,7 @@ class GoogleCalendarService {
       ]
         .filter(Boolean)
         .join('\n'),
-      type:
-        deadline.type === 'prazo'
-          ? 'prazo'
-          : deadline.type === 'audiencia'
-            ? 'audiencia'
-            : deadline.type === 'reuniao'
-              ? 'reuniao'
-              : 'outro',
+      type: getAppointmentType(deadline.type),
       date: deadlineDate.toISOString().split('T')[0],
       time: '09:00', // Padrão manhã para prazos
       duration: 60,

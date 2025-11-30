@@ -9,6 +9,14 @@ interface NotificationPreferences {
   financialAlerts: boolean
 }
 
+/**
+ * Build notification body with prazo info
+ */
+function buildPrazoBody(prazo: Prazo, suffix: string): string {
+  const processInfo = prazo.processId ? ` (${prazo.processId})` : ''
+  return `${prazo.descricao}${processInfo} ${suffix}`
+}
+
 export function useNotifications() {
   // CORRIGIDO: Buscar prazos dos PROCESSOS (onde realmente estão salvos)
   const [processes] = useKV<Process[]>('processes', [])
@@ -67,28 +75,28 @@ export function useNotifications() {
 
         if (diasRestantes === 7) {
           new Notification('⚖️ Prazo em 7 dias', {
-            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence em uma semana`,
+            body: buildPrazoBody(prazo, 'vence em uma semana'),
             icon: '/icon-192.png',
             tag: `prazo-7-${prazo.id}`,
             requireInteraction: false,
           })
         } else if (diasRestantes === 2) {
           new Notification('⚠️ Prazo em 2 dias!', {
-            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence em 2 dias`,
+            body: buildPrazoBody(prazo, 'vence em 2 dias'),
             icon: '/icon-192.png',
             tag: `prazo-2-${prazo.id}`,
             requireInteraction: true,
           })
         } else if (diasRestantes === 1) {
           new Notification('🚨 Prazo AMANHÃ!', {
-            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence amanhã!`,
+            body: buildPrazoBody(prazo, 'vence amanhã!'),
             icon: '/icon-192.png',
             tag: `prazo-1-${prazo.id}`,
             requireInteraction: true,
           })
         } else if (diasRestantes === 0) {
           new Notification('🔴 PRAZO HOJE!', {
-            body: `${prazo.descricao}${prazo.processoNumero ? ` (${prazo.processoNumero})` : ''} vence HOJE!`,
+            body: buildPrazoBody(prazo, 'vence HOJE!'),
             icon: '/icon-192.png',
             tag: `prazo-0-${prazo.id}`,
             requireInteraction: true,
@@ -110,7 +118,7 @@ export function useNotifications() {
 
     const permission = await Notification.requestPermission()
     if (permission === 'granted') {
-      setPreferences((current) => ({ 
+      setPreferences((current) => ({
         enabled: true,
         prazoAlerts: current?.prazoAlerts ?? true,
         agentAlerts: current?.agentAlerts ?? true,

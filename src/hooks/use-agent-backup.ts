@@ -115,7 +115,7 @@ export function useAgentBackup(options: BackupOptions) {
       const history = historyStr ? JSON.parse(historyStr) : [];
 
       const lastBackupStr = localStorage.getItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`);
-      const lastBackup = lastBackupStr ? parseInt(lastBackupStr) : null;
+      const lastBackup = lastBackupStr ? Number.parseInt(lastBackupStr, 10) : null;
 
       return {
         success: true,
