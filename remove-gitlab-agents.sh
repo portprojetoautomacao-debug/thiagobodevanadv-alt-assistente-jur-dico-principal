@@ -75,11 +75,11 @@ list_agents_for_removal() {
     echo "=============================================="
 
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
             config_file="$agent_dir/config.yaml"
 
-            if [ -f "$config_file" ]; then
+            if [[ -f "$config_file" ]]; then
                 echo "• $agent_name (configurado)"
             else
                 echo "• $agent_name (sem config)"
@@ -127,7 +127,7 @@ remove_agent_graphql() {
 
     read -p "Digite o nome do agente para remover: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
@@ -183,7 +183,7 @@ cleanup_cluster_resources() {
 
     read -p "Digite o nome do agente removido: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
@@ -195,7 +195,7 @@ cleanup_cluster_resources() {
 
     read -p "Tem certeza? Digite 'SIM' para confirmar: " confirm
 
-    if [ "$confirm" != "SIM" ]; then
+    if [[ "$confirm" != "SIM" ]]; then
         warning "Operação cancelada"
         return
     fi
@@ -212,11 +212,11 @@ cleanup_cluster_resources() {
     # Remover recursos específicos do agente
     resources_file="k8s/agents/$agent_name/resources.yml"
 
-    if [ -f "$resources_file" ]; then
+    if [[ -f "$resources_file" ]]; then
         echo "📄 Removendo recursos do arquivo: $resources_file"
         kubectl delete -f "$resources_file" --ignore-not-found=true
 
-        if [ $? -eq 0 ]; then
+        if [[ $? -eq 0 ]]; then
             success "Recursos do agente removidos do cluster"
         else
             error "Erro ao remover recursos do cluster"
@@ -231,7 +231,7 @@ cleanup_cluster_resources() {
 
         # Remover secrets relacionados
         secrets=$(kubectl get secrets -n "$namespace" --no-headers 2>/dev/null | grep "$agent_name" | awk '{print $1}')
-        if [ -n "$secrets" ]; then
+        if [[ -n "$secrets" ]]; then
             echo "🔒 Removendo secrets relacionados:"
             echo "$secrets" | while read -r secret; do
                 kubectl delete secret "$secret" -n "$namespace" --ignore-not-found=true
@@ -241,7 +241,7 @@ cleanup_cluster_resources() {
 
         # Remover configmaps relacionados
         configmaps=$(kubectl get configmaps -n "$namespace" --no-headers 2>/dev/null | grep "$agent_name" | awk '{print $1}')
-        if [ -n "$configmaps" ]; then
+        if [[ -n "$configmaps" ]]; then
             echo "📋 Removendo configmaps relacionados:"
             echo "$configmaps" | while read -r cm; do
                 kubectl delete configmap "$cm" -n "$namespace" --ignore-not-found=true
@@ -252,7 +252,7 @@ cleanup_cluster_resources() {
 
     # Verificar se namespace gitlab-agent está vazio
     pod_count=$(kubectl get pods -n gitlab-agent --no-headers 2>/dev/null | wc -l)
-    if [ "$pod_count" -eq 0 ]; then
+    if [[ "$pod_count" -eq 0 ]]; then
         echo ""
         warning "Namespace gitlab-agent está vazio"
         read -p "Deseja remover o namespace também? (y/N): " remove_ns
@@ -272,14 +272,14 @@ remove_local_files() {
 
     read -p "Digite o nome do agente: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
 
     agent_dir=".gitlab/agents/$agent_name"
 
-    if [ -d "$agent_dir" ]; then
+    if [[ -d "$agent_dir" ]]; then
         echo "🗑️  Removendo diretório: $agent_dir"
 
         read -p "Confirmar remoção dos arquivos locais? (y/N): " confirm
@@ -311,7 +311,7 @@ verify_removal() {
 
     read -p "Digite o nome do agente removido: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
@@ -328,7 +328,7 @@ verify_removal() {
 
     # Verificar arquivos locais
     agent_dir=".gitlab/agents/$agent_name"
-    if [ -d "$agent_dir" ]; then
+    if [[ -d "$agent_dir" ]]; then
         error "❌ Arquivos locais ainda existem: $agent_dir"
     else
         success "✅ Arquivos locais removidos: $agent_dir"
@@ -340,7 +340,7 @@ verify_removal() {
 
         # Verificar pods
         pod_count=$(kubectl get pods -n "$namespace" --no-headers 2>/dev/null | grep "$agent_name" | wc -l)
-        if [ "$pod_count" -eq 0 ]; then
+        if [[ "$pod_count" -eq 0 ]]; then
             success "✅ Pods do agente removidos do cluster"
         else
             error "❌ Ainda existem $pod_count pods do agente no cluster"
@@ -350,10 +350,10 @@ verify_removal() {
         echo ""
         echo "📜 Verificando logs do agente restante:"
         pods=$(kubectl get pods -n "$namespace" --no-headers 2>/dev/null | awk '{print $1}')
-        if [ -n "$pods" ]; then
+        if [[ -n "$pods" ]]; then
             for pod in $pods; do
                 log_count=$(kubectl logs "$pod" -n "$namespace" 2>/dev/null | grep -c "unauthenticated" || echo "0")
-                if [ "$log_count" -gt 0 ]; then
+                if [[ "$log_count" -gt 0 ]]; then
                     success "✅ Agente $pod desconectado (logs de unauthenticated encontrados)"
                 fi
             done

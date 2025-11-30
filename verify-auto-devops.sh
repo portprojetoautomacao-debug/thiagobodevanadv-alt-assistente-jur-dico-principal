@@ -95,16 +95,16 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "3️⃣  VERIFICANDO ARQUIVOS KUBERNETES"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -d "k8s" ]; then
+if [[ -d "k8s" ]]; then
     check_pass "Diretório k8s/ existe"
     
-    if [ -f "k8s/deployment.yaml" ]; then
+    if [[ -f "k8s/deployment.yaml" ]]; then
         check_pass "k8s/deployment.yaml encontrado"
     else
         check_warn "k8s/deployment.yaml não encontrado"
     fi
     
-    if [ -f "k8s/service.yaml" ]; then
+    if [[ -f "k8s/service.yaml" ]]; then
         check_pass "k8s/service.yaml encontrado"
     else
         check_info "k8s/service.yaml não encontrado (pode estar em deployment.yaml)"
@@ -126,7 +126,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "4️⃣  VERIFICANDO DOCKER/CONTAINER REGISTRY"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -f "Dockerfile" ]; then
+if [[ -f "Dockerfile" ]]; then
     check_pass "Dockerfile encontrado"
 else
     check_fail "Dockerfile NÃO encontrado"
@@ -211,7 +211,7 @@ echo -e "${RED}❌ Erros:    $ERRORS${NC}"
 
 echo ""
 
-if [ $ERRORS -gt 5 ]; then
+if [[ $ERRORS -gt 5 ]]; then
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${RED}❌ AUTO DEVOPS NÃO ESTÁ CONFIGURADO${NC}"
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -224,7 +224,7 @@ if [ $ERRORS -gt 5 ]; then
     echo "   3. Configure cluster Kubernetes"
     echo "   4. Adicione build e push de Docker"
     echo ""
-elif [ $ERRORS -gt 0 ]; then
+elif [[ $ERRORS -gt 0 ]]; then
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}⚠️  AUTO DEVOPS PARCIALMENTE CONFIGURADO${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

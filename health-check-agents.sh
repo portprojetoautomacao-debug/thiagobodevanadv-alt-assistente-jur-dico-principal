@@ -59,7 +59,7 @@ check_agent_pods() {
 
         # Verificar pods
         pod_count=$(kubectl get pods -n gitlab-agent --no-headers 2>/dev/null | wc -l)
-        if [ "$pod_count" -gt 0 ]; then
+        if [[ "$pod_count" -gt 0 ]]; then
             success "Pods do agente encontrados: $pod_count"
 
             echo "📊 Status dos pods:"
@@ -88,14 +88,14 @@ check_agent_configs() {
     issues_found=0
 
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
             config_file="$agent_dir/config.yaml"
 
             echo ""
             echo "🤖 Verificando agente: $agent_name"
 
-            if [ -f "$config_file" ]; then
+            if [[ -f "$config_file" ]]; then
                 success "Arquivo config.yaml encontrado"
 
                 # Verificar ci_access
@@ -127,7 +127,7 @@ check_agent_configs() {
     done
 
     echo ""
-    if [ "$issues_found" -eq 0 ]; then
+    if [[ "$issues_found" -eq 0 ]]; then
         success "Todas as configurações estão OK"
     else
         warning "Encontrados $issues_found problemas de configuração"
@@ -140,7 +140,7 @@ check_rbac() {
 
     rbac_file="k8s/shared/rbac-security.yaml"
 
-    if [ -f "$rbac_file" ]; then
+    if [[ -f "$rbac_file" ]]; then
         success "Arquivo RBAC encontrado"
 
         # Verificar se foi aplicado
@@ -191,7 +191,7 @@ check_agent_logs() {
     if kubectl get pods -n gitlab-agent &>/dev/null; then
         pod_name=$(kubectl get pods -n gitlab-agent -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
 
-        if [ -n "$pod_name" ]; then
+        if [[ -n "$pod_name" ]]; then
             echo "📜 Últimas 20 linhas dos logs do pod: $pod_name"
             echo "=================================================="
             kubectl logs --tail=20 -n gitlab-agent "$pod_name" 2>/dev/null || warning "Erro ao obter logs"
@@ -253,9 +253,9 @@ main() {
     echo "✅ Verificações aprovadas: $checks_passed/$total_checks"
     echo ""
 
-    if [ "$checks_passed" -eq "$total_checks" ]; then
+    if [[ "$checks_passed" -eq "$total_checks" ]]; then
         success "Sistema saudável!"
-    elif [ "$checks_passed" -ge 4 ]; then
+    elif [[ "$checks_passed" -ge 4 ]]; then
         warning "Sistema com alguns problemas menores"
     else
         error "Sistema com problemas críticos"

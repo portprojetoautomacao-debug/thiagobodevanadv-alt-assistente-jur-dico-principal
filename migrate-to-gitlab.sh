@@ -151,7 +151,7 @@ if [[ $REPLY =~ ^[Ss]$ ]]; then
     echo ""
     read -p "📝 Digite a URL do repositório GitLab (https://gitlab.com/SEU_USUARIO/assistente-juridico-p.git): " GITLAB_URL
 
-    if [ -z "$GITLAB_URL" ]; then
+    if [[ -z "$GITLAB_URL" ]]; then
         echo "❌ URL não fornecida. Saindo..."
         exit 1
     fi

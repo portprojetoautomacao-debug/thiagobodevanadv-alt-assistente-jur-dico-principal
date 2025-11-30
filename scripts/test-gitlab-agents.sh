@@ -38,14 +38,14 @@ for agent_info in "${AGENTS_TO_TEST[@]}"; do
     # Verificar se o pod existe
     pod_count=$(kubectl get pods -n "$namespace" --no-headers 2>/dev/null | grep -c gitlab-agent || echo "0")
 
-    if [ "$pod_count" -gt "0" ]; then
+    if [[ "$pod_count" -gt "0" ]]; then
         echo "  ✅ Pod encontrado no namespace $namespace"
 
         # Verificar status do pod
         pod_status=$(kubectl get pods -n "$namespace" --no-headers | grep gitlab-agent | awk '{print $3}')
         echo "  📊 Status do pod: $pod_status"
 
-        if [ "$pod_status" == "Running" ]; then
+        if [[ "$pod_status" == "Running" ]]; then
             echo "  ✅ Agente $agent_name está rodando!"
         else
             echo "  ⚠️  Agente $agent_name com status: $pod_status"
@@ -76,7 +76,7 @@ for agent_info in "${AGENTS_TO_TEST[@]}"; do
     IFS=':' read -r agent_name namespace <<< "$agent_info"
 
     pod_count=$(kubectl get pods -n "$namespace" --no-headers 2>/dev/null | grep -c gitlab-agent || echo "0")
-    if [ "$pod_count" -gt "0" ]; then
+    if [[ "$pod_count" -gt "0" ]]; then
         echo "  ✅ $namespace: Agente presente"
     else
         echo "  ❌ $namespace: Agente ausente"
