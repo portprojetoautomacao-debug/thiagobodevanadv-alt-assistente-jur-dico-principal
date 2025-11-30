@@ -19,6 +19,37 @@ const runtimeFetch = async (...args: Parameters<typeof fetch>): Promise<Response
   return f(...args)
 }
 
+/**
+ * Determina a baseUrl para chamadas internas
+ */
+function getBaseUrl(hostHeader: string): string {
+  const vercelUrl = process.env.VERCEL_URL?.trim()
+
+  if (vercelUrl && vercelUrl.length > 0) {
+    return `https://${vercelUrl}`
+  }
+
+  if (process.env.NODE_ENV === 'production' && hostHeader) {
+    return `https://${hostHeader}`
+  }
+
+  return 'http://localhost:3000'
+}
+
+/**
+ * Extrai logId do response data
+ */
+function extractLogId(data: { log?: unknown; id?: string }): string | undefined {
+  if (data.id) return data.id
+
+  const logObj = data.log ?? data
+  if (typeof logObj === 'object' && logObj && 'id' in logObj) {
+    return (logObj as { id?: string }).id
+  }
+
+  return undefined
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== 'POST') {
     res.status(405).json({ ok: false, error: 'Method not allowed' })
@@ -36,16 +67,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    // Descobre baseUrl para chamar o próprio backend
-    const vercelUrl = process.env.VERCEL_URL?.trim()
     const hostHeader = typeof req.headers.host === 'string' ? req.headers.host.trim() : ''
-
-    const baseUrl =
-      vercelUrl && vercelUrl.length > 0
-        ? `https://${vercelUrl}`
-        : process.env.NODE_ENV === 'production' && hostHeader
-          ? `https://${hostHeader}`
-          : 'http://localhost:3000'
+    const baseUrl = getBaseUrl(hostHeader)
 
     const response = await runtimeFetch(`${baseUrl}/api/kv`, {
       method: 'POST',
@@ -88,11 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     }
 
     const logObj = data.log ?? data
-    const logId =
-      data.id ||
-      (typeof logObj === 'object' && logObj && 'id' in logObj
-        ? (logObj as { id?: string }).id
-        : undefined)
+    const logId = extractLogId(data)
 
     res.status(200).json({
       ok: true,
