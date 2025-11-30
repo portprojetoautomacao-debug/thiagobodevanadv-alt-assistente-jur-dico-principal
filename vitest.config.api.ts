@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
-import { fileURLToPath } from 'url'
-import { resolve } from 'path'
+import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 
 // Resolve seguro para ESM (funciona no Vercel, Windows e Linux)
 const __filename = fileURLToPath(import.meta.url)

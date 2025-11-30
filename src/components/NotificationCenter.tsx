@@ -139,8 +139,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
     const currentCount = notifications?.length || 0
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
       setHasNewNotifications(true)
-      // TODO: integrar som de notificação aqui se quiser
-      // playNotificationSound()
+      // FUTURE: Som de notificação pode ser adicionado aqui se necessário
+      // Exemplo: playNotificationSound()
     }
     prevCountRef.current = currentCount
   }, [notifications])

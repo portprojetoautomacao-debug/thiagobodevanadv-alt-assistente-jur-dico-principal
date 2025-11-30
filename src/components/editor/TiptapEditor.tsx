@@ -813,9 +813,9 @@ export function TiptapEditor({
                   )}
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
+                    <span className="text-sm font-medium">
                       Comandos rápidos
-                    </label>
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {aiQuickCommands.map((cmd) => (
                         <Button
@@ -835,8 +835,9 @@ export function TiptapEditor({
                   <Separator />
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Gerar com IA</label>
+                    <label htmlFor="ai-prompt-input" className="text-sm font-medium">Gerar com IA</label>
                     <Input
+                      id="ai-prompt-input"
                       placeholder="Ex: Escreva uma petição inicial sobre..."
                       value={aiPrompt}
                       onChange={(e) => setAiPrompt(e.target.value)}
