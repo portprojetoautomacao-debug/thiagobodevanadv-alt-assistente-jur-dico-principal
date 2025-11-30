@@ -11,6 +11,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 
+/**
+ * Get color based on notification priority
+ */
+function getPriorityColor(priority: string): string {
+  if (priority === 'urgent') return '#ff0000';
+  if (priority === 'high') return '#ff9900';
+  return '#36a64f';
+}
+
 // Constantes
 const KV_KEYS = {
   NOTIFICATION_QUEUE: 'notification-queue',
@@ -159,8 +168,7 @@ async function sendSlackWebhook(webhookUrl: string, notification: Notification):
         }
       ],
       attachments: notification.metadata ? [{
-        color: notification.priority === 'urgent' ? '#ff0000' :
-          notification.priority === 'high' ? '#ff9900' : '#36a64f',
+        color: getPriorityColor(notification.priority),
         fields: formatMetadataFieldsAlt(notification.metadata)
       }] : undefined
     };

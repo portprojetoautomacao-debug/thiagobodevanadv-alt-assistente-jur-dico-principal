@@ -1,6 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 /**
+ * Get AI provider name based on available keys
+ */
+function getAIProvider(openaiKey?: string, geminiKey?: string): string {
+  if (openaiKey) return 'OpenAI';
+  if (geminiKey) return 'Gemini';
+  return 'none';
+}
+
+/**
  * Configura headers CORS
  */
 function setCorsHeaders(res: VercelResponse): void {
@@ -47,11 +56,7 @@ function generateHealthCheck(res: VercelResponse): void {
     upstash_redis: !!process.env.UPSTASH_REDIS_REST_URL,
   };
 
-  const aiProvider = process.env.OPENAI_API_KEY
-    ? 'OpenAI'
-    : geminiKey
-      ? 'Gemini'
-      : 'none';
+  const aiProvider = getAIProvider(process.env.OPENAI_API_KEY, geminiKey);
 
   const info = {
     ai_provider: aiProvider,

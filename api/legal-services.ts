@@ -7,6 +7,15 @@ import { consultarDJENForLawyer } from './lib/djen-client.js';
 
 const logger = new SafeLogger('LegalServices');
 
+/**
+ * Get reason for non-business day
+ */
+function getHolidayReason(date: Date, tribunalCode?: string): string {
+  if (isWeekend(date)) return 'Final de semana';
+  if (isFeriado(date, tribunalCode)) return 'Feriado';
+  return 'Recesso forense';
+}
+
 
 
 // --- DEADLINE CALCULATION LOGIC ---
@@ -100,11 +109,7 @@ function calcularPrazo(
     if (isDiaUtil(currentDate, tribunalCode)) {
       daysAdded++;
     } else {
-      const reason = isWeekend(currentDate)
-        ? 'Final de semana'
-        : isFeriado(currentDate, tribunalCode)
-          ? 'Feriado'
-          : 'Recesso forense';
+      const reason = getHolidayReason(currentDate, tribunalCode);
 
       holidays.push(`${currentDate.toLocaleDateString('pt-BR')} - ${reason}`);
       reasoning.push(`Dia ${currentDate.toLocaleDateString('pt-BR')} desconsiderado (${reason})`);

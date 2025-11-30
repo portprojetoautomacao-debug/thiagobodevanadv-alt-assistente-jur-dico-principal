@@ -16,6 +16,15 @@
 import { getGeminiApiKey, isGeminiConfigured, validateGeminiApiKey } from '@/lib/gemini-config'
 import { withRetry, type RetryConfig } from '@/lib/ai-providers'
 
+/**
+ * Extract error message from unknown error type
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Erro desconhecido ao chamar Gemini'
+}
+
 // ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
@@ -132,12 +141,7 @@ function buildGeminiError(error: unknown, context?: { endpoint?: string; model?:
     model: context?.model,
   })
 
-  const message =
-    error instanceof Error
-      ? error.message
-      : (typeof error === 'string'
-        ? error
-        : 'Erro desconhecido ao chamar Gemini')
+  const message = getErrorMessage(error)
 
   return {
     text: '',

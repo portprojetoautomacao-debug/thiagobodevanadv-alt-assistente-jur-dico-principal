@@ -4,6 +4,19 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+/**
+ * Get base URL for internal API calls
+ */
+function getBaseUrl(req: VercelRequest): string {
+  if (process.env.VERCEL_URL && process.env.VERCEL_URL.trim().length > 0) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  if (process.env.NODE_ENV === 'production' && req.headers.host) {
+    return `https://${req.headers.host}`;
+  }
+  return 'http://localhost:3000';
+}
+
 interface CreateTaskRequestBody {
   descricao?: string
   dueDate?: string
@@ -26,12 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Descobre baseUrl para chamar o próprio backend
-    const baseUrl =
-      process.env.VERCEL_URL && process.env.VERCEL_URL.trim().length > 0
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.NODE_ENV === 'production' && req.headers.host
-          ? `https://${req.headers.host}`
-          : 'http://localhost:3000'
+    const baseUrl = getBaseUrl(req);
 
     const response = await fetch(`${baseUrl}/api/todoist`, {
       method: 'POST',
@@ -48,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     if (!response.ok) {
-      const errorData = (await response.json().catch(() => ({}))) as { error?: string; [key: string]: unknown }
+      const errorData = (await response.json().catch(() => ({}))) as { error?: string;[key: string]: unknown }
 
       return res.status(response.status).json({
         ok: false,
@@ -58,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const data = (await response.json()) as {
-      tarefa?: { id?: string; [key: string]: unknown }
+      tarefa?: { id?: string;[key: string]: unknown }
       id?: string
       [key: string]: unknown
     }
@@ -70,7 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       timestamp: new Date().toISOString()
     })
   } catch (err: unknown) {
-     
+
     console.error('[api/tarefas/criar] Erro:', err)
 
     return res.status(500).json({

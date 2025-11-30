@@ -53,41 +53,41 @@ function validateSignature(
  */
 async function processEvent(event: string, payload: WebhookEvent): Promise<void> {
   console.log(`[Webhook] Processando evento: ${event}`);
-  
+
   switch (event) {
     case 'push':
       console.log(`[Webhook] Push para: ${payload.ref}`);
       console.log(`[Webhook] Commits: ${payload.commits?.length || 0}`);
       break;
-      
+
     case 'pull_request':
       console.log(`[Webhook] PR #${payload.number}: ${payload.action}`);
       break;
-      
+
     case 'workflow_run':
       console.log(`[Webhook] Workflow: ${payload.workflow_run?.name} - ${payload.workflow_run?.conclusion}`);
       break;
-      
+
     case 'workflow_job':
       console.log(`[Webhook] Job: ${payload.workflow_job?.name} - ${payload.workflow_job?.conclusion}`);
       break;
-      
+
     case 'deployment':
       console.log(`[Webhook] Deployment: ${payload.deployment?.environment}`);
       break;
-      
+
     case 'deployment_status':
       console.log(`[Webhook] Deployment Status: ${payload.deployment_status?.state}`);
       break;
-      
+
     case 'check_run':
       console.log(`[Webhook] Check Run: ${payload.check_run?.name} - ${payload.check_run?.conclusion}`);
       break;
-      
+
     case 'ping':
       console.log(`[Webhook] Ping recebido - Webhook ativo!`);
       break;
-      
+
     default:
       console.log(`[Webhook] Evento não processado: ${event}`);
   }
@@ -96,7 +96,7 @@ async function processEvent(event: string, payload: WebhookEvent): Promise<void>
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Apenas aceita POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
+    return res.status(405).json({
       error: 'Method not allowed',
       message: 'Este endpoint aceita apenas POST requests do GitHub'
     });
@@ -108,7 +108,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const delivery = req.headers['x-github-delivery'] as string;
 
   if (!event) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Bad request',
       message: 'Header X-GitHub-Event não encontrado'
     });
@@ -123,11 +123,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[Webhook] Assinatura inválida!');
     console.error('[Webhook] DEBUG - Expected secret length:', webhookSecret?.length);
     console.error('[Webhook] DEBUG - Received signature:', signature);
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Unauthorized',
       message: 'Assinatura do webhook inválida'
     });
-  }  try {
+  } try {
     // Processa o evento
     await processEvent(event, req.body);
 
@@ -144,7 +144,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('[Webhook] Erro ao processar evento:', error);
-    
+
     res.status(500).json({
       success: false,
       event,
