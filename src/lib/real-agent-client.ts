@@ -67,7 +67,7 @@ export async function processTaskWithStreamingAI(
 
       for (const line of lines) {
         const trimmed = line.trim()
-        if (!trimmed || !trimmed.startsWith('data: ')) continue
+        if (!trimmed?.startsWith('data: ')) continue
 
         try {
           const json = JSON.parse(trimmed.slice(6))

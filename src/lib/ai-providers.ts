@@ -41,7 +41,7 @@
 export type AIChatRole = 'system' | 'user' | 'assistant'
 
 export interface AIChatMessage {
-  role: AIChatRole | string
+  role: AIChatRole
   content: string
 }
 
@@ -153,10 +153,10 @@ export async function withRetry<T>(
       }
 
       if (attempt < maxRetries) {
-         
+
         console.warn(
           `[AI Provider] Tentativa ${attempt}/${maxRetries} falhou. ` +
-            `Retry em ${delay}ms. Erro: ${msg}`
+          `Retry em ${delay}ms. Erro: ${msg}`
         )
         await new Promise(resolve => setTimeout(resolve, delay))
         delay = Math.min(delay * backoffFactor, maxDelay)
@@ -221,9 +221,9 @@ export class GeminiClient {
       apiKey ||
       (typeof import.meta !== 'undefined'
         ? (import.meta.env.VITE_GOOGLE_API_KEY ||
-            import.meta.env.VITE_GEMINI_API_KEY ||
-            import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
-            '')
+          import.meta.env.VITE_GEMINI_API_KEY ||
+          import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
+          '')
         : '') ||
       null
 
@@ -231,7 +231,7 @@ export class GeminiClient {
 
     // Valida a chave no construtor (apenas warning, não bloqueia)
     if (this.apiKey && !isValidApiKey(this.apiKey, 'gemini')) {
-       
+
       console.warn('[GeminiClient] API key pode estar em formato inválido')
     }
   }
@@ -273,7 +273,7 @@ export class GeminiClient {
     if (!this.apiKey) {
       throw new Error(
         'Gemini API key não configurada. ' +
-          'Configure uma das variáveis: VITE_GOOGLE_API_KEY, VITE_GEMINI_API_KEY ou VITE_GEMINI_API_KEY_BACKEND'
+        'Configure uma das variáveis: VITE_GOOGLE_API_KEY, VITE_GEMINI_API_KEY ou VITE_GEMINI_API_KEY_BACKEND'
       )
     }
 
@@ -701,7 +701,7 @@ export class UnifiedAIClient {
             continue
         }
       } catch (error) {
-         
+
         console.warn(`Provider ${p} failed:`, error)
         continue
       }
@@ -721,7 +721,7 @@ export class UnifiedAIClient {
       available.push('huggingface')
     }
 
-    if (typeof import.meta !== 'undefined' && !!import.meta.env.VITE_GITHUB_TOKEN) {
+    if (import.meta?.env?.VITE_GITHUB_TOKEN) {
       available.push('github')
     }
 

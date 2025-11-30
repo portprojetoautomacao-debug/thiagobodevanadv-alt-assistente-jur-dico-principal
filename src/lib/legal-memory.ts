@@ -112,7 +112,7 @@ export class LegalMemory {
             tags,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            relevanceScore: 1.0
+            relevanceScore: 1
         }
 
         // Validação Zod

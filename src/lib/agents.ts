@@ -101,7 +101,7 @@ export interface Agent {
   config?: Record<string, unknown>
   nextScheduledRun?: string
   workQueue?: AgentTask[]
-  humanInteractionMode?: 'auto' | 'strict' | 'relaxed' | string
+  humanInteractionMode?: 'auto' | 'strict' | 'relaxed'
   /** Contador de falhas recentes para circuit breaker */
   recentFailures?: number
   /** Timestamp da última falha (ISO) */
@@ -114,8 +114,8 @@ export interface Agent {
  */
 export interface AgentTask {
   id: string
-  agentId: AgentId | string
-  type: TarefaSistemaTipo | string
+  agentId: AgentId
+  type: TarefaSistemaTipo
   priority: TaskPriority
   status: TaskStatus
   createdAt: string
@@ -180,7 +180,7 @@ export interface AgentTaskGeneratorConfig {
   enabled: boolean
   intervalMinutes: number
   maxTasksPerInterval: number
-  agentIds: (AgentId | string)[]
+  agentIds: AgentId[]
 }
 
 export interface AgentTaskGenerator {
@@ -289,7 +289,7 @@ export function recuperarTarefaTravada(task: AgentTask): AgentTask {
   const maxRetries = task.maxRetries ?? 3
   const nowIso = new Date().toISOString()
 
-   
+
   console.warn(`[TaskEngine] Tarefa travada detectada: ${task.id} (${task.type})`)
 
   if (retryCount <= maxRetries) {
