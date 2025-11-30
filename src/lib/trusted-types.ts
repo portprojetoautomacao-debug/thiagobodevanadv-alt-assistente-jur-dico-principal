@@ -53,8 +53,8 @@ const ALLOWED_ATTRS = new Set([
  */
 export function isTrustedTypesSupported(): boolean {
     return globalThis.window !== undefined &&
-        globalThis.window.trustedTypes !== undefined &&
-        typeof globalThis.window.trustedTypes?.createPolicy === 'function';
+        globalThis.window?.trustedTypes !== undefined &&
+        typeof globalThis.window?.trustedTypes?.createPolicy === 'function';
 }
 
 /**

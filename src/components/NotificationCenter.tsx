@@ -303,7 +303,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                 return (
                   <div
                     key={notification.id}
-                    className={`group relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${!notification.read ? 'bg-muted/30' : ''
+                    className={`group relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${notification.read ? '' : 'bg-muted/30'
                       }`}
                     onClick={() => handleClick(notification)}
                   >
@@ -322,7 +322,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                     {/* Conteúdo */}
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm font-medium ${!notification.read ? '' : 'text-muted-foreground'
+                        className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : ''
                           }`}
                       >
                         {notification.title}

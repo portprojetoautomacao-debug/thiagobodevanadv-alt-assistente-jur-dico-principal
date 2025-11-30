@@ -145,10 +145,8 @@ export async function criarMinutaComAgenteIA(
     const conteudoGerado = geminiResponse.text
 
     // 2) Monta objeto Minuta (mínimo necessário: id, titulo, conteudo)
-    const tituloMinuta =
-      titulo ||
-      `Minuta - ${tipoMinuta}${numeroProcesso ? ` - Proc. ${numeroProcesso}` : ''
-      }`
+    const sufixoProcesso = numeroProcesso ? ` - Proc. ${numeroProcesso}` : ''
+    const tituloMinuta = titulo || `Minuta - ${tipoMinuta}${sufixoProcesso}`
 
     const minuta: Minuta = {
       // compatível com o tipo do seu app (id/titulo/conteudo são seguros)
