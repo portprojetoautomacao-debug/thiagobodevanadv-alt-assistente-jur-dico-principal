@@ -38,7 +38,7 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
   })
 
   const logs = propLogs || fetchedLogs
-  const isLoading = propIsLoading !== undefined ? propIsLoading : queryIsLoading
+  const isLoading = propIsLoading ?? queryIsLoading
 
   const handleRefresh = () => {
     if (onRefresh) {
@@ -104,7 +104,7 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
                       <WarningCircle className="w-4 h-4" weight="fill" />
                     )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-foreground flex items-center gap-2">
@@ -115,17 +115,17 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
                         {new Date(log.timestamp).toLocaleString('pt-BR')}
                       </span>
                     </div>
-                    
+
                     <p className="text-xs text-foreground mt-1 font-mono">
                       {log.action}
                     </p>
-                    
+
                     {log.durationMs && (
                       <p className="text-[10px] text-muted-foreground mt-1">
                         Duração: {log.durationMs.toFixed(0)}ms
                       </p>
                     )}
-                    
+
                     {log.details && Object.keys(log.details).length > 0 && (
                       <div className="mt-2 p-2 bg-background rounded border text-[10px] font-mono text-muted-foreground overflow-x-auto">
                         <pre>{JSON.stringify(log.details, null, 2)}</pre>

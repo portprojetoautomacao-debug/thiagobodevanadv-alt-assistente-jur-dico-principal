@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Hoist mocks to ensure they are applied before imports
 const mocks = vi.hoisted(() => {
@@ -33,12 +33,12 @@ vi.mock('../google-calendar-service', () => ({
 }));
 
 // Import the agent AFTER mocking
-import { todoistAgent, TodoistAgent } from './todoist-agent';
+import { todoistAgent } from './todoist-agent';
 
 describe('TodoistAgent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup default mock return values
     mocks.getTodoistClient.mockReturnValue(mocks.todoistApi);
   });
@@ -56,9 +56,9 @@ describe('TodoistAgent', () => {
 
       // Spy on console.log to verify execution flow (since handleItemUpdated logs)
       const consoleSpy = vi.spyOn(console, 'log');
-      
+
       await todoistAgent.processWebhookEvent(event);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Agente Todoist processando evento'), 'item:updated');
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Data da tarefa 123 atualizada'));
     });
@@ -73,9 +73,9 @@ describe('TodoistAgent', () => {
       };
 
       const consoleSpy = vi.spyOn(console, 'log');
-      
+
       await todoistAgent.processWebhookEvent(event);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Tarefa Processo 1234567-89.2023.8.26.0100 concluída!'));
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Atualizando progresso do processo'));
     });
@@ -101,7 +101,7 @@ describe('TodoistAgent', () => {
       }));
 
       await todoistAgent.processWebhookEvent(event);
-      
+
       expect(mocks.llmService.execute).toHaveBeenCalled();
       expect(mocks.updateLegalTask).toHaveBeenCalledWith('task_123', { dueDate: '2023-10-28' });
     });
@@ -113,9 +113,9 @@ describe('TodoistAgent', () => {
       };
 
       const consoleSpy = vi.spyOn(console, 'log');
-      
+
       await todoistAgent.processWebhookEvent(event);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('Evento ignorado pelo agente:', 'unknown:event');
     });
   });
@@ -124,7 +124,7 @@ describe('TodoistAgent', () => {
     it('should interpret and execute "reschedule" command', async () => {
       // We can access private methods by casting to any if needed, 
       // but better to test via public interface (processWebhookEvent with note:added)
-      
+
       const event = {
         event_name: 'note:added',
         event_data: {

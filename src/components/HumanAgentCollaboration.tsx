@@ -93,7 +93,7 @@ export default function HumanAgentCollaboration({
           setPhase('agent_resuming')
           setTimeWithoutActivity(0)
 
-          const resumeId = window.setTimeout(() => {
+          window.setTimeout(() => {
             setPhase('agent_working')
           }, RESUME_DELAY_MS)
 
@@ -254,11 +254,10 @@ export default function HumanAgentCollaboration({
         <div className="grid grid-cols-3 gap-4 pt-4 border-t">
           <div className="text-center">
             <Robot
-              className={`w-8 h-8 mx-auto mb-2 ${
-                phase === 'agent_working' || phase === 'agent_resuming'
+              className={`w-8 h-8 mx-auto mb-2 ${phase === 'agent_working' || phase === 'agent_resuming'
                   ? 'text-primary animate-pulse'
                   : 'text-muted-foreground'
-              }`}
+                }`}
               weight="fill"
             />
             <p className="text-xs font-medium">Agente de IA</p>
@@ -277,9 +276,8 @@ export default function HumanAgentCollaboration({
 
           <div className="text-center">
             <User
-              className={`w-8 h-8 mx-auto mb-2 ${
-                phase === 'human_editing' ? 'text-accent' : 'text-muted-foreground'
-              }`}
+              className={`w-8 h-8 mx-auto mb-2 ${phase === 'human_editing' ? 'text-accent' : 'text-muted-foreground'
+                }`}
               weight="fill"
             />
             <p className="text-xs font-medium">Você</p>

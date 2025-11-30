@@ -9,8 +9,6 @@
  * @see https://web.dev/trusted-types/
  */
 
-import type { TrustedTypePolicyOptions as _TrustedTypePolicyOptions } from 'trusted-types/lib';
-
 // Tipo genérico para policy com todas as opções
 type FullTrustedTypePolicy = {
     readonly name: string;

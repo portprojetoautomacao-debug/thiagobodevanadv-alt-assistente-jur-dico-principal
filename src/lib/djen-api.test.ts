@@ -88,7 +88,7 @@ describe('DJEN API - Classe de Erro', () => {
 
 describe('DJEN API - Integração', () => {
   beforeEach(() => {
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
   })
 
   it('deve lançar erro se não houver termo de busca', async () => {
@@ -101,7 +101,7 @@ describe('DJEN API - Integração', () => {
   })
 
   it('deve processar resposta vazia corretamente', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => []
@@ -119,7 +119,7 @@ describe('DJEN API - Integração', () => {
   })
 
   it('deve filtrar publicações por nome do advogado', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => [
@@ -150,7 +150,7 @@ describe('DJEN API - Integração', () => {
   })
 
   it('deve identificar match por OAB', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => [
@@ -174,7 +174,7 @@ describe('DJEN API - Integração', () => {
   })
 
   it('deve identificar match por nome e OAB', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => [
@@ -189,7 +189,7 @@ describe('DJEN API - Integração', () => {
 
     const resultado = await consultarDJEN({
       tribunais: ['TST'],
-      searchTerms: { 
+      searchTerms: {
         nomeAdvogado: 'Pedro Costa',
         numeroOAB: 'OAB/RJ 555555'
       },
@@ -201,7 +201,7 @@ describe('DJEN API - Integração', () => {
   })
 
   it('deve coletar erros de tribunais que falharem', async () => {
-    vi.mocked(global.fetch)
+    vi.mocked(globalThis.fetch)
       .mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -226,7 +226,7 @@ describe('DJEN API - Integração', () => {
   })
 
   it('deve usar data atual se não especificada', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => []
@@ -237,22 +237,22 @@ describe('DJEN API - Integração', () => {
       searchTerms: { nomeAdvogado: 'Teste' }
     })
 
-    const chamada = vi.mocked(global.fetch).mock.calls[0]
+    const chamada = vi.mocked(globalThis.fetch).mock.calls[0]
     const url = chamada[0] as string
-    
+
     const hoje = new Date().toISOString().split('T')[0]
     expect(url).toContain(hoje)
   })
 
   it('deve aplicar delay entre requisições', async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => []
     } as Response)
 
     const inicio = Date.now()
-    
+
     await consultarDJEN({
       tribunais: ['TJSP', 'TJMG'],
       searchTerms: { nomeAdvogado: 'Teste' },
@@ -260,7 +260,7 @@ describe('DJEN API - Integração', () => {
     })
 
     const duracao = Date.now() - inicio
-    
+
     expect(duracao).toBeGreaterThanOrEqual(100)
   })
 })

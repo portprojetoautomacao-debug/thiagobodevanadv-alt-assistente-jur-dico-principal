@@ -7,7 +7,7 @@
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import { getTodoistClient, updateLegalTask } from '../todoist-integration';
+import { updateLegalTask } from '../todoist-integration';
 import { todoistClient } from '../todoist-client';
 import { llmService } from '../llm-service';
 import { googleCalendarService } from '../google-calendar-service';
