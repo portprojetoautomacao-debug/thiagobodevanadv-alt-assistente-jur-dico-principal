@@ -73,6 +73,50 @@ const COLORS = [
   '#C026D3', '#DB2777', '#E11D48',
 ]
 
+const AI_QUICK_COMMANDS = [
+  {
+    label: 'Expandir',
+    icon: ArrowsOut,
+    prompt: 'Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:',
+  },
+  {
+    label: 'Resumir',
+    icon: TextAa,
+    prompt: 'Resuma o seguinte texto de forma concisa:',
+  },
+  {
+    label: 'Formalizar',
+    icon: MagicWand,
+    prompt: 'Reescreva o seguinte texto em linguagem jurídica formal:',
+  },
+  {
+    label: 'Corrigir',
+    icon: Sparkle,
+    prompt: 'Corrija erros de gramática e ortografia no seguinte texto:',
+  },
+] as const
+
+// ===========================
+// Helper Functions
+// ===========================
+
+function countWords(text: string): number {
+  if (text.trim().length === 0) return 0
+  return text.trim().split(/\s+/).filter(w => w.length > 0).length
+}
+
+function getGenerateButtonText(isStreaming: boolean, hasStreamSupport: boolean): string {
+  if (isStreaming) return 'Gerando...'
+  if (hasStreamSupport) return 'Gerar com Streaming'
+  return 'Gerar Texto'
+}
+
+function getAIButtonClassName(isStreaming: boolean): string {
+  const base = 'gap-2 border-purple-500/20 hover:border-purple-500/40'
+  if (isStreaming) return `${base} bg-purple-500/20 animate-pulse`
+  return `${base} bg-gradient-to-r from-purple-500/10 to-blue-500/10`
+}
+
 export function TiptapEditor({
   content,
   onChange,
@@ -129,15 +173,8 @@ export function TiptapEditor({
       onChange(html)
 
       const text = editor.getText()
-      const words = text.trim().length === 0
-        ? 0
-        : text
-          .trim()
-          .split(/\s+/)
-          .filter(w => w.length > 0).length
-
       setCharCount(text.length)
-      setWordCount(words)
+      setWordCount(countWords(text))
     },
   })
 
@@ -160,28 +197,7 @@ export function TiptapEditor({
     return result
   }, [variables])
 
-  const aiQuickCommands = [
-    {
-      label: 'Expandir',
-      icon: ArrowsOut,
-      prompt: 'Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:',
-    },
-    {
-      label: 'Resumir',
-      icon: TextAa,
-      prompt: 'Resuma o seguinte texto de forma concisa:',
-    },
-    {
-      label: 'Formalizar',
-      icon: MagicWand,
-      prompt: 'Reescreva o seguinte texto em linguagem jurídica formal:',
-    },
-    {
-      label: 'Corrigir',
-      icon: Sparkle,
-      prompt: 'Corrija erros de gramática e ortografia no seguinte texto:',
-    },
-  ] as const
+  const aiQuickCommands = AI_QUICK_COMMANDS
 
   // Execução genérica de IA em streaming (respeita posição/seleção atual)
   const runAIStreaming = useCallback(async (prompt: string) => {
@@ -763,12 +779,7 @@ export function TiptapEditor({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(
-                    'gap-2 border-purple-500/20 hover:border-purple-500/40',
-                    isStreaming
-                      ? 'bg-purple-500/20 animate-pulse'
-                      : 'bg-gradient-to-r from-purple-500/10 to-blue-500/10',
-                  )}
+                  className={getAIButtonClassName(isStreaming)}
                   disabled={isAILoading || isStreaming}
                 >
                   {isAILoading || isStreaming ? (
@@ -844,11 +855,7 @@ export function TiptapEditor({
                       ) : (
                         <Lightning className="h-4 w-4" weight="fill" />
                       )}
-                      {(() => {
-                        if (isStreaming) return 'Gerando...'
-                        if (onAIStream) return 'Gerar com Streaming'
-                        return 'Gerar Texto'
-                      })()}
+                      {getGenerateButtonText(isStreaming, !!onAIStream)}
                     </Button>
                   </div>
 
