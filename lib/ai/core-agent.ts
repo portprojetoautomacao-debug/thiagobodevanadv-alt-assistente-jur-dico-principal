@@ -137,11 +137,136 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     return this.opts.tools.filter((t) => set.has(t.name));
   }
 
+  // ===== Helper functions for run() - Reduced Cognitive Complexity =====
+
+  private createThoughtTrace(step: number, userInput: string): AgentTrace {
+    return {
+      timestamp: new Date().toISOString(),
+      step,
+      type: 'thought',
+      content: `Analisando: ${userInput.substring(0, 100)}...`,
+    };
+  }
+
+  private createErrorTrace(step: number, content: string, duration: number, error: string): AgentTrace {
+    return {
+      timestamp: new Date().toISOString(),
+      step,
+      type: 'observation',
+      content,
+      duration,
+      error,
+    };
+  }
+
+  private tryParseJSON(rawContent: string): { parsed: Record<string, unknown> | null; error?: string } {
+    try {
+      return { parsed: JSON.parse(rawContent) };
+    } catch {
+      return { parsed: null, error: 'JSON parsing failed' };
+    }
+  }
+
+  private async handleFinalAction(
+    parsed: Record<string, unknown>,
+    step: number,
+    stepDuration: number,
+    history: ChatMessage[],
+    userInput: string,
+    traces: AgentTrace[],
+    usedTools: string[],
+    startTime: number
+  ): Promise<{ answer: string; steps: number; usedTools: string[]; traces: AgentTrace[]; totalDuration: number }> {
+    const answer = parsed.answer ?? "";
+    const answerContent = typeof answer === 'string' ? answer : JSON.stringify(answer);
+
+    traces.push({
+      timestamp: new Date().toISOString(),
+      step,
+      type: 'final',
+      content: answerContent,
+      duration: stepDuration,
+    });
+
+    const newHistory: ChatMessage[] = [
+      ...history,
+      { role: "user", content: userInput },
+      { role: "assistant", content: answerContent },
+    ];
+    await this.memoryStore.save(this.sessionId, newHistory);
+
+    return {
+      answer: answerContent,
+      steps: step + 1,
+      usedTools,
+      traces,
+      totalDuration: Date.now() - startTime,
+    };
+  }
+
+  private async executeTool(
+    tool: Tool,
+    toolArgs: Record<string, unknown>,
+    toolName: string,
+    step: number,
+    traces: AgentTrace[],
+    usedTools: string[]
+  ): Promise<unknown> {
+    const toolStart = Date.now();
+
+    traces.push({
+      timestamp: new Date().toISOString(),
+      step,
+      type: 'action',
+      content: `Executando: ${toolName}`,
+      toolUsed: toolName,
+    });
+
+    try {
+      const enrichedContext: GlobalToolContext = {
+        ...(this.opts.toolContext as GlobalToolContext),
+        traceId: `trace-${Date.now()}`,
+        agentId: this.opts.persona.id,
+        sessionId: this.sessionId,
+      };
+
+      const result = await tool.run(toolArgs, enrichedContext);
+      usedTools.push(toolName);
+
+      traces.push({
+        timestamp: new Date().toISOString(),
+        step,
+        type: 'observation',
+        content: `Resultado: ${JSON.stringify(result).substring(0, 200)}...`,
+        toolUsed: toolName,
+        duration: Date.now() - toolStart,
+      });
+
+      return result;
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+
+      traces.push({
+        timestamp: new Date().toISOString(),
+        step,
+        type: 'observation',
+        content: `Erro: ${error.message}`,
+        toolUsed: toolName,
+        duration: Date.now() - toolStart,
+        error: error.message,
+      });
+
+      return { error: true, message: error.message };
+    }
+  }
+
+  // ===== Main run() method - Refactored =====
+
   async run(userInput: string): Promise<{
     answer: string;
     steps: number;
     usedTools: string[];
-    traces: AgentTrace[]; // Observabilidade completa
+    traces: AgentTrace[];
     totalDuration: number;
   }> {
     const startTime = Date.now();
@@ -157,181 +282,53 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
 
     for (let step = 0; step < this.maxSteps; step++) {
       const stepStart = Date.now();
-      
-      // THOUGHT: Raciocínio do agente (padrão ReAct)
-      traces.push({
-        timestamp: new Date().toISOString(),
-        step,
-        type: 'thought',
-        content: `Analisando: ${userInput.substring(0, 100)}...`,
-      });
+      traces.push(this.createThoughtTrace(step, userInput));
 
       const raw = await this.opts.llm.chat(messages);
       const stepDuration = Date.now() - stepStart;
-
-      // Garantir que raw seja uma string válida
       const rawContent = typeof raw === 'string' ? raw : JSON.stringify(raw);
 
-      let parsed: Record<string, unknown>;
-      try {
-        parsed = JSON.parse(rawContent);
-      } catch {
-        // força correção
-        traces.push({
-          timestamp: new Date().toISOString(),
-          step,
-          type: 'observation',
-          content: 'Resposta inválida - solicitando correção',
-          duration: stepDuration,
-          error: 'JSON parsing failed',
-        });
-        
+      const { parsed, error } = this.tryParseJSON(rawContent);
+
+      if (!parsed) {
+        traces.push(this.createErrorTrace(step, 'Resposta inválida - solicitando correção', stepDuration, error!));
         messages.push({ role: "assistant", content: rawContent });
-        messages.push({
-          role: "user",
-          content:
-            "Sua resposta não está em JSON válido. Reformule seguindo exatamente o formato especificado.",
-        });
+        messages.push({ role: "user", content: "Sua resposta não está em JSON válido. Reformule seguindo exatamente o formato especificado." });
         continue;
       }
 
+      // Handle final action
       if (parsed.action === "final") {
-        const answer = parsed.answer ?? "";
-
-        // FINAL: Resposta final do agente
-        const answerContent = typeof answer === 'string' ? answer : JSON.stringify(answer);
-
-        traces.push({
-          timestamp: new Date().toISOString(),
-          step,
-          type: 'final',
-          content: answerContent,
-          duration: stepDuration,
-        });
-
-        const newHistory: ChatMessage[] = [
-          ...history,
-          { role: "user", content: userInput },
-          { role: "assistant", content: answerContent },
-        ];
-        await this.memoryStore.save(this.sessionId, newHistory);
-
-        return {
-          answer: answerContent,
-          steps: step + 1,
-          usedTools,
-          traces,
-          totalDuration: Date.now() - startTime,
-        };
+        return this.handleFinalAction(parsed, step, stepDuration, history, userInput, traces, usedTools, startTime);
       }
 
+      // Handle tool action
       if (parsed.action === "tool") {
-        const toolName: string = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
+        const toolName = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
         const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
         const tool = this.allowedTools().find((t) => t.name === toolName);
 
         if (!tool) {
-          traces.push({
-            timestamp: new Date().toISOString(),
-            step,
-            type: 'observation',
-            content: `Tool '${toolName}' não disponível`,
-            duration: stepDuration,
-            error: `Tool not found: ${toolName}`,
-          });
-          
+          traces.push(this.createErrorTrace(step, `Tool '${toolName}' não disponível`, stepDuration, `Tool not found: ${toolName}`));
           messages.push({ role: "assistant", content: raw });
-          messages.push({
-            role: "user",
-            content: `A ferramenta "${toolName}" não está disponível para este agente. Use apenas as ferramentas listadas.`,
-          });
+          messages.push({ role: "user", content: `A ferramenta "${toolName}" não está disponível para este agente. Use apenas as ferramentas listadas.` });
           continue;
         }
 
-        // ACTION: Executando tool (padrão ReAct)
-        traces.push({
-          timestamp: new Date().toISOString(),
-          step,
-          type: 'action',
-          content: `Executando: ${toolName}`,
-          toolUsed: toolName,
-        });
-
-        let result: unknown;
-        const toolStart = Date.now();
-        
-        try {
-          // Adicionar contexto de trace à tool
-          const enrichedContext: GlobalToolContext = {
-            ...(this.opts.toolContext as GlobalToolContext),
-            traceId: `trace-${Date.now()}`,
-            agentId: this.opts.persona.id,
-            sessionId: this.sessionId,
-          };
-          
-          result = await tool.run(toolArgs, enrichedContext);
-          usedTools.push(toolName);
-          
-          // OBSERVATION: Resultado da tool (padrão ReAct)
-          traces.push({
-            timestamp: new Date().toISOString(),
-            step,
-            type: 'observation',
-            content: `Resultado: ${JSON.stringify(result).substring(0, 200)}...`,
-            toolUsed: toolName,
-            duration: Date.now() - toolStart,
-          });
-        } catch (e: unknown) {
-          const error = e instanceof Error ? e : new Error(String(e));
-          result = {
-            error: true,
-            message: error.message,
-          };
-          
-          traces.push({
-            timestamp: new Date().toISOString(),
-            step,
-            type: 'observation',
-            content: `Erro: ${error.message}`,
-            toolUsed: toolName,
-            duration: Date.now() - toolStart,
-            error: error.message,
-          });
-        }
-
+        const result = await this.executeTool(tool, toolArgs, toolName, step, traces, usedTools);
         messages.push({ role: "assistant", content: raw });
-        messages.push({
-          role: "user",
-          content:
-            `Resultado da ferramenta "${toolName}": ${JSON.stringify(
-              result
-            )}. Agora decida o próximo passo ou finalize a resposta.`,
-        });
-
+        messages.push({ role: "user", content: `Resultado da ferramenta "${toolName}": ${JSON.stringify(result)}. Agora decida o próximo passo ou finalize a resposta.` });
         continue;
       }
 
-      // ação inválida
-      traces.push({
-        timestamp: new Date().toISOString(),
-        step,
-        type: 'observation',
-        content: 'Formato de resposta inválido',
-        duration: stepDuration,
-        error: 'Invalid action format',
-      });
-      
+      // Invalid action
+      traces.push(this.createErrorTrace(step, 'Formato de resposta inválido', stepDuration, 'Invalid action format'));
       messages.push({ role: "assistant", content: raw });
-      messages.push({
-        role: "user",
-        content:
-          'Sua resposta JSON deve ter "action":"tool" ou "action":"final". Reformule seguindo o formato.',
-      });
+      messages.push({ role: "user", content: 'Sua resposta JSON deve ter "action":"tool" ou "action":"final". Reformule seguindo o formato.' });
     }
 
     return {
-      answer:
-        "Não consegui concluir a tarefa dentro do limite de passos configurado para o agente.",
+      answer: "Não consegui concluir a tarefa dentro do limite de passos configurado para o agente.",
       steps: this.maxSteps,
       usedTools,
       traces,
