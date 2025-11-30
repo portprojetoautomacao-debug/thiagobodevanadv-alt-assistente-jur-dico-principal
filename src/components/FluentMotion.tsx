@@ -1,4 +1,4 @@
-import { motion, HTMLMotionProps } from 'framer-motion'
+import { motion, HTMLMotionProps, Variants, Transition, TargetAndTransition } from 'framer-motion'
 import { ReactNode } from 'react'
 import { fluentTransitions, fluentVariants } from '@/hooks/use-fluent-motion'
 
@@ -15,38 +15,44 @@ interface FluentMotionProps extends Omit<HTMLMotionProps<'div'>, 'transition'> {
   tap?: boolean
 }
 
-export function FluentMotion({ 
-  children, 
+export function FluentMotion({
+  children,
   variant = 'fadeInUp',
   transition = 'standard',
   delay = 0,
   stagger = false,
   hover = false,
   tap = false,
-  ...props 
+  ...props
 }: FluentMotionProps) {
   const selectedVariant = fluentVariants[variant]
-  const selectedTransition = {
+  const selectedTransition: Transition = {
     ...fluentTransitions[transition],
     delay
   }
 
-  const hoverEffect = hover ? { scale: 1.02, transition: fluentTransitions.decelerate as any } : undefined
-  const tapEffect = tap ? { scale: 0.98, transition: fluentTransitions.accelerate as any } : undefined
+  const hoverEffect: TargetAndTransition | undefined = hover ? {
+    scale: 1.02,
+    transition: fluentTransitions.decelerate
+  } : undefined
+  const tapEffect: TargetAndTransition | undefined = tap ? {
+    scale: 0.98,
+    transition: fluentTransitions.accelerate
+  } : undefined
 
-  const variants = stagger
+  const variants: Variants = stagger
     ? {
-        initial: selectedVariant.initial,
-        animate: {
-          ...selectedVariant.animate,
-          transition: {
-            ...selectedTransition,
-            staggerChildren: 0.05,
-            delayChildren: 0.1
-          }
-        },
-        exit: selectedVariant.exit
-      }
+      initial: selectedVariant.initial,
+      animate: {
+        ...selectedVariant.animate,
+        transition: {
+          ...selectedTransition,
+          staggerChildren: 0.05,
+          delayChildren: 0.1
+        }
+      },
+      exit: selectedVariant.exit
+    }
     : selectedVariant
 
   return (
@@ -54,8 +60,8 @@ export function FluentMotion({
       initial="initial"
       animate="animate"
       exit="exit"
-      variants={variants as any}
-      transition={selectedTransition as any}
+      variants={variants}
+      transition={selectedTransition}
       whileHover={hoverEffect}
       whileTap={tapEffect}
       {...props}
@@ -65,9 +71,9 @@ export function FluentMotion({
   )
 }
 
-export function FluentStaggerItem({ 
+export function FluentStaggerItem({
   children,
-  ...props 
+  ...props
 }: HTMLMotionProps<'div'>) {
   return (
     <motion.div
@@ -82,10 +88,10 @@ export function FluentStaggerItem({
   )
 }
 
-export function FluentReveal({ 
+export function FluentReveal({
   children,
   direction = 'left',
-  ...props 
+  ...props
 }: HTMLMotionProps<'div'> & { direction?: 'left' | 'right' | 'up' | 'down' }) {
   const variants = {
     left: {
@@ -110,8 +116,8 @@ export function FluentReveal({
     <motion.div
       initial="initial"
       animate="animate"
-      variants={variants[direction] as any}
-      transition={fluentTransitions.emphasized as any}
+      variants={variants[direction]}
+      transition={fluentTransitions.emphasized}
       {...props}
     >
       {children}
@@ -119,17 +125,17 @@ export function FluentReveal({
   )
 }
 
-export function FluentFade({ 
+export function FluentFade({
   children,
   delay = 0,
-  ...props 
+  ...props
 }: HTMLMotionProps<'div'> & { delay?: number }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ ...fluentTransitions.standard, delay } as any}
+      transition={{ ...fluentTransitions.standard, delay }}
       {...props}
     >
       {children}
@@ -137,11 +143,11 @@ export function FluentFade({
   )
 }
 
-export function FluentSlide({ 
+export function FluentSlide({
   children,
   direction = 'up',
   delay = 0,
-  ...props 
+  ...props
 }: HTMLMotionProps<'div'> & { direction?: 'up' | 'down' | 'left' | 'right'; delay?: number }) {
   const variants = {
     up: { initial: { y: 40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
@@ -155,8 +161,8 @@ export function FluentSlide({
       initial="initial"
       animate="animate"
       exit="initial"
-      variants={variants[direction] as any}
-      transition={{ ...fluentTransitions.emphasized, delay } as any}
+      variants={variants[direction]}
+      transition={{ ...fluentTransitions.emphasized, delay }}
       {...props}
     >
       {children}
@@ -164,17 +170,17 @@ export function FluentSlide({
   )
 }
 
-export function FluentScale({ 
+export function FluentScale({
   children,
   delay = 0,
-  ...props 
+  ...props
 }: HTMLMotionProps<'div'> & { delay?: number }) {
   return (
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}
-      transition={{ ...fluentTransitions.emphasized, delay } as any}
+      transition={{ ...fluentTransitions.emphasized, delay }}
       {...props}
     >
       {children}
@@ -182,16 +188,16 @@ export function FluentScale({
   )
 }
 
-export function FluentHover({ 
+export function FluentHover({
   children,
   scale = 1.02,
-  ...props 
+  ...props
 }: HTMLMotionProps<'div'> & { scale?: number }) {
   return (
     <motion.div
       whileHover={{ scale }}
       whileTap={{ scale: 0.98 }}
-      transition={fluentTransitions.decelerate as any}
+      transition={fluentTransitions.decelerate}
       {...props}
     >
       {children}

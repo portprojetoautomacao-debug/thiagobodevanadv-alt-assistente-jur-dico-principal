@@ -2,16 +2,16 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { 
-  House, 
-  Briefcase, 
-  Tray, 
-  FileText, 
-  MicrophoneStage, 
-  Calculator, 
-  Database, 
-  CalendarDots, 
-  CurrencyCircleDollar, 
+import {
+  House,
+  Briefcase,
+  Tray,
+  FileText,
+  MicrophoneStage,
+  Calculator,
+  Database,
+  CalendarDots,
+  CurrencyCircleDollar,
   Books,
   SignOut,
   Robot,
@@ -108,8 +108,8 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
             <Separator />
           </>
         )}
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full justify-start text-muted-foreground hover:text-foreground"
           onClick={onLogout}
         >

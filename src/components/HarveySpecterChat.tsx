@@ -591,11 +591,11 @@ Regras:
 
                                 {/* Quick Actions */}
                                 <div className="grid grid-cols-2 gap-3">
-                                    {QUICK_ACTIONS.map((action, idx) => {
+                                    {QUICK_ACTIONS.map((action) => {
                                         const Icon = action.icon
                                         return (
                                             <Card
-                                                key={idx}
+                                                key={action.title}
                                                 className="p-3 cursor-pointer hover:bg-accent/5 transition-colors"
                                                 onClick={() => sendMessage(action.query)}
                                             >
@@ -617,9 +617,9 @@ Regras:
                                 <div>
                                     <p className="text-xs font-medium text-muted-foreground mb-2">Sugestões:</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {SUGGESTED_QUESTIONS.map((q, idx) => (
+                                        {SUGGESTED_QUESTIONS.map((q) => (
                                             <Button
-                                                key={idx}
+                                                key={q}
                                                 variant="outline"
                                                 size="sm"
                                                 className="text-xs"
@@ -699,9 +699,9 @@ Regras:
                                                 {/* Insights clicáveis */}
                                                 {message.insights && message.insights.length > 0 && message.role === 'assistant' && (
                                                     <div className="flex flex-wrap gap-2 mt-2">
-                                                        {message.insights.map((insight, idx) => (
+                                                        {message.insights.map((insight) => (
                                                             <Card
-                                                                key={idx}
+                                                                key={insight.title}
                                                                 className={cn(
                                                                     'px-2 py-1.5 inline-flex items-center gap-1.5 text-xs',
                                                                     insight.action && 'cursor-pointer hover:bg-accent/10'

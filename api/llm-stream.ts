@@ -219,6 +219,52 @@ async function streamGemini(
     sendEvent({ type: 'done', provider: 'Gemini' });
 }
 
+/**
+ * Determina qual provedor usar baseado nas chaves disponíveis
+ */
+function determineProvider(openaiKey?: string, geminiKey?: string): 'openai' | 'gemini' | null {
+    if (openaiKey) return 'openai';
+    if (geminiKey) return 'gemini';
+    return null;
+}
+
+/**
+ * Valida se a requisição tem os dados necessários
+ */
+function validateRequest(body: unknown): LLMRequest {
+    if (!body || typeof body !== 'object') {
+        throw new Error('Invalid request body');
+    }
+
+    const request = body as LLMRequest;
+    if (!request.messages || !Array.isArray(request.messages)) {
+        throw new Error('Messages array is required');
+    }
+
+    return request;
+}
+
+/**
+ * Processa a requisição de streaming baseada no provedor disponível
+ */
+async function processStreamingRequest(
+    validatedBody: LLMRequest,
+    provider: 'openai' | 'gemini',
+    sendEvent: (data: SSEEvent) => void,
+    openaiKey?: string,
+    geminiKey?: string
+): Promise<void> {
+    const requestedModel = validatedBody.model || 'gpt-4o-mini';
+
+    if (provider === 'openai' && openaiKey) {
+        await streamOpenAI(validatedBody, openaiKey, requestedModel, sendEvent);
+    } else if (provider === 'gemini' && geminiKey) {
+        await streamGemini(validatedBody, geminiKey, requestedModel, sendEvent);
+    } else {
+        throw new Error('No valid provider configuration found');
+    }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS
     setupCorsHeaders(res);
@@ -236,27 +282,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Headers para SSE
     setupSSEHeaders(res);
 
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const requestedModel = body.model || 'gpt-4o-mini';
-
-    // Helper para enviar SSE
-    const sendEvent = createEventSender(res);
-
     try {
+        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const validatedBody = validateRequest(body);
+
+        // Helper para enviar SSE
+        const sendEvent = createEventSender(res);
+
         // Verificar provedor disponível
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
+        const provider = determineProvider(openaiKey, geminiKey);
 
-        if (openaiKey) {
-            await streamOpenAI(body, openaiKey, requestedModel, sendEvent);
-        } else if (geminiKey) {
-            await streamGemini(body, geminiKey, requestedModel, sendEvent);
-        } else {
+        if (!provider) {
             throw new Error('No LLM provider configured. Set OPENAI_API_KEY or GEMINI_API_KEY');
         }
 
+        await processStreamingRequest(validatedBody, provider, sendEvent, openaiKey, geminiKey);
+
     } catch (error) {
         console.error('[LLM-Stream] Error:', error);
+        const sendEvent = createEventSender(res);
         sendEvent({
             type: 'error',
             message: error instanceof Error ? error.message : 'Unknown error'

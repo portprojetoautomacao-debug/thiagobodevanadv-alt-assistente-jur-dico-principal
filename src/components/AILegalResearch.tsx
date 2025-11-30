@@ -280,9 +280,9 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
           </TabsContent>
 
           <TabsContent value="arguments" className="space-y-4">
-            {result.legalArguments.map((arg, index) => (
+            {result.legalArguments.map((arg) => (
               <Card
-                key={index}
+                key={arg.titulo}
                 className="glassmorphic card-glow-hover"
               >
                 <CardHeader>
@@ -306,9 +306,9 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         Precedentes citados
                       </p>
                       <ul className="space-y-1">
-                        {arg.precedentes.map((prec, i) => (
+                        {arg.precedentes.map((prec) => (
                           <li
-                            key={i}
+                            key={prec}
                             className="text-sm flex gap-2"
                           >
                             <span className="text-primary shrink-0">
@@ -327,9 +327,9 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         Doutrina
                       </p>
                       <ul className="space-y-1">
-                        {arg.doutrina.map((doc, i) => (
+                        {arg.doutrina.map((doc) => (
                           <li
-                            key={i}
+                            key={doc}
                             className="text-sm flex gap-2"
                           >
                             <span className="text-secondary shrink-0">
@@ -368,9 +368,9 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {result.keywords.map((keyword, index) => (
+                    {result.keywords.map((keyword) => (
                       <Badge
-                        key={index}
+                        key={keyword}
                         variant="outline"
                         className="cursor-pointer hover:bg-primary/10"
                       >
@@ -398,9 +398,9 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {result.relatedThemes.map((theme, index) => (
+                    {result.relatedThemes.map((theme) => (
                       <Button
-                        key={index}
+                        key={theme}
                         variant="outline"
                         className="justify-start h-auto py-3 px-4"
                         onClick={() => handleQuickSearch(theme)}

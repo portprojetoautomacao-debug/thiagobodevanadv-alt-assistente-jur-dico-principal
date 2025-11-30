@@ -234,6 +234,51 @@ function setCorsHeaders(res: VercelResponse): void {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 }
 
+/**
+ * Handler for GET /api/expedientes?action=pending
+ * Delegates to /api/djen/check for next pending intimation
+ */
+async function handlePending(req: VercelRequest, res: VercelResponse): Promise<VercelResponse> {
+  try {
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'
+
+    const response = await fetch(`${baseUrl}/api/djen-sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'next-pending',
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return res.status(response.status).json({
+        ok: false,
+        error: errorData.error || 'Erro ao buscar intimação',
+        detalhes: errorData,
+      })
+    }
+
+    const data = await response.json()
+
+    return res.status(200).json({
+      ok: true,
+      intimacao: data.intimacao || data,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err))
+    console.error('[API Expedientes Pending] Erro:', error)
+    return res.status(500).json({
+      ok: false,
+      error: 'Erro ao buscar intimação',
+      message: error.message,
+    })
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(res)
 
@@ -250,6 +295,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'POST' && isSyncRequest(req)) {
       return handlePostSync(req, res)
+    }
+
+    if (req.method === 'GET' && req.query.action === 'pending') {
+      return handlePending(req, res)
     }
 
     return res.status(405).json({ error: 'Method not allowed' })
