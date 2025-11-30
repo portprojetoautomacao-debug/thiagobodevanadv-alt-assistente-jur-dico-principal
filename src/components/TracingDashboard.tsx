@@ -207,12 +207,15 @@ export default function TracingDashboard({
                     {traces.slice(-50).reverse().map((span) => (
                       <div
                         key={span.context.spanId}
+                        role="button"
+                        tabIndex={0}
                         className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                           selectedTrace === span.context.traceId
                             ? 'border-primary bg-primary/5'
                             : 'hover:bg-muted/50'
                         }`}
                         onClick={() => setSelectedTrace(span.context.traceId)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedTrace(span.context.traceId); } }}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">

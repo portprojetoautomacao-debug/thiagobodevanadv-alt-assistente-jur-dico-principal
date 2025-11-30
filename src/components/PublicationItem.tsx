@@ -67,12 +67,15 @@ export function PublicationItem({
 
     return (
         <div
+            role="button"
+            tabIndex={0}
             className={cn(
                 'p-3 rounded-lg border transition-all cursor-pointer',
                 'hover:bg-accent/50 hover:border-primary/30',
                 expanded === pub.id && 'bg-accent/30 border-primary/50',
             )}
             onClick={() => onToggleExpand(expanded === pub.id ? null : pub.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleExpand(expanded === pub.id ? null : pub.id); } }}
         >
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">

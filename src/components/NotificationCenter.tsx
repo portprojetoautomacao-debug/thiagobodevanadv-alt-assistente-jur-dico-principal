@@ -303,9 +303,12 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                 return (
                   <div
                     key={notification.id}
+                    role="button"
+                    tabIndex={0}
                     className={`group relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${notification.read ? '' : 'bg-muted/30'
                       }`}
                     onClick={() => handleClick(notification)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(notification); } }}
                   >
                     {/* Indicador de não lida */}
                     {!notification.read && (

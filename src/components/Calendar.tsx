@@ -831,9 +831,12 @@ export default function Calendar() {
                         {dayAppointments.slice(0, 2).map((apt) => (
                           <div
                             key={apt.id}
+                            role="button"
+                            tabIndex={0}
                             className={`text-xs p-1 rounded border ${EVENT_COLORS[apt.type] || EVENT_COLORS.outro
                               } truncate cursor-pointer hover:opacity-80`}
                             onClick={() => handleViewDetails(apt)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewDetails(apt); } }}
                           >
                             {apt.time} {apt.title}
                           </div>
@@ -872,8 +875,11 @@ export default function Calendar() {
               {sortedUpcomingAppointments.slice(0, 5).map((apt) => (
                 <div
                   key={apt.id}
+                  role="button"
+                  tabIndex={0}
                   className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
                   onClick={() => handleViewDetails(apt)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewDetails(apt); } }}
                 >
                   <CalendarDots
                     className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
