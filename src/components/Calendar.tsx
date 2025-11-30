@@ -125,6 +125,79 @@ const EVENT_COLORS: Record<string, string> = {
 const SAFE_ORIGIN =
   globalThis.window ? globalThis.window.location.origin : 'http://localhost'
 
+/**
+ * Calcula os dias do mês para renderização do calendário
+ */
+function calculateDaysInMonth(year: number, month: number): (number | null)[] {
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const days: (number | null)[] = []
+
+  for (let i = 0; i < firstDay; i++) {
+    days.push(null)
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(i)
+  }
+
+  return days
+}
+
+/**
+ * Verifica se um dia é o dia atual
+ */
+function checkIsToday(day: number, month: number, year: number): boolean {
+  const today = new Date()
+  return (
+    day === today.getDate() &&
+    month === today.getMonth() &&
+    year === today.getFullYear()
+  )
+}
+
+/**
+ * Converte o tipo de compromisso para label em português
+ */
+function getHumanTypeLabel(type: Appointment['type']): string {
+  switch (type) {
+    case 'audiencia':
+    case 'hearing':
+      return 'Audiência'
+    case 'reuniao':
+    case 'meeting':
+      return 'Reunião'
+    case 'prazo':
+    case 'deadline':
+      return 'Prazo'
+    default:
+      return 'Outro'
+  }
+}
+
+/**
+ * Retorna a classe CSS para o estado do novo compromisso
+ */
+function getNewAppointmentInitialState(): {
+  title: string
+  description: string
+  type: Appointment['type']
+  date: string
+  time: string
+  duration: number
+  location: string
+} {
+  return {
+    title: '',
+    description: '',
+    type: 'outro' as Appointment['type'],
+    date: '',
+    time: '',
+    duration: 60,
+    location: ''
+  }
+}
+
 export default function Calendar() {
   const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
   const [currentDate, setCurrentDate] = useState(() => new Date())
@@ -194,21 +267,7 @@ export default function Calendar() {
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
 
-  const getDaysInMonth = () => {
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const days: (number | null)[] = []
-
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null)
-    }
-
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i)
-    }
-
-    return days
-  }
+  const getDaysInMonth = () => calculateDaysInMonth(year, month)
 
   const getAppointmentsForDay = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -253,15 +312,7 @@ export default function Calendar() {
     }
 
     setShowDialog(false)
-    setNewAppointment({
-      title: '',
-      description: '',
-      type: 'outro' as Appointment['type'],
-      date: '',
-      time: '',
-      duration: 60,
-      location: ''
-    })
+    setNewAppointment(getNewAppointmentInitialState())
   }
 
   const handleConnectGoogle = async () => {
@@ -395,15 +446,8 @@ export default function Calendar() {
   }
 
   const days = useMemo(getDaysInMonth, [month, year])
-  const today = new Date()
 
-  const isToday = (day: number) => {
-    return (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    )
-  }
+  const isToday = (day: number) => checkIsToday(day, month, year)
 
   // Helper function para determinar classe CSS do dia (evita ternário aninhado)
   const getDayClassName = (day: number | null): string => {
@@ -429,21 +473,7 @@ export default function Calendar() {
     [appointments]
   )
 
-  const humanTypeLabel = (type: Appointment['type']) => {
-    switch (type) {
-      case 'audiencia':
-      case 'hearing':
-        return 'Audiência'
-      case 'reuniao':
-      case 'meeting':
-        return 'Reunião'
-      case 'prazo':
-      case 'deadline':
-        return 'Prazo'
-      default:
-        return 'Outro'
-    }
-  }
+  const humanTypeLabel = getHumanTypeLabel
 
   return (
     <div className="p-6 space-y-6">

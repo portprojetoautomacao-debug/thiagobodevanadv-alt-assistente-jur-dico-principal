@@ -232,10 +232,10 @@ async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
   // Rate limit
   if (response.status === 429) {
     const data = await response.json()
-    return { 
-      success: false, 
+    return {
+      success: false,
       rateLimited: true,
-      message: data.message || 'Tente novamente em alguns segundos' 
+      message: data.message || 'Tente novamente em alguns segundos'
     }
   }
 
@@ -244,17 +244,17 @@ async function executeDJENSync(baseUrl: string): Promise<SyncResult> {
   }
 
   const result = await response.json()
-  
+
   if (result.ok) {
-    return { 
-      success: true, 
-      newPublications: result.result?.newPublications || 0 
+    return {
+      success: true,
+      newPublications: result.result?.newPublications || 0
     }
   }
 
-  return { 
-    success: false, 
-    message: result.error || result.message || 'Erro na sincronização' 
+  return {
+    success: false,
+    message: result.error || result.message || 'Erro na sincronização'
   }
 }
 
@@ -299,6 +299,53 @@ function checkProcessExists(
       p.numeroCNJ === numeroProcesso ||
       p.numeroCNJ.replaceAll(/\D/g, '') === numeroProcesso.replaceAll(/\D/g, ''),
   )
+}
+
+// ===== Date Formatting Helpers (reduces S3776) =====
+
+/**
+ * Calculates the relative date description from a date string
+ */
+function getRelativeDateDescription(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffHours < 1) return 'Agora mesmo'
+  if (diffHours < 24) return `${diffHours}h atrás`
+  if (diffDays === 1) return 'Ontem'
+  if (diffDays < 7) return `${diffDays} dias atrás`
+  return date.toLocaleDateString('pt-BR')
+}
+
+// ===== Match Badge Helpers (reduces S3776) =====
+
+type MatchType = 'nome' | 'oab' | 'ambos'
+
+interface MatchBadgeVariant {
+  label: string
+  className: string
+}
+
+const MATCH_BADGE_VARIANTS: Record<MatchType, MatchBadgeVariant> = {
+  nome: {
+    label: 'Nome',
+    className: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  },
+  oab: {
+    label: 'OAB',
+    className: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  },
+  ambos: {
+    label: 'Nome + OAB',
+    className: 'bg-green-500/20 text-green-400 border-green-500/30',
+  },
+}
+
+function getMatchBadgeVariant(type: MatchType): MatchBadgeVariant {
+  return MATCH_BADGE_VARIANTS[type]
 }
 
 interface DJENPublicationsWidgetProps {
@@ -370,9 +417,9 @@ export default function DJENPublicationsWidget({
     try {
       const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
       const result = await executeDJENSync(baseUrl)
-      
+
       showSyncToast(result)
-      
+
       if (result.success) {
         await fetchPublications()
       }
@@ -485,38 +532,12 @@ export default function DJENPublicationsWidget({
     fetchPublications()
   }, [fetchPublications])
 
-  // Formata data relativa
-  const formatRelativeDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  // Use extracted helper for relative date formatting
+  const formatRelativeDate = getRelativeDateDescription
 
-    if (diffHours < 1) return 'Agora mesmo'
-    if (diffHours < 24) return `${diffHours}h atrás`
-    if (diffDays === 1) return 'Ontem'
-    if (diffDays < 7) return `${diffDays} dias atrás`
-    return date.toLocaleDateString('pt-BR')
-  }
-
-  // Badge de tipo de match
+  // Badge de tipo de match - uses extracted constants
   const MatchBadge = ({ type }: { type: 'nome' | 'oab' | 'ambos' }) => {
-    const variants = {
-      nome: {
-        label: 'Nome',
-        className: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      },
-      oab: {
-        label: 'OAB',
-        className: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      },
-      ambos: {
-        label: 'Nome + OAB',
-        className: 'bg-green-500/20 text-green-400 border-green-500/30',
-      },
-    }
-    const variant = variants[type]
+    const variant = getMatchBadgeVariant(type)
     return (
       <Badge variant="outline" className={variant.className}>
         {variant.label}

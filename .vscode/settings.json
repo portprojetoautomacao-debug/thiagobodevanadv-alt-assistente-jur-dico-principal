@@ -196,10 +196,14 @@
   "sonarlint.ls.javaHome": "",
 
   // Regras customizadas locais (sobrescrevem servidor se definidas)
+  // Para focar em alta severidade, desabilite regras de baixa prioridade:
   "sonarlint.rules": {
-    // Desabilitar regras específicas se necessário
+    // Desabilitar regras de info/minor se desejar focar em bugs/vulnerabilidades
     // "typescript:S1234": { "level": "off" }
   },
+
+  // Focar apenas em código novo (reduz ruído)
+  "sonarlint.focusOnNewCode": true,
 
   // Parâmetros do analisador (equivalente a sonar.* properties do scanner)
   "sonarlint.analyzerProperties": {

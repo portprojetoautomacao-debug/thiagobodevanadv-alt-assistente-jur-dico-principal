@@ -35,6 +35,37 @@ function needsAnalysis(exp: Expediente): boolean {
   return !exp.analyzed || needsReanalysis(exp)
 }
 
+/**
+ * Verifica se as ações sugeridas indicam necessidade de resposta/petição
+ */
+function checkNeedsResponse(suggestedActions?: string[]): boolean {
+  if (!suggestedActions) return false
+  const responseKeywords = ['resposta', 'manifestar', 'petição', 'contestar', 'recurso']
+  return suggestedActions.some(a =>
+    responseKeywords.some(keyword => a.toLowerCase().includes(keyword))
+  )
+}
+
+/**
+ * Verifica se as ações sugeridas indicam necessidade de pesquisa
+ */
+function checkNeedsResearch(suggestedActions?: string[]): boolean {
+  if (!suggestedActions) return false
+  const researchKeywords = ['jurisprudência', 'precedente', 'pesquisar']
+  return suggestedActions.some(a =>
+    researchKeywords.some(keyword => a.toLowerCase().includes(keyword))
+  )
+}
+
+/**
+ * Determina a prioridade da tarefa baseada na prioridade da análise
+ */
+function getTaskPriority(priority: string, defaultPriority: 'low' | 'medium' | 'high' = 'medium'): 'low' | 'medium' | 'high' {
+  const normalizedPriority = priority.toLowerCase()
+  if (normalizedPriority === 'alta' || normalizedPriority === 'urgente') return 'high'
+  return defaultPriority
+}
+
 // Determina quais agentes devem receber tarefas com base na análise
 function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   priority?: string
@@ -51,7 +82,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
     tasks.push({
       agentId: 'gestao-prazos',
       type: 'calculate_deadline',
-      priority: priority === 'alta' || priority === 'urgente' ? 'high' : 'medium',
+      priority: getTaskPriority(priority, 'medium'),
       data: {
         expedienteId: exp.id,
         processNumber: exp.numeroProcesso,
@@ -78,7 +109,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   })
 
   // 3. Análise de Risco - para prioridades altas
-  if (priority === 'alta' || priority === 'urgente') {
+  if (getTaskPriority(priority) === 'high') {
     tasks.push({
       agentId: 'analise-risco',
       type: 'risk_analysis',
@@ -94,18 +125,11 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   }
 
   // 4. Redação de Petições - se ações sugerem resposta
-  const needsResponse = analysisData.suggestedActions?.some(a =>
-    a.toLowerCase().includes('resposta') ||
-    a.toLowerCase().includes('manifestar') ||
-    a.toLowerCase().includes('petição') ||
-    a.toLowerCase().includes('contestar') ||
-    a.toLowerCase().includes('recurso')
-  )
-  if (needsResponse) {
+  if (checkNeedsResponse(analysisData.suggestedActions)) {
     tasks.push({
       agentId: 'redacao-peticoes',
       type: 'draft_petition',
-      priority: priority === 'alta' ? 'high' : 'medium',
+      priority: getTaskPriority(priority, 'medium'),
       data: {
         expedienteId: exp.id,
         processNumber: exp.numeroProcesso,
@@ -117,12 +141,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   }
 
   // 5. Pesquisa de Jurisprudência - para casos complexos
-  const needsResearch = analysisData.suggestedActions?.some(a =>
-    a.toLowerCase().includes('jurisprudência') ||
-    a.toLowerCase().includes('precedente') ||
-    a.toLowerCase().includes('pesquisar')
-  )
-  if (needsResearch || priority === 'alta') {
+  if (checkNeedsResearch(analysisData.suggestedActions) || getTaskPriority(priority) === 'high') {
     tasks.push({
       agentId: 'pesquisa-juris',
       type: 'research_precedents',
@@ -140,7 +159,7 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
   tasks.push({
     agentId: 'estrategia-processual',
     type: 'case_strategy',
-    priority: priority === 'alta' || priority === 'urgente' ? 'high' : 'medium',
+    priority: getTaskPriority(priority, 'medium'),
     data: {
       expedienteId: exp.id,
       processNumber: exp.numeroProcesso,
