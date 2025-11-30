@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo, type JSX } from 'react'
-import { useKV } from '@/hooks/use-kv'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -7,17 +8,6 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -26,28 +16,38 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
-  CalendarDots,
-  Plus,
-  CaretLeft,
-  CaretRight,
-  GoogleLogo,
-  CloudArrowDown,
-  CloudArrowUp,
-  Link as LinkIcon,
-  Trash,
-  Warning,
-  Info,
-  ArrowsClockwise,
-  CheckCircle,
-  XCircle
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import { useKV } from '@/hooks/use-kv'
 import { googleCalendarService } from '@/lib/google-calendar-service'
 import type { Appointment } from '@/types'
+import {
+  ArrowsClockwise,
+  CalendarDots,
+  CaretLeft,
+  CaretRight,
+  CheckCircle,
+  CloudArrowDown,
+  CloudArrowUp,
+  GoogleLogo,
+  Info,
+  Link as LinkIcon,
+  Plus,
+  Trash,
+  Warning,
+  XCircle
+} from '@phosphor-icons/react'
+import { useEffect, useMemo, useState, type JSX } from 'react'
+import { toast } from 'sonner'
 
 // Verificar se as credenciais do Google estão configuradas
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -708,6 +708,7 @@ export default function Calendar() {
                 </div>
                 <Switch
                   id="sync-toggle"
+                  aria-label="Ativar sincronização automática com Google Calendar"
                   checked={!!syncEnabled}
                   onCheckedChange={handleToggleSync}
                   disabled={!isGoogleConnected}

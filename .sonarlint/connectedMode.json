@@ -1,4 +1,5 @@
 {
     "sonarCloudOrganization": "thiagobodevan-a11y",
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+    "region": "EU"
 }

@@ -9,8 +9,29 @@
  * - Integração com Sentry para alertas
  */
 
+import { Redis } from '@upstash/redis'
+import { captureError, captureMessage, trackMetric, withSpan } from '../services/error-tracking'
 import { AgentStatus } from './agents'
-import { trackMetric, captureMessage, captureError, withSpan } from '../services/error-tracking'
+
+// ============================================================================
+// REDIS HELPER
+// ============================================================================
+
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+
+let _redisClient: Redis | null = null
+
+function getRedisOrNull(): Redis | null {
+    if (!redisUrl || !redisToken) return null
+    if (!_redisClient) {
+        _redisClient = new Redis({
+            url: redisUrl,
+            token: redisToken
+        })
+    }
+    return _redisClient
+}
 
 export interface AgentActionLog {
     agentId: string
@@ -66,36 +87,19 @@ export class AgentMonitor {
             captureMessage(`Agent Action Failed: ${agentId} - ${action}`, 'warning')
         }
 
-        // Persistir no KV (apenas se estiver no ambiente server-side com token)
-        if (typeof process !== 'undefined' && process.env.GITHUB_TOKEN) {
+        // Persistir no Redis (apenas se estiver disponível)
+        const redis = getRedisOrNull()
+        if (redis) {
             try {
-                const sparkId = process.env.SPARK_ID || 'spark-default'
-                const kvEndpoint = `https://api.github.com/spark/kv/agent-logs?sparkId=${sparkId}`
-
-                // Primeiro buscar logs existentes
-                const response = await fetch(kvEndpoint, {
-                    headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-                })
-
-                let logs: AgentActionLog[] = []
-                if (response.ok) {
-                    const data = await response.json() as { value?: AgentActionLog[] }
-                    logs = data.value || []
-                }
+                // Buscar logs existentes
+                const existingLogs = await redis.get('agent-logs') as AgentActionLog[] | null
+                const logs = existingLogs || []
 
                 // Manter apenas os últimos 50 logs para não estourar o limite
                 const newLogs = [log, ...logs].slice(0, 50)
-
-                await fetch(kvEndpoint, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
-                    },
-                    body: JSON.stringify({ value: newLogs })
-                })
+                await redis.set('agent-logs', newLogs)
             } catch (error) {
-                console.error('[AgentMonitor] Failed to persist log to KV', error)
+                console.error('[AgentMonitor] Failed to persist log to Redis', error)
             }
         }
     }

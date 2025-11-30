@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useKV } from '@/hooks/use-kv'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -7,24 +8,23 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
-import {
-  FileText,
-  Warning,
-  CheckCircle,
-  Clock,
-  Robot,
-  Bell,
-  Info
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { useKV } from '@/hooks/use-kv'
 import { geminiGenerateJSON } from '@/lib/gemini-client'
 import type { Process } from '@/types'
+import {
+  Bell,
+  CheckCircle,
+  Clock,
+  FileText,
+  Info,
+  Robot,
+  Warning
+} from '@phosphor-icons/react'
+import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface MissingDocument {
   id: string
@@ -243,6 +243,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                 <span>Auto-verificação (1h)</span>
                 <Switch
                   id="auto-check"
+                  aria-label="Ativar verificação automática de documentos a cada 1 hora"
                   checked={autoCheckEnabled}
                   onCheckedChange={setAutoCheckEnabled}
                   disabled={processes.length === 0}
@@ -368,8 +369,8 @@ Retorne um objeto JSON com a seguinte estrutura:
                           doc.urgency === 'high'
                             ? 'hsl(var(--destructive))'
                             : doc.urgency === 'medium'
-                            ? 'hsl(var(--primary))'
-                            : 'hsl(var(--muted-foreground))'
+                              ? 'hsl(var(--primary))'
+                              : 'hsl(var(--muted-foreground))'
                       }}
                     >
                       <CardContent className="pt-6">

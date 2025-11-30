@@ -9,7 +9,28 @@
  * - Interface para futura integração com Vector DB
  */
 
+import { Redis } from '@upstash/redis'
 import { z } from 'zod'
+
+// ============================================================================
+// REDIS HELPER
+// ============================================================================
+
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+
+let _redisClient: Redis | null = null
+
+function getRedisOrNull(): Redis | null {
+    if (!redisUrl || !redisToken) return null
+    if (!_redisClient) {
+        _redisClient = new Redis({
+            url: redisUrl,
+            token: redisToken
+        })
+    }
+    return _redisClient
+}
 
 // ============================================================================
 // TYPES & SCHEMAS
@@ -70,28 +91,23 @@ export class LegalMemory {
      * Carrega memória do KV Storage
      */
     private async loadFromKV(): Promise<void> {
-        if (typeof process === 'undefined' || !process.env.GITHUB_TOKEN) return
-
         try {
-            const sparkId = process.env.SPARK_ID || 'spark-default'
-            const kvEndpoint = `https://api.github.com/spark/kv/legal-memory?sparkId=${sparkId}`
+            const redis = getRedisOrNull()
+            if (!redis) {
+                console.warn('[LegalMemory] No Redis available')
+                return
+            }
 
-            const response = await fetch(kvEndpoint, {
-                headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-            })
-
-            if (response.ok) {
-                const data = await response.json() as { value?: LegalContextItem[] }
-                const items = data.value || []
-
+            const items = await redis.get('legal-memory') as LegalContextItem[] | null
+            if (items && Array.isArray(items)) {
                 this.memoryCache.clear()
                 for (const item of items) {
                     this.memoryCache.set(item.id, item)
                 }
-                console.log(`[LegalMemory] Carregados ${items.length} itens do KV`)
+                console.log(`[LegalMemory] Carregados ${items.length} itens do Redis`)
             }
         } catch (error) {
-            console.error('[LegalMemory] Failed to load from KV', error)
+            console.error('[LegalMemory] Failed to load from Redis', error)
         }
     }
 
@@ -121,36 +137,19 @@ export class LegalMemory {
         // Armazenar (por enquanto em memória/cache)
         this.memoryCache.set(validatedItem.id, validatedItem)
 
-        // Persistir no KV (apenas se estiver no ambiente server-side com token)
-        if (typeof process !== 'undefined' && process.env.GITHUB_TOKEN) {
+        // Persistir no Redis (apenas se estiver disponível)
+        const redis = getRedisOrNull()
+        if (redis) {
             try {
-                const sparkId = process.env.SPARK_ID || 'spark-default'
-                const kvEndpoint = `https://api.github.com/spark/kv/legal-memory?sparkId=${sparkId}`
-
                 // Buscar memória existente
-                const response = await fetch(kvEndpoint, {
-                    headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-                })
-
-                let memory: LegalContextItem[] = []
-                if (response.ok) {
-                    const data = await response.json() as { value?: LegalContextItem[] }
-                    memory = data.value || []
-                }
+                const existingMemory = await redis.get('legal-memory') as LegalContextItem[] | null
+                const memory = existingMemory || []
 
                 // Adicionar novo item
                 const newMemory = [...memory, validatedItem]
-
-                await fetch(kvEndpoint, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
-                    },
-                    body: JSON.stringify({ value: newMemory })
-                })
+                await redis.set('legal-memory', newMemory)
             } catch (error) {
-                console.error('[LegalMemory] Failed to persist to KV', error)
+                console.error('[LegalMemory] Failed to persist to Redis', error)
             }
         }
 
