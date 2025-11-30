@@ -46,7 +46,7 @@ export default function TracingDashboard({
     setTraces(tracingService.getTraces())
     setStats(tracingService.getStats())
     setLLMMetrics(getLLMMetrics())
-    
+
     const metrics: Record<string, ReturnType<typeof getAgentMetrics>> = {}
     agentIds.forEach(id => {
       metrics[id] = getAgentMetrics(id)
@@ -56,7 +56,7 @@ export default function TracingDashboard({
 
   useEffect(() => {
     refreshData()
-    
+
     if (autoRefresh) {
       const interval = setInterval(refreshData, refreshInterval)
       return () => clearInterval(interval)
@@ -209,11 +209,10 @@ export default function TracingDashboard({
                         key={span.context.spanId}
                         role="button"
                         tabIndex={0}
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                          selectedTrace === span.context.traceId
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedTrace === span.context.traceId
                             ? 'border-primary bg-primary/5'
                             : 'hover:bg-muted/50'
-                        }`}
+                          }`}
                         onClick={() => setSelectedTrace(span.context.traceId)}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedTrace(span.context.traceId); } }}
                       >

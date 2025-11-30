@@ -6,7 +6,7 @@ import { config } from './config'
  * Permite gerenciar tarefas jurídicas, prazos e compromissos
  */
 export class TodoistClient {
-  private api: TodoistApi | null = null
+  private readonly api: TodoistApi | null = null
 
   constructor() {
     const apiKey = config.todoist?.apiKey

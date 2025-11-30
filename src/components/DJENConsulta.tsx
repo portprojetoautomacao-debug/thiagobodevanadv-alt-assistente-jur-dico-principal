@@ -159,7 +159,7 @@ export default function DJENConsulta() {
     a.download = `djen-resultados-${dataConsulta}.json`
     document.body.appendChild(a)
     a.click()
-    document.body.removeChild(a)
+    a.remove()
     URL.revokeObjectURL(url)
     toast.success('Resultados exportados com sucesso')
   }
