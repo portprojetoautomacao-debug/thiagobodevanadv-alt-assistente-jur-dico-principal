@@ -12,8 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
-import { PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import { Users, Clock, CurrencyDollar, TrendUp, Warning } from '@phosphor-icons/react'
 import type { Process, FinancialEntry } from '@/types'
 

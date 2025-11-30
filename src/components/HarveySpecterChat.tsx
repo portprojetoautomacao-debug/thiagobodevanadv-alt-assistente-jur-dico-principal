@@ -669,17 +669,17 @@ Regras:
                                                             <SimpleMarkdown content={streamingContent || ''} />
                                                             <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
                                                         </div>
-                                                    ) : message.content ? (
+                                                    ) : (message.content ? (
                                                         <div className="text-sm">
                                                             <SimpleMarkdown content={message.content} />
                                                         </div>
-                                                    ) : message.id === streamingMessageId ? (
+                                                    ) : (message.id === streamingMessageId ? (
                                                         <div className="flex gap-1">
                                                             <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
                                                             <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
                                                             <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
                                                         </div>
-                                                    ) : null}
+                                                    ) : null))}
                                                 </Card>
 
                                                 {/* Copy button para assistente */}

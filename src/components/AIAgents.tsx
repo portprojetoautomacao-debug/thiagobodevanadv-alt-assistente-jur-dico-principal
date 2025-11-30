@@ -575,10 +575,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                         <span>Capacidades:</span>
                         <Badge
-                          variant={isStreaming ? 'default' : agent.enabled ? 'default' : 'secondary'}
+                          variant={isStreaming || agent.enabled ? 'default' : 'secondary'}
                           className={`text-xs ${isStreaming ? 'bg-purple-500 text-white' : ''}`}
                         >
-                          {isStreaming ? 'Streaming' : agent.enabled ? 'Ativo' : 'Pausado'}
+                          {isStreaming ? 'Streaming' : (agent.enabled ? 'Ativo' : 'Pausado')}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -612,10 +612,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Status:</span>
                       <Badge
-                        variant={isStreaming ? 'default' : agent.enabled ? 'default' : 'secondary'}
+                        variant={isStreaming || agent.enabled ? 'default' : 'secondary'}
                         className={isStreaming ? 'bg-purple-500' : ''}
                       >
-                        {isStreaming ? '⚡ Gerando resposta...' : agent.enabled ? 'Pronto para uso' : 'Desativado'}
+                        {isStreaming ? '⚡ Gerando resposta...' : (agent.enabled ? 'Pronto para uso' : 'Desativado')}
                       </Badge>
                     </div>
                   </CardContent>
@@ -760,11 +760,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                           </div>
                           <Badge
                             variant={
-                              task.status === 'processing'
-                                ? 'default'
-                                : task.status === 'queued'
-                                  ? 'secondary'
-                                  : 'destructive'
+                              task.status === 'processing' ? 'default' :
+                                (task.status === 'queued' ? 'secondary' : 'destructive')
                             }
                             className="flex-shrink-0"
                           >
