@@ -427,8 +427,45 @@ export async function consultarDJENForLawyer(
   const queryDataInicio = dataInicio || defaultDate;
   const queryDataFim = dataFim || queryDataInicio;
 
-  const { numero: numeroOabNumerico, uf: ufOab } = numeroOAB ? parseOAB(numeroOAB) : {};
+  const parsedOAB = numeroOAB ? parseOAB(numeroOAB) : { numero: undefined, uf: undefined };
+  const numeroOabNumerico = parsedOAB.numero;
+  const ufOab = parsedOAB.uf;
 
+  return await queryAllTribunais(
+    tribunais, queryDataInicio, queryDataFim,
+    nomeAdvogado, numeroOabNumerico, ufOab, meio
+  );
+}
+
+/**
+ * Processa resultado de query de tribunal individual
+ */
+function processQueryResult(
+  queryResult: TribunalQueryResult,
+  tribunal: string,
+  resultados: DJENFilteredResult[],
+  erros: Array<{ tribunal: string; erro: string }>
+): boolean {
+  if (queryResult.error) {
+    erros.push({ tribunal, erro: queryResult.error });
+    return queryResult.rateLimitHit;
+  }
+  resultados.push(...queryResult.resultados);
+  return false;
+}
+
+/**
+ * Consulta todos os tribunais com delay entre requisições
+ */
+async function queryAllTribunais(
+  tribunais: string[],
+  queryDataInicio: string,
+  queryDataFim: string,
+  nomeAdvogado: string | undefined,
+  numeroOabNumerico: string | undefined,
+  ufOab: string | undefined,
+  meio: 'D' | 'E' | undefined
+): Promise<{ resultados: DJENFilteredResult[]; erros: Array<{ tribunal: string; erro: string }>; rateLimitWarning?: boolean }> {
   const resultados: DJENFilteredResult[] = [];
   const erros: Array<{ tribunal: string; erro: string }> = [];
   let rateLimitWarning = false;
@@ -441,12 +478,8 @@ export async function consultarDJENForLawyer(
         nomeAdvogado, numeroOabNumerico, ufOab, meio
       );
 
-      if (queryResult.error) {
-        erros.push({ tribunal, erro: queryResult.error });
-        if (queryResult.rateLimitHit) rateLimitWarning = true;
-      } else {
-        resultados.push(...queryResult.resultados);
-      }
+      const hitRateLimit = processQueryResult(queryResult, tribunal, resultados, erros);
+      if (hitRateLimit) rateLimitWarning = true;
 
       // Delay entre tribunais
       if (i < tribunais.length - 1) {
