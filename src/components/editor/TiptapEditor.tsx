@@ -844,11 +844,11 @@ export function TiptapEditor({
                       ) : (
                         <Lightning className="h-4 w-4" weight="fill" />
                       )}
-                      {isStreaming
-                        ? 'Gerando...'
-                        : onAIStream
-                          ? 'Gerar com Streaming'
-                          : 'Gerar Texto'}
+                      {(() => {
+                        if (isStreaming) return 'Gerando...'
+                        if (onAIStream) return 'Gerar com Streaming'
+                        return 'Gerar Texto'
+                      })()}
                     </Button>
                   </div>
 
