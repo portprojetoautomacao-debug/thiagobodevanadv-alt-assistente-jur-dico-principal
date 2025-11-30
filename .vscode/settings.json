@@ -41,7 +41,12 @@
   "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js",
   "sonarlint.analyzerProperties": {
     "sonar.exclusions": "**/.vscode-remote/extensions/**"
-  }
+  },
+  // Desabilitar funcionalidades GitLab Duo (projeto usa GitHub)
+  "gitlab.enabled": false,
+  "gitlab.real-timeSecurityScan.enabled": false,
+  "gitlab.debug": false,
+  "gitlab.showPipelineUpdateNotifications": false,
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -51,5 +56,10 @@
   "cSpell.ignorePaths": [
     "**/.vscode-remote/extensions/**"
   ],
-  "typescript.preferences.includePackageJsonAutoImports": "off"
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  // Configurações específicas para desabilitar GitLab Duo neste workspace GitHub
+  "gitlab.instanceUrl": "",
+  "gitlab.pipelineGitRemoteName": "",
+  "gitlab.remoteName": "",
+  "gitlab.acquireVsCodeApi": false
 }

@@ -351,6 +351,7 @@ textarea {
 
 /* Suporte ao modo de alto contraste (forced-colors) */
 @media (forced-colors: active) {
+
   /* Garantir que elementos interativos mantenham suas cores no modo de alto contraste */
   button,
   a[href],
