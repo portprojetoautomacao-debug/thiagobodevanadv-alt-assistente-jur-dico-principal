@@ -57,7 +57,7 @@ export default function CalculadoraPrazos() {
 
   const handleCalcular = () => {
     const inicio = new Date(`${dataInicio}T00:00:00`)
-    const dias = parseInt(diasCorridos, 10)
+    const dias = Number.parseInt(diasCorridos, 10)
 
     if (Number.isNaN(dias) || dias <= 0) {
       toast.error('Dias inválidos', {
@@ -114,7 +114,7 @@ export default function CalculadoraPrazos() {
     }
 
     // Se já tiver quantidade de dias válida, dispara cálculo automaticamente
-    const dias = parseInt(diasCorridos, 10)
+    const dias = Number.parseInt(diasCorridos, 10)
     if (!Number.isNaN(dias) && dias > 0) {
       handleCalcular()
     }
@@ -260,9 +260,9 @@ export default function CalculadoraPrazos() {
                     placeholder={
                       !selectedProcessId
                         ? 'Selecione primeiro um processo'
-                        : expedientesDoProcesso.length === 0
+                        : (expedientesDoProcesso.length === 0
                           ? 'Nenhuma intimação vinculada a este processo'
-                          : 'Selecione uma intimação'
+                          : 'Selecione uma intimação')
                     }
                   />
                 </SelectTrigger>
@@ -272,9 +272,9 @@ export default function CalculadoraPrazos() {
                       {e.titulo || e.tipo || 'Intimação'} •{' '}
                       {e.dataRecebimento
                         ? formatarData(e.dataRecebimento)
-                        : e.data
+                        : (e.data
                           ? formatarData(e.data)
-                          : 'Data não informada'}
+                          : 'Data não informada')}
                     </SelectItem>
                   ))}
                 </SelectContent>

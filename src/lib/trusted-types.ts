@@ -31,7 +31,7 @@ const ALLOWED_SCRIPT_ORIGINS = [
     'https://*.vercel.app',
     'https://*.sentry.io',
     // Origem local
-    window.location.origin,
+    globalThis.window?.location?.origin ?? '',
 ];
 
 // Tags HTML permitidas para sanitização
@@ -52,9 +52,9 @@ const ALLOWED_ATTRS = new Set([
  * Verifica se Trusted Types é suportado pelo navegador
  */
 export function isTrustedTypesSupported(): boolean {
-    return typeof window !== 'undefined' &&
-        window.trustedTypes !== undefined &&
-        typeof window.trustedTypes.createPolicy === 'function';
+    return typeof globalThis.window !== 'undefined' &&
+        globalThis.window.trustedTypes !== undefined &&
+        typeof globalThis.window.trustedTypes.createPolicy === 'function';
 }
 
 /**

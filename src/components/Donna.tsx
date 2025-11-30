@@ -612,7 +612,7 @@ IMPORTANTE:
                         {/* Mostra streaming content se esta é a mensagem sendo streamada */}
                         {message.id === streamingMessageId && isStreaming
                           ? (streamingContent || '▋')
-                          : message.content || (message.id === streamingMessageId ? '▋' : '')}
+                          : (message.content || (message.id === streamingMessageId ? '▋' : ''))}
                         {/* Cursor piscante durante streaming */}
                         {message.id === streamingMessageId && isStreaming && (
                           <span className="animate-pulse">▋</span>

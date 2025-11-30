@@ -253,8 +253,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
         <Card
           className={`card-glow-hover ${stats.prazosUrgentes > 0
-              ? 'status-gradient-urgent border-destructive/50'
-              : ''
+            ? 'status-gradient-urgent border-destructive/50'
+            : ''
             }`}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -274,8 +274,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <CardContent>
             <div
               className={`text-3xl font-bold ${stats.prazosUrgentes > 0
-                  ? 'text-destructive'
-                  : 'gradient-text'
+                ? 'text-destructive'
+                : 'gradient-text'
                 }`}
             >
               {stats.prazosUrgentes}
@@ -451,13 +451,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         variant={urgente ? 'destructive' : 'default'}
                         className={`shrink-0 ${urgente ? 'neon-glow' : ''}`}
                       >
-                        {diasRestantes < 0
-                          ? 'Vencido'
-                          : diasRestantes === 0
-                            ? 'Hoje'
-                            : diasRestantes === 1
-                              ? 'Amanhã'
-                              : `${diasRestantes} dias`}
+                        {diasRestantes < 0 ? 'Vencido' :
+                          diasRestantes === 0 ? 'Hoje' :
+                            diasRestantes === 1 ? 'Amanhã' :
+                              `${diasRestantes} dias`}
                       </Badge>
                     </div>
                   )
@@ -518,13 +515,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                     <Badge
                       variant={
-                        process.status === 'ativo'
-                          ? 'default'
-                          : process.status === 'concluido'
-                            ? 'secondary'
-                            : process.status === 'suspenso'
-                              ? 'outline'
-                              : 'destructive'
+                        process.status === 'ativo' ? 'default' :
+                          process.status === 'concluido' ? 'secondary' :
+                            process.status === 'suspenso' ? 'outline' :
+                              'destructive'
                       }
                       className="shrink-0"
                     >

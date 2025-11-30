@@ -83,7 +83,7 @@ const EVENT_COLORS: Record<string, string> = {
 
 // fallback para SSR (evita ReferenceError com window)
 const SAFE_ORIGIN =
-  globalThis.window !== undefined ? globalThis.window.location.origin : 'http://localhost'
+  typeof globalThis.window !== 'undefined' ? globalThis.window.location.origin : 'http://localhost'
 
 export default function Calendar() {
   const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
@@ -523,11 +523,11 @@ export default function Calendar() {
                 <CardDescription>
                   {!isGoogleConfigured
                     ? 'Configure as credenciais do Google para habilitar a sincronização'
-                    : isInitializing
+                    : (isInitializing
                       ? 'Inicializando conexão...'
-                      : isGoogleConnected
+                      : (isGoogleConnected
                         ? 'Conectado - seus eventos podem ser sincronizados'
-                        : 'Conecte sua conta do Google para sincronizar eventos'}
+                        : 'Conecte sua conta do Google para sincronizar eventos'))}
                 </CardDescription>
               </div>
             </div>
@@ -539,22 +539,22 @@ export default function Calendar() {
                 variant={
                   isGoogleConnected
                     ? 'default'
-                    : isGoogleConfigured
+                    : (isGoogleConfigured
                       ? 'secondary'
-                      : 'destructive'
+                      : 'destructive')
                 }
               >
                 {isGoogleConnected ? (
                   <span className="flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" /> Conectado
                   </span>
-                ) : isGoogleConfigured ? (
+                ) : (isGoogleConfigured ? (
                   'Desconectado'
                 ) : (
                   <span className="flex items-center gap-1">
                     <XCircle className="w-3 h-3" /> Não Configurado
                   </span>
-                )}
+                ))}
               </Badge>
             </div>
           </div>
@@ -758,10 +758,10 @@ export default function Calendar() {
                 <div
                   key={idx}
                   className={`min-h-24 p-2 border rounded-lg ${!isValidDay
-                      ? 'bg-muted/30'
-                      : isToday(day)
-                        ? 'bg-primary/10 border-primary'
-                        : 'bg-card hover:bg-muted/50'
+                    ? 'bg-muted/30'
+                    : isToday(day)
+                      ? 'bg-primary/10 border-primary'
+                      : 'bg-card hover:bg-muted/50'
                     }`}
                 >
                   {isValidDay && (
