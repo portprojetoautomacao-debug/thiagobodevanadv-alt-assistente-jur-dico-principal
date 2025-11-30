@@ -404,7 +404,6 @@ export function getLLMMetrics(): {
   const traces = tracingService.getTracesByName('llm.') as unknown[]
 
   const calls = traces.filter(t => t.endTime)
-  const successful = calls.filter(t => t.status === 'ok')
   const failed = calls.filter(t => t.status === 'error')
 
   let totalTokens = 0

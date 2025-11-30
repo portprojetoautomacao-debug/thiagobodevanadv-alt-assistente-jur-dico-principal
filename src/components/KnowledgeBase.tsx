@@ -1,5 +1,4 @@
-import { useState, type KeyboardEvent } from 'react'
-import type { SVGProps } from 'react'
+import { useState, type KeyboardEvent, type SVGProps } from 'react'
 import {
   Card,
   CardContent,
@@ -28,7 +27,7 @@ import { toast } from 'sonner'
  * IMPORTANTE:
  * - O frontend NÃO chama diretamente o Gemini; quem fala com o modelo é o backend.
  * - Ainda NÃO há indexação real (embeddings). As contagens de documentos são ilustrativas.
- * - TODO: Integrar com backend de RAG (embeddings + search) e substituir números fixos.
+ * - Futura integração: backend de RAG (embeddings + search) para substituir números fixos.
  */
 
 interface Message {
@@ -275,10 +274,9 @@ export default function KnowledgeBase() {
                   <div className="space-y-4">
                     {messages.map((message, idx) => (
                       <div
-                        key={idx}
-                        className={`flex gap-3 ${
-                          message.role === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
+                        key={message.id ?? idx}
+                        className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'
+                          }`}
                       >
                         {message.role === 'assistant' && (
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
@@ -289,11 +287,10 @@ export default function KnowledgeBase() {
                           </div>
                         )}
                         <div
-                          className={`max-w-[80%] p-4 rounded-lg ${
-                            message.role === 'user'
+                          className={`max-w-[80%] p-4 rounded-lg ${message.role === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
-                          }`}
+                            }`}
                         >
                           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                         </div>

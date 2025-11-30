@@ -76,3 +76,7 @@ mcp-server-config.json*
 .env*.local
 eslint-results.sarif
 *.zip
+
+# SonarCloud
+.scannerwork/
+.sonar/

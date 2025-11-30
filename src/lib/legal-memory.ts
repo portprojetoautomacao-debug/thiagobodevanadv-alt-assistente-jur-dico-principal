@@ -53,7 +53,7 @@ export interface LegalMemorySearchOptions {
 
 export class LegalMemory {
     private static instance: LegalMemory
-    private memoryCache: Map<string, LegalContextItem> = new Map()
+    private readonly memoryCache: Map<string, LegalContextItem> = new Map()
 
     private constructor() {
         // Inicialização (futuramente conectar com Vector DB)

@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 
 // Skip all tests in browser environment
 const isBrowser =
-  typeof window !== 'undefined' && typeof window.document !== 'undefined'
+  globalThis.window !== undefined && globalThis.window.document !== undefined
 
 describe.skipIf(isBrowser)('TodoistClient', () => {
   // construtor carregado dinamicamente

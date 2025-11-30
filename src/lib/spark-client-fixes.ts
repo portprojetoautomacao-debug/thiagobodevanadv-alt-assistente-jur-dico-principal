@@ -89,18 +89,13 @@ export function applySparkClientFixes() {
   patchFileReader();
 
   const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
-  // if (!w.spark?.kv) return; // REMOVIDO: Não podemos depender de w.spark existir
 
   try {
     // Se spark não existir, cria um mock seguro para evitar crash
-    if (!w.spark) {
-      w.spark = {} as { kv?: SparkKV; llm?: SparkLLM };
-    }
+    w.spark ??= {} as { kv?: SparkKV; llm?: SparkLLM };
 
     // Se kv não existir, cria um mock
-    if (!w.spark.kv) {
-      w.spark.kv = {} as SparkKV;
-    }
+    w.spark.kv ??= {} as SparkKV;
 
     const spark = w.spark;
     const original = { ...spark.kv };
@@ -300,9 +295,6 @@ export function applySparkLLMFixes() {
           console.error('LLM diagnostic fetch failed:', e);
           const diagnosticMsg = e instanceof Error ? e.message : String(e);
           const originalMsg = err instanceof Error ? err.message : String(err);
-          // Lança um erro combinando informações do erro de diagnóstico e do erro original
-          const diagnosticMessage = e instanceof Error ? e.message : String(e);
-          const originalMessage = err instanceof Error ? err.message : String(err);
           throw new Error(
             `LLM diagnostic fetch failed: ${diagnosticMsg} | Original error: ${originalMsg}`
           );

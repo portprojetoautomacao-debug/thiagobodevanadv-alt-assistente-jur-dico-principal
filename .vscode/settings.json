@@ -1,7 +1,117 @@
 {
-  // === GitHub Copilot - Aprovação Automática ===
+  "settingsSync.ignoredSettings": [],
+  "settingsSync.ignoredExtensions": [],
+  "settingsSync.keybindingsPerPlatform": true,
+  "git.autofetch": true,
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay",
   "github.copilot.chat.agent.autoApprove": true,
-
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "chat.agent.maxRequests": 50,
+  "chat.tools.global.autoApprove": true,
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "chat.useNestedAgentsMdFiles": true,
+  "chat.agentSessionsViewLocation": "single-view",
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true
+  },
+  "chat.tools.terminal.autoApprove": {
+    "gh": true,
+    "npm run build": true,
+    "npm ci": true,
+    "git checkout": true,
+    "git push": true,
+    "git add": true,
+    "git commit": true,
+    "npm run test:e2e": true,
+    "npm ls": true,
+    "npm run test": true,
+    "npm install": true,
+    "git config": true,
+    "vercel": true,
+    "mv": true,
+    "git lfs": true,
+    "npx": true,
+    "sed": true,
+    "git pull": true,
+    "npm run lint": true,
+    "glab": true,
+    "cd": true,
+    "git log": true,
+    "echo": true,
+    "ls": true,
+    "pwd": true,
+    "cat": true,
+    "head": true,
+    "tail": true,
+    "wc": true,
+    "tr": true,
+    "cut": true,
+    "which": true,
+    "basename": true,
+    "dirname": true,
+    "realpath": true,
+    "stat": true,
+    "file": true,
+    "du": true,
+    "df": true,
+    "sleep": true,
+    "grep": true,
+    "find": true,
+    "sort": true,
+    "tree": true,
+    "git status": true,
+    "git show": true,
+    "git diff": true,
+    "git grep": true,
+    "git branch": true,
+    "rm": true,
+    "rmdir": true,
+    "mkdir": true,
+    "touch": true,
+    "cp": true,
+    "curl": true,
+    "wget": true,
+    "chmod": true,
+    "chown": true,
+    "jq": true,
+    "xargs": true,
+    "awk": true,
+    "node": true,
+    "tsc": true,
+    "npm": true,
+    "pnpm": true,
+    "yarn": true,
+    "apk": true
+  },
+  "gitlens.ai.model": "vscode",
+  "gitlens.ai.vscode.model": "copilot:gpt-4.1",
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "testing.alwaysRevealTestOnStateChange": true,
+  "notebook.defaultFormatter": "GitHub.copilot-chat",
   "files.watcherExclude": {
     "**/docs/archive/**": true,
     "**/node_modules/**": true,
@@ -47,8 +157,6 @@
   ],
   "search-node-modules.path": "node_modules",
   "search-node-modules.useLastFolder": false,
-
-  // --- Configurações Tailwind CSS IntelliSense (v4 + shadcn/ui) ---
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
@@ -68,5 +176,9 @@
   "sonarlint.connectedMode.project": {
     "connectionId": "thiagobodevan-a11y",
     "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
-  }
+  },
+  // [EXPERIMENTAL] Esta configuração ativa uma feature experimental do VS Code. Pode mudar ou ser removida em versões futuras.
+  "inlineChat.enableV2": true,
+  // [EXPERIMENTAL] Esta configuração ativa uma feature experimental do VS Code. Pode mudar ou ser removida em versões futuras.
+  "issueReporter.experimental.webReporter": true
 }

@@ -140,7 +140,7 @@ describe('Todoist Integration - Estruturas de Dados', () => {
   describe('Validação de Entrada', () => {
     it('deve validar número de processo', () => {
       const validProcess = '1234567-89.2024.8.09.0000'
-      const parts = validProcess.split(/[-.]/).filter(p => p)
+      const parts = validProcess.split(/[-.]/).filter(Boolean)
 
       expect(parts.length).toBeGreaterThan(0)
       expect(validProcess).toContain('-')
