@@ -23,7 +23,7 @@ check_env() {
     local is_required=${2:-true}
     
     if [[ -z "$var_value" ]]; then
-        if [[ "$is_required" = true ]]; then
+        if [[ "$is_required" == true ]]; then
             echo -e "${RED}✗${NC} $var_name: ${RED}NÃO CONFIGURADA${NC} (obrigatória)"
             ((ERRORS++))
         else
@@ -69,7 +69,7 @@ if [[ -f "runtime.config.json" ]]; then
         echo "  Runtime ID: $RUNTIME_ID"
         
         # Comparar com variável de ambiente
-        if [[ ! -z "$GITHUB_RUNTIME_PERMANENT_NAME" ]] && [ "$GITHUB_RUNTIME_PERMANENT_NAME" != "$RUNTIME_ID" ]]; then
+        if [[ -n "$GITHUB_RUNTIME_PERMANENT_NAME" ]] && [[ "$GITHUB_RUNTIME_PERMANENT_NAME" != "$RUNTIME_ID" ]]; then
             echo -e "${YELLOW}⚠${NC} AVISO: GITHUB_RUNTIME_PERMANENT_NAME ($GITHUB_RUNTIME_PERMANENT_NAME) diferente do runtime.config.json ($RUNTIME_ID)"
             ((WARNINGS++))
         fi
@@ -84,7 +84,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Resumo
-if [[ $ERRORS -eq 0 ]] && [ $WARNINGS -eq 0 ]]; then
+if [[ $ERRORS -eq 0 ]] && [[ $WARNINGS -eq 0 ]]; then
     echo -e "${GREEN}✅ Todas as configurações estão corretas!${NC}"
     echo ""
     echo "Próximos passos:"
