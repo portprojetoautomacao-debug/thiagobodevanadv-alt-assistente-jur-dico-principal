@@ -57,7 +57,7 @@ COMPONENTS=(
 
 ALL_COMPONENTS_EXIST=true
 for component in "${COMPONENTS[@]}"; do
-    if [ -f "$component" ]; then
+    if [[ -f "$component" ]]; then
         echo "✅ $component"
     else
         echo "❌ $component - COMPONENTE AUSENTE"
@@ -65,7 +65,7 @@ for component in "${COMPONENTS[@]}"; do
     fi
 done
 
-if [ "$ALL_COMPONENTS_EXIST" = true ]; then
+if [[ "$ALL_COMPONENTS_EXIST" = true ]]; then
     echo ""
     echo "🎉 Todos os componentes locais estão presentes!"
 else

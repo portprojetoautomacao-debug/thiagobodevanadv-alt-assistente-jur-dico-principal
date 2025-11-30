@@ -25,7 +25,7 @@ import {
 } from 'recharts'
 
 interface DashboardAdvboxProps {
-  onNavigate: (view: ViewType) => void
+  readonly onNavigate: (view: ViewType) => void
 }
 
 function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
@@ -504,20 +504,30 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                   const temPrazo = prazoInfo && prazoInfo.count > 0
                   const prazoUrgente = prazoInfo?.urgente
 
+                  // Função para determinar classes CSS do dia do calendário
+                  const getDayClassName = (): string => {
+                    const baseClasses = 'aspect-square flex flex-col items-center justify-center text-sm rounded-lg font-semibold transition-all relative'
+
+                    if (day === null) {
+                      return `${baseClasses} text-transparent pointer-events-none`
+                    }
+                    if (isToday) {
+                      return `${baseClasses} bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110`
+                    }
+                    if (prazoUrgente) {
+                      return `${baseClasses} bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105`
+                    }
+                    if (temPrazo) {
+                      return `${baseClasses} bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105`
+                    }
+                    return `${baseClasses} text-foreground hover:bg-linear-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105`
+                  }
+
                   return (
                     <div
                       key={index}
                       title={prazoInfo?.descricoes?.join('\n')}
-                      className={`aspect-square flex flex-col items-center justify-center text-sm rounded-lg font-semibold transition-all relative ${day === null
-                        ? 'text-transparent pointer-events-none'
-                        : isToday
-                          ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110'
-                          : prazoUrgente
-                            ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105'
-                            : temPrazo
-                              ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105'
-                              : 'text-foreground hover:bg-linear-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105'
-                        }`}
+                      className={getDayClassName()}
                     >
                       {day}
                       {temPrazo && (

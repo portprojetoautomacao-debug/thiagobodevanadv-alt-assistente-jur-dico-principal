@@ -111,7 +111,7 @@ export default function MinutasManager() {
     onError?: (error: string) => void
   }>({})
 
-  const { streamChat, isStreaming: isAIStreaming, streamingContent } = useAIStreaming({
+  const { streamChat, isStreaming: _isAIStreaming, streamingContent: _streamingContent } = useAIStreaming({
     onChunk: (chunk) => {
       streamCallbacksRef.current.onChunk?.(chunk)
     },

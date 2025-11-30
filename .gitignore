@@ -39,6 +39,22 @@ dist-ssr
 .env.vercel
 .env.staging
 
+# Test output and coverage
+playwright-report/
+playwright-report/**
+test-results/
+test-results/**
+coverage/
+coverage/**
+*.coverage
+Coverage-*.json
+.nyc_output/
+.nyc_output/**
+# HTML coverage reports
+htmlcov/
+lcov.info
+*.lcov
+
 # Credential files (NEVER commit these!)
 credentials.json
 secrets.json
@@ -77,14 +93,6 @@ mcp-server-config.json*
 eslint-results.sarif
 *.zip
 
-# MCP Server local files
-.mcp/
-
-# SonarQube/SonarCloud (temp directories)
+# SonarCloud
 .scannerwork/
 .sonar/
-
-# Test coverage
-coverage/
-coverage-api/
-*.lcov

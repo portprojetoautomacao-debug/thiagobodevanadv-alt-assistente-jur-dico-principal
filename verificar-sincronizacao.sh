@@ -20,7 +20,7 @@ ERROR=0
 
 # Função para verificação
 check() {
-    if [ $1 -eq 0 ]; then
+    if [[ $1 -eq 0 ]]; then
         echo -e "${GREEN}✅ $2${NC}"
         ((OK++))
     else
@@ -30,7 +30,7 @@ check() {
 }
 
 check_warn() {
-    if [ $1 -eq 0 ]; then
+    if [[ $1 -eq 0 ]]; then
         echo -e "${GREEN}✅ $2${NC}"
         ((OK++))
     else
@@ -44,7 +44,7 @@ echo "📂 VERIFICAÇÃO DE ARQUIVOS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verifica se .env existe
-if [ -f ".env" ]; then
+if [[ -f ".env" ]]; then
     check 0 "Arquivo .env existe"
 else
     check 1 "Arquivo .env NÃO encontrado"
@@ -52,7 +52,7 @@ else
 fi
 
 # Verifica se .gitignore existe
-if [ -f ".gitignore" ]; then
+if [[ -f ".gitignore" ]]; then
     check 0 "Arquivo .gitignore existe"
 else
     check 1 "Arquivo .gitignore NÃO encontrado"
@@ -67,7 +67,7 @@ else
 fi
 
 # Verifica se package.json existe
-if [ -f "package.json" ]; then
+if [[ -f "package.json" ]]; then
     check 0 "package.json existe"
 else
     check 1 "package.json NÃO encontrado"
@@ -78,7 +78,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "🔑 VERIFICAÇÃO DE VARIÁVEIS DE AMBIENTE"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -f ".env" ]; then
+if [[ -f ".env" ]]; then
     # Verifica VITE_GEMINI_API_KEY (obrigatória)
     if grep -q "^VITE_GEMINI_API_KEY=AIza" .env 2>/dev/null; then
         check 0 "VITE_GEMINI_API_KEY configurada"
@@ -112,7 +112,7 @@ echo "🔧 VERIFICAÇÃO DO GIT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verifica se Git está inicializado
-if [ -d ".git" ]; then
+if [[ -d ".git" ]]; then
     check 0 "Repositório Git inicializado"
     
     # Verifica remote
@@ -127,7 +127,7 @@ if [ -d ".git" ]; then
     
     # Verifica branch
     CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
-    if [ ! -z "$CURRENT_BRANCH" ]; then
+    if [[ ! -z "$CURRENT_BRANCH" ]]; then
         check 0 "Branch atual: $CURRENT_BRANCH"
     else
         check_warn 1 "Nenhuma branch ativa"
@@ -151,7 +151,7 @@ echo "📦 VERIFICAÇÃO DE DEPENDÊNCIAS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verifica se node_modules existe
-if [ -d "node_modules" ]; then
+if [[ -d "node_modules" ]]; then
     check 0 "node_modules existe"
 else
     check 1 "node_modules NÃO encontrado"
@@ -188,14 +188,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "🎯 PRÓXIMOS PASSOS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ $ERROR -gt 0 ]; then
+if [[ $ERROR -gt 0 ]]; then
     echo -e "${RED}Existem problemas críticos que precisam ser resolvidos!${NC}"
     echo ""
     echo "📖 Para mais informações, consulte:"
     echo "   → SINCRONIZACAO_REPOSITORIO.md"
     echo "   → GEMINI_QUICK_START.md"
     echo ""
-elif [ $WARN -gt 0 ]; then
+elif [[ $WARN -gt 0 ]]; then
     echo -e "${YELLOW}Configuração básica OK, mas algumas funcionalidades opcionais não estão configuradas.${NC}"
     echo ""
     echo "Para configurar funcionalidades opcionais:"

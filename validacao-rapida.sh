@@ -27,7 +27,7 @@ fi
 echo ""
 
 echo "🔒 2. VERIFICANDO ARQUIVOS DE SEGURANÇA..."
-if [ -f "vercel.json" ]; then
+if [[ -f "vercel.json" ]]; then
     if grep -q "Strict-Transport-Security" vercel.json; then
         echo -e "${GREEN}✅ HSTS configurado${NC}"
     else
@@ -45,7 +45,7 @@ fi
 echo ""
 
 echo "♿ 3. VERIFICANDO ACESSIBILIDADE..."
-if [ -f "index.html" ]; then
+if [[ -f "index.html" ]]; then
     if grep -q "skip-link" index.html; then
         echo -e "${GREEN}✅ Skip link presente${NC}"
     else
@@ -59,7 +59,7 @@ if [ -f "index.html" ]; then
     fi
 fi
 
-if [ -f "src/index.css" ]; then
+if [[ -f "src/index.css" ]]; then
     if grep -q "focus-visible" src/index.css; then
         echo -e "${GREEN}✅ Indicadores de foco configurados${NC}"
     else
@@ -67,7 +67,7 @@ if [ -f "src/index.css" ]; then
     fi
 fi
 
-if [ -f "src/App.tsx" ]; then
+if [[ -f "src/App.tsx" ]]; then
     if grep -q 'id="main-content"' src/App.tsx; then
         echo -e "${GREEN}✅ Landmark main presente${NC}"
     else
@@ -77,19 +77,19 @@ fi
 echo ""
 
 echo "🔍 4. VERIFICANDO SEO..."
-if [ -f "public/robots.txt" ]; then
+if [[ -f "public/robots.txt" ]]; then
     echo -e "${GREEN}✅ robots.txt presente${NC}"
 else
     echo -e "${RED}❌ robots.txt ausente${NC}"
 fi
 
-if [ -f "public/sitemap.xml" ]; then
+if [[ -f "public/sitemap.xml" ]]; then
     echo -e "${GREEN}✅ sitemap.xml presente${NC}"
 else
     echo -e "${RED}❌ sitemap.xml ausente${NC}"
 fi
 
-if [ -f "index.html" ]; then
+if [[ -f "index.html" ]]; then
     if grep -q "<title>" index.html; then
         echo -e "${GREEN}✅ Tag <title> presente${NC}"
     else
@@ -105,7 +105,7 @@ fi
 echo ""
 
 echo "📱 5. VERIFICANDO VIEWPORT MOBILE..."
-if [ -f "index.html" ]; then
+if [[ -f "index.html" ]]; then
     if grep -q 'name="viewport"' index.html; then
         if grep -q 'maximum-scale=5.0' index.html; then
             echo -e "${GREEN}✅ Viewport otimizada (permite zoom)${NC}"
@@ -119,7 +119,7 @@ fi
 echo ""
 
 echo "⚙️  6. VERIFICANDO OTIMIZAÇÕES DE BUILD..."
-if [ -f "vite.config.ts" ]; then
+if [[ -f "vite.config.ts" ]]; then
     if grep -q "minify: 'terser'" vite.config.ts; then
         echo -e "${GREEN}✅ Terser configurado${NC}"
     else
@@ -135,7 +135,7 @@ fi
 echo ""
 
 echo "📊 7. ANÁLISE DE TAMANHO DOS ASSETS..."
-if [ -d "dist/assets" ]; then
+if [[ -d "dist/assets" ]]; then
     echo "Maiores arquivos JavaScript:"
     du -h dist/assets/*.js | sort -rh | head -5
     echo ""

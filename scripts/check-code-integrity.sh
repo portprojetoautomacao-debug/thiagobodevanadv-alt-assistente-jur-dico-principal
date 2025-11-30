@@ -50,7 +50,7 @@ check_mock_data() {
   
   for pattern in "${PATTERNS[@]}"; do
     RESULTS=$(grep -rln "$pattern" src/ api/ lib/ 2>/dev/null | grep -v "\.test\.\|\.spec\.\|node_modules\|sample-data\.ts" || true)
-    if [ -n "$RESULTS" ]; then
+    if [[ -n "$RESULTS" ]]; then
       for file in $RESULTS; do
         echo -e "  ${YELLOW}⚠️${NC} $file (padrão: $pattern)"
         MOCK_COUNT=$((MOCK_COUNT + 1))
@@ -60,7 +60,7 @@ check_mock_data() {
   
   # Verificar CPF/CNPJ hardcoded
   CPF_FILES=$(grep -rln "[0-9]\{3\}\.[0-9]\{3\}\.[0-9]\{3\}-[0-9]\{2\}" src/ api/ lib/ 2>/dev/null | grep -v test || true)
-  if [ -n "$CPF_FILES" ]; then
+  if [[ -n "$CPF_FILES" ]]; then
     echo ""
     echo "Arquivos com possíveis CPFs hardcoded:"
     for file in $CPF_FILES; do
@@ -70,12 +70,13 @@ check_mock_data() {
   fi
   
   echo ""
-  if [ $MOCK_COUNT -eq 0 ]; then
+  if [[ $MOCK_COUNT -eq 0 ]]; then
     echo -e "${GREEN}✅ Nenhum dado mockado suspeito encontrado${NC}"
   else
     echo -e "${YELLOW}⚠️  Total de ocorrências: $MOCK_COUNT${NC}"
   fi
   echo ""
+  return 0
 }
 
 # ==========================================
@@ -168,7 +169,7 @@ check_api_endpoints() {
   
   API_FILES=$(find api -name "*.ts" 2>/dev/null | grep -v "_lib" || true)
   for file in $API_FILES; do
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
       ENDPOINT=$(echo "$file" | sed 's|api/|/api/|' | sed 's|\.ts$||' | sed 's|/index$||')
       
       # Verificar se tem handler default export
@@ -196,7 +197,7 @@ check_console_logs() {
   
   echo "Console statements em código de produção: $CONSOLE_COUNT"
   
-  if [ "$CONSOLE_COUNT" -gt 30 ]; then
+  if [[ "$CONSOLE_COUNT" -gt 30 ]]; then
     echo -e "${YELLOW}⚠️  Considere reduzir console.log em produção${NC}"
     WARNINGS=$((WARNINGS + 1))
   else
@@ -216,7 +217,7 @@ check_sample_data() {
   
   SAMPLE_IMPORTS=$(grep -rln "from.*sample-data\|import.*sample-data" src/ api/ lib/ 2>/dev/null || true)
   
-  if [ -n "$SAMPLE_IMPORTS" ]; then
+  if [[ -n "$SAMPLE_IMPORTS" ]]; then
     echo "Arquivos que importam sample-data:"
     for file in $SAMPLE_IMPORTS; do
       echo -e "  ${YELLOW}⚠️${NC} $file"
@@ -255,10 +256,10 @@ print_summary() {
   
   TOTAL_ISSUES=$((MOCK_COUNT + INTEGRATION_ISSUES + WARNINGS))
   
-  if [ $TOTAL_ISSUES -eq 0 ]; then
+  if [[ $TOTAL_ISSUES -eq 0 ]]; then
     echo -e "${GREEN}✅ Código está em boa forma!${NC}"
     exit 0
-  elif [ $INTEGRATION_ISSUES -gt 0 ]; then
+  elif [[ $INTEGRATION_ISSUES -gt 0 ]]; then
     echo -e "${RED}❌ Existem problemas de integração que precisam ser corrigidos${NC}"
     exit 1
   else

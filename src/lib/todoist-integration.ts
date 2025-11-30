@@ -32,9 +32,7 @@ let todoistClient: TodoistApi | null = null
  * Inicializa o cliente Todoist com a API key
  */
 export function initializeTodoistClient(apiKey: string): TodoistApi {
-  if (!todoistClient) {
-    todoistClient = new TodoistApi(apiKey)
-  }
+  todoistClient ??= new TodoistApi(apiKey)
   return todoistClient
 }
 

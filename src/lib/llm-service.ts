@@ -12,7 +12,7 @@
  */
 
 import { llm as llmCall } from './llm-client'
-import { tracingService, type LLMSpan } from './tracing'
+import { tracingService } from './tracing'
 
 // LLM Models supported
 export type LLMModel = 'gpt-4o' | 'gpt-4' | 'gpt-3.5-turbo'

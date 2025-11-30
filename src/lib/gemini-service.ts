@@ -135,9 +135,9 @@ function buildGeminiError(error: unknown, context?: { endpoint?: string; model?:
   const message =
     error instanceof Error
       ? error.message
-      : typeof error === 'string'
+      : (typeof error === 'string'
         ? error
-        : 'Erro desconhecido ao chamar Gemini'
+        : 'Erro desconhecido ao chamar Gemini')
 
   return {
     text: '',

@@ -20,12 +20,9 @@ declare global {
   }
 }
 
-// Garante que este arquivo é tratado como módulo (necessário pro declare global)
-export {}
-
 // Helpers
 function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof document !== 'undefined'
+  return globalThis.window !== undefined && globalThis.document !== undefined
 }
 
 // Configuração
@@ -51,10 +48,10 @@ export function initGTM(): void {
   }
 
   // Inicializa dataLayer se ainda não existir
-  window.dataLayer = window.dataLayer || []
+  globalThis.window.dataLayer = globalThis.window.dataLayer || []
 
   // Adiciona evento de inicialização
-  window.dataLayer.push({
+  globalThis.window.dataLayer.push({
     'gtm.start': new Date().getTime(),
     event: 'gtm.js'
   })
@@ -121,15 +118,15 @@ export function initGA4(): void {
   document.head.appendChild(script)
 
   // Inicializa gtag
-  window.dataLayer = window.dataLayer || []
+  globalThis.window.dataLayer = globalThis.window.dataLayer || []
 
   // Função gtag usando rest parameters
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer.push(args)
+  globalThis.window.gtag = function gtag(...args: unknown[]) {
+    globalThis.window.dataLayer.push(args)
   }
 
-  window.gtag('js', new Date())
-  window.gtag('config', GA_MEASUREMENT_ID, {
+  globalThis.window.gtag('js', new Date())
+  globalThis.window.gtag('config', GA_MEASUREMENT_ID, {
     send_page_view: false, // Controlamos manualmente
     anonymize_ip: true,
     cookie_flags: 'SameSite=None;Secure'
@@ -181,13 +178,13 @@ export function trackEvent(
   }
 
   // Envia para dataLayer (funciona com GTM e GA4)
-  if (window.dataLayer) {
-    window.dataLayer.push(eventData)
+  if (globalThis.window.dataLayer) {
+    globalThis.window.dataLayer.push(eventData)
   }
 
   // Se gtag disponível, envia também
-  if (window.gtag && GA_MEASUREMENT_ID) {
-    window.gtag('event', eventName, params)
+  if (globalThis.window.gtag && GA_MEASUREMENT_ID) {
+    globalThis.window.gtag('event', eventName, params)
   }
 
   if (import.meta.env.DEV) {
@@ -207,7 +204,7 @@ export function trackPageView(
   trackEvent('page_view', {
     page_path: pagePath,
     page_title: pageTitle || document.title,
-    page_location: window.location.href
+    page_location: globalThis.window.location.href
   })
 }
 
@@ -347,12 +344,12 @@ export function setUserProperties(properties: {
 }): void {
   if (!isBrowser()) return
 
-  if (window.gtag && GA_MEASUREMENT_ID) {
-    window.gtag('set', 'user_properties', properties)
+  if (globalThis.window.gtag && GA_MEASUREMENT_ID) {
+    globalThis.window.gtag('set', 'user_properties', properties)
   }
 
-  if (window.dataLayer) {
-    window.dataLayer.push({
+  if (globalThis.window.dataLayer) {
+    globalThis.window.dataLayer.push({
       event: 'set_user_properties',
       ...properties
     })
@@ -366,8 +363,8 @@ export function optOutAnalytics(): void {
   if (!isBrowser()) return
 
   // Desabilita cookies do GA
-  if (window.gtag) {
-    window.gtag('consent', 'update', {
+  if (globalThis.window.gtag) {
+    globalThis.window.gtag('consent', 'update', {
       analytics_storage: 'denied'
     })
   }
@@ -389,8 +386,8 @@ export function optOutAnalytics(): void {
 export function optInAnalytics(): void {
   if (!isBrowser()) return
 
-  if (window.gtag) {
-    window.gtag('consent', 'update', {
+  if (globalThis.window.gtag) {
+    globalThis.window.gtag('consent', 'update', {
       analytics_storage: 'granted'
     })
   }

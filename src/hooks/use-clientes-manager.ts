@@ -13,7 +13,6 @@
 
 import { useKV } from '@/hooks/use-kv'
 import type { Cliente } from '@/types'
-import { toast } from 'sonner'
 
 // ============================================
 // TIPOS PARA INTEGRAÇÃO

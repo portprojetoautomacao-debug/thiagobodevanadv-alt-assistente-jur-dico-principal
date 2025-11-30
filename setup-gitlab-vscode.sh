@@ -7,7 +7,7 @@ set -e
 echo "🔧 Configurando GitLab Workflow para VS Code..."
 
 # Carregar variáveis do arquivo .gitlab-token
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
     echo "✅ Token do GitLab carregado"
 else
@@ -16,7 +16,7 @@ else
 fi
 
 # Verificar se o token está definido
-if [ -z "$GITLAB_TOKEN" ]; then
+if [[ -z "$GITLAB_TOKEN" ]]; then
     echo "❌ GITLAB_TOKEN não está definido no arquivo .gitlab-token"
     exit 1
 fi

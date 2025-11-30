@@ -46,6 +46,66 @@ import type { IconProps } from '@phosphor-icons/react'
 import { ServerLogsViewer } from '@/components/ServerLogsViewer'
 import { LegalMemoryViewer } from '@/components/LegalMemoryViewer'
 
+// ===========================
+// Helper Functions (outside component to avoid re-creation)
+// ===========================
+
+function getAgentStatusLabel(isStreaming: boolean, enabled: boolean): string {
+  if (isStreaming) return 'Streaming'
+  return enabled ? 'Ativo' : 'Pausado'
+}
+
+function getAgentStatusLabelExtended(isStreaming: boolean, enabled: boolean): string {
+  if (isStreaming) return '⚡ Gerando resposta...'
+  return enabled ? 'Pronto para uso' : 'Desativado'
+}
+
+function getTaskStatusVariant(status: string): 'default' | 'secondary' | 'destructive' {
+  if (status === 'processing') return 'default'
+  if (status === 'queued') return 'secondary'
+  return 'destructive'
+}
+
+function getStatusColor(enabled: boolean, isStreaming: boolean, status?: string): string {
+  if (!enabled) return 'text-muted-foreground'
+  if (isStreaming) return 'text-purple-500'
+  if (status === 'processing') return 'text-accent'
+  return 'text-green-600'
+}
+
+/**
+ * Returns the badge variant based on streaming and enabled state
+ * Extraído para evitar ternários aninhados (S3358)
+ */
+function getBadgeVariant(isStreaming: boolean, enabled: boolean): 'default' | 'secondary' {
+  if (isStreaming) return 'default'
+  return enabled ? 'default' : 'secondary'
+}
+
+function getCardClassName(enabled: boolean, isStreaming: boolean): string {
+  const base = 'transition-all duration-300'
+  if (isStreaming) return `${base} border-purple-500/50 shadow-lg shadow-purple-500/10`
+  if (enabled) return `${base} border-primary/30`
+  return base
+}
+
+function getIconContainerClassName(enabled: boolean, isStreaming: boolean): string {
+  const base = 'p-2 rounded-lg relative'
+  if (isStreaming) return `${base} bg-purple-500/20 animate-pulse`
+  if (enabled) return `${base} bg-primary/10`
+  return `${base} bg-muted`
+}
+
+function getActiveAgentsText(count: number): string {
+  if (count === 0) return 'Nenhum ativado'
+  return `${count} ativo(s)`
+}
+
+function getProcessingText(count: number): string {
+  if (count > 0) return `${count} em processamento`
+  return 'Aguardando tarefas'
+}
+
 const agentIcons: Record<string, ComponentType<IconProps>> = {
   'djen-monitor': Database,
   'agent-djen-monitor': Database,
@@ -207,9 +267,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               {activeAgents}/{agents.length}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {activeAgents === 0
-                ? 'Nenhum ativado'
-                : `${activeAgents} ativo(s)`}
+              {getActiveAgentsText(activeAgents)}
             </p>
           </CardContent>
         </Card>
@@ -226,9 +284,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               {queuedTasks + processingTasks}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {processingTasks > 0
-                ? `${processingTasks} em processamento`
-                : 'Aguardando tarefas'}
+              {getProcessingText(processingTasks)}
             </p>
           </CardContent>
         </Card>
@@ -487,34 +543,18 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               const IconComponent = agentIcons[agent.id] || Robot
               const isStreaming = !!streamingContent[agent.id]
               const streamPreview = streamingContent[agent.id]?.slice(-100) || ''
-              const statusColor = agent.enabled
-                ? isStreaming
-                  ? 'text-purple-500'
-                  : agent.status === 'processing'
-                    ? 'text-accent'
-                    : 'text-green-600'
-                : 'text-muted-foreground'
+              const statusColor = getStatusColor(agent.enabled, isStreaming, agent.status)
 
               return (
                 <Card
                   key={agent.id}
-                  className={`transition-all duration-300 ${isStreaming
-                    ? 'border-purple-500/50 shadow-lg shadow-purple-500/10'
-                    : agent.enabled
-                      ? 'border-primary/30'
-                      : ''
-                    }`}
+                  className={getCardClassName(agent.enabled, isStreaming)}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
                         <div
-                          className={`p-2 rounded-lg relative ${isStreaming
-                            ? 'bg-purple-500/20 animate-pulse'
-                            : agent.enabled
-                              ? 'bg-primary/10'
-                              : 'bg-muted'
-                            }`}
+                          className={getIconContainerClassName(agent.enabled, isStreaming)}
                         >
                           <IconComponent
                             className={`w-6 h-6 ${statusColor}`}
@@ -567,10 +607,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                         <span>Capacidades:</span>
                         <Badge
-                          variant={isStreaming ? 'default' : agent.enabled ? 'default' : 'secondary'}
+                          variant={isStreaming || agent.enabled ? 'default' : 'secondary'}
                           className={`text-xs ${isStreaming ? 'bg-purple-500 text-white' : ''}`}
                         >
-                          {isStreaming ? 'Streaming' : agent.enabled ? 'Ativo' : 'Pausado'}
+                          {getAgentStatusLabel(isStreaming, agent.enabled)}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -604,10 +644,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Status:</span>
                       <Badge
-                        variant={isStreaming ? 'default' : agent.enabled ? 'default' : 'secondary'}
+                        variant={isStreaming || agent.enabled ? 'default' : 'secondary'}
                         className={isStreaming ? 'bg-purple-500' : ''}
                       >
-                        {isStreaming ? '⚡ Gerando resposta...' : agent.enabled ? 'Pronto para uso' : 'Desativado'}
+                        {getAgentStatusLabelExtended(isStreaming, agent.enabled)}
                       </Badge>
                     </div>
                   </CardContent>
@@ -751,13 +791,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                             </p>
                           </div>
                           <Badge
-                            variant={
-                              task.status === 'processing'
-                                ? 'default'
-                                : task.status === 'queued'
-                                  ? 'secondary'
-                                  : 'destructive'
-                            }
+                            variant={getTaskStatusVariant(task.status)}
                             className="flex-shrink-0"
                           >
                             {task.status}

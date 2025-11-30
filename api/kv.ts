@@ -35,119 +35,128 @@ function getRedisOrNull(): Redis | null {
   return _redisClient
 }
 
+// ===== Configuração inicial dos agentes =====
+
+function getDefaultAgentes() {
+  return [
+    {
+      id: 'agent-djen-monitor',
+      name: 'Agente de Monitoramento DJEN',
+      type: 'monitor',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Monitoramento 24/7',
+        'Detecção de publicações',
+        'Alertas em tempo real',
+        'Análise de relevância'
+      ],
+      lastActivity: null as string | null
+    },
+    {
+      id: 'agent-deadline-calculator',
+      name: 'Agente Calculador de Prazos',
+      type: 'calculator',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Cálculo de prazos processuais',
+        'Considera feriados e recessos',
+        'Alertas de vencimento',
+        'Análise de urgência'
+      ],
+      lastActivity: null as string | null
+    },
+    {
+      id: 'agent-document-analyzer',
+      name: 'Agente Analisador de Documentos',
+      type: 'analyzer',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Análise de petições',
+        'Extração de dados',
+        'Identificação de prazos',
+        'Resumo automático'
+      ],
+      lastActivity: null as string | null
+    },
+    {
+      id: 'agent-legal-writer',
+      name: 'Agente Redator Jurídico',
+      type: 'writer',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Redação de peças',
+        'Sugestão de teses',
+        'Formatação ABNT',
+        'Revisão jurídica'
+      ],
+      lastActivity: null as string | null
+    },
+    {
+      id: 'agent-jurisprudence-researcher',
+      name: 'Agente Pesquisador de Jurisprudência',
+      type: 'researcher',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Busca de precedentes',
+        'Análise de tendências',
+        'Resumo de decisões',
+        'Recomendações estratégicas'
+      ],
+      lastActivity: null as string | null
+    },
+    {
+      id: 'agent-strategic-advisor',
+      name: 'Agente Estratégico',
+      type: 'strategic',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Análise de riscos',
+        'Planejamento processual',
+        'Probabilidade de êxito',
+        'Sugestões táticas'
+      ],
+      lastActivity: null as string | null
+    },
+    {
+      id: 'agent-calendar-sync',
+      name: 'Agente de Sincronização de Agenda',
+      type: 'calendar',
+      enabled: true,
+      status: 'active',
+      capabilities: [
+        'Sincronização Google Calendar',
+        'Lembretes automáticos',
+        'Gestão de compromissos',
+        'Alertas de audiências'
+      ],
+      lastActivity: null as string | null
+    }
+  ]
+}
+
+function getDefaultAdvogado() {
+  return {
+    id: 'lawyer-thiago-bodevan',
+    name: 'Thiago Bodevan Veiga',
+    oab: '184404/MG',
+    email: 'thiagobodevanadvocacia@gmail.com',
+    tribunals: ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1'],
+    enabled: true
+  }
+}
+
 // ===== Init de configuração (agentes + advogado monitorado) =====
 
 async function handleInitConfig(_req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
-    const agentes = [
-      {
-        id: 'agent-djen-monitor',
-        name: 'Agente de Monitoramento DJEN',
-        type: 'monitor',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Monitoramento 24/7',
-          'Detecção de publicações',
-          'Alertas em tempo real',
-          'Análise de relevância'
-        ],
-        lastActivity: null as string | null
-      },
-      {
-        id: 'agent-deadline-calculator',
-        name: 'Agente Calculador de Prazos',
-        type: 'calculator',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Cálculo de prazos processuais',
-          'Considera feriados e recessos',
-          'Alertas de vencimento',
-          'Análise de urgência'
-        ],
-        lastActivity: null as string | null
-      },
-      {
-        id: 'agent-document-analyzer',
-        name: 'Agente Analisador de Documentos',
-        type: 'analyzer',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Análise de petições',
-          'Extração de dados',
-          'Identificação de prazos',
-          'Resumo automático'
-        ],
-        lastActivity: null as string | null
-      },
-      {
-        id: 'agent-legal-writer',
-        name: 'Agente Redator Jurídico',
-        type: 'writer',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Redação de peças',
-          'Sugestão de teses',
-          'Formatação ABNT',
-          'Revisão jurídica'
-        ],
-        lastActivity: null as string | null
-      },
-      {
-        id: 'agent-jurisprudence-researcher',
-        name: 'Agente Pesquisador de Jurisprudência',
-        type: 'researcher',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Busca de precedentes',
-          'Análise de tendências',
-          'Resumo de decisões',
-          'Recomendações estratégicas'
-        ],
-        lastActivity: null as string | null
-      },
-      {
-        id: 'agent-strategic-advisor',
-        name: 'Agente Estratégico',
-        type: 'strategic',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Análise de riscos',
-          'Planejamento processual',
-          'Probabilidade de êxito',
-          'Sugestões táticas'
-        ],
-        lastActivity: null as string | null
-      },
-      {
-        id: 'agent-calendar-sync',
-        name: 'Agente de Sincronização de Agenda',
-        type: 'calendar',
-        enabled: true,
-        status: 'active',
-        capabilities: [
-          'Sincronização Google Calendar',
-          'Lembretes automáticos',
-          'Gestão de compromissos',
-          'Alertas de audiências'
-        ],
-        lastActivity: null as string | null
-      }
-    ]
-
-    const advogado = {
-      id: 'lawyer-thiago-bodevan',
-      name: 'Thiago Bodevan Veiga',
-      oab: '184404/MG',
-      email: 'thiagobodevanadvocacia@gmail.com',
-      tribunals: ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1'],
-      enabled: true
-    }
+    const agentes = getDefaultAgentes()
+    const advogado = getDefaultAdvogado()
 
     const redis = getRedisOrNull()
     if (!redis) {
@@ -181,7 +190,6 @@ async function handleInitConfig(_req: VercelRequest, res: VercelResponse): Promi
       }
     })
   } catch (error) {
-
     console.error('Error initializing config:', error)
     res.status(500).json({
       ok: false,
@@ -191,47 +199,159 @@ async function handleInitConfig(_req: VercelRequest, res: VercelResponse): Promi
   }
 }
 
+// ===== Handlers para operações KV =====
+
+/**
+ * Configura headers CORS
+ */
+function setupCorsHeaders(res: VercelResponse): void {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+}
+
+/**
+ * Extrai IP do cliente
+ */
+function getClientIP(req: VercelRequest): string {
+  return (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ||
+    (req.headers['x-real-ip'] as string | undefined) ||
+    'unknown'
+}
+
+/**
+ * Aplica rate limiting
+ */
+async function applyRateLimit(req: VercelRequest, res: VercelResponse): Promise<boolean> {
+  const clientIP = getClientIP(req)
+  const rateLimitResult = await rateLimitMiddleware(clientIP)
+
+  Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+    res.setHeader(key, value)
+  })
+
+  if (!rateLimitResult.allowed) {
+    const resetSeconds = Math.max(
+      1,
+      Math.ceil((Number(rateLimitResult.headers['X-RateLimit-Reset']) - Date.now()) / 1000)
+    )
+
+    res.setHeader('Retry-After', resetSeconds.toString())
+    res.status(429).json({
+      error: rateLimitResult.error || 'Rate limit exceeded'
+    })
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Handler GET /api/kv?key=...
+ */
+async function handleGetKey(redis: Redis, req: VercelRequest, res: VercelResponse): Promise<void> {
+  const { key } = req.query
+
+  if (!key || typeof key !== 'string') {
+    res.status(400).json({ error: 'Key parameter is required' })
+    return
+  }
+
+  const value = await redis.get(key)
+  res.status(200).json({ key, value: value ?? null })
+}
+
+/**
+ * Handler batch-get: ler várias chaves de uma vez
+ */
+async function handleBatchGet(redis: Redis, keys: unknown, res: VercelResponse): Promise<void> {
+  const validKeys = (keys as unknown[])
+    .filter((k: unknown): k is string => typeof k === 'string')
+    .slice(0, 50)
+
+  const values: Record<string, unknown> = {}
+
+  if (validKeys.length > 0) {
+    const pipeline = redis.pipeline()
+    for (const k of validKeys) {
+      pipeline.get(k)
+    }
+    const results = await pipeline.exec()
+
+    for (let i = 0; i < validKeys.length; i++) {
+      values[validKeys[i]] = results[i] ?? null
+    }
+  }
+
+  res.status(200).json({ success: true, values })
+}
+
+/**
+ * Handler batch-set: gravar várias chaves de uma vez
+ */
+async function handleBatchSet(redis: Redis, entries: unknown, res: VercelResponse): Promise<void> {
+  const validEntries = (entries as unknown[])
+    .filter(
+      (e: unknown): e is { key: string; value: unknown } =>
+        !!e &&
+        typeof e === 'object' &&
+        'key' in e &&
+        'value' in e &&
+        typeof (e as Record<string, unknown>).key === 'string'
+    )
+    .slice(0, 50)
+
+  if (validEntries.length > 0) {
+    const pipeline = redis.pipeline()
+    for (const entry of validEntries) {
+      pipeline.set(entry.key, entry.value)
+    }
+    await pipeline.exec()
+  }
+
+  res.status(200).json({ success: true, count: validEntries.length })
+}
+
+/**
+ * Handler set simples key/value
+ */
+async function handleSetKey(redis: Redis, key: string, value: unknown, res: VercelResponse): Promise<void> {
+  await redis.set(key, value)
+  res.status(200).json({ success: true, key })
+}
+
+/**
+ * Resposta fallback quando não há KV configurado
+ */
+function handleFallbackResponse(req: VercelRequest, res: VercelResponse, body: Record<string, unknown> | null): void {
+  console.warn('No KV storage available')
+  if (req.method === 'GET') {
+    res.status(200).json({ key: req.query.key, value: null, fallback: true })
+  } else if (req.method === 'POST') {
+    res.status(200).json({ success: true, key: body?.key ?? null, fallback: true })
+  } else {
+    res.status(405).json({ error: 'Method not allowed' })
+  }
+}
+
 // ===== Handler principal =====
 
 export default withErrorHandler(
   async (req: VercelRequest, res: VercelResponse): Promise<void> => {
     // CORS / preflight
     if (req.method === 'OPTIONS') {
-      res.setHeader('Access-Control-Allow-Origin', '*')
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+      setupCorsHeaders(res)
       res.status(200).end()
       return
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    setupCorsHeaders(res)
 
     // Rate limiting por IP
-    const clientIP =
-      (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ||
-      (req.headers['x-real-ip'] as string | undefined) ||
-      'unknown'
+    const rateLimitPassed = await applyRateLimit(req, res)
+    if (!rateLimitPassed) return
 
-    const rateLimitResult = await rateLimitMiddleware(clientIP)
-    Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
-      res.setHeader(key, value)
-    })
-
-    if (!rateLimitResult.allowed) {
-      const resetSeconds = Math.max(
-        1,
-        Math.ceil((Number(rateLimitResult.headers['X-RateLimit-Reset']) - Date.now()) / 1000)
-      )
-
-      res.setHeader('Retry-After', resetSeconds.toString())
-      res.status(429).json({
-        error: rateLimitResult.error || 'Rate limit exceeded'
-      })
-      return
-    }
-
+    const clientIP = getClientIP(req)
     logger.info('KV API request', {
       method: req.method,
       url: req.url,
@@ -247,12 +367,11 @@ export default withErrorHandler(
     }
 
     // Parse body se vier como string
-    let body: unknown = req.body
+    let body: Record<string, unknown> | null = req.body
     if (typeof body === 'string') {
       try {
         body = JSON.parse(body)
       } catch (e) {
-
         console.warn('Failed to parse request body:', e)
       }
     }
@@ -261,44 +380,18 @@ export default withErrorHandler(
 
     // Se não houver KV configurado, responde em modo "fallback"
     if (!redis) {
-
-      console.warn('No KV storage available')
-      if (req.method === 'GET') {
-        res.status(200).json({ key: req.query.key, value: null, fallback: true })
-      } else if (req.method === 'POST') {
-        res
-          .status(200)
-          .json({ success: true, key: body?.key ?? null, fallback: true })
-      } else {
-        res.status(405).json({ error: 'Method not allowed' })
-      }
+      handleFallbackResponse(req, res, body)
       return
     }
 
     try {
-      // ======================
       // GET /api/kv?key=...
-      // ======================
       if (req.method === 'GET') {
-        const { key } = req.query
-
-        if (!key || typeof key !== 'string') {
-          res.status(400).json({ error: 'Key parameter is required' })
-          return
-        }
-
-        const value = await redis.get(key)
-
-        res.status(200).json({
-          key,
-          value: value ?? null
-        })
+        await handleGetKey(redis, req, res)
         return
       }
 
-      // ======================
       // POST /api/kv
-      // ======================
       if (req.method === 'POST') {
         const {
           key,
@@ -306,60 +399,17 @@ export default withErrorHandler(
           action: bodyAction,
           keys,
           entries
-        }: {
-          key?: string
-          value?: unknown
-          action?: string
-          keys?: unknown
-          entries?: unknown
         } = body || {}
 
         // batch-get: ler várias chaves de uma vez
         if (bodyAction === 'batch-get' && Array.isArray(keys)) {
-          const validKeys = keys
-            .filter((k: unknown): k is string => typeof k === 'string')
-            .slice(0, 50)
-
-          const values: Record<string, unknown> = {}
-
-          if (validKeys.length > 0) {
-            const pipeline = redis.pipeline()
-            for (const k of validKeys) {
-              pipeline.get(k)
-            }
-            const results = await pipeline.exec()
-
-            for (let i = 0; i < validKeys.length; i++) {
-              values[validKeys[i]] = results[i] ?? null
-            }
-          }
-
-          res.status(200).json({ success: true, values })
+          await handleBatchGet(redis, keys, res)
           return
         }
 
         // batch-set: gravar várias chaves de uma vez
         if (bodyAction === 'batch-set' && Array.isArray(entries)) {
-          const validEntries = entries
-            .filter(
-              (e: unknown): e is { key: string; value: unknown } =>
-                !!e &&
-                typeof e === 'object' &&
-                'key' in e &&
-                'value' in e &&
-                typeof (e as Record<string, unknown>).key === 'string'
-            )
-            .slice(0, 50)
-
-          if (validEntries.length > 0) {
-            const pipeline = redis.pipeline()
-            for (const entry of validEntries) {
-              pipeline.set(entry.key, entry.value)
-            }
-            await pipeline.exec()
-          }
-
-          res.status(200).json({ success: true, count: validEntries.length })
+          await handleBatchSet(redis, entries, res)
           return
         }
 
@@ -373,15 +423,13 @@ export default withErrorHandler(
           return
         }
 
-        await redis.set(key, value)
-        res.status(200).json({ success: true, key })
+        await handleSetKey(redis, key, value, res)
         return
       }
 
       res.status(405).json({ error: 'Method not allowed' })
     } catch (error) {
       logger.error('KV API Error', error)
-      // passa contexto pro error handler central
       handleError(error, res, 'KV API')
     }
   },

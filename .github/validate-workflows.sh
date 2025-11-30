@@ -38,14 +38,14 @@ fi
 echo "1️⃣  Verificando sintaxe YAML..."
 WORKFLOW_DIR=".github/workflows"
 
-if [ ! -d "$WORKFLOW_DIR" ]; then
+if [[ ! -d "$WORKFLOW_DIR" ]]; then
     echo -e "${RED}❌ Diretório $WORKFLOW_DIR não encontrado!${NC}"
     exit 1
 fi
 
 WORKFLOW_COUNT=0
 for workflow in "$WORKFLOW_DIR"/*.yml; do
-    if [ -f "$workflow" ]; then
+    if [[ -f "$workflow" ]]; then
         WORKFLOW_COUNT=$((WORKFLOW_COUNT + 1))
         
         # Verificar sintaxe básica com Python (disponível na maioria dos sistemas)
@@ -80,7 +80,7 @@ check_workflow_practice() {
         echo -e "   ${GREEN}✓${NC} $(basename $workflow): $message"
         PASSED=$((PASSED + 1))
     else
-        if [ "$level" = "error" ]; then
+        if [[ "$level" == "error" ]]; then
             echo -e "   ${RED}✗${NC} $(basename $workflow): $message (faltando)"
             ERRORS=$((ERRORS + 1))
         else
@@ -91,7 +91,7 @@ check_workflow_practice() {
 }
 
 for workflow in "$WORKFLOW_DIR"/*.yml; do
-    if [ -f "$workflow" ]; then
+    if [[ -f "$workflow" ]]; then
         # Verificar se tem concurrency group (recomendado)
         check_workflow_practice "$workflow" "concurrency:" "tem concurrency group" "warning"
         
@@ -114,7 +114,7 @@ echo "   CI/Build workflows: $CI_COUNT"
 echo "   Deploy workflows: $DEPLOY_COUNT"
 echo "   Security workflows: $SECURITY_COUNT"
 
-if [ $CI_COUNT -gt 2 ]; then
+if [[ $CI_COUNT -gt 2 ]]; then
     echo -e "   ${YELLOW}⚠️  Múltiplos workflows de CI detectados. Considere consolidar.${NC}"
     WARNINGS=$((WARNINGS + 1))
 fi
@@ -148,7 +148,7 @@ echo "5️⃣  Verificando TODOs/FIXMEs..."
 
 TODO_COUNT=$(grep -r "TODO\|FIXME\|XXX\|HACK" "$WORKFLOW_DIR" 2>/dev/null | wc -l)
 
-if [ "$TODO_COUNT" -gt 0 ]; then
+if [[ "$TODO_COUNT" -gt 0 ]]; then
     echo -e "   ${YELLOW}⚠️  $TODO_COUNT TODO/FIXME encontrados:${NC}"
     grep -rn "TODO\|FIXME\|XXX\|HACK" "$WORKFLOW_DIR" 2>/dev/null | while read -r line; do
         echo "      $line"
@@ -165,12 +165,12 @@ echo ""
 echo "6️⃣  Verificando tamanho dos workflows..."
 
 for workflow in "$WORKFLOW_DIR"/*.yml; do
-    if [ -f "$workflow" ]; then
+    if [[ -f "$workflow" ]]; then
         LINES=$(wc -l < "$workflow")
-        if [ "$LINES" -gt 500 ]; then
+        if [[ "$LINES" -gt 500 ]]; then
             echo -e "   ${YELLOW}⚠${NC}  $(basename $workflow): $LINES linhas (considere dividir)"
             WARNINGS=$((WARNINGS + 1))
-        elif [ "$LINES" -gt 300 ]; then
+        elif [[ "$LINES" -gt 300 ]]; then
             echo -e "   ${BLUE}○${NC} $(basename $workflow): $LINES linhas"
         else
             echo -e "   ${GREEN}✓${NC} $(basename $workflow): $LINES linhas"
@@ -184,7 +184,7 @@ echo ""
 # 7. Verificar documentação
 echo "7️⃣  Verificando documentação..."
 
-if [ -f "$WORKFLOW_DIR/README.md" ]; then
+if [[ -f "$WORKFLOW_DIR/README.md" ]]; then
     echo -e "   ${GREEN}✓${NC} README.md dos workflows existe"
     PASSED=$((PASSED + 1))
     
@@ -215,10 +215,10 @@ echo -e "   ${YELLOW}⚠ Avisos:     $WARNINGS${NC}"
 echo -e "   ${RED}✗ Erros:      $ERRORS${NC}"
 echo ""
 
-if [ $ERRORS -gt 0 ]; then
+if [[ $ERRORS -gt 0 ]]; then
     echo -e "${RED}❌ Validação falhou com $ERRORS erro(s)!${NC}"
     exit 1
-elif [ $WARNINGS -gt 0 ]; then
+elif [[ $WARNINGS -gt 0 ]]; then
     echo -e "${YELLOW}⚠️  Validação passou com $WARNINGS aviso(s)${NC}"
     echo "   Considere revisar os avisos acima"
     exit 0

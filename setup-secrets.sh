@@ -30,7 +30,7 @@ create_secret() {
 }
 
 # Ler valores do .env local (se existir)
-if [ -f .env ]; then
+if [[ -f .env ]]; then
     echo "📖 Lendo configurações do arquivo .env..."
     source .env
 else

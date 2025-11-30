@@ -31,11 +31,11 @@ export function phosphorIconOptimizer(): Plugin {
         id.includes('node_modules') ||
         id.includes('dist')
       ) {
-        return null
+        return undefined
       }
 
       // Se não importar @phosphor-icons/react, ignora
-      if (!iconPattern.test(code)) return null
+      if (!iconPattern.test(code)) return undefined
 
       let match: RegExpExecArray | null
       while ((match = importPattern.exec(code)) !== null) {
@@ -51,7 +51,7 @@ export function phosphorIconOptimizer(): Plugin {
         }
       }
 
-      return null
+      return undefined
     },
 
     buildEnd() {
@@ -73,8 +73,7 @@ export function phosphorIconOptimizer(): Plugin {
         )}% do bundle de ícones`,
       )
       console.log(
-        `   Exemplos: ${[...usedIcons].slice(0, 10).join(', ')}${
-          usedIcons.size > 10 ? '…' : ''
+        `   Exemplos: ${[...usedIcons].slice(0, 10).join(', ')}${usedIcons.size > 10 ? '…' : ''
         }`,
       )
     },

@@ -58,11 +58,11 @@ configure_debug() {
 
     echo "🤖 AGENTES DISPONÍVEIS:"
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
             config_file="$agent_dir/config.yaml"
 
-            if [ -f "$config_file" ]; then
+            if [[ -f "$config_file" ]]; then
                 echo "• $agent_name"
             fi
         fi
@@ -71,14 +71,14 @@ configure_debug() {
 
     read -p "Digite o nome do agente: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
 
     config_file=".gitlab/agents/$agent_name/config.yaml"
 
-    if [ ! -f "$config_file" ]; then
+    if [[ ! -f "$config_file" ]]; then
         error "Arquivo de configuração não encontrado: $config_file"
         return
     fi
@@ -148,10 +148,10 @@ set_debug_config() {
     if grep -q "observability:" "$config_file" 2>/dev/null; then
         # Encontrar linhas da seção observability
         start_line=$(grep -n "observability:" "$config_file" | cut -d: -f1)
-        if [ -n "$start_line" ]; then
+        if [[ -n "$start_line" ]]; then
             # Encontrar fim da seção (próxima seção no mesmo nível)
             end_line=$(tail -n +$((start_line + 1)) "$config_file" | grep -n -E "^[a-zA-Z]" | head -1 | cut -d: -f1)
-            if [ -n "$end_line" ]; then
+            if [[ -n "$end_line" ]]; then
                 end_line=$((start_line + end_line - 1))
             else
                 end_line=$(wc -l < "$config_file")
@@ -208,7 +208,7 @@ view_live_logs() {
 
     pod_name=$(kubectl get pods -n gitlab-agent -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
 
-    if [ -z "$pod_name" ]; then
+    if [[ -z "$pod_name" ]]; then
         error "Nenhum pod do agente encontrado"
         return
     fi
@@ -225,11 +225,11 @@ check_debug_status() {
     log "Verificando status de debug..."
 
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
             config_file="$agent_dir/config.yaml"
 
-            if [ -f "$config_file" ]; then
+            if [[ -f "$config_file" ]]; then
                 echo ""
                 echo "🤖 Agente: $agent_name"
 

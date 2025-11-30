@@ -7,7 +7,7 @@ echo "🔧 Configurando TODAS as variáveis no GitLab CI/CD..."
 echo ""
 
 # Solicitar token do GitLab
-if [ -f .gitlab-token ]; then
+if [[ -f .gitlab-token ]]; then
     source .gitlab-token
 else
     echo "❌ Arquivo .gitlab-token não encontrado!"
@@ -32,7 +32,7 @@ create_variable() {
         --data "{\"key\": \"$key\", \"value\": \"$value\", \"protected\": $protected, \"masked\": $masked}" \
         "https://gitlab.com/api/v4/projects/$PROJECT_ID/variables" 2>/dev/null)
 
-    if [ $? -eq 0 ] && [ -n "$response" ]; then
+    if [[ $? -eq 0 ]] && [[ -n "$response" ]]; then
         echo "✅ $key configurada com sucesso"
     else
         echo "❌ Falha ao configurar $key"
@@ -42,8 +42,13 @@ create_variable() {
 echo "🔑 Configurando variáveis ESSENCIAIS..."
 echo ""
 
-# GitHub Integration
-create_variable "GITHUB_TOKEN" "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" true true
+# GitHub Integration - NUNCA hardcode tokens!
+if [[ -z "$GITHUB_TOKEN" ]]; then
+  echo "⚠️ GITHUB_TOKEN não definido. Defina a variável de ambiente antes de executar."
+  echo "   export GITHUB_TOKEN='seu_token_aqui'"
+else
+  create_variable "GITHUB_TOKEN" "$GITHUB_TOKEN" true true
+fi
 create_variable "GITHUB_REPO_OWNER" "thiagobodevan-a11y" false false
 create_variable "GITHUB_REPO_NAME" "assistente-juridico-p" false false
 

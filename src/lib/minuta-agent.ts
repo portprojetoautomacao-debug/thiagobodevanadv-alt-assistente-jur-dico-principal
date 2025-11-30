@@ -145,12 +145,8 @@ export async function criarMinutaComAgenteIA(
     const conteudoGerado = geminiResponse.text
 
     // 2) Monta objeto Minuta (mínimo necessário: id, titulo, conteudo)
-    const agoraISO = new Date().toISOString()
-    const tituloMinuta =
-      titulo ||
-      `Minuta - ${tipoMinuta}${
-        numeroProcesso ? ` - Proc. ${numeroProcesso}` : ''
-      }`
+    const sufixoProcesso = numeroProcesso ? ` - Proc. ${numeroProcesso}` : ''
+    const tituloMinuta = titulo || `Minuta - ${tipoMinuta}${sufixoProcesso}`
 
     const minuta: Minuta = {
       // compatível com o tipo do seu app (id/titulo/conteudo são seguros)
@@ -169,7 +165,7 @@ export async function criarMinutaComAgenteIA(
     if (syncDocs) {
       try {
         const docsResult = await googleDocsService.createDocument(minuta)
-        if (docsResult && docsResult.docId) {
+        if (docsResult?.docId) {
           docsId = docsResult.docId
           docsUrl = docsResult.url
         } else {
@@ -216,10 +212,10 @@ export async function criarMinutaComAgenteIA(
           reminders: prazo.priority === 'crítica'
             ? [60, 240, 1440, 2880, 4320] // mais agressivo pra crítica
             : prazo.priority === 'alta'
-            ? [60, 1440, 2880]
-            : prazo.priority === 'média'
-            ? [60, 1440]
-            : [60],
+              ? [60, 1440, 2880]
+              : prazo.priority === 'média'
+                ? [60, 1440]
+                : [60],
         }
 
         const eventId = await googleCalendarService.createDeadlineEvent(deadlineEvent)

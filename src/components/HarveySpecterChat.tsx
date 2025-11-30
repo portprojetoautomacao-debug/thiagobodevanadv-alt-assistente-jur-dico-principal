@@ -69,8 +69,8 @@ interface AgentTask {
 }
 
 interface HarveySpecterChatProps {
-    onNavigate?: (view: ViewType) => void
-    maxMessages?: number // Limite de mensagens no histórico
+    readonly onNavigate?: (view: ViewType) => void
+    readonly maxMessages?: number // Limite de mensagens no histórico
 }
 
 // ============================================
@@ -129,22 +129,22 @@ const SimpleMarkdown = memo(({ content }: { content: string }) => {
 
         return content
             // Headers
-            .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold mt-3 mb-1">$1</h3>')
-            .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
-            .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
+            .replaceAll(/^### (.+)$/gm, '<h3 class="text-base font-bold mt-3 mb-1">$1</h3>')
+            .replaceAll(/^## (.+)$/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
+            .replaceAll(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
             // Bold
-            .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+            .replaceAll(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
             // Italic
-            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replaceAll(/\*(.+?)\*/g, '<em>$1</em>')
             // Code inline
-            .replace(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-muted rounded text-sm font-mono">$1</code>')
+            .replaceAll(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-muted rounded text-sm font-mono">$1</code>')
             // Lists
-            .replace(/^• (.+)$/gm, '<li class="ml-4">$1</li>')
-            .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
-            .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
+            .replaceAll(/^• (.+)$/gm, '<li class="ml-4">$1</li>')
+            .replaceAll(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+            .replaceAll(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
             // Line breaks
-            .replace(/\n\n/g, '</p><p class="mt-2">')
-            .replace(/\n/g, '<br/>')
+            .replaceAll('\n\n', '</p><p class="mt-2">')
+            .replaceAll('\n', '<br/>')
     }, [content])
 
     return (
@@ -669,17 +669,17 @@ Regras:
                                                             <SimpleMarkdown content={streamingContent || ''} />
                                                             <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
                                                         </div>
-                                                    ) : message.content ? (
+                                                    ) : (message.content ? (
                                                         <div className="text-sm">
                                                             <SimpleMarkdown content={message.content} />
                                                         </div>
-                                                    ) : message.id === streamingMessageId ? (
+                                                    ) : (message.id === streamingMessageId ? (
                                                         <div className="flex gap-1">
                                                             <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
                                                             <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
                                                             <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
                                                         </div>
-                                                    ) : null}
+                                                    ) : null))}
                                                 </Card>
 
                                                 {/* Copy button para assistente */}

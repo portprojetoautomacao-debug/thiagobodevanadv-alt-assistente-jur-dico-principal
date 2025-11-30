@@ -2,8 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { WarningCircle } from '@phosphor-icons/react'
-import { GithubLogo } from '@phosphor-icons/react'
+import { WarningCircle, GithubLogo } from '@phosphor-icons/react'
 import { config, validateConfig } from '@/lib/config'
 
 export interface GitHubUser {

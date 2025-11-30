@@ -17,11 +17,61 @@ import { config } from '@/lib/config'
 import type { Process, PremonicaoJuridica, Expediente } from '@/types'
 
 const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<string, string> = {
   'ativo': 'bg-blue-100 text-blue-800 border-blue-300',
   'suspenso': 'bg-yellow-100 text-yellow-800 border-yellow-300',
   'concluido': 'bg-green-100 text-green-800 border-green-300',
   'arquivado': 'bg-gray-100 text-gray-800 border-gray-300',
+}
+
+// ===========================
+// Helper Functions
+// ===========================
+
+function isProcessIncomplete(process: Process): boolean {
+  const authorMissing = !process.autor || process.autor === '' || process.autor === 'Não identificado'
+  const defendantMissing = !process.reu || process.reu === '' || process.reu === 'Não identificado'
+  return authorMissing || defendantMissing
+}
+
+function processMatchesFilter(process: Process, filter: string): boolean {
+  if (!filter) return true
+  const lowerFilter = filter.toLowerCase()
+  return (
+    process.numeroCNJ.toLowerCase().includes(lowerFilter) ||
+    process.titulo.toLowerCase().includes(lowerFilter) ||
+    process.autor.toLowerCase().includes(lowerFilter)
+  )
+}
+
+function processMatchesStage(process: Process, selectedStage: string | null): boolean {
+  return !selectedStage || process.fase === selectedStage
+}
+
+function getStatusColorClass(status: string): string {
+  return STATUS_COLORS[status] || 'bg-gray-100 text-gray-800 border-gray-300'
+}
+
+function findExpedienteForProcess(
+  expedientes: Expediente[],
+  process: Process
+): Expediente | undefined {
+  return expedientes.find(e =>
+    e.processId === process.id ||
+    e.numeroProcesso === process.numeroCNJ ||
+    e.numeroProcesso?.replace(/\D/g, '') === process.numeroCNJ.replace(/\D/g, '')
+  )
+}
+
+function getExpedienteTeor(expediente: Expediente | undefined, process: Process): string {
+  if (!expediente) return process.notas || ''
+  return expediente.teor || expediente.content || expediente.conteudo || process.notas || ''
+}
+
+function shouldUpdateParties(autor: string | undefined, reu: string | undefined): boolean {
+  const authorValid = autor && autor !== 'Não identificado'
+  const defendantValid = reu && reu !== 'Não identificado'
+  return !!(authorValid || defendantValid)
 }
 
 export default function ProcessCRM() {
@@ -46,20 +96,10 @@ export default function ProcessCRM() {
   const [premonicaoError, setPremonicaoError] = useState<string | null>(null)
 
   // Conta processos sem autor/réu preenchidos
-  const incompleteProcesses = (processes || []).filter(p =>
-    !p.autor || p.autor === '' || p.autor === 'Não identificado' ||
-    !p.reu || p.reu === '' || p.reu === 'Não identificado'
-  )
+  const incompleteProcesses = (processes || []).filter(isProcessIncomplete)
 
   const filteredProcesses = (processes || []).filter(p => {
-    const matchesFilter = filter === '' ||
-      p.numeroCNJ.toLowerCase().includes(filter.toLowerCase()) ||
-      p.titulo.toLowerCase().includes(filter.toLowerCase()) ||
-      p.autor.toLowerCase().includes(filter.toLowerCase())
-
-    const matchesStage = !selectedStage || p.fase === selectedStage
-
-    return matchesFilter && matchesStage
+    return processMatchesFilter(p, filter) && processMatchesStage(p, selectedStage)
   })
 
   const handleAddProcess = async () => {
@@ -160,13 +200,8 @@ export default function ProcessCRM() {
 
     for (const process of incompleteProcesses) {
       // Busca expediente vinculado ao processo para extrair o teor
-      const expediente = (expedientes || []).find(e =>
-        e.processId === process.id ||
-        e.numeroProcesso === process.numeroCNJ ||
-        e.numeroProcesso?.replace(/\D/g, '') === process.numeroCNJ.replace(/\D/g, '')
-      )
-
-      const teor = expediente?.teor || expediente?.content || expediente?.conteudo || process.notas || ''
+      const expediente = findExpedienteForProcess(expedientes || [], process)
+      const teor = getExpedienteTeor(expediente, process)
 
       if (!teor) {
         console.log(`[UpdateParties] Sem teor para extrair partes do processo ${process.numeroCNJ}`)
@@ -177,8 +212,7 @@ export default function ProcessCRM() {
         const parties = await extractPartiesWithFallback(teor)
 
         // Só atualiza se encontrou algo diferente de "Não identificado"
-        if (parties.autor && parties.autor !== 'Não identificado' ||
-          parties.reu && parties.reu !== 'Não identificado') {
+        if (shouldUpdateParties(parties.autor, parties.reu)) {
           const idx = updatedProcesses.findIndex(p => p.id === process.id)
           if (idx >= 0) {
             updatedProcesses[idx] = {
@@ -344,7 +378,7 @@ export default function ProcessCRM() {
               <CardHeader className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base line-clamp-2">{process.titulo}</CardTitle>
-                  <Badge className={STATUS_COLORS[process.status] || 'bg-gray-100 text-gray-800 border-gray-300'}>
+                  <Badge className={getStatusColorClass(process.status)}>
                     {process.status}
                   </Badge>
                 </div>

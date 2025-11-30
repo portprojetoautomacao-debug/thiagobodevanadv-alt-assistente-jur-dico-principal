@@ -24,7 +24,7 @@ files=(
 )
 
 for file in "${files[@]}"; do
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
         echo "✅ $file - OK"
     else
         echo "❌ $file - MISSING"

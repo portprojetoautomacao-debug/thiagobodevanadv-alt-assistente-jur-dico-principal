@@ -53,7 +53,7 @@ export interface LegalMemorySearchOptions {
 
 export class LegalMemory {
     private static instance: LegalMemory
-    private memoryCache: Map<string, LegalContextItem> = new Map()
+    private readonly memoryCache: Map<string, LegalContextItem> = new Map()
 
     private constructor() {
         // Inicialização (futuramente conectar com Vector DB)
@@ -112,7 +112,7 @@ export class LegalMemory {
             tags,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            relevanceScore: 1.0
+            relevanceScore: 1
         }
 
         // Validação Zod

@@ -185,7 +185,7 @@ export default function AdvancedNLPDashboard() {
     filename: string,
   ) => {
     try {
-      if (typeof window === 'undefined' || typeof document === 'undefined') {
+      if (globalThis.window === undefined || globalThis.document === undefined) {
         toast.error('Download não é suportado neste ambiente')
         return
       }

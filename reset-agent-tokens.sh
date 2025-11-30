@@ -134,7 +134,7 @@ reset_token_cli() {
 
     read -p "Digite o nome do agente: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
@@ -171,14 +171,14 @@ update_agent_token() {
 
     read -p "Digite o nome do agente: " agent_name
 
-    if [ -z "$agent_name" ]; then
+    if [[ -z "$agent_name" ]]; then
         warning "Nome do agente não fornecido"
         return
     fi
 
     read -p "Digite o novo token: " new_token
 
-    if [ -z "$new_token" ]; then
+    if [[ -z "$new_token" ]]; then
         warning "Token não fornecido"
         return
     fi
@@ -205,7 +205,7 @@ update_agent_token() {
         --namespace gitlab-agent \
         --dry-run=client -o yaml | kubectl apply -f -
 
-    if [ $? -eq 0 ]; then
+    if [[ $? -eq 0 ]]; then
         success "Token atualizado no cluster"
         echo ""
         echo "⏳ Aguardando o agente aplicar as mudanças..."
@@ -252,7 +252,7 @@ check_token_status() {
     echo "====================="
 
     for agent_dir in .gitlab/agents/*/; do
-        if [ -d "$agent_dir" ]; then
+        if [[ -d "$agent_dir" ]]; then
             agent_name=$(basename "$agent_dir")
 
             echo ""
@@ -263,7 +263,7 @@ check_token_status() {
                 token_count=$(glab cluster agent get "$agent_name" | grep -c "token")
                 echo "  🔑 Tokens encontrados: $token_count"
 
-                if [ "$token_count" -gt 1 ]; then
+                if [[ "$token_count" -gt 1 ]]; then
                     warning "  ⚠️  Mais de 1 token ativo (máximo recomendado: 2)"
                 fi
             else

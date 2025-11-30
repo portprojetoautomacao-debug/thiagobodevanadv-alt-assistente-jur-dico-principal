@@ -17,7 +17,7 @@ fi
 echo "📋 Verificando configuração atual..."
 
 # Verificar se já existe .gitlab-ci.yml
-if [ -f ".gitlab-ci.yml" ]; then
+if [[ -f ".gitlab-ci.yml" ]]; then
     echo "⚠️  Já existe um .gitlab-ci.yml customizado"
     echo ""
     echo "Escolha uma opção:"
