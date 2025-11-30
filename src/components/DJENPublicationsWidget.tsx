@@ -144,6 +144,74 @@ function createExpedienteFromPublication(
   }
 }
 
+// ===== Registration Helpers (reduces S3776 Cognitive Complexity) =====
+
+interface RegistrationContext {
+  createOrUpdateFromDjenIntimacao: (data: {
+    nomeCliente: string
+    cidade: string
+    estado: string
+    processo: string
+  }) => void
+}
+
+/**
+ * Extrai cidade e estado do campo orgão
+ */
+function parseOrgaoLocation(orgao?: string): { cidade: string; estado: string } {
+  const parts = orgao?.split('/') || []
+  return {
+    cidade: parts[0] || '',
+    estado: parts[1] || '',
+  }
+}
+
+/**
+ * Registra cliente a partir das partes extraídas
+ */
+function registerClientFromParties(
+  parties: PartiesResult,
+  pub: DJENPublication,
+  ctx: RegistrationContext
+): void {
+  if (!parties.autor || parties.autor === 'Não identificado') return
+  
+  const location = parseOrgaoLocation(pub.orgao)
+  ctx.createOrUpdateFromDjenIntimacao({
+    nomeCliente: parties.autor,
+    cidade: location.cidade,
+    estado: location.estado,
+    processo: pub.numeroProcesso || '',
+  })
+}
+
+/**
+ * Processa uma única publicação para registro
+ */
+async function processPublicationForRegistration(
+  pub: DJENPublication,
+  now: string,
+  ctx: RegistrationContext
+): Promise<{ process: Process; expediente: Expediente } | null> {
+  if (!pub.numeroProcesso) return null
+
+  const parties = await extractPartiesWithFallback(pub.teor)
+  registerClientFromParties(parties, pub, ctx)
+
+  const newProcess = createProcessFromPublication(pub, parties, now)
+  const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
+
+  return { process: newProcess, expediente: newExpediente }
+}
+
+/**
+ * Formata descrição das partes para toast
+ */
+function formatPartiesDescription(parties: PartiesResult): string {
+  if (parties.autor === 'Não identificado') return ''
+  return ` - ${parties.autor} x ${parties.reu}`
+}
+
 interface DJENPublicationsWidgetProps {
   readonly onViewAll?: () => void
   readonly compact?: boolean
@@ -284,7 +352,6 @@ export default function DJENPublicationsWidget({
       return
     }
 
-    // Verifica se já existe
     if (isAlreadyRegistered(pub)) {
       toast.info('Processo já cadastrado', {
         description: `O processo ${pub.numeroProcesso} já está no Acervo`,
@@ -292,35 +359,22 @@ export default function DJENPublicationsWidget({
       return
     }
 
-    const now = new Date().toISOString()
-
-    // Extrai partes (autor/réu) do teor usando IA
     toast.info('Extraindo partes do processo...', {
       description: 'Analisando teor da publicação com IA',
     })
+
+    const now = new Date().toISOString()
+    const ctx: RegistrationContext = { createOrUpdateFromDjenIntimacao }
+    const result = await processPublicationForRegistration(pub, now, ctx)
+
+    if (!result) return
+
+    setProcesses((current) => [...(current || []), result.process])
+    setExpedientes((current) => [...(current || []), result.expediente])
+
     const parties = await extractPartiesWithFallback(pub.teor)
-
-    // Cadastra/atualiza cliente automaticamente a partir da parte autor
-    if (parties.autor && parties.autor !== 'Não identificado') {
-      createOrUpdateFromDjenIntimacao({
-        nomeCliente: parties.autor,
-        cidade: pub.orgao?.split('/')[0] || '',
-        estado: pub.orgao?.split('/')[1] || '',
-        processo: pub.numeroProcesso,
-      })
-    }
-
-    // Usa funções auxiliares para criar processo e expediente
-    const newProcess = createProcessFromPublication(pub, parties, now)
-    const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
-
-    // Adiciona aos KV storages
-    setProcesses((current) => [...(current || []), newProcess])
-    setExpedientes((current) => [...(current || []), newExpediente])
-
-    const partiesDesc = parties.autor === 'Não identificado' ? '' : ` - ${parties.autor} x ${parties.reu}`
     toast.success('Processo cadastrado!', {
-      description: `${pub.numeroProcesso} adicionado ao Acervo${partiesDesc}`,
+      description: `${pub.numeroProcesso} adicionado ao Acervo${formatPartiesDescription(parties)}`,
     })
   }
 

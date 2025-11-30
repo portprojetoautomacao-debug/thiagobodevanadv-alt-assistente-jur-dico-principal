@@ -56,57 +56,109 @@ export function isTrustedTypesSupported(): boolean {
         typeof globalThis.window?.trustedTypes?.createPolicy === 'function';
 }
 
+// ===== Sanitization Helpers (reduces S3776 Cognitive Complexity) =====
+
+/**
+ * Verifica se um atributo href/src contém valor perigoso
+ */
+function isDangerousUrlValue(value: string): boolean {
+    const normalizedValue = value.toLowerCase().trim();
+    return normalizedValue.startsWith('javascript:') ||
+        normalizedValue.startsWith('data:text/html') ||
+        normalizedValue.startsWith('vbscript:');
+}
+
+/**
+ * Verifica se um atributo é um event handler (onclick, onload, etc.)
+ */
+function isEventHandler(attrName: string): boolean {
+    return attrName.toLowerCase().startsWith('on');
+}
+
+/**
+ * Processa um único atributo e remove se não permitido
+ */
+function sanitizeAttribute(element: Element, attr: Attr): void {
+    const attrName = attr.name.toLowerCase();
+
+    // Remove atributos não permitidos
+    if (!ALLOWED_ATTRS.has(attrName)) {
+        element.removeAttribute(attr.name);
+        return;
+    }
+
+    // Verifica valores de href/src perigosos
+    if ((attrName === 'href' || attrName === 'src') && isDangerousUrlValue(attr.value)) {
+        element.removeAttribute(attr.name);
+        return;
+    }
+
+    // Remove event handlers
+    if (isEventHandler(attrName)) {
+        element.removeAttribute(attr.name);
+    }
+}
+
+/**
+ * Sanitiza todos os atributos de um elemento
+ */
+function sanitizeElementAttributes(element: Element): void {
+    const attrs = Array.from(element.attributes);
+    for (const attr of attrs) {
+        sanitizeAttribute(element, attr);
+    }
+}
+
+/**
+ * Substitui tag não permitida por seu conteúdo de texto
+ */
+function replaceDisallowedTag(element: Element): void {
+    const textContent = element.textContent || '';
+    element.replaceWith(document.createTextNode(textContent));
+}
+
+/**
+ * Sanitiza um nó DOM recursivamente
+ */
+function sanitizeNode(node: Node): void {
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    const element = node as Element;
+    const tagName = element.tagName.toLowerCase();
+
+    // Remove tags não permitidas
+    if (!ALLOWED_TAGS.has(tagName)) {
+        replaceDisallowedTag(element);
+        return;
+    }
+
+    // Sanitiza atributos
+    sanitizeElementAttributes(element);
+
+    // Recursivamente sanitiza filhos
+    Array.from(element.childNodes).forEach(sanitizeNode);
+}
+
 /**
  * Sanitiza HTML removendo tags e atributos perigosos
  */
 function sanitizeHTML(html: string): string {
-    // Parser DOM para sanitização segura
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-
-    function sanitizeNode(node: Node): void {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as Element;
-            const tagName = element.tagName.toLowerCase();
-
-            // Remove tags não permitidas
-            if (!ALLOWED_TAGS.has(tagName)) {
-                // Preserva conteúdo de texto, remove a tag
-                const textContent = element.textContent || '';
-                element.replaceWith(document.createTextNode(textContent));
-                return;
-            }
-
-            // Remove atributos não permitidos
-            const attrs = Array.from(element.attributes);
-            for (const attr of attrs) {
-                if (!ALLOWED_ATTRS.has(attr.name.toLowerCase())) {
-                    element.removeAttribute(attr.name);
-                }
-
-                // Verifica valores de atributos perigosos
-                if (attr.name === 'href' || attr.name === 'src') {
-                    const value = attr.value.toLowerCase().trim();
-                    if (value.startsWith('javascript:') ||
-                        value.startsWith('data:text/html') ||
-                        value.startsWith('vbscript:')) {
-                        element.removeAttribute(attr.name);
-                    }
-                }
-
-                // Remove event handlers (onclick, onload, etc.)
-                if (attr.name.toLowerCase().startsWith('on')) {
-                    element.removeAttribute(attr.name);
-                }
-            }
-
-            // Recursivamente sanitiza filhos
-            Array.from(element.childNodes).forEach(sanitizeNode);
-        }
-    }
-
     sanitizeNode(doc.body);
     return doc.body.innerHTML;
+}
+
+/**
+ * Verifica se uma origem corresponde a um padrão com wildcard
+ */
+function matchesWildcardOrigin(parsedOrigin: string, parsedHref: string, allowedPattern: string): boolean {
+    if (allowedPattern.includes('*')) {
+        const pattern = allowedPattern.replace('*', '[^/]+');
+        const regex = new RegExp(`^${pattern}$`);
+        return regex.test(parsedOrigin);
+    }
+    return parsedOrigin === allowedPattern || parsedHref.startsWith(allowedPattern);
 }
 
 /**
@@ -122,16 +174,10 @@ function validateScriptURL(url: string): boolean {
         }
 
         // Verifica contra lista de origens permitidas
-        return ALLOWED_SCRIPT_ORIGINS.some(allowed => {
-            if (allowed.includes('*')) {
-                const pattern = allowed.replace('*', '[^/]+');
-                const regex = new RegExp(`^${pattern}$`);
-                return regex.test(parsed.origin);
-            }
-            return parsed.origin === allowed || parsed.href.startsWith(allowed);
-        });
+        return ALLOWED_SCRIPT_ORIGINS.some(allowed =>
+            matchesWildcardOrigin(parsed.origin, parsed.href, allowed)
+        );
     } catch {
-        // URL inválida
         return false;
     }
 }

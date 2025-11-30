@@ -59,6 +59,48 @@ export class DJENAPIError extends Error {
   }
 }
 
+// ===== Error handling helpers (reduces S3776 Cognitive Complexity) =====
+
+function createTimeoutError(timeout: number, tribunal: string): DJENAPIError {
+  return new DJENAPIError(
+    `Timeout após ${timeout}ms aguardando resposta`,
+    tribunal
+  )
+}
+
+function createNetworkError(error: Error, tribunal: string): DJENAPIError {
+  return new DJENAPIError(
+    `Erro de rede: ${error.message}`,
+    tribunal,
+    undefined,
+    error
+  )
+}
+
+function createUnknownError(tribunal: string, originalError?: unknown): DJENAPIError {
+  return new DJENAPIError(
+    'Erro desconhecido ao consultar API',
+    tribunal,
+    undefined,
+    originalError
+  )
+}
+
+function handleFetchError(error: unknown, tribunal: string, timeout: number): never {
+  if (error instanceof DJENAPIError) {
+    throw error
+  }
+
+  if (error instanceof Error) {
+    if (error.name === 'AbortError') {
+      throw createTimeoutError(timeout, tribunal)
+    }
+    throw createNetworkError(error, tribunal)
+  }
+
+  throw createUnknownError(tribunal, error)
+}
+
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
@@ -106,52 +148,89 @@ function extractPublicationText(pub: DJENPublication): string {
   return parts.filter(Boolean).join(' ')
 }
 
+// ===== Match type helpers (reduces S3776) =====
+
+type MatchType = 'nome' | 'oab' | 'ambos'
+
+function determineMatchType(nomeMatch: boolean, oabMatch: boolean): { matches: boolean; matchType?: MatchType } {
+  if (nomeMatch && oabMatch) return { matches: true, matchType: 'ambos' }
+  if (nomeMatch) return { matches: true, matchType: 'nome' }
+  if (oabMatch) return { matches: true, matchType: 'oab' }
+  return { matches: false }
+}
+
 function matchesSearchTerms(
   publicationText: string,
   searchTerms: DJENConfig['searchTerms']
-): { matches: boolean; matchType?: 'nome' | 'oab' | 'ambos' } {
+): { matches: boolean; matchType?: MatchType } {
   const normalizedText = normalizeText(publicationText)
-  
-  const nomeMatch = searchTerms.nomeAdvogado 
+
+  const nomeMatch = searchTerms.nomeAdvogado
     ? normalizedText.includes(normalizeText(searchTerms.nomeAdvogado))
     : false
-  
+
   const oabMatch = searchTerms.numeroOAB
     ? normalizedText.includes(normalizeText(searchTerms.numeroOAB))
     : false
 
-  if (nomeMatch && oabMatch) {
-    return { matches: true, matchType: 'ambos' }
-  } else if (nomeMatch) {
-    return { matches: true, matchType: 'nome' }
-  } else if (oabMatch) {
-    return { matches: true, matchType: 'oab' }
+  return determineMatchType(nomeMatch, oabMatch)
+}
+
+// ===== Response validation helpers (reduces S3776) =====
+
+function validateResponseStatus(response: Response, tribunal: string): void {
+  if (!response.ok) {
+    throw new DJENAPIError(
+      `Erro HTTP ${response.status}: ${response.statusText}`,
+      tribunal,
+      response.status
+    )
   }
-  
-  return { matches: false }
+}
+
+function validateResponseContentType(response: Response, tribunal: string): void {
+  const contentType = response.headers.get('content-type')
+  if (!contentType?.includes('application/json')) {
+    throw new DJENAPIError(
+      'Resposta não está em formato JSON. Verifique os cabeçalhos da requisição.',
+      tribunal
+    )
+  }
+}
+
+function parseResponseData(data: unknown, tribunal: string): DJENPublication[] {
+  if (Array.isArray(data)) {
+    return data as DJENPublication[]
+  }
+
+  if (data && typeof data === 'object' && Object.keys(data).length === 0) {
+    return []
+  }
+
+  console.warn(`Resposta do tribunal ${tribunal} não é um array:`, data)
+  return []
 }
 
 async function consultarPublicacoesTribunal(
   params: DJENQueryParams,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<DJENPublication[]> {
-  // Build query parameters
   const queryParams = new URLSearchParams()
   queryParams.append('siglaTribunal', params.tribunal)
   queryParams.append('dataDisponibilizacaoInicio', params.dataInicio)
   queryParams.append('dataDisponibilizacaoFim', params.dataFim)
-  
+
   if (params.nomeAdvogado) {
     queryParams.append('nomeAdvogado', params.nomeAdvogado)
   }
-  
+
   if (params.numeroOAB && params.ufOAB) {
     queryParams.append('numeroOab', params.numeroOAB)
     queryParams.append('ufOab', params.ufOAB)
   }
-  
+
   const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryParams.toString()}`
-  
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
 
@@ -167,62 +246,14 @@ async function consultarPublicacoesTribunal(
 
     clearTimeout(timeoutId)
 
-    if (!response.ok) {
-      throw new DJENAPIError(
-        `Erro HTTP ${response.status}: ${response.statusText}`,
-        params.tribunal,
-        response.status
-      )
-    }
-
-    const contentType = response.headers.get('content-type')
-    if (!contentType?.includes('application/json')) {
-      throw new DJENAPIError(
-        'Resposta não está em formato JSON. Verifique os cabeçalhos da requisição.',
-        params.tribunal
-      )
-    }
+    validateResponseStatus(response, params.tribunal)
+    validateResponseContentType(response, params.tribunal)
 
     const data = await response.json()
-    
-    if (!Array.isArray(data)) {
-      if (data && typeof data === 'object' && Object.keys(data).length === 0) {
-        return []
-      }
-      console.warn(`Resposta do tribunal ${params.tribunal} não é um array:`, data)
-      return []
-    }
-
-    return data as DJENPublication[]
+    return parseResponseData(data, params.tribunal)
   } catch (error) {
     clearTimeout(timeoutId)
-    
-    if (error instanceof DJENAPIError) {
-      throw error
-    }
-
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new DJENAPIError(
-          `Timeout após ${timeout}ms aguardando resposta`,
-          params.tribunal
-        )
-      }
-      
-      throw new DJENAPIError(
-        `Erro de rede: ${error.message}`,
-        params.tribunal,
-        undefined,
-        error
-      )
-    }
-
-    throw new DJENAPIError(
-      'Erro desconhecido ao consultar API',
-      params.tribunal,
-      undefined,
-      error
-    )
+    handleFetchError(error, params.tribunal, timeout)
   }
 }
 
@@ -272,11 +303,11 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   const defaultDate = formatDate(new Date())
   const queryDataInicio = dataInicio || defaultDate
   const queryDataFim = dataFim || dataInicio || defaultDate
-  
+
   // Extract UF and number from OAB if provided
   let numeroOAB: string | undefined
   let ufOAB: string | undefined
-  
+
   if (searchTerms.numeroOAB) {
     const parsed = parseOAB(searchTerms.numeroOAB)
     ufOAB = parsed.uf
@@ -290,9 +321,9 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   for (const tribunal of tribunais) {
     try {
       const publicacoes = await consultarPublicacoesTribunal(
-        { 
-          tribunal, 
-          dataInicio: queryDataInicio, 
+        {
+          tribunal,
+          dataInicio: queryDataInicio,
           dataFim: queryDataFim,
           nomeAdvogado: searchTerms.nomeAdvogado,
           numeroOAB,
@@ -344,10 +375,10 @@ export function getTribunaisDisponiveis(): string[] {
 export function validarFormatoData(data: string): boolean {
   const regex = /^\d{4}-\d{2}-\d{2}$/
   if (!regex.test(data)) return false
-  
+
   const date = new Date(data)
   if (isNaN(date.getTime())) return false
-  
+
   // Verifica se a data não foi ajustada (ex: 2025-04-31 vira 2025-05-01)
   const [year, month, day] = data.split('-').map(Number)
   return (
