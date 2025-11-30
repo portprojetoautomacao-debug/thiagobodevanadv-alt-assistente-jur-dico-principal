@@ -29,24 +29,7 @@ import {
   ArrowsLeftRight,
   ChatCircle,
   CloudArrowUp,
-
-// Funções auxiliares para evitar ternários aninhados
-function getAgentStatusLabel(isStreaming: boolean, enabled: boolean): string {
-    if (isStreaming) return 'Streaming'
-    return enabled ? 'Ativo' : 'Pausado'
-  }
-
-function getAgentStatusLabelExtended(isStreaming: boolean, enabled: boolean): string {
-  if (isStreaming) return '⚡ Gerando resposta...'
-  return enabled ? 'Pronto para uso' : 'Desativado'
-}
-
-function getTaskStatusVariant(status: string): 'default' | 'secondary' | 'destructive' {
-  if (status === 'processing') return 'default'
-  if (status === 'queued') return 'secondary'
-  return 'destructive'
-}
-ClockCounterClockwise,
+  ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
 import { useAgentBackup } from '@/hooks/use-agent-backup'
@@ -62,6 +45,57 @@ import type { ViewType, User } from '@/types'
 import type { IconProps } from '@phosphor-icons/react'
 import { ServerLogsViewer } from '@/components/ServerLogsViewer'
 import { LegalMemoryViewer } from '@/components/LegalMemoryViewer'
+
+// ===========================
+// Helper Functions (outside component to avoid re-creation)
+// ===========================
+
+function getAgentStatusLabel(isStreaming: boolean, enabled: boolean): string {
+  if (isStreaming) return 'Streaming'
+  return enabled ? 'Ativo' : 'Pausado'
+}
+
+function getAgentStatusLabelExtended(isStreaming: boolean, enabled: boolean): string {
+  if (isStreaming) return '⚡ Gerando resposta...'
+  return enabled ? 'Pronto para uso' : 'Desativado'
+}
+
+function getTaskStatusVariant(status: string): 'default' | 'secondary' | 'destructive' {
+  if (status === 'processing') return 'default'
+  if (status === 'queued') return 'secondary'
+  return 'destructive'
+}
+
+function getStatusColor(enabled: boolean, isStreaming: boolean, status?: string): string {
+  if (!enabled) return 'text-muted-foreground'
+  if (isStreaming) return 'text-purple-500'
+  if (status === 'processing') return 'text-accent'
+  return 'text-green-600'
+}
+
+function getCardClassName(enabled: boolean, isStreaming: boolean): string {
+  const base = 'transition-all duration-300'
+  if (isStreaming) return `${base} border-purple-500/50 shadow-lg shadow-purple-500/10`
+  if (enabled) return `${base} border-primary/30`
+  return base
+}
+
+function getIconContainerClassName(enabled: boolean, isStreaming: boolean): string {
+  const base = 'p-2 rounded-lg relative'
+  if (isStreaming) return `${base} bg-purple-500/20 animate-pulse`
+  if (enabled) return `${base} bg-primary/10`
+  return `${base} bg-muted`
+}
+
+function getActiveAgentsText(count: number): string {
+  if (count === 0) return 'Nenhum ativado'
+  return `${count} ativo(s)`
+}
+
+function getProcessingText(count: number): string {
+  if (count > 0) return `${count} em processamento`
+  return 'Aguardando tarefas'
+}
 
 const agentIcons: Record<string, ComponentType<IconProps>> = {
   'djen-monitor': Database,
@@ -224,9 +258,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               {activeAgents}/{agents.length}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {activeAgents === 0
-                ? 'Nenhum ativado'
-                : `${activeAgents} ativo(s)`}
+              {getActiveAgentsText(activeAgents)}
             </p>
           </CardContent>
         </Card>
@@ -243,9 +275,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               {queuedTasks + processingTasks}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {processingTasks > 0
-                ? `${processingTasks} em processamento`
-                : 'Aguardando tarefas'}
+              {getProcessingText(processingTasks)}
             </p>
           </CardContent>
         </Card>
@@ -504,42 +534,18 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
               const IconComponent = agentIcons[agent.id] || Robot
               const isStreaming = !!streamingContent[agent.id]
               const streamPreview = streamingContent[agent.id]?.slice(-100) || ''
-
-              // Função para determinar cor do status
-              const getStatusColor = (): string => {
-                if (!agent.enabled) return 'text-muted-foreground'
-                if (isStreaming) return 'text-purple-500'
-                if (agent.status === 'processing') return 'text-accent'
-                return 'text-green-600'
-              }
-              const statusColor = getStatusColor()
-
-              // Função para determinar classes do Card
-              const getCardClassName = (): string => {
-                const base = 'transition-all duration-300'
-                if (isStreaming) return `${base} border-purple-500/50 shadow-lg shadow-purple-500/10`
-                if (agent.enabled) return `${base} border-primary/30`
-                return base
-              }
-
-              // Função para determinar classes do ícone container
-              const getIconContainerClassName = (): string => {
-                const base = 'p-2 rounded-lg relative'
-                if (isStreaming) return `${base} bg-purple-500/20 animate-pulse`
-                if (agent.enabled) return `${base} bg-primary/10`
-                return `${base} bg-muted`
-              }
+              const statusColor = getStatusColor(agent.enabled, isStreaming, agent.status)
 
               return (
                 <Card
                   key={agent.id}
-                  className={getCardClassName()}
+                  className={getCardClassName(agent.enabled, isStreaming)}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
                         <div
-                          className={getIconContainerClassName()}
+                          className={getIconContainerClassName(agent.enabled, isStreaming)}
                         >
                           <IconComponent
                             className={`w-6 h-6 ${statusColor}`}
