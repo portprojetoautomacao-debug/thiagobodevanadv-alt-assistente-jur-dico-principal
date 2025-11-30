@@ -56,7 +56,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
         <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>
         <Badge className="mt-2 bg-green-500/10 text-green-700 border-green-500/20">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse" />
-          Gemini AI Ativo
+          {'Gemini AI Ativo'}
         </Badge>
       </div>
 

@@ -393,22 +393,9 @@ export function validarEntradaTarefa<T>(
 
 /**
  * Valida saída de agente com schema apropriado
+ * Reutiliza a mesma lógica de validarEntradaTarefa
  */
-export function validarSaidaAgente<T>(
-  schema: z.ZodType<T>,
-  data: unknown
-): { success: true; data: T } | { success: false; errors: string[] } {
-  const result = schema.safeParse(data)
-
-  if (result.success) {
-    return { success: true, data: result.data }
-  }
-
-  return {
-    success: false,
-    errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-  }
-}
+export const validarSaidaAgente = validarEntradaTarefa
 
 /**
  * Tenta extrair JSON de resposta de LLM

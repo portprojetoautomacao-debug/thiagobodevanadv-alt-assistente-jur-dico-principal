@@ -21,6 +21,15 @@ export function getProjectUrl(projectId: string): string {
  */
 export type GetTasksResponse = Task[]
 
+/**
+ * Throws browser-not-supported error for all Todoist API methods
+ */
+function throwBrowserError(): never {
+  throw new Error(
+    'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
+  )
+}
+
 export class TodoistApi {
   constructor(_apiKey: string) {
     console.warn(
@@ -31,28 +40,20 @@ export class TodoistApi {
   /**
    * SDK oficial: getTasks({ projectId?, label?, filter? }): Promise<Task[]>
    */
-
   async getTasks(_args?: { projectId?: string; label?: string; filter?: string }): Promise<Task[]> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   /**
    * Método auxiliar para compatibilidade — não existe no SDK oficial,
    * mas alguns wrappers podem usar getTasksByFilter.
    */
-
   async getTasksByFilter(_args?: { query?: string; cursor?: string; limit?: number }): Promise<Task[]> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   async getProjects(): Promise<Project[]> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   async addTask(_args: {
@@ -63,9 +64,7 @@ export class TodoistApi {
     priority?: number
     labels?: string[]
   }): Promise<Task> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   async updateTask(
@@ -78,27 +77,19 @@ export class TodoistApi {
       labels?: string[]
     }
   ): Promise<Task> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   async closeTask(_id: string): Promise<void> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   async deleteTask(_id: string): Promise<void> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 
   async addProject(_args: { name: string; color?: string }): Promise<Project> {
-    throw new Error(
-      'TodoistApi não está disponível no browser. Use os endpoints /api/todoist-* em vez de chamar o SDK direto.'
-    )
+    throwBrowserError()
   }
 }
 
