@@ -28,11 +28,13 @@
     "formulahendry.auto-close-tag",
     "pkief.material-icon-theme",
 
-    // GitLab
-    "gitlab.gitlab-workflow",
+    // REMOVIDO: GitLab (projeto usa GitHub)
+    // "gitlab.gitlab-workflow",
 
     // SonarLint
-    "sonarsource.sonarlint-vscode", // AI & Productivity
+    "sonarsource.sonarlint-vscode",
+
+    // AI & Productivity
     "teamsdevapp.vscode-ai-foundry",
     "p42ai.refactor"
   ]
