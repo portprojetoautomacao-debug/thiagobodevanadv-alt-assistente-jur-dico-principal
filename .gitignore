@@ -80,6 +80,10 @@ eslint-results.sarif
 # MCP Server local files
 .mcp/
 
+# SonarQube/SonarCloud (temp directories)
+.scannerwork/
+.sonar/
+
 # Test coverage
 coverage/
 coverage-api/
