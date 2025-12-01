@@ -51,8 +51,10 @@ const isDevelopmentEnvironment = (): boolean => {
   }
 
   // Localhost
+  // NOTA: Removido bloqueio de localhost para permitir desenvolvimento local
+  // O desenvolvedor deve adicionar http://localhost:5173 no Google Cloud Console
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return true;
+    return false;
   }
 
   // Preview deployments da Vercel (qualquer outra URL .vercel.app)
