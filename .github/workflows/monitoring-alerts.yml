@@ -377,11 +377,11 @@ jobs:
         run: |
           echo "📦 Verificando dependências desatualizadas..."
 
-          # Verificar pacotes desatualizados
-          npm outdated --json > outdated-packages.json
+          # Verificar pacotes desatualizados (|| true para não falhar o workflow)
+          npm outdated --json > outdated-packages.json || true
 
           # Contar pacotes desatualizados
-          OUTDATED_COUNT=$(jq 'length' outdated-packages.json)
+          OUTDATED_COUNT=$(jq 'length' outdated-packages.json 2>/dev/null || echo "0")
           echo "📊 Pacotes desatualizados: $OUTDATED_COUNT"
 
           if [[ "$OUTDATED_COUNT" -gt 10 ]]; then
