@@ -20,20 +20,22 @@ O app fica **"carregando infinitamente"** em produção (Vercel) e **não abre o
 
 ```typescript
 // ✅ ANTES: Bloqueava assistente-juridico-p.vercel.app
-if (hostname.includes('vercel.app') &&
-  hostname !== 'assistente-juridico-github.vercel.app' &&
-  !hostname.startsWith('assistente-juridico-github.')) {
-  return true  // ❌ Tratava como dev
+if (
+  hostname.includes("vercel.app") &&
+  hostname !== "assistente-juridico-github.vercel.app" &&
+  !hostname.startsWith("assistente-juridico-github.")
+) {
+  return true; // ❌ Tratava como dev
 }
 
 // ✅ DEPOIS: Permite ambas URLs de produção
 const PRODUCTION_URLS = [
-  'assistente-juridico-p.vercel.app',
-  'assistente-juridico-github.vercel.app'
-]
+  "assistente-juridico-p.vercel.app",
+  "assistente-juridico-github.vercel.app",
+];
 
 if (PRODUCTION_URLS.includes(hostname)) {
-  return false  // ✅ Permite login
+  return false; // ✅ Permite login
 }
 ```
 
@@ -47,11 +49,11 @@ if (PRODUCTION_URLS.includes(hostname)) {
 
 2. Adicione as seguintes variáveis:
 
-| Variável | Valor | Ambientes |
-|----------|-------|-----------|
+| Variável                | Valor                                        | Ambientes                        |
+| ----------------------- | -------------------------------------------- | -------------------------------- |
 | `VITE_GOOGLE_CLIENT_ID` | `[SEU-CLIENT-ID].apps.googleusercontent.com` | Production, Preview, Development |
-| `VITE_REDIRECT_URI` | `https://assistente-juridico-p.vercel.app` | Production |
-| `VITE_GOOGLE_API_KEY` | `[SUA-API-KEY]` (opcional) | Production, Preview, Development |
+| `VITE_REDIRECT_URI`     | `https://assistente-juridico-p.vercel.app`   | Production                       |
+| `VITE_GOOGLE_API_KEY`   | `[SUA-API-KEY]` (opcional)                   | Production, Preview, Development |
 
 3. Clique em **Save**
 
@@ -80,12 +82,14 @@ git push
 3. Clique no **Client ID OAuth 2.0**
 
 4. Em **Authorized JavaScript origins**, adicione:
+
    ```
    https://assistente-juridico-p.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 
 5. Em **Authorized redirect URIs**, adicione:
+
    ```
    https://assistente-juridico-p.vercel.app
    https://assistente-juridico-github.vercel.app
@@ -98,11 +102,13 @@ git push
 ## 🧪 Como Testar
 
 ### 1. Verificar Variáveis (Local)
+
 ```bash
 ./check-oauth-config.sh
 ```
 
 ### 2. Testar em Produção
+
 1. Acesse: https://assistente-juridico-p.vercel.app
 2. Aguarde carregar
 3. Clique no botão **"Sign in with Google"**
@@ -115,22 +121,28 @@ git push
 ## 🔍 Troubleshooting
 
 ### Erro: "Origin mismatch"
+
 **Causa**: URL não autorizada no Google Cloud Console  
 **Solução**: Adicione a URL exata nas configurações OAuth (passo acima)
 
 ### Erro: "Missing client ID"
+
 **Causa**: Variável `VITE_GOOGLE_CLIENT_ID` não configurada no Vercel  
 **Solução**: Adicione a variável e faça redeploy
 
 ### Popup não abre
+
 **Causa**: Script do Google bloqueado por CSP ou AdBlocker  
-**Solução**: 
+**Solução**:
+
 - Desabilite AdBlocker temporariamente
 - Verifique console do browser (F12) por erros CSP
 
 ### App fica carregando
+
 **Causa**: Código ainda está bloqueando produção  
-**Solução**: 
+**Solução**:
+
 - Verifique se o commit foi deployado
 - Force refresh (Ctrl+Shift+R)
 - Limpe cache do browser

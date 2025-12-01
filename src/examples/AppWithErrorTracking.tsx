@@ -1,30 +1,32 @@
 // Exemplo de como usar Error Tracking no seu App.tsx
 
-import { useEffect } from 'react'
-import { useUserTracking, usePageTracking } from '../hooks/useErrorTracking'
-import { captureMessage, setErrorTag } from '../services/error-tracking'
+import { useEffect } from "react";
+import { usePageTracking, useUserTracking } from "../hooks/useErrorTracking";
+import { getEnv } from "../lib/env-helper";
+import { captureMessage, setErrorTag } from "../services/error-tracking";
 
-export function AppWithErrorTracking({ user }: { user?: { id: string; email: string } }) {
+export function AppWithErrorTracking({
+  user,
+}: {
+  user?: { id: string; email: string };
+}) {
   // Rastrear usuário logado
-  useUserTracking(user?.id, user?.email)
+  useUserTracking(user?.id, user?.email);
 
   // Rastrear navegação de páginas
-  usePageTracking()
+  usePageTracking();
 
   // Rastrear versão do app
   useEffect(() => {
-    const version = process.env.REACT_APP_VERSION || process.env.VITE_APP_VERSION || 'unknown'
-    const env = process.env.NODE_ENV || 'development'
-    
-    setErrorTag('app_version', version)
-    setErrorTag('environment', env)
-    
-    captureMessage(`App started - Version ${version} (${env})`, 'info')
-  }, [])
+    const version =
+      getEnv("REACT_APP_VERSION") || getEnv("VITE_APP_VERSION") || "unknown";
+    const env = getEnv("NODE_ENV") || "development";
 
-  return (
-    <div>
-      {/* Seu App aqui */}
-    </div>
-  )
+    setErrorTag("app_version", version);
+    setErrorTag("environment", env);
+
+    captureMessage(`App started - Version ${version} (${env})`, "info");
+  }, []);
+
+  return <div>{/* Seu App aqui */}</div>;
 }
