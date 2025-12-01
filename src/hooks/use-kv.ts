@@ -251,18 +251,29 @@ async function processWriteBatch(): Promise<void> {
   try {
     const entries = Array.from(writes.entries()).map(([key, { value }]) => ({ key, value }));
 
+    // AbortController com timeout de 5s
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const response = await fetch('/api/kv', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'batch-set', entries }),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       recordApiSuccess();
     } else if (response.status === 429) {
       recordApiError();
     }
-  } catch {
+  } catch (error) {
+    // Silenciar erros de rede em dev
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.debug('[KV] API não disponível (normal em dev):', error.message);
+    }
     recordApiError();
   }
 }
