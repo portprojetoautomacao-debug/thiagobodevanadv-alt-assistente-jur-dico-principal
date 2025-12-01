@@ -256,6 +256,34 @@ jobs:
             echo "| Dashboard | useKV (Upstash) | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
           fi
 
+          # MinutasManager -> GoogleDocsService
+          if grep -q "googleDocsService" src/components/MinutasManager.tsx 2>/dev/null; then
+            echo "| MinutasManager | GoogleDocsService | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| MinutasManager | GoogleDocsService | ⚠️ Verificar |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # MinutasManager -> TiptapEditor (lazy loading)
+          if grep -q "lazy.*TiptapEditor" src/components/MinutasManager.tsx 2>/dev/null; then
+            echo "| MinutasManager | TiptapEditor (lazy) | ✅ Conectado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| MinutasManager | TiptapEditor | ⚠️ Sem lazy loading |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # GoogleDocsService -> config.ts
+          if grep -q "import.*config.*from.*config" src/lib/google-docs-service.ts 2>/dev/null; then
+            echo "| GoogleDocsService | config.ts | ✅ Usando config centralizado |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| GoogleDocsService | config.ts | ⚠️ Verificar imports |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # TiptapEditor -> Phosphor Icons (type import)
+          if grep -q "type Icon.*from.*phosphor" src/components/editor/TiptapEditor.tsx 2>/dev/null; then
+            echo "| TiptapEditor | Phosphor Icons | ✅ Type import OK |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| TiptapEditor | Phosphor Icons | ⚠️ Verificar tree-shaking |" >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: 🧪 Verificar funções exportadas vs usadas
         run: |
           echo "" >> $GITHUB_STEP_SUMMARY
