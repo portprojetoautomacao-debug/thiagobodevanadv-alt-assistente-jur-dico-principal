@@ -14,6 +14,8 @@
  * @see https://docs.sentry.io/platforms/javascript/guides/react/
  */
 
+/// <reference types="vite/client" />
+
 import * as Sentry from "@sentry/react";
 
 // Configuração

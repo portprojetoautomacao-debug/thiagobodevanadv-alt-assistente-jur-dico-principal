@@ -10,7 +10,7 @@
  */
 
 import { Redis } from '@upstash/redis'
-import { AgentStatus } from './agents'
+import { AgentStatus } from './agents.js'
 
 // ============================================================================
 // TIPOS PARA FUNÇÕES DE MONITORAMENTO
@@ -60,7 +60,7 @@ async function getSentryFunctions(): Promise<SentryFunctions> {
 
     if (!_sentryFunctions) {
         try {
-            const errorTracking = await import('../services/error-tracking')
+            const errorTracking = await import('../services/error-tracking.js')
             _sentryFunctions = {
                 captureError: errorTracking.captureError,
                 captureMessage: errorTracking.captureMessage as CaptureMessageFn,
