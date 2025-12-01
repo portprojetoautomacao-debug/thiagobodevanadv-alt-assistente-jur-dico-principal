@@ -1,30 +1,13 @@
 {
-  "github.copilot.chat.codeGeneration.instructions": [
-    {
-      "text": "This dev container includes an up-to-date version of Git, built from source as needed, pre-installed and available on the `PATH`."
-    },
-    {
-      "text": "This dev container includes `node`, `npm` and `eslint` pre-installed and available on the `PATH` for Node.js and JavaScript development."
-    },
-    {
-      "text": "This dev container includes an up-to-date version of Git, built from source as needed, pre-installed and available on the `PATH`."
-    },
-    {
-      "text": "This dev container includes the TypeScript compiler (`tsc`) pre-installed and available on the `PATH` for TypeScript development."
-    },
-    {
-      "text": "This dev container includes `node`, `npm` and `eslint` pre-installed and available on the `PATH` for Node.js and JavaScript development."
-    },
-    {
-      "text": "This workspace is in a dev container running on \"Debian GNU/Linux 13 (trixie)\".\n\nUse `\"$BROWSER\" <url>` to open a webpage in the host's default browser.\n\nSome of the command line tools available on the `PATH`: `apt`, `dpkg`, `git`, `curl`, `wget`, `ssh`, `scp`, `rsync`, `gpg`, `ps`, `lsof`, `netstat`, `top`, `tree`, `find`, `grep`, `zip`, `unzip`, `tar`, `gzip`, `bzip2`, `xz`"
-    }
-  ],
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "SonarSource.sonarlint-vscode",
-  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "sonarlint.disableTelemetry": true,
+  "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js",
   "remote.portsAttributes": {
     "5000": {
       "label": "Preview Server",
@@ -35,38 +18,35 @@
       "onAutoForward": "notify"
     }
   },
-  "gooseSonarQube.projectBinding": null,
-  "sonarlint.pathToCompileCommands": "",
-  "sonarlint.disableTelemetry": true,
-  "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js",
-  "sonarlint.analyzerProperties": {
-    "sonar.exclusions": "**/.vscode-remote/extensions/**"
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  // Desabilitar funcionalidades GitLab Duo (projeto usa GitHub)
-  "gitlab.enabled": false,
-  "gitlab.real-timeSecurityScan.enabled": false,
-  "gitlab.debug": false,
-  "gitlab.showPipelineUpdateNotifications": false,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "files.watcherExclude": {
     "**/.vscode-remote/extensions/**": true
   },
-  "cSpell.ignorePaths": [
-    "**/.vscode-remote/extensions/**"
-  ],
-  "typescript.preferences.includePackageJsonAutoImports": "off",
-  // Configurações específicas para desabilitar GitLab Duo neste workspace GitHub
-  "gitlab.instanceUrl": "",
-  "gitlab.pipelineGitRemoteName": "",
-  "gitlab.remoteName": "",
-  "gitlab.acquireVsCodeApi": false,
-  "gitlab.duoChat.enabled": false,
-  "gitlab.gitLabWorkflow.enabled": false,
-  "gitlab.duoCodeSuggestions.enabled": false,
-  "java.search.scope": "main",
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  "cSpell.ignorePaths": ["**/.vscode-remote/extensions/**"]
 }
