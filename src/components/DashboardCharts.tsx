@@ -1,7 +1,6 @@
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
 import { ChartPie, Gavel, TrendUp } from '@phosphor-icons/react';
-import { memo } from 'react';
 import {
   Bar,
   BarChart,
@@ -18,6 +17,9 @@ import {
   YAxis,
 } from 'recharts';
 
+// Altura padrão dos gráficos para consistência visual
+const CHART_HEIGHT = 250
+
 interface ChartData {
   statusData: Array<{ name: string; value: number; color: string }>
   varaChartData: Array<{ name: string; value: number }>
@@ -28,8 +30,7 @@ interface DashboardChartsProps {
   chartData: ChartData
 }
 
-// ✅ OTIMIZAÇÃO: React.memo para evitar re-renders desnecessários
-export const StatusChart = memo(function StatusChart({ chartData }: DashboardChartsProps) {
+export function StatusChart({ chartData }: DashboardChartsProps) {
   try {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
       return (
@@ -41,26 +42,28 @@ export const StatusChart = memo(function StatusChart({ chartData }: DashboardCha
     }
 
     return (
-      <ResponsiveContainer width="99%" height={250}>
-        <PieChart>
-          <Pie
-            data={chartData.statusData}
-            cx="50%"
-            cy="50%"
-            outerRadius={80}
-            fill="#8884d8"
-            dataKey="value"
-            label={({ name, percent }) =>
-              `${name} ${((percent || 0) * 100).toFixed(0)}%`
-            }
-          >
-            {chartData.statusData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip />
-        </PieChart>
-      </ResponsiveContainer>
+      <div style={{ width: '100%', height: CHART_HEIGHT }}>
+        <ResponsiveContainer width="99%" height="100%">
+          <PieChart>
+            <Pie
+              data={chartData.statusData}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, percent }) =>
+                `${name} ${((percent || 0) * 100).toFixed(0)}%`
+              }
+            >
+              {chartData.statusData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     )
   } catch (error) {
     console.error('Error rendering StatusChart:', error)
@@ -71,9 +74,9 @@ export const StatusChart = memo(function StatusChart({ chartData }: DashboardCha
       </div>
     )
   }
-})
+}
 
-export const VaraChart = memo(function VaraChart({ chartData }: DashboardChartsProps) {
+export function VaraChart({ chartData }: DashboardChartsProps) {
   try {
     if (!chartData?.varaChartData || chartData.varaChartData.length === 0) {
       return (
@@ -85,40 +88,42 @@ export const VaraChart = memo(function VaraChart({ chartData }: DashboardChartsP
     }
 
     return (
-      <ResponsiveContainer width="99%" height={250}>
-        <BarChart data={chartData.varaChartData}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            className="stroke-border/30"
-          />
-          <XAxis
-            dataKey="name"
-            className="text-muted-foreground"
-            tick={{ fill: 'currentColor' }}
-            stroke="currentColor"
-            fontSize={12}
-          />
-          <YAxis
-            className="text-muted-foreground"
-            tick={{ fill: 'currentColor' }}
-            stroke="currentColor"
-            fontSize={12}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              color: 'hsl(var(--card-foreground))',
-            }}
-          />
-          <Bar
-            dataKey="value"
-            fill="#22c55e"
-            radius={[8, 8, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+      <div style={{ width: '100%', height: CHART_HEIGHT }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData.varaChartData}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-border/30"
+            />
+            <XAxis
+              dataKey="name"
+              className="text-muted-foreground"
+              tick={{ fill: 'currentColor' }}
+              stroke="currentColor"
+              fontSize={12}
+            />
+            <YAxis
+              className="text-muted-foreground"
+              tick={{ fill: 'currentColor' }}
+              stroke="currentColor"
+              fontSize={12}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                color: 'hsl(var(--card-foreground))',
+              }}
+            />
+            <Bar
+              dataKey="value"
+              fill="#22c55e"
+              radius={[8, 8, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     )
   } catch (error) {
     console.error('Error rendering VaraChart:', error)
@@ -129,9 +134,9 @@ export const VaraChart = memo(function VaraChart({ chartData }: DashboardChartsP
       </div>
     )
   }
-})
+}
 
-export const TrendChart = memo(function TrendChart({ chartData }: DashboardChartsProps) {
+export function TrendChart({ chartData }: DashboardChartsProps) {
   try {
     if (!chartData?.trendData || chartData.trendData.length === 0) {
       return (
@@ -143,50 +148,52 @@ export const TrendChart = memo(function TrendChart({ chartData }: DashboardChart
     }
 
     return (
-      <ResponsiveContainer width="99%" height={250}>
-        <LineChart data={chartData.trendData}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            className="stroke-border/30"
-          />
-          <XAxis
-            dataKey="month"
-            className="text-muted-foreground"
-            tick={{ fill: 'currentColor' }}
-            stroke="currentColor"
-            fontSize={12}
-          />
-          <YAxis
-            className="text-muted-foreground"
-            tick={{ fill: 'currentColor' }}
-            stroke="currentColor"
-            fontSize={12}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              color: 'hsl(var(--card-foreground))',
-            }}
-          />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="ativos"
-            stroke="hsl(var(--primary))"
-            strokeWidth={2}
-            name="Ativos"
-          />
-          <Line
-            type="monotone"
-            dataKey="concluidos"
-            stroke="#22c55e"
-            strokeWidth={2}
-            name="Concluídos"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div style={{ width: '100%', height: CHART_HEIGHT }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData.trendData}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-border/30"
+            />
+            <XAxis
+              dataKey="month"
+              className="text-muted-foreground"
+              tick={{ fill: 'currentColor' }}
+              stroke="currentColor"
+              fontSize={12}
+            />
+            <YAxis
+              className="text-muted-foreground"
+              tick={{ fill: 'currentColor' }}
+              stroke="currentColor"
+              fontSize={12}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                color: 'hsl(var(--card-foreground))',
+              }}
+            />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="ativos"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              name="Ativos"
+            />
+            <Line
+              type="monotone"
+              dataKey="concluidos"
+              stroke="#22c55e"
+              strokeWidth={2}
+              name="Concluídos"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     )
   } catch (error) {
     console.error('Error rendering TrendChart:', error)
@@ -197,4 +204,4 @@ export const TrendChart = memo(function TrendChart({ chartData }: DashboardChart
       </div>
     )
   }
-})
+}

@@ -1,21 +1,54 @@
 import type { Minuta } from '@/types'
+import { config } from './config'
 import type {
-  GoogleAuthResponse,
-  TokenClient,
-  GapiGlobal,
-  GoogleGisGlobal,
+  DocsBatchUpdateResponse,
   DocsClient,
   DocsCreateResponse,
+  DocsDocument,
   DocsGetResponse,
-  DocsBatchUpdateResponse,
   DocumentElement,
+  GapiGlobal,
+  GoogleAuthResponse,
+  GoogleGisGlobal,
   ParagraphElement,
+  TokenClient,
 } from './google-types'
 
-const GOOGLE_DOCS_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-const GOOGLE_DOCS_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
+const GOOGLE_DOCS_CLIENT_ID = config.google.clientId
+const GOOGLE_DOCS_API_KEY = config.google.apiKey
 const SCOPES =
   'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file'
+
+// Constantes de configuração
+const MAX_DOCS_LENGTH = 1_000_000 // Limite do Google Docs: 1 milhão de caracteres
+const TOKEN_STORAGE_KEY = 'google_docs_token'
+const MAX_RETRIES = 3
+const BASE_RETRY_DELAY = 1000 // 1 segundo
+
+// Helper: Retry com backoff exponencial
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = MAX_RETRIES,
+  baseDelay = BASE_RETRY_DELAY,
+  context = 'operation'
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      const isLastAttempt = i === maxRetries - 1
+      if (isLastAttempt) {
+        console.error(`[GoogleDocs] Failed ${context} after ${maxRetries} attempts`, error)
+        throw error
+      }
+
+      const delay = baseDelay * Math.pow(2, i)
+      console.warn(`[GoogleDocs] ${context} failed (attempt ${i + 1}/${maxRetries}), retrying in ${delay}ms...`, error)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  throw new Error(`Max retries (${maxRetries}) exceeded for ${context}`)
+}
 
 // Helpers de log (iguais ao padrão do Google Calendar Service)
 const debug = (message: string, data?: unknown) => {
@@ -29,10 +62,66 @@ const debugError = (message: string, error?: unknown) => {
 class GoogleDocsService {
   private tokenClient: TokenClient | null = null
   private accessToken: string | null = null
+  private tokenExpiry: number | null = null
   private gapiInited = false
   private gisInited = false
   private initPromise: Promise<void> | null = null
   private lastError: string | null = null
+
+  constructor() {
+    // Tentar carregar token do localStorage ao inicializar
+    this.loadTokenFromStorage()
+  }
+
+  private saveTokenToStorage(token: string, expiresIn: number): void {
+    try {
+      const expiry = Date.now() + (expiresIn * 1000)
+      this.tokenExpiry = expiry
+      const data = { token, expiry }
+      localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(data))
+      debug('Token saved to localStorage', { expiresIn, expiry: new Date(expiry).toISOString() })
+    } catch (error) {
+      debugError('Failed to save token to localStorage', error)
+    }
+  }
+
+  private loadTokenFromStorage(): void {
+    try {
+      const saved = localStorage.getItem(TOKEN_STORAGE_KEY)
+      if (!saved) return
+
+      const { token, expiry } = JSON.parse(saved) as { token: string; expiry: number }
+
+      // Verificar se token ainda é válido (com margem de 5 minutos)
+      const now = Date.now()
+      const fiveMinutes = 5 * 60 * 1000
+
+      if (now < expiry - fiveMinutes) {
+        this.accessToken = token
+        this.tokenExpiry = expiry
+        debug('Token loaded from localStorage', {
+          expiresIn: Math.floor((expiry - now) / 1000),
+          expiry: new Date(expiry).toISOString()
+        })
+      } else {
+        debug('Stored token expired, removing')
+        this.clearTokenFromStorage()
+      }
+    } catch (error) {
+      debugError('Failed to load token from localStorage', error)
+      this.clearTokenFromStorage()
+    }
+  }
+
+  private clearTokenFromStorage(): void {
+    try {
+      localStorage.removeItem(TOKEN_STORAGE_KEY)
+      this.tokenExpiry = null
+      debug('Token cleared from localStorage')
+    } catch (error) {
+      debugError('Failed to clear token from localStorage', error)
+    }
+  }
 
   getStatus(): {
     configured: boolean
@@ -293,6 +382,11 @@ class GoogleDocsService {
         this.accessToken = resp.access_token ?? null
         this.lastError = null
 
+        // Salvar token no localStorage com expiração
+        if (this.accessToken && resp.expires_in) {
+          this.saveTokenToStorage(this.accessToken, resp.expires_in)
+        }
+
         // Conectar token do GIS com gapi.client (igual ao Calendar)
         const gapiWindow = window as unknown as {
           gapi?: GapiGlobal & {
@@ -357,9 +451,20 @@ class GoogleDocsService {
         return null
       }
 
-      const createResponse = (await docsApi.documents.create({
-        title: minuta.titulo,
-      })) as DocsCreateResponse
+      // Criar documento com retry
+      const createResponse = await retryWithBackoff(
+        async () => {
+          if (!docsApi.documents?.create) {
+            throw new Error('docsApi.documents.create not available')
+          }
+          return (await docsApi.documents.create({
+            title: minuta.titulo,
+          })) as DocsCreateResponse
+        },
+        MAX_RETRIES,
+        BASE_RETRY_DELAY,
+        'createDocument'
+      )
 
       const docId = createResponse.result?.documentId
       if (!docId) {
@@ -388,7 +493,14 @@ class GoogleDocsService {
   }
 
   async updateDocumentContent(docId: string, content: string): Promise<boolean> {
-    debug('Updating Docs document content...', { docId })
+    debug('Updating Docs document content...', { docId, length: content.length })
+
+    // Validar tamanho do conteúdo
+    if (content.length > MAX_DOCS_LENGTH) {
+      this.lastError = `Conteúdo muito longo (${content.length.toLocaleString()} caracteres). Limite do Google Docs: ${MAX_DOCS_LENGTH.toLocaleString()} caracteres.`
+      debugError(this.lastError)
+      return false
+    }
 
     if (!this.accessToken) {
       const authenticated = await this.authenticate()
@@ -408,23 +520,53 @@ class GoogleDocsService {
         return false
       }
 
-      // Estratégia simples: insere o conteúdo a partir do index 1
-      // (para algo mais avançado, poderíamos limpar o conteúdo antes)
-      const requests = [
-        {
-          insertText: {
-            location: {
-              index: 1,
-            },
-            text: content,
-          },
-        },
-      ]
+      // Primeiro, obter tamanho do documento para limpar conteúdo existente
+      const docResponse = await this.getDocumentMetadata(docId)
+      const endIndex = docResponse?.body?.content?.[docResponse.body.content.length - 1]?.endIndex ?? 1
 
-      await (docsApi.documents.batchUpdate({
-        documentId: docId,
-        requests,
-      }) as Promise<DocsBatchUpdateResponse>)
+      // Estratégia melhorada: deletar conteúdo antigo e inserir novo
+      const requests: Array<{
+        deleteContentRange?: { range: { startIndex: number; endIndex: number } }
+        insertText?: { location: { index: number }; text: string }
+      }> = []
+
+      // Se há conteúdo (endIndex > 1), deletar primeiro
+      if (endIndex > 1) {
+        requests.push({
+          deleteContentRange: {
+            range: {
+              startIndex: 1,
+              endIndex: endIndex - 1, // -1 porque não pode deletar o último \n
+            },
+          },
+        })
+      }
+
+      // Inserir novo conteúdo
+      requests.push({
+        insertText: {
+          location: {
+            index: 1,
+          },
+          text: content,
+        },
+      })
+
+      // Atualizar com retry
+      await retryWithBackoff(
+        async () => {
+          if (!docsApi.documents?.batchUpdate) {
+            throw new Error('docsApi.documents.batchUpdate not available')
+          }
+          return await (docsApi.documents.batchUpdate({
+            documentId: docId,
+            requests,
+          }) as Promise<DocsBatchUpdateResponse>)
+        },
+        MAX_RETRIES,
+        BASE_RETRY_DELAY,
+        'updateDocumentContent'
+      )
 
       debug('Docs document content updated successfully')
       return true
@@ -433,6 +575,26 @@ class GoogleDocsService {
         }`
       debugError(this.lastError, error)
       return false
+    }
+  }
+
+  private async getDocumentMetadata(docId: string): Promise<DocsDocument | null> {
+    try {
+      const gapiWindow = window as unknown as { gapi?: GapiGlobal }
+      const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs
+
+      if (!docsApi || typeof docsApi.documents?.get !== 'function') {
+        return null
+      }
+
+      const response = (await docsApi.documents.get({
+        documentId: docId,
+      })) as DocsGetResponse
+
+      return response.result ?? null
+    } catch (error) {
+      debugError('Failed to get document metadata', error)
+      return null
     }
   }
 
@@ -457,9 +619,20 @@ class GoogleDocsService {
         return null
       }
 
-      const response = (await docsApi.documents.get({
-        documentId: docId,
-      })) as DocsGetResponse
+      // Buscar documento com retry
+      const response = await retryWithBackoff(
+        async () => {
+          if (!docsApi.documents?.get) {
+            throw new Error('docsApi.documents.get not available')
+          }
+          return (await docsApi.documents.get({
+            documentId: docId,
+          })) as DocsGetResponse
+        },
+        MAX_RETRIES,
+        BASE_RETRY_DELAY,
+        'getDocumentContent'
+      )
 
       const doc = response.result
       let text = ''
@@ -500,7 +673,22 @@ class GoogleDocsService {
   }
 
   isAuthenticated(): boolean {
-    return this.accessToken !== null
+    if (!this.accessToken) return false
+
+    // Verificar se token ainda é válido
+    if (this.tokenExpiry) {
+      const now = Date.now()
+      const fiveMinutes = 5 * 60 * 1000
+
+      if (now >= this.tokenExpiry - fiveMinutes) {
+        debug('Token expired or expiring soon')
+        this.accessToken = null
+        this.clearTokenFromStorage()
+        return false
+      }
+    }
+
+    return true
   }
 
   isConfigured(): boolean {
@@ -526,6 +714,7 @@ class GoogleDocsService {
         // erro de revoke não é crítico
       }
       this.accessToken = null
+      this.clearTokenFromStorage()
     }
   }
 }

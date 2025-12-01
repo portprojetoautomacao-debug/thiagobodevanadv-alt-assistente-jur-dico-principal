@@ -134,7 +134,11 @@ export default function MinutasManager() {
   })
 
   useEffect(() => {
-    setIsAuthenticated(googleDocsService.isAuthenticated())
+    const initGoogleDocs = async () => {
+      await googleDocsService.initialize()
+      setIsAuthenticated(googleDocsService.isAuthenticated())
+    }
+    initGoogleDocs()
   }, [])
 
   // Carregar variáveis do processo selecionado
@@ -261,6 +265,8 @@ export default function MinutasManager() {
       return
     }
 
+    const toastId = toast.loading('Criando documento no Google Docs...')
+
     try {
       const result = await googleDocsService.createDocument(minuta)
 
@@ -279,12 +285,14 @@ export default function MinutasManager() {
         )
 
         googleDocsService.openDocument(result.url)
-        toast.success('Documento criado no Google Docs!')
+        toast.success('✅ Documento criado no Google Docs!', { id: toastId })
       } else {
-        toast.error('Erro ao criar documento no Google Docs')
+        const lastError = googleDocsService.getLastError()
+        toast.error(lastError || 'Erro ao criar documento no Google Docs', { id: toastId })
       }
     } catch (error) {
-      toast.error('Erro ao abrir no Google Docs')
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+      toast.error(`Erro ao abrir no Google Docs: ${errorMessage}`, { id: toastId })
       console.error(error)
     }
   }
@@ -296,6 +304,7 @@ export default function MinutasManager() {
     }
 
     setIsSyncing(minuta.id)
+    const toastId = toast.loading('Sincronizando do Google Docs...')
 
     try {
       const content = await googleDocsService.syncDocument(minuta.googleDocsId)
@@ -313,12 +322,14 @@ export default function MinutasManager() {
               : m,
           ),
         )
-        toast.success('Minuta sincronizada do Google Docs!')
+        toast.success(`✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`, { id: toastId })
       } else {
-        toast.error('Erro ao sincronizar do Google Docs')
+        const lastError = googleDocsService.getLastError()
+        toast.error(lastError || 'Erro ao sincronizar do Google Docs', { id: toastId })
       }
     } catch (error) {
-      toast.error('Erro ao sincronizar')
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+      toast.error(`Erro ao sincronizar: ${errorMessage}`, { id: toastId })
       console.error(error)
     } finally {
       setIsSyncing(null)
@@ -768,9 +779,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
 
                   {/* Editor */}
-                  <div className="flex-1 overflow-hidden min-h-[350px]">
+                  <div className="flex-1 overflow-hidden flex flex-col min-h-[400px]">
                     <Suspense fallback={
-                      <div className="h-[350px] flex items-center justify-center bg-muted rounded-lg border">
+                      <div className="h-[400px] flex items-center justify-center bg-muted rounded-lg border">
                         <div className="flex flex-col items-center gap-2">
                           <SpinnerGap className="h-8 w-8 animate-spin text-primary" />
                           <span className="text-sm text-muted-foreground">Carregando editor...</span>
@@ -778,7 +789,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       </div>
                     }>
                       <TiptapEditor
-                        key={selectedMinuta?.id || 'new-minuta'}
+                        key={editingMinuta?.id || 'new-minuta'}
                         content={formData.conteudo}
                         onChange={(content) =>
                           setFormData({ ...formData, conteudo: content })
@@ -787,7 +798,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         onAIStream={handleAIStream}
                         variables={variableValues}
                         placeholder="Digite o conteúdo da minuta ou use o botão de IA para gerar com Gemini..."
-                        className="h-[350px]"
+                        className="h-full min-h-[400px]"
                       />
                     </Suspense>
                   </div>
