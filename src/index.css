@@ -3,31 +3,32 @@
 /* ✅ OTIMIZAÇÃO LCP: Fonte Inter hospedada localmente para evitar FOIT e 404 */
 /* Isso elimina dependência do Google Fonts CDN e melhora performance */
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/InterVariable.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  src: url("/fonts/InterVariable.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 /* Radix Colors - apenas as essenciais para o tema jurídico */
-@import '@radix-ui/colors/slate.css' layer(base);
-@import '@radix-ui/colors/slate-dark.css' layer(base);
-@import '@radix-ui/colors/slate-alpha.css' layer(base);
-@import '@radix-ui/colors/slate-dark-alpha.css' layer(base);
-@import '@radix-ui/colors/blue.css' layer(base);
-@import '@radix-ui/colors/blue-dark.css' layer(base);
-@import '@radix-ui/colors/green.css' layer(base);
-@import '@radix-ui/colors/green-dark.css' layer(base);
-@import '@radix-ui/colors/red.css' layer(base);
-@import '@radix-ui/colors/red-dark.css' layer(base);
-@import '@radix-ui/colors/amber.css' layer(base);
-@import '@radix-ui/colors/amber-dark.css' layer(base);
+@import "@radix-ui/colors/slate.css" layer(base);
+@import "@radix-ui/colors/slate-dark.css" layer(base);
+@import "@radix-ui/colors/slate-alpha.css" layer(base);
+@import "@radix-ui/colors/slate-dark-alpha.css" layer(base);
+@import "@radix-ui/colors/blue.css" layer(base);
+@import "@radix-ui/colors/blue-dark.css" layer(base);
+@import "@radix-ui/colors/green.css" layer(base);
+@import "@radix-ui/colors/green-dark.css" layer(base);
+@import "@radix-ui/colors/red.css" layer(base);
+@import "@radix-ui/colors/red-dark.css" layer(base);
+@import "@radix-ui/colors/amber.css" layer(base);
+@import "@radix-ui/colors/amber-dark.css" layer(base);
 
 /* Theme Base Styles (from theme.css) */
 @layer base {
-
   *,
   ::after,
   ::before,
@@ -242,7 +243,7 @@ textarea {
 }
 
 /* Fix for Sonner toast compatibility */
-[data-sonner-toast][data-swiped=true] {
+[data-sonner-toast][data-swiped="true"] {
   -webkit-user-select: none;
   user-select: none;
 }
@@ -250,36 +251,36 @@ textarea {
 :root {
   /* Tema Azul e Branco Profissional */
   --background: oklch(0.99 0.002 240);
-  --foreground: oklch(0.20 0.015 240);
+  --foreground: oklch(0.2 0.015 240);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.015 240);
+  --card-foreground: oklch(0.2 0.015 240);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.015 240);
+  --popover-foreground: oklch(0.2 0.015 240);
 
   /* Azul primário vibrante */
-  --primary: oklch(0.55 0.20 250);
+  --primary: oklch(0.55 0.2 250);
   --primary-foreground: oklch(0.99 0 0);
 
   /* Azul secundário claro */
   --secondary: oklch(0.94 0.015 240);
-  --secondary-foreground: oklch(0.25 0.020 240);
+  --secondary-foreground: oklch(0.25 0.02 240);
 
   --muted: oklch(0.96 0.008 240);
-  --muted-foreground: oklch(0.50 0.010 240);
+  --muted-foreground: oklch(0.5 0.01 240);
 
   /* Azul accent */
-  --accent: oklch(0.92 0.020 245);
-  --accent-foreground: oklch(0.25 0.020 240);
+  --accent: oklch(0.92 0.02 245);
+  --accent-foreground: oklch(0.25 0.02 240);
 
   /* Darker red for better contrast (AA compliance) */
-  --destructive: oklch(0.50 0.22 25);
+  --destructive: oklch(0.5 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.90 0.008 240);
-  --input: oklch(0.90 0.008 240);
-  --ring: oklch(0.55 0.20 250);
+  --border: oklch(0.9 0.008 240);
+  --input: oklch(0.9 0.008 240);
+  --ring: oklch(0.55 0.2 250);
 
   --radius: 0.5rem;
 }
@@ -296,24 +297,24 @@ textarea {
   --popover-foreground: oklch(0.95 0.005 240);
 
   /* Azul brilhante para dark mode */
-  --primary: oklch(0.60 0.22 250);
+  --primary: oklch(0.6 0.22 250);
   --primary-foreground: oklch(0.99 0 0);
 
-  --secondary: oklch(0.20 0.020 240);
-  --secondary-foreground: oklch(0.90 0.010 240);
+  --secondary: oklch(0.2 0.02 240);
+  --secondary-foreground: oklch(0.9 0.01 240);
 
   --muted: oklch(0.18 0.015 240);
-  --muted-foreground: oklch(0.65 0.010 240);
+  --muted-foreground: oklch(0.65 0.01 240);
 
   --accent: oklch(0.22 0.025 245);
-  --accent-foreground: oklch(0.90 0.010 240);
+  --accent-foreground: oklch(0.9 0.01 240);
 
-  --destructive: oklch(0.60 0.24 25);
+  --destructive: oklch(0.6 0.24 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.25 0.020 240);
-  --input: oklch(0.25 0.020 240);
-  --ring: oklch(0.60 0.22 250);
+  --border: oklch(0.25 0.02 240);
+  --input: oklch(0.25 0.02 240);
+  --ring: oklch(0.6 0.22 250);
 }
 
 @theme {
@@ -351,7 +352,6 @@ textarea {
 
 /* Suporte ao modo de alto contraste (forced-colors) */
 @media (forced-colors: active) {
-
   /* Garantir que elementos interativos mantenham suas cores no modo de alto contraste */
   button,
   a[href],
@@ -421,20 +421,44 @@ textarea {
    TIPTAP EDITOR - Estilos Profissionais
    ======================================== */
 
+/* Container do editor - garante visibilidade */
+.tiptap-editor-container {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+}
+
 /* Área de edição do Tiptap */
 .ProseMirror {
   outline: none !important;
-  min-height: inherit;
+  min-height: 200px;
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: hsl(var(--foreground));
+  background: transparent;
+  caret-color: hsl(var(--primary));
+}
+
+/* Garante que o editor tenha cor de texto visível */
+.ProseMirror * {
+  color: inherit;
+}
+
+/* Foco visual na área de edição */
+.ProseMirror:focus {
+  outline: none;
 }
 
 /* Placeholder do editor */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: var(--muted-foreground);
+  color: hsl(var(--muted-foreground));
   pointer-events: none;
   height: 0;
   font-style: italic;
+  opacity: 0.6;
 }
 
 /* Estilos tipográficos para o conteúdo do editor */
