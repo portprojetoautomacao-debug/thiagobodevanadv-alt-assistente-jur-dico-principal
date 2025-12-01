@@ -65,5 +65,8 @@
   "gitlab.duoChat.enabled": false,
   "gitlab.gitLabWorkflow.enabled": false,
   "gitlab.duoCodeSuggestions.enabled": false,
-  "java.search.scope": "main"
+  "java.search.scope": "main",
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
