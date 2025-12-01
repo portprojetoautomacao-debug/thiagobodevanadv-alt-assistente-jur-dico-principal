@@ -1,4 +1,3 @@
-import typography from "@tailwindcss/typography";
 import fs from "fs";
 
 /** @type {import('tailwindcss').Config} */
@@ -176,5 +175,4 @@ export default {
   corePlugins: {
     preflight: true,
   },
-  plugins: [typography],
 };
