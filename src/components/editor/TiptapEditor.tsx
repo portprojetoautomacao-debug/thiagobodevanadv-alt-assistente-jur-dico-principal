@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-// ✅ FIX: Lazy import de ícones do Phosphor para evitar erro "Cannot set properties of undefined (setting 'Activity')"
-// Importar apenas os ícones necessários reduz bundle size e evita problemas de inicialização
+// ✅ FIX: Phosphor Icons - imports nomeados são seguros desde que @phosphor-icons/react
+// esteja no chunk 'react-vendor' (vite.config.ts) para evitar "Cannot set properties of undefined (setting 'Activity')"
+// Esse erro ocorria quando diferentes chunks tentavam inicializar os ícones simultaneamente
 import {
   ArrowClockwise,
   ArrowCounterClockwise,

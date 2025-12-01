@@ -64,7 +64,9 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 // ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
-// Isso resolve o erro "Cannot set properties of undefined (setting 'Activity')"
+// Isso reduz o bundle inicial e melhora First Contentful Paint (FCP)
+// Nota: O erro "Cannot set properties of undefined (setting 'Activity')" dos ícones Phosphor
+// foi corrigido movendo @phosphor-icons/react para o chunk 'react-vendor' no vite.config.ts
 const TiptapEditor = lazy(() => import('@/components/editor/TiptapEditor').then(m => ({ default: m.TiptapEditor })))
 
 // Verificar se as credenciais do Google estão configuradas

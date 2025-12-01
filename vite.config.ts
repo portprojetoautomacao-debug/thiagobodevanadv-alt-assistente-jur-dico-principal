@@ -147,6 +147,12 @@ export default defineConfig({
             return 'react-vendor'
           }
 
+          // ✅ FIX: Phosphor Icons no bundle principal para evitar "Cannot set properties of undefined (setting 'Activity')"
+          // O erro acontece quando chunks diferentes tentam acessar ícones antes da inicialização
+          if (id.includes('@phosphor-icons/react')) {
+            return 'react-vendor'
+          }
+
           // ⚠️ NÃO separar Recharts/D3 em chunks - pode causar erro de inicialização
 
           // Radix UI components - separar em chunks menores
