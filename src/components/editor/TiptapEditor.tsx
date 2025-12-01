@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+// ✅ FIX: Lazy import de ícones do Phosphor para evitar erro "Cannot set properties of undefined (setting 'Activity')"
+// Importar apenas os ícones necessários reduz bundle size e evita problemas de inicialização
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
@@ -35,7 +37,7 @@ import {
   TextHTwo,
   TextItalic,
   TextStrikethrough,
-  TextUnderline,
+  TextUnderline
 } from '@phosphor-icons/react'
 import Highlight from '@tiptap/extension-highlight'
 import Image from '@tiptap/extension-image'

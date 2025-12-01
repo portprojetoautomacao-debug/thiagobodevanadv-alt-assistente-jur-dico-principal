@@ -50,9 +50,17 @@ export interface DocumentElement {
   paragraph?: {
     elements?: ParagraphElement[]
   }
+  endIndex?: number
 }
 
 export interface DocsDocument {
+  documentId?: string
+  body?: {
+    content?: DocumentElement[]
+  }
+}
+
+export interface DocsCreateResponse {
   documentId?: string
   body?: {
     content?: DocumentElement[]
