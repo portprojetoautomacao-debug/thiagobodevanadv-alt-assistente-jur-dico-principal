@@ -1,3 +1,4 @@
+import typography from "@tailwindcss/typography";
 import fs from "fs";
 
 /** @type {import('tailwindcss').Config} */
@@ -10,7 +11,7 @@ try {
     theme = JSON.parse(fs.readFileSync(themePath, "utf-8"));
   }
 } catch (err) {
-  console.error('failed to parse custom styles', err)
+  console.error("failed to parse custom styles", err);
 }
 const defaultTheme = {
   extend: {
@@ -24,17 +25,17 @@ const defaultTheme = {
     colors: {
       // Tema Azul e Branco
       blue: {
-        50: '#eff6ff',
-        100: '#dbeafe',
-        200: '#bfdbfe',
-        300: '#93c5fd',
-        400: '#60a5fa',
-        500: '#3b82f6',
-        600: '#2563eb',
-        700: '#1d4ed8',
-        800: '#1e40af',
-        900: '#1e3a8a',
-        950: '#172554',
+        50: "#eff6ff",
+        100: "#dbeafe",
+        200: "#bfdbfe",
+        300: "#93c5fd",
+        400: "#60a5fa",
+        500: "#3b82f6",
+        600: "#2563eb",
+        700: "#1d4ed8",
+        800: "#1e40af",
+        900: "#1e3a8a",
+        950: "#172554",
       },
       neutral: {
         1: "var(--color-neutral-1)",
@@ -151,23 +152,20 @@ const defaultTheme = {
     96: "var(--size-96)",
   },
   darkMode: ["selector", '[data-appearance="dark"]'],
-}
+};
 
 export default {
   content: {
-    files: [
-      "./index.html", 
-      "./src/**/*.{js,ts,jsx,tsx}"
-    ],
+    files: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
     options: {
       safelist: [
-        'bg-blue-500',
-        'bg-green-500', 
-        'bg-red-500',
-        'bg-amber-500',
-        'text-blue-600',
-        'text-green-600',
-        'text-red-600',
+        "bg-blue-500",
+        "bg-green-500",
+        "bg-red-500",
+        "bg-amber-500",
+        "text-blue-600",
+        "text-green-600",
+        "text-red-600",
       ],
     },
   },
@@ -178,4 +176,5 @@ export default {
   corePlugins: {
     preflight: true,
   },
+  plugins: [typography],
 };

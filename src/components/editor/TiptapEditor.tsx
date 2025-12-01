@@ -1,9 +1,13 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 // ✅ FIX: Phosphor Icons - imports nomeados são seguros desde que @phosphor-icons/react
 // esteja no chunk 'react-vendor' (vite.config.ts) para evitar "Cannot set properties of undefined (setting 'Activity')"
 // Esse erro ocorria quando diferentes chunks tentavam inicializar os ícones simultaneamente
@@ -38,66 +42,84 @@ import {
   TextHTwo,
   TextItalic,
   TextStrikethrough,
-  TextUnderline
-} from '@phosphor-icons/react'
-import Highlight from '@tiptap/extension-highlight'
-import Image from '@tiptap/extension-image'
-import Link from '@tiptap/extension-link'
-import Placeholder from '@tiptap/extension-placeholder'
-import TextAlign from '@tiptap/extension-text-align'
-import { Color, TextStyle } from '@tiptap/extension-text-style'
-import Typography from '@tiptap/extension-typography'
-import Underline from '@tiptap/extension-underline'
-import { EditorContent, useEditor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+  TextUnderline,
+} from "@phosphor-icons/react";
+import Highlight from "@tiptap/extension-highlight";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
+import { Color, TextStyle } from "@tiptap/extension-text-style";
+import Typography from "@tiptap/extension-typography";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface TiptapEditorProps {
-  readonly content: string
-  readonly onChange: (content: string) => void
-  readonly placeholder?: string
-  readonly className?: string
-  readonly readOnly?: boolean
-  readonly onAIGenerate?: (prompt: string) => Promise<string>
-  readonly onAIStream?: (prompt: string, callbacks: {
-    onChunk: (chunk: string) => void
-    onComplete: () => void
-    onError: (error: Error) => void
-  }) => Promise<void>
-  readonly variables?: Record<string, string>
+  readonly content: string;
+  readonly onChange: (content: string) => void;
+  readonly placeholder?: string;
+  readonly className?: string;
+  readonly readOnly?: boolean;
+  readonly onAIGenerate?: (prompt: string) => Promise<string>;
+  readonly onAIStream?: (
+    prompt: string,
+    callbacks: {
+      onChunk: (chunk: string) => void;
+      onComplete: () => void;
+      onError: (error: Error) => void;
+    }
+  ) => Promise<void>;
+  readonly variables?: Record<string, string>;
 }
 
 const COLORS = [
-  '#000000', '#374151', '#6B7280', '#9CA3AF',
-  '#DC2626', '#EA580C', '#D97706', '#CA8A04',
-  '#16A34A', '#059669', '#0D9488', '#0891B2',
-  '#2563EB', '#4F46E5', '#7C3AED', '#9333EA',
-  '#C026D3', '#DB2777', '#E11D48',
-]
+  "#000000",
+  "#374151",
+  "#6B7280",
+  "#9CA3AF",
+  "#DC2626",
+  "#EA580C",
+  "#D97706",
+  "#CA8A04",
+  "#16A34A",
+  "#059669",
+  "#0D9488",
+  "#0891B2",
+  "#2563EB",
+  "#4F46E5",
+  "#7C3AED",
+  "#9333EA",
+  "#C026D3",
+  "#DB2777",
+  "#E11D48",
+];
 
 const AI_QUICK_COMMANDS = [
   {
-    label: 'Expandir',
+    label: "Expandir",
     icon: ArrowsOut,
-    prompt: 'Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:',
+    prompt:
+      "Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:",
   },
   {
-    label: 'Resumir',
+    label: "Resumir",
     icon: TextAa,
-    prompt: 'Resuma o seguinte texto de forma concisa:',
+    prompt: "Resuma o seguinte texto de forma concisa:",
   },
   {
-    label: 'Formalizar',
+    label: "Formalizar",
     icon: MagicWand,
-    prompt: 'Reescreva o seguinte texto em linguagem jurídica formal:',
+    prompt: "Reescreva o seguinte texto em linguagem jurídica formal:",
   },
   {
-    label: 'Corrigir',
+    label: "Corrigir",
     icon: Sparkle,
-    prompt: 'Corrija erros de gramática e ortografia no seguinte texto:',
+    prompt: "Corrija erros de gramática e ortografia no seguinte texto:",
   },
-] as const
+] as const;
 
 // ===========================
 // Helper Functions
@@ -106,19 +128,25 @@ const AI_QUICK_COMMANDS = [
 function countWords(text: string): number {
   return text.trim().length === 0
     ? 0
-    : text.trim().split(/\s+/).filter(w => w.length > 0).length
+    : text
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w.length > 0).length;
 }
 
-function getGenerateButtonText(isStreaming: boolean, hasStreamSupport: boolean): string {
-  if (isStreaming) return 'Gerando...'
-  return hasStreamSupport ? 'Gerar com Streaming' : 'Gerar Texto'
+function getGenerateButtonText(
+  isStreaming: boolean,
+  hasStreamSupport: boolean
+): string {
+  if (isStreaming) return "Gerando...";
+  return hasStreamSupport ? "Gerar com Streaming" : "Gerar Texto";
 }
 
 function getAIButtonClassName(isStreaming: boolean): string {
-  const base = 'gap-2 border-purple-500/20 hover:border-purple-500/40'
+  const base = "gap-2 border-purple-500/20 hover:border-purple-500/40";
   return isStreaming
     ? `${base} bg-purple-500/20 animate-pulse`
-    : `${base} bg-linear-to-r from-purple-500/10 to-blue-500/10`
+    : `${base} bg-linear-to-r from-purple-500/10 to-blue-500/10`;
 }
 
 /**
@@ -131,14 +159,14 @@ function insertContentAtPosition(
   from: number,
   to: number
 ): void {
-  if (!editor) return
+  if (!editor) return;
   editor
     .chain()
     .focus()
     .setTextSelection({ from, to })
     .deleteSelection()
     .insertContent(content)
-    .run()
+    .run();
 }
 
 /**
@@ -149,18 +177,18 @@ function getSelectedOrAllText(
   from: number,
   to: number
 ): string {
-  if (!editor) return ''
-  const hasSelection = from !== to
+  if (!editor) return "";
+  const hasSelection = from !== to;
   return hasSelection
-    ? editor.state.doc.textBetween(from, to, ' ')
-    : editor.getText()
+    ? editor.state.doc.textBetween(from, to, " ")
+    : editor.getText();
 }
 
 /**
  * Mensagem de sucesso para comando de IA
  */
 function getAISuccessMessage(commandLabel: string): string {
-  return `Texto ${commandLabel.toLowerCase()}!`
+  return `Texto ${commandLabel.toLowerCase()}!`;
 }
 
 // ===========================
@@ -168,12 +196,12 @@ function getAISuccessMessage(commandLabel: string): string {
 // ===========================
 
 interface ToolbarButtonProps {
-  readonly editor: ReturnType<typeof useEditor>
-  readonly disabled: boolean
+  readonly editor: ReturnType<typeof useEditor>;
+  readonly disabled: boolean;
 }
 
 function UndoRedoButtons({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <>
       <Button
@@ -195,15 +223,15 @@ function UndoRedoButtons({ editor, disabled }: ToolbarButtonProps) {
         <ArrowClockwise className="h-4 w-4" />
       </Button>
     </>
-  )
+  );
 }
 
 function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <>
       <Button
-        variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("bold") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleBold().run()}
         disabled={disabled}
@@ -212,7 +240,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <TextB className="h-4 w-4" weight="bold" />
       </Button>
       <Button
-        variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("italic") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         disabled={disabled}
@@ -221,7 +249,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <TextItalic className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("underline") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         disabled={disabled}
@@ -230,7 +258,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <TextUnderline className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive('strike') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("strike") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         disabled={disabled}
@@ -239,11 +267,11 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <TextStrikethrough className="h-4 w-4" />
       </Button>
     </>
-  )
+  );
 }
 
 function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -254,31 +282,43 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
       <PopoverContent className="w-auto p-2">
         <div className="flex flex-col gap-1">
           <Button
-            variant={editor.isActive('heading', { level: 1 }) ? 'secondary' : 'ghost'}
+            variant={
+              editor.isActive("heading", { level: 1 }) ? "secondary" : "ghost"
+            }
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
             className="justify-start"
           >
             <TextHOne className="h-4 w-4 mr-2" /> Título 1
           </Button>
           <Button
-            variant={editor.isActive('heading', { level: 2 }) ? 'secondary' : 'ghost'}
+            variant={
+              editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"
+            }
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
             className="justify-start"
           >
             <TextHTwo className="h-4 w-4 mr-2" /> Título 2
           </Button>
           <Button
-            variant={editor.isActive('heading', { level: 3 }) ? 'secondary' : 'ghost'}
+            variant={
+              editor.isActive("heading", { level: 3 }) ? "secondary" : "ghost"
+            }
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
             className="justify-start"
           >
             <TextHThree className="h-4 w-4 mr-2" /> Título 3
           </Button>
           <Button
-            variant={editor.isActive('paragraph') ? 'secondary' : 'ghost'}
+            variant={editor.isActive("paragraph") ? "secondary" : "ghost"}
             size="sm"
             onClick={() => editor.chain().focus().setParagraph().run()}
             className="justify-start"
@@ -288,15 +328,15 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 function ListButtons({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <>
       <Button
-        variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         disabled={disabled}
@@ -305,7 +345,7 @@ function ListButtons({ editor, disabled }: ToolbarButtonProps) {
         <ListBullets className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         disabled={disabled}
@@ -314,59 +354,65 @@ function ListButtons({ editor, disabled }: ToolbarButtonProps) {
         <ListNumbers className="h-4 w-4" />
       </Button>
     </>
-  )
+  );
 }
 
 function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <>
       <Button
-        variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
+        variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
         size="icon"
-        onClick={() => editor.chain().focus().setTextAlign('left').run()}
+        onClick={() => editor.chain().focus().setTextAlign("left").run()}
         disabled={disabled}
         title="Alinhar à esquerda"
       >
         <TextAlignLeft className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
+        variant={
+          editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"
+        }
         size="icon"
-        onClick={() => editor.chain().focus().setTextAlign('center').run()}
+        onClick={() => editor.chain().focus().setTextAlign("center").run()}
         disabled={disabled}
         title="Centralizar"
       >
         <TextAlignCenter className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive({ textAlign: 'right' }) ? 'secondary' : 'ghost'}
+        variant={
+          editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"
+        }
         size="icon"
-        onClick={() => editor.chain().focus().setTextAlign('right').run()}
+        onClick={() => editor.chain().focus().setTextAlign("right").run()}
         disabled={disabled}
         title="Alinhar à direita"
       >
         <TextAlignRight className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive({ textAlign: 'justify' }) ? 'secondary' : 'ghost'}
+        variant={
+          editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"
+        }
         size="icon"
-        onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+        onClick={() => editor.chain().focus().setTextAlign("justify").run()}
         disabled={disabled}
         title="Justificar"
       >
         <TextAlignJustify className="h-4 w-4" />
       </Button>
     </>
-  )
+  );
 }
 
 function ExtraFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <>
       <Button
-        variant={editor.isActive('blockquote') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("blockquote") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         disabled={disabled}
@@ -375,7 +421,7 @@ function ExtraFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <Quotes className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("codeBlock") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         disabled={disabled}
@@ -384,7 +430,7 @@ function ExtraFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <Code className="h-4 w-4" />
       </Button>
       <Button
-        variant={editor.isActive('highlight') ? 'secondary' : 'ghost'}
+        variant={editor.isActive("highlight") ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().toggleHighlight().run()}
         disabled={disabled}
@@ -393,15 +439,20 @@ function ExtraFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         <Highlighter className="h-4 w-4" />
       </Button>
     </>
-  )
+  );
 }
 
 function ColorPickerPopover({ editor, disabled }: ToolbarButtonProps) {
-  if (!editor) return null
+  if (!editor) return null;
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" title="Cor do texto" disabled={disabled}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Cor do texto"
+          disabled={disabled}
+        >
           <Palette className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -427,7 +478,7 @@ function ColorPickerPopover({ editor, disabled }: ToolbarButtonProps) {
         </Button>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 // ===========================
@@ -435,17 +486,17 @@ function ColorPickerPopover({ editor, disabled }: ToolbarButtonProps) {
 // ===========================
 
 interface AIToolbarSectionProps {
-  readonly isStreaming: boolean
-  readonly isAILoading: boolean
-  readonly showAIPopover: boolean
-  readonly setShowAIPopover: (open: boolean) => void
-  readonly onAIStream?: TiptapEditorProps['onAIStream']
-  readonly aiPrompt: string
-  readonly setAiPrompt: (prompt: string) => void
-  readonly streamingText: string
-  readonly handleAIGenerate: () => void
-  readonly handleQuickAI: (cmd: typeof AI_QUICK_COMMANDS[number]) => void
-  readonly aiQuickCommands: typeof AI_QUICK_COMMANDS
+  readonly isStreaming: boolean;
+  readonly isAILoading: boolean;
+  readonly showAIPopover: boolean;
+  readonly setShowAIPopover: (open: boolean) => void;
+  readonly onAIStream?: TiptapEditorProps["onAIStream"];
+  readonly aiPrompt: string;
+  readonly setAiPrompt: (prompt: string) => void;
+  readonly streamingText: string;
+  readonly handleAIGenerate: () => void;
+  readonly handleQuickAI: (cmd: (typeof AI_QUICK_COMMANDS)[number]) => void;
+  readonly aiQuickCommands: typeof AI_QUICK_COMMANDS;
 }
 
 function AIToolbarSection({
@@ -466,11 +517,22 @@ function AIToolbarSection({
       {isStreaming && (
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 animate-pulse">
           <div className="flex gap-1">
-            <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span
+              className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+              style={{ animationDelay: "0ms" }}
+            />
+            <span
+              className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            />
+            <span
+              className="w-2 h-2 bg-purple-300 rounded-full animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            />
           </div>
-          <span className="text-xs text-purple-400 font-medium">Streaming...</span>
+          <span className="text-xs text-purple-400 font-medium">
+            Streaming...
+          </span>
         </div>
       )}
 
@@ -482,14 +544,17 @@ function AIToolbarSection({
             className={getAIButtonClassName(isStreaming)}
             disabled={isAILoading || isStreaming}
           >
-            {(isAILoading || isStreaming) ? (
+            {isAILoading || isStreaming ? (
               <SpinnerGap className="h-4 w-4 animate-spin" />
             ) : (
               <Robot className="h-4 w-4" weight="fill" />
             )}
-            {isStreaming ? 'Gerando...' : 'IA'}
+            {isStreaming ? "Gerando..." : "IA"}
             {onAIStream && !isStreaming && (
-              <Badge variant="secondary" className="text-[10px] px-1 py-0 bg-purple-500/20 text-purple-400">
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1 py-0 bg-purple-500/20 text-purple-400"
+              >
                 Stream
               </Badge>
             )}
@@ -527,13 +592,15 @@ function AIToolbarSection({
             <Separator />
 
             <div className="space-y-2">
-              <label htmlFor="ai-prompt-input" className="text-sm font-medium">Gerar com IA</label>
+              <label htmlFor="ai-prompt-input" className="text-sm font-medium">
+                Gerar com IA
+              </label>
               <Input
                 id="ai-prompt-input"
                 placeholder="Ex: Escreva uma petição inicial sobre..."
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                onKeyDown={(e) => e.key === "Enter" && handleAIGenerate()}
                 disabled={isStreaming}
               />
               <Button
@@ -541,7 +608,7 @@ function AIToolbarSection({
                 onClick={handleAIGenerate}
                 disabled={!aiPrompt.trim() || isAILoading || isStreaming}
               >
-                {(isAILoading || isStreaming) ? (
+                {isAILoading || isStreaming ? (
                   <SpinnerGap className="h-4 w-4 animate-spin" />
                 ) : (
                   <Lightning className="h-4 w-4" weight="fill" />
@@ -562,26 +629,26 @@ function AIToolbarSection({
         </PopoverContent>
       </Popover>
     </>
-  )
+  );
 }
 
 export function TiptapEditor({
   content,
   onChange,
-  placeholder = 'Digite ou use /ai para comandos de IA...',
+  placeholder = "Digite ou use /ai para comandos de IA...",
   className,
   readOnly = false,
   onAIGenerate,
   onAIStream,
   variables = {},
 }: TiptapEditorProps) {
-  const [isAILoading, setIsAILoading] = useState(false)
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [streamingText, setStreamingText] = useState('')
-  const [aiPrompt, setAiPrompt] = useState('')
-  const [showAIPopover, setShowAIPopover] = useState(false)
-  const [wordCount, setWordCount] = useState(0)
-  const [charCount, setCharCount] = useState(0)
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [showAIPopover, setShowAIPopover] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
 
   const editor = useEditor({
     extensions: [
@@ -598,13 +665,13 @@ export function TiptapEditor({
       }),
       Typography,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ["heading", "paragraph"],
       }),
       Underline,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-primary underline cursor-pointer',
+          class: "text-primary underline cursor-pointer",
         },
       }),
       Image.configure({
@@ -617,183 +684,199 @@ export function TiptapEditor({
     content,
     editable: !readOnly,
     onUpdate: ({ editor }) => {
-      const html = editor.getHTML()
-      onChange(html)
+      const html = editor.getHTML();
+      onChange(html);
 
-      const text = editor.getText()
-      setCharCount(text.length)
-      setWordCount(countWords(text))
+      const text = editor.getText();
+      setCharCount(text.length);
+      setWordCount(countWords(text));
     },
-  })
+  });
 
   // Sincronizar conteúdo externo sem loop
   useEffect(() => {
-    if (!editor) return
-    const current = editor.getHTML()
+    if (!editor) return;
+    const current = editor.getHTML();
     if (content !== current) {
-      editor.commands.setContent(content, { emitUpdate: false })
+      editor.commands.setContent(content, { emitUpdate: false });
     }
-  }, [content, editor])
+  }, [content, editor]);
 
   // Substituir variáveis no conteúdo
-  const replaceVariables = useCallback((text: string) => {
-    let result = text
-    Object.entries(variables).forEach(([key, value]) => {
-      const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g')
-      result = result.replace(regex, value)
-    })
-    return result
-  }, [variables])
+  const replaceVariables = useCallback(
+    (text: string) => {
+      let result = text;
+      Object.entries(variables).forEach(([key, value]) => {
+        const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g");
+        result = result.replace(regex, value);
+      });
+      return result;
+    },
+    [variables]
+  );
 
-  const aiQuickCommands = AI_QUICK_COMMANDS
+  const aiQuickCommands = AI_QUICK_COMMANDS;
 
   // Execução genérica de IA em streaming (respeita posição/seleção atual)
-  const runAIStreaming = useCallback(async (prompt: string) => {
-    if (!editor || !onAIStream) return
+  const runAIStreaming = useCallback(
+    async (prompt: string) => {
+      if (!editor || !onAIStream) return;
 
-    const { from, to } = editor.state.selection
+      const { from, to } = editor.state.selection;
 
-    setIsStreaming(true)
-    setStreamingText('')
+      setIsStreaming(true);
+      setStreamingText("");
 
-    let accumulated = ''
+      let accumulated = "";
 
-    try {
-      await onAIStream(prompt, {
-        onChunk: (chunk: string) => {
-          accumulated += chunk
-          setStreamingText(accumulated)
-        },
-        onComplete: () => {
-          const finalText = replaceVariables(accumulated)
-          insertContentAtPosition(editor, finalText, from, to)
+      try {
+        await onAIStream(prompt, {
+          onChunk: (chunk: string) => {
+            accumulated += chunk;
+            setStreamingText(accumulated);
+          },
+          onComplete: () => {
+            const finalText = replaceVariables(accumulated);
+            insertContentAtPosition(editor, finalText, from, to);
 
-          setIsStreaming(false)
-          setStreamingText('')
-          setAiPrompt('')
-          setShowAIPopover(false)
-          toast.success('Texto inserido com IA (streaming)!')
-        },
-        onError: (error: Error) => {
-          console.error('Erro no streaming:', error)
-          toast.error('Erro no streaming de IA')
-          setIsStreaming(false)
-          setStreamingText('')
-        },
-      })
-    } catch (error) {
-      console.error('Erro ao iniciar streaming:', error)
-      setIsStreaming(false)
-      setStreamingText('')
-    }
-  }, [editor, onAIStream, replaceVariables])
+            setIsStreaming(false);
+            setStreamingText("");
+            setAiPrompt("");
+            setShowAIPopover(false);
+            toast.success("Texto inserido com IA (streaming)!");
+          },
+          onError: (error: Error) => {
+            console.error("Erro no streaming:", error);
+            toast.error("Erro no streaming de IA");
+            setIsStreaming(false);
+            setStreamingText("");
+          },
+        });
+      } catch (error) {
+        console.error("Erro ao iniciar streaming:", error);
+        setIsStreaming(false);
+        setStreamingText("");
+      }
+    },
+    [editor, onAIStream, replaceVariables]
+  );
 
   const handleAIGenerate = useCallback(async () => {
-    if (!aiPrompt.trim() || !editor) return
-    const prompt = aiPrompt.trim()
+    if (!aiPrompt.trim() || !editor) return;
+    const prompt = aiPrompt.trim();
 
     // Streaming - early return para reduzir CC
     if (onAIStream) {
-      await runAIStreaming(prompt)
-      return
+      await runAIStreaming(prompt);
+      return;
     }
 
-    if (!onAIGenerate) return
+    if (!onAIGenerate) return;
 
-    setIsAILoading(true)
+    setIsAILoading(true);
     try {
-      const generatedText = await onAIGenerate(prompt)
-      const processedText = replaceVariables(generatedText)
-      const { from, to } = editor.state.selection
+      const generatedText = await onAIGenerate(prompt);
+      const processedText = replaceVariables(generatedText);
+      const { from, to } = editor.state.selection;
 
-      insertContentAtPosition(editor, processedText, from, to)
+      insertContentAtPosition(editor, processedText, from, to);
 
-      setAiPrompt('')
-      setShowAIPopover(false)
-      toast.success('Texto gerado com sucesso!')
+      setAiPrompt("");
+      setShowAIPopover(false);
+      toast.success("Texto gerado com sucesso!");
     } catch (error) {
-      console.error('Erro ao gerar texto com IA:', error)
-      toast.error('Erro ao gerar texto com IA')
+      console.error("Erro ao gerar texto com IA:", error);
+      toast.error("Erro ao gerar texto com IA");
     } finally {
-      setIsAILoading(false)
+      setIsAILoading(false);
     }
-  }, [aiPrompt, editor, onAIGenerate, onAIStream, runAIStreaming, replaceVariables])
+  }, [
+    aiPrompt,
+    editor,
+    onAIGenerate,
+    onAIStream,
+    runAIStreaming,
+    replaceVariables,
+  ]);
 
-  const handleQuickAI = useCallback(async (command: (typeof aiQuickCommands)[number]) => {
-    if (!editor || (!onAIGenerate && !onAIStream)) return
+  const handleQuickAI = useCallback(
+    async (command: (typeof aiQuickCommands)[number]) => {
+      if (!editor || (!onAIGenerate && !onAIStream)) return;
 
-    const { from, to } = editor.state.selection
-    const selectedText = getSelectedOrAllText(editor, from, to)
+      const { from, to } = editor.state.selection;
+      const selectedText = getSelectedOrAllText(editor, from, to);
 
-    if (!selectedText.trim()) {
-      toast.error('Selecione um texto ou escreva algo primeiro')
-      return
-    }
-
-    const fullPrompt = `${command.prompt}\n\n"${selectedText}"`
-
-    // Early return para streaming
-    if (onAIStream) {
-      await runAIStreaming(fullPrompt)
-      return
-    }
-
-    setIsAILoading(true)
-    try {
-      const generatedText = await onAIGenerate!(fullPrompt)
-      const processedText = replaceVariables(generatedText)
-      const hasSelection = from !== to
-
-      if (hasSelection) {
-        insertContentAtPosition(editor, processedText, from, to)
-      } else {
-        editor.chain().focus().insertContent(processedText).run()
+      if (!selectedText.trim()) {
+        toast.error("Selecione um texto ou escreva algo primeiro");
+        return;
       }
 
-      toast.success(getAISuccessMessage(command.label))
-    } catch (error) {
-      console.error('Erro ao processar com IA:', error)
-      toast.error('Erro ao processar com IA')
-    } finally {
-      setIsAILoading(false)
-    }
-  }, [editor, onAIGenerate, onAIStream, runAIStreaming, replaceVariables])
+      const fullPrompt = `${command.prompt}\n\n"${selectedText}"`;
+
+      // Early return para streaming
+      if (onAIStream) {
+        await runAIStreaming(fullPrompt);
+        return;
+      }
+
+      setIsAILoading(true);
+      try {
+        const generatedText = await onAIGenerate!(fullPrompt);
+        const processedText = replaceVariables(generatedText);
+        const hasSelection = from !== to;
+
+        if (hasSelection) {
+          insertContentAtPosition(editor, processedText, from, to);
+        } else {
+          editor.chain().focus().insertContent(processedText).run();
+        }
+
+        toast.success(getAISuccessMessage(command.label));
+      } catch (error) {
+        console.error("Erro ao processar com IA:", error);
+        toast.error("Erro ao processar com IA");
+      } finally {
+        setIsAILoading(false);
+      }
+    },
+    [editor, onAIGenerate, onAIStream, runAIStreaming, replaceVariables]
+  );
 
   const setLink = useCallback(() => {
-    if (!editor || readOnly) return
+    if (!editor || readOnly) return;
 
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('URL do link:', previousUrl)
+    const previousUrl = editor.getAttributes("link").href;
+    const url = window.prompt("URL do link:", previousUrl);
 
-    if (url === null) return
+    if (url === null) return;
 
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run()
-      return
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
     }
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-  }, [editor, readOnly])
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor, readOnly]);
 
   const addImage = useCallback(() => {
-    if (!editor || readOnly) return
+    if (!editor || readOnly) return;
 
-    const url = window.prompt('URL da imagem:')
+    const url = window.prompt("URL da imagem:");
     if (url) {
-      editor.chain().focus().setImage({ src: url }).run()
+      editor.chain().focus().setImage({ src: url }).run();
     }
-  }, [editor, readOnly])
+  }, [editor, readOnly]);
 
   // Imprimir / Exportar PDF com layout A4
   const handlePrint = useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
 
-    const html = editor.getHTML()
-    const printWindow = window.open('', '_blank')
+    const html = editor.getHTML();
+    const printWindow = window.open("", "_blank");
 
     if (!printWindow) {
-      toast.error('Habilite pop-ups para imprimir/exportar PDF')
-      return
+      toast.error("Habilite pop-ups para imprimir/exportar PDF");
+      return;
     }
 
     printWindow.document.write(`
@@ -863,19 +946,24 @@ export function TiptapEditor({
           <div class="page-footer"></div>
         </body>
       </html>
-    `)
+    `);
 
-    printWindow.document.close()
-    printWindow.focus()
-    printWindow.print()
-  }, [editor])
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  }, [editor]);
 
-  if (!editor) return null
+  if (!editor) return null;
 
-  const editingDisabled = readOnly || isStreaming || isAILoading
+  const editingDisabled = readOnly || isStreaming || isAILoading;
 
   return (
-    <div className={cn('border rounded-lg overflow-hidden bg-background', className)}>
+    <div
+      className={cn(
+        "border rounded-lg overflow-hidden bg-background",
+        className
+      )}
+    >
       {/* Toolbar - Using extracted components to reduce CC */}
       <div className="border-b bg-muted/30 p-2 flex flex-wrap items-center gap-1">
         <UndoRedoButtons editor={editor} disabled={editingDisabled} />
@@ -893,7 +981,7 @@ export function TiptapEditor({
 
         {/* Link, Imagem */}
         <Button
-          variant={editor.isActive('link') ? 'secondary' : 'ghost'}
+          variant={editor.isActive("link") ? "secondary" : "ghost"}
           size="icon"
           onClick={setLink}
           disabled={editingDisabled}
@@ -917,7 +1005,9 @@ export function TiptapEditor({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+          onClick={() =>
+            editor.chain().focus().clearNodes().unsetAllMarks().run()
+          }
           disabled={editingDisabled}
           title="Limpar formatação"
         >
@@ -958,20 +1048,26 @@ export function TiptapEditor({
       </div>
 
       {/* Área do editor */}
-      <div className="bg-muted/50 p-4 flex justify-center overflow-auto flex-1">
-        <div className="bg-white dark:bg-slate-900 shadow-md w-full max-w-4xl min-h-[200px] p-6 rounded-md border">
+      <div className="p-4 bg-muted/20">
+        <div
+          className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm mx-auto"
+          style={{ maxWidth: "800px", minHeight: "300px" }}
+        >
           <EditorContent
             editor={editor}
             className={cn(
-              'prose prose-sm dark:prose-invert max-w-none',
-              'min-h-[180px] focus:outline-none',
-              '[&_.ProseMirror]:outline-none',
-              '[&_.ProseMirror]:min-h-[180px]',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0',
+              "prose prose-sm dark:prose-invert max-w-none",
+              "p-6",
+              "[&_.ProseMirror]:outline-none",
+              "[&_.ProseMirror]:min-h-[250px]",
+              "[&_.ProseMirror]:text-foreground",
+              "[&_.ProseMirror_p]:text-foreground",
+              "[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground",
+              "[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
+              "[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left",
+              "[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none",
+              "[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0",
+              "[&_.ProseMirror_p.is-editor-empty:first-child::before]:opacity-60"
             )}
           />
         </div>
@@ -990,7 +1086,7 @@ export function TiptapEditor({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default TiptapEditor
+export default TiptapEditor;
