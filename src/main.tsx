@@ -1,96 +1,124 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import { ErrorBoundary } from "react-error-boundary";
-import App from './App';
-import { ErrorFallback } from './ErrorFallback.tsx';
+import App from "./App";
+import { ErrorFallback } from "./ErrorFallback.tsx";
 
-import './index.css';
+// ================= Instrumentação temporária para diagnosticar loop de loading =================
+// Remover após correção da causa raiz.
+/* eslint-disable no-console */
+console.log("[main.tsx] Script carregado, iniciando bootstrap React");
+window.addEventListener("error", (e) => {
+  console.error("[window.error]", e.message, e.error);
+});
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("[unhandledrejection]", e.reason);
+});
+
+import "./index.css";
 
 // Root element check
-const rootElement = document.getElementById('root')
+const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error('Root element not found')
+  throw new Error("Root element not found");
 }
 
 // ⚠️ TRUSTED TYPES: DESABILITADO TEMPORARIAMENTE
 // O vite-plugin-pwa gera registerSW.js que não é compatível com Trusted Types
 // causando erro: "This document requires 'TrustedScriptURL' assignment"
 // NOTA: Reabilitar quando o plugin PWA suportar Trusted Types nativamente
-// 
+//
 // import('./lib/trusted-types').then(({ initTrustedTypes }) => {
 //   initTrustedTypes()
 // }).catch(err => console.warn('Trusted Types não disponível:', err))
 
 // ✅ ANALYTICS: GTM + GA4 inicialização (após consentimento se LGPD requerido)
 // IDs configuráveis via VITE_GTM_ID e VITE_GA4_ID
-let analyticsInitialized = false
+let analyticsInitialized = false;
 
 const initAnalyticsServices = () => {
-  if (analyticsInitialized) return
-  analyticsInitialized = true
+  if (analyticsInitialized) return;
+  analyticsInitialized = true;
 
-  import('./lib/analytics').then(({ initAnalytics }) => {
-    // initAnalytics é síncrono - não precisa de await
-    initAnalytics()
-  }).catch(error => {
-    console.warn('Analytics não inicializado:', error)
-  })
-}
+  import("./lib/analytics")
+    .then(({ initAnalytics }) => {
+      // initAnalytics é síncrono - não precisa de await
+      initAnalytics();
+    })
+    .catch((error) => {
+      console.warn("Analytics não inicializado:", error);
+    });
+};
 
 // Inicializa analytics após 2s para não impactar FCP/LCP
-setTimeout(initAnalyticsServices, 2000)
+setTimeout(initAnalyticsServices, 2000);
 
 // ✅ OTIMIZAÇÃO: Sentry lazy loading avançado
 // Carrega apenas após interação do usuário OU após 5s de idle
 // Economia: ~238KB de código não utilizado imediatamente
-let sentryInitialized = false
+let sentryInitialized = false;
 
 const initSentry = () => {
-  if (sentryInitialized) return
-  sentryInitialized = true
+  if (sentryInitialized) return;
+  sentryInitialized = true;
 
-  import('./services/error-tracking').then(({ initErrorTracking }) => {
-    initErrorTracking()
-  }).catch(error => {
-    console.error('❌ Failed to initialize Sentry:', error)
-  })
-}
+  import("./services/error-tracking")
+    .then(({ initErrorTracking }) => {
+      initErrorTracking();
+    })
+    .catch((error) => {
+      console.error("❌ Failed to initialize Sentry:", error);
+    });
+};
 
 // Estratégia 1: Carregar Sentry após primeira interação do usuário
 const initOnInteraction = () => {
-  const events = ['click', 'keydown', 'scroll', 'touchstart']
+  const events = ["click", "keydown", "scroll", "touchstart"];
   const handler = () => {
-    events.forEach(e => window.removeEventListener(e, handler, { capture: true }))
+    events.forEach((e) =>
+      window.removeEventListener(e, handler, { capture: true })
+    );
     // Usar requestIdleCallback para não bloquear a interação
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => initSentry(), { timeout: 2000 })
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(() => initSentry(), { timeout: 2000 });
     } else {
-      setTimeout(initSentry, 100)
+      setTimeout(initSentry, 100);
     }
-  }
-  events.forEach(e => window.addEventListener(e, handler, { capture: true, passive: true }))
-}
+  };
+  events.forEach((e) =>
+    window.addEventListener(e, handler, { capture: true, passive: true })
+  );
+};
 
 // Estratégia 2: Fallback - carregar após 5s se usuário não interagir
 const initOnIdle = () => {
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => {
-      setTimeout(initSentry, 5000) // 5s delay após idle
-    }, { timeout: 10000 })
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(
+      () => {
+        setTimeout(initSentry, 5000); // 5s delay após idle
+      },
+      { timeout: 10000 }
+    );
   } else {
-    setTimeout(initSentry, 8000) // 8s para browsers sem requestIdleCallback
+    setTimeout(initSentry, 8000); // 8s para browsers sem requestIdleCallback
   }
-}
+};
 
 // Iniciar ambas estratégias (a primeira que executar ganha)
-initOnInteraction()
-initOnIdle()
+initOnInteraction();
+initOnIdle();
 
 // Render App diretamente (sem dynamic import para evitar problemas de loading)
-createRoot(rootElement).render(
-  <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <StrictMode>
-      <App />
-    </StrictMode>
-  </ErrorBoundary>
-)
+try {
+  console.log("[main.tsx] Montando React dentro de #root");
+  createRoot(rootElement).render(
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <StrictMode>
+        <App />
+      </StrictMode>
+    </ErrorBoundary>
+  );
+  console.log("[main.tsx] React montado com sucesso");
+} catch (err) {
+  console.error("[main.tsx] Falha ao montar React", err);
+}
