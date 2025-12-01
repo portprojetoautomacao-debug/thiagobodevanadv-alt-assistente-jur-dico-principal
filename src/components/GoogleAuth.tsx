@@ -1,170 +1,229 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { config } from '@/lib/config'
-import { ArrowSquareOut, Warning } from '@phosphor-icons/react'
-import { useCallback, useEffect, useState } from 'react'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { config } from "@/lib/config";
+import { ArrowSquareOut, Warning } from "@phosphor-icons/react";
+import { useCallback, useEffect, useState } from "react";
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
-const PRODUCTION_DOMAIN = 'https://assistente-juridico-github.vercel.app'
+const PRODUCTION_DOMAIN = "https://assistente-juridico-p.vercel.app";
+
+// URLs de produção autorizadas no Google Cloud Console
+const PRODUCTION_URLS = [
+  "assistente-juridico-p.vercel.app",
+  "assistente-juridico-github.vercel.app",
+];
 
 // Detecta se está em ambiente de desenvolvimento/preview (URL dinâmica)
 const isDevelopmentEnvironment = (): boolean => {
-  const hostname = window.location.hostname
+  const hostname = window.location.hostname;
+
+  // Produção autorizada - permite login
+  if (PRODUCTION_URLS.includes(hostname)) {
+    return false;
+  }
 
   // GitHub Codespaces / DevContainers
-  if (hostname.includes('.app.github.dev') || hostname.includes('.github.dev')) {
-    return true
+  if (
+    hostname.includes(".app.github.dev") ||
+    hostname.includes(".github.dev")
+  ) {
+    return true;
   }
 
   // Gitpod
-  if (hostname.includes('.gitpod.io')) {
-    return true
+  if (hostname.includes(".gitpod.io")) {
+    return true;
   }
 
   // StackBlitz
-  if (hostname.includes('.stackblitz.io') || hostname.includes('.webcontainer.io')) {
-    return true
+  if (
+    hostname.includes(".stackblitz.io") ||
+    hostname.includes(".webcontainer.io")
+  ) {
+    return true;
   }
 
   // Localhost
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return true
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return true;
   }
 
-  // Preview deployments da Vercel (formato: projeto-hash-account.vercel.app)
-  if (hostname.includes('vercel.app') &&
-    hostname !== 'assistente-juridico-github.vercel.app' &&
-    !hostname.startsWith('assistente-juridico-github.')) {
-    return true
+  // Preview deployments da Vercel (qualquer outra URL .vercel.app)
+  if (hostname.includes("vercel.app")) {
+    return true;
   }
 
-  return false
-}
+  return false;
+};
 
 export interface GoogleUser {
-  id: string
-  email: string
-  name: string
-  picture: string
-  role?: 'admin' | 'advogado' | 'assistente'
+  id: string;
+  email: string;
+  name: string;
+  picture: string;
+  role?: "admin" | "advogado" | "assistente";
 }
 
 interface GoogleAuthButtonProps {
-  onSuccess?: (user: GoogleUser) => void
-  onError?: (error: Error) => void
+  onSuccess?: (user: GoogleUser) => void;
+  onError?: (error: Error) => void;
 }
 
-export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) {
-  const [error, setError] = useState<string>('')
-  const [isConfigured, setIsConfigured] = useState(false)
+export function GoogleAuthButton({
+  onSuccess,
+  onError,
+}: GoogleAuthButtonProps) {
+  const [error, setError] = useState<string>("");
+  const [isConfigured, setIsConfigured] = useState(false);
 
-  type CredentialResponse = { credential: string }
+  type CredentialResponse = { credential: string };
 
-  const handleCredentialResponse = useCallback(async (response: unknown) => {
-    try {
-      if (!response || typeof response !== 'object' || !('credential' in response)) {
-        throw new Error('Invalid credential response from Google')
+  const handleCredentialResponse = useCallback(
+    async (response: unknown) => {
+      try {
+        if (
+          !response ||
+          typeof response !== "object" ||
+          !("credential" in response)
+        ) {
+          throw new Error("Invalid credential response from Google");
+        }
+
+        const { credential } = response as CredentialResponse;
+        const payloadBase64 = credential.split(".")?.[1] ?? "";
+        const payload = JSON.parse(atob(payloadBase64)) as {
+          sub?: string;
+          email?: string;
+          name?: string;
+          picture?: string;
+        };
+
+        const user: GoogleUser = {
+          id: payload.sub ?? "",
+          email: payload.email ?? "",
+          name: payload.name ?? "",
+          picture: payload.picture ?? "",
+        };
+
+        onSuccess?.(user);
+      } catch (err) {
+        const error =
+          err instanceof Error
+            ? err
+            : new Error("Falha ao processar login do Google");
+        setError(error.message);
+        onError?.(error);
       }
-
-      const { credential } = response as CredentialResponse
-      const payloadBase64 = credential.split('.')?.[1] ?? ''
-      const payload = JSON.parse(atob(payloadBase64)) as {
-        sub?: string
-        email?: string
-        name?: string
-        picture?: string
-      }
-
-      const user: GoogleUser = {
-        id: payload.sub ?? '',
-        email: payload.email ?? '',
-        name: payload.name ?? '',
-        picture: payload.picture ?? '',
-      }
-
-      onSuccess?.(user)
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Falha ao processar login do Google')
-      setError(error.message)
-      onError?.(error)
-    }
-  }, [onSuccess, onError])
+    },
+    [onSuccess, onError]
+  );
 
   type GoogleAccount = {
     accounts: {
       id: {
-        initialize: (opts: { client_id: string; callback: (resp: { credential: string }) => void }) => void
+        initialize: (opts: {
+          client_id: string;
+          callback: (resp: { credential: string }) => void;
+        }) => void;
         renderButton: (
           el: HTMLElement,
-          options: { theme?: string; size?: string; width?: number; text?: string; shape?: string }
-        ) => void
-      }
-    }
-  }
+          options: {
+            theme?: string;
+            size?: string;
+            width?: number;
+            text?: string;
+            shape?: string;
+          }
+        ) => void;
+      };
+    };
+  };
 
   const initializeGoogleSignIn = useCallback(() => {
-    const google = (window as unknown as { google?: GoogleAccount })?.google
-    if (!google) return
+    const google = (window as unknown as { google?: GoogleAccount })?.google;
+    if (!google) return;
 
     google.accounts.id.initialize({
       client_id: config.google.clientId,
-      callback: (resp) => { handleCredentialResponse(resp).catch(console.error) },
-    })
+      callback: (resp) => {
+        handleCredentialResponse(resp).catch(console.error);
+      },
+    });
 
-    const buttonDiv = document.getElementById('google-signin-button')
+    const buttonDiv = document.getElementById("google-signin-button");
     if (buttonDiv) {
       google.accounts.id.renderButton(buttonDiv, {
-        theme: 'outline',
-        size: 'large',
+        theme: "outline",
+        size: "large",
         width: buttonDiv.offsetWidth,
-        text: 'signin_with',
-        shape: 'rectangular',
-      })
+        text: "signin_with",
+        shape: "rectangular",
+      });
     }
-  }, [handleCredentialResponse])
+  }, [handleCredentialResponse]);
 
   useEffect(() => {
     // Forçar configuração como true se temos o Client ID básico
-    const configured = !!config.google.clientId
-    setIsConfigured(configured)
+    const configured = !!config.google.clientId;
+    setIsConfigured(configured);
 
     if (!configured) {
-      setError('Google OAuth não está configurado. Veja OAUTH_SETUP.md para instruções.')
-      return
+      setError(
+        "Google OAuth não está configurado. Veja OAUTH_SETUP.md para instruções."
+      );
+      return;
     }
 
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
-    script.async = true
-    script.onload = () => initializeGoogleSignIn()
-    document.body.appendChild(script)
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => initializeGoogleSignIn();
+    document.body.appendChild(script);
 
     return () => {
       if (document.body.contains(script)) {
-        script.remove()
+        script.remove();
       }
-    }
-  }, [initializeGoogleSignIn])
+    };
+  }, [initializeGoogleSignIn]);
 
   // Verificação de ambiente de desenvolvimento - deve vir antes das outras verificações
   if (isDevelopmentEnvironment()) {
-    const isCodespace = window.location.hostname.includes('.app.github.dev')
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const isCodespace = window.location.hostname.includes(".app.github.dev");
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
 
     return (
       <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
         <Warning className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800 dark:text-amber-200">
           <strong>
-            {isCodespace ? 'GitHub Codespace Detectado' :
-              isLocalhost ? 'Ambiente Local Detectado' :
-                'Ambiente de Desenvolvimento Detectado'}
+            {isCodespace
+              ? "GitHub Codespace Detectado"
+              : isLocalhost
+              ? "Ambiente Local Detectado"
+              : "Ambiente de Desenvolvimento Detectado"}
           </strong>
           <p className="mt-2 text-sm">
-            O login com Google não funciona em {isCodespace ? 'Codespaces' : isLocalhost ? 'localhost' : 'ambientes de desenvolvimento'} porque
-            a origem <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">{window.location.origin}</code> não
-            está autorizada no Google Cloud Console.
+            O login com Google não funciona em{" "}
+            {isCodespace
+              ? "Codespaces"
+              : isLocalhost
+              ? "localhost"
+              : "ambientes de desenvolvimento"}{" "}
+            porque a origem{" "}
+            <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">
+              {window.location.origin}
+            </code>{" "}
+            não está autorizada no Google Cloud Console.
           </p>
           <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
             💡 Para testar o login, use o ambiente de produção.
@@ -173,14 +232,14 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
             variant="outline"
             size="sm"
             className="mt-3 gap-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900"
-            onClick={() => window.open(PRODUCTION_DOMAIN, '_blank')}
+            onClick={() => window.open(PRODUCTION_DOMAIN, "_blank")}
           >
             <ArrowSquareOut className="h-4 w-4" />
             Abrir em Produção
           </Button>
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (!isConfigured) {
@@ -193,13 +252,19 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
             As credenciais do Google OAuth não estão configuradas. Por favor:
           </p>
           <ol className="mt-2 text-sm list-decimal list-inside space-y-1">
-            <li>Copie <code>.env.example</code> para <code>.env</code></li>
-            <li>Adicione seu Google Client ID ao <code>.env</code></li>
-            <li>Veja <code>OAUTH_SETUP.md</code> para instruções detalhadas</li>
+            <li>
+              Copie <code>.env.example</code> para <code>.env</code>
+            </li>
+            <li>
+              Adicione seu Google Client ID ao <code>.env</code>
+            </li>
+            <li>
+              Veja <code>OAUTH_SETUP.md</code> para instruções detalhadas
+            </li>
           </ol>
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (error) {
@@ -208,31 +273,31 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
         <Warning className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
-    )
+    );
   }
 
   return (
     <div className="w-full">
       <div id="google-signin-button" className="w-full" />
     </div>
-  )
+  );
 }
 
 export function GoogleAuthExample() {
-  const [user, setUser] = useState<GoogleUser | null>(null)
+  const [user, setUser] = useState<GoogleUser | null>(null);
 
   const handleSuccess = (user: GoogleUser) => {
-    console.log('Usuário logado:', user)
-    setUser(user)
-  }
+    console.log("Usuário logado:", user);
+    setUser(user);
+  };
 
   const handleError = (error: Error) => {
-    console.error('Erro no login:', error)
-  }
+    console.error("Erro no login:", error);
+  };
 
   const handleSignOut = () => {
-    setUser(null)
-  }
+    setUser(null);
+  };
 
   if (user) {
     return (
@@ -258,7 +323,7 @@ export function GoogleAuthExample() {
           </Button>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -273,5 +338,5 @@ export function GoogleAuthExample() {
         <GoogleAuthButton onSuccess={handleSuccess} onError={handleError} />
       </CardContent>
     </Card>
-  )
+  );
 }
