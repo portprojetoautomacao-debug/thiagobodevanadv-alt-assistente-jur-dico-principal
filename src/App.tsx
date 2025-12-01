@@ -1,8 +1,8 @@
 import GlobalSearch from "@/components/GlobalSearch";
-import type { GoogleUser } from "@/components/GoogleAuth";
-import { GoogleAuthButton } from "@/components/GoogleAuth";
+// Removido Google OAuth (uso exclusivo, login simples)
 import NotificationCenter from "@/components/NotificationCenter";
 import Sidebar from "@/components/Sidebar";
+import { SimpleAuth } from "@/components/SimpleAuth";
 import { Toaster } from "@/components/ui/sonner";
 import { useAutoMinuta } from "@/hooks/use-auto-minuta";
 import { useKV } from "@/hooks/use-kv";
@@ -41,16 +41,10 @@ function App() {
     setIsAuthenticated(!!user);
   }, [user]);
 
-  const handleAuthSuccess = (authUser: GoogleUser) => {
-    // Normalize user data for Google provider
-    const normalizedUser: User = {
-      id: authUser.id,
-      email: authUser.email,
-      name: authUser.name,
-      avatarUrl: authUser.picture,
-      role: authUser.role || "advogado", // Valor padrão para advogados
-    };
-    setUser(normalizedUser);
+  // Handler legado de Google removido
+
+  const handleSimpleAuthSuccess = (user: User) => {
+    setUser(user);
     setIsAuthenticated(true);
   };
 
@@ -128,12 +122,10 @@ function App() {
           </div>
 
           <div className="space-y-4">
-            <GoogleAuthButton
-              onSuccess={handleAuthSuccess}
-              onError={(error) =>
-                console.error("Erro na autenticação Google:", error)
-              }
-            />
+            {/* Login simples local (adm/adm123) */}
+            <SimpleAuth onSuccess={handleSimpleAuthSuccess} />
+
+            {/* GoogleAuth removido definitivamente */}
           </div>
         </div>
         <Toaster />
