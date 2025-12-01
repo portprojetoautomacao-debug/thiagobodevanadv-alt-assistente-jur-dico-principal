@@ -17,7 +17,7 @@ interface DashboardDeadlinesProps {
 
 export function DashboardDeadlines({ prazosProximos, onNavigate }: DashboardDeadlinesProps) {
   return (
-    <Card className="bg-gradient-to-br from-neutral-2 to-neutral-3 border-neutral-6">
+    <Card className="bg-linear-to-br from-neutral-2 to-neutral-3 border-neutral-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-5 w-5 text-accent-9" weight="duotone" />

@@ -194,14 +194,14 @@ Responda APENAS com JSON válido, sem texto adicional.`
 
       {error && (
         <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
-          <WarningCircle className="w-5 h-5 flex-shrink-0" />
+          <WarningCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
       )}
 
       {!isSpeechSupported && (
         <div className="flex items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400">
-          <WarningCircle className="w-5 h-5 flex-shrink-0" />
+          <WarningCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">Gravação em tempo real não disponível neste navegador. Cole o texto manualmente na área de transcrição.</p>
         </div>
       )}
@@ -347,7 +347,7 @@ Responda APENAS com JSON válido, sem texto adicional.`
                   <ul className="space-y-2">
                     {actionItems.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                        <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                        <span className="shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
                           {idx + 1}
                         </span>
                         <p className="text-sm flex-1">{item}</p>

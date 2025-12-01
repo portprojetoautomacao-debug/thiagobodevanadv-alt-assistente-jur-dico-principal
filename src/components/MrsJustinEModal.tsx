@@ -191,7 +191,7 @@ export default function MrsJustinEModal({
             </h3>
             <div className="space-y-3">
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-sm font-bold text-primary">1</span>
                 </div>
                 <div className="flex-1">
@@ -204,7 +204,7 @@ export default function MrsJustinEModal({
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-sm font-bold text-primary">2</span>
                 </div>
                 <div className="flex-1">
@@ -216,7 +216,7 @@ export default function MrsJustinEModal({
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-sm font-bold text-primary">3</span>
                 </div>
                 <div className="flex-1">
@@ -228,7 +228,7 @@ export default function MrsJustinEModal({
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-sm font-bold text-primary">4</span>
                 </div>
                 <div className="flex-1">
@@ -241,10 +241,10 @@ export default function MrsJustinEModal({
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
+          <div className="bg-linear-to-br from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
             <div className="flex items-start gap-3">
               <Sparkle
-                className="w-6 h-6 text-primary flex-shrink-0 mt-0.5"
+                className="w-6 h-6 text-primary shrink-0 mt-0.5"
                 weight="fill"
               />
               <div className="space-y-2">

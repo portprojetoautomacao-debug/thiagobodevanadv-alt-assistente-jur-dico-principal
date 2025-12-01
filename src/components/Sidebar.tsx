@@ -74,14 +74,14 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
                 className={cn(
                   'w-full justify-start',
                   isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
-                  isFeatured && !isActive && 'border border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5'
+                  isFeatured && !isActive && 'border border-purple-500/30 bg-linear-to-r from-purple-500/5 to-pink-500/5'
                 )}
                 onClick={() => onViewChange(item.id as ViewType)}
               >
                 <Icon className="w-5 h-5 mr-3" weight={isActive ? 'fill' : 'regular'} />
                 {item.label}
                 {isFeatured && (
-                  <Badge variant="secondary" className="ml-auto text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+                  <Badge variant="secondary" className="ml-auto text-xs bg-linear-to-r from-purple-500 to-pink-500 text-white border-0">
                     Novo
                   </Badge>
                 )}

@@ -274,7 +274,7 @@ export default function FinancialManagementAdvbox() {
                         className="flex items-center justify-between p-2 bg-muted rounded-lg border border-border"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <File size={16} className="text-primary flex-shrink-0" />
+                          <File size={16} className="text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate">{file.name}</p>
                             <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
@@ -284,7 +284,7 @@ export default function FinancialManagementAdvbox() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 flex-shrink-0"
+                          className="h-6 w-6 shrink-0"
                           onClick={() => removeAttachment(file.id)}
                           aria-label="Remover anexo"
                         >

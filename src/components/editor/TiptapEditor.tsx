@@ -117,7 +117,7 @@ function getAIButtonClassName(isStreaming: boolean): string {
   const base = 'gap-2 border-purple-500/20 hover:border-purple-500/40'
   return isStreaming
     ? `${base} bg-purple-500/20 animate-pulse`
-    : `${base} bg-gradient-to-r from-purple-500/10 to-blue-500/10`
+    : `${base} bg-linear-to-r from-purple-500/10 to-blue-500/10`
 }
 
 /**

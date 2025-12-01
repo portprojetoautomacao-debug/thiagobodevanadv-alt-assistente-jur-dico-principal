@@ -177,7 +177,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
               <Card key={doc.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       {getFileIcon(doc.tipo)}
                     </div>
                     
@@ -195,7 +195,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                       </div>
                     </div>
 
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex gap-1 shrink-0">
                       {doc.tipo.includes('pdf') && (
                         <Button
                           size="icon"

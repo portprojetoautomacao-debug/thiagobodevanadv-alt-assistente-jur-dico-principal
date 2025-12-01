@@ -306,7 +306,7 @@ Mantenha a resposta objetiva e profissional.`
               )}
 
               {analysis && (
-                <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5">
+                <Card className="p-6 bg-linear-to-br from-accent/5 to-primary/5">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkle className="w-6 h-6 text-accent" weight="fill" />
                     <h3 className="text-lg font-bold text-foreground">Análise da IA</h3>
@@ -353,7 +353,7 @@ Mantenha a resposta objetiva e profissional.`
                         key={`${movimento.codigo}-${movimento.dataHora}-${index}`}
                         className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                       >
-                        <div className="flex-shrink-0 mt-1">
+                        <div className="shrink-0 mt-1">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                             <CheckCircle className="w-5 h-5 text-primary" weight="fill" />
                           </div>

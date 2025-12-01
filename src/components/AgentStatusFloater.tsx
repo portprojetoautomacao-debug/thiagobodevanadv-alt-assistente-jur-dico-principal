@@ -38,7 +38,7 @@ export default function AgentStatusFloater() {
           exit={{ y: 100, opacity: 0 }}
           className="fixed bottom-6 right-6 z-50 w-80"
         >
-          <Card className="border-primary/30 bg-gradient-to-br from-background/95 to-primary/5 backdrop-blur-sm shadow-lg">
+          <Card className="border-primary/30 bg-linear-to-br from-background/95 to-primary/5 backdrop-blur-sm shadow-lg">
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export default function AgentStatusFloater() {
                               className="flex items-start gap-2 p-2 rounded-lg bg-muted text-xs"
                             >
                               <CheckCircle
-                                className="w-3 h-3 text-green-600 flex-shrink-0 mt-0.5"
+                                className="w-3 h-3 text-green-600 shrink-0 mt-0.5"
                                 weight="fill"
                               />
                               <div className="flex-1 min-w-0">

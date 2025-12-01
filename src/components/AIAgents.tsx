@@ -754,7 +754,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                           className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                         >
                           <IconComponent
-                            className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
+                            className="w-5 h-5 text-primary shrink-0 mt-0.5"
                             weight="fill"
                           />
                           <div className="flex-1 min-w-0">
@@ -806,7 +806,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                           className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                         >
                           <IconComponent
-                            className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
+                            className="w-5 h-5 text-primary shrink-0 mt-0.5"
                             weight="fill"
                           />
                           <div className="flex-1 min-w-0">
@@ -825,7 +825,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                           </div>
                           <Badge
                             variant={getTaskStatusVariant(task.status)}
-                            className="flex-shrink-0"
+                            className="shrink-0"
                           >
                             {task.status}
                           </Badge>
@@ -870,7 +870,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
                           className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                         >
                           <IconComponent
-                            className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5"
+                            className="w-5 h-5 text-green-600 shrink-0 mt-0.5"
                             weight="fill"
                           />
                           <div className="flex-1 min-w-0">

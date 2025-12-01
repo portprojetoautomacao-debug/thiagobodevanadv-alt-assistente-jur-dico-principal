@@ -317,7 +317,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
 
                     {/* Ícone */}
                     <div
-                      className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${config.bgColor} ${config.color}`}
+                      className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${config.bgColor} ${config.color}`}
                     >
                       {config.icon}
                     </div>
@@ -346,7 +346,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                         e.stopPropagation()
                         removeNotification(notification.id)
                       }}
-                      className="flex-shrink-0 p-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity"
+                      className="shrink-0 p-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity"
                     >
                       <X className="w-3 h-3 text-muted-foreground" />
                     </button>

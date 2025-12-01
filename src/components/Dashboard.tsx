@@ -305,7 +305,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {/* DJEN Publications Widget + Upload PDF */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card className="card-glow border-primary/30 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+          <Card className="card-glow border-primary/30 bg-linear-to-br from-primary/10 via-secondary/10 to-accent/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 gradient-text">
                 <Upload size={24} weight="duotone" />

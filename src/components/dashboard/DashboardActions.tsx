@@ -14,7 +14,7 @@ interface DashboardActionsProps {
 
 export function DashboardActions({ onNavigate }: DashboardActionsProps) {
   return (
-    <Card className="bg-gradient-to-br from-neutral-2 to-neutral-3 border-neutral-6">
+    <Card className="bg-linear-to-br from-neutral-2 to-neutral-3 border-neutral-6">
       <CardHeader>
         <CardTitle className="text-accent-11">Ações Rápidas</CardTitle>
       </CardHeader>
