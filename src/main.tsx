@@ -4,24 +4,10 @@ import { ErrorBoundary } from "react-error-boundary";
 import App from "./App";
 import { ErrorFallback } from "./ErrorFallback.tsx";
 
-// ================= Instrumentação temporária para diagnosticar loop de loading =================
-// Remover após correção da causa raiz.
-/* eslint-disable no-console */
-console.log("[main.tsx] Script carregado, iniciando bootstrap React");
-window.addEventListener("error", (e) => {
-  console.error("[window.error]", e.message, e.error);
-});
-window.addEventListener("unhandledrejection", (e) => {
-  console.error("[unhandledrejection]", e.reason);
-});
-
 import "./index.css";
 
-// Root element check
 const rootElement = document.getElementById("root");
-if (!rootElement) {
-  throw new Error("Root element not found");
-}
+if (!rootElement) throw new Error("Root element not found");
 
 // ⚠️ TRUSTED TYPES: DESABILITADO TEMPORARIAMENTE
 // O vite-plugin-pwa gera registerSW.js que não é compatível com Trusted Types
@@ -104,21 +90,13 @@ const initOnIdle = () => {
   }
 };
 
-// Iniciar ambas estratégias (a primeira que executar ganha)
 initOnInteraction();
 initOnIdle();
 
-// Render App diretamente (sem dynamic import para evitar problemas de loading)
-try {
-  console.log("[main.tsx] Montando React dentro de #root");
-  createRoot(rootElement).render(
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <StrictMode>
-        <App />
-      </StrictMode>
-    </ErrorBoundary>
-  );
-  console.log("[main.tsx] React montado com sucesso");
-} catch (err) {
-  console.error("[main.tsx] Falha ao montar React", err);
-}
+createRoot(rootElement).render(
+  <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <StrictMode>
+      <App />
+    </StrictMode>
+  </ErrorBoundary>
+);
