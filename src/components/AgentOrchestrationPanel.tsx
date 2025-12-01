@@ -499,7 +499,7 @@ export default function AgentOrchestrationPanel() {
                           key={idx}
                           className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded"
                         >
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             <Badge
                               variant={
                                 trace.type === 'final'
@@ -527,7 +527,7 @@ export default function AgentOrchestrationPanel() {
                               </p>
                             )}
                           </div>
-                          <div className="flex-shrink-0 text-xs text-muted-foreground">
+                          <div className="shrink-0 text-xs text-muted-foreground">
                             {typeof trace.duration === 'number'
                               ? `${trace.duration}ms`
                               : '-- ms'}

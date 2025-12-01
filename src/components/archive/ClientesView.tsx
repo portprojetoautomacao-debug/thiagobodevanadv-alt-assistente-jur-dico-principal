@@ -131,7 +131,7 @@ export default function ClientesView() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
             Clientes
           </h1>
           <p className="text-muted-foreground mt-1">Gerencie seus clientes</p>

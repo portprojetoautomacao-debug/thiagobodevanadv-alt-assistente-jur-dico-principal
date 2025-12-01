@@ -595,7 +595,7 @@ export default function Calendar() {
       </div>
 
       {/* CARD GOOGLE CALENDAR */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+      <Card className="bg-linear-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -883,7 +883,7 @@ export default function Calendar() {
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewDetails(apt); } }}
                 >
                   <CalendarDots
-                    className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
+                    className="w-5 h-5 text-primary shrink-0 mt-0.5"
                     weight="fill"
                   />
                   <div className="flex-1 min-w-0">

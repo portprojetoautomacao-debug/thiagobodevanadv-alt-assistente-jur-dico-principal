@@ -193,7 +193,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
   const todayYear = today.getFullYear()
 
   return (
-    <div className="p-4 lg:p-6 flex flex-col gap-6 h-full overflow-y-auto bg-gradient-to-br from-background via-background to-[#1a1d29]">
+    <div className="p-4 lg:p-6 flex flex-col gap-6 h-full overflow-y-auto bg-linear-to-br from-background via-background to-[#1a1d29]">
       {/* Header with Search */}
       <div className="flex items-center gap-4">
         <div className="flex-1 relative">
@@ -216,22 +216,22 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             />
           </svg>
         </div>
-        <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 py-3 font-semibold transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-105">
+        <Button className="bg-linear-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 py-3 font-semibold transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-105">
           NOVA TAREFA
         </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="relative overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border-border/50 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 rounded-2xl group">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="relative overflow-hidden bg-linear-to-br from-card via-card to-card/80 border-border/50 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 rounded-2xl group">
+          <div className="absolute inset-0 bg-linear-to-br from-green-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-gradient-to-br from-green-500/20 to-green-500/5 rounded-xl shadow-lg">
+              <div className="p-3 bg-linear-to-br from-green-500/20 to-green-500/5 rounded-xl shadow-lg">
                 <CheckCircle size={32} weight="duotone" className="text-green-500" />
               </div>
               <div className="flex-1">
-                <p className="text-4xl font-bold text-foreground mb-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                <p className="text-4xl font-bold text-foreground mb-1 bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">
                   {stats.tarefasFinalizadas}
                 </p>
                 <p className="text-sm text-muted-foreground font-medium">
@@ -242,11 +242,11 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border-border/50 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 rounded-2xl group">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="relative overflow-hidden bg-linear-to-br from-card via-card to-card/80 border-border/50 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 rounded-2xl group">
+          <div className="absolute inset-0 bg-linear-to-br from-yellow-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-xl shadow-lg">
+              <div className="p-3 bg-linear-to-br from-yellow-500/20 to-yellow-500/5 rounded-xl shadow-lg">
                 <Clock size={32} weight="duotone" className="text-yellow-500" />
               </div>
               <div className="flex-1">
@@ -261,11 +261,11 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border-border/50 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 rounded-2xl group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="relative overflow-hidden bg-linear-to-br from-card via-card to-card/80 border-border/50 shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 rounded-2xl group">
+          <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl shadow-lg">
+              <div className="p-3 bg-linear-to-br from-primary/20 to-primary/5 rounded-xl shadow-lg">
                 <Trophy size={32} weight="duotone" className="text-primary" />
               </div>
               <div className="flex-1">
@@ -285,10 +285,10 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Performance Chart - Left Side (2 columns) */}
         <div className="lg:col-span-2">
-          <Card className="bg-gradient-to-br from-card via-card to-card/80 border-border/50 h-full shadow-xl rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-border/50 bg-gradient-to-r from-card/50 to-transparent">
+          <Card className="bg-linear-to-br from-card via-card to-card/80 border-border/50 h-full shadow-xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 bg-linear-to-r from-card/50 to-transparent">
               <CardTitle className="text-lg font-bold text-foreground flex items-center justify-between">
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
                   MEU DESEMPENHO
                 </span>
                 <div className="flex items-center gap-2">
@@ -448,8 +448,8 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
 
         {/* Calendar - Right Side */}
         <div>
-          <Card className="bg-gradient-to-br from-card via-card to-card/80 border-border/50 shadow-xl rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-border/50 bg-gradient-to-r from-card/50 to-transparent">
+          <Card className="bg-linear-to-br from-card via-card to-card/80 border-border/50 shadow-xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 bg-linear-to-r from-card/50 to-transparent">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-bold text-foreground">
                   {selectedMonth
@@ -512,13 +512,13 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                       return `${baseClasses} text-transparent pointer-events-none`
                     }
                     if (isToday) {
-                      return `${baseClasses} bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110`
+                      return `${baseClasses} bg-linear-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110`
                     }
                     if (prazoUrgente) {
-                      return `${baseClasses} bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105`
+                      return `${baseClasses} bg-linear-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105`
                     }
                     if (temPrazo) {
-                      return `${baseClasses} bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105`
+                      return `${baseClasses} bg-linear-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105`
                     }
                     return `${baseClasses} text-foreground hover:bg-linear-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105`
                   }
@@ -545,8 +545,8 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
       </div>
 
       {/* Intimações/Compromissos List */}
-      <Card className="bg-gradient-to-br from-card via-card to-card/80 border-border/50 shadow-xl rounded-2xl overflow-hidden">
-        <CardHeader className="border-b border-border/50 bg-gradient-to-r from-card/50 to-transparent">
+      <Card className="bg-linear-to-br from-card via-card to-card/80 border-border/50 shadow-xl rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-border/50 bg-linear-to-r from-card/50 to-transparent">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-bold text-foreground">
               COMPROMISSOS

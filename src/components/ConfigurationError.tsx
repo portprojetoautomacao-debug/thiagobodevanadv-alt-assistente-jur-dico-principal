@@ -53,7 +53,7 @@ export function ConfigurationError() {
             <div className="space-y-4">
               {/* PASSO 1 */}
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                   1
                 </div>
                 <div className="flex-1">
@@ -86,7 +86,7 @@ export function ConfigurationError() {
 
               {/* PASSO 2 */}
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                   2
                 </div>
                 <div className="flex-1">
@@ -122,7 +122,7 @@ export function ConfigurationError() {
 
               {/* PASSO 3 */}
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                   3
                 </div>
                 <div className="flex-1">

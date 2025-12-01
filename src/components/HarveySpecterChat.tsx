@@ -555,7 +555,7 @@ Regras:
             {/* Header */}
             <div className="border-b bg-card/50 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center">
                         <Sparkle className="w-5 h-5 text-white" weight="fill" />
                     </div>
                     <div>
@@ -642,10 +642,10 @@ Regras:
                                         )}>
                                             {/* Avatar */}
                                             <div className={cn(
-                                                'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                                                'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
                                                 message.role === 'user'
                                                     ? 'bg-primary text-primary-foreground'
-                                                    : 'bg-gradient-to-br from-primary/20 to-accent/20'
+                                                    : 'bg-linear-to-br from-primary/20 to-accent/20'
                                             )}>
                                                 {message.role === 'user'
                                                     ? <User className="w-4 h-4" weight="fill" />

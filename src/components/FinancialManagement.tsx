@@ -235,7 +235,7 @@ export default function FinancialManagement() {
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((entry) => (
                   <div key={entry.id} className="flex items-start gap-4 p-4 border rounded-lg">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${entry.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${entry.type === 'income' ? 'bg-green-100' : 'bg-red-100'
                       }`}>
                       {entry.type === 'income' ? (
                         <TrendUp className="w-5 h-5 text-green-600" weight="bold" />
@@ -251,7 +251,7 @@ export default function FinancialManagement() {
                             <p className="text-sm text-muted-foreground mt-1">{entry.description}</p>
                           )}
                         </div>
-                        <div className="text-right flex-shrink-0">
+                        <div className="text-right shrink-0">
                           <p className={`text-lg font-bold ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'
                             }`}>
                             {entry.type === 'income' ? '+' : '-'} {formatCurrency(entry.amount)}

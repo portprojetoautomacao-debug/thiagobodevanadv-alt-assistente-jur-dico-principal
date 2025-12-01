@@ -81,10 +81,10 @@ function SortableCard({ card, onOpenDetails }: SortableCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="relative overflow-hidden bg-gradient-to-br from-card via-card to-card/90 border-border/50 hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing group shadow-lg hover:shadow-2xl hover:shadow-primary/10 rounded-xl"
+      className="relative overflow-hidden bg-linear-to-br from-card via-card to-card/90 border-border/50 hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing group shadow-lg hover:shadow-2xl hover:shadow-primary/10 rounded-xl"
       onClick={() => onOpenDetails(card)}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <CardHeader className="p-4 pb-2 relative z-10">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -226,9 +226,9 @@ export default function ProcessCRMAdvbox() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-gradient-to-br from-background via-background to-[#1a1d29]">
+      <div className="flex flex-col h-full bg-linear-to-br from-background via-background to-[#1a1d29]">
         {/* Header */}
-        <div className="p-4 border-b border-border/50 bg-gradient-to-r from-card/50 to-transparent backdrop-blur-sm">
+        <div className="p-4 border-b border-border/50 bg-linear-to-r from-card/50 to-transparent backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -247,7 +247,7 @@ export default function ProcessCRMAdvbox() {
                 <Funnel size={16} className="mr-1" />
                 Filtros
               </Button>
-              <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 font-semibold hover:scale-105 transition-all">
+              <Button className="bg-linear-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 font-semibold hover:scale-105 transition-all">
                 + NOVO PROCESSO
               </Button>
             </div>
@@ -262,7 +262,7 @@ export default function ProcessCRMAdvbox() {
                 size="sm"
                 onClick={() => setSelectedPhase(phase)}
                 className={selectedPhase === phase 
-                  ? 'bg-gradient-to-r from-primary to-accent text-white shadow-lg shadow-primary/20 rounded-lg font-semibold' 
+                  ? 'bg-linear-to-r from-primary to-accent text-white shadow-lg shadow-primary/20 rounded-lg font-semibold' 
                   : 'hover:bg-primary/10 rounded-lg'}
               >
                 {phase}
@@ -311,12 +311,12 @@ export default function ProcessCRMAdvbox() {
             {KANBAN_COLUMNS.map(column => {
               const cards = getCardsByColumn(column)
               return (
-                <div key={column} className="w-[320px] flex-shrink-0">
+                <div key={column} className="w-[320px] shrink-0">
                   {/* Column Header */}
                   <div className="mb-4">
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-card/80 to-card rounded-t-2xl border border-border/50 shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center justify-between p-4 bg-linear-to-r from-card/80 to-card rounded-t-2xl border border-border/50 shadow-lg backdrop-blur-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-gradient-to-br from-primary to-accent rounded-full shadow-lg shadow-primary/30 animate-pulse"></div>
+                        <div className="w-3 h-3 bg-linear-to-br from-primary to-accent rounded-full shadow-lg shadow-primary/30 animate-pulse"></div>
                         <span className="font-bold text-sm text-foreground">{column}</span>
                       </div>
                       <Badge className="bg-primary/10 text-primary border-primary/20 font-bold">
@@ -331,7 +331,7 @@ export default function ProcessCRMAdvbox() {
                     strategy={verticalListSortingStrategy}
                     id={column}
                   >
-                    <div className="space-y-4 min-h-[300px] p-4 rounded-2xl bg-gradient-to-br from-muted/10 via-muted/5 to-transparent border-2 border-dashed border-border/30 hover:border-primary/40 hover:bg-primary/5 transition-all">
+                    <div className="space-y-4 min-h-[300px] p-4 rounded-2xl bg-linear-to-br from-muted/10 via-muted/5 to-transparent border-2 border-dashed border-border/30 hover:border-primary/40 hover:bg-primary/5 transition-all">
                       {cards.map(card => (
                         <SortableCard
                           key={card.id}

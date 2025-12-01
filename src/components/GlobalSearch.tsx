@@ -344,7 +344,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${index === selectedIndex ? 'bg-muted' : 'hover:bg-muted/50'
                                             }`}
                                     >
-                                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-background rounded-lg border">
+                                        <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-background rounded-lg border">
                                             {result.icon}
                                         </div>
                                         <div className="flex-1 min-w-0">
