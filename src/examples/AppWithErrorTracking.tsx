@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePageTracking, useUserTracking } from "../hooks/useErrorTracking";
-import { getEnv } from "../lib/env-helper";
+import { getEnv } from "../lib/env-helper.js";
 import { captureMessage, setErrorTag } from "../services/error-tracking";
 
 export function AppWithErrorTracking({
