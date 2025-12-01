@@ -95,12 +95,14 @@ export const config = {
 export const validateConfig = (): boolean => {
   const errors: string[] = [];
 
-  if (!config.google.clientId) {
-    errors.push("Google Client ID is not configured");
-  }
-
-  if (!config.google.redirectUri) {
-    errors.push("Redirect URI is not configured");
+  // Se authMode for 'simple', ignorar validação de Google OAuth
+  if (config.app.authMode !== "simple") {
+    if (!config.google.clientId) {
+      errors.push("Google Client ID is not configured");
+    }
+    if (!config.google.redirectUri) {
+      errors.push("Redirect URI is not configured");
+    }
   }
 
   // Optional OAuth configs
