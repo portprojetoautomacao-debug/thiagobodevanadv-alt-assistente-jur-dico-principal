@@ -373,6 +373,9 @@ jobs:
           node-version: "22.x"
           cache: "npm"
 
+      - name: 📦 Instalar Dependências
+        run: npm ci
+
       - name: 📦 Verificar Dependências Desatualizadas
         run: |
           echo "📦 Verificando dependências desatualizadas..."
