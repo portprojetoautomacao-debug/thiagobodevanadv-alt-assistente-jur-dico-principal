@@ -2,10 +2,10 @@ name: SonarCloud Analysis
 
 on:
   push:
-    branches: [main, develop, fix/sonar-copilot-assistant]
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [main, develop]
+  workflow_dispatch:
 
 concurrency:
   group: sonarcloud-${{ github.workflow }}-${{ github.ref }}
