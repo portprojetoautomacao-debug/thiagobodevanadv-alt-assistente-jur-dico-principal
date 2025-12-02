@@ -162,7 +162,10 @@ export default function NotificationSettings() {
         return response.json();
       },
       (data: { webhook?: WebhookConfig }) => {
-        if (data.webhook) setWebhooks((prev) => [...prev, data.webhook]);
+        if (data.webhook) {
+          // Cast explícito evita tipo opcional na atualização do estado
+          setWebhooks((prev) => [...prev, data.webhook as WebhookConfig]);
+        }
         setNewWebhook({ name: "", url: "", type: "slack" });
         setShowAddForm(false);
       },

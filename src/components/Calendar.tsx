@@ -173,7 +173,7 @@ export default function Calendar() {
       setIsGoogleConnected(true);
       setConnectionError(null);
       toast.success("Conectado ao Google Calendar (stub)");
-    } catch (_e) {
+    } catch {
       setConnectionError("Falha ao conectar");
       toast.error("Falha ao conectar");
     } finally {
