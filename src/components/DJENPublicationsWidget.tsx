@@ -22,6 +22,7 @@ import { useDJENProcessRegistration } from "@/hooks/use-djen-process-registratio
 import { useDJENPublications } from "@/hooks/use-djen-publications";
 import { useDJENSync } from "@/hooks/use-djen-sync";
 import { useKV } from "@/hooks/use-kv";
+import { getRelativeDateDescription } from "@/lib/date-utils";
 import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { cn } from "@/lib/utils";
 import type { Expediente, Process } from "@/types";
@@ -469,20 +470,7 @@ export default function DJENPublicationsWidget({
     fetchPublications();
   }, [fetchPublications]);
 
-  // Helper para data relativa
-  const getRelativeDateDescription = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffHours < 1) return "Agora mesmo";
-    if (diffHours < 24) return `${diffHours}h atrás`;
-    if (diffDays === 1) return "Ontem";
-    if (diffDays < 7) return `${diffDays} dias atrás`;
-    return date.toLocaleDateString("pt-BR");
-  };
+  // getRelativeDateDescription importado de util para reduzir complexidade
 
   // Verifica se há publicações não cadastradas (memoizado para reduzir complexidade)
   const hasUnregisteredPublications = useMemo(() => {
