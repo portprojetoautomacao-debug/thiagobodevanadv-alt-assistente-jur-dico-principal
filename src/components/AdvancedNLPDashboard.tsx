@@ -51,115 +51,81 @@ export default function AdvancedNLPDashboard() {
     null
   );
 
-  const handleExtractEntities = async () => {
+  const hasInput = () => {
     if (!inputText.trim()) {
       toast.error("Digite um texto para análise");
-      return;
+      return false;
     }
+    return true;
+  };
 
+  const runWithProcessing = async <T,>(fn: () => Promise<T>, onSuccess?: (result: T) => void, successMsg?: string) => {
     setIsProcessing(true);
     try {
-      const result = await nlpPipeline.extractEntities(inputText);
-      setEntities(result);
-      toast.success(`${result.length} entidades extraídas`);
+      const result = await fn();
+      onSuccess?.(result);
+      if (successMsg) toast.success(successMsg);
     } catch (error) {
-      toast.error("Erro ao extrair entidades");
       console.error(error);
+      toast.error("Erro ao processar operação");
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleExtractEntities = async () => {
+    if (!hasInput()) return;
+    await runWithProcessing(
+      () => nlpPipeline.extractEntities(inputText),
+      (result) => {
+        setEntities(result);
+      },
+      "Entidades extraídas"
+    );
   };
 
   const handleAnalyzeSentiment = async () => {
-    if (!inputText.trim()) {
-      toast.error("Digite um texto para análise");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const result = await nlpPipeline.analyzeSentiment(inputText);
-      setSentiment(result);
-      toast.success("Análise de sentimento concluída");
-    } catch (error) {
-      toast.error("Erro ao analisar sentimento");
-      console.error(error);
-    } finally {
-      setIsProcessing(false);
-    }
+    if (!hasInput()) return;
+    await runWithProcessing(
+      () => nlpPipeline.analyzeSentiment(inputText),
+      (result) => setSentiment(result),
+      "Análise de sentimento concluída"
+    );
   };
 
   const handleClassifyDocument = async () => {
-    if (!inputText.trim()) {
-      toast.error("Digite um texto para análise");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const result = await nlpPipeline.classifyDocument(inputText);
-      setClassification(result);
-      toast.success("Documento classificado");
-    } catch (error) {
-      toast.error("Erro ao classificar documento");
-      console.error(error);
-    } finally {
-      setIsProcessing(false);
-    }
+    if (!hasInput()) return;
+    await runWithProcessing(
+      () => nlpPipeline.classifyDocument(inputText),
+      (result) => setClassification(result),
+      "Documento classificado"
+    );
   };
 
   const handleExtractInformation = async () => {
-    if (!inputText.trim()) {
-      toast.error("Digite um texto para análise");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const result = await nlpPipeline.extractInformation(inputText);
-      setExtraction(result);
-      toast.success("Informações extraídas");
-    } catch (error) {
-      toast.error("Erro ao extrair informações");
-      console.error(error);
-    } finally {
-      setIsProcessing(false);
-    }
+    if (!hasInput()) return;
+    await runWithProcessing(
+      () => nlpPipeline.extractInformation(inputText),
+      (result) => setExtraction(result),
+      "Informações extraídas"
+    );
   };
 
   const handleProcessAll = async () => {
-    if (!inputText.trim()) {
-      toast.error("Digite um texto para análise");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      // Run all analyses in parallel
-      const [
-        entitiesResult,
-        sentimentResult,
-        classificationResult,
-        extractionResult,
-      ] = await Promise.all([
+    if (!hasInput()) return;
+    await runWithProcessing(async () => {
+      const [entitiesResult, sentimentResult, classificationResult, extractionResult] = await Promise.all([
         nlpPipeline.extractEntities(inputText),
         nlpPipeline.analyzeSentiment(inputText),
         nlpPipeline.classifyDocument(inputText),
         nlpPipeline.extractInformation(inputText),
       ]);
-
       setEntities(entitiesResult);
       setSentiment(sentimentResult);
       setClassification(classificationResult);
       setExtraction(extractionResult);
-
-      toast.success("Análise completa concluída");
-    } catch (error) {
-      toast.error("Erro ao processar documento");
-      console.error(error);
-    } finally {
-      setIsProcessing(false);
-    }
+      return true as const;
+    }, undefined, "Análise completa concluída");
   };
 
   const copyToClipboard = (text: string) => {
