@@ -1,254 +1,331 @@
-import PremonicaoModal from '@/components/PremonicaoModal'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useKV } from '@/hooks/use-kv'
-import { config } from '@/lib/config'
-import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
-import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
-import { createProcessTasks, initializeTodoistClient } from '@/lib/todoist-integration'
-import type { Expediente, PremonicaoJuridica, Process } from '@/types'
-import { MagnifyingGlass, Plus, Robot, Sparkle } from '@phosphor-icons/react'
-import { useState } from 'react'
-import { toast } from 'sonner'
+import PremonicaoModal from "@/components/PremonicaoModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useKV } from "@/hooks/use-kv";
+import { config } from "@/lib/config";
+import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
+import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
+import {
+  createProcessTasks,
+  initializeTodoistClient,
+} from "@/lib/todoist-integration";
+import type { Expediente, PremonicaoJuridica, Process } from "@/types";
+import { MagnifyingGlass, Plus, Robot, Sparkle } from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-const PROCESS_STAGES = ['Inicial', 'Instrução', 'Sentença', 'Recurso', 'Execução']
+const PROCESS_STAGES = [
+  "Inicial",
+  "Instrução",
+  "Sentença",
+  "Recurso",
+  "Execução",
+];
 const STATUS_COLORS: Record<string, string> = {
-  'ativo': 'bg-blue-100 text-blue-800 border-blue-300',
-  'suspenso': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  'concluido': 'bg-green-100 text-green-800 border-green-300',
-  'arquivado': 'bg-gray-100 text-gray-800 border-gray-300',
-}
+  ativo: "bg-blue-100 text-blue-800 border-blue-300",
+  suspenso: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  concluido: "bg-green-100 text-green-800 border-green-300",
+  arquivado: "bg-gray-100 text-gray-800 border-gray-300",
+};
 
 // ===========================
 // Helper Functions
 // ===========================
 
 function isProcessIncomplete(process: Process): boolean {
-  const authorMissing = !process.autor || process.autor === '' || process.autor === 'Não identificado'
-  const defendantMissing = !process.reu || process.reu === '' || process.reu === 'Não identificado'
-  return authorMissing || defendantMissing
+  const authorMissing =
+    !process.autor ||
+    process.autor === "" ||
+    process.autor === "Não identificado";
+  const defendantMissing =
+    !process.reu || process.reu === "" || process.reu === "Não identificado";
+  return authorMissing || defendantMissing;
 }
 
 function processMatchesFilter(process: Process, filter: string): boolean {
-  if (!filter) return true
-  const lowerFilter = filter.toLowerCase()
+  if (!filter) return true;
+  const lowerFilter = filter.toLowerCase();
   return (
     process.numeroCNJ.toLowerCase().includes(lowerFilter) ||
     process.titulo.toLowerCase().includes(lowerFilter) ||
     process.autor.toLowerCase().includes(lowerFilter)
-  )
+  );
 }
 
-function processMatchesStage(process: Process, selectedStage: string | null): boolean {
-  return !selectedStage || process.fase === selectedStage
+function processMatchesStage(
+  process: Process,
+  selectedStage: string | null
+): boolean {
+  return !selectedStage || process.fase === selectedStage;
 }
 
 function getStatusColorClass(status: string): string {
-  return STATUS_COLORS[status] || 'bg-gray-100 text-gray-800 border-gray-300'
+  return STATUS_COLORS[status] || "bg-gray-100 text-gray-800 border-gray-300";
 }
 
 function findExpedienteForProcess(
   expedientes: Expediente[],
   process: Process
 ): Expediente | undefined {
-  return expedientes.find(e =>
-    e.processId === process.id ||
-    e.numeroProcesso === process.numeroCNJ ||
-    e.numeroProcesso?.replace(/\D/g, '') === process.numeroCNJ.replace(/\D/g, '')
-  )
+  return expedientes.find(
+    (e) =>
+      e.processId === process.id ||
+      e.numeroProcesso === process.numeroCNJ ||
+      e.numeroProcesso?.replace(/\D/g, "") ===
+        process.numeroCNJ.replace(/\D/g, "")
+  );
 }
 
-function getExpedienteTeor(expediente: Expediente | undefined, process: Process): string {
-  if (!expediente) return process.notas || ''
-  return expediente.teor || expediente.content || expediente.conteudo || process.notas || ''
+function getExpedienteTeor(
+  expediente: Expediente | undefined,
+  process: Process
+): string {
+  if (!expediente) return process.notas || "";
+  return (
+    expediente.teor ||
+    expediente.content ||
+    expediente.conteudo ||
+    process.notas ||
+    ""
+  );
 }
 
-function shouldUpdateParties(autor: string | undefined, reu: string | undefined): boolean {
-  const authorValid = autor && autor !== 'Não identificado'
-  const defendantValid = reu && reu !== 'Não identificado'
-  return !!(authorValid || defendantValid)
+function shouldUpdateParties(
+  autor: string | undefined,
+  reu: string | undefined
+): boolean {
+  const authorValid = autor && autor !== "Não identificado";
+  const defendantValid = reu && reu !== "Não identificado";
+  return !!(authorValid || defendantValid);
 }
 
 export default function ProcessCRM() {
-  const [processes, setProcesses] = useKV<Process[]>('processes', [])
-  const [expedientes] = useKV<Expediente[]>('expedientes', [])
-  const [filter, setFilter] = useState('')
-  const [selectedStage, setSelectedStage] = useState<string | null>(null)
-  const [showDialog, setShowDialog] = useState(false)
-  const [updatingParties, setUpdatingParties] = useState(false)
+  const [processes, setProcesses] = useKV<Process[]>("processes", []);
+  const [expedientes] = useKV<Expediente[]>("expedientes", []);
+  const [filter, setFilter] = useState("");
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [updatingParties, setUpdatingParties] = useState(false);
   const [newProcess, setNewProcess] = useState({
-    numeroCNJ: '',
-    titulo: '',
-    autor: '',
-    reu: '',
-    advogado: '',
-    fase: 'Inicial',
-  })
+    numeroCNJ: "",
+    titulo: "",
+    autor: "",
+    reu: "",
+    advogado: "",
+    fase: "Inicial",
+  });
 
-  const [premonicaoOpen, setPremonicaoOpen] = useState(false)
-  const [premonicaoLoading, setPremonicaoLoading] = useState(false)
-  const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null)
-  const [premonicaoError, setPremonicaoError] = useState<string | null>(null)
+  const [premonicaoOpen, setPremonicaoOpen] = useState(false);
+  const [premonicaoLoading, setPremonicaoLoading] = useState(false);
+  const [premonicaoData, setPremonicaoData] =
+    useState<PremonicaoJuridica | null>(null);
+  const [premonicaoError, setPremonicaoError] = useState<string | null>(null);
 
   // Conta processos sem autor/réu preenchidos
-  const incompleteProcesses = (processes || []).filter(isProcessIncomplete)
+  const incompleteProcesses = (processes || []).filter(isProcessIncomplete);
 
-  const filteredProcesses = (processes || []).filter(p => {
-    return processMatchesFilter(p, filter) && processMatchesStage(p, selectedStage)
-  })
+  const filteredProcesses = (processes || []).filter((p) => {
+    return (
+      processMatchesFilter(p, filter) && processMatchesStage(p, selectedStage)
+    );
+  });
 
   const handleAddProcess = async () => {
     if (!newProcess.numeroCNJ || !newProcess.titulo) {
-      toast.error('CNJ e título são obrigatórios')
-      return
+      toast.error("CNJ e título são obrigatórios");
+      return;
     }
 
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     const process: Process = {
       id: crypto.randomUUID(),
       numeroCNJ: newProcess.numeroCNJ,
       titulo: newProcess.titulo,
       autor: newProcess.autor,
       reu: newProcess.reu,
-      comarca: '',
-      vara: '',
-      status: 'ativo',
+      comarca: "",
+      vara: "",
+      status: "ativo",
       fase: newProcess.fase,
-      dataDistribuicao: now.split('T')[0],
+      dataDistribuicao: now.split("T")[0],
       dataUltimaMovimentacao: now,
       prazos: [],
       createdAt: now,
       updatedAt: now,
-    }
+    };
 
-    setProcesses((current) => [...(current || []), process])
+    setProcesses((current) => [...(current || []), process]);
 
     // Integração com Todoist
     if (config.todoist.apiKey) {
       try {
-        initializeTodoistClient(config.todoist.apiKey)
+        initializeTodoistClient(config.todoist.apiKey);
         await createProcessTasks({
           number: process.numeroCNJ,
           type: process.titulo,
           deadlines: [
             {
-              type: 'Análise Inicial',
-              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +2 dias
-              description: 'Analisar processo recém cadastrado'
-            }
-          ]
-        })
-        toast.success('Tarefas criadas no Todoist!')
+              type: "Análise Inicial",
+              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0], // +2 dias
+              description: "Analisar processo recém cadastrado",
+            },
+          ],
+        });
+        toast.success("Tarefas criadas no Todoist!");
       } catch (error) {
-        console.error('Erro ao criar tarefas no Todoist:', error)
-        toast.error('Erro na integração com Todoist')
+        console.error("Erro ao criar tarefas no Todoist:", error);
+        toast.error("Erro na integração com Todoist");
       }
     }
 
-    setShowDialog(false)
-    setNewProcess({ numeroCNJ: '', titulo: '', autor: '', reu: '', advogado: '', fase: 'Inicial' })
-    toast.success('Processo adicionado com sucesso')
-  }
+    setShowDialog(false);
+    setNewProcess({
+      numeroCNJ: "",
+      titulo: "",
+      autor: "",
+      reu: "",
+      advogado: "",
+      fase: "Inicial",
+    });
+    toast.success("Processo adicionado com sucesso");
+  };
 
-  const handleStatusChange = (processId: string, newStatus: Process['status']) => {
+  const handleStatusChange = (
+    processId: string,
+    newStatus: Process["status"]
+  ) => {
     setProcesses((current) =>
-      (current || []).map(p =>
+      (current || []).map((p) =>
         p.id === processId
           ? { ...p, status: newStatus, updatedAt: new Date().toISOString() }
           : p
       )
-    )
-    toast.success('Status atualizado')
-  }
+    );
+    toast.success("Status atualizado");
+  };
 
   const handlePremonicao = async (process: Process) => {
-    setPremonicaoOpen(true)
-    setPremonicaoLoading(true)
-    setPremonicaoError(null)
-    setPremonicaoData(null)
+    setPremonicaoOpen(true);
+    setPremonicaoLoading(true);
+    setPremonicaoError(null);
+    setPremonicaoData(null);
 
     try {
-      const data = await generatePremonicaoJuridica(process.numeroCNJ, process)
-      setPremonicaoData(data)
+      const data = await generatePremonicaoJuridica(process.numeroCNJ, process);
+      setPremonicaoData(data);
     } catch (error) {
-      setPremonicaoError(error instanceof Error ? error.message : 'Erro desconhecido')
-      toast.error('Erro ao gerar premonição jurídica')
+      setPremonicaoError(
+        error instanceof Error ? error.message : "Erro desconhecido"
+      );
+      toast.error("Erro ao gerar premonição jurídica");
     } finally {
-      setPremonicaoLoading(false)
+      setPremonicaoLoading(false);
     }
-  }
+  };
 
   // Atualiza partes (autor/réu) de processos incompletos usando IA
   const handleUpdateIncompleteParties = async () => {
     if (incompleteProcesses.length === 0) {
-      toast.info('Todos os processos já têm autor e réu preenchidos')
-      return
+      toast.info("Todos os processos já têm autor e réu preenchidos");
+      return;
     }
 
-    setUpdatingParties(true)
+    setUpdatingParties(true);
     toast.info(`Atualizando ${incompleteProcesses.length} processos...`, {
-      description: 'Extraindo partes dos expedientes com IA'
-    })
+      description: "Extraindo partes dos expedientes com IA",
+    });
 
-    let updated = 0
-    const updatedProcesses = [...(processes || [])]
+    let updated = 0;
+    const updatedProcesses = [...(processes || [])];
 
     for (const process of incompleteProcesses) {
       // Busca expediente vinculado ao processo para extrair o teor
-      const expediente = findExpedienteForProcess(expedientes || [], process)
-      const teor = getExpedienteTeor(expediente, process)
+      const expediente = findExpedienteForProcess(expedientes || [], process);
+      const teor = getExpedienteTeor(expediente, process);
 
       if (!teor) {
-        console.log(`[UpdateParties] Sem teor para extrair partes do processo ${process.numeroCNJ}`)
-        continue
+        console.log(
+          `[UpdateParties] Sem teor para extrair partes do processo ${process.numeroCNJ}`
+        );
+        continue;
       }
 
       try {
-        const parties = await extractPartiesWithFallback(teor)
+        const parties = await extractPartiesWithFallback(teor);
 
         // Só atualiza se encontrou algo diferente de "Não identificado"
         if (shouldUpdateParties(parties.autor, parties.reu)) {
-          const idx = updatedProcesses.findIndex(p => p.id === process.id)
+          const idx = updatedProcesses.findIndex((p) => p.id === process.id);
           if (idx >= 0) {
             updatedProcesses[idx] = {
               ...updatedProcesses[idx],
-              autor: parties.autor || updatedProcesses[idx].autor || 'Não identificado',
-              reu: parties.reu || updatedProcesses[idx].reu || 'Não identificado',
-              updatedAt: new Date().toISOString()
-            }
-            updated++
+              autor:
+                parties.autor ||
+                updatedProcesses[idx].autor ||
+                "Não identificado",
+              reu:
+                parties.reu || updatedProcesses[idx].reu || "Não identificado",
+              updatedAt: new Date().toISOString(),
+            };
+            updated++;
           }
         }
       } catch (error) {
-        console.error(`[UpdateParties] Erro no processo ${process.numeroCNJ}:`, error)
+        console.error(
+          `[UpdateParties] Erro no processo ${process.numeroCNJ}:`,
+          error
+        );
       }
     }
 
-    setProcesses(updatedProcesses)
-    setUpdatingParties(false)
+    setProcesses(updatedProcesses);
+    setUpdatingParties(false);
 
     if (updated > 0) {
       toast.success(`${updated} processo(s) atualizado(s)!`, {
-        description: 'As partes foram extraídas com sucesso'
-      })
+        description: "As partes foram extraídas com sucesso",
+      });
     } else {
-      toast.warning('Nenhum processo foi atualizado', {
-        description: 'Não foi possível extrair partes dos expedientes'
-      })
+      toast.warning("Nenhum processo foi atualizado", {
+        description: "Não foi possível extrair partes dos expedientes",
+      });
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-6">
       {/* Header com título e ações */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Acervo de Processos</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            Acervo de Processos
+          </h1>
           <p className="text-muted-foreground mt-1">
             Gestão visual CRM do fluxo de processos
           </p>
@@ -261,7 +338,9 @@ export default function ProcessCRM() {
               disabled={updatingParties}
             >
               <Robot className="w-4 h-4 mr-2" />
-              {updatingParties ? 'Atualizando...' : `Completar ${incompleteProcesses.length} processo(s)`}
+              {updatingParties
+                ? "Atualizando..."
+                : `Completar ${incompleteProcesses.length} processo(s)`}
             </Button>
           )}
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -285,7 +364,12 @@ export default function ProcessCRM() {
                     id="numeroCNJ"
                     placeholder="0000000-00.0000.0.00.0000"
                     value={newProcess.numeroCNJ}
-                    onChange={(e) => setNewProcess({ ...newProcess, numeroCNJ: e.target.value })}
+                    onChange={(e) =>
+                      setNewProcess({
+                        ...newProcess,
+                        numeroCNJ: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="col-span-2 space-y-2">
@@ -294,7 +378,9 @@ export default function ProcessCRM() {
                     id="titulo"
                     placeholder="Ex: Ação Trabalhista - Horas Extras"
                     value={newProcess.titulo}
-                    onChange={(e) => setNewProcess({ ...newProcess, titulo: e.target.value })}
+                    onChange={(e) =>
+                      setNewProcess({ ...newProcess, titulo: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -303,7 +389,9 @@ export default function ProcessCRM() {
                     id="autor"
                     placeholder="Nome do autor"
                     value={newProcess.autor}
-                    onChange={(e) => setNewProcess({ ...newProcess, autor: e.target.value })}
+                    onChange={(e) =>
+                      setNewProcess({ ...newProcess, autor: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -312,7 +400,9 @@ export default function ProcessCRM() {
                     id="reu"
                     placeholder="Nome do réu"
                     value={newProcess.reu}
-                    onChange={(e) => setNewProcess({ ...newProcess, reu: e.target.value })}
+                    onChange={(e) =>
+                      setNewProcess({ ...newProcess, reu: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -321,18 +411,27 @@ export default function ProcessCRM() {
                     id="advogado"
                     placeholder="Nome do advogado"
                     value={newProcess.advogado}
-                    onChange={(e) => setNewProcess({ ...newProcess, advogado: e.target.value })}
+                    onChange={(e) =>
+                      setNewProcess({ ...newProcess, advogado: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fase">Fase Processual</Label>
-                  <Select value={newProcess.fase} onValueChange={(value) => setNewProcess({ ...newProcess, fase: value })}>
+                  <Select
+                    value={newProcess.fase}
+                    onValueChange={(value) =>
+                      setNewProcess({ ...newProcess, fase: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {PROCESS_STAGES.map((stage) => (
-                        <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                        <SelectItem key={stage} value={stage}>
+                          {stage}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -342,9 +441,7 @@ export default function ProcessCRM() {
                 <Button variant="outline" onClick={() => setShowDialog(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddProcess}>
-                  Adicionar Processo
-                </Button>
+                <Button onClick={handleAddProcess}>Adicionar Processo</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -362,47 +459,76 @@ export default function ProcessCRM() {
             className="pl-10"
           />
         </div>
-        <Select value={selectedStage || 'all'} onValueChange={(value) => setSelectedStage(value === 'all' ? null : value)}>
+        <Select
+          value={selectedStage || "all"}
+          onValueChange={(value) =>
+            setSelectedStage(value === "all" ? null : value)
+          }
+        >
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Todas as fases" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as fases</SelectItem>
             {PROCESS_STAGES.map((stage) => (
-              <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+              <SelectItem key={stage} value={stage}>
+                {stage}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Grid de cards de processos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        data-testid="process-grid"
+      >
         {filteredProcesses.map((process) => (
-          <Card key={process.id} className="hover:shadow-lg transition-shadow flex flex-col">
+          <Card
+            key={process.id}
+            className="hover:shadow-lg transition-shadow flex flex-col"
+            data-testid="process-card"
+          >
             <CardHeader className="space-y-2 pb-3">
               <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base font-semibold line-clamp-2 flex-1">{process.titulo}</CardTitle>
-                <Badge className={`${getStatusColorClass(process.status)} shrink-0`}>
+                <CardTitle className="text-base font-semibold line-clamp-2 flex-1">
+                  {process.titulo}
+                </CardTitle>
+                <Badge
+                  className={`${getStatusColorClass(process.status)} shrink-0`}
+                >
                   {process.status}
                 </Badge>
               </div>
-              <CardDescription className="text-xs font-mono">{process.numeroCNJ}</CardDescription>
+              <CardDescription className="text-xs font-mono">
+                {process.numeroCNJ}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 flex-1 flex flex-col">
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-0.5">Autor:</p>
-                <p className="font-medium line-clamp-1">{process.autor || '-'}</p>
+                <p className="font-medium line-clamp-1">
+                  {process.autor || "-"}
+                </p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-0.5">Réu:</p>
-                <p className="font-medium line-clamp-1">{process.reu || '-'}</p>
+                <p className="font-medium line-clamp-1">{process.reu || "-"}</p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-0.5">Fase:</p>
-                <Badge variant="outline" className="text-xs">{process.fase || 'N/A'}</Badge>
+                <Badge variant="outline" className="text-xs">
+                  {process.fase || "N/A"}
+                </Badge>
               </div>
               <div className="mt-auto pt-3 space-y-2">
-                <Select value={process.status} onValueChange={(value) => handleStatusChange(process.id, value as Process['status'])}>
+                <Select
+                  value={process.status}
+                  onValueChange={(value) =>
+                    handleStatusChange(process.id, value as Process["status"])
+                  }
+                >
                   <SelectTrigger className="w-full h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>
@@ -433,9 +559,13 @@ export default function ProcessCRM() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Plus className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-foreground">Nenhum processo encontrado</p>
+            <p className="text-lg font-medium text-foreground">
+              Nenhum processo encontrado
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {filter || selectedStage ? 'Tente ajustar os filtros' : 'Adicione seu primeiro processo'}
+              {filter || selectedStage
+                ? "Tente ajustar os filtros"
+                : "Adicione seu primeiro processo"}
             </p>
           </CardContent>
         </Card>
@@ -450,5 +580,5 @@ export default function ProcessCRM() {
         error={premonicaoError}
       />
     </div>
-  )
+  );
 }

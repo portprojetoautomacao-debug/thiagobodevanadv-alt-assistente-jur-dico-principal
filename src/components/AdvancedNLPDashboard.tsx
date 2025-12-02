@@ -59,7 +59,11 @@ export default function AdvancedNLPDashboard() {
     return true;
   };
 
-  const runWithProcessing = async <T,>(fn: () => Promise<T>, onSuccess?: (result: T) => void, successMsg?: string) => {
+  const runWithProcessing = async <T,>(
+    fn: () => Promise<T>,
+    onSuccess?: (result: T) => void,
+    successMsg?: string
+  ) => {
     setIsProcessing(true);
     try {
       const result = await fn();
@@ -113,19 +117,28 @@ export default function AdvancedNLPDashboard() {
 
   const handleProcessAll = async () => {
     if (!hasInput()) return;
-    await runWithProcessing(async () => {
-      const [entitiesResult, sentimentResult, classificationResult, extractionResult] = await Promise.all([
-        nlpPipeline.extractEntities(inputText),
-        nlpPipeline.analyzeSentiment(inputText),
-        nlpPipeline.classifyDocument(inputText),
-        nlpPipeline.extractInformation(inputText),
-      ]);
-      setEntities(entitiesResult);
-      setSentiment(sentimentResult);
-      setClassification(classificationResult);
-      setExtraction(extractionResult);
-      return true as const;
-    }, undefined, "Análise completa concluída");
+    await runWithProcessing(
+      async () => {
+        const [
+          entitiesResult,
+          sentimentResult,
+          classificationResult,
+          extractionResult,
+        ] = await Promise.all([
+          nlpPipeline.extractEntities(inputText),
+          nlpPipeline.analyzeSentiment(inputText),
+          nlpPipeline.classifyDocument(inputText),
+          nlpPipeline.extractInformation(inputText),
+        ]);
+        setEntities(entitiesResult);
+        setSentiment(sentimentResult);
+        setClassification(classificationResult);
+        setExtraction(extractionResult);
+        return true as const;
+      },
+      undefined,
+      "Análise completa concluída"
+    );
   };
 
   const copyToClipboard = (text: string) => {

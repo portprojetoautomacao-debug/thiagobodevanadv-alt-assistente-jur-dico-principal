@@ -20,18 +20,17 @@ import { useKV } from "@/hooks/use-kv";
 import { getEnv } from "@/lib/env-helper";
 import type { Appointment } from "@/types";
 import {
-  ArrowsClockwise,
-  CalendarDots,
-  CaretLeft,
-  CaretRight,
-  CloudArrowDown,
-  CloudArrowUp,
-  GoogleLogo,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  CloudDownload,
+  CloudUpload,
   Info,
   Link as LinkIcon,
   Plus,
+  RefreshCw,
   Trash,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -236,7 +235,8 @@ export default function Calendar() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <GoogleLogo className="w-8 h-8 text-blue-600" weight="fill" />
+              {/* Ícone genérico para Google Calendar (evita dependência de pacote deprecado) */}
+              <CalendarDays className="w-8 h-8 text-blue-600" />
               <div>
                 <CardTitle>Integração Google Calendar</CardTitle>
                 <CardDescription>
@@ -304,12 +304,12 @@ export default function Calendar() {
                   >
                     {isInitializing ? (
                       <>
-                        <ArrowsClockwise className="w-4 h-4 mr-2 animate-spin" />{" "}
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />{" "}
                         Conectando...
                       </>
                     ) : (
                       <>
-                        <GoogleLogo className="w-4 h-4 mr-2" /> Conectar ao
+                        <CalendarDays className="w-4 h-4 mr-2" /> Conectar ao
                         Google
                       </>
                     )}
@@ -323,7 +323,7 @@ export default function Calendar() {
                       variant="outline"
                       disabled={isSyncing}
                     >
-                      <CloudArrowDown className="w-4 h-4 mr-2" />
+                      <CloudDownload className="w-4 h-4 mr-2" />
                       {isSyncing ? "Sincronizando..." : "Importar do Google"}
                     </Button>
                     <Button
@@ -331,7 +331,7 @@ export default function Calendar() {
                       variant="outline"
                       disabled={isSyncing}
                     >
-                      <CloudArrowUp className="w-4 h-4 mr-2" />
+                      <CloudUpload className="w-4 h-4 mr-2" />
                       {isSyncing ? "Sincronizando..." : "Enviar ao Google"}
                     </Button>
                     <Button
@@ -365,7 +365,7 @@ export default function Calendar() {
                 onClick={handlePreviousMonth}
                 aria-label="Mês anterior"
               >
-                <CaretLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5" />
               </Button>
               <Button
                 variant="outline"
@@ -373,7 +373,7 @@ export default function Calendar() {
                 onClick={handleNextMonth}
                 aria-label="Próximo mês"
               >
-                <CaretRight className="w-5 h-5" />
+                <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
           </div>
@@ -464,7 +464,7 @@ export default function Calendar() {
         <CardContent>
           {sortedUpcomingAppointments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <CalendarDots className="w-12 h-12 text-muted-foreground mb-3" />
+              <CalendarDays className="w-12 h-12 text-muted-foreground mb-3" />
               <p className="text-sm text-muted-foreground">
                 Nenhum compromisso agendado
               </p>
@@ -478,10 +478,7 @@ export default function Calendar() {
                   className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
                   onClick={() => handleViewDetails(apt)}
                 >
-                  <CalendarDots
-                    className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                    weight="fill"
-                  />
+                  <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className="font-medium">{apt.title}</p>
