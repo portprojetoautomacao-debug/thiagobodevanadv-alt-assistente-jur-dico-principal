@@ -39,6 +39,9 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
+      - name: Export ESLint report (SARIF)
+        run: npm run lint:sarif || true
+
       - name: Build application
         run: npm run build
         continue-on-error: true
@@ -48,8 +51,8 @@ jobs:
           VITE_REDIRECT_URI: "http://localhost:5173"
           VITE_APP_ENV: "ci"
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
+      - name: Run tests with coverage (lcov)
+        run: npm run test:coverage -- --coverage.reporter=lcov --coverage.reporter=text-summary
         continue-on-error: true
         env:
           CI: true
