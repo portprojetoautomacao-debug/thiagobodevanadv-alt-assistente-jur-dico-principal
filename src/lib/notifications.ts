@@ -712,8 +712,8 @@ const ROUTES: RouteConfig[] = [
     pattern: (path) => path.startsWith("/webhook/"),
     handler: async (kv, _req, res) => {
       const url = new URL(_req.url || "", `http://${_req.headers.host}`);
-      const path = url.pathname.replace("/api/notifications", "");
-      const webhookId = path.replace("/webhook/", "");
+      const path = url.pathname.replaceAll("/api/notifications", "");
+      const webhookId = path.replaceAll("/webhook/", "");
       return handleDeleteWebhook(kv, webhookId, res);
     },
   },
