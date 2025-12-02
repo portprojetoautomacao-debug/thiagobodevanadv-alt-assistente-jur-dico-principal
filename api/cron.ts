@@ -15,6 +15,8 @@
 
 import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+// Import estático de createHash (Node 22) para uso em fallback de hash
+import { createHash } from "crypto";
 
 // ================= KV UTILS (INLINE) =================
 
@@ -39,6 +41,10 @@ const KV_KEYS = {
   COMPLETED_TASKS: "completed-agent-tasks",
   LAST_DJEN_CHECK: "last-djen-check",
   NOTIFICATION_QUEUE: "notification-queue",
+  NOTIFICATION_DEDUPE_PREFIX: "notification-dedupe",
+  AGENT_QUEUE_DEPTH_HISTORY: "agent-queue-depth-history",
+  WATCHDOG_LAST_RESULT: "watchdog-last-result",
+  AGENT_QUEUE_SCALING_EVENTS: "agent-queue-scaling-events",
   // Cache keys para otimização
   DJEN_CACHE: "djen-cache",
   DJEN_CACHE_TTL: "djen-cache-ttl",
@@ -972,6 +978,27 @@ async function handleProcessAgentQueue(
       (t) => t.status === "pending" || t.status === "queued"
     );
 
+    // Histórico de profundidade da fila (mantém últimos 200 registros)
+    try {
+      const history =
+        ((await kv.get(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY)) as Array<{
+          timestamp: string;
+          queueLength: number;
+          pendingCount: number;
+        }>) || [];
+      history.unshift({
+        timestamp,
+        queueLength: taskQueue.length,
+        pendingCount: pendingTasks.length,
+      });
+      await kv.set(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY, history.slice(0, 200));
+    } catch (histErr) {
+      console.warn(
+        "[Cron Agent Queue] Falha registrar histórico fila:",
+        histErr
+      );
+    }
+
     console.log(
       `[Cron Agent Queue] Found ${pendingTasks.length} pending tasks`
     );
@@ -980,22 +1007,96 @@ async function handleProcessAgentQueue(
       return result;
     }
 
-    // Process up to 10 tasks per execution
-    const tasksToProcess = pendingTasks.slice(0, 10);
-    const agents = await getAgents();
+    // ===== Throughput Dinâmico =====
+    // Estatísticas para decidir limite de processamento
+    let tasksLimit = 10; // padrão
+    try {
+      const history =
+        ((await kv.get(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY)) as Array<{
+          timestamp: string;
+          queueLength: number;
+          pendingCount: number;
+        }>) || [];
+      const recent = history.slice(0, 12);
+      const avgPending =
+        recent.reduce((acc, h) => acc + h.pendingCount, 0) /
+        Math.max(recent.length, 1);
+      const maxPending = recent.reduce(
+        (acc, h) => (h.pendingCount > acc ? h.pendingCount : acc),
+        0
+      );
 
-    for (const task of tasksToProcess) {
-      await processAgentTask(task, taskQueue, agents, result);
+      if (avgPending >= 100 || maxPending >= 150 || pendingTasks.length >= 150) {
+        tasksLimit = 40; // crítico
+      } else if (avgPending >= 50 || pendingTasks.length >= 80) {
+        tasksLimit = 25; // alto
+      }
+
+      if (tasksLimit > 10) {
+        console.log(
+          `[Cron Agent Queue] Scaling throughput: limit=${tasksLimit} avgPending=${avgPending.toFixed(
+            1
+          )} maxPending=${maxPending}`
+        );
+        // Registrar evento de scaling
+        try {
+          const events =
+            ((await kv.get("agent-queue-scaling-events")) as Array<{
+              timestamp: string;
+              limit: number;
+              avgPending: number;
+              maxPending: number;
+              currentPending: number;
+            }>) || [];
+          events.unshift({
+            timestamp,
+            limit: tasksLimit,
+            avgPending,
+            maxPending,
+            currentPending: pendingTasks.length,
+          });
+          await kv.set("agent-queue-scaling-events", events.slice(0, 100));
+        } catch (scaleErr) {
+          console.warn(
+            "[Cron Agent Queue] Falha registrar scaling event:",
+            scaleErr
+          );
+        }
+      }
+    } catch (statsErr) {
+      console.warn(
+        "[Cron Agent Queue] Falha computar estatísticas fila:",
+        statsErr
+      );
     }
 
-    // Save updated queue
-    await kv.set("agent-task-queue", taskQueue);
+    const agents = await getAgents();
+    const processBatch = async (batch: AgentTask[]) => {
+      for (const task of batch) {
+        await processAgentTask(task, taskQueue, agents, result);
+      }
+    };
 
-    // Move completed tasks to completed list
+    // Primeira passagem
+    await processBatch(pendingTasks.slice(0, tasksLimit));
+
+    // Segunda passagem opcional (boost) se ainda há muitas pendentes e cenário alto/crítico
+    const remaining = taskQueue.filter(
+      (t) => t.status === "pending" || t.status === "queued"
+    );
+    if (tasksLimit > 10 && remaining.length > tasksLimit) {
+      console.log(
+        `[Cron Agent Queue] Boost pass iniciada (remaining=${remaining.length})`
+      );
+      await processBatch(remaining.slice(0, tasksLimit));
+    }
+
+    // Persistir queue atualizada
+    await kv.set("agent-task-queue", taskQueue);
     await moveCompletedTasks(kv, taskQueue);
 
     console.log(
-      `[Cron Agent Queue] Completed: ${result.tasksProcessed} processed, ${result.tasksFailed} failed`
+      `[Cron Agent Queue] Completed: ${result.tasksProcessed} processed, ${result.tasksFailed} failed (limit=${tasksLimit})`
     );
   } catch (error) {
     result.success = false;
@@ -1229,6 +1330,43 @@ async function sendEmailNotification(
 
   if (!resendApiKey || !recipientEmail) {
     return;
+  }
+
+  // Dedupe: evita envio repetido (mesmo título+mensagem) dentro de 10 minutos
+  try {
+    const kv = await getKv();
+    const rawKey = `${notification.title}::${notification.message}`.trim();
+    // Usar Web Crypto se disponível no ambiente; fallback para Node 'crypto'
+    let hash: string;
+    try {
+      // Preferir Web Crypto se disponível (edge / browser-like), senão fallback para createHash Node
+      if (typeof crypto !== "undefined" && "subtle" in crypto) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawKey);
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        hash = Array.from(new Uint8Array(digest))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("")
+          .slice(0, 32);
+      } else {
+        hash = createHash("sha256").update(rawKey).digest("hex").slice(0, 32);
+      }
+    } catch {
+      hash = rawKey.slice(0, 32);
+    }
+    const dedupeKey = `${KV_KEYS.NOTIFICATION_DEDUPE_PREFIX}:${hash}`;
+    const existing = await kv.get(dedupeKey);
+    if (existing) {
+      console.log("[Notifications] Dedupe hit - email ignorado");
+      return;
+    }
+    // TTL 600s (10 minutos). Upstash aceita objeto de opções (ex: { ex: 600 })
+    await kv.set(dedupeKey, { sentAt: Date.now() }, { ex: 600 } as any);
+  } catch (dedupeErr) {
+    console.warn(
+      "[Notifications] Falha dedupe, prosseguindo envio:",
+      dedupeErr
+    );
   }
 
   const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -1941,6 +2079,12 @@ async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
     console.log(
       `[Cron Watchdog] Completed: ${result.agentsReset} agents reset, ${result.tasksTimedOut} tasks timed out`
     );
+    // Persistir resultado para painel
+    try {
+      await kv.set(KV_KEYS.WATCHDOG_LAST_RESULT, result);
+    } catch (persistErr) {
+      console.warn("[Cron Watchdog] Falha persistir resultado:", persistErr);
+    }
   } catch (error) {
     result.success = false;
     result.errors.push(
@@ -2423,10 +2567,23 @@ const VALID_ACTIONS = Object.keys(ACTION_HANDLERS).join(", ");
 // Autorização simplificada: removido uso de CRON_SECRET conforme solicitação.
 // Mantemos apenas execução via Vercel Cron (header Bearer gerado) ou ambiente local.
 function isAuthorized(req: VercelRequest): boolean {
+  // Vercel Cron adiciona o header "x-vercel-cron" automaticamente nas execuções agendadas.
+  // Suporte legado a Bearer e ambiente local.
   const authHeader = req.headers.authorization;
-  const isVercelCron = authHeader?.startsWith("Bearer ");
+  const hasVercelCronHeader = !!req.headers["x-vercel-cron"]; // verdadeiro quando disparado por agendamento Vercel
+  const isBearerAuth = authHeader?.startsWith("Bearer ");
   const isLocalTest = process.env.NODE_ENV === "development";
-  return !!(isVercelCron || isLocalTest);
+  // Modo leitura: permitir GET watchdog com mode=read (sem executar ações destrutivas extras)
+  const action = req.query.action;
+  const mode = req.query.mode;
+  const isReadOnlyWatchdog =
+    req.method === "GET" &&
+    (action === "watchdog" ||
+      (Array.isArray(action) && action[0] === "watchdog")) &&
+    mode === "read";
+  return (
+    hasVercelCronHeader || isBearerAuth || isLocalTest || isReadOnlyWatchdog
+  );
 }
 
 /**
