@@ -1026,7 +1026,11 @@ async function handleProcessAgentQueue(
         0
       );
 
-      if (avgPending >= 100 || maxPending >= 150 || pendingTasks.length >= 150) {
+      if (
+        avgPending >= 100 ||
+        maxPending >= 150 ||
+        pendingTasks.length >= 150
+      ) {
         tasksLimit = 40; // crítico
       } else if (avgPending >= 50 || pendingTasks.length >= 80) {
         tasksLimit = 25; // alto

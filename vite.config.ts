@@ -210,8 +210,14 @@ export default defineConfig({
             return "toasts";
           }
 
-          // Tiptap editor - lazy loaded
-          if (id.includes("@tiptap")) {
+          // Tiptap editor e ProseMirror - mesmo chunk para evitar race condition
+          // O erro "Cannot set properties of undefined (setting 'Activity')" acontece
+          // quando ProseMirror carrega antes do React estar inicializado
+          if (
+            id.includes("@tiptap") ||
+            id.includes("prosemirror") ||
+            id.includes("@prosemirror")
+          ) {
             return "editor";
           }
 

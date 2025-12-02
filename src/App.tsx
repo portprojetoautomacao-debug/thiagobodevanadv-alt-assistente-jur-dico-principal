@@ -8,7 +8,7 @@ import { useAutoMinuta } from "@/hooks/use-auto-minuta";
 import { useKV } from "@/hooks/use-kv";
 import type { User, ViewType } from "@/types";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 // ⚡ COMPONENTES PRINCIPAIS - Carregados diretamente (sem lazy loading)
 // Sistema 100% automático requer componentes prontos imediatamente
@@ -25,9 +25,13 @@ import ExpedientePanel from "@/components/ExpedientePanel";
 import FinancialManagement from "@/components/FinancialManagement";
 import HarveySpecterChat from "@/components/HarveySpecterChat";
 import KnowledgeBase from "@/components/KnowledgeBase";
-import MinutasManager from "@/components/MinutasManager";
 import PDFUploader from "@/components/PDFUploader";
 import ProcessCRM from "@/components/ProcessCRM";
+
+// ⚡ LAZY LOADING: MinutasManager contém TiptapEditor (ProseMirror) que é pesado
+// Isso evita o erro "Cannot set properties of undefined (setting 'Activity')"
+// causado por race condition na inicialização do ProseMirror
+const MinutasManager = lazy(() => import("@/components/MinutasManager"));
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -91,7 +95,17 @@ function App() {
       case "upload-pdf":
         return <PDFUploader />;
       case "minutas":
-        return <MinutasManager />;
+        return (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+              </div>
+            }
+          >
+            <MinutasManager />
+          </Suspense>
+        );
       case "donna":
       case "assistente":
         return <HarveySpecterChat />;

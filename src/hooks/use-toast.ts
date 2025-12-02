@@ -18,7 +18,9 @@ export function useToast() {
   const [state, setState] = useState<ToastState>({ toasts: [] });
 
   // Use ref to avoid circular dependency between toast and dismiss
-  const dismissRef = useRef<(toastId?: string) => void>(undefined);
+  // Ref pode iniciar nulo até atribuirmos função dismiss
+  // Ajuste: fornecer valor inicial compatível com assinatura de useRef<T>(initialValue: T)
+  const dismissRef = useRef<(toastId?: string) => void>(() => {});
 
   const dismiss = useCallback((toastId?: string) => {
     setState((prev) => ({
