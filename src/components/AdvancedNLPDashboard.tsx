@@ -62,7 +62,8 @@ export default function AdvancedNLPDashboard() {
   const runWithProcessing = async <T,>(
     fn: () => Promise<T>,
     onSuccess?: (result: T) => void,
-    successMsg?: string
+    successMsg?: string,
+    errorMsg?: string
   ) => {
     setIsProcessing(true);
     try {
@@ -71,7 +72,7 @@ export default function AdvancedNLPDashboard() {
       if (successMsg) toast.success(successMsg);
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao processar operação");
+      toast.error(errorMsg || "Erro ao processar operação");
     } finally {
       setIsProcessing(false);
     }
@@ -84,7 +85,8 @@ export default function AdvancedNLPDashboard() {
       (result) => {
         setEntities(result);
       },
-      "Entidades extraídas"
+      "Entidades extraídas",
+      "Erro ao extrair entidades"
     );
   };
 
@@ -93,7 +95,8 @@ export default function AdvancedNLPDashboard() {
     await runWithProcessing(
       () => nlpPipeline.analyzeSentiment(inputText),
       (result) => setSentiment(result),
-      "Análise de sentimento concluída"
+      "Análise de sentimento concluída",
+      "Erro ao analisar sentimento"
     );
   };
 
@@ -102,7 +105,8 @@ export default function AdvancedNLPDashboard() {
     await runWithProcessing(
       () => nlpPipeline.classifyDocument(inputText),
       (result) => setClassification(result),
-      "Documento classificado"
+      "Documento classificado",
+      "Erro ao classificar documento"
     );
   };
 
@@ -111,7 +115,8 @@ export default function AdvancedNLPDashboard() {
     await runWithProcessing(
       () => nlpPipeline.extractInformation(inputText),
       (result) => setExtraction(result),
-      "Informações extraídas"
+      "Informações extraídas",
+      "Erro ao extrair informações"
     );
   };
 
@@ -137,7 +142,8 @@ export default function AdvancedNLPDashboard() {
         return true as const;
       },
       undefined,
-      "Análise completa concluída"
+      "Análise completa concluída",
+      "Erro ao processar análise completa"
     );
   };
 
