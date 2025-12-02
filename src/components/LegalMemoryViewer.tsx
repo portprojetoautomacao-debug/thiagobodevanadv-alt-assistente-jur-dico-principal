@@ -1,3 +1,4 @@
+import React from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +11,7 @@ interface LegalMemoryViewerProps {
   readonly onRefresh?: () => void
 }
 
-const typeIcons: Record<string, any> = {
+const typeIcons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
   'peca_processual': FileText,
   'precedente': Gavel,
   'estrategia': Lightbulb,

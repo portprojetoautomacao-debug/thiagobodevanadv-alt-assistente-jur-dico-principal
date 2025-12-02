@@ -343,7 +343,7 @@ export default function HarveySpecterChat({
         (financialRecords?.length ?? 0) > 0 ||
         (taskQueue?.length ?? 0) > 0,
     };
-  }, [processes, financialRecords, taskQueue, completedTasks]);
+  }, [processes, financialRecords, taskQueue]);
 
   // ============================================
   // FUNÇÕES MEMOIZADAS

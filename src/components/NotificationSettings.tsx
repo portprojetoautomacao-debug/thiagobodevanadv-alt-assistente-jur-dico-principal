@@ -161,7 +161,7 @@ export default function NotificationSettings() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
       },
-      (data: any) => {
+      (data: { webhook?: WebhookConfig }) => {
         if (data.webhook) setWebhooks((prev) => [...prev, data.webhook]);
         setNewWebhook({ name: "", url: "", type: "slack" });
         setShowAddForm(false);
@@ -204,7 +204,7 @@ export default function NotificationSettings() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
       },
-      (data: any) => {
+      (data: { success?: boolean; webhook?: { name?: string } }) => {
         if (data.success) {
           toast.success("Teste enviado!", {
             description: data.webhook?.name
@@ -392,7 +392,7 @@ export default function NotificationSettings() {
                 aria-label="Ativar alertas de prazos próximos do vencimento (D-7, D-2, D-1)"
                 checked={preferences?.prazoAlerts ?? true}
                 onCheckedChange={(checked) =>
-                  setPreferences((current: any) => ({
+                  setPreferences((current) => ({
                     ...current,
                     prazoAlerts: checked,
                   }))
@@ -416,7 +416,7 @@ export default function NotificationSettings() {
                 aria-label="Ativar alertas quando agentes autônomos completarem tarefas"
                 checked={preferences?.agentAlerts ?? true}
                 onCheckedChange={(checked) =>
-                  setPreferences((current: any) => ({
+                  setPreferences((current) => ({
                     ...current,
                     agentAlerts: checked,
                   }))
@@ -443,7 +443,7 @@ export default function NotificationSettings() {
                 aria-label="Ativar alertas sobre honorários vencidos e pagamentos pendentes"
                 checked={preferences?.financialAlerts ?? true}
                 onCheckedChange={(checked) =>
-                  setPreferences((current: any) => ({
+                  setPreferences((current) => ({
                     ...current,
                     financialAlerts: checked,
                   }))
