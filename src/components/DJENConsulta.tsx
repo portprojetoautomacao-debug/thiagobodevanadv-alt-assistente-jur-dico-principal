@@ -1,123 +1,128 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-  MagnifyingGlass,
-  Newspaper,
-  CheckCircle,
-  Warning,
-  // X - disponível para botões de fechar
-  Copy,
-  Download,
-  Spinner
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useKV } from "@/hooks/use-kv";
 import {
   consultarDJEN,
   getTribunaisDisponiveis,
   validarFormatoData,
   validarNumeroOAB,
+  type DJENConfig,
   type DJENFilteredResult,
-  type DJENConfig
-} from '@/lib/djen-api'
+} from "@/lib/djen-api";
+import {
+  CheckCircle,
+  // X - disponível para botões de fechar
+  Copy,
+  Download,
+  MagnifyingGlass,
+  Newspaper,
+  Spinner,
+  Warning,
+} from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface DJENSearchHistory {
-  id: string
-  timestamp: string
-  nomeAdvogado?: string
-  numeroOAB?: string
-  tribunais: string[]
-  totalResultados: number
+  id: string;
+  timestamp: string;
+  nomeAdvogado?: string;
+  numeroOAB?: string;
+  tribunais: string[];
+  totalResultados: number;
 }
 
 export default function DJENConsulta() {
-  const [nomeAdvogado, setNomeAdvogado] = useState('')
-  const [numeroOAB, setNumeroOAB] = useState('')
+  const [nomeAdvogado, setNomeAdvogado] = useState("");
+  const [numeroOAB, setNumeroOAB] = useState("");
   const [dataConsulta, setDataConsulta] = useState(
-    new Date().toISOString().split('T')[0]
-  )
+    new Date().toISOString().split("T")[0]
+  );
   const [tribunaisSelecionados, setTribunaisSelecionados] = useState<string[]>(
     getTribunaisDisponiveis()
-  )
-  const [isLoading, setIsLoading] = useState(false)
-  const [resultados, setResultados] = useState<DJENFilteredResult[]>([])
-  const [erros, setErros] = useState<Array<{ tribunal: string; erro: string }>>([])
-  const [totalConsultado, setTotalConsultado] = useState(0)
-  const [_searchHistory, setSearchHistory] = useKV<DJENSearchHistory[]>('djen-search-history', [])
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [resultados, setResultados] = useState<DJENFilteredResult[]>([]);
+  const [erros, setErros] = useState<Array<{ tribunal: string; erro: string }>>(
+    []
+  );
+  const [totalConsultado, setTotalConsultado] = useState(0);
+  const [_searchHistory, setSearchHistory] = useKV<DJENSearchHistory[]>(
+    "djen-search-history",
+    []
+  );
 
   const toggleTribunal = (tribunal: string) => {
-    setTribunaisSelecionados(current =>
+    setTribunaisSelecionados((current) =>
       current.includes(tribunal)
-        ? current.filter(t => t !== tribunal)
+        ? current.filter((t) => t !== tribunal)
         : [...current, tribunal]
-    )
-  }
+    );
+  };
 
   const toggleTodosTribunais = () => {
     if (tribunaisSelecionados.length === getTribunaisDisponiveis().length) {
-      setTribunaisSelecionados([])
+      setTribunaisSelecionados([]);
     } else {
-      setTribunaisSelecionados(getTribunaisDisponiveis())
+      setTribunaisSelecionados(getTribunaisDisponiveis());
     }
-  }
+  };
 
   const validarFormulario = (): string | null => {
     if (!nomeAdvogado.trim() && !numeroOAB.trim()) {
-      return 'Informe pelo menos o nome do advogado ou número da OAB'
+      return "Informe pelo menos o nome do advogado ou número da OAB";
     }
 
     if (numeroOAB.trim() && !validarNumeroOAB(numeroOAB)) {
-      return 'Formato de OAB inválido. Use o formato: OAB/UF 12345'
+      return "Formato de OAB inválido. Use o formato: OAB/UF 12345";
     }
 
     if (!validarFormatoData(dataConsulta)) {
-      return 'Data inválida. Use o formato AAAA-MM-DD'
+      return "Data inválida. Use o formato AAAA-MM-DD";
     }
 
     if (tribunaisSelecionados.length === 0) {
-      return 'Selecione pelo menos um tribunal'
+      return "Selecione pelo menos um tribunal";
     }
 
-    return null
-  }
+    return null;
+  };
 
   const handleConsultar = async () => {
-    const validationError = validarFormulario()
+    const validationError = validarFormulario();
     if (validationError) {
-      toast.error(validationError)
-      return
+      toast.error(validationError);
+      return;
     }
 
-    setIsLoading(true)
-    setResultados([])
-    setErros([])
-    setTotalConsultado(0)
+    setIsLoading(true);
+    setResultados([]);
+    setErros([]);
+    setTotalConsultado(0);
 
     try {
       const config: DJENConfig = {
         tribunais: tribunaisSelecionados,
         searchTerms: {
           nomeAdvogado: nomeAdvogado.trim() || undefined,
-          numeroOAB: numeroOAB.trim() || undefined
+          numeroOAB: numeroOAB.trim() || undefined,
         },
         dataInicio: dataConsulta,
         dataFim: dataConsulta,
         timeout: 60000,
-        delayBetweenRequests: 1500
-      }
+        delayBetweenRequests: 1500,
+      };
 
-      const resultado = await consultarDJEN(config)
+      const resultado = await consultarDJEN(config);
 
-      setResultados(resultado.resultados)
-      setErros(resultado.erros)
-      setTotalConsultado(resultado.totalConsultado)
+      setResultados(resultado.resultados);
+      setErros(resultado.erros);
+      setTotalConsultado(resultado.totalConsultado);
 
       const newHistoryEntry: DJENSearchHistory = {
         id: Date.now().toString(),
@@ -125,66 +130,73 @@ export default function DJENConsulta() {
         nomeAdvogado: nomeAdvogado.trim() || undefined,
         numeroOAB: numeroOAB.trim() || undefined,
         tribunais: tribunaisSelecionados,
-        totalResultados: resultado.resultados.length
-      }
+        totalResultados: resultado.resultados.length,
+      };
 
-      setSearchHistory(current => [newHistoryEntry, ...(current || []).slice(0, 49)])
+      setSearchHistory((current) => [
+        newHistoryEntry,
+        ...(current || []).slice(0, 49),
+      ]);
 
       if (resultado.resultados.length === 0 && resultado.erros.length === 0) {
-        toast.info('Nenhuma publicação encontrada para os termos informados')
+        toast.info("Nenhuma publicação encontrada para os termos informados");
       } else if (resultado.resultados.length > 0) {
-        toast.success(`${resultado.resultados.length} publicação(ões) encontrada(s)`)
+        toast.success(
+          `${resultado.resultados.length} publicação(ões) encontrada(s)`
+        );
       } else if (resultado.erros.length > 0) {
-        toast.warning('Consulta finalizada com alguns erros. Verifique os detalhes.')
+        toast.warning(
+          "Consulta finalizada com alguns erros. Verifique os detalhes."
+        );
       }
     } catch (error) {
-      console.error('Erro ao consultar DJEN:', error)
-      toast.error(error instanceof Error ? error.message : 'Erro ao consultar DJEN')
+      console.error("Erro ao consultar DJEN:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao consultar DJEN"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success('Copiado para a área de transferência')
-  }
+    navigator.clipboard.writeText(text);
+    toast.success("Copiado para a área de transferência");
+  };
 
   const exportResultados = () => {
-    const jsonData = JSON.stringify(resultados, null, 2)
-    const blob = new Blob([jsonData], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `djen-resultados-${dataConsulta}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
-    toast.success('Resultados exportados com sucesso')
-  }
+    const jsonData = JSON.stringify(resultados, null, 2);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `djen-resultados-${dataConsulta}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Resultados exportados com sucesso");
+  };
 
   const getMatchTypeBadge = (matchType: string) => {
     switch (matchType) {
-      case 'ambos':
-        return <Badge className="bg-green-500">Nome + OAB</Badge>
-      case 'nome':
-        return <Badge variant="secondary">Nome</Badge>
-      case 'oab':
-        return <Badge variant="outline">OAB</Badge>
+      case "ambos":
+        return <Badge className="bg-green-500">Nome + OAB</Badge>;
+      case "nome":
+        return <Badge variant="secondary">Nome</Badge>;
+      case "oab":
+        return <Badge variant="outline">OAB</Badge>;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="h-full p-6 space-y-6">
       <div className="flex items-center gap-3">
         <Newspaper size={32} className="text-primary" weight="duotone" />
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Consulta DJEN
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">Consulta DJEN</h1>
           <p className="text-sm text-muted-foreground">
             Diário de Justiça Eletrônico Nacional - API Comunica PJe
           </p>
@@ -244,9 +256,10 @@ export default function DJENConsulta() {
                 onClick={toggleTodosTribunais}
                 disabled={isLoading}
               >
-                {tribunaisSelecionados.length === getTribunaisDisponiveis().length
-                  ? 'Desmarcar todos'
-                  : 'Selecionar todos'}
+                {tribunaisSelecionados.length ===
+                getTribunaisDisponiveis().length
+                  ? "Desmarcar todos"
+                  : "Selecionar todos"}
               </Button>
             </div>
 
@@ -294,11 +307,7 @@ export default function DJENConsulta() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Resultados</h2>
             {resultados.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportResultados}
-              >
+              <Button variant="outline" size="sm" onClick={exportResultados}>
                 <Download className="mr-2" size={16} />
                 Exportar JSON
               </Button>
@@ -316,7 +325,11 @@ export default function DJENConsulta() {
 
           {!isLoading && resultados.length === 0 && erros.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-              <Newspaper size={48} className="text-muted-foreground" weight="duotone" />
+              <Newspaper
+                size={48}
+                className="text-muted-foreground"
+                weight="duotone"
+              />
               <p className="text-sm text-muted-foreground">
                 Nenhuma consulta realizada ainda.
                 <br />
@@ -330,7 +343,8 @@ export default function DJENConsulta() {
               {totalConsultado > 0 && (
                 <Alert>
                   <AlertDescription>
-                    {totalConsultado} publicação(ões) consultada(s) | {resultados.length} relevante(s) encontrada(s)
+                    {totalConsultado} publicação(ões) consultada(s) |{" "}
+                    {resultados.length} relevante(s) encontrada(s)
                   </AlertDescription>
                 </Alert>
               )}
@@ -339,10 +353,14 @@ export default function DJENConsulta() {
                 <Alert variant="destructive">
                   <Warning className="h-4 w-4" />
                   <AlertDescription>
-                    <div className="font-semibold mb-2">Erros ao consultar alguns tribunais:</div>
+                    <div className="font-semibold mb-2">
+                      Erros ao consultar alguns tribunais:
+                    </div>
                     <ul className="text-xs space-y-1">
-                      {erros.map((erro, idx) => (
-                        <li key={idx}>
+                      {erros.map((erro) => (
+                        <li
+                          key={`${erro.tribunal}-${erro.erro.substring(0, 50)}`}
+                        >
                           <strong>{erro.tribunal}:</strong> {erro.erro}
                         </li>
                       ))}
@@ -354,11 +372,18 @@ export default function DJENConsulta() {
               {resultados.length > 0 && (
                 <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-4">
-                    {resultados.map((resultado, idx) => (
-                      <Card key={idx} className="p-4 space-y-3 hover:shadow-md transition-shadow">
+                    {resultados.map((resultado) => (
+                      <Card
+                        key={`${resultado.tribunal}-${
+                          resultado.numeroProcesso || resultado.data
+                        }`}
+                        className="p-4 space-y-3 hover:shadow-md transition-shadow"
+                      >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline">{resultado.tribunal}</Badge>
+                            <Badge variant="outline">
+                              {resultado.tribunal}
+                            </Badge>
                             <Badge variant="secondary">{resultado.tipo}</Badge>
                             {getMatchTypeBadge(resultado.matchType)}
                           </div>
@@ -373,7 +398,7 @@ export default function DJENConsulta() {
 
                         {resultado.numeroProcesso && (
                           <div className="text-sm">
-                            <span className="font-medium">Processo:</span>{' '}
+                            <span className="font-medium">Processo:</span>{" "}
                             <code className="bg-muted px-1 rounded text-xs">
                               {resultado.numeroProcesso}
                             </code>
@@ -382,20 +407,24 @@ export default function DJENConsulta() {
 
                         {resultado.orgao && (
                           <div className="text-sm text-muted-foreground">
-                            <span className="font-medium">Órgão:</span> {resultado.orgao}
+                            <span className="font-medium">Órgão:</span>{" "}
+                            {resultado.orgao}
                           </div>
                         )}
 
                         <div className="bg-muted p-3 rounded text-sm">
-                          <div className="font-medium mb-1">Teor da Publicação:</div>
+                          <div className="font-medium mb-1">
+                            Teor da Publicação:
+                          </div>
                           <div className="text-xs whitespace-pre-wrap max-h-32 overflow-y-auto">
                             {resultado.teor.substring(0, 500)}
-                            {resultado.teor.length > 500 && '...'}
+                            {resultado.teor.length > 500 && "..."}
                           </div>
                         </div>
 
                         <div className="text-xs text-muted-foreground">
-                          Publicado em: {new Date(resultado.data).toLocaleDateString('pt-BR')}
+                          Publicado em:{" "}
+                          {new Date(resultado.data).toLocaleDateString("pt-BR")}
                         </div>
                       </Card>
                     ))}
@@ -405,7 +434,10 @@ export default function DJENConsulta() {
 
               {resultados.length === 0 && erros.length === 0 && !isLoading && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <CheckCircle size={48} className="text-muted-foreground mb-3" />
+                  <CheckCircle
+                    size={48}
+                    className="text-muted-foreground mb-3"
+                  />
                   <p className="text-sm text-muted-foreground">
                     Nenhuma publicação encontrada para os termos informados.
                   </p>
@@ -416,5 +448,5 @@ export default function DJENConsulta() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

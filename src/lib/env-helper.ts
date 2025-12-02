@@ -8,16 +8,17 @@ export function getEnv(key: string, defaultValue: string = ""): string {
   // Nota: import.meta.env geralmente só tem variáveis prefixadas com VITE_ no cliente,
   // a menos que configurado diferente no vite.config.ts
   try {
-    // @ts-ignore - import.meta pode não existir em alguns ambientes TS estritos sem config
     if (
       typeof import.meta !== "undefined" &&
-      import.meta.env &&
-      import.meta.env[key] !== undefined
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (import.meta as any).env &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (import.meta as any).env[key] !== undefined
     ) {
-      // @ts-ignore
-      return String(import.meta.env[key]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return String((import.meta as any).env[key]);
     }
-  } catch (e) {
+  } catch {
     // Ignora erro de acesso a import.meta
   }
 
@@ -26,12 +27,15 @@ export function getEnv(key: string, defaultValue: string = ""): string {
   try {
     if (
       typeof process !== "undefined" &&
-      process.env &&
-      process.env[key] !== undefined
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (process as any).env &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (process as any).env[key] !== undefined
     ) {
-      return process.env[key] || "";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return ((process as any).env[key] as string) || "";
     }
-  } catch (e) {
+  } catch {
     // Ignora erro de acesso a process
   }
 

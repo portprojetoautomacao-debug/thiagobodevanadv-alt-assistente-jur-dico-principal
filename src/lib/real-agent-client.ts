@@ -4,26 +4,26 @@
  * Agora com suporte a STREAMING para respostas em tempo real
  */
 
-import type { AgentTask, Agent, AgentTaskResult } from './agents'
+import type { Agent, AgentTask, AgentTaskResult } from "./agents";
 
 interface ProcessTaskAPIResponse {
-  result: AgentTaskResult
+  result: AgentTaskResult;
 }
 
 interface FetchTasksAPIResponse {
-  tasks?: AgentTask[]
+  tasks?: AgentTask[];
 }
 
 interface StreamingCallbacks {
-  onChunk?: (chunk: string) => void
-  onComplete?: (fullContent: string) => void
-  onError?: (error: Error) => void
+  onChunk?: (chunk: string) => void;
+  onComplete?: (fullContent: string) => void;
+  onError?: (error: Error) => void;
 }
 
 interface StreamingChunk {
-  type: string
-  content?: string
-  message?: string
+  type: string;
+  content?: string;
+  message?: string;
 }
 
 // ===========================
@@ -34,13 +34,13 @@ interface StreamingChunk {
  * Processa uma linha SSE e retorna a ação a ser tomada
  */
 function parseSSELine(line: string): StreamingChunk | null {
-  const trimmed = line.trim()
-  if (!trimmed?.startsWith('data: ')) return null
+  const trimmed = line.trim();
+  if (!trimmed?.startsWith("data: ")) return null;
 
   try {
-    return JSON.parse(trimmed.slice(6)) as StreamingChunk
+    return JSON.parse(trimmed.slice(6)) as StreamingChunk;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -52,21 +52,21 @@ function processStreamingChunk(
   currentContent: string,
   callbacks?: StreamingCallbacks
 ): { content: string; shouldThrow?: Error } {
-  if (chunk.type === 'content' && chunk.content) {
-    callbacks?.onChunk?.(chunk.content)
-    return { content: currentContent + chunk.content }
+  if (chunk.type === "content" && chunk.content) {
+    callbacks?.onChunk?.(chunk.content);
+    return { content: currentContent + chunk.content };
   }
 
-  if (chunk.type === 'done') {
-    callbacks?.onComplete?.(currentContent)
-    return { content: currentContent }
+  if (chunk.type === "done") {
+    callbacks?.onComplete?.(currentContent);
+    return { content: currentContent };
   }
 
-  if (chunk.type === 'error' && chunk.message) {
-    return { content: currentContent, shouldThrow: new Error(chunk.message) }
+  if (chunk.type === "error" && chunk.message) {
+    return { content: currentContent, shouldThrow: new Error(chunk.message) };
   }
 
-  return { content: currentContent }
+  return { content: currentContent };
 }
 
 /**
@@ -77,21 +77,21 @@ function processSSEBuffer(
   currentContent: string,
   callbacks?: StreamingCallbacks
 ): string {
-  let content = currentContent
+  let content = currentContent;
 
   for (const line of lines) {
-    const chunk = parseSSELine(line)
-    if (!chunk) continue
+    const chunk = parseSSELine(line);
+    if (!chunk) continue;
 
-    const result = processStreamingChunk(chunk, content, callbacks)
-    content = result.content
+    const result = processStreamingChunk(chunk, content, callbacks);
+    content = result.content;
 
     if (result.shouldThrow) {
-      throw result.shouldThrow
+      throw result.shouldThrow;
     }
   }
 
-  return content
+  return content;
 }
 
 /**
@@ -101,22 +101,22 @@ async function readStreamContent(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   callbacks?: StreamingCallbacks
 ): Promise<string> {
-  const decoder = new TextDecoder()
-  let fullContent = ''
-  let buffer = ''
+  const decoder = new TextDecoder();
+  let fullContent = "";
+  let buffer = "";
 
   while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
+    const { done, value } = await reader.read();
+    if (done) break;
 
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() ?? ''
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
 
-    fullContent = processSSEBuffer(lines, fullContent, callbacks)
+    fullContent = processSSEBuffer(lines, fullContent, callbacks);
   }
 
-  return fullContent
+  return fullContent;
 }
 
 /**
@@ -125,10 +125,10 @@ async function readStreamContent(
 function createStreamingSuccessResult(content: string): AgentTaskResult {
   return {
     success: true,
-    message: content || 'Tarefa processada com sucesso',
+    message: content || "Tarefa processada com sucesso",
     data: { content, streamedAt: new Date().toISOString() },
-    confidence: 0.9
-  }
+    confidence: 0.9,
+  };
 }
 
 // ===========================
@@ -144,36 +144,38 @@ export async function processTaskWithStreamingAI(
   callbacks?: StreamingCallbacks
 ): Promise<AgentTaskResult> {
   try {
-    const systemPrompt = buildAgentSystemPrompt(agent)
-    const userPrompt = buildTaskPrompt(task)
+    const systemPrompt = buildAgentSystemPrompt(agent);
+    const userPrompt = buildTaskPrompt(task);
 
-    const response = await fetch('/api/llm-stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/llm-stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: 'gemini',
+        model: "gemini",
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 4096
-      })
-    })
+        max_tokens: 4096,
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Streaming API error: ${response.status}`)
+      throw new Error(`Streaming API error: ${response.status}`);
     }
 
-    const reader = response.body?.getReader()
-    if (!reader) throw new Error('No reader available')
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("No reader available");
 
-    const fullContent = await readStreamContent(reader, callbacks)
-    return createStreamingSuccessResult(fullContent)
+    const fullContent = await readStreamContent(reader, callbacks);
+    return createStreamingSuccessResult(fullContent);
   } catch (error) {
-    console.error('[Streaming Agent] Error:', error)
-    callbacks?.onError?.(error instanceof Error ? error : new Error(String(error)))
-    throw error
+    console.error("[Streaming Agent] Error:", error);
+    callbacks?.onError?.(
+      error instanceof Error ? error : new Error(String(error))
+    );
+    throw error;
   }
 }
 
@@ -181,86 +183,86 @@ export async function processTaskWithStreamingAI(
  * Prompts do sistema para cada tipo de agente
  */
 const AGENT_SYSTEM_PROMPTS: Record<string, string> = {
-  'harvey': `Você é Harvey Specter, estrategista jurídico do escritório.
+  harvey: `Você é Harvey Specter, estrategista jurídico do escritório.
 Analise com visão macro, identifique riscos e oportunidades.
 Responda de forma direta e estratégica.`,
 
-  'justine': `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
+  justine: `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
 Identifique prazos, tipo de documento, urgência e ações necessárias.
 Retorne análises estruturadas em JSON quando possível.`,
 
-  'analise-documental': `Você é o Agente de Análise Documental.
+  "analise-documental": `Você é o Agente de Análise Documental.
 Extraia informações relevantes de documentos jurídicos.
 Classifique e organize dados de forma estruturada.`,
 
-  'monitor-djen': `Você é o Monitor DJEN.
+  "monitor-djen": `Você é o Monitor DJEN.
 Acompanhe publicações do Diário de Justiça Eletrônico.
 Identifique intimações relevantes para o escritório.`,
 
-  'gestao-prazos': `Você é o Gestor de Prazos.
+  "gestao-prazos": `Você é o Gestor de Prazos.
 Calcule prazos processuais considerando dias úteis e feriados.
 Alerte sobre prazos críticos.`,
 
-  'redacao-peticoes': `Você é um Redator Jurídico Profissional.
+  "redacao-peticoes": `Você é um Redator Jurídico Profissional.
 Crie petições, recursos e manifestações em linguagem jurídica formal.
 Use estrutura correta e cite legislação quando apropriado.`,
 
-  'pesquisa-juris': `Você é um Pesquisador de Jurisprudência.
+  "pesquisa-juris": `Você é um Pesquisador de Jurisprudência.
 Busque precedentes relevantes do STF, STJ e tribunais regionais.
 Fundamentação sólida para petições.`,
 
-  'analise-risco': `Você é um Analista de Riscos Processuais.
+  "analise-risco": `Você é um Analista de Riscos Processuais.
 Avalie viabilidade de casos e probabilidade de sucesso.
 Calcule custos vs benefícios.`,
 
-  'estrategia-processual': `Você é um Consultor de Estratégia Processual.
+  "estrategia-processual": `Você é um Consultor de Estratégia Processual.
 Sugira estratégias baseadas em dados e precedentes.
-Otimize chances de êxito.`
-}
+Otimize chances de êxito.`,
+};
 
 /**
  * Gera prompt padrão para agente desconhecido
  */
 function getDefaultAgentPrompt(agentName: string): string {
   return `Você é ${agentName}, um agente especializado do escritório jurídico.
-Execute tarefas de forma eficiente e profissional.`
+Execute tarefas de forma eficiente e profissional.`;
 }
 
 /**
  * Constrói o system prompt baseado no tipo de agente
  */
 function buildAgentSystemPrompt(agent: Agent): string {
-  return AGENT_SYSTEM_PROMPTS[agent.id] || getDefaultAgentPrompt(agent.name)
+  return AGENT_SYSTEM_PROMPTS[agent.id] || getDefaultAgentPrompt(agent.name);
 }
 
 /**
  * Constrói o prompt da tarefa
  */
 function buildTaskPrompt(task: AgentTask): string {
-  const data = task.data || {}
+  const data = task.data || {};
 
-  let prompt = `**Tarefa: ${task.type}**\n`
-  prompt += `Prioridade: ${task.priority}\n\n`
+  let prompt = `**Tarefa: ${task.type}**\n`;
+  prompt += `Prioridade: ${task.priority}\n\n`;
 
   if (data.description) {
-    prompt += `Descrição: ${data.description}\n\n`
+    prompt += `Descrição: ${data.description}\n\n`;
   }
 
   if (data.content || data.teor) {
-    prompt += `Conteúdo:\n${data.content || data.teor}\n\n`
+    prompt += `Conteúdo:\n${data.content || data.teor}\n\n`;
   }
 
   if (data.processNumber) {
-    prompt += `Processo: ${data.processNumber}\n`
+    prompt += `Processo: ${data.processNumber}\n`;
   }
 
   if (data.expedienteId) {
-    prompt += `ID do Expediente: ${data.expedienteId}\n`
+    prompt += `ID do Expediente: ${data.expedienteId}\n`;
   }
 
-  prompt += `\nExecute a tarefa e forneça uma resposta estruturada.`
+  prompt += `\nExecute a tarefa e forneça uma resposta estruturada.`;
 
-  return prompt
+  return prompt;
 }
 
 /**
@@ -271,59 +273,63 @@ export async function processTaskWithRealAI(
   agent: Agent
 ): Promise<AgentTaskResult> {
   try {
-    const response = await fetch('/api/agents/process-task', {
-      method: 'POST',
+    const response = await fetch("/api/agents/process-task", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         task,
         agent: {
           id: agent.id,
           type: agent.type,
-          name: agent.name
-        }
-      })
-    })
+          name: agent.name,
+        },
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`)
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = (await response.json()) as ProcessTaskAPIResponse
+    const data = (await response.json()) as ProcessTaskAPIResponse;
 
-    if (!data || typeof data !== 'object' || !data.result) {
-      throw new Error('Invalid API response: missing result')
+    if (!data || typeof data !== "object" || !data.result) {
+      throw new Error("Invalid API response: missing result");
     }
 
-    return data.result
+    return data.result;
   } catch (error) {
-    console.error('[Real Agent Client] Error processing task:', error)
-    throw error
+    console.error("[Real Agent Client] Error processing task:", error);
+    throw error;
   }
 }
 
 /**
  * Busca tarefas pendentes do backend
  */
-export async function fetchPendingTasks(agentId?: string): Promise<AgentTask[]> {
+export async function fetchPendingTasks(
+  agentId?: string
+): Promise<AgentTask[]> {
   try {
     const url = agentId
       ? `/api/agents/tasks?agentId=${encodeURIComponent(agentId)}&status=queued`
-      : '/api/agents/tasks?status=queued'
+      : "/api/agents/tasks?status=queued";
 
-    const response = await fetch(url)
+    const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch tasks: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `Failed to fetch tasks: ${response.status} ${response.statusText}`
+      );
     }
 
-    const data = (await response.json()) as FetchTasksAPIResponse
+    const data = (await response.json()) as FetchTasksAPIResponse;
 
-    return Array.isArray(data.tasks) ? data.tasks : []
+    return Array.isArray(data.tasks) ? data.tasks : [];
   } catch (error) {
-    console.error('[Real Agent Client] Error fetching tasks:', error)
-    return []
+    console.error("[Real Agent Client] Error fetching tasks:", error);
+    return [];
   }
 }
 
@@ -332,44 +338,48 @@ export async function fetchPendingTasks(agentId?: string): Promise<AgentTask[]> 
  */
 export async function queueTask(task: AgentTask): Promise<void> {
   try {
-    const response = await fetch('/api/agents/queue-task', {
-      method: 'POST',
+    const response = await fetch("/api/agents/queue-task", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ task })
-    })
+      body: JSON.stringify({ task }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Failed to queue task: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `Failed to queue task: ${response.status} ${response.statusText}`
+      );
     }
   } catch (error) {
-    console.error('[Real Agent Client] Error queueing task:', error)
-    throw error
+    console.error("[Real Agent Client] Error queueing task:", error);
+    throw error;
   }
 }
 
 /**
  * Monitora DJEN usando o endpoint real
  */
-export async function monitorDJEN(tribunais: string[]): Promise<any> {
+export async function monitorDJEN(tribunais: string[]): Promise<unknown> {
   try {
-    const response = await fetch('/api/djen/check', {
-      method: 'POST',
+    const response = await fetch("/api/djen/check", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ tribunais })
-    })
+      body: JSON.stringify({ tribunais }),
+    });
 
     if (!response.ok) {
-      throw new Error(`DJEN API error: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `DJEN API error: ${response.status} ${response.statusText}`
+      );
     }
 
-    return await response.json()
+    return await response.json();
   } catch (error) {
-    console.error('[Real Agent Client] Error monitoring DJEN:', error)
-    throw error
+    console.error("[Real Agent Client] Error monitoring DJEN:", error);
+    throw error;
   }
 }
 
@@ -380,28 +390,30 @@ export async function calculateRealDeadline(
   startDate: Date,
   businessDays: number,
   tribunalCode?: string
-): Promise<any> {
+): Promise<unknown> {
   try {
-    const response = await fetch('/api/deadline/calculate', {
-      method: 'POST',
+    const response = await fetch("/api/deadline/calculate", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         startDate: startDate.toISOString(),
         businessDays,
-        tribunalCode
-      })
-    })
+        tribunalCode,
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Deadline API error: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `Deadline API error: ${response.status} ${response.statusText}`
+      );
     }
 
-    return await response.json()
+    return await response.json();
   } catch (error) {
-    console.error('[Real Agent Client] Error calculating deadline:', error)
-    throw error
+    console.error("[Real Agent Client] Error calculating deadline:", error);
+    throw error;
   }
 }
 
@@ -411,7 +423,7 @@ export async function calculateRealDeadline(
  */
 export function isRealAgentsEnabled(): boolean {
   // Agentes SEMPRE usam IA real - não há mais modo simulado
-  return true
+  return true;
 }
 
 /**
@@ -419,7 +431,7 @@ export function isRealAgentsEnabled(): boolean {
  */
 export function setRealAgentsMode(_enabled: boolean): void {
   console.warn(
-    '[DEPRECATED] setRealAgentsMode: Modo simulado foi removido. Agentes sempre usam IA real.'
-  )
+    "[DEPRECATED] setRealAgentsMode: Modo simulado foi removido. Agentes sempre usam IA real."
+  );
   // Função mantida apenas para compatibilidade - não faz nada
 }

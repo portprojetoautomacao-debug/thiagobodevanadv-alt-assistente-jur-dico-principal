@@ -1,196 +1,206 @@
-import { useMemo, useState, memo } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import type { Process, Prazo, ViewType } from '@/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useKV } from "@/hooks/use-kv";
+import type { Prazo, Process, ViewType } from "@/types";
 import {
-  CheckCircle,
-  Clock,
-  Trophy,
+  ArrowUp,
   CaretLeft,
   CaretRight,
-  ArrowUp,
-  FileText
-} from '@phosphor-icons/react'
+  CheckCircle,
+  Clock,
+  FileText,
+  Trophy,
+} from "@phosphor-icons/react";
+import { memo, useMemo, useState } from "react";
 import {
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend
-} from 'recharts'
+} from "recharts";
 
 interface DashboardAdvboxProps {
-  readonly onNavigate: (view: ViewType) => void
+  readonly onNavigate: (view: ViewType) => void;
 }
 
 function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
-  const [processes] = useKV<Process[]>('processes', [])
-  const [selectedMonth, setSelectedMonth] = useState(new Date())
+  const [processes] = useKV<Process[]>("processes", []);
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const stats = useMemo(() => {
-    const processesList = processes || []
+    const processesList = processes || [];
 
-    const todosPrazos: (Prazo & { processoTitulo: string })[] = []
+    const todosPrazos: (Prazo & { processoTitulo: string })[] = [];
     processesList.forEach((process) => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach((prazo) => {
           todosPrazos.push({
             ...prazo,
-            processoTitulo: process.titulo
-          })
-        })
+            processoTitulo: process.titulo,
+          });
+        });
       }
-    })
+    });
 
-    const tarefasFinalizadas = todosPrazos.filter((p) => p.concluido).length
-    const tarefasPendentes = todosPrazos.filter((p) => !p.concluido).length
-    const pontosAcumulados = tarefasFinalizadas * 10 // 10 pontos por tarefa
+    const tarefasFinalizadas = todosPrazos.filter((p) => p.concluido).length;
+    const tarefasPendentes = todosPrazos.filter((p) => !p.concluido).length;
+    const pontosAcumulados = tarefasFinalizadas * 10; // 10 pontos por tarefa
 
     return {
       tarefasFinalizadas,
       tarefasPendentes,
       pontosAcumulados,
-      todosPrazos: todosPrazos.filter((p) => !p.concluido).slice(0, 5)
-    }
-  }, [processes])
+      todosPrazos: todosPrazos.filter((p) => !p.concluido).slice(0, 5),
+    };
+  }, [processes]);
 
   // Performance data for line chart (Meu Desempenho)
   const performanceData = useMemo(() => {
-    const processesList = processes || []
+    const processesList = processes || [];
     const monthlyStats: {
-      [key: string]: { entradas: number; meta: number; tarefas: number }
-    } = {}
+      [key: string]: { entradas: number; meta: number; tarefas: number };
+    } = {};
 
     // Últimos 6 meses
-    const months: string[] = []
+    const months: string[] = [];
     for (let i = 5; i >= 0; i--) {
-      const date = new Date()
-      date.setMonth(date.getMonth() - i)
-      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short' })
-      months.push(monthKey)
-      monthlyStats[monthKey] = { entradas: 0, meta: 100, tarefas: 0 }
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toLocaleDateString("pt-BR", { month: "short" });
+      months.push(monthKey);
+      monthlyStats[monthKey] = { entradas: 0, meta: 100, tarefas: 0 };
     }
 
     // Contar processos por mês
     processesList.forEach((p) => {
-      if (!p.createdAt) return
-      const created = new Date(p.createdAt)
-      if (Number.isNaN(created.getTime())) return
+      if (!p.createdAt) return;
+      const created = new Date(p.createdAt);
+      if (Number.isNaN(created.getTime())) return;
 
-      const monthKey = created.toLocaleDateString('pt-BR', { month: 'short' })
+      const monthKey = created.toLocaleDateString("pt-BR", { month: "short" });
       if (monthlyStats[monthKey]) {
-        monthlyStats[monthKey].entradas += 1
-        monthlyStats[monthKey].tarefas += p.prazos?.length || 0
+        monthlyStats[monthKey].entradas += 1;
+        monthlyStats[monthKey].tarefas += p.prazos?.length || 0;
       }
-    })
+    });
 
     return months.map((month) => ({
       month,
-      'ESTE MÊS': monthlyStats[month].entradas,
-      'METAS/OUTROS': monthlyStats[month].meta,
-      META: 50
-    }))
-  }, [processes])
+      "ESTE MÊS": monthlyStats[month].entradas,
+      "METAS/OUTROS": monthlyStats[month].meta,
+      META: 50,
+    }));
+  }, [processes]);
 
   // Calendar data
   const calendarDays = useMemo(() => {
-    const year = selectedMonth.getFullYear()
-    const month = selectedMonth.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
-    const days: (number | null)[] = []
+    const days: (number | null)[] = [];
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null)
+      days.push(null);
     }
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day)
+      days.push(day);
     }
-    return days
-  }, [selectedMonth])
+    return days;
+  }, [selectedMonth]);
 
   const intimacoes = useMemo(() => {
-    const processesList = processes || []
-    const now = Date.now()
-    const umMesMs = 30 * 24 * 60 * 60 * 1000
-    const limite = new Date(now - umMesMs)
+    const processesList = processes || [];
+    const now = Date.now();
+    const umMesMs = 30 * 24 * 60 * 60 * 1000;
+    const limite = new Date(now - umMesMs);
 
     return processesList.slice(0, 4).map((p) => {
-      const temMov = !!p.dataUltimaMovimentacao
-      let atrasado = false
+      const temMov = !!p.dataUltimaMovimentacao;
+      let atrasado = false;
 
       if (temMov) {
-        const mov = new Date(p.dataUltimaMovimentacao!)
+        const mov = new Date(p.dataUltimaMovimentacao!);
         if (!Number.isNaN(mov.getTime())) {
-          atrasado = mov < limite
+          atrasado = mov < limite;
         }
       }
 
       return {
-        tipo: 'INTIMAÇÃO JUDICIAL',
-        status: temMov ? '1 mês atrás' : 'não informado',
-        parte1: p.autor || 'Parte não informada',
-        parte2: p.reu || 'Não informado',
+        tipo: "INTIMAÇÃO JUDICIAL",
+        status: temMov ? "1 mês atrás" : "não informado",
+        parte1: p.autor || "Parte não informada",
+        parte2: p.reu || "Não informado",
         numero: p.numeroCNJ,
-        atrasado
-      }
-    })
-  }, [processes])
+        atrasado,
+      };
+    });
+  }, [processes]);
 
   // Mapeamento de prazos por dia do mês selecionado
   const prazosPorDia = useMemo(() => {
-    const processesList = processes || []
-    const year = selectedMonth.getFullYear()
-    const month = selectedMonth.getMonth()
-    const map: Record<number, { count: number; urgente: boolean; descricoes: string[] }> = {}
+    const processesList = processes || [];
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    const map: Record<
+      number,
+      { count: number; urgente: boolean; descricoes: string[] }
+    > = {};
 
     processesList.forEach((process) => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach((prazo) => {
-          if (prazo.concluido) return
-          const dataFinal = new Date(prazo.dataFinal)
-          if (dataFinal.getFullYear() === year && dataFinal.getMonth() === month) {
-            const day = dataFinal.getDate()
-            const hoje = new Date()
-            const diasRestantes = Math.ceil((dataFinal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
-            const urgente = diasRestantes <= 5 && diasRestantes >= 0
+          if (prazo.concluido) return;
+          const dataFinal = new Date(prazo.dataFinal);
+          if (
+            dataFinal.getFullYear() === year &&
+            dataFinal.getMonth() === month
+          ) {
+            const day = dataFinal.getDate();
+            const hoje = new Date();
+            const diasRestantes = Math.ceil(
+              (dataFinal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            const urgente = diasRestantes <= 5 && diasRestantes >= 0;
 
             if (!map[day]) {
-              map[day] = { count: 0, urgente: false, descricoes: [] }
+              map[day] = { count: 0, urgente: false, descricoes: [] };
             }
-            map[day].count++
-            if (urgente) map[day].urgente = true
-            map[day].descricoes.push(`${prazo.descricao || 'Prazo'} - ${process.titulo}`)
+            map[day].count++;
+            if (urgente) map[day].urgente = true;
+            map[day].descricoes.push(
+              `${prazo.descricao || "Prazo"} - ${process.titulo}`
+            );
           }
-        })
+        });
       }
-    })
-    return map
-  }, [processes, selectedMonth])
+    });
+    return map;
+  }, [processes, selectedMonth]);
 
   const nextMonth = () => {
     setSelectedMonth(
       new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1)
-    )
-  }
+    );
+  };
 
   const prevMonth = () => {
     setSelectedMonth(
       new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1)
-    )
-  }
+    );
+  };
 
-  const today = new Date()
-  const todayDay = today.getDate()
-  const todayMonth = today.getMonth()
-  const todayYear = today.getFullYear()
+  const today = new Date();
+  const todayDay = today.getDate();
+  const todayMonth = today.getMonth();
+  const todayYear = today.getFullYear();
 
   return (
     <div className="p-4 lg:p-6 flex flex-col gap-6 h-full overflow-y-auto bg-linear-to-br from-background via-background to-[#1a1d29]">
@@ -228,7 +238,11 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-linear-to-br from-green-500/20 to-green-500/5 rounded-xl shadow-lg">
-                <CheckCircle size={32} weight="duotone" className="text-green-500" />
+                <CheckCircle
+                  size={32}
+                  weight="duotone"
+                  className="text-green-500"
+                />
               </div>
               <div className="flex-1">
                 <p className="text-4xl font-bold text-foreground mb-1 bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">
@@ -323,7 +337,13 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                 <ResponsiveContainer width="99%" height="100%">
                   <LineChart data={performanceData}>
                     <defs>
-                      <linearGradient id="colorEste" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient
+                        id="colorEste"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
                         <stop
                           offset="5%"
                           stopColor="#52b788"
@@ -335,7 +355,13 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                           stopOpacity={0}
                         />
                       </linearGradient>
-                      <linearGradient id="colorMetas" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient
+                        id="colorMetas"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
                         <stop
                           offset="5%"
                           stopColor="#48cae4"
@@ -357,39 +383,39 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                       dataKey="month"
                       stroke="#6b7280"
                       tick={{
-                        fill: '#9ca3af',
+                        fill: "#9ca3af",
                         fontSize: 13,
-                        fontWeight: 500
+                        fontWeight: 500,
                       }}
-                      axisLine={{ stroke: '#2a2d3e' }}
+                      axisLine={{ stroke: "#2a2d3e" }}
                     />
                     <YAxis
                       stroke="#6b7280"
                       tick={{
-                        fill: '#9ca3af',
+                        fill: "#9ca3af",
                         fontSize: 13,
-                        fontWeight: 500
+                        fontWeight: 500,
                       }}
-                      axisLine={{ stroke: '#2a2d3e' }}
+                      axisLine={{ stroke: "#2a2d3e" }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1a1d29',
-                        border: '1px solid #00b4d8',
-                        borderRadius: '12px',
-                        color: '#e8eaed',
-                        boxShadow: '0 8px 24px rgba(0, 180, 216, 0.2)'
+                        backgroundColor: "#1a1d29",
+                        border: "1px solid #00b4d8",
+                        borderRadius: "12px",
+                        color: "#e8eaed",
+                        boxShadow: "0 8px 24px rgba(0, 180, 216, 0.2)",
                       }}
                       cursor={{
-                        stroke: '#00b4d8',
+                        stroke: "#00b4d8",
                         strokeWidth: 1,
-                        strokeDasharray: '3 3'
+                        strokeDasharray: "3 3",
                       }}
                     />
                     <Legend
                       wrapperStyle={{
-                        color: '#e8eaed',
-                        fontWeight: 600
+                        color: "#e8eaed",
+                        fontWeight: 600,
                       }}
                       iconType="circle"
                     />
@@ -399,16 +425,16 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                       stroke="#52b788"
                       strokeWidth={3}
                       dot={{
-                        fill: '#52b788',
+                        fill: "#52b788",
                         r: 5,
                         strokeWidth: 2,
-                        stroke: '#0f1117'
+                        stroke: "#0f1117",
                       }}
                       activeDot={{
                         r: 7,
-                        fill: '#52b788',
-                        stroke: '#0f1117',
-                        strokeWidth: 3
+                        fill: "#52b788",
+                        stroke: "#0f1117",
+                        strokeWidth: 3,
                       }}
                       fill="url(#colorEste)"
                     />
@@ -418,16 +444,16 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                       stroke="#48cae4"
                       strokeWidth={3}
                       dot={{
-                        fill: '#48cae4',
+                        fill: "#48cae4",
                         r: 5,
                         strokeWidth: 2,
-                        stroke: '#0f1117'
+                        stroke: "#0f1117",
                       }}
                       activeDot={{
                         r: 7,
-                        fill: '#48cae4',
-                        stroke: '#0f1117',
-                        strokeWidth: 3
+                        fill: "#48cae4",
+                        stroke: "#0f1117",
+                        strokeWidth: 3,
                       }}
                       fill="url(#colorMetas)"
                     />
@@ -453,9 +479,9 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-bold text-foreground">
                   {selectedMonth
-                    .toLocaleDateString('pt-BR', {
-                      month: 'long',
-                      year: 'numeric'
+                    .toLocaleDateString("pt-BR", {
+                      month: "long",
+                      year: "numeric",
                     })
                     .toUpperCase()}
                 </CardTitle>
@@ -483,7 +509,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             </CardHeader>
             <CardContent className="pt-4">
               <div className="grid grid-cols-7 gap-2 mb-3">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day) => (
+                {["D", "S", "T", "Q", "Q", "S", "S"].map((day) => (
                   <div
                     key={day}
                     className="text-center text-xs text-primary/70 font-bold"
@@ -498,45 +524,59 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     day !== null &&
                     day === todayDay &&
                     selectedMonth.getMonth() === todayMonth &&
-                    selectedMonth.getFullYear() === todayYear
+                    selectedMonth.getFullYear() === todayYear;
 
-                  const prazoInfo = day !== null ? prazosPorDia[day] : null
-                  const temPrazo = prazoInfo && prazoInfo.count > 0
-                  const prazoUrgente = prazoInfo?.urgente
+                  const prazoInfo = day !== null ? prazosPorDia[day] : null;
+                  const temPrazo = prazoInfo && prazoInfo.count > 0;
+                  const prazoUrgente = prazoInfo?.urgente;
 
                   // Função para determinar classes CSS do dia do calendário
                   const getDayClassName = (): string => {
-                    const baseClasses = 'aspect-square flex flex-col items-center justify-center text-sm rounded-lg font-semibold transition-all relative'
+                    const baseClasses =
+                      "aspect-square flex flex-col items-center justify-center text-sm rounded-lg font-semibold transition-all relative";
 
                     if (day === null) {
-                      return `${baseClasses} text-transparent pointer-events-none`
+                      return `${baseClasses} text-transparent pointer-events-none`;
                     }
                     if (isToday) {
-                      return `${baseClasses} bg-linear-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110`
+                      return `${baseClasses} bg-linear-to-br from-primary to-accent text-white shadow-lg shadow-primary/30 scale-110`;
                     }
                     if (prazoUrgente) {
-                      return `${baseClasses} bg-linear-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105`
+                      return `${baseClasses} bg-linear-to-br from-red-500/20 to-red-600/10 text-red-400 border border-red-500/30 cursor-pointer hover:scale-105`;
                     }
                     if (temPrazo) {
-                      return `${baseClasses} bg-linear-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105`
+                      return `${baseClasses} bg-linear-to-br from-yellow-500/20 to-yellow-600/10 text-yellow-400 border border-yellow-500/30 cursor-pointer hover:scale-105`;
                     }
-                    return `${baseClasses} text-foreground hover:bg-linear-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105`
-                  }
+                    return `${baseClasses} text-foreground hover:bg-linear-to-br hover:from-primary/10 hover:to-accent/10 cursor-pointer hover:scale-105`;
+                  };
+
+                  const keyForDay =
+                    day === null
+                      ? `empty-${index}`
+                      : `day-${selectedMonth.getFullYear()}-${String(
+                          selectedMonth.getMonth() + 1
+                        ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
                   return (
                     <div
-                      key={`day-${index}-${day || 'null'}`}
-                      title={prazoInfo?.descricoes?.join('\n')}
+                      key={keyForDay}
+                      title={prazoInfo?.descricoes?.join("\n")}
                       className={getDayClassName()}
                     >
                       {day}
                       {temPrazo && (
-                        <span className={`absolute -top-1 -right-1 w-4 h-4 text-[10px] flex items-center justify-center rounded-full ${prazoUrgente ? 'bg-red-500 text-white' : 'bg-yellow-500 text-black'}`}>
+                        <span
+                          className={`absolute -top-1 -right-1 w-4 h-4 text-[10px] flex items-center justify-center rounded-full ${
+                            prazoUrgente
+                              ? "bg-red-500 text-white"
+                              : "bg-yellow-500 text-black"
+                          }`}
+                        >
                           {prazoInfo.count}
                         </span>
                       )}
                     </div>
-                  )
+                  );
                 })}
               </div>
             </CardContent>
@@ -590,11 +630,11 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
 
             {/* List Items */}
             {intimacoes.map((item, index) => {
-              const initial = (item.parte1 || '?').charAt(0).toUpperCase()
+              const initial = (item.parte1 || "?").charAt(0).toUpperCase();
 
               return (
                 <div
-                  key={index}
+                  key={`${item.numero || item.parte1}-${index}`}
                   className="flex items-center justify-between py-3 px-4 hover:bg-linear-to-r hover:from-primary/5 hover:to-transparent rounded-xl cursor-pointer group transition-all border-b border-border/30 last:border-b-0"
                 >
                   <div className="flex items-center gap-3 flex-1">
@@ -618,7 +658,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                   </div>
                   <div className="flex items-center gap-4">
                     <Badge
-                      variant={item.atrasado ? 'destructive' : 'secondary'}
+                      variant={item.atrasado ? "destructive" : "secondary"}
                       className="text-xs"
                     >
                       {item.status}
@@ -628,13 +668,13 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-export default memo(DashboardAdvbox)
+export default memo(DashboardAdvbox);

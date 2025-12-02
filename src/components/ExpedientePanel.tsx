@@ -1,11 +1,17 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Textarea } from '@/components/ui/textarea'
-import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
-import { useKV } from '@/hooks/use-kv'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
+import { useKV } from "@/hooks/use-kv";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Dialog,
@@ -13,153 +19,176 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import type { AgentTask } from '@/lib/agents'
-import { createLocalAppointmentFromAnalysis, syncDeadlineToGoogleCalendar, type IntimationAnalysisResult } from '@/lib/deadline-calendar-integration'
-import type { Appointment, Expediente } from '@/types'
-import { toast } from 'sonner'
+} from "@/components/ui/dialog";
+import type { AgentTask } from "@/lib/agents";
+import {
+  createLocalAppointmentFromAnalysis,
+  syncDeadlineToGoogleCalendar,
+  type IntimationAnalysisResult,
+} from "@/lib/deadline-calendar-integration";
+import type { Appointment, Expediente } from "@/types";
+import { toast } from "sonner";
 
 // Verifica se um expediente precisa de re-análise (tem mensagem de erro/placeholder)
 function needsReanalysis(exp: Expediente): boolean {
-  if (!exp.analyzed) return false
-  const summary = exp.summary?.toLowerCase() || ''
-  return summary.includes('indisponível') ||
-    summary.includes('manualmente') ||
-    summary.includes('revisar documento') ||
-    summary === '' ||
+  if (!exp.analyzed) return false;
+  const summary = exp.summary?.toLowerCase() || "";
+  return (
+    summary.includes("indisponível") ||
+    summary.includes("manualmente") ||
+    summary.includes("revisar documento") ||
+    summary === "" ||
     !exp.summary
+  );
 }
 
 // Verifica se um expediente precisa ser analisado
 function needsAnalysis(exp: Expediente): boolean {
-  return !exp.analyzed || needsReanalysis(exp)
+  return !exp.analyzed || needsReanalysis(exp);
 }
 
 /**
  * Verifica se as ações sugeridas indicam necessidade de resposta/petição
  */
 function checkNeedsResponse(suggestedActions?: string[]): boolean {
-  if (!suggestedActions) return false
-  const responseKeywords = ['resposta', 'manifestar', 'petição', 'contestar', 'recurso']
-  return suggestedActions.some(a =>
-    responseKeywords.some(keyword => a.toLowerCase().includes(keyword))
-  )
+  if (!suggestedActions) return false;
+  const responseKeywords = [
+    "resposta",
+    "manifestar",
+    "petição",
+    "contestar",
+    "recurso",
+  ];
+  return suggestedActions.some((a) =>
+    responseKeywords.some((keyword) => a.toLowerCase().includes(keyword))
+  );
 }
 
 /**
  * Verifica se as ações sugeridas indicam necessidade de pesquisa
  */
 function checkNeedsResearch(suggestedActions?: string[]): boolean {
-  if (!suggestedActions) return false
-  const researchKeywords = ['jurisprudência', 'precedente', 'pesquisar']
-  return suggestedActions.some(a =>
-    researchKeywords.some(keyword => a.toLowerCase().includes(keyword))
-  )
+  if (!suggestedActions) return false;
+  const researchKeywords = ["jurisprudência", "precedente", "pesquisar"];
+  return suggestedActions.some((a) =>
+    researchKeywords.some((keyword) => a.toLowerCase().includes(keyword))
+  );
 }
 
 /**
  * Determina a prioridade da tarefa baseada na prioridade da análise
  */
-function getTaskPriority(priority: string, defaultPriority: 'low' | 'medium' | 'high' = 'medium'): 'low' | 'medium' | 'high' {
-  const normalizedPriority = priority.toLowerCase()
-  if (normalizedPriority === 'alta' || normalizedPriority === 'urgente') return 'high'
-  return defaultPriority
+function getTaskPriority(
+  priority: string,
+  defaultPriority: "low" | "medium" | "high" = "medium"
+): "low" | "medium" | "high" {
+  const normalizedPriority = priority.toLowerCase();
+  if (normalizedPriority === "alta" || normalizedPriority === "urgente")
+    return "high";
+  return defaultPriority;
 }
 
 // Determina quais agentes devem receber tarefas com base na análise
-function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
-  priority?: string
-  deadline?: { days?: number; type?: string; endDate?: string }
-  suggestedActions?: string[]
-  documentType?: string
-}): Partial<AgentTask>[] {
-  const tasks: Partial<AgentTask>[] = []
-  const priority = analysisData.priority?.toLowerCase() || 'média'
-  const hasPrazo = analysisData.deadline?.days && analysisData.deadline.days > 0
+function getAgentTasksFromAnalysis(
+  exp: Expediente,
+  analysisData: {
+    priority?: string;
+    deadline?: { days?: number; type?: string; endDate?: string };
+    suggestedActions?: string[];
+    documentType?: string;
+  }
+): Partial<AgentTask>[] {
+  const tasks: Partial<AgentTask>[] = [];
+  const priority = analysisData.priority?.toLowerCase() || "média";
+  const hasPrazo =
+    analysisData.deadline?.days && analysisData.deadline.days > 0;
 
   // 1. Gestão de Prazos - sempre que há prazo identificado
   if (hasPrazo) {
     tasks.push({
-      agentId: 'gestao-prazos',
-      type: 'CALCULATE_DEADLINE',
-      priority: getTaskPriority(priority, 'medium'),
+      agentId: "gestao-prazos",
+      type: "CALCULATE_DEADLINE",
+      priority: getTaskPriority(priority, "medium"),
       data: {
         expedienteId: exp.id,
         processNumber: exp.numeroProcesso,
         deadlineDays: analysisData.deadline?.days,
         deadlineType: analysisData.deadline?.type,
         deadlineDate: analysisData.deadline?.endDate,
-        source: 'auto-analysis'
-      }
-    })
+        source: "auto-analysis",
+      },
+    });
   }
 
   // 2. Monitor DJEN - registrar que foi processado
   tasks.push({
-    agentId: 'monitor-djen',
-    type: 'MONITOR_DJEN',
-    priority: 'low',
+    agentId: "monitor-djen",
+    type: "MONITOR_DJEN",
+    priority: "low",
     data: {
       expedienteId: exp.id,
       processNumber: exp.numeroProcesso,
       tribunal: exp.tribunal,
-      action: 'register-processed',
-      source: 'auto-analysis'
-    }
-  })
+      action: "register-processed",
+      source: "auto-analysis",
+    },
+  });
 
   // 3. Análise de Risco - para prioridades altas
-  if (getTaskPriority(priority) === 'high') {
+  if (getTaskPriority(priority) === "high") {
     tasks.push({
-      agentId: 'analise-risco',
-      type: 'RISK_ANALYSIS',
-      priority: 'high',
+      agentId: "analise-risco",
+      type: "RISK_ANALYSIS",
+      priority: "high",
       data: {
         expedienteId: exp.id,
         processNumber: exp.numeroProcesso,
         summary: exp.summary,
         priority: priority,
-        source: 'auto-analysis'
-      }
-    })
+        source: "auto-analysis",
+      },
+    });
   }
 
   // 4. Redação de Petições - se ações sugerem resposta
   if (checkNeedsResponse(analysisData.suggestedActions)) {
     tasks.push({
-      agentId: 'redacao-peticoes',
-      type: 'DRAFT_PETITION',
-      priority: getTaskPriority(priority, 'medium'),
+      agentId: "redacao-peticoes",
+      type: "DRAFT_PETITION",
+      priority: getTaskPriority(priority, "medium"),
       data: {
         expedienteId: exp.id,
         processNumber: exp.numeroProcesso,
         documentType: analysisData.documentType,
         suggestedActions: analysisData.suggestedActions,
-        source: 'auto-analysis'
-      }
-    })
+        source: "auto-analysis",
+      },
+    });
   }
 
   // 5. Pesquisa de Jurisprudência - para casos complexos
-  if (checkNeedsResearch(analysisData.suggestedActions) || getTaskPriority(priority) === 'high') {
+  if (
+    checkNeedsResearch(analysisData.suggestedActions) ||
+    getTaskPriority(priority) === "high"
+  ) {
     tasks.push({
-      agentId: 'pesquisa-juris',
-      type: 'RESEARCH_PRECEDENTS',
-      priority: 'medium',
+      agentId: "pesquisa-juris",
+      type: "RESEARCH_PRECEDENTS",
+      priority: "medium",
       data: {
         expedienteId: exp.id,
         processNumber: exp.numeroProcesso,
         summary: exp.summary,
-        source: 'auto-analysis'
-      }
-    })
+        source: "auto-analysis",
+      },
+    });
   }
 
   // 6. Estratégia Processual - sempre gera sugestão estratégica automaticamente
   tasks.push({
-    agentId: 'estrategia-processual',
-    type: 'CASE_STRATEGY',
-    priority: getTaskPriority(priority, 'medium'),
+    agentId: "estrategia-processual",
+    type: "CASE_STRATEGY",
+    priority: getTaskPriority(priority, "medium"),
     data: {
       expedienteId: exp.id,
       processNumber: exp.numeroProcesso,
@@ -169,67 +198,82 @@ function getAgentTasksFromAnalysis(exp: Expediente, analysisData: {
       priority: priority,
       deadline: analysisData.deadline,
       suggestedActions: analysisData.suggestedActions,
-      source: 'auto-analysis'
-    }
-  })
+      source: "auto-analysis",
+    },
+  });
 
-  return tasks
+  return tasks;
 }
 
 /**
  * Tipo para dados de análise do expediente
  */
 interface AnalysisData {
-  summary?: string
-  documentType?: string
-  priority?: string
+  summary?: string;
+  documentType?: string;
+  priority?: string;
   deadline?: {
-    days?: number
-    type?: 'úteis' | 'corridos'
-    startDate?: string
-    endDate?: string
-    description?: string
-  }
-  suggestedActions?: string[]
-  nextSteps?: string[]
+    days?: number;
+    type?: "úteis" | "corridos";
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+  };
+  suggestedActions?: string[];
+  nextSteps?: string[];
 }
 
 /**
  * Faz parse da resposta JSON da análise ou retorna fallback
  */
-function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisData {
+function parseAnalysisResponse(
+  responseText: string,
+  exp: Expediente
+): AnalysisData {
   try {
-    const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    return JSON.parse(jsonText) as AnalysisData
+    const jsonText = responseText
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+    return JSON.parse(jsonText) as AnalysisData;
   } catch {
     return {
-      summary: responseText || 'Análise concluída',
-      documentType: exp.type || 'Intimação',
-      priority: 'média',
-      deadline: { days: 15, type: 'úteis', endDate: 'Verificar' },
-      suggestedActions: ['Verificar prazo processual', 'Analisar providências'],
-      nextSteps: ['Revisar intimação', 'Preparar resposta se necessário']
-    }
+      summary: responseText || "Análise concluída",
+      documentType: exp.type || "Intimação",
+      priority: "média",
+      deadline: { days: 15, type: "úteis", endDate: "Verificar" },
+      suggestedActions: ["Verificar prazo processual", "Analisar providências"],
+      nextSteps: ["Revisar intimação", "Preparar resposta se necessário"],
+    };
   }
 }
 
 /**
  * Gera o texto do rascunho de petição
  */
-function buildDraftPetition(analysisData: AnalysisData, exp: Expediente): string {
+function buildDraftPetition(
+  analysisData: AnalysisData,
+  exp: Expediente
+): string {
   const actionsText = (analysisData.suggestedActions || [])
-    .map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')
+    .map((a: string, i: number) => `${i + 1}. ${a}`)
+    .join("\n");
   const stepsText = (analysisData.nextSteps || [])
-    .map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')
+    .map((s: string, i: number) => `${i + 1}. ${s}`)
+    .join("\n");
 
-  return `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
-    `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
+  return (
+    `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
+    `📋 RESUMO:\n${analysisData.summary || "N/A"}\n\n` +
     `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
-    `🚨 PRIORIDADE: ${analysisData.priority || 'média'}\n\n` +
-    `📅 PRAZO: ${analysisData.deadline?.days || 'N/A'} dias ${analysisData.deadline?.type || ''}\n` +
-    `   Data limite: ${analysisData.deadline?.endDate || 'N/A'}\n\n` +
+    `🚨 PRIORIDADE: ${analysisData.priority || "média"}\n\n` +
+    `📅 PRAZO: ${analysisData.deadline?.days || "N/A"} dias ${
+      analysisData.deadline?.type || ""
+    }\n` +
+    `   Data limite: ${analysisData.deadline?.endDate || "N/A"}\n\n` +
     `✅ AÇÕES SUGERIDAS:\n${actionsText}\n\n` +
     `📝 PRÓXIMOS PASSOS:\n${stepsText}`
+  );
 }
 
 /**
@@ -240,154 +284,191 @@ function buildCalendarAnalysisResult(
   exp: Expediente
 ): IntimationAnalysisResult {
   // Converter deadline para o formato esperado por IntimationAnalysisResult
-  const deadline = analysisData.deadline && analysisData.deadline.days !== undefined
-    ? {
-      days: analysisData.deadline.days,
-      type: (analysisData.deadline.type || 'úteis') as 'úteis' | 'corridos',
-      endDate: analysisData.deadline.endDate || '',
-      description: analysisData.deadline.description
-    }
-    : undefined
+  const deadline =
+    analysisData.deadline && analysisData.deadline.days !== undefined
+      ? {
+          days: analysisData.deadline.days,
+          type: (analysisData.deadline.type || "úteis") as "úteis" | "corridos",
+          endDate: analysisData.deadline.endDate || "",
+          description: analysisData.deadline.description,
+        }
+      : undefined;
 
   const result: IntimationAnalysisResult = {
-    summary: analysisData.summary || 'Intimação analisada',
+    summary: analysisData.summary || "Intimação analisada",
     deadline,
-    priority: (analysisData.priority?.toLowerCase() || 'média') as 'baixa' | 'média' | 'alta' | 'crítica',
+    priority: (analysisData.priority?.toLowerCase() || "média") as
+      | "baixa"
+      | "média"
+      | "alta"
+      | "crítica",
     nextSteps: analysisData.nextSteps || analysisData.suggestedActions,
     suggestedAction: analysisData.suggestedActions?.[0],
     processNumber: exp.numeroProcesso,
     court: exp.tribunal,
-    documentType: analysisData.documentType || exp.type
-  }
+    documentType: analysisData.documentType || exp.type,
+  };
 
   // Calcular data limite se não estiver presente
   if (result.deadline && !result.deadline.endDate && result.deadline.days) {
-    const hoje = new Date()
-    const diasParaAdicionar = result.deadline.days
-    const dataLimite = new Date(hoje)
-    dataLimite.setDate(dataLimite.getDate() + diasParaAdicionar)
-    result.deadline.endDate = dataLimite.toISOString()
+    const hoje = new Date();
+    const diasParaAdicionar = result.deadline.days;
+    const dataLimite = new Date(hoje);
+    dataLimite.setDate(dataLimite.getDate() + diasParaAdicionar);
+    result.deadline.endDate = dataLimite.toISOString();
   }
 
-  return result
+  return result;
 }
 
 export default function ExpedientePanel() {
-  const [expedientes, setExpedientes] = useKV<Expediente[]>('expedientes', [])
-  const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
-  const [selectedExp, setSelectedExp] = useState<Expediente | null>(null)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false)
+  const [expedientes, setExpedientes] = useKV<Expediente[]>("expedientes", []);
+  const [appointments, setAppointments] = useKV<Appointment[]>(
+    "appointments",
+    []
+  );
+  const [selectedExp, setSelectedExp] = useState<Expediente | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false);
   // Estado temporário para task selecionada (usado no futuro para UI de detalhes)
-  const [_selectedTask, setSelectedTask] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [lastSync, setLastSync] = useState<string | null>(null)
+  const [_selectedTask, setSelectedTask] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [lastSync, setLastSync] = useState<string | null>(null);
   // Contador de advogados configurados (reservado para estatísticas futuras)
-  const [_lawyersCount, setLawyersCount] = useState(0)
+  const [_lawyersCount, setLawyersCount] = useState(0);
 
   // Estado para análise automática
-  const [autoAnalyzing, setAutoAnalyzing] = useState(false)
-  const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 })
-  const [tasksCreated, setTasksCreated] = useState(0)
-  const [deadlinesCreated, setDeadlinesCreated] = useState(0)
-  const autoAnalysisRanRef = useRef(false)
+  const [autoAnalyzing, setAutoAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState({
+    current: 0,
+    total: 0,
+  });
+  const [tasksCreated, setTasksCreated] = useState(0);
+  const [deadlinesCreated, setDeadlinesCreated] = useState(0);
+  const autoAnalysisRanRef = useRef(false);
 
   // Hook dos agentes autônomos para criar tarefas
-  const { addTask, agents } = useAutonomousAgents()
+  const { addTask, agents } = useAutonomousAgents();
 
   // Função para buscar expedientes da API
   const fetchExpedientes = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch('/api/expedientes')
-      const data = await response.json()
+      const response = await fetch("/api/expedientes");
+      const data = await response.json();
 
       if (data.success && data.expedientes?.length > 0) {
-        setExpedientes(data.expedientes)
-        setLastSync(data.lastCheck)
-        setLawyersCount(data.lawyersConfigured || 0)
-        toast.success(`${data.expedientes.length} expediente(s) carregado(s)`)
+        setExpedientes(data.expedientes);
+        setLastSync(data.lastCheck);
+        setLawyersCount(data.lawyersConfigured || 0);
+        toast.success(`${data.expedientes.length} expediente(s) carregado(s)`);
       } else {
-        setLawyersCount(data.lawyersConfigured || 0)
+        setLawyersCount(data.lawyersConfigured || 0);
         if (data.lawyersConfigured === 0) {
-          toast.info('Nenhum advogado configurado para monitoramento')
+          toast.info("Nenhum advogado configurado para monitoramento");
         }
       }
     } catch (error) {
-      console.error('Erro ao buscar expedientes:', error)
+      console.error("Erro ao buscar expedientes:", error);
       // Silently fail - API may not be available in dev
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [setExpedientes])
+  }, [setExpedientes]);
 
   // Busca expedientes ao montar componente
   useEffect(() => {
-    fetchExpedientes()
-  }, [fetchExpedientes])
+    fetchExpedientes();
+  }, [fetchExpedientes]);
 
   // Ensure expedientes is always an array to prevent runtime errors
-  const safeExpedientes = useMemo(() => Array.isArray(expedientes) ? expedientes : [], [expedientes])
+  const safeExpedientes = useMemo(
+    () => (Array.isArray(expedientes) ? expedientes : []),
+    [expedientes]
+  );
 
   // Helper para mapear prioridade PT -> EN
-  const mapPriority = (priority: string | undefined): 'low' | 'medium' | 'high' | 'urgent' | undefined => {
-    if (!priority) return 'medium'
-    const map: Record<string, 'low' | 'medium' | 'high' | 'urgent'> = {
-      'baixa': 'low', 'low': 'low',
-      'média': 'medium', 'media': 'medium', 'medium': 'medium',
-      'alta': 'high', 'high': 'high',
-      'urgente': 'urgent', 'urgent': 'urgent'
-    }
-    return map[priority.toLowerCase()] || 'medium'
-  }
+  const mapPriority = (
+    priority: string | undefined
+  ): "low" | "medium" | "high" | "urgent" | undefined => {
+    if (!priority) return "medium";
+    const map: Record<string, "low" | "medium" | "high" | "urgent"> = {
+      baixa: "low",
+      low: "low",
+      média: "medium",
+      media: "medium",
+      medium: "medium",
+      alta: "high",
+      high: "high",
+      urgente: "urgent",
+      urgent: "urgent",
+    };
+    return map[priority.toLowerCase()] || "medium";
+  };
 
   /**
    * Cria prazo no calendário com base na análise do expediente
    */
-  const createCalendarDeadline = useCallback((exp: Expediente, analysisData: AnalysisData): void => {
-    try {
-      const analysisResult = buildCalendarAnalysisResult(analysisData, exp)
-      const localAppointment = createLocalAppointmentFromAnalysis(
-        analysisResult,
-        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
-      )
+  const createCalendarDeadline = useCallback(
+    (exp: Expediente, analysisData: AnalysisData): void => {
+      try {
+        const analysisResult = buildCalendarAnalysisResult(analysisData, exp);
+        const localAppointment = createLocalAppointmentFromAnalysis(
+          analysisResult,
+          `${exp.type || "Intimação"} - ${exp.numeroProcesso || "Processo"}`
+        );
 
-      if (!localAppointment) return
+        if (!localAppointment) return;
 
-      // Verificar se já existe
-      const existingAppt = (appointments || []).find(apt =>
-        apt.date === localAppointment.date &&
-        apt.title.includes(exp.numeroProcesso?.substring(0, 15) || '')
-      )
+        // Verificar se já existe
+        const existingAppt = (appointments || []).find(
+          (apt) =>
+            apt.date === localAppointment.date &&
+            apt.title.includes(exp.numeroProcesso?.substring(0, 15) || "")
+        );
 
-      if (existingAppt) return
+        if (existingAppt) return;
 
-      setAppointments(current => [...(current || []), localAppointment])
-      setDeadlinesCreated(prev => prev + 1)
-      console.log('[ExpedientePanel] Prazo adicionado ao calendário:', localAppointment.title)
+        setAppointments((current) => [...(current || []), localAppointment]);
+        setDeadlinesCreated((prev) => prev + 1);
+        console.log(
+          "[ExpedientePanel] Prazo adicionado ao calendário:",
+          localAppointment.title
+        );
 
-      // Tentar sincronizar com Google Calendar em background
-      syncDeadlineToGoogleCalendar(
-        analysisResult,
-        `${exp.type || 'Intimação'} - ${exp.numeroProcesso || 'Processo'}`
-      ).catch(err => console.warn('[ExpedientePanel] Sync com Google Calendar falhou:', err))
-    } catch (calendarError) {
-      console.warn('[ExpedientePanel] Erro ao criar prazo no calendário:', calendarError)
-    }
-  }, [appointments, setAppointments, setDeadlinesCreated])
+        // Tentar sincronizar com Google Calendar em background
+        syncDeadlineToGoogleCalendar(
+          analysisResult,
+          `${exp.type || "Intimação"} - ${exp.numeroProcesso || "Processo"}`
+        ).catch((err) =>
+          console.warn(
+            "[ExpedientePanel] Sync com Google Calendar falhou:",
+            err
+          )
+        );
+      } catch (calendarError) {
+        console.warn(
+          "[ExpedientePanel] Erro ao criar prazo no calendário:",
+          calendarError
+        );
+      }
+    },
+    [appointments, setAppointments, setDeadlinesCreated]
+  );
 
   // Função para analisar um único expediente (retorna o expediente analisado)
-  const analyzeExpediente = useCallback(async (exp: Expediente): Promise<Expediente> => {
-    try {
-      const response = await fetch('/api/llm-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gemini',
-          messages: [
-            {
-              role: 'system',
-              content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
+  const analyzeExpediente = useCallback(
+    async (exp: Expediente): Promise<Expediente> => {
+      try {
+        const response = await fetch("/api/llm-proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gemini",
+            messages: [
+              {
+                role: "system",
+                content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
 Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
 {
   "summary": "Resumo claro da intimação em 2-3 frases",
@@ -401,148 +482,164 @@ Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
   "suggestedActions": ["lista de ações recomendadas"],
   "nextSteps": ["próximos passos a seguir"]
 }
-Responda APENAS com o JSON, sem texto adicional.`
-            },
-            {
-              role: 'user',
-              content: `Analise esta intimação:
+Responda APENAS com o JSON, sem texto adicional.`,
+              },
+              {
+                role: "user",
+                content: `Analise esta intimação:
 
-PROCESSO: ${exp.numeroProcesso || 'Não informado'}
-TRIBUNAL: ${exp.tribunal || 'Não informado'}
-DATA: ${exp.receivedAt || exp.dataRecebimento || 'Não informada'}
+PROCESSO: ${exp.numeroProcesso || "Não informado"}
+TRIBUNAL: ${exp.tribunal || "Não informado"}
+DATA: ${exp.receivedAt || exp.dataRecebimento || "Não informada"}
 
 CONTEÚDO:
-${exp.content || exp.teor || 'Sem conteúdo'}`
-            }
-          ]
-        })
-      })
+${exp.content || exp.teor || "Sem conteúdo"}`,
+              },
+            ],
+          }),
+        });
 
-      const data = await response.json()
-      const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
-      const analysisData = parseAnalysisResponse(responseText, exp)
+        const data = await response.json();
+        const responseText =
+          data.choices?.[0]?.message?.content || data.message?.content || "";
+        const analysisData = parseAnalysisResponse(responseText, exp);
 
-      const analyzedExp: Expediente = {
-        ...exp,
-        analyzed: true,
-        summary: analysisData.summary || 'Análise concluída pela Mrs. Justin-e',
-        suggestedAction: analysisData.suggestedActions?.[0] || 'Verificar prazo',
-        pendingDocs: analysisData.nextSteps || [],
-        deadline: analysisData.deadline,
-        priority: mapPriority(analysisData.priority),
-        draftPetition: buildDraftPetition(analysisData, exp)
-      }
+        const analyzedExp: Expediente = {
+          ...exp,
+          analyzed: true,
+          summary:
+            analysisData.summary || "Análise concluída pela Mrs. Justin-e",
+          suggestedAction:
+            analysisData.suggestedActions?.[0] || "Verificar prazo",
+          pendingDocs: analysisData.nextSteps || [],
+          deadline: analysisData.deadline,
+          priority: mapPriority(analysisData.priority),
+          draftPetition: buildDraftPetition(analysisData, exp),
+        };
 
-      // Criar tarefas para outros agentes com base na análise
-      const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData)
-      let createdTasks = 0
+        // Criar tarefas para outros agentes com base na análise
+        const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData);
+        let createdTasks = 0;
 
-      for (const taskData of agentTasks) {
-        // Só cria tarefa se o agente estiver habilitado
-        const agent = agents.find(a => a.id === taskData.agentId)
-        if (agent?.enabled) {
-          const task: AgentTask = {
-            id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-            agentId: taskData.agentId!,
-            type: taskData.type!,
-            priority: taskData.priority as 'low' | 'medium' | 'high' | 'critical',
-            status: 'queued',
-            createdAt: new Date().toISOString(),
-            data: taskData.data as Record<string, unknown>
+        for (const taskData of agentTasks) {
+          // Só cria tarefa se o agente estiver habilitado
+          const agent = agents.find((a) => a.id === taskData.agentId);
+          if (agent?.enabled) {
+            const task: AgentTask = {
+              id: `task-${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2, 11)}`,
+              agentId: taskData.agentId!,
+              type: taskData.type!,
+              priority: taskData.priority as
+                | "low"
+                | "medium"
+                | "high"
+                | "critical",
+              status: "queued",
+              createdAt: new Date().toISOString(),
+              data: taskData.data as Record<string, unknown>,
+            };
+            addTask(task);
+            createdTasks++;
           }
-          addTask(task)
-          createdTasks++
         }
-      }
 
-      if (createdTasks > 0) {
-        setTasksCreated(prev => prev + createdTasks)
-      }
+        if (createdTasks > 0) {
+          setTasksCreated((prev) => prev + createdTasks);
+        }
 
-      // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
-      if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
-        createCalendarDeadline(exp, analysisData)
-      }
+        // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
+        if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
+          createCalendarDeadline(exp, analysisData);
+        }
 
-      return analyzedExp
-    } catch (error) {
-      console.error('Erro ao analisar expediente:', error)
-      throw error
-    }
-  }, [addTask, agents, createCalendarDeadline])
+        return analyzedExp;
+      } catch (error) {
+        console.error("Erro ao analisar expediente:", error);
+        throw error;
+      }
+    },
+    [addTask, agents, createCalendarDeadline]
+  );
 
   // Análise automática de todos os expedientes pendentes
   const runAutoAnalysis = useCallback(async () => {
-    const pending = safeExpedientes.filter(needsAnalysis)
-    if (pending.length === 0) return
+    const pending = safeExpedientes.filter(needsAnalysis);
+    if (pending.length === 0) return;
 
-    setAutoAnalyzing(true)
-    setAnalysisProgress({ current: 0, total: pending.length })
-    setTasksCreated(0)
+    setAutoAnalyzing(true);
+    setAnalysisProgress({ current: 0, total: pending.length });
+    setTasksCreated(0);
 
-    toast.info(`🤖 Mrs. Justin-e iniciando análise automática de ${pending.length} intimação(ões)...`)
+    toast.info(
+      `🤖 Mrs. Justin-e iniciando análise automática de ${pending.length} intimação(ões)...`
+    );
 
-    let analyzed = 0
+    let analyzed = 0;
     for (const exp of pending) {
       try {
-        const result = await analyzeExpediente(exp)
+        const result = await analyzeExpediente(exp);
         setExpedientes((current) =>
-          (current || []).map(e => e.id === exp.id ? result : e)
-        )
-        analyzed++
-        setAnalysisProgress({ current: analyzed, total: pending.length })
+          (current || []).map((e) => (e.id === exp.id ? result : e))
+        );
+        analyzed++;
+        setAnalysisProgress({ current: analyzed, total: pending.length });
 
         // Pequeno delay entre análises para não sobrecarregar a API
         if (analyzed < pending.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       } catch (error) {
-        console.error(`Erro ao analisar expediente ${exp.id}:`, error)
+        console.error(`Erro ao analisar expediente ${exp.id}:`, error);
       }
     }
 
-    setAutoAnalyzing(false)
+    setAutoAnalyzing(false);
     if (analyzed > 0) {
-      const deadlineMsg = deadlinesCreated > 0 ? ` e criou ${deadlinesCreated} prazo(s) na agenda` : ''
+      const deadlineMsg =
+        deadlinesCreated > 0
+          ? ` e criou ${deadlinesCreated} prazo(s) na agenda`
+          : "";
       toast.success(
         `✅ Mrs. Justin-e analisou ${analyzed} intimação(ões)${deadlineMsg} e distribuiu tarefas para os agentes!`,
         { duration: 5000 }
-      )
+      );
     }
-  }, [safeExpedientes, setExpedientes, analyzeExpediente, deadlinesCreated])
+  }, [safeExpedientes, setExpedientes, analyzeExpediente, deadlinesCreated]);
 
   // Dispara análise automática quando expedientes são carregados
   useEffect(() => {
     // Só executa uma vez por sessão e se houver expedientes pendentes
-    if (autoAnalysisRanRef.current) return
-    if (safeExpedientes.length === 0) return
-    if (loading) return
+    if (autoAnalysisRanRef.current) return;
+    if (safeExpedientes.length === 0) return;
+    if (loading) return;
 
-    const pending = safeExpedientes.filter(needsAnalysis)
+    const pending = safeExpedientes.filter(needsAnalysis);
     if (pending.length > 0) {
-      autoAnalysisRanRef.current = true
+      autoAnalysisRanRef.current = true;
       // Delay de 2 segundos para garantir que a UI já carregou
       setTimeout(() => {
-        runAutoAnalysis()
-      }, 2000)
+        runAutoAnalysis();
+      }, 2000);
     }
-  }, [safeExpedientes, loading, runAutoAnalysis])
+  }, [safeExpedientes, loading, runAutoAnalysis]);
 
   // Análise com IA real via API Gemini direta (mantida para uso manual)
   const handleAnalyze = async (exp: Expediente) => {
-    setAnalyzing(true)
-    setSelectedExp(exp)
+    setAnalyzing(true);
+    setSelectedExp(exp);
 
     try {
       // Usa API Gemini diretamente para análise mais confiável
-      const response = await fetch('/api/llm-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/llm-proxy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: 'gemini',
+          model: "gemini",
           messages: [
             {
-              role: 'system',
+              role: "system",
               content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
 Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
 {
@@ -557,99 +654,113 @@ Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
   "suggestedActions": ["lista de ações recomendadas"],
   "nextSteps": ["próximos passos a seguir"]
 }
-Responda APENAS com o JSON, sem texto adicional.`
+Responda APENAS com o JSON, sem texto adicional.`,
             },
             {
-              role: 'user',
+              role: "user",
               content: `Analise esta intimação:
 
-PROCESSO: ${exp.numeroProcesso || 'Não informado'}
-TRIBUNAL: ${exp.tribunal || 'Não informado'}
-DATA: ${exp.receivedAt || exp.dataRecebimento || 'Não informada'}
+PROCESSO: ${exp.numeroProcesso || "Não informado"}
+TRIBUNAL: ${exp.tribunal || "Não informado"}
+DATA: ${exp.receivedAt || exp.dataRecebimento || "Não informada"}
 
 CONTEÚDO:
-${exp.content || exp.teor || 'Sem conteúdo'}`
-            }
-          ]
-        })
-      })
+${exp.content || exp.teor || "Sem conteúdo"}`,
+            },
+          ],
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       // Extrai o conteúdo da resposta
-      const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
+      const responseText =
+        data.choices?.[0]?.message?.content || data.message?.content || "";
 
       // Tenta fazer parse do JSON da resposta
-      let analysisData
+      let analysisData;
       try {
         // Remove possíveis marcadores de código
-        const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-        analysisData = JSON.parse(jsonText)
+        const jsonText = responseText
+          .replace(/```json\n?/g, "")
+          .replace(/```\n?/g, "")
+          .trim();
+        analysisData = JSON.parse(jsonText);
       } catch {
         // Se não conseguir parse, cria estrutura básica com a resposta
         analysisData = {
-          summary: responseText || 'Análise concluída',
-          documentType: exp.type || 'Intimação',
-          priority: 'média',
-          deadline: { days: 15, type: 'úteis', endDate: 'Verificar' },
-          suggestedActions: ['Verificar prazo processual', 'Analisar providências'],
-          nextSteps: ['Revisar intimação', 'Preparar resposta se necessário']
-        }
+          summary: responseText || "Análise concluída",
+          documentType: exp.type || "Intimação",
+          priority: "média",
+          deadline: { days: 15, type: "úteis", endDate: "Verificar" },
+          suggestedActions: [
+            "Verificar prazo processual",
+            "Analisar providências",
+          ],
+          nextSteps: ["Revisar intimação", "Preparar resposta se necessário"],
+        };
       }
 
       const analyzed: Expediente = {
         ...exp,
         analyzed: true,
-        summary: analysisData.summary || 'Análise concluída pela Mrs. Justin-e',
-        suggestedAction: analysisData.suggestedActions?.[0] || 'Verificar prazo',
+        summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
+        suggestedAction:
+          analysisData.suggestedActions?.[0] || "Verificar prazo",
         pendingDocs: analysisData.nextSteps || [],
         deadline: analysisData.deadline,
         priority: mapPriority(analysisData.priority),
-        draftPetition: `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
-          `📋 RESUMO:\n${analysisData.summary || 'N/A'}\n\n` +
+        draftPetition:
+          `ANÁLISE AUTOMÁTICA - Mrs. Justin-e\n\n` +
+          `📋 RESUMO:\n${analysisData.summary || "N/A"}\n\n` +
           `⚖️ TIPO: ${analysisData.documentType || exp.type}\n` +
-          `🚨 PRIORIDADE: ${analysisData.priority || 'média'}\n\n` +
-          `📅 PRAZO: ${analysisData.deadline?.days || 'N/A'} dias ${analysisData.deadline?.type || ''}\n` +
-          `   Data limite: ${analysisData.deadline?.endDate || 'N/A'}\n\n` +
-          `✅ AÇÕES SUGERIDAS:\n${(analysisData.suggestedActions || []).map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}\n\n` +
-          `📝 PRÓXIMOS PASSOS:\n${(analysisData.nextSteps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`
-      }
+          `🚨 PRIORIDADE: ${analysisData.priority || "média"}\n\n` +
+          `📅 PRAZO: ${analysisData.deadline?.days || "N/A"} dias ${
+            analysisData.deadline?.type || ""
+          }\n` +
+          `   Data limite: ${analysisData.deadline?.endDate || "N/A"}\n\n` +
+          `✅ AÇÕES SUGERIDAS:\n${(analysisData.suggestedActions || [])
+            .map((a: string, i: number) => `${i + 1}. ${a}`)
+            .join("\n")}\n\n` +
+          `📝 PRÓXIMOS PASSOS:\n${(analysisData.nextSteps || [])
+            .map((s: string, i: number) => `${i + 1}. ${s}`)
+            .join("\n")}`,
+      };
 
       setExpedientes((current) =>
-        (current || []).map(e => e.id === exp.id ? analyzed : e)
-      )
-      setSelectedExp(analyzed)
-      toast.success('Mrs. Justin-e concluiu a análise!')
-
+        (current || []).map((e) => (e.id === exp.id ? analyzed : e))
+      );
+      setSelectedExp(analyzed);
+      toast.success("Mrs. Justin-e concluiu a análise!");
     } catch (error) {
-      console.error('Erro na análise:', error)
-      toast.error('Erro na análise com IA. Tente novamente.')
+      console.error("Erro na análise:", error);
+      toast.error("Erro na análise com IA. Tente novamente.");
       // NÃO salvar como analisado se falhou - permite tentar novamente
     } finally {
-      setAnalyzing(false)
+      setAnalyzing(false);
     }
-  }
+  };
 
   const handleActivateMichaelRoss = () => {
-    setShowMichaelRossDialog(true)
-  }
+    setShowMichaelRossDialog(true);
+  };
 
   // Análise com Mrs. Justin-e (tarefa específica)
   const handleSelectTask = async (task: string) => {
-    setSelectedTask(task)
-    setAnalyzing(true)
+    setSelectedTask(task);
+    setAnalyzing(true);
 
     try {
       if (selectedExp) {
         // Usa API Gemini diretamente
-        const response = await fetch('/api/llm-proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/llm-proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: 'gemini',
+            model: "gemini",
             messages: [
               {
-                role: 'system',
+                role: "system",
                 content: `Você é Mrs. Justin-e, especialista em controladoria jurídica.
 Crie um workflow detalhado para a tarefa solicitada.
 Retorne um JSON:
@@ -660,113 +771,147 @@ Retorne um JSON:
   "nextSteps": ["próximos passos após a tarefa"],
   "observations": "observações importantes"
 }
-Responda APENAS com o JSON.`
+Responda APENAS com o JSON.`,
               },
               {
-                role: 'user',
+                role: "user",
                 content: `TAREFA: ${task}
 
-PROCESSO: ${selectedExp.numeroProcesso || 'Não informado'}
-TRIBUNAL: ${selectedExp.tribunal || 'Não informado'}
+PROCESSO: ${selectedExp.numeroProcesso || "Não informado"}
+TRIBUNAL: ${selectedExp.tribunal || "Não informado"}
 
 CONTEXTO DA INTIMAÇÃO:
-${selectedExp.content || selectedExp.teor || 'Sem conteúdo'}
+${selectedExp.content || selectedExp.teor || "Sem conteúdo"}
 
-Crie o workflow de controladoria para esta tarefa.`
-              }
-            ]
-          })
-        })
+Crie o workflow de controladoria para esta tarefa.`,
+              },
+            ],
+          }),
+        });
 
-        const data = await response.json()
-        const responseText = data.choices?.[0]?.message?.content || data.message?.content || ''
+        const data = await response.json();
+        const responseText =
+          data.choices?.[0]?.message?.content || data.message?.content || "";
 
-        let analysisData
+        let analysisData;
         try {
-          const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-          analysisData = JSON.parse(jsonText)
+          const jsonText = responseText
+            .replace(/```json\n?/g, "")
+            .replace(/```\n?/g, "")
+            .trim();
+          analysisData = JSON.parse(jsonText);
         } catch {
           analysisData = {
             summary: `Workflow criado para: ${task}`,
-            deadline: { days: 15, type: 'úteis', endDate: 'Calcular' },
-            checklist: ['Verificar prazo', 'Elaborar documento', 'Protocolar'],
-            nextSteps: ['Acompanhar andamento', 'Aguardar manifestação'],
-            observations: responseText || 'Sem observações adicionais'
-          }
+            deadline: { days: 15, type: "úteis", endDate: "Calcular" },
+            checklist: ["Verificar prazo", "Elaborar documento", "Protocolar"],
+            nextSteps: ["Acompanhar andamento", "Aguardar manifestação"],
+            observations: responseText || "Sem observações adicionais",
+          };
         }
 
         const analyzed: Expediente = {
           ...selectedExp,
           analyzed: true,
-          summary: analysisData.summary || `Mrs. Justin-e analisou a intimação para: ${task}`,
+          summary:
+            analysisData.summary ||
+            `Mrs. Justin-e analisou a intimação para: ${task}`,
           suggestedAction: `Executar: ${task}`,
-          pendingDocs: analysisData.checklist || analysisData.nextSteps || ['Documento Principal'],
+          pendingDocs: analysisData.checklist ||
+            analysisData.nextSteps || ["Documento Principal"],
           deadline: analysisData.deadline,
-          priority: 'high',
-          draftPetition: `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
+          priority: "high",
+          draftPetition:
+            `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
             `🎯 TAREFA: ${task}\n\n` +
-            `📋 RESUMO:\n${analysisData.summary || 'Workflow em processamento'}\n\n` +
-            `📅 PRAZO: ${analysisData.deadline?.days || 15} dias ${analysisData.deadline?.type || 'úteis'}\n` +
-            `   Data limite: ${analysisData.deadline?.endDate || 'Calcular'}\n\n` +
-            `✅ CHECKLIST:\n${(analysisData.checklist || analysisData.nextSteps || []).map((s: string, i: number) => `☐ ${i + 1}. ${s}`).join('\n')}\n\n` +
-            `📝 OBSERVAÇÕES:\n${analysisData.observations || 'Nenhuma'}`
-        }
+            `📋 RESUMO:\n${
+              analysisData.summary || "Workflow em processamento"
+            }\n\n` +
+            `📅 PRAZO: ${analysisData.deadline?.days || 15} dias ${
+              analysisData.deadline?.type || "úteis"
+            }\n` +
+            `   Data limite: ${
+              analysisData.deadline?.endDate || "Calcular"
+            }\n\n` +
+            `✅ CHECKLIST:\n${(
+              analysisData.checklist ||
+              analysisData.nextSteps ||
+              []
+            )
+              .map((s: string, i: number) => `☐ ${i + 1}. ${s}`)
+              .join("\n")}\n\n` +
+            `📝 OBSERVAÇÕES:\n${analysisData.observations || "Nenhuma"}`,
+        };
 
         setExpedientes((current) =>
-          (current || []).map(e => e.id === selectedExp.id ? analyzed : e)
-        )
-        setSelectedExp(analyzed)
-        toast.success('Mrs. Justin-e criou o workflow de controladoria!')
+          (current || []).map((e) => (e.id === selectedExp.id ? analyzed : e))
+        );
+        setSelectedExp(analyzed);
+        toast.success("Mrs. Justin-e criou o workflow de controladoria!");
       }
     } catch (error) {
-      console.error('Erro no workflow:', error)
-      toast.error('Erro ao criar workflow. Tente novamente.')
+      console.error("Erro no workflow:", error);
+      toast.error("Erro ao criar workflow. Tente novamente.");
     } finally {
-      setAnalyzing(false)
-      setShowMichaelRossDialog(false)
+      setAnalyzing(false);
+      setShowMichaelRossDialog(false);
     }
-  }
+  };
 
   // Limpar análises antigas com erro para permitir re-análise
   const handleClearFailedAnalysis = () => {
-    const needsReanalysisList = safeExpedientes.filter(needsReanalysis)
+    const needsReanalysisList = safeExpedientes.filter(needsReanalysis);
     if (needsReanalysisList.length === 0) {
-      toast.info('Nenhum expediente com análise inválida encontrado')
-      return
+      toast.info("Nenhum expediente com análise inválida encontrado");
+      return;
     }
 
     setExpedientes((current) =>
-      (current || []).map(exp =>
+      (current || []).map((exp) =>
         needsReanalysis(exp)
-          ? { ...exp, analyzed: false, summary: undefined, suggestedAction: undefined, pendingDocs: undefined }
+          ? {
+              ...exp,
+              analyzed: false,
+              summary: undefined,
+              suggestedAction: undefined,
+              pendingDocs: undefined,
+            }
           : exp
       )
-    )
-    toast.success(`${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`)
-  }
+    );
+    toast.success(
+      `${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`
+    );
+  };
 
   const suggestedTasks = [
-    'Apresentar alegações finais',
-    'Juntar documentos complementares',
-    'Manifestar sobre documentos juntados',
-    'Especificar provas',
-    'Cumprir diligência determinada',
-    'Apresentar rol de testemunhas'
-  ]
+    "Apresentar alegações finais",
+    "Juntar documentos complementares",
+    "Manifestar sobre documentos juntados",
+    "Especificar provas",
+    "Cumprir diligência determinada",
+    "Apresentar rol de testemunhas",
+  ];
 
   return (
     <>
       <div className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Painel de Expedientes
+            </h1>
             <p className="text-muted-foreground mt-1">
               Caixa de entrada inteligente com análise de IA
             </p>
             <p className="text-xs text-muted-foreground mt-2">
-              <span className="font-medium">Advogado:</span> Thiago Bodevan Veiga - OAB/MG 184.404
+              <span className="font-medium">Advogado:</span> Thiago Bodevan
+              Veiga - OAB/MG 184.404
               {lastSync && (
-                <span className="ml-2">• Última verificação: {new Date(lastSync).toLocaleString('pt-BR')}</span>
+                <span className="ml-2">
+                  • Última verificação:{" "}
+                  {new Date(lastSync).toLocaleString("pt-BR")}
+                </span>
               )}
             </p>
           </div>
@@ -778,7 +923,6 @@ Crie o workflow de controladoria para esta tarefa.`
                 size="sm"
                 title="Limpar análises com erro para permitir re-análise"
               >
-
                 Limpar Análises Inválidas
               </Button>
             )}
@@ -788,8 +932,7 @@ Crie o workflow de controladoria para esta tarefa.`
               variant="outline"
               size="sm"
             >
-
-              {loading ? 'Atualizando...' : 'Atualizar'}
+              {loading ? "Atualizando..." : "Atualizar"}
             </Button>
           </div>
         </div>
@@ -799,29 +942,28 @@ Crie o workflow de controladoria para esta tarefa.`
           <Card className="border-primary/50 bg-primary/5">
             <CardContent className="py-4">
               <div className="flex items-center gap-4">
-                <div className="shrink-0">
-
-                </div>
+                <div className="shrink-0"></div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-foreground">
-                      🤖 Mrs. Justin-e analisando intimações e distribuindo tarefas...
+                      🤖 Mrs. Justin-e analisando intimações e distribuindo
+                      tarefas...
                     </p>
                     <span className="text-sm text-muted-foreground">
                       {analysisProgress.current}/{analysisProgress.total}
                     </span>
                   </div>
                   <Progress
-                    value={(analysisProgress.current / analysisProgress.total) * 100}
+                    value={
+                      (analysisProgress.current / analysisProgress.total) * 100
+                    }
                     className="h-2"
                   />
                   {tasksCreated > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
-
                       {tasksCreated} tarefa(s) distribuída(s) para agentes
                       {deadlinesCreated > 0 && (
                         <span className="ml-2">
-
                           {deadlinesCreated} prazo(s) na agenda
                         </span>
                       )}
@@ -834,32 +976,38 @@ Crie o workflow de controladoria para esta tarefa.`
         )}
 
         {/* Status de análises concluídas */}
-        {!autoAnalyzing && safeExpedientes.length > 0 && safeExpedientes.every(e => e.analyzed && !needsReanalysis(e)) && (
-          <Card className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
-            <CardContent className="py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-
-                  <p className="text-sm text-green-700 dark:text-green-400">
-                    ✅ Todas as {safeExpedientes.length} intimações analisadas pela Mrs. Justin-e
-                  </p>
+        {!autoAnalyzing &&
+          safeExpedientes.length > 0 &&
+          safeExpedientes.every((e) => e.analyzed && !needsReanalysis(e)) && (
+            <Card className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
+              <CardContent className="py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm text-green-700 dark:text-green-400">
+                      ✅ Todas as {safeExpedientes.length} intimações analisadas
+                      pela Mrs. Justin-e
+                    </p>
+                  </div>
+                  {tasksCreated > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-700"
+                    >
+                      {tasksCreated} tarefas na fila dos agentes
+                    </Badge>
+                  )}
+                  {deadlinesCreated > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-700"
+                    >
+                      {deadlinesCreated} prazos na agenda
+                    </Badge>
+                  )}
                 </div>
-                {tasksCreated > 0 && (
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-
-                    {tasksCreated} tarefas na fila dos agentes
-                  </Badge>
-                )}
-                {deadlinesCreated > 0 && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
-
-                    {deadlinesCreated} prazos na agenda
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
@@ -869,12 +1017,13 @@ Crie o workflow de controladoria para esta tarefa.`
                   Expedientes Recentes
                   <Badge variant="secondary">{safeExpedientes.length}</Badge>
                 </CardTitle>
-                <CardDescription>Intimações do DJEN aguardando análise</CardDescription>
+                <CardDescription>
+                  Intimações do DJEN aguardando análise
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {safeExpedientes.length === 0 ? (
                   <div className="text-center py-8 space-y-3">
-
                     <p className="text-sm text-muted-foreground">
                       Nenhuma publicação encontrada
                     </p>
@@ -888,29 +1037,33 @@ Crie o workflow de controladoria para esta tarefa.`
                       size="sm"
                       className="mt-2"
                     >
-
                       Verificar Agora
                     </Button>
                   </div>
                 ) : (
                   safeExpedientes.map((exp) => (
-                    <div
+                    <button
                       key={exp.id}
-                      role="button"
-                      tabIndex={0}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedExp?.id === exp.id
-                        ? 'bg-primary/10 border-primary'
-                        : 'bg-card border-border hover:bg-muted'
-                        }`}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedExp?.id === exp.id
+                          ? "bg-primary/10 border-primary"
+                          : "bg-card border-border hover:bg-muted"
+                      }`}
                       onClick={() => setSelectedExp(exp)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedExp(exp); } }}
+                      type="button"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
+                          <p className="text-sm font-medium line-clamp-1">
+                            {exp.type || exp.tipo}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString('pt-BR')}
-                            {exp.tribunal && <span className="ml-1">• {exp.tribunal}</span>}
+                            {new Date(
+                              exp.receivedAt || exp.dataRecebimento
+                            ).toLocaleDateString("pt-BR")}
+                            {exp.tribunal && (
+                              <span className="ml-1">• {exp.tribunal}</span>
+                            )}
                           </p>
                         </div>
                         {exp.analyzed ? (
@@ -919,7 +1072,7 @@ Crie o workflow de controladoria para esta tarefa.`
                           <Badge variant="outline">Pendente</Badge>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))
                 )}
               </CardContent>
@@ -934,34 +1087,51 @@ Crie o workflow de controladoria para esta tarefa.`
                     <div className="flex-1">
                       <CardTitle>{selectedExp.type}</CardTitle>
                       <CardDescription className="mt-1">
-                        Recebido em {new Date(selectedExp.receivedAt || selectedExp.dataRecebimento).toLocaleDateString('pt-BR')}
+                        Recebido em{" "}
+                        {new Date(
+                          selectedExp.receivedAt || selectedExp.dataRecebimento
+                        ).toLocaleDateString("pt-BR")}
                       </CardDescription>
                     </div>
                     {!selectedExp.analyzed && (
                       <div className="flex gap-2">
-                        <Button onClick={() => handleActivateMichaelRoss()} disabled={analyzing} variant="default">
-
-                          {analyzing ? 'Analisando...' : 'Ativar Michael Ross'}
+                        <Button
+                          onClick={() => handleActivateMichaelRoss()}
+                          disabled={analyzing}
+                          variant="default"
+                        >
+                          {analyzing ? "Analisando..." : "Ativar Michael Ross"}
                         </Button>
-                        <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline">
-
+                        <Button
+                          onClick={() => handleAnalyze(selectedExp)}
+                          disabled={analyzing}
+                          variant="outline"
+                        >
                           Análise Padrão
                         </Button>
                       </div>
                     )}
                     {selectedExp.analyzed && needsReanalysis(selectedExp) && (
-                      <Button onClick={() => handleAnalyze(selectedExp)} disabled={analyzing} variant="outline" size="sm">
-
-                        {analyzing ? 'Re-analisando...' : 'Re-analisar com IA'}
+                      <Button
+                        onClick={() => handleAnalyze(selectedExp)}
+                        disabled={analyzing}
+                        variant="outline"
+                        size="sm"
+                      >
+                        {analyzing ? "Re-analisando..." : "Re-analisar com IA"}
                       </Button>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold mb-2">Conteúdo Original</h3>
+                    <h3 className="text-sm font-semibold mb-2">
+                      Conteúdo Original
+                    </h3>
                     <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap document-content">{selectedExp.content}</p>
+                      <p className="text-sm whitespace-pre-wrap document-content">
+                        {selectedExp.content}
+                      </p>
                     </div>
                   </div>
 
@@ -969,7 +1139,6 @@ Crie o workflow de controladoria para esta tarefa.`
                     <>
                       <div>
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-
                           Resumo Inteligente
                         </h3>
                         <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
@@ -978,35 +1147,39 @@ Crie o workflow de controladoria para esta tarefa.`
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold mb-2">Ação Sugerida</h3>
+                        <h3 className="text-sm font-semibold mb-2">
+                          Ação Sugerida
+                        </h3>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-900">{selectedExp.suggestedAction}</p>
+                          <p className="text-sm text-blue-900">
+                            {selectedExp.suggestedAction}
+                          </p>
                         </div>
                       </div>
 
-                      {selectedExp.pendingDocs && selectedExp.pendingDocs.length > 0 && (
-                        <div>
-                          <h3 className="text-sm font-semibold mb-2">Documentos Pendentes</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedExp.pendingDocs.map((doc, idx) => (
-                              <Badge key={doc} variant="outline">
-
-                                {doc}
-                              </Badge>
-                            ))}
+                      {selectedExp.pendingDocs &&
+                        selectedExp.pendingDocs.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-semibold mb-2">
+                              Documentos Pendentes
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedExp.pendingDocs.map((doc, idx) => (
+                                <Badge key={doc} variant="outline">
+                                  {doc}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {selectedExp.draftPetition && (
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="text-sm font-semibold flex items-center gap-2">
-
                               Minuta de Petição Gerada
                             </h3>
                             <Button variant="outline" size="sm">
-
                               Exportar
                             </Button>
                           </div>
@@ -1024,8 +1197,9 @@ Crie o workflow de controladoria para esta tarefa.`
             ) : (
               <Card key="empty-selection">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-
-                  <p className="text-lg font-medium text-foreground">Selecione um expediente</p>
+                  <p className="text-lg font-medium text-foreground">
+                    Selecione um expediente
+                  </p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Escolha um expediente da lista para visualizar e analisar
                   </p>
@@ -1036,15 +1210,19 @@ Crie o workflow de controladoria para esta tarefa.`
         </div>
       </div>
 
-      <Dialog open={showMichaelRossDialog} onOpenChange={setShowMichaelRossDialog}>
+      <Dialog
+        open={showMichaelRossDialog}
+        onOpenChange={setShowMichaelRossDialog}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
-
               Mrs. Michael Ross - Análise de Intimação
             </DialogTitle>
             <DialogDescription>
-              Resumo: {selectedExp?.summary || 'Intimação recebida aguardando análise detalhada'}
+              Resumo:{" "}
+              {selectedExp?.summary ||
+                "Intimação recebida aguardando análise detalhada"}
             </DialogDescription>
           </DialogHeader>
 
@@ -1054,7 +1232,8 @@ Crie o workflow de controladoria para esta tarefa.`
                 📊 Análise Rápida (95% de precisão em menos de 1 minuto)
               </p>
               <p className="text-xs text-muted-foreground">
-                Identifiquei que esta intimação requer ação. Selecione a tarefa mais pertinente ao caso:
+                Identifiquei que esta intimação requer ação. Selecione a tarefa
+                mais pertinente ao caso:
               </p>
             </div>
 
@@ -1072,9 +1251,13 @@ Crie o workflow de controladoria para esta tarefa.`
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-primary">{index + 1}</span>
+                        <span className="text-xs font-bold text-primary">
+                          {index + 1}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-foreground">{task}</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {task}
+                      </span>
                     </div>
                   </button>
                 ))}
@@ -1094,5 +1277,5 @@ Crie o workflow de controladoria para esta tarefa.`
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

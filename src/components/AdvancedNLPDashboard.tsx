@@ -4,135 +4,136 @@
  * Interface for advanced NLP operations inspired by Databricks Spark NLP
  */
 
-import { useState } from 'react'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Progress } from '@/components/ui/progress'
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  nlpPipeline,
+  type DocumentClassification,
+  type ExtractedInformation,
+  type NamedEntity,
+  type SentimentAnalysis,
+} from "@/lib/nlp-pipeline";
 import {
   Brain,
-  MagnifyingGlass,
-  FileText,
-  Tag,
   ChartBar,
-  Lightning,
   CheckCircle,
   Copy,
   Download,
-} from '@phosphor-icons/react'
-import {
-  nlpPipeline,
-  type NamedEntity,
-  type SentimentAnalysis,
-  type DocumentClassification,
-  type ExtractedInformation,
-} from '@/lib/nlp-pipeline'
-import { toast } from 'sonner'
+  FileText,
+  Lightning,
+  MagnifyingGlass,
+  Tag,
+} from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function AdvancedNLPDashboard() {
-  const [inputText, setInputText] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [inputText, setInputText] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Results state
-  const [entities, setEntities] = useState<NamedEntity[]>([])
-  const [sentiment, setSentiment] = useState<SentimentAnalysis | null>(null)
+  const [entities, setEntities] = useState<NamedEntity[]>([]);
+  const [sentiment, setSentiment] = useState<SentimentAnalysis | null>(null);
   const [classification, setClassification] =
-    useState<DocumentClassification | null>(null)
-  const [extraction, setExtraction] =
-    useState<ExtractedInformation | null>(null)
+    useState<DocumentClassification | null>(null);
+  const [extraction, setExtraction] = useState<ExtractedInformation | null>(
+    null
+  );
 
   const handleExtractEntities = async () => {
     if (!inputText.trim()) {
-      toast.error('Digite um texto para análise')
-      return
+      toast.error("Digite um texto para análise");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const result = await nlpPipeline.extractEntities(inputText)
-      setEntities(result)
-      toast.success(`${result.length} entidades extraídas`)
+      const result = await nlpPipeline.extractEntities(inputText);
+      setEntities(result);
+      toast.success(`${result.length} entidades extraídas`);
     } catch (error) {
-      toast.error('Erro ao extrair entidades')
-      console.error(error)
+      toast.error("Erro ao extrair entidades");
+      console.error(error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleAnalyzeSentiment = async () => {
     if (!inputText.trim()) {
-      toast.error('Digite um texto para análise')
-      return
+      toast.error("Digite um texto para análise");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const result = await nlpPipeline.analyzeSentiment(inputText)
-      setSentiment(result)
-      toast.success('Análise de sentimento concluída')
+      const result = await nlpPipeline.analyzeSentiment(inputText);
+      setSentiment(result);
+      toast.success("Análise de sentimento concluída");
     } catch (error) {
-      toast.error('Erro ao analisar sentimento')
-      console.error(error)
+      toast.error("Erro ao analisar sentimento");
+      console.error(error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleClassifyDocument = async () => {
     if (!inputText.trim()) {
-      toast.error('Digite um texto para análise')
-      return
+      toast.error("Digite um texto para análise");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const result = await nlpPipeline.classifyDocument(inputText)
-      setClassification(result)
-      toast.success('Documento classificado')
+      const result = await nlpPipeline.classifyDocument(inputText);
+      setClassification(result);
+      toast.success("Documento classificado");
     } catch (error) {
-      toast.error('Erro ao classificar documento')
-      console.error(error)
+      toast.error("Erro ao classificar documento");
+      console.error(error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleExtractInformation = async () => {
     if (!inputText.trim()) {
-      toast.error('Digite um texto para análise')
-      return
+      toast.error("Digite um texto para análise");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const result = await nlpPipeline.extractInformation(inputText)
-      setExtraction(result)
-      toast.success('Informações extraídas')
+      const result = await nlpPipeline.extractInformation(inputText);
+      setExtraction(result);
+      toast.success("Informações extraídas");
     } catch (error) {
-      toast.error('Erro ao extrair informações')
-      console.error(error)
+      toast.error("Erro ao extrair informações");
+      console.error(error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleProcessAll = async () => {
     if (!inputText.trim()) {
-      toast.error('Digite um texto para análise')
-      return
+      toast.error("Digite um texto para análise");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
       // Run all analyses in parallel
       const [
@@ -145,35 +146,37 @@ export default function AdvancedNLPDashboard() {
         nlpPipeline.analyzeSentiment(inputText),
         nlpPipeline.classifyDocument(inputText),
         nlpPipeline.extractInformation(inputText),
-      ])
+      ]);
 
-      setEntities(entitiesResult)
-      setSentiment(sentimentResult)
-      setClassification(classificationResult)
-      setExtraction(extractionResult)
+      setEntities(entitiesResult);
+      setSentiment(sentimentResult);
+      setClassification(classificationResult);
+      setExtraction(extractionResult);
 
-      toast.success('Análise completa concluída')
+      toast.success("Análise completa concluída");
     } catch (error) {
-      toast.error('Erro ao processar documento')
-      console.error(error)
+      toast.error("Erro ao processar documento");
+      console.error(error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const copyToClipboard = (text: string) => {
     try {
-      if (typeof navigator === 'undefined' || !navigator.clipboard) {
-        toast.error('Copiar para a área de transferência não é suportado neste ambiente')
-        return
+      if (typeof navigator === "undefined" || !navigator.clipboard) {
+        toast.error(
+          "Copiar para a área de transferência não é suportado neste ambiente"
+        );
+        return;
       }
-      void navigator.clipboard.writeText(text)
-      toast.success('Copiado para área de transferência')
+      void navigator.clipboard.writeText(text);
+      toast.success("Copiado para área de transferência");
     } catch (error) {
-      console.error(error)
-      toast.error('Não foi possível copiar o texto')
+      console.error(error);
+      toast.error("Não foi possível copiar o texto");
     }
-  }
+  };
 
   const downloadAsJSON = (
     data:
@@ -182,51 +185,54 @@ export default function AdvancedNLPDashboard() {
       | DocumentClassification
       | ExtractedInformation
       | null,
-    filename: string,
+    filename: string
   ) => {
     try {
-      if (globalThis.window === undefined || globalThis.document === undefined) {
-        toast.error('Download não é suportado neste ambiente')
-        return
+      if (
+        globalThis.window === undefined ||
+        globalThis.document === undefined
+      ) {
+        toast.error("Download não é suportado neste ambiente");
+        return;
       }
 
-      const json = JSON.stringify(data, null, 2)
-      const blob = new Blob([json], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Arquivo baixado')
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Arquivo baixado");
     } catch (error) {
-      console.error(error)
-      toast.error('Erro ao gerar arquivo para download')
+      console.error(error);
+      toast.error("Erro ao gerar arquivo para download");
     }
-  }
+  };
 
   const getEntityColor = (type: string) => {
     const colors: Record<string, string> = {
-      PERSON: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
-      ORGANIZATION: 'bg-green-500/20 text-green-400 border-green-500/50',
-      LOCATION: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
-      DATE: 'bg-purple-500/20 text-purple-400 border-purple-500/50',
-      MONETARY_VALUE: 'bg-pink-500/20 text-pink-400 border-pink-500/50',
-      LEGAL_REFERENCE: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50',
-      PROCESS_NUMBER: 'bg-orange-500/20 text-orange-400 border-orange-500/50',
-      LAW_ARTICLE: 'bg-red-500/20 text-red-400 border-red-500/50',
-    }
-    return colors[type] || 'bg-gray-500/20 text-gray-400 border-gray-500/50'
-  }
+      PERSON: "bg-blue-500/20 text-blue-400 border-blue-500/50",
+      ORGANIZATION: "bg-green-500/20 text-green-400 border-green-500/50",
+      LOCATION: "bg-yellow-500/20 text-yellow-400 border-yellow-500/50",
+      DATE: "bg-purple-500/20 text-purple-400 border-purple-500/50",
+      MONETARY_VALUE: "bg-pink-500/20 text-pink-400 border-pink-500/50",
+      LEGAL_REFERENCE: "bg-cyan-500/20 text-cyan-400 border-cyan-500/50",
+      PROCESS_NUMBER: "bg-orange-500/20 text-orange-400 border-orange-500/50",
+      LAW_ARTICLE: "bg-red-500/20 text-red-400 border-red-500/50",
+    };
+    return colors[type] || "bg-gray-500/20 text-gray-400 border-gray-500/50";
+  };
 
   const getSentimentColor = (sentiment: string) => {
     const colors: Record<string, string> = {
-      positive: 'text-green-500',
-      negative: 'text-red-500',
-      neutral: 'text-gray-400',
-    }
-    return colors[sentiment] || 'text-gray-400'
-  }
+      positive: "text-green-500",
+      negative: "text-red-500",
+      neutral: "text-gray-400",
+    };
+    return colors[sentiment] || "text-gray-400";
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -270,7 +276,7 @@ export default function AdvancedNLPDashboard() {
               className="gradient-button"
             >
               <Lightning size={20} />
-              {isProcessing ? 'Processando...' : 'Análise Completa'}
+              {isProcessing ? "Processando..." : "Análise Completa"}
             </Button>
             <Button
               onClick={handleExtractEntities}
@@ -324,13 +330,13 @@ export default function AdvancedNLPDashboard() {
             Entidades {entities.length > 0 && `(${entities.length})`}
           </TabsTrigger>
           <TabsTrigger value="sentiment">
-            Sentimento {sentiment && '✓'}
+            Sentimento {sentiment && "✓"}
           </TabsTrigger>
           <TabsTrigger value="classification">
-            Classificação {classification && '✓'}
+            Classificação {classification && "✓"}
           </TabsTrigger>
           <TabsTrigger value="extraction">
-            Extração {extraction && '✓'}
+            Extração {extraction && "✓"}
           </TabsTrigger>
         </TabsList>
 
@@ -353,7 +359,7 @@ export default function AdvancedNLPDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadAsJSON(entities, 'entities.json')}
+                    onClick={() => downloadAsJSON(entities, "entities.json")}
                   >
                     <Download size={16} />
                     Download
@@ -365,14 +371,14 @@ export default function AdvancedNLPDashboard() {
                   <div className="space-y-2">
                     {entities.map((entity, index) => (
                       <div
-                        key={index}
+                        key={`${entity.type}-${entity.text}-${index}`}
                         className="p-3 rounded-lg border border-border hover:bg-card/50 transition-colors"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium">{entity.text}</span>
                           <div className="flex items-center gap-2">
                             <Badge className={getEntityColor(entity.type)}>
-                              {entity.type.replace('_', ' ')}
+                              {entity.type.replaceAll("_", " ")}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {(entity.confidence * 100).toFixed(0)}% confiança
@@ -420,9 +426,7 @@ export default function AdvancedNLPDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      downloadAsJSON(sentiment, 'sentiment.json')
-                    }
+                    onClick={() => downloadAsJSON(sentiment, "sentiment.json")}
                   >
                     <Download size={16} />
                     Download
@@ -437,12 +441,12 @@ export default function AdvancedNLPDashboard() {
                   </div>
                   <div
                     className={`text-4xl font-bold capitalize mb-2 ${getSentimentColor(
-                      sentiment.sentiment,
+                      sentiment.sentiment
                     )}`}
                   >
-                    {sentiment.sentiment === 'positive' && '😊 Positivo'}
-                    {sentiment.sentiment === 'negative' && '😟 Negativo'}
-                    {sentiment.sentiment === 'neutral' && '😐 Neutro'}
+                    {sentiment.sentiment === "positive" && "😊 Positivo"}
+                    {sentiment.sentiment === "negative" && "😟 Negativo"}
+                    {sentiment.sentiment === "neutral" && "😐 Neutro"}
                   </div>
                   <div className="text-2xl font-bold gradient-text mb-4">
                     Score: {sentiment.score.toFixed(2)}
@@ -459,19 +463,15 @@ export default function AdvancedNLPDashboard() {
                 {/* Aspects */}
                 {sentiment.aspects && sentiment.aspects.length > 0 && (
                   <div>
-                    <h4 className="font-semibold mb-3">
-                      Análise por Aspectos
-                    </h4>
+                    <h4 className="font-semibold mb-3">Análise por Aspectos</h4>
                     <div className="space-y-3">
                       {sentiment.aspects.map((aspect, index) => (
                         <div
-                          key={index}
+                          key={`${aspect.aspect}-${index}`}
                           className="p-3 rounded-lg border border-border"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">
-                              {aspect.aspect}
-                            </span>
+                            <span className="font-medium">{aspect.aspect}</span>
                             <Badge
                               className={getSentimentColor(aspect.sentiment)}
                             >
@@ -526,7 +526,7 @@ export default function AdvancedNLPDashboard() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      downloadAsJSON(classification, 'classification.json')
+                      downloadAsJSON(classification, "classification.json")
                     }
                   >
                     <Download size={16} />
@@ -561,7 +561,11 @@ export default function AdvancedNLPDashboard() {
                     <h4 className="font-semibold mb-3">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {classification.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-sm">
+                        <Badge
+                          key={`${tag}-${index}`}
+                          variant="secondary"
+                          className="text-sm"
+                        >
                           {tag}
                         </Badge>
                       ))}
@@ -605,7 +609,7 @@ export default function AdvancedNLPDashboard() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      downloadAsJSON(extraction, 'extraction.json')
+                      downloadAsJSON(extraction, "extraction.json")
                     }
                   >
                     <Download size={16} />
@@ -621,9 +625,7 @@ export default function AdvancedNLPDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() =>
-                        copyToClipboard(extraction.summary ?? '')
-                      }
+                      onClick={() => copyToClipboard(extraction.summary ?? "")}
                     >
                       <Copy size={16} />
                     </Button>
@@ -640,7 +642,7 @@ export default function AdvancedNLPDashboard() {
                     <div className="space-y-2">
                       {extraction.keyPoints.map((point, index) => (
                         <div
-                          key={index}
+                          key={`${String(point).slice(0, 20)}-${index}`}
                           className="flex items-start gap-2 p-3 rounded-lg border border-border"
                         >
                           <CheckCircle
@@ -713,9 +715,7 @@ export default function AdvancedNLPDashboard() {
 
                   {extraction.parties && extraction.parties.length > 0 && (
                     <div className="p-4 rounded-lg border border-border">
-                      <h5 className="font-semibold mb-2">
-                        Partes Envolvidas
-                      </h5>
+                      <h5 className="font-semibold mb-2">Partes Envolvidas</h5>
                       <div className="space-y-1">
                         {extraction.parties.map((party) => (
                           <div
@@ -745,5 +745,5 @@ export default function AdvancedNLPDashboard() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

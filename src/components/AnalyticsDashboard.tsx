@@ -1,18 +1,30 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { useAnalytics } from '@/hooks/use-analytics'
-import { ChartBar, Eye, MouseSimple, Warning, Trash } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { useMemo } from 'react'
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAnalytics } from "@/hooks/use-analytics";
+import {
+  ChartBar,
+  Eye,
+  MouseSimple,
+  Trash,
+  Warning,
+} from "@phosphor-icons/react";
+import { useMemo } from "react";
+import { toast } from "sonner";
 
 export default function AnalyticsDashboard() {
-  const { getAnalytics, clearEvents, events } = useAnalytics()
-  const analytics = getAnalytics()
+  const { getAnalytics, clearEvents, events } = useAnalytics();
+  const analytics = getAnalytics();
 
   const handleClearEvents = () => {
-    clearEvents()
-    toast.success('Dados de análise limpos com sucesso')
-  }
+    clearEvents();
+    toast.success("Dados de análise limpos com sucesso");
+  };
 
   // Garantir estrutura segura mesmo se o hook ainda não tiver dados
   const safeAnalytics = useMemo(() => {
@@ -23,21 +35,34 @@ export default function AnalyticsDashboard() {
       errors: 0,
       popularPages: [] as Array<[string, number]>,
       topActions: [] as Array<[string, number]>,
-    }
+    };
 
-    const last24h = analytics?.last24h ?? baseLast
-    const last7d = analytics?.last7d ?? { ...baseLast, popularPages: [], topActions: [] }
+    const last24h = analytics?.last24h ?? baseLast;
+    const last7d = analytics?.last7d ?? {
+      ...baseLast,
+      popularPages: [],
+      topActions: [],
+    };
 
-    return { last24h, last7d }
-  }, [analytics])
+    return { last24h, last7d };
+  }, [analytics]);
 
-  const sortedPages = safeAnalytics.last24h.popularPages ?? []
-  const sortedActions = safeAnalytics.last24h.topActions ?? []
+  const sortedPages = safeAnalytics.last24h.popularPages ?? [];
+  const sortedActions = safeAnalytics.last24h.topActions ?? [];
 
-  const pageMaxCount = sortedPages.length > 0 ? sortedPages[0][1] || 1 : 1
-  const actionMaxCount = sortedActions.length > 0 ? sortedActions[0][1] || 1 : 1
+  const pageMaxCount = (() => {
+    if (sortedPages.length === 0) return 1;
+    const [, max] = sortedPages[0];
+    return max || 1;
+  })();
 
-  const safeEvents = events ?? []
+  const actionMaxCount = (() => {
+    if (sortedActions.length === 0) return 1;
+    const [, max] = sortedActions[0];
+    return max || 1;
+  })();
+
+  const safeEvents = events ?? [];
 
   return (
     <div className="p-6 space-y-6">
@@ -63,7 +88,9 @@ export default function AnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total de Eventos
+            </CardTitle>
             <ChartBar size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -78,7 +105,9 @@ export default function AnalyticsDashboard() {
 
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Visualizações (24h)</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Visualizações (24h)
+            </CardTitle>
             <Eye size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -115,9 +144,7 @@ export default function AnalyticsDashboard() {
             <div className="text-2xl font-bold text-destructive">
               {safeAnalytics.last24h.errors}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Erros registrados
-            </p>
+            <p className="text-xs text-muted-foreground">Erros registrados</p>
           </CardContent>
         </Card>
       </div>
@@ -140,7 +167,7 @@ export default function AnalyticsDashboard() {
                   <div key={page} className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate capitalize">
-                        {page.replace(/-/g, ' ')}
+                        {page.replaceAll("-", " ")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
@@ -148,7 +175,10 @@ export default function AnalyticsDashboard() {
                         <div
                           className="h-full button-gradient"
                           style={{
-                            width: `${Math.max(5, (count / pageMaxCount) * 100)}%`,
+                            width: `${Math.max(
+                              5,
+                              (count / pageMaxCount) * 100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -176,10 +206,13 @@ export default function AnalyticsDashboard() {
             ) : (
               <div className="space-y-4">
                 {sortedActions.map(([action, count]) => (
-                  <div key={action} className="flex items-center justify-between">
+                  <div
+                    key={action}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate capitalize">
-                        {action.replace(/-/g, ' ')}
+                        {action.replaceAll("-", " ")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
@@ -187,7 +220,10 @@ export default function AnalyticsDashboard() {
                         <div
                           className="h-full bg-linear-to-r from-secondary to-accent"
                           style={{
-                            width: `${Math.max(5, (count / actionMaxCount) * 100)}%`,
+                            width: `${Math.max(
+                              5,
+                              (count / actionMaxCount) * 100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -226,25 +262,27 @@ export default function AnalyticsDashboard() {
                   >
                     <div
                       className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                        event.type === 'pageview'
-                          ? 'bg-secondary'
-                          : event.type === 'action'
-                          ? 'bg-accent'
-                          : 'bg-destructive'
+                        event.type === "pageview"
+                          ? "bg-secondary"
+                          : event.type === "action"
+                          ? "bg-accent"
+                          : "bg-destructive"
                       }`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium capitalize">
-                          {event.type === 'pageview' &&
-                            `Visualização: ${event.data?.path ?? '-'}`}
-                          {event.type === 'action' &&
-                            `Ação: ${event.data?.action ?? '-'}`}
-                          {event.type === 'error' &&
-                            `Erro: ${event.data?.error ?? '-'}`}
+                          {event.type === "pageview" &&
+                            `Visualização: ${event.data?.path ?? "-"}`}
+                          {event.type === "action" &&
+                            `Ação: ${event.data?.action ?? "-"}`}
+                          {event.type === "error" &&
+                            `Erro: ${event.data?.error ?? "-"}`}
                         </p>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(event.timestamp).toLocaleTimeString('pt-BR')}
+                          {new Date(event.timestamp).toLocaleTimeString(
+                            "pt-BR"
+                          )}
                         </span>
                       </div>
                       {event.data?.category && (
@@ -260,5 +298,5 @@ export default function AnalyticsDashboard() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

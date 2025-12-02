@@ -41,6 +41,22 @@ function App() {
     setIsAuthenticated(!!user);
   }, [user]);
 
+  // Fallback de roteamento: sincroniza currentView com o hash da URL
+  useEffect(() => {
+    const applyHashView = () => {
+      if (typeof window === "undefined") return;
+      const hash = window.location.hash.replace(/^#/, "").trim();
+      if (hash) {
+        setCurrentView(hash as ViewType);
+      }
+    };
+    // aplica na carga inicial
+    applyHashView();
+    // escuta alterações de hash
+    window.addEventListener("hashchange", applyHashView);
+    return () => window.removeEventListener("hashchange", applyHashView);
+  }, []);
+
   // Handler legado de Google removido
 
   const handleSimpleAuthSuccess = (user: User) => {

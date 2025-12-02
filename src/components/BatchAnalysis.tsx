@@ -1,21 +1,27 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from '@/components/ui/table'
-import { Sparkle, Download } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { useClientesManager } from '@/hooks/use-clientes-manager'
-import type { Expediente } from '@/types'
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { useClientesManager } from "@/hooks/use-clientes-manager";
+import { useKV } from "@/hooks/use-kv";
+import type { Expediente } from "@/types";
+import { Download, Sparkle } from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 /**
  * BatchAnalysis - Análise em lote de documentos jurídicos
@@ -36,210 +42,222 @@ import type { Expediente } from '@/types'
  */
 
 interface ExtractedData {
-  cnj: string
-  parties: string
-  deadline: string
-  type: string
+  cnj: string;
+  parties: string;
+  deadline: string;
+  type: string;
 }
 
 export default function BatchAnalysis() {
-  const [, setExpedientes] = useKV<Expediente[]>('expedientes', [])
-  const [inputText, setInputText] = useState('')
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [extractedData, setExtractedData] = useState<ExtractedData[]>([])
-  const [analyzing, setAnalyzing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [, setExpedientes] = useKV<Expediente[]>("expedientes", []);
+  const [inputText, setInputText] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [extractedData, setExtractedData] = useState<ExtractedData[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Hook centralizado para cadastro de clientes
-  const { createOrUpdateFromDjenIntimacao } = useClientesManager()
+  const { createOrUpdateFromDjenIntimacao } = useClientesManager();
 
-  const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024 // 200MB
+  const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024; // 200MB
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
+    const files = Array.from(event.target.files || []);
     if (files.length === 0) {
-      setSelectedFiles([])
-      return
+      setSelectedFiles([]);
+      return;
     }
 
-    const validFiles: File[] = []
-    let rejected = 0
+    const validFiles: File[] = [];
+    let rejected = 0;
 
     files.forEach((file) => {
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        rejected++
+        rejected++;
       } else {
-        validFiles.push(file)
+        validFiles.push(file);
       }
-    })
+    });
 
     if (rejected > 0) {
       toast.error(
         `Alguns arquivos foram rejeitados por excederem 200MB (${rejected} arquivo(s))`
-      )
+      );
     }
 
-    setSelectedFiles(validFiles)
+    setSelectedFiles(validFiles);
 
     if (validFiles.length > 0) {
       toast.success(
         `${validFiles.length} arquivo(s) selecionado(s) para análise em lote`
-      )
+      );
     }
-  }
+  };
 
   const handleAnalyze = async () => {
     if (!inputText.trim() && selectedFiles.length === 0) {
-      toast.error('Cole os expedientes ou selecione arquivos para análise')
-      return
+      toast.error("Cole os expedientes ou selecione arquivos para análise");
+      return;
     }
 
-    setAnalyzing(true)
-    setError(null)
+    setAnalyzing(true);
+    setError(null);
 
     try {
-      const formData = new FormData()
+      const formData = new FormData();
 
       if (inputText.trim()) {
-        formData.append('text', inputText)
+        formData.append("text", inputText);
       }
 
       if (selectedFiles.length > 0) {
         selectedFiles.forEach((file) => {
-          formData.append('files', file)
-        })
+          formData.append("files", file);
+        });
       }
 
       // Chama a API real do Gemini 2.5 Pro via backend
-      const response = await fetch('/api/ai/batch-expedientes', {
-        method: 'POST',
-        body: formData
+      const response = await fetch("/api/ai/batch-expedientes", {
+        method: "POST",
+        body: formData,
         // NÃO definir Content-Type manualmente aqui (browser cuida do boundary)
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`)
+        throw new Error(`Erro na API: ${response.status}`);
       }
 
       const parsed = (await response.json()) as {
-        expedientes?: ExtractedData[]
-        error?: string
+        expedientes?: ExtractedData[];
+        error?: string;
+      };
+
+      if (
+        parsed.error &&
+        (!parsed.expedientes || parsed.expedientes.length === 0)
+      ) {
+        setError(
+          parsed.error || "Nenhum expediente encontrado no conteúdo enviado"
+        );
+        toast.warning("Nenhum expediente identificado");
+        setExtractedData([]);
+        return;
       }
 
-      if (parsed.error && (!parsed.expedientes || parsed.expedientes.length === 0)) {
-        setError(parsed.error || 'Nenhum expediente encontrado no conteúdo enviado')
-        toast.warning('Nenhum expediente identificado')
-        setExtractedData([])
-        return
-      }
-
-      const expedientes: ExtractedData[] = parsed.expedientes || []
+      const expedientes: ExtractedData[] = parsed.expedientes || [];
 
       if (expedientes.length === 0) {
-        setError('Nenhum expediente com dados estruturados foi encontrado')
-        toast.warning('Nenhum expediente identificado')
-        setExtractedData([])
-        return
+        setError("Nenhum expediente com dados estruturados foi encontrado");
+        toast.warning("Nenhum expediente identificado");
+        setExtractedData([]);
+        return;
       }
 
       // Conteúdo-base salvo nos registros (apenas referência)
       const conteudoBase =
         inputText ||
         (selectedFiles.length > 0
-          ? `Documentos anexados: ${selectedFiles.map((f) => f.name).join(', ')}`
-          : '')
+          ? `Documentos anexados: ${selectedFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          : "");
 
-      const nowIso = new Date().toISOString()
+      const nowIso = new Date().toISOString();
 
       // Salva os expedientes extraídos na KV
       const newExpedientes: Expediente[] = expedientes.map((data) => {
         // Cadastra/atualiza cliente automaticamente a partir das partes
         // O campo 'parties' geralmente tem formato "Autor vs Réu" ou "Autor x Réu"
         if (data.parties) {
-          const partiesMatch = data.parties.match(/^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i)
+          const partiesMatch = data.parties.match(
+            /^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i
+          );
           if (partiesMatch) {
-            const autor = partiesMatch[1].trim()
+            const autor = partiesMatch[1].trim();
             // const reu = partiesMatch[2].trim() // Unused
             // Cadastra o autor como cliente
-            if (autor && autor !== 'Não identificado') {
+            if (autor && autor !== "Não identificado") {
               createOrUpdateFromDjenIntimacao({
                 nomeCliente: autor,
-                numeroProcesso: data.cnj
-              })
+                numeroProcesso: data.cnj,
+              });
             }
           } else {
             // Se não conseguiu separar, cadastra o campo inteiro como nome
             createOrUpdateFromDjenIntimacao({
               nomeCliente: data.parties,
-              numeroProcesso: data.cnj
-            })
+              numeroProcesso: data.cnj,
+            });
           }
         }
 
         return {
           id: crypto.randomUUID(),
-          processId: data.cnj || 'CNJ não identificado',
-          tipo: data.type?.toLowerCase().includes('intimação')
-            ? 'intimacao'
-            : data.type?.toLowerCase().includes('citação')
-              ? 'citacao'
-              : 'outro',
-          titulo: data.type || 'Documento',
-          type: data.type || 'Documento',
+          processId: data.cnj || "CNJ não identificado",
+          tipo: (() => {
+            const t = data.type?.toLowerCase() || "";
+            if (t.includes("intimação")) return "intimacao";
+            if (t.includes("citação")) return "citacao";
+            return "outro";
+          })(),
+          titulo: data.type || "Documento",
+          type: data.type || "Documento",
           conteudo: conteudoBase,
           content: conteudoBase,
           dataRecebimento: nowIso,
           receivedAt: nowIso,
-          prazoFatal: data.deadline || 'Não identificado',
-          deadline: data.deadline || 'Não identificado',
+          prazoFatal: data.deadline || "Não identificado",
+          deadline: data.deadline || "Não identificado",
           lido: false,
           arquivado: false,
-          analyzed: true
-        }
-      })
+          analyzed: true,
+        };
+      });
 
-      setExpedientes((current) => [...(current || []), ...newExpedientes])
-      setExtractedData(expedientes)
+      setExpedientes((current) => [...(current || []), ...newExpedientes]);
+      setExtractedData(expedientes);
 
       toast.success(
         `${expedientes.length} expediente(s) extraído(s) com IA Gemini 2.5 Pro`
-      )
+      );
     } catch (err) {
-      console.error('Erro na análise em lote:', err)
-      setError('Erro ao analisar com IA. Verifique a conexão ou tente novamente.')
-      toast.error('Erro na análise com IA')
+      console.error("Erro na análise em lote:", err);
+      setError(
+        "Erro ao analisar com IA. Verifique a conexão ou tente novamente."
+      );
+      toast.error("Erro na análise com IA");
     } finally {
-      setAnalyzing(false)
+      setAnalyzing(false);
     }
-  }
+  };
 
   const handleExport = () => {
     if (extractedData.length === 0) {
-      toast.warning('Não há dados para exportar')
-      return
+      toast.warning("Não há dados para exportar");
+      return;
     }
 
     const csv = [
-      ['CNJ', 'Partes', 'Prazo', 'Tipo'].join(','),
+      ["CNJ", "Partes", "Prazo", "Tipo"].join(","),
       ...extractedData.map((d) =>
         [d.cnj, d.parties, d.deadline, d.type]
-          .map((field) => `"${(field || '').replace(/"/g, '""')}"`)
-          .join(',')
-      )
-    ].join('\n')
+          .map((field) => `"${(field || "").replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `expedientes-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Dados exportados com sucesso')
-  }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `expedientes-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Dados exportados com sucesso");
+  };
 
   const totalFileSize =
-    selectedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)
+    selectedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
 
   return (
     <div className="p-6 space-y-6">
@@ -248,8 +266,8 @@ export default function BatchAnalysis() {
           Análise de Documentos em Lote
         </h1>
         <p className="text-muted-foreground mt-1">
-          Extraia informações estruturadas de múltiplos expedientes, inclusive de
-          documentos grandes (até ~1000 páginas / 200MB por arquivo)
+          Extraia informações estruturadas de múltiplos expedientes, inclusive
+          de documentos grandes (até ~1000 páginas / 200MB por arquivo)
         </p>
       </div>
 
@@ -265,7 +283,7 @@ export default function BatchAnalysis() {
           <CardContent className="space-y-4">
             <Textarea
               placeholder={
-                'Cole aqui o conteúdo dos expedientes...\n\nExemplo:\nINTIMAÇÃO - Processo nº 0001234-56.2023.5.02.0001\nPartes: João Silva vs Empresa XYZ Ltda\nPrazo: 15 dias para apresentação de alegações finais...'
+                "Cole aqui o conteúdo dos expedientes...\n\nExemplo:\nINTIMAÇÃO - Processo nº 0001234-56.2023.5.02.0001\nPartes: João Silva vs Empresa XYZ Ltda\nPrazo: 15 dias para apresentação de alegações finais..."
               }
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
@@ -274,7 +292,8 @@ export default function BatchAnalysis() {
 
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">
-                Ou selecione documentos (até 200MB cada, ~1000 páginas por arquivo)
+                Ou selecione documentos (até 200MB cada, ~1000 páginas por
+                arquivo)
               </p>
               <Input
                 type="file"
@@ -284,7 +303,7 @@ export default function BatchAnalysis() {
               />
               {selectedFiles.length > 0 && (
                 <div className="text-xs text-muted-foreground mt-1">
-                  {selectedFiles.length} arquivo(s) selecionado(s) ·{' '}
+                  {selectedFiles.length} arquivo(s) selecionado(s) ·{" "}
                   {totalFileSize.toFixed(1)} MB
                 </div>
               )}
@@ -298,11 +317,15 @@ export default function BatchAnalysis() {
 
             <Button
               onClick={handleAnalyze}
-              disabled={analyzing || (!inputText.trim() && selectedFiles.length === 0)}
+              disabled={
+                analyzing || (!inputText.trim() && selectedFiles.length === 0)
+              }
               className="w-full"
             >
               <Sparkle className="w-4 h-4 mr-2" weight="fill" />
-              {analyzing ? 'Analisando com IA...' : 'Analisar com Gemini 2.5 Pro'}
+              {analyzing
+                ? "Analisando com IA..."
+                : "Analisar com Gemini 2.5 Pro"}
             </Button>
           </CardContent>
         </Card>
@@ -333,7 +356,8 @@ export default function BatchAnalysis() {
                   Aguardando análise
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Cole os expedientes ou envie arquivos e clique em &quot;Analisar&quot;
+                  Cole os expedientes ou envie arquivos e clique em
+                  &quot;Analisar&quot;
                 </p>
               </div>
             ) : (
@@ -348,11 +372,19 @@ export default function BatchAnalysis() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {extractedData.map((data, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono text-xs">{data.cnj}</TableCell>
-                        <TableCell className="text-sm">{data.parties}</TableCell>
-                        <TableCell className="text-sm">{data.deadline}</TableCell>
+                    {extractedData.map((data) => (
+                      <TableRow
+                        key={`${data.cnj}-${data.deadline}-${data.type}`}
+                      >
+                        <TableCell className="font-mono text-xs">
+                          {data.cnj}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {data.parties}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {data.deadline}
+                        </TableCell>
                         <TableCell className="text-sm">{data.type}</TableCell>
                       </TableRow>
                     ))}
@@ -364,5 +396,5 @@ export default function BatchAnalysis() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
