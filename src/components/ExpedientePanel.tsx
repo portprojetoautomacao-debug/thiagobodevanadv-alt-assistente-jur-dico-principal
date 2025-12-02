@@ -285,7 +285,7 @@ function buildCalendarAnalysisResult(
 ): IntimationAnalysisResult {
   // Converter deadline para o formato esperado por IntimationAnalysisResult
   const deadline =
-    analysisData.deadline && analysisData.deadline.days !== undefined
+    analysisData.deadline?.days !== undefined
       ? {
           days: analysisData.deadline.days,
           type: (analysisData.deadline.type || "úteis") as "úteis" | "corridos",
