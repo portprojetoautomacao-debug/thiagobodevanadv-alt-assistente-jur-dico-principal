@@ -35,7 +35,7 @@ import {
   Newspaper,
   RefreshCw,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Tipos
@@ -499,7 +499,8 @@ export default function DJENPublicationsWidget({
   const errorMessage: string | undefined =
     typeof error === "string"
       ? error
-      : (error as unknown as { message?: string } | undefined)?.message || undefined;
+      : (error as unknown as { message?: string } | undefined)?.message ||
+        undefined;
 
   // Renderiza estado de erro
   const renderErrorState = () => (
