@@ -487,13 +487,6 @@ export default function DJENPublicationsWidget({
 
   // getRelativeDateDescription importado de util para reduzir complexidade
 
-  // Verifica se há publicações não cadastradas (memoizado para reduzir complexidade)
-  const hasUnregisteredPublications = useMemo(() => {
-    return publications.some(
-      (pub) => pub.numeroProcesso && !isAlreadyRegistered(pub)
-    );
-  }, [publications, isAlreadyRegistered]);
-
   // Função pura reutilizável para verificar não cadastrados (facilita testes e reduz nesting)
   function getHasUnregistered(pubs: DJENPublication[]): boolean {
     return pubs.some((p) => p.numeroProcesso && !isAlreadyRegistered(p));
