@@ -24,8 +24,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'npm'
+          node-version: "22.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -38,10 +38,10 @@ jobs:
         run: npm run build
         continue-on-error: true
         env:
-          VITE_GOOGLE_CLIENT_ID: 'dummy-for-build'
-          VITE_GOOGLE_API_KEY: 'dummy-for-build'
-          VITE_REDIRECT_URI: 'http://localhost:5173'
-          VITE_APP_ENV: 'ci'
+          VITE_GOOGLE_CLIENT_ID: "dummy-for-build"
+          VITE_GOOGLE_API_KEY: "dummy-for-build"
+          VITE_REDIRECT_URI: "http://localhost:5173"
+          VITE_APP_ENV: "ci"
 
       - name: Run tests with coverage
         run: npm run test:coverage
@@ -59,6 +59,7 @@ jobs:
             -Dsonar.verbose=false
             -Dsonar.scm.revision=${{ github.sha }}
             -Dsonar.links.ci=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ${{ github.event_name == 'pull_request' && format('-Dsonar.pullrequest.key={0} -Dsonar.pullrequest.branch={1} -Dsonar.pullrequest.base={2}', github.event.pull_request.number, github.head_ref, github.base_ref) || format('-Dsonar.branch.name={0}', github.ref_name) }}
 
       - name: SonarCloud Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@v1
