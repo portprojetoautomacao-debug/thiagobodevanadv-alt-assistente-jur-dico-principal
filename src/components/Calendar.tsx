@@ -62,10 +62,7 @@ function getHumanTypeLabel(type: Appointment["type"]): string {
 }
 
 export default function Calendar() {
-  const [appointments, setAppointments] = useKV<Appointment[]>(
-    "appointments",
-    []
-  );
+  const [appointments] = useKV<Appointment[]>("appointments", []);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
@@ -211,6 +208,19 @@ export default function Calendar() {
     }
   };
 
+  // Helper para conteúdo do botão de conexão
+  const connectButtonContent = isInitializing ? (
+    <>
+      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+      Conectando...
+    </>
+  ) : (
+    <>
+      <CalendarDays className="w-4 h-4 mr-2" />
+      Conectar ao Google
+    </>
+  );
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -302,17 +312,7 @@ export default function Calendar() {
                     variant="default"
                     disabled={isInitializing}
                   >
-                    {isInitializing ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />{" "}
-                        Conectando...
-                      </>
-                    ) : (
-                      <>
-                        <CalendarDays className="w-4 h-4 mr-2" /> Conectar ao
-                        Google
-                      </>
-                    )}
+                    {connectButtonContent}
                   </Button>
                 )}
 
