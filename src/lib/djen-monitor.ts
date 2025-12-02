@@ -317,7 +317,7 @@ function buildDJENQueryParams(
   const params = new URLSearchParams();
 
   // Required parameters
-  params.set("numeroOab", numeroOAB.replace(/\D/g, ""));
+  params.set("numeroOab", numeroOAB.replaceAll(/\D/g, ""));
   params.set("ufOab", ufOAB.toUpperCase());
   params.set("meio", "D"); // Diário Eletrônico
 
