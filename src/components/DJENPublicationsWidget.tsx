@@ -5,69 +5,69 @@
  * Separação de responsabilidades em hooks customizados
  */
 
-import { useState, useEffect } from 'react'
-import { toast } from 'sonner'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { PublicationItem } from "@/components/PublicationItem";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
+import { useDJENProcessRegistration } from "@/hooks/use-djen-process-registration";
+import { useDJENPublications } from "@/hooks/use-djen-publications";
+import { useDJENSync } from "@/hooks/use-djen-sync";
+import { useKV } from "@/hooks/use-kv";
+import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
+import { cn } from "@/lib/utils";
+import type { Expediente, Process } from "@/types";
 import {
-  Newspaper,
-  ArrowsClockwise,
-  Clock,
-  CheckCircle,
-  Warning,
+  AlertTriangle,
   ArrowRight,
-  Robot,
-  Funnel,
-} from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
-import { useDJENPublications } from '@/hooks/use-djen-publications'
-import { useDJENSync } from '@/hooks/use-djen-sync'
-import { useDJENProcessRegistration } from '@/hooks/use-djen-process-registration'
-import { PublicationItem } from '@/components/PublicationItem'
-import { extractPartiesWithFallback } from '@/lib/extract-parties-service'
-import type { Process, Expediente } from '@/types'
+  Bot,
+  CheckCircle,
+  Clock,
+  Filter,
+  Newspaper,
+  RefreshCw,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // Tipos
 interface DJENPublication {
-  id: string
-  tribunal: string
-  data: string
-  tipo: string
-  teor: string
-  numeroProcesso?: string
-  orgao?: string
-  lawyerName: string
-  matchType: 'nome' | 'oab' | 'ambos'
-  source: string
-  createdAt: string
-  notified?: boolean
+  id: string;
+  tribunal: string;
+  data: string;
+  tipo: string;
+  teor: string;
+  numeroProcesso?: string;
+  orgao?: string;
+  lawyerName: string;
+  matchType: "nome" | "oab" | "ambos";
+  source: string;
+  createdAt: string;
+  notified?: boolean;
 }
 
 interface _ExpedientesResponse {
-  success: boolean
-  expedientes: DJENPublication[]
-  count: number
-  lastCheck: string | null
-  lawyersConfigured: number
-  message?: string
+  success: boolean;
+  expedientes: DJENPublication[];
+  count: number;
+  lastCheck: string | null;
+  lawyersConfigured: number;
+  message?: string;
 }
 
 interface PartiesResult {
-  autor: string
-  reu: string
-  advogadoAutor?: string
-  advogadoReu?: string
+  autor: string;
+  reu: string;
+  advogadoAutor?: string;
+  advogadoReu?: string;
 }
 
 /**
@@ -81,31 +81,39 @@ function createProcessFromPublication(
   return {
     id: crypto.randomUUID(),
     numeroCNJ: pub.numeroProcesso!,
-    titulo: `${pub.tipo || 'Intimação'} - ${pub.tribunal}`,
-    autor: parties.autor || 'Não identificado',
-    reu: parties.reu || 'Não identificado',
-    comarca: pub.orgao || '',
-    vara: pub.tribunal || '',
-    status: 'ativo',
-    fase: 'Inicial',
-    dataDistribuicao: pub.data || now.split('T')[0],
+    titulo: `${pub.tipo || "Intimação"} - ${pub.tribunal}`,
+    autor: parties.autor || "Não identificado",
+    reu: parties.reu || "Não identificado",
+    comarca: pub.orgao || "",
+    vara: pub.tribunal || "",
+    status: "ativo",
+    fase: "Inicial",
+    dataDistribuicao: pub.data || now.split("T")[0],
     dataUltimaMovimentacao: now,
     notas: buildProcessNotes(pub, parties),
     prazos: [],
     createdAt: now,
     updatedAt: now,
-  }
+  };
 }
 
 /**
  * Monta as notas do processo
  */
-function buildProcessNotes(pub: DJENPublication, parties: PartiesResult): string {
-  const advAutor = parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : ''
-  const advReu = parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : ''
-  const teorTruncado = pub.teor.length > 500 ? pub.teor.substring(0, 500) + '...' : pub.teor
+function buildProcessNotes(
+  pub: DJENPublication,
+  parties: PartiesResult
+): string {
+  const advAutor = parties.advogadoAutor
+    ? `\nAdvogado Autor: ${parties.advogadoAutor}`
+    : "";
+  const advReu = parties.advogadoReu
+    ? `\nAdvogado Réu: ${parties.advogadoReu}`
+    : "";
+  const teorTruncado =
+    pub.teor.length > 500 ? pub.teor.substring(0, 500) + "..." : pub.teor;
 
-  return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`
+  return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`;
 }
 
 /**
@@ -119,8 +127,8 @@ function createExpedienteFromPublication(
   return {
     id: crypto.randomUUID(),
     processId,
-    tipo: pub.tipo || 'intimacao',
-    titulo: `${pub.tipo || 'Intimação'} - ${pub.numeroProcesso}`,
+    tipo: pub.tipo || "intimacao",
+    titulo: `${pub.tipo || "Intimação"} - ${pub.numeroProcesso}`,
     conteudo: pub.teor,
     content: pub.teor,
     teor: pub.teor,
@@ -137,30 +145,33 @@ function createExpedienteFromPublication(
     source: pub.source,
     createdAt: pub.createdAt,
     data: pub.data,
-    priority: 'high', // Intimações são sempre prioridade alta
-  }
+    priority: "high", // Intimações são sempre prioridade alta
+  };
 }
 
 // ===== Registration Helpers (reduces S3776 Cognitive Complexity) =====
 
 interface RegistrationContext {
   createOrUpdateFromDjenIntimacao: (data: {
-    nomeCliente: string
-    cidade: string
-    estado: string
-    processo: string
-  }) => void
+    nomeCliente: string;
+    cidade: string;
+    estado: string;
+    processo: string;
+  }) => void;
 }
 
 /**
  * Extrai cidade e estado do campo orgão
  */
-function parseOrgaoLocation(orgao?: string): { cidade: string; estado: string } {
-  const parts = orgao?.split('/') || []
+function parseOrgaoLocation(orgao?: string): {
+  cidade: string;
+  estado: string;
+} {
+  const parts = orgao?.split("/") || [];
   return {
-    cidade: parts[0] || '',
-    estado: parts[1] || '',
-  }
+    cidade: parts[0] || "",
+    estado: parts[1] || "",
+  };
 }
 
 /**
@@ -171,15 +182,15 @@ function registerClientFromParties(
   pub: DJENPublication,
   ctx: RegistrationContext
 ): void {
-  if (!parties.autor || parties.autor === 'Não identificado') return
+  if (!parties.autor || parties.autor === "Não identificado") return;
 
-  const location = parseOrgaoLocation(pub.orgao)
+  const location = parseOrgaoLocation(pub.orgao);
   ctx.createOrUpdateFromDjenIntimacao({
     nomeCliente: parties.autor,
     cidade: location.cidade,
     estado: location.estado,
-    processo: pub.numeroProcesso || '',
-  })
+    processo: pub.numeroProcesso || "",
+  });
 }
 
 /**
@@ -190,32 +201,36 @@ async function _processPublicationForRegistration(
   now: string,
   ctx: RegistrationContext
 ): Promise<{ process: Process; expediente: Expediente } | null> {
-  if (!pub.numeroProcesso) return null
+  if (!pub.numeroProcesso) return null;
 
-  const parties = await extractPartiesWithFallback(pub.teor)
-  registerClientFromParties(parties, pub, ctx)
+  const parties = await extractPartiesWithFallback(pub.teor);
+  registerClientFromParties(parties, pub, ctx);
 
-  const newProcess = createProcessFromPublication(pub, parties, now)
-  const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now)
+  const newProcess = createProcessFromPublication(pub, parties, now);
+  const newExpediente = createExpedienteFromPublication(
+    pub,
+    newProcess.id,
+    now
+  );
 
-  return { process: newProcess, expediente: newExpediente }
+  return { process: newProcess, expediente: newExpediente };
 }
 
 /**
  * Formata descrição das partes para toast
  */
 function _formatPartiesDescription(parties: PartiesResult): string {
-  if (parties.autor === 'Não identificado') return ''
-  return ` - ${parties.autor} x ${parties.reu}`
+  if (parties.autor === "Não identificado") return "";
+  return ` - ${parties.autor} x ${parties.reu}`;
 }
 
 // ===== Sync Helpers (reduces S3776 Cognitive Complexity) =====
 
 interface SyncResult {
-  success: boolean
-  message?: string
-  newPublications?: number
-  rateLimited?: boolean
+  success: boolean;
+  message?: string;
+  newPublications?: number;
+  rateLimited?: boolean;
 }
 
 /**
@@ -223,36 +238,36 @@ interface SyncResult {
  */
 async function _executeDJENSync(baseUrl: string): Promise<SyncResult> {
   const response = await fetch(`${baseUrl}/api/djen-sync`, {
-    method: 'POST',
-  })
+    method: "POST",
+  });
 
   // Rate limit
   if (response.status === 429) {
-    const data = await response.json()
+    const data = await response.json();
     return {
       success: false,
       rateLimited: true,
-      message: data.message || 'Tente novamente em alguns segundos'
-    }
+      message: data.message || "Tente novamente em alguns segundos",
+    };
   }
 
   if (!response.ok) {
-    return { success: false, message: `HTTP ${response.status}` }
+    return { success: false, message: `HTTP ${response.status}` };
   }
 
-  const result = await response.json()
+  const result = await response.json();
 
   if (result.ok) {
     return {
       success: true,
-      newPublications: result.result?.newPublications || 0
-    }
+      newPublications: result.result?.newPublications || 0,
+    };
   }
 
   return {
     success: false,
-    message: result.error || result.message || 'Erro na sincronização'
-  }
+    message: result.error || result.message || "Erro na sincronização",
+  };
 }
 
 /**
@@ -260,30 +275,31 @@ async function _executeDJENSync(baseUrl: string): Promise<SyncResult> {
  */
 function _showSyncToast(result: SyncResult): void {
   if (result.rateLimited) {
-    toast.warning('Aguarde antes de sincronizar', {
+    toast.warning("Aguarde antes de sincronizar", {
       description: result.message,
-    })
-    return
+    });
+    return;
   }
 
   if (result.success) {
-    toast.success('Sincronização concluída', {
-      description: result.newPublications && result.newPublications > 0
-        ? `${result.newPublications} novas publicações encontradas`
-        : 'Nenhuma nova publicação',
-    })
-    return
+    toast.success("Sincronização concluída", {
+      description:
+        result.newPublications && result.newPublications > 0
+          ? `${result.newPublications} novas publicações encontradas`
+          : "Nenhuma nova publicação",
+    });
+    return;
   }
 
-  toast.error('Falha na sincronização', {
-    description: result.message || 'Erro desconhecido',
-  })
+  toast.error("Falha na sincronização", {
+    description: result.message || "Erro desconhecido",
+  });
 }
 
 interface DJENPublicationsWidgetProps {
-  readonly onViewAll?: () => void
-  readonly compact?: boolean
-  readonly maxItems?: number
+  readonly onViewAll?: () => void;
+  readonly compact?: boolean;
+  readonly maxItems?: number;
 }
 
 export default function DJENPublicationsWidget({
@@ -291,8 +307,8 @@ export default function DJENPublicationsWidget({
   compact = false,
   maxItems = 5,
 }: DJENPublicationsWidgetProps) {
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "unread">("all");
 
   // Hooks customizados para reduzir complexidade
   const {
@@ -302,51 +318,51 @@ export default function DJENPublicationsWidget({
     lastCheck,
     lawyersCount,
     fetchPublications,
-  } = useDJENPublications(maxItems, filter)
+  } = useDJENPublications(maxItems, filter);
 
-  const { syncing, handleSync } = useDJENSync()
+  const { syncing, handleSync } = useDJENSync();
 
   // KV storage para processos e expedientes
-  const [processes, setProcesses] = useKV<Process[]>('processes', [])
-  const [, setExpedientes] = useKV<Expediente[]>('expedientes', [])
+  const [processes, setProcesses] = useKV<Process[]>("processes", []);
+  const [, setExpedientes] = useKV<Expediente[]>("expedientes", []);
 
   const {
     autoRegistering,
     isAlreadyRegistered,
     handleRegisterProcess,
     handleAutoRegisterAll,
-  } = useDJENProcessRegistration(processes, setProcesses, setExpedientes)
+  } = useDJENProcessRegistration(processes, setProcesses, setExpedientes);
 
   // Carrega publicações ao montar
   useEffect(() => {
-    fetchPublications()
-  }, [fetchPublications])
+    fetchPublications();
+  }, [fetchPublications]);
 
   // Helper para data relativa
   const getRelativeDateDescription = (dateStr: string): string => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffHours < 1) return 'Agora mesmo'
-    if (diffHours < 24) return `${diffHours}h atrás`
-    if (diffDays === 1) return 'Ontem'
-    if (diffDays < 7) return `${diffDays} dias atrás`
-    return date.toLocaleDateString('pt-BR')
-  }
+    if (diffHours < 1) return "Agora mesmo";
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffDays === 1) return "Ontem";
+    if (diffDays < 7) return `${diffDays} dias atrás`;
+    return date.toLocaleDateString("pt-BR");
+  };
 
   // Verifica se há publicações não cadastradas
   const hasUnregisteredPublications = (): boolean => {
     return publications.some(
       (pub) => pub.numeroProcesso && !isAlreadyRegistered(pub)
-    )
-  }
+    );
+  };
 
   // Renderiza estado de loading
   const renderLoadingState = () => (
-    <Card className={cn('card-glow-hover glassmorphic', compact && 'h-fit')}>
+    <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-40" />
@@ -364,20 +380,20 @@ export default function DJENPublicationsWidget({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   // Renderiza estado de erro
   const renderErrorState = () => (
-    <Card className={cn('card-glow-hover glassmorphic', compact && 'h-fit')}>
+    <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Newspaper size={20} weight="duotone" className="text-primary" />
+          <Newspaper size={20} className="text-primary" />
           Publicações DJEN
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Alert variant="destructive">
-          <Warning size={16} />
+          <AlertTriangle size={16} />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
         <Button
@@ -386,12 +402,12 @@ export default function DJENPublicationsWidget({
           onClick={fetchPublications}
           className="mt-3 w-full"
         >
-          <ArrowsClockwise size={16} />
+          <RefreshCw size={16} />
           Tentar novamente
         </Button>
       </CardContent>
     </Card>
-  )
+  );
 
   // Renderiza lista vazia
   const renderEmptyState = () => (
@@ -399,15 +415,14 @@ export default function DJENPublicationsWidget({
       <Newspaper
         size={40}
         className="text-muted-foreground mb-2"
-        weight="duotone"
       />
       <p className="text-sm text-muted-foreground mb-1">
         Nenhuma publicação encontrada
       </p>
       <p className="text-xs text-muted-foreground">
         {lawyersCount === 0
-          ? 'Configure advogados para monitorar'
-          : 'O monitoramento está ativo'}
+          ? "Configure advogados para monitorar"
+          : "O monitoramento está ativo"}
       </p>
       <Button
         variant="outline"
@@ -416,17 +431,17 @@ export default function DJENPublicationsWidget({
         className="mt-4"
         disabled={syncing}
       >
-        <ArrowsClockwise size={14} className={syncing ? 'animate-spin' : ''} />
+        <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
         Verificar agora
       </Button>
     </div>
-  )
+  );
 
   // Renderiza footer com ações
   const renderFooterActions = () => {
-    if (publications.length === 0) return null
+    if (publications.length === 0) return null;
 
-    const hasUnregistered = hasUnregisteredPublications()
+    const hasUnregistered = hasUnregisteredPublications();
 
     return (
       <>
@@ -443,13 +458,11 @@ export default function DJENPublicationsWidget({
                     disabled={autoRegistering}
                     className="flex-1 button-gradient"
                   >
-                    <Robot
+                    <Bot
                       size={14}
-                      className={autoRegistering ? 'animate-pulse' : ''}
+                      className={autoRegistering ? "animate-pulse" : ""}
                     />
-                    {autoRegistering
-                      ? 'Cadastrando...'
-                      : 'Cadastrar Todas'}
+                    {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -465,8 +478,8 @@ export default function DJENPublicationsWidget({
               size="sm"
               onClick={onViewAll}
               className={cn(
-                'hover:button-gradient hover:text-primary-foreground',
-                hasUnregistered ? 'flex-1' : 'w-full'
+                "hover:button-gradient hover:text-primary-foreground",
+                hasUnregistered ? "flex-1" : "w-full"
               )}
             >
               Ver todas
@@ -475,17 +488,17 @@ export default function DJENPublicationsWidget({
           )}
         </div>
       </>
-    )
-  }
+    );
+  };
 
   // Early return: Loading state
   if (loading) {
-    return renderLoadingState()
+    return renderLoadingState();
   }
 
   // Early return: Error state
   if (error && publications.length === 0) {
-    return renderErrorState()
+    return renderErrorState();
   }
 
   // Renderiza header do card
@@ -493,7 +506,7 @@ export default function DJENPublicationsWidget({
     <CardHeader className="pb-2">
       <div className="flex items-center justify-between">
         <CardTitle className="flex items-center gap-2 text-sm gradient-text">
-          <Newspaper size={20} weight="duotone" className="text-primary" />
+          <Newspaper size={20} className="text-primary" />
           Publicações DJEN
           {publications.length > 0 && (
             <Button variant="secondary" className="ml-1 h-5 px-2 text-xs">
@@ -509,23 +522,24 @@ export default function DJENPublicationsWidget({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setFilter((f) => (f === 'all' ? 'unread' : 'all'))}
+                  onClick={() =>
+                    setFilter((f) => (f === "all" ? "unread" : "all"))
+                  }
                   className="h-8 w-8 p-0"
                   aria-label={
-                    filter === 'all'
-                      ? 'Filtrar: mostrar apenas não lidas'
-                      : 'Filtrar: mostrar todas'
+                    filter === "all"
+                      ? "Filtrar: mostrar apenas não lidas"
+                      : "Filtrar: mostrar todas"
                   }
                 >
-                  <Funnel
+                  <Filter
                     size={16}
-                    weight={filter === 'unread' ? 'fill' : 'regular'}
-                    className={filter === 'unread' ? 'text-primary' : ''}
+                    className={filter === "unread" ? "text-primary" : ""}
                   />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {filter === 'all' ? 'Mostrar não lidas' : 'Mostrar todas'}
+                {filter === "all" ? "Mostrar não lidas" : "Mostrar todas"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -541,9 +555,9 @@ export default function DJENPublicationsWidget({
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
                 >
-                  <ArrowsClockwise
+                  <RefreshCw
                     size={16}
-                    className={syncing ? 'animate-spin' : ''}
+                    className={syncing ? "animate-spin" : ""}
                   />
                 </Button>
               </TooltipTrigger>
@@ -569,7 +583,7 @@ export default function DJENPublicationsWidget({
         )}
       </div>
     </CardHeader>
-  )
+  );
 
   // Renderiza conteúdo principal
   const renderCardContent = () => (
@@ -577,7 +591,7 @@ export default function DJENPublicationsWidget({
       {publications.length === 0 ? (
         renderEmptyState()
       ) : (
-        <ScrollArea className={compact ? 'h-[250px]' : 'h-[350px]'}>
+        <ScrollArea className={compact ? "h-[250px]" : "h-[350px]"}>
           <div className="space-y-2 pr-2">
             {publications.map((pub) => (
               <PublicationItem
@@ -596,13 +610,13 @@ export default function DJENPublicationsWidget({
 
       {renderFooterActions()}
     </CardContent>
-  )
+  );
 
   // Main render
   return (
-    <Card className={cn('card-glow-hover glassmorphic', compact && 'h-fit')}>
+    <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
       {renderCardHeader()}
       {renderCardContent()}
     </Card>
-  )
+  );
 }

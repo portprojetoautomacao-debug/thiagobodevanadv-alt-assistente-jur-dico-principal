@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DJENPublication } from "@/types/djen-publication";
 import {
-  BellRinging,
-  CaretDown,
-  CaretUp,
+  BellRing,
   CheckCircle,
+  ChevronDown,
+  ChevronUp,
   Copy,
   Plus,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface PublicationItemProps {
@@ -84,7 +84,7 @@ export function PublicationItem({
             <MatchBadge type={pub.matchType} />
             {!pub.notified && (
               <Badge className="bg-primary/20 text-primary text-xs px-1.5">
-                <BellRinging size={10} className="mr-1" />
+                <BellRing size={10} className="mr-1" />
                 Novo
               </Badge>
             )}
@@ -104,9 +104,9 @@ export function PublicationItem({
             {formatRelativeDate(pub.createdAt)}
           </span>
           {expanded === pub.id ? (
-            <CaretUp size={14} className="text-muted-foreground" />
+            <ChevronUp size={14} className="text-muted-foreground" />
           ) : (
-            <CaretDown size={14} className="text-muted-foreground" />
+            <ChevronDown size={14} className="text-muted-foreground" />
           )}
         </div>
       </div>
