@@ -11,6 +11,8 @@ import {
 import { Warning } from '@phosphor-icons/react'
 
 interface ConfirmDialogProps {
+    readonly confirmDisabled?: boolean
+    readonly autoCloseOnConfirmResult?: boolean
   readonly open: boolean
   readonly onOpenChange: (open: boolean) => void
   readonly title: string
@@ -22,17 +24,36 @@ interface ConfirmDialogProps {
 }
 
 export default function ConfirmDialog({
+    confirmDisabled = false,
+    autoCloseOnConfirmResult = true,
   open,
   onOpenChange,
+    const [confirming, setConfirming] = useState(false)
   title,
-  description,
+    const handleConfirmClick = () => {
   confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
-  onConfirm,
-  variant = 'default',
-}: ConfirmDialogProps) {
-  const isDestructive = variant === 'destructive'
-
+      try {
+        const res = onConfirm()
+        if (res instanceof Promise) {
+          setConfirming(true)
+          res
+            .then((value) => {
+              if (autoCloseOnConfirmResult && value === true) {
+                onOpenChange(false)
+              }
+            })
+            .catch((err) => {
+              console.error('[ConfirmDialog] Erro no onConfirm:', err)
+            })
+            .finally(() => setConfirming(false))
+        } else {
+          if (autoCloseOnConfirmResult && res === true) {
+            onOpenChange(false)
+          }
+        }
+      } catch (err) {
+        console.error('[ConfirmDialog] Erro no onConfirm (sync):', err)
+      }
   const handleConfirmClick = () => {
     // suporta tanto função sync quanto async, sem quebrar o AlertDialog
     const result = onConfirm()
@@ -64,8 +85,9 @@ export default function ConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>
             {cancelText}
+              disabled={confirmDisabled || confirming}
           </AlertDialogCancel>
-          <AlertDialogAction
+              {confirming ? 'Processando...' : confirmText}
             onClick={handleConfirmClick}
             className={
               isDestructive
