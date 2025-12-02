@@ -5,13 +5,13 @@
  * Separação de responsabilidades em hooks customizados
  */
 
+import { DJENErrorCard } from "@/components/djen/DJENErrorCard";
+import { DJENLoadingCard } from "@/components/djen/DJENLoadingCard";
 import { PublicationItem } from "@/components/PublicationItem";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -27,7 +27,6 @@ import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { cn } from "@/lib/utils";
 import type { Expediente, Process } from "@/types";
 import {
-  AlertTriangle,
   ArrowRight,
   Bot,
   CheckCircle,
@@ -36,7 +35,7 @@ import {
   Newspaper,
   RefreshCw,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 // Tipos
@@ -405,29 +404,34 @@ function PublicationsContent(
   handleRegisterProcess: (pub: DJENPublication) => void,
   isAlreadyRegistered: (pub: DJENPublication) => boolean,
   formatRelativeDate: (dateStr: string) => string,
-  renderFooterActions: () => JSX.Element | null
+  renderFooterActions: () => React.ReactNode,
+  renderEmptyState: () => React.ReactNode
 ) {
+  const showEmpty = publications.length === 0;
+
+  function PublicationsList() {
+    return (
+      <ScrollArea className={compact ? "h-[250px]" : "h-[350px]"}>
+        <div className="space-y-2 pr-2">
+          {publications.map((pub) => (
+            <PublicationItem
+              key={pub.id}
+              pub={pub}
+              expanded={expanded}
+              onToggleExpand={setExpanded}
+              onRegister={handleRegisterProcess}
+              isAlreadyRegistered={isAlreadyRegistered(pub)}
+              formatRelativeDate={formatRelativeDate}
+            />
+          ))}
+        </div>
+      </ScrollArea>
+    );
+  }
+
   return (
     <CardContent className="pt-2">
-      {publications.length === 0 ? (
-        renderEmptyState()
-      ) : (
-        <ScrollArea className={compact ? "h-[250px]" : "h-[350px]"}>
-          <div className="space-y-2 pr-2">
-            {publications.map((pub) => (
-              <PublicationItem
-                key={pub.id}
-                pub={pub}
-                expanded={expanded}
-                onToggleExpand={setExpanded}
-                onRegister={handleRegisterProcess}
-                isAlreadyRegistered={isAlreadyRegistered(pub)}
-                formatRelativeDate={formatRelativeDate}
-              />
-            ))}
-          </div>
-        </ScrollArea>
-      )}
+      {showEmpty ? renderEmptyState() : <PublicationsList />}
 
       {renderFooterActions()}
     </CardContent>
@@ -479,57 +483,25 @@ export default function DJENPublicationsWidget({
     );
   }, [publications, isAlreadyRegistered]);
 
+  // Função pura reutilizável para verificar não cadastrados (facilita testes e reduz nesting)
+  function getHasUnregistered(pubs: DJENPublication[]): boolean {
+    return pubs.some((p) => p.numeroProcesso && !isAlreadyRegistered(p));
+  }
+
   // Renderiza estado de loading
-  const renderLoadingState = () => (
-    <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-8 w-8 rounded-full" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-3 w-2/3" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const renderLoadingState = () => <DJENLoadingCard compact={compact} />;
 
   // Renderiza estado de erro
   const renderErrorState = () => (
-    <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Newspaper size={20} className="text-primary" />
-          Publicações DJEN
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Alert variant="destructive">
-          <AlertTriangle size={16} />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchPublications}
-          className="mt-3 w-full"
-        >
-          <RefreshCw size={16} />
-          Tentar novamente
-        </Button>
-      </CardContent>
-    </Card>
+    <DJENErrorCard
+      compact={compact}
+      error={error}
+      onRetry={fetchPublications}
+    />
   );
 
   // Renderiza lista vazia
-  const renderEmptyState = () => (
+  const renderEmptyState = (): React.ReactNode => (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <Newspaper size={40} className="text-muted-foreground mb-2" />
       <p className="text-sm text-muted-foreground mb-1">
@@ -553,57 +525,86 @@ export default function DJENPublicationsWidget({
     </div>
   );
 
-  // Renderiza footer com ações
-  const renderFooterActions = () => {
-    if (publications.length === 0) return null;
+  // Helpers de rodapé: badge e seção de botões (reduzem nesting)
+  function FooterButtonsSection({
+    showRegisterAll,
+    showViewAll,
+  }: {
+    showRegisterAll: boolean;
+    showViewAll: boolean;
+  }) {
+    return (
+      <div className="flex gap-2">
+        {showRegisterAll && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleAutoRegisterAll(publications)}
+                  disabled={autoRegistering}
+                  className="flex-1 button-gradient"
+                  aria-label="Cadastrar todas as intimações"
+                >
+                  <Bot
+                    size={14}
+                    className={autoRegistering ? "animate-pulse" : ""}
+                  />
+                  {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Cadastra automaticamente todas as intimações no Acervo
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        {showViewAll && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onViewAll}
+            className={cn(
+              "hover:button-gradient hover:text-primary-foreground",
+              showRegisterAll ? "flex-1" : "w-full"
+            )}
+            aria-label="Ver todas as publicações"
+          >
+            Ver todas
+            <ArrowRight size={14} />
+          </Button>
+        )}
+      </div>
+    );
+  }
 
+  function renderFooterActions(): React.ReactNode {
+    if (publications.length === 0) return null;
+    const showRegisterAll = shouldShowRegisterAll(publications);
+    const showViewAll = shouldShowViewAll(publications, onViewAll);
     return (
       <>
         <Separator className="my-3" />
-        <div className="flex gap-2">
-          {hasUnregisteredPublications && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => handleAutoRegisterAll(publications)}
-                    disabled={autoRegistering}
-                    className="flex-1 button-gradient"
-                  >
-                    <Bot
-                      size={14}
-                      className={autoRegistering ? "animate-pulse" : ""}
-                    />
-                    {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Cadastra automaticamente todas as intimações no Acervo
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
-          {onViewAll && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onViewAll}
-              className={cn(
-                "hover:button-gradient hover:text-primary-foreground",
-                hasUnregisteredPublications ? "flex-1" : "w-full"
-              )}
-            >
-              Ver todas
-              <ArrowRight size={14} />
-            </Button>
-          )}
-        </div>
+        <FooterButtonsSection
+          showRegisterAll={showRegisterAll}
+          showViewAll={showViewAll}
+        />
       </>
     );
-  };
+  }
+
+  // Decisores puros para exibição (reduzem nested ifs)
+  function shouldShowRegisterAll(pubs: DJENPublication[]): boolean {
+    return pubs.length > 0 && getHasUnregistered(pubs);
+  }
+
+  function shouldShowViewAll(
+    pubs: DJENPublication[],
+    onView?: () => void
+  ): boolean {
+    return pubs.length > 0 && typeof onView === "function";
+  }
 
   // Early return: Loading state
   if (loading) {
@@ -638,7 +639,8 @@ export default function DJENPublicationsWidget({
       handleRegisterProcess,
       isAlreadyRegistered,
       getRelativeDateDescription,
-      renderFooterActions
+      renderFooterActions,
+      renderEmptyState
     );
 
   // Main render
