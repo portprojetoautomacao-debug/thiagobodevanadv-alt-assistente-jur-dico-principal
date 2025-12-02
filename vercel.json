@@ -6,12 +6,10 @@
   "functions": {
     "api/agents.ts": {
       "maxDuration": 45,
-      "memory": 1024,
       "includeFiles": "api/lib/**"
     },
     "api/djen-sync.ts": {
       "maxDuration": 60,
-      "memory": 1024,
       "includeFiles": "api/lib/**"
     },
     "api/expedientes.ts": {
@@ -28,7 +26,6 @@
     },
     "api/llm-proxy.ts": {
       "maxDuration": 40,
-      "memory": 512,
       "includeFiles": "api/lib/**"
     },
     "api/cron.ts": {
@@ -89,7 +86,11 @@
     },
     {
       "path": "/api/cron?action=deadline-alerts",
-      "schedule": "0 12 * * *"
+      "schedule": "55 11 * * *"
+    },
+    {
+      "path": "/api/cron?action=watchdog",
+      "schedule": "*/30 * * * *"
     }
   ],
   "rewrites": [
