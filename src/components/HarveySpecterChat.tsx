@@ -229,7 +229,7 @@ export default function HarveySpecterChat({
   const [processes] = useKV<Process[]>("processes", []);
   const [financialRecords] = useKV<FinancialEntry[]>("financialEntries", []);
   const [taskQueue] = useKV<AgentTask[]>("agent-task-queue", []);
-  const [completedTasks] = useKV<AgentTask[]>("completed-agent-tasks", []);
+  const [_completedTasks] = useKV<AgentTask[]>("completed-agent-tasks", []);
 
   // Hook de streaming
   const {
