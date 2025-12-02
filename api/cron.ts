@@ -2420,17 +2420,13 @@ const VALID_ACTIONS = Object.keys(ACTION_HANDLERS).join(", ");
 /**
  * Valida se a requisição está autorizada
  */
-function isAuthorized(
-  req: VercelRequest,
-  secret: string | string[] | undefined
-): boolean {
+// Autorização simplificada: removido uso de CRON_SECRET conforme solicitação.
+// Mantemos apenas execução via Vercel Cron (header Bearer gerado) ou ambiente local.
+function isAuthorized(req: VercelRequest): boolean {
   const authHeader = req.headers.authorization;
   const isVercelCron = authHeader?.startsWith("Bearer ");
-  const cronSecret = process.env.CRON_SECRET;
-  const isValidSecret = cronSecret && secret === cronSecret;
   const isLocalTest = process.env.NODE_ENV === "development";
-
-  return !!(isVercelCron || isValidSecret || isLocalTest);
+  return !!(isVercelCron || isLocalTest);
 }
 
 /**
@@ -2476,12 +2472,12 @@ function handleErrorResponse(
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { action, secret } = req.query;
+  const { action } = req.query;
 
-  if (!isAuthorized(req, secret)) {
+  if (!isAuthorized(req)) {
     return res.status(401).json({
-      error: "Unauthorized - Use Vercel Cron Jobs or provide valid secret",
-      hint: "Add ?secret=YOUR_CRON_SECRET for manual testing",
+      error:
+        "Unauthorized - This endpoint is restricted to Vercel Cron or local development",
     });
   }
 
