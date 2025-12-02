@@ -7,13 +7,18 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main, develop]
 
+concurrency:
+  group: sonarcloud-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   sonarcloud:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
+      checks: write
 
     steps:
       - name: Checkout code
@@ -66,4 +71,5 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
         continue-on-error: true
