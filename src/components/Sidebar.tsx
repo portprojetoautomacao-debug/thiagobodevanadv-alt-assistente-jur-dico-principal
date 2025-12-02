@@ -1,51 +1,56 @@
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import type { User, ViewType } from "@/types";
 import {
-  House,
+  Books,
   Briefcase,
-  Tray,
-  FileText,
-  MicrophoneStage,
   Calculator,
-  Database,
   CalendarDots,
   CurrencyCircleDollar,
-  Books,
-  SignOut,
-  Robot,
+  Database,
+  FileText,
+  House,
+  MicrophoneStage,
   Newspaper,
-  PencilLine
-} from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
-import type { User, ViewType } from '@/types'
+  PencilLine,
+  Robot,
+  SignOut,
+  Tray,
+} from "@phosphor-icons/react";
 
 interface SidebarProps {
-  currentView: string
-  onViewChange: (view: ViewType) => void
-  user: User | null
-  onLogout: () => void
+  currentView: string;
+  onViewChange: (view: ViewType) => void;
+  user: User | null;
+  onLogout: () => void;
 }
 
 const NAVIGATION_ITEMS = [
-  { id: 'dashboard', label: 'Meu Painel', icon: House },
-  { id: 'donna', label: 'Harvey Specter', icon: Robot, featured: true },
-  { id: 'ai-agents', label: 'Agentes de IA', icon: Robot },
-  { id: 'processes', label: 'Acervo (CRM)', icon: Briefcase },
-  { id: 'expedientes', label: 'Expedientes', icon: Tray },
-  { id: 'minutas', label: 'Minutas', icon: PencilLine },
-  { id: 'batch', label: 'Análise em Lote', icon: FileText },
-  { id: 'audio', label: 'Transcrição', icon: MicrophoneStage },
-  { id: 'calculator', label: 'Calc. Prazos', icon: Calculator },
-  { id: 'queries', label: 'Consultas', icon: Database },
-  { id: 'datajud', label: 'DataJud Checklist', icon: Newspaper },
-  { id: 'calendar', label: 'Agenda', icon: CalendarDots },
-  { id: 'financial', label: 'Financeiro', icon: CurrencyCircleDollar },
-  { id: 'knowledge', label: 'Base Conhecimento', icon: Books },
-]
+  { id: "dashboard", label: "Meu Painel", icon: House },
+  { id: "donna", label: "Harvey Specter", icon: Robot, featured: true },
+  { id: "ai-agents", label: "Agentes de IA", icon: Robot },
+  { id: "processes", label: "Acervo (CRM)", icon: Briefcase },
+  { id: "expedientes", label: "Expedientes", icon: Tray },
+  { id: "minutas", label: "Minutas", icon: PencilLine },
+  { id: "batch", label: "Análise em Lote", icon: FileText },
+  { id: "audio", label: "Transcrição", icon: MicrophoneStage },
+  { id: "calculator", label: "Calc. Prazos", icon: Calculator },
+  { id: "queries", label: "Consultas", icon: Database },
+  { id: "datajud", label: "DataJud Checklist", icon: Newspaper },
+  { id: "calendar", label: "Agenda", icon: CalendarDots },
+  { id: "financial", label: "Financeiro", icon: CurrencyCircleDollar },
+  { id: "knowledge", label: "Base Conhecimento", icon: Books },
+];
 
-export default function Sidebar({ currentView, onViewChange, user, onLogout }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  user,
+  onLogout,
+}: SidebarProps) {
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
@@ -53,40 +58,60 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
           <Robot className="w-6 h-6 text-primary" weight="fill" />
           <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
         </div>
-        <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>
+        <p className="text-sm text-muted-foreground">
+          Agentes IA Autônomos 24/7
+        </p>
         <Badge className="mt-2 bg-green-500/10 text-green-700 border-green-500/20">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse" />
-          {'Gemini AI Ativo'}
+          {"Gemini AI Ativo"}
         </Badge>
       </div>
 
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
           {NAVIGATION_ITEMS.map((item) => {
-            const Icon = item.icon
-            const isActive = currentView === item.id
-            const isFeatured = 'featured' in item && item.featured
+            const Icon = item.icon;
+            const isActive = currentView === item.id;
+            const isFeatured = "featured" in item && item.featured;
 
             return (
               <Button
                 key={item.id}
-                variant={isActive ? 'secondary' : 'ghost'}
+                variant={isActive ? "secondary" : "ghost"}
                 className={cn(
-                  'w-full justify-start',
-                  isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
-                  isFeatured && !isActive && 'border border-purple-500/30 bg-linear-to-r from-purple-500/5 to-pink-500/5'
+                  "w-full justify-start",
+                  isActive &&
+                    "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
+                  isFeatured &&
+                    !isActive &&
+                    "border border-purple-500/30 bg-linear-to-r from-purple-500/5 to-pink-500/5"
                 )}
-                onClick={() => onViewChange(item.id as ViewType)}
+                onClick={() => {
+                  // Atualiza estado e URL hash para fallback de roteamento
+                  const view = item.id as ViewType;
+                  try {
+                    window.location.hash = `#${view}`;
+                  } catch (_) {
+                    // ignore ambientes sem window
+                  }
+                  onViewChange(view);
+                }}
               >
-                <Icon className="w-5 h-5 mr-3" weight={isActive ? 'fill' : 'regular'} />
+                <Icon
+                  className="w-5 h-5 mr-3"
+                  weight={isActive ? "fill" : "regular"}
+                />
                 {item.label}
                 {isFeatured && (
-                  <Badge variant="secondary" className="ml-auto text-xs bg-linear-to-r from-purple-500 to-pink-500 text-white border-0">
+                  <Badge
+                    variant="secondary"
+                    className="ml-auto text-xs bg-linear-to-r from-purple-500 to-pink-500 text-white border-0"
+                  >
                     Novo
                   </Badge>
                 )}
               </Button>
-            )
+            );
           })}
         </nav>
       </ScrollArea>
@@ -101,8 +126,12 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user.name}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {user.role}
+                </p>
               </div>
             </div>
             <Separator />
@@ -118,5 +147,5 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
         </Button>
       </div>
     </div>
-  )
+  );
 }

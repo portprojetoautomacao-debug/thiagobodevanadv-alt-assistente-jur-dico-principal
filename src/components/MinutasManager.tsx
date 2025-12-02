@@ -1,13 +1,13 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,30 +15,34 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ScrollArea } from '@/components/ui/scroll-area'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useAIStreaming } from '@/hooks/use-ai-streaming'
-import { useKV } from '@/hooks/use-kv'
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAIStreaming } from "@/hooks/use-ai-streaming";
+import { useKV } from "@/hooks/use-kv";
 import {
   documentTemplates,
   extractUnfilledVariables,
   replaceTemplateVariables,
   type DocumentTemplate,
-} from '@/lib/document-templates'
-import { callGemini, isGeminiConfigured } from '@/lib/gemini-service'
-import { googleDocsService } from '@/lib/google-docs-service'
-import type { Minuta, Process } from '@/types'
+} from "@/lib/document-templates";
+import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
+import { googleDocsService } from "@/lib/google-docs-service";
+import type { Minuta, Process } from "@/types";
 import {
   ArrowsClockwise,
   CaretDown,
@@ -60,19 +64,30 @@ import {
   SpinnerGap,
   Trash,
   Warning,
-} from '@phosphor-icons/react'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
+} from "@phosphor-icons/react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 // ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
 // Isso reduz o bundle inicial e melhora First Contentful Paint (FCP)
 // Nota: O erro "Cannot set properties of undefined (setting 'Activity')" dos ícones Phosphor
 // foi corrigido movendo @phosphor-icons/react para o chunk 'react-vendor' no vite.config.ts
-const TiptapEditor = lazy(() => import('@/components/editor/TiptapEditor').then(m => ({ default: m.TiptapEditor })))
+const TiptapEditor = lazy(() =>
+  import("@/components/editor/TiptapEditor").then((m) => ({
+    default: m.TiptapEditor,
+  }))
+);
 
 // Verificar se as credenciais do Google estão configuradas
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''
-const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
+const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY;
 
 // Prompt de sistema para a IA do editor
 const AI_EDITOR_SYSTEM_PROMPT = `Você é um advogado brasileiro experiente especializado em redação jurídica.
@@ -89,306 +104,356 @@ Suas respostas devem:
   - Destaques em <strong> e <u> quando necessário
 - Não inclua <html>, <head> ou <body>, apenas o conteúdo da peça
 
-Responda apenas com o conteúdo solicitado (trecho ou minuta), sem explicações fora do texto jurídico.`
+Responda apenas com o conteúdo solicitado (trecho ou minuta), sem explicações fora do texto jurídico.`;
 
 export default function MinutasManager() {
-  const [minutas, setMinutas] = useKV<Minuta[]>('minutas', [])
-  const [processes] = useKV<Process[]>('processes', [])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null)
-  const [isSyncing, setIsSyncing] = useState<string | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeTab, setActiveTab] = useState('editor')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null)
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({})
-  const [filterStatus, setFilterStatus] = useState<string>('all')
-  const [filterTipo, setFilterTipo] = useState<string>('all')
-  const [error, setError] = useState<string | null>(null)
+  const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
+  const [processes] = useKV<Process[]>("processes", []);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null);
+  const [isSyncing, setIsSyncing] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState("editor");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<DocumentTemplate | null>(null);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(
+    {}
+  );
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterTipo, setFilterTipo] = useState<string>("all");
+  const [error, setError] = useState<string | null>(null);
 
   // Hook de streaming para IA - referência para callbacks dinâmicos
   const streamCallbacksRef = useRef<{
-    onChunk?: (chunk: string) => void
-    onComplete?: () => void
-    onError?: (error: string) => void
-  }>({})
+    onChunk?: (chunk: string) => void;
+    onComplete?: () => void;
+    onError?: (error: string) => void;
+  }>({});
 
-  const { streamChat, isStreaming: _isAIStreaming, streamingContent: _streamingContent } = useAIStreaming({
+  const {
+    streamChat,
+    isStreaming: _isAIStreaming,
+    streamingContent: _streamingContent,
+  } = useAIStreaming({
     onChunk: (chunk) => {
-      streamCallbacksRef.current.onChunk?.(chunk)
+      streamCallbacksRef.current.onChunk?.(chunk);
     },
     onComplete: () => {
-      streamCallbacksRef.current.onComplete?.()
+      streamCallbacksRef.current.onComplete?.();
     },
     onError: (err) => {
-      console.error('[MinutasManager] Erro no streaming:', err)
-      toast.error('Erro no streaming de IA')
-      streamCallbacksRef.current.onError?.(err)
+      console.error("[MinutasManager] Erro no streaming:", err);
+      toast.error("Erro no streaming de IA");
+      streamCallbacksRef.current.onError?.(err);
     },
-  })
+  });
 
   const [formData, setFormData] = useState({
-    titulo: '',
-    processId: '_none',
-    tipo: 'peticao' as Minuta['tipo'],
-    conteudo: '',
-    status: 'rascunho' as Minuta['status'],
-  })
+    titulo: "",
+    processId: "_none",
+    tipo: "peticao" as Minuta["tipo"],
+    conteudo: "",
+    status: "rascunho" as Minuta["status"],
+  });
 
   useEffect(() => {
     const initGoogleDocs = async () => {
-      await googleDocsService.initialize()
-      setIsAuthenticated(googleDocsService.isAuthenticated())
-    }
-    initGoogleDocs()
-  }, [])
+      if (!isGoogleConfigured) {
+        // Em desenvolvimento ou sem credenciais, não inicializa Google Docs
+        setIsAuthenticated(false);
+        return;
+      }
+      try {
+        await googleDocsService.initialize();
+        setIsAuthenticated(googleDocsService.isAuthenticated());
+      } catch (err) {
+        console.warn("[MinutasManager] Google Docs init falhou:", err);
+        setIsAuthenticated(false);
+      }
+    };
+    initGoogleDocs();
+  }, []);
 
   // Carregar variáveis do processo selecionado
   useEffect(() => {
-    if (formData.processId && formData.processId !== '_none') {
-      const processo = (processes || []).find((p) => p.id === formData.processId)
+    if (formData.processId && formData.processId !== "_none") {
+      const processo = (processes || []).find(
+        (p) => p.id === formData.processId
+      );
       if (processo) {
         setVariableValues((prev) => ({
           ...prev,
-          'processo.numero': processo.numeroCNJ || '',
-          'processo.titulo': processo.titulo || '',
-          'autor.nome': processo.autor || '',
-          'reu.nome': processo.reu || '',
-          comarca: processo.comarca || '',
-          vara: processo.vara || '',
-        }))
+          "processo.numero": processo.numeroCNJ || "",
+          "processo.titulo": processo.titulo || "",
+          "autor.nome": processo.autor || "",
+          "reu.nome": processo.reu || "",
+          comarca: processo.comarca || "",
+          vara: processo.vara || "",
+        }));
       }
     }
-  }, [formData.processId, processes])
+  }, [formData.processId, processes]);
 
   const handleAuthGoogle = async () => {
     try {
-      const success = await googleDocsService.authenticate()
+      if (!isGoogleConfigured) {
+        toast.error("Google não está configurado no ambiente (.env)");
+        return;
+      }
+      const success = await googleDocsService.authenticate();
       if (success) {
-        setIsAuthenticated(true)
-        toast.success('Autenticado com Google Docs!')
+        setIsAuthenticated(true);
+        toast.success("Autenticado com Google Docs!");
       } else {
-        toast.error('Falha na autenticação')
+        toast.error("Falha na autenticação");
       }
     } catch (error) {
-      toast.error('Erro ao autenticar com Google')
-      console.error(error)
+      toast.error("Erro ao autenticar com Google");
+      console.error(error);
     }
-  }
+  };
 
   const handleCreateMinuta = async () => {
     if (!formData.titulo || !formData.conteudo) {
-      toast.error('Preencha título e conteúdo')
-      return
+      toast.error("Preencha título e conteúdo");
+      return;
     }
 
     const novaMinuta: Minuta = {
       id: `minuta-${Date.now()}`,
       titulo: formData.titulo,
-      processId: formData.processId !== '_none' ? formData.processId : undefined,
+      processId:
+        formData.processId !== "_none" ? formData.processId : undefined,
       tipo: formData.tipo,
       conteudo: formData.conteudo,
       status: formData.status,
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
-      autor: 'current-user',
+      autor: "current-user",
       criadoPorAgente: false,
-    }
+    };
 
-    setMinutas((current = []) => [...current, novaMinuta])
+    setMinutas((current = []) => [...current, novaMinuta]);
 
-    resetForm()
-    setIsDialogOpen(false)
-    toast.success('Minuta criada com sucesso!')
-  }
+    resetForm();
+    setIsDialogOpen(false);
+    toast.success("Minuta criada com sucesso!");
+  };
 
   const handleUpdateMinuta = async () => {
     if (!editingMinuta || !formData.titulo || !formData.conteudo) {
-      toast.error('Preencha título e conteúdo')
-      return
+      toast.error("Preencha título e conteúdo");
+      return;
     }
 
     setMinutas((current = []) =>
       current.map((m) =>
         m.id === editingMinuta.id
           ? {
-            ...m,
-            titulo: formData.titulo,
-            processId: formData.processId !== '_none' ? formData.processId : undefined,
-            tipo: formData.tipo,
-            conteudo: formData.conteudo,
-            status: formData.status,
-            atualizadoEm: new Date().toISOString(),
-          }
-          : m,
-      ),
-    )
+              ...m,
+              titulo: formData.titulo,
+              processId:
+                formData.processId !== "_none" ? formData.processId : undefined,
+              tipo: formData.tipo,
+              conteudo: formData.conteudo,
+              status: formData.status,
+              atualizadoEm: new Date().toISOString(),
+            }
+          : m
+      )
+    );
 
     if (editingMinuta.googleDocsId) {
       const success = await googleDocsService.updateDocumentContent(
         editingMinuta.googleDocsId,
-        formData.conteudo,
-      )
+        formData.conteudo
+      );
       if (success) {
-        toast.success('Minuta atualizada localmente e no Google Docs!')
+        toast.success("Minuta atualizada localmente e no Google Docs!");
       } else {
-        toast.warning('Minuta atualizada localmente, mas erro ao sincronizar com Google Docs')
+        toast.warning(
+          "Minuta atualizada localmente, mas erro ao sincronizar com Google Docs"
+        );
       }
     } else {
-      toast.success('Minuta atualizada!')
+      toast.success("Minuta atualizada!");
     }
 
-    setEditingMinuta(null)
-    resetForm()
-    setIsDialogOpen(false)
-  }
+    setEditingMinuta(null);
+    resetForm();
+    setIsDialogOpen(false);
+  };
 
   const resetForm = () => {
     setFormData({
-      titulo: '',
-      processId: '_none',
-      tipo: 'peticao',
-      conteudo: '',
-      status: 'rascunho',
-    })
-    setSelectedTemplate(null)
-    setVariableValues({})
-    setError(null)
-  }
+      titulo: "",
+      processId: "_none",
+      tipo: "peticao",
+      conteudo: "",
+      status: "rascunho",
+    });
+    setSelectedTemplate(null);
+    setVariableValues({});
+    setError(null);
+  };
 
   const handleOpenInGoogleDocs = async (minuta: Minuta) => {
+    if (!isGoogleConfigured) {
+      toast.error("Google não está configurado neste ambiente");
+      return;
+    }
     if (!isAuthenticated) {
-      toast.error('Autentique-se com Google primeiro')
-      return
+      toast.error("Autentique-se com Google primeiro");
+      return;
     }
 
     if (minuta.googleDocsUrl) {
-      googleDocsService.openDocument(minuta.googleDocsUrl)
-      return
+      googleDocsService.openDocument(minuta.googleDocsUrl);
+      return;
     }
 
-    const toastId = toast.loading('Criando documento no Google Docs...')
+    const toastId = toast.loading("Criando documento no Google Docs...");
 
     try {
-      const result = await googleDocsService.createDocument(minuta)
+      const result = await googleDocsService.createDocument(minuta);
 
       if (result) {
         setMinutas((current = []) =>
           current.map((m) =>
             m.id === minuta.id
               ? {
-                ...m,
-                googleDocsId: result.docId,
-                googleDocsUrl: result.url,
-                ultimaSincronizacao: new Date().toISOString(),
-              }
-              : m,
-          ),
-        )
+                  ...m,
+                  googleDocsId: result.docId,
+                  googleDocsUrl: result.url,
+                  ultimaSincronizacao: new Date().toISOString(),
+                }
+              : m
+          )
+        );
 
-        googleDocsService.openDocument(result.url)
-        toast.success('✅ Documento criado no Google Docs!', { id: toastId })
+        googleDocsService.openDocument(result.url);
+        toast.success("✅ Documento criado no Google Docs!", { id: toastId });
       } else {
-        const lastError = googleDocsService.getLastError()
-        toast.error(lastError || 'Erro ao criar documento no Google Docs', { id: toastId })
+        const lastError = googleDocsService.getLastError();
+        toast.error(lastError || "Erro ao criar documento no Google Docs", {
+          id: toastId,
+        });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      toast.error(`Erro ao abrir no Google Docs: ${errorMessage}`, { id: toastId })
-      console.error(error)
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error(`Erro ao abrir no Google Docs: ${errorMessage}`, {
+        id: toastId,
+      });
+      console.error(error);
     }
-  }
+  };
 
   const handleSyncFromGoogleDocs = async (minuta: Minuta) => {
+    if (!isGoogleConfigured) {
+      toast.error("Google não está configurado neste ambiente");
+      return;
+    }
     if (!minuta.googleDocsId) {
-      toast.error('Esta minuta não está vinculada ao Google Docs')
-      return
+      toast.error("Esta minuta não está vinculada ao Google Docs");
+      return;
     }
 
-    setIsSyncing(minuta.id)
-    const toastId = toast.loading('Sincronizando do Google Docs...')
+    setIsSyncing(minuta.id);
+    const toastId = toast.loading("Sincronizando do Google Docs...");
 
     try {
-      const content = await googleDocsService.syncDocument(minuta.googleDocsId)
+      const content = await googleDocsService.syncDocument(minuta.googleDocsId);
 
       if (content !== null) {
         setMinutas((current = []) =>
           current.map((m) =>
             m.id === minuta.id
               ? {
-                ...m,
-                conteudo: content,
-                atualizadoEm: new Date().toISOString(),
-                ultimaSincronizacao: new Date().toISOString(),
-              }
-              : m,
-          ),
-        )
-        toast.success(`✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`, { id: toastId })
+                  ...m,
+                  conteudo: content,
+                  atualizadoEm: new Date().toISOString(),
+                  ultimaSincronizacao: new Date().toISOString(),
+                }
+              : m
+          )
+        );
+        toast.success(
+          `✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`,
+          { id: toastId }
+        );
       } else {
-        const lastError = googleDocsService.getLastError()
-        toast.error(lastError || 'Erro ao sincronizar do Google Docs', { id: toastId })
+        const lastError = googleDocsService.getLastError();
+        toast.error(lastError || "Erro ao sincronizar do Google Docs", {
+          id: toastId,
+        });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      toast.error(`Erro ao sincronizar: ${errorMessage}`, { id: toastId })
-      console.error(error)
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error(`Erro ao sincronizar: ${errorMessage}`, { id: toastId });
+      console.error(error);
     } finally {
-      setIsSyncing(null)
+      setIsSyncing(null);
     }
-  }
+  };
 
   const handleDeleteMinuta = (id: string) => {
-    setMinutas((current = []) => current.filter((m) => m.id !== id))
-    toast.success('Minuta excluída')
-  }
+    setMinutas((current = []) => current.filter((m) => m.id !== id));
+    toast.success("Minuta excluída");
+  };
 
   const handleEditMinuta = (minuta: Minuta) => {
-    setEditingMinuta(minuta)
+    setEditingMinuta(minuta);
     setFormData({
       titulo: minuta.titulo,
-      processId: minuta.processId || '_none',
+      processId: minuta.processId || "_none",
       tipo: minuta.tipo,
       conteudo: minuta.conteudo,
       status: minuta.status,
-    })
-    setActiveTab('editor')
-    setIsDialogOpen(true)
-    setError(null)
-  }
+    });
+    setActiveTab("editor");
+    setIsDialogOpen(true);
+    setError(null);
+  };
 
   const handleDuplicateMinuta = (minuta: Minuta) => {
     const novaMinuta: Minuta = {
       ...minuta,
       id: `minuta-${Date.now()}`,
       titulo: `${minuta.titulo} (cópia)`,
-      status: 'rascunho',
+      status: "rascunho",
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
       googleDocsId: undefined,
       googleDocsUrl: undefined,
       ultimaSincronizacao: undefined,
-    }
-    setMinutas((current = []) => [...current, novaMinuta])
-    toast.success('Minuta duplicada!')
-  }
+    };
+    setMinutas((current = []) => [...current, novaMinuta]);
+    toast.success("Minuta duplicada!");
+  };
 
   const handleApproveMinuta = (id: string) => {
     setMinutas((current = []) =>
       current.map((m) =>
         m.id === id
-          ? { ...m, status: 'finalizada' as const, atualizadoEm: new Date().toISOString() }
-          : m,
-      ),
-    )
-    toast.success('Minuta aprovada!')
-  }
+          ? {
+              ...m,
+              status: "finalizada" as const,
+              atualizadoEm: new Date().toISOString(),
+            }
+          : m
+      )
+    );
+    toast.success("Minuta aprovada!");
+  };
 
   const handleExportPDF = async (minuta: Minuta) => {
-    const printWindow = window.open('', '_blank')
+    const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      toast.error('Habilite pop-ups para exportar PDF')
-      return
+      toast.error("Habilite pop-ups para exportar PDF");
+      return;
     }
 
     printWindow.document.write(`
@@ -419,11 +484,11 @@ export default function MinutasManager() {
           ${minuta.conteudo}
         </body>
       </html>
-    `)
-    printWindow.document.close()
-    printWindow.print()
-    toast.success('Janela de impressão aberta - salve como PDF')
-  }
+    `);
+    printWindow.document.close();
+    printWindow.print();
+    toast.success("Janela de impressão aberta - salve como PDF");
+  };
 
   const handleExportDOCX = (minuta: Minuta) => {
     const blob = new Blob(
@@ -445,171 +510,179 @@ export default function MinutasManager() {
       </html>
     `,
       ],
-      { type: 'application/msword' },
-    )
+      { type: "application/msword" }
+    );
 
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${minuta.titulo}.doc`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Documento exportado!')
-  }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${minuta.titulo}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Documento exportado!");
+  };
 
   // Aplicar template
   const handleApplyTemplate = (template: DocumentTemplate) => {
-    setSelectedTemplate(template)
+    setSelectedTemplate(template);
     setFormData((prev) => ({
       ...prev,
       titulo: prev.titulo || template.nome,
-      tipo: template.tipo as Minuta['tipo'],
+      tipo: template.tipo as Minuta["tipo"],
       conteudo: template.conteudo,
-    }))
-    toast.success(`Template "${template.nome}" aplicado!`)
-  }
+    }));
+    toast.success(`Template "${template.nome}" aplicado!`);
+  };
 
   // Preencher variáveis do template
   const handleFillVariables = () => {
-    if (!selectedTemplate) return
+    if (!selectedTemplate) return;
 
-    const filledContent = replaceTemplateVariables(formData.conteudo, variableValues)
-    setFormData((prev) => ({ ...prev, conteudo: filledContent }))
-    toast.success('Variáveis preenchidas!')
-  }
+    const filledContent = replaceTemplateVariables(
+      formData.conteudo,
+      variableValues
+    );
+    setFormData((prev) => ({ ...prev, conteudo: filledContent }));
+    toast.success("Variáveis preenchidas!");
+  };
 
   // IA integrada ao Tiptap (usando Gemini 2.5 Pro)
   const handleAIGenerate = useCallback(
     async (userPrompt: string): Promise<string> => {
       if (!userPrompt.trim()) {
-        throw new Error('Prompt vazio')
+        throw new Error("Prompt vazio");
       }
 
       if (!isGeminiConfigured()) {
-        const msg = 'Gemini não está configurado. Verifique VITE_GEMINI_API_KEY no .env.'
-        toast.error(msg)
-        throw new Error(msg)
+        const msg =
+          "Gemini não está configurado. Verifique VITE_GEMINI_API_KEY no .env.";
+        toast.error(msg);
+        throw new Error(msg);
       }
 
       try {
         const fullPrompt = `${AI_EDITOR_SYSTEM_PROMPT}
 
 Instrução específica do usuário:
-${userPrompt}`
+${userPrompt}`;
 
         const response = await callGemini(fullPrompt, {
           temperature: 0.6,
           maxOutputTokens: 4096,
-        })
+        });
 
         if (response.error) {
-          console.error('[MinutasManager] Erro Gemini:', response.error)
-          toast.error('Erro ao gerar texto com Gemini.')
-          throw new Error(response.error)
+          console.error("[MinutasManager] Erro Gemini:", response.error);
+          toast.error("Erro ao gerar texto com Gemini.");
+          throw new Error(response.error);
         }
 
-        const text = response.text?.trim()
+        const text = response.text?.trim();
         if (!text) {
-          const msg = 'Gemini retornou resposta vazia.'
-          toast.error(msg)
-          throw new Error(msg)
+          const msg = "Gemini retornou resposta vazia.";
+          toast.error(msg);
+          throw new Error(msg);
         }
 
-        return text
+        return text;
       } catch (err) {
-        console.error('[MinutasManager] Erro inesperado na IA:', err)
-        throw err
+        console.error("[MinutasManager] Erro inesperado na IA:", err);
+        throw err;
       }
     },
-    [],
-  )
+    []
+  );
 
   // 🎯 Função de streaming para IA no editor (usa SSE para resposta em tempo real)
   const handleAIStream = useCallback(
     async (
       prompt: string,
       callbacks: {
-        onChunk: (chunk: string) => void
-        onComplete: () => void
-        onError: (error: Error) => void
-      },
+        onChunk: (chunk: string) => void;
+        onComplete: () => void;
+        onError: (error: Error) => void;
+      }
     ) => {
       // Configura os callbacks dinâmicos no ref
       streamCallbacksRef.current = {
         onChunk: callbacks.onChunk,
         onComplete: callbacks.onComplete,
         onError: (err) => callbacks.onError(new Error(err)),
-      }
+      };
 
       try {
         await streamChat([
           {
-            role: 'system',
+            role: "system",
             content: `Você é um assistente jurídico especializado em redação de documentos legais brasileiros.
 Sua função é ajudar na criação, edição e melhoria de petições, contratos, pareceres e outros documentos jurídicos.
 Sempre use linguagem formal e técnica apropriada. Cite legislação e jurisprudência quando relevante.
 Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>, <li>, <blockquote>).`,
           },
-          { role: 'user', content: prompt },
-        ])
+          { role: "user", content: prompt },
+        ]);
       } catch (err) {
-        console.error('[MinutasManager] Erro no streaming:', err)
-        callbacks.onError(err instanceof Error ? err : new Error('Erro no streaming'))
+        console.error("[MinutasManager] Erro no streaming:", err);
+        callbacks.onError(
+          err instanceof Error ? err : new Error("Erro no streaming")
+        );
       }
     },
-    [streamChat],
-  )
+    [streamChat]
+  );
 
-  const getStatusColor = (status: Minuta['status']) => {
+  const getStatusColor = (status: Minuta["status"]) => {
     const colors = {
-      rascunho: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-      'em-revisao': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-      'pendente-revisao': 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-      finalizada: 'bg-green-500/10 text-green-500 border-green-500/20',
-      arquivada: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-    }
-    return colors[status] || colors.rascunho
-  }
+      rascunho: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+      "em-revisao": "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      "pendente-revisao":
+        "bg-orange-500/10 text-orange-500 border-orange-500/20",
+      finalizada: "bg-green-500/10 text-green-500 border-green-500/20",
+      arquivada: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+    };
+    return colors[status] || colors.rascunho;
+  };
 
-  const getStatusLabel = (status: Minuta['status']) => {
+  const getStatusLabel = (status: Minuta["status"]) => {
     const labels = {
-      rascunho: 'Rascunho',
-      'em-revisao': 'Em Revisão',
-      'pendente-revisao': 'Pendente Revisão',
-      finalizada: 'Finalizada',
-      arquivada: 'Arquivada',
-    }
-    return labels[status] || status
-  }
+      rascunho: "Rascunho",
+      "em-revisao": "Em Revisão",
+      "pendente-revisao": "Pendente Revisão",
+      finalizada: "Finalizada",
+      arquivada: "Arquivada",
+    };
+    return labels[status] || status;
+  };
 
-  const getTipoLabel = (tipo: Minuta['tipo']) => {
+  const getTipoLabel = (tipo: Minuta["tipo"]) => {
     const labels = {
-      peticao: 'Petição',
-      contrato: 'Contrato',
-      parecer: 'Parecer',
-      recurso: 'Recurso',
-      procuracao: 'Procuração',
-      outro: 'Outro',
-    }
-    return labels[tipo] || tipo
-  }
+      peticao: "Petição",
+      contrato: "Contrato",
+      parecer: "Parecer",
+      recurso: "Recurso",
+      procuracao: "Procuração",
+      outro: "Outro",
+    };
+    return labels[tipo] || tipo;
+  };
 
   // Filtrar minutas
   const filteredMinutas = (minutas || []).filter((m) => {
     const matchesSearch =
-      searchQuery === '' || m.titulo.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = filterStatus === 'all' || m.status === filterStatus
-    const matchesTipo = filterTipo === 'all' || m.tipo === filterTipo
-    return matchesSearch && matchesStatus && matchesTipo
-  })
+      searchQuery === "" ||
+      m.titulo.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || m.status === filterStatus;
+    const matchesTipo = filterTipo === "all" || m.tipo === filterTipo;
+    return matchesSearch && matchesStatus && matchesTipo;
+  });
 
   // Minutas pendentes de revisão (criadas por agentes)
   const minutasPendentes = (minutas || []).filter(
-    (m) => m.status === 'pendente-revisao' || m.criadoPorAgente,
-  )
+    (m) => m.status === "pendente-revisao" || m.criadoPorAgente
+  );
 
   // Variáveis não preenchidas no conteúdo atual
-  const unfilledVariables = extractUnfilledVariables(formData.conteudo)
+  const unfilledVariables = extractUnfilledVariables(formData.conteudo);
 
   return (
     <div className="p-6 space-y-6">
@@ -650,8 +723,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             <DialogTrigger asChild>
               <Button
                 onClick={() => {
-                  setEditingMinuta(null)
-                  resetForm()
+                  setEditingMinuta(null);
+                  resetForm();
                 }}
               >
                 <Plus className="mr-2" weight="bold" />
@@ -675,8 +748,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   )}
                 </DialogTitle>
                 <DialogDescription>
-                  Use o editor rico para criar sua minuta. Use o botão de IA para gerar
-                  conteúdo automaticamente com Gemini 2.5 Pro.
+                  Use o editor rico para criar sua minuta. Use o botão de IA
+                  para gerar conteúdo automaticamente com Gemini 2.5 Pro.
                 </DialogDescription>
               </DialogHeader>
 
@@ -716,7 +789,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         onValueChange={(value) =>
                           setFormData({
                             ...formData,
-                            tipo: value as Minuta['tipo'],
+                            tipo: value as Minuta["tipo"],
                           })
                         }
                       >
@@ -741,7 +814,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         onValueChange={(value) =>
                           setFormData({
                             ...formData,
-                            status: value as Minuta['status'],
+                            status: value as Minuta["status"],
                           })
                         }
                       >
@@ -759,7 +832,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
 
                   <div>
-                    <Label htmlFor="processo">Vincular a Processo (opcional)</Label>
+                    <Label htmlFor="processo">
+                      Vincular a Processo (opcional)
+                    </Label>
                     <Select
                       value={formData.processId}
                       onValueChange={(value) =>
@@ -782,16 +857,20 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
 
                   {/* Editor */}
                   <div className="flex-1 overflow-hidden flex flex-col min-h-[400px]">
-                    <Suspense fallback={
-                      <div className="h-[400px] flex items-center justify-center bg-muted rounded-lg border">
-                        <div className="flex flex-col items-center gap-2">
-                          <SpinnerGap className="h-8 w-8 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">Carregando editor...</span>
+                    <Suspense
+                      fallback={
+                        <div className="h-[400px] flex items-center justify-center bg-muted rounded-lg border">
+                          <div className="flex flex-col items-center gap-2">
+                            <SpinnerGap className="h-8 w-8 animate-spin text-primary" />
+                            <span className="text-sm text-muted-foreground">
+                              Carregando editor...
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    }>
+                      }
+                    >
                       <TiptapEditor
-                        key={editingMinuta?.id || 'new-minuta'}
+                        key={editingMinuta?.id || "new-minuta"}
                         content={formData.conteudo}
                         onChange={(content) =>
                           setFormData({ ...formData, conteudo: content })
@@ -810,15 +889,17 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
                       <Warning className="h-4 w-4 text-amber-600" />
                       <AlertDescription className="text-amber-800 dark:text-amber-200">
-                        <strong>{unfilledVariables.length} variáveis não preenchidas:</strong>{' '}
-                        {unfilledVariables.slice(0, 5).join(', ')}
+                        <strong>
+                          {unfilledVariables.length} variáveis não preenchidas:
+                        </strong>{" "}
+                        {unfilledVariables.slice(0, 5).join(", ")}
                         {unfilledVariables.length > 5 &&
                           ` e mais ${unfilledVariables.length - 5}`}
                         <Button
                           variant="link"
                           size="sm"
                           className="ml-2 text-amber-600"
-                          onClick={() => setActiveTab('variaveis')}
+                          onClick={() => setActiveTab("variaveis")}
                         >
                           Preencher variáveis →
                         </Button>
@@ -828,12 +909,17 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
 
                   {error && (
                     <Alert variant="destructive">
-                      <AlertDescription className="text-xs">{error}</AlertDescription>
+                      <AlertDescription className="text-xs">
+                        {error}
+                      </AlertDescription>
                     </Alert>
                   )}
                 </TabsContent>
 
-                <TabsContent value="templates" className="flex-1 overflow-hidden mt-4">
+                <TabsContent
+                  value="templates"
+                  className="flex-1 overflow-hidden mt-4"
+                >
                   <div className="space-y-4 h-full flex flex-col">
                     <div className="flex gap-2">
                       <div className="relative flex-1">
@@ -852,21 +938,22 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         {documentTemplates
                           .filter(
                             (t) =>
-                              searchQuery === '' ||
+                              searchQuery === "" ||
                               t.nome
                                 .toLowerCase()
                                 .includes(searchQuery.toLowerCase()) ||
                               t.categoria
                                 .toLowerCase()
-                                .includes(searchQuery.toLowerCase()),
+                                .includes(searchQuery.toLowerCase())
                           )
                           .map((template) => (
                             <Card
                               key={template.id}
-                              className={`cursor-pointer transition-all hover:border-primary/50 ${selectedTemplate?.id === template.id
-                                ? 'border-primary bg-primary/5'
-                                : ''
-                                }`}
+                              className={`cursor-pointer transition-all hover:border-primary/50 ${
+                                selectedTemplate?.id === template.id
+                                  ? "border-primary bg-primary/5"
+                                  : ""
+                              }`}
                               onClick={() => handleApplyTemplate(template)}
                             >
                               <CardHeader className="p-4">
@@ -883,7 +970,10 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                                   <Badge variant="outline" className="text-xs">
                                     {template.categoria}
                                   </Badge>
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
                                     {template.variaveis.length} variáveis
                                   </Badge>
                                 </div>
@@ -895,12 +985,18 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="variaveis" className="flex-1 overflow-hidden mt-4">
+                <TabsContent
+                  value="variaveis"
+                  className="flex-1 overflow-hidden mt-4"
+                >
                   <div className="space-y-4 h-full flex flex-col">
                     <p className="text-sm text-muted-foreground">
-                      Preencha as variáveis para substituir automaticamente no documento. Use
-                      o formato{' '}
-                      <code className="bg-muted px-1 rounded">{'{{variavel}}'}</code>.
+                      Preencha as variáveis para substituir automaticamente no
+                      documento. Use o formato{" "}
+                      <code className="bg-muted px-1 rounded">
+                        {"{{variavel}}"}
+                      </code>
+                      .
                     </p>
 
                     <ScrollArea className="flex-1">
@@ -910,7 +1006,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                             <div key={variable}>
                               <Label className="text-xs">{variable}</Label>
                               <Input
-                                value={variableValues[variable] || ''}
+                                value={variableValues[variable] || ""}
                                 onChange={(e) =>
                                   setVariableValues((prev) => ({
                                     ...prev,
@@ -920,7 +1016,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                                 placeholder={`Valor para ${variable}`}
                               />
                             </div>
-                          ),
+                          )
                         )}
                       </div>
                     </ScrollArea>
@@ -938,15 +1034,19 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setIsDialogOpen(false)
-                    setEditingMinuta(null)
-                    setError(null)
+                    setIsDialogOpen(false);
+                    setEditingMinuta(null);
+                    setError(null);
                   }}
                 >
                   Cancelar
                 </Button>
-                <Button onClick={editingMinuta ? handleUpdateMinuta : handleCreateMinuta}>
-                  {editingMinuta ? 'Atualizar' : 'Criar'} Minuta
+                <Button
+                  onClick={
+                    editingMinuta ? handleUpdateMinuta : handleCreateMinuta
+                  }
+                >
+                  {editingMinuta ? "Atualizar" : "Criar"} Minuta
                 </Button>
               </div>
             </DialogContent>
@@ -959,7 +1059,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
         <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
           <Robot className="h-4 w-4 text-orange-600" weight="fill" />
           <AlertDescription className="text-orange-800 dark:text-orange-200">
-            <strong>{minutasPendentes.length} minuta(s) pendente(s) de revisão</strong>{' '}
+            <strong>
+              {minutasPendentes.length} minuta(s) pendente(s) de revisão
+            </strong>{" "}
             criada(s) pelos agentes IA.
             <div className="flex gap-2 mt-2">
               {minutasPendentes.slice(0, 3).map((m) => (
@@ -1027,11 +1129,15 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       {filteredMinutas.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText size={64} className="text-muted-foreground mb-4" weight="thin" />
+            <FileText
+              size={64}
+              className="text-muted-foreground mb-4"
+              weight="thin"
+            />
             <p className="text-muted-foreground text-center">
-              {searchQuery || filterStatus !== 'all' || filterTipo !== 'all'
-                ? 'Nenhuma minuta encontrada com os filtros aplicados.'
-                : 'Nenhuma minuta criada ainda.'}
+              {searchQuery || filterStatus !== "all" || filterTipo !== "all"
+                ? "Nenhuma minuta encontrada com os filtros aplicados."
+                : "Nenhuma minuta criada ainda."}
               <br />
               Clique em &quot;Nova Minuta&quot; para começar.
             </p>
@@ -1040,12 +1146,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       ) : (
         <div className="grid gap-4">
           {filteredMinutas.map((minuta) => {
-            const processo = (processes || []).find((p) => p.id === minuta.processId)
+            const processo = (processes || []).find(
+              (p) => p.id === minuta.processId
+            );
 
             return (
               <Card
                 key={minuta.id}
-                className={minuta.criadoPorAgente ? 'border-orange-500/30' : ''}
+                className={minuta.criadoPorAgente ? "border-orange-500/30" : ""}
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -1064,13 +1172,20 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         <Badge className={getStatusColor(minuta.status)}>
                           {getStatusLabel(minuta.status)}
                         </Badge>
-                        <Badge variant="outline">{getTipoLabel(minuta.tipo)}</Badge>
+                        <Badge variant="outline">
+                          {getTipoLabel(minuta.tipo)}
+                        </Badge>
                         {processo && (
-                          <Badge variant="secondary">{processo.numeroCNJ}</Badge>
+                          <Badge variant="secondary">
+                            {processo.numeroCNJ}
+                          </Badge>
                         )}
                         {minuta.googleDocsId && (
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            <GoogleLogo className="mr-1 h-3 w-3" weight="bold" />
+                            <GoogleLogo
+                              className="mr-1 h-3 w-3"
+                              weight="bold"
+                            />
                             Google Docs
                           </Badge>
                         )}
@@ -1087,7 +1202,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       dangerouslySetInnerHTML={{
                         __html:
                           minuta.conteudo.substring(0, 500) +
-                          (minuta.conteudo.length > 500 ? '...' : ''),
+                          (minuta.conteudo.length > 500 ? "..." : ""),
                       }}
                     />
 
@@ -1095,14 +1210,16 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock weight="bold" className="h-3 w-3" />
-                        Atualizado em{' '}
-                        {new Date(minuta.atualizadoEm).toLocaleString('pt-BR')}
+                        Atualizado em{" "}
+                        {new Date(minuta.atualizadoEm).toLocaleString("pt-BR")}
                       </span>
                       {minuta.ultimaSincronizacao && (
                         <span className="flex items-center gap-1">
                           <ArrowsClockwise className="h-3 w-3" />
-                          Sincronizado em{' '}
-                          {new Date(minuta.ultimaSincronizacao).toLocaleString('pt-BR')}
+                          Sincronizado em{" "}
+                          {new Date(minuta.ultimaSincronizacao).toLocaleString(
+                            "pt-BR"
+                          )}
                         </span>
                       )}
                     </div>
@@ -1118,7 +1235,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         Editar
                       </Button>
 
-                      {minuta.status !== 'finalizada' && (
+                      {minuta.status !== "finalizada" && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -1142,7 +1259,10 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button size="sm" variant="outline">
-                            <DownloadSimple className="mr-2 h-4 w-4" weight="bold" />
+                            <DownloadSimple
+                              className="mr-2 h-4 w-4"
+                              weight="bold"
+                            />
                             Exportar
                             <CaretDown className="ml-1 h-3 w-3" />
                           </Button>
@@ -1172,8 +1292,12 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               disabled={!isAuthenticated}
                               className="justify-start"
                             >
-                              <GoogleLogo className="mr-2 h-4 w-4" weight="bold" />
-                              {minuta.googleDocsUrl ? 'Abrir no' : 'Criar no'} Google Docs
+                              <GoogleLogo
+                                className="mr-2 h-4 w-4"
+                                weight="bold"
+                              />
+                              {minuta.googleDocsUrl ? "Abrir no" : "Criar no"}{" "}
+                              Google Docs
                             </Button>
                           </div>
                         </PopoverContent>
@@ -1187,8 +1311,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           disabled={isSyncing === minuta.id}
                         >
                           <ArrowsClockwise
-                            className={`mr-2 h-4 w-4 ${isSyncing === minuta.id ? 'animate-spin' : ''
-                              }`}
+                            className={`mr-2 h-4 w-4 ${
+                              isSyncing === minuta.id ? "animate-spin" : ""
+                            }`}
                             weight="bold"
                           />
                           Sincronizar
@@ -1208,10 +1333,10 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }

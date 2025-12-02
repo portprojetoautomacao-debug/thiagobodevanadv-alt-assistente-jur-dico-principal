@@ -11,75 +11,77 @@
  * - Ícone de loading corrigido (ArrowsClockwise em vez de Spinner)
  */
 
-import { useState } from 'react'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Separator } from '@/components/ui/separator'
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
-  Database,
-  MagnifyingGlass,
+  getEnabledSources,
+  searchPublications,
+  type PublicationSearchParams,
+  type PublicationSource,
+  type UnifiedPublication,
+} from "@/lib/multi-source-publications";
+import {
+  ArrowsClockwise,
   CheckCircle,
-  Warning,
   Copy,
+  Database,
   Download,
   Info,
-  ArrowsClockwise,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import {
-  searchPublications,
-  getEnabledSources,
-  type PublicationSearchParams,
-  type UnifiedPublication,
-  type PublicationSource,
-} from '@/lib/multi-source-publications'
+  MagnifyingGlass,
+  Warning,
+} from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-type SourceStatus = 'success' | 'error' | string
+type SourceStatus = "success" | "error" | string;
 
 interface SourceStatsItem {
-  source: PublicationSource | string
-  status: SourceStatus
-  count: number
-  duration: number
+  source: PublicationSource | string;
+  status: SourceStatus;
+  count: number;
+  duration: number;
 }
 
 interface SearchStats {
-  totalFound: number
-  sources: SourceStatsItem[]
+  totalFound: number;
+  sources: SourceStatsItem[];
   // Permite campos extra que o backend quiser adicionar (ex.: tempo total, paginação etc.)
-  [key: string]: unknown
+  [key: string]: unknown;
 }
 
 function getTodayISO(): string {
-  return new Date().toISOString().split('T')[0] ?? ''
+  return new Date().toISOString().split("T")[0] ?? "";
 }
 
 export default function MultiSourcePublications() {
   const [searchParams, setSearchParams] = useState<PublicationSearchParams>({
     startDate: getTodayISO(),
     endDate: getTodayISO(),
-  })
+  });
 
-  const [selectedSources, setSelectedSources] = useState<PublicationSource[]>([])
-  const [loading, setLoading] = useState(false)
-  const [publications, setPublications] = useState<UnifiedPublication[]>([])
-  const [searchStats, setSearchStats] = useState<SearchStats | null>(null)
+  const [selectedSources, setSelectedSources] = useState<PublicationSource[]>(
+    []
+  );
+  const [loading, setLoading] = useState(false);
+  const [publications, setPublications] = useState<UnifiedPublication[]>([]);
+  const [searchStats, setSearchStats] = useState<SearchStats | null>(null);
 
-  const enabledSources = getEnabledSources()
+  const enabledSources = getEnabledSources();
 
   const handleSearch = async () => {
-    if (loading) return
+    if (loading) return;
 
     // Validação de critérios mínimos
     const hasAnyFilter =
@@ -87,123 +89,137 @@ export default function MultiSourcePublications() {
       !!searchParams.oabNumber ||
       !!searchParams.processNumber ||
       !!searchParams.partyName ||
-      (searchParams.keywords && searchParams.keywords.length > 0)
+      (searchParams.keywords && searchParams.keywords.length > 0);
 
     if (!hasAnyFilter) {
-      toast.error('Forneça pelo menos um critério de busca (advogado, OAB, processo, parte ou palavra-chave).')
-      return
+      toast.error(
+        "Forneça pelo menos um critério de busca (advogado, OAB, processo, parte ou palavra-chave)."
+      );
+      return;
     }
 
     // Validação simples de intervalo de datas
     if (searchParams.startDate && searchParams.endDate) {
-      const start = new Date(searchParams.startDate)
-      const end = new Date(searchParams.endDate)
+      const start = new Date(searchParams.startDate);
+      const end = new Date(searchParams.endDate);
       if (start > end) {
-        toast.error('Data inicial não pode ser maior que data final.')
-        return
+        toast.error("Data inicial não pode ser maior que data final.");
+        return;
       }
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const params: PublicationSearchParams = {
         ...searchParams,
         sources: selectedSources.length > 0 ? selectedSources : undefined,
-      }
+      };
 
-      const result = await searchPublications(params)
+      const result = await searchPublications(params);
 
       // Garantimos que temos um array de publicações
       const pubs: UnifiedPublication[] = Array.isArray(result.publications)
         ? result.publications
-        : []
+        : [];
 
       // Ordenar por data (mais recente primeiro) se a data existir
       const sorted = [...pubs].sort((a, b) => {
-        if (!a.publicationDate || !b.publicationDate) return 0
-        const da = new Date(a.publicationDate).getTime()
-        const db = new Date(b.publicationDate).getTime()
-        return db - da
-      })
+        if (!a.publicationDate || !b.publicationDate) return 0;
+        const da = new Date(a.publicationDate).getTime();
+        const db = new Date(b.publicationDate).getTime();
+        return db - da;
+      });
 
-      setPublications(sorted)
+      setPublications(sorted);
 
       // Extrai estatísticas de busca de forma segura
-      const totalFoundValue = result.totalFound ?? sorted.length
+      const totalFoundValue = result.totalFound ?? sorted.length;
       const sourcesValue: SourceStatsItem[] = Array.isArray(result.sources)
         ? result.sources.map((s: unknown) => {
-          if (typeof s === 'object' && s !== null) {
-            return s as SourceStatsItem
-          }
-          return { source: String(s), status: 'success' as SourceStatus, count: 0, duration: 0 }
-        })
-        : []
+            if (typeof s === "object" && s !== null) {
+              return s as SourceStatsItem;
+            }
+            return {
+              source: String(s),
+              status: "success" as SourceStatus,
+              count: 0,
+              duration: 0,
+            };
+          })
+        : [];
 
       setSearchStats({
         totalFound: totalFoundValue,
         sources: sourcesValue,
-      })
+      });
 
       toast.success(
-        `${result.totalFound ?? sorted.length} publicações encontradas em ${Array.isArray(result.sources) ? result.sources.length : 0
+        `${result.totalFound ?? sorted.length} publicações encontradas em ${
+          Array.isArray(result.sources) ? result.sources.length : 0
         } fontes`
-      )
+      );
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao buscar publicações'
-      toast.error(message)
-      console.error('Search error:', error)
-      setSearchStats(null)
-      setPublications([])
+      const message =
+        error instanceof Error ? error.message : "Erro ao buscar publicações";
+      toast.error(message);
+      console.error("Search error:", error);
+      setSearchStats(null);
+      setPublications([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSourceToggle = (source: PublicationSource) => {
     setSelectedSources((prev) =>
-      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]
-    )
-  }
+      prev.includes(source)
+        ? prev.filter((s) => s !== source)
+        : [...prev, source]
+    );
+  };
 
   const handleCopyContent = (content: string) => {
     if (!navigator.clipboard) {
-      toast.error('Clipboard não suportado neste navegador.')
-      return
+      toast.error("Clipboard não suportado neste navegador.");
+      return;
     }
 
     navigator.clipboard
       .writeText(content)
-      .then(() => toast.success('Conteúdo copiado!'))
+      .then(() => toast.success("Conteúdo copiado!"))
       .catch((err) => {
-        console.error('Erro ao copiar conteúdo:', err)
-        toast.error('Não foi possível copiar o conteúdo.')
-      })
-  }
+        console.error("Erro ao copiar conteúdo:", err);
+        toast.error("Não foi possível copiar o conteúdo.");
+      });
+  };
 
   const handleExportResults = () => {
     if (!publications.length) {
-      toast.error('Não há resultados para exportar.')
-      return
+      toast.error("Não há resultados para exportar.");
+      return;
     }
 
-    const dataStr = JSON.stringify(publications, null, 2)
-    const blob = new Blob([dataStr], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `publicacoes_${new Date().toISOString()}.json`
-    link.click()
-    URL.revokeObjectURL(url)
-    toast.success('Resultados exportados!')
-  }
+    const dataStr = JSON.stringify(publications, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `publicacoes_${new Date().toISOString()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("Resultados exportados!");
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Publicações Multi-Fonte</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Publicações Multi-Fonte
+        </h1>
         <p className="text-muted-foreground mt-1">
-          Busca unificada em DJEN, DataJud, PJe, Diários Oficiais e outras fontes integradas.
+          Busca unificada em DJEN, DataJud, PJe, Diários Oficiais e outras
+          fontes integradas.
         </p>
       </div>
 
@@ -215,19 +231,23 @@ export default function MultiSourcePublications() {
             Fontes de Dados Disponíveis
           </CardTitle>
           <CardDescription>
-            Selecione as fontes que deseja consultar (ou deixe em branco para buscar em todas as fontes habilitadas).
+            Selecione as fontes que deseja consultar (ou deixe em branco para
+            buscar em todas as fontes habilitadas).
           </CardDescription>
         </CardHeader>
         <CardContent>
           {enabledSources.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nenhuma fonte de dados está habilitada no momento. Verifique a configuração do
-              módulo <code>multi-source-publications</code>.
+              Nenhuma fonte de dados está habilitada no momento. Verifique a
+              configuração do módulo <code>multi-source-publications</code>.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {enabledSources.map((source) => (
-                <div key={source} className="flex items-start space-x-3 p-3 border rounded-lg">
+                <div
+                  key={source}
+                  className="flex items-start space-x-3 p-3 border rounded-lg"
+                >
                   <Checkbox
                     id={source}
                     checked={selectedSources.includes(source)}
@@ -259,7 +279,8 @@ export default function MultiSourcePublications() {
         <CardHeader>
           <CardTitle>Critérios de Busca</CardTitle>
           <CardDescription>
-            Forneça pelo menos um critério (advogado, OAB, processo, parte ou palavra-chave).
+            Forneça pelo menos um critério (advogado, OAB, processo, parte ou
+            palavra-chave).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -270,9 +291,12 @@ export default function MultiSourcePublications() {
               <Input
                 id="lawyer-name"
                 placeholder="Ex: João Silva"
-                value={searchParams.lawyerName || ''}
+                value={searchParams.lawyerName || ""}
                 onChange={(e) =>
-                  setSearchParams((prev) => ({ ...prev, lawyerName: e.target.value }))
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    lawyerName: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -282,9 +306,12 @@ export default function MultiSourcePublications() {
               <Input
                 id="oab-number"
                 placeholder="Ex: OAB/SP 123456"
-                value={searchParams.oabNumber || ''}
+                value={searchParams.oabNumber || ""}
                 onChange={(e) =>
-                  setSearchParams((prev) => ({ ...prev, oabNumber: e.target.value }))
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    oabNumber: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -295,9 +322,12 @@ export default function MultiSourcePublications() {
               <Input
                 id="party-name"
                 placeholder="Ex: Maria Santos"
-                value={searchParams.partyName || ''}
+                value={searchParams.partyName || ""}
                 onChange={(e) =>
-                  setSearchParams((prev) => ({ ...prev, partyName: e.target.value }))
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    partyName: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -308,25 +338,30 @@ export default function MultiSourcePublications() {
               <Input
                 id="process-number"
                 placeholder="Ex: 0000000-00.0000.0.00.0000"
-                value={searchParams.processNumber || ''}
+                value={searchParams.processNumber || ""}
                 onChange={(e) =>
-                  setSearchParams((prev) => ({ ...prev, processNumber: e.target.value }))
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    processNumber: e.target.value,
+                  }))
                 }
               />
             </div>
 
             {/* Palavras-chave */}
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="keywords">Palavras-chave (separadas por vírgula)</Label>
+              <Label htmlFor="keywords">
+                Palavras-chave (separadas por vírgula)
+              </Label>
               <Input
                 id="keywords"
                 placeholder="Ex: intimação, sentença, recurso"
-                value={searchParams.keywords?.join(', ') || ''}
+                value={searchParams.keywords?.join(", ") || ""}
                 onChange={(e) =>
                   setSearchParams((prev) => ({
                     ...prev,
                     keywords: e.target.value
-                      .split(',')
+                      .split(",")
                       .map((k) => k.trim())
                       .filter(Boolean),
                   }))
@@ -340,9 +375,12 @@ export default function MultiSourcePublications() {
               <Input
                 id="start-date"
                 type="date"
-                value={searchParams.startDate || ''}
+                value={searchParams.startDate || ""}
                 onChange={(e) =>
-                  setSearchParams((prev) => ({ ...prev, startDate: e.target.value }))
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -352,9 +390,12 @@ export default function MultiSourcePublications() {
               <Input
                 id="end-date"
                 type="date"
-                value={searchParams.endDate || ''}
+                value={searchParams.endDate || ""}
                 onChange={(e) =>
-                  setSearchParams((prev) => ({ ...prev, endDate: e.target.value }))
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    endDate: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -385,66 +426,81 @@ export default function MultiSourcePublications() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <div className="text-2xl font-bold">{searchStats.totalFound}</div>
-                <div className="text-sm text-muted-foreground">Publicações Encontradas</div>
-              </div>
-              <div>
                 <div className="text-2xl font-bold">
-                  {Array.isArray(searchStats.sources) ? searchStats.sources.length : 0}
+                  {searchStats.totalFound}
                 </div>
-                <div className="text-sm text-muted-foreground">Fontes Consultadas</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">
-                  {Array.isArray(searchStats.sources)
-                    ? searchStats.sources.filter((s) => s.status === 'success').length
-                    : 0}
+                <div className="text-sm text-muted-foreground">
+                  Publicações Encontradas
                 </div>
-                <div className="text-sm text-muted-foreground">Fontes com Sucesso</div>
               </div>
               <div>
                 <div className="text-2xl font-bold">
                   {Array.isArray(searchStats.sources)
-                    ? searchStats.sources.filter((s) => s.status === 'error').length
+                    ? searchStats.sources.length
                     : 0}
                 </div>
-                <div className="text-sm text-muted-foreground">Fontes com Erro</div>
+                <div className="text-sm text-muted-foreground">
+                  Fontes Consultadas
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {Array.isArray(searchStats.sources)
+                    ? searchStats.sources.filter((s) => s.status === "success")
+                        .length
+                    : 0}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Fontes com Sucesso
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {Array.isArray(searchStats.sources)
+                    ? searchStats.sources.filter((s) => s.status === "error")
+                        .length
+                    : 0}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Fontes com Erro
+                </div>
               </div>
             </div>
 
-            {Array.isArray(searchStats.sources) && searchStats.sources.length > 0 && (
-              <>
-                <Separator className="my-4" />
-                <div className="space-y-2">
-                  <h4 className="font-semibold">Detalhes por Fonte:</h4>
-                  {searchStats.sources.map((source) => (
-                    <div
-                      key={source.source}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <div className="flex items-center gap-2">
-                        {source.status === 'success' ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <Warning className="w-4 h-4 text-red-500" />
-                        )}
-                        <span className="capitalize">
-                          {String(source.source).replace('_', ' ')}
-                        </span>
+            {Array.isArray(searchStats.sources) &&
+              searchStats.sources.length > 0 && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">Detalhes por Fonte:</h4>
+                    {searchStats.sources.map((source) => (
+                      <div
+                        key={source.source}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          {source.status === "success" ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Warning className="w-4 h-4 text-red-500" />
+                          )}
+                          <span className="capitalize">
+                            {String(source.source).replaceAll("_", " ")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">
+                            {source.count} resultado(s)
+                          </span>
+                          <span className="text-muted-foreground">
+                            {source.duration}ms
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-muted-foreground">
-                          {source.count} resultado(s)
-                        </span>
-                        <span className="text-muted-foreground">
-                          {source.duration}ms
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+                    ))}
+                  </div>
+                </>
+              )}
           </CardContent>
         </Card>
       )}
@@ -457,7 +513,8 @@ export default function MultiSourcePublications() {
               <div>
                 <CardTitle>Resultados ({publications.length})</CardTitle>
                 <CardDescription>
-                  Publicações encontradas, ordenadas por data da mais recente para a mais antiga.
+                  Publicações encontradas, ordenadas por data da mais recente
+                  para a mais antiga.
                 </CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={handleExportResults}>
@@ -468,20 +525,25 @@ export default function MultiSourcePublications() {
           </CardHeader>
           <CardContent className="space-y-4">
             {publications.map((pub, idx) => (
-              <Card key={pub.id || idx} className="border-l-4 border-l-primary">
+              <Card
+                key={pub.id || `${pub.source}-${pub.processNumber || idx}`}
+                className="border-l-4 border-l-primary"
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg">{pub.title}</CardTitle>
                       <CardDescription className="flex items-center gap-2 mt-1">
                         <Badge variant="outline" className="capitalize">
-                          {pub.source.replace('_', ' ')}
+                          {pub.source.replaceAll("_", " ")}
                         </Badge>
                         {pub.publicationType && (
-                          <Badge variant="secondary">{pub.publicationType}</Badge>
+                          <Badge variant="secondary">
+                            {pub.publicationType}
+                          </Badge>
                         )}
                         {pub.matchType && (
-                          <Badge>{pub.matchType.replace('_', ' ')}</Badge>
+                          <Badge>{pub.matchType.replaceAll("_", " ")}</Badge>
                         )}
                       </CardDescription>
                     </div>
@@ -500,8 +562,10 @@ export default function MultiSourcePublications() {
                       <span className="text-muted-foreground">Data:</span>
                       <div className="font-medium">
                         {pub.publicationDate
-                          ? new Date(pub.publicationDate).toLocaleDateString('pt-BR')
-                          : 'N/A'}
+                          ? new Date(pub.publicationDate).toLocaleDateString(
+                              "pt-BR"
+                            )
+                          : "N/A"}
                       </div>
                     </div>
                     {pub.processNumber && (
@@ -529,7 +593,9 @@ export default function MultiSourcePublications() {
                   <Separator />
 
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Conteúdo:</div>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      Conteúdo:
+                    </div>
                     <div className="text-sm bg-muted p-3 rounded max-h-40 overflow-y-auto whitespace-pre-wrap">
                       {pub.content}
                     </div>
@@ -539,7 +605,7 @@ export default function MultiSourcePublications() {
                     <Alert>
                       <Info className="h-4 w-4" />
                       <AlertDescription className="text-xs">
-                        Fonte:{' '}
+                        Fonte:{" "}
                         <a
                           href={pub.sourceUrl}
                           target="_blank"
@@ -563,12 +629,12 @@ export default function MultiSourcePublications() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Nenhuma publicação encontrada com os critérios fornecidos.
-            Ajuste filtros (nome, OAB, processo, parte ou palavras-chave) ou amplie o
+            Nenhuma publicação encontrada com os critérios fornecidos. Ajuste
+            filtros (nome, OAB, processo, parte ou palavras-chave) ou amplie o
             período de datas.
           </AlertDescription>
         </Alert>
       )}
     </div>
-  )
+  );
 }

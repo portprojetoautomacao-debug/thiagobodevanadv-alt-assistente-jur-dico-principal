@@ -1,5 +1,5 @@
 {
-  "task.allowAutomaticTasks": "off",
+  "task.allowAutomaticTasks": "on",
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {

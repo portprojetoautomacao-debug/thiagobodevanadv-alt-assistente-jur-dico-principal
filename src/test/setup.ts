@@ -69,7 +69,7 @@ globalThis.IntersectionObserver = class IntersectionObserver {
   unobserve() {
     /* Mock method - intentionally empty */
   }
-} as any;
+} as unknown as typeof IntersectionObserver;
 
 // Mock do ResizeObserver
 globalThis.ResizeObserver = class ResizeObserver {
@@ -85,4 +85,4 @@ globalThis.ResizeObserver = class ResizeObserver {
   unobserve() {
     /* Mock method - intentionally empty */
   }
-} as any;
+} as unknown as typeof ResizeObserver;

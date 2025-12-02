@@ -10,209 +10,214 @@
  * - Categorias: prazos, agentes, sistema etc.
  */
 
-import type { ReactNode } from 'react'
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useKV } from "@/hooks/use-kv";
 import {
   Bell,
   BellRinging,
-  X,
-  Trash,
-  Clock,
-  Robot,
-  Warning,
   CheckCircle,
-  Info,
+  Clock,
   FileText,
+  Info,
+  Robot,
+  Trash,
   Tray,
-} from '@phosphor-icons/react'
-import { formatDistanceToNow } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+  Warning,
+  X,
+} from "@phosphor-icons/react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Tipos de notificação
 export type NotificationType =
-  | 'prazo_urgente' // Prazo vencendo
-  | 'prazo_vencido' // Prazo vencido
-  | 'agente_tarefa' // Agente completou tarefa
-  | 'nova_intimacao' // Nova intimação detectada
-  | 'minuta_criada' // Nova minuta criada por agente
-  | 'sistema' // Notificação do sistema
-  | 'sucesso' // Ação concluída com sucesso
-  | 'erro' // Erro ocorreu
+  | "prazo_urgente" // Prazo vencendo
+  | "prazo_vencido" // Prazo vencido
+  | "agente_tarefa" // Agente completou tarefa
+  | "nova_intimacao" // Nova intimação detectada
+  | "minuta_criada" // Nova minuta criada por agente
+  | "sistema" // Notificação do sistema
+  | "sucesso" // Ação concluída com sucesso
+  | "erro"; // Erro ocorreu
 
 export interface Notification {
-  id: string
-  type: NotificationType
-  title: string
-  message: string
-  createdAt: string
-  read: boolean
-  data?: Record<string, unknown>
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+  data?: Record<string, unknown>;
   action?: {
-    label: string
-    view: string
-    payload?: unknown
-  }
+    label: string;
+    view: string;
+    payload?: unknown;
+  };
 }
 
 // Configuração de ícones e cores por tipo
 const notificationConfig: Record<
   NotificationType,
   {
-    icon: ReactNode
-    color: string
-    bgColor: string
+    icon: ReactNode;
+    color: string;
+    bgColor: string;
   }
 > = {
   prazo_urgente: {
     icon: <Clock className="w-4 h-4" weight="fill" />,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    color: "text-orange-500",
+    bgColor: "bg-orange-100 dark:bg-orange-900/30",
   },
   prazo_vencido: {
     icon: <Warning className="w-4 h-4" weight="fill" />,
-    color: 'text-red-500',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    color: "text-red-500",
+    bgColor: "bg-red-100 dark:bg-red-900/30",
   },
   agente_tarefa: {
     icon: <Robot className="w-4 h-4" weight="fill" />,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    color: "text-blue-500",
+    bgColor: "bg-blue-100 dark:bg-blue-900/30",
   },
   nova_intimacao: {
     icon: <Tray className="w-4 h-4" weight="fill" />,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    color: "text-purple-500",
+    bgColor: "bg-purple-100 dark:bg-purple-900/30",
   },
   minuta_criada: {
     icon: <FileText className="w-4 h-4" weight="fill" />,
-    color: 'text-indigo-500',
-    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
   },
   sistema: {
     icon: <Info className="w-4 h-4" weight="fill" />,
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-100 dark:bg-gray-900/30',
+    color: "text-gray-500",
+    bgColor: "bg-gray-100 dark:bg-gray-900/30",
   },
   sucesso: {
     icon: <CheckCircle className="w-4 h-4" weight="fill" />,
-    color: 'text-green-500',
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    color: "text-green-500",
+    bgColor: "bg-green-100 dark:bg-green-900/30",
   },
   erro: {
     icon: <Warning className="w-4 h-4" weight="fill" />,
-    color: 'text-red-500',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    color: "text-red-500",
+    bgColor: "bg-red-100 dark:bg-red-900/30",
   },
-}
+};
 
 interface NotificationCenterProps {
-  onNavigate?: (view: string, data?: unknown) => void
+  onNavigate?: (view: string, data?: unknown) => void;
 }
 
 // Fallback seguro para IDs caso crypto.randomUUID não exista
 function generateId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
   }
-  return `notif-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return `notif-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useKV<Notification[]>('notifications', [])
-  const [hasNewNotifications, setHasNewNotifications] = useState(false)
-  const prevCountRef = useRef(0)
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useKV<Notification[]>(
+    "notifications",
+    []
+  );
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const prevCountRef = useRef(0);
 
   // Contagem de não lidas
-  const unreadCount = (notifications || []).filter((n) => !n.read).length
+  const unreadCount = (notifications || []).filter((n) => !n.read).length;
 
   // Detectar novas notificações
   useEffect(() => {
-    const currentCount = notifications?.length || 0
+    const currentCount = notifications?.length || 0;
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
-      setHasNewNotifications(true)
+      setHasNewNotifications(true);
       // FUTURE: Som de notificação pode ser adicionado aqui se necessário
       // Exemplo: playNotificationSound()
     }
-    prevCountRef.current = currentCount
-  }, [notifications])
+    prevCountRef.current = currentCount;
+  }, [notifications]);
 
   // Função para adicionar notificação (usada pelo sistema)
   const addNotification = useCallback(
-    (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+    (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
       const newNotification: Notification = {
         ...notification,
         id: generateId(),
         createdAt: new Date().toISOString(),
         read: false,
-      }
+      };
 
-      setNotifications((current) =>
-        [newNotification, ...(current || [])].slice(0, 100) // limite de 100 últimas
-      )
+      setNotifications(
+        (current) => [newNotification, ...(current || [])].slice(0, 100) // limite de 100 últimas
+      );
     },
     [setNotifications]
-  )
+  );
 
   // Marcar como lida
   const markAsRead = useCallback(
     (id: string) => {
       setNotifications((current) =>
         (current || []).map((n) => (n.id === id ? { ...n, read: true } : n))
-      )
+      );
     },
     [setNotifications]
-  )
+  );
 
   // Marcar todas como lidas
   const markAllAsRead = useCallback(() => {
-    setNotifications((current) => (current || []).map((n) => ({ ...n, read: true })))
-    setHasNewNotifications(false)
-  }, [setNotifications])
+    setNotifications((current) =>
+      (current || []).map((n) => ({ ...n, read: true }))
+    );
+    setHasNewNotifications(false);
+  }, [setNotifications]);
 
   // Remover notificação
   const removeNotification = useCallback(
     (id: string) => {
-      setNotifications((current) => (current || []).filter((n) => n.id !== id))
+      setNotifications((current) => (current || []).filter((n) => n.id !== id));
     },
     [setNotifications]
-  )
+  );
 
   // Limpar todas
   const clearAll = useCallback(() => {
-    setNotifications([])
-    setHasNewNotifications(false)
-  }, [setNotifications])
+    setNotifications([]);
+    setHasNewNotifications(false);
+  }, [setNotifications]);
 
   // Handler de clique na notificação
   const handleClick = (notification: Notification) => {
     if (notification.read === false) {
-      markAsRead(notification.id)
+      markAsRead(notification.id);
     }
 
     if (notification.action) {
-      setIsOpen(false)
-      onNavigate?.(notification.action.view, notification.action.payload)
+      setIsOpen(false);
+      onNavigate?.(notification.action.view, notification.action.payload);
     }
-  }
+  };
 
   // Expor função global para adicionar notificações (útil para agentes / websockets)
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ; (globalThis as any).addNotification = addNotification
+    (globalThis as any).addNotification = addNotification;
     return () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (globalThis as any).addNotification
-    }
-  }, [addNotification])
+      delete (globalThis as any).addNotification;
+    };
+  }, [addNotification]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -224,7 +229,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           title={
             unreadCount > 0
               ? `${unreadCount} notificação(ões) não lida(s)`
-              : 'Notificações'
+              : "Notificações"
           }
         >
           {hasNewNotifications || unreadCount > 0 ? (
@@ -236,7 +241,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           {/* Badge de contagem */}
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
         </Button>
@@ -278,16 +283,18 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
               <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p className="text-sm">Nenhuma notificação</p>
               <p className="text-xs mt-1 opacity-70">
-                Você será notificado sobre prazos, intimações e tarefas dos agentes.
+                Você será notificado sobre prazos, intimações e tarefas dos
+                agentes.
               </p>
             </div>
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => {
                 const config =
-                  notificationConfig[notification.type] || notificationConfig.sistema
+                  notificationConfig[notification.type] ||
+                  notificationConfig.sistema;
 
-                let relativeTime = ''
+                let relativeTime = "";
                 try {
                   relativeTime = formatDistanceToNow(
                     new Date(notification.createdAt),
@@ -295,20 +302,19 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                       addSuffix: true,
                       locale: ptBR,
                     }
-                  )
+                  );
                 } catch {
-                  relativeTime = ''
+                  relativeTime = "";
                 }
 
                 return (
-                  <div
+                  <button
                     key={notification.id}
-                    role="button"
-                    tabIndex={0}
-                    className={`group relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${notification.read ? '' : 'bg-muted/30'
-                      }`}
+                    className={`group relative flex gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                      notification.read ? "" : "bg-muted/30"
+                    }`}
                     onClick={() => handleClick(notification)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(notification); } }}
+                    type="button"
                   >
                     {/* Indicador de não lida */}
                     {!notification.read && (
@@ -325,8 +331,9 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                     {/* Conteúdo */}
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : ''
-                          }`}
+                        className={`text-sm font-medium ${
+                          notification.read ? "text-muted-foreground" : ""
+                        }`}
                       >
                         {notification.title}
                       </p>
@@ -343,15 +350,15 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                     {/* Botão remover */}
                     <button
                       onClick={(e) => {
-                        e.stopPropagation()
-                        removeNotification(notification.id)
+                        e.stopPropagation();
+                        removeNotification(notification.id);
                       }}
                       className="shrink-0 p-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity"
                     >
                       <X className="w-3 h-3 text-muted-foreground" />
                     </button>
-                  </div>
-                )
+                  </button>
+                );
               })}
             </div>
           )}
@@ -361,49 +368,53 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         {(notifications?.length || 0) > 0 && (
           <div className="px-4 py-2 border-t bg-muted/30">
             <p className="text-xs text-center text-muted-foreground">
-              {notifications?.length} notificação(ões) • {unreadCount} não lida(s)
+              {notifications?.length} notificação(ões) • {unreadCount} não
+              lida(s)
             </p>
           </div>
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 // Hook para usar o sistema de notificações em qualquer lugar
 export function useNotifications() {
-  const [notifications, setNotifications] = useKV<Notification[]>('notifications', [])
+  const [notifications, setNotifications] = useKV<Notification[]>(
+    "notifications",
+    []
+  );
 
   const addNotification = useCallback(
-    (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+    (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
       const newNotification: Notification = {
         ...notification,
         id: generateId(),
         createdAt: new Date().toISOString(),
         read: false,
-      }
+      };
 
       setNotifications((current) =>
         [newNotification, ...(current || [])].slice(0, 100)
-      )
+      );
 
-      return newNotification.id
+      return newNotification.id;
     },
     [setNotifications]
-  )
+  );
 
   const markAsRead = useCallback(
     (id: string) => {
       setNotifications((current) =>
         (current || []).map((n) => (n.id === id ? { ...n, read: true } : n))
-      )
+      );
     },
     [setNotifications]
-  )
+  );
 
   const clearAll = useCallback(() => {
-    setNotifications([])
-  }, [setNotifications])
+    setNotifications([]);
+  }, [setNotifications]);
 
   return {
     notifications: notifications || [],
@@ -411,7 +422,7 @@ export function useNotifications() {
     addNotification,
     markAsRead,
     clearAll,
-  }
+  };
 }
 
-export default NotificationCenter
+export default NotificationCenter;

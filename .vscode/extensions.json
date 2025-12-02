@@ -36,6 +36,7 @@
 
     // AI & Productivity
     "teamsdevapp.vscode-ai-foundry",
-    "p42ai.refactor"
+    "p42ai.refactor",
+    "ms-playwright.playwright"
   ]
 }
