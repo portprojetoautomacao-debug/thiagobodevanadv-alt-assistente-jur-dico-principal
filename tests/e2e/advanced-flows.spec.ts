@@ -39,6 +39,22 @@ test.beforeEach(async ({ page }) => {
     console.log(`[console:${msg.type()}]`, msg.text())
   );
   page.on("requestfailed", (req) => console.warn("[requestfailed]", req.url()));
+
+  // Intercepta chamadas a APIs serverless (não disponíveis no dev local) para evitar 404
+  await page.route(/.*\/api\/kv.*/, async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.route(/.*\/api\/djen-sync.*/, async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, synced: true }),
+    });
+  });
 });
 
 // CRM: Drag-and-drop between columns (Kanban)

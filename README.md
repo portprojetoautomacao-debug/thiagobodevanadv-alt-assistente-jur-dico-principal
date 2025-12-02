@@ -2,6 +2,8 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thiagobodevan-a11y_assistente-juridico-p&metric=alert_status&token=f6b2364c458b1c0f3ad4d08e55779f7c8b051e67)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
 
+> ⚠️ **MODO MANUTENÇÃO**: O desenvolvimento de novas funcionalidades está encerrado. O sistema está em produção estável e o foco atual é exclusivamente manter todas as funcionalidades operando corretamente.
+
 Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
 
 ## 🚀 Funcionalidades Principais
@@ -24,31 +26,31 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 
 ### 📋 Status da Migração
 
-| Item | Status |
-|------|--------|
-| **Spark (antigo)** | ❌ Descontinuado - Não mais utilizado |
-| **Gemini 2.5 Pro** | ✅ Ativo - Motor principal de IA |
-| **Módulos Legados** | ♻️ Reaproveitados e adaptados |
+| Item                | Status                                |
+| ------------------- | ------------------------------------- |
+| **Spark (antigo)**  | ❌ Descontinuado - Não mais utilizado |
+| **Gemini 2.5 Pro**  | ✅ Ativo - Motor principal de IA      |
+| **Módulos Legados** | ♻️ Reaproveitados e adaptados         |
 
 ### 🔄 O que foi Reaproveitado
 
 Os módulos e arquivos do Spark foram **reaproveitados e adaptados** para funcionar com o Gemini 2.5 Pro:
 
-| Arquivo Original | Novo Propósito |
-|------------------|----------------|
+| Arquivo Original        | Novo Propósito                      |
+| ----------------------- | ----------------------------------- |
 | `spark-client-fixes.ts` | Patches de compatibilidade (legado) |
-| `spark.meta.json` | Configuração de metadados |
-| Hooks de KV/Storage | Migrados para Upstash Redis |
-| Interface LLM | Abstração em `ai-providers.ts` |
+| `spark.meta.json`       | Configuração de metadados           |
+| Hooks de KV/Storage     | Migrados para Upstash Redis         |
+| Interface LLM           | Abstração em `ai-providers.ts`      |
 
 ### 🆕 Novos Arquivos Gemini
 
-| Arquivo | Função |
-|---------|--------|
-| `src/lib/gemini-service.ts` | Serviço principal do Gemini 2.5 Pro |
-| `src/lib/gemini-config.ts` | Configurações e parâmetros do modelo |
-| `src/lib/ai-providers.ts` | Abstração de provedores de IA |
-| `src/lib/real-agent-client.ts` | Cliente para agentes com Gemini |
+| Arquivo                        | Função                               |
+| ------------------------------ | ------------------------------------ |
+| `src/lib/gemini-service.ts`    | Serviço principal do Gemini 2.5 Pro  |
+| `src/lib/gemini-config.ts`     | Configurações e parâmetros do modelo |
+| `src/lib/ai-providers.ts`      | Abstração de provedores de IA        |
+| `src/lib/real-agent-client.ts` | Cliente para agentes com Gemini      |
 
 ### ⚙️ Configuração
 
@@ -77,10 +79,10 @@ O sistema inclui um **editor de texto rico profissional (Tiptap)** com integraç
 
 O editor foi projetado para operar em dois modos:
 
-| Modo | Descrição |
-|------|-----------|
+| Modo           | Descrição                                                       |
+| -------------- | --------------------------------------------------------------- |
 | **Automático** | Agentes IA criam minutas automaticamente baseadas em intimações |
-| **Manual** | Operador pode criar, editar ou refinar minutas usando o editor |
+| **Manual**     | Operador pode criar, editar ou refinar minutas usando o editor  |
 
 ### 🔧 Arquitetura da Integração
 
@@ -130,52 +132,57 @@ O editor foi projetado para operar em dois modos:
 
 ### 📦 Componentes Implementados
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/components/editor/TiptapEditor.tsx` | Editor WYSIWYG completo com toolbar e IA |
-| `src/lib/document-templates.ts` | 8 templates jurídicos pré-definidos |
-| `src/hooks/use-auto-minuta.ts` | Hook para criação automática de minutas |
-| `src/components/MinutasManager.tsx` | Painel de gestão de minutas com Tiptap |
-| `api/agents.ts` | Backend que salva minutas quando agente termina |
+| Arquivo                                  | Descrição                                       |
+| ---------------------------------------- | ----------------------------------------------- |
+| `src/components/editor/TiptapEditor.tsx` | Editor WYSIWYG completo com toolbar e IA        |
+| `src/lib/document-templates.ts`          | 8 templates jurídicos pré-definidos             |
+| `src/hooks/use-auto-minuta.ts`           | Hook para criação automática de minutas         |
+| `src/components/MinutasManager.tsx`      | Painel de gestão de minutas com Tiptap          |
+| `api/agents.ts`                          | Backend que salva minutas quando agente termina |
 
 ### ✨ Funcionalidades do Editor Tiptap
 
 #### Formatação de Texto
-| Recurso | Atalho | Descrição |
-|---------|--------|-----------|
-| **Negrito** | Ctrl+B | Texto em negrito |
-| **Itálico** | Ctrl+I | Texto em itálico |
-| **Sublinhado** | Ctrl+U | Texto sublinhado |
-| **Tachado** | - | Texto riscado |
-| **Destaque** | - | Marca-texto (highlight) |
+
+| Recurso        | Atalho | Descrição               |
+| -------------- | ------ | ----------------------- |
+| **Negrito**    | Ctrl+B | Texto em negrito        |
+| **Itálico**    | Ctrl+I | Texto em itálico        |
+| **Sublinhado** | Ctrl+U | Texto sublinhado        |
+| **Tachado**    | -      | Texto riscado           |
+| **Destaque**   | -      | Marca-texto (highlight) |
 
 #### Estrutura
-| Recurso | Descrição |
-|---------|-----------|
-| **Títulos H1-H3** | Hierarquia de títulos |
-| **Parágrafos** | Texto normal |
-| **Lista com marcadores** | Bullets |
-| **Lista numerada** | 1, 2, 3... |
-| **Citação** | Blockquote |
-| **Código** | Bloco de código |
+
+| Recurso                  | Descrição             |
+| ------------------------ | --------------------- |
+| **Títulos H1-H3**        | Hierarquia de títulos |
+| **Parágrafos**           | Texto normal          |
+| **Lista com marcadores** | Bullets               |
+| **Lista numerada**       | 1, 2, 3...            |
+| **Citação**              | Blockquote            |
+| **Código**               | Bloco de código       |
 
 #### Alinhamento
-| Recurso | Descrição |
-|---------|-----------|
-| **Esquerda** | Alinhamento padrão |
-| **Centro** | Centralizado |
-| **Direita** | Alinhamento à direita |
-| **Justificado** | Texto justificado |
+
+| Recurso         | Descrição             |
+| --------------- | --------------------- |
+| **Esquerda**    | Alinhamento padrão    |
+| **Centro**      | Centralizado          |
+| **Direita**     | Alinhamento à direita |
+| **Justificado** | Texto justificado     |
 
 #### Cores e Mídia
-| Recurso | Descrição |
-|---------|-----------|
-| **19 cores de texto** | Paleta de cores |
-| **Links** | URLs clicáveis |
-| **Imagens** | Inserir via URL |
-| **Desfazer/Refazer** | Histórico de edições |
+
+| Recurso               | Descrição            |
+| --------------------- | -------------------- |
+| **19 cores de texto** | Paleta de cores      |
+| **Links**             | URLs clicáveis       |
+| **Imagens**           | Inserir via URL      |
+| **Desfazer/Refazer**  | Histórico de edições |
 
 #### Contadores
+
 - 📊 **Contador de palavras** em tempo real
 - 📊 **Contador de caracteres** em tempo real
 - 🏷️ **Badge de variáveis** disponíveis
@@ -184,15 +191,16 @@ O editor foi projetado para operar em dois modos:
 
 O editor possui comandos de IA integrados:
 
-| Comando | Função |
-|---------|--------|
-| **Expandir** | Desenvolve texto de forma mais detalhada |
-| **Resumir** | Condensa texto de forma concisa |
-| **Formalizar** | Reescreve em linguagem jurídica formal |
-| **Corrigir** | Corrige gramática e ortografia |
-| **Gerar Texto** | Cria conteúdo a partir de prompt livre |
+| Comando         | Função                                   |
+| --------------- | ---------------------------------------- |
+| **Expandir**    | Desenvolve texto de forma mais detalhada |
+| **Resumir**     | Condensa texto de forma concisa          |
+| **Formalizar**  | Reescreve em linguagem jurídica formal   |
+| **Corrigir**    | Corrige gramática e ortografia           |
+| **Gerar Texto** | Cria conteúdo a partir de prompt livre   |
 
 **Exemplo de uso:**
+
 1. Selecione um trecho de texto
 2. Clique no botão "IA" na toolbar
 3. Escolha "Formalizar"
@@ -202,16 +210,16 @@ O editor possui comandos de IA integrados:
 
 O sistema inclui **8 templates** prontos para uso:
 
-| Template | Tipo | Variáveis |
-|----------|------|-----------|
-| **Petição Inicial** | `peticao` | autor, reu, processo, comarca, vara, fatos, pedidos |
-| **Contestação** | `peticao` | autor, reu, processo, vara, defesa |
-| **Manifestação Processual** | `peticao` | autor, reu, processo, manifestacao |
-| **Contrato de Honorários** | `contrato` | advogado, cliente, valor, objeto |
-| **Procuração Ad Judicia** | `procuracao` | outorgante, outorgado, poderes |
-| **Procuração Poderes Especiais** | `procuracao` | outorgante, outorgado, poderes_especiais |
-| **Recurso de Apelação** | `recurso` | apelante, apelado, processo, razoes |
-| **Parecer Jurídico** | `parecer` | consulente, materia, conclusao |
+| Template                         | Tipo         | Variáveis                                           |
+| -------------------------------- | ------------ | --------------------------------------------------- |
+| **Petição Inicial**              | `peticao`    | autor, reu, processo, comarca, vara, fatos, pedidos |
+| **Contestação**                  | `peticao`    | autor, reu, processo, vara, defesa                  |
+| **Manifestação Processual**      | `peticao`    | autor, reu, processo, manifestacao                  |
+| **Contrato de Honorários**       | `contrato`   | advogado, cliente, valor, objeto                    |
+| **Procuração Ad Judicia**        | `procuracao` | outorgante, outorgado, poderes                      |
+| **Procuração Poderes Especiais** | `procuracao` | outorgante, outorgado, poderes_especiais            |
+| **Recurso de Apelação**          | `recurso`    | apelante, apelado, processo, razoes                 |
+| **Parecer Jurídico**             | `parecer`    | consulente, materia, conclusao                      |
 
 #### Sistema de Variáveis
 
@@ -224,6 +232,7 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 ```
 
 **Variáveis automáticas quando vinculado a processo:**
+
 - `{{processo.numero}}` - Número CNJ
 - `{{processo.titulo}}` - Título do processo
 - `{{autor.nome}}` - Nome do autor
@@ -237,7 +246,7 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 2. **Análise**: Mrs. Justin-e identifica "contestar em 15 dias"
 3. **Tarefa**: Sistema cria `DRAFT_PETITION` para agente
 4. **Redação**: Agente usa IA para gerar minuta completa
-5. **Salvamento**: 
+5. **Salvamento**:
    - Backend salva no KV com `criadoPorAgente: true`
    - Frontend detecta via `use-auto-minuta` hook
 6. **Notificação**: Toast "📝 Nova minuta criada!"
@@ -248,6 +257,7 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 ### 🎨 Interface Visual
 
 **Notificação de nova minuta:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  📝 Nova minuta criada pelo Agente de Redação!              │
@@ -257,6 +267,7 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 ```
 
 **Lista de minutas:**
+
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │  🤖 [Agente] Contestação - Processo 1234567-89...             │
@@ -270,6 +281,7 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 ### 📊 Tipos e Status de Minutas
 
 **Tipos disponíveis:**
+
 - `peticao` - Petições, contestações, manifestações
 - `contrato` - Contratos, acordos
 - `parecer` - Pareceres jurídicos
@@ -278,6 +290,7 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 - `outro` - Outros documentos
 
 **Status de workflow:**
+
 - `rascunho` - Em elaboração
 - `em-revisao` - Sendo revisado
 - `pendente-revisao` - Criado por agente, aguarda humano
@@ -286,72 +299,88 @@ Templates usam sintaxe `{{variavel}}` para substituição automática:
 
 ### 🔧 Configuração Técnica
 
-**Dependências Tiptap instaladas (75 pacotes):**
+**Dependências Tiptap instaladas:**
+
 ```json
 {
-  "@tiptap/react": "^2.x",
-  "@tiptap/starter-kit": "^2.x",
-  "@tiptap/extension-placeholder": "^2.x",
-  "@tiptap/extension-highlight": "^2.x",
-  "@tiptap/extension-typography": "^2.x",
-  "@tiptap/extension-text-align": "^2.x",
-  "@tiptap/extension-underline": "^2.x",
-  "@tiptap/extension-link": "^2.x",
-  "@tiptap/extension-image": "^2.x",
-  "@tiptap/extension-color": "^2.x",
-  "@tiptap/extension-text-style": "^2.x"
+  "@tiptap/react": "^3.11.x",
+  "@tiptap/starter-kit": "^3.11.x",
+  "@tiptap/pm": "^3.11.x",
+  "@tiptap/extension-placeholder": "^3.11.x",
+  "@tiptap/extension-highlight": "^3.11.x",
+  "@tiptap/extension-typography": "^3.11.x",
+  "@tiptap/extension-text-align": "^3.11.x",
+  "@tiptap/extension-underline": "^3.11.x",
+  "@tiptap/extension-link": "^3.11.x",
+  "@tiptap/extension-image": "^3.11.x",
+  "@tiptap/extension-color": "^3.11.x",
+  "@tiptap/extension-text-style": "^3.11.x",
+  "@tiptap/extension-table": "^3.11.x",
+  "@tiptap/extension-task-list": "^3.11.x",
+  "@tiptap/extension-task-item": "^3.11.x",
+  "@tiptap/extension-bubble-menu": "^3.11.x",
+  "@tiptap/extension-floating-menu": "^3.11.x"
 }
 ```
 
 **Tipo Minuta atualizado:**
+
 ```typescript
 interface Minuta {
-  id: string
-  titulo: string
-  processId?: string
-  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro'
-  conteudo: string
-  status: 'rascunho' | 'em-revisao' | 'pendente-revisao' | 'finalizada' | 'arquivada'
-  criadoEm: string
-  atualizadoEm: string
-  autor: string
-  googleDocsId?: string
-  googleDocsUrl?: string
+  id: string;
+  titulo: string;
+  processId?: string;
+  tipo: "peticao" | "contrato" | "parecer" | "recurso" | "procuracao" | "outro";
+  conteudo: string;
+  status:
+    | "rascunho"
+    | "em-revisao"
+    | "pendente-revisao"
+    | "finalizada"
+    | "arquivada";
+  criadoEm: string;
+  atualizadoEm: string;
+  autor: string;
+  googleDocsId?: string;
+  googleDocsUrl?: string;
   // Campos para integração com agentes IA
-  criadoPorAgente?: boolean
-  agenteId?: string
-  templateId?: string
-  expedienteId?: string
-  variaveis?: Record<string, string>
+  criadoPorAgente?: boolean;
+  agenteId?: string;
+  templateId?: string;
+  expedienteId?: string;
+  variaveis?: Record<string, string>;
 }
 ```
 
 ### 🧪 Testando a Integração
 
 **1. Verificar agente de redação ativo:**
+
 ```bash
 curl https://seu-app.vercel.app/api/agents?action=status
 ```
 
 **2. Criar tarefa de teste:**
+
 ```javascript
 // No console do navegador
 const task = {
   id: crypto.randomUUID(),
-  agentId: 'redacao-peticoes',
-  type: 'draft_petition',
-  priority: 'medium',
-  status: 'queued',
+  agentId: "redacao-peticoes",
+  type: "draft_petition",
+  priority: "medium",
+  status: "queued",
   data: {
-    processNumber: '1234567-89.2024.5.02.0999',
-    documentType: 'contestação',
-    summary: 'Elaborar contestação para ação de cobrança'
-  }
-}
+    processNumber: "1234567-89.2024.5.02.0999",
+    documentType: "contestação",
+    summary: "Elaborar contestação para ação de cobrança",
+  },
+};
 // Adicionar à fila via hook useAutonomousAgents
 ```
 
 **3. Verificar minuta criada:**
+
 - Acesse painel de Minutas no app
 - Procure por minutas com tag `[Agente]`
 - Status deve ser `pendente-revisao`
@@ -362,11 +391,11 @@ O hook retorna estatísticas úteis:
 
 ```typescript
 const {
-  minutasTotal,           // Total de minutas no sistema
+  minutasTotal, // Total de minutas no sistema
   minutasPendentesRevisao, // Aguardando revisão humana
   minutasCriadasPorAgente, // Criadas automaticamente
-  processedTasksCount      // Tarefas de redação processadas
-} = useAutoMinuta()
+  processedTasksCount, // Tarefas de redação processadas
+} = useAutoMinuta();
 ```
 
 ### 📚 Documentação Completa
@@ -376,6 +405,7 @@ Para documentação técnica detalhada do sistema de minutas automáticas, consu
 📖 **[docs/FLUXO_MINUTAS_AUTOMATICAS.md](docs/FLUXO_MINUTAS_AUTOMATICAS.md)**
 
 Conteúdo da documentação:
+
 - Arquitetura completa com diagramas ASCII
 - Fluxo detalhado das 7 etapas (DJEN → Aprovação)
 - Tipos TypeScript (`Minuta`, `AgentTask`, `DocumentTemplate`)
@@ -401,17 +431,18 @@ https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab={SEU_NUMERO_OAB}&ufO
 ```
 
 **Exemplo prático:**
+
 ```
 https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=12345&ufOab=SP&meio=D
 ```
 
 ### 📝 Parâmetros
 
-| Parâmetro | Descrição | Exemplo |
-|-----------|-----------|---------|
-| `numeroOab` | Número da sua OAB (apenas números) | `12345` |
-| `ufOab` | Sigla do estado da OAB | `SP`, `PR`, `MG`, `RJ` |
-| `meio` | Tipo de diário (`D` = Digital, `E` = Eletrônico) | `D` |
+| Parâmetro   | Descrição                                        | Exemplo                |
+| ----------- | ------------------------------------------------ | ---------------------- |
+| `numeroOab` | Número da sua OAB (apenas números)               | `12345`                |
+| `ufOab`     | Sigla do estado da OAB                           | `SP`, `PR`, `MG`, `RJ` |
+| `meio`      | Tipo de diário (`D` = Digital, `E` = Eletrônico) | `D`                    |
 
 ### 💾 Salvando os Resultados
 
@@ -460,13 +491,14 @@ GET https://comunicaapi.pje.jus.br/api/v1/comunicacao
 
 **Query Parameters obrigatórios:**
 
-| Parâmetro | Valor | Descrição |
-|-----------|-------|-----------|
-| `numeroOab` | `184404` | Número OAB (apenas dígitos) |
-| `ufOab` | `MG` | UF da OAB (sigla maiúscula) |
-| `meio` | `D` | **OBRIGATÓRIO** - Tipo de diário (D=Digital) |
+| Parâmetro   | Valor    | Descrição                                    |
+| ----------- | -------- | -------------------------------------------- |
+| `numeroOab` | `184404` | Número OAB (apenas dígitos)                  |
+| `ufOab`     | `MG`     | UF da OAB (sigla maiúscula)                  |
+| `meio`      | `D`      | **OBRIGATÓRIO** - Tipo de diário (D=Digital) |
 
 **Exemplo de chamada bem-sucedida:**
+
 ```bash
 curl "https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=184404&ufOab=MG&meio=D"
 ```
@@ -525,45 +557,55 @@ NOTIFICATION_EMAIL=seu@email.com
 
 ### 📂 Arquivos da Implementação
 
-| Arquivo | Função |
-|---------|--------|
-| `api/djen-sync.ts` | Endpoint público para sincronização manual |
-| `api/cron.ts` | Cron job diário (11:00 BRT) |
-| `api/expedientes.ts` | Lista publicações armazenadas |
-| `api/lawyers.ts` | Gerencia advogados monitorados |
-| `src/components/DJENPublicationsWidget.tsx` | Widget do dashboard |
-| `src/components/ExpedientePanel.tsx` | Painel completo de expedientes |
+| Arquivo                                     | Função                                     |
+| ------------------------------------------- | ------------------------------------------ |
+| `api/djen-sync.ts`                          | Endpoint público para sincronização manual |
+| `api/cron.ts`                               | Cron job diário (11:00 BRT)                |
+| `api/expedientes.ts`                        | Lista publicações armazenadas              |
+| `api/lawyers.ts`                            | Gerencia advogados monitorados             |
+| `src/components/DJENPublicationsWidget.tsx` | Widget do dashboard                        |
+| `src/components/ExpedientePanel.tsx`        | Painel completo de expedientes             |
 
 ### 🕐 Cron Automatizado
 
-Configurado no `vercel.json`:
+Configurado no `vercel.json` (2 verificações diárias):
 
 ```json
 {
   "crons": [
     {
       "path": "/api/cron?action=djen-monitor",
-      "schedule": "0 14 * * *"
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron?action=djen-monitor",
+      "schedule": "0 20 * * *"
     }
   ]
 }
 ```
 
-**Horário**: `0 14 * * *` = 14:00 UTC = **11:00 BRT** (horário de Brasília)
+**Horários**:
+
+- `0 12 * * *` = 12:00 UTC = **09:00 BRT** (manhã)
+- `0 20 * * *` = 20:00 UTC = **17:00 BRT** (tarde)
 
 ### 🧪 Testando a Integração
 
 **1. Verificar status:**
+
 ```bash
 curl https://seu-app.vercel.app/api/status
 ```
 
 **2. Sincronizar manualmente:**
+
 ```bash
 curl -X POST https://seu-app.vercel.app/api/djen-sync
 ```
 
 **3. Listar publicações:**
+
 ```bash
 curl https://seu-app.vercel.app/api/expedientes
 ```
@@ -571,12 +613,15 @@ curl https://seu-app.vercel.app/api/expedientes
 ### ⚠️ Detalhes Técnicos Importantes
 
 1. **Parâmetro `meio=D` é OBRIGATÓRIO**
+
    - Sem ele, a API retorna erro ou resultados vazios
    - `D` = Diário Digital (padrão dos tribunais)
 
 2. **Região do Vercel deve ser `gru1` (São Paulo)**
+
    - A API DJEN bloqueia requests de fora do Brasil
    - Configure em `vercel.json`:
+
    ```json
    {
      "regions": ["gru1"]
@@ -584,6 +629,7 @@ curl https://seu-app.vercel.app/api/expedientes
    ```
 
 3. **Rate Limit**
+
    - A API do CNJ pode ter limitações
    - O sistema implementa cache de 5 minutos entre chamadas
 
@@ -598,6 +644,7 @@ curl https://seu-app.vercel.app/api/expedientes
 **Tribunais configurados:** TJMG, TRT3, TST, STJ, TRF1, TRF6
 
 **Resultado em 27/11/2025:**
+
 - ✅ 3 intimações capturadas automaticamente
 - ✅ Widget exibindo corretamente no dashboard
 - ✅ Processos identificados:
@@ -611,10 +658,10 @@ curl https://seu-app.vercel.app/api/expedientes
 
 - **Frontend**: React 19 + TypeScript + Vite 6
 - **Styling**: Tailwind CSS v4 + shadcn/ui
-- **State**: Spark KV (useKV hook)
+- **State**: Upstash Redis (useKV hook via /api/kv)
 - **Forms**: React Hook Form + Zod
-- **AI**: Spark LLM (GPT-4)
-- **Deployment**: Vercel + GitLab CI/CD
+- **AI**: Google Gemini 2.5 Pro
+- **Deployment**: Vercel + GitHub Actions
 
 ---
 
@@ -627,12 +674,12 @@ Esta seção documenta a análise técnica comparando o estado atual do sistema 
 
 ### 📈 Scores por Área
 
-| Área | Score | Status |
-|------|-------|--------|
+| Área                      | Score  | Status                                           |
+| ------------------------- | ------ | ------------------------------------------------ |
 | 🧠 **Cérebro de Tarefas** | 78/100 | ⚠️ Bom - falta `criadoPor` e backoff exponencial |
-| 🤖 **Agentes IA** | 82/100 | ✅ Muito bom - falta Zod schemas |
-| 💾 **Memória** | 60/100 | ⚠️ Maior gap - falta banco de conhecimento |
-| 🔍 **Auto-monitoramento** | 72/100 | ⚠️ Bom - falta watchdog e auditoria |
+| 🤖 **Agentes IA**         | 82/100 | ✅ Muito bom - falta Zod schemas                 |
+| 💾 **Memória**            | 60/100 | ⚠️ Maior gap - falta banco de conhecimento       |
+| 🔍 **Auto-monitoramento** | 72/100 | ⚠️ Bom - falta watchdog e auditoria              |
 
 ---
 
@@ -640,23 +687,23 @@ Esta seção documenta a análise técnica comparando o estado atual do sistema 
 
 #### ✅ Implementado e Funcionando
 
-| Item | Status | Localização |
-|------|--------|-------------|
-| Tipo `AgentTask` completo | ✅ | `src/lib/agents.ts:33-48` |
-| Status (queued/processing/completed/failed) | ✅ | `api/agents.ts` - Enum `TaskStatus` |
-| Prioridade (low/medium/high/critical) | ✅ | `api/agents.ts` - Enum `TaskPriority` |
-| Campos createdAt, startedAt, completedAt | ✅ | Interface `AgentTask` |
-| Fila persistente KV | ✅ | `agent-task-queue` no Upstash |
-| Chain automático de tarefas | ✅ | 14 tipos de encadeamento |
-| 8 Cron Jobs ativos | ✅ | `vercel.json` |
+| Item                                        | Status | Localização                           |
+| ------------------------------------------- | ------ | ------------------------------------- |
+| Tipo `AgentTask` completo                   | ✅     | `src/lib/agents.ts:33-48`             |
+| Status (queued/processing/completed/failed) | ✅     | `api/agents.ts` - Enum `TaskStatus`   |
+| Prioridade (low/medium/high/critical)       | ✅     | `api/agents.ts` - Enum `TaskPriority` |
+| Campos createdAt, startedAt, completedAt    | ✅     | Interface `AgentTask`                 |
+| Fila persistente KV                         | ✅     | `agent-task-queue` no Upstash         |
+| Chain automático de tarefas                 | ✅     | 14 tipos de encadeamento              |
+| 10 Cron Jobs ativos                         | ✅     | `vercel.json`                         |
 
 #### ⚠️ Gaps Identificados
 
-| Item | Descrição | Prioridade |
-|------|-----------|------------|
-| Campo `criadoPor` | Rastrear origem: 'sistema' \| 'agente' \| 'humano' | 🟢 Baixa |
-| Retry exponencial | Backoff com delay crescente | 🟡 Média |
-| Orquestrador sofisticado | Regras avançadas de roteamento | 🟢 Baixa |
+| Item                     | Descrição                                          | Prioridade |
+| ------------------------ | -------------------------------------------------- | ---------- |
+| Campo `criadoPor`        | Rastrear origem: 'sistema' \| 'agente' \| 'humano' | 🟢 Baixa   |
+| Retry exponencial        | Backoff com delay crescente                        | 🟡 Média   |
+| Orquestrador sofisticado | Regras avançadas de roteamento                     | 🟢 Baixa   |
 
 ---
 
@@ -664,23 +711,23 @@ Esta seção documenta a análise técnica comparando o estado atual do sistema 
 
 #### ✅ Implementado e Funcionando
 
-| Item | Status | Localização |
-|------|--------|-------------|
-| 15 Agentes definidos | ✅ | `src/lib/agents.ts:136-302` |
-| Capabilities tipadas | ✅ | Array por agente |
-| Human-in-the-loop | ✅ | `shouldPauseForHuman()` + `canResumeAfterHuman()` |
-| System prompts especializados | ✅ | 11 tipos em `api/agents.ts` |
-| Validadores TypeScript | ✅ | `validateAgentTask()`, `validateAgent()` |
-| Logger estruturado | ✅ | Objeto `logger` com info/error/warn |
-| Auto-criação de minutas | ✅ | Backend + Frontend (dupla camada) |
+| Item                          | Status | Localização                                       |
+| ----------------------------- | ------ | ------------------------------------------------- |
+| 15 Agentes definidos          | ✅     | `src/lib/agents.ts:136-302`                       |
+| Capabilities tipadas          | ✅     | Array por agente                                  |
+| Human-in-the-loop             | ✅     | `shouldPauseForHuman()` + `canResumeAfterHuman()` |
+| System prompts especializados | ✅     | 11 tipos em `api/agents.ts`                       |
+| Validadores TypeScript        | ✅     | `validateAgentTask()`, `validateAgent()`          |
+| Logger estruturado            | ✅     | Objeto `logger` com info/error/warn               |
+| Auto-criação de minutas       | ✅     | Backend + Frontend (dupla camada)                 |
 
 #### ⚠️ Gaps Identificados
 
-| Item | Descrição | Prioridade |
-|------|-----------|------------|
-| Schemas Zod | Validação runtime de entrada/saída | 🟡 Média |
-| Persona regional | Especialização por comarca/estado | 🟢 Baixa |
-| `allowedActions` por agente | Restrição granular de ações | 🟢 Baixa |
+| Item                        | Descrição                          | Prioridade |
+| --------------------------- | ---------------------------------- | ---------- |
+| Schemas Zod                 | Validação runtime de entrada/saída | 🟡 Média   |
+| Persona regional            | Especialização por comarca/estado  | 🟢 Baixa   |
+| `allowedActions` por agente | Restrição granular de ações        | 🟢 Baixa   |
 
 ---
 
@@ -688,22 +735,22 @@ Esta seção documenta a análise técnica comparando o estado atual do sistema 
 
 #### ✅ Implementado e Funcionando
 
-| Item | Status | Localização |
-|------|--------|-------------|
-| Memória curto prazo (processos) | ✅ | KV `processes` com prazos |
-| Expedientes vinculados | ✅ | `Expediente.processId` |
-| Minutas vinculadas | ✅ | `Minuta.processId`, `Minuta.expedienteId` |
-| Histórico de tarefas | ✅ | KV `completed-agent-tasks` (últimas 500) |
+| Item                            | Status | Localização                               |
+| ------------------------------- | ------ | ----------------------------------------- |
+| Memória curto prazo (processos) | ✅     | KV `processes` com prazos                 |
+| Expedientes vinculados          | ✅     | `Expediente.processId`                    |
+| Minutas vinculadas              | ✅     | `Minuta.processId`, `Minuta.expedienteId` |
+| Histórico de tarefas            | ✅     | KV `completed-agent-tasks` (últimas 500)  |
 
 #### ❌ Gaps Críticos
 
-| Item | Descrição | Prioridade |
-|------|-----------|------------|
-| `winning-templates` | Templates que tiveram sucesso | 🔴 **Alta** |
-| `precedent-bank` | Jurisprudências reutilizáveis | 🔴 **Alta** |
-| `best-practices` | Boas práticas por área/comarca | 🟡 Média |
-| Feedback loop | Agente aprende com correções humanas | 🔴 **Alta** |
-| Métricas de aprovação | % de minutas aprovadas sem edição | 🟡 Média |
+| Item                  | Descrição                            | Prioridade  |
+| --------------------- | ------------------------------------ | ----------- |
+| `winning-templates`   | Templates que tiveram sucesso        | 🔴 **Alta** |
+| `precedent-bank`      | Jurisprudências reutilizáveis        | 🔴 **Alta** |
+| `best-practices`      | Boas práticas por área/comarca       | 🟡 Média    |
+| Feedback loop         | Agente aprende com correções humanas | 🔴 **Alta** |
+| Métricas de aprovação | % de minutas aprovadas sem edição    | 🟡 Média    |
 
 #### 💡 Estrutura Sugerida
 
@@ -732,45 +779,47 @@ interface TemplatePerformance {
 
 #### ✅ Implementado e Funcionando
 
-| Item | Status | Localização |
-|------|--------|-------------|
-| Endpoint `/api/status` | ✅ | Health check completo |
-| Verificações AI provider | ✅ | Checa OpenAI, Gemini, Upstash |
-| 8 Cron Jobs | ✅ | Ver tabela abaixo |
+| Item                     | Status | Localização                   |
+| ------------------------ | ------ | ----------------------------- |
+| Endpoint `/api/status`   | ✅     | Health check completo         |
+| Verificações AI provider | ✅     | Checa OpenAI, Gemini, Upstash |
+| 10 Cron Jobs             | ✅     | Ver tabela abaixo             |
 
 #### 📅 Cron Jobs Configurados (vercel.json)
 
-| Job | Schedule | Horário BRT | Função |
-|-----|----------|-------------|--------|
-| `djen-monitor` | `0 14 * * *` | 11:00 | Monitora DJEN |
-| `daily-reset` | `0 0 * * *` | 21:00 | Reset contadores |
-| `process-agent-queue` | `*/15 * * * *` | A cada 15min | Processa fila |
-| `process-notifications` | `*/5 * * * *` | A cada 5min | Envia notificações |
-| `calendar-sync` | `0 */2 * * *` | A cada 2h | Sync Google Calendar |
-| `backup` | `0 3 * * *` | 00:00 | Backup automático |
-| `datajud-monitor` | `0 16 * * *` | 13:00 | Monitora DataJud |
-| `deadline-alerts` | `0 12 * * *` | 09:00 | Alertas de prazos |
+| Job                     | Schedule (UTC) | Horário BRT  | Função                   |
+| ----------------------- | -------------- | ------------ | ------------------------ |
+| `djen-monitor` (manhã)  | `0 12 * * *`   | 09:00        | Monitora DJEN            |
+| `djen-monitor` (tarde)  | `0 20 * * *`   | 17:00        | Segunda verificação DJEN |
+| `daily-reset`           | `0 0 * * *`    | 21:00        | Reset contadores         |
+| `process-agent-queue`   | `*/15 * * * *` | A cada 15min | Processa fila            |
+| `process-notifications` | `*/5 * * * *`  | A cada 5min  | Envia notificações       |
+| `calendar-sync`         | `0 */2 * * *`  | A cada 2h    | Sync Google Calendar     |
+| `backup`                | `0 3 * * *`    | 00:00        | Backup automático        |
+| `datajud-monitor`       | `0 16 * * *`   | 13:00        | Monitora DataJud         |
+| `deadline-alerts`       | `0 55 11 * *`  | 08:55        | Alertas de prazos        |
+| `watchdog`              | `*/30 * * * *` | A cada 30min | Monitoramento do sistema |
 
 #### ⚠️ Gaps Identificados
 
-| Item | Descrição | Prioridade |
-|------|-----------|------------|
-| Watchdog de fila | Alertar se queue > X tarefas | 🟡 Média |
-| Taxa de erro por agente | Alerta se erro > Y% | 🟡 Média |
-| Fallback de modelo | Se Gemini falha, usar GPT | 🟡 Média |
-| Trilha de auditoria | `inputPrompt`, `revisaoHumana` | 🔴 **Alta** |
+| Item                    | Descrição                      | Prioridade  |
+| ----------------------- | ------------------------------ | ----------- |
+| Watchdog de fila        | Alertar se queue > X tarefas   | 🟡 Média    |
+| Taxa de erro por agente | Alerta se erro > Y%            | 🟡 Média    |
+| Fallback de modelo      | Se Gemini falha, usar GPT      | 🟡 Média    |
+| Trilha de auditoria     | `inputPrompt`, `revisaoHumana` | 🔴 **Alta** |
 
 ---
 
 ### 🎯 TOP 5 Ações Prioritárias
 
-| # | Ação | Score Impact | Esforço |
-|---|------|--------------|---------|
-| 1 | **Criar banco de conhecimento** (`winning-templates`, `precedent-bank`) | +15 pontos | 🟡 Médio |
-| 2 | **Implementar trilha de auditoria** com tracking de `revisaoHumana` | +8 pontos | 🟢 Baixo |
-| 3 | **Adicionar Zod schemas** para validação de entrada/saída | +5 pontos | 🟢 Baixo |
-| 4 | **Implementar watchdog** de fila e taxa de erro | +5 pontos | 🟡 Médio |
-| 5 | **Adicionar campo `criadoPor`** nas tarefas | +2 pontos | 🟢 Baixo |
+| #   | Ação                                                                    | Score Impact | Esforço  |
+| --- | ----------------------------------------------------------------------- | ------------ | -------- |
+| 1   | **Criar banco de conhecimento** (`winning-templates`, `precedent-bank`) | +15 pontos   | 🟡 Médio |
+| 2   | **Implementar trilha de auditoria** com tracking de `revisaoHumana`     | +8 pontos    | 🟢 Baixo |
+| 3   | **Adicionar Zod schemas** para validação de entrada/saída               | +5 pontos    | 🟢 Baixo |
+| 4   | **Implementar watchdog** de fila e taxa de erro                         | +5 pontos    | 🟡 Médio |
+| 5   | **Adicionar campo `criadoPor`** nas tarefas                             | +2 pontos    | 🟢 Baixo |
 
 ---
 
@@ -779,13 +828,15 @@ interface TemplatePerformance {
 O sistema está **acima da média** para sistemas de agentes IA jurídicos:
 
 ✅ **Pontos fortes:**
+
 - 15 agentes funcionando 24/7
-- 8 cron jobs ativos e configurados
+- 10 cron jobs ativos e configurados
 - Chain automático robusto (14 tipos)
 - Human-in-the-loop implementado
 - Dupla camada de criação de minutas (backend + frontend)
 
 ⚠️ **Principal gap:**
+
 - Memória de longo prazo (banco de conhecimento jurídico)
 - Feedback loop para aprendizado contínuo
 
@@ -816,12 +867,12 @@ O sistema utiliza **Google OAuth 2.0** como método único de autenticação, ga
 
 ### 📦 Componentes Disponíveis
 
-| Componente | Descrição | Status |
-|------------|-----------|--------|
-| 🔒 **Segurança** | Auditoria npm + detecção de segredos + LGPD | ✅ Implementado |
-| 🧪 **Testes** | Unitários + Integração + E2E + Acessibilidade | ✅ Implementado |
-| 🚀 **Deployment** | Vercel + Netlify + Docker + Health checks | ✅ Implementado |
-| 📊 **Monitoramento** | Performance + Uptime + Core Web Vitals | ✅ Implementado |
+| Componente           | Descrição                                     | Status          |
+| -------------------- | --------------------------------------------- | --------------- |
+| 🔒 **Segurança**     | Auditoria npm + detecção de segredos + LGPD   | ✅ Implementado |
+| 🧪 **Testes**        | Unitários + Integração + E2E + Acessibilidade | ✅ Implementado |
+| 🚀 **Deployment**    | Vercel + Netlify + Docker + Health checks     | ✅ Implementado |
+| 📊 **Monitoramento** | Performance + Uptime + Core Web Vitals        | ✅ Implementado |
 
 ### 🚀 Como Usar os Componentes
 
@@ -866,11 +917,10 @@ include:
 Este projeto utiliza **GPG para assinatura de commits**, garantindo a autenticidade e integridade de todas as contribuições.
 
 ### Verificação de Commits
+
 - ✅ Todos os commits são assinados digitalmente
 - ✅ Chaves GPG verificadas no GitLab
 - ✅ Autenticação de contribuidores validada
-
-
 
 GLab is an open source GitLab CLI tool bringing GitLab to your terminal next to where you are already working with `git` and your code without switching between windows and browser tabs. Work with issues, merge requests, **watch running pipelines directly from your CLI** among other features.
 Inspired by [gh], the official GitHub CLI tool.
@@ -879,58 +929,62 @@ Inspired by [gh], the official GitHub CLI tool.
 
 ![image](https://user-images.githubusercontent.com/41906128/88968573-0b556400-d29f-11ea-8504-8ecd9c292263.png)
 
-Table of Contents
-=================
+# Table of Contents
 
-* [Usage](#usage)
-* [Demo](#demo)
-* [Documentation](#documentation)
-* [Installation](#installation)
-  * [Quick Install (Bash)](#quick-install-bash)
-  * [Windows](#windows)
-    * [WinGet](#winget)
-    * [Scoop](#scoop)
-    * [EXE Installer](#exe-installer)
-  * [Linux](#linux)
-    * [Linuxbrew (Homebrew)](#linuxbrew-homebrew)
-    * [Snapcraft](#snapcraft)
-    * [Arch Linux](#arch-linux)
-    * [KISS Linux](#kiss-linux)
-    * [Alpine Linux](#alpine-linux)
-      * [Install a pinned version from edge](#install-a-pinned-version-from-edge)
-      * [Alpine Linux Docker-way](#alpine-linux-docker-way)
-    * [Nix/NixOS](#nixnixos)
-  * [macOS](#macos)
-    * [Homebrew](#homebrew)
-    * [MacPorts](#macports)
-  * [Building From Source](#building-from-source)
-    * [Prerequisites](#prerequisites-for-building-from-source-are)
-* [Authentication](#authentication)
-* [Configuration](#configuration)
-* [Environment Variables](#environment-variables)
-* [What about lab](#what-about-lab)
-* [Issues](#issues)
-* [Contributing](#contributing)
-  * [Support glab <g-emoji class="g-emoji" alias="sparkling_heart" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f496.png">💖</g-emoji>](#support-glab-)
-    * [Individuals](#individuals)
-    * [Backers](#backers)
-* [License](#license)
+- [Usage](#usage)
+- [Demo](#demo)
+- [Documentation](#documentation)
+- [Installation](#installation)
+  - [Quick Install (Bash)](#quick-install-bash)
+  - [Windows](#windows)
+    - [WinGet](#winget)
+    - [Scoop](#scoop)
+    - [EXE Installer](#exe-installer)
+  - [Linux](#linux)
+    - [Linuxbrew (Homebrew)](#linuxbrew-homebrew)
+    - [Snapcraft](#snapcraft)
+    - [Arch Linux](#arch-linux)
+    - [KISS Linux](#kiss-linux)
+    - [Alpine Linux](#alpine-linux)
+      - [Install a pinned version from edge](#install-a-pinned-version-from-edge)
+      - [Alpine Linux Docker-way](#alpine-linux-docker-way)
+    - [Nix/NixOS](#nixnixos)
+  - [macOS](#macos)
+    - [Homebrew](#homebrew)
+    - [MacPorts](#macports)
+  - [Building From Source](#building-from-source)
+    - [Prerequisites](#prerequisites-for-building-from-source-are)
+- [Authentication](#authentication)
+- [Configuration](#configuration)
+- [Environment Variables](#environment-variables)
+- [What about lab](#what-about-lab)
+- [Issues](#issues)
+- [Contributing](#contributing)
+  - [Support glab <g-emoji class="g-emoji" alias="sparkling_heart" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f496.png">💖</g-emoji>](#support-glab-)
+    - [Individuals](#individuals)
+    - [Backers](#backers)
+- [License](#license)
 
 ## Usage
-  ```bash
-  glab <command> <subcommand> [flags]
-  ```
+
+```bash
+glab <command> <subcommand> [flags]
+```
 
 ## Demo
+
 [![asciicast](https://asciinema.org/a/368622.svg)](https://asciinema.org/a/368622)
 
 ## Documentation
+
 Read the [documentation](https://glab.readthedocs.io/) for usage instructions.
 
 ## Installation
+
 Download a binary suitable for your OS at the [releases page](https://github.com/profclems/glab/releases/latest).
 
 ### Quick Install
+
 **Supported Platforms**: Linux and macOS
 
 #### Homebrew
@@ -940,79 +994,101 @@ brew install glab
 ```
 
 Updating (Homebrew):
+
 ```sh
 brew upgrade glab
 ```
 
 Alternatively, you can install `glab` by shell script:
+
 ```sh
 curl -sL https://j.mp/glab-cli | sudo sh
 ```
+
 or
+
 ```sh
 curl -s https://raw.githubusercontent.com/profclems/glab/trunk/scripts/install.sh | sudo sh
 ```
-*Installs into `usr/bin`*
+
+_Installs into `usr/bin`_
 
 **NOTE**: Please take care when running scripts in this fashion. Consider peeking at the install script itself and verify that it works as intended.
 
 ### Windows
+
 Available for download via [WinGet](https://github.com/microsoft/winget-cli), [scoop](https://scoop.sh), or downloadable EXE installer file.
 
 #### WinGet
+
 ```sh
 winget install glab
 ```
 
 Updating (WinGet):
+
 ```sh
 winget install glab
 ```
 
 #### Scoop
+
 ```sh
 scoop install glab
 ```
 
 Updating (Scoop):
+
 ```sh
 scoop update glab
 ```
+
 #### EXE Installer
 
 EXE installers are available for download on the [releases page](https://github.com/profclems/glab/releases/latest).
 
 ### Linux
+
 Prebuilt binaries available at the [releases page](https://github.com/profclems/glab/releases/latest).
 
 #### Linuxbrew (Homebrew)
+
 ```sh
 brew install glab
 ```
 
 Updating (Homebrew):
+
 ```sh
 brew upgrade glab
 ```
+
 #### Snapcraft
+
 [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/glab)
 
 Make sure you have [snap installed on your Linux Distro](https://snapcraft.io/docs/installing-snapd).
+
 1. `sudo snap install --edge glab`
 1. `sudo snap connect glab:ssh-keys` to grant ssh access
 
 #### Arch Linux
+
 `glab` is available through the [community/glab](https://archlinux.org/packages/community/x86_64/glab/) package or download and install an archive from the [releases page](https://github.com/profclems/glab/releases/latest). Arch Linux also supports [snap](https://snapcraft.io/docs/installing-snap-on-arch-linux).
+
 ```sh
 yay -Sy glab
 ```
+
 or any other [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers) of your choice.
 
 #### KISS Linux
+
 > WARNING: It seems that KISS Linux may no longer be actively maintained, so links to its web domain have been removed from this README.
 
 `glab` is available on the [KISS Linux Community Repo](https://github.com/kisslinux/community) as `gitlab-glab`.
 If you already have the community repo configured in your `KISS_PATH` you can install `glab` through your terminal.
+
 ```sh
 kiss b gitlab-glab && kiss i gitlab-glab
 ```
@@ -1076,7 +1152,9 @@ nix-env -iA nixos.glab
 ```sh
 brew install glab
 ```
+
 Updating:
+
 ```sh
 brew upgrade glab
 ```
@@ -1090,14 +1168,17 @@ sudo port install glab
 ```
 
 Updating:
+
 ```sh
 sudo port selfupdate && sudo port upgrade glab
 ```
 
 ### Building From Source
+
 If a supported binary for your OS is not found at the [releases page](https://github.com/profclems/glab/releases/latest), you can build from source:
 
 #### Prerequisites for building from source
+
 - `make`
 - Go 1.13+
 
@@ -1116,9 +1197,11 @@ If a supported binary for your OS is not found at the [releases page](https://gi
    git clone https://github.com/profclems/glab.git
    cd glab
    ```
+
    If you have $GOPATH/bin or $GOBIN in your $PATH, you can just install with `make install` (install glab in $GOPATH/bin) and **skip steps 3 and 4**.
 
 3. Build the project
+
    ```sh
    make
    ```
@@ -1129,23 +1212,26 @@ If a supported binary for your OS is not found at the [releases page](https://gi
    export PATH=$PWD/bin:$PATH
    ```
 
-4. Run `glab version` to confirm that it worked
+5. Run `glab version` to confirm that it worked
 
 ## Authentication
 
 Get a GitLab access token at <https://gitlab.com/-/profile/personal_access_tokens> or <https://gitlab.example.com/-/profile/personal_access_tokens> if self-hosted
 
 - start interactive setup
+
   ```sh
   glab auth login
   ```
 
 - authenticate against gitlab.com by reading the token from a file
+
   ```sh
   glab auth login --stdin < myaccesstoken.txt
   ```
 
 - authenticate against a self-hosted GitLab instance by reading from a file
+
   ```sh
   glab auth login --hostname salsa.debian.org --stdin < myaccesstoken.txt
   ```
@@ -1179,34 +1265,34 @@ Use the `--host` flag to set configuration for a specific host. This is always s
 glab config set editor vim --host gitlab.example.org
 ```
 
-
 ## Environment Variables
-  ```sh
-  GITLAB_TOKEN: an authentication token for API requests. Setting this avoids being
-  prompted to authenticate and overrides any previously stored credentials.
-  Can be set in the config with 'glab config set token xxxxxx'
 
-  GITLAB_URI or GITLAB_HOST: specify the url of the gitlab server if self hosted (eg: https://gitlab.example.com). Default is https://gitlab.com.
+```sh
+GITLAB_TOKEN: an authentication token for API requests. Setting this avoids being
+prompted to authenticate and overrides any previously stored credentials.
+Can be set in the config with 'glab config set token xxxxxx'
 
-  GITLAB_API_HOST: specify the host where the API endpoint is found. Useful when there are separate [sub]domains or hosts for git and the API endpoint: defaults to the hostname found in the git URL
+GITLAB_URI or GITLAB_HOST: specify the url of the gitlab server if self hosted (eg: https://gitlab.example.com). Default is https://gitlab.com.
 
-  REMOTE_ALIAS or GIT_REMOTE_URL_VAR: git remote variable or alias that contains the gitlab url.
-  Can be set in the config with 'glab config set remote_alias origin'
+GITLAB_API_HOST: specify the host where the API endpoint is found. Useful when there are separate [sub]domains or hosts for git and the API endpoint: defaults to the hostname found in the git URL
 
-  VISUAL, EDITOR (in order of precedence): the editor tool to use for authoring text.
-  Can be set in the config with 'glab config set editor vim'
+REMOTE_ALIAS or GIT_REMOTE_URL_VAR: git remote variable or alias that contains the gitlab url.
+Can be set in the config with 'glab config set remote_alias origin'
 
-  BROWSER: the web browser to use for opening links.
-  Can be set in the config with 'glab config set browser mybrowser'
+VISUAL, EDITOR (in order of precedence): the editor tool to use for authoring text.
+Can be set in the config with 'glab config set editor vim'
 
-  GLAMOUR_STYLE: environment variable to set your desired markdown renderer style
-  Available options are (dark|light|notty) or set a custom style
-  https://github.com/charmbracelet/glamour#styles
+BROWSER: the web browser to use for opening links.
+Can be set in the config with 'glab config set browser mybrowser'
 
-  NO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.
+GLAMOUR_STYLE: environment variable to set your desired markdown renderer style
+Available options are (dark|light|notty) or set a custom style
+https://github.com/charmbracelet/glamour#styles
 
-  FORCE_HYPERLINKS: set to 1 to force hyperlinks to be output, even when not outputing to a TTY
-  ```
+NO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.
+
+FORCE_HYPERLINKS: set to 1 to force hyperlinks to be output, even when not outputing to a TTY
+```
 
 ## What about [Lab]?
 
@@ -1216,14 +1302,16 @@ If you want a tool that’s more opinionated and intended to help simplify your 
 
 Some `glab` commands such as `ci view` and `ci trace` were adopted from [lab].
 
-[gh]:https://github.com/cli/cli
-[hub]:https://github.com/github/hub
-[lab]:https://github.com/zaquestion/lab
+[gh]: https://github.com/cli/cli
+[hub]: https://github.com/github/hub
+[lab]: https://github.com/zaquestion/lab
 
 ## Issues
+
 If you have an issue: report it on the [issue tracker](https://github.com/profclems/glab/issues)
 
 ## Contributing
+
 Feel like contributing? That's awesome! We have a [contributing guide](https://github.com/profclems/glab/blob/trunk/CONTRIBUTING.md) and [Code of conduct](https://github.com/profclems/glab/blob/trunk/CODE_OF_CONDUCT.md) to help guide you
 
 ### Contributors
@@ -1238,6 +1326,7 @@ This project exists thanks to all the people who contribute. [[Contribute](https
 [![Fosshost.org](https://fosshost.org/img/fosshost-logo.png)](https://fosshost.org)
 
 ## License
+
 Copyright © [Clement Sam](https://clementsam.tech)
 
 `glab` is open-sourced software licensed under the [MIT](LICENSE) license.
@@ -1249,12 +1338,14 @@ Copyright © [Clement Sam](https://clementsam.tech)
 ## 📊 Status dos Agentes (4/7 Conectados)
 
 ### ✅ Agentes Ativos
+
 - **assistente-juridico-agent**: Agente principal com desenvolvimento remoto e CI/CD completo
 - **agente-cluster**: Agente para gerenciamento de cluster
 - **agenterevisor**: Agente para revisão de código
 - **agenterevisor2**: Segundo agente de revisão
 
 ### 🔄 Agentes Pendentes de Registro
+
 - **agente-desenvolvimento**: Ambiente de desenvolvimento com debug e hot reload
 - **agente-qa**: Ambiente de QA com testes automatizados e segurança
 - **agente-producao**: Ambiente de produção com HA e backup
@@ -1262,11 +1353,13 @@ Copyright © [Clement Sam](https://clementsam.tech)
 ## 🏗️ Infraestrutura Kubernetes
 
 ### Namespaces Isolados
+
 - `desenvolvimento`: Ambiente de desenvolvimento
 - `qa`: Ambiente de testes e qualidade
 - `production`: Ambiente de produção
 
 ### Recursos Configurados
+
 - ✅ RBAC (ClusterRoles e ServiceAccounts)
 - ✅ Network Policies para isolamento
 - ✅ ConfigMaps por ambiente
@@ -1275,28 +1368,35 @@ Copyright © [Clement Sam](https://clementsam.tech)
 ## 📋 Próximos Passos para Completar Configuração
 
 ### 1. Registro Manual dos Agentes
+
 ```bash
 # Execute o guia de registro
 ./.gitlab/register-agents-manual.sh
 ```
 
 ### 2. Acesse o GitLab
+
 - URL: https://gitlab.com/thiagobodevan-a11y-group/assistente-juridico-p
 - Navegue: Infrastructure → Kubernetes clusters → Agents
 
 ### 3. Registre Cada Agente
+
 Para cada agente pendente:
+
 - Clique em "Register an agent"
 - Selecione o agente da lista
 - Copie o token gerado
 
 ### 4. Configure Variáveis de Ambiente
+
 No GitLab CI/CD Settings → Variables:
+
 - `AGENTE_DESENVOLVIMENTO_TOKEN`
 - `AGENTE_QA_TOKEN`
 - `AGENTE_PRODUCAO_TOKEN`
 
 ### 5. Teste a Configuração
+
 ```bash
 # Teste conectividade
 ./scripts/test-gitlab-agents.sh
