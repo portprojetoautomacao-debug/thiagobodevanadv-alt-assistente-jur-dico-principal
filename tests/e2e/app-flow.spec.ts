@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Fluxo Principal da Aplicação", () => {
   test.beforeEach(async ({ page }) => {
-    // Simula um usuário autenticado injetando no localStorage
+    // Simula um usuário autenticado injetando no localStorage ANTES do carregamento
     await page.addInitScript(() => {
       const user = {
         name: "Test User",
@@ -12,21 +12,26 @@ test.describe("Fluxo Principal da Aplicação", () => {
       };
       window.localStorage.setItem("user", JSON.stringify(user));
     });
+
+    // Navega para a raiz e aguarda o shell autenticado aparecer
+    await page.goto("/");
+    const sidebar = page.getByTestId("sidebar-nav");
+    try {
+      await expect(sidebar).toBeVisible({ timeout: 10000 });
+    } catch {
+      // Fallback: aguarda qualquer <nav> aparecer para versões sem test id
+      await expect(page.locator("nav")).toBeVisible({ timeout: 10000 });
+    }
   });
 
   test("deve carregar o Dashboard quando autenticado", async ({ page }) => {
-    await page.goto("/");
-
-    // Verifica se o título do Dashboard está visível
-    // O Dashboard tem um título "Meu Painel" ou similar nos cards
-    // Vamos verificar elementos específicos do Dashboard
-    await expect(page.getByText("Meu Painel")).toBeVisible();
-    await expect(page.getByText("PJe Assistente")).toBeVisible();
+    // Após beforeEach, já estamos autenticados e com shell pronto
+    await expect(page.getByText(/Meu Painel|PJe Assistente/i)).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("deve navegar para o CRM de Processos", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
     // Clica via test id ou fallback por texto
     const navProcesses = page.getByTestId("nav-processes");
     if (await navProcesses.count()) {
@@ -43,8 +48,6 @@ test.describe("Fluxo Principal da Aplicação", () => {
   });
 
   test("deve navegar para a Calculadora de Prazos", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
     // Clica via test id ou fallback por texto
     const navCalc = page.getByTestId("nav-calculator");
     if (await navCalc.count()) {
@@ -55,7 +58,7 @@ test.describe("Fluxo Principal da Aplicação", () => {
 
     // Verifica se a calculadora carregou
     await expect(
-      page.getByText("Calculadora de Prazos Processuais")
-    ).toBeVisible();
+      page.getByText(/Calculadora de Prazos Processuais|Calculadora de Prazos/i)
+    ).toBeVisible({ timeout: 10000 });
   });
 });

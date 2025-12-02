@@ -32,14 +32,11 @@ import ProcessCRM from "@/components/ProcessCRM";
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
   const [user, setUser] = useKV<User | null>("user", null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // ✨ Auto-criação de minutas quando agentes completam tarefas de redação
   useAutoMinuta();
 
-  useEffect(() => {
-    setIsAuthenticated(!!user);
-  }, [user]);
+  // Autenticação é derivada diretamente da presença do usuário no KV/localStorage
 
   // Fallback de roteamento: sincroniza currentView com o hash da URL
   useEffect(() => {
@@ -61,12 +58,10 @@ function App() {
 
   const handleSimpleAuthSuccess = (user: User) => {
     setUser(user);
-    setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     setUser(null);
-    setIsAuthenticated(false);
     setCurrentView("dashboard");
   };
 
@@ -121,7 +116,7 @@ function App() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div
         className="min-h-screen bg-background flex items-center justify-center p-4 notranslate"

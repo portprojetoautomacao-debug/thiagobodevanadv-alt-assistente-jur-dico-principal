@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test.beforeEach(async ({ page }) => {
-    // Simula um usuário autenticado
+    // Simula um usuário autenticado ANTES do carregamento
     await page.addInitScript(() => {
       const user = {
         name: "Test User",
@@ -12,19 +12,12 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
       };
       window.localStorage.setItem("user", JSON.stringify(user));
     });
+    // Navega direto para a página de agentes por hash (fallback de roteamento)
+    await page.goto("/#ai-agents");
   });
 
   test("deve carregar a página de Agentes IA", async ({ page }) => {
-    await page.goto("/");
-
-    await page.waitForLoadState("networkidle");
-    // Navega via test id ou fallback por texto
-    const navAgents = page.getByTestId("nav-ai-agents");
-    if (await navAgents.count()) {
-      await navAgents.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já navegamos por hash no beforeEach; apenas valida conteúdo
 
     // Verifica se a página carregou corretamente
     await expect(page.getByText("Agentes de IA Autônomos")).toBeVisible();
@@ -35,14 +28,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve mostrar status dos agentes corretamente", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents2 = page.getByTestId("nav-ai-agents");
-    if (await navAgents2.count()) {
-      await navAgents2.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Verifica se os agentes estão com status "Active"
     await expect(page.getByText("Active")).toBeVisible();
@@ -52,14 +38,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve permitir alternar status dos agentes", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents3 = page.getByTestId("nav-ai-agents");
-    if (await navAgents3.count()) {
-      await navAgents3.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Localiza o switch do primeiro agente (Harvey Specter)
     const harveySwitch = page
@@ -79,14 +58,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve mostrar métricas dos agentes", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents4 = page.getByTestId("nav-ai-agents");
-    if (await navAgents4.count()) {
-      await navAgents4.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Verifica se há seção de métricas
     await expect(page.getByText("Métricas dos Agentes")).toBeVisible();
@@ -100,14 +72,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test("deve permitir executar tarefas manuais dos agentes", async ({
     page,
   }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents5 = page.getByTestId("nav-ai-agents");
-    if (await navAgents5.count()) {
-      await navAgents5.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Procura por botões de ação dos agentes
     const actionButtons = page.locator(
@@ -126,14 +91,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve mostrar logs de atividade dos agentes", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents6 = page.getByTestId("nav-ai-agents");
-    if (await navAgents6.count()) {
-      await navAgents6.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Verifica se há seção de logs/atividade
     const logsSection = page
@@ -153,14 +111,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test("deve permitir configuração de geração automática de tarefas", async ({
     page,
   }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents7 = page.getByTestId("nav-ai-agents");
-    if (await navAgents7.count()) {
-      await navAgents7.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Procura pelo controle de geração automática
     const autoGenerateSwitch = page
@@ -182,14 +133,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test("deve mostrar modal de colaboração Harvey + Mrs. Justin-e", async ({
     page,
   }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const navAgents8 = page.getByTestId("nav-ai-agents");
-    if (await navAgents8.count()) {
-      await navAgents8.click();
-    } else {
-      await page.click("text=Agentes de IA");
-    }
+    // Já estamos na tela de agentes via hash
 
     // Procura por botão de colaboração ou demo
     const collaborationButton = page.locator(
@@ -209,7 +153,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test("deve permitir backup e restauração de agentes", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await page.getByTestId("nav-ai-agents").click();
+    // Já estamos na tela de agentes via hash
 
     // Procura por botões de backup
     const backupButton = page.locator(
@@ -229,7 +173,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test("deve mostrar orquestração de agentes", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await page.getByTestId("nav-ai-agents").click();
+    // Já estamos na tela de agentes via hash
 
     // Procura por painel de orquestração
     const orchestrationButton = page.locator(
