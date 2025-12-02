@@ -2,6 +2,6 @@
   "schemaVersion": 1,
   "label": "CI Build",
   "message": "passing",
-  "color": "brightgreen",
+  "color": "red",
   "namedLogo": "github"
 }
