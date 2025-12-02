@@ -931,6 +931,7 @@ Crie o workflow de controladoria para esta tarefa.`,
               disabled={loading}
               variant="outline"
               size="sm"
+              data-testid="expedientes-sync-btn"
             >
               {loading ? "Atualizando..." : "Atualizar"}
             </Button>
