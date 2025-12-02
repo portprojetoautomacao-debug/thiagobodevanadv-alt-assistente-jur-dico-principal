@@ -45,7 +45,7 @@ export default function LLMObservabilityDashboard() {
   const [metrics, setMetrics] = useState<LLMMetrics[]>([])
   const [summary, setSummary] = useState<MetricsSummary | null>(null)
   const [cacheStats, setCacheStats] = useState<{ size: number; totalHits: number; averageAge: number } | null>(null)
-  const [auditLog, setAuditLog] = useState<any[]>([])
+  const [auditLog, setAuditLog] = useState<{ timestamp: number; action: string; details?: Record<string, unknown> }[]>([])
 
   const refreshData = () => {
     const currentMetrics = llmService.getMetrics(timeRange)
@@ -63,6 +63,7 @@ export default function LLMObservabilityDashboard() {
     refreshData()
     const interval = setInterval(refreshData, 30000) // Refresh every 30 seconds
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange])
 
   const handleClearCache = () => {
