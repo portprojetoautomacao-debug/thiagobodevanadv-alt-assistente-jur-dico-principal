@@ -397,44 +397,55 @@ function PublicationsHeader(
 }
 
 function PublicationsContent(
-  publications: DJENPublication[],
-  compact: boolean,
-  expanded: string | null,
-  setExpanded: (id: string | null) => void,
-  handleRegisterProcess: (pub: DJENPublication) => void,
-  isAlreadyRegistered: (pub: DJENPublication) => boolean,
-  formatRelativeDate: (dateStr: string) => string,
-  renderFooterActions: () => React.ReactNode,
-  renderEmptyState: () => React.ReactNode
+  content: React.ReactNode,
+  footer: React.ReactNode
 ) {
-  const showEmpty = publications.length === 0;
-
-  function PublicationsList() {
-    return (
-      <ScrollArea className={compact ? "h-[250px]" : "h-[350px]"}>
-        <div className="space-y-2 pr-2">
-          {publications.map((pub) => (
-            <PublicationItem
-              key={pub.id}
-              pub={pub}
-              expanded={expanded}
-              onToggleExpand={setExpanded}
-              onRegister={handleRegisterProcess}
-              isAlreadyRegistered={isAlreadyRegistered(pub)}
-              formatRelativeDate={formatRelativeDate}
-            />
-          ))}
-        </div>
-      </ScrollArea>
-    );
-  }
-
   return (
     <CardContent className="pt-2">
-      {showEmpty ? renderEmptyState() : <PublicationsList />}
-
-      {renderFooterActions()}
+      {content}
+      {footer}
     </CardContent>
+  );
+}
+
+// Decisor puro de conteúdo (reduz condicionais e nesting)
+function ContentDecider({
+  publications,
+  compact,
+  expanded,
+  setExpanded,
+  handleRegisterProcess,
+  isAlreadyRegistered,
+  formatRelativeDate,
+  emptyState,
+}: {
+  publications: DJENPublication[];
+  compact: boolean;
+  expanded: string | null;
+  setExpanded: (id: string | null) => void;
+  handleRegisterProcess: (pub: DJENPublication) => void;
+  isAlreadyRegistered: (pub: DJENPublication) => boolean;
+  formatRelativeDate: (dateStr: string) => string;
+  emptyState: React.ReactNode;
+}) {
+  if (publications.length === 0) return emptyState as React.ReactElement;
+
+  return (
+    <ScrollArea className={compact ? "h-[250px]" : "h-[350px]"}>
+      <div className="space-y-2 pr-2">
+        {publications.map((pub) => (
+          <PublicationItem
+            key={pub.id}
+            pub={pub}
+            expanded={expanded}
+            onToggleExpand={setExpanded}
+            onRegister={handleRegisterProcess}
+            isAlreadyRegistered={isAlreadyRegistered(pub)}
+            formatRelativeDate={formatRelativeDate}
+          />
+        ))}
+      </div>
+    </ScrollArea>
   );
 }
 
@@ -491,11 +502,17 @@ export default function DJENPublicationsWidget({
   // Renderiza estado de loading
   const renderLoadingState = () => <DJENLoadingCard compact={compact} />;
 
+  // Normaliza mensagem de erro para string
+  const errorMessage: string | undefined =
+    typeof error === "string"
+      ? error
+      : (error as unknown as { message?: string } | undefined)?.message || undefined;
+
   // Renderiza estado de erro
   const renderErrorState = () => (
     <DJENErrorCard
       compact={compact}
-      error={error}
+      error={errorMessage ?? "Erro desconhecido"}
       onRetry={fetchPublications}
     />
   );
@@ -526,6 +543,60 @@ export default function DJENPublicationsWidget({
   );
 
   // Helpers de rodapé: badge e seção de botões (reduzem nesting)
+  function FooterRegisterButton({ show }: { show: boolean }) {
+    if (!show) return null;
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleAutoRegisterAll(publications)}
+              disabled={autoRegistering}
+              className="flex-1 button-gradient"
+              aria-label="Cadastrar todas as intimações"
+            >
+              <Bot
+                size={14}
+                className={autoRegistering ? "animate-pulse" : ""}
+              />
+              {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Cadastra automaticamente todas as intimações no Acervo
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  function FooterViewAllButton({
+    show,
+    compactLayout,
+  }: {
+    show: boolean;
+    compactLayout: boolean;
+  }) {
+    if (!show) return null;
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onViewAll}
+        className={cn(
+          "hover:button-gradient hover:text-primary-foreground",
+          compactLayout ? "flex-1" : "w-full"
+        )}
+        aria-label="Ver todas as publicações"
+      >
+        Ver todas
+        <ArrowRight size={14} />
+      </Button>
+    );
+  }
+
   function FooterButtonsSection({
     showRegisterAll,
     showViewAll,
@@ -533,54 +604,17 @@ export default function DJENPublicationsWidget({
     showRegisterAll: boolean;
     showViewAll: boolean;
   }) {
+    const compactLayout = showRegisterAll;
     return (
       <div className="flex gap-2">
-        {showRegisterAll && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleAutoRegisterAll(publications)}
-                  disabled={autoRegistering}
-                  className="flex-1 button-gradient"
-                  aria-label="Cadastrar todas as intimações"
-                >
-                  <Bot
-                    size={14}
-                    className={autoRegistering ? "animate-pulse" : ""}
-                  />
-                  {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Cadastra automaticamente todas as intimações no Acervo
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        {showViewAll && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onViewAll}
-            className={cn(
-              "hover:button-gradient hover:text-primary-foreground",
-              showRegisterAll ? "flex-1" : "w-full"
-            )}
-            aria-label="Ver todas as publicações"
-          >
-            Ver todas
-            <ArrowRight size={14} />
-          </Button>
-        )}
+        <FooterRegisterButton show={showRegisterAll} />
+        <FooterViewAllButton show={showViewAll} compactLayout={compactLayout} />
       </div>
     );
   }
 
-  function renderFooterActions(): React.ReactNode {
-    if (publications.length === 0) return null;
+  function buildFooterSection(showFooter: boolean): React.ReactNode {
+    if (!showFooter) return null;
     const showRegisterAll = shouldShowRegisterAll(publications);
     const showViewAll = shouldShowViewAll(publications, onViewAll);
     return (
@@ -630,18 +664,23 @@ export default function DJENPublicationsWidget({
     );
 
   // Renderiza conteúdo principal
+  const showFooter = publications.length > 0;
+
+  const contentNode = (
+    <ContentDecider
+      publications={publications}
+      compact={compact}
+      expanded={expanded}
+      setExpanded={setExpanded}
+      handleRegisterProcess={handleRegisterProcess}
+      isAlreadyRegistered={isAlreadyRegistered}
+      formatRelativeDate={getRelativeDateDescription}
+      emptyState={renderEmptyState()}
+    />
+  );
+
   const renderCardContent = () =>
-    PublicationsContent(
-      publications,
-      compact,
-      expanded,
-      setExpanded,
-      handleRegisterProcess,
-      isAlreadyRegistered,
-      getRelativeDateDescription,
-      renderFooterActions,
-      renderEmptyState
-    );
+    PublicationsContent(contentNode, buildFooterSection(showFooter));
 
   // Main render
   return (

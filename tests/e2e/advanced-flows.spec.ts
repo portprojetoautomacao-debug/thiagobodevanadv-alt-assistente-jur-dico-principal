@@ -43,7 +43,68 @@ test.beforeEach(async ({ page }) => {
 
 // CRM: Drag-and-drop between columns (Kanban)
 test("CRM drag-and-drop measures", async ({ page }) => {
+  // Seed localStorage (dev) para processos
+  await page.addInitScript(
+    ({ seed }) => {
+      try {
+        const value = JSON.stringify(seed);
+        window.localStorage.setItem("processes", value);
+      } catch {}
+    },
+    {
+      seed: [
+        {
+          id: "proc-e2e-1",
+          numeroCNJ: "0000000-00.0000.0.00.0000",
+          titulo: "Processo E2E Drag",
+          autor: "Autor Teste",
+          reu: "Réu Teste",
+          comarca: "",
+          vara: "",
+          status: "ativo",
+          fase: "Inicial",
+          dataDistribuicao: new Date().toISOString().split("T")[0],
+          dataUltimaMovimentacao: new Date().toISOString(),
+          prazos: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    }
+  );
   await goto(page, "#processes");
+
+  // Seed por API: garantir ao menos um processo
+  try {
+    await page.request.post("/api/kv", {
+      data: {
+        action: "batch-set",
+        entries: [
+          {
+            key: "processes",
+            value: [
+              {
+                id: "proc-e2e-1",
+                numeroCNJ: "0000000-00.0000.0.00.0000",
+                titulo: "Processo E2E Drag",
+                autor: "Autor Teste",
+                reu: "Réu Teste",
+                comarca: "",
+                vara: "",
+                status: "ativo",
+                fase: "Inicial",
+                dataDistribuicao: new Date().toISOString().split("T")[0],
+                dataUltimaMovimentacao: new Date().toISOString(),
+                prazos: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ],
+          },
+        ],
+      },
+    });
+  } catch {}
 
   // Try to find a card and columns by common text or roles
   const card = page
@@ -52,14 +113,47 @@ test("CRM drag-and-drop measures", async ({ page }) => {
   const targetColumn = page.locator('[data-testid="process-grid"]').first();
 
   // Aguarda elementos necessários ficarem visíveis
-  const cardVisible = await card.isVisible().catch(() => false);
+  let cardVisible = await card.isVisible().catch(() => false);
   const colVisible = await targetColumn.isVisible().catch(() => false);
   // Sem falha dura: se ausente, apenas registra e encerra cenário
   if (!cardVisible || !colVisible) {
-    console.warn(
-      "[crm] elementos não encontrados, registrando apenas navegação/perf"
-    );
-    return;
+    // Seed mínimo via UI: tentar criar um processo
+    console.warn("[crm] sem elementos; tentando criar processo de seed");
+    const newProcessBtn = page
+      .getByRole("button", {
+        name: /Novo Processo|Adicionar Processo|Criar Processo|Novo/i,
+      })
+      .first();
+    if (await newProcessBtn.isVisible().catch(() => false)) {
+      await newProcessBtn.click();
+      // Campos comuns: Título/Nome/Descrição
+      const titleField = page
+        .getByLabel(/Título|Nome do Processo|Nome/i)
+        .first();
+      if (await titleField.isVisible().catch(() => false)) {
+        await titleField.fill("Processo de Teste E2E");
+      }
+      const descField = page.getByLabel(/Descrição|Notas/i).first();
+      if (await descField.isVisible().catch(() => false)) {
+        await descField.fill("Seed criado automaticamente para teste de drag.");
+      }
+      // Botão confirmar/criar
+      const confirmBtn = page
+        .getByRole("button", { name: /Criar|Adicionar|Salvar/i })
+        .first();
+      if (await confirmBtn.isVisible().catch(() => false)) {
+        await confirmBtn.click();
+        await page.waitForTimeout(300);
+        cardVisible = await card.isVisible().catch(() => false);
+      }
+    }
+    // Se ainda não houver card/coluna, encerrar registrando navegação
+    if (!cardVisible || !colVisible) {
+      console.warn(
+        "[crm] elementos não encontrados após seed; registrando apenas navegação/perf"
+      );
+      return;
+    }
   }
 
   // Start trace-like timing
@@ -88,51 +182,149 @@ test("CRM drag-and-drop measures", async ({ page }) => {
 
 // Minutas: Editar → Aprovar → Exportar PDF/DOC
 test("Minutas approve and export", async ({ page, context }) => {
+  // Seed localStorage (dev) para minutas pendentes
+  await page.addInitScript(
+    ({ seed }) => {
+      try {
+        const value = JSON.stringify(seed);
+        window.localStorage.setItem("minutas", value);
+      } catch {}
+    },
+    {
+      seed: [
+        {
+          id: "minuta-e2e-1",
+          titulo: "Minuta E2E Pendente",
+          tipo: "peticao",
+          conteudo: "<p>Conteúdo de teste E2E</p>",
+          status: "pendente-revisao",
+          criadoPorAgente: true,
+          criadoEm: new Date().toISOString(),
+          atualizadoEm: new Date().toISOString(),
+          autor: "E2E",
+        },
+      ],
+    }
+  );
   await goto(page, "#minutas");
+
+  // Seed por API: garantir minuta pendente para Aprovar/Exportar
+  try {
+    await page.request.post("/api/kv", {
+      data: {
+        action: "batch-set",
+        entries: [
+          {
+            key: "minutas",
+            value: [
+              {
+                id: "minuta-e2e-1",
+                titulo: "Minuta E2E Pendente",
+                tipo: "peticao",
+                conteudo: "<p>Conteúdo de teste E2E</p>",
+                status: "pendente-revisao",
+                criadoPorAgente: true,
+                criadoEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString(),
+                autor: "E2E",
+              },
+            ],
+          },
+        ],
+      },
+    });
+  } catch {}
 
   // Abrir diálogo de nova minuta se não houver
   const newButton = page.getByRole("button", { name: /Nova Minuta/i });
   if (await newButton.isVisible().catch(() => false)) {
+    const tCreateStart = Date.now();
     await newButton.click();
     await page
       .getByLabel("Título")
       .fill("Manifestação sobre intimação do DJEN");
     await page.getByRole("button", { name: /Criar Minuta|Atualizar/i }).click();
+    const tCreateEnd = Date.now();
+    console.log("[minutas-create-ms]", tCreateEnd - tCreateStart);
   }
 
   // Aprovar a primeira minuta
   const approveBtn = page.locator('[data-testid="minuta-approve-btn"]').first();
   const approveVisible = await approveBtn.isVisible().catch(() => false);
-  // Sem falha dura: se ausente, apenas registra e encerra cenário
   if (!approveVisible) {
-    console.warn(
-      "[minutas] botão Aprovar não visível; encerrando cenário com navegação."
-    );
+    // Fallback: criar minuta via UI para garantir o botão Aprovar
+    console.warn("[minutas] criando minuta via UI para expor Aprovar");
+    const newButton = page.getByRole("button", { name: /Nova Minuta/i });
+    if (await newButton.isVisible().catch(() => false)) {
+      const tCreateStart = Date.now();
+      await newButton.click();
+      await page.getByLabel("Título").fill("Minuta E2E - Aprovação");
+      // Preencher conteúdo mínimo
+      await page.locator('div[contenteditable="true"]').first().click();
+      await page.keyboard.type("<p>Conteúdo E2E para aprovação</p>");
+      await page
+        .getByRole("button", { name: /Criar Minuta|Atualizar/i })
+        .click();
+      console.log("[minutas-create-ms]", Date.now() - tCreateStart);
+      // Alterar status via UI para pendente-revisao, se disponível
+      const statusSelect = page
+        .getByRole("combobox", { name: /Status/i })
+        .first();
+      if (await statusSelect.isVisible().catch(() => false)) {
+        await statusSelect.click();
+        const opt = page
+          .getByRole("option", { name: /Pendente Revisão/i })
+          .first();
+        if (await opt.isVisible().catch(() => false)) {
+          await opt.click();
+        }
+        await page.waitForTimeout(200);
+      }
+      // Reavaliar botão Aprovar
+      await page.waitForTimeout(200);
+    }
+  }
+  const approveBtn2 = page
+    .locator('[data-testid="minuta-approve-btn"]')
+    .first();
+  if (!(await approveBtn2.isVisible().catch(() => false))) {
+    console.warn("[minutas] Aprovar ainda não visível; encerrando cenário.");
     return;
   }
+  await approveBtn2.click();
   await approveBtn.click();
 
-  // Exportar PDF (abre janela de impressão)
+  // Exportar PDF (abre janela de impressão) e medir tempos
+  const tExportStart = Date.now();
   const exportBtn = page.getByRole("button", { name: /Exportar/i }).first();
   await exportBtn.click();
   const pdfItem = page.getByRole("button", { name: /Exportar PDF/i }).first();
   await pdfItem.click();
+  const [previewPdf] = await Promise.all([context.waitForEvent("page")]);
+  await previewPdf.waitForLoadState("domcontentloaded");
+  await expect(previewPdf).toHaveTitle(/Manifestação|Minuta|Assistente/i);
+  const tPreviewReady = Date.now();
+  console.log("[minutas-export-preview-ms]", tPreviewReady - tExportStart);
+  await previewPdf.close();
 
-  // Espera por nova página (print preview)
-  const [preview] = await Promise.all([context.waitForEvent("page")]);
-  await preview.waitForLoadState("domcontentloaded");
-  await expect(preview).toHaveTitle(/Manifestação|Minuta|Assistente/i);
-  await preview.close();
-
-  // Exportar DOC
+  // Exportar DOC e medir tempo total desde início do export
   await exportBtn.click();
   const docItem = page.getByRole("button", { name: /Exportar DOC/i }).first();
   await docItem.click();
+  const tExportDocEnd = Date.now();
+  console.log("[minutas-export-doc-ms]", tExportDocEnd - tExportStart);
 });
 
 // Expedientes: Sincronizar publicações e capturar rede
 test("Expedientes sync publications capture", async ({ page }) => {
   await goto(page, "#expedientes");
+
+  // Seed por API: acionar sync DJEN para gerar dados quando possível
+  try {
+    const start = Date.now();
+    const res = await page.request.post("/api/djen-sync");
+    console.log("[djen-sync-ms]", Date.now() - start, res.status());
+  } catch {}
 
   const syncBtn = page.locator('[data-testid="expedientes-sync-btn"]').first();
   const syncVisible = await syncBtn.isVisible().catch(() => false);
@@ -156,9 +348,21 @@ test("Expedientes sync publications capture", async ({ page }) => {
     /api\/kv/i,
     /datajud/i,
   ];
+  const reqTimes = new Map<string, number>();
   page.on("request", (req) => {
     if (targets.some((re) => re.test(req.url()))) {
+      reqTimes.set(req.url(), Date.now());
       console.log("[request]", req.method(), req.url());
+    }
+  });
+  page.on("response", async (res) => {
+    const url = res.url();
+    if (targets.some((re) => re.test(url))) {
+      const start = reqTimes.get(url);
+      if (start) {
+        const dur = Date.now() - start;
+        console.log("[expedientes-response-ms]", dur, url, res.status());
+      }
     }
   });
 
