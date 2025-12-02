@@ -90,6 +90,27 @@ export default function NotificationSettings() {
     type: 'slack',
   })
 
+  // Helpers para reduzir complexidade cognitiva
+  const hasNewWebhookFields = () => {
+    const hasFields = newWebhook.name.trim() && newWebhook.url.trim()
+    if (!hasFields) {
+      toast.error('Nome e URL são obrigatórios')
+      return false
+    }
+    return true
+  }
+
+  const runApiWithToast = async <T,>(fn: () => Promise<T>, onSuccess?: (data: T) => void, successMsg?: string, errorPrefix = 'Erro') => {
+    try {
+      const data = await fn()
+      if (onSuccess) onSuccess(data)
+      if (successMsg) toast.success(successMsg)
+    } catch (error) {
+      console.error('[NotificationSettings]', error)
+      toast.error(`${errorPrefix}`)
+    }
+  }
+
   // Buscar webhooks do backend
   const fetchWebhooks = useCallback(async () => {
     setLoadingWebhooks(true)
@@ -120,84 +141,71 @@ export default function NotificationSettings() {
 
   // Adicionar webhook
   const addWebhook = async () => {
-    if (!newWebhook.name.trim() || !newWebhook.url.trim()) {
-      toast.error('Nome e URL são obrigatórios')
-      return
-    }
-
-    try {
-      setSavingWebhook(true)
-      const response = await fetch(`${API_BASE_URL}/api/notifications/webhook`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newWebhook, events: ['all'] }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const data = await response.json()
-      if (data.webhook) {
-        setWebhooks((prev) => [...prev, data.webhook])
-      }
-      setNewWebhook({ name: '', url: '', type: 'slack' })
-      setShowAddForm(false)
-      toast.success('Webhook adicionado!')
-    } catch (error) {
-      console.error('[NotificationSettings] addWebhook error:', error)
-      toast.error('Erro ao adicionar webhook')
-    } finally {
-      setSavingWebhook(false)
-    }
+    if (!hasNewWebhookFields()) return
+    setSavingWebhook(true)
+    await runApiWithToast(
+      async () => {
+        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...newWebhook, events: ['all'] }),
+        })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return response.json()
+      },
+      (data: any) => {
+        if (data.webhook) setWebhooks((prev) => [...prev, data.webhook])
+        setNewWebhook({ name: '', url: '', type: 'slack' })
+        setShowAddForm(false)
+      },
+      'Webhook adicionado!',
+      'Erro ao adicionar webhook'
+    )
+    setSavingWebhook(false)
   }
 
   // Remover webhook
   const deleteWebhook = async (id: string) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/notifications/webhook/${id}`,
-        { method: 'DELETE' }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      setWebhooks((prev) => prev.filter((w) => w.id !== id))
-      toast.success('Webhook removido')
-    } catch (error) {
-      console.error('[NotificationSettings] deleteWebhook error:', error)
-      toast.error('Erro ao remover webhook')
-    }
+    await runApiWithToast(
+      async () => {
+        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook/${id}`, { method: 'DELETE' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return { id }
+      },
+      () => {
+        setWebhooks((prev) => prev.filter((w) => w.id !== id))
+      },
+      'Webhook removido',
+      'Erro ao remover webhook'
+    )
   }
 
   // Testar webhook
   const testWebhookFn = async (webhookId: string) => {
-    try {
-      setTestingWebhook(webhookId)
-      const response = await fetch(`${API_BASE_URL}/api/notifications/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ webhookId }),
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        toast.success('Teste enviado!', {
-          description: data.webhook?.name
-            ? `Webhook: ${data.webhook.name}`
-            : undefined,
+    setTestingWebhook(webhookId)
+    await runApiWithToast(
+      async () => {
+        const response = await fetch(`${API_BASE_URL}/api/notifications/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ webhookId }),
         })
-      } else {
-        toast.error('Falha no teste do webhook')
-      }
-    } catch (error) {
-      console.error('[NotificationSettings] testWebhook error:', error)
-      toast.error('Erro ao testar webhook')
-    } finally {
-      setTestingWebhook(null)
-    }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return response.json()
+      },
+      (data: any) => {
+        if (data.success) {
+          toast.success('Teste enviado!', {
+            description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
+          })
+        } else {
+          toast.error('Falha no teste do webhook')
+        }
+      },
+      undefined,
+      'Erro ao testar webhook'
+    )
+    setTestingWebhook(null)
   }
 
   const getWebhookIcon = (type: WebhookType) => {
