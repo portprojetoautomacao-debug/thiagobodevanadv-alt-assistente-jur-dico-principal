@@ -7,62 +7,63 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Warning } from '@phosphor-icons/react'
+} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
 
 interface ConfirmDialogProps {
-    readonly confirmDisabled?: boolean
-    readonly autoCloseOnConfirmResult?: boolean
-  readonly open: boolean
-  readonly onOpenChange: (open: boolean) => void
-  readonly title: string
-  readonly description: string
-  readonly confirmText?: string
-  readonly cancelText?: string
-  readonly onConfirm: () => void | Promise<void>
-  readonly variant?: 'default' | 'destructive'
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly title: string;
+  readonly description: string;
+  readonly confirmText?: string;
+  readonly cancelText?: string;
+  readonly onConfirm: () => void | boolean | Promise<void | boolean>;
+  readonly variant?: "default" | "destructive";
+  readonly confirmDisabled?: boolean;
+  readonly autoCloseOnConfirmResult?: boolean;
 }
 
 export default function ConfirmDialog({
-    confirmDisabled = false,
-    autoCloseOnConfirmResult = true,
   open,
   onOpenChange,
-    const [confirming, setConfirming] = useState(false)
   title,
-    const handleConfirmClick = () => {
-  confirmText = 'Confirmar',
-      try {
-        const res = onConfirm()
-        if (res instanceof Promise) {
-          setConfirming(true)
-          res
-            .then((value) => {
-              if (autoCloseOnConfirmResult && value === true) {
-                onOpenChange(false)
-              }
-            })
-            .catch((err) => {
-              console.error('[ConfirmDialog] Erro no onConfirm:', err)
-            })
-            .finally(() => setConfirming(false))
-        } else {
-          if (autoCloseOnConfirmResult && res === true) {
-            onOpenChange(false)
-          }
-        }
-      } catch (err) {
-        console.error('[ConfirmDialog] Erro no onConfirm (sync):', err)
-      }
+  description,
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  onConfirm,
+  variant = "default",
+  confirmDisabled = false,
+  autoCloseOnConfirmResult = true,
+}: ConfirmDialogProps) {
+  const [confirming, setConfirming] = useState(false);
+
+  const isDestructive = variant === "destructive";
+
   const handleConfirmClick = () => {
-    // suporta tanto função sync quanto async, sem quebrar o AlertDialog
-    const result = onConfirm()
-    if (result instanceof Promise) {
-      result.catch((err) => {
-        console.error('[ConfirmDialog] Erro no onConfirm:', err)
-      })
+    try {
+      const res = onConfirm();
+      if (res instanceof Promise) {
+        setConfirming(true);
+        res
+          .then((value) => {
+            if (autoCloseOnConfirmResult && value === true) {
+              onOpenChange(false);
+            }
+          })
+          .catch((err) => {
+            console.error("[ConfirmDialog] Erro no onConfirm:", err);
+          })
+          .finally(() => setConfirming(false));
+      } else {
+        if (autoCloseOnConfirmResult && res === true) {
+          onOpenChange(false);
+        }
+      }
+    } catch (err) {
+      console.error("[ConfirmDialog] Erro no onConfirm (sync):", err);
     }
-  }
+  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -70,35 +71,29 @@ export default function ConfirmDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             {isDestructive && (
-              <Warning
-                className="text-destructive"
-                size={24}
-                weight="fill"
-              />
+              <AlertTriangle className="text-destructive" size={20} />
             )}
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            {description}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={confirming}>
             {cancelText}
-              disabled={confirmDisabled || confirming}
           </AlertDialogCancel>
-              {confirming ? 'Processando...' : confirmText}
+          <AlertDialogAction
             onClick={handleConfirmClick}
+            disabled={confirmDisabled || confirming}
             className={
               isDestructive
-                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                : 'button-gradient'
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : "button-gradient"
             }
           >
-            {confirmText}
+            {confirming ? "Processando..." : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

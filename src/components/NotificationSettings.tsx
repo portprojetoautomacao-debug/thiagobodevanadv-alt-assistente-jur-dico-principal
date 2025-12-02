@@ -1,26 +1,26 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { useNotifications } from '@/hooks/use-notifications'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { useNotifications } from "@/hooks/use-notifications";
+import { cn } from "@/lib/utils";
 import {
   Bell,
   CheckCircle,
@@ -33,9 +33,9 @@ import {
   Trash,
   Warning,
   XCircle,
-} from '@phosphor-icons/react'
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+} from "@phosphor-icons/react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // Microsoft Teams icon
 const TeamsIcon = ({ size = 20 }: { size?: number }) => (
@@ -49,20 +49,20 @@ const TeamsIcon = ({ size = 20 }: { size?: number }) => (
   >
     <path d="M20.625 8.5h-3.75V6.875c0-.69.56-1.25 1.25-1.25h1.25c.69 0 1.25.56 1.25 1.25V8.5zm-.938 1.25c-.865 0-1.562-.697-1.562-1.562V6.875c0-1.381 1.119-2.5 2.5-2.5h1.25c1.381 0 2.5 1.119 2.5 2.5v4.375c0 2.071-1.679 3.75-3.75 3.75h-.625V19c0 .69-.56 1.25-1.25 1.25H4.25c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25h4.375V5.75c0-.69.56-1.25 1.25-1.25h5c.69 0 1.25.56 1.25 1.25v2.75h3.562z" />
   </svg>
-)
+);
 
-type WebhookType = 'slack' | 'discord' | 'teams' | 'generic'
+type WebhookType = "slack" | "discord" | "teams" | "generic";
 
 interface WebhookConfig {
-  id: string
-  name: string
-  url: string
-  type: WebhookType
-  enabled: boolean
-  createdAt: string
+  id: string;
+  name: string;
+  url: string;
+  type: WebhookType;
+  enabled: boolean;
+  createdAt: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 export default function NotificationSettings() {
   const {
@@ -72,198 +72,211 @@ export default function NotificationSettings() {
     testNotification,
     isSupported,
     permission,
-  } = useNotifications()
+  } = useNotifications();
 
   // Webhook state
-  const [webhooks, setWebhooks] = useState<WebhookConfig[]>([])
-  const [loadingWebhooks, setLoadingWebhooks] = useState(true)
-  const [savingWebhook, setSavingWebhook] = useState(false)
-  const [testingWebhook, setTestingWebhook] = useState<string | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
+  const [loadingWebhooks, setLoadingWebhooks] = useState(true);
+  const [savingWebhook, setSavingWebhook] = useState(false);
+  const [testingWebhook, setTestingWebhook] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newWebhook, setNewWebhook] = useState<{
-    name: string
-    url: string
-    type: WebhookType
+    name: string;
+    url: string;
+    type: WebhookType;
   }>({
-    name: '',
-    url: '',
-    type: 'slack',
-  })
+    name: "",
+    url: "",
+    type: "slack",
+  });
 
   // Helpers para reduzir complexidade cognitiva
   const hasNewWebhookFields = () => {
-    const hasFields = newWebhook.name.trim() && newWebhook.url.trim()
+    const hasFields = newWebhook.name.trim() && newWebhook.url.trim();
     if (!hasFields) {
-      toast.error('Nome e URL são obrigatórios')
-      return false
+      toast.error("Nome e URL são obrigatórios");
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
-  const runApiWithToast = async <T,>(fn: () => Promise<T>, onSuccess?: (data: T) => void, successMsg?: string, errorPrefix = 'Erro') => {
+  const runApiWithToast = async <T,>(
+    fn: () => Promise<T>,
+    onSuccess?: (data: T) => void,
+    successMsg?: string,
+    errorPrefix = "Erro"
+  ) => {
     try {
-      const data = await fn()
-      if (onSuccess) onSuccess(data)
-      if (successMsg) toast.success(successMsg)
+      const data = await fn();
+      if (onSuccess) onSuccess(data);
+      if (successMsg) toast.success(successMsg);
     } catch (error) {
-      console.error('[NotificationSettings]', error)
-      toast.error(`${errorPrefix}`)
+      console.error("[NotificationSettings]", error);
+      toast.error(`${errorPrefix}`);
     }
-  }
+  };
 
   // Buscar webhooks do backend
   const fetchWebhooks = useCallback(async () => {
-    setLoadingWebhooks(true)
+    setLoadingWebhooks(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/notifications`)
+      const response = await fetch(`${API_BASE_URL}/api/notifications`);
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      const data = await response.json()
+      const data = await response.json();
       if (Array.isArray(data.webhooks)) {
-        setWebhooks(data.webhooks)
+        setWebhooks(data.webhooks);
       } else {
-        setWebhooks([])
+        setWebhooks([]);
       }
     } catch (error) {
-      console.error('[NotificationSettings] Fetch error:', error)
-      toast.error('Erro ao carregar webhooks')
-      setWebhooks([])
+      console.error("[NotificationSettings] Fetch error:", error);
+      toast.error("Erro ao carregar webhooks");
+      setWebhooks([]);
     } finally {
-      setLoadingWebhooks(false)
+      setLoadingWebhooks(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchWebhooks()
-  }, [fetchWebhooks])
+    fetchWebhooks();
+  }, [fetchWebhooks]);
 
   // Adicionar webhook
   const addWebhook = async () => {
-    if (!hasNewWebhookFields()) return
-    setSavingWebhook(true)
+    if (!hasNewWebhookFields()) return;
+    setSavingWebhook(true);
     await runApiWithToast(
       async () => {
-        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...newWebhook, events: ['all'] }),
-        })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return response.json()
+        const response = await fetch(
+          `${API_BASE_URL}/api/notifications/webhook`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...newWebhook, events: ["all"] }),
+          }
+        );
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
       },
       (data: any) => {
-        if (data.webhook) setWebhooks((prev) => [...prev, data.webhook])
-        setNewWebhook({ name: '', url: '', type: 'slack' })
-        setShowAddForm(false)
+        if (data.webhook) setWebhooks((prev) => [...prev, data.webhook]);
+        setNewWebhook({ name: "", url: "", type: "slack" });
+        setShowAddForm(false);
       },
-      'Webhook adicionado!',
-      'Erro ao adicionar webhook'
-    )
-    setSavingWebhook(false)
-  }
+      "Webhook adicionado!",
+      "Erro ao adicionar webhook"
+    );
+    setSavingWebhook(false);
+  };
 
   // Remover webhook
   const deleteWebhook = async (id: string) => {
     await runApiWithToast(
       async () => {
-        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook/${id}`, { method: 'DELETE' })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return { id }
+        const response = await fetch(
+          `${API_BASE_URL}/api/notifications/webhook/${id}`,
+          { method: "DELETE" }
+        );
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { id };
       },
       () => {
-        setWebhooks((prev) => prev.filter((w) => w.id !== id))
+        setWebhooks((prev) => prev.filter((w) => w.id !== id));
       },
-      'Webhook removido',
-      'Erro ao remover webhook'
-    )
-  }
+      "Webhook removido",
+      "Erro ao remover webhook"
+    );
+  };
 
   // Testar webhook
   const testWebhookFn = async (webhookId: string) => {
-    setTestingWebhook(webhookId)
+    setTestingWebhook(webhookId);
     await runApiWithToast(
       async () => {
         const response = await fetch(`${API_BASE_URL}/api/notifications/test`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ webhookId }),
-        })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return response.json()
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
       },
       (data: any) => {
         if (data.success) {
-          toast.success('Teste enviado!', {
-            description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
-          })
+          toast.success("Teste enviado!", {
+            description: data.webhook?.name
+              ? `Webhook: ${data.webhook.name}`
+              : undefined,
+          });
         } else {
-          toast.error('Falha no teste do webhook')
+          toast.error("Falha no teste do webhook");
         }
       },
       undefined,
-      'Erro ao testar webhook'
-    )
-    setTestingWebhook(null)
-  }
+      "Erro ao testar webhook"
+    );
+    setTestingWebhook(null);
+  };
 
   const getWebhookIcon = (type: WebhookType) => {
     switch (type) {
-      case 'slack':
-        return <SlackLogo size={18} weight="duotone" />
-      case 'discord':
-        return <DiscordLogo size={18} weight="duotone" />
-      case 'teams':
-        return <TeamsIcon size={18} />
+      case "slack":
+        return <SlackLogo size={18} weight="duotone" />;
+      case "discord":
+        return <DiscordLogo size={18} weight="duotone" />;
+      case "teams":
+        return <TeamsIcon size={18} />;
       default:
-        return <Globe size={18} weight="duotone" />
+        return <Globe size={18} weight="duotone" />;
     }
-  }
+  };
 
   const handleEnableNotifications = async () => {
     if (!isSupported) {
-      toast.error('Seu navegador não suporta notificações')
-      return
+      toast.error("Seu navegador não suporta notificações");
+      return;
     }
 
-    const result = await requestPermission()
+    const result = await requestPermission();
 
-    if (result === 'granted') {
-      toast.success('Notificações ativadas com sucesso!')
-      testNotification()
-    } else if (result === 'denied') {
+    if (result === "granted") {
+      toast.success("Notificações ativadas com sucesso!");
+      testNotification();
+    } else if (result === "denied") {
       toast.error(
-        'Você bloqueou as notificações. Ative-as nas configurações do navegador.'
-      )
+        "Você bloqueou as notificações. Ative-as nas configurações do navegador."
+      );
     }
-  }
+  };
 
   const getPermissionBadge = () => {
     switch (permission) {
-      case 'granted':
+      case "granted":
         return (
           <Badge variant="default" className="gap-1 bg-primary">
             <CheckCircle size={12} weight="fill" />
             Permitido
           </Badge>
-        )
-      case 'denied':
+        );
+      case "denied":
         return (
           <Badge variant="destructive" className="gap-1">
             <XCircle size={12} weight="fill" />
             Bloqueado
           </Badge>
-        )
+        );
       default:
         return (
           <Badge variant="secondary" className="gap-1">
             <Warning size={12} weight="fill" />
             Pendente
           </Badge>
-        )
+        );
     }
-  }
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -304,7 +317,7 @@ export default function NotificationSettings() {
               </Alert>
             )}
 
-            {isSupported && permission === 'default' && (
+            {isSupported && permission === "default" && (
               <Alert className="border-primary/50 bg-primary/5">
                 <Warning className="text-primary" size={16} weight="fill" />
                 <AlertDescription>
@@ -314,7 +327,7 @@ export default function NotificationSettings() {
               </Alert>
             )}
 
-            {isSupported && permission === 'denied' && (
+            {isSupported && permission === "denied" && (
               <Alert variant="destructive">
                 <XCircle size={16} weight="fill" />
                 <AlertDescription>
@@ -324,7 +337,7 @@ export default function NotificationSettings() {
               </Alert>
             )}
 
-            {isSupported && permission === 'granted' && (
+            {isSupported && permission === "granted" && (
               <Alert className="border-primary/50 bg-primary/5">
                 <CheckCircle className="text-primary" size={16} weight="fill" />
                 <AlertDescription>
@@ -334,18 +347,18 @@ export default function NotificationSettings() {
             )}
 
             <div className="flex gap-3">
-              {permission !== 'granted' && (
+              {permission !== "granted" && (
                 <Button
                   onClick={handleEnableNotifications}
                   className="button-gradient"
-                  disabled={!isSupported || permission === 'denied'}
+                  disabled={!isSupported || permission === "denied"}
                 >
                   <Bell size={20} weight="duotone" />
                   Ativar Notificações
                 </Button>
               )}
 
-              {permission === 'granted' && (
+              {permission === "granted" && (
                 <Button onClick={testNotification} variant="outline">
                   <Bell size={20} weight="duotone" />
                   Testar Notificação
@@ -366,10 +379,7 @@ export default function NotificationSettings() {
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label
-                  htmlFor="prazo-alerts"
-                  className="text-base font-medium"
-                >
+                <Label htmlFor="prazo-alerts" className="text-base font-medium">
                   Alertas de Prazos
                 </Label>
                 <p className="text-sm text-muted-foreground">
@@ -387,16 +397,13 @@ export default function NotificationSettings() {
                     prazoAlerts: checked,
                   }))
                 }
-                disabled={permission !== 'granted'}
+                disabled={permission !== "granted"}
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label
-                  htmlFor="agent-alerts"
-                  className="text-base font-medium"
-                >
+                <Label htmlFor="agent-alerts" className="text-base font-medium">
                   Alertas de Agentes IA
                 </Label>
                 <p className="text-sm text-muted-foreground">
@@ -414,7 +421,7 @@ export default function NotificationSettings() {
                     agentAlerts: checked,
                   }))
                 }
-                disabled={permission !== 'granted'}
+                disabled={permission !== "granted"}
               />
             </div>
 
@@ -441,7 +448,7 @@ export default function NotificationSettings() {
                     financialAlerts: checked,
                   }))
                 }
-                disabled={permission !== 'granted'}
+                disabled={permission !== "granted"}
               />
             </div>
           </CardContent>
@@ -454,9 +461,9 @@ export default function NotificationSettings() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              <strong className="text-foreground">Prazos:</strong> Você
-              receberá alertas automáticos 7, 2 e 1 dia antes do vencimento de
-              cada prazo ativo.
+              <strong className="text-foreground">Prazos:</strong> Você receberá
+              alertas automáticos 7, 2 e 1 dia antes do vencimento de cada prazo
+              ativo.
             </p>
             <p>
               <strong className="text-foreground">Privacidade:</strong> As
@@ -582,12 +589,12 @@ export default function NotificationSettings() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setShowAddForm(false)
+                        setShowAddForm(false);
                         setNewWebhook({
-                          name: '',
-                          url: '',
-                          type: 'slack',
-                        })
+                          name: "",
+                          url: "",
+                          type: "slack",
+                        });
                       }}
                     >
                       Cancelar
@@ -633,10 +640,8 @@ export default function NotificationSettings() {
                   <div
                     key={wh.id}
                     className={cn(
-                      'flex items-center justify-between p-3 rounded-lg border',
-                      wh.enabled
-                        ? 'bg-card'
-                        : 'bg-muted/50 opacity-70'
+                      "flex items-center justify-between p-3 rounded-lg border",
+                      wh.enabled ? "bg-card" : "bg-muted/50 opacity-70"
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -700,14 +705,14 @@ export default function NotificationSettings() {
             <Alert>
               <Warning size={14} />
               <AlertDescription className="text-xs">
-                <strong>Como obter a URL do webhook:</strong> Slack: Apps → Incoming
-                Webhooks • Discord: Configurações do Canal → Webhooks • Teams:
-                Conectores → Incoming Webhook.
+                <strong>Como obter a URL do webhook:</strong> Slack: Apps →
+                Incoming Webhooks • Discord: Configurações do Canal → Webhooks •
+                Teams: Conectores → Incoming Webhook.
               </AlertDescription>
             </Alert>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
