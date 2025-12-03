@@ -1,4 +1,8 @@
 {
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64"
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+  "github.copilot.chat.alternateGptPrompt.enabled": true,
+  "github.copilot.chat.anthropic.thinking.enabled": true,
+  "github.copilot.chat.anthropic.tools.websearch.enabled": true,
+  "github.copilot.chat.codesearch.enabled": true
 }

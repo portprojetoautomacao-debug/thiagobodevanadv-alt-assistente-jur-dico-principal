@@ -34,6 +34,7 @@ module.exports = defineConfig( {
       "x-vercel-protection-bypass":
         process.env.VERCEL_AUTOMATION_BYPASS_SECRET || "",
     },
+    headless: true,
     storageState: fs.existsSync( "tests/e2e/storageState.json" )
       ? "tests/e2e/storageState.json"
       : undefined,
@@ -57,8 +58,7 @@ module.exports = defineConfig( {
     const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
     if ( useProd ) return undefined;
     return {
-      command: "npm run dev:local",
-      env: { PORT: envPort, HOST: "127.0.0.1", CI: isCI ? "true" : "false" },
+      command: `npx vite --host 127.0.0.1 --port ${ envPort }`,
       port: Number( envPort ),
       reuseExistingServer: true,
       timeout: 120_000,
