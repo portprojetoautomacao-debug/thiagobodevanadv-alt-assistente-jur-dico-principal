@@ -153,48 +153,11 @@ async function processIntimationAnalysis(
   try {
     const aiResponse = await analyzeWithGemini(text, context);
 
-    // Tenta parsear JSON da resposta
-    let analysisData;
-    try {
-      // Remove possíveis marcadores de código
-      const cleanJson = aiResponse
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-      analysisData = JSON.parse(cleanJson);
-    } catch {
-      // Se não for JSON válido, cria estrutura básica
-      analysisData = {
-        summary: aiResponse.substring(0, 500),
-        suggestedActions: ["Revisar intimação manualmente"],
-        priority: "medium",
-        documentType: documentType,
-        nextSteps: ["Análise manual requerida"],
-      };
-    }
+    // Parse and sanitize AI response
+    const analysisData = parseAIResponse(aiResponse, documentType);
 
-    // Calcula data final do prazo se houver
-    if (analysisData.deadline?.days) {
-      const startDate = new Date();
-      const endDate = new Date(startDate);
-
-      if (analysisData.deadline.type === "úteis") {
-        // Adiciona dias úteis (simplificado - não considera feriados)
-        let daysAdded = 0;
-        while (daysAdded < analysisData.deadline.days) {
-          endDate.setDate(endDate.getDate() + 1);
-          const dayOfWeek = endDate.getDay();
-          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            daysAdded++;
-          }
-        }
-      } else {
-        endDate.setDate(endDate.getDate() + analysisData.deadline.days);
-      }
-
-      analysisData.deadline.startDate = startDate.toISOString().split("T")[0];
-      analysisData.deadline.endDate = endDate.toISOString().split("T")[0];
-    }
+    // Populate computed deadline dates (if any)
+    applyDeadlineDates(analysisData);
 
     return {
       success: true,
@@ -211,6 +174,50 @@ async function processIntimationAnalysis(
         error instanceof Error ? error.message : "Erro desconhecido na análise",
     };
   }
+}
+
+// Helper to parse AI's response into a structured AnalysisResult.data
+function parseAIResponse(aiResponse: string, documentType: string) {
+  try {
+    const cleanJson = aiResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+    return JSON.parse(cleanJson);
+  } catch {
+    return {
+      summary: aiResponse.substring(0, 500),
+      suggestedActions: ["Revisar intimação manualmente"],
+      priority: "medium",
+      documentType: documentType,
+      nextSteps: ["Análise manual requerida"],
+    } as unknown as AnalysisResult["data"];
+  }
+}
+
+// Helper to compute and assign startDate/endDate from a 'deadline' object
+function applyDeadlineDates(analysisData: any) {
+  if (!analysisData?.deadline?.days) return;
+
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+
+  if (analysisData.deadline.type === "úteis") {
+    // Add business days (simple approach - doesn't consider holidays)
+    let daysAdded = 0;
+    while (daysAdded < analysisData.deadline.days) {
+      endDate.setDate(endDate.getDate() + 1);
+      const dayOfWeek = endDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        daysAdded++;
+      }
+    }
+  } else {
+    endDate.setDate(endDate.getDate() + analysisData.deadline.days);
+  }
+
+  analysisData.deadline.startDate = startDate.toISOString().split("T")[0];
+  analysisData.deadline.endDate = endDate.toISOString().split("T")[0];
 }
 
 // Handler principal

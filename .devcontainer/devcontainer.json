@@ -23,11 +23,24 @@
         "typescript.preferences.importModuleSpecifier": "relative",
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
-        }
+        },
+        // Auto-provisioning (terminal & Copilot) - enable defaults in container
+        "task.allowAutomaticTasks": "on",
+        "extensions.autoCheckUpdates": true,
+        "extensions.autoUpdate": true,
+        "github.copilot.enable": true,
+        "github.copilot.inlineSuggest.enable": true,
+        "github.copilot.chat.enable": true,
+        // WARNING: Trust workspace disabled inside container for seamless automation. This lowers security in shared environments.
+        "security.workspace.trust.enabled": false,
+        "security.workspace.trust.untrustedFiles": "open",
+        "terminal.integrated.shellIntegration.enabled": true
       }
     }
   },
   "postCreateCommand": "npm install",
+  // Rodar auto-init ao iniciar o container (de maneira não bloqueante)
+  "postStartCommand": "bash auto-init.sh > /tmp/auto-init.log 2>&1 &",
   "forwardPorts": [5173, 5000],
   "portsAttributes": {
     "5173": {
