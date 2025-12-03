@@ -30,5 +30,5 @@ export function useIsMobile() {
     }
   }, []) // Empty dependency array - only runs once on mount
 
-  return isMobile
+  return isMobile ?? false
 }
