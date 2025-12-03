@@ -12,7 +12,7 @@ import {
   FileText,
   Trophy,
 } from "@phosphor-icons/react";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -31,6 +31,9 @@ interface DashboardAdvboxProps {
 function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
   const [processes] = useKV<Process[]>("processes", []);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+
+  // Ref para capturar timestamp na montagem (evita violação de pureza React Compiler)
+  const initialTimestampRef = useRef(Date.now());
 
   const stats = useMemo(() => {
     const processesList = processes || [];
@@ -116,6 +119,8 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
     return days;
   }, [selectedMonth]);
 
+  // Captura timestamp fora do useMemo para evitar violação de pureza
+  const nowTimestamp = initialTimestampRef.current;
   const intimacoes = useMemo(() => {
     const processesList = processes || [];
     const umMesMs = 30 * 24 * 60 * 60 * 1000;
@@ -141,7 +146,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
         atrasado,
       };
     });
-  }, [processes]);
+  }, [processes, nowTimestamp]);
 
   // Mapeamento de prazos por dia do mês selecionado
   const prazosPorDia = useMemo(() => {
