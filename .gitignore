@@ -96,3 +96,4 @@ eslint-results.sarif
 # SonarCloud
 .scannerwork/
 .sonar/
+coverage-api/

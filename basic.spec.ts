@@ -20,7 +20,9 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
     } else {
       // Verifica tela de login simples
       await expect(
-        page.getByText(/Assistente Jurídico PJe|Sistema inteligente de gestão jurídica/i)
+        page.getByText(
+          /Assistente Jurídico PJe|Sistema inteligente de gestão jurídica/i
+        )
       ).toBeVisible();
     }
   });
