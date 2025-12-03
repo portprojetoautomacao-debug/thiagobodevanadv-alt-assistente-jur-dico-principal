@@ -1,40 +1,31 @@
 import { defineConfig, devices } from "@playwright/test";
 import fs from "fs";
 
+const PORT = process.env.PORT || "5173";
+const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`;
+const USE_PROD = process.env.USE_PROD_BASE_URL === "true";
+const IS_CI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
+
 export default defineConfig({
   testDir: "tests/e2e",
   // Use path (string) for ESM compatibility
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,
   fullyParallel: true,
-  reporter: [ [ "html", { open: "never" } ] ],
-  // Inicia servidor de desenvolvimento para evitar 404 quando BASE_URL não aponta para produção.
-  // Em CI e por padrão, inicia o servidor local a menos que USE_PROD_BASE_URL === 'true'.
-  webServer: ((): any =>
-  {
-    const useProd = process.env.USE_PROD_BASE_URL === "true";
-    const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
-    // Se for para usar a base de produção explicitamente, não iniciamos o webServer local.
-    if (useProd) return undefined;
-    // Caso contrário, sempre iniciar o servidor local (inclusive em CI) para garantir disponibilidade.
-    const defaultPort = process.env.PORT || "5173";
-    return {
-      // Use Vite directly with host and port
-      command: `npx vite --host 127.0.0.1 --port ${defaultPort}`,
-      port: Number(defaultPort),
-      reuseExistingServer: true,
-      timeout: 120_000,
-      cwd: process.cwd(),
-    };
-  })(),
+  reporter: [["html", { open: "never" }], ["list"]],
+  // Inicia servidor de desenvolvimento automaticamente
+  webServer: USE_PROD ? undefined : {
+    command: `npm run dev -- --port ${PORT} --host 127.0.0.1`,
+    url: `http://127.0.0.1:${PORT}`,
+    reuseExistingServer: !IS_CI,
+    timeout: 120_000,
+    stdout: "pipe",
+    stderr: "pipe",
+  },
   use: {
     // Preferir ambiente local por padrão para maior estabilidade dos seletores.
     // Permite sobrescrever via BASE_URL ou setando USE_PROD_BASE_URL=true
-    baseURL:
-      process.env.BASE_URL ||
-      (process.env.USE_PROD_BASE_URL === "true"
-        ? "https://assistente-juridico-p.vercel.app"
-        : `http://127.0.0.1:${process.env.PORT || "5173"}`),
+    baseURL: USE_PROD ? "https://assistente-juridico-p.vercel.app" : BASE_URL,
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -42,7 +33,6 @@ export default defineConfig({
     storageState: fs.existsSync("tests/e2e/storageState.json")
       ? "tests/e2e/storageState.json"
       : undefined,
-    browserName: "chromium",
   },
   projects: [
     {
