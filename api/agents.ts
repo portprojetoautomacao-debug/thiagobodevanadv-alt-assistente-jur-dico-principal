@@ -22,8 +22,8 @@ function requireAuth(req: VercelRequest): boolean {
   // Permitir acesso em desenvolvimento/localhost
   if (!authHeader) {
     const isDev = process.env.NODE_ENV === 'development' || 
-                  req.headers.host?.includes('localhost') ||
-                  req.headers.host?.includes('vercel.app')
+                  req.headers.host?.includes('localhost') === true ||
+                  req.headers.host?.includes('vercel.app') === true
     return isDev
   }
   
