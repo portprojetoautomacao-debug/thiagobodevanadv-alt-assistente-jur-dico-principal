@@ -229,7 +229,7 @@ function applyDeadlineDates (analysisData: any)
 // Handler principal
 export async function dispatchTask (
   task: AgentTask,
-  agent: Agent
+  _agent: Agent
 ): Promise<AnalysisResult>
 {
   // Roteia para o processador correto baseado no tipo de tarefa

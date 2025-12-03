@@ -196,7 +196,10 @@ async function streamGemini(
     console.log('[LLM-Stream] Using Gemini streaming');
 
     const geminiBody = transformToGemini(body);
-    const model = requestedModel.startsWith('gemini') ? requestedModel : 'gemini-2.5-pro';
+    // Normaliza o nome do modelo: "gemini" sozinho vira "gemini-2.5-pro"
+    const model = (requestedModel === 'gemini' || !requestedModel.startsWith('gemini-')) 
+        ? 'gemini-2.5-pro' 
+        : requestedModel;
 
     const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${geminiKey}&alt=sse`,

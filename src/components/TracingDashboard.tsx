@@ -64,6 +64,7 @@ export default function TracingDashboard({
     setAgentMetrics(metrics);
   }, [agentIds]);
 
+  // Carregamento inicial e auto-refresh
   useEffect(() => {
     // Schedule initial refresh to avoid synchronous setState in effect
     const initialRefreshTimeout = globalThis.setTimeout(refreshData, 0);

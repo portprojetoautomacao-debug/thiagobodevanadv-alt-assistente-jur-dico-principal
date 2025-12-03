@@ -49,6 +49,9 @@ export default function AgentMetrics({
   const [circuitBreakers, setCircuitBreakers] =
     useState<CircuitBreakersMetrics | null>(null)
 
+  // Ref para capturar timestamp na montagem (evita violação de pureza)
+  const initialTimestampRef = useRef(Date.now())
+
   // Fetch V2 metrics
   useEffect(() => {
     const fetchV2Metrics = async () => {
@@ -82,7 +85,7 @@ export default function AgentMetrics({
 
   const totalTasks = completedTasks.length
 
-  const todayStr = new Date().toDateString()
+  const todayStr = new Date(initialTimestampRef.current).toDateString()
   const totalToday = completedTasks.filter((t) => {
     return (
       t.completedAt &&
@@ -112,7 +115,7 @@ export default function AgentMetrics({
     ).length
   }, [completedTasks])
 
-  const getAverageProcessingTime = () => {
+  const averageProcessingTime = useMemo(() => {
     const tasksWithTime = completedTasks.filter(
       (task) => task.startedAt && task.completedAt,
     )
@@ -127,10 +130,7 @@ export default function AgentMetrics({
 
     // segundos médios por tarefa
     return Math.round(totalTime / tasksWithTime.length / 1000)
-  }
-
-  const tasks24h = getTasksLast24Hours()
-  const avgProcessingTime = getAverageProcessingTime()
+  }, [completedTasks])
 
   return (
     <div className="space-y-6">
@@ -258,7 +258,7 @@ export default function AgentMetrics({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground mb-2">
-              {avgProcessingTime}s
+              {averageProcessingTime}s
             </div>
             <p className="text-xs text-muted-foreground">
               Tempo médio de processamento por tarefa
@@ -278,7 +278,7 @@ export default function AgentMetrics({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground mb-2">
-              {tasks24h}
+              {tasksLast24Hours}
             </div>
             <p className="text-xs text-muted-foreground">
               Tarefas completadas nas últimas 24 horas

@@ -133,6 +133,7 @@ export function useAutoMinuta() {
 
       // Marcar como processada
       processedTasksRef.current.add(task.id)
+      setProcessedTasksCount(processedTasksRef.current.size)
 
       // Salvar no localStorage
       try {

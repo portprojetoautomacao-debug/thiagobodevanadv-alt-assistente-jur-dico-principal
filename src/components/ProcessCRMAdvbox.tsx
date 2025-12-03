@@ -138,7 +138,7 @@ export default function ProcessCRMAdvbox() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedCard, setSelectedCard] = useState<ProcessCardData | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
+  const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({})
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -174,7 +174,7 @@ export default function ProcessCRMAdvbox() {
       valor: p.valor ? p.valor.toString() : 'A definir',
       resultado: p.fase || 'Em análise',
       status: getStatusColor(p.status || 'ativo'),
-      column: KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
+      column: cardColumnOverrides[p.id] || KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
       processo: p
     }))
   }, [processes, getStatusColor])
@@ -204,13 +204,10 @@ export default function ProcessCRMAdvbox() {
     const overColumn = over.id as string
 
     if (activeCard && KANBAN_COLUMNS.includes(overColumn)) {
-      setProcessCards(cards =>
-        cards.map(card =>
-          card.id === active.id
-            ? { ...card, column: overColumn }
-            : card
-        )
-      )
+      setCardColumnOverrides(prev => ({
+        ...prev,
+        [active.id as string]: overColumn
+      }))
       toast.success(`Processo movido para ${overColumn}`)
     }
 

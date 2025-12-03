@@ -139,7 +139,7 @@ export function useAgentBackup(options: BackupOptions) {
     const intervalMs = autoBackupInterval * 60 * 1000;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    // Backup imediato se houver dados e não houver backup recente
+    // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
     if (agents.length > 0 && (now - lastBackup) > intervalMs) {
       // Schedule to avoid synchronous setState in effect

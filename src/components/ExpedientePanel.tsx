@@ -464,7 +464,7 @@ export default function ExpedientePanel() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gemini",
+            model: "gemini-2.5-pro",
             messages: [
               {
                 role: "system",
@@ -636,7 +636,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gemini",
+          model: "gemini-2.5-pro",
           messages: [
             {
               role: "system",
@@ -757,7 +757,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gemini",
+            model: "gemini-2.5-pro",
             messages: [
               {
                 role: "system",

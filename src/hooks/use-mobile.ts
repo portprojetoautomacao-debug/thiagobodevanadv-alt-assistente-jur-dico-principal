@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 
 const MOBILE_BREAKPOINT = 768
 
@@ -30,5 +30,7 @@ export function useIsMobile() {
     }
   }, []) // Empty dependency array - only runs once on mount
 
-  return !!isMobile
+export function useIsMobile() {
+  const isMobile = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  return isMobile
 }

@@ -91,6 +91,20 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         return () => document.removeEventListener('keydown', handleKeyDown)
     }, [])
 
+    // Reset state quando modal fecha
+    const resetSearchState = useCallback(() => {
+        setQuery('')
+        setCategory('all')
+        setSelectedIndex(0)
+        setResults([])
+    }, [])
+
+    // Função para fechar o modal com reset
+    const closeSearch = useCallback(() => {
+        setIsOpen(false)
+        resetSearchState()
+    }, [resetSearchState])
+
     // Focar input quando abrir
     useEffect(() => {
         if (isOpen) {
@@ -237,14 +251,14 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                 }
                 break
             case 'Escape':
-                setIsOpen(false)
+                closeSearch()
                 break
         }
     }
 
     // Selecionar resultado
     const handleSelect = (result: SearchResult) => {
-        setIsOpen(false)
+        closeSearch()
 
         // Navegar para a view correspondente
         switch (result.type) {
@@ -287,7 +301,13 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             </button>
 
             {/* Dialog de busca */}
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <Dialog open={isOpen} onOpenChange={(open) => {
+                if (!open) {
+                    closeSearch()
+                } else {
+                    setIsOpen(true)
+                }
+            }}>
                 <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
                     {/* Header com input */}
                     <div className="flex items-center gap-3 px-4 py-3 border-b">
