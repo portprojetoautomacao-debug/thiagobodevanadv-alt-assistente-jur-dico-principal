@@ -177,7 +177,7 @@ export default function ProcessCRMAdvbox() {
       column: cardColumnOverrides[p.id] || KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
       processo: p
     }))
-  }, [processes, getStatusColor])
+  }, [processes, getStatusColor, cardColumnOverrides])
 
   // Initialize process cards from computed values
   useEffect(() => {
