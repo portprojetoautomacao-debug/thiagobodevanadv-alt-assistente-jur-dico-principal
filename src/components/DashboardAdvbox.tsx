@@ -126,7 +126,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
     // Use a fixed reference date instead of Date.now() to avoid impurity
     // We get time once when array changes via dependency
     const umMesMs = 30 * 24 * 60 * 60 * 1000;
-    const now = new Date();
+    const now = new Date(nowTimestamp);
     const limite = new Date(now.getTime() - umMesMs);
 
     return processesList.slice(0, 4).map((p) => {

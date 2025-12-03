@@ -62,7 +62,7 @@ export function useAutoMinuta() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Schedule to avoid synchronous setState in effect
-      const timeoutId = globalThis.setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         try {
           const stored = localStorage.getItem('processed-petition-tasks')
           if (stored) {
@@ -74,7 +74,7 @@ export function useAutoMinuta() {
           console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
         }
       }, 0)
-      return () => globalThis.clearTimeout(timeoutId)
+      return () => clearTimeout(timeoutId)
     }
   }, [])
 
