@@ -1165,7 +1165,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                               Documentos Pendentes
                             </h3>
                             <div className="flex flex-wrap gap-2">
-                              {selectedExp.pendingDocs.map((doc, idx) => (
+                              {selectedExp.pendingDocs.map((doc, _idx) => (
                                 <Badge key={doc} variant="outline">
                                   {doc}
                                 </Badge>

@@ -155,7 +155,7 @@ export default function Calendar() {
     setShowDetailsDialog(true);
   };
 
-  const handleDeleteAppointment = (appointment: Appointment) => {
+  const handleDeleteAppointment = (_appointment: Appointment) => {
     toast.success("Compromisso removido");
     setShowDetailsDialog(false);
   };
@@ -173,7 +173,7 @@ export default function Calendar() {
       setIsGoogleConnected(true);
       setConnectionError(null);
       toast.success("Conectado ao Google Calendar (stub)");
-    } catch (e) {
+    } catch {
       setConnectionError("Falha ao conectar");
       toast.error("Falha ao conectar");
     } finally {

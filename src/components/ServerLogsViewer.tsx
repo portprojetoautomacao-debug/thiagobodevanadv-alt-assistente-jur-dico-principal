@@ -1,60 +1,82 @@
-import { useQuery } from '@tanstack/react-query'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Robot, CheckCircle, WarningCircle, Clock } from '@phosphor-icons/react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  CheckCircle,
+  Clock,
+  Robot,
+  WarningCircle,
+} from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
 
 interface AgentActionLog {
-  agentId: string
-  action: string
-  details?: Record<string, any>
-  timestamp: string
-  success: boolean
-  durationMs?: number
+  agentId: string;
+  action: string;
+  details?: Record<string, unknown>;
+  timestamp: string;
+  success: boolean;
+  durationMs?: number;
 }
 
 async function fetchServerLogs() {
-  const response = await fetch('/api/agents?action=logs')
+  const response = await fetch("/api/agents?action=logs");
   if (!response.ok) {
-    throw new Error('Failed to fetch server logs')
+    throw new Error("Failed to fetch server logs");
   }
-  const data = await response.json()
-  return data.logs as AgentActionLog[]
+  const data = await response.json();
+  return data.logs as AgentActionLog[];
 }
 
 interface ServerLogsViewerProps {
-  logs?: AgentActionLog[]
-  isLoading?: boolean
-  onRefresh?: () => void
+  logs?: AgentActionLog[];
+  isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onRefresh }: ServerLogsViewerProps = {}) {
-  const { data: fetchedLogs, isLoading: queryIsLoading, error, refetch } = useQuery({
-    queryKey: ['server-agent-logs'],
+export function ServerLogsViewer({
+  logs: propLogs,
+  isLoading: propIsLoading,
+  onRefresh,
+}: ServerLogsViewerProps = {}) {
+  const {
+    data: fetchedLogs,
+    isLoading: queryIsLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["server-agent-logs"],
     queryFn: fetchServerLogs,
     refetchInterval: 10000,
-    enabled: propLogs === undefined // Only fetch if logs are not provided via props
-  })
+    enabled: propLogs === undefined, // Only fetch if logs are not provided via props
+  });
 
-  const logs = propLogs || fetchedLogs
-  const isLoading = propIsLoading ?? queryIsLoading
+  const logs = propLogs || fetchedLogs;
+  const isLoading = propIsLoading ?? queryIsLoading;
 
   const handleRefresh = () => {
     if (onRefresh) {
-      onRefresh()
+      onRefresh();
     } else {
-      refetch()
+      refetch();
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Clock className="w-6 h-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Carregando logs do servidor...</span>
+        <span className="ml-2 text-muted-foreground">
+          Carregando logs do servidor...
+        </span>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -68,7 +90,7 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
           {(error as Error).message}
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   return (
@@ -77,10 +99,15 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
         <div>
           <CardTitle>Logs do Servidor (Backend)</CardTitle>
           <CardDescription>
-            Atividades executadas pelos agentes no ambiente serverless (Cron/API)
+            Atividades executadas pelos agentes no ambiente serverless
+            (Cron/API)
           </CardDescription>
         </div>
-        <Badge variant="outline" className="cursor-pointer" onClick={handleRefresh}>
+        <Badge
+          variant="outline"
+          className="cursor-pointer"
+          onClick={handleRefresh}
+        >
           Atualizar
         </Badge>
       </CardHeader>
@@ -97,7 +124,13 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
                   key={`${log.agentId}-${log.timestamp}-${index}`}
                   className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                 >
-                  <div className={`mt-0.5 p-1 rounded-full ${log.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                  <div
+                    className={`mt-0.5 p-1 rounded-full ${
+                      log.success
+                        ? "bg-green-100 text-green-600"
+                        : "bg-red-100 text-red-600"
+                    }`}
+                  >
                     {log.success ? (
                       <CheckCircle className="w-4 h-4" weight="fill" />
                     ) : (
@@ -112,7 +145,7 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
                         {log.agentId}
                       </p>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(log.timestamp).toLocaleString('pt-BR')}
+                        {new Date(log.timestamp).toLocaleString("pt-BR")}
                       </span>
                     </div>
 
@@ -139,5 +172,5 @@ export function ServerLogsViewer({ logs: propLogs, isLoading: propIsLoading, onR
         </ScrollArea>
       </CardContent>
     </Card>
-  )
+  );
 }

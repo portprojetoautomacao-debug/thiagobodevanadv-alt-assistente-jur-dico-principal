@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": "vite",
   "installCommand": "npm ci --include=dev",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
@@ -9,34 +10,68 @@
       "memory": 1024,
       "includeFiles": "api/lib/**"
     },
-    "api/djen-sync.ts": {
+    "api/backup.ts": {
       "maxDuration": 60,
-      "memory": 1024,
-      "includeFiles": "api/lib/**"
-    },
-    "api/expedientes.ts": {
-      "maxDuration": 30,
-      "includeFiles": "api/lib/**"
-    },
-    "api/kv.ts": {
-      "maxDuration": 30,
-      "includeFiles": "api/lib/**"
-    },
-    "api/legal-services.ts": {
-      "maxDuration": 30,
-      "includeFiles": "api/lib/**"
-    },
-    "api/llm-proxy.ts": {
-      "maxDuration": 40,
       "memory": 512,
       "includeFiles": "api/lib/**"
     },
     "api/cron.ts": {
+      "maxDuration": 60,
+      "memory": 512,
+      "includeFiles": "api/lib/**"
+    },
+    "api/djen-sync.ts": {
+      "maxDuration": 60,
+      "memory": 512,
+      "includeFiles": "api/lib/**"
+    },
+    "api/expedientes.ts": {
       "maxDuration": 30,
+      "memory": 512,
+      "includeFiles": "api/lib/**"
+    },
+    "api/kv.ts": {
+      "maxDuration": 30,
+      "memory": 256,
+      "includeFiles": "api/lib/**"
+    },
+    "api/legal-services.ts": {
+      "maxDuration": 30,
+      "memory": 512,
+      "includeFiles": "api/lib/**"
+    },
+    "api/llm-proxy.ts": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": "api/lib/**"
+    },
+    "api/llm-stream.ts": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": "api/lib/**"
+    },
+    "api/observability.ts": {
+      "maxDuration": 30,
+      "memory": 256,
       "includeFiles": "api/lib/**"
     },
     "api/status.ts": {
-      "maxDuration": 30
+      "maxDuration": 10,
+      "memory": 128
+    },
+    "api/test.ts": {
+      "maxDuration": 10,
+      "memory": 128
+    },
+    "api/notifications.ts": {
+      "maxDuration": 30,
+      "memory": 512,
+      "includeFiles": "api/lib/**"
+    },
+    "api/agents/process-task.ts": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": "api/lib/**"
     }
   },
   "regions": ["gru1"],
@@ -89,7 +124,11 @@
     },
     {
       "path": "/api/cron?action=deadline-alerts",
-      "schedule": "0 12 * * *"
+      "schedule": "55 11 * * *"
+    },
+    {
+      "path": "/api/cron?action=watchdog",
+      "schedule": "*/30 * * * *"
     }
   ],
   "rewrites": [
@@ -216,6 +255,28 @@
         {
           "key": "Cross-Origin-Opener-Policy",
           "value": "same-origin-allow-popups"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/workbox-:hash.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     },
