@@ -28,6 +28,7 @@ export default defineConfig({
       injectRegister: "inline",
       includeAssets: ["robots.txt", "sitemap.xml", "*.svg", "*.png"],
       manifest: {
+        id: "/",
         name: "Assistente Jurídico PJe",
         short_name: "PJe Assistant",
         description:
@@ -37,6 +38,21 @@ export default defineConfig({
         display: "standalone",
         scope: "/",
         start_url: "/",
+        screenshots: [
+          {
+            src: "/og-image.svg",
+            sizes: "1200x630",
+            type: "image/svg+xml",
+            form_factor: "wide",
+            label: "Assistente Jurídico Desktop",
+          },
+          {
+            src: "/og-image.svg",
+            sizes: "1200x630",
+            type: "image/svg+xml",
+            label: "Assistente Jurídico Mobile",
+          },
+        ],
         icons: [
           {
             src: "/icon-192.svg",
@@ -53,7 +69,15 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // 🔄 FORÇA ATUALIZAÇÃO: skipWaiting + clientsClaim para atualizar imediatamente
+        skipWaiting: true,
+        clientsClaim: true,
+        // Limpar caches antigos automaticamente
+        cleanupOutdatedCaches: true,
+        // ✅ EXCLUIR chunks do editor do precache para evitar carregamento prematuro
+        // Esses chunks são lazy-loaded e não devem ser pré-cacheados
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globIgnores: ["**/TiptapEditor*.js", "**/MinutasManager*.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
@@ -138,28 +162,68 @@ export default defineConfig({
     minify: "esbuild",
     // Target focado em browsers modernos → menos polyfill
     target: "es2020",
+    // ❌ DESABILITAR modulePreload para evitar race condition do ProseMirror
+    // O erro "Cannot set properties of undefined (setting 'Activity')"
+    // acontece quando editor-vendor é pré-carregado antes do React estar pronto
+    modulePreload: {
+      polyfill: true,
+      // Não fazer preload de chunks que contêm ProseMirror/Tiptap
+      resolveDependencies: (
+        _filename,
+        deps,
+        { hostId: _hostId, hostType: _hostType }
+      ) => {
+        // Filtrar dependências que não devem ser preloaded
+        return deps.filter((dep) => {
+          // Não preload editor chunks - eles serão carregados sob demanda
+          if (
+            dep.includes("editor") ||
+            dep.includes("tiptap") ||
+            dep.includes("prosemirror")
+          ) {
+            return false;
+          }
+          // Não preload Minutas - lazy loaded
+          if (dep.includes("Minutas") || dep.includes("minutas")) {
+            return false;
+          }
+          return true;
+        });
+      },
+    },
     rollupOptions: {
+      // ✅ FIX: Desabilita hoisting de imports transitivos para evitar dependências circulares
+      // O erro "Cannot set properties of undefined (setting 'Activity')" acontecia porque
+      // o Rollup movia helpers como getDefaultExportFromCjs para chunks errados
+      treeshake: {
+        // Preserva imports transitivos nos chunks originais
+        manualPureFunctions: [],
+      },
       output: {
+        // ✅ FIX: Não hoista imports transitivos entre chunks
+        // Isso evita que react-vendor importe de editor-vendor
+        hoistTransitiveImports: false,
         // Otimiza nomes de chunks para melhor caching em produção
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
         manualChunks(id) {
-          // React core - crítico, carrega primeiro
+          // React core + Phosphor Icons - crítico, carrega primeiro
+          // ✅ FIX: Phosphor Icons incluído aqui para evitar dependência circular
+          // O erro "Cannot set properties of undefined (setting 'Activity')"
+          // acontecia porque editor-vendor era importado antes do React estar pronto
           if (
             id.includes("node_modules/react") ||
-            id.includes("node_modules/react-dom")
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/scheduler") ||
+            id.includes("@phosphor-icons/react")
           ) {
             return "react-vendor";
           }
 
-          // ✅ FIX: Phosphor Icons no bundle principal para evitar "Cannot set properties of undefined (setting 'Activity')"
-          // O erro acontece quando chunks diferentes tentam acessar ícones antes da inicialização
-          if (id.includes("@phosphor-icons/react")) {
-            return "react-vendor";
-          }
-
-          // ⚠️ NÃO separar Recharts/D3 em chunks - pode causar erro de inicialização
+          // ⚠️ REMOVIDO: editor-vendor separado causava dependência circular
+          // Tiptap/ProseMirror agora é bundled naturalmente com MinutasManager (lazy)
+          // Isso evita que react-vendor precise importar de editor-vendor
 
           // Radix UI components - separar em chunks menores
           if (id.includes("@radix-ui")) {
@@ -208,17 +272,6 @@ export default defineConfig({
           // Sonner toasts - usado frequentemente
           if (id.includes("sonner")) {
             return "toasts";
-          }
-
-          // Tiptap editor e ProseMirror - mesmo chunk para evitar race condition
-          // O erro "Cannot set properties of undefined (setting 'Activity')" acontece
-          // quando ProseMirror carrega antes do React estar inicializado
-          if (
-            id.includes("@tiptap") ||
-            id.includes("prosemirror") ||
-            id.includes("@prosemirror")
-          ) {
-            return "editor";
           }
 
           // Sample data (apenas desenvolvimento/demo)

@@ -34,6 +34,9 @@
     <!-- ✅ PRELOAD: Fonte Inter local para evitar FOIT -->
     <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 
+    <!-- ✅ PRELOAD LCP: imagem hero (fallback OG) para antecipar carregamento -->
+    <!-- <link rel="preload" href="/og-image.png" as="image" /> -->
+
     <!-- ✅ OTIMIZAÇÃO LCP: CSS crítico inline expandido para evitar render-blocking -->
     <style>
         /* Critical CSS - Above the fold styles */
@@ -254,12 +257,77 @@
 
 <body class="notranslate" translate="no">
     <div id="root">
-        <div class="loading-container">
+        <div class="loading-container" id="loading-screen">
             <h1 class="loading-title">Assistente Jurídico PJe</h1>
             <div class="loading-spinner"></div>
-            <p class="loading-text">Carregando sistema...</p>
+            <p class="loading-text" id="loading-text">Carregando sistema...</p>
+            <button id="reset-btn"
+                style="display:none;margin-top:1rem;padding:0.5rem 1rem;background:#3b82f6;color:white;border:none;border-radius:0.5rem;cursor:pointer;">
+                Limpar cache e recarregar
+            </button>
         </div>
     </div>
+
+    <!-- Script de fallback para problemas de carregamento -->
+    <script>
+        (function () {
+            // 🔄 FORÇA LIMPEZA DE CACHE na primeira visita após deploy
+            var CACHE_VERSION = 'v2-' + Date.now().toString(36);
+            var lastVersion = localStorage.getItem('_cacheVersion');
+
+            // Se o erro "Activity" aparecer, limpa tudo automaticamente
+            window.addEventListener('error', function (e) {
+                if (e.message && e.message.includes('Activity')) {
+                    console.warn('[CACHE] Erro "Activity" detectado - limpando cache...');
+                    cleanAndReload();
+                }
+            });
+
+            function cleanAndReload() {
+                // Limpa Service Workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        registrations.forEach(function (reg) { reg.unregister(); });
+                    });
+                }
+                // Limpa caches
+                if ('caches' in window) {
+                    caches.keys().then(function (names) {
+                        names.forEach(function (name) { caches.delete(name); });
+                    });
+                }
+                // Marca como limpo
+                localStorage.setItem('_cacheVersion', CACHE_VERSION);
+                // Recarrega sem cache
+                setTimeout(function () {
+                    window.location.href = window.location.href.split('?')[0] + '?nocache=' + Date.now();
+                }, 300);
+            }
+
+            var timeout = setTimeout(function () {
+                var text = document.getElementById('loading-text');
+                var btn = document.getElementById('reset-btn');
+                if (text) text.textContent = 'O carregamento está demorando... Clique abaixo para limpar o cache.';
+                if (btn) btn.style.display = 'block';
+            }, 8000);
+
+            // Limpa o timeout quando o React carregar
+            window.__clearLoadingTimeout = function () {
+                clearTimeout(timeout);
+                var screen = document.getElementById('loading-screen');
+                if (screen) screen.style.display = 'none';
+            };
+
+            // Handler do botão de reset
+            document.addEventListener('DOMContentLoaded', function () {
+                var btn = document.getElementById('reset-btn');
+                if (btn) {
+                    btn.addEventListener('click', cleanAndReload);
+                }
+            });
+        })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
 </body>
 
