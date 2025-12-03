@@ -14,24 +14,13 @@ function safeCompare(a: string | undefined, b: string | undefined): boolean {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Security: Block access in production environment
+  // Security: Block this endpoint in production environment
+  // This endpoint allows data injection and should only be used for testing/debugging
   if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
     return res.status(404).json({ error: "Not found" });
   }
 
-  // Security: Require admin token for access
-  const expectedToken = process.env.ADMIN_TOKEN;
-  if (!expectedToken) {
-    // ADMIN_TOKEN not configured - deny access
-    return res.status(403).json({ error: "Forbidden - token not configured" });
-  }
-
-  const providedToken = req.headers["x-admin-token"];
-  if (typeof providedToken !== "string" || !safeCompare(providedToken, expectedToken)) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const results: Record<string, unknown> = {
+  const results: Record<string, any> = {
     timestamp: new Date().toISOString(),
     checks: {},
   };
