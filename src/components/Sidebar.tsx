@@ -68,7 +68,7 @@ export default function Sidebar({
       </div>
 
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="space-y-1">
+        <nav className="space-y-1" data-testid="sidebar-nav">
           {NAVIGATION_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -86,12 +86,13 @@ export default function Sidebar({
                     !isActive &&
                     "border border-purple-500/30 bg-linear-to-r from-purple-500/5 to-pink-500/5"
                 )}
+                data-testid={`nav-${item.id}`}
                 onClick={() => {
                   // Atualiza estado e URL hash para fallback de roteamento
                   const view = item.id as ViewType;
                   try {
                     window.location.hash = `#${view}`;
-                  } catch (_) {
+                  } catch {
                     // ignore ambientes sem window
                   }
                   onViewChange(view);

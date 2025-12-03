@@ -2,10 +2,14 @@ name: SonarCloud Analysis
 
 on:
   push:
-    branches: [main, develop, fix/sonar-copilot-assistant]
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: sonarcloud-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   sonarcloud:
@@ -13,7 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
+      checks: write
 
     steps:
       - name: Checkout code
@@ -34,6 +39,9 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
+      - name: Export ESLint report (SARIF)
+        run: npm run lint:sarif || true
+
       - name: Build application
         run: npm run build
         continue-on-error: true
@@ -43,8 +51,8 @@ jobs:
           VITE_REDIRECT_URI: "http://localhost:5173"
           VITE_APP_ENV: "ci"
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
+      - name: Run tests with coverage (lcov)
+        run: npm run test:coverage -- --coverage.reporter=lcov --coverage.reporter=text-summary
         continue-on-error: true
         env:
           CI: true
@@ -66,4 +74,5 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
         continue-on-error: true

@@ -285,7 +285,7 @@ function buildCalendarAnalysisResult(
 ): IntimationAnalysisResult {
   // Converter deadline para o formato esperado por IntimationAnalysisResult
   const deadline =
-    analysisData.deadline && analysisData.deadline.days !== undefined
+    analysisData.deadline?.days !== undefined
       ? {
           days: analysisData.deadline.days,
           type: (analysisData.deadline.type || "úteis") as "úteis" | "corridos",
@@ -931,6 +931,7 @@ Crie o workflow de controladoria para esta tarefa.`,
               disabled={loading}
               variant="outline"
               size="sm"
+              data-testid="expedientes-sync-btn"
             >
               {loading ? "Atualizando..." : "Atualizar"}
             </Button>
@@ -1164,7 +1165,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                               Documentos Pendentes
                             </h3>
                             <div className="flex flex-wrap gap-2">
-                              {selectedExp.pendingDocs.map((doc, idx) => (
+                              {selectedExp.pendingDocs.map((doc, _idx) => (
                                 <Badge key={doc} variant="outline">
                                   {doc}
                                 </Badge>
