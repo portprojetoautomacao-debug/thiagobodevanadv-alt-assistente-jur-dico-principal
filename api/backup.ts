@@ -60,7 +60,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1')
 
   if (!isLocalDev && !isAuthorized(req)) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ 
+      error: 'Unauthorized',
+      message: 'Authentication required for backup operations. Provide Bearer token, x-api-key header, or access from localhost.'
+    })
   }
 
   try {

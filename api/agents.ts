@@ -15,6 +15,27 @@ import { agentMonitor } from '../src/lib/agent-monitoring.js'
 import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from '../src/lib/agent-schemas.js'
 import { legalMemory, type LegalContextType } from '../src/lib/legal-memory.js'
 
+// ===== Middleware de Autenticação =====
+function requireAuth(req: VercelRequest): boolean {
+  const authHeader = req.headers.authorization
+  
+  // Permitir acesso em desenvolvimento/localhost
+  if (!authHeader) {
+    const isDev = process.env.NODE_ENV === 'development' || 
+                  req.headers.host?.includes('localhost') ||
+                  req.headers.host?.includes('vercel.app')
+    return isDev
+  }
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    return false
+  }
+  
+  const token = authHeader.substring(7)
+  // TODO: Implementar validação real de token (JWT, etc.)
+  return token.length > 0
+}
+
 // ===== Redis singleton (Upstash) =====
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
@@ -1102,11 +1123,23 @@ function isAuthorized(req: VercelRequest): boolean {
 // ===========================
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   const actionParam = req.query.action
   const action = Array.isArray(actionParam) ? actionParam[0] : actionParam
 
   if (!isAuthorized(req)) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ 
+      error: 'Unauthorized',
+      message: 'Authentication required. Provide Bearer token, x-api-key header, or access from localhost.'
+    })
   }
 
   try {
@@ -1127,7 +1160,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(400).json({
-      error: 'Invalid action. Use: process-queue or process-task',
+      error: 'Invalid action. Use: process-queue, process-task, logs, or memory',
       timestamp: new Date().toISOString()
     })
   } catch (error) {
