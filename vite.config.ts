@@ -28,6 +28,7 @@ export default defineConfig({
       injectRegister: "inline",
       includeAssets: ["robots.txt", "sitemap.xml", "*.svg", "*.png"],
       manifest: {
+        id: "/",
         name: "Assistente Jurídico PJe",
         short_name: "PJe Assistant",
         description:
@@ -37,6 +38,21 @@ export default defineConfig({
         display: "standalone",
         scope: "/",
         start_url: "/",
+        screenshots: [
+          {
+            src: "/og-image.svg",
+            sizes: "1200x630",
+            type: "image/svg+xml",
+            form_factor: "wide",
+            label: "Assistente Jurídico Desktop",
+          },
+          {
+            src: "/og-image.svg",
+            sizes: "1200x630",
+            type: "image/svg+xml",
+            label: "Assistente Jurídico Mobile",
+          },
+        ],
         icons: [
           {
             src: "/icon-192.svg",
