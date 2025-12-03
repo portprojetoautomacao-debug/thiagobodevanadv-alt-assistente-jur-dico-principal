@@ -1,20 +1,21 @@
-import { chromium, FullConfig } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
+import { chromium, FullConfig } from "@playwright/test";
+import path from "path";
 
 async function globalSetup(config: FullConfig) {
   // Any global setup can go here (programmatic login + storageState)
-  console.log('🚀 Starting E2E tests...');
+  console.log("🚀 Starting E2E tests...");
 
   const projectRoot = config.rootDir || process.cwd();
-  const storagePath = path.join(projectRoot, 'tests/e2e/storageState.json');
+  const storagePath = path.join(projectRoot, "tests/e2e/storageState.json");
 
   const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
   const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
-  const baseURL = process.env.BASE_URL || 'http://127.0.0.1:5173';
+  const baseURL = process.env.BASE_URL || "http://127.0.0.1:5173";
 
   if (!TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
-    console.warn('⚠️ TEST_USER_EMAIL or TEST_USER_PASSWORD not set. Skipping login storageState creation.');
+    console.warn(
+      "⚠️ TEST_USER_EMAIL or TEST_USER_PASSWORD not set. Skipping login storageState creation."
+    );
     return;
   }
 
@@ -25,20 +26,32 @@ async function globalSetup(config: FullConfig) {
     await page.goto(`${baseURL}/login`);
     await page.fill('input[name="email"]', TEST_USER_EMAIL);
     await page.fill('input[name="password"]', TEST_USER_PASSWORD);
-    await page.click('button[type="submit"][role="button"]', { timeout: 10_000 }).catch(async () => {
-      // Try clicking generic submit
-      await page.click('button[type="submit"]', { timeout: 10_000 }).catch(() => {});
-    });
+    await page
+      .click('button[type="submit"][role="button"]', { timeout: 10_000 })
+      .catch(async () => {
+        // Try clicking generic submit
+        await page
+          .click('button[type="submit"]', { timeout: 10_000 })
+          .catch(() => {});
+      });
     // Wait for navigation to dashboard or authenticated route
-    await page.waitForURL('**/dashboard', { timeout: 15_000 }).catch(() => {
+    await page.waitForURL("**/dashboard", { timeout: 15_000 }).catch(() => {
       // fallback wait for any auth badge / avatar
-      return page.waitForSelector('[data-test="user-avatar"], .avatar, [aria-label="account"]', { timeout: 10_000 }).catch(() => null);
+      return page
+        .waitForSelector(
+          '[data-test="user-avatar"], .avatar, [aria-label="account"]',
+          { timeout: 10_000 }
+        )
+        .catch(() => null);
     });
     await context.storageState({ path: storagePath });
     await browser.close();
     console.log(`✅ Storage state saved to ${storagePath}`);
   } catch (error) {
-    console.warn('⚠️ Failed to create storage state during global setup:', error);
+    console.warn(
+      "⚠️ Failed to create storage state during global setup:",
+      error
+    );
   }
 }
 
@@ -53,7 +66,7 @@ export default globalSetup;
 
 async function globalSetup() {
   // Any global setup can go here
-  console.log('🚀 Starting E2E tests...');
+  console.log("🚀 Starting E2E tests...");
 }
 
 export default globalSetup;
