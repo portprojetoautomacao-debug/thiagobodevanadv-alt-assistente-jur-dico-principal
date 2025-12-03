@@ -1,12 +1,92 @@
 {
-  "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+  // ========================================
+  // 🤖 GITHUB COPILOT - AGENTE DE CODIFICAÇÃO
+  // ========================================
+  
+  // Habilitar Copilot Instruction Files (copilot-instructions.md)
+  "github.copilot.chat.useInstructionFiles": true,
+  
+  // Configurações avançadas do Copilot
   "github.copilot.chat.alternateGptPrompt.enabled": true,
   "github.copilot.chat.anthropic.thinking.enabled": true,
   "github.copilot.chat.anthropic.tools.websearch.enabled": true,
   "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.editor.enableAutoCompletions": true,
   
-  // TypeScript Language Server - Aumentar memória e otimizar
+  // Instruções contextuais para geração de código
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "text": "Sempre siga as instruções em .github/copilot-instructions.md"
+    },
+    {
+      "text": "Modo MANUTENÇÃO: Apenas corrigir bugs, não adicionar features"
+    },
+    {
+      "text": "Antes de qualquer mudança, execute verificação diária do sistema automático"
+    },
+    {
+      "text": "Use TypeScript strict mode e valide tipos"
+    },
+    {
+      "text": "Siga padrões React 19 com componentes funcionais"
+    },
+    {
+      "text": "Mantenha compatibilidade com Vercel serverless (Node.js 22.x)"
+    }
+  ],
+
+  // ========================================
+  // 📝 EDITOR - AUTOMAÇÃO E FORMATAÇÃO
+  // ========================================
+  
+  // Auto-save rápido
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  
+  // Format on save
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  
+  // ESLint auto-fix on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  
+  // Prettier como formatador padrão
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ========================================
+  // 🔍 TYPESCRIPT & JAVASCRIPT
+  // ========================================
+  
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsserver.maxTsServerMemory": 4096,
   "typescript.tsserver.watchOptions": {
     "watchFile": "useFsEvents",
@@ -15,8 +95,118 @@
   },
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
   
-  // SonarLint - Usar modo standalone (sem servidor)
+  // Inlay Hints (sugestões visuais)
+  "typescript.inlayHints.parameterNames.enabled": "all",
+  "typescript.inlayHints.parameterTypes.enabled": true,
+  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+
+  // ========================================
+  // 🎨 TAILWIND CSS
+  // ========================================
+  
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+  "tailwindCSS.emmetCompletions": true,
+
+  // ========================================
+  // ✅ ESLINT
+  // ========================================
+  
+  "eslint.enable": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.format.enable": true,
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+
+  // ========================================
+  // 🧪 TESTES - VITEST
+  // ========================================
+  
+  "vitest.enable": true,
+  "vitest.commandLine": "npm run test",
+
+  // ========================================
+  // 🚀 TASKS AUTOMÁTICAS
+  // ========================================
+  
+  "task.allowAutomaticTasks": "on",
+  "task.autoDetect": "on",
+
+  // ========================================
+  // 🔐 SEGURANÇA & PRIVACIDADE
+  // ========================================
+  
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.vite": true
+  },
+  
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.vite": true,
+    "**/coverage": true
+  },
+
+  // ========================================
+  // 🔧 SONARQUBE/SONARLINT
+  // ========================================
+  
+  "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
   "sonarlint.output.showAnalyzerLogs": true,
-  "sonarlint.output.showVerboseLogs": false
+  "sonarlint.output.showVerboseLogs": false,
+  "sonarlint.rules": {
+    "typescript:S1128": {
+      "level": "off"
+    }
+  },
+
+  // ========================================
+  // 🎯 EXPERIENCE & UI
+  // ========================================
+  
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.startupEditor": "none",
+  
+  // Terminal
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.fontSize": 13,
+  
+  // Editor
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": true,
+  "editor.suggestSelection": "first",
+  "editor.inlineSuggest.enabled": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  
+  // IntelliSense
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue"
 }

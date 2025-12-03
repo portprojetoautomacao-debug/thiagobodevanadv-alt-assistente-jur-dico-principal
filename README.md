@@ -6,6 +6,19 @@
 
 Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
 
+## 🤖 GitHub Copilot - Agente de Codificação
+
+Este repositório está **otimizado para o Agente de Codificação do GitHub Copilot**!
+
+✨ **Configuração concluída** - O Copilot já conhece toda a arquitetura do projeto e pode ajudar você com:
+- 🔍 Buscar código e funcionalidades
+- 🐛 Corrigir bugs automaticamente
+- 🧪 Gerar testes unitários
+- 📝 Documentar código
+- 🎯 Sugerir melhorias (apenas correções, sem novas features)
+
+👉 **[Veja o guia completo de uso](.github/COPILOT_AGENT_SETUP.md)**
+
 ## 🚀 Funcionalidades Principais
 
 - 🤖 **IA Jurídica**: Chatbot inteligente com Harvey Specter (Gemini 2.5 Pro)
