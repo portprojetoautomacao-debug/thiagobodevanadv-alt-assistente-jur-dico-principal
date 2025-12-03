@@ -141,13 +141,6 @@ export default function ProcessCRMAdvbox() {
   const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({})
   const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  )
 
   // Helper function for status color
   const getStatusColor = useCallback((status: string): 'green' | 'yellow' | 'red' => {
