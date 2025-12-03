@@ -1,1 +1,19 @@
-const scanner = require('sonarqube-scanner');\n\nscanner({\n  serverUrl: 'https://sonarcloud.io',\n  token: process.env.SONAR_TOKEN,\n  options: {\n    'sonar.projectKey': 'thiagobodevan-a11y_assistente-juridico-p',\n    'sonar.organization': 'thiagobodevan-a11y',\n    'sonar.sources': 'src',\n    'sonar.tests': 'src',\n    'sonar.test.inclusions': 'src/**/*.test.ts,src/**/*.test.tsx,src/**/*.spec.ts,src/**/*.spec.tsx',\n    'sonar.typescript.lcov.reportPaths': 'coverage/lcov.info',\n    'sonar.javascript.lcov.reportPaths': 'coverage/lcov.info',\n    'sonar.exclusions': 'coverage/**,dist/**,node_modules/**',\n  }\n}, () => { console.log('Sonar scan finished'); process.exit(); });
+const scanner = require('sonarqube-scanner');
+
+scanner({
+  serverUrl: 'https://sonarcloud.io',
+  token: process.env.SONAR_TOKEN,
+  options: {
+    'sonar.projectKey': 'thiagobodevan-a11y_assistente-juridico-p',
+    'sonar.organization': 'thiagobodevan-a11y',
+    'sonar.sources': 'src',
+    'sonar.tests': 'src',
+    'sonar.test.inclusions': 'src/**/*.test.ts,src/**/*.test.tsx,src/**/*.spec.ts,src/**/*.spec.tsx',
+    'sonar.typescript.lcov.reportPaths': 'coverage-api/lcov.info',
+    'sonar.javascript.lcov.reportPaths': 'coverage-api/lcov.info',
+    'sonar.exclusions': 'coverage/**,dist/**,node_modules/**',
+  }
+}, () => {
+  console.log('Sonar scan finished');
+  process.exit();
+});
