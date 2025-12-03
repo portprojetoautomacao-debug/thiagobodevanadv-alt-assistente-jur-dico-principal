@@ -18,6 +18,23 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 - ✏️ **Editor Tiptap com IA**: Redação automática de minutas
 - 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
 
+## 🛠️ Configuração de Desenvolvimento (VS Code + SonarLint)
+
+Se você utiliza `nvm` para gerenciar NodeJS, o VS Code pode não detectar o binário do Node automaticamente. Para garantir que o SonarLint funcione com análise JavaScript/TypeScript, adicione ao arquivo `.vscode/settings.json` do projeto o caminho absoluto do Node 22 ativo no seu ambiente:
+
+```json
+"sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node"
+```
+
+Substitua o path acima pelo caminho do seu Node se a versão ou o local for diferente. No Windows, use `C:\\Program Files\\nodejs\\node.exe` (duas barras invertidas).
+
+Para identificar o caminho do Node no sistema:
+
+```bash
+which node
+node --version
+```
+
 ---
 
 ## 🧠 Motor de IA - Gemini 2.5 Pro
