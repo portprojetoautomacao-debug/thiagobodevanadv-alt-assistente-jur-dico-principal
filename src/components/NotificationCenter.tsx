@@ -140,16 +140,18 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   // Detectar novas notificações
   useEffect(() => {
     const currentCount = notifications?.length || 0;
-    // Usar um timer para evitar setState direto no corpo do effect
-    const timer = setTimeout(() => {
-      if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
+    if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
+      // Schedule state update to avoid synchronous setState in effect
+      const timeoutId = globalThis.setTimeout(() => {
         setHasNewNotifications(true);
-        // FUTURE: Som de notificação pode ser adicionado aqui se necessário
-        // Exemplo: playNotificationSound()
-      }
+      }, 0);
+      // FUTURE: Som de notificação pode ser adicionado aqui se necessário
+      // Exemplo: playNotificationSound()
       prevCountRef.current = currentCount;
-    }, 0);
-    return () => clearTimeout(timer);
+      return () => globalThis.clearTimeout(timeoutId);
+    }
+    // Update ref only when count changes without triggering notification
+    prevCountRef.current = currentCount;
   }, [notifications]);
 
   // Função para adicionar notificação (usada pelo sistema)

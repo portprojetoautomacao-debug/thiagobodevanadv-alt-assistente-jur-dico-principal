@@ -66,18 +66,20 @@ export default function TracingDashboard({
 
   // Carregamento inicial e auto-refresh
   useEffect(() => {
-    // Usar um timeout para evitar chamada direta durante render
-    const initialTimeout = setTimeout(refreshData, 0);
+    // Schedule initial refresh to avoid synchronous setState in effect
+    const initialRefreshTimeout = globalThis.setTimeout(refreshData, 0);
 
     if (autoRefresh) {
       const interval = setInterval(refreshData, refreshInterval);
       return () => {
-        clearTimeout(initialTimeout);
+        globalThis.clearTimeout(initialRefreshTimeout);
         clearInterval(interval);
       };
     }
     
-    return () => clearTimeout(initialTimeout);
+    return () => {
+      globalThis.clearTimeout(initialRefreshTimeout);
+    };
   }, [autoRefresh, refreshInterval, refreshData]);
 
   const handleClearTraces = () => {

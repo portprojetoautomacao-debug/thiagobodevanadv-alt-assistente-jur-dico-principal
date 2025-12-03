@@ -2,23 +2,33 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 
 const MOBILE_BREAKPOINT = 768
 
-function getSnapshot() {
+// Get initial mobile state safely for SSR
+function getInitialMobileState(): boolean | undefined {
+  if (typeof window === 'undefined') return undefined
   return window.innerWidth < MOBILE_BREAKPOINT
 }
 
-function getServerSnapshot() {
-  return false
-}
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(getInitialMobileState)
 
-function subscribe(callback: () => void) {
-  const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-  mql.addEventListener("change", callback)
-  window.addEventListener("resize", callback)
-  return () => {
-    mql.removeEventListener("change", callback)
-    window.removeEventListener("resize", callback)
-  }
-}
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    }
+    mql.addEventListener("change", onChange)
+    
+    // Set initial value on mount in case SSR returned undefined
+    // Schedule to avoid synchronous setState in effect
+    const timeoutId = globalThis.setTimeout(() => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    }, 0)
+    
+    return () => {
+      globalThis.clearTimeout(timeoutId)
+      mql.removeEventListener("change", onChange)
+    }
+  }, []) // Empty dependency array - only runs once on mount
 
 export function useIsMobile() {
   const isMobile = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)

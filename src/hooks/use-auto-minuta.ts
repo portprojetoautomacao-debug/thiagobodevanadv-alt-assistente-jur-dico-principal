@@ -5,7 +5,7 @@
  * automaticamente cria minutas no sistema com status 'pendente-revisao'
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { toast } from 'sonner'
 import type { Minuta } from '@/types'
@@ -55,13 +55,14 @@ export function useAutoMinuta() {
 
   // Rastrear tarefas já processadas para evitar duplicatas
   const processedTasksRef = useRef<Set<string>>(new Set())
+  // Track count in state to safely return from hook
   const [processedTasksCount, setProcessedTasksCount] = useState(0)
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Usar timeout para evitar setState direto no corpo do effect
-      const timer = setTimeout(() => {
+      // Schedule to avoid synchronous setState in effect
+      const timeoutId = globalThis.setTimeout(() => {
         try {
           const stored = localStorage.getItem('processed-petition-tasks')
           if (stored) {
@@ -73,7 +74,7 @@ export function useAutoMinuta() {
           console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
         }
       }, 0)
-      return () => clearTimeout(timer)
+      return () => globalThis.clearTimeout(timeoutId)
     }
   }, [])
 
@@ -140,6 +141,8 @@ export function useAutoMinuta() {
           'processed-petition-tasks',
           JSON.stringify([...processedTasksRef.current])
         )
+        // Update count state
+        setProcessedTasksCount(processedTasksRef.current.size)
       } catch (e) {
         console.error('[AutoMinuta] Erro ao salvar tarefas processadas:', e)
       }
@@ -168,11 +171,14 @@ export function useAutoMinuta() {
     }
   }, [completedTasks, setMinutas])
 
-  // Retornar estatísticas úteis
-  return {
+  // Compute stats using useMemo to avoid recalculating on each render
+  const stats = useMemo(() => ({
     minutasTotal: minutas?.length || 0,
     minutasPendentesRevisao: minutas?.filter(m => m.status === 'pendente-revisao').length || 0,
     minutasCriadasPorAgente: minutas?.filter(m => m.criadoPorAgente).length || 0,
     processedTasksCount,
-  }
+  }), [minutas, processedTasksCount])
+
+  // Retornar estatísticas úteis
+  return stats
 }
