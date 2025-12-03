@@ -200,19 +200,15 @@ export default function OfficeManagement() {
     if (processesList.length === 0) return [];
 
     const byYear: { [key: number]: Process[] } = {};
+    // Use current year as fallback instead of Date.now() for purity
     const currentYear = new Date().getFullYear();
+    const fallbackDate = `${currentYear}-01-01`;
 
     processesList.forEach((process) => {
       // Usar dataDistribuicao ou createdAt como data de referência
-      // Fallback para ano atual se nenhuma data estiver disponível
-      let year = currentYear;
-      const dateStr = process.dataDistribuicao || process.createdAt;
-      if (dateStr) {
-        const parsedDate = new Date(dateStr);
-        if (!Number.isNaN(parsedDate.getTime())) {
-          year = parsedDate.getFullYear();
-        }
-      }
+      const year = new Date(
+        process.dataDistribuicao || process.createdAt || fallbackDate
+      ).getFullYear();
       if (!byYear[year]) {
         byYear[year] = [];
       }

@@ -64,19 +64,22 @@ export default function TracingDashboard({
     setAgentMetrics(metrics);
   }, [agentIds]);
 
-  // Initial data load - separate from auto-refresh to avoid cascading renders
+  // Carregamento inicial e auto-refresh
   useEffect(() => {
-    // Use setTimeout to defer the setState calls
-    const timeoutId = setTimeout(refreshData, 0);
-    return () => clearTimeout(timeoutId);
-  }, [refreshData]);
+    // Schedule initial refresh to avoid synchronous setState in effect
+    const initialRefreshTimeout = globalThis.setTimeout(refreshData, 0);
 
-  // Auto-refresh interval
-  useEffect(() => {
-    if (!autoRefresh) return;
+    if (autoRefresh) {
+      const interval = setInterval(refreshData, refreshInterval);
+      return () => {
+        globalThis.clearTimeout(initialRefreshTimeout);
+        clearInterval(interval);
+      };
+    }
     
-    const interval = setInterval(refreshData, refreshInterval);
-    return () => clearInterval(interval);
+    return () => {
+      globalThis.clearTimeout(initialRefreshTimeout);
+    };
   }, [autoRefresh, refreshInterval, refreshData]);
 
   const handleClearTraces = () => {

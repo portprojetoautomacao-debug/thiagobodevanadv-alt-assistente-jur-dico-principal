@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 const MOBILE_BREAKPOINT = 768
 
-// Helper function to get initial mobile state
+// Get initial mobile state safely for SSR
 function getInitialMobileState(): boolean | undefined {
   if (typeof window === 'undefined') return undefined
   return window.innerWidth < MOBILE_BREAKPOINT
@@ -17,8 +17,14 @@ export function useIsMobile() {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+    
+    // Set initial value on mount in case SSR returned undefined
+    // (Removido setTimeout redundante)
+    
+    return () => {
+      mql.removeEventListener("change", onChange)
+    }
+  }, []) // Empty dependency array - only runs once on mount
 
-  return !!isMobile
+  return isMobile
 }
