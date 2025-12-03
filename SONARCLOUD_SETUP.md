@@ -8,18 +8,19 @@ Este projeto está configurado com **SonarCloud** para análise contínua de qua
 
 ## 🔧 Arquivos de Configuração
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `sonar-project.properties` | Configuração principal do SonarCloud |
-| `.sonarlint/connectedMode.json` | Configuração do SonarLint (VS Code) |
-| `.vscode/settings.json` | Integração VS Code + SonarLint |
-| `.github/workflows/sonarcloud.yml` | CI/CD - Análise automática |
+| Arquivo                            | Propósito                            |
+| ---------------------------------- | ------------------------------------ |
+| `sonar-project.properties`         | Configuração principal do SonarCloud |
+| `.sonarlint/connectedMode.json`    | Configuração do SonarLint (VS Code)  |
+| `.vscode/settings.json`            | Integração VS Code + SonarLint       |
+| `.github/workflows/sonarcloud.yml` | CI/CD - Análise automática           |
 
 ---
 
 ## ✅ Configuração Atual
 
 ### **1. Informações do Projeto**
+
 ```properties
 Organization: thiagobodevan-a11y
 Project Key: thiagobodevan-a11y_assistente-juridico-p
@@ -27,18 +28,21 @@ Project Name: Assistente Jurídico PJe
 ```
 
 ### **2. Arquivos Analisados**
+
 - **Sources**: `src/`, `api/`
 - **Tests**: `src/**/*.test.ts`, `src/**/*.spec.tsx`
 
 ### **3. Exclusões**
-| Tipo | Padrão |
-|------|--------|
-| Código | `node_modules`, `dist`, `coverage`, `public` |
-| Testes | `**/*.test.ts`, `**/*.spec.tsx` |
-| Coverage | Arquivos de teste + tipos + configs |
-| Duplicação | Arquivos de teste + `types.ts` |
+
+| Tipo       | Padrão                                       |
+| ---------- | -------------------------------------------- |
+| Código     | `node_modules`, `dist`, `coverage`, `public` |
+| Testes     | `**/*.test.ts`, `**/*.spec.tsx`              |
+| Coverage   | Arquivos de teste + tipos + configs          |
+| Duplicação | Arquivos de teste + `types.ts`               |
 
 ### **4. Integrações**
+
 - ✅ **GitHub Actions**: Análise automática em push/PR
 - ✅ **VS Code**: SonarLint Connected Mode
 - ✅ **Quality Gate**: Verificação automática de qualidade
@@ -50,15 +54,18 @@ Project Name: Assistente Jurídico PJe
 ### **VS Code (Desenvolvimento Local)**
 
 1. **Extensão SonarLint**
+
    - Já instalada e configurada no workspace
    - Análise em tempo real enquanto codifica
    - Sugestões de correção inline
-   
+
    > Dica: Se você usa `nvm` para gerenciar Node.js, o VS Code pode não detectar automaticamente o executável do Node para o SonarLint.
    > Defina `sonarlint.pathToNodeExecutable` em `.vscode/settings.json` apontando para o binário do Node 22, por exemplo:
+   >
    > ```json
    > "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node"
    > ```
+   >
    > No Windows, use: `C:\\Program Files\\nodejs\\node.exe` (duas barras invertidas)
 
 2. **Ver Problemas Detectados**
@@ -69,12 +76,14 @@ Project Name: Assistente Jurídico PJe
 ### **GitHub Actions (CI/CD)**
 
 A análise roda automaticamente quando você:
+
 - ✅ Faz push para `main` ou `develop`
 - ✅ Abre/atualiza um Pull Request
 
 **Workflow**: `.github/workflows/sonarcloud.yml`
 
 **O que é analisado:**
+
 1. Código TypeScript/JavaScript
 2. Cobertura de testes
 3. Duplicação de código
@@ -94,6 +103,7 @@ Para o workflow funcionar, configure o secret:
 2. Clique em **"New repository secret"**
 
 3. Configure:
+
    ```
    Name: SONAR_TOKEN
    Value: [Seu token do SonarCloud]
@@ -113,6 +123,7 @@ Acesse o dashboard do projeto:
 🔗 **URL**: https://sonarcloud.io/dashboard?id=thiagobodevan-a11y_assistente-juridico-p
 
 **O que você encontra:**
+
 - 📈 Métricas de qualidade (bugs, vulnerabilidades, code smells)
 - 📊 Cobertura de testes
 - 🔍 Histórico de análises
@@ -125,17 +136,18 @@ Acesse o dashboard do projeto:
 
 ### **Critérios Atuais**
 
-| Métrica | Threshold |
-|---------|-----------|
-| Coverage em novo código | ≥ 80% |
-| Duplicação em novo código | ≤ 3% |
-| Maintainability Rating | ≥ A |
-| Reliability Rating | ≥ A |
-| Security Rating | ≥ A |
+| Métrica                   | Threshold |
+| ------------------------- | --------- |
+| Coverage em novo código   | ≥ 80%     |
+| Duplicação em novo código | ≤ 3%      |
+| Maintainability Rating    | ≥ A       |
+| Reliability Rating        | ≥ A       |
+| Security Rating           | ≥ A       |
 
 ### **Status do Quality Gate**
 
 Visível em:
+
 - Pull Request checks (GitHub)
 - SonarCloud dashboard
 - Badge no README (se configurado)
@@ -145,6 +157,7 @@ Visível em:
 ## 🛠️ Comandos Úteis
 
 ### **Rodar análise localmente** (opcional)
+
 ```bash
 # Instalar SonarScanner
 npm install -g sonarqube-scanner
@@ -159,6 +172,7 @@ sonar-scanner \
 ```
 
 ### **Gerar coverage para SonarCloud**
+
 ```bash
 npm run test:coverage
 # Arquivo gerado: coverage/lcov.info
@@ -171,11 +185,13 @@ npm run test:coverage
 ### **SonarLint não está funcionando no VS Code**
 
 1. Verifique se a extensão está ativa:
+
    ```
    Ctrl+Shift+P → "SonarLint: Show SonarLint Output"
    ```
 
 2. Verifique a conexão:
+
    ```
    Ctrl+Shift+P → "SonarLint: Update all project bindings"
    ```
@@ -188,10 +204,12 @@ npm run test:coverage
 ### **Workflow do GitHub Actions falhando**
 
 1. **Secret não configurado**
+
    - Erro: `SONAR_TOKEN not found`
    - Solução: Configure o secret (ver seção acima)
 
 2. **Problemas de coverage**
+
    - Erro: `coverage file not found`
    - Solução: Verifique se `npm run test:coverage` funciona localmente
 
@@ -202,6 +220,7 @@ npm run test:coverage
 ### **Token expirado**
 
 Se receber erro de autenticação:
+
 1. Gere novo token em: https://sonarcloud.io/account/security
 2. Atualize o secret `SONAR_TOKEN` no GitHub
 3. Re-rode o workflow
