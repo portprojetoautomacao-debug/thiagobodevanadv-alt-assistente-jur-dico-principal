@@ -22,7 +22,7 @@ function runSonarScan() {
       token: process.env.SONAR_TOKEN,
       options: {
         "sonar.projectKey": "thiagobodevan-a11y_assistente-juridico-p",
-        "sonar.organization": "thiagobodevan-a11y-assistente-juridico-p",
+        "sonar.organization": "thiagobodevan-a11y",
         // Include 'api' as a source so TypeScript files under /api are analyzed
         "sonar.sources": "src,api",
         "sonar.tests": "src,api",

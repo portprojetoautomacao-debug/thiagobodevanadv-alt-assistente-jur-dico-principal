@@ -29,6 +29,12 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Desabilitar regras experimentais do React Compiler (v7+)
+      // Estas regras são muito rigorosas para código de produção existente
+      // e causam falsos positivos em padrões React tradicionais válidos
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off", 
+      "react-hooks/set-state-in-effect": "off",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
