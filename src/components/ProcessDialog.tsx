@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -16,8 +16,22 @@ interface ProcessDialogProps {
   onSave: (process: Process) => void
 }
 
-export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
-  const [formData, setFormData] = useState({
+function getInitialFormData(process?: Process) {
+  if (process) {
+    return {
+      numeroCNJ: process.numeroCNJ,
+      titulo: process.titulo,
+      autor: process.autor,
+      reu: process.reu,
+      comarca: process.comarca,
+      vara: process.vara,
+      status: process.status,
+      valor: process.valor?.toString() || '',
+      dataDistribuicao: process.dataDistribuicao,
+      notas: process.notas || ''
+    }
+  }
+  return {
     numeroCNJ: '',
     titulo: '',
     autor: '',
@@ -26,39 +40,26 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
     vara: '',
     status: 'ativo' as Process['status'],
     valor: '',
-    dataDistribuicao: '',
+    dataDistribuicao: new Date().toISOString().split('T')[0],
     notas: ''
-  })
+  }
+}
 
-  useEffect(() => {
-    if (process) {
-      setFormData({
-        numeroCNJ: process.numeroCNJ,
-        titulo: process.titulo,
-        autor: process.autor,
-        reu: process.reu,
-        comarca: process.comarca,
-        vara: process.vara,
-        status: process.status,
-        valor: process.valor?.toString() || '',
-        dataDistribuicao: process.dataDistribuicao,
-        notas: process.notas || ''
-      })
-    } else {
-      setFormData({
-        numeroCNJ: '',
-        titulo: '',
-        autor: '',
-        reu: '',
-        comarca: '',
-        vara: '',
-        status: 'ativo',
-        valor: '',
-        dataDistribuicao: new Date().toISOString().split('T')[0],
-        notas: ''
-      })
+export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
+  const [formData, setFormData] = useState(() => getInitialFormData(process))
+
+  // Reset form quando dialog abre/fecha ou process muda
+  const resetForm = useCallback(() => {
+    setFormData(getInitialFormData(process))
+  }, [process])
+
+  // Usar onOpenChange para resetar
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    if (newOpen) {
+      resetForm()
     }
-  }, [process, open])
+    onOpenChange(newOpen)
+  }, [onOpenChange, resetForm])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,7 +102,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{process ? 'Editar Processo' : 'Novo Processo'}</DialogTitle>

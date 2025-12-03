@@ -140,12 +140,16 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   // Detectar novas notificações
   useEffect(() => {
     const currentCount = notifications?.length || 0;
-    if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
-      setHasNewNotifications(true);
-      // FUTURE: Som de notificação pode ser adicionado aqui se necessário
-      // Exemplo: playNotificationSound()
-    }
-    prevCountRef.current = currentCount;
+    // Usar um timer para evitar setState direto no corpo do effect
+    const timer = setTimeout(() => {
+      if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
+        setHasNewNotifications(true);
+        // FUTURE: Som de notificação pode ser adicionado aqui se necessário
+        // Exemplo: playNotificationSound()
+      }
+      prevCountRef.current = currentCount;
+    }, 0);
+    return () => clearTimeout(timer);
   }, [notifications]);
 
   // Função para adicionar notificação (usada pelo sistema)

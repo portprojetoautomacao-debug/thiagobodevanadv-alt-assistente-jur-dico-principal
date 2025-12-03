@@ -200,12 +200,12 @@ export default function OfficeManagement() {
     if (processesList.length === 0) return [];
 
     const byYear: { [key: number]: Process[] } = {};
+    const currentYear = new Date().getFullYear();
 
     processesList.forEach((process) => {
-      // Usar dataDistribuicao ou createdAt como data de referência
-      const year = new Date(
-        process.dataDistribuicao || process.createdAt || Date.now()
-      ).getFullYear();
+      // Usar dataDistribuicao ou createdAt como data de referência, ou ano atual como fallback
+      const dateString = process.dataDistribuicao || process.createdAt;
+      const year = dateString ? new Date(dateString).getFullYear() : currentYear;
       if (!byYear[year]) {
         byYear[year] = [];
       }

@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useKV } from './use-kv';
 
 /**
@@ -28,6 +28,7 @@ export function useAgentBackup(options: BackupOptions) {
   const [lastDjenCheck] = useKV('last-djen-check', null);
 
   const lastBackupRef = useRef<number>(0);
+  const [lastBackup, setLastBackup] = useState<number>(0);
 
   // Função para criar backup local
   const createBackup = useCallback(async () => {
@@ -63,6 +64,7 @@ export function useAgentBackup(options: BackupOptions) {
       localStorage.setItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`, String(Date.now()));
 
       lastBackupRef.current = backupData.timestamp;
+      setLastBackup(backupData.timestamp);
 
       console.log('✅ Backup local criado:', new Date(backupData.timestamp).toLocaleString());
 
@@ -137,10 +139,13 @@ export function useAgentBackup(options: BackupOptions) {
 
     const intervalMs = autoBackupInterval * 60 * 1000;
 
-    // Backup imediato se houver dados e não houver backup recente
+    // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
+    let initialBackupTimer: ReturnType<typeof setTimeout> | null = null;
     if (agents.length > 0 && (now - lastBackupRef.current) > intervalMs) {
-      createBackup();
+      initialBackupTimer = setTimeout(() => {
+        createBackup();
+      }, 0);
     }
 
     // Configurar backup periódico
@@ -150,7 +155,10 @@ export function useAgentBackup(options: BackupOptions) {
       }
     }, intervalMs);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (initialBackupTimer) clearTimeout(initialBackupTimer);
+      clearInterval(timer);
+    };
   }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup]);
 
   // Não tenta restaurar automaticamente - dados já estão no Spark KV
@@ -160,7 +168,7 @@ export function useAgentBackup(options: BackupOptions) {
     createBackup,
     restoreBackup,
     getBackupHistory,
-    lastBackup: lastBackupRef.current,
+    lastBackup,
     storageType: 'local' as const
   };
 }

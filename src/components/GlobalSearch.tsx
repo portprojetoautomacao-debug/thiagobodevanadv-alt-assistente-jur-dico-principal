@@ -96,10 +96,14 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100)
         } else {
-            setQuery('')
-            setCategory('all')
-            setSelectedIndex(0)
-            setResults([])
+            // Usar callback para resetar os estados quando fechar
+            const resetTimer = setTimeout(() => {
+                setQuery('')
+                setCategory('all')
+                setSelectedIndex(0)
+                setResults([])
+            }, 0)
+            return () => clearTimeout(resetTimer)
         }
     }, [isOpen])
 

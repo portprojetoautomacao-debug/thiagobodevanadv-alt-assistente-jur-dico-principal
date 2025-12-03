@@ -345,7 +345,11 @@ export function useKV<T>(
   // Ref para evitar re-renders desnecessários
   const isLoadingRef = useRef(false);
   const keyRef = useRef(key);
-  keyRef.current = key;
+
+  // Atualizar ref de forma segura
+  useEffect(() => {
+    keyRef.current = key;
+  }, [key]);
 
   // Setter otimizado
   const setValue = useCallback(
