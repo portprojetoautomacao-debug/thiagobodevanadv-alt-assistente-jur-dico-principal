@@ -19,13 +19,9 @@ export function useIsMobile() {
     mql.addEventListener("change", onChange)
     
     // Set initial value on mount in case SSR returned undefined
-    // Schedule to avoid synchronous setState in effect
-    const timeoutId = globalThis.setTimeout(() => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }, 0)
+    // (Removido setTimeout redundante)
     
     return () => {
-      globalThis.clearTimeout(timeoutId)
       mql.removeEventListener("change", onChange)
     }
   }, []) // Empty dependency array - only runs once on mount
