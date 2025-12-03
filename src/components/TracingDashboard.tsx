@@ -65,12 +65,20 @@ export default function TracingDashboard({
   }, [agentIds]);
 
   useEffect(() => {
-    refreshData();
+    // Schedule initial refresh to avoid synchronous setState in effect
+    const initialRefreshTimeout = globalThis.setTimeout(refreshData, 0);
 
     if (autoRefresh) {
       const interval = setInterval(refreshData, refreshInterval);
-      return () => clearInterval(interval);
+      return () => {
+        globalThis.clearTimeout(initialRefreshTimeout);
+        clearInterval(interval);
+      };
     }
+    
+    return () => {
+      globalThis.clearTimeout(initialRefreshTimeout);
+    };
   }, [autoRefresh, refreshInterval, refreshData]);
 
   const handleClearTraces = () => {

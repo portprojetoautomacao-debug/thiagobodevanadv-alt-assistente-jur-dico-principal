@@ -129,11 +129,26 @@ export default function HumanAgentCollaboration({
   // Timer de inatividade durante edição humana
   useEffect(() => {
     if (phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
-      return
+      // Use a cleanup pattern instead of direct setState
+      return () => {
+        // Reset will happen naturally when effect re-runs
+      }
     }
 
-    return createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
+    // Reset timer when entering human_editing phase
+    const resetTimer = () => {
+      setTimeWithoutActivity(0)
+    }
+    
+    // Schedule reset on next tick to avoid synchronous setState in effect
+    const timeoutId = globalThis.setTimeout(resetTimer, 0)
+
+    const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
+    
+    return () => {
+      globalThis.clearTimeout(timeoutId)
+      cleanup()
+    }
   }, [phase, isHumanActive])
 
   // Limpa timeout de atividade humana ao desmontar

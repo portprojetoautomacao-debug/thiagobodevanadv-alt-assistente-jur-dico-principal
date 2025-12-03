@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -148,23 +148,24 @@ export default function ProcessCRMAdvbox() {
     })
   )
 
-  // Initialize process cards
-  useEffect(() => {
-    const getStatusColor = (status: string): 'green' | 'yellow' | 'red' => {
-      switch (status) {
-        case 'concluido':
-          return 'green'
-        case 'ativo':
-          return 'yellow'
-        case 'suspenso':
-        case 'arquivado':
-          return 'red'
-        default:
-          return 'yellow'
-      }
+  // Helper function for status color
+  const getStatusColor = useCallback((status: string): 'green' | 'yellow' | 'red' => {
+    switch (status) {
+      case 'concluido':
+        return 'green'
+      case 'ativo':
+        return 'yellow'
+      case 'suspenso':
+      case 'arquivado':
+        return 'red'
+      default:
+        return 'yellow'
     }
+  }, [])
 
-    const cards: ProcessCardData[] = (processes || []).slice(0, 8).map((p, idx) => ({
+  // Compute process cards using useMemo instead of useEffect + setState
+  const computedProcessCards = useMemo(() => {
+    return (processes || []).slice(0, 8).map((p, idx) => ({
       id: p.id,
       autor: p.autor || 'Não informado',
       reu: p.reu || 'INSS',
@@ -176,8 +177,12 @@ export default function ProcessCRMAdvbox() {
       column: KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
       processo: p
     }))
-    setProcessCards(cards)
-  }, [processes])
+  }, [processes, getStatusColor])
+
+  // Initialize process cards from computed values
+  useEffect(() => {
+    setProcessCards(computedProcessCards)
+  }, [computedProcessCards])
 
   const getCardsByColumn = (column: string) => {
     return processCards.filter(card => card.column === column)

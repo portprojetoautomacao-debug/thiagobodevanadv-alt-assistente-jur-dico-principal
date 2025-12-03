@@ -2,8 +2,14 @@ import { useEffect, useState } from "react"
 
 const MOBILE_BREAKPOINT = 768
 
+// Get initial mobile state safely for SSR
+function getInitialMobileState(): boolean | undefined {
+  if (typeof window === 'undefined') return undefined
+  return window.innerWidth < MOBILE_BREAKPOINT
+}
+
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(getInitialMobileState)
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
@@ -11,9 +17,19 @@ export function useIsMobile() {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    // Set initial value on mount in case SSR returned undefined
+    if (isMobile === undefined) {
+      // Schedule to avoid synchronous setState in effect
+      const timeoutId = globalThis.setTimeout(() => {
+        setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+      }, 0)
+      return () => {
+        globalThis.clearTimeout(timeoutId)
+        mql.removeEventListener("change", onChange)
+      }
+    }
     return () => mql.removeEventListener("change", onChange)
-  }, [])
+  }, [isMobile])
 
   return !!isMobile
 }

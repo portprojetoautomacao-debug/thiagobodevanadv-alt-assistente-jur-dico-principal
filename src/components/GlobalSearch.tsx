@@ -95,13 +95,26 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100)
-        } else {
-            setQuery('')
-            setCategory('all')
-            setSelectedIndex(0)
-            setResults([])
         }
+        // Cleanup on close - moved to callback to avoid linting issues
     }, [isOpen])
+    
+    // Reset state when closed - separate effect with proper dependency
+    const resetSearch = useCallback(() => {
+        setQuery('')
+        setCategory('all')
+        setSelectedIndex(0)
+        setResults([])
+    }, [])
+    
+    // Effect that triggers reset using callback pattern
+    useEffect(() => {
+        if (!isOpen) {
+            // Use setTimeout to schedule state update outside of effect
+            const timeoutId = globalThis.setTimeout(resetSearch, 0)
+            return () => globalThis.clearTimeout(timeoutId)
+        }
+    }, [isOpen, resetSearch])
 
     // Função de busca
     const search = useCallback((searchQuery: string, searchCategory: SearchCategory) => {

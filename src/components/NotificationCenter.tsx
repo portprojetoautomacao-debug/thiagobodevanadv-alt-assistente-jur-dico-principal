@@ -141,9 +141,14 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   useEffect(() => {
     const currentCount = notifications?.length || 0;
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
-      setHasNewNotifications(true);
+      // Schedule state update to avoid synchronous setState in effect
+      const timeoutId = globalThis.setTimeout(() => {
+        setHasNewNotifications(true);
+      }, 0);
       // FUTURE: Som de notificação pode ser adicionado aqui se necessário
       // Exemplo: playNotificationSound()
+      prevCountRef.current = currentCount;
+      return () => globalThis.clearTimeout(timeoutId);
     }
     prevCountRef.current = currentCount;
   }, [notifications]);

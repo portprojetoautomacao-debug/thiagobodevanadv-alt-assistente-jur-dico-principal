@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -16,8 +16,23 @@ interface ProcessDialogProps {
   onSave: (process: Process) => void
 }
 
-export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
-  const [formData, setFormData] = useState({
+// Helper to create initial form data
+function createInitialFormData(process?: Process) {
+  if (process) {
+    return {
+      numeroCNJ: process.numeroCNJ,
+      titulo: process.titulo,
+      autor: process.autor,
+      reu: process.reu,
+      comarca: process.comarca,
+      vara: process.vara,
+      status: process.status,
+      valor: process.valor?.toString() || '',
+      dataDistribuicao: process.dataDistribuicao,
+      notas: process.notas || ''
+    }
+  }
+  return {
     numeroCNJ: '',
     titulo: '',
     autor: '',
@@ -26,38 +41,24 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
     vara: '',
     status: 'ativo' as Process['status'],
     valor: '',
-    dataDistribuicao: '',
+    dataDistribuicao: new Date().toISOString().split('T')[0],
     notas: ''
-  })
+  }
+}
 
+export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
+  // Compute initial data based on process
+  const initialData = useMemo(() => createInitialFormData(process), [process])
+  
+  const [formData, setFormData] = useState(initialData)
+
+  // Sync form data when process or dialog state changes
   useEffect(() => {
-    if (process) {
-      setFormData({
-        numeroCNJ: process.numeroCNJ,
-        titulo: process.titulo,
-        autor: process.autor,
-        reu: process.reu,
-        comarca: process.comarca,
-        vara: process.vara,
-        status: process.status,
-        valor: process.valor?.toString() || '',
-        dataDistribuicao: process.dataDistribuicao,
-        notas: process.notas || ''
-      })
-    } else {
-      setFormData({
-        numeroCNJ: '',
-        titulo: '',
-        autor: '',
-        reu: '',
-        comarca: '',
-        vara: '',
-        status: 'ativo',
-        valor: '',
-        dataDistribuicao: new Date().toISOString().split('T')[0],
-        notas: ''
-      })
-    }
+    // Schedule to avoid synchronous setState in effect
+    const timeoutId = globalThis.setTimeout(() => {
+      setFormData(createInitialFormData(process))
+    }, 0)
+    return () => globalThis.clearTimeout(timeoutId)
   }, [process, open])
 
   const handleSubmit = (e: React.FormEvent) => {
