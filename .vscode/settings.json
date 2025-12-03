@@ -13,6 +13,19 @@
   "github.copilot.chat.codesearch.enabled": true,
   "github.copilot.editor.enableAutoCompletions": true,
   
+  // 🚀 AUTOMAÇÃO MÁXIMA - Copilot trabalha sozinho
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": false,
+    "markdown": true
+  },
+  "github.copilot.advanced": {
+    "debug.overrideEngine": "gpt-4o",
+    "inlineSuggestCount": 3,
+    "listCount": 10
+  },
+  
   // Instruções contextuais para geração de código
   "github.copilot.chat.codeGeneration.instructions": [
     {
