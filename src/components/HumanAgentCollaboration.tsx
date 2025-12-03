@@ -129,10 +129,7 @@ export default function HumanAgentCollaboration({
   // Timer de inatividade durante edição humana
   useEffect(() => {
     if (phase !== 'human_editing') {
-      // Use a cleanup pattern instead of direct setState
-      return () => {
-        // Reset will happen naturally when effect re-runs
-      }
+      return // No cleanup needed when not in human_editing phase
     }
 
     // Reset timer when entering human_editing phase

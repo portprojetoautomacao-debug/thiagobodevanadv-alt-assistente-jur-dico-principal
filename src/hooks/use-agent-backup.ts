@@ -137,26 +137,15 @@ export function useAgentBackup(options: BackupOptions) {
     if (!enableAutoBackup || !userId) return;
 
     const intervalMs = autoBackupInterval * 60 * 1000;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     // Backup imediato se houver dados e não houver backup recente
     const now = Date.now();
     if (agents.length > 0 && (now - lastBackup) > intervalMs) {
       // Schedule to avoid synchronous setState in effect
-      const timeoutId = globalThis.setTimeout(createBackup, 0);
-      
-      // Configurar backup periódico
-      const timer = setInterval(() => {
-        if (agents.length > 0) {
-          createBackup();
-        }
-      }, intervalMs);
-
-      return () => {
-        globalThis.clearTimeout(timeoutId);
-        clearInterval(timer);
-      };
+      timeoutId = globalThis.setTimeout(createBackup, 0);
     }
-
+    
     // Configurar backup periódico
     const timer = setInterval(() => {
       if (agents.length > 0) {
@@ -164,7 +153,12 @@ export function useAgentBackup(options: BackupOptions) {
       }
     }, intervalMs);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (timeoutId) {
+        globalThis.clearTimeout(timeoutId);
+      }
+      clearInterval(timer);
+    };
   }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup, lastBackup]);
 
   // Não tenta restaurar automaticamente - dados já estão no Spark KV

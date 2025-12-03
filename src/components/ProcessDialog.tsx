@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -47,10 +47,8 @@ function createInitialFormData(process?: Process) {
 }
 
 export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
-  // Compute initial data based on process
-  const initialData = useMemo(() => createInitialFormData(process), [process])
-  
-  const [formData, setFormData] = useState(initialData)
+  // Initialize form data with lazy initialization
+  const [formData, setFormData] = useState(() => createInitialFormData(process))
 
   // Sync form data when process or dialog state changes
   useEffect(() => {

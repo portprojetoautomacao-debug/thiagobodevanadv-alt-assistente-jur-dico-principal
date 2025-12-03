@@ -17,19 +17,18 @@ export function useIsMobile() {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     mql.addEventListener("change", onChange)
+    
     // Set initial value on mount in case SSR returned undefined
-    if (isMobile === undefined) {
-      // Schedule to avoid synchronous setState in effect
-      const timeoutId = globalThis.setTimeout(() => {
-        setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-      }, 0)
-      return () => {
-        globalThis.clearTimeout(timeoutId)
-        mql.removeEventListener("change", onChange)
-      }
+    // Schedule to avoid synchronous setState in effect
+    const timeoutId = globalThis.setTimeout(() => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    }, 0)
+    
+    return () => {
+      globalThis.clearTimeout(timeoutId)
+      mql.removeEventListener("change", onChange)
     }
-    return () => mql.removeEventListener("change", onChange)
-  }, [isMobile])
+  }, []) // Empty dependency array - only runs once on mount
 
   return !!isMobile
 }
