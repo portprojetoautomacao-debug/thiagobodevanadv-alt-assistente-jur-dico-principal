@@ -7,18 +7,18 @@ O Vercel **bloqueou o plano gratuito (Hobby)** devido à configuração de cron 
 ### Mensagem de Erro do Vercel
 
 ```
-Hobby accounts are limited to daily cron jobs. 
-This cron expression (0 * * * *) would run more than once per day. 
+Hobby accounts are limited to daily cron jobs.
+This cron expression (0 * * * *) would run more than once per day.
 Upgrade to the Pro plan to unlock all Cron Jobs features on Vercel.
 ```
 
 ## 📋 Limitações do Plano Gratuito
 
-| Feature | Plano Hobby (Grátis) | Plano Pro ($20/mês) |
-|---------|---------------------|---------------------|
-| **Cron Jobs** | ❌ Apenas 1x por dia | ✅ Ilimitados |
+| Feature        | Plano Hobby (Grátis)         | Plano Pro ($20/mês) |
+| -------------- | ---------------------------- | ------------------- |
+| **Cron Jobs**  | ❌ Apenas 1x por dia         | ✅ Ilimitados       |
 | **Frequência** | Máximo: `0 0 * * *` (diário) | Qualquer frequência |
-| **Quantidade** | 1 cron job | Múltiplos cron jobs |
+| **Quantidade** | 1 cron job                   | Múltiplos cron jobs |
 
 ## ✅ Solução Aplicada
 
@@ -65,9 +65,9 @@ name: Scheduled Tasks
 on:
   schedule:
     # Monitoramento DJEN - a cada 2 horas durante horário comercial
-    - cron: '0 8-20/2 * * *'
+    - cron: "0 8-20/2 * * *"
     # Reset diário - meia-noite
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   workflow_dispatch: # Permite execução manual
 
 jobs:
@@ -89,6 +89,7 @@ jobs:
 ```
 
 **Vantagens:**
+
 - ✅ 100% gratuito
 - ✅ Qualquer frequência
 - ✅ Múltiplas tarefas
@@ -100,6 +101,7 @@ jobs:
 Serviço externo que faz requests HTTP agendados.
 
 **Passos:**
+
 1. Acesse [cron-job.org](https://cron-job.org)
 2. Crie conta gratuita
 3. Adicione jobs apontando para suas APIs:
@@ -108,12 +110,14 @@ Serviço externo que faz requests HTTP agendados.
 4. Configure frequência desejada
 
 **Vantagens:**
+
 - ✅ 100% gratuito
 - ✅ Interface simples
 - ✅ Notificações de falha
 - ✅ Histórico de execuções
 
 **Limitações:**
+
 - ⚠️ Máximo 3 jobs no plano gratuito
 - ⚠️ Intervalo mínimo: 5 minutos
 
@@ -122,11 +126,13 @@ Serviço externo que faz requests HTTP agendados.
 Se migrar para Railway, cron jobs nativos estão disponíveis.
 
 **Vantagens:**
+
 - ✅ Cron nativo
 - ✅ $5/mês grátis
 - ✅ PostgreSQL incluído
 
 **Desvantagens:**
+
 - ⚠️ Requer cartão de crédito
 - ⚠️ Créditos limitados
 
@@ -151,11 +157,13 @@ services:
 ```
 
 **Vantagens:**
+
 - ✅ 100% gratuito
 - ✅ Cron nativo
 - ✅ Qualquer frequência
 
 **Desvantagens:**
+
 - ⚠️ App principal "dorme" após 15 min
 
 ### 5. Cloudflare Workers (Grátis)
@@ -163,11 +171,13 @@ services:
 Cloudflare oferece Cron Triggers no Workers.
 
 **Vantagens:**
+
 - ✅ 100% gratuito
 - ✅ Execução global
 - ✅ Muito rápido
 
 **Desvantagens:**
+
 - ⚠️ Requer aprender Cloudflare Workers
 - ⚠️ Curva de aprendizado maior
 
@@ -219,41 +229,7 @@ Se optar por usar alternativas:
 
 ### Adicionar Header de Autenticação
 
-**Em `.env`:**
-```env
-CRON_SECRET=sua-senha-secreta-aqui-min-32-caracteres
-```
-
-**Em `api/cron/*.ts`:**
-```typescript
-export default async function handler(req: Request) {
-  // Verificar autenticação
-  const authHeader = req.headers.get('authorization');
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-  
-  if (authHeader !== expectedAuth) {
-    return new Response('Unauthorized', { status: 401 });
-  }
-  
-  // Sua lógica de cron aqui...
-}
-```
-
-### No GitHub Actions:
-
-```yaml
-- name: Run Cron
-  run: |
-    curl -X POST https://seu-app.vercel.app/api/cron/djen-monitor \
-      -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
-```
-
-### No cron-job.org:
-
-Configure "Custom Headers":
-```
-Authorization: Bearer sua-senha-secreta-aqui
-```
+> Nota: Autenticação por `CRON_SECRET` foi removida deste projeto conforme solicitação. As rotas de cron agora aceitam apenas chamadas originadas pelo agendador do Vercel (header Bearer interno) ou execução em ambiente de desenvolvimento local. Caso seja necessária proteção adicional futura, reintroduza um header estático ou assinado (ex: HMAC) antes de expor novamente.
 
 ## 📚 Documentação Relacionada
 

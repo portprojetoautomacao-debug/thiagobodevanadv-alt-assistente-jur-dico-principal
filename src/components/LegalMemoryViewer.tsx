@@ -1,30 +1,53 @@
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Brain, FileText, Gavel, Lightbulb, Clock } from '@phosphor-icons/react'
-import { type MemoryItem } from '@/hooks/use-autonomous-agents'
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { type MemoryItem } from "@/hooks/use-autonomous-agents";
+import {
+  Brain,
+  Clock,
+  FileText,
+  Gavel,
+  Lightbulb,
+} from "@phosphor-icons/react";
+import React from "react";
 
 interface LegalMemoryViewerProps {
-  readonly memory?: MemoryItem[]
-  readonly isLoading?: boolean
-  readonly onRefresh?: () => void
+  readonly memory?: MemoryItem[];
+  readonly isLoading?: boolean;
+  readonly onRefresh?: () => void;
 }
 
-const typeIcons: Record<string, any> = {
-  'peca_processual': FileText,
-  'precedente': Gavel,
-  'estrategia': Lightbulb,
-  'default': Brain
-}
+// Permite peso (weight) para ícones do Phosphor
+const typeIcons: Record<
+  string,
+  React.ComponentType<{ className?: string; size?: number; weight?: any }>
+> = {
+  peca_processual: FileText,
+  precedente: Gavel,
+  estrategia: Lightbulb,
+  default: Brain,
+};
 
-export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryViewerProps) {
+export function LegalMemoryViewer({
+  memory,
+  isLoading,
+  onRefresh,
+}: LegalMemoryViewerProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Clock className="w-6 h-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Carregando memória jurídica...</span>
+        <span className="ml-2 text-muted-foreground">
+          Carregando memória jurídica...
+        </span>
       </div>
-    )
+    );
   }
 
   return (
@@ -33,11 +56,16 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
         <div>
           <CardTitle>Memória Jurídica Compartilhada</CardTitle>
           <CardDescription>
-            Conhecimento acumulado pelos agentes (RAG - Retrieval Augmented Generation)
+            Conhecimento acumulado pelos agentes (RAG - Retrieval Augmented
+            Generation)
           </CardDescription>
         </div>
         {onRefresh && (
-          <Badge variant="outline" className="cursor-pointer" onClick={onRefresh}>
+          <Badge
+            variant="outline"
+            className="cursor-pointer"
+            onClick={onRefresh}
+          >
             Atualizar
           </Badge>
         )}
@@ -51,7 +79,8 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
           ) : (
             <div className="space-y-2">
               {memory.map((item) => {
-                const IconComponent = typeIcons[item.type] || typeIcons['default']
+                const IconComponent =
+                  typeIcons[item.type] || typeIcons["default"];
 
                 return (
                   <div
@@ -68,7 +97,7 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
                           {item.type}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(item.createdAt).toLocaleString('pt-BR')}
+                          {new Date(item.createdAt).toLocaleString("pt-BR")}
                         </span>
                       </div>
 
@@ -76,28 +105,29 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
                         {item.content}
                       </p>
 
-                      {item.metadata && Object.keys(item.metadata).length > 0 && (
-                        <div className="mt-2 flex gap-2 flex-wrap">
-                          {typeof item.metadata.agentId === 'string' && (
-                            <Badge variant="outline" className="text-[10px]">
-                              Agente: {item.metadata.agentId}
-                            </Badge>
-                          )}
-                          {typeof item.metadata.taskId === 'string' && (
-                            <Badge variant="outline" className="text-[10px]">
-                              Task: {item.metadata.taskId.substring(0, 8)}...
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                      {item.metadata &&
+                        Object.keys(item.metadata).length > 0 && (
+                          <div className="mt-2 flex gap-2 flex-wrap">
+                            {typeof item.metadata.agentId === "string" && (
+                              <Badge variant="outline" className="text-[10px]">
+                                Agente: {item.metadata.agentId}
+                              </Badge>
+                            )}
+                            {typeof item.metadata.taskId === "string" && (
+                              <Badge variant="outline" className="text-[10px]">
+                                Task: {item.metadata.taskId.substring(0, 8)}...
+                              </Badge>
+                            )}
+                          </div>
+                        )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           )}
         </ScrollArea>
       </CardContent>
     </Card>
-  )
+  );
 }

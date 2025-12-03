@@ -92,7 +92,7 @@ export default function Sidebar({
                   const view = item.id as ViewType;
                   try {
                     window.location.hash = `#${view}`;
-                  } catch (_) {
+                  } catch {
                     // ignore ambientes sem window
                   }
                   onViewChange(view);

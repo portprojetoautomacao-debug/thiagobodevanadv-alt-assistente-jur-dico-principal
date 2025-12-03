@@ -1,7 +1,3 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-
 interface ErrorFallbackProps {
   error: Error;
   resetErrorBoundary: () => void;
@@ -11,39 +7,129 @@ export const ErrorFallback = ({
   error,
   resetErrorBoundary,
 }: ErrorFallbackProps) => {
-  // Don't throw in development - let ErrorBoundary handle it
-  // if (import.meta.env.DEV) throw error;
-
+  // Fallback extremamente simples que NÃO depende de componentes externos
+  // Isso garante que erros de carregamento de chunks sejam exibidos
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle size={20} />
-          <AlertTitle>Erro na aplicação</AlertTitle>
-          <AlertDescription>
-            Algo inesperado aconteceu durante a execução da aplicação. Os
-            detalhes do erro estão abaixo. Tente recarregar a página ou entre em
-            contato com o suporte.
-          </AlertDescription>
-        </Alert>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+        fontFamily: "system-ui, sans-serif",
+        backgroundColor: "#fff",
+        color: "#333",
+      }}
+    >
+      <div style={{ maxWidth: "28rem", width: "100%" }}>
+        <div
+          style={{
+            padding: "1rem",
+            marginBottom: "1rem",
+            border: "1px solid #dc2626",
+            borderRadius: "0.5rem",
+            backgroundColor: "#fef2f2",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "1.125rem",
+              fontWeight: 600,
+              color: "#dc2626",
+              marginBottom: "0.5rem",
+            }}
+          >
+            ⚠️ Erro na aplicação
+          </h2>
+          <p style={{ fontSize: "0.875rem", color: "#7f1d1d" }}>
+            Algo inesperado aconteceu. Tente recarregar a página ou limpar o
+            cache do navegador.
+          </p>
+        </div>
 
-        <div className="bg-card border rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-sm text-muted-foreground mb-2">
+        <div
+          style={{
+            padding: "1rem",
+            marginBottom: "1rem",
+            border: "1px solid #e5e7eb",
+            borderRadius: "0.5rem",
+            backgroundColor: "#f9fafb",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: "#6b7280",
+              marginBottom: "0.5rem",
+            }}
+          >
             Detalhes do Erro:
           </h3>
-          <pre className="text-xs text-destructive bg-muted/50 p-3 rounded border overflow-auto max-h-32">
+          <pre
+            style={{
+              fontSize: "0.75rem",
+              color: "#dc2626",
+              backgroundColor: "#fff",
+              padding: "0.75rem",
+              borderRadius: "0.25rem",
+              border: "1px solid #e5e7eb",
+              overflow: "auto",
+              maxHeight: "8rem",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
             {error.message}
+            {error.stack && `\n\n${error.stack}`}
           </pre>
         </div>
 
-        <Button
-          onClick={resetErrorBoundary}
-          className="w-full"
-          variant="outline"
-        >
-          <RefreshCw size={20} />
-          Tentar Novamente
-        </Button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            onClick={resetErrorBoundary}
+            style={{
+              flex: 1,
+              padding: "0.75rem 1rem",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              color: "#fff",
+              backgroundColor: "#2563eb",
+              border: "none",
+              borderRadius: "0.5rem",
+              cursor: "pointer",
+            }}
+          >
+            🔄 Tentar Novamente
+          </button>
+          <button
+            onClick={() => {
+              // Limpa cache e recarrega
+              if ("caches" in window) {
+                caches.keys().then((names) => {
+                  for (const name of names) caches.delete(name);
+                });
+              }
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload();
+            }}
+            style={{
+              flex: 1,
+              padding: "0.75rem 1rem",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              color: "#374151",
+              backgroundColor: "#f3f4f6",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.5rem",
+              cursor: "pointer",
+            }}
+          >
+            🗑️ Limpar Cache
+          </button>
+        </div>
       </div>
     </div>
   );

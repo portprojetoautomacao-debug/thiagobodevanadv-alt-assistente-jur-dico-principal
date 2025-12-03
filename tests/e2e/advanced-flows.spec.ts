@@ -39,6 +39,22 @@ test.beforeEach(async ({ page }) => {
     console.log(`[console:${msg.type()}]`, msg.text())
   );
   page.on("requestfailed", (req) => console.warn("[requestfailed]", req.url()));
+
+  // Intercepta chamadas a APIs serverless (não disponíveis no dev local) para evitar 404
+  await page.route(/.*\/api\/kv.*/, async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.route(/.*\/api\/djen-sync.*/, async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, synced: true }),
+    });
+  });
 });
 
 // CRM: Drag-and-drop between columns (Kanban)
@@ -49,7 +65,9 @@ test("CRM drag-and-drop measures", async ({ page }) => {
       try {
         const value = JSON.stringify(seed);
         window.localStorage.setItem("processes", value);
-      } catch {}
+      } catch {
+        // Ignoring localStorage errors in test seed
+      }
     },
     {
       seed: [
@@ -104,7 +122,9 @@ test("CRM drag-and-drop measures", async ({ page }) => {
         ],
       },
     });
-  } catch {}
+  } catch {
+    // API seed optional in test environment
+  }
 
   // Try to find a card and columns by common text or roles
   const card = page
@@ -188,7 +208,9 @@ test("Minutas approve and export", async ({ page, context }) => {
       try {
         const value = JSON.stringify(seed);
         window.localStorage.setItem("minutas", value);
-      } catch {}
+      } catch {
+        // Ignoring localStorage errors in test seed
+      }
     },
     {
       seed: [
@@ -233,7 +255,9 @@ test("Minutas approve and export", async ({ page, context }) => {
         ],
       },
     });
-  } catch {}
+  } catch {
+    // API seed optional in test environment
+  }
 
   // Abrir diálogo de nova minuta se não houver
   const newButton = page.getByRole("button", { name: /Nova Minuta/i });
@@ -324,7 +348,9 @@ test("Expedientes sync publications capture", async ({ page }) => {
     const start = Date.now();
     const res = await page.request.post("/api/djen-sync");
     console.log("[djen-sync-ms]", Date.now() - start, res.status());
-  } catch {}
+  } catch {
+    // DJEN sync optional in test environment
+  }
 
   const syncBtn = page.locator('[data-testid="expedientes-sync-btn"]').first();
   const syncVisible = await syncBtn.isVisible().catch(() => false);
