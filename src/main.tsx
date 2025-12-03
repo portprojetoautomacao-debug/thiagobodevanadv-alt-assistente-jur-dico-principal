@@ -100,3 +100,8 @@ createRoot(rootElement).render(
     </StrictMode>
   </ErrorBoundary>
 );
+
+// ✅ Limpa o timeout de loading quando o React carrega
+if (typeof window !== 'undefined' && (window as unknown as { __clearLoadingTimeout?: () => void }).__clearLoadingTimeout) {
+  (window as unknown as { __clearLoadingTimeout: () => void }).__clearLoadingTimeout();
+}

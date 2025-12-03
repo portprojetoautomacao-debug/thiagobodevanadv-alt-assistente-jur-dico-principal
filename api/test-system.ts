@@ -13,7 +13,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       !process.env.UPSTASH_REDIS_REST_URL ||
       !process.env.UPSTASH_REDIS_REST_TOKEN
     ) {
-      throw new Error("Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
+      throw new Error(
+        "Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN"
+      );
     }
 
     const kv = new Redis({
@@ -25,19 +27,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     results.checks.kv = { status: "ok", ping };
 
     // 2. Check Queues
-    const taskQueue = (await kv.get("agent-task-queue")) as any[] || [];
-    const notificationQueue = (await kv.get("notification-queue")) as any[] || [];
-    
+    const taskQueue = ((await kv.get("agent-task-queue")) as any[]) || [];
+    const notificationQueue =
+      ((await kv.get("notification-queue")) as any[]) || [];
+
     results.checks.queues = {
       taskQueueLength: taskQueue.length,
-      notificationQueueLength: notificationQueue.length
+      notificationQueueLength: notificationQueue.length,
     };
 
     // 3. Check Monitored Lawyers
-    const lawyers = (await kv.get("monitored-lawyers")) as any[] || [];
+    const lawyers = ((await kv.get("monitored-lawyers")) as any[]) || [];
     results.checks.lawyers = {
       count: lawyers.length,
-      names: lawyers.map((l: any) => l.name)
+      names: lawyers.map((l: any) => l.name),
     };
 
     // 4. Inject Test Data (Optional via ?inject=true)
@@ -62,14 +65,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "pending",
         priority: "medium",
         createdAt: new Date().toISOString(),
-        data: { source: "manual_test" }
+        data: { source: "manual_test" },
       };
       taskQueue.push(testTask);
       await kv.set("agent-task-queue", taskQueue);
 
       results.injected = {
         notification: testNotification.id,
-        task: testTask.id
+        task: testTask.id,
       };
     }
 
@@ -78,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       error: "System check failed",
       details: error instanceof Error ? error.message : String(error),
-      results
+      results,
     });
   }
 }
