@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "tests/e2e",
-  globalSetup: require.resolve("./tests/e2e/global-setup.ts"),
+  // Use path (string) for ESM compatibility
+  globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,
   fullyParallel: true,
   reporter: [["html", { open: "never" }]],
