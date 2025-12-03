@@ -48,19 +48,5 @@ jobs:
           VITE_REDIRECT_URI: "http://localhost:5173"
           VITE_APP_ENV: "ci"
 
-  sonarqube:
-    name: SonarQube Analysis
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        continue-on-error: true
+  # SonarCloud scan is performed in .github/workflows/sonarcloud.yml
+  # SonarQube/Cloud scans should be run separately from the main build workflow
