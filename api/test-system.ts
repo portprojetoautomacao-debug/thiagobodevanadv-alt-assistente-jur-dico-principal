@@ -2,7 +2,18 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const results: Record<string, any> = {
+  // Security: Block access in production environment
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  // Security: Require admin token for access
+  const adminToken = req.headers["x-admin-token"];
+  if (!adminToken || adminToken !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const results: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     checks: {},
   };
@@ -24,26 +35,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const ping = await kv.ping();
-    results.checks.kv = { status: "ok", ping };
+    results.checks = {
+      ...(results.checks as Record<string, unknown>),
+      kv: { status: "ok", ping },
+    };
 
-    // 2. Check Queues
-    const taskQueue = ((await kv.get("agent-task-queue")) as any[]) || [];
+    // 2. Check Queues (only counts, no sensitive data)
+    const taskQueue = ((await kv.get("agent-task-queue")) as unknown[]) || [];
     const notificationQueue =
-      ((await kv.get("notification-queue")) as any[]) || [];
+      ((await kv.get("notification-queue")) as unknown[]) || [];
 
-    results.checks.queues = {
-      taskQueueLength: taskQueue.length,
-      notificationQueueLength: notificationQueue.length,
+    results.checks = {
+      ...(results.checks as Record<string, unknown>),
+      queues: {
+        taskQueueLength: taskQueue.length,
+        notificationQueueLength: notificationQueue.length,
+      },
     };
 
-    // 3. Check Monitored Lawyers
-    const lawyers = ((await kv.get("monitored-lawyers")) as any[]) || [];
-    results.checks.lawyers = {
-      count: lawyers.length,
-      names: lawyers.map((l: any) => l.name),
+    // 3. Check Monitored Lawyers (only count, no names for privacy)
+    const lawyers = ((await kv.get("monitored-lawyers")) as unknown[]) || [];
+    results.checks = {
+      ...(results.checks as Record<string, unknown>),
+      lawyers: {
+        count: lawyers.length,
+      },
     };
 
-    // 4. Inject Test Data (Optional via ?inject=true)
+    // 4. Inject Test Data (Optional via ?inject=true) - only in non-production
     if (req.query.inject === "true") {
       // Inject Test Notification
       const testNotification = {
@@ -54,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         createdAt: new Date().toISOString(),
         sent: false,
       };
-      notificationQueue.push(testNotification);
+      (notificationQueue as unknown[]).push(testNotification);
       await kv.set("notification-queue", notificationQueue);
 
       // Inject Test Task
@@ -67,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         createdAt: new Date().toISOString(),
         data: { source: "manual_test" },
       };
-      taskQueue.push(testTask);
+      (taskQueue as unknown[]).push(testTask);
       await kv.set("agent-task-queue", taskQueue);
 
       results.injected = {
