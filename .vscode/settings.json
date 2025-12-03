@@ -8,26 +8,14 @@
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.tsserver.maxTsServerMemory": 4096,
-  "eslint.useFlatConfig": true,
-  "eslint.validate": ["typescript", "typescriptreact"],
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
-}{
-  "task.allowAutomaticTasks": "on",
-  "files.autoSave": "afterDelay",
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.preferences.includePackageJsonAutoImports": "off",
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["typescript", "typescriptreact"],
   "sonarlint.disableTelemetry": true,
   "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js",
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+  "sonarlint.pathToNodeExecutable": "/usr/bin/node",
   "remote.portsAttributes": {
     "5000": {
       "label": "Preview Server",
