@@ -22,7 +22,7 @@ import scanner from "sonarqube-scanner";
         },
         (err) => {
           if (err) reject(err);
-          else resolve();
+          else resolve(undefined);
         }
       );
     });
