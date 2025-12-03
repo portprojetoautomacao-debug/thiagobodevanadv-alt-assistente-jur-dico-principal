@@ -16,7 +16,8 @@ export default defineConfig({
     if (useProd) return undefined;
     // Caso contrário, sempre iniciar o servidor local (inclusive em CI) para garantir disponibilidade.
     return {
-      command: "npm run dev",
+      // Explicitly start vite on defined host and port to avoid "port already in use" / IPv6 issues
+      command: "npx vite --host 127.0.0.1 --port 5173",
       env: { PORT: "5173", HOST: "127.0.0.1" },
       port: 5173,
       reuseExistingServer: true,
