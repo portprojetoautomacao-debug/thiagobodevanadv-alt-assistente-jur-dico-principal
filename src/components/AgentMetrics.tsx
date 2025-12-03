@@ -49,6 +49,9 @@ export default function AgentMetrics({
   const [circuitBreakers, setCircuitBreakers] =
     useState<CircuitBreakersMetrics | null>(null)
 
+  // Ref para capturar timestamp na montagem (evita violação de pureza)
+  const initialTimestampRef = useRef(Date.now())
+
   // Fetch V2 metrics
   useEffect(() => {
     const fetchV2Metrics = async () => {
@@ -82,7 +85,7 @@ export default function AgentMetrics({
 
   const totalTasks = completedTasks.length
 
-  const todayStr = new Date().toDateString()
+  const todayStr = new Date(initialTimestampRef.current).toDateString()
   const totalToday = completedTasks.filter((t) => {
     return (
       t.completedAt &&

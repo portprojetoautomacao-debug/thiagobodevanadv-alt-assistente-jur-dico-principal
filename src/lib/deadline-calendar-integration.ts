@@ -68,6 +68,12 @@ export function createLocalAppointmentFromAnalysis(
 
   const deadlineDate = new Date(analysis.deadline.endDate)
 
+  // Validar se a data é válida antes de usar toISOString()
+  if (isNaN(deadlineDate.getTime())) {
+    console.warn('[DeadlineIntegration] Invalid deadline date:', analysis.deadline.endDate)
+    return null
+  }
+
   // Ajustar para formato de data local (YYYY-MM-DD)
   const dateStr = deadlineDate.toISOString().split('T')[0]
 

@@ -18,11 +18,9 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
     if (hasSidebar) {
       await expect(navigationById).toBeVisible();
     } else {
-      // Verifica tela de login simples
+      // Verifica tela de login simples - usar primeiro elemento encontrado
       await expect(
-        page.getByText(
-          /Assistente Jurídico PJe|Sistema inteligente de gestão jurídica/i
-        )
+        page.getByRole("heading", { name: /Assistente Jurídico/i }).first()
       ).toBeVisible();
     }
   });

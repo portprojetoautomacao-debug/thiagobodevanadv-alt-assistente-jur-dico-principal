@@ -126,6 +126,13 @@ export default function HumanAgentCollaboration({
     return createProgressInterval(setProgress, onComplete)
   }, [phase, onComplete])
 
+  // Reset de inatividade quando sai do modo edição humana
+  const previousPhaseRef = useRef(phase)
+  if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
+    setTimeWithoutActivity(0)
+  }
+  previousPhaseRef.current = phase
+
   // Timer de inatividade durante edição humana
   useEffect(() => {
     if (phase !== 'human_editing') {

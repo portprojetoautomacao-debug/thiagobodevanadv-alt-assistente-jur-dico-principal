@@ -163,6 +163,7 @@ export default function ProcessCRMAdvbox() {
           return 'yellow'
       }
     }
+  }
 
     return (processes || []).slice(0, 8).map((p, idx) => ({
       id: p.id,
@@ -177,6 +178,14 @@ export default function ProcessCRMAdvbox() {
       processo: p
     }))
   }, [processes, cardColumnOverrides])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   const getCardsByColumn = (column: string) => {
     return processCards.filter(card => card.column === column)
