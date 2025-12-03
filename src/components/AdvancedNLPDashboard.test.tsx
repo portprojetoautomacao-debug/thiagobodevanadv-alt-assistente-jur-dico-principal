@@ -144,7 +144,7 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(extractEntitiesButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Erro ao extrair entidades");
+        expect(toast.error).toHaveBeenCalledWith("Erro ao processar operação");
       });
 
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -487,7 +487,7 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(processAllButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Erro ao processar análise completa");
+        expect(toast.error).toHaveBeenCalledWith("Erro ao processar operação");
       });
 
       consoleErrorSpy.mockRestore();
