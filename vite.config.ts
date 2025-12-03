@@ -75,15 +75,9 @@ export default defineConfig({
         // Limpar caches antigos automaticamente
         cleanupOutdatedCaches: true,
         // ✅ EXCLUIR chunks do editor do precache para evitar carregamento prematuro
-        // O erro "Cannot set properties of undefined (setting 'Activity')" acontece
-        // quando editor-vendor é carregado antes do React estar pronto
+        // Esses chunks são lazy-loaded e não devem ser pré-cacheados
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        globIgnores: [
-          "**/editor-vendor*.js",
-          "**/TiptapEditor*.js",
-          "**/MinutasManager*.js",
-          "**/prosemirror*.js",
-        ],
+        globIgnores: ["**/TiptapEditor*.js", "**/MinutasManager*.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
@@ -198,34 +192,38 @@ export default defineConfig({
       },
     },
     rollupOptions: {
+      // ✅ FIX: Desabilita hoisting de imports transitivos para evitar dependências circulares
+      // O erro "Cannot set properties of undefined (setting 'Activity')" acontecia porque
+      // o Rollup movia helpers como getDefaultExportFromCjs para chunks errados
+      treeshake: {
+        // Preserva imports transitivos nos chunks originais
+        manualPureFunctions: [],
+      },
       output: {
+        // ✅ FIX: Não hoista imports transitivos entre chunks
+        // Isso evita que react-vendor importe de editor-vendor
+        hoistTransitiveImports: false,
         // Otimiza nomes de chunks para melhor caching em produção
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
         manualChunks(id) {
-          // React core - crítico, carrega primeiro
+          // React core + Phosphor Icons - crítico, carrega primeiro
+          // ✅ FIX: Phosphor Icons incluído aqui para evitar dependência circular
+          // O erro "Cannot set properties of undefined (setting 'Activity')"
+          // acontecia porque editor-vendor era importado antes do React estar pronto
           if (
             id.includes("node_modules/react") ||
             id.includes("node_modules/react-dom") ||
-            id.includes("node_modules/scheduler")
+            id.includes("node_modules/scheduler") ||
+            id.includes("@phosphor-icons/react")
           ) {
             return "react-vendor";
           }
 
-          // ❌ REMOVIDO: icons-vendor separado causava race condition
-          // "Cannot set properties of undefined (setting 'Activity')"
-          // Phosphor Icons agora é incluído diretamente nos componentes
-          // que os usam (inline chunking)
-
-          // Tiptap e ProseMirror - editor rico
-          if (
-            id.includes("@tiptap") ||
-            id.includes("prosemirror") ||
-            id.includes("@prosemirror")
-          ) {
-            return "editor-vendor";
-          }
+          // ⚠️ REMOVIDO: editor-vendor separado causava dependência circular
+          // Tiptap/ProseMirror agora é bundled naturalmente com MinutasManager (lazy)
+          // Isso evita que react-vendor precise importar de editor-vendor
 
           // Radix UI components - separar em chunks menores
           if (id.includes("@radix-ui")) {
