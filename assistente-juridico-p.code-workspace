@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "sonarlint.disableTelemetry": true,
+    "sonarlint.automaticAnalysis": true
+  }
+}
