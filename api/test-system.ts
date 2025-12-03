@@ -1,5 +1,17 @@
 import { Redis } from "@upstash/redis";
+import { timingSafeEqual } from "crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+
+/**
+ * Performs a timing-safe string comparison to prevent timing attacks.
+ * Returns false if either string is empty or undefined.
+ */
+function safeCompare(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b || a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Security: Block access in production environment
@@ -8,8 +20,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Security: Require admin token for access
-  const adminToken = req.headers["x-admin-token"];
-  if (!adminToken || adminToken !== process.env.ADMIN_TOKEN) {
+  const expectedToken = process.env.ADMIN_TOKEN;
+  if (!expectedToken) {
+    // ADMIN_TOKEN not configured - deny access
+    return res.status(403).json({ error: "Forbidden - token not configured" });
+  }
+
+  const providedToken = req.headers["x-admin-token"];
+  if (typeof providedToken !== "string" || !safeCompare(providedToken, expectedToken)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
