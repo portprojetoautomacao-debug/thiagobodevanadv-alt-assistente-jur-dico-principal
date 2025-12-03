@@ -1,7 +1,7 @@
 {
   "name": "assistente-juridico-p",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "engines": {
     "node": "22.x"
@@ -11,14 +11,14 @@
     "kill": "fuser -k 5000/tcp",
     "build": "tsc && vite build",
     "start": "serve -s dist -l 10000",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150",
     "lint:sarif": "eslint . --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
     "optimize": "vite optimize",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --config vitest.config.node.ts --coverage",
     "test:api": "vitest run --config vitest.config.node.ts",
     "test:all": "npm run test:run && npm run test:api",
     "test:e2e": "playwright test --project=chromium",

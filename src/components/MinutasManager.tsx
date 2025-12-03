@@ -1241,6 +1241,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           variant="outline"
                           onClick={() => handleApproveMinuta(minuta.id)}
                           className="text-green-600 border-green-500/50 hover:bg-green-500/10"
+                          data-testid="minuta-approve-btn"
                         >
                           <CheckCircle className="mr-2 h-4 w-4" weight="bold" />
                           Aprovar
@@ -1274,6 +1275,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               size="sm"
                               onClick={() => handleExportPDF(minuta)}
                               className="justify-start"
+                              data-testid="minuta-export-pdf"
                             >
                               <FilePdf className="mr-2 h-4 w-4" /> Exportar PDF
                             </Button>
@@ -1282,6 +1284,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               size="sm"
                               onClick={() => handleExportDOCX(minuta)}
                               className="justify-start"
+                              data-testid="minuta-export-doc"
                             >
                               <FileDoc className="mr-2 h-4 w-4" /> Exportar DOC
                             </Button>
