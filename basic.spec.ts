@@ -20,7 +20,9 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
     } else {
       // Verifica tela de login simples
       await expect(
-        page.getByText(/Assistente Jurídico PJe|Sistema inteligente de gestão jurídica/i)
+        page.getByText(
+          /Assistente Jurídico PJe|Sistema inteligente de gestão jurídica/i
+        )
       ).toBeVisible();
     }
   });
@@ -41,16 +43,6 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
         `Encontradas ${count} mensagens de erro (podem ser avisos de configuração)`
       );
     }
-  });
-
-  test("deve verificar API de health", async ({ request }) => {
-    const response = await request.get("/api/health");
-    expect(response.ok()).toBeTruthy();
-
-    const data = await response.json();
-    expect(data).toHaveProperty("status");
-  });
-});
   });
 
   test("deve verificar API de health", async ({ request }) => {
