@@ -141,7 +141,10 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   useEffect(() => {
     const currentCount = notifications?.length || 0;
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
-      setHasNewNotifications(true);
+      // Use queueMicrotask to avoid cascading renders
+      queueMicrotask(() => {
+        setHasNewNotifications(true);
+      });
       // FUTURE: Som de notificação pode ser adicionado aqui se necessário
       // Exemplo: playNotificationSound()
     }

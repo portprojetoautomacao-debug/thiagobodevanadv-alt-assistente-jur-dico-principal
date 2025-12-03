@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -138,33 +138,25 @@ export default function ProcessCRMAdvbox() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedCard, setSelectedCard] = useState<ProcessCardData | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  )
-
-  // Initialize process cards
-  useEffect(() => {
-    const getStatusColor = (status: string): 'green' | 'yellow' | 'red' => {
-      switch (status) {
-        case 'concluido':
-          return 'green'
-        case 'ativo':
-          return 'yellow'
-        case 'suspenso':
-        case 'arquivado':
-          return 'red'
-        default:
-          return 'yellow'
-      }
+  // Helper function for status color
+  const getStatusColor = (status: string): 'green' | 'yellow' | 'red' => {
+    switch (status) {
+      case 'concluido':
+        return 'green'
+      case 'ativo':
+        return 'yellow'
+      case 'suspenso':
+      case 'arquivado':
+        return 'red'
+      default:
+        return 'yellow'
     }
+  }
 
-    const cards: ProcessCardData[] = (processes || []).slice(0, 8).map((p, idx) => ({
+  // Use useMemo instead of useEffect+useState for derived state
+  const processCards = useMemo<ProcessCardData[]>(() => {
+    return (processes || []).slice(0, 8).map((p, idx) => ({
       id: p.id,
       autor: p.autor || 'Não informado',
       reu: p.reu || 'INSS',
@@ -176,8 +168,15 @@ export default function ProcessCRMAdvbox() {
       column: KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
       processo: p
     }))
-    setProcessCards(cards)
   }, [processes])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   const getCardsByColumn = (column: string) => {
     return processCards.filter(card => card.column === column)

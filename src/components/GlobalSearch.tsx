@@ -109,6 +109,14 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100)
+        } else {
+            // Use queueMicrotask to avoid cascading renders
+            queueMicrotask(() => {
+                setQuery('')
+                setCategory('all')
+                setSelectedIndex(0)
+                setResults([])
+            })
         }
         // Não fazemos reset aqui - é feito na função closeSearch
     }, [isOpen])

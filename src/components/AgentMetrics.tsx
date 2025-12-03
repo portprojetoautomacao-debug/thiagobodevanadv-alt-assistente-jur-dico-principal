@@ -17,7 +17,7 @@ import {
   Pulse,
   LightningSlash,
 } from '@phosphor-icons/react'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 
 interface AgentMetricsProps {
@@ -106,8 +106,9 @@ export default function AgentMetrics({
   const hoursPerTask = 10 / 60
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1)
 
+  // Calculate tasks in last 24 hours using useMemo for purity
   const tasksLast24Hours = useMemo(() => {
-    const last24h = new Date(initialTimestampRef.current - 24 * 60 * 60 * 1000)
+    const last24h = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
     return completedTasks.filter(
       (task) =>
         task.completedAt && new Date(task.completedAt) > last24h,
@@ -131,7 +132,6 @@ export default function AgentMetrics({
     return Math.round(totalTime / tasksWithTime.length / 1000)
   }
 
-  const tasks24h = tasksLast24Hours
   const avgProcessingTime = getAverageProcessingTime()
 
   return (
@@ -280,7 +280,7 @@ export default function AgentMetrics({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground mb-2">
-              {tasks24h}
+              {tasksLast24Hours}
             </div>
             <p className="text-xs text-muted-foreground">
               Tarefas completadas nas últimas 24 horas

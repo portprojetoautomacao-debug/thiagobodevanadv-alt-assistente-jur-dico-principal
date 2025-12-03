@@ -124,7 +124,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
   const intimacoes = useMemo(() => {
     const processesList = processes || [];
     const umMesMs = 30 * 24 * 60 * 60 * 1000;
-    const limite = new Date(nowTimestamp - umMesMs);
+    const limite = new Date(new Date().getTime() - umMesMs);
 
     return processesList.slice(0, 4).map((p) => {
       const temMov = !!p.dataUltimaMovimentacao;
