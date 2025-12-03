@@ -17,7 +17,7 @@ import {
   Pulse,
   LightningSlash,
 } from '@phosphor-icons/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 
 interface AgentMetricsProps {
@@ -48,6 +48,9 @@ export default function AgentMetrics({
 }: AgentMetricsProps) {
   const [circuitBreakers, setCircuitBreakers] =
     useState<CircuitBreakersMetrics | null>(null)
+
+  // Ref para capturar timestamp na montagem (evita violação de pureza)
+  const initialTimestampRef = useRef(Date.now())
 
   // Fetch V2 metrics
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function AgentMetrics({
 
   const totalTasks = completedTasks.length
 
-  const todayStr = new Date().toDateString()
+  const todayStr = new Date(initialTimestampRef.current).toDateString()
   const totalToday = completedTasks.filter((t) => {
     return (
       t.completedAt &&
@@ -103,13 +106,14 @@ export default function AgentMetrics({
   const hoursPerTask = 10 / 60
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1)
 
-  const getTasksLast24Hours = () => {
-    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  // Calculate tasks in last 24 hours using useMemo for purity
+  const tasksLast24Hours = useMemo(() => {
+    const last24h = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
     return completedTasks.filter(
       (task) =>
         task.completedAt && new Date(task.completedAt) > last24h,
     ).length
-  }
+  }, [completedTasks])
 
   const getAverageProcessingTime = () => {
     const tasksWithTime = completedTasks.filter(
@@ -128,7 +132,6 @@ export default function AgentMetrics({
     return Math.round(totalTime / tasksWithTime.length / 1000)
   }
 
-  const tasks24h = getTasksLast24Hours()
   const avgProcessingTime = getAverageProcessingTime()
 
   return (
@@ -277,7 +280,7 @@ export default function AgentMetrics({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground mb-2">
-              {tasks24h}
+              {tasksLast24Hours}
             </div>
             <p className="text-xs text-muted-foreground">
               Tarefas completadas nas últimas 24 horas

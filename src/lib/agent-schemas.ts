@@ -9,7 +9,7 @@
  * - Validação rigorosa sem perder autonomia
  */
 
-import { z } from 'zod'
+import { z } from "zod";
 
 // ============================================================================
 // SCHEMAS DE ENTRADA (INPUT)
@@ -19,13 +19,16 @@ import { z } from 'zod'
  * Schema para análise de intimação (Mrs. Justin-e)
  */
 export const AnalyzeIntimationInputSchema = z.object({
-  text: z.string().min(10, 'Texto da intimação muito curto'),
+  text: z.string().min(10, "Texto da intimação muito curto"),
   processNumber: z.string().optional(),
   tribunal: z.string().optional(),
   publicationId: z.string().optional(),
   expedienteId: z.string().optional(),
-  source: z.enum(['DJEN', 'DataJud', 'PJe', 'manual']).optional().default('manual')
-})
+  source: z
+    .enum(["DJEN", "DataJud", "PJe", "manual"])
+    .optional()
+    .default("manual"),
+});
 
 /**
  * Schema para redação de petição
@@ -34,24 +37,24 @@ export const DraftPetitionInputSchema = z.object({
   processNumber: z.string().optional(),
   court: z.string().optional(),
   type: z.enum([
-    'peticao_inicial',
-    'contestacao',
-    'recurso',
-    'manifestacao',
-    'embargos',
-    'agravo',
-    'apelacao',
-    'replica',
-    'impugnacao',
-    'outro'
+    "peticao_inicial",
+    "contestacao",
+    "recurso",
+    "manifestacao",
+    "embargos",
+    "agravo",
+    "apelacao",
+    "replica",
+    "impugnacao",
+    "outro",
   ]),
-  summary: z.string().min(20, 'Resumo muito curto para gerar petição'),
+  summary: z.string().min(20, "Resumo muito curto para gerar petição"),
   expedienteId: z.string().optional(),
   processId: z.string().optional(),
   templateId: z.string().optional(),
   precedents: z.array(z.string()).optional(),
-  instructions: z.string().optional()
-})
+  instructions: z.string().optional(),
+});
 
 /**
  * Schema para cálculo de prazo
@@ -60,24 +63,26 @@ export const CalculateDeadlineInputSchema = z.object({
   startDate: z.string().datetime().optional(),
   businessDays: z.number().int().positive().max(365),
   tipoPrazo: z
-    .enum(['cpc', 'clt', 'trabalhista', 'penal', 'administrativo'])
-    .default('cpc'),
+    .enum(["cpc", "clt", "trabalhista", "penal", "administrativo"])
+    .default("cpc"),
   comarca: z.string().optional(),
   tribunal: z.string().optional(),
-  incluirFeriados: z.boolean().default(true)
-})
+  incluirFeriados: z.boolean().default(true),
+});
 
 /**
  * Schema para pesquisa de jurisprudência
  */
 export const ResearchPrecedentsInputSchema = z.object({
-  tema: z.string().min(5, 'Tema muito curto'),
+  tema: z.string().min(5, "Tema muito curto"),
   tribunais: z.array(z.string()).optional(),
   dataInicio: z.string().optional(),
   dataFim: z.string().optional(),
-  tipoDecisao: z.enum(['sentenca', 'acordao', 'sumula', 'todos']).default('todos'),
-  maxResults: z.number().int().min(1).max(50).default(10)
-})
+  tipoDecisao: z
+    .enum(["sentenca", "acordao", "sumula", "todos"])
+    .default("todos"),
+  maxResults: z.number().int().min(1).max(50).default(10),
+});
 
 /**
  * Schema para análise de risco
@@ -86,11 +91,18 @@ export const RiskAnalysisInputSchema = z.object({
   processNumber: z.string().optional(),
   description: z.string().min(20),
   area: z
-    .enum(['civel', 'trabalhista', 'previdenciario', 'penal', 'tributario', 'outro'])
-    .default('civel'),
+    .enum([
+      "civel",
+      "trabalhista",
+      "previdenciario",
+      "penal",
+      "tributario",
+      "outro",
+    ])
+    .default("civel"),
   valorCausa: z.number().optional(),
-  precedents: z.array(z.string()).optional()
-})
+  precedents: z.array(z.string()).optional(),
+});
 
 /**
  * Schema para comunicação com cliente
@@ -98,48 +110,56 @@ export const RiskAnalysisInputSchema = z.object({
 export const ClientCommunicationInputSchema = z.object({
   clientName: z.string().min(2),
   processNumber: z.string().optional(),
-  tipo: z.enum(['atualizacao', 'urgente', 'informativo', 'cobranca', 'felicitacao']),
+  tipo: z.enum([
+    "atualizacao",
+    "urgente",
+    "informativo",
+    "cobranca",
+    "felicitacao",
+  ]),
   conteudo: z.string().min(10),
-  canal: z.enum(['email', 'whatsapp', 'sms', 'carta']).default('email')
-})
+  canal: z.enum(["email", "whatsapp", "sms", "carta"]).default("email"),
+});
 
 /**
  * Schema para revisão contratual
  */
 export const ContractReviewInputSchema = z.object({
-  contractText: z.string().min(100, 'Contrato muito curto'),
+  contractText: z.string().min(100, "Contrato muito curto"),
   tipo: z.enum([
-    'prestacao_servicos',
-    'compra_venda',
-    'locacao',
-    'trabalhista',
-    'societario',
-    'outro'
+    "prestacao_servicos",
+    "compra_venda",
+    "locacao",
+    "trabalhista",
+    "societario",
+    "outro",
   ]),
   focusAreas: z
     .array(
       z.enum([
-        'clausulas_abusivas',
-        'prazos',
-        'valores',
-        'penalidades',
-        'rescisao',
-        'lgpd',
-        'compliance'
+        "clausulas_abusivas",
+        "prazos",
+        "valores",
+        "penalidades",
+        "rescisao",
+        "lgpd",
+        "compliance",
       ])
     )
-    .optional()
-})
+    .optional(),
+});
 
 /**
  * Schema para análise de documento genérico
  */
 export const AnalyzeDocumentInputSchema = z.object({
-  content: z.string().min(50, 'Documento muito curto'),
-  tipo: z.enum(['intimacao', 'sentenca', 'acordao', 'peticao', 'contrato', 'outro']).optional(),
+  content: z.string().min(50, "Documento muito curto"),
+  tipo: z
+    .enum(["intimacao", "sentenca", "acordao", "peticao", "contrato", "outro"])
+    .optional(),
   extractEntities: z.boolean().default(true),
-  summarize: z.boolean().default(true)
-})
+  summarize: z.boolean().default(true),
+});
 
 // ============================================================================
 // SCHEMAS DE SAÍDA (OUTPUT)
@@ -153,13 +173,13 @@ export const AnalyzeIntimationOutputSchema = z.object({
   deadline: z
     .object({
       days: z.number().int().nonnegative(),
-      type: z.enum(['úteis', 'corridos']),
+      type: z.enum(["úteis", "corridos"]),
       startDate: z.string().optional(),
       endDate: z.string(),
-      description: z.string().optional()
+      description: z.string().optional(),
     })
     .optional(),
-  priority: z.enum(['baixa', 'média', 'alta', 'crítica']),
+  priority: z.enum(["baixa", "média", "alta", "crítica"]),
   nextSteps: z.array(z.string()).min(1),
   suggestedAction: z.string(),
   processNumber: z.string().optional(),
@@ -167,18 +187,18 @@ export const AnalyzeIntimationOutputSchema = z.object({
   parties: z
     .object({
       author: z.string().optional(),
-      defendant: z.string().optional()
+      defendant: z.string().optional(),
     })
     .optional(),
   documentType: z.string().optional(),
-  confidence: z.number().min(0).max(1)
-})
+  confidence: z.number().min(0).max(1),
+});
 
 /**
  * Schema de saída para redação de petição
  */
 export const DraftPetitionOutputSchema = z.object({
-  draftHtml: z.string().min(500, 'Petição muito curta'),
+  draftHtml: z.string().min(500, "Petição muito curta"),
   confidence: z.number().min(0).max(1),
   templateId: z.string().optional(),
   variaveis: z.record(z.string(), z.string()).optional(),
@@ -189,10 +209,10 @@ export const DraftPetitionOutputSchema = z.object({
     .object({
       tipo: z.string().optional(),
       tribunal: z.string().optional(),
-      fundamentosUsados: z.array(z.string()).optional()
+      fundamentosUsados: z.array(z.string()).optional(),
     })
-    .optional()
-})
+    .optional(),
+});
 
 /**
  * Schema de saída para cálculo de prazo
@@ -205,13 +225,13 @@ export const CalculateDeadlineOutputSchema = z.object({
     z.object({
       date: z.string(),
       name: z.string(),
-      type: z.enum(['nacional', 'estadual', 'municipal', 'forense'])
+      type: z.enum(["nacional", "estadual", "municipal", "forense"]),
     })
   ),
   reasoning: z.array(z.string()),
-  urgency: z.enum(['normal', 'atenção', 'urgente', 'crítico']),
-  alerts: z.array(z.string()).optional()
-})
+  urgency: z.enum(["normal", "atenção", "urgente", "crítico"]),
+  alerts: z.array(z.string()).optional(),
+});
 
 /**
  * Schema de saída para pesquisa de jurisprudência
@@ -226,27 +246,27 @@ export const ResearchPrecedentsOutputSchema = z.object({
       tema: z.string(),
       ementa: z.string(),
       relevanceScore: z.number().min(0).max(1),
-      link: z.string().optional()
+      link: z.string().optional(),
     })
   ),
   thematicAnalysis: z.string(),
   recommendation: z.string(),
-  confidence: z.number().min(0).max(1)
-})
+  confidence: z.number().min(0).max(1),
+});
 
 /**
  * Schema de saída para análise de risco
  */
 export const RiskAnalysisOutputSchema = z.object({
-  riskLevel: z.enum(['muito_baixo', 'baixo', 'médio', 'alto', 'muito_alto']),
+  riskLevel: z.enum(["muito_baixo", "baixo", "médio", "alto", "muito_alto"]),
   riskScore: z.number().min(0).max(100),
   successProbability: z.number().min(0).max(100),
   factors: z.array(
     z.object({
       factor: z.string(),
-      impact: z.enum(['positivo', 'negativo', 'neutro']),
+      impact: z.enum(["positivo", "negativo", "neutro"]),
       weight: z.number().min(0).max(1),
-      description: z.string()
+      description: z.string(),
     })
   ),
   recommendations: z.array(z.string()),
@@ -254,11 +274,11 @@ export const RiskAnalysisOutputSchema = z.object({
     .object({
       bestCase: z.number().optional(),
       worstCase: z.number().optional(),
-      expected: z.number().optional()
+      expected: z.number().optional(),
     })
     .optional(),
-  confidence: z.number().min(0).max(1)
-})
+  confidence: z.number().min(0).max(1),
+});
 
 /**
  * Schema genérico de saída com metadados
@@ -269,8 +289,8 @@ export const GenericOutputSchema = z.object({
   message: z.string().optional(),
   confidence: z.number().min(0).max(1).optional(),
   processingTimeMs: z.number().optional(),
-  tokensUsed: z.number().optional()
-})
+  tokensUsed: z.number().optional(),
+});
 
 // ============================================================================
 // FILTROS INTELIGENTES (FASE 2)
@@ -282,27 +302,27 @@ export const GenericOutputSchema = z.object({
 export function isOutputConfiavelPeticao(
   output: z.infer<typeof DraftPetitionOutputSchema>
 ): { confiavel: boolean; motivos: string[] } {
-  const motivos: string[] = []
+  const motivos: string[] = [];
 
   // Confiança mínima de 70%
   if (output.confidence < 0.7) {
-    motivos.push(`Confiança baixa: ${(output.confidence * 100).toFixed(0)}%`)
+    motivos.push(`Confiança baixa: ${(output.confidence * 100).toFixed(0)}%`);
   }
 
   // Petição muito curta
   if (!output.draftHtml || output.draftHtml.length < 500) {
-    motivos.push('Petição muito curta (< 500 caracteres)')
+    motivos.push("Petição muito curta (< 500 caracteres)");
   }
 
   // Variáveis não preenchidas
-  if (output.draftHtml.includes('{{') && output.draftHtml.includes('}}')) {
-    motivos.push('Contém variáveis não preenchidas')
+  if (output.draftHtml.includes("{{") && output.draftHtml.includes("}}")) {
+    motivos.push("Contém variáveis não preenchidas");
   }
 
   return {
     confiavel: motivos.length === 0,
-    motivos
-  }
+    motivos,
+  };
 }
 
 /**
@@ -311,32 +331,32 @@ export function isOutputConfiavelPeticao(
 export function isOutputConfiavelIntimacao(
   output: z.infer<typeof AnalyzeIntimationOutputSchema>
 ): { confiavel: boolean; motivos: string[] } {
-  const motivos: string[] = []
+  const motivos: string[] = [];
 
   // Confiança mínima de 75%
   if (output.confidence < 0.75) {
-    motivos.push(`Confiança baixa: ${(output.confidence * 100).toFixed(0)}%`)
+    motivos.push(`Confiança baixa: ${(output.confidence * 100).toFixed(0)}%`);
   }
 
   // Sem próximos passos definidos
   if (!output.nextSteps || output.nextSteps.length === 0) {
-    motivos.push('Nenhum próximo passo identificado')
+    motivos.push("Nenhum próximo passo identificado");
   }
 
   // Resumo muito curto
   if (output.summary.length < 50) {
-    motivos.push('Resumo muito curto')
+    motivos.push("Resumo muito curto");
   }
 
   // Prazo crítico sem deadline
-  if (output.priority === 'crítica' && !output.deadline) {
-    motivos.push('Prioridade crítica mas sem prazo definido')
+  if (output.priority === "crítica" && !output.deadline) {
+    motivos.push("Prioridade crítica mas sem prazo definido");
   }
 
   return {
     confiavel: motivos.length === 0,
-    motivos
-  }
+    motivos,
+  };
 }
 
 /**
@@ -345,27 +365,27 @@ export function isOutputConfiavelIntimacao(
 export function isOutputConfiavelRisco(
   output: z.infer<typeof RiskAnalysisOutputSchema>
 ): { confiavel: boolean; motivos: string[] } {
-  const motivos: string[] = []
+  const motivos: string[] = [];
 
   // Confiança mínima de 65%
   if (output.confidence < 0.65) {
-    motivos.push(`Confiança baixa: ${(output.confidence * 100).toFixed(0)}%`)
+    motivos.push(`Confiança baixa: ${(output.confidence * 100).toFixed(0)}%`);
   }
 
   // Sem fatores de análise
   if (!output.factors || output.factors.length < 2) {
-    motivos.push('Poucos fatores de análise identificados')
+    motivos.push("Poucos fatores de análise identificados");
   }
 
   // Sem recomendações
   if (!output.recommendations || output.recommendations.length === 0) {
-    motivos.push('Nenhuma recomendação fornecida')
+    motivos.push("Nenhuma recomendação fornecida");
   }
 
   return {
     confiavel: motivos.length === 0,
-    motivos
-  }
+    motivos,
+  };
 }
 
 // ============================================================================
@@ -379,43 +399,45 @@ export function validarEntradaTarefa<T>(
   schema: z.ZodType<T>,
   data: unknown
 ): { success: true; data: T } | { success: false; errors: string[] } {
-  const result = schema.safeParse(data)
+  const result = schema.safeParse(data);
 
   if (result.success) {
-    return { success: true, data: result.data }
+    return { success: true, data: result.data };
   }
 
   return {
     success: false,
-    errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-  }
+    errors: result.error.issues.map(
+      (issue) => `${issue.path.join(".")}: ${issue.message}`
+    ),
+  };
 }
 
 /**
  * Valida saída de agente com schema apropriado
  * Reutiliza a mesma lógica de validarEntradaTarefa
  */
-export const validarSaidaAgente = validarEntradaTarefa
+export const validarSaidaAgente = validarEntradaTarefa;
 
 /**
  * Tenta extrair JSON de resposta de LLM
  */
 export function extrairJSONDeResposta(content: string): unknown | null {
   // Tenta extrair JSON entre ```json e ```
-  const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/)
+  const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
   if (jsonBlockMatch) {
     try {
-      return JSON.parse(jsonBlockMatch[1])
+      return JSON.parse(jsonBlockMatch[1]);
     } catch {
       // Continua tentando outros métodos
     }
   }
 
   // Tenta extrair primeiro objeto JSON (não guloso)
-  const jsonMatch = content.match(/\{[\s\S]*?\}/)
+  const jsonMatch = content.match(/\{[\s\S]*?\}/);
   if (jsonMatch) {
     try {
-      return JSON.parse(jsonMatch[0])
+      return JSON.parse(jsonMatch[0]);
     } catch {
       // Continua tentando outros métodos
     }
@@ -423,9 +445,9 @@ export function extrairJSONDeResposta(content: string): unknown | null {
 
   // Tenta parsear conteúdo direto
   try {
-    return JSON.parse(content)
+    return JSON.parse(content);
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -433,21 +455,35 @@ export function extrairJSONDeResposta(content: string): unknown | null {
 // TIPOS EXPORTADOS
 // ============================================================================
 
-export type AnalyzeIntimationInput = z.infer<typeof AnalyzeIntimationInputSchema>
-export type AnalyzeIntimationOutput = z.infer<typeof AnalyzeIntimationOutputSchema>
+export type AnalyzeIntimationInput = z.infer<
+  typeof AnalyzeIntimationInputSchema
+>;
+export type AnalyzeIntimationOutput = z.infer<
+  typeof AnalyzeIntimationOutputSchema
+>;
 
-export type DraftPetitionInput = z.infer<typeof DraftPetitionInputSchema>
-export type DraftPetitionOutput = z.infer<typeof DraftPetitionOutputSchema>
+export type DraftPetitionInput = z.infer<typeof DraftPetitionInputSchema>;
+export type DraftPetitionOutput = z.infer<typeof DraftPetitionOutputSchema>;
 
-export type CalculateDeadlineInput = z.infer<typeof CalculateDeadlineInputSchema>
-export type CalculateDeadlineOutput = z.infer<typeof CalculateDeadlineOutputSchema>
+export type CalculateDeadlineInput = z.infer<
+  typeof CalculateDeadlineInputSchema
+>;
+export type CalculateDeadlineOutput = z.infer<
+  typeof CalculateDeadlineOutputSchema
+>;
 
-export type ResearchPrecedentsInput = z.infer<typeof ResearchPrecedentsInputSchema>
-export type ResearchPrecedentsOutput = z.infer<typeof ResearchPrecedentsOutputSchema>
+export type ResearchPrecedentsInput = z.infer<
+  typeof ResearchPrecedentsInputSchema
+>;
+export type ResearchPrecedentsOutput = z.infer<
+  typeof ResearchPrecedentsOutputSchema
+>;
 
-export type RiskAnalysisInput = z.infer<typeof RiskAnalysisInputSchema>
-export type RiskAnalysisOutput = z.infer<typeof RiskAnalysisOutputSchema>
+export type RiskAnalysisInput = z.infer<typeof RiskAnalysisInputSchema>;
+export type RiskAnalysisOutput = z.infer<typeof RiskAnalysisOutputSchema>;
 
-export type ClientCommunicationInput = z.infer<typeof ClientCommunicationInputSchema>
-export type ContractReviewInput = z.infer<typeof ContractReviewInputSchema>
-export type AnalyzeDocumentInput = z.infer<typeof AnalyzeDocumentInputSchema>
+export type ClientCommunicationInput = z.infer<
+  typeof ClientCommunicationInputSchema
+>;
+export type ContractReviewInput = z.infer<typeof ContractReviewInputSchema>;
+export type AnalyzeDocumentInput = z.infer<typeof AnalyzeDocumentInputSchema>;

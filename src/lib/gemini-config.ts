@@ -5,35 +5,36 @@
 
 export const getGeminiApiKey = (): string => {
   // Tenta múltiplas variáveis (flexível para diferentes ambientes)
-  const apiKey =
+  const apiKey = String(
     import.meta.env.VITE_GEMINI_API_KEY ||
-    import.meta.env.VITE_GOOGLE_GEMINI_KEY ||
-    import.meta.env.VITE_GOOGLE_API_KEY ||
-    ''
+      import.meta.env.VITE_GOOGLE_GEMINI_KEY ||
+      import.meta.env.VITE_GOOGLE_API_KEY ||
+      ""
+  );
 
   if (!apiKey) {
     throw new Error(
-      'A variável VITE_GEMINI_API_KEY não está configurada.\n' +
-        '➡ Adicione sua chave Gemini no arquivo .env:\n' +
+      "A variável VITE_GEMINI_API_KEY não está configurada.\n" +
+        "➡ Adicione sua chave Gemini no arquivo .env:\n" +
         '    VITE_GEMINI_API_KEY="SUA_CHAVE_AQUI"\n\n' +
         'As chaves Gemini começam com "AIza..." ou "GEM-...".'
-    )
+    );
   }
 
-  return apiKey
-}
+  return apiKey;
+};
 
 /**
  * Verifica se existe chave válida no ambiente
  */
 export const isGeminiConfigured = (): boolean => {
   try {
-    const key = getGeminiApiKey()
-    return validateGeminiApiKey(key)
+    const key = getGeminiApiKey();
+    return validateGeminiApiKey(key);
   } catch {
-    return false
+    return false;
   }
-}
+};
 
 /**
  * Validação robusta para chaves Gemini:
@@ -42,14 +43,14 @@ export const isGeminiConfigured = (): boolean => {
  * - Aceita chaves longas usadas no Gemini Studio
  */
 export const validateGeminiApiKey = (apiKey: string): boolean => {
-  if (!apiKey || apiKey.length < 20) return false
+  if (!apiKey || apiKey.length < 20) return false;
 
   // Padrões possíveis:
   const patterns = [
     /^AIza[0-9A-Za-z_-]{20,}$/, // Gemini padrão
     /^GEM-[0-9A-Za-z_-]{16,}$/, // Gemini Enterprise / Studio
     /^[A-Za-z0-9_-]{32,}$/, // fallback para chaves longas
-  ]
+  ];
 
-  return patterns.some((regex) => regex.test(apiKey))
-}
+  return patterns.some((regex) => regex.test(apiKey));
+};

@@ -33,6 +33,8 @@
 
     // SonarLint
     "sonarsource.sonarlint-vscode",
+    // Java support for LSP and debugging (recommended if working with Java tools)
+    "vscjava.vscode-java-pack",
 
     // AI & Productivity
     "teamsdevapp.vscode-ai-foundry",
