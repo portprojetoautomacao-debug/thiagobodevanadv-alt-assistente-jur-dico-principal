@@ -1,0 +1,7 @@
+# ESLint ignore patterns for generated coverage files
+coverage-api/
+coverage-api/**
+coverage/
+coverage/**
+playwright-report/
+playwright-report/**
