@@ -148,34 +148,25 @@ export default defineConfig({
           // React core - crítico, carrega primeiro
           if (
             id.includes("node_modules/react") ||
-            id.includes("node_modules/react-dom")
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/scheduler")
           ) {
             return "react-vendor";
           }
 
-          // ✅ FIX: Phosphor Icons no bundle principal para evitar "Cannot set properties of undefined (setting 'Activity')"
-          // O erro acontece quando chunks diferentes tentam acessar ícones antes da inicialização
+          // Phosphor Icons - separar para evitar conflitos de inicialização
           if (id.includes("@phosphor-icons/react")) {
-            return "react-vendor";
+            return "icons-vendor";
           }
 
-          // ✅ FIX: Tiptap e ProseMirror DEVEM estar no mesmo chunk que React
-          // para evitar "Cannot set properties of undefined (setting 'Activity')"
-          // O erro ocorre quando o editor carrega antes do React/Phosphor estarem prontos
+          // Tiptap e ProseMirror - editor rico
           if (
             id.includes("@tiptap") ||
             id.includes("prosemirror") ||
             id.includes("@prosemirror")
           ) {
-            return "react-vendor";
+            return "editor-vendor";
           }
-
-          // ✅ FIX: TiptapEditor local também no react-vendor para evitar race condition
-          if (id.includes("src/components/editor/TiptapEditor.tsx")) {
-            return "react-vendor";
-          }
-
-          // ⚠️ NÃO separar Recharts/D3 em chunks - pode causar erro de inicialização
 
           // Radix UI components - separar em chunks menores
           if (id.includes("@radix-ui")) {
