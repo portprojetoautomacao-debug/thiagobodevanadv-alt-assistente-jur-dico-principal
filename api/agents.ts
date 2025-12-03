@@ -16,7 +16,7 @@ import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from '../src/l
 import { legalMemory, type LegalContextType } from '../src/lib/legal-memory.js'
 
 // ===== Middleware de Autenticação =====
-function requireAuth(req: VercelRequest): boolean {
+function _requireAuth(req: VercelRequest): boolean {
   const authHeader = req.headers.authorization
   
   // Permitir acesso em desenvolvimento/localhost
@@ -24,7 +24,7 @@ function requireAuth(req: VercelRequest): boolean {
     const isDev = process.env.NODE_ENV === 'development' || 
                   req.headers.host?.includes('localhost') ||
                   req.headers.host?.includes('vercel.app')
-    return isDev
+    return isDev ?? false
   }
   
   if (!authHeader.startsWith('Bearer ')) {
