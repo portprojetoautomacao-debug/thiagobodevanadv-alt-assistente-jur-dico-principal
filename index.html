@@ -271,6 +271,39 @@
     <!-- Script de fallback para problemas de carregamento -->
     <script>
         (function () {
+            // 🔄 FORÇA LIMPEZA DE CACHE na primeira visita após deploy
+            var CACHE_VERSION = 'v2-' + Date.now().toString(36);
+            var lastVersion = localStorage.getItem('_cacheVersion');
+            
+            // Se o erro "Activity" aparecer, limpa tudo automaticamente
+            window.addEventListener('error', function(e) {
+                if (e.message && e.message.includes('Activity')) {
+                    console.warn('[CACHE] Erro "Activity" detectado - limpando cache...');
+                    cleanAndReload();
+                }
+            });
+            
+            function cleanAndReload() {
+                // Limpa Service Workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        registrations.forEach(function (reg) { reg.unregister(); });
+                    });
+                }
+                // Limpa caches
+                if ('caches' in window) {
+                    caches.keys().then(function (names) {
+                        names.forEach(function (name) { caches.delete(name); });
+                    });
+                }
+                // Marca como limpo
+                localStorage.setItem('_cacheVersion', CACHE_VERSION);
+                // Recarrega sem cache
+                setTimeout(function () {
+                    window.location.href = window.location.href.split('?')[0] + '?nocache=' + Date.now();
+                }, 300);
+            }
+
             var timeout = setTimeout(function () {
                 var text = document.getElementById('loading-text');
                 var btn = document.getElementById('reset-btn');
@@ -289,26 +322,7 @@
             document.addEventListener('DOMContentLoaded', function () {
                 var btn = document.getElementById('reset-btn');
                 if (btn) {
-                    btn.addEventListener('click', function () {
-                        // Limpa Service Workers
-                        if ('serviceWorker' in navigator) {
-                            navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                                registrations.forEach(function (reg) { reg.unregister(); });
-                            });
-                        }
-                        // Limpa caches
-                        if ('caches' in window) {
-                            caches.keys().then(function (names) {
-                                names.forEach(function (name) { caches.delete(name); });
-                            });
-                        }
-                        // Limpa localStorage
-                        try { localStorage.clear(); } catch (e) { }
-                        // Recarrega sem cache
-                        setTimeout(function () {
-                            window.location.reload(true);
-                        }, 500);
-                    });
+                    btn.addEventListener('click', cleanAndReload);
                 }
             });
         })();

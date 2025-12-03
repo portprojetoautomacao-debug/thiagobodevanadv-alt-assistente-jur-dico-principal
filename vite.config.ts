@@ -69,6 +69,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // 🔄 FORÇA ATUALIZAÇÃO: skipWaiting + clientsClaim para atualizar imediatamente
+        skipWaiting: true,
+        clientsClaim: true,
+        // Limpar caches antigos automaticamente
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         runtimeCaching: [
           {
@@ -170,10 +175,10 @@ export default defineConfig({
             return "react-vendor";
           }
 
-          // Phosphor Icons - separar para evitar conflitos de inicialização
-          if (id.includes("@phosphor-icons/react")) {
-            return "icons-vendor";
-          }
+          // ❌ REMOVIDO: icons-vendor separado causava race condition
+          // "Cannot set properties of undefined (setting 'Activity')"
+          // Phosphor Icons agora é incluído diretamente nos componentes
+          // que os usam (inline chunking)
 
           // Tiptap e ProseMirror - editor rico
           if (
