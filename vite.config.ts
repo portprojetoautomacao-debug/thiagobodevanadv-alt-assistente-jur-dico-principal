@@ -159,6 +159,35 @@ export default defineConfig({
     minify: "esbuild",
     // Target focado em browsers modernos → menos polyfill
     target: "es2020",
+    // ❌ DESABILITAR modulePreload para evitar race condition do ProseMirror
+    // O erro "Cannot set properties of undefined (setting 'Activity')"
+    // acontece quando editor-vendor é pré-carregado antes do React estar pronto
+    modulePreload: {
+      polyfill: true,
+      // Não fazer preload de chunks que contêm ProseMirror/Tiptap
+      resolveDependencies: (
+        _filename,
+        deps,
+        { hostId: _hostId, hostType: _hostType }
+      ) => {
+        // Filtrar dependências que não devem ser preloaded
+        return deps.filter((dep) => {
+          // Não preload editor chunks - eles serão carregados sob demanda
+          if (
+            dep.includes("editor") ||
+            dep.includes("tiptap") ||
+            dep.includes("prosemirror")
+          ) {
+            return false;
+          }
+          // Não preload Minutas - lazy loaded
+          if (dep.includes("Minutas") || dep.includes("minutas")) {
+            return false;
+          }
+          return true;
+        });
+      },
+    },
     rollupOptions: {
       output: {
         // Otimiza nomes de chunks para melhor caching em produção
