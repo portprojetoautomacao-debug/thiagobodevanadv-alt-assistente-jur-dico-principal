@@ -274,15 +274,15 @@
             // 🔄 FORÇA LIMPEZA DE CACHE na primeira visita após deploy
             var CACHE_VERSION = 'v2-' + Date.now().toString(36);
             var lastVersion = localStorage.getItem('_cacheVersion');
-            
+
             // Se o erro "Activity" aparecer, limpa tudo automaticamente
-            window.addEventListener('error', function(e) {
+            window.addEventListener('error', function (e) {
                 if (e.message && e.message.includes('Activity')) {
                     console.warn('[CACHE] Erro "Activity" detectado - limpando cache...');
                     cleanAndReload();
                 }
             });
-            
+
             function cleanAndReload() {
                 // Limpa Service Workers
                 if ('serviceWorker' in navigator) {
