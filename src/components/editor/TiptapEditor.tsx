@@ -8,42 +8,9 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-// ✅ FIX: Phosphor Icons - imports nomeados são seguros desde que @phosphor-icons/react
-// esteja no chunk 'react-vendor' (vite.config.ts) para evitar "Cannot set properties of undefined (setting 'Activity')"
-// Esse erro ocorria quando diferentes chunks tentavam inicializar os ícones simultaneamente
-import {
-  ArrowClockwise,
-  ArrowCounterClockwise,
-  ArrowsOut,
-  Code,
-  Eraser,
-  Highlighter,
-  Image as ImageIcon,
-  Lightning,
-  Link as LinkIcon,
-  ListBullets,
-  ListNumbers,
-  MagicWand,
-  Palette,
-  Printer,
-  Quotes,
-  Robot,
-  Sparkle,
-  SpinnerGap,
-  TextAa,
-  TextAlignCenter,
-  TextAlignJustify,
-  TextAlignLeft,
-  TextAlignRight,
-  TextB,
-  TextH,
-  TextHOne,
-  TextHThree,
-  TextHTwo,
-  TextItalic,
-  TextStrikethrough,
-  TextUnderline,
-} from "@phosphor-icons/react";
+// ✅ FIX: Usando Lucide React ao invés de Phosphor Icons
+// Phosphor Icons causava erro "Cannot set properties of undefined (setting 'Activity')"
+// quando carregado em chunks separados. Lucide é mais leve e não tem esse problema.
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -54,6 +21,39 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Bot,
+  Code,
+  Eraser,
+  Expand,
+  Heading1,
+  Heading2,
+  Heading3,
+  Highlighter,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Loader2,
+  Palette,
+  Pilcrow,
+  Printer,
+  Quote,
+  Redo,
+  Sparkles,
+  Strikethrough,
+  Type,
+  Underline as UnderlineIcon,
+  Undo,
+  Wand2,
+  Zap,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -100,23 +100,23 @@ const COLORS = [
 const AI_QUICK_COMMANDS = [
   {
     label: "Expandir",
-    icon: ArrowsOut,
+    icon: Expand,
     prompt:
       "Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:",
   },
   {
     label: "Resumir",
-    icon: TextAa,
+    icon: Pilcrow,
     prompt: "Resuma o seguinte texto de forma concisa:",
   },
   {
     label: "Formalizar",
-    icon: MagicWand,
+    icon: Wand2,
     prompt: "Reescreva o seguinte texto em linguagem jurídica formal:",
   },
   {
     label: "Corrigir",
-    icon: Sparkle,
+    icon: Sparkles,
     prompt: "Corrija erros de gramática e ortografia no seguinte texto:",
   },
 ] as const;
@@ -211,7 +211,7 @@ function UndoRedoButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={!editor.can().undo() || disabled}
         title="Desfazer"
       >
-        <ArrowCounterClockwise className="h-4 w-4" />
+        <Undo className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
@@ -220,7 +220,7 @@ function UndoRedoButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={!editor.can().redo() || disabled}
         title="Refazer"
       >
-        <ArrowClockwise className="h-4 w-4" />
+        <Redo className="h-4 w-4" />
       </Button>
     </>
   );
@@ -237,7 +237,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Negrito (Ctrl+B)"
       >
-        <TextB className="h-4 w-4" weight="bold" />
+        <Bold className="h-4 w-4" />
       </Button>
       <Button
         variant={editor.isActive("italic") ? "secondary" : "ghost"}
@@ -246,7 +246,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Itálico (Ctrl+I)"
       >
-        <TextItalic className="h-4 w-4" />
+        <Italic className="h-4 w-4" />
       </Button>
       <Button
         variant={editor.isActive("underline") ? "secondary" : "ghost"}
@@ -255,7 +255,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Sublinhado (Ctrl+U)"
       >
-        <TextUnderline className="h-4 w-4" />
+        <UnderlineIcon className="h-4 w-4" />
       </Button>
       <Button
         variant={editor.isActive("strike") ? "secondary" : "ghost"}
@@ -264,7 +264,7 @@ function TextFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Tachado"
       >
-        <TextStrikethrough className="h-4 w-4" />
+        <Strikethrough className="h-4 w-4" />
       </Button>
     </>
   );
@@ -276,7 +276,7 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" title="Títulos" disabled={disabled}>
-          <TextH className="h-4 w-4" />
+          <Type className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2">
@@ -291,7 +291,7 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
             }
             className="justify-start"
           >
-            <TextHOne className="h-4 w-4 mr-2" /> Título 1
+            <Heading1 className="h-4 w-4 mr-2" /> Título 1
           </Button>
           <Button
             variant={
@@ -303,7 +303,7 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
             }
             className="justify-start"
           >
-            <TextHTwo className="h-4 w-4 mr-2" /> Título 2
+            <Heading2 className="h-4 w-4 mr-2" /> Título 2
           </Button>
           <Button
             variant={
@@ -315,7 +315,7 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
             }
             className="justify-start"
           >
-            <TextHThree className="h-4 w-4 mr-2" /> Título 3
+            <Heading3 className="h-4 w-4 mr-2" /> Título 3
           </Button>
           <Button
             variant={editor.isActive("paragraph") ? "secondary" : "ghost"}
@@ -323,7 +323,7 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
             onClick={() => editor.chain().focus().setParagraph().run()}
             className="justify-start"
           >
-            <TextAa className="h-4 w-4 mr-2" /> Parágrafo
+            <Pilcrow className="h-4 w-4 mr-2" /> Parágrafo
           </Button>
         </div>
       </PopoverContent>
@@ -342,7 +342,7 @@ function ListButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Lista com marcadores"
       >
-        <ListBullets className="h-4 w-4" />
+        <List className="h-4 w-4" />
       </Button>
       <Button
         variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
@@ -351,7 +351,7 @@ function ListButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Lista numerada"
       >
-        <ListNumbers className="h-4 w-4" />
+        <ListOrdered className="h-4 w-4" />
       </Button>
     </>
   );
@@ -368,7 +368,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Alinhar à esquerda"
       >
-        <TextAlignLeft className="h-4 w-4" />
+        <AlignLeft className="h-4 w-4" />
       </Button>
       <Button
         variant={
@@ -379,7 +379,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Centralizar"
       >
-        <TextAlignCenter className="h-4 w-4" />
+        <AlignCenter className="h-4 w-4" />
       </Button>
       <Button
         variant={
@@ -390,7 +390,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Alinhar à direita"
       >
-        <TextAlignRight className="h-4 w-4" />
+        <AlignRight className="h-4 w-4" />
       </Button>
       <Button
         variant={
@@ -401,7 +401,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Justificar"
       >
-        <TextAlignJustify className="h-4 w-4" />
+        <AlignJustify className="h-4 w-4" />
       </Button>
     </>
   );
@@ -418,7 +418,7 @@ function ExtraFormattingButtons({ editor, disabled }: ToolbarButtonProps) {
         disabled={disabled}
         title="Citação"
       >
-        <Quotes className="h-4 w-4" />
+        <Quote className="h-4 w-4" />
       </Button>
       <Button
         variant={editor.isActive("codeBlock") ? "secondary" : "ghost"}
@@ -545,9 +545,9 @@ function AIToolbarSection({
             disabled={isAILoading || isStreaming}
           >
             {isAILoading || isStreaming ? (
-              <SpinnerGap className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Robot className="h-4 w-4" weight="fill" />
+              <Bot className="h-4 w-4" />
             )}
             {isStreaming ? "Gerando..." : "IA"}
             {onAIStream && !isStreaming && (
@@ -564,7 +564,7 @@ function AIToolbarSection({
           <div className="space-y-4">
             {onAIStream && (
               <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                <Lightning className="h-4 w-4 text-purple-500" weight="fill" />
+                <Zap className="h-4 w-4 text-purple-500" />
                 <span className="text-xs text-purple-400">
                   Modo Streaming ativo – texto gerado em tempo real
                 </span>
@@ -609,9 +609,9 @@ function AIToolbarSection({
                 disabled={!aiPrompt.trim() || isAILoading || isStreaming}
               >
                 {isAILoading || isStreaming ? (
-                  <SpinnerGap className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Lightning className="h-4 w-4" weight="fill" />
+                  <Zap className="h-4 w-4" />
                 )}
                 {getGenerateButtonText(isStreaming, !!onAIStream)}
               </Button>
