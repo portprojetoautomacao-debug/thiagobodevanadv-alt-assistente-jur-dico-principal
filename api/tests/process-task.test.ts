@@ -1,34 +1,41 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import handler from "../agents/process-task";
 
-function mockRes() {
+function mockRes ()
+{
   const res: any = {};
   res.statusCode = 200;
   res.body = null;
-  res.setHeader = (k: string, v: string) => (res.headers = res.headers || {}, (res.headers[k] = v));
+  res.setHeader = (k: string, v: string) => (res.headers = res.headers || {}, (res.headers[ k ] = v));
   res.end = () => (res.body = res.body || {});
-  res.json = (data: any) => {
+  res.json = (data: any) =>
+  {
     res.body = data;
     return res;
   };
-  res.status = (code: number) => {
+  res.status = (code: number) =>
+  {
     res.statusCode = code;
     return res;
   };
   return res;
 }
 
-function makeReq(task: any, agent: any, method = "POST") {
+function makeReq (task: any, agent: any, method = "POST")
+{
   return {
     method,
     body: { task, agent },
   } as any;
 }
 
-describe("process-task API", () => {
-  beforeEach(() => {
+describe("process-task API", () =>
+{
+  beforeEach(() =>
+  {
     // stub fetch for Gemini
-    vi.stubGlobal("fetch", vi.fn(async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+    {
       return {
         ok: true,
         json: async () => ({
@@ -39,10 +46,10 @@ describe("process-task API", () => {
                   {
                     text: JSON.stringify({
                       summary: "Resumo teste",
-                      suggestedActions: ["action1"],
+                      suggestedActions: [ "action1" ],
                       priority: "low",
                       documentType: "Intimação",
-                      nextSteps: ["Revisar"],
+                      nextSteps: [ "Revisar" ],
                       deadline: {
                         days: 10,
                         type: "úteis",
@@ -59,11 +66,13 @@ describe("process-task API", () => {
     process.env.GEMINI_API_KEY = "test";
   });
 
-  afterEach(() => {
+  afterEach(() =>
+  {
     vi.unstubAllGlobals();
   });
 
-  it("should process an analyze_intimation task and return analysis result", async () => {
+  it("should process an analyze_intimation task and return analysis result", async () =>
+  {
     const task = {
       id: "1",
       agentId: "a1",
@@ -90,7 +99,8 @@ describe("process-task API", () => {
     expect(res.body.result.data).toHaveProperty("summary");
   });
 
-  it("should return message for unknown task without text", async () => {
+  it("should return message for unknown task without text", async () =>
+  {
     const task = {
       id: "2",
       agentId: "a2",

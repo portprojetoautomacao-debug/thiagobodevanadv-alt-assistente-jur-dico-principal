@@ -1,11 +1,11 @@
-const { defineConfig, devices } = require("@playwright/test");
-const fs = require("fs");
+const { defineConfig, devices } = require( "@playwright/test" );
+const fs = require( "fs" );
 const envPort = process.env.PORT || "5173";
 
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
-module.exports = defineConfig({
+module.exports = defineConfig( {
   testDir: "tests/e2e",
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -22,9 +22,9 @@ module.exports = defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL:
       process.env.BASE_URL ||
-      (process.env.USE_PROD_BASE_URL === "true"
+      ( process.env.USE_PROD_BASE_URL === "true"
         ? "https://assistente-juridico-p.vercel.app"
-        : `http://127.0.0.1:${envPort}`),
+        : `http://127.0.0.1:${ envPort }` ),
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -34,7 +34,7 @@ module.exports = defineConfig({
       "x-vercel-protection-bypass":
         process.env.VERCEL_AUTOMATION_BYPASS_SECRET || "",
     },
-    storageState: fs.existsSync("tests/e2e/storageState.json")
+    storageState: fs.existsSync( "tests/e2e/storageState.json" )
       ? "tests/e2e/storageState.json"
       : undefined,
   },
@@ -50,18 +50,19 @@ module.exports = defineConfig({
       use: { ...devices["Desktop Firefox"] },
     },
   ],
-  webServer: (() => {
+  webServer: ( () =>
+  {
     const envPort = process.env.PORT || "5173";
     const useProd = process.env.USE_PROD_BASE_URL === "true";
     const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
-    if (useProd) return undefined;
+    if ( useProd ) return undefined;
     return {
       command: "npm run dev:local",
       env: { PORT: envPort, HOST: "127.0.0.1", CI: isCI ? "true" : "false" },
-      port: Number(envPort),
+      port: Number( envPort ),
       reuseExistingServer: true,
       timeout: 120_000,
       cwd: process.cwd(),
     };
-  })(),
-});
+  } )(),
+} );

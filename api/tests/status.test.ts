@@ -1,16 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import handler from "../status";
 
-function mockRes() {
+function mockRes ()
+{
   const res: any = {};
   res.statusCode = 200;
   res.body = null;
   res.headers = {};
-  res.setHeader = (k: string, v: string) => (res.headers[k] = v);
-  res.status = (code: number) => {
+  res.setHeader = (k: string, v: string) => (res.headers[ k ] = v);
+  res.status = (code: number) =>
+  {
     res.statusCode = code;
     return {
-      json: (data: any) => {
+      json: (data: any) =>
+      {
         res.body = data;
         return res;
       },
@@ -21,7 +24,8 @@ function mockRes() {
   return res;
 }
 
-function makeReq(type?: string, method = "GET") {
+function makeReq (type?: string, method = "GET")
+{
   const q: any = {};
   if (type) q.type = type;
   return {
@@ -31,8 +35,10 @@ function makeReq(type?: string, method = "GET") {
   } as any;
 }
 
-describe("status API", () => {
-  beforeEach(() => {
+describe("status API", () =>
+{
+  beforeEach(() =>
+  {
     // Ensure no Upstash env by default
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -40,7 +46,8 @@ describe("status API", () => {
     delete process.env.VITE_GOOGLE_API_KEY;
   });
 
-  it("should respond to OPTIONS with 200 and set headers", async () => {
+  it("should respond to OPTIONS with 200 and set headers", async () =>
+  {
     const req = makeReq(undefined, "OPTIONS");
     const res = mockRes();
     await handler(req, res);
@@ -48,7 +55,8 @@ describe("status API", () => {
     expect(res.headers).toHaveProperty("Access-Control-Allow-Origin");
   });
 
-  it("should respond 'loaded' for /loaded routes (POST)", async () => {
+  it("should respond 'loaded' for /loaded routes (POST)", async () =>
+  {
     const req = makeReq("loaded", "POST");
     const res = mockRes();
     await handler(req, res);
@@ -57,7 +65,8 @@ describe("status API", () => {
     expect(res.body.status).toBe("loaded");
   });
 
-  it("should respond 'ok' for loaded (GET)", async () => {
+  it("should respond 'ok' for loaded (GET)", async () =>
+  {
     const req = makeReq("loaded", "GET");
     const res = mockRes();
     await handler(req, res);
@@ -65,7 +74,8 @@ describe("status API", () => {
     expect(res.body).toHaveProperty("service", "spark-loaded");
   });
 
-  it("should respond watchdog with null data when no KV configured", async () => {
+  it("should respond watchdog with null data when no KV configured", async () =>
+  {
     const req = makeReq("watchdog", "GET");
     const res = mockRes();
     await handler(req, res);
@@ -74,7 +84,8 @@ describe("status API", () => {
     expect(res.body.watchdog).toBeNull();
   });
 
-  it("should respond cron-health with defaults when no KV configured", async () => {
+  it("should respond cron-health with defaults when no KV configured", async () =>
+  {
     const req = makeReq("cron-health", "GET");
     const res = mockRes();
     await handler(req, res);
@@ -83,7 +94,8 @@ describe("status API", () => {
     expect(Array.isArray(res.body.queue_history)).toBe(true);
   });
 
-  it("should return 'unhealthy' when AI is not configured", async () => {
+  it("should return 'unhealthy' when AI is not configured", async () =>
+  {
     const req = makeReq(undefined, "GET");
     const res = mockRes();
     await handler(req, res);
@@ -92,7 +104,8 @@ describe("status API", () => {
     expect(res.statusCode).toBe(500);
   });
 
-  it("should return 'healthy' when Gemini key is configured", async () => {
+  it("should return 'healthy' when Gemini key is configured", async () =>
+  {
     process.env.GEMINI_API_KEY = "testkey";
     const req = makeReq(undefined, "GET");
     const res = mockRes();
