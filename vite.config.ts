@@ -22,7 +22,7 @@ export default defineConfig({
     // createIconImportProxy() as PluginOption, // REMOVIDO: dependia de @github/spark
     // sparkPlugin() as PluginOption, // REMOVIDO: dependia de @github/spark
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "manual",
       // ✅ FIX: Usar 'inline' ao invés do padrão para evitar problemas com CSP
       // O script de registro será injetado diretamente no HTML ao invés de arquivo separado
       injectRegister: "inline",
@@ -159,6 +159,22 @@ export default defineConfig({
             return "react-vendor";
           }
 
+          // ✅ FIX: Tiptap e ProseMirror DEVEM estar no mesmo chunk que React
+          // para evitar "Cannot set properties of undefined (setting 'Activity')"
+          // O erro ocorre quando o editor carrega antes do React/Phosphor estarem prontos
+          if (
+            id.includes("@tiptap") ||
+            id.includes("prosemirror") ||
+            id.includes("@prosemirror")
+          ) {
+            return "react-vendor";
+          }
+
+          // ✅ FIX: TiptapEditor local também no react-vendor para evitar race condition
+          if (id.includes("src/components/editor/TiptapEditor.tsx")) {
+            return "react-vendor";
+          }
+
           // ⚠️ NÃO separar Recharts/D3 em chunks - pode causar erro de inicialização
 
           // Radix UI components - separar em chunks menores
@@ -208,17 +224,6 @@ export default defineConfig({
           // Sonner toasts - usado frequentemente
           if (id.includes("sonner")) {
             return "toasts";
-          }
-
-          // Tiptap editor e ProseMirror - mesmo chunk para evitar race condition
-          // O erro "Cannot set properties of undefined (setting 'Activity')" acontece
-          // quando ProseMirror carrega antes do React estar inicializado
-          if (
-            id.includes("@tiptap") ||
-            id.includes("prosemirror") ||
-            id.includes("@prosemirror")
-          ) {
-            return "editor";
           }
 
           // Sample data (apenas desenvolvimento/demo)

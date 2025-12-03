@@ -34,6 +34,9 @@
     <!-- ✅ PRELOAD: Fonte Inter local para evitar FOIT -->
     <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 
+    <!-- ✅ PRELOAD LCP: imagem hero (fallback OG) para antecipar carregamento -->
+    <link rel="preload" href="/og-image.png" as="image" />
+
     <!-- ✅ OTIMIZAÇÃO LCP: CSS crítico inline expandido para evitar render-blocking -->
     <style>
         /* Critical CSS - Above the fold styles */
