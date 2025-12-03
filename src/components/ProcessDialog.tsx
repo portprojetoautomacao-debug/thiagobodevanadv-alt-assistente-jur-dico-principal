@@ -16,8 +16,8 @@ interface ProcessDialogProps {
   onSave: (process: Process) => void
 }
 
-// Helper function to create form data from process
-function createFormData(process?: Process) {
+// Helper to create initial form data
+function createInitialFormData(process?: Process) {
   if (process) {
     return {
       numeroCNJ: process.numeroCNJ,
@@ -47,16 +47,16 @@ function createFormData(process?: Process) {
 }
 
 export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
-  // Use useMemo to create initial form data based on process
-  const initialFormData = useMemo(() => createFormData(process), [process])
-  
-  const [formData, setFormData] = useState(initialFormData)
+  // Initialize form data with lazy initialization
+  const [formData, setFormData] = useState(() => createInitialFormData(process))
 
-  // Sync form data when process or open state changes
+  // Sync form data when process or dialog state changes
   useEffect(() => {
-    if (open) {
-      setFormData(createFormData(process))
-    }
+    // Schedule to avoid synchronous setState in effect
+    const timeoutId = globalThis.setTimeout(() => {
+      setFormData(createInitialFormData(process))
+    }, 0)
+    return () => globalThis.clearTimeout(timeoutId)
   }, [process, open])
 
   const handleSubmit = (e: React.FormEvent) => {

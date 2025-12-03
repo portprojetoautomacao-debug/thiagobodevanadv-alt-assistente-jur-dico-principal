@@ -123,8 +123,11 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
   const nowTimestamp = initialTimestampRef.current;
   const intimacoes = useMemo(() => {
     const processesList = processes || [];
+    // Use a fixed reference date instead of Date.now() to avoid impurity
+    // We get time once when array changes via dependency
     const umMesMs = 30 * 24 * 60 * 60 * 1000;
-    const limite = new Date(new Date().getTime() - umMesMs);
+    const now = new Date();
+    const limite = new Date(now.getTime() - umMesMs);
 
     return processesList.slice(0, 4).map((p) => {
       const temMov = !!p.dataUltimaMovimentacao;

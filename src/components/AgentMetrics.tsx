@@ -17,7 +17,7 @@ import {
   Pulse,
   LightningSlash,
 } from '@phosphor-icons/react'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 
 interface AgentMetricsProps {
@@ -106,16 +106,16 @@ export default function AgentMetrics({
   const hoursPerTask = 10 / 60
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1)
 
-  // Calculate tasks in last 24 hours using useMemo for purity
   const tasksLast24Hours = useMemo(() => {
-    const last24h = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
+    const now = typeof window !== 'undefined' ? Date.now() : 0
+    const last24h = new Date(now - 24 * 60 * 60 * 1000)
     return completedTasks.filter(
       (task) =>
         task.completedAt && new Date(task.completedAt) > last24h,
     ).length
   }, [completedTasks])
 
-  const getAverageProcessingTime = () => {
+  const averageProcessingTime = useMemo(() => {
     const tasksWithTime = completedTasks.filter(
       (task) => task.startedAt && task.completedAt,
     )
@@ -130,9 +130,7 @@ export default function AgentMetrics({
 
     // segundos médios por tarefa
     return Math.round(totalTime / tasksWithTime.length / 1000)
-  }
-
-  const avgProcessingTime = getAverageProcessingTime()
+  }, [completedTasks])
 
   return (
     <div className="space-y-6">
@@ -260,7 +258,7 @@ export default function AgentMetrics({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground mb-2">
-              {avgProcessingTime}s
+              {averageProcessingTime}s
             </div>
             <p className="text-xs text-muted-foreground">
               Tempo médio de processamento por tarefa

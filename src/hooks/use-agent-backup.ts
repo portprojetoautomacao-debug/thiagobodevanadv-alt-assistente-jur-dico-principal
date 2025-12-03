@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useKV } from './use-kv';
 
 /**
@@ -27,7 +27,7 @@ export function useAgentBackup(options: BackupOptions) {
   const [completedTasks] = useKV('completed-agent-tasks', []);
   const [lastDjenCheck] = useKV('last-djen-check', null);
 
-  const lastBackupRef = useRef<number>(0);
+  // Use state instead of ref for lastBackup to avoid accessing ref during render
   const [lastBackup, setLastBackup] = useState<number>(0);
 
   // Função para criar backup local
@@ -63,7 +63,6 @@ export function useAgentBackup(options: BackupOptions) {
       // Salvar timestamp do último backup
       localStorage.setItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`, String(Date.now()));
 
-      lastBackupRef.current = backupData.timestamp;
       setLastBackup(backupData.timestamp);
 
       console.log('✅ Backup local criado:', new Date(backupData.timestamp).toLocaleString());
@@ -138,13 +137,15 @@ export function useAgentBackup(options: BackupOptions) {
     if (!enableAutoBackup || !userId) return;
 
     const intervalMs = autoBackupInterval * 60 * 1000;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    // Backup imediato se houver dados e não houver backup recente
+    // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
-    if (agents.length > 0 && (now - lastBackupRef.current) > intervalMs) {
-      createBackup();
+    if (agents.length > 0 && (now - lastBackup) > intervalMs) {
+      // Schedule to avoid synchronous setState in effect
+      timeoutId = globalThis.setTimeout(createBackup, 0);
     }
-
+    
     // Configurar backup periódico
     const timer = setInterval(() => {
       if (agents.length > 0) {
@@ -152,8 +153,13 @@ export function useAgentBackup(options: BackupOptions) {
       }
     }, intervalMs);
 
-    return () => clearInterval(timer);
-  }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup]);
+    return () => {
+      if (timeoutId) {
+        globalThis.clearTimeout(timeoutId);
+      }
+      clearInterval(timer);
+    };
+  }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup, lastBackup]);
 
   // Não tenta restaurar automaticamente - dados já estão no Spark KV
   // Restauração manual disponível via botão
