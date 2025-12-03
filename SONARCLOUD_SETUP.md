@@ -53,6 +53,13 @@ Project Name: Assistente Jurídico PJe
    - Já instalada e configurada no workspace
    - Análise em tempo real enquanto codifica
    - Sugestões de correção inline
+   
+   > Dica: Se você usa `nvm` para gerenciar Node.js, o VS Code pode não detectar automaticamente o executável do Node para o SonarLint.
+   > Defina `sonarlint.pathToNodeExecutable` em `.vscode/settings.json` apontando para o binário do Node 22, por exemplo:
+   > ```json
+   > "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node"
+   > ```
+   > No Windows, use: `C:\\Program Files\\nodejs\\node.exe` (duas barras invertidas)
 
 2. **Ver Problemas Detectados**
    - Painel "Problems" do VS Code
