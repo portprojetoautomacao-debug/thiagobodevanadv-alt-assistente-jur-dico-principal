@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useKV } from './use-kv';
 
 /**
@@ -28,6 +28,7 @@ export function useAgentBackup(options: BackupOptions) {
   const [lastDjenCheck] = useKV('last-djen-check', null);
 
   const lastBackupRef = useRef<number>(0);
+  const [lastBackup, setLastBackup] = useState<number>(0);
 
   // Função para criar backup local
   const createBackup = useCallback(async () => {
@@ -63,6 +64,7 @@ export function useAgentBackup(options: BackupOptions) {
       localStorage.setItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`, String(Date.now()));
 
       lastBackupRef.current = backupData.timestamp;
+      setLastBackup(backupData.timestamp);
 
       console.log('✅ Backup local criado:', new Date(backupData.timestamp).toLocaleString());
 
@@ -160,7 +162,7 @@ export function useAgentBackup(options: BackupOptions) {
     createBackup,
     restoreBackup,
     getBackupHistory,
-    lastBackup: lastBackupRef.current,
+    lastBackup,
     storageType: 'local' as const
   };
 }

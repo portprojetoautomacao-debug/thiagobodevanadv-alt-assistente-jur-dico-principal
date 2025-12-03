@@ -1,173 +1,22 @@
 {
-  "task.allowAutomaticTasks": "on",
-  "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 1000,
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "typescript.tsserver.maxTsServerMemory": 4096,
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.preferences.includePackageJsonAutoImports": "off",
-  "eslint.useFlatConfig": true,
-  "eslint.validate": ["typescript", "typescriptreact"],
-  // SonarQube for IDE - Connected Mode com SonarCloud
-  "sonarlint.disableTelemetry": true,
-  "sonarlint.automaticAnalysis": true,
-  "sonarlint.focusOnNewCode": true,
-  "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js,**/tests/**",
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.output.showVerboseLogs": false,
-
-  // Conexão com SonarCloud
-  "sonarlint.connectedMode.connections.sonarcloud": [
-    {
-      "connectionId": "sonarcloud-assistente",
-      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
-      "token": "bde063593f1a19200d7e20d1112d8b9639cbfb10"
-    }
-  ],
-
-  // Binding do projeto
-  "sonarlint.connectedMode.project": {
-    "connectionId": "sonarcloud-assistente",
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+  "github.copilot.chat.alternateGptPrompt.enabled": true,
+  "github.copilot.chat.anthropic.thinking.enabled": true,
+  "github.copilot.chat.anthropic.tools.websearch.enabled": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  
+  // TypeScript Language Server - Aumentar memória e otimizar
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriorityPolling"
   },
-  "remote.portsAttributes": {
-    "5000": {
-      "label": "Preview Server",
-      "onAutoForward": "notify"
-    },
-    "5173": {
-      "label": "Vite Dev Server",
-      "onAutoForward": "notify"
-    }
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[github-actions-workflow]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "files.watcherExclude": {
-    "**/.vscode-remote/extensions/**": true
-  },
-  "cSpell.ignorePaths": ["**/.vscode-remote/extensions/**"],
-
-  // Configuração do cSpell para Português
-  "cSpell.language": "en,pt,pt_BR",
-  "cSpell.words": [
-    "Autenticação",
-    "Calculadora",
-    "Carregados",
-    "COMPONENTES",
-    "Expediente",
-    "Minutas",
-    "PRINCIPAIS",
-    "Prazos",
-    "alterações",
-    "aplica",
-    "automático",
-    "carga",
-    "causado",
-    "componentes",
-    "completam",
-    "contém",
-    "criação",
-    "derivada",
-    "diretamente",
-    "erro",
-    "escuta",
-    "exclusivo",
-    "imediatamente",
-    "inicial",
-    "inicialização",
-    "legado",
-    "minutas",
-    "navegação",
-    "passam",
-    "pesado",
-    "presença",
-    "prontos",
-    "redação",
-    "Removido",
-    "removido",
-    "requer",
-    "roteamento",
-    "sincroniza",
-    "usuário",
-    "juridico",
-    "datajud",
-    "intimações",
-    "expedientes",
-    "petições",
-    "processual",
-    "jurisprudência",
-    "protocolo",
-    "honorários",
-    "advogado",
-    "advogados",
-    "procuração",
-    "contestação",
-    "manifestação",
-    "recurso",
-    "parecer",
-    "cliente",
-    "clientes",
-    "prazo",
-    "prazos",
-    "processo",
-    "processos",
-    "publicação",
-    "publicações",
-    "notificação",
-    "notificações",
-    "audiência",
-    "audiências",
-    "comarca",
-    "vara",
-    "tribunal",
-    "desembargador",
-    "magistrado",
-    "réu",
-    "autor",
-    "outorgante",
-    "outorgado",
-    "feriado",
-    "feriados",
-    "DJEN",
-    "DataJud",
-    "PJe",
-    "CNJ",
-    "Upstash",
-    "Vercel",
-    "shadcn",
-    "Tiptap",
-    "Gemini",
-    "LGPD"
-  ],
-  "editor.codeActions.triggerOnFocusChange": true
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  
+  // SonarLint - Usar modo standalone (sem servidor)
+  "sonarlint.output.showAnalyzerLogs": true,
+  "sonarlint.output.showVerboseLogs": false
 }

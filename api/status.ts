@@ -2,7 +2,8 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 let _kv: Redis | null = null;
-async function getKv(): Promise<Redis | null> {
+async function getKv (): Promise<Redis | null>
+{
   if (_kv) return _kv;
   if (
     process.env.UPSTASH_REDIS_REST_URL &&
@@ -20,7 +21,8 @@ async function getKv(): Promise<Redis | null> {
 /**
  * Get AI provider name based on available keys
  */
-function getAIProvider(openaiKey?: string, geminiKey?: string): string {
+function getAIProvider (openaiKey?: string, geminiKey?: string): string
+{
   if (openaiKey) return "OpenAI";
   if (geminiKey) return "Gemini";
   return "none";
@@ -29,7 +31,8 @@ function getAIProvider(openaiKey?: string, geminiKey?: string): string {
 /**
  * Configura headers CORS
  */
-function setCorsHeaders(res: VercelResponse): void {
+function setCorsHeaders (res: VercelResponse): void
+{
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -38,7 +41,8 @@ function setCorsHeaders(res: VercelResponse): void {
 /**
  * Handler para Spark Loaded Logic
  */
-function handleSparkLoaded(req: VercelRequest, res: VercelResponse): boolean {
+function handleSparkLoaded (req: VercelRequest, res: VercelResponse): boolean
+{
   if (req.method === "POST") {
     res.status(200).json({
       status: "loaded",
@@ -59,10 +63,57 @@ function handleSparkLoaded(req: VercelRequest, res: VercelResponse): boolean {
   return false;
 }
 
+async function handleWatchdogRequest (req: VercelRequest, res: VercelResponse)
+{
+  try {
+    const kv = await getKv();
+    const data = kv ? await kv.get("watchdog-last-result") : null;
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      watchdog: data || null,
+    });
+  } catch (e) {
+    res.status(500).json({
+      status: "error",
+      error: e instanceof Error ? e.message : "unknown",
+    });
+  }
+}
+
+async function handleCronHealthRequest (req: VercelRequest, res: VercelResponse)
+{
+  try {
+    const kv = await getKv();
+    const queueHistory = kv
+      ? ((await kv.get("agent-queue-depth-history")) as Array<{
+        timestamp: string;
+        queueLength: number;
+        pendingCount: number;
+      }>)
+      : [];
+    const watchdog = kv ? await kv.get("watchdog-last-result") : null;
+    const lastBackup = kv ? await kv.get("backup-list") : null;
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      queue_history: Array.isArray(queueHistory) ? queueHistory.slice(0, 20) : [],
+      last_watchdog: watchdog || null,
+      backups: lastBackup || [],
+    });
+  } catch (e) {
+    res.status(500).json({
+      status: "error",
+      error: e instanceof Error ? e.message : "unknown",
+    });
+  }
+}
+
 /**
  * Gera resposta de health check
  */
-function generateHealthCheck(res: VercelResponse): void {
+function generateHealthCheck (res: VercelResponse): void
+{
   const geminiKey =
     process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
 
@@ -111,7 +162,8 @@ function generateHealthCheck(res: VercelResponse): void {
  * - /api/status?type=health (Health Check)
  * - /api/status?type=loaded (Spark Loaded)
  */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler (req: VercelRequest, res: VercelResponse)
+{
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     setCorsHeaders(res);
@@ -130,57 +182,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Watchdog last result (read-only)
   if (type === "watchdog") {
-    try {
-      const kv = await getKv();
-      const data = kv ? await kv.get("watchdog-last-result") : null;
-      res
-        .status(200)
-        .json({
-          status: "ok",
-          timestamp: new Date().toISOString(),
-          watchdog: data || null,
-        });
-    } catch (e) {
-      res
-        .status(500)
-        .json({
-          status: "error",
-          error: e instanceof Error ? e.message : "unknown",
-        });
-    }
+    await handleWatchdogRequest(req, res);
     return;
   }
 
   // Cron health (fila agentes + watchdog + próximos backups)
   if (type === "cron-health") {
-    try {
-      const kv = await getKv();
-      const queueHistory = kv
-        ? ((await kv.get("agent-queue-depth-history")) as Array<{
-            timestamp: string;
-            queueLength: number;
-            pendingCount: number;
-          }>)
-        : [];
-      const watchdog = kv ? await kv.get("watchdog-last-result") : null;
-      const lastBackup = kv ? await kv.get("backup-list") : null;
-      res.status(200).json({
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        queue_history: Array.isArray(queueHistory)
-          ? queueHistory.slice(0, 20)
-          : [],
-        last_watchdog: watchdog || null,
-        backups: lastBackup || [],
-      });
-    } catch (e) {
-      res
-        .status(500)
-        .json({
-          status: "error",
-          error: e instanceof Error ? e.message : "unknown",
-        });
-    }
+    await handleCronHealthRequest(req, res);
     return;
   }
 

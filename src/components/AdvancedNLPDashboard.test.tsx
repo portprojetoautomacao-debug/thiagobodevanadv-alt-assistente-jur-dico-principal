@@ -5,12 +5,12 @@
  * as well as the refactored handlers for NLP operations.
  */
 
-import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+import { nlpPipeline } from "@/lib/nlp-pipeline";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import AdvancedNLPDashboard from "./AdvancedNLPDashboard";
 import { toast } from "sonner";
-import { nlpPipeline } from "@/lib/nlp-pipeline";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import AdvancedNLPDashboard from "./AdvancedNLPDashboard";
 
 // Mock sonner toast
 vi.mock("sonner", () => ({
@@ -487,7 +487,9 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(processAllButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Erro ao processar análise completa");
+        expect(toast.error).toHaveBeenCalledWith(
+          "Erro ao processar análise completa"
+        );
       });
 
       consoleErrorSpy.mockRestore();
@@ -531,12 +533,18 @@ describe("AdvancedNLPDashboard", () => {
     it("should render all tabs", () => {
       render(<AdvancedNLPDashboard />);
 
-      expect(screen.getByRole("tab", { name: /entidades/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /sentimento/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /entidades/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /sentimento/i })
+      ).toBeInTheDocument();
       expect(
         screen.getByRole("tab", { name: /classificação/i })
       ).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /extração/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /extração/i })
+      ).toBeInTheDocument();
     });
 
     it("should show empty state messages when no results", () => {

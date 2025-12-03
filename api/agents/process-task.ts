@@ -9,7 +9,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-interface AgentTask {
+interface AgentTask
+{
   id: string;
   agentId: string;
   type: string;
@@ -24,17 +25,19 @@ interface AgentTask {
     type?: string;
     source?: string;
     description?: string;
-    [key: string]: unknown;
+    [ key: string ]: unknown;
   };
 }
 
-interface Agent {
+interface Agent
+{
   id: string;
   type: string;
   name: string;
 }
 
-interface AnalysisResult {
+interface AnalysisResult
+{
   success: boolean;
   data?: {
     summary: string;
@@ -58,10 +61,11 @@ interface AnalysisResult {
 }
 
 // Função para chamar Gemini API
-async function analyzeWithGemini(
+async function analyzeWithGemini (
   text: string,
   context: string
-): Promise<string> {
+): Promise<string>
+{
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
 
   if (!apiKey) {
@@ -108,7 +112,7 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [ { parts: [ { text: prompt } ] } ],
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: 2048,
@@ -123,7 +127,7 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
   }
 
   const data = await response.json();
-  const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const generatedText = data.candidates?.[ 0 ]?.content?.parts?.[ 0 ]?.text;
 
   if (!generatedText) {
     throw new Error("No response from Gemini");
@@ -133,9 +137,10 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
 }
 
 // Função para processar análise de intimação
-async function processIntimationAnalysis(
+async function processIntimationAnalysis (
   task: AgentTask
-): Promise<AnalysisResult> {
+): Promise<AnalysisResult>
+{
   const text = task.data.text || "";
   const processNumber = task.data.processNumber || "N/A";
   const tribunal = task.data.tribunal || "N/A";
@@ -153,55 +158,17 @@ async function processIntimationAnalysis(
   try {
     const aiResponse = await analyzeWithGemini(text, context);
 
-    // Tenta parsear JSON da resposta
-    let analysisData;
-    try {
-      // Remove possíveis marcadores de código
-      const cleanJson = aiResponse
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-      analysisData = JSON.parse(cleanJson);
-    } catch {
-      // Se não for JSON válido, cria estrutura básica
-      analysisData = {
-        summary: aiResponse.substring(0, 500),
-        suggestedActions: ["Revisar intimação manualmente"],
-        priority: "medium",
-        documentType: documentType,
-        nextSteps: ["Análise manual requerida"],
-      };
-    }
+    // Parse and sanitize AI response
+    const analysisData = parseAIResponse(aiResponse, documentType);
 
-    // Calcula data final do prazo se houver
-    if (analysisData.deadline?.days) {
-      const startDate = new Date();
-      const endDate = new Date(startDate);
-
-      if (analysisData.deadline.type === "úteis") {
-        // Adiciona dias úteis (simplificado - não considera feriados)
-        let daysAdded = 0;
-        while (daysAdded < analysisData.deadline.days) {
-          endDate.setDate(endDate.getDate() + 1);
-          const dayOfWeek = endDate.getDay();
-          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            daysAdded++;
-          }
-        }
-      } else {
-        endDate.setDate(endDate.getDate() + analysisData.deadline.days);
-      }
-
-      analysisData.deadline.startDate = startDate.toISOString().split("T")[0];
-      analysisData.deadline.endDate = endDate.toISOString().split("T")[0];
-    }
+    // Populate computed deadline dates (if any)
+    applyDeadlineDates(analysisData);
 
     return {
       success: true,
       data: analysisData,
-      message: `Análise concluída por Mrs. Justin-e - ${
-        analysisData.suggestedActions?.length || 0
-      } ações sugeridas`,
+      message: `Análise concluída por Mrs. Justin-e - ${analysisData.suggestedActions?.length || 0
+        } ações sugeridas`,
     };
   } catch (error) {
     console.error("[Process Task] Error analyzing intimation:", error);
@@ -213,8 +180,86 @@ async function processIntimationAnalysis(
   }
 }
 
+// Helper to parse AI's response into a structured AnalysisResult.data
+function parseAIResponse (aiResponse: string, documentType: string)
+{
+  try {
+    const cleanJson = aiResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+    return JSON.parse(cleanJson);
+  } catch {
+    return {
+      summary: aiResponse.substring(0, 500),
+      suggestedActions: [ "Revisar intimação manualmente" ],
+      priority: "medium",
+      documentType: documentType,
+      nextSteps: [ "Análise manual requerida" ],
+    } as unknown as AnalysisResult[ "data" ];
+  }
+}
+
+// Helper to compute and assign startDate/endDate from a 'deadline' object
+function applyDeadlineDates (analysisData: any)
+{
+  if (!analysisData?.deadline?.days) return;
+
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+
+  if (analysisData.deadline.type === "úteis") {
+    // Add business days (simple approach - doesn't consider holidays)
+    let daysAdded = 0;
+    while (daysAdded < analysisData.deadline.days) {
+      endDate.setDate(endDate.getDate() + 1);
+      const dayOfWeek = endDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        daysAdded++;
+      }
+    }
+  } else {
+    endDate.setDate(endDate.getDate() + analysisData.deadline.days);
+  }
+
+  analysisData.deadline.startDate = startDate.toISOString().split("T")[ 0 ];
+  analysisData.deadline.endDate = endDate.toISOString().split("T")[ 0 ];
+}
+
 // Handler principal
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export async function dispatchTask (
+  task: AgentTask,
+  _agent: Agent
+): Promise<AnalysisResult>
+{
+  // Roteia para o processador correto baseado no tipo de tarefa
+  switch (task.type) {
+    case "analyze_intimation":
+    case "analyze_document":
+      return await processIntimationAnalysis(task);
+
+    case "monitor-djen":
+    case "check-deadlines":
+      // Estes são processados pelo cron, não por IA
+      return {
+        success: true,
+        message: `Tarefa ${task.type} processada pelo sistema`,
+      };
+
+    default:
+      // Análise genérica com IA
+      if (task.data.text) {
+        return await processIntimationAnalysis(task);
+      }
+      return {
+        success: true,
+        message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
+      };
+  }
+}
+
+export default async function handler (req: VercelRequest, res: VercelResponse)
+{
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -241,39 +286,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   );
 
   try {
-    let result: AnalysisResult;
-
-    // Roteia para o processador correto baseado no tipo de tarefa
-    switch (task.type) {
-      case "analyze_intimation":
-      case "analyze_document":
-        result = await processIntimationAnalysis(task);
-        break;
-
-      case "monitor-djen":
-      case "check-deadlines":
-        // Estes são processados pelo cron, não por IA
-        result = {
-          success: true,
-          message: `Tarefa ${task.type} processada pelo sistema`,
-        };
-        break;
-
-      default:
-        // Análise genérica com IA
-        if (task.data.text) {
-          result = await processIntimationAnalysis(task);
-        } else {
-          result = {
-            success: true,
-            message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
-          };
-        }
-    }
+    const result: AnalysisResult = await dispatchTask(task, agent);
 
     console.log(
-      `[Process Task] Task ${task.id} completed: ${
-        result.success ? "success" : "failed"
+      `[Process Task] Task ${task.id} completed: ${result.success ? "success" : "failed"
       }`
     );
 
