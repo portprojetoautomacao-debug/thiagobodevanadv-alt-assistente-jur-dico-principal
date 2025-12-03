@@ -2,6 +2,12 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Security: Block this endpoint in production environment
+  // This endpoint allows data injection and should only be used for testing/debugging
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    return res.status(404).json({ error: "Not found" });
+  }
+
   const results: Record<string, any> = {
     timestamp: new Date().toISOString(),
     checks: {},
