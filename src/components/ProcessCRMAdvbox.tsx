@@ -185,6 +185,14 @@ export default function ProcessCRMAdvbox() {
     setProcessCards(computedProcessCards)
   }, [computedProcessCards])
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
+
   const getCardsByColumn = (column: string) => {
     return processCards.filter(card => card.column === column)
   }
