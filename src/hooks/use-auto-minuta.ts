@@ -5,7 +5,7 @@
  * automaticamente cria minutas no sistema com status 'pendente-revisao'
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useKV } from '@/hooks/use-kv'
 import { toast } from 'sonner'
 import type { Minuta } from '@/types'
@@ -55,6 +55,7 @@ export function useAutoMinuta() {
 
   // Rastrear tarefas já processadas para evitar duplicatas
   const processedTasksRef = useRef<Set<string>>(new Set())
+  const [processedTasksCount, setProcessedTasksCount] = useState<number>(0)
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
@@ -64,6 +65,7 @@ export function useAutoMinuta() {
         if (stored) {
           const parsed = JSON.parse(stored) as string[]
           processedTasksRef.current = new Set(parsed)
+          setProcessedTasksCount(parsed.length)
         }
       } catch (e) {
         console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
@@ -126,6 +128,7 @@ export function useAutoMinuta() {
 
       // Marcar como processada
       processedTasksRef.current.add(task.id)
+      setProcessedTasksCount(processedTasksRef.current.size)
 
       // Salvar no localStorage
       try {
@@ -166,6 +169,6 @@ export function useAutoMinuta() {
     minutasTotal: minutas?.length || 0,
     minutasPendentesRevisao: minutas?.filter(m => m.status === 'pendente-revisao').length || 0,
     minutasCriadasPorAgente: minutas?.filter(m => m.criadoPorAgente).length || 0,
-    processedTasksCount: processedTasksRef.current.size,
+    processedTasksCount,
   }
 }

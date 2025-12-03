@@ -129,7 +129,10 @@ export default function HumanAgentCollaboration({
   // Timer de inatividade durante edição humana
   useEffect(() => {
     if (phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
+      // Use queueMicrotask to avoid cascading renders
+      queueMicrotask(() => {
+        setTimeWithoutActivity(0)
+      })
       return
     }
 

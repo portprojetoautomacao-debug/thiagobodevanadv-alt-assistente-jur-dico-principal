@@ -96,10 +96,13 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100)
         } else {
-            setQuery('')
-            setCategory('all')
-            setSelectedIndex(0)
-            setResults([])
+            // Use queueMicrotask to avoid cascading renders
+            queueMicrotask(() => {
+                setQuery('')
+                setCategory('all')
+                setSelectedIndex(0)
+                setResults([])
+            })
         }
     }, [isOpen])
 
