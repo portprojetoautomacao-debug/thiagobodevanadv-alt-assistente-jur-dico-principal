@@ -9,8 +9,8 @@ scanner({
     'sonar.sources': 'src',
     'sonar.tests': 'src',
     'sonar.test.inclusions': 'src/**/*.test.ts,src/**/*.test.tsx,src/**/*.spec.ts,src/**/*.spec.tsx',
-    'sonar.typescript.lcov.reportPaths': 'coverage/lcov.info',
-    'sonar.javascript.lcov.reportPaths': 'coverage/lcov.info',
+    'sonar.typescript.lcov.reportPaths': 'coverage-api/lcov.info',
+    'sonar.javascript.lcov.reportPaths': 'coverage-api/lcov.info',
     'sonar.exclusions': 'coverage/**,dist/**,node_modules/**',
   }
 }, () => {
