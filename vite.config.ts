@@ -22,7 +22,7 @@ export default defineConfig({
     // createIconImportProxy() as PluginOption, // REMOVIDO: dependia de @github/spark
     // sparkPlugin() as PluginOption, // REMOVIDO: dependia de @github/spark
     VitePWA({
-      registerType: "manual",
+      registerType: "autoUpdate",
       // ✅ FIX: Usar 'inline' ao invés do padrão para evitar problemas com CSP
       // O script de registro será injetado diretamente no HTML ao invés de arquivo separado
       injectRegister: "inline",
