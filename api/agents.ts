@@ -24,7 +24,7 @@ function requireAuth(req: VercelRequest): boolean {
     const isDev = process.env.NODE_ENV === 'development' || 
                   req.headers.host?.includes('localhost') === true ||
                   req.headers.host?.includes('vercel.app') === true
-    return isDev
+    return Boolean(isDev)
   }
   
   if (!authHeader.startsWith('Bearer ')) {
