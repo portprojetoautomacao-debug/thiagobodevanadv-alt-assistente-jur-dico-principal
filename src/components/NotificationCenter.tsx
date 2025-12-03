@@ -147,9 +147,11 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       }, 0);
       // FUTURE: Som de notificação pode ser adicionado aqui se necessário
       // Exemplo: playNotificationSound()
-      return () => clearTimeout(timeoutId);
+      // Atualiza ref dentro do if e retorna cleanup
+      prevCountRef.current = currentCount;
+      return () => globalThis.clearTimeout(timeoutId);
     }
-    // Update ref when count changes
+    // Atualiza ref somente quando não há novas notificações (fora do if)
     prevCountRef.current = currentCount;
   }, [notifications]);
 

@@ -1106,20 +1106,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     'https://assistente-juridico-p.vercel.app',
     'https://assistente-juridico-github.vercel.app'
-  ];
-  const origin = req.headers.origin || '';
+  ]
+  const origin = req.headers.origin || ''
   // Permitir localhost em desenvolvimento
-  const isDev = process.env.NODE_ENV === 'development' || origin.includes('localhost') || origin.includes('127.0.0.1');
-  
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (isDev && origin) {
-    // Em desenvolvimento, permitir a origem especificada (localhost)
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  const isDev = process.env.NODE_ENV === 'development' || origin.includes('localhost') || origin.includes('127.0.0.1')
+  if (allowedOrigins.includes(origin) || isDev) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*')
   }
-  // Não definir header se origem não for permitida (mais seguro que '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

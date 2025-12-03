@@ -52,6 +52,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
 
   // Sync form data when process or dialog state changes
   useEffect(() => {
+    // Só atualiza quando o diálogo está aberto para evitar setState desnecessário
+    if (!open) return
+    
     // Schedule to avoid synchronous setState in effect
     const timeoutId = globalThis.setTimeout(() => {
       setFormData(createInitialFormData(process))
