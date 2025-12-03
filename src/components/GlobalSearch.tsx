@@ -114,6 +114,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     }, [isOpen])
     
     // Reset state when closed - separate effect with proper dependency
+    // Note: setState functions are stable in React, so empty deps array is intentional
     const resetSearch = useCallback(() => {
         setQuery('')
         setCategory('all')
@@ -125,8 +126,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     useEffect(() => {
         if (!isOpen) {
             // Use setTimeout to schedule state update outside of effect
-            const timeoutId = globalThis.setTimeout(resetSearch, 0)
-            return () => globalThis.clearTimeout(timeoutId)
+            const timeoutId = setTimeout(resetSearch, 0)
+            return () => clearTimeout(timeoutId)
         }
     }, [isOpen, resetSearch])
 
