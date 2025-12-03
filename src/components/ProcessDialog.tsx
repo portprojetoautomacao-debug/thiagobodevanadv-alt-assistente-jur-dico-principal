@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -16,8 +16,7 @@ interface ProcessDialogProps {
   onSave: (process: Process) => void
 }
 
-// Helper function to create form data from process
-function createFormData(process?: Process) {
+function getInitialFormData(process?: Process) {
   if (process) {
     return {
       numeroCNJ: process.numeroCNJ,
@@ -47,17 +46,20 @@ function createFormData(process?: Process) {
 }
 
 export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
-  // Use useMemo to create initial form data based on process
-  const initialFormData = useMemo(() => createFormData(process), [process])
-  
-  const [formData, setFormData] = useState(initialFormData)
+  const [formData, setFormData] = useState(() => getInitialFormData(process))
 
-  // Sync form data when process or open state changes
-  useEffect(() => {
-    if (open) {
-      setFormData(createFormData(process))
+  // Reset form quando dialog abre/fecha ou process muda
+  const resetForm = useCallback(() => {
+    setFormData(getInitialFormData(process))
+  }, [process])
+
+  // Usar onOpenChange para resetar
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    if (newOpen) {
+      resetForm()
     }
-  }, [process, open])
+    onOpenChange(newOpen)
+  }, [onOpenChange, resetForm])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,7 +102,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{process ? 'Editar Processo' : 'Novo Processo'}</DialogTitle>

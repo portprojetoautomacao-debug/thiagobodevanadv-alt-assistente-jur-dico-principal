@@ -139,10 +139,13 @@ export function useAgentBackup(options: BackupOptions) {
 
     const intervalMs = autoBackupInterval * 60 * 1000;
 
-    // Backup imediato se houver dados e não houver backup recente
+    // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
+    let initialBackupTimer: ReturnType<typeof setTimeout> | null = null;
     if (agents.length > 0 && (now - lastBackupRef.current) > intervalMs) {
-      createBackup();
+      initialBackupTimer = setTimeout(() => {
+        createBackup();
+      }, 0);
     }
 
     // Configurar backup periódico
@@ -152,7 +155,10 @@ export function useAgentBackup(options: BackupOptions) {
       }
     }, intervalMs);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (initialBackupTimer) clearTimeout(initialBackupTimer);
+      clearInterval(timer);
+    };
   }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup]);
 
   // Não tenta restaurar automaticamente - dados já estão no Spark KV

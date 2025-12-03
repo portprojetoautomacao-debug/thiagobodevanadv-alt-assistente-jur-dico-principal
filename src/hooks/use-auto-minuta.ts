@@ -55,21 +55,25 @@ export function useAutoMinuta() {
 
   // Rastrear tarefas já processadas para evitar duplicatas
   const processedTasksRef = useRef<Set<string>>(new Set())
-  const [processedTasksCount, setProcessedTasksCount] = useState<number>(0)
+  const [processedTasksCount, setProcessedTasksCount] = useState(0)
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('processed-petition-tasks')
-        if (stored) {
-          const parsed = JSON.parse(stored) as string[]
-          processedTasksRef.current = new Set(parsed)
-          setProcessedTasksCount(parsed.length)
+      // Usar timeout para evitar setState direto no corpo do effect
+      const timer = setTimeout(() => {
+        try {
+          const stored = localStorage.getItem('processed-petition-tasks')
+          if (stored) {
+            const parsed = JSON.parse(stored) as string[]
+            processedTasksRef.current = new Set(parsed)
+            setProcessedTasksCount(parsed.length)
+          }
+        } catch (e) {
+          console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
         }
-      } catch (e) {
-        console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
-      }
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [])
 

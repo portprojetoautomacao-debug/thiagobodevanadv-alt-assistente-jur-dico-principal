@@ -346,7 +346,7 @@ export function useKV<T>(
   const isLoadingRef = useRef(false);
   const keyRef = useRef(key);
 
-  // Atualizar keyRef quando key muda
+  // Atualizar ref de forma segura
   useEffect(() => {
     keyRef.current = key;
   }, [key]);
