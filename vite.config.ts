@@ -74,7 +74,16 @@ export default defineConfig({
         clientsClaim: true,
         // Limpar caches antigos automaticamente
         cleanupOutdatedCaches: true,
+        // ✅ EXCLUIR chunks do editor do precache para evitar carregamento prematuro
+        // O erro "Cannot set properties of undefined (setting 'Activity')" acontece
+        // quando editor-vendor é carregado antes do React estar pronto
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globIgnores: [
+          "**/editor-vendor*.js",
+          "**/TiptapEditor*.js",
+          "**/MinutasManager*.js",
+          "**/prosemirror*.js",
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
