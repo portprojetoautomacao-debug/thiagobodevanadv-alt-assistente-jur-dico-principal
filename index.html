@@ -257,12 +257,63 @@
 
 <body class="notranslate" translate="no">
     <div id="root">
-        <div class="loading-container">
+        <div class="loading-container" id="loading-screen">
             <h1 class="loading-title">Assistente Jurídico PJe</h1>
             <div class="loading-spinner"></div>
-            <p class="loading-text">Carregando sistema...</p>
+            <p class="loading-text" id="loading-text">Carregando sistema...</p>
+            <button id="reset-btn"
+                style="display:none;margin-top:1rem;padding:0.5rem 1rem;background:#3b82f6;color:white;border:none;border-radius:0.5rem;cursor:pointer;">
+                Limpar cache e recarregar
+            </button>
         </div>
     </div>
+
+    <!-- Script de fallback para problemas de carregamento -->
+    <script>
+        (function () {
+            var timeout = setTimeout(function () {
+                var text = document.getElementById('loading-text');
+                var btn = document.getElementById('reset-btn');
+                if (text) text.textContent = 'O carregamento está demorando... Clique abaixo para limpar o cache.';
+                if (btn) btn.style.display = 'block';
+            }, 8000);
+
+            // Limpa o timeout quando o React carregar
+            window.__clearLoadingTimeout = function () {
+                clearTimeout(timeout);
+                var screen = document.getElementById('loading-screen');
+                if (screen) screen.style.display = 'none';
+            };
+
+            // Handler do botão de reset
+            document.addEventListener('DOMContentLoaded', function () {
+                var btn = document.getElementById('reset-btn');
+                if (btn) {
+                    btn.addEventListener('click', function () {
+                        // Limpa Service Workers
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                                registrations.forEach(function (reg) { reg.unregister(); });
+                            });
+                        }
+                        // Limpa caches
+                        if ('caches' in window) {
+                            caches.keys().then(function (names) {
+                                names.forEach(function (name) { caches.delete(name); });
+                            });
+                        }
+                        // Limpa localStorage
+                        try { localStorage.clear(); } catch (e) { }
+                        // Recarrega sem cache
+                        setTimeout(function () {
+                            window.location.reload(true);
+                        }, 500);
+                    });
+                }
+            });
+        })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
 </body>
 
