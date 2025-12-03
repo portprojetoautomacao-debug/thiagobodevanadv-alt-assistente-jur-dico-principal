@@ -14,9 +14,13 @@ function safeCompare(a: string | undefined, b: string | undefined): boolean {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Security: Block this endpoint in production environment
+  // Security: Block this endpoint in production and preview environments
   // This endpoint allows data injection and should only be used for testing/debugging
-  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  ) {
     return res.status(404).json({ error: "Not found" });
   }
 
