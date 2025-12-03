@@ -12,10 +12,28 @@
   "typescript.preferences.includePackageJsonAutoImports": "off",
   "eslint.useFlatConfig": true,
   "eslint.validate": ["typescript", "typescriptreact"],
+  // SonarQube for IDE - Connected Mode com SonarCloud
   "sonarlint.disableTelemetry": true,
-  "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js",
+  "sonarlint.automaticAnalysis": true,
+  "sonarlint.focusOnNewCode": true,
+  "sonarlint.testFilePattern": "**/*test*.ts,**/*test*.js,**/*.spec.ts,**/*.spec.js,**/tests/**",
   "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
   "sonarlint.pathToNodeExecutable": "/usr/bin/node",
+  "sonarlint.output.showVerboseLogs": false,
+
+  // Conexão com SonarCloud (token armazenado de forma segura pelo VS Code)
+  "sonarlint.connectedMode.connections.sonarcloud": [
+    {
+      "connectionId": "sonarcloud-assistente",
+      "organizationKey": "thiagobodevan-a11y"
+    }
+  ],
+
+  // Binding do projeto
+  "sonarlint.connectedMode.project": {
+    "connectionId": "sonarcloud-assistente",
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+  },
   "remote.portsAttributes": {
     "5000": {
       "label": "Preview Server",
