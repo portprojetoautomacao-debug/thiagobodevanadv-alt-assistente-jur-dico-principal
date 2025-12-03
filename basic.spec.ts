@@ -51,13 +51,3 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
     expect(data).toHaveProperty("status");
   });
 });
-  });
-
-  test("deve verificar API de health", async ({ request }) => {
-    const response = await request.get("/api/health");
-    expect(response.ok()).toBeTruthy();
-
-    const data = await response.json();
-    expect(data).toHaveProperty("status");
-  });
-});
