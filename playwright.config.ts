@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import fs from "fs";
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -15,13 +16,19 @@ export default defineConfig({
     // Se for para usar a base de produção explicitamente, não iniciamos o webServer local.
     if (useProd) return undefined;
     // Caso contrário, sempre iniciar o servidor local (inclusive em CI) para garantir disponibilidade.
+    const defaultPort = process.env.PORT || "5173";
     return {
-      // Explicitly start vite on defined host and port to avoid "port already in use" / IPv6 issues
-      command: "npx vite --host 127.0.0.1 --port 5173",
-      env: { PORT: "5173", HOST: "127.0.0.1" },
-      port: 5173,
+      // Use the local dev wrapper script to ensure readiness checks and host binding
+      command: "npm run dev:local",
+      env: {
+        PORT: defaultPort,
+        HOST: "127.0.0.1",
+        CI: isCI ? "true" : "false",
+      },
+      port: Number(defaultPort),
       reuseExistingServer: true,
-      timeout: 60_000,
+      timeout: 120_000,
+      cwd: process.cwd(),
     };
   })(),
   use: {
@@ -31,10 +38,13 @@ export default defineConfig({
       process.env.BASE_URL ||
       (process.env.USE_PROD_BASE_URL === "true"
         ? "https://assistente-juridico-p.vercel.app"
-        : "http://127.0.0.1:5173"),
+        : `http://127.0.0.1:${process.env.PORT || "5173"}`),
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
+    storageState: fs.existsSync("tests/e2e/storageState.json")
+      ? "tests/e2e/storageState.json"
+      : undefined,
     browserName: "chromium",
   },
   projects: [

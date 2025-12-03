@@ -221,6 +221,36 @@ function applyDeadlineDates(analysisData: any) {
 }
 
 // Handler principal
+export async function dispatchTask(
+  task: AgentTask,
+  agent: Agent
+): Promise<AnalysisResult> {
+  // Roteia para o processador correto baseado no tipo de tarefa
+  switch (task.type) {
+    case "analyze_intimation":
+    case "analyze_document":
+      return await processIntimationAnalysis(task);
+
+    case "monitor-djen":
+    case "check-deadlines":
+      // Estes são processados pelo cron, não por IA
+      return {
+        success: true,
+        message: `Tarefa ${task.type} processada pelo sistema`,
+      };
+
+    default:
+      // Análise genérica com IA
+      if (task.data.text) {
+        return await processIntimationAnalysis(task);
+      }
+      return {
+        success: true,
+        message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
+      };
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -248,35 +278,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   );
 
   try {
-    let result: AnalysisResult;
-
-    // Roteia para o processador correto baseado no tipo de tarefa
-    switch (task.type) {
-      case "analyze_intimation":
-      case "analyze_document":
-        result = await processIntimationAnalysis(task);
-        break;
-
-      case "monitor-djen":
-      case "check-deadlines":
-        // Estes são processados pelo cron, não por IA
-        result = {
-          success: true,
-          message: `Tarefa ${task.type} processada pelo sistema`,
-        };
-        break;
-
-      default:
-        // Análise genérica com IA
-        if (task.data.text) {
-          result = await processIntimationAnalysis(task);
-        } else {
-          result = {
-            success: true,
-            message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
-          };
-        }
-    }
+    const result: AnalysisResult = await dispatchTask(task, agent);
 
     console.log(
       `[Process Task] Task ${task.id} completed: ${

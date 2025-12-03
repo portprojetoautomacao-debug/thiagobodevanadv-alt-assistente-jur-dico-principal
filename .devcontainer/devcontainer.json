@@ -4,6 +4,9 @@
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "11"
     }
   },
   "customizations": {
@@ -16,6 +19,8 @@
         "GitHub.copilot-chat",
         "ms-playwright.playwright",
         "SonarSource.sonarlint-vscode"
+        ,
+        "vscjava.vscode-java-pack"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -25,16 +30,19 @@
           "source.fixAll.eslint": "explicit"
         },
         // Auto-provisioning (terminal & Copilot) - enable defaults in container
-        "task.allowAutomaticTasks": "on",
+        "task.allowAutomaticTasks": true,
         "extensions.autoCheckUpdates": true,
         "extensions.autoUpdate": true,
         "github.copilot.enable": true,
         "github.copilot.inlineSuggest.enable": true,
         "github.copilot.chat.enable": true,
         // WARNING: Trust workspace disabled inside container for seamless automation. This lowers security in shared environments.
-        "security.workspace.trust.enabled": false,
+        "security.workspace.trust.enabled": true,
         "security.workspace.trust.untrustedFiles": "open",
-        "terminal.integrated.shellIntegration.enabled": true
+        "terminal.integrated.shellIntegration.enabled": true,
+        "chat.useNestedAgentsMdFiles": true,
+        "chat.tools.terminal.autoReplyToPrompts": true,
+        "chat.tools.terminal.autoApprove": true
       }
     }
   },

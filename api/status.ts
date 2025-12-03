@@ -59,6 +59,50 @@ function handleSparkLoaded(req: VercelRequest, res: VercelResponse): boolean {
   return false;
 }
 
+async function handleWatchdogRequest(req: VercelRequest, res: VercelResponse) {
+  try {
+    const kv = await getKv();
+    const data = kv ? await kv.get("watchdog-last-result") : null;
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      watchdog: data || null,
+    });
+  } catch (e) {
+    res.status(500).json({
+      status: "error",
+      error: e instanceof Error ? e.message : "unknown",
+    });
+  }
+}
+
+async function handleCronHealthRequest(req: VercelRequest, res: VercelResponse) {
+  try {
+    const kv = await getKv();
+    const queueHistory = kv
+      ? ((await kv.get("agent-queue-depth-history")) as Array<{
+          timestamp: string;
+          queueLength: number;
+          pendingCount: number;
+        }>)
+      : [];
+    const watchdog = kv ? await kv.get("watchdog-last-result") : null;
+    const lastBackup = kv ? await kv.get("backup-list") : null;
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      queue_history: Array.isArray(queueHistory) ? queueHistory.slice(0, 20) : [],
+      last_watchdog: watchdog || null,
+      backups: lastBackup || [],
+    });
+  } catch (e) {
+    res.status(500).json({
+      status: "error",
+      error: e instanceof Error ? e.message : "unknown",
+    });
+  }
+}
+
 /**
  * Gera resposta de health check
  */
@@ -130,57 +174,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Watchdog last result (read-only)
   if (type === "watchdog") {
-    try {
-      const kv = await getKv();
-      const data = kv ? await kv.get("watchdog-last-result") : null;
-      res
-        .status(200)
-        .json({
-          status: "ok",
-          timestamp: new Date().toISOString(),
-          watchdog: data || null,
-        });
-    } catch (e) {
-      res
-        .status(500)
-        .json({
-          status: "error",
-          error: e instanceof Error ? e.message : "unknown",
-        });
-    }
+    await handleWatchdogRequest(req, res);
     return;
   }
 
   // Cron health (fila agentes + watchdog + próximos backups)
   if (type === "cron-health") {
-    try {
-      const kv = await getKv();
-      const queueHistory = kv
-        ? ((await kv.get("agent-queue-depth-history")) as Array<{
-            timestamp: string;
-            queueLength: number;
-            pendingCount: number;
-          }>)
-        : [];
-      const watchdog = kv ? await kv.get("watchdog-last-result") : null;
-      const lastBackup = kv ? await kv.get("backup-list") : null;
-      res.status(200).json({
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        queue_history: Array.isArray(queueHistory)
-          ? queueHistory.slice(0, 20)
-          : [],
-        last_watchdog: watchdog || null,
-        backups: lastBackup || [],
-      });
-    } catch (e) {
-      res
-        .status(500)
-        .json({
-          status: "error",
-          error: e instanceof Error ? e.message : "unknown",
-        });
-    }
+    await handleCronHealthRequest(req, res);
     return;
   }
 
