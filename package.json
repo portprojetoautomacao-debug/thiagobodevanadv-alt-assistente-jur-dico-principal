@@ -11,8 +11,8 @@
     "kill": "fuser -k 5000/tcp",
     "build": "tsc && vite build",
     "start": "serve -s dist -l 10000",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150 --ignore-pattern 'coverage-api/**'",
-    "lint:sarif": "eslint . --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif --ignore-pattern 'coverage-api/**'",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint 'src/**/*.{ts,tsx}' 'api/**/*.ts' --ext ts,tsx --report-unused-disable-directives --max-warnings 150 --ignore-pattern 'coverage-api/**'",
+    "lint:sarif": "eslint 'src/**/*.{ts,tsx}' 'api/**/*.ts' --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif --ignore-pattern 'coverage-api/**'",
     "optimize": "vite optimize",
     "preview": "vite preview",
     "test": "vitest",
@@ -24,7 +24,8 @@
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:report": "playwright show-report",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"",
-    "sonar:local": "node sonar-scanner.mjs",
+    "sonar:local": "node sonar-run.mjs",
+    "sonar:local:old": "node sonar-scanner.mjs",
     "sonar:local:esm": "node --experimental-loader node:module ./sonar-scanner.mjs"
   },
   "dependencies": {
