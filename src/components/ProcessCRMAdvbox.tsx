@@ -139,6 +139,7 @@ export default function ProcessCRMAdvbox() {
   const [selectedCard, setSelectedCard] = useState<ProcessCardData | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({})
+  const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

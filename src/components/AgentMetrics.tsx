@@ -17,7 +17,7 @@ import {
   Pulse,
   LightningSlash,
 } from '@phosphor-icons/react'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 
 interface AgentMetricsProps {
@@ -106,7 +106,7 @@ export default function AgentMetrics({
   const hoursPerTask = 10 / 60
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1)
 
-  const getTasksLast24Hours = useCallback(() => {
+  const tasksLast24Hours = useMemo(() => {
     const now = typeof window !== 'undefined' ? Date.now() : 0
     const last24h = new Date(now - 24 * 60 * 60 * 1000)
     return completedTasks.filter(

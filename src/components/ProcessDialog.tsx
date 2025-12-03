@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -100,7 +100,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{process ? 'Editar Processo' : 'Novo Processo'}</DialogTitle>
