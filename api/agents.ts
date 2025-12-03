@@ -1103,8 +1103,17 @@ function isAuthorized(req: VercelRequest): boolean {
 // ===========================
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  // CORS headers - permitir apenas origens confiáveis
+  const allowedOrigins = [
+    'https://assistente-juridico-p.vercel.app',
+    'https://assistente-juridico-github.vercel.app'
+  ]
+  const origin = req.headers.origin || ''
+  // Permitir localhost em desenvolvimento
+  const isDev = process.env.NODE_ENV === 'development' || origin.includes('localhost') || origin.includes('127.0.0.1')
+  if (allowedOrigins.includes(origin) || isDev) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*')
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
   

@@ -90,7 +90,7 @@ function createInactivityInterval(
       // Check if agent should resume
       if (next >= INACTIVITY_LIMIT_SECONDS) {
         setPhase('agent_resuming')
-        globalThis.setTimeout(() => {
+        setTimeout(() => {
           setPhase('agent_working')
         }, RESUME_DELAY_MS)
         return 0
@@ -128,10 +128,14 @@ export default function HumanAgentCollaboration({
 
   // Reset de inatividade quando sai do modo edição humana
   const previousPhaseRef = useRef(phase)
-  if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
-    setTimeWithoutActivity(0)
-  }
-  previousPhaseRef.current = phase
+  
+  // Mover reset de inatividade para useEffect para evitar setState durante render
+  useEffect(() => {
+    if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
+      setTimeWithoutActivity(0)
+    }
+    previousPhaseRef.current = phase
+  }, [phase])
 
   // Timer de inatividade durante edição humana
   useEffect(() => {
@@ -145,12 +149,12 @@ export default function HumanAgentCollaboration({
     }
     
     // Schedule reset on next tick to avoid synchronous setState in effect
-    const timeoutId = globalThis.setTimeout(resetTimer, 0)
+    const timeoutId = setTimeout(resetTimer, 0)
 
     const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
     
     return () => {
-      globalThis.clearTimeout(timeoutId)
+      clearTimeout(timeoutId)
       cleanup()
     }
   }, [phase, isHumanActive])
@@ -159,7 +163,7 @@ export default function HumanAgentCollaboration({
   useEffect(() => {
     return () => {
       if (humanActivityTimeoutRef.current != null) {
-        globalThis.clearTimeout(humanActivityTimeoutRef.current)
+        clearTimeout(humanActivityTimeoutRef.current)
       }
     }
   }, [])
@@ -173,9 +177,9 @@ export default function HumanAgentCollaboration({
 
     // Simula uma janela de "atividade" humana por alguns segundos
     if (humanActivityTimeoutRef.current != null) {
-      globalThis.clearTimeout(humanActivityTimeoutRef.current)
+      clearTimeout(humanActivityTimeoutRef.current)
     }
-    humanActivityTimeoutRef.current = globalThis.setTimeout(() => {
+    humanActivityTimeoutRef.current = setTimeout(() => {
       setIsHumanActive(false)
     }, 3000)
   }
@@ -185,7 +189,7 @@ export default function HumanAgentCollaboration({
     setTimeWithoutActivity(0)
     setPhase('agent_resuming')
 
-    const resumeId = globalThis.setTimeout(() => {
+    const resumeId = setTimeout(() => {
       setPhase('agent_working')
     }, RESUME_DELAY_MS)
 
