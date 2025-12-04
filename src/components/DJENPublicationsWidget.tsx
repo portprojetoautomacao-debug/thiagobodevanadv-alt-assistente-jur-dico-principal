@@ -41,14 +41,7 @@ interface DJENPublication {
   notified?: boolean;
 }
 
-interface ExpedientesResponse {
-  success: boolean;
-  expedientes: DJENPublication[];
-  count: number;
-  lastCheck: string | null;
-  lawyersConfigured: number;
-  message?: string;
-}
+// Interface ExpedientesResponse removida - não utilizada
 
 interface PartiesResult {
   autor: string;
@@ -290,7 +283,7 @@ interface PublicationsHeaderProps {
 }
 
 // Helpers de renderização extraídos para reduzir complexidade (S3776)
-function PublicationsHeader(props: PublicationsHeaderProps) {
+function PublicationsHeader(props: Readonly<PublicationsHeaderProps>) {
   const {
     publicationsCount,
     filter,
@@ -398,7 +391,7 @@ function ContentDecider({
   isAlreadyRegistered,
   formatRelativeDate,
   emptyState,
-}: {
+}: Readonly<{
   publications: DJENPublication[];
   compact: boolean;
   expanded: string | null;
@@ -407,7 +400,7 @@ function ContentDecider({
   isAlreadyRegistered: (pub: DJENPublication) => boolean;
   formatRelativeDate: (dateStr: string) => string;
   emptyState: React.ReactNode;
-}) {
+}>) {
   if (publications.length === 0) return emptyState as React.ReactElement;
 
   return (
@@ -435,11 +428,11 @@ function FooterRegisterButton({
   show,
   autoRegistering,
   onRegisterAll,
-}: {
+}: Readonly<{
   show: boolean;
   autoRegistering: boolean;
   onRegisterAll: () => void;
-}) {
+}>) {
   if (!show) return null;
   return (
     <TooltipProvider>
@@ -467,11 +460,11 @@ function FooterViewAllButton({
   show,
   compactLayout,
   onViewAll,
-}: {
+}: Readonly<{
   show: boolean;
   compactLayout: boolean;
   onViewAll?: () => void;
-}) {
+}>) {
   if (!show || !onViewAll) return null;
   return (
     <Button
@@ -496,13 +489,13 @@ function FooterButtonsSection({
   autoRegistering,
   onRegisterAll,
   onViewAll,
-}: {
+}: Readonly<{
   showRegisterAll: boolean;
   showViewAll: boolean;
   autoRegistering: boolean;
   onRegisterAll: () => void;
   onViewAll?: () => void;
-}) {
+}>) {
   const compactLayout = showRegisterAll;
   return (
     <div className="flex gap-2">
@@ -525,14 +518,16 @@ function shouldShowRegisterAll(
   pubs: DJENPublication[],
   isAlreadyRegistered: (pub: DJENPublication) => boolean
 ): boolean {
-  return pubs.length > 0 && pubs.some((p) => p.numeroProcesso && !isAlreadyRegistered(p));
+  // S7745: some() já retorna false para arrays vazios, não precisa verificar length
+  return pubs.some((p) => p.numeroProcesso && !isAlreadyRegistered(p));
 }
 
 /**
  * Verifica se deve exibir botão "Ver todas" (decisor puro para exibição)
  */
 function shouldShowViewAll(pubs: DJENPublication[], onView?: () => void): boolean {
-  return pubs.length > 0 && typeof onView === "function";
+  // Simplificado: verifica apenas se há callback e publicações existem
+  return pubs.length > 0 && onView !== undefined;
 }
 
 export default function DJENPublicationsWidget({
