@@ -286,7 +286,7 @@ export default function BatchAnalysis() {
               disabled={analyzing || (!inputText.trim() && selectedFiles.length === 0)}
               className="w-full"
             >
-              <Sparkle className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2" />
               {analyzing ? "Analisando com IA..." : "Analisar com Gemini 2.5 Pro"}
             </Button>
           </CardContent>
@@ -313,7 +313,7 @@ export default function BatchAnalysis() {
           <CardContent>
             {extractedData.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Sparkle className="w-16 h-16 text-muted-foreground mb-4" />
+                <Sparkles className="w-16 h-16 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium text-foreground">Aguardando análise</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Cole os expedientes ou envie arquivos e clique em &quot;Analisar&quot;

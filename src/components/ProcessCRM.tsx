@@ -470,7 +470,7 @@ export default function ProcessCRM() {
                   className="w-full gap-2"
                   onClick={() => handlePremonicao(process)}
                 >
-                  <Sparkle className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                   Premonição Jurídica
                 </Button>
               </div>

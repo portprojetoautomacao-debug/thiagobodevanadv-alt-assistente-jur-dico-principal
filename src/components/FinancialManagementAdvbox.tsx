@@ -338,7 +338,7 @@ export default function FinancialManagementAdvbox() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Valor previsto este mês</p>
               <div className="flex items-center gap-2">
-                <TrendUp className="text-green-500" size={20} />
+                <TrendingUp className="text-green-500" size={20} />
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(stats.valorPrevisto)}
                 </span>
@@ -352,7 +352,7 @@ export default function FinancialManagementAdvbox() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">A receber esta semana</p>
               <div className="flex items-center gap-2">
-                <TrendUp className="text-green-500" size={20} />
+                <TrendingUp className="text-green-500" size={20} />
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(stats.aReceberSemana)}
                 </span>
@@ -366,7 +366,7 @@ export default function FinancialManagementAdvbox() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">A pagar esta semana</p>
               <div className="flex items-center gap-2">
-                <TrendDown className="text-red-500" size={20} />
+                <TrendingDown className="text-red-500" size={20} />
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(stats.aPagarSemana)}
                 </span>

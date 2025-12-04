@@ -101,7 +101,7 @@ export function DocumentTemplates() {
           </p>
         </div>
         <Button onClick={handleUpload} aria-label="Upload de Template">
-          <UploadSimple className="mr-2 h-4 w-4" />
+          <Upload className="mr-2 h-4 w-4" />
           Upload Template
         </Button>
       </div>
@@ -127,7 +127,7 @@ export function DocumentTemplates() {
                   onClick={() => handleDownload(template)}
                   aria-label={`Baixar template ${template.name}`}
                 >
-                  <DownloadSimple className="mr-2 h-4 w-4" />
+                  <Download className="mr-2 h-4 w-4" />
                   Baixar
                 </Button>
                 <Button
