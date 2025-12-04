@@ -617,8 +617,12 @@ function getGeminiApiKey(): string {
  */
 function parseGeminiResponse(aiContent: string): TaskResult {
   try {
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : { rawResponse: aiContent };
+    const start = aiContent.indexOf("{");
+    const end = aiContent.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      return JSON.parse(aiContent.substring(start, end + 1));
+    }
+    return { rawResponse: aiContent };
   } catch (parseError) {
     logger.warn("Failed to parse Gemini JSON response", {
       error: parseError instanceof Error ? parseError.message : String(parseError),

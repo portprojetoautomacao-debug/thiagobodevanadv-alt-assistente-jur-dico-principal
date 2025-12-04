@@ -124,7 +124,7 @@ function parseOABNumericOnly(value: string): { numero?: string; uf?: string } | 
 }
 
 export function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
-  if (!numeroOAB) return {};
+  if (!numeroOAB || numeroOAB.length > 50) return {};
   const value = numeroOAB.trim();
 
   return parseOABWithPattern(value)

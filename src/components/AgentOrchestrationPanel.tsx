@@ -300,27 +300,33 @@ export default function AgentOrchestrationPanel() {
         {/* Agents Tab */}
         <TabsContent value="agents" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {agents.map((agent) => (
-              <Card key={agent.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="text-2xl">{agent.icon}</span>
-                    <span className={agent.color}>{agent.name}</span>
-                  </CardTitle>
-                  <CardDescription>ID: {agent.id}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    onClick={() => executeAgent(agent.id)}
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    <PlayCircle className="h-4 w-4 mr-2" />
-                    {loading && selectedAgent === agent.id ? "Executando..." : "Executar"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {agents.map((agent) => {
+              const buttonText =
+                loading && selectedAgent === agent.id
+                  ? "Executando..."
+                  : "Executar";
+              return (
+                <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className="text-2xl">{agent.icon}</span>
+                      <span className={agent.color}>{agent.name}</span>
+                    </CardTitle>
+                    <CardDescription>ID: {agent.id}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      onClick={() => executeAgent(agent.id)}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      {buttonText}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </TabsContent>
 
@@ -451,7 +457,7 @@ export default function AgentOrchestrationPanel() {
                   <p className="text-sm font-medium mb-2">Ferramentas Utilizadas:</p>
                   <div className="flex flex-wrap gap-2">
                     {[...new Set(execution.usedTools)].map((tool) => (
-                      <Badge key={`tool-${tool}`} variant="secondary">
+                      <Badge key={tool} variant="secondary">
                         <Cpu className="h-3 w-3 mr-1" />
                         {tool}
                       </Badge>
@@ -464,7 +470,7 @@ export default function AgentOrchestrationPanel() {
                   <p className="text-sm font-medium mb-3">Timeline de Execução (ReAct):</p>
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
-                      {execution.traces.map((trace) => (
+                      {execution.traces.map((trace, index) => (
                         <div
                           key={`trace-${trace.timestamp}-${trace.step}`}
                           className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded"
