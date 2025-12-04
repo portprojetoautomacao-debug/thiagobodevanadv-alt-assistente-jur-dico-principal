@@ -41,7 +41,7 @@ interface DJENPublication {
   notified?: boolean;
 }
 
-interface _ExpedientesResponse {
+interface ExpedientesResponse {
   success: boolean;
   expedientes: DJENPublication[];
   count: number;
@@ -272,7 +272,7 @@ function _showSyncToast(result: SyncResult): void {
 }
 
 interface DJENPublicationsWidgetProps {
-  readonly onViewAll?: () => void;
+  onViewAll?: () => void;
   readonly compact?: boolean;
   readonly maxItems?: number;
 }

@@ -12,15 +12,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DiscordLogo,
+  AlertTriangle,
+  FlaskConical,
   Globe,
+  Loader2,
+  MessageSquare,
   Plus,
-  SlackLogo,
-  Spinner,
-  TestTube,
-  Trash,
-  Warning,
-} from "@phosphor-icons/react";
+  Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -39,12 +38,12 @@ const TeamsIcon = ({ size = 20 }: { size?: number }) => (
 );
 
 // Componente para renderizar ícone do webhook por tipo
-function WebhookTypeIcon({ type, size = 20 }: { type: WebhookType; size?: number }) {
+function WebhookTypeIcon({ type, size = 20 }: Readonly<{ type: WebhookType; size?: number }>) {
   switch (type) {
     case "slack":
-      return <SlackLogo size={size} />;
+      return <MessageSquare size={size} />;
     case "discord":
-      return <DiscordLogo size={size} />;
+      return <MessageSquare size={size} />;
     case "teams":
       return <TeamsIcon size={size} />;
     case "generic":
@@ -55,11 +54,11 @@ function WebhookTypeIcon({ type, size = 20 }: { type: WebhookType; size?: number
 
 // Props para componente de lista de webhooks
 interface WebhookListContentProps {
-  loading: boolean;
-  webhooks: WebhookConfig[];
-  testingWebhook: string | null;
-  onTest: (id: string) => void;
-  onDelete: (id: string) => void;
+  readonly loading: boolean;
+  readonly webhooks: readonly WebhookConfig[];
+  readonly testingWebhook: string | null;
+  readonly onTest: (id: string) => void;
+  readonly onDelete: (id: string) => void;
 }
 
 // Componente extraído para evitar ternário aninhado (S3358)
@@ -73,7 +72,7 @@ function WebhookListContent({
   if (loading) {
     return (
       <div className="flex justify-center py-4">
-        <Spinner className="animate-spin text-primary" size={24} />
+        <Loader2 className="animate-spin text-primary" size={24} />
       </div>
     );
   }
@@ -117,9 +116,9 @@ function WebhookListContent({
               title="Testar webhook"
             >
               {testingWebhook === webhook.id ? (
-                <Spinner className="animate-spin" size={14} />
+                <Loader2 className="animate-spin" size={14} />
               ) : (
-                <TestTube size={14} />
+                <FlaskConical size={14} />
               )}
             </Button>
             <Button
@@ -129,7 +128,7 @@ function WebhookListContent({
               onClick={() => onDelete(webhook.id)}
               title="Remover"
             >
-              <Trash size={14} />
+              <Trash2 size={14} />
             </Button>
           </div>
         </div>
@@ -285,7 +284,7 @@ export function WebhooksSettings() {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Globe className="text-primary" size={24} weight="duotone" />
+              <Globe className="text-primary" size={24} />
               Webhooks (Slack/Discord/Teams)
             </CardTitle>
             <CardDescription className="mt-2">
@@ -336,13 +335,13 @@ export function WebhooksSettings() {
                     <SelectContent>
                       <SelectItem value="slack">
                         <span className="flex items-center gap-2">
-                          <SlackLogo size={14} />
+                          <MessageSquare size={14} />
                           Slack
                         </span>
                       </SelectItem>
                       <SelectItem value="discord">
                         <span className="flex items-center gap-2">
-                          <DiscordLogo size={14} />
+                          <MessageSquare size={14} />
                           Discord
                         </span>
                       </SelectItem>
@@ -383,7 +382,7 @@ export function WebhooksSettings() {
                   Cancelar
                 </Button>
                 <Button size="sm" onClick={addWebhook} disabled={savingWebhook}>
-                  {savingWebhook ? <Spinner className="animate-spin" size={16} /> : "Salvar"}
+                  {savingWebhook ? <Loader2 className="animate-spin" size={16} /> : "Salvar"}
                 </Button>
               </div>
             </div>
@@ -401,7 +400,7 @@ export function WebhooksSettings() {
 
         {webhooks.length > 0 && (
           <div className="flex items-start gap-2 rounded-md bg-yellow-500/10 p-3 text-xs text-yellow-600 dark:text-yellow-400">
-            <Warning size={16} className="mt-0.5 shrink-0" />
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
             <p>
               Webhooks recebem dados sensíveis sobre processos. Certifique-se de que as URLs
               configuradas são seguras e confiáveis.

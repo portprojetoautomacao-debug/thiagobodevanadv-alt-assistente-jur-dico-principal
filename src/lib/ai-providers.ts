@@ -219,13 +219,9 @@ export class GeminiClient {
     if (apiKey) {
       this.apiKey = String(apiKey);
     } else if (typeof import.meta !== "undefined") {
-      let envKey: string | undefined = import.meta.env.VITE_GOOGLE_API_KEY as string | undefined;
-      if (!envKey) {
-        envKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-      }
-      if (!envKey) {
-        envKey = import.meta.env.VITE_GEMINI_API_KEY_BACKEND as string | undefined;
-      }
+      const env = import.meta.env;
+      const envKey =
+        env.VITE_GOOGLE_API_KEY ?? env.VITE_GEMINI_API_KEY ?? env.VITE_GEMINI_API_KEY_BACKEND;
       this.apiKey = envKey ? String(envKey) : null;
     } else {
       this.apiKey = null;

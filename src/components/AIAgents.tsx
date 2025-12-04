@@ -187,7 +187,7 @@ const agentIcons: Record<string, React.ElementType> = {
 };
 
 interface AIAgentsProps {
-  onNavigate?: (view: ViewType) => void;
+  readonly onNavigate?: (view: ViewType) => void;
 }
 
 export default function AIAgents({ onNavigate }: AIAgentsProps) {

@@ -61,6 +61,9 @@ interface MonitoredLawyer {
   tribunals: string[];
 }
 
+// Type alias para evitar repetição de union types (SonarCloud S4323)
+type DJENMatchType = "nome" | "oab" | "ambos";
+
 interface StoredPublication {
   id: string;
   djenId?: number;
@@ -73,7 +76,7 @@ interface StoredPublication {
   meio?: string;
   link?: string;
   hash?: string;
-  matchType: "nome" | "oab" | "ambos";
+  matchType: DJENMatchType;
   lawyerId: string;
   lawyerName?: string;
   lawyerOAB?: string;

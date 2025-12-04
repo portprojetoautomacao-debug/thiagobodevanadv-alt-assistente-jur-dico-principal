@@ -7,7 +7,7 @@
 
 import { tracingService, withTracing } from "./tracing";
 
-import type { Span, AgentSpan, TraceContext, SpanAttributes } from "./tracing";
+import type { AgentSpan, Span, SpanAttributes, TraceContext } from "./tracing";
 
 import type { Agent, AgentTask, AgentTaskResult } from "./agents";
 
@@ -349,9 +349,7 @@ export function getAgentMetrics(agentId: string): {
   const failed = executions.filter((t) => t.status === "error");
 
   const durations = executions
-    .map(
-      (t) => ((t.endTime as number | undefined) ?? 0) - ((t.startTime as number | undefined) ?? 0)
-    )
+    .map((t) => (t.endTime ?? 0) - (t.startTime ?? 0))
     .filter((d) => d > 0);
 
   const avgDuration =
@@ -373,9 +371,7 @@ export function getAgentMetrics(agentId: string): {
       });
   });
 
-  const recentErrors = failed
-    .slice(-5)
-    .map((t) => (t.statusMessage as string | undefined) || "Unknown error");
+  const recentErrors = failed.slice(-5).map((t) => t.statusMessage || "Unknown error");
 
   return {
     totalExecutions: executions.length,
@@ -435,4 +431,4 @@ export function getLLMMetrics(): {
 // ============================================================================
 
 export { tracingService, withTracing };
-export type { Span, AgentSpan, TraceContext };
+export type { AgentSpan, Span, TraceContext };

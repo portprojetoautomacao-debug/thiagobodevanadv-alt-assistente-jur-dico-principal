@@ -64,6 +64,11 @@ interface MonitoredLawyer {
   tribunals: string[];
 }
 
+// Type alias para evitar repetição de union types (SonarCloud S4323)
+type DJENMatchType = "nome" | "oab" | "ambos";
+
+interface StoredPublication {
+
 interface StoredPublication {
   id: string;
   djenId?: number;
@@ -76,7 +81,7 @@ interface StoredPublication {
   meio?: string;
   link?: string;
   hash?: string;
-  matchType: "nome" | "oab" | "ambos";
+  matchType: DJENMatchType;
   lawyerId: string;
   lawyerName?: string;
   lawyerOAB?: string;
@@ -974,12 +979,12 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
             currentPending: pendingTasks.length,
           });
           await kv.set("agent-queue-scaling-events", events.slice(0, 100));
-        } catch (scaleErr) {
-          console.warn("[Cron Agent Queue] Falha registrar scaling event:", scaleErr);
+        } catch (error_) {
+          console.warn("[Cron Agent Queue] Falha registrar scaling event:", error_);
         }
       }
-    } catch (statsErr) {
-      console.warn("[Cron Agent Queue] Falha computar estatísticas fila:", statsErr);
+    } catch (error_) {
+      console.warn("[Cron Agent Queue] Falha computar estatísticas fila:", error_);
     }
 
     const agents = await getAgents();
@@ -1247,8 +1252,8 @@ async function sendEmailNotification(
     }
     // TTL 600s (10 minutos). Upstash aceita objeto de opções (ex: { ex: 600 })
     await kv.set(dedupeKey, { sentAt: Date.now() }, { ex: 600 } as any);
-  } catch (dedupeErr) {
-    console.warn("[Notifications] Falha dedupe, prosseguindo envio:", dedupeErr);
+  } catch (error_) {
+    console.warn("[Notifications] Falha dedupe, prosseguindo envio:", error_);
   }
 
   const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -1912,8 +1917,8 @@ async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
     // Persistir resultado para painel
     try {
       await kv.set(KV_KEYS.WATCHDOG_LAST_RESULT, result);
-    } catch (persistErr) {
-      console.warn("[Cron Watchdog] Falha persistir resultado:", persistErr);
+    } catch (error_) {
+      console.warn("[Cron Watchdog] Falha persistir resultado:", error_);
     }
   } catch (error) {
     result.success = false;
