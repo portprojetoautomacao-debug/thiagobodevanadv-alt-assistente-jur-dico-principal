@@ -8,8 +8,9 @@ export function getEnv(key: string, defaultValue: string = ""): string {
   // Nota: import.meta.env geralmente só tem variáveis prefixadas com VITE_ no cliente,
   // a menos que configurado diferente no vite.config.ts
   try {
-    if (typeof import.meta !== "undefined" && import.meta.env?.[key] !== undefined) {
-      return String(import.meta.env[key]);
+    const value = import.meta?.env?.[key];
+    if (value !== undefined) {
+      return String(value);
     }
   } catch {
     // Ignora erro de acesso a import.meta
