@@ -99,6 +99,31 @@ export default function FailedTasksAnalysis() {
     fetchAnalysis();
   };
 
+  const handleClearOld = async () => {
+    try {
+      toast.info("Removendo tarefas falhadas antigas...");
+      const response = await fetch("/api/clear-old-failed-tasks", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao limpar tarefas antigas");
+      }
+
+      const result = await response.json();
+      toast.success(
+        `✅ ${result.stats.removed} tarefas removidas (${result.stats.failedBefore} → ${result.stats.failedAfter} falhas)`
+      );
+
+      // Recarregar análise
+      setTimeout(() => {
+        fetchAnalysis();
+      }, 500);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao limpar tarefas antigas");
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -156,10 +181,21 @@ export default function FailedTasksAnalysis() {
               {data.summary.failureRate})
             </CardDescription>
           </div>
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Atualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleClearOld}
+              variant="outline"
+              size="sm"
+              title="Remove tarefas falhadas com mais de 24h"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Limpar Antigas
+            </Button>
+            <Button onClick={handleRefresh} variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
