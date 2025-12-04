@@ -185,8 +185,8 @@ function parseAIResponse (aiResponse: string, documentType: string)
 {
   try {
     const cleanJson = aiResponse
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
+      .replaceAll(/```json\n?/g, "")
+      .replaceAll(/```\n?/g, "")
       .trim();
     return JSON.parse(cleanJson);
   } catch {

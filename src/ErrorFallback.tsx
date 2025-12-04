@@ -102,14 +102,14 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
           <button
             onClick={() => {
               // Limpa cache e recarrega
-              if ("caches" in window) {
+              if ("caches" in globalThis.window) {
                 caches.keys().then((names) => {
                   for (const name of names) caches.delete(name);
                 });
               }
               localStorage.clear();
               sessionStorage.clear();
-              window.location.reload();
+              globalThis.window.location.reload();
             }}
             style={{
               flex: 1,
