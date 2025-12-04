@@ -589,77 +589,85 @@ export default function NotificationSettings() {
             )}
 
             {/* Lista de webhooks */}
-            {loadingWebhooks ? (
-              <div className="flex justify-center py-4">
-                <Spinner className="animate-spin" size={24} />
-              </div>
-            ) : webhooks.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <Globe size={40} className="mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum webhook configurado</p>
-                <p className="text-xs">
-                  Configure webhooks para receber notificações no Slack, Discord ou Teams
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {webhooks.map((wh) => (
-                  <div
-                    key={wh.id}
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border",
-                      wh.enabled ? "bg-card" : "bg-muted/50 opacity-70"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-primary/10">{getWebhookIcon(wh.type)}</div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{wh.name}</span>
-                          <Badge variant="outline" className="text-xs px-1">
-                            {wh.type}
-                          </Badge>
-                          {wh.enabled && (
-                            <Badge className="bg-green-500/20 text-green-600 text-xs px-1">
-                              <CheckCircle size={8} className="mr-0.5" weight="fill" />
-                              Ativo
+            {(() => {
+              if (loadingWebhooks) {
+                return (
+                  <div className="flex justify-center py-4">
+                    <Spinner className="animate-spin" size={24} />
+                  </div>
+                );
+              }
+              if (webhooks.length === 0) {
+                return (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Globe size={40} className="mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhum webhook configurado</p>
+                    <p className="text-xs">
+                      Configure webhooks para receber notificações no Slack, Discord ou Teams
+                    </p>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  {webhooks.map((wh) => (
+                    <div
+                      key={wh.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border",
+                        wh.enabled ? "bg-card" : "bg-muted/50 opacity-70"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded bg-primary/10">{getWebhookIcon(wh.type)}</div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">{wh.name}</span>
+                            <Badge variant="outline" className="text-xs px-1">
+                              {wh.type}
                             </Badge>
-                          )}
+                            {wh.enabled && (
+                              <Badge className="bg-green-500/20 text-green-600 text-xs px-1">
+                                <CheckCircle size={8} className="mr-0.5" weight="fill" />
+                                Ativo
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate max-w-[220px]">
+                            {wh.url}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate max-w-[220px]">
-                          {wh.url}
-                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2"
+                          onClick={() => testWebhookFn(wh.id)}
+                          disabled={testingWebhook === wh.id}
+                          title="Testar webhook"
+                        >
+                          {testingWebhook === wh.id ? (
+                            <Spinner className="animate-spin" size={12} />
+                          ) : (
+                            <TestTube size={12} />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-destructive"
+                          onClick={() => deleteWebhook(wh.id)}
+                          title="Excluir webhook"
+                        >
+                          <Trash size={12} />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => testWebhookFn(wh.id)}
-                        disabled={testingWebhook === wh.id}
-                        title="Testar webhook"
-                      >
-                        {testingWebhook === wh.id ? (
-                          <Spinner className="animate-spin" size={12} />
-                        ) : (
-                          <TestTube size={12} />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-destructive"
-                        onClick={() => deleteWebhook(wh.id)}
-                        title="Excluir webhook"
-                      >
-                        <Trash size={12} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              );
+            })()}
 
             <Separator />
 
