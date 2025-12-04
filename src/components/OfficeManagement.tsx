@@ -357,8 +357,8 @@ export default function OfficeManagement() {
                           paddingAngle={5}
                           dataKey="value"
                         >
-                          {estoqueData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          {estoqueData.map((entry) => (
+                            <Cell key={`cell-${entry.name}-${entry.value}`} fill={entry.color} />
                           ))}
                         </Pie>
                         <Tooltip
