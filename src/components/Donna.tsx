@@ -703,8 +703,11 @@ IMPORTANTE:
 
                     {message.insights && message.insights.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
-                        {message.insights.map((insight, idx) => (
-                          <Card key={idx} className="p-3 bg-card border">
+                        {message.insights.map((insight) => (
+                          <Card
+                            key={`insight-${insight.title}-${insight.type}`}
+                            className="p-3 bg-card border"
+                          >
                             <div className="flex items-start gap-2">
                               <div
                                 className={cn("p-1.5 rounded-md", getInsightColor(insight.type))}

@@ -1,6 +1,3 @@
-import { useState } from "react";
-import type { Process, PremonicaoJuridica } from "@/types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,16 +8,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Trash, CalendarCheck, Sparkle, FileText } from "@phosphor-icons/react";
-import { formatarData, calcularDiasRestantes, isUrgente, formatarMoeda } from "@/lib/prazos";
-import { toast } from "sonner";
-import PremonicaoModal from "./PremonicaoModal";
+import { calcularDiasRestantes, formatarData, formatarMoeda, isUrgente } from "@/lib/prazos";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
+import type { PremonicaoJuridica, Process } from "@/types";
+import { CalendarCheck, FileText, Pencil, Sparkle, Trash } from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 import DocumentUploader from "./DocumentUploader";
+import PremonicaoModal from "./PremonicaoModal";
+
+// Helper: mapeia status do processo para variant do Badge (S3358)
+function getProcessStatusVariant(
+  status: string
+): "default" | "secondary" | "outline" | "destructive" {
+  if (status === "ativo") return "default";
+  if (status === "concluido") return "secondary";
+  if (status === "suspenso") return "outline";
+  return "destructive";
+}
+
+// Helper: formata dias restantes para exibição (S3358)
+function formatDiasRestantes(dias: number): string {
+  if (dias < 0) return "Vencido";
+  if (dias === 0) return "Hoje";
+  if (dias === 1) return "Amanhã";
+  return `${dias}d`;
+}
 
 interface ProcessDetailsDialogProps {
   open: boolean;
@@ -116,19 +134,7 @@ export default function ProcessDetailsDialog({
 
           <TabsContent value="detalhes" className="space-y-6">
             <div className="flex items-center gap-2">
-              <Badge
-                variant={
-                  process.status === "ativo"
-                    ? "default"
-                    : process.status === "concluido"
-                      ? "secondary"
-                      : process.status === "suspenso"
-                        ? "outline"
-                        : "destructive"
-                }
-              >
-                {process.status}
-              </Badge>
+              <Badge variant={getProcessStatusVariant(process.status)}>{process.status}</Badge>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -211,13 +217,7 @@ export default function ProcessDetailsDialog({
                         ) : (
                           <>
                             <Badge variant={urgente ? "destructive" : "default"}>
-                              {diasRestantes < 0
-                                ? "Vencido"
-                                : diasRestantes === 0
-                                  ? "Hoje"
-                                  : diasRestantes === 1
-                                    ? "Amanhã"
-                                    : `${diasRestantes}d`}
+                              {formatDiasRestantes(diasRestantes)}
                             </Badge>
                             {urgente && (
                               <Badge variant="outline" className="text-xs">

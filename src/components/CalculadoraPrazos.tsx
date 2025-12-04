@@ -25,6 +25,16 @@ import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+// Helper: retorna placeholder para SelectValue de expediente (S3358)
+function getExpedientePlaceholder(
+  selectedProcessId: string | null,
+  expedientesCount: number
+): string {
+  if (!selectedProcessId) return "Selecione primeiro um processo";
+  if (expedientesCount === 0) return "Nenhuma intimação vinculada a este processo";
+  return "Selecione uma intimação";
+}
+
 /**
  * Formata a data de um expediente, priorizando dataRecebimento > data
  */
@@ -256,13 +266,10 @@ export default function CalculadoraPrazos() {
               >
                 <SelectTrigger id="expediente">
                   <SelectValue
-                    placeholder={
-                      !selectedProcessId
-                        ? "Selecione primeiro um processo"
-                        : expedientesDoProcesso.length === 0
-                          ? "Nenhuma intimação vinculada a este processo"
-                          : "Selecione uma intimação"
-                    }
+                    placeholder={getExpedientePlaceholder(
+                      selectedProcessId,
+                      expedientesDoProcesso.length
+                    )}
                   />
                 </SelectTrigger>
                 <SelectContent>

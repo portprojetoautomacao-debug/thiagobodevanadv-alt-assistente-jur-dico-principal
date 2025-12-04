@@ -17,7 +17,7 @@
   "chat.editing.enabled": true,
   "chat.editing.confirmEditRequestRemoval": true,
   "chat.extensionTools.enabled": true,
-  
+
   // 🔧 TOOL SETS - Conjunto padrão de ferramentas para Ask/Edit/Plan
   "github.copilot.chat.defaultToolset": "fullEditingTools",
 

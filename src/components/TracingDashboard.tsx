@@ -389,7 +389,10 @@ export default function TracingDashboard({
                     <div>
                       <p className="text-xs text-red-600 mb-1">Erros recentes:</p>
                       {metrics.recentErrors.slice(0, 2).map((error, i) => (
-                        <p key={i} className="text-xs text-muted-foreground truncate">
+                        <p
+                          key={`error-${i}-${error.slice(0, 20).replace(/\W/g, "")}`}
+                          className="text-xs text-muted-foreground truncate"
+                        >
                           {error}
                         </p>
                       ))}

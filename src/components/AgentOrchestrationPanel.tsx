@@ -5,27 +5,34 @@
  * Conecta com a arquitetura V2: ReAct, Circuit Breakers, Traces
  */
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Pulse,
-  WarningCircle,
+  ArrowsClockwise,
   CheckCircle,
   Clock,
   Cpu,
   GitBranch,
-  PlayCircle,
-  ArrowsClockwise,
-  XCircle,
-  Lightning,
-  UsersThree,
   Graph,
+  Lightning,
+  PlayCircle,
+  Pulse,
+  UsersThree,
+  WarningCircle,
+  XCircle,
 } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+// Helper: mapeia tipo de trace para variant do Badge (S3358)
+function getTraceVariant(type: string): "default" | "secondary" | "outline" {
+  if (type === "final") return "default";
+  if (type === "action") return "secondary";
+  return "outline";
+}
 
 interface CircuitBreakerStatus {
   name: string;
@@ -443,8 +450,8 @@ export default function AgentOrchestrationPanel() {
                 <div>
                   <p className="text-sm font-medium mb-2">Ferramentas Utilizadas:</p>
                   <div className="flex flex-wrap gap-2">
-                    {execution.usedTools.map((tool, idx) => (
-                      <Badge key={idx} variant="secondary">
+                    {execution.usedTools.map((tool) => (
+                      <Badge key={`tool-${tool}`} variant="secondary">
                         <Cpu className="h-3 w-3 mr-1" />
                         {tool}
                       </Badge>
@@ -457,21 +464,13 @@ export default function AgentOrchestrationPanel() {
                   <p className="text-sm font-medium mb-3">Timeline de Execução (ReAct):</p>
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
-                      {execution.traces.map((trace, idx) => (
+                      {execution.traces.map((trace) => (
                         <div
-                          key={idx}
+                          key={`trace-${trace.step}-${trace.type}`}
                           className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded"
                         >
                           <div className="shrink-0">
-                            <Badge
-                              variant={
-                                trace.type === "final"
-                                  ? "default"
-                                  : trace.type === "action"
-                                    ? "secondary"
-                                    : "outline"
-                              }
-                            >
+                            <Badge variant={getTraceVariant(trace.type)}>
                               {trace.type.toUpperCase()}
                             </Badge>
                           </div>

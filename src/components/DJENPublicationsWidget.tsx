@@ -283,7 +283,7 @@ interface PublicationsHeaderProps {
   filter: "all" | "unread";
   setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void;
   syncing: boolean;
-  handleSync: (fn: () => void) => void;
+  handleSync: (fn?: () => void) => void;
   fetchPublications: () => void;
   lastCheck: string | null;
   lawyersCount: number;
@@ -345,7 +345,7 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleSync(fetchPublications)}
+                  onClick={() => void handleSync(fetchPublications)}
                   disabled={syncing}
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
@@ -595,7 +595,7 @@ export default function DJENPublicationsWidget({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => handleSync(fetchPublications)}
+        onClick={() => void handleSync(fetchPublications)}
         className="mt-4"
         disabled={syncing}
       >
@@ -641,8 +641,12 @@ export default function DJENPublicationsWidget({
       filter,
       setFilter,
       syncing,
-      handleSync,
-      fetchPublications,
+      handleSync: (onSuccess?: () => void) => {
+        void handleSync(onSuccess);
+      },
+      fetchPublications: () => {
+        void fetchPublications();
+      },
       lastCheck,
       lawyersCount,
     });

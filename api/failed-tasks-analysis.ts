@@ -5,8 +5,8 @@
  * Analisa todas as tarefas falhadas e agrupa por tipo de erro
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const getKv = (): Redis => {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -83,12 +83,14 @@ export default async function handler(
       count: tasks.length,
       affectedAgents: [...new Set(tasks.map((t) => t.agentId))],
       affectedTaskTypes: [...new Set(tasks.map((t) => t.type))],
-      firstOccurrence: tasks.sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      )[0]?.createdAt,
-      lastOccurrence: tasks.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0]?.createdAt,
+      firstOccurrence: tasks
+        .slice()
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]
+        ?.createdAt,
+      lastOccurrence: tasks
+        .slice()
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+        ?.createdAt,
       examples: tasks.slice(0, 3), // Primeiros 3 exemplos
     }));
 

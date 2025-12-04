@@ -348,7 +348,10 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                 <CardContent>
                   <ul className="space-y-2">
                     {actionItems.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                      <li
+                        key={`action-${idx}-${item.slice(0, 20).replace(/\W/g, "")}`}
+                        className="flex items-start gap-3 p-3 bg-muted rounded-lg"
+                      >
                         <span className="shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
                           {idx + 1}
                         </span>

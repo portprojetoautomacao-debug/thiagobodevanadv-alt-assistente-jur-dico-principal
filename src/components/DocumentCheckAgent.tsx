@@ -12,6 +12,13 @@ import { Bell, CheckCircle, Clock, FileText, Info, Robot, Warning } from "@phosp
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+// Helper: mapeia urgência para cor da borda (S3358)
+function getUrgencyColor(urgency: "high" | "medium" | "low"): string {
+  if (urgency === "high") return "hsl(var(--destructive))";
+  if (urgency === "medium") return "hsl(var(--primary))";
+  return "hsl(var(--muted-foreground))";
+}
+
 interface MissingDocument {
   id: string;
   processId: string;
@@ -336,6 +343,7 @@ Retorne um objeto JSON com a seguinte estrutura:
             <ScrollArea className="h-[500px] pr-4">
               <div className="space-y-4">
                 {unresolvedDocs
+                  .slice()
                   .sort((a, b) => {
                     const urgencyOrder: Record<MissingDocument["urgency"], number> = {
                       high: 0,
@@ -349,12 +357,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                       key={doc.id}
                       className="border-l-4"
                       style={{
-                        borderLeftColor:
-                          doc.urgency === "high"
-                            ? "hsl(var(--destructive))"
-                            : doc.urgency === "medium"
-                              ? "hsl(var(--primary))"
-                              : "hsl(var(--muted-foreground))",
+                        borderLeftColor: getUrgencyColor(doc.urgency),
                       }}
                     >
                       <CardContent className="pt-6">
