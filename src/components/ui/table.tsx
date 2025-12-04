@@ -9,7 +9,10 @@ function Table({ className, ...props }: ComponentProps<"table">) {
         data-slot="table"
         className={cn("w-full caption-bottom text-sm", className)}
         {...props}
-      />
+      >
+        <caption className="sr-only">Tabela de dados</caption>
+        {props.children}
+      </table>
     </div>
   );
 }
@@ -87,4 +90,4 @@ function TableCaption({ className, ...props }: ComponentProps<"caption">) {
   );
 }
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow };

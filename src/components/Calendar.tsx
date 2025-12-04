@@ -219,6 +219,9 @@ export default function Calendar() {
     </>
   );
 
+  const syncFromGoogleText = isSyncing ? "Sincronizando..." : "Importar do Google";
+  const syncToGoogleText = isSyncing ? "Sincronizando..." : "Enviar ao Google";
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -302,11 +305,11 @@ export default function Calendar() {
                   <>
                     <Button onClick={handleSyncFromGoogle} variant="outline" disabled={isSyncing}>
                       <CloudDownload className="w-4 h-4 mr-2" />
-                      {isSyncing ? "Sincronizando..." : "Importar do Google"}
+                      {syncFromGoogleText}
                     </Button>
                     <Button onClick={handleSyncToGoogle} variant="outline" disabled={isSyncing}>
                       <CloudUpload className="w-4 h-4 mr-2" />
-                      {isSyncing ? "Sincronizando..." : "Enviar ao Google"}
+                      {syncToGoogleText}
                     </Button>
                     <Button
                       onClick={() => window.open("https://calendar.google.com", "_blank")}
