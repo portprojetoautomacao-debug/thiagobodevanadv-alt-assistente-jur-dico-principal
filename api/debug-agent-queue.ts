@@ -94,7 +94,7 @@ export default async function handler(
     // Tarefas mais antigas
     const oldestTasks = taskQueue
       .filter((t) => t.status === "pending" || t.status === "queued")
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .toSorted((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       .slice(0, 5)
       .map((t) => ({
         id: t.id,
@@ -107,8 +107,7 @@ export default async function handler(
 
     // Tarefas completadas recentemente
     const recentCompleted = completedTasks
-      .slice()
-      .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+      .toSorted((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
       .slice(0, 10)
       .map((t) => ({
         id: t.id,

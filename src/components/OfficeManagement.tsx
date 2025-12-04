@@ -484,9 +484,9 @@ export default function OfficeManagement() {
                             dataKey="valor"
                             nameKey="categoria"
                           >
-                            {custosData.map((entry, index) => (
+                            {custosData.map((entry) => (
                               <Cell
-                                key={`cell-${entry.categoria}-${entry.valor}`}
+                                key={`cell-custo-${entry.categoria}-${entry.valor}`}
                                 fill={
                                   [
                                     "#ef4444",

@@ -15,7 +15,7 @@
  * // streamingContent será atualizado em tempo real
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 interface Message {
   role: "system" | "user" | "assistant";

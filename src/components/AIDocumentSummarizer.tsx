@@ -207,21 +207,27 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         <Badge variant="outline">Pontos-Chave</Badge>
                       </h3>
                       <ul className="space-y-2">
-                        {keyPoints.map((point, index) => (
-                          <li
-                            key={`keypoint-${index}-${point.slice(0, 20).replace(/\W/g, "")}`}
-                            className="text-sm flex gap-2"
-                          >
-                            {point.startsWith("---") ? (
-                              <span className="font-bold text-primary mt-2">{point}</span>
-                            ) : (
-                              <>
-                                <span className="text-primary shrink-0">•</span>
-                                <span>{point}</span>
-                              </>
-                            )}
-                          </li>
-                        ))}
+                        {keyPoints.map((point, index) => {
+                          const uniqueKey = `keypoint-${index}-${point
+                            .slice(0, 20)
+                            .replace(/\W/g, "")}`;
+                          return (
+                            <li key={uniqueKey} className="text-sm flex gap-2">
+                              {point.startsWith("---") ? (
+                                <span className="font-bold text-primary mt-2">
+                                  {point}
+                                </span>
+                              ) : (
+                                <>
+                                  <span className="text-primary shrink-0">
+                                    •
+                                  </span>
+                                  <span>{point}</span>
+                                </>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}

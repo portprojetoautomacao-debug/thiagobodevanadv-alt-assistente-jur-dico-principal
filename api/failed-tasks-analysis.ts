@@ -78,21 +78,24 @@ export default async function handler(
     });
 
     // Estatísticas
-    const errorStats = Object.entries(errorGroups).map(([errorKey, tasks]) => ({
-      errorType: errorKey,
-      count: tasks.length,
-      affectedAgents: [...new Set(tasks.map((t) => t.agentId))],
-      affectedTaskTypes: [...new Set(tasks.map((t) => t.type))],
-      firstOccurrence: tasks
+    const errorStats = Object.entries(errorGroups).map(([errorKey, tasks]) => {
+      const sortedTasks = tasks
         .slice()
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]
-        ?.createdAt,
-      lastOccurrence: tasks
-        .slice()
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
-        ?.createdAt,
-      examples: tasks.slice(0, 3), // Primeiros 3 exemplos
-    }));
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
+      return {
+        errorType: errorKey,
+        count: tasks.length,
+        affectedAgents: [...new Set(tasks.map((t) => t.agentId))],
+        affectedTaskTypes: [...new Set(tasks.map((t) => t.type))],
+        firstOccurrence: sortedTasks[0]?.createdAt,
+        lastOccurrence: sortedTasks[sortedTasks.length - 1]?.createdAt,
+        examples: tasks.slice(0, 3), // Primeiros 3 exemplos
+      };
+    });
 
     // Ordenar por contagem (mais frequente primeiro)
     errorStats.sort((a, b) => b.count - a.count);

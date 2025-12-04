@@ -450,7 +450,7 @@ export default function AgentOrchestrationPanel() {
                 <div>
                   <p className="text-sm font-medium mb-2">Ferramentas Utilizadas:</p>
                   <div className="flex flex-wrap gap-2">
-                    {execution.usedTools.map((tool) => (
+                    {[...new Set(execution.usedTools)].map((tool) => (
                       <Badge key={`tool-${tool}`} variant="secondary">
                         <Cpu className="h-3 w-3 mr-1" />
                         {tool}
@@ -466,7 +466,7 @@ export default function AgentOrchestrationPanel() {
                     <div className="space-y-3">
                       {execution.traces.map((trace) => (
                         <div
-                          key={`trace-${trace.step}-${trace.type}`}
+                          key={`trace-${trace.timestamp}-${trace.step}`}
                           className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded"
                         >
                           <div className="shrink-0">
