@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Sparkle, ArrowRight, Warning } from '@phosphor-icons/react'
-import { isGeminiConfigured } from '@/lib/gemini-config'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Sparkle, ArrowRight, Warning } from "@phosphor-icons/react";
+import { isGeminiConfigured } from "@/lib/gemini-config";
 import {
   analyzeDocument,
   answerLegalQuestion,
@@ -12,123 +12,113 @@ import {
   suggestStrategy,
   summarizeJurisprudence,
   generatePeticao,
-} from '@/lib/gemini-service'
-import { toast } from 'sonner'
+} from "@/lib/gemini-service";
+import { toast } from "sonner";
 
-type AnalysisType =
-  | 'document'
-  | 'question'
-  | 'deadline'
-  | 'strategy'
-  | 'jurisprudence'
-  | 'peticao'
+type AnalysisType = "document" | "question" | "deadline" | "strategy" | "jurisprudence" | "peticao";
 
 interface AnalysisOption {
-  id: AnalysisType
-  label: string
-  placeholder: string
-  description: string
+  id: AnalysisType;
+  label: string;
+  placeholder: string;
+  description: string;
 }
 
 const ANALYSIS_OPTIONS: AnalysisOption[] = [
   {
-    id: 'document',
-    label: 'Analisar Documento',
-    placeholder: 'Cole aqui o texto do documento jurídico para análise...',
-    description: 'Analisa documentos e fornece resumo estruturado',
+    id: "document",
+    label: "Analisar Documento",
+    placeholder: "Cole aqui o texto do documento jurídico para análise...",
+    description: "Analisa documentos e fornece resumo estruturado",
   },
   {
-    id: 'question',
-    label: 'Pergunta Jurídica',
-    placeholder: 'Digite sua pergunta jurídica...',
-    description: 'Responde perguntas com fundamentação legal',
+    id: "question",
+    label: "Pergunta Jurídica",
+    placeholder: "Digite sua pergunta jurídica...",
+    description: "Responde perguntas com fundamentação legal",
   },
   {
-    id: 'deadline',
-    label: 'Calcular Prazo',
-    placeholder: 'Data de publicação: 15/01/2024\nPrazo: 15 dias\nContexto: Recurso de apelação',
-    description: 'Analisa prazos processuais com base no CPC',
+    id: "deadline",
+    label: "Calcular Prazo",
+    placeholder: "Data de publicação: 15/01/2024\nPrazo: 15 dias\nContexto: Recurso de apelação",
+    description: "Analisa prazos processuais com base no CPC",
   },
   {
-    id: 'strategy',
-    label: 'Sugerir Estratégia',
-    placeholder: 'Descreva o caso e a situação atual...',
-    description: 'Fornece análise estratégica e recomendações',
+    id: "strategy",
+    label: "Sugerir Estratégia",
+    placeholder: "Descreva o caso e a situação atual...",
+    description: "Fornece análise estratégica e recomendações",
   },
   {
-    id: 'jurisprudence',
-    label: 'Resumir Jurisprudência',
-    placeholder: 'Cole aqui o texto do acórdão ou decisão...',
-    description: 'Extrai teses e pontos principais de decisões',
+    id: "jurisprudence",
+    label: "Resumir Jurisprudência",
+    placeholder: "Cole aqui o texto do acórdão ou decisão...",
+    description: "Extrai teses e pontos principais de decisões",
   },
   {
-    id: 'peticao',
-    label: 'Gerar Minuta',
-    placeholder: 'Tipo: Contestação\nDetalhes: Cliente é réu em ação de cobrança...',
-    description: 'Gera minutas de peças processuais',
+    id: "peticao",
+    label: "Gerar Minuta",
+    placeholder: "Tipo: Contestação\nDetalhes: Cliente é réu em ação de cobrança...",
+    description: "Gera minutas de peças processuais",
   },
-]
+];
 
 export default function GeminiExample() {
-  const [selectedType, setSelectedType] = useState<AnalysisType>('document')
-  const [input, setInput] = useState('')
-  const [result, setResult] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [selectedType, setSelectedType] = useState<AnalysisType>("document");
+  const [input, setInput] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const isConfigured = isGeminiConfigured()
+  const isConfigured = isGeminiConfigured();
 
   const handleAnalyze = async () => {
     if (!input.trim()) {
-      toast.error('Digite ou cole o texto para análise')
-      return
+      toast.error("Digite ou cole o texto para análise");
+      return;
     }
 
-    setLoading(true)
-    setResult('')
+    setLoading(true);
+    setResult("");
 
     try {
-      let response
+      let response;
 
       switch (selectedType) {
-        case 'document':
-          response = await analyzeDocument(input)
-          break
-        case 'question':
-          response = await answerLegalQuestion(input)
-          break
-        case 'deadline':
-          response = await calculateDeadline(
-            new Date().toISOString(),
-            15,
-            input
-          )
-          break
-        case 'strategy':
-          response = await suggestStrategy(input)
-          break
-        case 'jurisprudence':
-          response = await summarizeJurisprudence(input)
-          break
-        case 'peticao':
-          response = await generatePeticao('Petição Inicial', input)
-          break
+        case "document":
+          response = await analyzeDocument(input);
+          break;
+        case "question":
+          response = await answerLegalQuestion(input);
+          break;
+        case "deadline":
+          response = await calculateDeadline(new Date().toISOString(), 15, input);
+          break;
+        case "strategy":
+          response = await suggestStrategy(input);
+          break;
+        case "jurisprudence":
+          response = await summarizeJurisprudence(input);
+          break;
+        case "peticao":
+          response = await generatePeticao("Petição Inicial", input);
+          break;
       }
 
       if (response.error) {
-        toast.error(response.error)
+        toast.error(response.error);
       } else if (response.text) {
-        setResult(response.text)
-        toast.success('Análise concluída!')
+        setResult(response.text);
+        toast.success("Análise concluída!");
       }
     } catch (error) {
-      console.error('Erro na análise:', error)
-      toast.error('Erro ao processar análise')
+      console.error("Erro na análise:", error);
+      toast.error("Erro ao processar análise");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const currentOption = ANALYSIS_OPTIONS.find((opt) => opt.id === selectedType)
+  const currentOption = ANALYSIS_OPTIONS.find((opt) => opt.id === selectedType);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -146,13 +136,11 @@ export default function GeminiExample() {
         <Alert variant="destructive">
           <Warning size={20} />
           <AlertDescription>
-            API do Gemini não configurada. Configure a variável{' '}
-            <code className="bg-destructive/20 px-1 rounded">
-              VITE_GEMINI_API_KEY
-            </code>{' '}
-            no arquivo <code className="bg-destructive/20 px-1 rounded">.env</code>.
-            Consulte <code className="bg-destructive/20 px-1 rounded">GEMINI_API_SETUP.md</code>{' '}
-            para instruções.
+            API do Gemini não configurada. Configure a variável{" "}
+            <code className="bg-destructive/20 px-1 rounded">VITE_GEMINI_API_KEY</code> no arquivo{" "}
+            <code className="bg-destructive/20 px-1 rounded">.env</code>. Consulte{" "}
+            <code className="bg-destructive/20 px-1 rounded">GEMINI_API_SETUP.md</code> para
+            instruções.
           </AlertDescription>
         </Alert>
       )}
@@ -164,8 +152,8 @@ export default function GeminiExample() {
             onClick={() => setSelectedType(option.id)}
             className={`p-4 rounded-lg border-2 text-left transition-all ${
               selectedType === option.id
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50'
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
             }`}
           >
             <h3 className="font-semibold mb-1">{option.label}</h3>
@@ -209,9 +197,7 @@ export default function GeminiExample() {
         <Card>
           <CardHeader>
             <CardTitle>Resultado</CardTitle>
-            <CardDescription>
-              Análise gerada pelo Google Gemini
-            </CardDescription>
+            <CardDescription>Análise gerada pelo Google Gemini</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -227,9 +213,7 @@ export default function GeminiExample() {
               </div>
             ) : result ? (
               <div className="prose prose-sm max-w-none">
-                <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg text-sm">
-                  {result}
-                </pre>
+                <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg text-sm">{result}</pre>
               </div>
             ) : (
               <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
@@ -266,5 +250,5 @@ export default function GeminiExample() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

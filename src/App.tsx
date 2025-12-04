@@ -138,12 +138,8 @@ function App() {
       >
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Assistente Jurídico PJe
-            </h1>
-            <p className="text-muted-foreground">
-              Sistema inteligente de gestão jurídica com IA
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Assistente Jurídico PJe</h1>
+            <p className="text-muted-foreground">Sistema inteligente de gestão jurídica com IA</p>
           </div>
 
           <div className="space-y-4">
@@ -174,9 +170,7 @@ function App() {
             <GlobalSearch onNavigate={handleNavigate} />
             <span className="text-xs text-muted-foreground hidden sm:inline">
               Pressione{" "}
-              <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">
-                /
-              </kbd>{" "}
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">/</kbd>{" "}
               para buscar
             </span>
           </div>

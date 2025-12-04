@@ -4,36 +4,36 @@
  * Este arquivo fornece funções wrapper para usar o cliente Todoist
  * no contexto do assistente jurídico, permitindo gerenciar tarefas relacionadas
  * a processos judiciais, prazos e atividades jurídicas.
- * 
+ *
  * @note Este módulo usa o stub do Todoist para compatibilidade client-side.
  * As chamadas reais ao Todoist devem ser feitas via endpoints /api/todoist-*.
  */
 
-import { TodoistApi, type Task } from '@/lib/todoist-stub'
+import { TodoistApi, type Task } from "@/lib/todoist-stub";
 
 // Prioridade no Todoist: 4 (Vermelho/Urgente) a 1 (Branco/Normal)
-type Priority = 1 | 2 | 3 | 4
+type Priority = 1 | 2 | 3 | 4;
 
 interface LegalTaskInput {
-  content: string
-  description?: string
-  dueDate?: string
-  priority?: Priority
-  labels?: string[]
-  projectId?: string
+  content: string;
+  description?: string;
+  dueDate?: string;
+  priority?: Priority;
+  labels?: string[];
+  projectId?: string;
 }
 
 /**
  * Cliente Todoist singleton
  */
-let todoistClient: TodoistApi | null = null
+let todoistClient: TodoistApi | null = null;
 
 /**
  * Inicializa o cliente Todoist com a API key
  */
 export function initializeTodoistClient(apiKey: string): TodoistApi {
-  todoistClient ??= new TodoistApi(apiKey)
-  return todoistClient
+  todoistClient ??= new TodoistApi(apiKey);
+  return todoistClient;
 }
 
 /**
@@ -41,9 +41,9 @@ export function initializeTodoistClient(apiKey: string): TodoistApi {
  */
 export function getTodoistClient(): TodoistApi {
   if (!todoistClient) {
-    throw new Error('Cliente Todoist não inicializado. Chame initializeTodoistClient primeiro.')
+    throw new Error("Cliente Todoist não inicializado. Chame initializeTodoistClient primeiro.");
   }
-  return todoistClient
+  return todoistClient;
 }
 
 /**
@@ -59,9 +59,9 @@ export function getTodoistClient(): TodoistApi {
  * }])
  */
 export async function addLegalTasks(tasks: LegalTaskInput[]): Promise<Task[]> {
-  const client = getTodoistClient()
+  const client = getTodoistClient();
 
-  const createdTasks: Task[] = []
+  const createdTasks: Task[] = [];
   for (const task of tasks) {
     const created = await client.addTask({
       content: task.content,
@@ -70,11 +70,11 @@ export async function addLegalTasks(tasks: LegalTaskInput[]): Promise<Task[]> {
       priority: task.priority,
       labels: task.labels,
       projectId: task.projectId,
-    })
-    createdTasks.push(created)
+    });
+    createdTasks.push(created);
   }
 
-  return createdTasks
+  return createdTasks;
 }
 
 /**
@@ -85,10 +85,10 @@ export async function addLegalTasks(tasks: LegalTaskInput[]): Promise<Task[]> {
  * const tasks = await findLegalTasksByDate("2024-12-15");
  */
 export async function findLegalTasksByDate(date: string): Promise<Task[]> {
-  const client = getTodoistClient()
+  const client = getTodoistClient();
   // No SDK oficial, o filtro é via getTasks({ filter })
-  const tasks = await client.getTasks({ filter: date })
-  return tasks
+  const tasks = await client.getTasks({ filter: date });
+  return tasks;
 }
 
 /**
@@ -99,22 +99,22 @@ export async function findLegalTasksByDate(date: string): Promise<Task[]> {
  * const urgentTasks = await searchLegalTasks("@processo & p1");
  */
 export async function searchLegalTasks(searchText: string): Promise<Task[]> {
-  const client = getTodoistClient()
+  const client = getTodoistClient();
 
   // Tenta usar como filtro do Todoist primeiro
   try {
-    const tasks = await client.getTasks({ filter: searchText })
-    return tasks
+    const tasks = await client.getTasks({ filter: searchText });
+    return tasks;
   } catch {
     // Se falhar (filtro inválido), busca todas e filtra localmente (menos eficiente)
-    const allTasks = await client.getTasks()
-    const lower = searchText.toLowerCase()
+    const allTasks = await client.getTasks();
+    const lower = searchText.toLowerCase();
 
     return allTasks.filter(
-      task =>
+      (task) =>
         task.content.toLowerCase().includes(lower) ||
-        task.description?.toLowerCase().includes(lower),
-    )
+        task.description?.toLowerCase().includes(lower)
+    );
   }
 }
 
@@ -127,20 +127,20 @@ export async function searchLegalTasks(searchText: string): Promise<Task[]> {
 export async function updateLegalTask(
   taskId: string,
   updates: {
-    content?: string
-    description?: string
-    dueDate?: string
-    priority?: Priority
-    labels?: string[]
-  },
+    content?: string;
+    description?: string;
+    dueDate?: string;
+    priority?: Priority;
+    labels?: string[];
+  }
 ) {
-  const client = getTodoistClient()
-  const { dueDate, ...rest } = updates
+  const client = getTodoistClient();
+  const { dueDate, ...rest } = updates;
 
   return await client.updateTask(taskId, {
     ...rest,
     dueString: dueDate,
-  })
+  });
 }
 
 /**
@@ -149,8 +149,8 @@ export async function updateLegalTask(
  * @param taskId ID da tarefa no Todoist
  */
 export async function completeLegalTask(taskId: string) {
-  const client = getTodoistClient()
-  return await client.closeTask(taskId)
+  const client = getTodoistClient();
+  return await client.closeTask(taskId);
 }
 
 /**
@@ -165,12 +165,12 @@ export async function createTaskFromDeadline(
   processNumber: string,
   taskType: string,
   deadline: string,
-  description?: string,
+  description?: string
 ) {
-  const taskContent = `${taskType} - Processo ${processNumber}`
+  const taskContent = `${taskType} - Processo ${processNumber}`;
   const taskDescription = description
     ? `${description}\n\nProcesso: ${processNumber}`
-    : `Processo: ${processNumber}`
+    : `Processo: ${processNumber}`;
 
   return await addLegalTasks([
     {
@@ -178,9 +178,9 @@ export async function createTaskFromDeadline(
       description: taskDescription,
       dueDate: deadline,
       priority: 4, // Alta prioridade para prazos processuais
-      labels: ['processo', 'prazo', taskType.toLowerCase()],
+      labels: ["processo", "prazo", taskType.toLowerCase()],
     },
-  ])
+  ]);
 }
 
 /**
@@ -189,7 +189,7 @@ export async function createTaskFromDeadline(
  * @param processNumber Número do processo
  */
 export async function findTasksByProcess(processNumber: string) {
-  return await searchLegalTasks(processNumber)
+  return await searchLegalTasks(processNumber);
 }
 
 /**
@@ -198,41 +198,42 @@ export async function findTasksByProcess(processNumber: string) {
  * @param processData Dados do processo
  */
 export async function createProcessTasks(processData: {
-  number: string
-  type: string
+  number: string;
+  type: string;
   deadlines: Array<{
-    type: string
-    date: string
-    description?: string
-  }>
+    type: string;
+    date: string;
+    description?: string;
+  }>;
 }) {
-  const tasks: LegalTaskInput[] = processData.deadlines.map(deadline => ({
+  const tasks: LegalTaskInput[] = processData.deadlines.map((deadline) => ({
     content: `${deadline.type} - Processo ${processData.number}`,
-    description: `${deadline.description || ''}\n\nProcesso: ${processData.number
-      }\nTipo: ${processData.type}`,
+    description: `${deadline.description || ""}\n\nProcesso: ${
+      processData.number
+    }\nTipo: ${processData.type}`,
     dueDate: deadline.date,
     priority: 4 as Priority,
-    labels: ['processo', 'prazo', deadline.type.toLowerCase()],
-  }))
+    labels: ["processo", "prazo", deadline.type.toLowerCase()],
+  }));
 
-  return await addLegalTasks(tasks)
+  return await addLegalTasks(tasks);
 }
 
 /**
  * Obtém tarefas de hoje
  */
 export async function getTodayTasks() {
-  const today = new Date().toISOString().split('T')[0]
-  return await findLegalTasksByDate(today)
+  const today = new Date().toISOString().split("T")[0];
+  return await findLegalTasksByDate(today);
 }
 
 /**
  * Obtém tarefas urgentes (próximos 3 dias)
  */
 export async function getUrgentTasks() {
-  const client = getTodoistClient()
-  const tasks = await client.getTasks({ filter: '3 days' })
-  return tasks
+  const client = getTodoistClient();
+  const tasks = await client.getTasks({ filter: "3 days" });
+  return tasks;
 }
 
 /**
@@ -241,10 +242,10 @@ export async function getUrgentTasks() {
  */
 /**
  * Ferramentas do Todoist para integração com agentes IA.
- * 
+ *
  * @note As funções do @doist/todoist-ai não estão disponíveis no client-side.
  * Use os endpoints /api/todoist-* para operações reais.
- * 
+ *
  * @param _client Cliente TodoistApi (não utilizado no stub)
  * @returns Objeto com ferramentas mockadas
  */
@@ -255,16 +256,16 @@ export function getTodoistTools(_client: TodoistApi) {
     execute: () => {
       throw new Error(
         `[Todoist] A função ${name} não está disponível no browser. ` +
-        `Use os endpoints /api/todoist-* para operações com o Todoist.`
-      )
-    }
-  })
+          `Use os endpoints /api/todoist-* para operações com o Todoist.`
+      );
+    },
+  });
 
   return {
-    findTasksByDate: createStub('findTasksByDate'),
-    addTasks: createStub('addTasks'),
-    findTasks: createStub('findTasks'),
-    updateTasks: createStub('updateTasks'),
-    completeTasks: createStub('completeTasks'),
-  }
+    findTasksByDate: createStub("findTasksByDate"),
+    addTasks: createStub("addTasks"),
+    findTasks: createStub("findTasks"),
+    updateTasks: createStub("updateTasks"),
+    completeTasks: createStub("completeTasks"),
+  };
 }

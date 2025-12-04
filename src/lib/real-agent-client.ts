@@ -172,9 +172,7 @@ export async function processTaskWithStreamingAI(
     return createStreamingSuccessResult(fullContent);
   } catch (error) {
     console.error("[Streaming Agent] Error:", error);
-    callbacks?.onError?.(
-      error instanceof Error ? error : new Error(String(error))
-    );
+    callbacks?.onError?.(error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
@@ -308,9 +306,7 @@ export async function processTaskWithRealAI(
 /**
  * Busca tarefas pendentes do backend
  */
-export async function fetchPendingTasks(
-  agentId?: string
-): Promise<AgentTask[]> {
+export async function fetchPendingTasks(agentId?: string): Promise<AgentTask[]> {
   try {
     const url = agentId
       ? `/api/agents/tasks?agentId=${encodeURIComponent(agentId)}&status=queued`
@@ -319,9 +315,7 @@ export async function fetchPendingTasks(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch tasks: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to fetch tasks: ${response.status} ${response.statusText}`);
     }
 
     const data = (await response.json()) as FetchTasksAPIResponse;
@@ -347,9 +341,7 @@ export async function queueTask(task: AgentTask): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to queue task: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to queue task: ${response.status} ${response.statusText}`);
     }
   } catch (error) {
     console.error("[Real Agent Client] Error queueing task:", error);
@@ -371,9 +363,7 @@ export async function monitorDJEN(tribunais: string[]): Promise<unknown> {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `DJEN API error: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`DJEN API error: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();
@@ -405,9 +395,7 @@ export async function calculateRealDeadline(
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Deadline API error: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Deadline API error: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();

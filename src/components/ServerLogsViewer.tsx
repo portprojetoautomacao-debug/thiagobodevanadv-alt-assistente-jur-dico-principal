@@ -1,19 +1,8 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  CheckCircle,
-  Clock,
-  Robot,
-  WarningCircle,
-} from "@phosphor-icons/react";
+import { CheckCircle, Clock, Robot, WarningCircle } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 
 interface AgentActionLog {
@@ -72,9 +61,7 @@ export function ServerLogsViewer({
     return (
       <div className="flex items-center justify-center p-8">
         <Clock className="w-6 h-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">
-          Carregando logs do servidor...
-        </span>
+        <span className="ml-2 text-muted-foreground">Carregando logs do servidor...</span>
       </div>
     );
   }
@@ -99,15 +86,10 @@ export function ServerLogsViewer({
         <div>
           <CardTitle>Logs do Servidor (Backend)</CardTitle>
           <CardDescription>
-            Atividades executadas pelos agentes no ambiente serverless
-            (Cron/API)
+            Atividades executadas pelos agentes no ambiente serverless (Cron/API)
           </CardDescription>
         </div>
-        <Badge
-          variant="outline"
-          className="cursor-pointer"
-          onClick={handleRefresh}
-        >
+        <Badge variant="outline" className="cursor-pointer" onClick={handleRefresh}>
           Atualizar
         </Badge>
       </CardHeader>
@@ -126,9 +108,7 @@ export function ServerLogsViewer({
                 >
                   <div
                     className={`mt-0.5 p-1 rounded-full ${
-                      log.success
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
+                      log.success ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
                     }`}
                   >
                     {log.success ? (
@@ -149,9 +129,7 @@ export function ServerLogsViewer({
                       </span>
                     </div>
 
-                    <p className="text-xs text-foreground mt-1 font-mono">
-                      {log.action}
-                    </p>
+                    <p className="text-xs text-foreground mt-1 font-mono">{log.action}</p>
 
                     {log.durationMs && (
                       <p className="text-[10px] text-muted-foreground mt-1">

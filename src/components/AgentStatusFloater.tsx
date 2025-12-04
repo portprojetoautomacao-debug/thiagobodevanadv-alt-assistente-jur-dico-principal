@@ -1,33 +1,26 @@
-import { useState } from 'react'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Robot,
-  X,
-  CaretDown,
-  CaretUp,
-  Lightning,
-  CheckCircle,
-} from '@phosphor-icons/react'
-import { useAutonomousAgents } from '@/hooks/use-autonomous-agents'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Robot, X, CaretDown, CaretUp, Lightning, CheckCircle } from "@phosphor-icons/react";
+import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AgentStatusFloater() {
-  const { agents, activityLog } = useAutonomousAgents()
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isVisible, setIsVisible] = useState(true)
+  const { agents, activityLog } = useAutonomousAgents();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   const activeAgents = agents.filter(
-    (a) => a.enabled && (a.status === 'active' || a.status === 'processing'),
-  )
+    (a) => a.enabled && (a.status === "active" || a.status === "processing")
+  );
 
-  const processingAgents = agents.filter((a) => a.currentTask !== undefined)
-  const recentActivity = activityLog.slice(0, 3)
-  const enabledAgentsCount = agents.filter((a) => a.enabled).length
+  const processingAgents = agents.filter((a) => a.currentTask !== undefined);
+  const recentActivity = activityLog.slice(0, 3);
+  const enabledAgentsCount = agents.filter((a) => a.enabled).length;
 
   // Se não há agentes ativos, não mostra o floater
-  if (activeAgents.length === 0) return null
+  if (activeAgents.length === 0) return null;
 
   return (
     <AnimatePresence>
@@ -52,8 +45,8 @@ export default function AgentStatusFloater() {
                     </h3>
                     <p className="text-xs text-muted-foreground">
                       {activeAgents.length} agente
-                      {activeAgents.length !== 1 ? 's' : ''} ativo
-                      {activeAgents.length !== 1 ? 's' : ''}
+                      {activeAgents.length !== 1 ? "s" : ""} ativo
+                      {activeAgents.length !== 1 ? "s" : ""}
                     </p>
                   </div>
                 </div>
@@ -65,8 +58,8 @@ export default function AgentStatusFloater() {
                     onClick={() => setIsExpanded((prev) => !prev)}
                     aria-label={
                       isExpanded
-                        ? 'Recolher painel de status dos agentes'
-                        : 'Expandir painel de status dos agentes'
+                        ? "Recolher painel de status dos agentes"
+                        : "Expandir painel de status dos agentes"
                     }
                   >
                     {isExpanded ? (
@@ -90,14 +83,10 @@ export default function AgentStatusFloater() {
               {processingAgents.length > 0 && (
                 <div className="mb-3 p-2 rounded-lg bg-primary/10 border border-primary/20">
                   <div className="flex items-center gap-2">
-                    <Lightning
-                      className="w-4 h-4 text-accent animate-pulse"
-                      weight="fill"
-                    />
+                    <Lightning className="w-4 h-4 text-accent animate-pulse" weight="fill" />
                     <p className="text-xs font-medium text-foreground">
                       {processingAgents.length} tarefa
-                      {processingAgents.length !== 1 ? 's' : ''} em
-                      processamento
+                      {processingAgents.length !== 1 ? "s" : ""} em processamento
                     </p>
                   </div>
                 </div>
@@ -107,16 +96,14 @@ export default function AgentStatusFloater() {
                 {isExpanded && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
+                    animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     className="space-y-2 overflow-hidden"
                   >
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {recentActivity.length > 0 ? (
                         recentActivity.map((log) => {
-                          const agent = agents.find(
-                            (a) => a.id === log.agentId,
-                          )
+                          const agent = agents.find((a) => a.id === log.agentId);
                           return (
                             <div
                               key={log.id}
@@ -128,22 +115,18 @@ export default function AgentStatusFloater() {
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-foreground line-clamp-1">
-                                  {agent?.name ?? 'Agente desconhecido'}
+                                  {agent?.name ?? "Agente desconhecido"}
                                 </p>
-                                <p className="text-muted-foreground line-clamp-1">
-                                  {log.action}
-                                </p>
+                                <p className="text-muted-foreground line-clamp-1">{log.action}</p>
                                 <p className="text-muted-foreground">
-                                  {new Date(
-                                    log.timestamp,
-                                  ).toLocaleTimeString('pt-BR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
+                                  {new Date(log.timestamp).toLocaleTimeString("pt-BR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
                                   })}
                                 </p>
                               </div>
                             </div>
-                          )
+                          );
                         })
                       ) : (
                         <p className="text-xs text-muted-foreground text-center py-4">
@@ -154,9 +137,7 @@ export default function AgentStatusFloater() {
 
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          Agentes ativos
-                        </span>
+                        <span className="text-muted-foreground">Agentes ativos</span>
                         <Badge variant="secondary">
                           {enabledAgentsCount}/{agents.length}
                         </Badge>
@@ -168,9 +149,7 @@ export default function AgentStatusFloater() {
 
               {!isExpanded && (
                 <div className="flex items-center justify-between text-xs pt-2 border-t">
-                  <span className="text-muted-foreground">
-                    Clique para ver detalhes
-                  </span>
+                  <span className="text-muted-foreground">Clique para ver detalhes</span>
                   <Badge variant="secondary" className="text-xs">
                     {enabledAgentsCount} ativos
                   </Badge>
@@ -181,5 +160,5 @@ export default function AgentStatusFloater() {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }

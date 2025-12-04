@@ -1,113 +1,138 @@
-import { useState, useMemo, useRef } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, TrendUp, TrendDown, Paperclip, X, File } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { useState, useMemo, useRef } from "react";
+import { useKV } from "@/hooks/use-kv";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus, TrendUp, TrendDown, Paperclip, X, File } from "@phosphor-icons/react";
+import { toast } from "sonner";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
-import type { FinancialEntry } from '@/types'
-import { formatCurrency } from '@/lib/utils'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  CartesianGrid,
+} from "recharts";
+import type { FinancialEntry } from "@/types";
+import { formatCurrency } from "@/lib/utils";
 
 interface FileAttachment {
-  id: string
-  name: string
-  size: number
-  type: string
+  id: string;
+  name: string;
+  size: number;
+  type: string;
 }
 
 export default function FinancialManagementAdvbox() {
-  const [entries, setEntries] = useKV<FinancialEntry[]>('financialEntries', [])
-  const [showDialog, setShowDialog] = useState(false)
-  const [attachments, setAttachments] = useState<FileAttachment[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [entries, setEntries] = useKV<FinancialEntry[]>("financialEntries", []);
+  const [showDialog, setShowDialog] = useState(false);
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [newEntry, setNewEntry] = useState({
-    type: 'income' as 'income' | 'expense',
-    amount: '',
-    category: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-  })
+    type: "income" as "income" | "expense",
+    amount: "",
+    category: "",
+    description: "",
+    date: new Date().toISOString().split("T")[0],
+  });
 
   const stats = useMemo(() => {
-    const entriesList = entries || []
-    const now = new Date()
-    const thisMonth = now.getMonth()
-    const thisYear = now.getFullYear()
+    const entriesList = entries || [];
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
 
-    const thisMonthEntries = entriesList.filter(e => {
-      const entryDate = new Date(e.date)
-      return entryDate.getMonth() === thisMonth && entryDate.getFullYear() === thisYear
-    })
+    const thisMonthEntries = entriesList.filter((e) => {
+      const entryDate = new Date(e.date);
+      return entryDate.getMonth() === thisMonth && entryDate.getFullYear() === thisYear;
+    });
 
-    const thisWeekEntries = entriesList.filter(e => {
-      const entryDate = new Date(e.date)
-      const weekAgo = new Date()
-      weekAgo.setDate(weekAgo.getDate() - 7)
-      return entryDate >= weekAgo
-    })
+    const thisWeekEntries = entriesList.filter((e) => {
+      const entryDate = new Date(e.date);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return entryDate >= weekAgo;
+    });
 
     const valorPrevisto = thisMonthEntries
-      .filter(e => e.type === 'income')
-      .reduce((sum, e) => sum + e.amount, 0)
+      .filter((e) => e.type === "income")
+      .reduce((sum, e) => sum + e.amount, 0);
 
     const aReceberSemana = thisWeekEntries
-      .filter(e => e.type === 'income' && new Date(e.date) >= new Date())
-      .reduce((sum, e) => sum + e.amount, 0)
+      .filter((e) => e.type === "income" && new Date(e.date) >= new Date())
+      .reduce((sum, e) => sum + e.amount, 0);
 
     const aPagarSemana = thisWeekEntries
-      .filter(e => e.type === 'expense' && new Date(e.date) >= new Date())
-      .reduce((sum, e) => sum + e.amount, 0)
+      .filter((e) => e.type === "expense" && new Date(e.date) >= new Date())
+      .reduce((sum, e) => sum + e.amount, 0);
 
     return {
       valorPrevisto,
       aReceberSemana,
-      aPagarSemana
-    }
-  }, [entries])
+      aPagarSemana,
+    };
+  }, [entries]);
 
   // Chart data for Revenue vs Expenses
   const chartData = useMemo(() => {
-    const entriesList = entries || []
-    const monthlyData: { [key: string]: { receitas: number; despesas: number } } = {}
+    const entriesList = entries || [];
+    const monthlyData: { [key: string]: { receitas: number; despesas: number } } = {};
 
     // Generate last 6 months
-    const months: string[] = []
+    const months: string[] = [];
     for (let i = 5; i >= 0; i--) {
-      const date = new Date()
-      date.setMonth(date.getMonth() - i)
-      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
-      months.push(monthKey)
-      monthlyData[monthKey] = { receitas: 0, despesas: 0 }
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+      months.push(monthKey);
+      monthlyData[monthKey] = { receitas: 0, despesas: 0 };
     }
 
     // Aggregate data
-    entriesList.forEach(entry => {
-      const monthKey = new Date(entry.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+    entriesList.forEach((entry) => {
+      const monthKey = new Date(entry.date).toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "2-digit",
+      });
       if (monthlyData[monthKey]) {
-        if (entry.type === 'income') {
-          monthlyData[monthKey].receitas += entry.amount
+        if (entry.type === "income") {
+          monthlyData[monthKey].receitas += entry.amount;
         } else {
-          monthlyData[monthKey].despesas += entry.amount
+          monthlyData[monthKey].despesas += entry.amount;
         }
       }
-    })
+    });
 
-    return months.map(month => ({
+    return months.map((month) => ({
       month,
       Receitas: monthlyData[month].receitas,
-      Despesas: monthlyData[month].despesas
-    }))
-  }, [entries])
+      Despesas: monthlyData[month].despesas,
+    }));
+  }, [entries]);
 
   const handleAddEntry = () => {
     if (!newEntry.amount || !newEntry.category || !newEntry.date) {
-      toast.error('Preencha os campos obrigatórios')
-      return
+      toast.error("Preencha os campos obrigatórios");
+      return;
     }
 
     const entry: FinancialEntry = {
@@ -117,50 +142,50 @@ export default function FinancialManagementAdvbox() {
       category: newEntry.category,
       description: newEntry.description,
       date: newEntry.date,
-    }
+    };
 
-    setEntries((current) => [...(current || []), entry])
-    setShowDialog(false)
-    setAttachments([])
+    setEntries((current) => [...(current || []), entry]);
+    setShowDialog(false);
+    setAttachments([]);
     setNewEntry({
-      type: 'income',
-      amount: '',
-      category: '',
-      description: '',
-      date: new Date().toISOString().split('T')[0],
-    })
+      type: "income",
+      amount: "",
+      category: "",
+      description: "",
+      date: new Date().toISOString().split("T")[0],
+    });
 
     if (attachments.length > 0) {
-      toast.success(`Lançamento adicionado com ${attachments.length} anexo(s)`)
+      toast.success(`Lançamento adicionado com ${attachments.length} anexo(s)`);
     } else {
-      toast.success('Lançamento adicionado')
+      toast.success("Lançamento adicionado");
     }
-  }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
+    const files = e.target.files;
     if (files) {
-      const newAttachments: FileAttachment[] = Array.from(files).map(file => ({
+      const newAttachments: FileAttachment[] = Array.from(files).map((file) => ({
         id: crypto.randomUUID(),
         name: file.name,
         size: file.size,
-        type: file.type
-      }))
-      setAttachments(prev => [...prev, ...newAttachments])
-      toast.success(`${files.length} arquivo(s) anexado(s)`)
+        type: file.type,
+      }));
+      setAttachments((prev) => [...prev, ...newAttachments]);
+      toast.success(`${files.length} arquivo(s) anexado(s)`);
     }
-  }
+  };
 
   const removeAttachment = (id: string) => {
-    setAttachments(prev => prev.filter(a => a.id !== id))
-    toast.info('Anexo removido')
-  }
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+    toast.info("Anexo removido");
+  };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-  }
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
 
   return (
     <div className="p-4 lg:p-6 flex flex-col gap-6 h-full overflow-y-auto">
@@ -168,9 +193,7 @@ export default function FinancialManagementAdvbox() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Financeiro</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Controle de receitas e despesas
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Controle de receitas e despesas</p>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogTrigger asChild>
@@ -182,16 +205,14 @@ export default function FinancialManagementAdvbox() {
           <DialogContent className="bg-card border-border">
             <DialogHeader>
               <DialogTitle>Novo Lançamento</DialogTitle>
-              <DialogDescription>
-                Adicione uma nova receita ou despesa
-              </DialogDescription>
+              <DialogDescription>Adicione uma nova receita ou despesa</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>Tipo</Label>
                 <Select
                   value={newEntry.type}
-                  onValueChange={(value: 'income' | 'expense') =>
+                  onValueChange={(value: "income" | "expense") =>
                     setNewEntry({ ...newEntry, type: value })
                   }
                 >
@@ -268,7 +289,7 @@ export default function FinancialManagementAdvbox() {
                 {/* Attachment List */}
                 {attachments.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    {attachments.map(file => (
+                    {attachments.map((file) => (
                       <div
                         key={file.id}
                         className="flex items-center justify-between p-2 bg-muted rounded-lg border border-border"
@@ -277,7 +298,9 @@ export default function FinancialManagementAdvbox() {
                           <File size={16} className="text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate">{file.name}</p>
-                            <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(file.size)}
+                            </p>
                           </div>
                         </div>
                         <Button
@@ -366,27 +389,18 @@ export default function FinancialManagementAdvbox() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
-                <XAxis
-                  dataKey="month"
-                  stroke="#6b7280"
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                />
-                <YAxis
-                  stroke="#6b7280"
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                />
+                <XAxis dataKey="month" stroke="#6b7280" tick={{ fill: "#6b7280", fontSize: 12 }} />
+                <YAxis stroke="#6b7280" tick={{ fill: "#6b7280", fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1e2130',
-                    border: '1px solid #2a2d3e',
-                    borderRadius: '8px',
-                    color: '#e8eaed'
+                    backgroundColor: "#1e2130",
+                    border: "1px solid #2a2d3e",
+                    borderRadius: "8px",
+                    color: "#e8eaed",
                   }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
-                <Legend
-                  wrapperStyle={{ color: '#e8eaed' }}
-                />
+                <Legend wrapperStyle={{ color: "#e8eaed" }} />
                 <Bar dataKey="Receitas" fill="#52b788" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="Despesas" fill="#ef4444" radius={[8, 8, 0, 0]} />
               </BarChart>
@@ -405,38 +419,40 @@ export default function FinancialManagementAdvbox() {
         <CardContent>
           <div className="space-y-2">
             {(entries || []).length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhum lançamento cadastrado
-              </p>
+              <p className="text-center text-muted-foreground py-8">Nenhum lançamento cadastrado</p>
             ) : (
               <div className="space-y-2">
-                {[...(entries || [])].reverse().slice(0, 10).map(entry => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary transition-colors"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{entry.description || entry.category}</p>
-                      <p className="text-xs text-muted-foreground">{entry.category}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(entry.date).toLocaleDateString('pt-BR')}
-                      </span>
-                      <span
-                        className={`font-semibold ${entry.type === 'income' ? 'text-green-500' : 'text-red-500'
+                {[...(entries || [])]
+                  .reverse()
+                  .slice(0, 10)
+                  .map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary transition-colors"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{entry.description || entry.category}</p>
+                        <p className="text-xs text-muted-foreground">{entry.category}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(entry.date).toLocaleDateString("pt-BR")}
+                        </span>
+                        <span
+                          className={`font-semibold ${
+                            entry.type === "income" ? "text-green-500" : "text-red-500"
                           }`}
-                      >
-                        {entry.type === 'income' ? '+' : '-'} {formatCurrency(entry.amount)}
-                      </span>
+                        >
+                          {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-import { useEffect, useCallback, useState } from 'react';
-import { useKV } from './use-kv';
+import { useEffect, useCallback, useState } from "react";
+import { useKV } from "./use-kv";
 
 /**
  * Hook para backup local dos dados dos agentes IA
  * Usa localStorage do navegador com backup redundante
- * 
+ *
  * NOTA: Para backup em servidor (cross-device), configure:
  * - Vercel KV (requer plano Pro)
  * - Ou Supabase (free tier disponível)
@@ -16,16 +16,16 @@ interface BackupOptions {
   enableAutoBackup?: boolean;
 }
 
-const BACKUP_KEY_PREFIX = 'agent-backup';
+const BACKUP_KEY_PREFIX = "agent-backup";
 
 export function useAgentBackup(options: BackupOptions) {
   const { userId, autoBackupInterval = 5, enableAutoBackup = true } = options;
 
-  const [agents] = useKV('autonomous-agents', []);
-  const [monitoredLawyers] = useKV('monitored-lawyers', []);
-  const [taskQueue] = useKV('agent-task-queue', []);
-  const [completedTasks] = useKV('completed-agent-tasks', []);
-  const [lastDjenCheck] = useKV('last-djen-check', null);
+  const [agents] = useKV("autonomous-agents", []);
+  const [monitoredLawyers] = useKV("monitored-lawyers", []);
+  const [taskQueue] = useKV("agent-task-queue", []);
+  const [completedTasks] = useKV("completed-agent-tasks", []);
+  const [lastDjenCheck] = useKV("last-djen-check", null);
 
   // Use state instead of ref for lastBackup to avoid accessing ref during render
   const [lastBackup, setLastBackup] = useState<number>(0);
@@ -41,8 +41,8 @@ export function useAgentBackup(options: BackupOptions) {
           monitoredLawyers,
           taskQueue,
           completedTasks,
-          lastDjenCheck
-        }
+          lastDjenCheck,
+        },
       };
 
       // Salvar no localStorage como backup redundante
@@ -51,7 +51,7 @@ export function useAgentBackup(options: BackupOptions) {
 
       // Manter histórico dos últimos 7 backups
       const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
-      const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
       history.unshift(backupData);
 
       if (history.length > 7) {
@@ -65,23 +65,22 @@ export function useAgentBackup(options: BackupOptions) {
 
       setLastBackup(backupData.timestamp);
 
-      console.log('✅ Backup local criado:', new Date(backupData.timestamp).toLocaleString());
+      console.log("✅ Backup local criado:", new Date(backupData.timestamp).toLocaleString());
 
       // Validar com servidor (opcional - não bloqueia se falhar)
       try {
-        await fetch('/api/backup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, data: backupData.data })
+        await fetch("/api/backup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, data: backupData.data }),
         });
       } catch {
-        console.log('ℹ️ Server validation skipped (offline or unavailable)');
+        console.log("ℹ️ Server validation skipped (offline or unavailable)");
       }
 
       return { success: true, timestamp: backupData.timestamp };
-
     } catch (error) {
-      console.error('❌ Erro ao criar backup:', error);
+      console.error("❌ Erro ao criar backup:", error);
       throw error;
     }
   }, [userId, agents, monitoredLawyers, taskQueue, completedTasks, lastDjenCheck]);
@@ -93,17 +92,16 @@ export function useAgentBackup(options: BackupOptions) {
       const backupStr = localStorage.getItem(backupKey);
 
       if (!backupStr) {
-        console.log('ℹ️ Nenhum backup local encontrado');
+        console.log("ℹ️ Nenhum backup local encontrado");
         return null;
       }
 
       const backup = JSON.parse(backupStr);
-      console.log('✅ Backup local restaurado:', new Date(backup.timestamp).toLocaleString());
+      console.log("✅ Backup local restaurado:", new Date(backup.timestamp).toLocaleString());
 
       return backup;
-
     } catch (error) {
-      console.error('❌ Erro ao restaurar backup:', error);
+      console.error("❌ Erro ao restaurar backup:", error);
       throw error;
     }
   }, [userId]);
@@ -123,11 +121,10 @@ export function useAgentBackup(options: BackupOptions) {
         lastBackup,
         backupCount: history.length,
         history,
-        storage: 'local'
+        storage: "local",
       };
-
     } catch (error) {
-      console.error('❌ Erro ao buscar histórico:', error);
+      console.error("❌ Erro ao buscar histórico:", error);
       throw error;
     }
   }, [userId]);
@@ -141,11 +138,11 @@ export function useAgentBackup(options: BackupOptions) {
 
     // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
-    if (agents.length > 0 && (now - lastBackup) > intervalMs) {
+    if (agents.length > 0 && now - lastBackup > intervalMs) {
       // Schedule to avoid synchronous setState in effect
       timeoutId = globalThis.setTimeout(createBackup, 0);
     }
-    
+
     // Configurar backup periódico
     const timer = setInterval(() => {
       if (agents.length > 0) {
@@ -169,6 +166,6 @@ export function useAgentBackup(options: BackupOptions) {
     restoreBackup,
     getBackupHistory,
     lastBackup,
-    storageType: 'local' as const
+    storageType: "local" as const,
   };
 }

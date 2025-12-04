@@ -10,9 +10,7 @@
 // Safe origin resolver (evita erro se não houver window)
 const getOrigin = () => {
   try {
-    return typeof window !== "undefined"
-      ? window.location.origin
-      : "http://localhost";
+    return typeof window !== "undefined" ? window.location.origin : "http://localhost";
   } catch {
     return "http://localhost";
   }
@@ -22,16 +20,11 @@ const getOrigin = () => {
  * getEnvVar
  * Lê variável do import.meta.env com fallback seguro
  */
-const getEnvVar = (
-  key: string,
-  defaultValue?: string,
-  logError: boolean = true
-): string => {
+const getEnvVar = (key: string, defaultValue?: string, logError: boolean = true): string => {
   const value = import.meta.env[key];
 
   // Em desenvolvimento, não logar erros para variáveis opcionais
-  const isDevelopment =
-    import.meta.env.DEV || import.meta.env.MODE === "development";
+  const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === "development";
   const shouldLogError = logError && !isDevelopment;
 
   if ((!value || value === "") && !defaultValue && shouldLogError) {
@@ -60,10 +53,7 @@ export const config = {
   gitlab: {
     oauthClientId: getEnvVar("GITLAB_CLIENT_ID", ""),
     oauthClientSecret: getEnvVar("GITLAB_CLIENT_SECRET", ""),
-    redirectUri: getEnvVar(
-      "GITLAB_REDIRECT_URI",
-      `${getOrigin()}/api/auth/callback/gitlab`
-    ),
+    redirectUri: getEnvVar("GITLAB_REDIRECT_URI", `${getOrigin()}/api/auth/callback/gitlab`),
   },
 
   datajud: {
@@ -125,9 +115,7 @@ export const validateConfig = (): boolean => {
   if (errors.length > 0) {
     console.error("Configuration validation failed:");
     errors.forEach((e) => console.error(" - " + e));
-    console.error(
-      "\nPlease check your .env file and ensure all required variables are set."
-    );
+    console.error("\nPlease check your .env file and ensure all required variables are set.");
     console.error("See OAUTH_SETUP.md for configuration instructions.");
     return false;
   }

@@ -1,20 +1,8 @@
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type MemoryItem } from "@/hooks/use-autonomous-agents";
-import {
-  Brain,
-  Clock,
-  FileText,
-  Gavel,
-  Lightbulb,
-} from "@phosphor-icons/react";
+import { Brain, Clock, FileText, Gavel, Lightbulb } from "@phosphor-icons/react";
 import React from "react";
 
 interface LegalMemoryViewerProps {
@@ -34,18 +22,12 @@ const typeIcons: Record<
   default: Brain,
 };
 
-export function LegalMemoryViewer({
-  memory,
-  isLoading,
-  onRefresh,
-}: LegalMemoryViewerProps) {
+export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryViewerProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Clock className="w-6 h-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">
-          Carregando memória jurídica...
-        </span>
+        <span className="ml-2 text-muted-foreground">Carregando memória jurídica...</span>
       </div>
     );
   }
@@ -56,16 +38,11 @@ export function LegalMemoryViewer({
         <div>
           <CardTitle>Memória Jurídica Compartilhada</CardTitle>
           <CardDescription>
-            Conhecimento acumulado pelos agentes (RAG - Retrieval Augmented
-            Generation)
+            Conhecimento acumulado pelos agentes (RAG - Retrieval Augmented Generation)
           </CardDescription>
         </div>
         {onRefresh && (
-          <Badge
-            variant="outline"
-            className="cursor-pointer"
-            onClick={onRefresh}
-          >
+          <Badge variant="outline" className="cursor-pointer" onClick={onRefresh}>
             Atualizar
           </Badge>
         )}
@@ -79,8 +56,7 @@ export function LegalMemoryViewer({
           ) : (
             <div className="space-y-2">
               {memory.map((item) => {
-                const IconComponent =
-                  typeIcons[item.type] || typeIcons["default"];
+                const IconComponent = typeIcons[item.type] || typeIcons["default"];
 
                 return (
                   <div
@@ -101,25 +77,22 @@ export function LegalMemoryViewer({
                         </span>
                       </div>
 
-                      <p className="text-sm text-foreground mt-2 line-clamp-3">
-                        {item.content}
-                      </p>
+                      <p className="text-sm text-foreground mt-2 line-clamp-3">{item.content}</p>
 
-                      {item.metadata &&
-                        Object.keys(item.metadata).length > 0 && (
-                          <div className="mt-2 flex gap-2 flex-wrap">
-                            {typeof item.metadata.agentId === "string" && (
-                              <Badge variant="outline" className="text-[10px]">
-                                Agente: {item.metadata.agentId}
-                              </Badge>
-                            )}
-                            {typeof item.metadata.taskId === "string" && (
-                              <Badge variant="outline" className="text-[10px]">
-                                Task: {item.metadata.taskId.substring(0, 8)}...
-                              </Badge>
-                            )}
-                          </div>
-                        )}
+                      {item.metadata && Object.keys(item.metadata).length > 0 && (
+                        <div className="mt-2 flex gap-2 flex-wrap">
+                          {typeof item.metadata.agentId === "string" && (
+                            <Badge variant="outline" className="text-[10px]">
+                              Agente: {item.metadata.agentId}
+                            </Badge>
+                          )}
+                          {typeof item.metadata.taskId === "string" && (
+                            <Badge variant="outline" className="text-[10px]">
+                              Task: {item.metadata.taskId.substring(0, 8)}...
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

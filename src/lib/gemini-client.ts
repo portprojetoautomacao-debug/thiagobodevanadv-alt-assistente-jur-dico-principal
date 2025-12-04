@@ -14,49 +14,49 @@
  */
 
 /** Chave da API do Gemini (definida em .env) */
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 /** Modelo padrão do Gemini */
-const GEMINI_MODEL = 'gemini-2.5-pro'
+const GEMINI_MODEL = "gemini-2.5-pro";
 
 /** URL base da API do Gemini */
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models'
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models";
 
 /**
  * Configurações opcionais para chamadas ao Gemini
  */
 export interface GeminiOptions {
-    /** Modelo a ser usado (padrão: gemini-2.5-pro) */
-    model?: string
-    /** Temperatura para geração (0-1, padrão: 0.7) */
-    temperature?: number
-    /** Máximo de tokens na resposta */
-    maxOutputTokens?: number
-    /** Top-P para amostragem */
-    topP?: number
-    /** Top-K para amostragem */
-    topK?: number
+  /** Modelo a ser usado (padrão: gemini-2.5-pro) */
+  model?: string;
+  /** Temperatura para geração (0-1, padrão: 0.7) */
+  temperature?: number;
+  /** Máximo de tokens na resposta */
+  maxOutputTokens?: number;
+  /** Top-P para amostragem */
+  topP?: number;
+  /** Top-K para amostragem */
+  topK?: number;
 }
 
 /**
  * Resposta estruturada do Gemini
  */
 interface GeminiResponse {
-    candidates?: Array<{
-        content?: {
-            parts?: Array<{ text?: string }>
-        }
-        finishReason?: string
-        safetyRatings?: Array<{
-            category: string
-            probability: string
-        }>
-    }>
-    usageMetadata?: {
-        promptTokenCount?: number
-        candidatesTokenCount?: number
-        totalTokenCount?: number
-    }
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{ text?: string }>;
+    };
+    finishReason?: string;
+    safetyRatings?: Array<{
+      category: string;
+      probability: string;
+    }>;
+  }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
 }
 
 /**
@@ -64,11 +64,9 @@ interface GeminiResponse {
  * @throws {Error} Se a chave não estiver definida
  */
 function ensureGeminiConfigured(): void {
-    if (!GEMINI_API_KEY) {
-        throw new Error(
-            'Chave do Gemini não configurada. Defina VITE_GEMINI_API_KEY no .env',
-        )
-    }
+  if (!GEMINI_API_KEY) {
+    throw new Error("Chave do Gemini não configurada. Defina VITE_GEMINI_API_KEY no .env");
+  }
 }
 
 /**
@@ -76,7 +74,7 @@ function ensureGeminiConfigured(): void {
  * @returns {boolean} true se configurada, false caso contrário
  */
 export function isGeminiAvailable(): boolean {
-    return Boolean(GEMINI_API_KEY)
+  return Boolean(GEMINI_API_KEY);
 }
 
 /**
@@ -94,68 +92,66 @@ export function isGeminiAvailable(): boolean {
  * ```
  */
 export async function geminiGenerateText(
-    prompt: string,
-    options: GeminiOptions = {},
+  prompt: string,
+  options: GeminiOptions = {}
 ): Promise<string> {
-    ensureGeminiConfigured()
+  ensureGeminiConfigured();
 
-    const model = options.model || GEMINI_MODEL
-    const url = `${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`
+  const model = options.model || GEMINI_MODEL;
+  const url = `${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
-    const requestBody: Record<string, unknown> = {
-        contents: [
-            {
-                role: 'user',
-                parts: [{ text: prompt }],
-            },
-        ],
-    }
+  const requestBody: Record<string, unknown> = {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
+    ],
+  };
 
-    // Adiciona configuração de geração se houver opções customizadas
-    if (
-        options.temperature !== undefined ||
-        options.maxOutputTokens !== undefined ||
-        options.topP !== undefined ||
-        options.topK !== undefined
-    ) {
-        requestBody.generationConfig = {
-            ...(options.temperature !== undefined && {
-                temperature: options.temperature,
-            }),
-            ...(options.maxOutputTokens !== undefined && {
-                maxOutputTokens: options.maxOutputTokens,
-            }),
-            ...(options.topP !== undefined && { topP: options.topP }),
-            ...(options.topK !== undefined && { topK: options.topK }),
-        }
-    }
+  // Adiciona configuração de geração se houver opções customizadas
+  if (
+    options.temperature !== undefined ||
+    options.maxOutputTokens !== undefined ||
+    options.topP !== undefined ||
+    options.topK !== undefined
+  ) {
+    requestBody.generationConfig = {
+      ...(options.temperature !== undefined && {
+        temperature: options.temperature,
+      }),
+      ...(options.maxOutputTokens !== undefined && {
+        maxOutputTokens: options.maxOutputTokens,
+      }),
+      ...(options.topP !== undefined && { topP: options.topP }),
+      ...(options.topK !== undefined && { topK: options.topK }),
+    };
+  }
 
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-    })
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
 
-    if (!res.ok) {
-        const errorText = await res.text().catch(() => '')
-        throw new Error(
-            `Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`,
-        )
-    }
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`);
+  }
 
-    const data = (await res.json()) as GeminiResponse
+  const data = (await res.json()) as GeminiResponse;
 
-    const text =
-        data.candidates?.[0]?.content?.parts
-            ?.map((p) => p.text || '')
-            .join('')
-            .trim() ?? ''
+  const text =
+    data.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text || "")
+      .join("")
+      .trim() ?? "";
 
-    if (!text) {
-        throw new Error('Resposta vazia do Gemini')
-    }
+  if (!text) {
+    throw new Error("Resposta vazia do Gemini");
+  }
 
-    return text
+  return text;
 }
 
 /**
@@ -186,30 +182,30 @@ export async function geminiGenerateText(
  * ```
  */
 export async function geminiGenerateJSON<T = unknown>(
-    prompt: string,
-    options: GeminiOptions = {},
+  prompt: string,
+  options: GeminiOptions = {}
 ): Promise<T> {
-    const rawText = await geminiGenerateText(prompt, options)
+  const rawText = await geminiGenerateText(prompt, options);
 
-    // Tenta extrair JSON de bloco de código markdown se presente
-    let jsonText = rawText
-    const jsonBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (jsonBlockMatch) {
-        jsonText = jsonBlockMatch[1].trim()
-    }
+  // Tenta extrair JSON de bloco de código markdown se presente
+  let jsonText = rawText;
+  const jsonBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonBlockMatch) {
+    jsonText = jsonBlockMatch[1].trim();
+  }
 
-    try {
-        const parsed = JSON.parse(jsonText) as T
-        return parsed
-    } catch (error) {
-        console.error('Erro ao fazer parse do JSON retornado pelo Gemini:', {
-            rawPreview: rawText.slice(0, 400),
-            parseError: error,
-        })
-        throw new Error(
-            'A IA não retornou um JSON válido. Tente novamente ou ajuste o prompt/entrada.',
-        )
-    }
+  try {
+    const parsed = JSON.parse(jsonText) as T;
+    return parsed;
+  } catch (error) {
+    console.error("Erro ao fazer parse do JSON retornado pelo Gemini:", {
+      rawPreview: rawText.slice(0, 400),
+      parseError: error,
+    });
+    throw new Error(
+      "A IA não retornou um JSON válido. Tente novamente ou ajuste o prompt/entrada."
+    );
+  }
 }
 
 /**
@@ -229,72 +225,70 @@ export async function geminiGenerateJSON<T = unknown>(
  * ```
  */
 export async function geminiGenerateWithSystem(
-    systemPrompt: string,
-    userPrompt: string,
-    options: GeminiOptions = {},
+  systemPrompt: string,
+  userPrompt: string,
+  options: GeminiOptions = {}
 ): Promise<string> {
-    ensureGeminiConfigured()
+  ensureGeminiConfigured();
 
-    const model = options.model || GEMINI_MODEL
-    const url = `${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`
+  const model = options.model || GEMINI_MODEL;
+  const url = `${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
-    const requestBody: Record<string, unknown> = {
-        systemInstruction: {
-            parts: [{ text: systemPrompt }],
-        },
-        contents: [
-            {
-                role: 'user',
-                parts: [{ text: userPrompt }],
-            },
-        ],
-    }
+  const requestBody: Record<string, unknown> = {
+    systemInstruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: userPrompt }],
+      },
+    ],
+  };
 
-    // Adiciona configuração de geração se houver opções customizadas
-    if (
-        options.temperature !== undefined ||
-        options.maxOutputTokens !== undefined ||
-        options.topP !== undefined ||
-        options.topK !== undefined
-    ) {
-        requestBody.generationConfig = {
-            ...(options.temperature !== undefined && {
-                temperature: options.temperature,
-            }),
-            ...(options.maxOutputTokens !== undefined && {
-                maxOutputTokens: options.maxOutputTokens,
-            }),
-            ...(options.topP !== undefined && { topP: options.topP }),
-            ...(options.topK !== undefined && { topK: options.topK }),
-        }
-    }
+  // Adiciona configuração de geração se houver opções customizadas
+  if (
+    options.temperature !== undefined ||
+    options.maxOutputTokens !== undefined ||
+    options.topP !== undefined ||
+    options.topK !== undefined
+  ) {
+    requestBody.generationConfig = {
+      ...(options.temperature !== undefined && {
+        temperature: options.temperature,
+      }),
+      ...(options.maxOutputTokens !== undefined && {
+        maxOutputTokens: options.maxOutputTokens,
+      }),
+      ...(options.topP !== undefined && { topP: options.topP }),
+      ...(options.topK !== undefined && { topK: options.topK }),
+    };
+  }
 
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-    })
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
 
-    if (!res.ok) {
-        const errorText = await res.text().catch(() => '')
-        throw new Error(
-            `Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`,
-        )
-    }
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`);
+  }
 
-    const data = (await res.json()) as GeminiResponse
+  const data = (await res.json()) as GeminiResponse;
 
-    const text =
-        data.candidates?.[0]?.content?.parts
-            ?.map((p) => p.text || '')
-            .join('')
-            .trim() ?? ''
+  const text =
+    data.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text || "")
+      .join("")
+      .trim() ?? "";
 
-    if (!text) {
-        throw new Error('Resposta vazia do Gemini')
-    }
+  if (!text) {
+    throw new Error("Resposta vazia do Gemini");
+  }
 
-    return text
+  return text;
 }
 
 /**
@@ -315,35 +309,31 @@ export async function geminiGenerateWithSystem(
  * ```
  */
 export async function geminiGenerateJSONWithSystem<T = unknown>(
-    systemPrompt: string,
-    userPrompt: string,
-    options: GeminiOptions = {},
+  systemPrompt: string,
+  userPrompt: string,
+  options: GeminiOptions = {}
 ): Promise<T> {
-    const rawText = await geminiGenerateWithSystem(
-        systemPrompt,
-        userPrompt,
-        options,
-    )
+  const rawText = await geminiGenerateWithSystem(systemPrompt, userPrompt, options);
 
-    // Tenta extrair JSON de bloco de código markdown se presente
-    let jsonText = rawText
-    const jsonBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (jsonBlockMatch) {
-        jsonText = jsonBlockMatch[1].trim()
-    }
+  // Tenta extrair JSON de bloco de código markdown se presente
+  let jsonText = rawText;
+  const jsonBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonBlockMatch) {
+    jsonText = jsonBlockMatch[1].trim();
+  }
 
-    try {
-        const parsed = JSON.parse(jsonText) as T
-        return parsed
-    } catch (error) {
-        console.error('Erro ao fazer parse do JSON retornado pelo Gemini:', {
-            rawPreview: rawText.slice(0, 400),
-            parseError: error,
-        })
-        throw new Error(
-            'A IA não retornou um JSON válido. Tente novamente ou ajuste o prompt/entrada.',
-        )
-    }
+  try {
+    const parsed = JSON.parse(jsonText) as T;
+    return parsed;
+  } catch (error) {
+    console.error("Erro ao fazer parse do JSON retornado pelo Gemini:", {
+      rawPreview: rawText.slice(0, 400),
+      parseError: error,
+    });
+    throw new Error(
+      "A IA não retornou um JSON válido. Tente novamente ou ajuste o prompt/entrada."
+    );
+  }
 }
 
 /**
@@ -353,39 +343,39 @@ export async function geminiGenerateJSONWithSystem<T = unknown>(
  * @returns Métricas de uso de tokens
  */
 export async function geminiCountTokens(prompt: string): Promise<{
-    promptTokens: number
-    estimatedCost: number
+  promptTokens: number;
+  estimatedCost: number;
 }> {
-    ensureGeminiConfigured()
+  ensureGeminiConfigured();
 
-    const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:countTokens?key=${GEMINI_API_KEY}`
+  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:countTokens?key=${GEMINI_API_KEY}`;
 
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: prompt }],
-                },
-            ],
-        }),
-    })
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
+    }),
+  });
 
-    if (!res.ok) {
-        throw new Error(`Erro ao contar tokens: ${res.status}`)
-    }
+  if (!res.ok) {
+    throw new Error(`Erro ao contar tokens: ${res.status}`);
+  }
 
-    const data = (await res.json()) as { totalTokens?: number }
-    const tokens = data.totalTokens || 0
+  const data = (await res.json()) as { totalTokens?: number };
+  const tokens = data.totalTokens || 0;
 
-    // Estimativa de custo baseada em preços públicos do Gemini Pro
-    // (ajustar conforme pricing atual)
-    const estimatedCost = tokens * 0.000001 // exemplo: $0.001 por 1000 tokens
+  // Estimativa de custo baseada em preços públicos do Gemini Pro
+  // (ajustar conforme pricing atual)
+  const estimatedCost = tokens * 0.000001; // exemplo: $0.001 por 1000 tokens
 
-    return {
-        promptTokens: tokens,
-        estimatedCost,
-    }
+  return {
+    promptTokens: tokens,
+    estimatedCost,
+  };
 }

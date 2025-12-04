@@ -1,20 +1,12 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { 
-  FileText, 
-  FilePdf, 
-  FileDoc, 
-  Trash, 
-  Download, 
-  Eye, 
-  Upload 
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { useKV } from "@/hooks/use-kv";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText, FilePdf, FileDoc, Trash, Download, Eye, Upload } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,65 +16,65 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from "@/components/ui/alert-dialog";
 
 export interface Document {
-  id: string
-  nome: string
-  tipo: string
-  tamanho: number
-  data: string
-  conteudo: string // base64
+  id: string;
+  nome: string;
+  tipo: string;
+  tamanho: number;
+  data: string;
+  conteudo: string; // base64
 }
 
 interface DocumentUploaderProps {
-  processoId: string
+  processoId: string;
 }
 
 export default function DocumentUploader({ processoId }: DocumentUploaderProps) {
-  const [documentos, setDocumentos] = useKV<Document[]>(`docs-${processoId}`, [])
-  const [uploading, setUploading] = useState(false)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [previewDoc, setPreviewDoc] = useState<Document | null>(null)
+  const [documentos, setDocumentos] = useKV<Document[]>(`docs-${processoId}`, []);
+  const [uploading, setUploading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    setUploading(true)
+    setUploading(true);
 
     try {
       for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+        const file = files[i];
 
         // Validate file size (max 50MB)
         if (file.size > 50 * 1024 * 1024) {
-          toast.error(`Arquivo ${file.name} é muito grande. Máximo: 50MB`)
-          continue
+          toast.error(`Arquivo ${file.name} é muito grande. Máximo: 50MB`);
+          continue;
         }
 
         // Validate file type
         const allowedTypes = [
-          'application/pdf',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'text/plain',
-          'image/jpeg',
-          'image/png',
-        ]
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "text/plain",
+          "image/jpeg",
+          "image/png",
+        ];
 
         if (!allowedTypes.includes(file.type)) {
-          toast.error(`Tipo de arquivo não suportado: ${file.name}`)
-          continue
+          toast.error(`Tipo de arquivo não suportado: ${file.name}`);
+          continue;
         }
 
         // Read file as base64
         const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(file)
-        })
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
 
         // Add document
         const newDoc: Document = {
@@ -92,57 +84,58 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
           tamanho: file.size,
           data: new Date().toISOString(),
           conteudo: base64,
-        }
+        };
 
-        setDocumentos((docs) => [...(docs || []), newDoc])
-        toast.success(`${file.name} enviado com sucesso!`)
+        setDocumentos((docs) => [...(docs || []), newDoc]);
+        toast.success(`${file.name} enviado com sucesso!`);
       }
     } catch (error) {
-      console.error('Erro ao fazer upload:', error)
-      toast.error('Erro ao enviar arquivo')
+      console.error("Erro ao fazer upload:", error);
+      toast.error("Erro ao enviar arquivo");
     } finally {
-      setUploading(false)
+      setUploading(false);
       // Reset input
-      e.target.value = ''
+      e.target.value = "";
     }
-  }
+  };
 
   const handleDelete = (docId: string) => {
-    setDocumentos((docs) => (docs || []).filter(d => d.id !== docId))
-    setDeleteId(null)
-    toast.success('Documento removido')
-  }
+    setDocumentos((docs) => (docs || []).filter((d) => d.id !== docId));
+    setDeleteId(null);
+    toast.success("Documento removido");
+  };
 
   const handleDownload = (doc: Document) => {
     try {
-      const link = document.createElement('a')
-      link.href = doc.conteudo
-      link.download = doc.nome
-      link.click()
-      toast.success('Download iniciado')
+      const link = document.createElement("a");
+      link.href = doc.conteudo;
+      link.download = doc.nome;
+      link.click();
+      toast.success("Download iniciado");
     } catch (error) {
-      console.error('Erro ao baixar:', error)
-      toast.error('Erro ao baixar arquivo')
+      console.error("Erro ao baixar:", error);
+      toast.error("Erro ao baixar arquivo");
     }
-  }
+  };
 
   const handlePreview = (doc: Document) => {
-    setPreviewDoc(doc)
-  }
+    setPreviewDoc(doc);
+  };
 
   const getFileIcon = (tipo: string) => {
-    if (tipo.includes('pdf')) return <FilePdf size={24} className="text-red-500" />
-    if (tipo.includes('word') || tipo.includes('document')) return <FileDoc size={24} className="text-blue-500" />
-    return <FileText size={24} className="text-gray-500" />
-  }
+    if (tipo.includes("pdf")) return <FilePdf size={24} className="text-red-500" />;
+    if (tipo.includes("word") || tipo.includes("document"))
+      return <FileDoc size={24} className="text-blue-500" />;
+    return <FileText size={24} className="text-gray-500" />;
+  };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B'
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
-  }
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
 
   return (
     <div className="space-y-4">
@@ -160,11 +153,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
         </Button>
       </div>
 
-      {uploading && (
-        <div className="text-sm text-muted-foreground">
-          Enviando arquivo(s)...
-        </div>
-      )}
+      {uploading && <div className="text-sm text-muted-foreground">Enviando arquivo(s)...</div>}
 
       <div className="text-xs text-muted-foreground">
         Tipos aceitos: PDF, DOC, DOCX, TXT, JPG, PNG (máx. 50MB por arquivo)
@@ -177,26 +166,20 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
               <Card key={doc.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="shrink-0">
-                      {getFileIcon(doc.tipo)}
-                    </div>
-                    
+                    <div className="shrink-0">{getFileIcon(doc.tipo)}</div>
+
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {doc.nome}
-                      </div>
+                      <div className="font-medium text-sm truncate">{doc.nome}</div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <Badge variant="secondary" className="text-xs">
                           {formatFileSize(doc.tamanho)}
                         </Badge>
-                        <span>
-                          {new Date(doc.data).toLocaleDateString('pt-BR')}
-                        </span>
+                        <span>{new Date(doc.data).toLocaleDateString("pt-BR")}</span>
                       </div>
                     </div>
 
                     <div className="flex gap-1 shrink-0">
-                      {doc.tipo.includes('pdf') && (
+                      {doc.tipo.includes("pdf") && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -285,5 +268,5 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

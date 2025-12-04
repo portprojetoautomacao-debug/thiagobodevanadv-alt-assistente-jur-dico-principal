@@ -1,13 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -150,14 +144,11 @@ export default function NotificationSettings() {
     setSavingWebhook(true);
     await runApiWithToast(
       async () => {
-        const response = await fetch(
-          `${API_BASE_URL}/api/notifications/webhook`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...newWebhook, events: ["all"] }),
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...newWebhook, events: ["all"] }),
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
       },
@@ -179,10 +170,9 @@ export default function NotificationSettings() {
   const deleteWebhook = async (id: string) => {
     await runApiWithToast(
       async () => {
-        const response = await fetch(
-          `${API_BASE_URL}/api/notifications/webhook/${id}`,
-          { method: "DELETE" }
-        );
+        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook/${id}`, {
+          method: "DELETE",
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return { id };
       },
@@ -210,9 +200,7 @@ export default function NotificationSettings() {
       (data: { success?: boolean; webhook?: { name?: string } }) => {
         if (data.success) {
           toast.success("Teste enviado!", {
-            description: data.webhook?.name
-              ? `Webhook: ${data.webhook.name}`
-              : undefined,
+            description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
           });
         } else {
           toast.error("Falha no teste do webhook");
@@ -249,9 +237,7 @@ export default function NotificationSettings() {
       toast.success("Notificações ativadas com sucesso!");
       testNotification();
     } else if (result === "denied") {
-      toast.error(
-        "Você bloqueou as notificações. Ative-as nas configurações do navegador."
-      );
+      toast.error("Você bloqueou as notificações. Ative-as nas configurações do navegador.");
     }
   };
 
@@ -284,12 +270,8 @@ export default function NotificationSettings() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold gradient-text mb-2">
-          Configurações de Notificações
-        </h1>
-        <p className="text-muted-foreground">
-          Configure os alertas que deseja receber
-        </p>
+        <h1 className="text-3xl font-bold gradient-text mb-2">Configurações de Notificações</h1>
+        <p className="text-muted-foreground">Configure os alertas que deseja receber</p>
       </div>
 
       <div className="space-y-6">
@@ -314,8 +296,7 @@ export default function NotificationSettings() {
               <Alert variant="destructive">
                 <XCircle size={16} weight="fill" />
                 <AlertDescription>
-                  Seu navegador não suporta notificações push. Tente usar
-                  Chrome, Firefox ou Edge.
+                  Seu navegador não suporta notificações push. Tente usar Chrome, Firefox ou Edge.
                 </AlertDescription>
               </Alert>
             )}
@@ -324,8 +305,7 @@ export default function NotificationSettings() {
               <Alert className="border-primary/50 bg-primary/5">
                 <Warning className="text-primary" size={16} weight="fill" />
                 <AlertDescription>
-                  Você ainda não permitiu notificações. Clique no botão abaixo
-                  para ativar.
+                  Você ainda não permitiu notificações. Clique no botão abaixo para ativar.
                 </AlertDescription>
               </Alert>
             )}
@@ -334,8 +314,8 @@ export default function NotificationSettings() {
               <Alert variant="destructive">
                 <XCircle size={16} weight="fill" />
                 <AlertDescription>
-                  Notificações bloqueadas. Para ativar, clique no ícone de
-                  cadeado ao lado da URL e permita notificações.
+                  Notificações bloqueadas. Para ativar, clique no ícone de cadeado ao lado da URL e
+                  permita notificações.
                 </AlertDescription>
               </Alert>
             )}
@@ -375,9 +355,7 @@ export default function NotificationSettings() {
         <Card className="glassmorphic border-border/50">
           <CardHeader>
             <CardTitle>Tipos de Notificações</CardTitle>
-            <CardDescription>
-              Escolha quais tipos de alertas deseja receber
-            </CardDescription>
+            <CardDescription>Escolha quais tipos de alertas deseja receber</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
@@ -386,8 +364,7 @@ export default function NotificationSettings() {
                   Alertas de Prazos
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receber notificações sobre prazos próximos do vencimento (D-7,
-                  D-2, D-1)
+                  Receber notificações sobre prazos próximos do vencimento (D-7, D-2, D-1)
                 </p>
               </div>
               <Switch
@@ -410,8 +387,7 @@ export default function NotificationSettings() {
                   Alertas de Agentes IA
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receber notificações quando agentes autônomos completarem
-                  tarefas
+                  Receber notificações quando agentes autônomos completarem tarefas
                 </p>
               </div>
               <Switch
@@ -430,15 +406,11 @@ export default function NotificationSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label
-                  htmlFor="financial-alerts"
-                  className="text-base font-medium"
-                >
+                <Label htmlFor="financial-alerts" className="text-base font-medium">
                   Alertas Financeiros
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receber notificações sobre honorários vencidos e pagamentos
-                  pendentes
+                  Receber notificações sobre honorários vencidos e pagamentos pendentes
                 </p>
               </div>
               <Switch
@@ -464,20 +436,17 @@ export default function NotificationSettings() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              <strong className="text-foreground">Prazos:</strong> Você receberá
-              alertas automáticos 7, 2 e 1 dia antes do vencimento de cada prazo
-              ativo.
+              <strong className="text-foreground">Prazos:</strong> Você receberá alertas automáticos
+              7, 2 e 1 dia antes do vencimento de cada prazo ativo.
             </p>
             <p>
-              <strong className="text-foreground">Privacidade:</strong> As
-              notificações são processadas localmente no seu navegador. Nenhum
-              dado é enviado para servidores externos apenas para exibir o
-              alerta.
+              <strong className="text-foreground">Privacidade:</strong> As notificações são
+              processadas localmente no seu navegador. Nenhum dado é enviado para servidores
+              externos apenas para exibir o alerta.
             </p>
             <p>
-              <strong className="text-foreground">Controle:</strong> Você pode
-              desativar as notificações a qualquer momento usando os switches
-              acima.
+              <strong className="text-foreground">Controle:</strong> Você pode desativar as
+              notificações a qualquer momento usando os switches acima.
             </p>
           </CardContent>
         </Card>
@@ -492,15 +461,11 @@ export default function NotificationSettings() {
                   Webhooks (Slack/Discord/Teams)
                 </CardTitle>
                 <CardDescription className="mt-2">
-                  Receba notificações em canais externos quando novas
-                  publicações ou eventos relevantes forem encontrados
+                  Receba notificações em canais externos quando novas publicações ou eventos
+                  relevantes forem encontrados
                 </CardDescription>
               </div>
-              <Button
-                onClick={() => setShowAddForm(true)}
-                disabled={showAddForm}
-                size="sm"
-              >
+              <Button onClick={() => setShowAddForm(true)} disabled={showAddForm} size="sm">
                 <Plus size={16} />
                 Adicionar
               </Button>
@@ -581,9 +546,7 @@ export default function NotificationSettings() {
                         type="url"
                         placeholder="https://hooks..."
                         value={newWebhook.url}
-                        onChange={(e) =>
-                          setNewWebhook((p) => ({ ...p, url: e.target.value }))
-                        }
+                        onChange={(e) => setNewWebhook((p) => ({ ...p, url: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -605,11 +568,7 @@ export default function NotificationSettings() {
                     <Button
                       size="sm"
                       onClick={addWebhook}
-                      disabled={
-                        savingWebhook ||
-                        !newWebhook.name.trim() ||
-                        !newWebhook.url.trim()
-                      }
+                      disabled={savingWebhook || !newWebhook.name.trim() || !newWebhook.url.trim()}
                     >
                       {savingWebhook ? (
                         <Spinner className="animate-spin" size={14} />
@@ -633,8 +592,7 @@ export default function NotificationSettings() {
                 <Globe size={40} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Nenhum webhook configurado</p>
                 <p className="text-xs">
-                  Configure webhooks para receber notificações no Slack, Discord
-                  ou Teams
+                  Configure webhooks para receber notificações no Slack, Discord ou Teams
                 </p>
               </div>
             ) : (
@@ -648,9 +606,7 @@ export default function NotificationSettings() {
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-primary/10">
-                        {getWebhookIcon(wh.type)}
-                      </div>
+                      <div className="p-2 rounded bg-primary/10">{getWebhookIcon(wh.type)}</div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">{wh.name}</span>
@@ -659,11 +615,7 @@ export default function NotificationSettings() {
                           </Badge>
                           {wh.enabled && (
                             <Badge className="bg-green-500/20 text-green-600 text-xs px-1">
-                              <CheckCircle
-                                size={8}
-                                className="mr-0.5"
-                                weight="fill"
-                              />
+                              <CheckCircle size={8} className="mr-0.5" weight="fill" />
                               Ativo
                             </Badge>
                           )}
@@ -708,9 +660,8 @@ export default function NotificationSettings() {
             <Alert>
               <Warning size={14} />
               <AlertDescription className="text-xs">
-                <strong>Como obter a URL do webhook:</strong> Slack: Apps →
-                Incoming Webhooks • Discord: Configurações do Canal → Webhooks •
-                Teams: Conectores → Incoming Webhook.
+                <strong>Como obter a URL do webhook:</strong> Slack: Apps → Incoming Webhooks •
+                Discord: Configurações do Canal → Webhooks • Teams: Conectores → Incoming Webhook.
               </AlertDescription>
             </Alert>
           </CardContent>

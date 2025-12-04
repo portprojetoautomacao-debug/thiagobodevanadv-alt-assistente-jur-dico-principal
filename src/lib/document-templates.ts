@@ -1,31 +1,44 @@
 // Templates jurídicos para o editor de minutas
 export interface DocumentTemplate {
-  id: string
-  nome: string
-  tipo: 'peticao' | 'contrato' | 'parecer' | 'recurso' | 'procuracao' | 'outro'
-  categoria: string
-  descricao: string
-  conteudo: string
-  variaveis: string[]
-  tags: string[]
+  id: string;
+  nome: string;
+  tipo: "peticao" | "contrato" | "parecer" | "recurso" | "procuracao" | "outro";
+  categoria: string;
+  descricao: string;
+  conteudo: string;
+  variaveis: string[];
+  tags: string[];
 }
 
 export const documentTemplates: DocumentTemplate[] = [
   // PETIÇÕES
   {
-    id: 'peticao-inicial-civel',
-    nome: 'Petição Inicial - Ação Cível',
-    tipo: 'peticao',
-    categoria: 'Cível',
-    descricao: 'Modelo de petição inicial para ações cíveis em geral',
+    id: "peticao-inicial-civel",
+    nome: "Petição Inicial - Ação Cível",
+    tipo: "peticao",
+    categoria: "Cível",
+    descricao: "Modelo de petição inicial para ações cíveis em geral",
     variaveis: [
-      'juizo', 'vara', 'comarca', 'estado',
-      'autor.nome', 'autor.nacionalidade', 'autor.estadoCivil', 'autor.profissao',
-      'autor.cpf', 'autor.rg', 'autor.endereco', 'autor.email',
-      'reu.nome', 'reu.endereco', 'reu.cpf',
-      'valor.causa', 'advogado.nome', 'advogado.oab',
+      "juizo",
+      "vara",
+      "comarca",
+      "estado",
+      "autor.nome",
+      "autor.nacionalidade",
+      "autor.estadoCivil",
+      "autor.profissao",
+      "autor.cpf",
+      "autor.rg",
+      "autor.endereco",
+      "autor.email",
+      "reu.nome",
+      "reu.endereco",
+      "reu.cpf",
+      "valor.causa",
+      "advogado.nome",
+      "advogado.oab",
     ],
-    tags: ['petição inicial', 'cível', 'ação'],
+    tags: ["petição inicial", "cível", "ação"],
     conteudo: `<h1 style="text-align: center;">EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA {{juizo}} VARA {{vara}} DA COMARCA DE {{comarca}}/{{estado}}</h1>
 
 <p><br></p>
@@ -68,16 +81,21 @@ export const documentTemplates: DocumentTemplate[] = [
   },
 
   {
-    id: 'contestacao-civel',
-    nome: 'Contestação - Ação Cível',
-    tipo: 'peticao',
-    categoria: 'Cível',
-    descricao: 'Modelo de contestação para ações cíveis',
+    id: "contestacao-civel",
+    nome: "Contestação - Ação Cível",
+    tipo: "peticao",
+    categoria: "Cível",
+    descricao: "Modelo de contestação para ações cíveis",
     variaveis: [
-      'processo.numero', 'autor.nome', 'reu.nome',
-      'advogado.nome', 'advogado.oab', 'comarca', 'estado',
+      "processo.numero",
+      "autor.nome",
+      "reu.nome",
+      "advogado.nome",
+      "advogado.oab",
+      "comarca",
+      "estado",
     ],
-    tags: ['contestação', 'cível', 'defesa'],
+    tags: ["contestação", "cível", "defesa"],
     conteudo: `<h1 style="text-align: center;">EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO</h1>
 
 <p style="text-align: center;"><strong>Processo nº {{processo.numero}}</strong></p>
@@ -121,13 +139,20 @@ export const documentTemplates: DocumentTemplate[] = [
   },
 
   {
-    id: 'manifestacao-simples',
-    nome: 'Manifestação Simples',
-    tipo: 'peticao',
-    categoria: 'Geral',
-    descricao: 'Manifestação processual simples',
-    variaveis: ['processo.numero', 'parte.nome', 'advogado.nome', 'advogado.oab', 'comarca', 'estado'],
-    tags: ['manifestação', 'petição intercorrente'],
+    id: "manifestacao-simples",
+    nome: "Manifestação Simples",
+    tipo: "peticao",
+    categoria: "Geral",
+    descricao: "Manifestação processual simples",
+    variaveis: [
+      "processo.numero",
+      "parte.nome",
+      "advogado.nome",
+      "advogado.oab",
+      "comarca",
+      "estado",
+    ],
+    tags: ["manifestação", "petição intercorrente"],
     conteudo: `<h1 style="text-align: center;">EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO</h1>
 
 <p style="text-align: center;"><strong>Processo nº {{processo.numero}}</strong></p>
@@ -147,18 +172,27 @@ export const documentTemplates: DocumentTemplate[] = [
 
   // CONTRATOS
   {
-    id: 'contrato-honorarios',
-    nome: 'Contrato de Honorários Advocatícios',
-    tipo: 'contrato',
-    categoria: 'Honorários',
-    descricao: 'Contrato de prestação de serviços advocatícios',
+    id: "contrato-honorarios",
+    nome: "Contrato de Honorários Advocatícios",
+    tipo: "contrato",
+    categoria: "Honorários",
+    descricao: "Contrato de prestação de serviços advocatícios",
     variaveis: [
-      'cliente.nome', 'cliente.cpf', 'cliente.endereco',
-      'advogado.nome', 'advogado.oab', 'advogado.cpf', 'advogado.endereco',
-      'servico.descricao', 'honorarios.valor', 'honorarios.forma',
-      'data.assinatura', 'cidade', 'estado',
+      "cliente.nome",
+      "cliente.cpf",
+      "cliente.endereco",
+      "advogado.nome",
+      "advogado.oab",
+      "advogado.cpf",
+      "advogado.endereco",
+      "servico.descricao",
+      "honorarios.valor",
+      "honorarios.forma",
+      "data.assinatura",
+      "cidade",
+      "estado",
     ],
-    tags: ['contrato', 'honorários', 'advocatício'],
+    tags: ["contrato", "honorários", "advocatício"],
     conteudo: `<h1 style="text-align: center;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS</h1>
 
 <p><br></p>
@@ -235,18 +269,27 @@ export const documentTemplates: DocumentTemplate[] = [
 
   // PROCURAÇÕES
   {
-    id: 'procuracao-ad-judicia',
-    nome: 'Procuração Ad Judicia',
-    tipo: 'procuracao',
-    categoria: 'Procuração',
-    descricao: 'Procuração para representação judicial',
+    id: "procuracao-ad-judicia",
+    nome: "Procuração Ad Judicia",
+    tipo: "procuracao",
+    categoria: "Procuração",
+    descricao: "Procuração para representação judicial",
     variaveis: [
-      'outorgante.nome', 'outorgante.nacionalidade', 'outorgante.estadoCivil',
-      'outorgante.profissao', 'outorgante.cpf', 'outorgante.rg', 'outorgante.endereco',
-      'advogado.nome', 'advogado.oab', 'advogado.endereco',
-      'cidade', 'estado', 'data',
+      "outorgante.nome",
+      "outorgante.nacionalidade",
+      "outorgante.estadoCivil",
+      "outorgante.profissao",
+      "outorgante.cpf",
+      "outorgante.rg",
+      "outorgante.endereco",
+      "advogado.nome",
+      "advogado.oab",
+      "advogado.endereco",
+      "cidade",
+      "estado",
+      "data",
     ],
-    tags: ['procuração', 'ad judicia', 'mandato'],
+    tags: ["procuração", "ad judicia", "mandato"],
     conteudo: `<h1 style="text-align: center;">PROCURAÇÃO AD JUDICIA</h1>
 
 <p><br></p>
@@ -267,18 +310,27 @@ CPF: {{outorgante.cpf}}</p>`,
   },
 
   {
-    id: 'procuracao-poderes-especiais',
-    nome: 'Procuração com Poderes Especiais',
-    tipo: 'procuracao',
-    categoria: 'Procuração',
-    descricao: 'Procuração com poderes especiais (art. 105 CPC)',
+    id: "procuracao-poderes-especiais",
+    nome: "Procuração com Poderes Especiais",
+    tipo: "procuracao",
+    categoria: "Procuração",
+    descricao: "Procuração com poderes especiais (art. 105 CPC)",
     variaveis: [
-      'outorgante.nome', 'outorgante.nacionalidade', 'outorgante.estadoCivil',
-      'outorgante.profissao', 'outorgante.cpf', 'outorgante.rg', 'outorgante.endereco',
-      'advogado.nome', 'advogado.oab', 'advogado.endereco',
-      'cidade', 'estado', 'data',
+      "outorgante.nome",
+      "outorgante.nacionalidade",
+      "outorgante.estadoCivil",
+      "outorgante.profissao",
+      "outorgante.cpf",
+      "outorgante.rg",
+      "outorgante.endereco",
+      "advogado.nome",
+      "advogado.oab",
+      "advogado.endereco",
+      "cidade",
+      "estado",
+      "data",
     ],
-    tags: ['procuração', 'poderes especiais', 'mandato'],
+    tags: ["procuração", "poderes especiais", "mandato"],
     conteudo: `<h1 style="text-align: center;">PROCURAÇÃO AD JUDICIA ET EXTRA<br>COM PODERES ESPECIAIS</h1>
 
 <p><br></p>
@@ -314,16 +366,21 @@ CPF: {{outorgante.cpf}}</p>`,
 
   // RECURSOS
   {
-    id: 'recurso-apelacao',
-    nome: 'Recurso de Apelação',
-    tipo: 'recurso',
-    categoria: 'Recursos',
-    descricao: 'Modelo de recurso de apelação cível',
+    id: "recurso-apelacao",
+    nome: "Recurso de Apelação",
+    tipo: "recurso",
+    categoria: "Recursos",
+    descricao: "Modelo de recurso de apelação cível",
     variaveis: [
-      'processo.numero', 'apelante.nome', 'apelado.nome',
-      'advogado.nome', 'advogado.oab', 'comarca', 'estado',
+      "processo.numero",
+      "apelante.nome",
+      "apelado.nome",
+      "advogado.nome",
+      "advogado.oab",
+      "comarca",
+      "estado",
     ],
-    tags: ['recurso', 'apelação', 'segunda instância'],
+    tags: ["recurso", "apelação", "segunda instância"],
     conteudo: `<h1 style="text-align: center;">EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO</h1>
 
 <p style="text-align: center;"><strong>Processo nº {{processo.numero}}</strong></p>
@@ -381,16 +438,21 @@ Apelado(a): {{apelado.nome}}</p>
 
   // PARECER
   {
-    id: 'parecer-juridico',
-    nome: 'Parecer Jurídico',
-    tipo: 'parecer',
-    categoria: 'Parecer',
-    descricao: 'Modelo de parecer jurídico',
+    id: "parecer-juridico",
+    nome: "Parecer Jurídico",
+    tipo: "parecer",
+    categoria: "Parecer",
+    descricao: "Modelo de parecer jurídico",
     variaveis: [
-      'cliente.nome', 'assunto', 'advogado.nome', 'advogado.oab',
-      'cidade', 'estado', 'data',
+      "cliente.nome",
+      "assunto",
+      "advogado.nome",
+      "advogado.oab",
+      "cidade",
+      "estado",
+      "data",
     ],
-    tags: ['parecer', 'consultoria', 'opinião legal'],
+    tags: ["parecer", "consultoria", "opinião legal"],
     conteudo: `<h1 style="text-align: center;">PARECER JURÍDICO</h1>
 
 <p><br></p>
@@ -431,32 +493,33 @@ Apelado(a): {{apelado.nome}}</p>
 
 <p style="text-align: center;"><strong>{{advogado.nome}}</strong><br>OAB/{{estado}} nº {{advogado.oab}}</p>`,
   },
-]
+];
 
 // Função para buscar template por ID
 export function getTemplateById(id: string): DocumentTemplate | undefined {
-  return documentTemplates.find(t => t.id === id)
+  return documentTemplates.find((t) => t.id === id);
 }
 
 // Função para buscar templates por tipo
-export function getTemplatesByTipo(tipo: DocumentTemplate['tipo']): DocumentTemplate[] {
-  return documentTemplates.filter(t => t.tipo === tipo)
+export function getTemplatesByTipo(tipo: DocumentTemplate["tipo"]): DocumentTemplate[] {
+  return documentTemplates.filter((t) => t.tipo === tipo);
 }
 
 // Função para buscar templates por categoria
 export function getTemplatesByCategoria(categoria: string): DocumentTemplate[] {
-  return documentTemplates.filter(t => t.categoria === categoria)
+  return documentTemplates.filter((t) => t.categoria === categoria);
 }
 
 // Função para buscar templates por tag / texto livre
 export function searchTemplates(query: string): DocumentTemplate[] {
-  const lowerQuery = query.toLowerCase()
-  return documentTemplates.filter(t =>
-    t.nome.toLowerCase().includes(lowerQuery) ||
-    t.descricao.toLowerCase().includes(lowerQuery) ||
-    t.tags.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
-    t.categoria.toLowerCase().includes(lowerQuery)
-  )
+  const lowerQuery = query.toLowerCase();
+  return documentTemplates.filter(
+    (t) =>
+      t.nome.toLowerCase().includes(lowerQuery) ||
+      t.descricao.toLowerCase().includes(lowerQuery) ||
+      t.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)) ||
+      t.categoria.toLowerCase().includes(lowerQuery)
+  );
 }
 
 // Função para substituir variáveis no template
@@ -464,31 +527,30 @@ export function replaceTemplateVariables(
   content: string,
   variables: Record<string, string>
 ): string {
-  let result = content
+  let result = content;
 
   Object.entries(variables).forEach(([key, value]) => {
     // Corrigido: escapar TODOS os pontos da chave (autor.nome, processo.numero etc.)
-    const escapedKey = key.replace(/\./g, '\\.')
-    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, 'g')
-    result = result.replace(regex, value || `[${key}]`)
-  })
+    const escapedKey = key.replace(/\./g, "\\.");
+    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g");
+    result = result.replace(regex, value || `[${key}]`);
+  });
 
-  return result
+  return result;
 }
 
 // Extrair variáveis não preenchidas de um conteúdo
 export function extractUnfilledVariables(content: string): string[] {
-  const regex = /\{\{\s*([^}]+)\s*\}\}/g
-  const matches: string[] = []
-  let match: RegExpExecArray | null
+  const regex = /\{\{\s*([^}]+)\s*\}\}/g;
+  const matches: string[] = [];
+  let match: RegExpExecArray | null;
 
-   
   while ((match = regex.exec(content)) !== null) {
-    const variable = match[1].trim()
+    const variable = match[1].trim();
     if (!matches.includes(variable)) {
-      matches.push(variable)
+      matches.push(variable);
     }
   }
 
-  return matches
+  return matches;
 }

@@ -1,19 +1,8 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useKV } from "@/hooks/use-kv";
@@ -64,13 +53,9 @@ function getHumanTypeLabel(type: Appointment["type"]): string {
 export default function Calendar() {
   const [appointments] = useKV<Appointment[]>("appointments", []);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<Appointment | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [currentDate, setCurrentDate] = useState(() => new Date());
-  const [syncEnabled, setSyncEnabled] = useKV<boolean>(
-    "calendar-sync-enabled",
-    false
-  );
+  const [syncEnabled, setSyncEnabled] = useKV<boolean>("calendar-sync-enabled", false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -86,8 +71,7 @@ export default function Calendar() {
         .slice()
         .sort(
           (a, b) =>
-            new Date(`${a.date}T${a.time}`).getTime() -
-            new Date(`${b.date}T${b.time}`).getTime()
+            new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime()
         ),
     [appointments]
   );
@@ -120,11 +104,7 @@ export default function Calendar() {
   const days = useMemo(() => calculateDaysInMonth(year, month), [year, month]);
   const isToday = (day: number): boolean => {
     const today = new Date();
-    return (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    );
+    return day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
   };
   const getDayClassName = (day: number | null): string => {
     const base = "min-h-24 p-2 border rounded-lg";
@@ -225,12 +205,8 @@ export default function Calendar() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Agenda Integrada
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Compromissos, audiências e prazos
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Agenda Integrada</h1>
+          <p className="text-muted-foreground mt-1">Compromissos, audiências e prazos</p>
         </div>
         <div className="flex gap-2">
           <Button>
@@ -254,8 +230,8 @@ export default function Calendar() {
                     ? isGoogleConnected
                       ? "Conectado - seus eventos podem ser sincronizados"
                       : isInitializing
-                      ? "Inicializando conexão..."
-                      : "Desconectado"
+                        ? "Inicializando conexão..."
+                        : "Desconectado"
                     : "Configure as credenciais do Google para habilitar a sincronização"}
                 </CardDescription>
               </div>
@@ -265,8 +241,7 @@ export default function Calendar() {
                 <Alert className="border-blue-300 bg-blue-50 dark:bg-blue-950/20">
                   <Info className="h-4 w-4 text-blue-600" />
                   <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
-                    Cadastre as credenciais no Google Cloud Console e adicione
-                    as variáveis no .env.
+                    Cadastre as credenciais no Google Cloud Console e adicione as variáveis no .env.
                   </AlertDescription>
                 </Alert>
               )}
@@ -280,8 +255,8 @@ export default function Calendar() {
                 <Alert className="border-blue-300 bg-blue-50 dark:bg-blue-950/20">
                   <Info className="h-4 w-4 text-blue-600" />
                   <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
-                    Dicas: permita pop-ups, autorize a origem atual no Google
-                    Cloud Console e habilite a API do Calendar.
+                    Dicas: permita pop-ups, autorize a origem atual no Google Cloud Console e
+                    habilite a API do Calendar.
                   </AlertDescription>
                 </Alert>
               )}
@@ -292,8 +267,7 @@ export default function Calendar() {
                     Sincronização Automática
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Novos eventos serão enviados automaticamente ao Google
-                    Calendar
+                    Novos eventos serão enviados automaticamente ao Google Calendar
                   </p>
                 </div>
                 <Switch
@@ -307,41 +281,26 @@ export default function Calendar() {
 
               <div className="flex flex-wrap gap-2 mt-2">
                 {!isGoogleConnected && (
-                  <Button
-                    onClick={handleConnectGoogle}
-                    variant="default"
-                    disabled={isInitializing}
-                  >
+                  <Button onClick={handleConnectGoogle} variant="default" disabled={isInitializing}>
                     {connectButtonContent}
                   </Button>
                 )}
 
                 {isGoogleConnected && (
                   <>
-                    <Button
-                      onClick={handleSyncFromGoogle}
-                      variant="outline"
-                      disabled={isSyncing}
-                    >
+                    <Button onClick={handleSyncFromGoogle} variant="outline" disabled={isSyncing}>
                       <CloudDownload className="w-4 h-4 mr-2" />
                       {isSyncing ? "Sincronizando..." : "Importar do Google"}
                     </Button>
-                    <Button
-                      onClick={handleSyncToGoogle}
-                      variant="outline"
-                      disabled={isSyncing}
-                    >
+                    <Button onClick={handleSyncToGoogle} variant="outline" disabled={isSyncing}>
                       <CloudUpload className="w-4 h-4 mr-2" />
                       {isSyncing ? "Sincronizando..." : "Enviar ao Google"}
                     </Button>
                     <Button
-                      onClick={() =>
-                        window.open("https://calendar.google.com", "_blank")
-                      }
+                      onClick={() => window.open("https://calendar.google.com", "_blank")}
                       variant="outline"
                     >
-                      <LinkIcon className="w-4 h-4 mr-2" /> Abrir Google
-                      Calendar
+                      <LinkIcon className="w-4 h-4 mr-2" /> Abrir Google Calendar
                     </Button>
                   </>
                 )}
@@ -381,32 +340,26 @@ export default function Calendar() {
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
             {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
-              <div
-                key={d}
-                className="text-center text-sm font-semibold text-muted-foreground p-2"
-              >
+              <div key={d} className="text-center text-sm font-semibold text-muted-foreground p-2">
                 {d}
               </div>
             ))}
             {days.map((day, idx) => {
               const isValidDay = day !== null;
               const keyForCell = isValidDay
-                ? `day-${year}-${String(month + 1).padStart(2, "0")}-${String(
-                    day
-                  ).padStart(2, "0")}`
+                ? `day-${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(
+                    2,
+                    "0"
+                  )}`
                 : `empty-${idx}`;
-              const dayAppointments = isValidDay
-                ? getAppointmentsForDay(day as number)
-                : [];
+              const dayAppointments = isValidDay ? getAppointmentsForDay(day as number) : [];
               return (
                 <div key={keyForCell} className={getDayClassName(day)}>
                   {isValidDay && (
                     <>
                       <div
                         className={`text-sm font-medium mb-1 ${
-                          isToday(day as number)
-                            ? "text-primary"
-                            : "text-foreground"
+                          isToday(day as number) ? "text-primary" : "text-foreground"
                         }`}
                       >
                         {day}
@@ -430,9 +383,7 @@ export default function Calendar() {
                               type="button"
                               className="underline text-primary"
                               onClick={() => {
-                                const aptForDay = getAppointmentsForDay(
-                                  day as number
-                                );
+                                const aptForDay = getAppointmentsForDay(day as number);
                                 if (aptForDay.length) {
                                   setSelectedAppointment(aptForDay[0]);
                                   setShowDetailsDialog(true);
@@ -457,17 +408,13 @@ export default function Calendar() {
       <Card>
         <CardHeader>
           <CardTitle>Próximos Compromissos</CardTitle>
-          <CardDescription>
-            Eventos agendados para os próximos dias
-          </CardDescription>
+          <CardDescription>Eventos agendados para os próximos dias</CardDescription>
         </CardHeader>
         <CardContent>
           {sortedUpcomingAppointments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <CalendarDays className="w-12 h-12 text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">
-                Nenhum compromisso agendado
-              </p>
+              <p className="text-sm text-muted-foreground">Nenhum compromisso agendado</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -482,24 +429,17 @@ export default function Calendar() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className="font-medium">{apt.title}</p>
-                      <Badge
-                        className={EVENT_COLORS[apt.type] || EVENT_COLORS.outro}
-                      >
+                      <Badge className={EVENT_COLORS[apt.type] || EVENT_COLORS.outro}>
                         {getHumanTypeLabel(apt.type)}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(apt.date).toLocaleDateString("pt-BR")} às{" "}
-                      {apt.time}
+                      {new Date(apt.date).toLocaleDateString("pt-BR")} às {apt.time}
                     </p>
                     {apt.location && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {apt.location}
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">{apt.location}</p>
                     )}
-                    {apt.description && (
-                      <p className="text-sm mt-2">{apt.description}</p>
-                    )}
+                    {apt.description && <p className="text-sm mt-2">{apt.description}</p>}
                   </div>
                 </button>
               ))}
@@ -517,40 +457,28 @@ export default function Calendar() {
             <div className="space-y-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Título</Label>
-                <p className="text-lg font-semibold">
-                  {selectedAppointment.title}
-                </p>
+                <p className="text-lg font-semibold">{selectedAppointment.title}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-xs text-muted-foreground">Data</Label>
                   <p className="font-medium">
-                    {new Date(selectedAppointment.date).toLocaleDateString(
-                      "pt-BR",
-                      {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      }
-                    )}
+                    {new Date(selectedAppointment.date).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">
-                    Horário
-                  </Label>
+                  <Label className="text-xs text-muted-foreground">Horário</Label>
                   <p className="font-medium">{selectedAppointment.time}</p>
                 </div>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Tipo</Label>
                 <div className="mt-1">
-                  <Badge
-                    className={
-                      EVENT_COLORS[selectedAppointment.type] ||
-                      EVENT_COLORS.outro
-                    }
-                  >
+                  <Badge className={EVENT_COLORS[selectedAppointment.type] || EVENT_COLORS.outro}>
                     {getHumanTypeLabel(selectedAppointment.type)}
                   </Badge>
                 </div>
@@ -563,12 +491,8 @@ export default function Calendar() {
               )}
               {selectedAppointment.description && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">
-                    Descrição
-                  </Label>
-                  <p className="text-sm whitespace-pre-wrap">
-                    {selectedAppointment.description}
-                  </p>
+                  <Label className="text-xs text-muted-foreground">Descrição</Label>
+                  <p className="text-sm whitespace-pre-wrap">{selectedAppointment.description}</p>
                 </div>
               )}
               <div className="flex justify-between pt-4 border-t">
@@ -578,10 +502,7 @@ export default function Calendar() {
                 >
                   <Trash className="w-4 h-4 mr-2" /> Excluir
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDetailsDialog(false)}
-                >
+                <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
                   Fechar
                 </Button>
               </div>

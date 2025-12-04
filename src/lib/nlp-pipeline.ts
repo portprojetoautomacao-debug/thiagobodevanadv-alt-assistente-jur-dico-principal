@@ -6,57 +6,57 @@
 // - Information Extraction
 // - Batch Processing
 
-import { llmService, type LLMRequestConfig } from './llm-service'
+import { llmService, type LLMRequestConfig } from "./llm-service";
 
 // Entity types for legal documents
 export type EntityType =
-  | 'PERSON'
-  | 'ORGANIZATION'
-  | 'LOCATION'
-  | 'DATE'
-  | 'MONETARY_VALUE'
-  | 'LEGAL_REFERENCE'
-  | 'PROCESS_NUMBER'
-  | 'LAW_ARTICLE'
+  | "PERSON"
+  | "ORGANIZATION"
+  | "LOCATION"
+  | "DATE"
+  | "MONETARY_VALUE"
+  | "LEGAL_REFERENCE"
+  | "PROCESS_NUMBER"
+  | "LAW_ARTICLE";
 
 // Named Entity
 export interface NamedEntity {
-  text: string
-  type: EntityType
-  start: number
-  end: number
-  confidence: number
+  text: string;
+  type: EntityType;
+  start: number;
+  end: number;
+  confidence: number;
 }
 
 // Sentiment analysis result
 export interface SentimentAnalysis {
-  sentiment: 'positive' | 'negative' | 'neutral'
-  score: number
-  confidence: number
+  sentiment: "positive" | "negative" | "neutral";
+  score: number;
+  confidence: number;
   aspects: Array<{
-    aspect: string
-    sentiment: 'positive' | 'negative' | 'neutral'
-    score: number
-  }>
+    aspect: string;
+    sentiment: "positive" | "negative" | "neutral";
+    score: number;
+  }>;
 }
 
 // Document classification result
 export interface DocumentClassification {
-  category: string
-  subcategory?: string
-  confidence: number
-  tags: string[]
+  category: string;
+  subcategory?: string;
+  confidence: number;
+  tags: string[];
 }
 
 // Information extraction result
 export interface ExtractedInformation {
-  summary: string
-  keyPoints: string[]
-  entities: NamedEntity[]
-  dates: string[]
-  monetaryValues: string[]
-  legalReferences: string[]
-  parties: string[]
+  summary: string;
+  keyPoints: string[];
+  entities: NamedEntity[];
+  dates: string[];
+  monetaryValues: string[];
+  legalReferences: string[];
+  parties: string[];
 }
 
 /**
@@ -66,13 +66,10 @@ export class NLPPipeline {
   /**
    * Extract named entities from text
    */
-  async extractEntities(
-    text: string,
-    config: LLMRequestConfig = {}
-  ): Promise<NamedEntity[]> {
+  async extractEntities(text: string, config: LLMRequestConfig = {}): Promise<NamedEntity[]> {
     // Validating the input text to ensure it's not empty
     if (!text || text.trim().length === 0) {
-      throw new Error('Input text is empty or invalid.')
+      throw new Error("Input text is empty or invalid.");
     }
 
     const prompt = `Você é um especialista em processamento de linguagem natural para documentos jurídicos brasileiros.
@@ -98,30 +95,27 @@ export class NLPPipeline {
           "confidence": número_0_a_1
         }
       ]
-    }`
+    }`;
 
     try {
-      const result = await llmService.executeJSON<{ entities: NamedEntity[] }>(
-        prompt,
-        { ...config, feature: 'ner' }
-      )
-      return result.entities || []
+      const result = await llmService.executeJSON<{ entities: NamedEntity[] }>(prompt, {
+        ...config,
+        feature: "ner",
+      });
+      return result.entities || [];
     } catch (error) {
-      console.error('Error during NER processing:', error)
-      throw new Error('Failed to extract named entities.')
+      console.error("Error during NER processing:", error);
+      throw new Error("Failed to extract named entities.");
     }
   }
 
   /**
    * Analyze sentiment of text
    */
-  async analyzeSentiment(
-    text: string,
-    config: LLMRequestConfig = {}
-  ): Promise<SentimentAnalysis> {
+  async analyzeSentiment(text: string, config: LLMRequestConfig = {}): Promise<SentimentAnalysis> {
     // Validating the input text to ensure it's not empty
     if (!text || text.trim().length === 0) {
-      throw new Error('Input text is empty or invalid.')
+      throw new Error("Input text is empty or invalid.");
     }
 
     const prompt = `Você é um especialista em análise de sentimento para documentos jurídicos.
@@ -149,17 +143,17 @@ export class NLPPipeline {
           "score": número_entre_-1_e_1
         }
       ]
-    }`
+    }`;
 
     try {
-      const result = await llmService.executeJSON<SentimentAnalysis>(
-        prompt,
-        { ...config, feature: 'sentiment-analysis' }
-      )
-      return result
+      const result = await llmService.executeJSON<SentimentAnalysis>(prompt, {
+        ...config,
+        feature: "sentiment-analysis",
+      });
+      return result;
     } catch (error) {
-      console.error('Error during sentiment analysis:', error)
-      throw new Error('Failed to analyze sentiment.')
+      console.error("Error during sentiment analysis:", error);
+      throw new Error("Failed to analyze sentiment.");
     }
   }
 
@@ -172,7 +166,7 @@ export class NLPPipeline {
   ): Promise<DocumentClassification> {
     // Validating the input text to ensure it's not empty
     if (!text || text.trim().length === 0) {
-      throw new Error('Input text is empty or invalid.')
+      throw new Error("Input text is empty or invalid.");
     }
 
     const prompt = `Você é um especialista em classificação de documentos jurídicos brasileiros.
@@ -194,17 +188,17 @@ export class NLPPipeline {
       "subcategory": "subcategoria_opcional",
       "confidence": número_0_a_1,
       "tags": ["tag1", "tag2", "tag3"]
-    }`
+    }`;
 
     try {
-      const result = await llmService.executeJSON<DocumentClassification>(
-        prompt,
-        { ...config, feature: 'document-classification' }
-      )
-      return result
+      const result = await llmService.executeJSON<DocumentClassification>(prompt, {
+        ...config,
+        feature: "document-classification",
+      });
+      return result;
     } catch (error) {
-      console.error('Error during document classification:', error)
-      throw new Error('Failed to classify document.')
+      console.error("Error during document classification:", error);
+      throw new Error("Failed to classify document.");
     }
   }
 
@@ -217,7 +211,7 @@ export class NLPPipeline {
   ): Promise<ExtractedInformation> {
     // Validating the input text to ensure it's not empty
     if (!text || text.trim().length === 0) {
-      throw new Error('Input text is empty or invalid.')
+      throw new Error("Input text is empty or invalid.");
     }
 
     const prompt = `Você é um especialista em extração de informações de documentos jurídicos.
@@ -253,17 +247,17 @@ export class NLPPipeline {
       "monetaryValues": ["valor1", "valor2"],
       "legalReferences": ["ref1", "ref2"],
       "parties": ["parte1", "parte2"]
-    }`
+    }`;
 
     try {
-      const result = await llmService.executeJSON<ExtractedInformation>(
-        prompt,
-        { ...config, feature: 'information-extraction' }
-      )
-      return result
+      const result = await llmService.executeJSON<ExtractedInformation>(prompt, {
+        ...config,
+        feature: "information-extraction",
+      });
+      return result;
     } catch (error) {
-      console.error('Error during information extraction:', error)
-      throw new Error('Failed to extract information.')
+      console.error("Error during information extraction:", error);
+      throw new Error("Failed to extract information.");
     }
   }
 
@@ -272,43 +266,51 @@ export class NLPPipeline {
    */
   async batchProcess(
     documents: Array<{ id: string; text: string }>,
-    operation: 'entities' | 'sentiment' | 'classify' | 'extract',
+    operation: "entities" | "sentiment" | "classify" | "extract",
     config: LLMRequestConfig = {}
-  ): Promise<Array<{
-    id: string
-    result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation
-    error?: string
-  }>> {
+  ): Promise<
+    Array<{
+      id: string;
+      result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation;
+      error?: string;
+    }>
+  > {
     const operations = {
       entities: this.extractEntities.bind(this),
       sentiment: this.analyzeSentiment.bind(this),
       classify: this.classifyDocument.bind(this),
-      extract: this.extractInformation.bind(this)
-    }
+      extract: this.extractInformation.bind(this),
+    };
 
-    const operationFn = operations[operation]
+    const operationFn = operations[operation];
 
     const results = await Promise.allSettled(
       documents.map(async ({ id, text }) => {
-        const result = await operationFn(text, config)
-        return { id, result }
+        const result = await operationFn(text, config);
+        return { id, result };
       })
-    )
+    );
 
     return results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value as { id: string; result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation }
+      if (result.status === "fulfilled") {
+        return result.value as {
+          id: string;
+          result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation;
+        };
       } else {
         // Create default result based on operation type
-        const defaultResult: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation =
-          operation === 'entities' ? [] : {} as SentimentAnalysis
+        const defaultResult:
+          | NamedEntity[]
+          | SentimentAnalysis
+          | DocumentClassification
+          | ExtractedInformation = operation === "entities" ? [] : ({} as SentimentAnalysis);
         return {
           id: documents[index].id,
           result: defaultResult,
-          error: result.reason?.message || 'Unknown error'
-        }
+          error: result.reason?.message || "Unknown error",
+        };
       }
-    })
+    });
   }
 
   /**
@@ -327,7 +329,7 @@ export class NLPPipeline {
     ${text}
 
     PADRÕES A BUSCAR:
-    ${patterns.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+    ${patterns.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 
     INSTRUÇÕES:
     1. Para cada padrão, determine se está presente no texto
@@ -343,17 +345,17 @@ export class NLPPipeline {
           "occurrences": ["ocorrência1", "ocorrência2"]
         }
       ]
-    }`
+    }`;
 
     try {
       const result = await llmService.executeJSON<{
-        results: Array<{ pattern: string; found: boolean; occurrences: string[] }>
-      }>(prompt, { ...config, feature: 'pattern-analysis' })
+        results: Array<{ pattern: string; found: boolean; occurrences: string[] }>;
+      }>(prompt, { ...config, feature: "pattern-analysis" });
 
-      return result.results || []
+      return result.results || [];
     } catch (error) {
-      console.error('Error during pattern analysis:', error)
-      throw new Error('Failed to analyze patterns.')
+      console.error("Error during pattern analysis:", error);
+      throw new Error("Failed to analyze patterns.");
     }
   }
 
@@ -365,11 +367,11 @@ export class NLPPipeline {
     document2: string,
     config: LLMRequestConfig = {}
   ): Promise<{
-    similarity: number
-    differences: string[]
-    additions: string[]
-    removals: string[]
-    summary: string
+    similarity: number;
+    differences: string[];
+    additions: string[];
+    removals: string[];
+    summary: string;
   }> {
     const prompt = `Você é um especialista em comparação de documentos jurídicos.
 
@@ -395,21 +397,21 @@ export class NLPPipeline {
       "additions": ["adição1", "adição2"],
       "removals": ["remoção1", "remoção2"],
       "summary": "resumo_das_mudanças"
-    }`
+    }`;
 
     try {
       const result = await llmService.executeJSON<{
-        similarity: number
-        differences: string[]
-        additions: string[]
-        removals: string[]
-        summary: string
-      }>(prompt, { ...config, feature: 'document-comparison' })
+        similarity: number;
+        differences: string[];
+        additions: string[];
+        removals: string[];
+        summary: string;
+      }>(prompt, { ...config, feature: "document-comparison" });
 
-      return result
+      return result;
     } catch (error) {
-      console.error('Error during document comparison:', error)
-      throw new Error('Failed to compare documents.')
+      console.error("Error during document comparison:", error);
+      throw new Error("Failed to compare documents.");
     }
   }
 
@@ -421,11 +423,11 @@ export class NLPPipeline {
     documentType: string,
     config: LLMRequestConfig = {}
   ): Promise<{
-    summary: string
-    risks: string[]
-    opportunities: string[]
-    recommendations: string[]
-    urgency: 'low' | 'medium' | 'high' | 'critical'
+    summary: string;
+    risks: string[];
+    opportunities: string[];
+    recommendations: string[];
+    urgency: "low" | "medium" | "high" | "critical";
   }> {
     const prompt = `Você é um assistente jurídico sênior especializado em análise estratégica.
 
@@ -448,24 +450,24 @@ export class NLPPipeline {
       "opportunities": ["oportunidade1", "oportunidade2"],
       "recommendations": ["recomendação1", "recomendação2"],
       "urgency": "low|medium|high|critical"
-    }`
+    }`;
 
     try {
       const result = await llmService.executeJSON<{
-        summary: string
-        risks: string[]
-        opportunities: string[]
-        recommendations: string[]
-        urgency: 'low' | 'medium' | 'high' | 'critical'
-      }>(prompt, { ...config, feature: 'insight-generation' })
+        summary: string;
+        risks: string[];
+        opportunities: string[];
+        recommendations: string[];
+        urgency: "low" | "medium" | "high" | "critical";
+      }>(prompt, { ...config, feature: "insight-generation" });
 
-      return result
+      return result;
     } catch (error) {
-      console.error('Error during insight generation:', error)
-      throw new Error('Failed to generate insights.')
+      console.error("Error during insight generation:", error);
+      throw new Error("Failed to generate insights.");
     }
   }
 }
 
 // Export singleton instance
-export const nlpPipeline = new NLPPipeline()
+export const nlpPipeline = new NLPPipeline();
