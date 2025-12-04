@@ -965,7 +965,7 @@ export function TiptapEditor({
       )}
     >
       {/* Toolbar - Using extracted components to reduce CC */}
-      <div className="border-b bg-muted/30 p-2 flex flex-wrap items-center gap-1">
+      <div className="border-b bg-muted p-2 flex flex-wrap items-center gap-1">
         <UndoRedoButtons editor={editor} disabled={editingDisabled} />
         <Separator orientation="vertical" className="h-6 mx-1" />
         <TextFormattingButtons editor={editor} disabled={editingDisabled} />
@@ -1048,7 +1048,7 @@ export function TiptapEditor({
       </div>
 
       {/* Área do editor */}
-      <div className="p-4 bg-muted/20">
+      <div className="p-4 bg-background">
         <div
           className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm mx-auto"
           style={{ maxWidth: "800px", minHeight: "300px" }}
