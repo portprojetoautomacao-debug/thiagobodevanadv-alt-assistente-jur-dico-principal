@@ -201,7 +201,7 @@ function parseAIResponse (aiResponse: string, documentType: string)
 }
 
 // Helper to compute and assign startDate/endDate from a 'deadline' object
-function applyDeadlineDates (analysisData: any)
+function applyDeadlineDates (analysisData: AnalysisResult["data"] | null | undefined)
 {
   if (!analysisData?.deadline?.days) return;
 
