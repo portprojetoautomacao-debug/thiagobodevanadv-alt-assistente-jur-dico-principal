@@ -11,11 +11,10 @@ name: SonarCloud Analysis
 # 5. Reative este workflow removendo o comentário do trigger
 
 on:
-  # DESABILITADO TEMPORARIAMENTE - Descomentar após corrigir organização
-  # push:
-  #   branches: [main]
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch: # Permite execução manual para teste
 
 concurrency:

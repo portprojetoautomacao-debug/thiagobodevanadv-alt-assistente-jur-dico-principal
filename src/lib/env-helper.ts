@@ -17,10 +17,11 @@ export function getEnv(key: string, defaultValue: string = ""): string {
   }
 
   // 2. Tenta process.env (Node.js / Serverless)
-  // Verificação segura de 'process' para não quebrar no browser
+  // Usa optional chaining para simplificar (SonarCloud S6582)
   try {
-    if (typeof process !== "undefined" && process.env?.[key] !== undefined) {
-      return (process.env[key] as string) || "";
+    const envValue = globalThis.process?.env?.[key];
+    if (envValue !== undefined) {
+      return envValue;
     }
   } catch {
     // Ignora erro de acesso a process
