@@ -11,27 +11,23 @@
  */
 
 import { Button } from "@/components/ui/button";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useExpedientes } from "@/hooks/use-expedientes";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
 import {
-    Bell,
-    BellRinging,
-    CheckCircle,
-    Clock,
-    FileText,
-    Info,
-    Robot,
-    Trash,
-    Tray,
-    Warning,
-    X,
+  Bell,
+  BellRinging,
+  CheckCircle,
+  Clock,
+  FileText,
+  Info,
+  Robot,
+  Trash,
+  Tray,
+  Warning,
+  X,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -129,13 +125,10 @@ function generateId(): string {
 
 export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useKV<Notification[]>(
-    "notifications",
-    []
-  );
+  const [notifications, setNotifications] = useKV<Notification[]>("notifications", []);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const prevCountRef = useRef(0);
-  const { expedientes } = useExpedientes();  // ✅ Expedientes reais para notificações
+  const { expedientes } = useExpedientes(); // ✅ Expedientes reais para notificações
   const prevExpedientesCountRef = useRef(0);
 
   // Contagem de não lidas
@@ -144,18 +137,18 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   // Detectar novas notificações
   useEffect(() => {
     const currentCount = notifications?.length || 0;
-    
+
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
       // Schedule state update to avoid synchronous setState in effect
       const timeoutId = setTimeout(() => {
         setHasNewNotifications(true);
       }, 0);
-      // Atualiza ref dentro do if e retorna cleanup
+      // Atualiza ref e retorna cleanup
       prevCountRef.current = currentCount;
       return () => clearTimeout(timeoutId);
     }
-    
-    // Atualiza ref apenas quando não houve notificação nova
+
+    // Atualiza ref quando não houve notificação nova
     prevCountRef.current = currentCount;
   }, [notifications]);
 
@@ -188,9 +181,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
 
   // Marcar todas como lidas
   const markAllAsRead = useCallback(() => {
-    setNotifications((current) =>
-      (current || []).map((n) => ({ ...n, read: true }))
-    );
+    setNotifications((current) => (current || []).map((n) => ({ ...n, read: true })));
     setHasNewNotifications(false);
   }, [setNotifications]);
 
@@ -223,25 +214,30 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   // Criar notificações automáticas para novos expedientes
   useEffect(() => {
     const currentCount = expedientes?.length || 0;
-    
+
     if (currentCount > prevExpedientesCountRef.current && prevExpedientesCountRef.current > 0) {
-      const novosExpedientes = expedientes?.slice(0, currentCount - prevExpedientesCountRef.current) || [];
-      
+      const novosExpedientes =
+        expedientes?.slice(0, currentCount - prevExpedientesCountRef.current) || [];
+
       novosExpedientes.forEach((exp: Expediente) => {
         addNotification({
-          type: 'nova_intimacao',
-          title: 'Nova Intimação Detectada',
-          message: exp.descricao || exp.conteudo || exp.summary || 'Nova intimação processada automaticamente',
+          type: "nova_intimacao",
+          title: "Nova Intimação Detectada",
+          message:
+            exp.descricao ||
+            exp.conteudo ||
+            exp.summary ||
+            "Nova intimação processada automaticamente",
           data: { expedienteId: exp.id },
           action: {
-            label: 'Ver detalhes',
-            view: 'processos',
+            label: "Ver detalhes",
+            view: "processos",
             payload: { expedienteId: exp.id },
           },
         });
       });
     }
-    
+
     prevExpedientesCountRef.current = currentCount;
   }, [expedientes, addNotification]);
 
@@ -262,11 +258,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           variant="ghost"
           size="icon"
           className="relative"
-          title={
-            unreadCount > 0
-              ? `${unreadCount} notificação(ões) não lida(s)`
-              : "Notificações"
-          }
+          title={unreadCount > 0 ? `${unreadCount} notificação(ões) não lida(s)` : "Notificações"}
         >
           {hasNewNotifications || unreadCount > 0 ? (
             <BellRinging className="w-5 h-5 animate-pulse" weight="fill" />
@@ -289,12 +281,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           <h3 className="font-semibold">Notificações</h3>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={markAllAsRead}
-                className="text-xs h-7"
-              >
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs h-7">
                 Marcar como lidas
               </Button>
             )}
@@ -319,26 +306,20 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
               <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p className="text-sm">Nenhuma notificação</p>
               <p className="text-xs mt-1 opacity-70">
-                Você será notificado sobre prazos, intimações e tarefas dos
-                agentes.
+                Você será notificado sobre prazos, intimações e tarefas dos agentes.
               </p>
             </div>
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => {
-                const config =
-                  notificationConfig[notification.type] ||
-                  notificationConfig.sistema;
+                const config = notificationConfig[notification.type] || notificationConfig.sistema;
 
                 let relativeTime = "";
                 try {
-                  relativeTime = formatDistanceToNow(
-                    new Date(notification.createdAt),
-                    {
-                      addSuffix: true,
-                      locale: ptBR,
-                    }
-                  );
+                  relativeTime = formatDistanceToNow(new Date(notification.createdAt), {
+                    addSuffix: true,
+                    locale: ptBR,
+                  });
                 } catch {
                   relativeTime = "";
                 }
@@ -377,9 +358,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                         {notification.message}
                       </p>
                       {relativeTime && (
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">
-                          {relativeTime}
-                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">{relativeTime}</p>
                       )}
                     </div>
 
@@ -404,8 +383,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         {(notifications?.length || 0) > 0 && (
           <div className="px-4 py-2 border-t bg-muted/30">
             <p className="text-xs text-center text-muted-foreground">
-              {notifications?.length} notificação(ões) • {unreadCount} não
-              lida(s)
+              {notifications?.length} notificação(ões) • {unreadCount} não lida(s)
             </p>
           </div>
         )}
@@ -416,10 +394,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
 
 // Hook interno para gerenciar notificações no componente NotificationCenter
 export function useNotificationManager() {
-  const [notifications, setNotifications] = useKV<Notification[]>(
-    "notifications",
-    []
-  );
+  const [notifications, setNotifications] = useKV<Notification[]>("notifications", []);
 
   const addNotification = useCallback(
     (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
@@ -430,9 +405,7 @@ export function useNotificationManager() {
         read: false,
       };
 
-      setNotifications((current) =>
-        [newNotification, ...(current || [])].slice(0, 100)
-      );
+      setNotifications((current) => [newNotification, ...(current || [])].slice(0, 100));
 
       return newNotification.id;
     },

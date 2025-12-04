@@ -16,96 +16,96 @@
 // ============================================================================
 
 export type AgentStatus =
-  | 'active'
-  | 'idle'
-  | 'processing'
-  | 'paused'
-  | 'waiting_human'
-  | 'error'
-  | 'degraded'
+  | "active"
+  | "idle"
+  | "processing"
+  | "paused"
+  | "waiting_human"
+  | "error"
+  | "degraded";
 
 export type TaskStatus =
-  | 'queued'
-  | 'processing'
-  | 'completed'
-  | 'failed'
-  | 'human_intervention'
-  | 'pending_retry'
+  | "queued"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "human_intervention"
+  | "pending_retry";
 
-export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
+export type TaskPriority = "low" | "medium" | "high" | "critical";
 
 /**
  * Quem criou a tarefa - rastreabilidade total
  */
-export type TaskCreator = 'sistema' | 'agente' | 'humano' | 'cron' | 'webhook'
+export type TaskCreator = "sistema" | "agente" | "humano" | "cron" | "webhook";
 
 /**
  * Tipos de tarefa padronizados (TarefaSistemaTipo)
  */
 export type TarefaSistemaTipo =
-  | 'IMPORTAR_INTIMACOES'
-  | 'CRIAR_MINUTA'
-  | 'ANALISAR_PRAZO'
-  | 'ATUALIZAR_STATUS_PROCESSO'
-  | 'ENVIAR_RESUMO_DIARIO'
-  | 'CALCULATE_DEADLINE'
-  | 'RESEARCH_PRECEDENTS'
-  | 'CLIENT_COMMUNICATION'
-  | 'CHECK_DATAJUD'
-  | 'RISK_ANALYSIS'
-  | 'BILLING_ANALYSIS'
-  | 'ORGANIZE_FILES'
-  | 'COMPLIANCE_CHECK'
-  | 'LEGAL_TRANSLATION'
-  | 'CONTRACT_REVIEW'
-  | 'CASE_STRATEGY'
-  | 'DRAFT_PETITION'
-  | 'ANALYZE_DOCUMENT'
-  | 'ANALYZE_INTIMATION'
-  | 'MONITOR_DJEN'
-  | 'SYNC_CALENDAR'
-  | 'SEND_NOTIFICATION'
+  | "IMPORTAR_INTIMACOES"
+  | "CRIAR_MINUTA"
+  | "ANALISAR_PRAZO"
+  | "ATUALIZAR_STATUS_PROCESSO"
+  | "ENVIAR_RESUMO_DIARIO"
+  | "CALCULATE_DEADLINE"
+  | "RESEARCH_PRECEDENTS"
+  | "CLIENT_COMMUNICATION"
+  | "CHECK_DATAJUD"
+  | "RISK_ANALYSIS"
+  | "BILLING_ANALYSIS"
+  | "ORGANIZE_FILES"
+  | "COMPLIANCE_CHECK"
+  | "LEGAL_TRANSLATION"
+  | "CONTRACT_REVIEW"
+  | "CASE_STRATEGY"
+  | "DRAFT_PETITION"
+  | "ANALYZE_DOCUMENT"
+  | "ANALYZE_INTIMATION"
+  | "MONITOR_DJEN"
+  | "SYNC_CALENDAR"
+  | "SEND_NOTIFICATION";
 
 /**
  * IDs de agentes tipados para type safety
  */
 export type AgentId =
-  | 'harvey'
-  | 'justine'
-  | 'analise-documental'
-  | 'monitor-djen'
-  | 'gestao-prazos'
-  | 'redacao-peticoes'
-  | 'organizacao-arquivos'
-  | 'pesquisa-juris'
-  | 'analise-risco'
-  | 'revisao-contratual'
-  | 'comunicacao-clientes'
-  | 'financeiro'
-  | 'estrategia-processual'
-  | 'traducao-juridica'
-  | 'compliance'
+  | "harvey"
+  | "justine"
+  | "analise-documental"
+  | "monitor-djen"
+  | "gestao-prazos"
+  | "redacao-peticoes"
+  | "organizacao-arquivos"
+  | "pesquisa-juris"
+  | "analise-risco"
+  | "revisao-contratual"
+  | "comunicacao-clientes"
+  | "financeiro"
+  | "estrategia-processual"
+  | "traducao-juridica"
+  | "compliance";
 
 export interface Agent {
-  id: AgentId | string
-  name: string
-  description: string
-  type: string
-  status: AgentStatus
-  enabled: boolean
+  id: AgentId | string;
+  name: string;
+  description: string;
+  type: string;
+  status: AgentStatus;
+  enabled: boolean;
   /** Status/activity para exibir no UI (não é ISO) */
-  lastActivity: string
-  continuousMode: boolean
-  currentTask?: AgentTask
-  capabilities?: string[]
-  config?: Record<string, unknown>
-  nextScheduledRun?: string
-  workQueue?: AgentTask[]
-  humanInteractionMode?: 'auto' | 'strict' | 'relaxed'
+  lastActivity: string;
+  continuousMode: boolean;
+  currentTask?: AgentTask;
+  capabilities?: string[];
+  config?: Record<string, unknown>;
+  nextScheduledRun?: string;
+  workQueue?: AgentTask[];
+  humanInteractionMode?: "auto" | "strict" | "relaxed";
   /** Contador de falhas recentes para circuit breaker */
-  recentFailures?: number
+  recentFailures?: number;
   /** Timestamp da última falha (ISO) */
-  lastFailureAt?: string
+  lastFailureAt?: string;
 }
 
 /**
@@ -113,81 +113,81 @@ export interface Agent {
  * (AgentTask melhorado conforme Plano Mestre FASE 1)
  */
 export interface AgentTask {
-  id: string
-  agentId: AgentId
-  type: TarefaSistemaTipo
-  priority: TaskPriority
-  status: TaskStatus
-  createdAt: string
-  startedAt?: string
-  completedAt?: string
-  data: Record<string, unknown>
-  result?: AgentTaskResult
-  error?: string
-  humanTouchedAt?: string
-  resumeAfterHuman?: boolean
+  id: string;
+  agentId: AgentId;
+  type: TarefaSistemaTipo;
+  priority: TaskPriority;
+  status: TaskStatus;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  data: Record<string, unknown>;
+  result?: AgentTaskResult;
+  error?: string;
+  humanTouchedAt?: string;
+  resumeAfterHuman?: boolean;
 
   // FASE 1: Retry com backoff exponencial
-  retryCount?: number
-  maxRetries?: number
+  retryCount?: number;
+  maxRetries?: number;
   /** Próxima execução agendada (ISO) - para retry com backoff */
-  nextRunAt?: string
+  nextRunAt?: string;
 
   // FASE 1: Timeout de tarefa
   /** Timeout em ms (default: 10 min via DEFAULT_TASK_TIMEOUT_MS) */
-  timeout?: number
+  timeout?: number;
 
   // FASE 1: Rastreabilidade
   /** Quem criou a tarefa */
-  criadoPor?: TaskCreator
+  criadoPor?: TaskCreator;
   /** ISO timestamp da última atualização */
-  atualizadoEm?: string
+  atualizadoEm?: string;
   /** Número do processo relacionado */
-  processoNumero?: string
+  processoNumero?: string;
   /** ID da tarefa que originou esta (chaining) */
-  sourceTaskId?: string
+  sourceTaskId?: string;
 
   // FASE 3: Feedback e auditoria
   /** Confiança do resultado (0-1) */
-  confidence?: number
+  confidence?: number;
   /** Tokens usados na chamada LLM */
-  tokensUsed?: number
+  tokensUsed?: number;
   /** Tempo de processamento em ms */
-  processingTimeMs?: number
+  processingTimeMs?: number;
 }
 
 /**
  * Alias para compatibilidade - TarefaSistema = AgentTask
  */
-export type TarefaSistema = AgentTask
+export type TarefaSistema = AgentTask;
 
 export interface AgentTaskResult {
-  success: boolean
-  data?: Record<string, unknown>
-  message?: string
-  error?: string
-  suggestions?: string[]
-  nextSteps?: string[]
+  success: boolean;
+  data?: Record<string, unknown>;
+  message?: string;
+  error?: string;
+  suggestions?: string[];
+  nextSteps?: string[];
   /** Confiança do resultado (0-1) */
-  confidence?: number
+  confidence?: number;
   /** Tokens usados */
-  tokensUsed?: number
+  tokensUsed?: number;
   /** Tempo de processamento */
-  processingTimeMs?: number
+  processingTimeMs?: number;
 }
 
 export interface AgentTaskGeneratorConfig {
-  enabled: boolean
-  intervalMinutes: number
-  maxTasksPerInterval: number
-  agentIds: AgentId[]
+  enabled: boolean;
+  intervalMinutes: number;
+  maxTasksPerInterval: number;
+  agentIds: AgentId[];
 }
 
 export interface AgentTaskGenerator {
-  start(): void
-  stop(): void
-  updateConfig(config: Partial<AgentTaskGeneratorConfig>): void
-  setOnTaskGenerated(callback: (task: AgentTask) => void): void
+  start(): void;
+  stop(): void;
+  updateConfig(config: Partial<AgentTaskGeneratorConfig>): void;
+  setOnTaskGenerated(callback: (task: AgentTask) => void): void;
 }
 
 // ============================================================================
@@ -206,40 +206,40 @@ export function calcularAtrasoRetry(
   baseMs: number = 10_000,
   maxMs: number = 10 * 60 * 1_000
 ): number {
-  const safeRetry = Math.max(0, retryCount)
-  const expo = Math.pow(2, safeRetry)
-  const jitter = Math.random() * 0.3 + 0.85 // 0.85–1.15
-  return Math.min(baseMs * expo * jitter, maxMs)
+  const safeRetry = Math.max(0, retryCount);
+  const expo = Math.pow(2, safeRetry);
+  const jitter = Math.random() * 0.3 + 0.85; // 0.85–1.15
+  return Math.min(baseMs * expo * jitter, maxMs);
 }
 
 /**
  * Agenda retry de uma tarefa com backoff exponencial
  */
 export function agendarRetryTarefa(task: AgentTask): AgentTask {
-  const retryCount = (task.retryCount ?? 0) + 1
-  const maxRetries = task.maxRetries ?? 3
-  const nowIso = new Date().toISOString()
+  const retryCount = (task.retryCount ?? 0) + 1;
+  const maxRetries = task.maxRetries ?? 3;
+  const nowIso = new Date().toISOString();
 
   if (retryCount > maxRetries) {
     return {
       ...task,
-      status: 'failed',
+      status: "failed",
       retryCount,
       atualizadoEm: nowIso,
-      error: `Máximo de ${maxRetries} tentativas excedido`
-    }
+      error: `Máximo de ${maxRetries} tentativas excedido`,
+    };
   }
 
-  const atrasoMs = calcularAtrasoRetry(retryCount)
-  const nextRunAt = new Date(Date.now() + atrasoMs).toISOString()
+  const atrasoMs = calcularAtrasoRetry(retryCount);
+  const nextRunAt = new Date(Date.now() + atrasoMs).toISOString();
 
   return {
     ...task,
-    status: 'pending_retry',
+    status: "pending_retry",
     retryCount,
     nextRunAt,
-    atualizadoEm: nowIso
-  }
+    atualizadoEm: nowIso,
+  };
 }
 
 // ============================================================================
@@ -249,7 +249,7 @@ export function agendarRetryTarefa(task: AgentTask): AgentTask {
 /**
  * Timeout padrão para tarefas (10 minutos)
  */
-export const DEFAULT_TASK_TIMEOUT_MS = 10 * 60 * 1_000
+export const DEFAULT_TASK_TIMEOUT_MS = 10 * 60 * 1_000;
 
 /**
  * Verifica se uma tarefa estourou o timeout (baseado em startedAt + timeout/default)
@@ -259,14 +259,14 @@ export function isTaskTimedOut(
   nowMs: number = Date.now(),
   defaultTimeoutMs: number = DEFAULT_TASK_TIMEOUT_MS
 ): boolean {
-  if (!task.startedAt) return false
-  if (task.status !== 'processing') return false
+  if (!task.startedAt) return false;
+  if (task.status !== "processing") return false;
 
-  const timeoutMs = task.timeout ?? defaultTimeoutMs
-  const startedMs = new Date(task.startedAt).getTime()
-  if (Number.isNaN(startedMs)) return false
+  const timeoutMs = task.timeout ?? defaultTimeoutMs;
+  const startedMs = new Date(task.startedAt).getTime();
+  if (Number.isNaN(startedMs)) return false;
 
-  return nowMs - startedMs > timeoutMs
+  return nowMs - startedMs > timeoutMs;
 }
 
 /**
@@ -276,38 +276,37 @@ export function detectarTarefasTravadas(
   tarefas: AgentTask[],
   limiteMs: number = DEFAULT_TASK_TIMEOUT_MS
 ): AgentTask[] {
-  const agora = Date.now()
+  const agora = Date.now();
 
-  return tarefas.filter(t => isTaskTimedOut(t, agora, limiteMs))
+  return tarefas.filter((t) => isTaskTimedOut(t, agora, limiteMs));
 }
 
 /**
  * Recupera tarefa travada (reenfileira ou marca como falha)
  */
 export function recuperarTarefaTravada(task: AgentTask): AgentTask {
-  const retryCount = (task.retryCount ?? 0) + 1
-  const maxRetries = task.maxRetries ?? 3
-  const nowIso = new Date().toISOString()
+  const retryCount = (task.retryCount ?? 0) + 1;
+  const maxRetries = task.maxRetries ?? 3;
+  const nowIso = new Date().toISOString();
 
-
-  console.warn(`[TaskEngine] Tarefa travada detectada: ${task.id} (${task.type})`)
+  console.warn(`[TaskEngine] Tarefa travada detectada: ${task.id} (${task.type})`);
 
   if (retryCount <= maxRetries) {
     return agendarRetryTarefa({
       ...task,
       retryCount,
-      error: `Tarefa travada - tentativa ${retryCount} de ${maxRetries}`
-    })
+      error: `Tarefa travada - tentativa ${retryCount} de ${maxRetries}`,
+    });
   }
 
   return {
     ...task,
-    status: 'failed',
+    status: "failed",
     retryCount,
     completedAt: nowIso,
     atualizadoEm: nowIso,
-    error: 'Tarefa travada após múltiplas tentativas'
-  }
+    error: "Tarefa travada após múltiplas tentativas",
+  };
 }
 
 /**
@@ -315,13 +314,13 @@ export function recuperarTarefaTravada(task: AgentTask): AgentTask {
  */
 export function tarefaProntaParaExecucao(task: AgentTask): boolean {
   // Tarefas em pending_retry só rodam após nextRunAt
-  if (task.status === 'pending_retry') {
-    if (!task.nextRunAt) return false
-    return new Date(task.nextRunAt).getTime() <= Date.now()
+  if (task.status === "pending_retry") {
+    if (!task.nextRunAt) return false;
+    return new Date(task.nextRunAt).getTime() <= Date.now();
   }
 
   // Fila normal
-  return task.status === 'queued'
+  return task.status === "queued";
 }
 
 // ============================================================================
@@ -334,41 +333,51 @@ export function tarefaProntaParaExecucao(task: AgentTask): boolean {
  */
 export function shouldPauseForHuman(agent: Agent, task: AgentTask): boolean {
   // Tarefas de prioridade crítica sempre passam por humano
-  if (task.priority === 'critical') {
-    return true
+  if (task.priority === "critical") {
+    return true;
   }
 
   // Confiança baixa (se fornecida) força humano
-  if (typeof task.confidence === 'number' && task.confidence < 0.6) {
-    return true
+  if (typeof task.confidence === "number" && task.confidence < 0.6) {
+    return true;
   }
 
   // Tarefas que já bateram o limite de tentativas
   if ((task.retryCount ?? 0) >= (task.maxRetries ?? 3)) {
-    return true
+    return true;
   }
 
-  const typeLc = String(task.type).toLowerCase()
+  const typeLc = String(task.type).toLowerCase();
 
   // Coisas que mexem com protocolo, dinheiro, contrato ou cliente
   const highRiskKeywords = [
-    'petition', 'peticao', 'petição', 'protocolo',
-    'contract', 'contrato',
-    'billing', 'faturamento', 'pagamento',
-    'client_communication', 'client-communication', 'comunicacao', 'comunicação',
-    'legal_advice', 'parecer'
-  ]
+    "petition",
+    "peticao",
+    "petição",
+    "protocolo",
+    "contract",
+    "contrato",
+    "billing",
+    "faturamento",
+    "pagamento",
+    "client_communication",
+    "client-communication",
+    "comunicacao",
+    "comunicação",
+    "legal_advice",
+    "parecer",
+  ];
 
-  if (highRiskKeywords.some(keyword => typeLc.includes(keyword))) {
-    return true
+  if (highRiskKeywords.some((keyword) => typeLc.includes(keyword))) {
+    return true;
   }
 
   // Modo estrito de interação humana
-  if (agent.humanInteractionMode === 'strict') {
-    return true
+  if (agent.humanInteractionMode === "strict") {
+    return true;
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -377,24 +386,24 @@ export function shouldPauseForHuman(agent: Agent, task: AgentTask): boolean {
 export function canResumeAfterHuman(task: AgentTask): boolean {
   // Tarefa explicitamente marcada para retomar
   if (task.resumeAfterHuman) {
-    return true
+    return true;
   }
 
   // Tarefa em modo humana mas tocada há mais de 24h → auto-resume
-  if (task.status === 'human_intervention' && task.humanTouchedAt) {
-    const touchedTime = new Date(task.humanTouchedAt).getTime()
+  if (task.status === "human_intervention" && task.humanTouchedAt) {
+    const touchedTime = new Date(task.humanTouchedAt).getTime();
     if (Number.isNaN(touchedTime)) {
-      return false
+      return false;
     }
 
-    const now = Date.now()
-    const hoursSinceTouched = (now - touchedTime) / (1000 * 60 * 60)
+    const now = Date.now();
+    const hoursSinceTouched = (now - touchedTime) / (1000 * 60 * 60);
 
-    return hoursSinceTouched > 24
+    return hoursSinceTouched > 24;
   }
 
   // Fila normal
-  return task.status === 'queued'
+  return task.status === "queued";
 }
 
 // ============================================================================
@@ -406,186 +415,236 @@ export function canResumeAfterHuman(task: AgentTask): boolean {
  */
 export const DEFAULT_AGENTS: Agent[] = [
   {
-    id: 'harvey',
-    name: 'Harvey Specter',
+    id: "harvey",
+    name: "Harvey Specter",
     description:
-      'Assistente jurídico estratégico que analisa performance, processos, prazos e finanças do escritório em tempo real',
-    type: 'strategic',
-    status: 'idle',
+      "Assistente jurídico estratégico que analisa performance, processos, prazos e finanças do escritório em tempo real",
+    type: "strategic",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['strategic-analysis', 'performance-monitoring', 'risk-identification', 'data-analysis']
+    capabilities: [
+      "strategic-analysis",
+      "performance-monitoring",
+      "risk-identification",
+      "data-analysis",
+    ],
   },
   {
-    id: 'justine',
-    name: 'Mrs. Justin-e',
+    id: "justine",
+    name: "Mrs. Justin-e",
     description:
-      'Especialista em análise automática de intimações com foco em identificação de prazos, providências e geração de tarefas',
-    type: 'intimation-analyzer',
-    status: 'idle',
+      "Especialista em análise automática de intimações com foco em identificação de prazos, providências e geração de tarefas",
+    type: "intimation-analyzer",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['intimation-analysis', 'deadline-identification', 'task-generation', 'priority-assessment']
+    capabilities: [
+      "intimation-analysis",
+      "deadline-identification",
+      "task-generation",
+      "priority-assessment",
+    ],
   },
   {
-    id: 'analise-documental',
-    name: 'Analisador de Documentos',
+    id: "analise-documental",
+    name: "Analisador de Documentos",
     description:
-      'Analisa automaticamente expedientes, intimações e documentos do PJe 24/7, extraindo informações estruturadas',
-    type: 'analyzer',
-    status: 'idle',
+      "Analisa automaticamente expedientes, intimações e documentos do PJe 24/7, extraindo informações estruturadas",
+    type: "analyzer",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['document-analysis', 'text-extraction', 'entity-recognition', 'classification']
+    capabilities: ["document-analysis", "text-extraction", "entity-recognition", "classification"],
   },
   {
-    id: 'monitor-djen',
-    name: 'Monitor DJEN',
+    id: "monitor-djen",
+    name: "Monitor DJEN",
     description:
-      'Monitora automaticamente o Diário de Justiça Eletrônico Nacional (DJEN) e DataJud para novas publicações relevantes',
-    type: 'monitor',
-    status: 'idle',
+      "Monitora automaticamente o Diário de Justiça Eletrônico Nacional (DJEN) e DataJud para novas publicações relevantes",
+    type: "monitor",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['djen-monitoring', 'publication-detection', 'notification', 'datajud-integration']
+    capabilities: [
+      "djen-monitoring",
+      "publication-detection",
+      "notification",
+      "datajud-integration",
+    ],
   },
   {
-    id: 'gestao-prazos',
-    name: 'Gestão de Prazos',
+    id: "gestao-prazos",
+    name: "Gestão de Prazos",
     description:
-      'Calcula e acompanha prazos processuais automaticamente, gerando alertas e priorizando ações',
-    type: 'calculator',
-    status: 'idle',
+      "Calcula e acompanha prazos processuais automaticamente, gerando alertas e priorizando ações",
+    type: "calculator",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['deadline-calculation', 'business-days', 'holiday-detection', 'alert-generation']
+    capabilities: [
+      "deadline-calculation",
+      "business-days",
+      "holiday-detection",
+      "alert-generation",
+    ],
   },
   {
-    id: 'redacao-peticoes',
-    name: 'Redator de Petições',
+    id: "redacao-peticoes",
+    name: "Redator de Petições",
     description:
-      'Auxilia na criação de petições e documentos jurídicos profissionais com base nos autos e precedentes',
-    type: 'writer',
-    status: 'idle',
+      "Auxilia na criação de petições e documentos jurídicos profissionais com base nos autos e precedentes",
+    type: "writer",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['document-drafting', 'legal-writing', 'template-generation', 'precedent-integration']
+    capabilities: [
+      "document-drafting",
+      "legal-writing",
+      "template-generation",
+      "precedent-integration",
+    ],
   },
   {
-    id: 'organizacao-arquivos',
-    name: 'Organizador de Arquivos',
+    id: "organizacao-arquivos",
+    name: "Organizador de Arquivos",
     description:
-      'Organiza e categoriza automaticamente documentos do escritório por processo, tipo e relevância',
-    type: 'organizer',
-    status: 'idle',
+      "Organiza e categoriza automaticamente documentos do escritório por processo, tipo e relevância",
+    type: "organizer",
+    status: "idle",
     enabled: false,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: false,
-    capabilities: ['file-organization', 'categorization', 'indexing', 'duplicate-detection']
+    capabilities: ["file-organization", "categorization", "indexing", "duplicate-detection"],
   },
   {
-    id: 'pesquisa-juris',
-    name: 'Pesquisador de Jurisprudência',
+    id: "pesquisa-juris",
+    name: "Pesquisador de Jurisprudência",
     description:
-      'Busca e analisa precedentes e jurisprudências relevantes automaticamente em tribunais superiores',
-    type: 'researcher',
-    status: 'idle',
+      "Busca e analisa precedentes e jurisprudências relevantes automaticamente em tribunais superiores",
+    type: "researcher",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['jurisprudence-search', 'precedent-analysis', 'case-law-research', 'trend-analysis']
+    capabilities: [
+      "jurisprudence-search",
+      "precedent-analysis",
+      "case-law-research",
+      "trend-analysis",
+    ],
   },
   {
-    id: 'analise-risco',
-    name: 'Análise de Risco',
+    id: "analise-risco",
+    name: "Análise de Risco",
     description:
-      'Avalia riscos processuais, financeiros e estratégicos de cada caso com base em dados e precedentes',
-    type: 'risk-analyzer',
-    status: 'idle',
+      "Avalia riscos processuais, financeiros e estratégicos de cada caso com base em dados e precedentes",
+    type: "risk-analyzer",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['risk-assessment', 'probability-analysis', 'financial-impact', 'mitigation-strategies']
+    capabilities: [
+      "risk-assessment",
+      "probability-analysis",
+      "financial-impact",
+      "mitigation-strategies",
+    ],
   },
   {
-    id: 'revisao-contratual',
-    name: 'Revisor Contratual',
+    id: "revisao-contratual",
+    name: "Revisor Contratual",
     description:
-      'Analisa contratos identificando cláusulas problemáticas, riscos e pontos de não conformidade',
-    type: 'contract-reviewer',
-    status: 'idle',
+      "Analisa contratos identificando cláusulas problemáticas, riscos e pontos de não conformidade",
+    type: "contract-reviewer",
+    status: "idle",
     enabled: false,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: false,
-    capabilities: ['contract-analysis', 'clause-review', 'compliance-check', 'risk-identification']
+    capabilities: ["contract-analysis", "clause-review", "compliance-check", "risk-identification"],
   },
   {
-    id: 'comunicacao-clientes',
-    name: 'Comunicação com Clientes',
+    id: "comunicacao-clientes",
+    name: "Comunicação com Clientes",
     description:
-      'Gera comunicações personalizadas e relatórios para clientes em linguagem acessível e respeitosa',
-    type: 'communicator',
-    status: 'idle',
+      "Gera comunicações personalizadas e relatórios para clientes em linguagem acessível e respeitosa",
+    type: "communicator",
+    status: "idle",
     enabled: false,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: false,
-    capabilities: ['client-communication', 'report-generation', 'language-simplification', 'personalization']
+    capabilities: [
+      "client-communication",
+      "report-generation",
+      "language-simplification",
+      "personalization",
+    ],
   },
   {
-    id: 'financeiro',
-    name: 'Análise Financeira',
+    id: "financeiro",
+    name: "Análise Financeira",
     description:
-      'Monitora faturamento, recebimentos e análises de rentabilidade do escritório com base em dados reais',
-    type: 'financial-analyzer',
-    status: 'idle',
+      "Monitora faturamento, recebimentos e análises de rentabilidade do escritório com base em dados reais",
+    type: "financial-analyzer",
+    status: "idle",
     enabled: false,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: false,
-    capabilities: ['financial-monitoring', 'profitability-analysis', 'receivables-tracking', 'metrics-calculation']
+    capabilities: [
+      "financial-monitoring",
+      "profitability-analysis",
+      "receivables-tracking",
+      "metrics-calculation",
+    ],
   },
   {
-    id: 'estrategia-processual',
-    name: 'Estratégia Processual',
+    id: "estrategia-processual",
+    name: "Estratégia Processual",
     description:
-      'Sugere estratégias processuais baseadas em análise de dados, precedentes e probabilidade de sucesso',
-    type: 'strategy-advisor',
-    status: 'idle',
+      "Sugere estratégias processuais baseadas em análise de dados, precedentes e probabilidade de sucesso",
+    type: "strategy-advisor",
+    status: "idle",
     enabled: true,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: true,
-    capabilities: ['strategic-planning', 'option-analysis', 'cost-benefit', 'success-probability']
+    capabilities: ["strategic-planning", "option-analysis", "cost-benefit", "success-probability"],
   },
   {
-    id: 'traducao-juridica',
-    name: 'Tradutor Jurídico',
+    id: "traducao-juridica",
+    name: "Tradutor Jurídico",
     description:
-      'Traduz termos técnicos jurídicos para linguagem simples e vice-versa, mantendo precisão',
-    type: 'translator',
-    status: 'idle',
+      "Traduz termos técnicos jurídicos para linguagem simples e vice-versa, mantendo precisão",
+    type: "translator",
+    status: "idle",
     enabled: false,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: false,
-    capabilities: ['legal-translation', 'term-explanation', 'glossary-creation', 'language-adaptation']
+    capabilities: [
+      "legal-translation",
+      "term-explanation",
+      "glossary-creation",
+      "language-adaptation",
+    ],
   },
   {
-    id: 'compliance',
-    name: 'Compliance',
+    id: "compliance",
+    name: "Compliance",
     description:
-      'Verifica conformidade com LGPD, Código de Ética da OAB, normas trabalhistas e regulatórias',
-    type: 'compliance-checker',
-    status: 'idle',
+      "Verifica conformidade com LGPD, Código de Ética da OAB, normas trabalhistas e regulatórias",
+    type: "compliance-checker",
+    status: "idle",
     enabled: false,
-    lastActivity: 'Aguardando tarefas',
+    lastActivity: "Aguardando tarefas",
     continuousMode: false,
-    capabilities: ['compliance-check', 'lgpd-verification', 'ethics-review', 'regulatory-audit']
-  }
-]
+    capabilities: ["compliance-check", "lgpd-verification", "ethics-review", "regulatory-audit"],
+  },
+];
 
 /**
  * Inicializa agents com a configuração padrão
@@ -594,32 +653,32 @@ export const DEFAULT_AGENTS: Agent[] = [
  */
 export function initializeAgents(existingAgents?: Agent[]): Agent[] {
   const essentialAgents = new Set<AgentId>([
-    'harvey',
-    'justine',
-    'analise-documental',
-    'monitor-djen',
-    'gestao-prazos',
-    'redacao-peticoes',
-    'pesquisa-juris',
-    'analise-risco',
-    'estrategia-processual'
-  ])
+    "harvey",
+    "justine",
+    "analise-documental",
+    "monitor-djen",
+    "gestao-prazos",
+    "redacao-peticoes",
+    "pesquisa-juris",
+    "analise-risco",
+    "estrategia-processual",
+  ]);
 
   // Sem agentes existentes → usa defaults
   if (!existingAgents || existingAgents.length === 0) {
-    return DEFAULT_AGENTS.map(agent => ({
+    return DEFAULT_AGENTS.map((agent) => ({
       ...agent,
-      status: 'idle' as const,
+      status: "idle" as const,
       enabled: essentialAgents.has(agent.id as AgentId),
       lastActivity: essentialAgents.has(agent.id as AgentId)
-        ? 'Pronto para análise'
-        : 'Aguardando ativação'
-    }))
+        ? "Pronto para análise"
+        : "Aguardando ativação",
+    }));
   }
 
   // Merge: preserva settings do usuário, atualiza descrição / capabilities
-  return DEFAULT_AGENTS.map(defaultAgent => {
-    const existing = existingAgents.find(a => a.id === defaultAgent.id)
+  return DEFAULT_AGENTS.map((defaultAgent) => {
+    const existing = existingAgents.find((a) => a.id === defaultAgent.id);
 
     if (existing) {
       return {
@@ -627,19 +686,19 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
         ...existing,
         // Sempre atualiza descrição/capabilities do "catálogo"
         capabilities: defaultAgent.capabilities,
-        description: defaultAgent.description
-      }
+        description: defaultAgent.description,
+      };
     }
 
     return {
       ...defaultAgent,
-      status: 'idle' as const,
+      status: "idle" as const,
       enabled: essentialAgents.has(defaultAgent.id as AgentId),
       lastActivity: essentialAgents.has(defaultAgent.id as AgentId)
-        ? 'Pronto para análise'
-        : 'Aguardando ativação'
-    }
-  })
+        ? "Pronto para análise"
+        : "Aguardando ativação",
+    };
+  });
 }
 
 // ============================================================================
@@ -652,60 +711,60 @@ export function initializeAgents(existingAgents?: Agent[]): Agent[] {
  */
 export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<AgentTaskResult> {
   // Simula latência mínima
-  await new Promise(resolve => setTimeout(resolve, 10))
+  await new Promise((resolve) => setTimeout(resolve, 10));
 
-  const taskType = String(task.type).toLowerCase()
+  const taskType = String(task.type).toLowerCase();
 
   // Monitor (DJEN, DataJud, etc)
-  if (taskType.includes('monitor') || agent.type === 'monitor') {
+  if (taskType.includes("monitor") || agent.type === "monitor") {
     return {
       success: true,
-      message: 'Monitoramento concluído com sucesso',
+      message: "Monitoramento concluído com sucesso",
       data: {
         publicationsFound: Math.floor(Math.random() * 10),
         lastChecked: new Date().toISOString(),
-        source: 'DJEN/DataJud'
+        source: "DJEN/DataJud",
       },
-      suggestions: ['Verificar publicações encontradas', 'Atualizar filtros de busca']
-    }
+      suggestions: ["Verificar publicações encontradas", "Atualizar filtros de busca"],
+    };
   }
 
   // Análise (documentos, contratos, etc)
   if (
-    taskType.includes('analy') ||
-    taskType.includes('analise') ||
-    taskType.includes('análise') ||
-    agent.type === 'analyzer'
+    taskType.includes("analy") ||
+    taskType.includes("analise") ||
+    taskType.includes("análise") ||
+    agent.type === "analyzer"
   ) {
     return {
       success: true,
-      message: 'Análise concluída com sucesso',
+      message: "Análise concluída com sucesso",
       data: {
         confidence: 0.85 + Math.random() * 0.1,
-        entities: ['partes', 'valores', 'datas'],
-        summary: 'Documento analisado com alta confiança'
+        entities: ["partes", "valores", "datas"],
+        summary: "Documento analisado com alta confiança",
       },
-      suggestions: ['Revisar entidades extraídas', 'Validar classificação']
-    }
+      suggestions: ["Revisar entidades extraídas", "Validar classificação"],
+    };
   }
 
   // Prazos
-  if (taskType.includes('deadline') || taskType.includes('prazo') || agent.type === 'calculator') {
-    const businessDays = (task.data.businessDays as number) || 15
-    const deadline = new Date()
-    deadline.setDate(deadline.getDate() + Math.ceil(businessDays * 1.4))
+  if (taskType.includes("deadline") || taskType.includes("prazo") || agent.type === "calculator") {
+    const businessDays = (task.data.businessDays as number) || 15;
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + Math.ceil(businessDays * 1.4));
 
     return {
       success: true,
-      message: 'Cálculo de prazo concluído',
+      message: "Cálculo de prazo concluído",
       data: {
         deadline: deadline.toISOString(),
         businessDays,
         holidays: [],
-        urgency: businessDays <= 5 ? 'high' : 'normal'
+        urgency: businessDays <= 5 ? "high" : "normal",
       },
-      nextSteps: ['Adicionar ao calendário', 'Configurar alertas']
-    }
+      nextSteps: ["Adicionar ao calendário", "Configurar alertas"],
+    };
   }
 
   // Default genérico
@@ -714,9 +773,9 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
     message: `Tarefa ${task.type} processada com sucesso`,
     data: {
       processedAt: new Date().toISOString(),
-      agentId: agent.id
-    }
-  }
+      agentId: agent.id,
+    },
+  };
 }
 
 // ============================================================================
@@ -731,71 +790,76 @@ export function createTaskGenerator(
   config: AgentTaskGeneratorConfig,
   onTaskGenerated: (task: AgentTask) => void
 ): AgentTaskGenerator {
-  let intervalId: ReturnType<typeof setInterval> | null = null
-  let currentConfig: AgentTaskGeneratorConfig = { ...config }
-  let taskCallback = onTaskGenerated
-  let tasksGeneratedInInterval = 0
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+  let currentConfig: AgentTaskGeneratorConfig = { ...config };
+  let taskCallback = onTaskGenerated;
+  let tasksGeneratedInInterval = 0;
 
   const generateTask = (): AgentTask => {
-    const agentsPool = currentConfig.agentIds
+    const agentsPool = currentConfig.agentIds;
     const agentId =
-      agentsPool[Math.floor(Math.random() * Math.max(agentsPool.length, 1))] ?? 'harvey'
+      agentsPool[Math.floor(Math.random() * Math.max(agentsPool.length, 1))] ?? "harvey";
 
-    const taskTypes: TarefaSistemaTipo[] = ['MONITOR_DJEN', 'ANALYZE_DOCUMENT', 'CALCULATE_DEADLINE', 'ANALYZE_INTIMATION']
-    const priorities: TaskPriority[] = ['low', 'medium', 'high']
+    const taskTypes: TarefaSistemaTipo[] = [
+      "MONITOR_DJEN",
+      "ANALYZE_DOCUMENT",
+      "CALCULATE_DEADLINE",
+      "ANALYZE_INTIMATION",
+    ];
+    const priorities: TaskPriority[] = ["low", "medium", "high"];
 
     return {
       id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       agentId,
       type: taskTypes[Math.floor(Math.random() * taskTypes.length)],
       priority: priorities[Math.floor(Math.random() * priorities.length)],
-      status: 'queued',
+      status: "queued",
       createdAt: new Date().toISOString(),
       data: {
         autoGenerated: true,
-        generatorConfig: currentConfig
-      }
-    }
-  }
+        generatorConfig: currentConfig,
+      },
+    };
+  };
 
   const tick = () => {
-    if (!currentConfig.enabled) return
+    if (!currentConfig.enabled) return;
 
     if (tasksGeneratedInInterval < currentConfig.maxTasksPerInterval) {
-      const task = generateTask()
-      taskCallback(task)
-      tasksGeneratedInInterval++
+      const task = generateTask();
+      taskCallback(task);
+      tasksGeneratedInInterval++;
     }
-  }
+  };
 
   return {
     start() {
-      if (intervalId) return
-      tasksGeneratedInInterval = 0
+      if (intervalId) return;
+      tasksGeneratedInInterval = 0;
 
       // Primeira tarefa entra na hora
-      tick()
+      tick();
 
-      const intervalMs = currentConfig.intervalMinutes * 60 * 1000
+      const intervalMs = currentConfig.intervalMinutes * 60 * 1000;
       intervalId = setInterval(() => {
-        tasksGeneratedInInterval = 0
-        tick()
-      }, intervalMs)
+        tasksGeneratedInInterval = 0;
+        tick();
+      }, intervalMs);
     },
 
     stop() {
       if (intervalId) {
-        clearInterval(intervalId)
-        intervalId = null
+        clearInterval(intervalId);
+        intervalId = null;
       }
     },
 
     updateConfig(newConfig: Partial<AgentTaskGeneratorConfig>) {
-      currentConfig = { ...currentConfig, ...newConfig }
+      currentConfig = { ...currentConfig, ...newConfig };
     },
 
     setOnTaskGenerated(callback: (task: AgentTask) => void) {
-      taskCallback = callback
-    }
-  }
+      taskCallback = callback;
+    },
+  };
 }

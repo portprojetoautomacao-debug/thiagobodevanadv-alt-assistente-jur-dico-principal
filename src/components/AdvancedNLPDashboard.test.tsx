@@ -51,9 +51,7 @@ describe("AdvancedNLPDashboard", () => {
       const user = userEvent.setup();
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
 
       // Type only whitespace
       await user.type(textarea, "   ");
@@ -70,9 +68,7 @@ describe("AdvancedNLPDashboard", () => {
       const user = userEvent.setup();
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
 
       await user.type(textarea, "Texto de teste válido para análise");
 
@@ -102,9 +98,7 @@ describe("AdvancedNLPDashboard", () => {
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "João Silva é o autor do processo");
 
       const extractEntitiesButton = screen.getByRole("button", {
@@ -120,21 +114,15 @@ describe("AdvancedNLPDashboard", () => {
 
     it("should call toast.error when processing fails", async () => {
       const user = userEvent.setup();
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {
-          /* suppress error output */
-        });
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        /* suppress error output */
+      });
 
-      (nlpPipeline.extractEntities as Mock).mockRejectedValueOnce(
-        new Error("API Error")
-      );
+      (nlpPipeline.extractEntities as Mock).mockRejectedValueOnce(new Error("API Error"));
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Texto para teste de erro");
 
       const extractEntitiesButton = screen.getByRole("button", {
@@ -162,9 +150,7 @@ describe("AdvancedNLPDashboard", () => {
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Texto para teste de processamento");
 
       const extractEntitiesButton = screen.getByRole("button", {
@@ -183,9 +169,7 @@ describe("AdvancedNLPDashboard", () => {
 
       // Check that processing indicator is gone
       await waitFor(() => {
-        expect(
-          screen.queryByText(/processando com ia/i)
-        ).not.toBeInTheDocument();
+        expect(screen.queryByText(/processando com ia/i)).not.toBeInTheDocument();
       });
     });
   });
@@ -207,9 +191,7 @@ describe("AdvancedNLPDashboard", () => {
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Empresa ABC é a ré no processo");
 
       const extractEntitiesButton = screen.getByRole("button", {
@@ -219,9 +201,7 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(extractEntitiesButton);
 
       await waitFor(() => {
-        expect(nlpPipeline.extractEntities).toHaveBeenCalledWith(
-          "Empresa ABC é a ré no processo"
-        );
+        expect(nlpPipeline.extractEntities).toHaveBeenCalledWith("Empresa ABC é a ré no processo");
       });
     });
 
@@ -241,9 +221,7 @@ describe("AdvancedNLPDashboard", () => {
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Maria Santos assinou o contrato");
 
       const extractEntitiesButton = screen.getByRole("button", {
@@ -269,15 +247,11 @@ describe("AdvancedNLPDashboard", () => {
         aspects: [],
       };
 
-      (nlpPipeline.analyzeSentiment as Mock).mockResolvedValueOnce(
-        mockSentiment
-      );
+      (nlpPipeline.analyzeSentiment as Mock).mockResolvedValueOnce(mockSentiment);
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "A decisão foi favorável ao autor");
 
       const analyzeSentimentButton = screen.getByRole("button", {
@@ -290,9 +264,7 @@ describe("AdvancedNLPDashboard", () => {
         expect(nlpPipeline.analyzeSentiment).toHaveBeenCalledWith(
           "A decisão foi favorável ao autor"
         );
-        expect(toast.success).toHaveBeenCalledWith(
-          "Análise de sentimento concluída"
-        );
+        expect(toast.success).toHaveBeenCalledWith("Análise de sentimento concluída");
       });
     });
   });
@@ -307,15 +279,11 @@ describe("AdvancedNLPDashboard", () => {
         tags: ["trabalhista", "CLT"],
       };
 
-      (nlpPipeline.classifyDocument as Mock).mockResolvedValueOnce(
-        mockClassification
-      );
+      (nlpPipeline.classifyDocument as Mock).mockResolvedValueOnce(mockClassification);
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Petição inicial trabalhista");
 
       const classifyButton = screen.getByRole("button", {
@@ -325,9 +293,7 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(classifyButton);
 
       await waitFor(() => {
-        expect(nlpPipeline.classifyDocument).toHaveBeenCalledWith(
-          "Petição inicial trabalhista"
-        );
+        expect(nlpPipeline.classifyDocument).toHaveBeenCalledWith("Petição inicial trabalhista");
         expect(toast.success).toHaveBeenCalledWith("Documento classificado");
       });
     });
@@ -346,15 +312,11 @@ describe("AdvancedNLPDashboard", () => {
         parties: ["Autor", "Réu"],
       };
 
-      (nlpPipeline.extractInformation as Mock).mockResolvedValueOnce(
-        mockExtraction
-      );
+      (nlpPipeline.extractInformation as Mock).mockResolvedValueOnce(mockExtraction);
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Documento com informações importantes");
 
       const extractInfoButton = screen.getByRole("button", {
@@ -407,21 +369,13 @@ describe("AdvancedNLPDashboard", () => {
       };
 
       (nlpPipeline.extractEntities as Mock).mockResolvedValueOnce(mockEntities);
-      (nlpPipeline.analyzeSentiment as Mock).mockResolvedValueOnce(
-        mockSentiment
-      );
-      (nlpPipeline.classifyDocument as Mock).mockResolvedValueOnce(
-        mockClassification
-      );
-      (nlpPipeline.extractInformation as Mock).mockResolvedValueOnce(
-        mockExtraction
-      );
+      (nlpPipeline.analyzeSentiment as Mock).mockResolvedValueOnce(mockSentiment);
+      (nlpPipeline.classifyDocument as Mock).mockResolvedValueOnce(mockClassification);
+      (nlpPipeline.extractInformation as Mock).mockResolvedValueOnce(mockExtraction);
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Texto para análise completa");
 
       const processAllButton = screen.getByRole("button", {
@@ -435,23 +389,17 @@ describe("AdvancedNLPDashboard", () => {
         expect(nlpPipeline.analyzeSentiment).toHaveBeenCalled();
         expect(nlpPipeline.classifyDocument).toHaveBeenCalled();
         expect(nlpPipeline.extractInformation).toHaveBeenCalled();
-        expect(toast.success).toHaveBeenCalledWith(
-          "Análise completa concluída"
-        );
+        expect(toast.success).toHaveBeenCalledWith("Análise completa concluída");
       });
     });
 
     it("should show toast.error when any NLP operation fails during handleProcessAll", async () => {
       const user = userEvent.setup();
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {
-          /* suppress error output */
-        });
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        /* suppress error output */
+      });
 
-      (nlpPipeline.extractEntities as Mock).mockRejectedValueOnce(
-        new Error("Network Error")
-      );
+      (nlpPipeline.extractEntities as Mock).mockRejectedValueOnce(new Error("Network Error"));
       (nlpPipeline.analyzeSentiment as Mock).mockResolvedValueOnce({
         sentiment: "neutral",
         score: 0,
@@ -475,9 +423,7 @@ describe("AdvancedNLPDashboard", () => {
 
       render(<AdvancedNLPDashboard />);
 
-      const textarea = screen.getByPlaceholderText(
-        /cole aqui o texto do documento jurídico/i
-      );
+      const textarea = screen.getByPlaceholderText(/cole aqui o texto do documento jurídico/i);
       await user.type(textarea, "Texto para teste de falha");
 
       const processAllButton = screen.getByRole("button", {
@@ -487,9 +433,7 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(processAllButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          "Erro ao processar análise completa"
-        );
+        expect(toast.error).toHaveBeenCalledWith("Erro ao processar análise completa");
       });
 
       consoleErrorSpy.mockRestore();
@@ -500,59 +444,35 @@ describe("AdvancedNLPDashboard", () => {
     it("should render the dashboard header", () => {
       render(<AdvancedNLPDashboard />);
 
+      expect(screen.getByText("Processamento NLP Avançado")).toBeInTheDocument();
       expect(
-        screen.getByText("Processamento NLP Avançado")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          /pipeline de análise de linguagem natural para documentos jurídicos/i
-        )
+        screen.getByText(/pipeline de análise de linguagem natural para documentos jurídicos/i)
       ).toBeInTheDocument();
     });
 
     it("should render all action buttons", () => {
       render(<AdvancedNLPDashboard />);
 
-      expect(
-        screen.getByRole("button", { name: /análise completa/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /extrair entidades/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /analisar sentimento/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /classificar/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /extrair info/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /análise completa/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /extrair entidades/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /analisar sentimento/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /classificar/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /extrair info/i })).toBeInTheDocument();
     });
 
     it("should render all tabs", () => {
       render(<AdvancedNLPDashboard />);
 
-      expect(
-        screen.getByRole("tab", { name: /entidades/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("tab", { name: /sentimento/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("tab", { name: /classificação/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("tab", { name: /extração/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /entidades/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /sentimento/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /classificação/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /extração/i })).toBeInTheDocument();
     });
 
     it("should show empty state messages when no results", () => {
       render(<AdvancedNLPDashboard />);
 
-      expect(
-        screen.getByText("Nenhuma entidade extraída ainda")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Nenhuma entidade extraída ainda")).toBeInTheDocument();
     });
   });
 });

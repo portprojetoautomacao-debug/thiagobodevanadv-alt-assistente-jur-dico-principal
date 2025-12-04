@@ -45,12 +45,7 @@ const NAVIGATION_ITEMS = [
   { id: "knowledge", label: "Base Conhecimento", icon: Books },
 ];
 
-export default function Sidebar({
-  currentView,
-  onViewChange,
-  user,
-  onLogout,
-}: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, user, onLogout }: SidebarProps) {
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
@@ -58,9 +53,7 @@ export default function Sidebar({
           <Robot className="w-6 h-6 text-primary" weight="fill" />
           <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Agentes IA Autônomos 24/7
-        </p>
+        <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>
         <Badge className="mt-2 bg-green-500/10 text-green-700 border-green-500/20">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse" />
           {"Gemini AI Ativo"}
@@ -98,10 +91,7 @@ export default function Sidebar({
                   onViewChange(view);
                 }}
               >
-                <Icon
-                  className="w-5 h-5 mr-3"
-                  weight={isActive ? "fill" : "regular"}
-                />
+                <Icon className="w-5 h-5 mr-3" weight={isActive ? "fill" : "regular"} />
                 {item.label}
                 {isFeatured && (
                   <Badge
@@ -127,12 +117,8 @@ export default function Sidebar({
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {user.name}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {user.role}
-                </p>
+                <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
               </div>
             </div>
             <Separator />

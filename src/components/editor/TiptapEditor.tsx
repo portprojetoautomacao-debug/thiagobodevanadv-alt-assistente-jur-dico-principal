@@ -1,11 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 // ✅ FIX: Usando Lucide React ao invés de Phosphor Icons
@@ -101,8 +97,7 @@ const AI_QUICK_COMMANDS = [
   {
     label: "Expandir",
     icon: Expand,
-    prompt:
-      "Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:",
+    prompt: "Expanda e desenvolva o seguinte texto de forma mais detalhada e formal:",
   },
   {
     label: "Resumir",
@@ -134,10 +129,7 @@ function countWords(text: string): number {
         .filter((w) => w.length > 0).length;
 }
 
-function getGenerateButtonText(
-  isStreaming: boolean,
-  hasStreamSupport: boolean
-): string {
+function getGenerateButtonText(isStreaming: boolean, hasStreamSupport: boolean): string {
   if (isStreaming) return "Gerando...";
   return hasStreamSupport ? "Gerar com Streaming" : "Gerar Texto";
 }
@@ -179,9 +171,7 @@ function getSelectedOrAllText(
 ): string {
   if (!editor) return "";
   const hasSelection = from !== to;
-  return hasSelection
-    ? editor.state.doc.textBetween(from, to, " ")
-    : editor.getText();
+  return hasSelection ? editor.state.doc.textBetween(from, to, " ") : editor.getText();
 }
 
 /**
@@ -282,37 +272,25 @@ function HeadingsPopover({ editor, disabled }: ToolbarButtonProps) {
       <PopoverContent className="w-auto p-2">
         <div className="flex flex-col gap-1">
           <Button
-            variant={
-              editor.isActive("heading", { level: 1 }) ? "secondary" : "ghost"
-            }
+            variant={editor.isActive("heading", { level: 1 }) ? "secondary" : "ghost"}
             size="sm"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className="justify-start"
           >
             <Heading1 className="h-4 w-4 mr-2" /> Título 1
           </Button>
           <Button
-            variant={
-              editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"
-            }
+            variant={editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"}
             size="sm"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className="justify-start"
           >
             <Heading2 className="h-4 w-4 mr-2" /> Título 2
           </Button>
           <Button
-            variant={
-              editor.isActive("heading", { level: 3 }) ? "secondary" : "ghost"
-            }
+            variant={editor.isActive("heading", { level: 3 }) ? "secondary" : "ghost"}
             size="sm"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className="justify-start"
           >
             <Heading3 className="h-4 w-4 mr-2" /> Título 3
@@ -371,9 +349,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         <AlignLeft className="h-4 w-4" />
       </Button>
       <Button
-        variant={
-          editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"
-        }
+        variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().setTextAlign("center").run()}
         disabled={disabled}
@@ -382,9 +358,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         <AlignCenter className="h-4 w-4" />
       </Button>
       <Button
-        variant={
-          editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"
-        }
+        variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().setTextAlign("right").run()}
         disabled={disabled}
@@ -393,9 +367,7 @@ function AlignmentButtons({ editor, disabled }: ToolbarButtonProps) {
         <AlignRight className="h-4 w-4" />
       </Button>
       <Button
-        variant={
-          editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"
-        }
+        variant={editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"}
         size="icon"
         onClick={() => editor.chain().focus().setTextAlign("justify").run()}
         disabled={disabled}
@@ -447,12 +419,7 @@ function ColorPickerPopover({ editor, disabled }: ToolbarButtonProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Cor do texto"
-          disabled={disabled}
-        >
+        <Button variant="ghost" size="icon" title="Cor do texto" disabled={disabled}>
           <Palette className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -530,9 +497,7 @@ function AIToolbarSection({
               style={{ animationDelay: "300ms" }}
             />
           </div>
-          <span className="text-xs text-purple-400 font-medium">
-            Streaming...
-          </span>
+          <span className="text-xs text-purple-400 font-medium">Streaming...</span>
         </div>
       )}
 
@@ -667,7 +632,9 @@ export function TiptapEditor({
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
+      // ✅ Underline não está no StarterKit - adicionamos apenas 1x
       Underline,
+      // ✅ Link configurado apenas 1x (removido .extend para evitar duplicação)
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -790,14 +757,7 @@ export function TiptapEditor({
     } finally {
       setIsAILoading(false);
     }
-  }, [
-    aiPrompt,
-    editor,
-    onAIGenerate,
-    onAIStream,
-    runAIStreaming,
-    replaceVariables,
-  ]);
+  }, [aiPrompt, editor, onAIGenerate, onAIStream, runAIStreaming, replaceVariables]);
 
   const handleQuickAI = useCallback(
     async (command: (typeof aiQuickCommands)[number]) => {
@@ -958,12 +918,7 @@ export function TiptapEditor({
   const editingDisabled = readOnly || isStreaming || isAILoading;
 
   return (
-    <div
-      className={cn(
-        "border rounded-lg overflow-hidden bg-background",
-        className
-      )}
-    >
+    <div className={cn("border rounded-lg overflow-hidden bg-background", className)}>
       {/* Toolbar - Using extracted components to reduce CC */}
       <div className="border-b bg-muted p-2 flex flex-wrap items-center gap-1">
         <UndoRedoButtons editor={editor} disabled={editingDisabled} />
@@ -1005,9 +960,7 @@ export function TiptapEditor({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() =>
-            editor.chain().focus().clearNodes().unsetAllMarks().run()
-          }
+          onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
           disabled={editingDisabled}
           title="Limpar formatação"
         >

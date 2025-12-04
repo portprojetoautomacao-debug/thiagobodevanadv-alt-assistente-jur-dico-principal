@@ -99,9 +99,7 @@ export class LegalMemory {
         return;
       }
 
-      const items = (await redis.get("legal-memory")) as
-        | LegalContextItem[]
-        | null;
+      const items = (await redis.get("legal-memory")) as LegalContextItem[] | null;
       if (items && Array.isArray(items)) {
         this.memoryCache.clear();
         for (const item of items) {
@@ -145,9 +143,7 @@ export class LegalMemory {
     if (redis) {
       try {
         // Buscar memória existente
-        const existingMemory = (await redis.get("legal-memory")) as
-          | LegalContextItem[]
-          | null;
+        const existingMemory = (await redis.get("legal-memory")) as LegalContextItem[] | null;
         const memory = existingMemory || [];
 
         // Adicionar novo item
@@ -158,9 +154,7 @@ export class LegalMemory {
       }
     }
 
-    console.log(
-      `[LegalMemory] Contexto adicionado: ${validatedItem.id} (${type})`
-    );
+    console.log(`[LegalMemory] Contexto adicionado: ${validatedItem.id} (${type})`);
     return validatedItem;
   }
 
@@ -168,9 +162,7 @@ export class LegalMemory {
    * Busca contexto relevante baseado em uma query
    * (Simulação de busca semântica por enquanto)
    */
-  public async search(
-    options: LegalMemorySearchOptions
-  ): Promise<LegalContextItem[]> {
+  public async search(options: LegalMemorySearchOptions): Promise<LegalContextItem[]> {
     // Se cache estiver vazio, tenta carregar do KV
     if (this.memoryCache.size === 0) {
       await this.loadFromKV();

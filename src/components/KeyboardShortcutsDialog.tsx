@@ -4,14 +4,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Keyboard } from '@phosphor-icons/react'
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Keyboard } from "@phosphor-icons/react";
 
 interface ShortcutItemProps {
-  keys: string[]
-  description: string
+  keys: string[];
+  description: string;
 }
 
 function ShortcutItem({ keys, description }: ShortcutItemProps) {
@@ -26,56 +26,56 @@ function ShortcutItem({ keys, description }: ShortcutItemProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 interface KeyboardShortcutsDialogProps {
-  readonly open: boolean
-  readonly onOpenChange: (open: boolean) => void
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
 }
 
 type ShortcutConfig = {
-  keys: string[]
-  description: string
-}
+  keys: string[];
+  description: string;
+};
 
 type ShortcutGroup = {
-  title: string
-  items: ShortcutConfig[]
-}
+  title: string;
+  items: ShortcutConfig[];
+};
 
 // Grupos de atalhos configuráveis (mais fácil de manter/evoluir)
 const NAVIGATION_SHORTCUTS: ShortcutConfig[] = [
-  { keys: ['{CTRL}', 'D'], description: 'Ir para Dashboard' },
-  { keys: ['{CTRL}', 'P'], description: 'Ir para Processos' },
-  { keys: ['{CTRL}', 'K'], description: 'Buscar processos' },
-]
+  { keys: ["{CTRL}", "D"], description: "Ir para Dashboard" },
+  { keys: ["{CTRL}", "P"], description: "Ir para Processos" },
+  { keys: ["{CTRL}", "K"], description: "Buscar processos" },
+];
 
 const QUICK_ACTION_SHORTCUTS: ShortcutConfig[] = [
-  { keys: ['{CTRL}', 'N'], description: 'Novo processo (mostra dica)' },
-  { keys: ['{CTRL}', 'Shift', 'C'], description: 'Abrir Calculadora de Prazos' },
-]
+  { keys: ["{CTRL}", "N"], description: "Novo processo (mostra dica)" },
+  { keys: ["{CTRL}", "Shift", "C"], description: "Abrir Calculadora de Prazos" },
+];
 
 const GENERAL_SHORTCUTS: ShortcutConfig[] = [
-  { keys: ['Esc'], description: 'Fechar diálogos' },
-  { keys: ['Tab'], description: 'Navegar entre campos' },
-  { keys: ['Shift', 'Tab'], description: 'Navegar para trás' },
-]
+  { keys: ["Esc"], description: "Fechar diálogos" },
+  { keys: ["Tab"], description: "Navegar entre campos" },
+  { keys: ["Shift", "Tab"], description: "Navegar para trás" },
+];
 
 const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
-    title: 'Navegação',
+    title: "Navegação",
     items: NAVIGATION_SHORTCUTS,
   },
   {
-    title: 'Ações Rápidas',
+    title: "Ações Rápidas",
     items: QUICK_ACTION_SHORTCUTS,
   },
   {
-    title: 'Geral',
+    title: "Geral",
     items: GENERAL_SHORTCUTS,
   },
-]
+];
 
 export default function KeyboardShortcutsDialog({
   open,
@@ -83,15 +83,15 @@ export default function KeyboardShortcutsDialog({
 }: KeyboardShortcutsDialogProps) {
   // SSR-safe: navigator pode não existir no build / server
   const isMac =
-    typeof navigator !== 'undefined' &&
-    typeof navigator.platform === 'string' &&
-    navigator.platform.toUpperCase().includes('MAC')
+    typeof navigator !== "undefined" &&
+    typeof navigator.platform === "string" &&
+    navigator.platform.toUpperCase().includes("MAC");
 
-  const ctrlKeyLabel = isMac ? '⌘' : 'Ctrl'
+  const ctrlKeyLabel = isMac ? "⌘" : "Ctrl";
 
   // Substitui marcador {CTRL} pela tecla apropriada
   const resolveKeys = (keys: string[]) =>
-    keys.map((key) => (key === '{CTRL}' ? ctrlKeyLabel : key))
+    keys.map((key) => (key === "{CTRL}" ? ctrlKeyLabel : key));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,15 +127,15 @@ export default function KeyboardShortcutsDialog({
 
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-xs text-muted-foreground">
-              <strong>Dica:</strong> Você pode pressionar{' '}
+              <strong>Dica:</strong> Você pode pressionar{" "}
               <Badge variant="outline" className="font-mono mx-1">
                 ?
-              </Badge>{' '}
+              </Badge>{" "}
               a qualquer momento para ver esta lista de atalhos.
             </p>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

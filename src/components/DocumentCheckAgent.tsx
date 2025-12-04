@@ -1,70 +1,56 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { useKV } from '@/hooks/use-kv'
-import { geminiGenerateJSON } from '@/lib/gemini-client'
-import type { Process } from '@/types'
-import {
-  Bell,
-  CheckCircle,
-  Clock,
-  FileText,
-  Info,
-  Robot,
-  Warning
-} from '@phosphor-icons/react'
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { useKV } from "@/hooks/use-kv";
+import { geminiGenerateJSON } from "@/lib/gemini-client";
+import type { Process } from "@/types";
+import { Bell, CheckCircle, Clock, FileText, Info, Robot, Warning } from "@phosphor-icons/react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface MissingDocument {
-  id: string
-  processId: string
-  processNumber: string
-  documentType: string
-  reason: string
-  urgency: 'high' | 'medium' | 'low'
-  detectedAt: string
-  notified: boolean
-  resolved: boolean
+  id: string;
+  processId: string;
+  processNumber: string;
+  documentType: string;
+  reason: string;
+  urgency: "high" | "medium" | "low";
+  detectedAt: string;
+  notified: boolean;
+  resolved: boolean;
 }
 
 interface DocumentCheckAgentProps {
-  processes: Process[]
+  processes: Process[];
 }
 
 export default function DocumentCheckAgent({ processes }: DocumentCheckAgentProps) {
-  const [missingDocs, setMissingDocs] = useKV<MissingDocument[]>('missing-documents', [])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [lastCheck, setLastCheck] = useKV<string | null>('last-document-check', null)
-  const [autoCheckEnabled, setAutoCheckEnabled] = useKV<boolean>('auto-document-check', true)
+  const [missingDocs, setMissingDocs] = useKV<MissingDocument[]>("missing-documents", []);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [lastCheck, setLastCheck] = useKV<string | null>("last-document-check", null);
+  const [autoCheckEnabled, setAutoCheckEnabled] = useKV<boolean>("auto-document-check", true);
 
-  const normalizeUrgency = (value: string | undefined | null): MissingDocument['urgency'] => {
-    const v = (value || '').toLowerCase()
-    if (v === 'high' || v === 'alta') return 'high'
-    if (v === 'low' || v === 'baixa') return 'low'
-    return 'medium'
-  }
+  const normalizeUrgency = (value: string | undefined | null): MissingDocument["urgency"] => {
+    const v = (value || "").toLowerCase();
+    if (v === "high" || v === "alta") return "high";
+    if (v === "low" || v === "baixa") return "low";
+    return "medium";
+  };
 
   const analyzeProcessDocuments = useCallback(async () => {
     if (!processes || processes.length === 0) {
-      return null
+      return null;
     }
 
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
 
     try {
-      const processesToAnalyze = processes.filter((p) => p.status === 'ativo')
-      const newMissingDocs: MissingDocument[] = []
+      const processesToAnalyze = processes.filter((p) => p.status === "ativo");
+      const newMissingDocs: MissingDocument[] = [];
 
       for (const processo of processesToAnalyze) {
         const prompt = `Você é um agente especializado em análise documental jurídica.
@@ -79,7 +65,7 @@ Comarca: ${processo.comarca}
 Vara: ${processo.vara}
 Status: ${processo.status}
 Data de Distribuição: ${processo.dataDistribuicao}
-Notas: ${processo.notas || 'Nenhuma nota'}
+Notas: ${processo.notas || "Nenhuma nota"}
 
 Com base nessas informações, identifique documentos que podem estar faltando para dar andamento adequado ao processo. 
 Para cada documento faltante, informe:
@@ -96,15 +82,15 @@ Retorne um objeto JSON com a seguinte estrutura:
       "urgency": "high"
     }
   ]
-}`
+}`;
 
         const result = await geminiGenerateJSON<{
-          missingDocuments: Array<{ documentType: string; reason: string; urgency?: string }>
-        }>(prompt)
+          missingDocuments: Array<{ documentType: string; reason: string; urgency?: string }>;
+        }>(prompt);
 
         if (result.missingDocuments && Array.isArray(result.missingDocuments)) {
           result.missingDocuments.forEach((doc) => {
-            const urgency = normalizeUrgency(doc.urgency)
+            const urgency = normalizeUrgency(doc.urgency);
             newMissingDocs.push({
               id: crypto.randomUUID(),
               processId: processo.id,
@@ -114,112 +100,111 @@ Retorne um objeto JSON com a seguinte estrutura:
               urgency,
               detectedAt: new Date().toISOString(),
               notified: false,
-              resolved: false
-            })
-          })
+              resolved: false,
+            });
+          });
         }
       }
 
       setMissingDocs((current) => {
-        const existing = current || []
-        const existingIds = new Set(existing.map((d) => `${d.processId}-${d.documentType}`))
+        const existing = current || [];
+        const existingIds = new Set(existing.map((d) => `${d.processId}-${d.documentType}`));
 
         const uniqueNew = newMissingDocs.filter(
           (doc) => !existingIds.has(`${doc.processId}-${doc.documentType}`) && !doc.resolved
-        )
+        );
 
         // Mantém apenas não resolvidos + novos únicos
-        return [...existing.filter((d) => !d.resolved), ...uniqueNew]
-      })
+        return [...existing.filter((d) => !d.resolved), ...uniqueNew];
+      });
 
-      setLastCheck(new Date().toISOString())
+      setLastCheck(new Date().toISOString());
 
-      const unresolvedCount = newMissingDocs.filter((d) => !d.resolved).length
+      const unresolvedCount = newMissingDocs.filter((d) => !d.resolved).length;
       if (unresolvedCount > 0) {
         toast.info(`Encontrados ${unresolvedCount} documentos possivelmente faltantes`, {
-          description: 'Verifique a lista de documentos pendentes'
-        })
+          description: "Verifique a lista de documentos pendentes",
+        });
       } else {
-        toast.success('Análise concluída', {
-          description: 'Nenhum novo documento faltante identificado'
-        })
+        toast.success("Análise concluída", {
+          description: "Nenhum novo documento faltante identificado",
+        });
       }
     } catch (error) {
-      console.error('Erro ao analisar documentos:', error)
-      toast.error('Erro na análise', {
-        description: 'Não foi possível analisar os documentos'
-      })
+      console.error("Erro ao analisar documentos:", error);
+      toast.error("Erro na análise", {
+        description: "Não foi possível analisar os documentos",
+      });
     } finally {
-      setIsAnalyzing(false)
+      setIsAnalyzing(false);
     }
-  }, [processes, setMissingDocs, setLastCheck])
+  }, [processes, setMissingDocs, setLastCheck]);
 
   const notifyMissingDocument = (docId: string) => {
     setMissingDocs((current) =>
-      (current || []).map((doc) =>
-        doc.id === docId ? { ...doc, notified: true } : doc
-      )
-    )
+      (current || []).map((doc) => (doc.id === docId ? { ...doc, notified: true } : doc))
+    );
 
-    const doc = missingDocs?.find((d) => d.id === docId)
+    const doc = missingDocs?.find((d) => d.id === docId);
     if (doc) {
-      toast.warning('Notificação registrada', {
-        description: `Lembrete criado para juntar "${doc.documentType}" no processo ${doc.processNumber}`
-      })
+      toast.warning("Notificação registrada", {
+        description: `Lembrete criado para juntar "${doc.documentType}" no processo ${doc.processNumber}`,
+      });
     }
-  }
+  };
 
   const markAsResolved = (docId: string) => {
     setMissingDocs((current) =>
-      (current || []).map((doc) =>
-        doc.id === docId ? { ...doc, resolved: true } : doc
-      )
-    )
-    toast.success('Documento marcado como juntado')
-  }
+      (current || []).map((doc) => (doc.id === docId ? { ...doc, resolved: true } : doc))
+    );
+    toast.success("Documento marcado como juntado");
+  };
 
   useEffect(() => {
-    if (!autoCheckEnabled || !processes || processes.length === 0) return
+    if (!autoCheckEnabled || !processes || processes.length === 0) return;
 
-    const interval = setInterval(() => {
-      analyzeProcessDocuments()
-    }, 60 * 60 * 1000) // a cada 1h
+    const interval = setInterval(
+      () => {
+        analyzeProcessDocuments();
+      },
+      60 * 60 * 1000
+    ); // a cada 1h
 
-    return () => clearInterval(interval)
-  }, [autoCheckEnabled, processes, analyzeProcessDocuments])
+    return () => clearInterval(interval);
+  }, [autoCheckEnabled, processes, analyzeProcessDocuments]);
 
-  const unresolvedDocs = (missingDocs || []).filter((d) => !d.resolved)
-  const highUrgency = unresolvedDocs.filter((d) => d.urgency === 'high').length
-  const mediumUrgency = unresolvedDocs.filter((d) => d.urgency === 'medium').length
-  const lowUrgency = unresolvedDocs.filter((d) => d.urgency === 'low').length
+  const unresolvedDocs = (missingDocs || []).filter((d) => !d.resolved);
+  const highUrgency = unresolvedDocs.filter((d) => d.urgency === "high").length;
+  const mediumUrgency = unresolvedDocs.filter((d) => d.urgency === "medium").length;
+  const lowUrgency = unresolvedDocs.filter((d) => d.urgency === "low").length;
 
   const getUrgencyColor = (
-    urgency: MissingDocument['urgency']
-  ): 'default' | 'destructive' | 'secondary' => {
+    urgency: MissingDocument["urgency"]
+  ): "default" | "destructive" | "secondary" => {
     switch (urgency) {
-      case 'high':
-        return 'destructive'
-      case 'medium':
-        return 'default'
-      case 'low':
-        return 'secondary'
+      case "high":
+        return "destructive";
+      case "medium":
+        return "default";
+      case "low":
+        return "secondary";
       default:
-        return 'default'
+        return "default";
     }
-  }
+  };
 
-  const getUrgencyLabel = (urgency: MissingDocument['urgency']) => {
+  const getUrgencyLabel = (urgency: MissingDocument["urgency"]) => {
     switch (urgency) {
-      case 'high':
-        return 'Alta'
-      case 'medium':
-        return 'Média'
-      case 'low':
-        return 'Baixa'
+      case "high":
+        return "Alta";
+      case "medium":
+        return "Média";
+      case "low":
+        return "Baixa";
       default:
-        return 'Média'
+        return "Média";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -324,8 +309,7 @@ Retorne um objeto JSON com a seguinte estrutura:
 
           {lastCheck && (
             <div className="text-sm text-muted-foreground">
-              Última verificação:{' '}
-              {new Date(lastCheck).toLocaleString('pt-BR')}
+              Última verificação: {new Date(lastCheck).toLocaleString("pt-BR")}
             </div>
           )}
         </CardContent>
@@ -336,8 +320,8 @@ Retorne um objeto JSON com a seguinte estrutura:
           <CheckCircle className="w-4 h-4" weight="fill" />
           <AlertDescription>
             {processes.length === 0
-              ? 'Nenhum processo cadastrado para análise.'
-              : 'Nenhum documento faltante identificado. Todos os processos estão com documentação adequada.'}
+              ? "Nenhum processo cadastrado para análise."
+              : "Nenhum documento faltante identificado. Todos os processos estão com documentação adequada."}
           </AlertDescription>
         </Alert>
       ) : (
@@ -353,12 +337,12 @@ Retorne um objeto JSON com a seguinte estrutura:
               <div className="space-y-4">
                 {unresolvedDocs
                   .sort((a, b) => {
-                    const urgencyOrder: Record<MissingDocument['urgency'], number> = {
+                    const urgencyOrder: Record<MissingDocument["urgency"], number> = {
                       high: 0,
                       medium: 1,
-                      low: 2
-                    }
-                    return urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
+                      low: 2,
+                    };
+                    return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
                   })
                   .map((doc) => (
                     <Card
@@ -366,11 +350,11 @@ Retorne um objeto JSON com a seguinte estrutura:
                       className="border-l-4"
                       style={{
                         borderLeftColor:
-                          doc.urgency === 'high'
-                            ? 'hsl(var(--destructive))'
-                            : doc.urgency === 'medium'
-                              ? 'hsl(var(--primary))'
-                              : 'hsl(var(--muted-foreground))'
+                          doc.urgency === "high"
+                            ? "hsl(var(--destructive))"
+                            : doc.urgency === "medium"
+                              ? "hsl(var(--primary))"
+                              : "hsl(var(--muted-foreground))",
                       }}
                     >
                       <CardContent className="pt-6">
@@ -395,8 +379,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                               </p>
                               <p className="text-sm">{doc.reason}</p>
                               <p className="text-xs text-muted-foreground mt-2">
-                                Detectado em:{' '}
-                                {new Date(doc.detectedAt).toLocaleString('pt-BR')}
+                                Detectado em: {new Date(doc.detectedAt).toLocaleString("pt-BR")}
                               </p>
                             </div>
                             <div className="flex flex-col gap-2">
@@ -433,13 +416,12 @@ Retorne um objeto JSON com a seguinte estrutura:
       <Alert>
         <Info className="w-4 h-4" />
         <AlertDescription>
-          <strong>Como funciona:</strong> o agente analisa automaticamente os
-          processos ativos e identifica documentos que podem estar faltando com
-          base no tipo de ação, partes envolvidas e informações do processo. Você
-          pode registrar uma notificação e marcar como resolvido quando o
-          documento for juntado.
+          <strong>Como funciona:</strong> o agente analisa automaticamente os processos ativos e
+          identifica documentos que podem estar faltando com base no tipo de ação, partes envolvidas
+          e informações do processo. Você pode registrar uma notificação e marcar como resolvido
+          quando o documento for juntado.
         </AlertDescription>
       </Alert>
     </div>
-  )
+  );
 }

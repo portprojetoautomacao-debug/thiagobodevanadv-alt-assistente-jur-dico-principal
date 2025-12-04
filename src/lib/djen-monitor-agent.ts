@@ -1,8 +1,4 @@
-import {
-  consultarDJEN,
-  type DJENConfig,
-  type DJENFilteredResult,
-} from "@/lib/djen-api";
+import { consultarDJEN, type DJENConfig, type DJENFilteredResult } from "@/lib/djen-api";
 
 export interface DJENMonitorConfig {
   tribunais: string[];
@@ -91,8 +87,7 @@ export class DJENMonitorAgent {
         const resultado = await consultarDJEN(configConsulta);
         return resultado;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Erro desconhecido";
+        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
 
         if (attempt === maxRetries) {
           this.log(
@@ -124,10 +119,7 @@ export class DJENMonitorAgent {
     return !!(advogado.nome || advogado.oab);
   }
 
-  private buildConsultaConfig(advogado: {
-    nome?: string;
-    oab?: string;
-  }): DJENConfig {
+  private buildConsultaConfig(advogado: { nome?: string; oab?: string }): DJENConfig {
     return {
       tribunais: this.config.tribunais,
       searchTerms: {
@@ -139,23 +131,14 @@ export class DJENMonitorAgent {
     };
   }
 
-  private getAdvogadoIdentifier(advogado: {
-    nome?: string;
-    oab?: string;
-  }): string {
+  private getAdvogadoIdentifier(advogado: { nome?: string; oab?: string }): string {
     return advogado.nome || advogado.oab || "desconhecido";
   }
 
-  private handleAdvogadoError(
-    advogado: { nome?: string; oab?: string },
-    error: unknown
-  ): void {
-    const errorMessage =
-      error instanceof Error ? error.message : "Erro desconhecido";
+  private handleAdvogadoError(advogado: { nome?: string; oab?: string }, error: unknown): void {
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     this.log(
-      `Erro ao consultar advogado ${this.getAdvogadoIdentifier(
-        advogado
-      )}: ${errorMessage}`,
+      `Erro ao consultar advogado ${this.getAdvogadoIdentifier(advogado)}: ${errorMessage}`,
       "error"
     );
 
@@ -190,16 +173,11 @@ export class DJENMonitorAgent {
 
     if (resultado.erros.length > 0) {
       const tribunais = resultado.erros.map((e) => e.tribunal).join(", ");
-      this.log(
-        `Erros ao consultar tribunais para ${identifier}: ${tribunais}`,
-        "warn"
-      );
+      this.log(`Erros ao consultar tribunais para ${identifier}: ${tribunais}`, "warn");
     }
   }
 
-  private handlePublicacoesEncontradas(
-    todasPublicacoes: DJENFilteredResult[]
-  ): void {
+  private handlePublicacoesEncontradas(todasPublicacoes: DJENFilteredResult[]): void {
     this.task.totalPublicacoesEncontradas += todasPublicacoes.length;
     this.task.ultimasPublicacoes = todasPublicacoes;
 
@@ -222,9 +200,7 @@ export class DJENMonitorAgent {
     this.task.nextRun = this.calcularProximaExecucao().toISOString();
     this.task.status = "idle";
     this.log(
-      `Próxima execução agendada para ${new Date(
-        this.task.nextRun
-      ).toLocaleString("pt-BR")}`
+      `Próxima execução agendada para ${new Date(this.task.nextRun).toLocaleString("pt-BR")}`
     );
   }
 
@@ -234,9 +210,7 @@ export class DJENMonitorAgent {
     if (!this.isRunning) return;
 
     this.task.status = "running";
-    this.log(
-      "Iniciando consulta ao DJEN (modo diário automático, janela = hoje)..."
-    );
+    this.log("Iniciando consulta ao DJEN (modo diário automático, janela = hoje)...");
 
     const todasPublicacoes: DJENFilteredResult[] = [];
 
@@ -248,10 +222,7 @@ export class DJENMonitorAgent {
 
       try {
         const configConsulta = this.buildConsultaConfig(advogado);
-        const resultado = await this.consultarComRetry(
-          configConsulta,
-          advogado
-        );
+        const resultado = await this.consultarComRetry(configConsulta, advogado);
         this.processResultado(resultado, advogado, todasPublicacoes);
       } catch (error) {
         this.handleAdvogadoError(advogado, error);
@@ -261,10 +232,7 @@ export class DJENMonitorAgent {
     if (todasPublicacoes.length > 0) {
       this.handlePublicacoesEncontradas(todasPublicacoes);
     } else {
-      this.log(
-        "Nenhuma publicação relevante encontrada nesta execução",
-        "info"
-      );
+      this.log("Nenhuma publicação relevante encontrada nesta execução", "info");
     }
 
     this.finalizarConsulta();

@@ -1,39 +1,30 @@
-import { useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Brain, Sparkle } from '@phosphor-icons/react'
-import { useAIStreaming } from '@/hooks/use-ai-streaming'
-import { toast } from 'sonner'
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Brain, Sparkle } from "@phosphor-icons/react";
+import { useAIStreaming } from "@/hooks/use-ai-streaming";
+import { toast } from "sonner";
 
 interface MrsJustinEModalProps {
-  readonly open: boolean
-  readonly onOpenChange: (open: boolean) => void
-  readonly onActivate?: () => void
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onActivate?: () => void;
 }
 
 const SKILLS: string[] = [
-  'Interpreta intimações com IA jurídica (Gemini)',
-  'Conta prazos com base no contexto da intimação',
-  'Orienta a controladoria sobre próximos passos',
-  'Sugere tarefas e responsáveis',
-  'Organiza em sistema D-1, D-2 ou D-n',
-  'Prepara atendimentos com resumo objetivo',
-  'Cria workflow de controladoria a partir da análise',
-  'Refaz análise sempre que há nova informação',
-]
+  "Interpreta intimações com IA jurídica (Gemini)",
+  "Conta prazos com base no contexto da intimação",
+  "Orienta a controladoria sobre próximos passos",
+  "Sugere tarefas e responsáveis",
+  "Organiza em sistema D-1, D-2 ou D-n",
+  "Prepara atendimentos com resumo objetivo",
+  "Cria workflow de controladoria a partir da análise",
+  "Refaz análise sempre que há nova informação",
+];
 
-export default function MrsJustinEModal({
-  open,
-  onOpenChange,
-  onActivate,
-}: MrsJustinEModalProps) {
-  const [hasPreviewStarted, setHasPreviewStarted] = useState(false)
+export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJustinEModalProps) {
+  const [hasPreviewStarted, setHasPreviewStarted] = useState(false);
 
   const {
     streamingContent,
@@ -43,47 +34,47 @@ export default function MrsJustinEModal({
     reset: resetStreaming,
   } = useAIStreaming({
     onError: (error) => {
-      console.error('[MrsJustinE] Erro no streaming:', error)
-      toast.error('Erro ao gerar exemplo em tempo real da Mrs. Justin-e')
+      console.error("[MrsJustinE] Erro no streaming:", error);
+      toast.error("Erro ao gerar exemplo em tempo real da Mrs. Justin-e");
     },
-  })
+  });
 
   const handleActivate = () => {
-    onActivate?.()
-    onOpenChange(false)
-  }
+    onActivate?.();
+    onOpenChange(false);
+  };
 
   const handleStartPreview = async () => {
-    if (isStreaming) return
+    if (isStreaming) return;
 
     try {
-      setHasPreviewStarted(true)
-      resetStreaming()
+      setHasPreviewStarted(true);
+      resetStreaming();
 
       await streamChat([
         {
-          role: 'system',
+          role: "system",
           content:
-            'Você é Mrs. Justin-e, uma agente de IA jurídica especializada em análise de intimações, prazos e controladoria de escritórios de advocacia brasileiros. ' +
-            'Fale sempre em primeira pessoa, de forma clara, objetiva e profissional, sem prometer precisão absoluta ou garantia de resultado. ' +
-            'Explique o que você faz, como ajuda e como integra prazos, tarefas e workflows.',
+            "Você é Mrs. Justin-e, uma agente de IA jurídica especializada em análise de intimações, prazos e controladoria de escritórios de advocacia brasileiros. " +
+            "Fale sempre em primeira pessoa, de forma clara, objetiva e profissional, sem prometer precisão absoluta ou garantia de resultado. " +
+            "Explique o que você faz, como ajuda e como integra prazos, tarefas e workflows.",
         },
         {
-          role: 'user',
+          role: "user",
           content:
-            'Explique em poucos parágrafos como você analisa uma intimação, identifica prazos importantes e monta um workflow de tarefas para o escritório, de forma resumida.',
+            "Explique em poucos parágrafos como você analisa uma intimação, identifica prazos importantes e monta um workflow de tarefas para o escritório, de forma resumida.",
         },
-      ])
+      ]);
       // O texto final fica em streamingContent; não precisamos fazer nada aqui.
     } catch (error) {
-      console.error('[MrsJustinE] Erro ao iniciar preview:', error)
+      console.error("[MrsJustinE] Erro ao iniciar preview:", error);
       // onError do hook já mostra toast
     }
-  }
+  };
 
   const handleStopPreview = () => {
-    cancelStream()
-  }
+    cancelStream();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,28 +100,25 @@ export default function MrsJustinEModal({
 
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
             <p className="text-sm text-foreground">
-              Eu analiso intimações usando IA jurídica treinada para contexto brasileiro,
-              geralmente em menos de{' '}
-              <span className="font-bold text-primary">1 minuto</span>,
+              Eu analiso intimações usando IA jurídica treinada para contexto brasileiro, geralmente
+              em menos de <span className="font-bold text-primary">1 minuto</span>,
             </p>
             <p className="text-sm text-foreground">
-              enquanto humanos podem levar vários minutos e correr risco de esquecer
-              detalhes importantes.
+              enquanto humanos podem levar vários minutos e correr risco de esquecer detalhes
+              importantes.
             </p>
           </div>
 
           <div className="bg-accent/10 p-4 rounded-lg border border-accent/30">
             <p className="text-sm text-foreground">
-              Em cenários típicos, meu uso pode representar{' '}
-              <span className="font-bold text-accent">dezenas de horas</span> economizadas
-              a cada lote de intimações, além de reduzir o risco de prazos perdidos.
+              Em cenários típicos, meu uso pode representar{" "}
+              <span className="font-bold text-accent">dezenas de horas</span> economizadas a cada
+              lote de intimações, além de reduzir o risco de prazos perdidos.
             </p>
           </div>
 
           <div>
-            <h3 className="text-base font-semibold text-foreground mb-3">
-              Minhas Skills
-            </h3>
+            <h3 className="text-base font-semibold text-foreground mb-3">Minhas Skills</h3>
             <div className="flex flex-wrap gap-2">
               {SKILLS.map((skill, index) => (
                 <Badge
@@ -151,19 +139,11 @@ export default function MrsJustinEModal({
                 Ver Mrs. Justin-e em ação (exemplo em tempo real)
               </h3>
               {isStreaming ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleStopPreview}
-                >
+                <Button variant="outline" size="sm" onClick={handleStopPreview}>
                   Parar preview
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleStartPreview}
-                >
+                <Button variant="outline" size="sm" onClick={handleStartPreview}>
                   <Sparkle className="w-4 h-4 mr-2" weight="fill" />
                   Gerar exemplo
                 </Button>
@@ -179,8 +159,8 @@ export default function MrsJustinEModal({
               <p className="whitespace-pre-wrap">
                 {streamingContent ||
                   (hasPreviewStarted
-                    ? 'Nenhum conteúdo disponível. Clique em “Gerar exemplo” para ver uma demonstração.'
-                    : 'Clique em “Gerar exemplo” para ver, ao vivo, como Mrs. Justin-e explicaria sua atuação na análise de intimações e criação de workflows.')}
+                    ? "Nenhum conteúdo disponível. Clique em “Gerar exemplo” para ver uma demonstração."
+                    : "Clique em “Gerar exemplo” para ver, ao vivo, como Mrs. Justin-e explicaria sua atuação na análise de intimações e criação de workflows.")}
               </p>
             </div>
           </div>
@@ -196,7 +176,7 @@ export default function MrsJustinEModal({
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Na tela de intimações, clique em{' '}
+                    Na tela de intimações, clique em{" "}
                     <span className="font-semibold">“Ativar Mrs. Justin-e”</span> para receber um
                     resumo estruturado da intimação e sugestões de tarefas.
                   </p>
@@ -243,10 +223,7 @@ export default function MrsJustinEModal({
 
           <div className="bg-linear-to-br from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
             <div className="flex items-start gap-3">
-              <Sparkle
-                className="w-6 h-6 text-primary shrink-0 mt-0.5"
-                weight="fill"
-              />
+              <Sparkle className="w-6 h-6 text-primary shrink-0 mt-0.5" weight="fill" />
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground">Benefícios principais</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
@@ -266,16 +243,12 @@ export default function MrsJustinEModal({
               <Brain className="w-5 h-5 mr-2" weight="fill" />
               Ativar Mrs. Justin-e
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
               Depois
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

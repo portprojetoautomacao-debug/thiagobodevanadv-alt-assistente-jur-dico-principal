@@ -1,61 +1,76 @@
-import { useState } from 'react'
-import type { Process, PremonicaoJuridica } from '@/types'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, Trash, CalendarCheck, Sparkle, FileText } from '@phosphor-icons/react'
-import { formatarData, calcularDiasRestantes, isUrgente, formatarMoeda } from '@/lib/prazos'
-import { toast } from 'sonner'
-import PremonicaoModal from './PremonicaoModal'
-import { generatePremonicaoJuridica } from '@/lib/premonicao-service'
-import DocumentUploader from './DocumentUploader'
+import { useState } from "react";
+import type { Process, PremonicaoJuridica } from "@/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pencil, Trash, CalendarCheck, Sparkle, FileText } from "@phosphor-icons/react";
+import { formatarData, calcularDiasRestantes, isUrgente, formatarMoeda } from "@/lib/prazos";
+import { toast } from "sonner";
+import PremonicaoModal from "./PremonicaoModal";
+import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
+import DocumentUploader from "./DocumentUploader";
 
 interface ProcessDetailsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  process: Process | null
-  onEdit: (process: Process) => void
-  onDelete: (id: string) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  process: Process | null;
+  onEdit: (process: Process) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function ProcessDetailsDialog({ open, onOpenChange, process, onEdit, onDelete }: ProcessDetailsDialogProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [premonicaoOpen, setPremonicaoOpen] = useState(false)
-  const [premonicaoLoading, setPremonicaoLoading] = useState(false)
-  const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null)
-  const [premonicaoError, setPremonicaoError] = useState<string | null>(null)
-  
-  if (!process) return null
+export default function ProcessDetailsDialog({
+  open,
+  onOpenChange,
+  process,
+  onEdit,
+  onDelete,
+}: ProcessDetailsDialogProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [premonicaoOpen, setPremonicaoOpen] = useState(false);
+  const [premonicaoLoading, setPremonicaoLoading] = useState(false);
+  const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null);
+  const [premonicaoError, setPremonicaoError] = useState<string | null>(null);
+
+  if (!process) return null;
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
-  }
+    setDeleteDialogOpen(true);
+  };
 
   const confirmDelete = () => {
-    onDelete(process.id)
-    setDeleteDialogOpen(false)
-    toast.success('Processo excluído')
-  }
+    onDelete(process.id);
+    setDeleteDialogOpen(false);
+    toast.success("Processo excluído");
+  };
 
   const handlePremonicao = async () => {
-    setPremonicaoOpen(true)
-    setPremonicaoLoading(true)
-    setPremonicaoError(null)
-    setPremonicaoData(null)
+    setPremonicaoOpen(true);
+    setPremonicaoLoading(true);
+    setPremonicaoError(null);
+    setPremonicaoData(null);
 
     try {
-      const data = await generatePremonicaoJuridica(process.numeroCNJ, process)
-      setPremonicaoData(data)
+      const data = await generatePremonicaoJuridica(process.numeroCNJ, process);
+      setPremonicaoData(data);
     } catch (error) {
-      setPremonicaoError(error instanceof Error ? error.message : 'Erro desconhecido')
-      toast.error('Erro ao gerar premonição jurídica')
+      setPremonicaoError(error instanceof Error ? error.message : "Erro desconhecido");
+      toast.error("Erro ao gerar premonição jurídica");
     } finally {
-      setPremonicaoLoading(false)
+      setPremonicaoLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,10 +83,14 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
                 <Sparkle size={16} weight="fill" />
                 Premonição
               </Button>
-              <Button size="sm" variant="outline" onClick={() => {
-                onEdit(process)
-                onOpenChange(false)
-              }}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  onEdit(process);
+                  onOpenChange(false);
+                }}
+              >
                 <Pencil size={16} />
                 Editar
               </Button>
@@ -97,11 +116,17 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
 
           <TabsContent value="detalhes" className="space-y-6">
             <div className="flex items-center gap-2">
-              <Badge variant={
-                process.status === 'ativo' ? 'default' :
-                process.status === 'concluido' ? 'secondary' :
-                process.status === 'suspenso' ? 'outline' : 'destructive'
-              }>
+              <Badge
+                variant={
+                  process.status === "ativo"
+                    ? "default"
+                    : process.status === "concluido"
+                      ? "secondary"
+                      : process.status === "suspenso"
+                        ? "outline"
+                        : "destructive"
+                }
+              >
                 {process.status}
               </Badge>
             </div>
@@ -140,9 +165,7 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
               {process.valor && (
                 <div className="flex flex-col gap-1">
                   <p className="text-sm text-muted-foreground">Valor da Causa</p>
-                  <p className="text-sm font-semibold">
-                    {formatarMoeda(process.valor)}
-                  </p>
+                  <p className="text-sm font-semibold">{formatarMoeda(process.valor)}</p>
                 </div>
               )}
             </div>
@@ -161,12 +184,15 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
           <TabsContent value="prazos" className="space-y-4">
             {process.prazos && process.prazos.length > 0 ? (
               <div className="flex flex-col gap-2">
-                {process.prazos.map(prazo => {
-                  const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
-                  const urgente = isUrgente(diasRestantes) && !prazo.concluido
+                {process.prazos.map((prazo) => {
+                  const diasRestantes = calcularDiasRestantes(prazo.dataFinal);
+                  const urgente = isUrgente(diasRestantes) && !prazo.concluido;
 
                   return (
-                    <div key={prazo.id} className="flex items-start justify-between gap-3 p-3 border rounded-lg">
+                    <div
+                      key={prazo.id}
+                      className="flex items-start justify-between gap-3 p-3 border rounded-lg"
+                    >
                       <div className="flex flex-col gap-1 flex-1">
                         <p className="font-medium text-sm">{prazo.descricao}</p>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -174,7 +200,9 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
                           <span>•</span>
                           <span>Final: {formatarData(prazo.dataFinal)}</span>
                           <span>•</span>
-                          <span>{prazo.diasCorridos} dias ({prazo.tipoPrazo.toUpperCase()})</span>
+                          <span>
+                            {prazo.diasCorridos} dias ({prazo.tipoPrazo.toUpperCase()})
+                          </span>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
@@ -182,18 +210,25 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
                           <Badge variant="secondary">Concluído</Badge>
                         ) : (
                           <>
-                            <Badge variant={urgente ? 'destructive' : 'default'}>
-                              {diasRestantes < 0 ? 'Vencido' : 
-                               diasRestantes === 0 ? 'Hoje' : 
-                               diasRestantes === 1 ? 'Amanhã' : 
-                               `${diasRestantes}d`}
+                            <Badge variant={urgente ? "destructive" : "default"}>
+                              {diasRestantes < 0
+                                ? "Vencido"
+                                : diasRestantes === 0
+                                  ? "Hoje"
+                                  : diasRestantes === 1
+                                    ? "Amanhã"
+                                    : `${diasRestantes}d`}
                             </Badge>
-                            {urgente && <Badge variant="outline" className="text-xs">Urgente</Badge>}
+                            {urgente && (
+                              <Badge variant="outline" className="text-xs">
+                                Urgente
+                              </Badge>
+                            )}
                           </>
                         )}
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             ) : (
@@ -215,12 +250,16 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir processo</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este processo? Esta ação não pode ser desfeita e todos os prazos associados serão removidos.
+              Tem certeza que deseja excluir este processo? Esta ação não pode ser desfeita e todos
+              os prazos associados serão removidos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -235,5 +274,5 @@ export default function ProcessDetailsDialog({ open, onOpenChange, process, onEd
         error={premonicaoError}
       />
     </Dialog>
-  )
+  );
 }

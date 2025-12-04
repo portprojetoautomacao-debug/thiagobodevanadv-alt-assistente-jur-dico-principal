@@ -1,2 +1,2 @@
-export { TiptapEditor } from './TiptapEditor'
-export { default as TiptapEditorDefault } from './TiptapEditor'
+export { TiptapEditor } from "./TiptapEditor";
+export { default as TiptapEditorDefault } from "./TiptapEditor";

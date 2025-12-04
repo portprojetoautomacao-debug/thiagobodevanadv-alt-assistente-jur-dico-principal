@@ -12,12 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDJENProcessRegistration } from "@/hooks/use-djen-process-registration";
 import { useDJENPublications } from "@/hooks/use-djen-publications";
 import { useDJENSync } from "@/hooks/use-djen-sync";
@@ -26,15 +21,7 @@ import { getRelativeDateDescription } from "@/lib/date-utils";
 import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { cn } from "@/lib/utils";
 import type { Expediente, Process } from "@/types";
-import {
-  ArrowRight,
-  Bot,
-  CheckCircle,
-  Clock,
-  Filter,
-  Newspaper,
-  RefreshCw,
-} from "lucide-react";
+import { ArrowRight, Bot, CheckCircle, Clock, Filter, Newspaper, RefreshCw } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -100,18 +87,10 @@ function createProcessFromPublication(
 /**
  * Monta as notas do processo
  */
-function buildProcessNotes(
-  pub: DJENPublication,
-  parties: PartiesResult
-): string {
-  const advAutor = parties.advogadoAutor
-    ? `\nAdvogado Autor: ${parties.advogadoAutor}`
-    : "";
-  const advReu = parties.advogadoReu
-    ? `\nAdvogado Réu: ${parties.advogadoReu}`
-    : "";
-  const teorTruncado =
-    pub.teor.length > 500 ? pub.teor.substring(0, 500) + "..." : pub.teor;
+function buildProcessNotes(pub: DJENPublication, parties: PartiesResult): string {
+  const advAutor = parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : "";
+  const advReu = parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : "";
+  const teorTruncado = pub.teor.length > 500 ? pub.teor.substring(0, 500) + "..." : pub.teor;
 
   return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`;
 }
@@ -207,11 +186,7 @@ async function _processPublicationForRegistration(
   registerClientFromParties(parties, pub, ctx);
 
   const newProcess = createProcessFromPublication(pub, parties, now);
-  const newExpediente = createExpedienteFromPublication(
-    pub,
-    newProcess.id,
-    now
-  );
+  const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now);
 
   return { process: newProcess, expediente: newExpediente };
 }
@@ -333,9 +308,7 @@ function PublicationsHeader(
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    setFilter((f) => (f === "all" ? "unread" : "all"))
-                  }
+                  onClick={() => setFilter((f) => (f === "all" ? "unread" : "all"))}
                   className="h-8 w-8 p-0"
                   aria-label={
                     filter === "all"
@@ -343,10 +316,7 @@ function PublicationsHeader(
                       : "Filtrar: mostrar todas"
                   }
                 >
-                  <Filter
-                    size={16}
-                    className={filter === "unread" ? "text-primary" : ""}
-                  />
+                  <Filter size={16} className={filter === "unread" ? "text-primary" : ""} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -366,10 +336,7 @@ function PublicationsHeader(
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
                 >
-                  <RefreshCw
-                    size={16}
-                    className={syncing ? "animate-spin" : ""}
-                  />
+                  <RefreshCw size={16} className={syncing ? "animate-spin" : ""} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Sincronizar agora</TooltipContent>
@@ -396,10 +363,7 @@ function PublicationsHeader(
   );
 }
 
-function PublicationsContent(
-  content: React.ReactNode,
-  footer: React.ReactNode
-) {
+function PublicationsContent(content: React.ReactNode, footer: React.ReactNode) {
   return (
     <CardContent className="pt-2">
       {content}
@@ -458,14 +422,8 @@ export default function DJENPublicationsWidget({
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
   // Hooks customizados para reduzir complexidade
-  const {
-    publications,
-    loading,
-    error,
-    lastCheck,
-    lawyersCount,
-    fetchPublications,
-  } = useDJENPublications(maxItems, filter);
+  const { publications, loading, error, lastCheck, lawyersCount, fetchPublications } =
+    useDJENPublications(maxItems, filter);
 
   const { syncing, handleSync } = useDJENSync();
 
@@ -473,12 +431,8 @@ export default function DJENPublicationsWidget({
   const [processes, setProcesses] = useKV<Process[]>("processes", []);
   const [, setExpedientes] = useKV<Expediente[]>("expedientes", []);
 
-  const {
-    autoRegistering,
-    isAlreadyRegistered,
-    handleRegisterProcess,
-    handleAutoRegisterAll,
-  } = useDJENProcessRegistration(processes, setProcesses, setExpedientes);
+  const { autoRegistering, isAlreadyRegistered, handleRegisterProcess, handleAutoRegisterAll } =
+    useDJENProcessRegistration(processes, setProcesses, setExpedientes);
 
   // Carrega publicações ao montar
   useEffect(() => {
@@ -499,8 +453,7 @@ export default function DJENPublicationsWidget({
   const errorMessage: string | undefined =
     typeof error === "string"
       ? error
-      : (error as unknown as { message?: string } | undefined)?.message ||
-        undefined;
+      : (error as unknown as { message?: string } | undefined)?.message || undefined;
 
   // Renderiza estado de erro
   const renderErrorState = () => (
@@ -515,13 +468,9 @@ export default function DJENPublicationsWidget({
   const renderEmptyState = (): React.ReactNode => (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <Newspaper size={40} className="text-muted-foreground mb-2" />
-      <p className="text-sm text-muted-foreground mb-1">
-        Nenhuma publicação encontrada
-      </p>
+      <p className="text-sm text-muted-foreground mb-1">Nenhuma publicação encontrada</p>
       <p className="text-xs text-muted-foreground">
-        {lawyersCount === 0
-          ? "Configure advogados para monitorar"
-          : "O monitoramento está ativo"}
+        {lawyersCount === 0 ? "Configure advogados para monitorar" : "O monitoramento está ativo"}
       </p>
       <Button
         variant="outline"
@@ -551,28 +500,17 @@ export default function DJENPublicationsWidget({
               className="flex-1 button-gradient"
               aria-label="Cadastrar todas as intimações"
             >
-              <Bot
-                size={14}
-                className={autoRegistering ? "animate-pulse" : ""}
-              />
+              <Bot size={14} className={autoRegistering ? "animate-pulse" : ""} />
               {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            Cadastra automaticamente todas as intimações no Acervo
-          </TooltipContent>
+          <TooltipContent>Cadastra automaticamente todas as intimações no Acervo</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
   }
 
-  function FooterViewAllButton({
-    show,
-    compactLayout,
-  }: {
-    show: boolean;
-    compactLayout: boolean;
-  }) {
+  function FooterViewAllButton({ show, compactLayout }: { show: boolean; compactLayout: boolean }) {
     if (!show) return null;
     return (
       <Button
@@ -614,10 +552,7 @@ export default function DJENPublicationsWidget({
     return (
       <>
         <Separator className="my-3" />
-        <FooterButtonsSection
-          showRegisterAll={showRegisterAll}
-          showViewAll={showViewAll}
-        />
+        <FooterButtonsSection showRegisterAll={showRegisterAll} showViewAll={showViewAll} />
       </>
     );
   }
@@ -627,10 +562,7 @@ export default function DJENPublicationsWidget({
     return pubs.length > 0 && getHasUnregistered(pubs);
   }
 
-  function shouldShowViewAll(
-    pubs: DJENPublication[],
-    onView?: () => void
-  ): boolean {
+  function shouldShowViewAll(pubs: DJENPublication[], onView?: () => void): boolean {
     return pubs.length > 0 && typeof onView === "function";
   }
 
@@ -673,8 +605,7 @@ export default function DJENPublicationsWidget({
     />
   );
 
-  const renderCardContent = () =>
-    PublicationsContent(contentNode, buildFooterSection(showFooter));
+  const renderCardContent = () => PublicationsContent(contentNode, buildFooterSection(showFooter));
 
   // Main render
   return (
