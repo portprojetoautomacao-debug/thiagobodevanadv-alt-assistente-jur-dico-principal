@@ -125,13 +125,14 @@ Responda APENAS com o JSON, sem texto adicional.`,
  * Tenta extrair partes via regex (fallback rápido sem IA)
  */
 export function extractPartiesRegex(teor: string): ExtractedParties {
-  // Padrões comuns em publicações
+  // Padrões comuns em publicações (S5869: removido duplicatas, S5843: simplificado complexidade)
   const patterns = {
     // "AUTOR: Nome" ou "Requerente: Nome"
+    // Simplificado: removido alguns alternadores desnecessários para reduzir complexidade
     autor:
-      /(?:autor|requerente|exequente|embargante|apelante|agravante|impetrante)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-zÁÉÍÓÚÂÊÎÔÛÃÕÇáéíóúâêîôûãõç\s]+?)(?:\s*(?:x|vs?\.?|contra|CPF|CNPJ|RG|\d|,|\.|;|\n|$))/i,
+      /(?:autor|requerente|exequente|embargante|apelante|agravante|impetrante)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\s]+?)(?:\s*(?:x|vs?\.?|contra|CPF|CNPJ|RG|\d|[,;.\n]|$))/i,
     // "RÉU: Nome" ou "Requerido: Nome"
-    reu: /(?:r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-zÁÉÍÓÚÂÊÎÔÛÃÕÇáéíóúâêîôûãõç\s]+?)(?:\s*(?:CPF|CNPJ|RG|\d|,|\.|;|\n|$))/i,
+    reu: /(?:r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\s]+?)(?:\s*(?:CPF|CNPJ|RG|\d|[,;.\n]|$))/i,
   };
 
   const matchAutor = teor.match(patterns.autor);
