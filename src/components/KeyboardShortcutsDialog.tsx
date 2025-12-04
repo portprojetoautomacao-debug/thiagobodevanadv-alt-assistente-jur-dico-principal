@@ -1,4 +1,3 @@
-import {Keyboard} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Command } from "lucide-react";
 
 interface ShortcutItemProps {
   keys: string[];
@@ -98,7 +98,7 @@ export default function KeyboardShortcutsDialog({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Keyboard size={24} />
+            <Command size={24} />
             Atalhos de Teclado
           </DialogTitle>
           <DialogDescription>

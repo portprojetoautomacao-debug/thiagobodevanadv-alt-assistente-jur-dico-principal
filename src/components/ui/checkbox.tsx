@@ -1,4 +1,4 @@
-import {Check} from "lucide-react";
+import { Check } from "lucide-react";
 "use client";
 
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";

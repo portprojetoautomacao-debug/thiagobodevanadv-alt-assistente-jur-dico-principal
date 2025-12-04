@@ -1,4 +1,4 @@
-import { CheckCircle, Download, AlertCircle, RefreshCw, Calendar, FileText, ExternalLink, Filter, Search as SearchLucide } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle, Download, ExternalLink, FileText, Filter, RefreshCw, Search, Search as SearchLucide } from "lucide-react";
 /**
  * Multi-Source Publications Component
  *
@@ -27,7 +27,6 @@ import {
   type PublicationSource,
   type UnifiedPublication,
 } from "@/lib/multi-source-publications";
-import { ArrowClockwise, Copy, Database, Info, Warning } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -376,12 +375,12 @@ export default function MultiSourcePublications() {
           <Button onClick={handleSearch} disabled={loading} className="w-full">
             {loading ? (
               <>
-                <ArrowClockwise className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Buscando...
               </>
             ) : (
               <>
-                <SearchLucide className="w-4 h-4 mr-2" />
+                <Search className="w-4 h-4 mr-2" />
                 Buscar Publicações
               </>
             )}

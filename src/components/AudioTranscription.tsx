@@ -29,7 +29,7 @@ export default function AudioTranscription() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const audioFileRef = useRef<File | null>(null);
+  const audioFileRef = useRef<FileText | null>(null);
 
   // Verifica suporte a Web Speech API
   const isSpeechSupported =

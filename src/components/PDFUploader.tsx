@@ -1,4 +1,3 @@
-import {CircleNotch, Clock, FileText, Trash, X} from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import { geminiGenerateJSON } from "@/lib/gemini-client";
 import type { PDFUploadHistory } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle, Upload, User, XCircle } from "lucide-react";
+import { CheckCircle, Loader2, Upload, User, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -33,7 +32,7 @@ interface ExtractedData {
 }
 
 export default function PDFUploader() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileText | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [extractionStatus, setExtractionStatus] = useState<
@@ -272,7 +271,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
       case "processing":
         return (
           <Badge variant="secondary" className="gap-1">
-            <CircleNotch size={12} className="animate-spin" /> Processando
+            <Loader2 size={12} className="animate-spin" /> Processando
           </Badge>
         );
       case "success":
@@ -361,7 +360,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                 >
                   {isProcessing ? (
                     <>
-                      <CircleNotch className="animate-spin" size={20} />
+                      <Loader2 className="animate-spin" size={20} />
                       Processando...
                     </>
                   ) : (
@@ -374,7 +373,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "processing" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <CircleNotch className="animate-spin text-primary" size={16} />
+                    <Loader2 className="animate-spin text-primary" size={16} />
                     <AlertDescription>
                       Processando documento... Isso pode levar alguns segundos.
                     </AlertDescription>
@@ -641,7 +640,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         onClick={() => handleDeleteHistory(item.id)}
                         aria-label="Excluir item do histórico"
                       >
-                        <Trash size={16} />
+                        <Trash2 size={16} />
                       </Button>
                     </div>
                   </CardContent>

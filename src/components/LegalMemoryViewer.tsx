@@ -1,9 +1,9 @@
-import {Brain, Clock, FileText, Gavel, Lightbulb} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type MemoryItem } from "@/hooks/use-autonomous-agents";
 import React from "react";
+import { Brain, Clock, FileText, Gavel, Lightbulb } from "lucide-react";
 
 interface LegalMemoryViewerProps {
   readonly memory?: MemoryItem[];
