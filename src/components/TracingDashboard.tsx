@@ -23,7 +23,20 @@ import {
   Trash,
   XCircle,
 } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
+
+// Helper para obter ícone do status (evita ternário aninhado S3358)
+function getStatusIcon(status: string): ReactNode {
+  switch (status) {
+    case "ok":
+      return <CheckCircle className="h-3 w-3" />;
+    case "error":
+      return <XCircle className="h-3 w-3" />;
+    default:
+      return <Clock className="h-3 w-3" />;
+  }
+}
 
 interface TracingDashboardProps {
   agentIds?: string[];
@@ -237,13 +250,7 @@ export default function TracingDashboard({
                                 {formatDuration(span.startTime, span.endTime)}
                               </span>
                               <Badge variant="secondary" className={getStatusColor(span.status)}>
-                                {span.status === "ok" ? (
-                                  <CheckCircle className="h-3 w-3" />
-                                ) : span.status === "error" ? (
-                                  <XCircle className="h-3 w-3" />
-                                ) : (
-                                  <Clock className="h-3 w-3" />
-                                )}
+                                {getStatusIcon(span.status)}
                               </Badge>
                             </div>
                           </div>

@@ -27,12 +27,10 @@ let _redisClient: Redis | null = null;
 
 function getRedisOrNull(): Redis | null {
   if (!redisUrl || !redisToken) return null;
-  if (!_redisClient) {
-    _redisClient = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
-  }
+  _redisClient ??= new Redis({
+    url: redisUrl,
+    token: redisToken,
+  });
   return _redisClient;
 }
 

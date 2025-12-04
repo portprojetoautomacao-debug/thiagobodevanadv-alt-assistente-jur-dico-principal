@@ -98,12 +98,10 @@ let _redisClient: Redis | null = null;
 
 function getRedisOrNull(): Redis | null {
   if (!redisUrl || !redisToken) return null;
-  if (!_redisClient) {
-    _redisClient = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
-  }
+  _redisClient ??= new Redis({
+    url: redisUrl,
+    token: redisToken,
+  });
   return _redisClient;
 }
 
@@ -175,7 +173,7 @@ export class AgentMonitor {
       try {
         // Buscar logs existentes
         const existingLogs = (await redis.get("agent-logs")) as AgentActionLog[] | null;
-        const logs = existingLogs || [];
+        const logs = existingLogs ?? [];
 
         // Manter apenas os últimos 50 logs para não estourar o limite
         const newLogs = [log, ...logs].slice(0, 50);

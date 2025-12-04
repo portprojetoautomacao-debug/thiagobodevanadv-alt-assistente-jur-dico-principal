@@ -10,7 +10,7 @@
  * Usa localStorage como fallback e Upstash Redis em produção.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ============================================================================
 // CACHE E BATCHING
@@ -223,7 +223,7 @@ function scheduleLoad(key: string): Promise<unknown | null> {
     pendingKeys.add(key);
 
     // Adiciona resolver para esta chave
-    const resolvers = pendingResolvers.get(key) || [];
+    const resolvers = pendingResolvers.get(key) ?? [];
     resolvers.push(resolve);
     pendingResolvers.set(key, resolvers);
 
@@ -299,11 +299,9 @@ function scheduleWrite<T>(key: string, value: T): void {
   if (isProd) {
     pendingWrites.set(key, { value, timestamp: Date.now() });
 
-    if (!writeTimeout) {
-      writeTimeout = setTimeout(() => {
-        processWriteBatch();
-      }, WRITE_DEBOUNCE_MS);
-    }
+    writeTimeout ??= setTimeout(() => {
+      processWriteBatch();
+    }, WRITE_DEBOUNCE_MS);
   }
 }
 

@@ -24,12 +24,10 @@ let _redisClient: Redis | null = null;
 
 function getRedisOrNull(): Redis | null {
   if (!redisUrl || !redisToken) return null;
-  if (!_redisClient) {
-    _redisClient = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
-  }
+  _redisClient ??= new Redis({
+    url: redisUrl,
+    token: redisToken,
+  });
   return _redisClient;
 }
 
@@ -144,7 +142,7 @@ export class LegalMemory {
       try {
         // Buscar memória existente
         const existingMemory = (await redis.get("legal-memory")) as LegalContextItem[] | null;
-        const memory = existingMemory || [];
+        const memory = existingMemory ?? [];
 
         // Adicionar novo item
         const newMemory = [...memory, validatedItem];
