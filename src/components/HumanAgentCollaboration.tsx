@@ -129,8 +129,14 @@ export default function HumanAgentCollaboration({
 
   // Track previous phase for transition detection
   const previousPhaseRef = useRef(phase)
-  
-  // Inactivity timer during human editing
+  useEffect(() => {
+    if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
+      setTimeWithoutActivity(0)
+    }
+    previousPhaseRef.current = phase
+  }, [phase])
+
+  // Timer de inatividade durante edição humana
   useEffect(() => {
     const prevPhase = previousPhaseRef.current
     previousPhaseRef.current = phase
