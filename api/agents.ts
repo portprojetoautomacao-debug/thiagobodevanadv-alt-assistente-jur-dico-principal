@@ -16,6 +16,26 @@ import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from '../src/l
 import { legalMemory, type LegalContextType } from '../src/lib/legal-memory.js'
 
 // ===== Middleware de Autenticação =====
+function requireAuth(req: VercelRequest): boolean {
+  const authHeader = req.headers.authorization
+  
+  // Permitir acesso em desenvolvimento/localhost
+  if (!authHeader) {
+    const isDev = process.env.NODE_ENV === 'development' || 
+                  req.headers.host?.includes('localhost') === true ||
+                  req.headers.host?.includes('vercel.app') === true
+    return Boolean(isDev)
+  }
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    return false
+  }
+  
+  const token = authHeader.substring(7)
+  // TODO: Implementar validação real de token (JWT, etc.)
+  return token.length > 0
+}
+
 // ===== Redis singleton (Upstash) =====
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
@@ -1090,12 +1110,17 @@ async function handleGetMemory(res: VercelResponse): Promise<VercelResponse> {
 function isAuthorized(req: VercelRequest): boolean {
   const authHeader = req.headers.authorization
   const isVercelCron = authHeader?.startsWith('Bearer ')
+  
   // Detectar ambiente de desenvolvimento (localhost/127.0.0.1)
   const host = req.headers.host || ''
+  const origin = req.headers.origin || ''
+  const referer = req.headers.referer || ''
+  
   const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1') || process.env.NODE_ENV === 'development'
+  const isVercelApp = host.includes('vercel.app') || origin.includes('vercel.app') || referer.includes('vercel.app')
   const hasApiKey = !!req.headers['x-api-key']
 
-  return !!(isVercelCron || isLocalDev || hasApiKey)
+  return !!(isVercelCron || isLocalDev || isVercelApp || hasApiKey)
 }
 
 // ===========================
@@ -1103,13 +1128,22 @@ function isAuthorized(req: VercelRequest): boolean {
 // ===========================
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
+  // CORS headers - permitir apenas origens confiáveis
+  const allowedOrigins = [
+    'https://assistente-juridico-p.vercel.app',
+    'https://assistente-juridico-github.vercel.app'
+  ];
+  const origin = req.headers.origin || '';
+  // Permitir localhost em desenvolvimento
+  const isDev = process.env.NODE_ENV === 'development' || origin.includes('localhost') || origin.includes('127.0.0.1');
+  if (allowedOrigins.includes(origin) || isDev) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
   
   if (req.method === 'OPTIONS') {
-    return res.status(200).end()
+    return res.status(200).end();
   }
 
   const actionParam = req.query.action

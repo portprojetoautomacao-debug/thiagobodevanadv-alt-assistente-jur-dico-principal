@@ -18,13 +18,10 @@ export function useIsMobile() {
     }
     mql.addEventListener("change", onChange)
     
-    // Set initial value on mount in case SSR returned undefined
-    // (Removido setTimeout redundante)
-    
     return () => {
       mql.removeEventListener("change", onChange)
     }
   }, []) // Empty dependency array - only runs once on mount
 
-  return isMobile
+  return isMobile ?? false
 }

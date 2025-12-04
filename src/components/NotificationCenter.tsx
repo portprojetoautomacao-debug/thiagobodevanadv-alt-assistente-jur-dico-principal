@@ -12,24 +12,26 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useExpedientes } from "@/hooks/use-expedientes";
 import { useKV } from "@/hooks/use-kv";
+import type { Expediente } from "@/types";
 import {
-  Bell,
-  BellRinging,
-  CheckCircle,
-  Clock,
-  FileText,
-  Info,
-  Robot,
-  Trash,
-  Tray,
-  Warning,
-  X,
+    Bell,
+    BellRinging,
+    CheckCircle,
+    Clock,
+    FileText,
+    Info,
+    Robot,
+    Trash,
+    Tray,
+    Warning,
+    X,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -133,6 +135,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   );
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const prevCountRef = useRef(0);
+  const { expedientes } = useExpedientes();  // ✅ Expedientes reais para notificações
+  const prevExpedientesCountRef = useRef(0);
 
   // Contagem de não lidas
   const unreadCount = (notifications || []).filter((n) => !n.read).length;
@@ -140,17 +144,18 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   // Detectar novas notificações
   useEffect(() => {
     const currentCount = notifications?.length || 0;
+    
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
       // Schedule state update to avoid synchronous setState in effect
-      const timeoutId = globalThis.setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         setHasNewNotifications(true);
       }, 0);
-      // FUTURE: Som de notificação pode ser adicionado aqui se necessário
-      // Exemplo: playNotificationSound()
+      // Atualiza ref dentro do if e retorna cleanup
       prevCountRef.current = currentCount;
-      return () => globalThis.clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId);
     }
-    // Update ref only when count changes without triggering notification
+    
+    // Atualiza ref apenas quando não houve notificação nova
     prevCountRef.current = currentCount;
   }, [notifications]);
 
@@ -214,6 +219,31 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       onNavigate?.(notification.action.view, notification.action.payload);
     }
   };
+
+  // Criar notificações automáticas para novos expedientes
+  useEffect(() => {
+    const currentCount = expedientes?.length || 0;
+    
+    if (currentCount > prevExpedientesCountRef.current && prevExpedientesCountRef.current > 0) {
+      const novosExpedientes = expedientes?.slice(0, currentCount - prevExpedientesCountRef.current) || [];
+      
+      novosExpedientes.forEach((exp: Expediente) => {
+        addNotification({
+          type: 'nova_intimacao',
+          title: 'Nova Intimação Detectada',
+          message: exp.descricao || exp.conteudo || exp.summary || 'Nova intimação processada automaticamente',
+          data: { expedienteId: exp.id },
+          action: {
+            label: 'Ver detalhes',
+            view: 'processos',
+            payload: { expedienteId: exp.id },
+          },
+        });
+      });
+    }
+    
+    prevExpedientesCountRef.current = currentCount;
+  }, [expedientes, addNotification]);
 
   // Expor função global para adicionar notificações (útil para agentes / websockets)
   useEffect(() => {
@@ -384,8 +414,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   );
 }
 
-// Hook para usar o sistema de notificações em qualquer lugar
-export function useNotifications() {
+// Hook interno para gerenciar notificações no componente NotificationCenter
+export function useNotificationManager() {
   const [notifications, setNotifications] = useKV<Notification[]>(
     "notifications",
     []

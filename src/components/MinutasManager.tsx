@@ -2,76 +2,77 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAIStreaming } from "@/hooks/use-ai-streaming";
+import { useGoogleDocs } from "@/hooks/use-google-docs";
 import { useKV } from "@/hooks/use-kv";
 import {
-  documentTemplates,
-  extractUnfilledVariables,
-  replaceTemplateVariables,
-  type DocumentTemplate,
+    documentTemplates,
+    extractUnfilledVariables,
+    replaceTemplateVariables,
+    type DocumentTemplate,
 } from "@/lib/document-templates";
 import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
 import type { Minuta, Process } from "@/types";
 import {
-  ArrowsClockwise,
-  CaretDown,
-  CheckCircle,
-  Clock,
-  Copy,
-  DownloadSimple,
-  Eye,
-  FileDoc,
-  FilePdf,
-  FileText,
-  FolderOpen,
-  GoogleLogo,
-  MagnifyingGlass,
-  PencilSimple,
-  Plus,
-  Robot,
-  Sparkle,
-  SpinnerGap,
-  Trash,
-  Warning,
+    ArrowsClockwise,
+    CaretDown,
+    CheckCircle,
+    Clock,
+    Copy,
+    DownloadSimple,
+    Eye,
+    FileDoc,
+    FilePdf,
+    FileText,
+    FolderOpen,
+    GoogleLogo,
+    MagnifyingGlass,
+    PencilSimple,
+    Plus,
+    Robot,
+    Sparkle,
+    SpinnerGap,
+    Trash,
+    Warning,
 } from "@phosphor-icons/react";
 import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
+    lazy,
+    Suspense,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
 } from "react";
 import { toast } from "sonner";
 // ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
@@ -109,6 +110,7 @@ Responda apenas com o conteúdo solicitado (trecho ou minuta), sem explicações
 export default function MinutasManager() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
   const [processes] = useKV<Process[]>("processes", []);
+  const { exportToGoogleDocs, openDocument, isAuthenticated: isGoogleDocsAuth } = useGoogleDocs();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
@@ -303,20 +305,20 @@ export default function MinutasManager() {
       toast.error("Google não está configurado neste ambiente");
       return;
     }
-    if (!isAuthenticated) {
+    if (!isGoogleDocsAuth) {
       toast.error("Autentique-se com Google primeiro");
       return;
     }
 
     if (minuta.googleDocsUrl) {
-      googleDocsService.openDocument(minuta.googleDocsUrl);
+      openDocument(minuta.googleDocsUrl);
       return;
     }
 
     const toastId = toast.loading("Criando documento no Google Docs...");
 
     try {
-      const result = await googleDocsService.createDocument(minuta);
+      const result = await exportToGoogleDocs(minuta);
 
       if (result) {
         setMinutas((current = []) =>
@@ -332,11 +334,10 @@ export default function MinutasManager() {
           )
         );
 
-        googleDocsService.openDocument(result.url);
+        openDocument(result.url);
         toast.success("✅ Documento criado no Google Docs!", { id: toastId });
       } else {
-        const lastError = googleDocsService.getLastError();
-        toast.error(lastError || "Erro ao criar documento no Google Docs", {
+        toast.error("Erro ao criar documento no Google Docs", {
           id: toastId,
         });
       }

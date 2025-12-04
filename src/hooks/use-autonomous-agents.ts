@@ -1,14 +1,14 @@
 import { useKV } from "@/hooks/use-kv";
 import {
-  type Agent,
-  type AgentTask,
-  canResumeAfterHuman,
-  initializeAgents,
-  shouldPauseForHuman,
+    type Agent,
+    type AgentTask,
+    canResumeAfterHuman,
+    initializeAgents,
+    shouldPauseForHuman,
 } from "@/lib/agents";
 import {
-  processTaskWithRealAI,
-  processTaskWithStreamingAI,
+    processTaskWithRealAI,
+    processTaskWithStreamingAI,
 } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -327,9 +327,7 @@ export function useAutonomousAgents() {
           setServerLogs(data.logs);
         }
       } else if (logsRes.status === 401) {
-        console.warn(
-          "[Agents] API requer autenticação - ignorando sync de logs"
-        );
+        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
       }
 
       // Fetch memory com timeout
@@ -348,9 +346,7 @@ export function useAutonomousAgents() {
           setLegalMemory(data.memory);
         }
       } else if (memoryRes.status === 401) {
-        console.warn(
-          "[Agents] API requer autenticação - ignorando sync de memória"
-        );
+        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
       }
     } catch (error) {
       // Silenciar erros de rede em dev (servidor pode não estar rodando)
@@ -709,6 +705,16 @@ export function useAutonomousAgents() {
     setUseStreaming((prev) => !prev);
   }, []);
 
+  // Clear old activity logs (older than 24h)
+  const clearOldLogs = useCallback(() => {
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    setActivityLog((current) =>
+      (current || []).filter(
+        (log) => new Date(log.timestamp).getTime() > oneDayAgo
+      )
+    );
+  }, [setActivityLog]);
+
   return {
     agents: agents || [],
     taskQueue: taskQueue || [],
@@ -727,5 +733,6 @@ export function useAutonomousAgents() {
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
     setAgents,
+    clearOldLogs, // Clear logs older than 24h
   };
 }

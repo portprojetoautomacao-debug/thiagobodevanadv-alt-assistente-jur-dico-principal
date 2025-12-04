@@ -196,10 +196,13 @@ async function streamGemini(
     console.log('[LLM-Stream] Using Gemini streaming');
 
     const geminiBody = transformToGemini(body);
-    // Normaliza o nome do modelo: "gemini" sozinho vira "gemini-2.5-pro"
-    const model = (requestedModel === 'gemini' || !requestedModel.startsWith('gemini-')) 
-        ? 'gemini-2.5-pro' 
-        : requestedModel;
+    
+    // Normaliza o nome do modelo para garantir versão válida
+    let model = requestedModel;
+    if (!model || model === 'gemini' || !model.startsWith('gemini-')) {
+        model = 'gemini-2.5-pro'; // Modelo padrão válido
+        console.log(`[LLM-Stream] Modelo normalizado: ${requestedModel} → ${model}`);
+    }
 
     const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${geminiKey}&alt=sse`,
@@ -257,7 +260,9 @@ async function processStreamingRequest(
     openaiKey?: string,
     geminiKey?: string
 ): Promise<void> {
-    const requestedModel = validatedBody.model || 'gpt-4o-mini';
+    // Definir modelo padrão baseado no provedor
+    const defaultModel = provider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.5-pro';
+    const requestedModel = validatedBody.model || defaultModel;
 
     if (provider === 'openai' && openaiKey) {
         await streamOpenAI(validatedBody, openaiKey, requestedModel, sendEvent);
