@@ -12,6 +12,16 @@ function getEventTypeColor(type: string): string {
   return "bg-destructive";
 }
 
+function getEventTitle(event: { type: string; data?: { path?: string; action?: string; error?: string } }): string {
+  if (event.type === "pageview") {
+    return `Visualização: ${event.data?.path ?? "-"}`;
+  }
+  if (event.type === "action") {
+    return `Ação: ${event.data?.action ?? "-"}`;
+  }
+  return `Erro: ${event.data?.error ?? "-"}`;
+}
+
 export default function AnalyticsDashboard() {
   const { getAnalytics, clearEvents, events } = useAnalytics();
   const analytics = getAnalytics();
@@ -240,13 +250,7 @@ export default function AnalyticsDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium capitalize">
-                          {(() => {
-                            if (event.type === "pageview")
-                              return `Visualização: ${event.data?.path ?? "-"}`;
-                            if (event.type === "action")
-                              return `Ação: ${event.data?.action ?? "-"}`;
-                            return `Erro: ${event.data?.error ?? "-"}`;
-                          })()}
+                          {getEventTitle(event)}
                         </p>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {new Date(event.timestamp).toLocaleTimeString("pt-BR")}

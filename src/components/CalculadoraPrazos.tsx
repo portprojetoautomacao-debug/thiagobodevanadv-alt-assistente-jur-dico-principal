@@ -334,9 +334,13 @@ export default function CalculadoraPrazos() {
             <Alert>
               <Info size={16} />
               <AlertDescription className="text-xs">
-                {tipoPrazo === "cpc"
-                  ? "Conta apenas dias úteis (exclui sábados, domingos e feriados). Se o prazo final cair em dia não útil, prorroga para o próximo dia útil."
-                  : "Conta dias corridos a partir da data de início. Se o prazo final cair em dia não útil, prorroga para o próximo dia útil."}
+                {(() => {
+                  const prazoDescription =
+                    tipoPrazo === "cpc"
+                      ? "Conta apenas dias úteis (exclui sábados, domingos e feriados). Se o prazo final cair em dia não útil, prorroga para o próximo dia útil."
+                      : "Conta dias corridos a partir da data de início. Se o prazo final cair em dia não útil, prorroga para o próximo dia útil.";
+                  return prazoDescription;
+                })()}
               </AlertDescription>
             </Alert>
 

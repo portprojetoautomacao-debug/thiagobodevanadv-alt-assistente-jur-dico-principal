@@ -80,7 +80,8 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
       return;
     }
 
-    const fullText = `RESUMO:\n${summary}\n\nPONTOS-CHAVE:\n${keyPoints.join("\n")}`;
+    const keyPointsText = keyPoints.join("\n");
+    const fullText = `RESUMO:\n${summary}\n\nPONTOS-CHAVE:\n${keyPointsText}`;
     navigator.clipboard
       .writeText(fullText)
       .then(() => {
