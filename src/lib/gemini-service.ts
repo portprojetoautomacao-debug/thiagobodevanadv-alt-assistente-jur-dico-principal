@@ -13,8 +13,8 @@
  * @since 2025-11-28
  */
 
-import { getGeminiApiKey, isGeminiConfigured, validateGeminiApiKey } from "@/lib/gemini-config";
 import { withRetry, type RetryConfig } from "@/lib/ai-providers";
+import { getGeminiApiKey, isGeminiConfigured, validateGeminiApiKey } from "@/lib/gemini-config";
 
 /**
  * Extract error message from unknown error type
@@ -95,24 +95,24 @@ const DEFAULT_TIMEOUT_MS = 25_000;
 function validateGeminiApiKeyFormat(apiKey: string | undefined): boolean {
   if (!apiKey) {
     if (import.meta.env.DEV) {
-      console.warn('[GeminiService] ⚠️ API key não fornecida');
-      console.warn('[GeminiService] Configure VITE_GEMINI_API_KEY no .env.local');
-      console.warn('[GeminiService] Obtenha em: https://aistudio.google.com/app/apikey');
+      console.warn("[GeminiService] ⚠️ API key não fornecida");
+      console.warn("[GeminiService] Configure VITE_GEMINI_API_KEY no .env.local");
+      console.warn("[GeminiService] Obtenha em: https://aistudio.google.com/app/apikey");
     }
     return false;
   }
-  
-  if (!apiKey.startsWith('AIza')) {
+
+  if (!apiKey.startsWith("AIza")) {
     console.warn('[GeminiService] ⚠️ Formato de API key inválido - deve começar com "AIza"');
-    console.warn('[GeminiService] Verifique VITE_GEMINI_API_KEY no .env.local');
+    console.warn("[GeminiService] Verifique VITE_GEMINI_API_KEY no .env.local");
     return false;
   }
-  
+
   if (apiKey.length < 30) {
-    console.warn('[GeminiService] ⚠️ API key muito curta - verifique a configuração');
+    console.warn("[GeminiService] ⚠️ API key muito curta - verifique a configuração");
     return false;
   }
-  
+
   return true;
 }
 
@@ -211,7 +211,7 @@ export async function callGemini(
   let apiKey: string;
   try {
     apiKey = getGeminiApiKey();
-    
+
     // ✅ Validar formato da API key
     if (!validateGeminiApiKeyFormat(apiKey)) {
       return {
