@@ -55,10 +55,9 @@ export default function ConfirmDialog({
             console.error("[ConfirmDialog] Erro no onConfirm:", err);
           })
           .finally(() => setConfirming(false));
-      } else {
-        if (autoCloseOnConfirmResult && res === true) {
-          onOpenChange(false);
-        }
+      } else if (autoCloseOnConfirmResult && res === true) {
+        // Resultado síncrono: fechar se autoClose habilitado e resultado true
+        onOpenChange(false);
       }
     } catch (err) {
       console.error("[ConfirmDialog] Erro no onConfirm (sync):", err);

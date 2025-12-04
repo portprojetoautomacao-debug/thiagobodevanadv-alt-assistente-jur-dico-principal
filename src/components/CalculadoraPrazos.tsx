@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
-import { useKV } from "@/hooks/use-kv";
-import type { Process, Prazo, Expediente } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LabelWithTooltip } from "@/components/ui/info-tooltip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,18 +12,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Info } from "@phosphor-icons/react";
+import { useKV } from "@/hooks/use-kv";
 import {
-  calcularPrazoCPC,
   calcularPrazoCLT,
+  calcularPrazoCPC,
   formatarData,
   getFeriadosNacionais,
 } from "@/lib/prazos";
+import type { Expediente, Prazo, Process } from "@/types";
+import { Info } from "@phosphor-icons/react";
 import { format } from "date-fns";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { LabelWithTooltip } from "@/components/ui/info-tooltip";
+
+/**
+ * Formata a data de um expediente, priorizando dataRecebimento > data
+ */
+function formatExpedienteDate(e: Expediente): string {
+  if (e.dataRecebimento) {
+    return formatarData(e.dataRecebimento);
+  }
+  if (e.data) {
+    return formatarData(e.data);
+  }
+  return "Data não informada";
+}
 
 export default function CalculadoraPrazos() {
   const [processes, setProcesses] = useKV<Process[]>("processes", []);
@@ -255,12 +268,7 @@ export default function CalculadoraPrazos() {
                 <SelectContent>
                   {expedientesDoProcesso.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
-                      {e.titulo || e.tipo || "Intimação"} •{" "}
-                      {e.dataRecebimento
-                        ? formatarData(e.dataRecebimento)
-                        : e.data
-                          ? formatarData(e.data)
-                          : "Data não informada"}
+                      {e.titulo || e.tipo || "Intimação"} • {formatExpedienteDate(e)}
                     </SelectItem>
                   ))}
                 </SelectContent>
