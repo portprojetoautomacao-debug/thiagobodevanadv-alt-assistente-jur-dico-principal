@@ -147,11 +147,16 @@ export default function MinutasManager() {
         return;
       }
       try {
+        console.log("[MinutasManager] Inicializando Google Docs...");
         await googleDocsService.initialize();
-        setIsAuthenticated(googleDocsService.isAuthenticated());
+        const authenticated = googleDocsService.isAuthenticated();
+        setIsAuthenticated(authenticated);
+        console.log("[MinutasManager] ✅ Google Docs inicializado. Autenticado:", authenticated);
       } catch (err) {
-        console.warn("[MinutasManager] Google Docs init falhou:", err);
+        const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+        console.error("[MinutasManager] ❌ Google Docs init falhou:", errorMsg, err);
         setIsAuthenticated(false);
+        // Não mostrar toast aqui - evita poluir UI ao carregar página
       }
     };
     initGoogleDocs();
@@ -183,8 +188,15 @@ export default function MinutasManager() {
       }
 
       // CRÍTICO: Garantir que está inicializado ANTES de chamar authenticate()
-      // Se não estiver inicializado, authenticate() retorna false
-      await googleDocsService.initialize();
+      try {
+        await googleDocsService.initialize();
+      } catch (initError) {
+        const errorMsg =
+          initError instanceof Error ? initError.message : "Erro ao inicializar Google Docs";
+        console.error("[MinutasManager] Falha ao inicializar Google Docs:", initError);
+        toast.error(`Falha na inicialização: ${errorMsg}`);
+        return;
+      }
 
       // IMPORTANTE: authenticate() DEVE ser chamado diretamente do handler de clique
       // (sem await entre o clique e requestAccessToken) para evitar popup blocker
@@ -198,8 +210,9 @@ export default function MinutasManager() {
         toast.error(lastError || "Falha na autenticação - verifique se popups estão permitidos");
       }
     } catch (error) {
-      toast.error("Erro ao autenticar com Google");
-      console.error(error);
+      const errorMsg = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error(`Erro ao autenticar: ${errorMsg}`);
+      console.error("[MinutasManager] Erro na autenticação:", error);
     }
   };
 

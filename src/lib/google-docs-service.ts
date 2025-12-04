@@ -146,7 +146,7 @@ class GoogleDocsService {
   async initialize(): Promise<void> {
     // Prevenir múltiplas inicializações simultâneas
     if (this.initInProgress) {
-      debug("Initialization already in progress, skipping duplicate call");
+      debug("Initialization already in progress, waiting...");
       if (this.initPromise) {
         await this.initPromise;
       }
@@ -159,18 +159,18 @@ class GoogleDocsService {
     if (typeof window === "undefined" || typeof document === "undefined") {
       this.lastError = "Google Docs Service só pode ser inicializado no browser.";
       debugError(this.lastError);
-      return;
+      throw new Error(this.lastError);
     }
 
     if (!GOOGLE_DOCS_CLIENT_ID || !GOOGLE_DOCS_API_KEY) {
       this.lastError =
         "Credenciais do Google Docs não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.";
       debugError(this.lastError);
-      return;
+      throw new Error(this.lastError);
     }
 
     if (this.gapiInited && this.gisInited) {
-      debug("Already initialized");
+      debug("Already initialized successfully");
       return;
     }
 
@@ -186,6 +186,10 @@ class GoogleDocsService {
 
     try {
       await this.initPromise;
+      debug("✅ Google Docs initialized successfully");
+    } catch (error) {
+      debugError("❌ Google Docs initialization failed:", error);
+      throw error;
     } finally {
       this.initPromise = null;
       this.initInProgress = false;
@@ -201,11 +205,20 @@ class GoogleDocsService {
         gapiInited: this.gapiInited,
         gisInited: this.gisInited,
       });
+
+      // ✅ Verificar se realmente inicializou
+      if (!this.gapiInited || !this.gisInited) {
+        const error = `Inicialização incompleta: gapiInited=${this.gapiInited}, gisInited=${this.gisInited}`;
+        this.lastError = error;
+        throw new Error(error);
+      }
     } catch (err) {
       this.lastError = `Falha na inicialização: ${
         err instanceof Error ? err.message : String(err)
       }`;
       debugError("Initialization failed", err);
+      // ✅ RE-LANÇAR exceção para que o caller saiba que falhou
+      throw err;
     }
   }
 
