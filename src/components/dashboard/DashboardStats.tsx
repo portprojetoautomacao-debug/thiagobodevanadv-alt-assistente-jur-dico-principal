@@ -4,7 +4,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gavel, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, Gavel } from "lucide-react";
 
 interface DashboardStatsProps {
   stats: {
@@ -15,7 +15,7 @@ interface DashboardStatsProps {
   };
 }
 
-export function DashboardStats({ stats }: DashboardStatsProps) {
+export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="bg-linear-to-br from-accent-3 to-accent-4 border-accent-6">

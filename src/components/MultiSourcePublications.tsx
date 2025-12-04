@@ -1,4 +1,13 @@
-import { AlertCircle, Calendar, CheckCircle, Download, ExternalLink, FileText, Filter, RefreshCw, Search, Search as SearchLucide } from "lucide-react";
+import {
+  CheckCircle,
+  Copy,
+  Database,
+  Download,
+  Info,
+  RefreshCw,
+  Search,
+  TriangleAlert,
+} from "lucide-react";
 /**
  * Multi-Source Publications Component
  *
@@ -435,7 +444,7 @@ export default function MultiSourcePublications() {
                         {source.status === "success" ? (
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         ) : (
-                          <Warning className="w-4 h-4 text-red-500" />
+                          <TriangleAlert className="w-4 h-4 text-red-500" />
                         )}
                         <span className="capitalize">
                           {String(source.source).replaceAll("_", " ")}

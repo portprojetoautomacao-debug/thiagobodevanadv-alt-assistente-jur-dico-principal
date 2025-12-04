@@ -16,21 +16,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useExpedientes } from "@/hooks/use-expedientes";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
+  AlertTriangle,
   Bell,
   BellRing,
+  Bot,
   CheckCircle,
   Clock,
   FileText,
-  Info,
-  Bot,
-  Trash2,
   Inbox,
-  AlertTriangle,
+  Info,
+  Trash2,
   X,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -123,7 +123,7 @@ function generateId(): string {
   return `notif-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
+export function NotificationCenter({ onNavigate }: Readonly<NotificationCenterProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useKV<Notification[]>("notifications", []);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);

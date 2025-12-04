@@ -10,7 +10,7 @@ interface DJENErrorCardProps {
   readonly onRetry: () => void;
 }
 
-export function DJENErrorCard({ compact = false, error, onRetry }: DJENErrorCardProps) {
+export function DJENErrorCard({ compact = false, error, onRetry }: Readonly<DJENErrorCardProps>) {
   return (
     <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
       <CardHeader className="pb-2">

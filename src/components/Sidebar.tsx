@@ -4,7 +4,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User, ViewType } from "@/types";
-import { BookOpen, Bot, Briefcase, Calculator, Calendar, Database, DollarSign, FileText, Home, Inbox, LogOut, Mic, Newspaper, PenLine } from "lucide-react";
+import {
+  BookOpen,
+  Bot,
+  Briefcase,
+  Calculator,
+  Calendar,
+  Database,
+  DollarSign,
+  FileText,
+  Home,
+  Inbox,
+  LogOut,
+  Mic,
+  Newspaper,
+  PenLine,
+} from "lucide-react";
 
 interface SidebarProps {
   currentView: string;
@@ -14,19 +29,19 @@ interface SidebarProps {
 }
 
 const NAVIGATION_ITEMS = [
-  { id: "dashboard", label: "Meu Painel", icon: House },
+  { id: "dashboard", label: "Meu Painel", icon: Home },
   { id: "donna", label: "Harvey Specter", icon: Bot, featured: true },
   { id: "ai-agents", label: "Agentes de IA", icon: Bot },
   { id: "processes", label: "Acervo (CRM)", icon: Briefcase },
   { id: "expedientes", label: "Expedientes", icon: Inbox },
-  { id: "minutas", label: "Minutas", icon: PencilLine },
+  { id: "minutas", label: "Minutas", icon: PenLine },
   { id: "batch", label: "Análise em Lote", icon: FileText },
-  { id: "audio", label: "Transcrição", icon: MicrophoneStage },
+  { id: "audio", label: "Transcrição", icon: Mic },
   { id: "calculator", label: "Calc. Prazos", icon: Calculator },
   { id: "queries", label: "Consultas", icon: Database },
   { id: "datajud", label: "DataJud Checklist", icon: Newspaper },
-  { id: "calendar", label: "Agenda", icon: CalendarDots },
-  { id: "financial", label: "Financeiro", icon: CurrencyCircleDollar },
+  { id: "calendar", label: "Agenda", icon: Calendar },
+  { id: "financial", label: "Financeiro", icon: DollarSign },
   { id: "knowledge", label: "Base Conhecimento", icon: BookOpen },
 ];
 
@@ -78,7 +93,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
                   onViewChange(view);
                 }}
               >
-                <Icon className="w-5 h-5 mr-3" weight={isActive ? "fill" : "regular"} />
+                <Icon className="w-5 h-5 mr-3" />
                 {item.label}
                 {isFeatured && (
                   <Badge

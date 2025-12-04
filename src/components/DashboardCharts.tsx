@@ -32,7 +32,7 @@ interface DashboardChartsProps {
   chartData: ChartData;
 }
 
-export function StatusChart({ chartData }: DashboardChartsProps) {
+export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
   try {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
       return (
@@ -76,7 +76,7 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
   }
 }
 
-export function VaraChart({ chartData }: DashboardChartsProps) {
+export function VaraChart({ chartData }: Readonly<DashboardChartsProps>) {
   try {
     if (!chartData?.varaChartData || chartData.varaChartData.length === 0) {
       return (
@@ -129,7 +129,7 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
   }
 }
 
-export function TrendChart({ chartData }: DashboardChartsProps) {
+export function TrendChart({ chartData }: Readonly<DashboardChartsProps>) {
   try {
     if (!chartData?.trendData || chartData.trendData.length === 0) {
       return (

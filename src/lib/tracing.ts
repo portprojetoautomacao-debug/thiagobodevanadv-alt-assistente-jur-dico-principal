@@ -478,6 +478,13 @@ class TracingService {
   }
 
   /**
+   * Alias for getTraces() for compatibility
+   */
+  getSpans(): Span[] {
+    return this.getTraces();
+  }
+
+  /**
    * Get traces by trace ID
    */
   getTraceById(traceId: string): Span[] {
@@ -496,6 +503,13 @@ class TracingService {
    */
   clearTraces(): void {
     this.memoryExporter.clear();
+  }
+
+  /**
+   * Alias for clearTraces() for compatibility
+   */
+  clear(): void {
+    this.clearTraces();
   }
 
   /**
