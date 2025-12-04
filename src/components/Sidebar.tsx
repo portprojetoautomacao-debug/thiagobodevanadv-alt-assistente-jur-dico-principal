@@ -4,17 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User, ViewType } from "@/types";
-import {
-  Calculator,
-  CalendarDots,
-  CurrencyCircleDollar,
-  FileText,
-  House,
-  MicrophoneStage,
-  PencilLine,
-  SignOut,
-} from "@phosphor-icons/react";
-import { BookOpen, Bot, Briefcase, Database, Inbox, Newspaper } from "lucide-react";
+import { BookOpen, Bot, Briefcase, Calculator, Calendar, Database, DollarSign, FileText, Home, Inbox, LogOut, Mic, Newspaper, PenLine } from "lucide-react";
 
 interface SidebarProps {
   currentView: string;
@@ -126,7 +116,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
           className="w-full justify-start text-muted-foreground hover:text-foreground"
           onClick={onLogout}
         >
-          <SignOut className="w-5 h-5 mr-3" />
+          <LogOut className="w-5 h-5 mr-3" />
           Sair
         </Button>
       </div>

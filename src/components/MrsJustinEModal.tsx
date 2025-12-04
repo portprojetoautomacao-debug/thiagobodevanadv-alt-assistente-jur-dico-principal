@@ -1,10 +1,10 @@
-import {Brain, Sparkle} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAIStreaming } from "@/hooks/use-ai-streaming";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Brain, Sparkles } from "lucide-react";
 
 interface MrsJustinEModalProps {
   readonly open: boolean;
@@ -144,7 +144,7 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={handleStartPreview}>
-                  <Sparkle className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-2" />
                   Gerar exemplo
                 </Button>
               )}
@@ -223,7 +223,7 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
 
           <div className="bg-linear-to-br from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
             <div className="flex items-start gap-3">
-              <Sparkle className="w-6 h-6 text-primary shrink-0 mt-0.5" />
+              <Sparkles className="w-6 h-6 text-primary shrink-0 mt-0.5" />
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground">Benefícios principais</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">

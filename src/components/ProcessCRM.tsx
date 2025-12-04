@@ -1,4 +1,3 @@
-import {Plus, Sparkle} from "@phosphor-icons/react";
 import PremonicaoModal from "@/components/PremonicaoModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,7 @@ import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import { createProcessTasks, initializeTodoistClient } from "@/lib/todoist-integration";
 import type { Expediente, PremonicaoJuridica, Process } from "@/types";
-import { Bot, Search, Sparkles } from "lucide-react";
+import { Bot, Plus, Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

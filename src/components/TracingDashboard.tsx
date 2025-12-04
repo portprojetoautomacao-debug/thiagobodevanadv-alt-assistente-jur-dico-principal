@@ -1,15 +1,4 @@
-import { ArrowClockwise } from "@phosphor-icons/react";
-import {
-  ArrowRight,
-  Bot,
-  Brain,
-  CheckCircle,
-  Clock,
-  LineChart,
-  Trash2,
-  XCircle,
-  Zap,
-} from "lucide-react";
+import { , ArrowRight, Bot, Brain, CheckCircle, Clock, LineChart, RefreshCw, Trash2, XCircle, Zap } from "lucide-react";
 /**
  * Tracing Dashboard Component
  *
@@ -189,7 +178,7 @@ export default function TracingDashboard({
       {/* Action Buttons */}
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={refreshData}>
-          <ArrowClockwise className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 mr-2" />
           Atualizar
         </Button>
         <Button variant="outline" size="sm" onClick={handleClearTraces}>
