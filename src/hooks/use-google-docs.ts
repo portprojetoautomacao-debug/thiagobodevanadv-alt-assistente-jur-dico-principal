@@ -1,6 +1,6 @@
-import type { Minuta } from '@/types'
-import { useState, useCallback, useEffect } from 'react'
 import { googleDocsService } from '@/lib/google-docs-service'
+import type { Minuta } from '@/types'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -17,7 +17,7 @@ export function useGoogleDocs() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await googleDocsService.init()
+        await googleDocsService.initialize()
         const authenticated = googleDocsService.isAuthenticated()
         setIsConnected(authenticated)
       } catch (err) {
@@ -34,7 +34,7 @@ export function useGoogleDocs() {
   const authenticate = useCallback(async () => {
     setError(null)
     try {
-      await googleDocsService.init()
+      await googleDocsService.initialize()
       const success = await googleDocsService.authenticate()
       setIsConnected(success)
       
@@ -141,16 +141,16 @@ export function useGoogleDocs() {
         }
       }
 
-      const doc = await googleDocsService.getDocument(docId)
+      const content = await googleDocsService.getDocumentContent(docId)
       
-      if (!doc) {
-        throw new Error('Documento não encontrado')
+      if (!content) {
+        throw new Error('Documento não encontrado ou vazio')
       }
 
       return {
-        id: doc.documentId || docId,
-        title: doc.title || 'Sem título',
-        content: doc.body?.content || '',
+        id: docId,
+        title: 'Documento Google Docs',
+        content: content,
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao obter documento'
