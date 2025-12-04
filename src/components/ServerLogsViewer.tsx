@@ -2,8 +2,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, Clock, Bot, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, Bot, CheckCircle, Clock } from "lucide-react";
 
 interface AgentActionLog {
   agentId: string;
