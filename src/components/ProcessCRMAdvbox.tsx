@@ -462,13 +462,7 @@ export default function ProcessCRMAdvbox() {
                       <p className="text-sm font-medium text-muted-foreground">Status</p>
                       <div className="flex items-center gap-2">
                         <div
-                          className={(() => {
-                            if (selectedCard.status === "green")
-                              return "w-3 h-3 rounded-full bg-green-500";
-                            if (selectedCard.status === "yellow")
-                              return "w-3 h-3 rounded-full bg-yellow-500";
-                            return "w-3 h-3 rounded-full bg-red-500";
-                          })()}
+                          className={`w-3 h-3 rounded-full ${getStatusColor(selectedCard.status)}`}
                         ></div>
                         <span className="capitalize">{selectedCard.status}</span>
                       </div>
