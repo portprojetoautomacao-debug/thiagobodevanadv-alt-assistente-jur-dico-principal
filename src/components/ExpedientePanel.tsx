@@ -194,6 +194,7 @@ function getAgentTasksFromAnalysis(
 interface AnalysisData {
   summary?: string;
   documentType?: string;
+  processType?: string; // Tipo do processo (Inventário, Ação Cível, etc)
   priority?: string;
   deadline?: {
     days?: number;
@@ -215,7 +216,36 @@ function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisD
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
       .trim();
-    return JSON.parse(jsonText) as AnalysisData;
+    const parsed = JSON.parse(jsonText) as AnalysisData;
+
+    // ✅ VALIDAÇÃO: Detectar divergências entre conteúdo e ação sugerida
+    const content = (exp.content || exp.teor || "").toLowerCase();
+    const isInventario = content.includes("inventário") || content.includes("inventariante");
+    const isPrimeirasDeclaracoes = content.includes("primeiras declarações");
+    const suggestedAction = (parsed.suggestedActions?.[0] || "").toLowerCase();
+
+    // Corrigir ação incorreta para inventário
+    if (isInventario && isPrimeirasDeclaracoes && suggestedAction.includes("rol de testemunhas")) {
+      console.warn(
+        "⚠️ DIVERGÊNCIA DETECTADA: Processo de INVENTÁRIO com ação incorreta. Corrigindo..."
+      );
+      parsed.suggestedActions = ["Apresentar Primeiras Declarações de Inventário"];
+      parsed.summary = `ALERTA: A tarefa sugerida anteriormente estava INCORRETA. Este é um processo de INVENTÁRIO que determina apresentar as Primeiras Declarações. ${parsed.summary || ""}`;
+      parsed.documentType = "Intimação - Inventário";
+    }
+
+    // ✅ VALIDAÇÃO: Corrigir ano da data (deve ser 2025, não anos anteriores)
+    if (parsed.deadline?.endDate) {
+      const dataParts = parsed.deadline.endDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (dataParts && parseInt(dataParts[3]) < 2025) {
+        const day = dataParts[1];
+        const month = dataParts[2];
+        parsed.deadline.endDate = `${day}/${month}/2025`;
+        console.warn(`⚠️ ANO INCORRETO DETECTADO: Corrigido para 2025`);
+      }
+    }
+
+    return parsed;
   } catch {
     return {
       summary: responseText || "Análise concluída",
@@ -431,21 +461,29 @@ export default function ExpedientePanel() {
             messages: [
               {
                 role: "system",
-                content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
-Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
+                content: `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
+
+INSTRUÇÕES CRÍTICAS:
+1. Identifique EXATAMENTE o tipo de processo (ex: Inventário, Ação Cível, Execução)
+2. Identifique a AÇÃO ESPECÍFICA solicitada (ex: "Apresentar Primeiras Declarações de Inventário", não "Apresentar rol de testemunhas")
+3. Calcule a data do prazo com base na DATA DE RECEBIMENTO + número de dias (úteis ou corridos)
+4. Use SEMPRE o ano atual (2025) para cálculo de prazos - NUNCA use anos anteriores
+5. Se a intimação pedir "Primeiras Declarações", NÃO sugira "rol de testemunhas"
+
+Retorne APENAS JSON neste formato:
 {
-  "summary": "Resumo claro da intimação em 2-3 frases",
-  "documentType": "Tipo do documento (intimação, citação, despacho, etc)",
+  "summary": "Resumo claro identificando: processo de [TIPO] + ação solicitada + prazo",
+  "documentType": "Tipo exato do documento",
+  "processType": "Tipo do processo (Inventário, Ação Cível, etc)",
   "priority": "alta" | "média" | "baixa",
   "deadline": {
     "days": número de dias do prazo,
     "type": "úteis" | "corridos",
-    "endDate": "data limite no formato DD/MM/YYYY"
+    "endDate": "DD/MM/2025" (calcular a partir da data de recebimento)
   },
-  "suggestedActions": ["lista de ações recomendadas"],
-  "nextSteps": ["próximos passos a seguir"]
-}
-Responda APENAS com o JSON, sem texto adicional.`,
+  "suggestedActions": ["Ação EXATA solicitada na intimação"],
+  "nextSteps": ["Próximos passos específicos para a ação solicitada"]
+}`,
               },
               {
                 role: "user",
@@ -453,10 +491,16 @@ Responda APENAS com o JSON, sem texto adicional.`,
 
 PROCESSO: ${exp.numeroProcesso || "Não informado"}
 TRIBUNAL: ${exp.tribunal || "Não informado"}
-DATA: ${exp.receivedAt || exp.dataRecebimento || "Não informada"}
+DATA DE RECEBIMENTO: ${exp.receivedAt || exp.dataRecebimento || new Date().toISOString()}
 
-CONTEÚDO:
-${exp.content || exp.teor || "Sem conteúdo"}`,
+CONTEÚDO DA INTIMAÇÃO:
+${exp.content || exp.teor || "Sem conteúdo"}
+
+IMPORTANTE: 
+- Se a intimação mencionar "inventário" ou "inventariante", é processo de INVENTÁRIO
+- Se mencionar "Primeiras Declarações", a ação é "Apresentar Primeiras Declarações de Inventário"
+- Calcule a data final considerando APENAS dias ÚTEIS (segunda a sexta, excluindo feriados)
+- Use o ANO 2025 para calcular a data limite`,
               },
             ],
           }),
