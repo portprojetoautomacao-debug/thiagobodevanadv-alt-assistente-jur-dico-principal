@@ -1,0 +1,229 @@
+name: Copilot Auto-Fix
+
+on:
+  schedule:
+    # Executa diariamente às 9h BRT (12h UTC)
+    - cron: "0 12 * * *"
+  workflow_dispatch: # Permite execução manual
+  push:
+    branches: ["main", "develop", "fix/**"]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-fix-errors:
+    name: Auto-fix TypeScript e ESLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript check
+        id: tsc
+        continue-on-error: true
+        run: |
+          npx tsc --noEmit --skipLibCheck 2>&1 | tee tsc-errors.log
+          echo "has_errors=$?" >> $GITHUB_OUTPUT
+
+      - name: Run ESLint
+        id: eslint
+        continue-on-error: true
+        run: |
+          npm run lint 2>&1 | tee eslint-errors.log
+          echo "has_errors=$?" >> $GITHUB_OUTPUT
+
+      - name: Auto-fix ESLint errors
+        if: steps.eslint.outputs.has_errors != '0'
+        run: |
+          npm run lint:fix || true
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        run: npm run test:run
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code || echo "has_changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit auto-fixes
+        if: steps.git-check.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git commit -m "fix: auto-fix ESLint errors
+
+          🤖 Correções automáticas aplicadas pelo Copilot Auto-Fix workflow
+
+          - ESLint auto-fix executado
+          - Imports organizados
+          - Formatação aplicada
+
+          Co-authored-by: GitHub Copilot <copilot@github.com>"
+
+      - name: Push changes
+        if: steps.git-check.outputs.has_changes == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Create Issue if critical errors
+        if: steps.tsc.outputs.has_errors != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const tscErrors = fs.readFileSync('tsc-errors.log', 'utf8');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Erros críticos TypeScript detectados',
+              body: `## 🤖 Copilot Auto-Fix Report
+              
+              Foram detectados erros TypeScript que requerem atenção manual.
+              
+              ### 📋 Erros Encontrados:
+              
+              \`\`\`
+              ${tscErrors}
+              \`\`\`
+              
+              ### 🔧 Próximos Passos:
+              
+              1. Revise os erros acima
+              2. Use \`@workspace /fix\` no Copilot Chat para correções assistidas
+              3. Execute \`npm run type-check\` localmente
+              
+              Este issue foi criado automaticamente pelo workflow **Copilot Auto-Fix**.
+              `,
+              labels: ['bug', 'typescript', 'auto-fix', 'copilot']
+            });
+
+  dependency-updates:
+    name: Verificar atualizações de dependências
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check for outdated dependencies
+        run: |
+          npm outdated > outdated.log || true
+
+      - name: Create Issue for updates
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const outdated = fs.readFileSync('outdated.log', 'utf8');
+
+            if (outdated.trim()) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '📦 Dependências desatualizadas detectadas',
+                body: `## 🤖 Copilot Dependency Check
+                
+                Foram encontradas dependências desatualizadas:
+                
+                \`\`\`
+                ${outdated}
+                \`\`\`
+                
+                ### ⚠️ Modo MANUTENÇÃO
+                
+                Atualize apenas dependências críticas de segurança.
+                
+                Use: \`npm audit fix\` para correções de segurança.
+                `,
+                labels: ['dependencies', 'maintenance', 'copilot']
+              });
+            }
+
+  code-quality-check:
+    name: Verificação de qualidade de código
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run all quality checks
+        run: |
+          echo "🔍 Type Check..."
+          npm run type-check || echo "type_check_failed=true" >> $GITHUB_ENV
+
+          echo "🔍 Lint..."
+          npm run lint || echo "lint_failed=true" >> $GITHUB_ENV
+
+          echo "🔍 Tests..."
+          npm run test:run || echo "tests_failed=true" >> $GITHUB_ENV
+
+          echo "🔍 Build..."
+          npm run build || echo "build_failed=true" >> $GITHUB_ENV
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "## Quality Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ env.type_check_failed }}" == "true" ]; then
+            echo "❌ TypeScript: FAILED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ TypeScript: PASSED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ env.lint_failed }}" == "true" ]; then
+            echo "❌ ESLint: FAILED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ ESLint: PASSED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ env.tests_failed }}" == "true" ]; then
+            echo "❌ Tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ env.build_failed }}" == "true" ]; then
+            echo "❌ Build: FAILED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Build: PASSED" >> $GITHUB_STEP_SUMMARY
+          fi

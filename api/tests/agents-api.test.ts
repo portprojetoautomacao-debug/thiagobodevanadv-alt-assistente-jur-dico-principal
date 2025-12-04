@@ -20,6 +20,7 @@ function mockRes() {
       end: () => res,
     };
   };
+  res.end = () => res;
   return res;
 }
 

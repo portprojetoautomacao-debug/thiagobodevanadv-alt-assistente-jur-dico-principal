@@ -18,9 +18,6 @@ export function useIsMobile() {
     }
     mql.addEventListener("change", onChange)
     
-    // Set initial value on mount in case SSR returned undefined
-    // (Removido setTimeout redundante)
-    
     return () => {
       mql.removeEventListener("change", onChange)
     }

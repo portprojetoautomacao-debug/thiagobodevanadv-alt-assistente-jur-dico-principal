@@ -92,7 +92,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     }, [])
 
     // Reset state quando modal fecha
-    const resetSearchState = useCallback(() => {
+    const resetSearch = useCallback(() => {
         setQuery('')
         setCategory('all')
         setSelectedIndex(0)
@@ -102,8 +102,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     // Função para fechar o modal com reset
     const closeSearch = useCallback(() => {
         setIsOpen(false)
-        resetSearchState()
-    }, [resetSearchState])
+        resetSearch()
+    }, [resetSearch])
 
     // Focar input quando abrir
     useEffect(() => {
