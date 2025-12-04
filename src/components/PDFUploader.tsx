@@ -226,6 +226,12 @@ Retorne APENAS o JSON válido, sem explicações.`;
     // Verifica se já existe (o hook também faz upsert, mas é bom informar)
     const existingClient = clientes?.find((c) => c.cpfCnpj === extractedData.cpfCnpj);
 
+    // Montar observações separadamente (SonarCloud S5765)
+    const processoInfo = extractedData.numeroProcesso
+      ? ` - Processo: ${extractedData.numeroProcesso}`
+      : "";
+    const documentoOrigem = `Extraído de documento: ${selectedFile?.name || "PDF"}${processoInfo}`;
+
     // Usa o hook centralizado para criar/atualizar cliente
     createOrUpdateFromDocumento({
       nomeCliente: extractedData.nome,
@@ -237,9 +243,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
       estado: extractedData.estado || "",
       cep: extractedData.cep || "",
       tipoPessoa: extractedData.tipo || "fisica",
-      observacoes:
-        extractedData.observacoes ||
-        `Extraído de documento: ${selectedFile?.name || "PDF"}${extractedData.numeroProcesso ? ` - Processo: ${extractedData.numeroProcesso}` : ""}`,
+      observacoes: extractedData.observacoes || documentoOrigem,
     });
 
     const action = existingClient ? "atualizado" : "cadastrado";

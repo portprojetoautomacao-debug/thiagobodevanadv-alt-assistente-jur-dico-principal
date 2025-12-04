@@ -140,10 +140,15 @@ export async function consultarPublicacoesPJe(
     }
 
     try {
+      // Montar credenciais separadamente (SonarCloud S5765)
+      const username = config?.username || "";
+      const password = config?.password || "";
+      const credentials = btoa(`${username}:${password}`);
+
       const response = await fetch(`${baseUrl}/api/v1/publicacoes`, {
         method: "GET",
         headers: {
-          Authorization: `Basic ${btoa(`${config?.username || ""}:${config?.password || ""}`)}`, // Basic Authentication
+          Authorization: `Basic ${credentials}`,
         },
       });
 

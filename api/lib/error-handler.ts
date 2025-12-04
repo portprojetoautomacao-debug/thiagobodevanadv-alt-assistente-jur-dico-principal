@@ -171,9 +171,14 @@ export function handleError(
     );
   }
 
-  // Log do erro
+  // Log do erro - refatorado para evitar template literal aninhado (SonarCloud S5765)
+  const contextPrefix = context ? `em ${context}` : '';
+  const logMessage = contextPrefix
+    ? `Erro ${contextPrefix}: ${appError.message}`
+    : `Erro: ${appError.message}`;
+
   logger.error(
-    `Erro ${context ? `em ${context}` : ''}: ${appError.message}`,
+    logMessage,
     appError,
     {
       code: appError.code,

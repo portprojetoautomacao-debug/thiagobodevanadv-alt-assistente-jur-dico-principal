@@ -4,10 +4,10 @@
 // 2) Salva no Google Docs
 // 3) Cria prazo automático no Google Calendar (opcional)
 
-import type { Minuta } from "@/types";
-import { googleDocsService } from "./google-docs-service";
-import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 import { generatePeticao } from "@/lib/gemini-service";
+import type { Minuta } from "@/types";
+import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
+import { googleDocsService } from "./google-docs-service";
 
 // Mesmo shape do módulo de integração de prazos (deadline-integration)
 export interface MinutaAgentDeadline {
@@ -97,14 +97,17 @@ function getRemindersForPriority(priority?: MinutaAgentDeadline["priority"]): nu
 }
 
 /**
- * Função de feedback visual para o usuário durante o processo
+ * Log de feedback de sucesso (SonarCloud S4165 - métodos separados em vez de flag)
  */
-function logFeedback(message: string, isError = false): void {
-  if (isError) {
-    console.error(`[MinutaAgent][Erro]: ${message}`);
-  } else {
-    console.log(`[MinutaAgent][OK]: ${message}`);
-  }
+function logSuccess(message: string): void {
+  console.log(`[MinutaAgent][OK]: ${message}`);
+}
+
+/**
+ * Log de feedback de erro
+ */
+function logError(message: string): void {
+  console.error(`[MinutaAgent][Erro]: ${message}`);
 }
 
 /**
@@ -172,14 +175,14 @@ async function saveToGoogleDocs(
       return { docsId: docsResult.docId, docsUrl: docsResult.url };
     }
     errors.push("Não foi possível criar o documento no Google Docs");
-    logFeedback("Erro ao salvar no Google Docs", true);
+    logError("Erro ao salvar no Google Docs");
   } catch (err) {
     const errorMsg =
       err instanceof Error
         ? `Erro ao criar documento no Google Docs: ${err.message}`
         : "Erro desconhecido ao criar documento no Google Docs";
     errors.push(errorMsg);
-    logFeedback("Erro ao salvar no Google Docs", true);
+    logError("Erro ao salvar no Google Docs");
   }
   return { docsId: null, docsUrl: null };
 }
@@ -240,7 +243,7 @@ async function createCalendarEvent(
 
     if (!eventId) {
       errors.push("Não foi possível criar o evento de prazo no Google Calendar");
-      logFeedback("Erro ao criar evento no Google Calendar", true);
+      logError("Erro ao criar evento no Google Calendar");
     }
 
     return { eventId: eventId || null, prazoNormalizado };
@@ -250,7 +253,7 @@ async function createCalendarEvent(
         ? `Erro ao criar evento no Google Calendar: ${err.message}`
         : "Erro desconhecido ao criar evento no Google Calendar";
     errors.push(errorMsg);
-    logFeedback("Erro ao criar evento no Google Calendar", true);
+    logError("Erro ao criar evento no Google Calendar");
     return { eventId: null, prazoNormalizado: prazo };
   }
 }
@@ -280,7 +283,7 @@ export async function criarMinutaComAgenteIA(
 
     if (geminiError || !content) {
       errors.push(geminiError || "Erro ao gerar minuta");
-      logFeedback(geminiError || "Erro ao gerar minuta", true);
+      logError(geminiError || "Erro ao gerar minuta");
       return createErrorResult(errors, prazo ?? null);
     }
 
@@ -314,7 +317,7 @@ export async function criarMinutaComAgenteIA(
       prazoNormalizado = calendarResult.prazoNormalizado;
     }
 
-    logFeedback("Minuta gerada com sucesso");
+    logSuccess("Minuta gerada com sucesso");
 
     return {
       success: errors.length === 0,
@@ -333,7 +336,7 @@ export async function criarMinutaComAgenteIA(
         ? `Falha inesperada: ${error.message}`
         : "Falha inesperada ao executar o agente de minuta";
     errors.push(errorMsg);
-    logFeedback("Erro inesperado na execução", true);
+    logError("Erro inesperado na execução");
 
     return createErrorResult(errors, prazo ?? null);
   }
