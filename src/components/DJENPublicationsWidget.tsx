@@ -302,6 +302,11 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
     lawyersCount,
   } = props;
 
+  // Wrapper para evitar void operator (S3735)
+  const handleSyncClick = () => {
+    handleSync(fetchPublications).catch((err) => console.error("[DJENWidget] Sync failed:", err));
+  };
+
   return (
     <CardHeader className="pb-2">
       <div className="flex items-center justify-between">
@@ -345,7 +350,7 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => void handleSync(fetchPublications)}
+                  onClick={handleSyncClick}
                   disabled={syncing}
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
