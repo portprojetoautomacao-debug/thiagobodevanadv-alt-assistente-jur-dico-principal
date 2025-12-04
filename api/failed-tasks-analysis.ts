@@ -79,8 +79,9 @@ export default async function handler(
 
     // Estatísticas
     const errorStats = Object.entries(errorGroups).map(([errorKey, tasks]) => {
-      const sortedTasks = tasks.toSorted(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      const sortedTasks = [...tasks].sort(
+        (a: { createdAt: string }, b: { createdAt: string }) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
 
       return {
@@ -95,7 +96,9 @@ export default async function handler(
     });
 
     // Ordenar por contagem (mais frequente primeiro)
-    const sortedErrorStats = errorStats.toSorted((a, b) => b.count - a.count);
+    const sortedErrorStats = [...errorStats].sort(
+      (a: { count: number }, b: { count: number }) => b.count - a.count
+    );
 
     // Análise de padrões
     const patterns = analyzeErrorPatterns(failedTasks);
@@ -104,9 +107,7 @@ export default async function handler(
       summary: {
         totalFailed: failedTasks.length,
         totalInQueue: taskQueue.length,
-        failureRate: `${((failedTasks.length / taskQueue.length) * 100).toFixed(
-          1
-        )}%`,
+        failureRate: `${((failedTasks.length / taskQueue.length) * 100).toFixed(1)}%`,
         uniqueErrorTypes: Object.keys(errorGroups).length,
       },
       errorGroups: sortedErrorStats,
@@ -172,8 +173,8 @@ function analyzeErrorPatterns(
   failedTasks.forEach((t) => {
     byAgent[t.agentId] = (byAgent[t.agentId] || 0) + 1;
   });
-  patterns.mostFailedAgent = Object.entries(byAgent).toSorted(
-    (a, b) => b[1] - a[1]
+  patterns.mostFailedAgent = Object.entries(byAgent).sort(
+    (a: [string, number], b: [string, number]) => b[1] - a[1]
   )[0];
 
   // Padrão 2: Todos os erros de um mesmo tipo de tarefa
@@ -181,8 +182,8 @@ function analyzeErrorPatterns(
   failedTasks.forEach((t) => {
     byType[t.type] = (byType[t.type] || 0) + 1;
   });
-  patterns.mostFailedTaskType = Object.entries(byType).toSorted(
-    (a, b) => b[1] - a[1]
+  patterns.mostFailedTaskType = Object.entries(byType).sort(
+    (a: [string, number], b: [string, number]) => b[1] - a[1]
   )[0];
 
   // Padrão 3: Horários de maior incidência
@@ -191,8 +192,8 @@ function analyzeErrorPatterns(
     const hour = new Date(t.createdAt).getHours();
     byHour[hour] = (byHour[hour] || 0) + 1;
   });
-  patterns.peakFailureHour = Object.entries(byHour).toSorted(
-    (a, b) => b[1] - a[1]
+  patterns.peakFailureHour = Object.entries(byHour).sort(
+    (a: [string, number], b: [string, number]) => b[1] - a[1]
   )[0];
 
   // Padrão 4: Mesma mensagem de erro repetida
@@ -201,8 +202,8 @@ function analyzeErrorPatterns(
     const key = extractErrorKey(t.error || "");
     errorCounts[key] = (errorCounts[key] || 0) + 1;
   });
-  patterns.mostCommonError = Object.entries(errorCounts).toSorted(
-    (a, b) => b[1] - a[1]
+  patterns.mostCommonError = Object.entries(errorCounts).sort(
+    (a: [string, number], b: [string, number]) => b[1] - a[1]
   )[0];
 
   return patterns;

@@ -92,10 +92,10 @@ export default async function handler(
     );
 
     // Tarefas mais antigas
-    const oldestTasks = taskQueue
+    const oldestTasks = [...taskQueue]
       .filter((t) => t.status === "pending" || t.status === "queued")
-      .toSorted(
-        (a, b) =>
+      .sort(
+        (a: { createdAt: string }, b: { createdAt: string }) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       )
       .slice(0, 5)
@@ -105,15 +105,13 @@ export default async function handler(
         type: t.type,
         status: t.status,
         createdAt: t.createdAt,
-        ageMinutes: Math.round(
-          (Date.now() - new Date(t.createdAt).getTime()) / 60000
-        ),
+        ageMinutes: Math.round((Date.now() - new Date(t.createdAt).getTime()) / 60000),
       }));
 
     // Tarefas completadas recentemente
-    const recentCompleted = completedTasks
-      .toSorted(
-        (a, b) =>
+    const recentCompleted = [...completedTasks]
+      .sort(
+        (a: { completedAt: string }, b: { completedAt: string }) =>
           new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
       )
       .slice(0, 10)
@@ -122,9 +120,7 @@ export default async function handler(
         agentId: t.agentId,
         type: t.type,
         completedAt: t.completedAt,
-        ageMinutes: Math.round(
-          (Date.now() - new Date(t.completedAt).getTime()) / 60000
-        ),
+        ageMinutes: Math.round((Date.now() - new Date(t.completedAt).getTime()) / 60000),
       }));
 
     // Histórico recente da fila
