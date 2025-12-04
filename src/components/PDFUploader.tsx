@@ -13,7 +13,7 @@ import { geminiGenerateJSON } from "@/lib/gemini-client";
 import type { PDFUploadHistory } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle, Clock, FileText, Trash, Upload, User, XCircle } from "lucide-react";
+import { CheckCircle, Upload, User, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

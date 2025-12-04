@@ -1,4 +1,3 @@
-import {Clock} from "@phosphor-icons/react";
 /**
  * LLM Observability Dashboard
  *

@@ -26,7 +26,7 @@ import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import { createProcessTasks, initializeTodoistClient } from "@/lib/todoist-integration";
 import type { Expediente, PremonicaoJuridica, Process } from "@/types";
-import { Bot, Plus, Search } from "lucide-react";
+import { Bot, Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

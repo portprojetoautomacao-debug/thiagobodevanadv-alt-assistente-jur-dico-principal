@@ -1,4 +1,3 @@
-import {Gavel, X} from "@phosphor-icons/react";
 // ✅ DADOS REAIS: Este componente recebe dados reais via props do Dashboard
 // Os gráficos exibem estatísticas calculadas a partir de processos, expedientes e dados financeiros reais
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
