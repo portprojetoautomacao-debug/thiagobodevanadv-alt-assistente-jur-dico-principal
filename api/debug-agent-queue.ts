@@ -92,18 +92,20 @@ export default async function handler(
     );
 
     // Tarefas mais antigas
-    const oldestTasks = taskQueue
-      .filter((t) => t.status === "pending" || t.status === "queued")
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-      .slice(0, 5)
-      .map((t) => ({
-        id: t.id,
-        agentId: t.agentId,
-        type: t.type,
-        status: t.status,
-        createdAt: t.createdAt,
-        ageMinutes: Math.round((Date.now() - new Date(t.createdAt).getTime()) / 60000),
-      }));
+    const pendingOrQueued = taskQueue.filter(
+      (t) => t.status === "pending" || t.status === "queued"
+    );
+    const oldestSorted = [...pendingOrQueued].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+    const oldestTasks = oldestSorted.slice(0, 5).map((t) => ({
+      id: t.id,
+      agentId: t.agentId,
+      type: t.type,
+      status: t.status,
+      createdAt: t.createdAt,
+      ageMinutes: Math.round((Date.now() - new Date(t.createdAt).getTime()) / 60000),
+    }));
 
     // Tarefas completadas recentemente
     const recentCompleted = completedTasks

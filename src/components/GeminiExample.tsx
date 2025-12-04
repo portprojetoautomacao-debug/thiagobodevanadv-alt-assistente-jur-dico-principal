@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkle, ArrowRight, Warning } from "@phosphor-icons/react";
 import { isGeminiConfigured } from "@/lib/gemini-config";
 import {
   analyzeDocument,
   answerLegalQuestion,
   calculateDeadline,
+  generatePeticao,
   suggestStrategy,
   summarizeJurisprudence,
-  generatePeticao,
 } from "@/lib/gemini-service";
+import { ArrowRight, Sparkle, Warning } from "@phosphor-icons/react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 type AnalysisType = "document" | "question" | "deadline" | "strategy" | "jurisprudence" | "peticao";
