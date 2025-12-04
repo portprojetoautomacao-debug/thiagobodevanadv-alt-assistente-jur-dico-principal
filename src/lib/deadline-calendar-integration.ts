@@ -6,7 +6,6 @@
  */
 
 import type { Appointment } from "@/types";
-import { parseDeadlineDate } from "./date-utils";
 import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 
 // Tipos para integração
@@ -21,6 +20,7 @@ export interface IntimationAnalysisResult {
   summary: string;
   deadline?: AnalysisDeadline;
   priority: "baixa" | "média" | "alta" | "crítica";
+  type?: "intimacao_judicial" | "notificacao" | "outro";
   nextSteps?: string[];
   suggestedAction?: string;
   processNumber?: string;
@@ -36,23 +36,13 @@ export interface DeadlineCreationResult {
 }
 
 /**
- * Normaliza prioridade para o formato usado pelo Google Calendar service
- * ('média' → 'media', 'crítica' → 'critica')
+ * Mapeia prioridade do formato análise para o formato Google Calendar
+ * (Usa identidade: já está em português com acento)
  */
-function normalizePriorityForCalendar(
-  priority: IntimationAnalysisResult["priority"]
-): "baixa" | "media" | "alta" | "critica" {
-  switch (priority) {
-    case "média":
-      return "media";
-    case "crítica":
-      return "critica";
-    case "alta":
-      return "alta";
-    case "baixa":
-    default:
-      return "baixa";
-  }
+function mapPriorityToCalendarFormat(
+  priority: "baixa" | "média" | "alta" | "crítica"
+): "baixa" | "média" | "alta" | "crítica" {
+  return priority;
 }
 
 /**
@@ -130,20 +120,31 @@ function buildAppointment(
 }
 
 /**
+ * Valida se a análise contém uma data de prazo válida.
+ */
+function validateAnalysisDeadline(
+  analysis: IntimationAnalysisResult
+): analysis is IntimationAnalysisResult & { deadline: AnalysisDeadline } {
+  return !!analysis.deadline?.endDate;
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
   analysis: IntimationAnalysisResult,
   intimationTitle: string
 ): Appointment | null {
-  if (!analysis.deadline?.endDate) {
+  if (!validateAnalysisDeadline(analysis)) {
     console.log("[DeadlineIntegration] No deadline found in analysis");
     return null;
   }
 
-  const deadlineDate = parseDeadlineDate(analysis.deadline.endDate);
+  // Type guard above ensures analysis.deadline is defined
+  // Use non-null assertion after guard check for TypeScript strict mode
+  const deadlineDate = new Date(analysis.deadline!.endDate);
   if (!deadlineDate) {
-    console.warn("[DeadlineIntegration] Invalid deadline date:", analysis.deadline.endDate);
+    console.log("[DeadlineIntegration] Invalid deadline date");
     return null;
   }
 
@@ -160,6 +161,25 @@ export function createLocalAppointmentFromAnalysis(
 }
 
 /**
+ * Verifica se o Google Calendar está configurado e autenticado.
+ */
+function isGoogleCalendarReady(): boolean {
+  const status = googleCalendarService.getStatus();
+
+  if (!status.configured) {
+    console.log("[DeadlineIntegration] Google Calendar not configured");
+    return false;
+  }
+
+  if (!status.authenticated) {
+    console.log("[DeadlineIntegration] Google Calendar not authenticated");
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Sincronizar prazo com Google Calendar (se conectado)
  */
 export async function syncDeadlineToGoogleCalendar(
@@ -170,37 +190,17 @@ export async function syncDeadlineToGoogleCalendar(
     return null;
   }
 
-  // Verificar se Google Calendar está configurado e conectado
-  const status = googleCalendarService.getStatus();
-
-  if (!status.configured) {
-    console.log("[DeadlineIntegration] Google Calendar not configured");
-    return null;
-  }
-
-  if (!status.authenticated) {
-    console.log("[DeadlineIntegration] Google Calendar not authenticated");
+  if (!isGoogleCalendarReady()) {
     return null;
   }
 
   try {
     const deadlineEvent: DeadlineEvent = {
       title: intimationTitle.substring(0, 100),
-      description: [
-        analysis.summary,
-        "",
-        analysis.processNumber ? `Processo: ${analysis.processNumber}` : "",
-        analysis.court ? `Tribunal: ${analysis.court}` : "",
-        "",
-        "Próximos Passos:",
-        ...(analysis.nextSteps || []).map((step, i) => `${i + 1}. ${step}`),
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      deadline: analysis.deadline.endDate,
-      processNumber: analysis.processNumber,
-      type: "prazo",
-      priority: normalizePriorityForCalendar(analysis.priority),
+      description: buildAppointmentDescription(analysis),
+      deadline: new Date(analysis.deadline!.endDate).toISOString(),
+      type: analysis.type === "intimacao_judicial" ? "prazo" : "reuniao",
+      priority: mapPriorityToCalendarFormat(analysis.priority),
       reminders: getPriorityReminders(analysis.priority),
     };
 
@@ -212,9 +212,46 @@ export async function syncDeadlineToGoogleCalendar(
 
     return eventId;
   } catch (error) {
-    console.error("[DeadlineIntegration] Failed to sync to Google Calendar:", error);
+    console.error("[DeadlineIntegration] Failed to sync deadline to Google Calendar", error);
     return null;
   }
+}
+
+/**
+ * Verifica se existe appointment duplicado
+ */
+function isDuplicateAppointment(
+  newAppointment: Appointment,
+  existingAppointments: Appointment[],
+  intimationTitle: string
+): boolean {
+  return existingAppointments.some(
+    (apt) =>
+      apt.date === newAppointment.date && apt.title.includes(intimationTitle.substring(0, 30))
+  );
+}
+
+/**
+ * Adiciona novo appointment ao estado
+ */
+function addAppointmentToState(
+  appointment: Appointment,
+  currentAppointments: Appointment[],
+  setAppointments: (updater: (current: Appointment[]) => Appointment[]) => void
+): void {
+  setAppointments((current) => [...(current || []), appointment]);
+}
+
+/**
+ * Sincroniza com Google se necessário
+ */
+async function syncToGoogleIfEnabled(
+  shouldSync: boolean,
+  analysis: IntimationAnalysisResult,
+  intimationTitle: string
+): Promise<string | null> {
+  if (!shouldSync) return null;
+  return await syncDeadlineToGoogleCalendar(analysis, intimationTitle);
 }
 
 /**
@@ -227,53 +264,30 @@ export async function createDeadlineFromAnalysis(
   setAppointments: (updater: (current: Appointment[]) => Appointment[]) => void,
   syncToGoogle: boolean = true
 ): Promise<DeadlineCreationResult> {
-  const result: DeadlineCreationResult = {
-    success: false,
-  };
-
-  try {
-    // 1. Criar compromisso local
-    const localAppointment = createLocalAppointmentFromAnalysis(analysis, intimationTitle);
-
-    if (!localAppointment) {
-      result.error = "Nenhum prazo encontrado na análise";
-      return result;
-    }
-
-    // Verificar se já existe um compromisso similar
-    const existingAppointment = currentAppointments.find(
-      (apt) =>
-        apt.date === localAppointment.date && apt.title.includes(intimationTitle.substring(0, 30))
-    );
-
-    if (existingAppointment) {
-      console.log("[DeadlineIntegration] Appointment already exists:", existingAppointment.id);
-      result.success = true;
-      result.localAppointmentId = existingAppointment.id;
-      return result;
-    }
-
-    // Adicionar ao calendário local
-    setAppointments((current) => [...(current || []), localAppointment]);
-    result.localAppointmentId = localAppointment.id;
-    result.success = true;
-
-    console.log("[DeadlineIntegration] Added local appointment:", localAppointment.id);
-
-    // 2. Sincronizar com Google Calendar se habilitado
-    if (syncToGoogle) {
-      const googleEventId = await syncDeadlineToGoogleCalendar(analysis, intimationTitle);
-      if (googleEventId) {
-        result.googleEventId = googleEventId;
-      }
-    }
-
-    return result;
-  } catch (error) {
-    result.error = error instanceof Error ? error.message : "Erro desconhecido";
-    console.error("[DeadlineIntegration] Error creating deadline:", error);
-    return result;
+  // 1. Criar compromisso local
+  const localAppointment = createLocalAppointmentFromAnalysis(analysis, intimationTitle);
+  if (!localAppointment) {
+    return { success: false, error: "Nenhum prazo encontrado na análise" };
   }
+
+  // 2. Verificar se já existe
+  if (isDuplicateAppointment(localAppointment, currentAppointments, intimationTitle)) {
+    console.log("[DeadlineIntegration] Appointment already exists");
+    return { success: true, localAppointmentId: localAppointment.id };
+  }
+
+  // 3. Adicionar ao calendário local
+  addAppointmentToState(localAppointment, currentAppointments, setAppointments);
+  console.log("[DeadlineIntegration] Added local appointment:", localAppointment.id);
+
+  // 4. Sincronizar com Google Calendar se habilitado
+  const googleEventId = await syncToGoogleIfEnabled(syncToGoogle, analysis, intimationTitle);
+
+  return {
+    success: true,
+    localAppointmentId: localAppointment.id,
+    googleEventId: googleEventId || undefined,
+  };
 }
 
 function processSingleAnalysis(
@@ -327,6 +341,45 @@ async function syncBatchToGoogle(
 }
 
 /**
+ * Coletar appointments novos de análises
+ */
+function collectNewAppointments(
+  analysesWithDeadlines: Array<{ analysis: IntimationAnalysisResult; title: string }>,
+  currentAppointments: Appointment[],
+  results: DeadlineCreationResult[]
+): Appointment[] {
+  const newAppointments: Appointment[] = [];
+
+  for (const item of analysesWithDeadlines) {
+    const { result, appointment } = processSingleAnalysis(
+      item,
+      currentAppointments,
+      newAppointments
+    );
+    results.push(result);
+
+    if (appointment) {
+      newAppointments.push(appointment);
+    }
+  }
+
+  return newAppointments;
+}
+
+/**
+ * Adicionar novos appointments ao calendário
+ */
+function applyNewAppointments(
+  newAppointments: Appointment[],
+  setAppointments: (updater: (current: Appointment[]) => Appointment[]) => void
+): void {
+  if (newAppointments.length > 0) {
+    setAppointments((current) => [...(current || []), ...newAppointments]);
+    console.log(`[DeadlineIntegration] Added ${newAppointments.length} appointments to calendar`);
+  }
+}
+
+/**
  * Processar múltiplas análises e criar prazos em lote
  */
 export async function batchCreateDeadlines(
@@ -350,27 +403,15 @@ export async function batchCreateDeadlines(
     `[DeadlineIntegration] Processing ${analysesWithDeadlines.length} deadlines from ${analyses.length} analyses`
   );
 
-  // Coletar todos os novos appointments primeiro
-  const newAppointments: Appointment[] = [];
-
-  for (const item of analysesWithDeadlines) {
-    const { result, appointment } = processSingleAnalysis(
-      item,
-      currentAppointments,
-      newAppointments
-    );
-    results.push(result);
-
-    if (appointment) {
-      newAppointments.push(appointment);
-    }
-  }
+  // Coletar todos os novos appointments
+  const newAppointments = collectNewAppointments(
+    analysesWithDeadlines,
+    currentAppointments,
+    results
+  );
 
   // Adicionar todos de uma vez ao estado
-  if (newAppointments.length > 0) {
-    setAppointments((current) => [...(current || []), ...newAppointments]);
-    console.log(`[DeadlineIntegration] Added ${newAppointments.length} appointments to calendar`);
-  }
+  applyNewAppointments(newAppointments, setAppointments);
 
   // Sincronizar com Google Calendar em paralelo (se habilitado)
   if (syncToGoogle) {

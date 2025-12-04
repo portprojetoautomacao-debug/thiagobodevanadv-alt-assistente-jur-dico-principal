@@ -84,7 +84,9 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
                   // Atualiza estado e URL hash para fallback de roteamento
                   const view = item.id as ViewType;
                   try {
-                    window.location.hash = `#${view}`;
+                    if (globalThis.window !== undefined) {
+                      globalThis.window.location.hash = `#${view}`;
+                    }
                   } catch {
                     // ignore ambientes sem window
                   }

@@ -100,7 +100,7 @@ export function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
@@ -108,21 +108,23 @@ export function normalizeText(text: string): string {
 
 function parseOABWithPattern(value: string): { numero?: string; uf?: string } | null {
   const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i.exec(value);
-  return matchOABPattern
-    ? { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() }
-    : null;
+  if (matchOABPattern) {
+    return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
+  }
+  return null;
 }
 
 function parseOABNumericUF(value: string): { numero?: string; uf?: string } | null {
   const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
-  return matchNumericUF
-    ? { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() }
-    : null;
+  if (matchNumericUF) {
+    return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
+  }
+  return null;
 }
 
 function parseOABNumericOnly(value: string): { numero?: string; uf?: string } | null {
   const matchNumeric = /^(\d+)$/.exec(value);
-  return matchNumeric ? { numero: matchNumeric[1] } : null;
+  return matchNumeric ? { numero: matchNumeric[0] } : null;
 }
 
 export function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
@@ -264,7 +266,7 @@ export async function consultarComunicacoes(
 // ===== Helper functions for consultarDJENForLawyer (reduces S3776) =====
 
 interface AdvogadoMatch {
-  matchType: "nome" | "oab" | "ambos";
+  matchType: DJENMatchType;
   matched: boolean;
 }
 
@@ -281,10 +283,12 @@ function checkAdvogadoMatch(
     ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab
     : false;
 
-  if (matchNome && matchOab) return { matchType: "ambos", matched: true };
-  if (matchOab) return { matchType: "oab", matched: true };
-  if (matchNome) return { matchType: "nome", matched: true };
-  return { matchType: "nome", matched: false };
+  let matchType: DJENMatchType = "nome";
+  const matched = matchNome || matchOab;
+  if (matchNome && matchOab) matchType = "ambos";
+  else if (matchOab) matchType = "oab";
+
+  return { matchType, matched };
 }
 
 function buildDJENQueryParams(
@@ -318,7 +322,7 @@ function processComunicacao(
   numeroOabNumerico: string | undefined,
   ufOab: string | undefined
 ): DJENFilteredResult | null {
-  let matchType: "nome" | "oab" | "ambos" = "nome";
+  let matchType: DJENMatchType = "nome";
 
   const temAdvogado =
     comunicacao.destinatarioadvogados?.some((dest) => {

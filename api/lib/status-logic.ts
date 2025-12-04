@@ -113,23 +113,25 @@ export async function handleCronHealthRequest(req: VercelRequest, res: VercelRes
 }
 
 /**
- * Gera resposta de health check
+ * Constrói o objeto de checks de configuração
  */
-export function generateHealthCheck(res: VercelResponse): void {
-  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
-
-  const checks = {
+function buildHealthChecks(): Record<string, boolean> {
+  return {
     openai_api_key: !!process.env.OPENAI_API_KEY,
-    gemini_api_key: !!geminiKey,
+    gemini_api_key: !!process.env.GEMINI_API_KEY,
     google_client_id: !!process.env.VITE_GOOGLE_CLIENT_ID,
     app_env: !!process.env.VITE_APP_ENV,
     upstash_redis: !!process.env.UPSTASH_REDIS_REST_URL,
   };
+}
 
+/**
+ * Constrói o objeto de informações detalhadas
+ */
+function buildHealthInfo(geminiKey: string | undefined): Record<string, string | boolean> {
   const aiProvider = getAIProvider(process.env.OPENAI_API_KEY, geminiKey);
-  const aiConfigured = checks.openai_api_key || checks.gemini_api_key;
 
-  const info = {
+  return {
     ai_provider: aiProvider,
     ai_configured: aiProvider !== "none",
     openai_key_preview: getKeyPreview(process.env.OPENAI_API_KEY, "sk-"),
@@ -138,11 +140,30 @@ export function generateHealthCheck(res: VercelResponse): void {
     app_env: process.env.VITE_APP_ENV || "not set",
     node_env: process.env.NODE_ENV || "not set",
   };
+}
 
-  const statusCode = aiConfigured ? 200 : 500;
-
-  res.status(statusCode).json({
+/**
+ * Determina o status baseado em checks
+ */
+function getHealthStatus(checks: Record<string, boolean>): { status: string; code: number } {
+  const aiConfigured = checks.openai_api_key || checks.gemini_api_key;
+  return {
     status: aiConfigured ? "healthy" : "unhealthy",
+    code: aiConfigured ? 200 : 500,
+  };
+}
+
+/**
+ * Gera resposta de health check
+ */
+export function generateHealthCheck(res: VercelResponse): void {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
+  const checks = buildHealthChecks();
+  const info = buildHealthInfo(geminiKey);
+  const { status, code } = getHealthStatus(checks);
+
+  res.status(code).json({
+    status,
     timestamp: new Date().toISOString(),
     checks,
     info,

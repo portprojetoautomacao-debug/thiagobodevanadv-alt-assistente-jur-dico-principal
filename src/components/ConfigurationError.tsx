@@ -50,7 +50,9 @@ export function ConfigurationError() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open("https://aistudio.google.com/app/apikey", "_blank")}
+                    onClick={() =>
+                      globalThis.window?.open("https://aistudio.google.com/app/apikey", "_blank")
+                    }
                   >
                     <ArrowSquareOut size={16} />
                     Abrir AI Studio
@@ -111,7 +113,7 @@ export function ConfigurationError() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  window.open(
+                  globalThis.window?.open(
                     "https://github.com/thiagos-projects-9834ca6f/assistente-juridico-p/blob/main/LEIA_URGENTE.md",
                     "_blank"
                   )
@@ -124,7 +126,7 @@ export function ConfigurationError() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  window.open(
+                  globalThis.window?.open(
                     "https://github.com/thiagos-projects-9834ca6f/assistente-juridico-p/blob/main/CORRECAO_ERRO_401.md",
                     "_blank"
                   )

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Bell, CheckCircle, Warning, XCircle } from "@phosphor-icons/react";
+import { AlertTriangle, Bell, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { WebhooksSettings } from "./WebhooksSettings";
 
@@ -40,21 +40,21 @@ export default function NotificationSettings() {
       case "granted":
         return (
           <Badge variant="default" className="gap-1 bg-primary">
-            <CheckCircle size={12} weight="fill" />
+            <CheckCircle size={12} />
             Permitido
           </Badge>
         );
       case "denied":
         return (
           <Badge variant="destructive" className="gap-1">
-            <XCircle size={12} weight="fill" />
+            <XCircle size={12} />
             Bloqueado
           </Badge>
         );
       default:
         return (
           <Badge variant="secondary" className="gap-1">
-            <Warning size={12} weight="fill" />
+            <AlertTriangle size={12} />
             Pendente
           </Badge>
         );
@@ -75,7 +75,7 @@ export default function NotificationSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <Bell className="text-primary" size={24} weight="duotone" />
+                  <Bell className="text-primary" size={24} />
                   Status das Notificações
                 </CardTitle>
                 <CardDescription className="mt-2">
@@ -88,7 +88,7 @@ export default function NotificationSettings() {
           <CardContent className="space-y-4">
             {!isSupported && (
               <Alert variant="destructive">
-                <XCircle size={16} weight="fill" />
+                <XCircle size={16} />
                 <AlertDescription>
                   Seu navegador não suporta notificações push. Tente usar Chrome, Firefox ou Edge.
                 </AlertDescription>
@@ -97,7 +97,7 @@ export default function NotificationSettings() {
 
             {isSupported && permission === "default" && (
               <Alert className="border-primary/50 bg-primary/5">
-                <Warning className="text-primary" size={16} weight="fill" />
+                <AlertTriangle className="text-primary" size={16} />
                 <AlertDescription>
                   Você ainda não permitiu notificações. Clique no botão abaixo para ativar.
                 </AlertDescription>
@@ -106,7 +106,7 @@ export default function NotificationSettings() {
 
             {isSupported && permission === "denied" && (
               <Alert variant="destructive">
-                <XCircle size={16} weight="fill" />
+                <XCircle size={16} />
                 <AlertDescription>
                   Notificações bloqueadas. Para ativar, clique no ícone de cadeado ao lado da URL e
                   permita notificações.
@@ -116,7 +116,7 @@ export default function NotificationSettings() {
 
             {isSupported && permission === "granted" && (
               <Alert className="border-primary/50 bg-primary/5">
-                <CheckCircle className="text-primary" size={16} weight="fill" />
+                <CheckCircle className="text-primary" size={16} />
                 <AlertDescription>
                   Notificações ativadas! Você receberá alertas importantes.
                 </AlertDescription>
@@ -130,14 +130,14 @@ export default function NotificationSettings() {
                   className="button-gradient"
                   disabled={!isSupported || permission === "denied"}
                 >
-                  <Bell size={20} weight="duotone" />
+                  <Bell size={20} />
                   Ativar Notificações
                 </Button>
               )}
 
               {permission === "granted" && (
                 <Button onClick={testNotification} variant="outline">
-                  <Bell size={20} weight="duotone" />
+                  <Bell size={20} />
                   Testar Notificação
                 </Button>
               )}

@@ -16,6 +16,53 @@ function setCorsHeaders(res: VercelResponse): void {
 }
 
 /**
+ * Verifica se é requisição Spark Loaded
+ */
+function isSparkLoadedRequest(type: string, url?: string): boolean {
+  return type === "loaded" || url?.includes("/loaded") || false;
+}
+
+/**
+ * Processa requisição Spark Loaded
+ */
+async function processSparkLoadedRequest(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<boolean> {
+  if (handleSparkLoaded(req, res)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Roteia requisição para handler apropriado
+ */
+async function routeRequest(
+  type: string | undefined,
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (isSparkLoadedRequest(type || "", req.url)) {
+    if (await processSparkLoadedRequest(req, res)) {
+      return;
+    }
+  }
+
+  if (type === "watchdog") {
+    await handleWatchdogRequest(req, res);
+    return;
+  }
+
+  if (type === "cron-health") {
+    await handleCronHealthRequest(req, res);
+    return;
+  }
+
+  generateHealthCheck(res);
+}
+
+/**
  * Status Endpoint
  * Combines Health Check and Spark Loaded functionality
  *
@@ -31,27 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const type = req.query.type as string;
-
-  // Spark Loaded Logic
-  if (type === "loaded" || req.url?.includes("/loaded")) {
-    if (handleSparkLoaded(req, res)) {
-      return;
-    }
-  }
-
-  // Watchdog last result (read-only)
-  if (type === "watchdog") {
-    await handleWatchdogRequest(req, res);
-    return;
-  }
-
-  // Cron health (fila agentes + watchdog + próximos backups)
-  if (type === "cron-health") {
-    await handleCronHealthRequest(req, res);
-    return;
-  }
-
-  // Health Check Logic (Default)
-  generateHealthCheck(res);
+  const type = req.query.type as string | undefined;
+  await routeRequest(type, req, res);
 }
