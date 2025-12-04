@@ -6,8 +6,8 @@ function mockRes() {
   res.statusCode = 200;
   res.body = null;
   res.headers = {};
-  res.setHeader = (name: string, value: string) => {
-    res.headers[name] = value;
+  res.setHeader = (key: string, value: string) => {
+    res.headers[key] = value;
     return res;
   };
   res.status = (code: number) => {

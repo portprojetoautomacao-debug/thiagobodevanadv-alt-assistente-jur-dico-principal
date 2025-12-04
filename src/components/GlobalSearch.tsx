@@ -110,6 +110,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100)
         }
+        // Reset é feito via closeSearch - não precisa de efeito separado
     }, [isOpen])
 
     // Função de busca

@@ -23,6 +23,5 @@ export function useIsMobile() {
     }
   }, []) // Empty dependency array - only runs once on mount
 
-  // Ensures boolean return (false during SSR)
   return isMobile ?? false
 }
