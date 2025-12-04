@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Trash } from "@phosphor-icons/react";
+import { Download, Upload } from "lucide-react";
+import { useState } from "react";
 
 interface Template {
   id: string;

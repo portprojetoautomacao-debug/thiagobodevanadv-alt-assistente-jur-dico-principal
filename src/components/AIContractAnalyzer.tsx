@@ -1,3 +1,4 @@
+import {FileText, Sparkle, X} from "@phosphor-icons/react";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

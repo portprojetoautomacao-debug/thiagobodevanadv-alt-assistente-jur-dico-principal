@@ -1,3 +1,4 @@
+import {ArrowClockwise, Brain, Clock, Trash, X} from "@phosphor-icons/react";
 import { Bot, Brain, CheckCircle, Clock, XCircle } from "lucide-react";
 /**
  * Tracing Dashboard Component

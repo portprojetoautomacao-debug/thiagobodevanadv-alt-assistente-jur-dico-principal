@@ -1,3 +1,4 @@
+import {Plus} from "@phosphor-icons/react";
 /**
  * Componente para item individual de publicação DJEN
  * Reduz complexidade cognitiva do componente principal

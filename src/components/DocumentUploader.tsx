@@ -1,3 +1,4 @@
+import {FileText, Trash, X} from "@phosphor-icons/react";
 import {
   AlertDialog,
   AlertDialogAction,

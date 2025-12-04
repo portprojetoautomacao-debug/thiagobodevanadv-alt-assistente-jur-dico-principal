@@ -1,3 +1,4 @@
+import {Calculator, CalendarDots, CurrencyCircleDollar, FileText, House, MicrophoneStage, PencilLine, SignOut} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

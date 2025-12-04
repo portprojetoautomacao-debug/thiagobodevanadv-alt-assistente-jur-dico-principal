@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente, Minuta, Process } from "@/types";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { ArrowDown, ArrowUp, Command, FileText, Folder, User, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Command, FileText, Folder, User, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Tipo para cliente (simplificado)

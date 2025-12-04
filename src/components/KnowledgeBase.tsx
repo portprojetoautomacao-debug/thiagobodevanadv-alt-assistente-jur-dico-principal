@@ -1,3 +1,4 @@
+import {Keyboard, Plus, Sparkle} from "@phosphor-icons/react";
 import { useState, type KeyboardEvent, type SVGProps } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
