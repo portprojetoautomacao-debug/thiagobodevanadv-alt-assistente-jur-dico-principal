@@ -80,6 +80,33 @@ export function useAgentBackup(options: BackupOptions) {
 
       return { success: true, timestamp: backupData.timestamp };
     } catch (error) {
+      if (error instanceof DOMException && error.name === "QuotaExceededError") {
+        console.warn("⚠️ Quota excedida, limpando histórico antigo...");
+
+        // Remover histórico para liberar espaço
+        const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
+        localStorage.removeItem(historyKey);
+
+        // Tentar salvar backup mínimo (sem histórico)
+        try {
+          const minimalBackupKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
+          const minimalData = {
+            timestamp: Date.now(),
+            userId,
+            data: {
+              agents: agents.slice(0, 15), // Apenas agentes ativos
+              taskQueue: taskQueue.slice(0, 50), // Últimas 50 tarefas
+              // Não incluir histórico completo
+            },
+          };
+          localStorage.setItem(minimalBackupKey, JSON.stringify(minimalData));
+          console.log("✅ Backup mínimo criado após limpeza");
+          return { success: true, timestamp: minimalData.timestamp };
+        } catch (retryError) {
+          console.error("❌ Não foi possível criar backup mesmo após limpeza");
+          throw retryError;
+        }
+      }
       console.error("❌ Erro ao criar backup:", error);
       throw error;
     }
