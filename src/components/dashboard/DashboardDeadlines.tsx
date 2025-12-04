@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import type { Prazo, ViewType } from "@/types";
-import { ArrowRight, CalendarCheck } from "@phosphor-icons/react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
 
 interface DashboardDeadlinesProps {
   prazosProximos: (Prazo & { processoTitulo: string })[];
@@ -20,7 +20,7 @@ export function DashboardDeadlines({ prazosProximos, onNavigate }: DashboardDead
     <Card className="bg-linear-to-br from-neutral-2 to-neutral-3 border-neutral-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarCheck className="h-5 w-5 text-accent-9" weight="duotone" />
+          <CalendarCheck className="h-5 w-5 text-accent-9" />
           <CardTitle className="text-accent-11">Próximos Prazos</CardTitle>
         </div>
         <Button

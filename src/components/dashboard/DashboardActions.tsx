@@ -5,7 +5,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, ChartPie, TrendUp } from "@phosphor-icons/react";
+import { Upload, ChartPie, TrendUp } from "lucide-react";
 import type { ViewType } from "@/types";
 
 interface DashboardActionsProps {

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Books, Sparkle, MagnifyingGlass, User } from "@phosphor-icons/react";
+import { Books, Sparkles, MagnifyingGlass, User } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -213,7 +213,7 @@ export default function KnowledgeBase() {
           <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+                <Sparkles className="w-5 h-5 text-accent" />
                 Assistente Inteligente
               </CardTitle>
               <CardDescription>
@@ -271,7 +271,7 @@ export default function KnowledgeBase() {
                       >
                         {message.role === "assistant" && (
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
-                            <Sparkle className="w-5 h-5 text-accent-foreground" weight="fill" />
+                            <Sparkles className="w-5 h-5 text-accent-foreground" />
                           </div>
                         )}
                         <div
@@ -285,7 +285,7 @@ export default function KnowledgeBase() {
                         </div>
                         {message.role === "user" && (
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                            <User className="w-5 h-5 text-primary-foreground" weight="fill" />
+                            <User className="w-5 h-5 text-primary-foreground" />
                           </div>
                         )}
                       </div>
@@ -293,9 +293,9 @@ export default function KnowledgeBase() {
                     {loading && (
                       <div className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
-                          <Sparkle
+                          <Sparkles
                             className="w-5 h-5 text-accent-foreground animate-pulse"
-                            weight="fill"
+                           
                           />
                         </div>
                         <div className="bg-muted p-4 rounded-lg">
@@ -335,7 +335,7 @@ export default function KnowledgeBase() {
                   disabled={loading}
                   size="lg"
                 >
-                  <Sparkle className="w-5 h-5" weight="fill" />
+                  <Sparkles className="w-5 h-5" />
                 </Button>
               </div>
             </CardContent>

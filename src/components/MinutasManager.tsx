@@ -54,14 +54,14 @@ import {
   Sparkle,
   SpinnerGap,
   Trash,
-  Warning,
-} from "@phosphor-icons/react";
+  AlertTriangle,
+} from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 // ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
 // Isso reduz o bundle inicial e melhora First Contentful Paint (FCP)
 // Nota: O erro "Cannot set properties of undefined (setting 'Activity')" dos ícones Phosphor
-// foi corrigido movendo @phosphor-icons/react para o chunk 'react-vendor' no vite.config.ts
+// foi corrigido movendo lucide-react para o chunk 'react-vendor' no vite.config.ts
 const TiptapEditor = lazy(() =>
   import("@/components/editor/TiptapEditor").then((m) => ({
     default: m.TiptapEditor,
@@ -673,7 +673,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <FileText weight="fill" className="text-primary" />
+            <FileText className="text-primary" />
             Editor de Minutas
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -686,7 +686,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             if (!isGoogleConfigured) {
               return (
                 <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
-                  <Warning className="mr-2 h-4 w-4" />
+                  <AlertTriangle className="mr-2 h-4 w-4" />
                   Google não configurado
                 </Badge>
               );
@@ -694,14 +694,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             if (!isAuthenticated) {
               return (
                 <Button onClick={handleAuthGoogle} variant="outline">
-                  <GoogleLogo className="mr-2" weight="bold" />
+                  <GoogleLogo className="mr-2" />
                   Conectar Google Docs
                 </Button>
               );
             }
             return (
               <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
-                <GoogleLogo className="mr-2" weight="bold" />
+                <GoogleLogo className="mr-2" />
                 Google Conectado
               </Badge>
             );
@@ -715,7 +715,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   resetForm();
                 }}
               >
-                <Plus className="mr-2" weight="bold" />
+                <Plus className="mr-2" />
                 Nova Minuta
               </Button>
             </DialogTrigger>
@@ -725,12 +725,12 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                 <DialogTitle className="flex items-center gap-2">
                   {editingMinuta ? (
                     <>
-                      <PencilSimple weight="fill" />
+                      <PencilSimple />
                       Editar Minuta
                     </>
                   ) : (
                     <>
-                      <Plus weight="fill" />
+                      <Plus />
                       Nova Minuta
                     </>
                   )}
@@ -867,7 +867,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   {/* Variáveis não preenchidas */}
                   {unfilledVariables.length > 0 && (
                     <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                      <Warning className="h-4 w-4 text-amber-600" />
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
                       <AlertDescription className="text-amber-800 dark:text-amber-200">
                         <strong>{unfilledVariables.length} variáveis não preenchidas:</strong>{" "}
                         {unfilledVariables.slice(0, 5).join(", ")}
@@ -978,7 +978,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     </ScrollArea>
 
                     <Button onClick={handleFillVariables} className="w-full">
-                      <Sparkle className="mr-2" weight="fill" />
+                      <Sparkle className="mr-2" />
                       Aplicar Variáveis no Documento
                     </Button>
                   </div>
@@ -1009,7 +1009,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       {/* Alertas de minutas pendentes */}
       {minutasPendentes.length > 0 && (
         <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
-          <Robot className="h-4 w-4 text-orange-600" weight="fill" />
+          <Robot className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-800 dark:text-orange-200">
             <strong>{minutasPendentes.length} minuta(s) pendente(s) de revisão</strong> criada(s)
             pelos agentes IA.
@@ -1079,7 +1079,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       {filteredMinutas.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText size={64} className="text-muted-foreground mb-4" weight="thin" />
+            <FileText size={64} className="text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-center">
               {searchQuery || filterStatus !== "all" || filterTipo !== "all"
                 ? "Nenhuma minuta encontrada com os filtros aplicados."
@@ -1103,11 +1103,11 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2">
-                        <FileText weight="fill" className="text-primary" />
+                        <FileText className="text-primary" />
                         {minuta.titulo}
                         {minuta.criadoPorAgente && (
                           <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                            <Robot className="mr-1 h-3 w-3" weight="fill" />
+                            <Robot className="mr-1 h-3 w-3" />
                             IA
                           </Badge>
                         )}
@@ -1120,7 +1120,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         {processo && <Badge variant="secondary">{processo.numeroCNJ}</Badge>}
                         {minuta.googleDocsId && (
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            <GoogleLogo className="mr-1 h-3 w-3" weight="bold" />
+                            <GoogleLogo className="mr-1 h-3 w-3" />
                             Google Docs
                           </Badge>
                         )}
@@ -1144,7 +1144,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     {/* Timestamps */}
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock weight="bold" className="h-3 w-3" />
+                        <Clock className="h-3 w-3" />
                         Atualizado em {new Date(minuta.atualizadoEm).toLocaleString("pt-BR")}
                       </span>
                       {minuta.ultimaSincronizacao && (
@@ -1159,7 +1159,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     {/* Ações */}
                     <div className="flex gap-2 flex-wrap">
                       <Button size="sm" variant="outline" onClick={() => handleEditMinuta(minuta)}>
-                        <PencilSimple className="mr-2 h-4 w-4" weight="bold" />
+                        <PencilSimple className="mr-2 h-4 w-4" />
                         Editar
                       </Button>
 
@@ -1171,7 +1171,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           className="text-green-600 border-green-500/50 hover:bg-green-500/10"
                           data-testid="minuta-approve-btn"
                         >
-                          <CheckCircle className="mr-2 h-4 w-4" weight="bold" />
+                          <CheckCircle className="mr-2 h-4 w-4" />
                           Aprovar
                         </Button>
                       )}
@@ -1181,14 +1181,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         variant="outline"
                         onClick={() => handleDuplicateMinuta(minuta)}
                       >
-                        <Copy className="mr-2 h-4 w-4" weight="bold" />
+                        <Copy className="mr-2 h-4 w-4" />
                         Duplicar
                       </Button>
 
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button size="sm" variant="outline">
-                            <DownloadSimple className="mr-2 h-4 w-4" weight="bold" />
+                            <DownloadSimple className="mr-2 h-4 w-4" />
                             Exportar
                             <CaretDown className="ml-1 h-3 w-3" />
                           </Button>
@@ -1220,7 +1220,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               disabled={!isAuthenticated}
                               className="justify-start"
                             >
-                              <GoogleLogo className="mr-2 h-4 w-4" weight="bold" />
+                              <GoogleLogo className="mr-2 h-4 w-4" />
                               {minuta.googleDocsUrl ? "Abrir no" : "Criar no"} Google Docs
                             </Button>
                           </div>
@@ -1238,7 +1238,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                             className={`mr-2 h-4 w-4 ${
                               isSyncing === minuta.id ? "animate-spin" : ""
                             }`}
-                            weight="bold"
+                           
                           />
                           Sincronizar
                         </Button>
@@ -1250,7 +1250,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         onClick={() => handleDeleteMinuta(minuta.id)}
                         className="text-destructive hover:text-destructive ml-auto"
                       >
-                        <Trash className="mr-2 h-4 w-4" weight="bold" />
+                        <Trash className="mr-2 h-4 w-4" />
                         Excluir
                       </Button>
                     </div>

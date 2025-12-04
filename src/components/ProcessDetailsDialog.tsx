@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calcularDiasRestantes, formatarData, formatarMoeda, isUrgente } from "@/lib/prazos";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import type { PremonicaoJuridica, Process } from "@/types";
-import { CalendarCheck, FileText, Pencil, Sparkle, Trash } from "@phosphor-icons/react";
+import { CalendarCheck, FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import DocumentUploader from "./DocumentUploader";
@@ -98,7 +98,7 @@ export default function ProcessDetailsDialog({
             <DialogTitle className="flex-1">{process.titulo}</DialogTitle>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" onClick={handlePremonicao}>
-                <Sparkle size={16} weight="fill" />
+                <Sparkles size={16} />
                 Premonição
               </Button>
               <Button
@@ -113,7 +113,7 @@ export default function ProcessDetailsDialog({
                 Editar
               </Button>
               <Button size="sm" variant="destructive" onClick={handleDeleteClick}>
-                <Trash size={16} />
+                <Trash2 size={16} />
               </Button>
             </div>
           </div>

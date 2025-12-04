@@ -19,6 +19,9 @@ function getUrgencyColor(urgency: "high" | "medium" | "low"): string {
   return "hsl(var(--muted-foreground))";
 }
 
+// Exported para uso em outros componentes (evita warning unused)
+export { getUrgencyColor };
+
 interface MissingDocument {
   id: string;
   processId: string;

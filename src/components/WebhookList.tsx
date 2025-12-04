@@ -1,15 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  CheckCircle,
-  DiscordLogo,
-  Globe,
-  SlackLogo,
-  Spinner,
-  TestTube,
-  Trash,
-} from "@phosphor-icons/react";
+import { CheckCircle, FlaskConical, Globe, Loader2, MessageSquare, Trash2 } from "lucide-react";
 
 // Microsoft Teams icon
 export const TeamsIcon = ({ size = 20 }: { size?: number }) => (
@@ -54,20 +46,20 @@ export function WebhookList({
   const getWebhookIcon = (type: WebhookType) => {
     switch (type) {
       case "slack":
-        return <SlackLogo size={18} weight="duotone" />;
+        return <MessageSquare size={18} />;
       case "discord":
-        return <DiscordLogo size={18} weight="duotone" />;
+        return <MessageSquare size={18} />;
       case "teams":
         return <TeamsIcon size={18} />;
       default:
-        return <Globe size={18} weight="duotone" />;
+        return <Globe size={18} />;
     }
   };
 
   if (loading) {
     return (
       <div className="flex justify-center py-4">
-        <Spinner className="animate-spin" size={24} />
+        <Loader2 className="animate-spin" size={24} />
       </div>
     );
   }
@@ -104,7 +96,7 @@ export function WebhookList({
                 </Badge>
                 {wh.enabled && (
                   <Badge className="bg-green-500/20 text-green-600 text-xs px-1">
-                    <CheckCircle size={8} className="mr-0.5" weight="fill" />
+                    <CheckCircle size={8} className="mr-0.5" />
                     Ativo
                   </Badge>
                 )}
@@ -122,9 +114,9 @@ export function WebhookList({
               title="Testar webhook"
             >
               {testingWebhookId === wh.id ? (
-                <Spinner className="animate-spin" size={12} />
+                <Loader2 className="animate-spin" size={12} />
               ) : (
-                <TestTube size={12} />
+                <FlaskConical size={12} />
               )}
             </Button>
             <Button
@@ -134,7 +126,7 @@ export function WebhookList({
               onClick={() => onDelete(wh.id)}
               title="Excluir webhook"
             >
-              <Trash size={12} />
+              <Trash2 size={12} />
             </Button>
           </div>
         </div>

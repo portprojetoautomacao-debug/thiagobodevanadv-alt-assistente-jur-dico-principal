@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Books, Sparkle, MagnifyingGlass, Scales, Article } from "@phosphor-icons/react";
-import { toast } from "sonner";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
+import { BookOpen, FileText, Scale, Search, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface Precedent {
   id: string;
@@ -117,7 +117,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <Books size={32} weight="duotone" className="text-primary neon-glow" />
+          <BookOpen size={32} className="text-primary neon-glow" />
           Pesquisa Jurídica IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -135,7 +135,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <MagnifyingGlass
+              <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 size={20}
               />
@@ -152,7 +152,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               disabled={isResearching || !query.trim()}
               className="button-gradient"
             >
-              <Sparkle size={20} className={isResearching ? "animate-spin" : ""} />
+              <Sparkles size={20} className={isResearching ? "animate-spin" : ""} />
               {isResearching ? "Pesquisando..." : "Pesquisar"}
             </Button>
           </div>
@@ -183,11 +183,11 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
         <Tabs defaultValue="precedents" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="precedents">
-              <Scales size={16} className="mr-2" />
+              <Scale size={16} className="mr-2" />
               Precedentes ({result.precedents.length})
             </TabsTrigger>
             <TabsTrigger value="arguments">
-              <Article size={16} className="mr-2" />
+              <FileText size={16} className="mr-2" />
               Argumentos ({result.legalArguments.length})
             </TabsTrigger>
             <TabsTrigger value="keywords">Palavras-chave ({result.keywords.length})</TabsTrigger>
@@ -330,7 +330,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         className="justify-start h-auto py-3 px-4"
                         onClick={() => handleQuickSearch(theme)}
                       >
-                        <Sparkle size={16} className="mr-2 shrink-0" />
+                        <Sparkles size={16} className="mr-2 shrink-0" />
                         <span className="text-left">{theme}</span>
                       </Button>
                     ))}
@@ -345,7 +345,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
       {!result && !isResearching && (
         <Card className="glassmorphic">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Books size={64} className="text-muted-foreground mb-4" weight="duotone" />
+            <BookOpen size={64} className="text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Pronto para pesquisar</h3>
             <p className="text-muted-foreground max-w-md">
               Digite um tema jurídico acima ou clique em uma das pesquisas rápidas para começar

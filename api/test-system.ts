@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
@@ -9,13 +10,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 1. Check KV Connection
-    if (
-      !process.env.UPSTASH_REDIS_REST_URL ||
-      !process.env.UPSTASH_REDIS_REST_TOKEN
-    ) {
-      throw new Error(
-        "Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN"
-      );
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      throw new Error("Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
     }
 
     const kv = new Redis({
@@ -28,8 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 2. Check Queues
     const taskQueue = ((await kv.get("agent-task-queue")) as any[]) || [];
-    const notificationQueue =
-      ((await kv.get("notification-queue")) as any[]) || [];
+    const notificationQueue = ((await kv.get("notification-queue")) as any[]) || [];
 
     results.checks.queues = {
       taskQueueLength: taskQueue.length,

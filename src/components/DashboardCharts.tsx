@@ -2,7 +2,7 @@
 // Os gráficos exibem estatísticas calculadas a partir de processos, expedientes e dados financeiros reais
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
-import { ChartPie, Gavel, TrendUp } from "@phosphor-icons/react";
+import { ChartPie, Gavel, TrendUp } from "lucide-react";
 import {
   Bar,
   BarChart,

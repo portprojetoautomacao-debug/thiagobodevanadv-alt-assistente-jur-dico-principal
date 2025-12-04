@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { config } from "@/lib/config";
-import { ArrowSquareOut, Warning } from "@phosphor-icons/react";
+import { ArrowSquareOut, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
@@ -192,7 +192,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
 
     return (
       <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-        <Warning className="h-4 w-4 text-amber-600" />
+        <AlertTriangle className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800 dark:text-amber-200">
           <strong>{getEnvironmentTitle()}</strong>
           <p className="mt-2 text-sm">
@@ -222,7 +222,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   if (!isConfigured) {
     return (
       <Alert variant="destructive">
-        <Warning className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           <strong>Configuração OAuth Necessária</strong>
           <p className="mt-2 text-sm">
@@ -247,7 +247,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   if (error) {
     return (
       <Alert variant="destructive">
-        <Warning className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );

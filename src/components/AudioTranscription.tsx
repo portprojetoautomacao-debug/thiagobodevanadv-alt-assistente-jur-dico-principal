@@ -226,14 +226,14 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                   <div className="w-24 h-24 bg-destructive rounded-full flex items-center justify-center animate-pulse">
                     <MicrophoneStage
                       className="w-12 h-12 text-destructive-foreground"
-                      weight="fill"
+                     
                     />
                   </div>
                   <div className="absolute inset-0 rounded-full border-4 border-destructive animate-ping" />
                 </div>
               ) : (
                 <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
-                  <MicrophoneStage className="w-12 h-12 text-primary-foreground" weight="fill" />
+                  <MicrophoneStage className="w-12 h-12 text-primary-foreground" />
                 </div>
               )}
 
@@ -246,12 +246,12 @@ Responda APENAS com JSON válido, sem texto adicional.`,
               >
                 {isRecording ? (
                   <>
-                    <Stop className="w-5 h-5 mr-2" weight="fill" />
+                    <Stop className="w-5 h-5 mr-2" />
                     Parar Gravação
                   </>
                 ) : (
                   <>
-                    <MicrophoneStage className="w-5 h-5 mr-2" weight="fill" />
+                    <MicrophoneStage className="w-5 h-5 mr-2" />
                     Iniciar Gravação
                   </>
                 )}
@@ -295,7 +295,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
             <CardContent className="space-y-4">
               {processing ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <Sparkle className="w-16 h-16 text-accent animate-pulse mb-4" weight="fill" />
+                  <Sparkle className="w-16 h-16 text-accent animate-pulse mb-4" />
                   <p className="text-lg font-medium text-foreground">Analisando com IA Gemini...</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Aguarde enquanto processamos o texto
@@ -325,7 +325,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+                    <Sparkle className="w-5 h-5 text-accent" />
                     Sumário Executivo
                   </CardTitle>
                   <CardDescription>Resumo dos pontos principais</CardDescription>
@@ -340,7 +340,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+                    <Sparkle className="w-5 h-5 text-accent" />
                     Itens de Ação
                   </CardTitle>
                   <CardDescription>Próximos passos identificados</CardDescription>

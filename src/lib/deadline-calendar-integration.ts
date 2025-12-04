@@ -37,12 +37,18 @@ export interface DeadlineCreationResult {
 
 /**
  * Mapeia prioridade do formato análise para o formato Google Calendar
- * (Usa identidade: já está em português com acento)
+ * (Converte de português com acento para sem acento)
  */
 function mapPriorityToCalendarFormat(
   priority: "baixa" | "média" | "alta" | "crítica"
-): "baixa" | "média" | "alta" | "crítica" {
-  return priority;
+): "baixa" | "media" | "alta" | "critica" {
+  const priorityMap: Record<string, "baixa" | "media" | "alta" | "critica"> = {
+    baixa: "baixa",
+    média: "media",
+    alta: "alta",
+    crítica: "critica",
+  };
+  return priorityMap[priority] || "media";
 }
 
 /**

@@ -138,7 +138,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             type: "processo" as const,
             title: p.titulo || p.numeroCNJ || "Processo sem título",
             subtitle: `${p.numeroCNJ || "Sem número"} • ${p.status || "Ativo"}`,
-            icon: <Folder className="w-4 h-4 text-blue-500" weight="fill" />,
+            icon: <Folder className="w-4 h-4 text-blue-500" />,
             data: p,
           }));
         newResults.push(...matchedProcesses);
@@ -159,7 +159,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             type: "cliente" as const,
             title: c.nome || "Cliente sem nome",
             subtitle: c.email || c.telefone || "Sem contato",
-            icon: <User className="w-4 h-4 text-green-500" weight="fill" />,
+            icon: <User className="w-4 h-4 text-green-500" />,
             data: c,
           }));
         newResults.push(...matchedClientes);
@@ -177,7 +177,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             type: "minuta" as const,
             title: m.titulo || "Minuta sem título",
             subtitle: `${m.tipo} • ${m.status}`,
-            icon: <FileText className="w-4 h-4 text-purple-500" weight="fill" />,
+            icon: <FileText className="w-4 h-4 text-purple-500" />,
             data: m,
           }));
         newResults.push(...matchedMinutas);
@@ -198,7 +198,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             type: "expediente" as const,
             title: e.numeroProcesso || "Expediente",
             subtitle: e.summary?.slice(0, 60) + "..." || e.tribunal || "Sem resumo",
-            icon: <Tray className="w-4 h-4 text-orange-500" weight="fill" />,
+            icon: <Tray className="w-4 h-4 text-orange-500" />,
             data: e,
           }));
         newResults.push(...matchedExpedientes);

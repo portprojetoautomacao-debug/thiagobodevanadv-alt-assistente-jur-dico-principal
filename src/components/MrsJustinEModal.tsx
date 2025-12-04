@@ -82,7 +82,7 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Brain className="w-8 h-8 text-primary" weight="fill" />
+              <Brain className="w-8 h-8 text-primary" />
               Mrs. Justin-e
             </DialogTitle>
           </div>
@@ -144,13 +144,13 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={handleStartPreview}>
-                  <Sparkle className="w-4 h-4 mr-2" weight="fill" />
+                  <Sparkle className="w-4 h-4 mr-2" />
                   Gerar exemplo
                 </Button>
               )}
             </div>
 
-            <div className="bg-muted/60 rounded-lg p-3 text-sm min-h-[80px] max-h-40 overflow-y-auto">
+            <div className="bg-muted/60 rounded-lg p-3 text-sm min-h-20 max-h-40 overflow-y-auto">
               {isStreaming && (
                 <p className="text-xs text-muted-foreground mb-1 animate-pulse">
                   Mrs. Justin-e está pensando...
@@ -223,7 +223,7 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
 
           <div className="bg-linear-to-br from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
             <div className="flex items-start gap-3">
-              <Sparkle className="w-6 h-6 text-primary shrink-0 mt-0.5" weight="fill" />
+              <Sparkle className="w-6 h-6 text-primary shrink-0 mt-0.5" />
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground">Benefícios principais</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
@@ -240,7 +240,7 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
 
           <div className="flex gap-3 pt-4">
             <Button className="flex-1" size="lg" onClick={handleActivate}>
-              <Brain className="w-5 h-5 mr-2" weight="fill" />
+              <Brain className="w-5 h-5 mr-2" />
               Ativar Mrs. Justin-e
             </Button>
             <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>

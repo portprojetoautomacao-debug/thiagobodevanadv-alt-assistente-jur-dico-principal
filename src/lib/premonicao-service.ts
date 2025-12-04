@@ -180,7 +180,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
         isEmpty: !responseText,
         dataKeys: Object.keys(data),
         hasChoices: "choices" in data,
-        hasMessage: (data as any).choices?.[0]?.message,
+        hasMessage: (data as Record<string, unknown>).choices !== undefined,
       });
       throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
     }

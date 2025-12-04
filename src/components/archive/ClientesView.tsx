@@ -34,11 +34,11 @@ import {
   Plus,
   MagnifyingGlass,
   PencilSimple,
-  Trash,
+  Trash2,
   User,
   Buildings,
   DownloadSimple,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { toast } from "sonner";
 import type { Cliente } from "@/types";
 import { exportToCSV } from "@/lib/utils";
@@ -397,7 +397,7 @@ export default function ClientesView() {
                             size="sm"
                             onClick={() => handleDelete(cliente.id)}
                           >
-                            <Trash size={18} className="text-destructive" />
+                            <Trash2 size={18} className="text-destructive" />
                           </Button>
                         </div>
                       </TableCell>

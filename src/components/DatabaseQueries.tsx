@@ -15,7 +15,7 @@ import {
   validarNumeroCNJ,
   type DatajudProcesso,
 } from "@/lib/datajud-api";
-import { CircleNotch, Database, MagnifyingGlass, Warning } from "@phosphor-icons/react";
+import { CircleNotch, Database, MagnifyingGlass, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -159,7 +159,7 @@ export default function DatabaseQueries() {
 
               {!apiKeyConfigured && (
                 <Alert variant="destructive">
-                  <Warning className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     API Key do DataJud não configurada. Configure{" "}
                     <code className="mx-1 px-1 py-0.5 rounded bg-muted text-xs">
@@ -182,7 +182,7 @@ export default function DatabaseQueries() {
 
               {error && (
                 <Alert variant="destructive">
-                  <Warning className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}

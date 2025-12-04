@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
-import { Copy, Download, FileText, Sparkle } from "@phosphor-icons/react";
+import { Copy, Download, FileText, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -128,7 +128,7 @@ Gerado em: ${timestamp}`;
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <FileText size={32} weight="duotone" className="text-primary neon-glow" />
+          <FileText size={32} className="text-primary neon-glow" />
           Resumidor de Documentos IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -158,7 +158,7 @@ Gerado em: ${timestamp}`;
                 disabled={isProcessing || !documentText.trim()}
                 className="button-gradient"
               >
-                <Sparkle size={20} className={isProcessing ? "animate-spin" : ""} />
+                <Sparkles size={20} className={isProcessing ? "animate-spin" : ""} />
                 {isProcessing ? "Analisando..." : "Resumir com IA"}
               </Button>
             </div>
@@ -185,7 +185,7 @@ Gerado em: ${timestamp}`;
           <CardContent>
             {!summary ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Sparkle size={48} className="text-muted-foreground mb-4" weight="duotone" />
+                <Sparkles size={48} className="text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
                   O resumo aparecerá aqui após processar o documento
                 </p>

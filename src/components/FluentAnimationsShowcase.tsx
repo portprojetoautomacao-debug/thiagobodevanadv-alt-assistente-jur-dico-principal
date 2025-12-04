@@ -8,7 +8,7 @@ import {
   FluentHover,
   FluentStaggerItem,
 } from "@/components/FluentMotion";
-import { Sparkle, Wind, Lightning, Atom } from "@phosphor-icons/react";
+import { Sparkles, Wind, Zap, Atom } from "lucide-react";
 
 export default function FluentAnimationsShowcase() {
   return (
@@ -29,7 +29,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkle size={24} className="text-primary" weight="duotone" />
+                <Sparkles size={24} className="text-primary" />
                 Fade In Up
               </CardTitle>
             </CardHeader>
@@ -48,7 +48,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Wind size={24} className="text-accent-teal" weight="duotone" />
+                <Wind size={24} className="text-accent-teal" />
                 Fade In Scale
               </CardTitle>
             </CardHeader>
@@ -67,7 +67,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lightning size={24} className="text-accent-orange" weight="duotone" />
+                <Zap size={24} className="text-accent-orange" />
                 Slide In
               </CardTitle>
             </CardHeader>
@@ -87,7 +87,7 @@ export default function FluentAnimationsShowcase() {
         <Card className="windows-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Atom size={24} className="text-accent-purple" weight="duotone" />
+              <Atom size={24} className="text-accent-purple" />
               Stagger Animation
             </CardTitle>
           </CardHeader>

@@ -208,7 +208,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover status-gradient-active">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Processos Ativos</CardTitle>
-            <Gavel className="text-secondary neon-glow" size={24} weight="duotone" />
+            <Gavel className="text-secondary neon-glow" size={24} />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold gradient-text">{stats.ativos}</div>
@@ -219,7 +219,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover status-gradient-completed">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Processos Concluídos</CardTitle>
-            <CheckCircle className="text-accent neon-glow" size={24} weight="duotone" />
+            <CheckCircle className="text-accent neon-glow" size={24} />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold gradient-text">{stats.concluidos}</div>
@@ -230,7 +230,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Pendentes</CardTitle>
-            <Clock className="text-primary neon-glow" size={24} weight="duotone" />
+            <Clock className="text-primary neon-glow" size={24} />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold gradient-text">{stats.prazosPendentes}</div>
@@ -248,7 +248,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <WarningCircle
               className={stats.prazosUrgentes > 0 ? "text-destructive neon-glow" : "text-primary"}
               size={24}
-              weight="duotone"
+             
             />
           </CardHeader>
           <CardContent>
@@ -270,7 +270,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <Card className="card-glow border-primary/30 bg-linear-to-br from-primary/10 via-secondary/10 to-accent/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 gradient-text">
-                <Upload size={24} weight="duotone" />
+                <Upload size={24} />
                 Nova Funcionalidade: Upload de PDF
               </CardTitle>
             </CardHeader>
@@ -281,15 +281,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle size={14} weight="fill" />
+                  <CheckCircle size={14} />
                   Extração automática
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle size={14} weight="fill" />
+                  <CheckCircle size={14} />
                   Powered by Gemini 2.5 Pro
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle size={14} weight="fill" />
+                  <CheckCircle size={14} />
                   Salva automaticamente
                 </Badge>
               </div>
@@ -317,7 +317,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <ChartPie size={24} weight="duotone" />
+              <ChartPie size={24} />
               Processos por Status
             </CardTitle>
           </CardHeader>
@@ -337,7 +337,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <Gavel size={24} weight="duotone" />
+              <Gavel size={24} />
               Top 5 Varas
             </CardTitle>
           </CardHeader>
@@ -357,7 +357,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic lg:col-span-2 xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <TrendUp size={24} weight="duotone" />
+              <TrendUp size={24} />
               Evolução (6 meses)
             </CardTitle>
           </CardHeader>

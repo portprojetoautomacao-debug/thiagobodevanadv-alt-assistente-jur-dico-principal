@@ -1249,7 +1249,7 @@ async function sendEmailNotification(
       return;
     }
     // TTL 600s (10 minutos). Upstash aceita objeto de opções (ex: { ex: 600 })
-    await kv.set(dedupeKey, { sentAt: Date.now() }, { ex: 600 } as any);
+    await kv.set(dedupeKey, { sentAt: Date.now() }, { ex: 600 } as { ex: number });
   } catch (error_) {
     console.warn("[Notifications] Falha dedupe, prosseguindo envio:", error_);
   }

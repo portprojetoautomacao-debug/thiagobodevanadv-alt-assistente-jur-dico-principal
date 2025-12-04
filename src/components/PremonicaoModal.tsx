@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { PremonicaoJuridica } from "@/types";
-import { CaretRight, Check, Copy, Lightbulb, Link as LinkIcon, X } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
+import { Check, ChevronRight, Copy, ExternalLink, Lightbulb, X } from "lucide-react";
 import { useState } from "react";
 
 interface PremonicaoModalProps {
@@ -107,11 +107,7 @@ function CopyButton({ text }: CopyButtonProps) {
       aria-label={copied ? "Texto copiado" : "Copiar texto"}
       title="Copiar texto"
     >
-      {copied ? (
-        <Check className="h-4 w-4 text-green-600" weight="bold" />
-      ) : (
-        <Copy className="h-4 w-4" />
-      )}
+      {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
     </Button>
   );
 }
@@ -129,7 +125,7 @@ export default function PremonicaoModal({
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-accent/10">
-              <Lightbulb className="h-5 w-5 text-accent" weight="fill" />
+              <Lightbulb className="h-5 w-5 text-accent" />
             </div>
             <DialogTitle className="text-2xl font-semibold">Premonição Jurídica</DialogTitle>
           </div>
@@ -172,7 +168,7 @@ export default function PremonicaoModal({
               <div className="space-y-6">
                 <div className="bg-muted/50 p-6 rounded-lg border border-border">
                   <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-accent" weight="fill" />
+                    <Lightbulb className="w-5 h-5 text-accent" />
                     Análise da IA
                   </h3>
                   <p className="text-foreground leading-relaxed">{data.analise_ia}</p>
@@ -187,10 +183,7 @@ export default function PremonicaoModal({
                           key={`estrategia-${idx}-${estrategia.slice(0, 30).replace(/\W/g, "")}`}
                           className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow group"
                         >
-                          <CaretRight
-                            className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                            weight="bold"
-                          />
+                          <ChevronRight className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <p className="flex-1 text-foreground">{estrategia}</p>
                           <CopyButton text={estrategia} />
                         </div>
@@ -238,7 +231,7 @@ export default function PremonicaoModal({
                                     rel="noopener noreferrer"
                                     title="Abrir jurisprudência"
                                   >
-                                    <LinkIcon className="h-4 w-4" />
+                                    <ExternalLink className="h-4 w-4" />
                                   </a>
                                 </Button>
                               )}

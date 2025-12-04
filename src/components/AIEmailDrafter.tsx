@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -11,11 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { EnvelopeSimple, Sparkle, Copy, PaperPlaneTilt } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
+import { Copy, Mail, Send, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type EmailType =
   | "cliente-inicial"
@@ -151,7 +151,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <EnvelopeSimple size={32} weight="duotone" className="text-primary neon-glow" />
+          <Mail size={32} className="text-primary neon-glow" />
           Rascunho de Emails IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -218,7 +218,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               disabled={isDrafting || !context.trim()}
               className="w-full button-gradient"
             >
-              <Sparkle size={20} className={isDrafting ? "animate-spin" : ""} />
+              <Sparkles size={20} className={isDrafting ? "animate-spin" : ""} />
               {isDrafting ? "Gerando..." : "Gerar Rascunho"}
             </Button>
           </CardContent>
@@ -246,11 +246,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
             <CardContent>
               {!draft ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <EnvelopeSimple
-                    size={64}
-                    className="text-muted-foreground mb-4"
-                    weight="duotone"
-                  />
+                  <Mail size={64} className="text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
                     O email aparecerá aqui após gerar o rascunho
                   </p>
@@ -291,11 +287,11 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
 
                     <div className="flex gap-2 pt-4">
                       <Button className="flex-1" variant="outline">
-                        <PaperPlaneTilt size={20} />
+                        <Send size={20} />
                         Abrir no Email
                       </Button>
                       <Button className="flex-1 button-gradient">
-                        <Sparkle size={20} />
+                        <Sparkles size={20} />
                         Refinar com IA
                       </Button>
                     </div>

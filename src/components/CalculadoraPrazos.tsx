@@ -20,7 +20,7 @@ import {
   getFeriadosNacionais,
 } from "@/lib/prazos";
 import type { Expediente, Prazo, Process } from "@/types";
-import { Info } from "@phosphor-icons/react";
+import { Info } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
