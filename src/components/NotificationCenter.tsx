@@ -414,8 +414,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   );
 }
 
-// Hook para usar o sistema de notificações em qualquer lugar
-export function useNotifications() {
+// Hook interno para gerenciar notificações no componente NotificationCenter
+export function useNotificationManager() {
   const [notifications, setNotifications] = useKV<Notification[]>(
     "notifications",
     []
