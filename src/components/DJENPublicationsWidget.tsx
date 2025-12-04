@@ -427,6 +427,93 @@ function ContentDecider({
   );
 }
 
+// === HELPER COMPONENTS (extraídos para evitar S6478) ===
+
+function FooterRegisterButton({
+  show,
+  autoRegistering,
+  onRegisterAll,
+}: {
+  show: boolean;
+  autoRegistering: boolean;
+  onRegisterAll: () => void;
+}) {
+  if (!show) return null;
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onRegisterAll}
+            disabled={autoRegistering}
+            className="flex-1 button-gradient"
+            aria-label="Cadastrar todas as intimações"
+          >
+            <Bot size={14} className={autoRegistering ? "animate-pulse" : ""} />
+            {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Cadastra automaticamente todas as intimações no Acervo</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function FooterViewAllButton({
+  show,
+  compactLayout,
+  onViewAll,
+}: {
+  show: boolean;
+  compactLayout: boolean;
+  onViewAll?: () => void;
+}) {
+  if (!show || !onViewAll) return null;
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onViewAll}
+      className={cn(
+        "hover:button-gradient hover:text-primary-foreground",
+        compactLayout ? "flex-1" : "w-full"
+      )}
+      aria-label="Ver todas as publicações"
+    >
+      Ver todas
+      <ArrowRight size={14} />
+    </Button>
+  );
+}
+
+function FooterButtonsSection({
+  showRegisterAll,
+  showViewAll,
+  autoRegistering,
+  onRegisterAll,
+  onViewAll,
+}: {
+  showRegisterAll: boolean;
+  showViewAll: boolean;
+  autoRegistering: boolean;
+  onRegisterAll: () => void;
+  onViewAll?: () => void;
+}) {
+  const compactLayout = showRegisterAll;
+  return (
+    <div className="flex gap-2">
+      <FooterRegisterButton
+        show={showRegisterAll}
+        autoRegistering={autoRegistering}
+        onRegisterAll={onRegisterAll}
+      />
+      <FooterViewAllButton show={showViewAll} compactLayout={compactLayout} onViewAll={onViewAll} />
+    </div>
+  );
+}
+
 export default function DJENPublicationsWidget({
   onViewAll,
   compact = false,
@@ -499,66 +586,7 @@ export default function DJENPublicationsWidget({
     </div>
   );
 
-  // Helpers de rodapé: badge e seção de botões (reduzem nesting)
-  function FooterRegisterButton({ show }: { show: boolean }) {
-    if (!show) return null;
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleAutoRegisterAll(publications)}
-              disabled={autoRegistering}
-              className="flex-1 button-gradient"
-              aria-label="Cadastrar todas as intimações"
-            >
-              <Bot size={14} className={autoRegistering ? "animate-pulse" : ""} />
-              {autoRegistering ? "Cadastrando..." : "Cadastrar Todas"}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Cadastra automaticamente todas as intimações no Acervo</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  function FooterViewAllButton({ show, compactLayout }: { show: boolean; compactLayout: boolean }) {
-    if (!show) return null;
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onViewAll}
-        className={cn(
-          "hover:button-gradient hover:text-primary-foreground",
-          compactLayout ? "flex-1" : "w-full"
-        )}
-        aria-label="Ver todas as publicações"
-      >
-        Ver todas
-        <ArrowRight size={14} />
-      </Button>
-    );
-  }
-
-  function FooterButtonsSection({
-    showRegisterAll,
-    showViewAll,
-  }: {
-    showRegisterAll: boolean;
-    showViewAll: boolean;
-  }) {
-    const compactLayout = showRegisterAll;
-    return (
-      <div className="flex gap-2">
-        <FooterRegisterButton show={showRegisterAll} />
-        <FooterViewAllButton show={showViewAll} compactLayout={compactLayout} />
-      </div>
-    );
-  }
-
+  // Constrói seção de rodapé com botões
   function buildFooterSection(showFooter: boolean): React.ReactNode {
     if (!showFooter) return null;
     const showRegisterAll = shouldShowRegisterAll(publications);
@@ -566,7 +594,13 @@ export default function DJENPublicationsWidget({
     return (
       <>
         <Separator className="my-3" />
-        <FooterButtonsSection showRegisterAll={showRegisterAll} showViewAll={showViewAll} />
+        <FooterButtonsSection
+          showRegisterAll={showRegisterAll}
+          showViewAll={showViewAll}
+          autoRegistering={autoRegistering}
+          onRegisterAll={() => handleAutoRegisterAll(publications)}
+          onViewAll={onViewAll}
+        />
       </>
     );
   }
