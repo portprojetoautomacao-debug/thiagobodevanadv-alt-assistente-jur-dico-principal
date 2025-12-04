@@ -153,30 +153,18 @@ export function createLocalAppointmentFromAnalysis(
 
   const deadlineDate = parseDeadlineDate(analysis.deadline.endDate);
   if (!deadlineDate) {
-    console.warn("[DeadlineIntegration] Invalid deadline date:", analysis.deadline.endDate);
+    console.warn(
+      "[DeadlineIntegration] Invalid deadline date:",
+      analysis.deadline.endDate
+    );
     return null;
   }
 
-  // Ajustar para formato de data local (YYYY-MM-DD)
-  const dateStr = deadlineDate.toISOString().split("T")[0];
-
-  // Determinar tipo do evento baseado na prioridade
-  const type: Appointment["type"] =
-    analysis.priority === "crítica" || analysis.priority === "alta" ? "prazo" : "outro";
-
-  const appointment: Appointment = {
-    id: crypto.randomUUID(),
-    title: `⚠️ PRAZO: ${intimationTitle.substring(0, 50)}${
-      intimationTitle.length > 50 ? "..." : ""
-    }`,
-    description: buildAppointmentDescription(analysis),
-    type,
-    date: dateStr,
-    time: "09:00", // Padrão: manhã
-    duration: 60,
-    location: analysis.court || "",
-    reminders: getPriorityReminders(analysis.priority),
-  };
+  const appointment = buildAppointment(
+    analysis,
+    intimationTitle,
+    deadlineDate
+  );
 
   console.log("[DeadlineIntegration] Created local appointment:", {
     id: appointment.id,
@@ -186,6 +174,31 @@ export function createLocalAppointmentFromAnalysis(
   });
 
   return appointment;
+}
+
+
+function buildAppointment(
+  analysis: IntimationAnalysisResult,
+  intimationTitle: string,
+  deadlineDate: Date
+): Appointment {
+  const dateStr = deadlineDate.toISOString().split("T")[0];
+  const type: Appointment["type"] =
+    analysis.priority === "crítica" || analysis.priority === "alta"
+      ? "prazo"
+      : "outro";
+
+  return {
+    id: crypto.randomUUID(),
+    title: buildAppointmentTitle(intimationTitle),
+    description: buildAppointmentDescription(analysis),
+    type,
+    date: dateStr,
+    time: "09:00", // Padrão: manhã
+    duration: 60,
+    location: analysis.court || "",
+    reminders: getPriorityReminders(analysis.priority),
+  };
 }
 
 /**
