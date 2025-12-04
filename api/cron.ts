@@ -943,11 +943,7 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
       const recent = history.slice(0, 12);
       const avgPending =
         recent.reduce((acc, h) => acc + h.pendingCount, 0) / Math.max(recent.length, 1);
-      const maxPending = recent.reduce(
-        (acc, h) => (h.pendingCount > acc ? h.pendingCount : acc),
-        0
-      );
-
+      const maxPending = recent.reduce((acc, h) => Math.max(acc, h.pendingCount), 0);
       if (avgPending >= 100 || maxPending >= 150 || pendingTasks.length >= 150) {
         tasksLimit = 40; // crítico
       } else if (avgPending >= 50 || pendingTasks.length >= 80) {
@@ -1270,10 +1266,10 @@ async function sendEmailNotification(
           <h2 style="color: #333;">${notification.title}</h2>
           <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
             /\n/g,
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
+            "\n",
             "<br>"
-          )}</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-          <p style="color: #999; font-size: 12px;">
+          )}</p>le="color: #999; font-size: 12px;">
             Enviado automaticamente pelo Assistente Jurídico PJe<br>
             ${new Date().toLocaleString("pt-BR", {
               timeZone: "America/Sao_Paulo",

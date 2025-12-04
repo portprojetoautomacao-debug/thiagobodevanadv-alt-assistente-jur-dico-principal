@@ -470,43 +470,15 @@ export default function AgentOrchestrationPanel() {
                   <p className="text-sm font-medium mb-3">Timeline de Execução (ReAct):</p>
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
-                      {execution.traces.map((trace, index) => (
+                      {execution.traces.map((trace) => (
                         <TraceItem
-                          key={`trace-${trace.timestamp}-${index}`}
+                          key={`trace-${trace.timestamp}-${trace.step}`}
                           trace={trace}
                         />
                       ))}
                     </div>
                   </ScrollArea>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function TraceItem({ trace }: { trace: any }) {
-  return (
-    <div className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded">
-      <div className="shrink-0">
-        <Badge variant={getTraceVariant(trace.type)}>{trace.type.toUpperCase()}</Badge>
-      </div>
-      <div className="flex-1">
-        <p className="text-sm whitespace-pre-wrap">{trace.content}</p>
-        {trace.toolUsed && (
-          <p className="text-xs text-muted-foreground mt-1">🔧 {trace.toolUsed}</p>
-        )}
-        {trace.error && <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>}
-      </div>
-      <div className="shrink-0 text-xs text-muted-foreground">
-        {typeof trace.duration === "number" ? `${trace.duration}ms` : "-- ms"}
-      </div>
-    </div>
-  );
-}
               </CardContent>
             </Card>
           ) : (
@@ -521,6 +493,32 @@ function TraceItem({ trace }: { trace: any }) {
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function TraceItem({ trace }: { trace: AgentTrace }) {
+  return (
+    <div className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded">
+      <div className="shrink-0">
+        <Badge variant={getTraceVariant(trace.type)}>
+          {trace.type.toUpperCase()}
+        </Badge>
+      </div>
+      <div className="flex-1">
+        <p className="text-sm whitespace-pre-wrap">{trace.content}</p>
+        {trace.toolUsed && (
+          <p className="text-xs text-muted-foreground mt-1">
+            🔧 {trace.toolUsed}
+          </p>
+        )}
+        {trace.error && (
+          <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>
+        )}
+      </div>
+      <div className="shrink-0 text-xs text-muted-foreground">
+        {typeof trace.duration === "number" ? `${trace.duration}ms` : "-- ms"}
+      </div>
     </div>
   );
 }

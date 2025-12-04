@@ -219,11 +219,13 @@ export class GeminiClient {
     if (apiKey) {
       this.apiKey = String(apiKey);
     } else if (typeof import.meta !== "undefined") {
-      const envKey =
-        import.meta.env.VITE_GOOGLE_API_KEY ||
-        import.meta.env.VITE_GEMINI_API_KEY ||
-        import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
-        "";
+      let envKey = import.meta.env.VITE_GOOGLE_API_KEY;
+      if (!envKey) {
+        envKey = import.meta.env.VITE_GEMINI_API_KEY;
+      }
+      if (!envKey) {
+        envKey = import.meta.env.VITE_GEMINI_API_KEY_BACKEND;
+      }
       this.apiKey = envKey ? String(envKey) : null;
     } else {
       this.apiKey = null;

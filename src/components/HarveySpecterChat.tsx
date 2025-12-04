@@ -251,6 +251,107 @@ const CopyButton = memo(({ text }: { text: string }) => {
 });
 CopyButton.displayName = "CopyButton";
 
+interface ChatMessageProps {
+  message: Message;
+  streamingMessageId: string | null;
+  isStreaming: boolean;
+  streamingContent: string;
+  onInsightClick: (action?: ViewType) => void;
+}
+
+const ChatMessage = ({
+  message,
+  streamingMessageId,
+  isStreaming,
+  streamingContent,
+  onInsightClick,
+}: ChatMessageProps) => {
+  const isUser = message.role === "user";
+  const isAssistant = message.role === "assistant";
+
+  return (
+    <div className="group">
+      <div className={cn("flex gap-3", isUser ? "flex-row-reverse" : "flex-row")}>
+        {/* Avatar */}
+        <div
+          className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+            isUser
+              ? "bg-primary text-primary-foreground"
+              : "bg-linear-to-br from-primary/20 to-accent/20"
+          )}
+        >
+          {isUser ? (
+            <User className="w-4 h-4" weight="fill" />
+          ) : (
+            <Robot className="w-4 h-4" weight="fill" />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className={cn("flex-1 max-w-[80%]", isUser ? "text-right" : "text-left")}>
+          <Card
+            className={cn(
+              "p-3 inline-block text-left",
+              isUser ? "bg-primary text-primary-foreground" : "bg-card"
+            )}
+          >
+            {/* Streaming ou conteúdo final */}
+            {renderMessageContent(
+              {
+                messageId: message.id,
+                streamingMessageId,
+                isStreaming,
+                streamingContent,
+                messageContent: message.content,
+              },
+              SimpleMarkdown
+            )}
+          </Card>
+
+          {/* Copy button para assistente */}
+          {isAssistant && message.content && (
+            <div className="mt-1 flex items-center gap-2">
+              <CopyButton text={message.content} />
+              <span className="text-xs text-muted-foreground">
+                {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          )}
+
+          {/* Insights clicáveis */}
+          {message.insights && message.insights.length > 0 && isAssistant && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {message.insights.map((insight) => (
+                <Card
+                  key={insight.title}
+                  className={cn(
+                    "px-2 py-1.5 inline-flex items-center gap-1.5 text-xs",
+                    insight.action && "cursor-pointer hover:bg-accent/10"
+                  )}
+                  onClick={() => onInsightClick(insight.action)}
+                >
+                  {insight.type === "alert" && <Bell className="w-3 h-3 text-red-500" />}
+                  {insight.type === "statistics" && <ChartBar className="w-3 h-3 text-blue-500" />}
+                  {insight.type === "trend" && <ChartBar className="w-3 h-3 text-green-500" />}
+                  {insight.type === "suggestion" && <Sparkle className="w-3 h-3 text-purple-500" />}
+                  {insight.type === "info" && <Warning className="w-3 h-3 text-amber-500" />}
+                  <span className="font-medium">{insight.title}</span>
+                  {insight.value && <span className="font-bold">{insight.value}</span>}
+                  {insight.action && <ArrowRight className="w-3 h-3" />}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
@@ -748,111 +849,14 @@ Regras:
               // Messages
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <div key={message.id} className="group">
-                    <div
-                      className={cn(
-                        "flex gap-3",
-                        message.role === "user" ? "flex-row-reverse" : "flex-row"
-                      )}
-                    >
-                      {/* Avatar */}
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-linear-to-br from-primary/20 to-accent/20"
-                        )}
-                      >
-                        {message.role === "user" ? (
-                          <User className="w-4 h-4" weight="fill" />
-                        ) : (
-                          <Robot className="w-4 h-4" weight="fill" />
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div
-                        className={cn(
-                          "flex-1 max-w-[80%]",
-                          message.role === "user" ? "text-right" : "text-left"
-                        )}
-                      >
-                        <Card
-                          className={cn(
-                            "p-3 inline-block text-left",
-                            message.role === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card"
-                          )}
-                        >
-                          {/* Streaming ou conteúdo final */}
-                          {renderMessageContent(
-                            {
-                              messageId: message.id,
-                              streamingMessageId,
-                              isStreaming,
-                              streamingContent,
-                              messageContent: message.content,
-                            },
-                            SimpleMarkdown
-                          )}
-                        </Card>
-
-                        {/* Copy button para assistente */}
-                        {message.role === "assistant" && message.content && (
-                          <div className="mt-1 flex items-center gap-2">
-                            <CopyButton text={message.content} />
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Insights clicáveis */}
-                        {message.insights &&
-                          message.insights.length > 0 &&
-                          message.role === "assistant" && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {message.insights.map((insight) => (
-                                <Card
-                                  key={insight.title}
-                                  className={cn(
-                                    "px-2 py-1.5 inline-flex items-center gap-1.5 text-xs",
-                                    insight.action && "cursor-pointer hover:bg-accent/10"
-                                  )}
-                                  onClick={() => handleInsightClick(insight.action)}
-                                >
-                                  {insight.type === "alert" && (
-                                    <Bell className="w-3 h-3 text-red-500" />
-                                  )}
-                                  {insight.type === "statistics" && (
-                                    <ChartBar className="w-3 h-3 text-blue-500" />
-                                  )}
-                                  {insight.type === "trend" && (
-                                    <ChartBar className="w-3 h-3 text-green-500" />
-                                  )}
-                                  {insight.type === "suggestion" && (
-                                    <Sparkle className="w-3 h-3 text-purple-500" />
-                                  )}
-                                  {insight.type === "info" && (
-                                    <Warning className="w-3 h-3 text-amber-500" />
-                                  )}
-                                  <span className="font-medium">{insight.title}</span>
-                                  {insight.value && (
-                                    <span className="font-bold">{insight.value}</span>
-                                  )}
-                                  {insight.action && <ArrowRight className="w-3 h-3" />}
-                                </Card>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  </div>
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    streamingMessageId={streamingMessageId}
+                    isStreaming={isStreaming}
+                    streamingContent={streamingContent}
+                    onInsightClick={handleInsightClick}
+                  />
                 ))}
               </div>
             )}

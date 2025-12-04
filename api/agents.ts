@@ -541,7 +541,9 @@ const MEMORY_SAVE_CONFIG: Record<
   },
   [AgentTaskType.CASE_STRATEGY]: {
     getContent: (result) =>
-      result.strategyAnalysis ? `Estratégia processual: ${String(result.strategyAnalysis)}` : null,
+      result.strategyAnalysis
+        ? `Estratégia processual: ${JSON.stringify(result.strategyAnalysis)}`
+        : null,
     category: "estrategia",
   },
   // Tipos que não salvam na memória
@@ -847,7 +849,7 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
 // Action Handlers - Extracted to reduce CC (S3776)
 // ===========================
 
-interface _ProcessQueueResult {
+interface ProcessQueueResult {
   ok: boolean;
   message: string;
   processed: number;
@@ -1037,7 +1039,7 @@ async function processQueueTask(
   task: AgentTask,
   agents: Agent[],
   taskQueue: AgentTask[]
-): Promise<{ taskId: string; status: "completed" | "failed"; error?: string }> {
+): Promise<ProcessQueueResult> {
   const agent = agents.find((a) => a.id === task.agentId);
 
   if (!agent) {
@@ -1092,7 +1094,7 @@ async function handleProcessQueue(res: VercelResponse): Promise<VercelResponse> 
 
   const agents = await fetchAgents();
   const tasksToProcess = pendingTasks.slice(0, 5);
-  const results: Array<{ taskId: string; status: "completed" | "failed"; error?: string }> = [];
+  const results: Array<ProcessQueueResult> = [];
 
   for (const task of tasksToProcess) {
     const result = await processQueueTask(task, agents, taskQueue);

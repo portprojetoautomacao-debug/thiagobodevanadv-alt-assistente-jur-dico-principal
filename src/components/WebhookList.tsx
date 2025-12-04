@@ -12,7 +12,7 @@ import {
 } from "@phosphor-icons/react";
 
 // Microsoft Teams icon
-const TeamsIcon = ({ size = 20 }: { size?: number }) => (
+export const TeamsIcon = ({ size = 20 }: { size?: number }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"

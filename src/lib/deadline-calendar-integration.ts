@@ -127,15 +127,12 @@ function buildAppointmentDescription(analysis: IntimationAnalysisResult): string
   return descriptionParts.join("\n");
 }
 
-
 /**
  * Constrói o título do compromisso
  */
 function buildAppointmentTitle(intimationTitle: string): string {
   const truncatedTitle =
-    intimationTitle.length > 50
-      ? `${intimationTitle.substring(0, 50)}...`
-      : intimationTitle;
+    intimationTitle.length > 50 ? `${intimationTitle.substring(0, 50)}...` : intimationTitle;
   return `⚠️ PRAZO: ${truncatedTitle}`;
 }
 
@@ -153,18 +150,11 @@ export function createLocalAppointmentFromAnalysis(
 
   const deadlineDate = parseDeadlineDate(analysis.deadline.endDate);
   if (!deadlineDate) {
-    console.warn(
-      "[DeadlineIntegration] Invalid deadline date:",
-      analysis.deadline.endDate
-    );
+    console.warn("[DeadlineIntegration] Invalid deadline date:", analysis.deadline.endDate);
     return null;
   }
 
-  const appointment = buildAppointment(
-    analysis,
-    intimationTitle,
-    deadlineDate
-  );
+  const appointment = buildAppointment(analysis, intimationTitle, deadlineDate);
 
   console.log("[DeadlineIntegration] Created local appointment:", {
     id: appointment.id,
@@ -176,7 +166,6 @@ export function createLocalAppointmentFromAnalysis(
   return appointment;
 }
 
-
 function buildAppointment(
   analysis: IntimationAnalysisResult,
   intimationTitle: string,
@@ -184,9 +173,7 @@ function buildAppointment(
 ): Appointment {
   const dateStr = deadlineDate.toISOString().split("T")[0];
   const type: Appointment["type"] =
-    analysis.priority === "crítica" || analysis.priority === "alta"
-      ? "prazo"
-      : "outro";
+    analysis.priority === "crítica" || analysis.priority === "alta" ? "prazo" : "outro";
 
   return {
     id: crypto.randomUUID(),
@@ -396,23 +383,8 @@ export async function batchCreateDeadlines(
   }
 
   // Sincronizar com Google Calendar em paralelo (se habilitado)
-  if (syncToGoogle && googleCalendarService.getStatus().authenticated) {
-    const googlePromises = analysesWithDeadlines.map(({ analysis, title }) =>
-      syncDeadlineToGoogleCalendar(analysis, title)
-    );
-
-    try {
-      const googleResults = await Promise.allSettled(googlePromises);
-      googleResults.forEach((res, index) => {
-        if (res.status === "fulfilled" && res.value) {
-          if (results[index]) {
-            results[index].googleEventId = res.value;
-          }
-        }
-      });
-    } catch (error) {
-      console.error("[DeadlineIntegration] Error syncing to Google:", error);
-    }
+  if (syncToGoogle) {
+    await syncBatchToGoogle(analysesWithDeadlines, results);
   }
 
   return {
@@ -422,4 +394,28 @@ export async function batchCreateDeadlines(
     errors: results.filter((r) => !r.success).length,
     details: results,
   };
+}
+
+async function syncBatchToGoogle(
+  analysesWithDeadlines: Array<{ analysis: IntimationAnalysisResult; title: string }>,
+  results: DeadlineCreationResult[]
+): Promise<void> {
+  if (!googleCalendarService.getStatus().authenticated) return;
+
+  const googlePromises = analysesWithDeadlines.map(({ analysis, title }) =>
+    syncDeadlineToGoogleCalendar(analysis, title)
+  );
+
+  try {
+    const googleResults = await Promise.allSettled(googlePromises);
+    googleResults.forEach((res, index) => {
+      if (res.status === "fulfilled" && res.value) {
+        if (results[index]) {
+          results[index].googleEventId = res.value;
+        }
+      }
+    });
+  } catch (error) {
+    console.error("[DeadlineIntegration] Error syncing to Google:", error);
+  }
 }
