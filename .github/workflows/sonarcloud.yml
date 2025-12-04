@@ -2,7 +2,7 @@ name: SonarCloud Analysis
 
 # ⚠️ AÇÃO NECESSÁRIA: Verificar organização no SonarCloud
 # O workflow está falhando com "No organization with key 'thiagobodevan-a11y'"
-# 
+#
 # Para corrigir:
 # 1. Acesse https://sonarcloud.io/projects e encontre seu projeto
 # 2. Clique no projeto e vá em Administration > Update key

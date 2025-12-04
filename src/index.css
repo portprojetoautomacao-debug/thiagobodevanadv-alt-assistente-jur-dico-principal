@@ -191,16 +191,9 @@
 
 /* App Specific Styles (from index.css) */
 
-/* Variáveis de Acessibilidade */
-:root {
-  --min-font-size: 16px;
-  --focus-color: #3b82f6;
-  --focus-width: 3px;
-}
-
 /* Indicadores de foco visíveis (WCAG 2.4.7) */
 *:focus-visible {
-  outline: var(--focus-width) solid var(--focus-color) !important;
+  outline: 3px solid #3b82f6 !important;
   outline-offset: 2px !important;
 }
 

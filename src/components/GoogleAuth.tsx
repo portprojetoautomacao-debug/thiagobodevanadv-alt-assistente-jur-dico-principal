@@ -8,18 +8,18 @@ import { useCallback, useEffect, useState } from "react";
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
 const PRODUCTION_DOMAIN = "https://assistente-juridico-p.vercel.app";
 
-// URLs de produção autorizadas no Google Cloud Console
-const PRODUCTION_URLS = [
+// URLs de produção autorizadas no Google Cloud Console (Set para performance)
+const PRODUCTION_URLS = new Set([
   "assistente-juridico-p.vercel.app",
   "assistente-juridico-github.vercel.app",
-];
+]);
 
 // Detecta se está em ambiente de desenvolvimento/preview (URL dinâmica)
 const isDevelopmentEnvironment = (): boolean => {
   const hostname = window.location.hostname;
 
   // Produção autorizada - permite login
-  if (PRODUCTION_URLS.includes(hostname)) {
+  if (PRODUCTION_URLS.has(hostname)) {
     return false;
   }
 
