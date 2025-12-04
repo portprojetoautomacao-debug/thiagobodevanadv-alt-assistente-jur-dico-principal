@@ -1,4 +1,3 @@
-import {Calculator, CalendarDots, CurrencyCircleDollar, FileText, House, MicrophoneStage, PencilLine, SignOut} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -6,15 +5,16 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User, ViewType } from "@/types";
 import {
-  BookOpen,
-  Bot,
-  Briefcase,
   Calculator,
-  Database,
+  CalendarDots,
+  CurrencyCircleDollar,
   FileText,
-  Inbox,
-  Newspaper,
-} from "lucide-react";
+  House,
+  MicrophoneStage,
+  PencilLine,
+  SignOut,
+} from "@phosphor-icons/react";
+import { BookOpen, Bot, Briefcase, Database, Inbox, Newspaper } from "lucide-react";
 
 interface SidebarProps {
   currentView: string;

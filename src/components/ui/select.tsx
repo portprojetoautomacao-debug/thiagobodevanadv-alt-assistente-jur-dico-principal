@@ -1,4 +1,3 @@
-import {Check, ChevronDown} from "lucide-react";
 import {
   Check as Check,
   CaretDown as ChevronDown,
