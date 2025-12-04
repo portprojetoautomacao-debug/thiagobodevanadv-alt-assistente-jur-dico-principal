@@ -1,3 +1,5 @@
+import {TrendingDown, TrendingUp} from "lucide-react";
+import {Paperclip, Plus, X} from "@phosphor-icons/react";
 import { useState, useMemo, useRef } from "react";
 import { useKV } from "@/hooks/use-kv";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

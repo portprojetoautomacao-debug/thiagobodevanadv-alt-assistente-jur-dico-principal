@@ -1,3 +1,4 @@
+import {Clock} from "@phosphor-icons/react";
 /**
  * FailedTasksAnalysis - Painel de diagnóstico de tarefas falhadas
  * Mostra estatísticas de erros, padrões e recomendações de correção

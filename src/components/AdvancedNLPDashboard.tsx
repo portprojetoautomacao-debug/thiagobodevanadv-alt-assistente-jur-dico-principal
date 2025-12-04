@@ -18,7 +18,17 @@ import {
   type NamedEntity,
   type SentimentAnalysis,
 } from "@/lib/nlp-pipeline";
-import { Brain, CheckCircle, Copy, Download, FileText, Search, Tag } from "lucide-react";
+import {
+  BarChart3,
+  Brain,
+  CheckCircle,
+  Copy,
+  Download,
+  FileText,
+  Search,
+  Tag,
+  Zap,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -625,4 +635,3 @@ export default function AdvancedNLPDashboard() {
     </div>
   );
 }
-

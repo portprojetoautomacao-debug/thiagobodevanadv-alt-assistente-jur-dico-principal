@@ -1,3 +1,4 @@
+import {Check} from "lucide-react";
 /**
  * Tests for AdvancedNLPDashboard component
  *

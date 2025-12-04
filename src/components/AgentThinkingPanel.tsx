@@ -1,3 +1,4 @@
+import {Brain, Clock, FileText, Gavel, Sparkle, X} from "@phosphor-icons/react";
 /**
  * AgentThinkingPanel - Mostra o "pensamento" dos agentes em tempo real
  * Exibe detalhes específicos do que cada agente está fazendo:

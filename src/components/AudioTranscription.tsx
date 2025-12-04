@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Mic, Sparkles, StopCircle, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -223,10 +224,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
               {isRecording ? (
                 <div className="relative">
                   <div className="w-24 h-24 bg-destructive rounded-full flex items-center justify-center animate-pulse">
-                    <MicrophoneStage
-                      className="w-12 h-12 text-destructive-foreground"
-                     
-                    />
+                    <MicrophoneStage className="w-12 h-12 text-destructive-foreground" />
                   </div>
                   <div className="absolute inset-0 rounded-full border-4 border-destructive animate-ping" />
                 </div>

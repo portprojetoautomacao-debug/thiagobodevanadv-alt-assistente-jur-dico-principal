@@ -1,3 +1,4 @@
+import {Keyboard, Sparkle, Trash, X} from "@phosphor-icons/react";
 /**
  * Harvey Specter Chat - Assistente Jurídico Inteligente
  *

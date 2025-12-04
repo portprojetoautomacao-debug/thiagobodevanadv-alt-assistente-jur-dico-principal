@@ -1,3 +1,4 @@
+import {ChevronDown} from "lucide-react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ComponentProps } from "react";
 
