@@ -32,6 +32,7 @@ function extractResponseText(data: Record<string, unknown>): string {
  * Limpa e faz parse do JSON da resposta
  */
 function parseJsonResponse(responseText: string): Record<string, unknown> {
+  // Remover markdown code blocks
   const cleaned = responseText
     .replace(/```json\s*/gi, '')
     .replace(/```\s*/g, '')
@@ -39,12 +40,34 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
 
   try {
     return JSON.parse(cleaned) as Record<string, unknown>
-  } catch {
+  } catch (firstError) {
     // Tentar extrair o primeiro bloco JSON da resposta
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as Record<string, unknown>
+      try {
+        return JSON.parse(jsonMatch[0]) as Record<string, unknown>
+      } catch (secondError) {
+        // Tentar encontrar JSON truncado e completá-lo
+        const truncatedMatch = cleaned.match(/\{[\s\S]*/)
+        if (truncatedMatch) {
+          let truncated = truncatedMatch[0]
+          // Contar chaves abertas e fechadas
+          const openBraces = (truncated.match(/\{/g) || []).length
+          const closeBraces = (truncated.match(/\}/g) || []).length
+          
+          // Adicionar chaves faltantes
+          truncated += '}'.repeat(Math.max(0, openBraces - closeBraces))
+          
+          try {
+            return JSON.parse(truncated) as Record<string, unknown>
+          } catch {
+            console.warn('[PremonicaoService] JSON truncado não pôde ser corrigido:', truncated.substring(0, 200))
+          }
+        }
+      }
     }
+    
+    console.error('[PremonicaoService] Falha ao parsear JSON:', cleaned.substring(0, 500))
     throw new Error('Resposta não contém JSON reconhecível')
   }
 }

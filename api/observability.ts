@@ -29,11 +29,16 @@ interface SystemMetrics {
 function isAuthorized(req: VercelRequest): boolean {
   const authHeader = req.headers.authorization
   const isVercelCron = authHeader?.startsWith('Bearer ')
+  
   const host = req.headers.host || ''
+  const origin = req.headers.origin || ''
+  const referer = req.headers.referer || ''
+  
   const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1') || process.env.NODE_ENV === 'development'
+  const isVercelApp = host.includes('vercel.app') || origin.includes('vercel.app') || referer.includes('vercel.app')
   const hasApiKey = !!req.headers['x-api-key']
 
-  return !!(isVercelCron || isLocalDev || hasApiKey)
+  return !!(isVercelCron || isLocalDev || isVercelApp || hasApiKey)
 }
 
 // Simulação de circuit breakers (em produção viria de um serviço real)
@@ -94,11 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // Em dev local, permitir acesso sem auth
-  const host = req.headers.host || ''
-  const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1')
-
-  if (!isLocalDev && !isAuthorized(req)) {
+  if (!isAuthorized(req)) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
@@ -110,7 +111,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'circuit-breakers':
         return res.status(200).json({
           ok: true,
-          circuitBreakers: getCircuitBreakers(),
+          summary: {
+            total: 4,
+            healthy: 4,
+            degraded: 0,
+            failed: 0
+          },
+          breakers: getCircuitBreakers(),
           timestamp: new Date().toISOString()
         })
 

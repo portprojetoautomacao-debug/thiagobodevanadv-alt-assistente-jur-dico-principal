@@ -91,8 +91,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         return () => document.removeEventListener('keydown', handleKeyDown)
     }, [])
 
-    // Reset state quando modal fecha
-    const resetSearchState = useCallback(() => {
+    // Função para resetar o estado da busca
+    const resetSearch = useCallback(() => {
         setQuery('')
         setCategory('all')
         setSelectedIndex(0)
@@ -102,33 +102,16 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     // Função para fechar o modal com reset
     const closeSearch = useCallback(() => {
         setIsOpen(false)
-        resetSearchState()
-    }, [resetSearchState])
+        resetSearch()
+    }, [resetSearch])
 
     // Focar input quando abrir
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100)
         }
-        // Cleanup on close - moved to callback to avoid linting issues
+        // Reset é feito pelo closeSearch diretamente, não precisa de efeito separado
     }, [isOpen])
-    
-    // Reset state when closed - separate effect with proper dependency
-    const resetSearch = useCallback(() => {
-        setQuery('')
-        setCategory('all')
-        setSelectedIndex(0)
-        setResults([])
-    }, [])
-    
-    // Effect that triggers reset using callback pattern
-    useEffect(() => {
-        if (!isOpen) {
-            // Use setTimeout to schedule state update outside of effect
-            const timeoutId = globalThis.setTimeout(resetSearch, 0)
-            return () => globalThis.clearTimeout(timeoutId)
-        }
-    }, [isOpen, resetSearch])
 
     // Função de busca
     const search = useCallback((searchQuery: string, searchCategory: SearchCategory) => {
