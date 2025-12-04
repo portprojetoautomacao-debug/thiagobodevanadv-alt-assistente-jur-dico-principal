@@ -47,13 +47,13 @@ export const config = {
 
   github: {
     oauthClientId: getEnvVar("VITE_GITHUB_OAUTH_CLIENT_ID", ""),
-    oauthClientSecret: getEnvVar("GITHUB_OAUTH_CLIENT_SECRET", ""),
+    oauthClientSecret: getEnvVar("GITHUB_OAUTH_CLIENT_SECRET", "", false), // opcional
   },
 
   gitlab: {
-    oauthClientId: getEnvVar("GITLAB_CLIENT_ID", ""),
-    oauthClientSecret: getEnvVar("GITLAB_CLIENT_SECRET", ""),
-    redirectUri: getEnvVar("GITLAB_REDIRECT_URI", `${getOrigin()}/api/auth/callback/gitlab`),
+    oauthClientId: getEnvVar("GITLAB_CLIENT_ID", "", false), // opcional
+    oauthClientSecret: getEnvVar("GITLAB_CLIENT_SECRET", "", false), // opcional
+    redirectUri: getEnvVar("GITLAB_REDIRECT_URI", `${getOrigin()}/api/auth/callback/gitlab`, false),
   },
 
   datajud: {
