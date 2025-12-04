@@ -1,14 +1,14 @@
 import { useKV } from "@/hooks/use-kv";
 import {
-  type Agent,
-  type AgentTask,
-  canResumeAfterHuman,
-  initializeAgents,
-  shouldPauseForHuman,
+    type Agent,
+    type AgentTask,
+    canResumeAfterHuman,
+    initializeAgents,
+    shouldPauseForHuman,
 } from "@/lib/agents";
 import {
-  processTaskWithRealAI,
-  processTaskWithStreamingAI,
+    processTaskWithRealAI,
+    processTaskWithStreamingAI,
 } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
