@@ -1,34 +1,34 @@
-import { useMemo, useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import type { Process, Prazo } from '@/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CalendarCheck, CheckCircle, Clock, DownloadSimple } from '@phosphor-icons/react'
-import { calcularDiasRestantes, isUrgente, formatarData } from '@/lib/prazos'
-import { toast } from 'sonner'
-import { exportToCSV } from '@/lib/utils'
+import { useMemo, useState } from "react";
+import { useKV } from "@/hooks/use-kv";
+import type { Process, Prazo } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarCheck, CheckCircle, Clock, DownloadSimple } from "@phosphor-icons/react";
+import { calcularDiasRestantes, isUrgente, formatarData } from "@/lib/prazos";
+import { toast } from "sonner";
+import { exportToCSV } from "@/lib/utils";
 
 // ===== Helpers for PrazosView (reduces S3776 Cognitive Complexity) =====
 
-type FilterType = 'todos' | 'pendentes' | 'urgentes' | 'concluidos'
+type FilterType = "todos" | "pendentes" | "urgentes" | "concluidos";
 
 function getEmptyStateMessage(filter: FilterType): string {
   const messages: Record<FilterType, string> = {
-    pendentes: 'Todos os prazos estão concluídos!',
-    urgentes: 'Nenhum prazo urgente no momento',
-    concluidos: 'Nenhum prazo concluído ainda',
-    todos: 'Adicione prazos aos seus processos'
-  }
-  return messages[filter]
+    pendentes: "Todos os prazos estão concluídos!",
+    urgentes: "Nenhum prazo urgente no momento",
+    concluidos: "Nenhum prazo concluído ainda",
+    todos: "Adicione prazos aos seus processos",
+  };
+  return messages[filter];
 }
 
 function formatDiasRestantesBadge(diasRestantes: number): string {
-  if (diasRestantes < 0) return 'Vencido'
-  if (diasRestantes === 0) return 'Hoje'
-  if (diasRestantes === 1) return 'Amanhã'
-  return `${diasRestantes} dias`
+  if (diasRestantes < 0) return "Vencido";
+  if (diasRestantes === 0) return "Hoje";
+  if (diasRestantes === 1) return "Amanhã";
+  return `${diasRestantes} dias`;
 }
 
 // ===== Process Update Helpers (reduces S2004 nesting) =====
@@ -37,14 +37,14 @@ function formatDiasRestantesBadge(diasRestantes: number): string {
  * Toggles the concluido status of a prazo within a process
  */
 function togglePrazoConcluido(prazo: Prazo): Prazo {
-  return { ...prazo, concluido: !prazo.concluido }
+  return { ...prazo, concluido: !prazo.concluido };
 }
 
 /**
  * Updates prazos array with toggled prazo
  */
 function updatePrazosWithToggle(prazos: Prazo[], prazoId: string): Prazo[] {
-  return prazos.map(p => p.id === prazoId ? togglePrazoConcluido(p) : p)
+  return prazos.map((p) => (p.id === prazoId ? togglePrazoConcluido(p) : p));
 }
 
 /**
@@ -55,80 +55,84 @@ function updateProcessWithToggledPrazo(
   prazoId: string,
   prazoProcessId: string
 ): Process {
-  if (process.id !== prazoProcessId) return process
+  if (process.id !== prazoProcessId) return process;
 
   return {
     ...process,
     prazos: updatePrazosWithToggle(process.prazos, prazoId),
-    updatedAt: new Date().toISOString()
-  }
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 export default function PrazosView() {
-  const [processes, setProcesses] = useKV<Process[]>('processes', [])
-  const [filter, setFilter] = useState<'todos' | 'pendentes' | 'urgentes' | 'concluidos'>('pendentes')
+  const [processes, setProcesses] = useKV<Process[]>("processes", []);
+  const [filter, setFilter] = useState<"todos" | "pendentes" | "urgentes" | "concluidos">(
+    "pendentes"
+  );
 
   const prazosComProcesso = useMemo(() => {
-    const lista: (Prazo & { processo: Process })[] = []
-    const processesList = processes || []
+    const lista: (Prazo & { processo: Process })[] = [];
+    const processesList = processes || [];
 
-    processesList.forEach(process => {
+    processesList.forEach((process) => {
       if (process.prazos && Array.isArray(process.prazos)) {
-        process.prazos.forEach(prazo => {
-          lista.push({ ...prazo, processo: process })
-        })
+        process.prazos.forEach((prazo) => {
+          lista.push({ ...prazo, processo: process });
+        });
       }
-    })
+    });
 
-    return lista.sort((a, b) => a.dataFinal.localeCompare(b.dataFinal))
-  }, [processes])
+    return lista.sort((a, b) => a.dataFinal.localeCompare(b.dataFinal));
+  }, [processes]);
 
   const filteredPrazos = useMemo(() => {
-    return prazosComProcesso.filter(prazo => {
-      const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
+    return prazosComProcesso.filter((prazo) => {
+      const diasRestantes = calcularDiasRestantes(prazo.dataFinal);
 
-      if (filter === 'pendentes') return !prazo.concluido
-      if (filter === 'concluidos') return prazo.concluido
-      if (filter === 'urgentes') return !prazo.concluido && isUrgente(diasRestantes)
-      return true
-    })
-  }, [prazosComProcesso, filter])
+      if (filter === "pendentes") return !prazo.concluido;
+      if (filter === "concluidos") return prazo.concluido;
+      if (filter === "urgentes") return !prazo.concluido && isUrgente(diasRestantes);
+      return true;
+    });
+  }, [prazosComProcesso, filter]);
 
   const stats = useMemo(() => {
-    const pendentes = prazosComProcesso.filter(p => !p.concluido).length
-    const concluidos = prazosComProcesso.filter(p => p.concluido).length
-    const urgentes = prazosComProcesso.filter(p => !p.concluido && isUrgente(calcularDiasRestantes(p.dataFinal))).length
+    const pendentes = prazosComProcesso.filter((p) => !p.concluido).length;
+    const concluidos = prazosComProcesso.filter((p) => p.concluido).length;
+    const urgentes = prazosComProcesso.filter(
+      (p) => !p.concluido && isUrgente(calcularDiasRestantes(p.dataFinal))
+    ).length;
 
-    return { pendentes, concluidos, urgentes }
-  }, [prazosComProcesso])
+    return { pendentes, concluidos, urgentes };
+  }, [prazosComProcesso]);
 
   const handleToggleConcluido = (prazo: Prazo & { processo: Process }) => {
     // Use extracted helper to reduce nesting (S2004 compliance)
-    setProcesses(current =>
-      (current || []).map(process =>
+    setProcesses((current) =>
+      (current || []).map((process) =>
         updateProcessWithToggledPrazo(process, prazo.id, prazo.processId)
       )
-    )
+    );
 
-    toast.success(prazo.concluido ? 'Prazo marcado como pendente' : 'Prazo concluído')
-  }
+    toast.success(prazo.concluido ? "Prazo marcado como pendente" : "Prazo concluído");
+  };
 
   const handleExportCSV = () => {
-    const exportData = prazosComProcesso.map(p => ({
-      'Processo': p.processo.titulo,
-      'CNJ': p.processo.numeroCNJ,
-      'Descrição': p.descricao,
-      'Data Início': p.dataInicio,
-      'Dias Corridos': p.diasCorridos,
-      'Tipo': p.tipoPrazo === 'cpc' ? 'CPC' : 'CLT',
-      'Vencimento': p.dataFinal,
-      'Dias Restantes': calcularDiasRestantes(p.dataFinal),
-      'Status': p.concluido ? 'Concluído' : 'Pendente',
-      'Urgente': !p.concluido && isUrgente(calcularDiasRestantes(p.dataFinal)) ? 'Sim' : 'Não'
-    }))
-    exportToCSV(exportData, 'prazos')
-    toast.success('Prazos exportados com sucesso!')
-  }
+    const exportData = prazosComProcesso.map((p) => ({
+      Processo: p.processo.titulo,
+      CNJ: p.processo.numeroCNJ,
+      Descrição: p.descricao,
+      "Data Início": p.dataInicio,
+      "Dias Corridos": p.diasCorridos,
+      Tipo: p.tipoPrazo === "cpc" ? "CPC" : "CLT",
+      Vencimento: p.dataFinal,
+      "Dias Restantes": calcularDiasRestantes(p.dataFinal),
+      Status: p.concluido ? "Concluído" : "Pendente",
+      Urgente: !p.concluido && isUrgente(calcularDiasRestantes(p.dataFinal)) ? "Sim" : "Não",
+    }));
+    exportToCSV(exportData, "prazos");
+    toast.success("Prazos exportados com sucesso!");
+  };
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8">
@@ -144,7 +148,10 @@ export default function PrazosView() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter('pendentes')}>
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setFilter("pendentes")}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
             <Clock className="text-primary" size={20} />
@@ -154,7 +161,10 @@ export default function PrazosView() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter('urgentes')}>
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setFilter("urgentes")}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Urgentes</CardTitle>
             <CalendarCheck className="text-accent" size={20} />
@@ -164,7 +174,10 @@ export default function PrazosView() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter('concluidos')}>
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setFilter("concluidos")}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
             <CheckCircle className="text-primary" size={20} />
@@ -196,12 +209,12 @@ export default function PrazosView() {
             </Card>
           ) : (
             <div className="flex flex-col gap-3">
-              {filteredPrazos.map(prazo => {
-                const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
-                const urgente = isUrgente(diasRestantes) && !prazo.concluido
+              {filteredPrazos.map((prazo) => {
+                const diasRestantes = calcularDiasRestantes(prazo.dataFinal);
+                const urgente = isUrgente(diasRestantes) && !prazo.concluido;
 
                 return (
-                  <Card key={prazo.id} className={urgente ? 'border-accent' : ''}>
+                  <Card key={prazo.id} className={urgente ? "border-accent" : ""}>
                     <CardContent className="flex items-start gap-4 p-6">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3 mb-2">
@@ -216,10 +229,14 @@ export default function PrazosView() {
                               <Badge variant="secondary">Concluído</Badge>
                             ) : (
                               <>
-                                <Badge variant={urgente ? 'destructive' : 'default'}>
+                                <Badge variant={urgente ? "destructive" : "default"}>
                                   {formatDiasRestantesBadge(diasRestantes)}
                                 </Badge>
-                                {urgente && <Badge variant="outline" className="text-xs">Urgente</Badge>}
+                                {urgente && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Urgente
+                                  </Badge>
+                                )}
                               </>
                             )}
                           </div>
@@ -232,35 +249,41 @@ export default function PrazosView() {
                           </div>
                           <div className="flex flex-col gap-0.5">
                             <span className="text-xs text-muted-foreground">Data Final</span>
-                            <span className={urgente && !prazo.concluido ? 'text-accent font-semibold' : ''}>
+                            <span
+                              className={
+                                urgente && !prazo.concluido ? "text-accent font-semibold" : ""
+                              }
+                            >
                               {formatarData(prazo.dataFinal)}
                             </span>
                           </div>
                           <div className="flex flex-col gap-0.5">
                             <span className="text-xs text-muted-foreground">Prazo</span>
-                            <span>{prazo.diasCorridos} dias ({prazo.tipoPrazo.toUpperCase()})</span>
+                            <span>
+                              {prazo.diasCorridos} dias ({prazo.tipoPrazo.toUpperCase()})
+                            </span>
                           </div>
                         </div>
 
                         <div className="mt-4 flex gap-2">
                           <Button
                             size="sm"
-                            variant={prazo.concluido ? 'outline' : 'default'}
+                            variant={prazo.concluido ? "outline" : "default"}
                             onClick={() => handleToggleConcluido(prazo)}
                           >
                             <CheckCircle size={16} />
-                            {prazo.concluido ? 'Reabrir' : 'Marcar como Concluído'}
+                            {prazo.concluido ? "Reabrir" : "Marcar como Concluído"}
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
             </div>
           )}
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

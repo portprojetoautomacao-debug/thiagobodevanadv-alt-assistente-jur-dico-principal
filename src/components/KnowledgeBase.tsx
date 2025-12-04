@@ -1,22 +1,11 @@
-import { useState, type KeyboardEvent, type SVGProps } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-  Books,
-  Sparkle,
-  MagnifyingGlass,
-  User,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { useState, type KeyboardEvent, type SVGProps } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Books, Sparkle, MagnifyingGlass, User } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 /**
  * KnowledgeBase - Sistema RAG (Retrieval-Augmented Generation)
@@ -31,9 +20,9 @@ import { toast } from 'sonner'
  */
 
 interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
+  id: string;
+  role: "user" | "assistant";
+  content: string;
 }
 
 /**
@@ -54,38 +43,38 @@ Regras IMPORTANTES:
 - Cite precedentes ou súmulas quando souber com segurança (ex.: "Súmula 85 do TST").
 - Se não tiver certeza ou faltar contexto, diga isso explicitamente e indique quais dados faltam.
 - Nunca invente número de processo, nome de parte, valor ou dado sensível.
-- Se a pergunta não for jurídica, responda de forma educada, mas avise que seu foco é jurídico-trabalhista.`
+- Se a pergunta não for jurídica, responda de forma educada, mas avise que seu foco é jurídico-trabalhista.`;
 
 export default function KnowledgeBase() {
-  const [query, setQuery] = useState('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * Chama o backend Gemini (legal-rag) com a pergunta atual ou uma pergunta custom.
    */
   const handleQuery = async (customQuery?: string) => {
-    const raw = (customQuery ?? query).trim()
+    const raw = (customQuery ?? query).trim();
 
     if (!raw) {
-      toast.error('Digite uma pergunta')
-      return
+      toast.error("Digite uma pergunta");
+      return;
     }
 
     if (loading) {
       // Evita múltiplas requisições concorrentes
-      return
+      return;
     }
 
-    const userMessage: Message = { id: crypto.randomUUID(), role: 'user', content: raw }
-    setMessages(prev => [...prev, userMessage])
+    const userMessage: Message = { id: crypto.randomUUID(), role: "user", content: raw };
+    setMessages((prev) => [...prev, userMessage]);
 
     // Se veio de atalho, a caixa de texto pode ficar igual ou ser limpa.
     // Aqui vamos limpar para indicar que a pergunta foi enviada.
-    setQuery('')
-    setLoading(true)
-    setError(null)
+    setQuery("");
+    setLoading(true);
+    setError(null);
 
     try {
       /**
@@ -94,60 +83,59 @@ export default function KnowledgeBase() {
        * body: { question: string, systemPrompt: string }
        * response: { text: string; error?: string }
        */
-      const response = await fetch('/api/gemini/legal-rag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/gemini/legal-rag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: raw,
           systemPrompt: SYSTEM_PROMPT,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`)
+        throw new Error(`Erro na API: ${response.status}`);
       }
 
-      const data: { text?: string; error?: string } = await response.json()
+      const data: { text?: string; error?: string } = await response.json();
 
       if (data.error) {
-        throw new Error(data.error)
+        throw new Error(data.error);
       }
 
       const content =
-        typeof data.text === 'string' && data.text.trim().length > 0
+        typeof data.text === "string" && data.text.trim().length > 0
           ? data.text
-          : 'A IA não retornou nenhum conteúdo útil para esta pergunta.'
+          : "A IA não retornou nenhum conteúdo útil para esta pergunta.";
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
-        role: 'assistant',
+        role: "assistant",
         content,
-      }
-      setMessages(prev => [...prev, assistantMessage])
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (err: unknown) {
-      console.error('Erro ao consultar base de conhecimento:', err)
+      console.error("Erro ao consultar base de conhecimento:", err);
 
-      const message =
-        err instanceof Error ? err.message : 'Erro desconhecido ao consultar IA.'
+      const message = err instanceof Error ? err.message : "Erro desconhecido ao consultar IA.";
 
       setError(
-        message.includes('Erro na API')
-          ? 'Falha ao contatar o serviço de IA. Tente novamente em alguns instantes.'
-          : message,
-      )
+        message.includes("Erro na API")
+          ? "Falha ao contatar o serviço de IA. Tente novamente em alguns instantes."
+          : message
+      );
 
-      toast.error('Erro ao consultar base de conhecimento')
+      toast.error("Erro ao consultar base de conhecimento");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      void handleQuery()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void handleQuery();
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -239,8 +227,8 @@ export default function KnowledgeBase() {
                     <Books className="w-16 h-16 text-muted-foreground mb-4" />
                     <p className="text-lg font-medium text-foreground">Como posso ajudar?</p>
                     <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                      Pergunte sobre precedentes, modelos de petições, estratégias processuais
-                      ou qualquer conteúdo jurídico relevante.
+                      Pergunte sobre precedentes, modelos de petições, estratégias processuais ou
+                      qualquer conteúdo jurídico relevante.
                     </p>
                     <div className="mt-6 space-y-2 w-full max-w-md">
                       <p className="text-xs text-muted-foreground text-left">Exemplos:</p>
@@ -250,7 +238,7 @@ export default function KnowledgeBase() {
                         className="w-full justify-start text-left h-auto py-2 px-3"
                         onClick={() =>
                           void handleQuery(
-                            'Quais são os principais precedentes sobre horas extras?',
+                            "Quais são os principais precedentes sobre horas extras?"
                           )
                         }
                       >
@@ -263,7 +251,7 @@ export default function KnowledgeBase() {
                         variant="outline"
                         className="w-full justify-start text-left h-auto py-2 px-3"
                         onClick={() =>
-                          void handleQuery('Modelo de petição para reclamação trabalhista')
+                          void handleQuery("Modelo de petição para reclamação trabalhista")
                         }
                       >
                         <span className="text-sm">
@@ -277,31 +265,27 @@ export default function KnowledgeBase() {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'
-                          }`}
+                        className={`flex gap-3 ${
+                          message.role === "user" ? "justify-end" : "justify-start"
+                        }`}
                       >
-                        {message.role === 'assistant' && (
+                        {message.role === "assistant" && (
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
-                            <Sparkle
-                              className="w-5 h-5 text-accent-foreground"
-                              weight="fill"
-                            />
+                            <Sparkle className="w-5 h-5 text-accent-foreground" weight="fill" />
                           </div>
                         )}
                         <div
-                          className={`max-w-[80%] p-4 rounded-lg ${message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                            }`}
+                          className={`max-w-[80%] p-4 rounded-lg ${
+                            message.role === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
+                          }`}
                         >
                           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                         </div>
-                        {message.role === 'user' && (
+                        {message.role === "user" && (
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                            <User
-                              className="w-5 h-5 text-primary-foreground"
-                              weight="fill"
-                            />
+                            <User className="w-5 h-5 text-primary-foreground" weight="fill" />
                           </div>
                         )}
                       </div>
@@ -359,7 +343,7 @@ export default function KnowledgeBase() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Plus(props: SVGProps<SVGSVGElement>) {
@@ -373,5 +357,5 @@ function Plus(props: SVGProps<SVGSVGElement>) {
     >
       <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
     </svg>
-  )
+  );
 }

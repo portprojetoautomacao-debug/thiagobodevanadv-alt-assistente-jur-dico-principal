@@ -1,44 +1,44 @@
-import { useState } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
-import { Copy, Check, Lightbulb, X, CaretRight, Link as LinkIcon } from '@phosphor-icons/react'
-import type { PremonicaoJuridica } from '@/types'
+import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Copy, Check, Lightbulb, X, CaretRight, Link as LinkIcon } from "@phosphor-icons/react";
+import type { PremonicaoJuridica } from "@/types";
 
 interface PremonicaoModalProps {
-  isOpen: boolean
-  onClose: () => void
-  data: PremonicaoJuridica | null
-  isLoading: boolean
-  error: string | null
+  isOpen: boolean;
+  onClose: () => void;
+  data: PremonicaoJuridica | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 interface ProbabilityMeterProps {
-  percentage: number
+  percentage: number;
 }
 
 function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
-  const radius = 70
-  const strokeWidth = 12
-  const normalizedRadius = radius - strokeWidth / 2
-  const circumference = normalizedRadius * 2 * Math.PI
-  const strokeDashoffset = circumference - (percentage / 100) * circumference
+  const radius = 70;
+  const strokeWidth = 12;
+  const normalizedRadius = radius - strokeWidth / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   const getColor = (pct: number) => {
-    if (pct >= 75) return 'oklch(0.65 0.18 145)'
-    if (pct >= 50) return 'oklch(0.75 0.15 85)'
-    if (pct >= 25) return 'oklch(0.68 0.15 45)'
-    return 'oklch(0.55 0.22 25)'
-  }
+    if (pct >= 75) return "oklch(0.65 0.18 145)";
+    if (pct >= 50) return "oklch(0.75 0.15 85)";
+    if (pct >= 25) return "oklch(0.68 0.15 45)";
+    return "oklch(0.55 0.22 25)";
+  };
 
   const getLabel = (pct: number) => {
-    if (pct >= 75) return 'Alta Probabilidade'
-    if (pct >= 50) return 'Média Probabilidade'
-    if (pct >= 25) return 'Baixa-Média Probabilidade'
-    return 'Baixa Probabilidade'
-  }
+    if (pct >= 75) return "Alta Probabilidade";
+    if (pct >= 50) return "Média Probabilidade";
+    if (pct >= 25) return "Baixa-Média Probabilidade";
+    return "Baixa Probabilidade";
+  };
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -64,41 +64,39 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
             cy={radius}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset }}
-            transition={{ duration: 1, ease: 'linear' }}
+            transition={{ duration: 1, ease: "linear" }}
             style={{
-              transform: 'rotate(-90deg)',
-              transformOrigin: '50% 50%',
+              transform: "rotate(-90deg)",
+              transformOrigin: "50% 50%",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl font-bold text-foreground">
-            {percentage}%
-          </span>
+          <span className="text-4xl font-bold text-foreground">{percentage}%</span>
         </div>
       </div>
       <Badge
         className="px-4 py-1.5 text-sm font-medium"
-        style={{ backgroundColor: getColor(percentage), color: 'white' }}
+        style={{ backgroundColor: getColor(percentage), color: "white" }}
       >
         {getLabel(percentage)}
       </Badge>
     </div>
-  )
+  );
 }
 
 interface CopyButtonProps {
-  text: string
+  text: string;
 }
 
 function CopyButton({ text }: CopyButtonProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Button
@@ -115,7 +113,7 @@ function CopyButton({ text }: CopyButtonProps) {
         <Copy className="h-4 w-4" />
       )}
     </Button>
-  )
+  );
 }
 
 export default function PremonicaoModal({
@@ -133,9 +131,7 @@ export default function PremonicaoModal({
             <div className="p-2 rounded-lg bg-accent/10">
               <Lightbulb className="h-5 w-5 text-accent" weight="fill" />
             </div>
-            <DialogTitle className="text-2xl font-semibold">
-              Premonição Jurídica
-            </DialogTitle>
+            <DialogTitle className="text-2xl font-semibold">Premonição Jurídica</DialogTitle>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar premonição">
             <X className="h-5 w-5" />
@@ -191,7 +187,10 @@ export default function PremonicaoModal({
                           key={idx}
                           className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow group"
                         >
-                          <CaretRight className="w-5 h-5 text-primary shrink-0 mt-0.5" weight="bold" />
+                          <CaretRight
+                            className="w-5 h-5 text-primary shrink-0 mt-0.5"
+                            weight="bold"
+                          />
                           <p className="flex-1 text-foreground">{estrategia}</p>
                           <CopyButton text={estrategia} />
                         </div>
@@ -219,12 +218,12 @@ export default function PremonicaoModal({
                                   {precedente.numero}
                                 </span>
                               </div>
-                              <h4 className="font-semibold text-foreground">
-                                {precedente.tema}
-                              </h4>
+                              <h4 className="font-semibold text-foreground">{precedente.tema}</h4>
                             </div>
                             <div className="flex gap-1">
-                              <CopyButton text={`${precedente.id} - ${precedente.tema}\n\n${precedente.resumo_relevancia}\n\nLink: ${precedente.link}`} />
+                              <CopyButton
+                                text={`${precedente.id} - ${precedente.tema}\n\n${precedente.resumo_relevancia}\n\nLink: ${precedente.link}`}
+                              />
                               {precedente.link && (
                                 <Button
                                   variant="ghost"
@@ -265,5 +264,5 @@ export default function PremonicaoModal({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

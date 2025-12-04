@@ -6,13 +6,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAgentMetrics, getLLMMetrics } from "@/lib/agent-tracing";
@@ -48,9 +42,7 @@ export default function TracingDashboard({
   const [agentMetrics, setAgentMetrics] = useState<
     Record<string, ReturnType<typeof getAgentMetrics>>
   >({});
-  const [llmMetrics, setLLMMetrics] = useState<ReturnType<
-    typeof getLLMMetrics
-  > | null>(null);
+  const [llmMetrics, setLLMMetrics] = useState<ReturnType<typeof getLLMMetrics> | null>(null);
 
   const refreshData = useCallback(() => {
     setTraces(tracingService.getTraces());
@@ -76,7 +68,7 @@ export default function TracingDashboard({
         clearInterval(interval);
       };
     }
-    
+
     return () => {
       globalThis.clearTimeout(initialRefreshTimeout);
     };
@@ -116,9 +108,7 @@ export default function TracingDashboard({
     return `${(duration / 1000).toFixed(2)}s`;
   };
 
-  const selectedSpans = selectedTrace
-    ? tracingService.getTraceById(selectedTrace)
-    : [];
+  const selectedSpans = selectedTrace ? tracingService.getTraceById(selectedTrace) : [];
 
   return (
     <div className="space-y-6">
@@ -132,9 +122,7 @@ export default function TracingDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalSpans}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeSpans} ativos
-            </p>
+            <p className="text-xs text-muted-foreground">{stats.activeSpans} ativos</p>
           </CardContent>
         </Card>
 
@@ -145,9 +133,7 @@ export default function TracingDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {(stats.samplingRate * 100).toFixed(0)}%
-            </div>
+            <div className="text-2xl font-bold">{(stats.samplingRate * 100).toFixed(0)}%</div>
             <p className="text-xs text-muted-foreground">
               {stats.enabled ? "Tracing ativo" : "Tracing desativado"}
             </p>
@@ -161,9 +147,7 @@ export default function TracingDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {llmMetrics?.totalCalls || 0}
-            </div>
+            <div className="text-2xl font-bold">{llmMetrics?.totalCalls || 0}</div>
             <p className="text-xs text-muted-foreground">
               {llmMetrics?.totalTokens.toLocaleString() || 0} tokens
             </p>
@@ -224,9 +208,7 @@ export default function TracingDashboard({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Traces Recentes</CardTitle>
-                <CardDescription>
-                  Últimos {traces.length} spans registrados
-                </CardDescription>
+                <CardDescription>Últimos {traces.length} spans registrados</CardDescription>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[400px]">
@@ -248,18 +230,13 @@ export default function TracingDashboard({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {getKindIcon(span.kind)}
-                              <span className="font-medium text-sm">
-                                {span.name}
-                              </span>
+                              <span className="font-medium text-sm">{span.name}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">
                                 {formatDuration(span.startTime, span.endTime)}
                               </span>
-                              <Badge
-                                variant="secondary"
-                                className={getStatusColor(span.status)}
-                              >
+                              <Badge variant="secondary" className={getStatusColor(span.status)}>
                                 {span.status === "ok" ? (
                                   <CheckCircle className="h-3 w-3" />
                                 ) : span.status === "error" ? (
@@ -307,10 +284,7 @@ export default function TracingDashboard({
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">{span.name}</span>
-                            <Badge
-                              variant="secondary"
-                              className={getStatusColor(span.status)}
-                            >
+                            <Badge variant="secondary" className={getStatusColor(span.status)}>
                               {span.status}
                             </Badge>
                           </div>
@@ -318,25 +292,14 @@ export default function TracingDashboard({
                           {/* Attributes */}
                           {Object.keys(span.attributes).length > 0 && (
                             <div className="mb-2">
-                              <p className="text-xs font-medium mb-1">
-                                Atributos:
-                              </p>
+                              <p className="text-xs font-medium mb-1">Atributos:</p>
                               <div className="grid grid-cols-2 gap-1">
-                                {Object.entries(span.attributes).map(
-                                  ([key, value]) => (
-                                    <div
-                                      key={key}
-                                      className="text-xs bg-muted/50 rounded px-2 py-1"
-                                    >
-                                      <span className="text-muted-foreground">
-                                        {key}:{" "}
-                                      </span>
-                                      <span>
-                                        {String(value).substring(0, 50)}
-                                      </span>
-                                    </div>
-                                  )
-                                )}
+                                {Object.entries(span.attributes).map(([key, value]) => (
+                                  <div key={key} className="text-xs bg-muted/50 rounded px-2 py-1">
+                                    <span className="text-muted-foreground">{key}: </span>
+                                    <span>{String(value).substring(0, 50)}</span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           )}
@@ -344,9 +307,7 @@ export default function TracingDashboard({
                           {/* Events */}
                           {span.events.length > 0 && (
                             <div>
-                              <p className="text-xs font-medium mb-1">
-                                Eventos:
-                              </p>
+                              <p className="text-xs font-medium mb-1">Eventos:</p>
                               <div className="space-y-1">
                                 {span.events.map((event, i) => (
                                   <div
@@ -361,9 +322,7 @@ export default function TracingDashboard({
                           )}
 
                           {span.statusMessage && (
-                            <p className="text-xs text-red-600 mt-2">
-                              {span.statusMessage}
-                            </p>
+                            <p className="text-xs text-red-600 mt-2">{span.statusMessage}</p>
                           )}
                         </div>
                       ))}
@@ -398,39 +357,27 @@ export default function TracingDashboard({
                     </div>
                     <div>
                       <p className="text-muted-foreground">Taxa de Sucesso</p>
-                      <p className="font-medium">
-                        {metrics.successRate.toFixed(1)}%
-                      </p>
+                      <p className="font-medium">{metrics.successRate.toFixed(1)}%</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Duração Média</p>
-                      <p className="font-medium">
-                        {(metrics.avgDuration / 1000).toFixed(2)}s
-                      </p>
+                      <p className="font-medium">{(metrics.avgDuration / 1000).toFixed(2)}s</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Ferramentas</p>
-                      <p className="font-medium">
-                        {Object.keys(metrics.toolUsage).length}
-                      </p>
+                      <p className="font-medium">{Object.keys(metrics.toolUsage).length}</p>
                     </div>
                   </div>
 
                   {Object.keys(metrics.toolUsage).length > 0 && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">
-                        Ferramentas mais usadas:
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-1">Ferramentas mais usadas:</p>
                       <div className="flex flex-wrap gap-1">
                         {Object.entries(metrics.toolUsage)
                           .sort(([, a], [, b]) => b - a)
                           .slice(0, 5)
                           .map(([tool, count]) => (
-                            <Badge
-                              key={tool}
-                              variant="secondary"
-                              className="text-xs"
-                            >
+                            <Badge key={tool} variant="secondary" className="text-xs">
                               {tool}: {count}
                             </Badge>
                           ))}
@@ -440,14 +387,9 @@ export default function TracingDashboard({
 
                   {metrics.recentErrors.length > 0 && (
                     <div>
-                      <p className="text-xs text-red-600 mb-1">
-                        Erros recentes:
-                      </p>
+                      <p className="text-xs text-red-600 mb-1">Erros recentes:</p>
                       {metrics.recentErrors.slice(0, 2).map((error, i) => (
-                        <p
-                          key={i}
-                          className="text-xs text-muted-foreground truncate"
-                        >
+                        <p key={i} className="text-xs text-muted-foreground truncate">
                           {error}
                         </p>
                       ))}
@@ -484,37 +426,25 @@ export default function TracingDashboard({
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="border rounded-lg p-3">
-                        <p className="text-sm text-muted-foreground">
-                          Total de Chamadas
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {llmMetrics.totalCalls}
-                        </p>
+                        <p className="text-sm text-muted-foreground">Total de Chamadas</p>
+                        <p className="text-2xl font-bold">{llmMetrics.totalCalls}</p>
                       </div>
                       <div className="border rounded-lg p-3">
-                        <p className="text-sm text-muted-foreground">
-                          Total de Tokens
-                        </p>
+                        <p className="text-sm text-muted-foreground">Total de Tokens</p>
                         <p className="text-2xl font-bold">
                           {llmMetrics.totalTokens.toLocaleString()}
                         </p>
                       </div>
                       <div className="border rounded-lg p-3">
-                        <p className="text-sm text-muted-foreground">
-                          Tempo Médio
-                        </p>
+                        <p className="text-sm text-muted-foreground">Tempo Médio</p>
                         <p className="text-2xl font-bold">
                           {llmMetrics.avgResponseTime > 0
-                            ? `${(llmMetrics.avgResponseTime / 1000).toFixed(
-                                2
-                              )}s`
+                            ? `${(llmMetrics.avgResponseTime / 1000).toFixed(2)}s`
                             : "-"}
                         </p>
                       </div>
                       <div className="border rounded-lg p-3">
-                        <p className="text-sm text-muted-foreground">
-                          Taxa de Erro
-                        </p>
+                        <p className="text-sm text-muted-foreground">Taxa de Erro</p>
                         <p className="text-2xl font-bold text-red-600">
                           {llmMetrics.errorRate.toFixed(1)}%
                         </p>
@@ -523,23 +453,17 @@ export default function TracingDashboard({
 
                     {Object.keys(llmMetrics.tokensByModel).length > 0 && (
                       <div>
-                        <p className="text-sm font-medium mb-2">
-                          Tokens por Modelo:
-                        </p>
+                        <p className="text-sm font-medium mb-2">Tokens por Modelo:</p>
                         <div className="space-y-2">
-                          {Object.entries(llmMetrics.tokensByModel).map(
-                            ([model, tokens]) => (
-                              <div
-                                key={model}
-                                className="flex items-center justify-between border rounded px-3 py-2"
-                              >
-                                <span className="text-sm">{model}</span>
-                                <span className="font-medium">
-                                  {tokens.toLocaleString()}
-                                </span>
-                              </div>
-                            )
-                          )}
+                          {Object.entries(llmMetrics.tokensByModel).map(([model, tokens]) => (
+                            <div
+                              key={model}
+                              className="flex items-center justify-between border rounded px-3 py-2"
+                            >
+                              <span className="text-sm">{model}</span>
+                              <span className="font-medium">{tokens.toLocaleString()}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -570,9 +494,7 @@ export default function TracingDashboard({
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Taxa de Amostragem</span>
-                    <span className="font-medium">
-                      {(stats.samplingRate * 100).toFixed(0)}%
-                    </span>
+                    <span className="font-medium">{(stats.samplingRate * 100).toFixed(0)}%</span>
                   </div>
 
                   <div className="flex items-center justify-between">

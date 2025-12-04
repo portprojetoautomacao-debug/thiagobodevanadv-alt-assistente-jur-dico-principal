@@ -1,19 +1,31 @@
-import { useState, useEffect } from 'react'
-import type { Process } from '@/types'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { validarNumeroCNJ, formatarNumeroCNJ } from '@/lib/prazos'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import type { Process } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { validarNumeroCNJ, formatarNumeroCNJ } from "@/lib/prazos";
+import { toast } from "sonner";
 
 interface ProcessDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  process?: Process
-  onSave: (process: Process) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  process?: Process;
+  onSave: (process: Process) => void;
 }
 
 // Helper to create initial form data
@@ -27,58 +39,58 @@ function createInitialFormData(process?: Process) {
       comarca: process.comarca,
       vara: process.vara,
       status: process.status,
-      valor: process.valor?.toString() || '',
+      valor: process.valor?.toString() || "",
       dataDistribuicao: process.dataDistribuicao,
-      notas: process.notas || ''
-    }
+      notas: process.notas || "",
+    };
   }
   return {
-    numeroCNJ: '',
-    titulo: '',
-    autor: '',
-    reu: '',
-    comarca: '',
-    vara: '',
-    status: 'ativo' as Process['status'],
-    valor: '',
-    dataDistribuicao: new Date().toISOString().split('T')[0],
-    notas: ''
-  }
+    numeroCNJ: "",
+    titulo: "",
+    autor: "",
+    reu: "",
+    comarca: "",
+    vara: "",
+    status: "ativo" as Process["status"],
+    valor: "",
+    dataDistribuicao: new Date().toISOString().split("T")[0],
+    notas: "",
+  };
 }
 
 export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
   // Initialize form data with lazy initialization
-  const [formData, setFormData] = useState(() => createInitialFormData(process))
+  const [formData, setFormData] = useState(() => createInitialFormData(process));
 
   // Sync form data when process changes and dialog is opened
   useEffect(() => {
     if (!open) return; // Não atualiza quando o diálogo está fechado
-    
+
     // Schedule to avoid synchronous setState in effect
     const timeoutId = setTimeout(() => {
-      setFormData(createInitialFormData(process))
-    }, 0)
-    return () => clearTimeout(timeoutId)
-  }, [process, open])
+      setFormData(createInitialFormData(process));
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [process, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validarNumeroCNJ(formData.numeroCNJ)) {
-      toast.error('Número CNJ inválido', {
-        description: 'O número CNJ deve conter 20 dígitos'
-      })
-      return
+      toast.error("Número CNJ inválido", {
+        description: "O número CNJ deve conter 20 dígitos",
+      });
+      return;
     }
 
     if (!formData.titulo.trim() || !formData.autor.trim() || !formData.reu.trim()) {
-      toast.error('Campos obrigatórios', {
-        description: 'Preencha todos os campos obrigatórios'
-      })
-      return
+      toast.error("Campos obrigatórios", {
+        description: "Preencha todos os campos obrigatórios",
+      });
+      return;
     }
 
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     const processData: Process = {
       id: process?.id || `proc_${Date.now()}`,
       numeroCNJ: formatarNumeroCNJ(formData.numeroCNJ),
@@ -94,18 +106,18 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
       notas: formData.notas.trim(),
       prazos: process?.prazos || [],
       createdAt: process?.createdAt || now,
-      updatedAt: now
-    }
+      updatedAt: now,
+    };
 
-    onSave(processData)
-    toast.success(process ? 'Processo atualizado' : 'Processo criado')
-  }
+    onSave(processData);
+    toast.success(process ? "Processo atualizado" : "Processo criado");
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{process ? 'Editar Processo' : 'Novo Processo'}</DialogTitle>
+          <DialogTitle>{process ? "Editar Processo" : "Novo Processo"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -116,7 +128,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="numeroCNJ"
                 placeholder="0000000-00.0000.0.00.0000"
                 value={formData.numeroCNJ}
-                onChange={(e) => setFormData(f => ({ ...f, numeroCNJ: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, numeroCNJ: e.target.value }))}
                 required
               />
             </div>
@@ -127,7 +139,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="titulo"
                 placeholder="Ex: Ação de Cobrança"
                 value={formData.titulo}
-                onChange={(e) => setFormData(f => ({ ...f, titulo: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, titulo: e.target.value }))}
                 required
               />
             </div>
@@ -138,7 +150,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="autor"
                 placeholder="Nome do autor"
                 value={formData.autor}
-                onChange={(e) => setFormData(f => ({ ...f, autor: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, autor: e.target.value }))}
                 required
               />
             </div>
@@ -149,7 +161,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="reu"
                 placeholder="Nome do réu"
                 value={formData.reu}
-                onChange={(e) => setFormData(f => ({ ...f, reu: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, reu: e.target.value }))}
                 required
               />
             </div>
@@ -160,7 +172,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="comarca"
                 placeholder="Ex: São Paulo"
                 value={formData.comarca}
-                onChange={(e) => setFormData(f => ({ ...f, comarca: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, comarca: e.target.value }))}
               />
             </div>
 
@@ -170,13 +182,18 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="vara"
                 placeholder="Ex: 1ª Vara Cível"
                 value={formData.vara}
-                onChange={(e) => setFormData(f => ({ ...f, vara: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, vara: e.target.value }))}
               />
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData(f => ({ ...f, status: value as Process['status'] }))}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData((f) => ({ ...f, status: value as Process["status"] }))
+                }
+              >
                 <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
@@ -195,7 +212,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="dataDistribuicao"
                 type="date"
                 value={formData.dataDistribuicao}
-                onChange={(e) => setFormData(f => ({ ...f, dataDistribuicao: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, dataDistribuicao: e.target.value }))}
               />
             </div>
 
@@ -207,7 +224,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 step="0.01"
                 placeholder="0.00"
                 value={formData.valor}
-                onChange={(e) => setFormData(f => ({ ...f, valor: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, valor: e.target.value }))}
               />
             </div>
 
@@ -217,7 +234,7 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="notas"
                 placeholder="Adicione notas ou observações sobre o processo..."
                 value={formData.notas}
-                onChange={(e) => setFormData(f => ({ ...f, notas: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, notas: e.target.value }))}
                 rows={4}
               />
             </div>
@@ -227,12 +244,10 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
-              {process ? 'Salvar Alterações' : 'Criar Processo'}
-            </Button>
+            <Button type="submit">{process ? "Salvar Alterações" : "Criar Processo"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

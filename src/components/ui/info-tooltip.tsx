@@ -1,19 +1,19 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { Info } from '@phosphor-icons/react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "@phosphor-icons/react";
 
 interface InfoTooltipProps {
-  content: string
-  side?: 'top' | 'right' | 'bottom' | 'left'
-  className?: string
-  ariaLabel?: string
+  content: string;
+  side?: "top" | "right" | "bottom" | "left";
+  className?: string;
+  ariaLabel?: string;
 }
 
-export function InfoTooltip({ content, side = 'top', className = '', ariaLabel = 'Mais informações' }: InfoTooltipProps) {
+export function InfoTooltip({
+  content,
+  side = "top",
+  className = "",
+  ariaLabel = "Mais informações",
+}: InfoTooltipProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
@@ -31,13 +31,13 @@ export function InfoTooltip({ content, side = 'top', className = '', ariaLabel =
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }
 
 interface LabelWithTooltipProps {
-  label: string
-  tooltip: string
-  required?: boolean
+  label: string;
+  tooltip: string;
+  required?: boolean;
 }
 
 export function LabelWithTooltip({ label, tooltip, required = false }: LabelWithTooltipProps) {
@@ -49,5 +49,5 @@ export function LabelWithTooltip({ label, tooltip, required = false }: LabelWith
       </span>
       <InfoTooltip content={tooltip} />
     </div>
-  )
+  );
 }

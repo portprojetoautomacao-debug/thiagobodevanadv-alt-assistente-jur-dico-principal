@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -19,13 +13,7 @@ import { useKV } from "@/hooks/use-kv";
 import { useMemo, useState } from "react";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import type { FinancialEntry, Process } from "@/types";
-import {
-  Clock,
-  CurrencyDollar,
-  TrendUp,
-  Users,
-  Warning,
-} from "@phosphor-icons/react";
+import { Clock, CurrencyDollar, TrendUp, Users, Warning } from "@phosphor-icons/react";
 import {
   Bar,
   BarChart,
@@ -75,12 +63,9 @@ export default function OfficeManagement() {
     return {
       totalProcessos: processesList.length,
       processosAtivos: processesList.filter((p) => p.status === "ativo").length,
-      processosConcluidos: processesList.filter((p) => p.status === "concluido")
-        .length,
-      processosArquivados: processesList.filter((p) => p.status === "arquivado")
-        .length,
-      processosSuspensos: processesList.filter((p) => p.status === "suspenso")
-        .length,
+      processosConcluidos: processesList.filter((p) => p.status === "concluido").length,
+      processosArquivados: processesList.filter((p) => p.status === "arquivado").length,
+      processosSuspensos: processesList.filter((p) => p.status === "suspenso").length,
       taxa:
         processesList.length > 0
           ? Math.round(
@@ -220,8 +205,7 @@ export default function OfficeManagement() {
         ano: Number.parseInt(year),
         fechamentos: procs.length,
         emProducao: procs.filter((p) => p.status === "ativo").length,
-        transitoJulgado: procs.filter((p) => p.fase === "transitoJulgado")
-          .length,
+        transitoJulgado: procs.filter((p) => p.fase === "transitoJulgado").length,
         emExecucao: procs.filter((p) => p.fase === "execucao").length,
         concluidos: procs.filter((p) => p.status === "concluido").length,
         // Resultado não está no tipo Process, então sempre 0 por enquanto
@@ -236,9 +220,7 @@ export default function OfficeManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Gestão do escritório
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">Gestão do escritório</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Análise de produtividade e qualidade dos processos (dados reais)
           </p>
@@ -266,12 +248,8 @@ export default function OfficeManagement() {
                       <Users size={24} className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">
-                        {produtividadeData.totalProcessos}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Total de Processos
-                      </p>
+                      <p className="text-2xl font-bold">{produtividadeData.totalProcessos}</p>
+                      <p className="text-xs text-muted-foreground">Total de Processos</p>
                     </div>
                   </div>
                 </CardContent>
@@ -284,12 +262,8 @@ export default function OfficeManagement() {
                       <TrendUp size={24} className="text-green-500" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">
-                        {produtividadeData.processosAtivos}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Processos Ativos
-                      </p>
+                      <p className="text-2xl font-bold">{produtividadeData.processosAtivos}</p>
+                      <p className="text-xs text-muted-foreground">Processos Ativos</p>
                     </div>
                   </div>
                 </CardContent>
@@ -302,12 +276,8 @@ export default function OfficeManagement() {
                       <Clock size={24} className="text-accent" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">
-                        {produtividadeData.processosConcluidos}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Concluídos
-                      </p>
+                      <p className="text-2xl font-bold">{produtividadeData.processosConcluidos}</p>
+                      <p className="text-xs text-muted-foreground">Concluídos</p>
                     </div>
                   </div>
                 </CardContent>
@@ -320,12 +290,8 @@ export default function OfficeManagement() {
                       <CurrencyDollar size={24} className="text-yellow-500" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">
-                        {produtividadeData.taxa}%
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Taxa de Conclusão
-                      </p>
+                      <p className="text-2xl font-bold">{produtividadeData.taxa}%</p>
+                      <p className="text-xs text-muted-foreground">Taxa de Conclusão</p>
                     </div>
                   </div>
                 </CardContent>
@@ -334,12 +300,8 @@ export default function OfficeManagement() {
 
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">
-                  Fluxo Financeiro Mensal
-                </CardTitle>
-                <CardDescription>
-                  Receitas e despesas do ano atual
-                </CardDescription>
+                <CardTitle className="text-lg">Fluxo Financeiro Mensal</CardTitle>
+                <CardDescription>Receitas e despesas do ano atual</CardDescription>
               </CardHeader>
               <CardContent>
                 {financeiroData.length === 0 ? (
@@ -357,9 +319,7 @@ export default function OfficeManagement() {
                             border: "1px solid #2a2d3e",
                             borderRadius: "8px",
                           }}
-                          formatter={(value: number) =>
-                            `R$ ${value.toLocaleString("pt-BR")}`
-                          }
+                          formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR")}`}
                         />
                         <Legend />
                         <Bar dataKey="receita" fill="#52b788" name="Receita" />
@@ -378,12 +338,8 @@ export default function OfficeManagement() {
           <div className="space-y-6">
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">
-                  Distribuição de Processos por Status
-                </CardTitle>
-                <CardDescription>
-                  Visão geral do status atual dos processos
-                </CardDescription>
+                <CardTitle className="text-lg">Distribuição de Processos por Status</CardTitle>
+                <CardDescription>Visão geral do status atual dos processos</CardDescription>
               </CardHeader>
               <CardContent>
                 {estoqueData.length === 0 ? (
@@ -423,9 +379,7 @@ export default function OfficeManagement() {
             {estoqueData.length > 0 && (
               <Card className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    Detalhamento por Status
-                  </CardTitle>
+                  <CardTitle className="text-lg">Detalhamento por Status</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -439,20 +393,11 @@ export default function OfficeManagement() {
                     <TableBody>
                       {estoqueData.map((item) => (
                         <TableRow key={item.name}>
-                          <TableCell className="font-medium">
-                            {item.name}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {item.value}
-                          </TableCell>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell className="text-right">{item.value}</TableCell>
                           <TableCell className="text-right">
                             {Math.round(
-                              (item.value /
-                                estoqueData.reduce(
-                                  (sum, i) => sum + i.value,
-                                  0
-                                )) *
-                                100
+                              (item.value / estoqueData.reduce((sum, i) => sum + i.value, 0)) * 100
                             )}
                             %
                           </TableCell>
@@ -471,9 +416,7 @@ export default function OfficeManagement() {
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="text-lg">Receita x Despesa</CardTitle>
-              <CardDescription>
-                Comparativo mensal do fluxo financeiro
-              </CardDescription>
+              <CardDescription>Comparativo mensal do fluxo financeiro</CardDescription>
             </CardHeader>
             <CardContent>
               {financeiroData.length === 0 ? (
@@ -491,21 +434,11 @@ export default function OfficeManagement() {
                           border: "1px solid #2a2d3e",
                           borderRadius: "8px",
                         }}
-                        formatter={(value: number) =>
-                          `R$ ${value.toLocaleString("pt-BR")}`
-                        }
+                        formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR")}`}
                       />
                       <Legend />
-                      <Bar
-                        dataKey="receita"
-                        fill="#52b788"
-                        name="Receita (R$)"
-                      />
-                      <Bar
-                        dataKey="despesa"
-                        fill="#ef4444"
-                        name="Despesa (R$)"
-                      />
+                      <Bar dataKey="receita" fill="#52b788" name="Receita (R$)" />
+                      <Bar dataKey="despesa" fill="#ef4444" name="Despesa (R$)" />
                       <Bar dataKey="saldo" fill="#00b4d8" name="Saldo (R$)" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -573,9 +506,7 @@ export default function OfficeManagement() {
                               border: "1px solid #2a2d3e",
                               borderRadius: "8px",
                             }}
-                            formatter={(value: number) =>
-                              `R$ ${value.toLocaleString("pt-BR")}`
-                            }
+                            formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR")}`}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -590,10 +521,7 @@ export default function OfficeManagement() {
                   <CardContent>
                     <div className="space-y-4">
                       {custosData.map((item) => (
-                        <div
-                          key={item.categoria}
-                          className="flex items-center justify-between"
-                        >
+                        <div key={item.categoria} className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{item.categoria}</p>
                             <p className="text-sm text-muted-foreground">
@@ -629,12 +557,8 @@ export default function OfficeManagement() {
           <div className="space-y-6">
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">
-                  Safras de Processos por Ano
-                </CardTitle>
-                <CardDescription>
-                  Processos agrupados pelo ano de abertura
-                </CardDescription>
+                <CardTitle className="text-lg">Safras de Processos por Ano</CardTitle>
+                <CardDescription>Processos agrupados pelo ano de abertura</CardDescription>
               </CardHeader>
               <CardContent>
                 {safrasData.length === 0 ? (
@@ -644,9 +568,7 @@ export default function OfficeManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow className="border-border hover:bg-transparent">
-                          <TableHead className="bg-primary/20 font-semibold">
-                            ANO
-                          </TableHead>
+                          <TableHead className="bg-primary/20 font-semibold">ANO</TableHead>
                           <TableHead className="bg-primary/20 font-semibold text-center">
                             TOTAL
                           </TableHead>
@@ -678,24 +600,12 @@ export default function OfficeManagement() {
                               index % 2 === 0 ? "bg-muted/30" : "bg-muted/10"
                             } hover:bg-muted/50`}
                           >
-                            <TableCell className="font-medium">
-                              {safra.ano}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {safra.fechamentos}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {safra.emProducao}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {safra.transitoJulgado}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {safra.emExecucao}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {safra.concluidos}
-                            </TableCell>
+                            <TableCell className="font-medium">{safra.ano}</TableCell>
+                            <TableCell className="text-center">{safra.fechamentos}</TableCell>
+                            <TableCell className="text-center">{safra.emProducao}</TableCell>
+                            <TableCell className="text-center">{safra.transitoJulgado}</TableCell>
+                            <TableCell className="text-center">{safra.emExecucao}</TableCell>
+                            <TableCell className="text-center">{safra.concluidos}</TableCell>
                             <TableCell className="text-center text-green-500">
                               {safra.ganho > 0
                                 ? `${safra.ganho} (${Math.round(
@@ -741,8 +651,7 @@ export default function OfficeManagement() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Use os filtros acima para visualizar processos específicos por
-                  ano.
+                  Use os filtros acima para visualizar processos específicos por ano.
                 </p>
               </CardContent>
             </Card>

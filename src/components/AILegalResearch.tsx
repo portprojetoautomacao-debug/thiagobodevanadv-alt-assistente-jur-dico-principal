@@ -1,67 +1,50 @@
-import { useState } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
-import {
-  Books,
-  Sparkle,
-  MagnifyingGlass,
-  Scales,
-  Article,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { geminiGenerateJSON } from '@/lib/gemini-client'
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Books, Sparkle, MagnifyingGlass, Scales, Article } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { geminiGenerateJSON } from "@/lib/gemini-client";
 
 interface Precedent {
-  id: string
-  tribunal: string
-  numero: string
-  data: string
-  relator: string
-  ementa: string
-  tema: string
-  relevancia: string
+  id: string;
+  tribunal: string;
+  numero: string;
+  data: string;
+  relator: string;
+  ementa: string;
+  tema: string;
+  relevancia: string;
 }
 
 interface LegalArgument {
-  titulo: string
-  fundamentacao: string
-  precedentes: string[]
-  doutrina: string[]
+  titulo: string;
+  fundamentacao: string;
+  precedentes: string[];
+  doutrina: string[];
 }
 
 interface ResearchResult {
-  precedents: Precedent[]
-  legalArguments: LegalArgument[]
-  keywords: string[]
-  relatedThemes: string[]
+  precedents: Precedent[];
+  legalArguments: LegalArgument[];
+  keywords: string[];
+  relatedThemes: string[];
 }
 
 export default function AILegalResearch() {
-  const [query, setQuery] = useState('')
-  const [result, setResult] = useState<ResearchResult | null>(null)
-  const [isResearching, setIsResearching] = useState(false)
+  const [query, setQuery] = useState("");
+  const [result, setResult] = useState<ResearchResult | null>(null);
+  const [isResearching, setIsResearching] = useState(false);
 
   const handleResearch = async () => {
     if (!query.trim()) {
-      toast.error('Por favor, descreva o tema da pesquisa')
-      return
+      toast.error("Por favor, descreva o tema da pesquisa");
+      return;
     }
 
-    setIsResearching(true)
+    setIsResearching(true);
 
     try {
       const prompt = `Você é um pesquisador jurídico especializado no ordenamento brasileiro. Faça uma pesquisa completa sobre o seguinte tema jurídico:
@@ -104,52 +87,41 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
   ],
   "keywords": ["palavra 1", "palavra 2"],
   "relatedThemes": ["tema relacionado 1", "tema relacionado 2"]
-}`
+}`;
 
-      const raw = await geminiGenerateJSON<ResearchResult>(prompt)
+      const raw = await geminiGenerateJSON<ResearchResult>(prompt);
 
       // Hardening contra respostas parcialmente fora do esquema
       const safeResult: ResearchResult = {
         precedents: Array.isArray(raw.precedents) ? raw.precedents : [],
-        legalArguments: Array.isArray(raw.legalArguments)
-          ? raw.legalArguments
-          : [],
+        legalArguments: Array.isArray(raw.legalArguments) ? raw.legalArguments : [],
         keywords: Array.isArray(raw.keywords) ? raw.keywords : [],
-        relatedThemes: Array.isArray(raw.relatedThemes)
-          ? raw.relatedThemes
-          : [],
-      }
+        relatedThemes: Array.isArray(raw.relatedThemes) ? raw.relatedThemes : [],
+      };
 
-      setResult(safeResult)
-      toast.success('Pesquisa concluída!')
+      setResult(safeResult);
+      toast.success("Pesquisa concluída!");
     } catch (error) {
-      console.error('Erro na pesquisa:', error)
-      toast.error(
-        error instanceof Error ? error.message : 'Falha ao realizar pesquisa',
-      )
+      console.error("Erro na pesquisa:", error);
+      toast.error(error instanceof Error ? error.message : "Falha ao realizar pesquisa");
     } finally {
-      setIsResearching(false)
+      setIsResearching(false);
     }
-  }
+  };
 
   const handleQuickSearch = (theme: string) => {
-    setQuery(theme)
-  }
+    setQuery(theme);
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <Books
-            size={32}
-            weight="duotone"
-            className="text-primary neon-glow"
-          />
+          <Books size={32} weight="duotone" className="text-primary neon-glow" />
           Pesquisa Jurídica IA
         </h1>
         <p className="text-muted-foreground mt-1">
-          Encontre precedentes, argumentos e fundamentação legal
-          instantaneamente
+          Encontre precedentes, argumentos e fundamentação legal instantaneamente
         </p>
       </div>
 
@@ -171,7 +143,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                 placeholder="Ex: Responsabilidade civil por dano moral em relações de consumo"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleResearch()}
+                onKeyDown={(e) => e.key === "Enter" && handleResearch()}
                 className="pl-10"
               />
             </div>
@@ -180,24 +152,19 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               disabled={isResearching || !query.trim()}
               className="button-gradient"
             >
-              <Sparkle
-                size={20}
-                className={isResearching ? 'animate-spin' : ''}
-              />
-              {isResearching ? 'Pesquisando...' : 'Pesquisar'}
+              <Sparkle size={20} className={isResearching ? "animate-spin" : ""} />
+              {isResearching ? "Pesquisando..." : "Pesquisar"}
             </Button>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <p className="text-xs text-muted-foreground w-full">
-              Pesquisas rápidas:
-            </p>
+            <p className="text-xs text-muted-foreground w-full">Pesquisas rápidas:</p>
             {[
-              'Prescrição quinquenal trabalhista',
-              'Dano moral em acidente de trânsito',
-              'Execução fiscal - prescrição intercorrente',
-              'Revisão de contrato - teoria da imprevisão',
-              'Guarda compartilhada - interesse do menor',
+              "Prescrição quinquenal trabalhista",
+              "Dano moral em acidente de trânsito",
+              "Execução fiscal - prescrição intercorrente",
+              "Revisão de contrato - teoria da imprevisão",
+              "Guarda compartilhada - interesse do menor",
             ].map((theme) => (
               <Badge
                 key={theme}
@@ -223,20 +190,13 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               <Article size={16} className="mr-2" />
               Argumentos ({result.legalArguments.length})
             </TabsTrigger>
-            <TabsTrigger value="keywords">
-              Palavras-chave ({result.keywords.length})
-            </TabsTrigger>
-            <TabsTrigger value="related">
-              Temas ({result.relatedThemes.length})
-            </TabsTrigger>
+            <TabsTrigger value="keywords">Palavras-chave ({result.keywords.length})</TabsTrigger>
+            <TabsTrigger value="related">Temas ({result.relatedThemes.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="precedents" className="space-y-4">
             {result.precedents.map((prec) => (
-              <Card
-                key={prec.id}
-                className="glassmorphic card-glow-hover"
-              >
+              <Card key={prec.id} className="glassmorphic card-glow-hover">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -252,20 +212,12 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Ementa
-                    </p>
-                    <p className="text-sm leading-relaxed">
-                      {prec.ementa}
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-1">Ementa</p>
+                    <p className="text-sm leading-relaxed">{prec.ementa}</p>
                   </div>
                   <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Relevância para o caso
-                    </p>
-                    <p className="text-sm text-primary">
-                      {prec.relevancia}
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-1">Relevância para o caso</p>
+                    <p className="text-sm text-primary">{prec.relevancia}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -281,39 +233,23 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
 
           <TabsContent value="arguments" className="space-y-4">
             {result.legalArguments.map((arg) => (
-              <Card
-                key={arg.titulo}
-                className="glassmorphic card-glow-hover"
-              >
+              <Card key={arg.titulo} className="glassmorphic card-glow-hover">
                 <CardHeader>
-                  <CardTitle className="text-base">
-                    {arg.titulo}
-                  </CardTitle>
+                  <CardTitle className="text-base">{arg.titulo}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Fundamentação
-                    </p>
-                    <p className="text-sm leading-relaxed">
-                      {arg.fundamentacao}
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-2">Fundamentação</p>
+                    <p className="text-sm leading-relaxed">{arg.fundamentacao}</p>
                   </div>
 
                   {arg.precedentes.length > 0 && (
                     <div className="pt-3 border-t">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Precedentes citados
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-2">Precedentes citados</p>
                       <ul className="space-y-1">
                         {arg.precedentes.map((prec) => (
-                          <li
-                            key={prec}
-                            className="text-sm flex gap-2"
-                          >
-                            <span className="text-primary shrink-0">
-                              •
-                            </span>
+                          <li key={prec} className="text-sm flex gap-2">
+                            <span className="text-primary shrink-0">•</span>
                             <span>{prec}</span>
                           </li>
                         ))}
@@ -323,18 +259,11 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
 
                   {arg.doutrina.length > 0 && (
                     <div className="pt-3 border-t">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Doutrina
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-2">Doutrina</p>
                       <ul className="space-y-1">
                         {arg.doutrina.map((doc) => (
-                          <li
-                            key={doc}
-                            className="text-sm flex gap-2"
-                          >
-                            <span className="text-secondary shrink-0">
-                              •
-                            </span>
+                          <li key={doc} className="text-sm flex gap-2">
+                            <span className="text-secondary shrink-0">•</span>
                             <span>{doc}</span>
                           </li>
                         ))}
@@ -357,9 +286,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
             <Card className="glassmorphic">
               <CardHeader>
                 <CardTitle>Palavras-chave Relevantes</CardTitle>
-                <CardDescription>
-                  Use essas palavras para refinar sua busca
-                </CardDescription>
+                <CardDescription>Use essas palavras para refinar sua busca</CardDescription>
               </CardHeader>
               <CardContent>
                 {result.keywords.length === 0 ? (
@@ -387,9 +314,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
             <Card className="glassmorphic">
               <CardHeader>
                 <CardTitle>Temas Relacionados</CardTitle>
-                <CardDescription>
-                  Explore esses temas para aprofundar sua pesquisa
-                </CardDescription>
+                <CardDescription>Explore esses temas para aprofundar sua pesquisa</CardDescription>
               </CardHeader>
               <CardContent>
                 {result.relatedThemes.length === 0 ? (
@@ -405,10 +330,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         className="justify-start h-auto py-3 px-4"
                         onClick={() => handleQuickSearch(theme)}
                       >
-                        <Sparkle
-                          size={16}
-                          className="mr-2 shrink-0"
-                        />
+                        <Sparkle size={16} className="mr-2 shrink-0" />
                         <span className="text-left">{theme}</span>
                       </Button>
                     ))}
@@ -423,21 +345,14 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
       {!result && !isResearching && (
         <Card className="glassmorphic">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Books
-              size={64}
-              className="text-muted-foreground mb-4"
-              weight="duotone"
-            />
-            <h3 className="text-lg font-semibold mb-2">
-              Pronto para pesquisar
-            </h3>
+            <Books size={64} className="text-muted-foreground mb-4" weight="duotone" />
+            <h3 className="text-lg font-semibold mb-2">Pronto para pesquisar</h3>
             <p className="text-muted-foreground max-w-md">
-              Digite um tema jurídico acima ou clique em uma das pesquisas
-              rápidas para começar
+              Digite um tema jurídico acima ou clique em uma das pesquisas rápidas para começar
             </p>
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

@@ -6,13 +6,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -45,11 +39,8 @@ export default function AdvancedNLPDashboard() {
   // Results state
   const [entities, setEntities] = useState<NamedEntity[]>([]);
   const [sentiment, setSentiment] = useState<SentimentAnalysis | null>(null);
-  const [classification, setClassification] =
-    useState<DocumentClassification | null>(null);
-  const [extraction, setExtraction] = useState<ExtractedInformation | null>(
-    null
-  );
+  const [classification, setClassification] = useState<DocumentClassification | null>(null);
+  const [extraction, setExtraction] = useState<ExtractedInformation | null>(null);
 
   const hasInput = () => {
     if (!inputText.trim()) {
@@ -124,17 +115,13 @@ export default function AdvancedNLPDashboard() {
     if (!hasInput()) return;
     await runWithProcessing(
       async () => {
-        const [
-          entitiesResult,
-          sentimentResult,
-          classificationResult,
-          extractionResult,
-        ] = await Promise.all([
-          nlpPipeline.extractEntities(inputText),
-          nlpPipeline.analyzeSentiment(inputText),
-          nlpPipeline.classifyDocument(inputText),
-          nlpPipeline.extractInformation(inputText),
-        ]);
+        const [entitiesResult, sentimentResult, classificationResult, extractionResult] =
+          await Promise.all([
+            nlpPipeline.extractEntities(inputText),
+            nlpPipeline.analyzeSentiment(inputText),
+            nlpPipeline.classifyDocument(inputText),
+            nlpPipeline.extractInformation(inputText),
+          ]);
         setEntities(entitiesResult);
         setSentiment(sentimentResult);
         setClassification(classificationResult);
@@ -150,9 +137,7 @@ export default function AdvancedNLPDashboard() {
   const copyToClipboard = (text: string) => {
     try {
       if (typeof navigator === "undefined" || !navigator.clipboard) {
-        toast.error(
-          "Copiar para a área de transferência não é suportado neste ambiente"
-        );
+        toast.error("Copiar para a área de transferência não é suportado neste ambiente");
         return;
       }
       void navigator.clipboard.writeText(text);
@@ -164,19 +149,11 @@ export default function AdvancedNLPDashboard() {
   };
 
   const downloadAsJSON = (
-    data:
-      | NamedEntity[]
-      | SentimentAnalysis
-      | DocumentClassification
-      | ExtractedInformation
-      | null,
+    data: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation | null,
     filename: string
   ) => {
     try {
-      if (
-        globalThis.window === undefined ||
-        globalThis.document === undefined
-      ) {
+      if (globalThis.window === undefined || globalThis.document === undefined) {
         toast.error("Download não é suportado neste ambiente");
         return;
       }
@@ -224,11 +201,7 @@ export default function AdvancedNLPDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold gradient-text flex items-center gap-2">
-          <Brain
-            size={32}
-            weight="duotone"
-            className="text-primary neon-glow"
-          />
+          <Brain size={32} weight="duotone" className="text-primary neon-glow" />
           Processamento NLP Avançado
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -314,15 +287,9 @@ export default function AdvancedNLPDashboard() {
           <TabsTrigger value="entities">
             Entidades {entities.length > 0 && `(${entities.length})`}
           </TabsTrigger>
-          <TabsTrigger value="sentiment">
-            Sentimento {sentiment && "✓"}
-          </TabsTrigger>
-          <TabsTrigger value="classification">
-            Classificação {classification && "✓"}
-          </TabsTrigger>
-          <TabsTrigger value="extraction">
-            Extração {extraction && "✓"}
-          </TabsTrigger>
+          <TabsTrigger value="sentiment">Sentimento {sentiment && "✓"}</TabsTrigger>
+          <TabsTrigger value="classification">Classificação {classification && "✓"}</TabsTrigger>
+          <TabsTrigger value="extraction">Extração {extraction && "✓"}</TabsTrigger>
         </TabsList>
 
         {/* Entities Tab */}
@@ -337,8 +304,7 @@ export default function AdvancedNLPDashboard() {
                       Entidades Nomeadas ({entities.length})
                     </CardTitle>
                     <CardDescription>
-                      Pessoas, organizações, localizações e outras entidades
-                      identificadas
+                      Pessoas, organizações, localizações e outras entidades identificadas
                     </CardDescription>
                   </div>
                   <Button
@@ -370,10 +336,7 @@ export default function AdvancedNLPDashboard() {
                             </span>
                           </div>
                         </div>
-                        <Progress
-                          value={entity.confidence * 100}
-                          className="h-1"
-                        />
+                        <Progress value={entity.confidence * 100} className="h-1" />
                       </div>
                     ))}
                   </div>
@@ -385,9 +348,7 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="py-12 text-center text-muted-foreground">
                 <Tag size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma entidade extraída ainda</p>
-                <p className="text-sm mt-2">
-                  Execute a análise para ver os resultados
-                </p>
+                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
               </CardContent>
             </Card>
           )}
@@ -404,9 +365,7 @@ export default function AdvancedNLPDashboard() {
                       <ChartBar size={20} />
                       Análise de Sentimento
                     </CardTitle>
-                    <CardDescription>
-                      Sentimento geral e análise por aspectos
-                    </CardDescription>
+                    <CardDescription>Sentimento geral e análise por aspectos</CardDescription>
                   </div>
                   <Button
                     variant="outline"
@@ -421,9 +380,7 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="space-y-6">
                 {/* Overall Sentiment */}
                 <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-                  <div className="text-sm text-muted-foreground mb-2">
-                    Sentimento Geral
-                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">Sentimento Geral</div>
                   <div
                     className={`text-4xl font-bold capitalize mb-2 ${getSentimentColor(
                       sentiment.sentiment
@@ -436,10 +393,7 @@ export default function AdvancedNLPDashboard() {
                   <div className="text-2xl font-bold gradient-text mb-4">
                     Score: {sentiment.score.toFixed(2)}
                   </div>
-                  <Progress
-                    value={sentiment.confidence * 100}
-                    className="mb-2"
-                  />
+                  <Progress value={sentiment.confidence * 100} className="mb-2" />
                   <div className="text-xs text-muted-foreground">
                     {(sentiment.confidence * 100).toFixed(1)}% de confiança
                   </div>
@@ -457,17 +411,12 @@ export default function AdvancedNLPDashboard() {
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">{aspect.aspect}</span>
-                            <Badge
-                              className={getSentimentColor(aspect.sentiment)}
-                            >
+                            <Badge className={getSentimentColor(aspect.sentiment)}>
                               {aspect.sentiment}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Progress
-                              value={(aspect.score + 1) * 50}
-                              className="flex-1"
-                            />
+                            <Progress value={(aspect.score + 1) * 50} className="flex-1" />
                             <span className="text-sm text-muted-foreground">
                               {aspect.score.toFixed(2)}
                             </span>
@@ -484,9 +433,7 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="py-12 text-center text-muted-foreground">
                 <ChartBar size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma análise de sentimento ainda</p>
-                <p className="text-sm mt-2">
-                  Execute a análise para ver os resultados
-                </p>
+                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
               </CardContent>
             </Card>
           )}
@@ -503,16 +450,12 @@ export default function AdvancedNLPDashboard() {
                       <MagnifyingGlass size={20} />
                       Classificação do Documento
                     </CardTitle>
-                    <CardDescription>
-                      Categoria, subcategoria e tags identificadas
-                    </CardDescription>
+                    <CardDescription>Categoria, subcategoria e tags identificadas</CardDescription>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      downloadAsJSON(classification, "classification.json")
-                    }
+                    onClick={() => downloadAsJSON(classification, "classification.json")}
                   >
                     <Download size={16} />
                     Download
@@ -521,9 +464,7 @@ export default function AdvancedNLPDashboard() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-                  <div className="text-sm text-muted-foreground mb-2">
-                    Categoria Principal
-                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">Categoria Principal</div>
                   <div className="text-3xl font-bold gradient-text mb-2">
                     {classification.category}
                   </div>
@@ -532,10 +473,7 @@ export default function AdvancedNLPDashboard() {
                       {classification.subcategory}
                     </div>
                   )}
-                  <Progress
-                    value={classification.confidence * 100}
-                    className="mb-2"
-                  />
+                  <Progress value={classification.confidence * 100} className="mb-2" />
                   <div className="text-xs text-muted-foreground">
                     {(classification.confidence * 100).toFixed(1)}% de confiança
                   </div>
@@ -546,11 +484,7 @@ export default function AdvancedNLPDashboard() {
                     <h4 className="font-semibold mb-3">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {classification.tags.map((tag, index) => (
-                        <Badge
-                          key={`${tag}-${index}`}
-                          variant="secondary"
-                          className="text-sm"
-                        >
+                        <Badge key={`${tag}-${index}`} variant="secondary" className="text-sm">
                           {tag}
                         </Badge>
                       ))}
@@ -562,14 +496,9 @@ export default function AdvancedNLPDashboard() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                <MagnifyingGlass
-                  size={48}
-                  className="mx-auto mb-4 opacity-50"
-                />
+                <MagnifyingGlass size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma classificação ainda</p>
-                <p className="text-sm mt-2">
-                  Execute a análise para ver os resultados
-                </p>
+                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
               </CardContent>
             </Card>
           )}
@@ -593,9 +522,7 @@ export default function AdvancedNLPDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      downloadAsJSON(extraction, "extraction.json")
-                    }
+                    onClick={() => downloadAsJSON(extraction, "extraction.json")}
                   >
                     <Download size={16} />
                     Download
@@ -649,10 +576,7 @@ export default function AdvancedNLPDashboard() {
                       <h5 className="font-semibold mb-2">Datas</h5>
                       <div className="space-y-1">
                         {extraction.dates.map((date) => (
-                          <div
-                            key={date}
-                            className="text-sm text-muted-foreground"
-                          >
+                          <div key={date} className="text-sm text-muted-foreground">
                             • {date}
                           </div>
                         ))}
@@ -660,53 +584,38 @@ export default function AdvancedNLPDashboard() {
                     </div>
                   )}
 
-                  {extraction.monetaryValues &&
-                    extraction.monetaryValues.length > 0 && (
-                      <div className="p-4 rounded-lg border border-border">
-                        <h5 className="font-semibold mb-2">
-                          Valores Monetários
-                        </h5>
-                        <div className="space-y-1">
-                          {extraction.monetaryValues.map((value) => (
-                            <div
-                              key={value}
-                              className="text-sm text-muted-foreground"
-                            >
-                              • {value}
-                            </div>
-                          ))}
-                        </div>
+                  {extraction.monetaryValues && extraction.monetaryValues.length > 0 && (
+                    <div className="p-4 rounded-lg border border-border">
+                      <h5 className="font-semibold mb-2">Valores Monetários</h5>
+                      <div className="space-y-1">
+                        {extraction.monetaryValues.map((value) => (
+                          <div key={value} className="text-sm text-muted-foreground">
+                            • {value}
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                  {extraction.legalReferences &&
-                    extraction.legalReferences.length > 0 && (
-                      <div className="p-4 rounded-lg border border-border">
-                        <h5 className="font-semibold mb-2">
-                          Referências Legais
-                        </h5>
-                        <div className="space-y-1">
-                          {extraction.legalReferences.map((ref) => (
-                            <div
-                              key={ref}
-                              className="text-sm text-muted-foreground"
-                            >
-                              • {ref}
-                            </div>
-                          ))}
-                        </div>
+                  {extraction.legalReferences && extraction.legalReferences.length > 0 && (
+                    <div className="p-4 rounded-lg border border-border">
+                      <h5 className="font-semibold mb-2">Referências Legais</h5>
+                      <div className="space-y-1">
+                        {extraction.legalReferences.map((ref) => (
+                          <div key={ref} className="text-sm text-muted-foreground">
+                            • {ref}
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {extraction.parties && extraction.parties.length > 0 && (
                     <div className="p-4 rounded-lg border border-border">
                       <h5 className="font-semibold mb-2">Partes Envolvidas</h5>
                       <div className="space-y-1">
                         {extraction.parties.map((party) => (
-                          <div
-                            key={party}
-                            className="text-sm text-muted-foreground"
-                          >
+                          <div key={party} className="text-sm text-muted-foreground">
                             • {party}
                           </div>
                         ))}
@@ -721,9 +630,7 @@ export default function AdvancedNLPDashboard() {
               <CardContent className="py-12 text-center text-muted-foreground">
                 <Brain size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma informação extraída ainda</p>
-                <p className="text-sm mt-2">
-                  Execute a análise para ver os resultados
-                </p>
+                <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
               </CardContent>
             </Card>
           )}

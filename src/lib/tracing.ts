@@ -13,94 +13,94 @@
  */
 
 // Trace Span Types
-export type SpanKind = 'internal' | 'server' | 'client' | 'producer' | 'consumer'
-export type SpanStatus = 'unset' | 'ok' | 'error'
+export type SpanKind = "internal" | "server" | "client" | "producer" | "consumer";
+export type SpanStatus = "unset" | "ok" | "error";
 
 // Trace Context for distributed tracing
 export interface TraceContext {
-  traceId: string
-  spanId: string
-  parentSpanId?: string
-  traceFlags: number
-  traceState?: string
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  traceFlags: number;
+  traceState?: string;
 }
 
 // Span Attributes (OpenTelemetry compatible)
 export interface SpanAttributes {
-  [key: string]: string | number | boolean | string[] | number[] | undefined
+  [key: string]: string | number | boolean | string[] | number[] | undefined;
 }
 
 // Span Event
 export interface SpanEvent {
-  name: string
-  timestamp: number
-  attributes?: SpanAttributes
+  name: string;
+  timestamp: number;
+  attributes?: SpanAttributes;
 }
 
 // Span Link
 export interface SpanLink {
-  context: TraceContext
-  attributes?: SpanAttributes
+  context: TraceContext;
+  attributes?: SpanAttributes;
 }
 
 // Complete Span Structure
 export interface Span {
-  name: string
-  kind: SpanKind
-  context: TraceContext
-  parentContext?: TraceContext
-  startTime: number
-  endTime?: number
-  status: SpanStatus
-  statusMessage?: string
-  attributes: SpanAttributes
-  events: SpanEvent[]
-  links: SpanLink[]
+  name: string;
+  kind: SpanKind;
+  context: TraceContext;
+  parentContext?: TraceContext;
+  startTime: number;
+  endTime?: number;
+  status: SpanStatus;
+  statusMessage?: string;
+  attributes: SpanAttributes;
+  events: SpanEvent[];
+  links: SpanLink[];
 }
 
 // Agent-specific trace types
 export interface AgentSpan extends Span {
-  agentId: string
-  agentName: string
-  sessionId?: string
-  stepNumber?: number
-  toolsUsed?: string[]
-  tokensUsed?: number
-  cost?: number
+  agentId: string;
+  agentName: string;
+  sessionId?: string;
+  stepNumber?: number;
+  toolsUsed?: string[];
+  tokensUsed?: number;
+  cost?: number;
 }
 
 // LLM-specific trace types
 export interface LLMSpan extends Span {
-  model: string
-  promptTokens: number
-  completionTokens: number
-  totalTokens: number
-  temperature?: number
-  maxTokens?: number
-  responseTime: number
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  temperature?: number;
+  maxTokens?: number;
+  responseTime: number;
 }
 
 // Trace Exporter Interface
 export interface TraceExporter {
-  name: string
-  export(spans: Span[]): Promise<void>
-  shutdown(): Promise<void>
+  name: string;
+  export(spans: Span[]): Promise<void>;
+  shutdown(): Promise<void>;
 }
 
 /**
  * Console Exporter - For development/debugging
  */
 class ConsoleExporter implements TraceExporter {
-  name = 'console'
+  name = "console";
 
   async export(spans: Span[]): Promise<void> {
-    spans.forEach(span => {
-      const duration = span.endTime ? span.endTime - span.startTime : 0
+    spans.forEach((span) => {
+      const duration = span.endTime ? span.endTime - span.startTime : 0;
       console.log(
         `[TRACE] ${span.name} | ${span.kind} | ${duration}ms | ${span.status}`,
         span.attributes
-      )
-    })
+      );
+    });
   }
 
   async shutdown(): Promise<void> {
@@ -112,36 +112,36 @@ class ConsoleExporter implements TraceExporter {
  * Memory Exporter - Stores traces in memory for querying
  */
 class MemoryExporter implements TraceExporter {
-  readonly name = 'memory'
-  private spans: Span[] = []
-  private readonly maxSpans = 1000
+  readonly name = "memory";
+  private spans: Span[] = [];
+  private readonly maxSpans = 1000;
 
   async export(spans: Span[]): Promise<void> {
-    this.spans.push(...spans)
+    this.spans.push(...spans);
     // Keep only last maxSpans
     if (this.spans.length > this.maxSpans) {
-      this.spans = this.spans.slice(-this.maxSpans)
+      this.spans = this.spans.slice(-this.maxSpans);
     }
   }
 
   async shutdown(): Promise<void> {
-    this.spans = []
+    this.spans = [];
   }
 
   getSpans(): Span[] {
-    return [...this.spans]
+    return [...this.spans];
   }
 
   getSpansByTraceId(traceId: string): Span[] {
-    return this.spans.filter(s => s.context.traceId === traceId)
+    return this.spans.filter((s) => s.context.traceId === traceId);
   }
 
   getSpansByName(name: string): Span[] {
-    return this.spans.filter(s => s.name.includes(name))
+    return this.spans.filter((s) => s.name.includes(name));
   }
 
   clear(): void {
-    this.spans = []
+    this.spans = [];
   }
 }
 
@@ -149,27 +149,27 @@ class MemoryExporter implements TraceExporter {
  * HTTP Exporter - Sends traces to remote endpoint
  */
 class HTTPExporter implements TraceExporter {
-  readonly name = 'http'
-  private readonly endpoint: string
-  private readonly headers: Record<string, string>
+  readonly name = "http";
+  private readonly endpoint: string;
+  private readonly headers: Record<string, string>;
 
   constructor(endpoint: string, headers: Record<string, string> = {}) {
-    this.endpoint = endpoint
-    this.headers = headers
+    this.endpoint = endpoint;
+    this.headers = headers;
   }
 
   async export(spans: Span[]): Promise<void> {
     try {
       await fetch(this.endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...this.headers
+          "Content-Type": "application/json",
+          ...this.headers,
         },
-        body: JSON.stringify({ spans })
-      })
+        body: JSON.stringify({ spans }),
+      });
     } catch (error) {
-      console.error('[Tracing] Failed to export spans:', error)
+      console.error("[Tracing] Failed to export spans:", error);
     }
   }
 
@@ -182,19 +182,19 @@ class HTTPExporter implements TraceExporter {
  * Tracing Service Class
  */
 class TracingService {
-  private readonly exporters: TraceExporter[] = []
-  private readonly activeSpans: Map<string, Span> = new Map()
-  private readonly memoryExporter: MemoryExporter
-  private enabled = true
-  private samplingRate = 1.0 // 100% by default
+  private readonly exporters: TraceExporter[] = [];
+  private readonly activeSpans: Map<string, Span> = new Map();
+  private readonly memoryExporter: MemoryExporter;
+  private enabled = true;
+  private samplingRate = 1.0; // 100% by default
 
   constructor() {
-    this.memoryExporter = new MemoryExporter()
-    this.exporters.push(this.memoryExporter)
+    this.memoryExporter = new MemoryExporter();
+    this.exporters.push(this.memoryExporter);
 
     // Add console exporter in development
     if (import.meta.env.DEV) {
-      this.exporters.push(new ConsoleExporter())
+      this.exporters.push(new ConsoleExporter());
     }
   }
 
@@ -202,18 +202,14 @@ class TracingService {
    * Generate unique trace ID (W3C compatible)
    */
   generateTraceId(): string {
-    return Array.from({ length: 32 }, () =>
-      Math.floor(Math.random() * 16).toString(16)
-    ).join('')
+    return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
   }
 
   /**
    * Generate unique span ID
    */
   generateSpanId(): string {
-    return Array.from({ length: 16 }, () =>
-      Math.floor(Math.random() * 16).toString(16)
-    ).join('')
+    return Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
   }
 
   /**
@@ -224,8 +220,8 @@ class TracingService {
       traceId: parentContext?.traceId || this.generateTraceId(),
       spanId: this.generateSpanId(),
       parentSpanId: parentContext?.spanId,
-      traceFlags: 1 // Sampled
-    }
+      traceFlags: 1, // Sampled
+    };
   }
 
   /**
@@ -234,39 +230,39 @@ class TracingService {
   startSpan(
     name: string,
     options: {
-      kind?: SpanKind
-      parentContext?: TraceContext
-      attributes?: SpanAttributes
-      links?: SpanLink[]
+      kind?: SpanKind;
+      parentContext?: TraceContext;
+      attributes?: SpanAttributes;
+      links?: SpanLink[];
     } = {}
   ): Span {
     // Tracing desabilitado => span no-op
     if (!this.enabled) {
-      return this.createNoOpSpan(name)
+      return this.createNoOpSpan(name);
     }
 
     // Sampling check
     if (Math.random() > this.samplingRate) {
       // Return a no-op span
-      return this.createNoOpSpan(name)
+      return this.createNoOpSpan(name);
     }
 
-    const context = this.createTraceContext(options.parentContext)
+    const context = this.createTraceContext(options.parentContext);
 
     const span: Span = {
       name,
-      kind: options.kind || 'internal',
+      kind: options.kind || "internal",
       context,
       parentContext: options.parentContext,
       startTime: Date.now(),
-      status: 'unset',
+      status: "unset",
       attributes: options.attributes || {},
       events: [],
-      links: options.links || []
-    }
+      links: options.links || [],
+    };
 
-    this.activeSpans.set(context.spanId, span)
-    return span
+    this.activeSpans.set(context.spanId, span);
+    return span;
   }
 
   /**
@@ -275,18 +271,18 @@ class TracingService {
   private createNoOpSpan(name: string): Span {
     return {
       name,
-      kind: 'internal',
+      kind: "internal",
       context: {
-        traceId: '00000000000000000000000000000000',
-        spanId: '0000000000000000',
-        traceFlags: 0
+        traceId: "00000000000000000000000000000000",
+        spanId: "0000000000000000",
+        traceFlags: 0,
       },
       startTime: Date.now(),
-      status: 'unset',
+      status: "unset",
       attributes: {},
       events: [],
-      links: []
-    }
+      links: [],
+    };
   }
 
   /**
@@ -295,23 +291,23 @@ class TracingService {
   async endSpan(span: Span, status?: SpanStatus, statusMessage?: string): Promise<void> {
     // No-op span (não amostrado ou tracing off)
     if (span.context.traceFlags === 0) {
-      return
+      return;
     }
 
-    span.endTime = Date.now()
-    span.status = status || 'ok'
-    span.statusMessage = statusMessage
+    span.endTime = Date.now();
+    span.status = status || "ok";
+    span.statusMessage = statusMessage;
 
-    this.activeSpans.delete(span.context.spanId)
+    this.activeSpans.delete(span.context.spanId);
 
     // Export to all exporters
     await Promise.all(
-      this.exporters.map(exporter =>
-        exporter.export([span]).catch(err =>
-          console.error(`[Tracing] ${exporter.name} export failed:`, err)
-        )
+      this.exporters.map((exporter) =>
+        exporter
+          .export([span])
+          .catch((err) => console.error(`[Tracing] ${exporter.name} export failed:`, err))
       )
-    )
+    );
   }
 
   /**
@@ -321,35 +317,35 @@ class TracingService {
     span.events.push({
       name,
       timestamp: Date.now(),
-      attributes
-    })
+      attributes,
+    });
   }
 
   /**
    * Set span attribute
    */
   setAttribute(span: Span, key: string, value: string | number | boolean): void {
-    span.attributes[key] = value
+    span.attributes[key] = value;
   }
 
   /**
    * Set multiple span attributes
    */
   setAttributes(span: Span, attributes: SpanAttributes): void {
-    Object.assign(span.attributes, attributes)
+    Object.assign(span.attributes, attributes);
   }
 
   /**
    * Record exception in span
    */
   recordException(span: Span, error: Error): void {
-    this.addEvent(span, 'exception', {
-      'exception.type': error.name,
-      'exception.message': error.message,
-      'exception.stacktrace': error.stack
-    })
-    span.status = 'error'
-    span.statusMessage = error.message
+    this.addEvent(span, "exception", {
+      "exception.type": error.name,
+      "exception.message": error.message,
+      "exception.stacktrace": error.stack,
+    });
+    span.status = "error";
+    span.statusMessage = error.message;
   }
 
   /**
@@ -359,28 +355,28 @@ class TracingService {
     agentId: string,
     agentName: string,
     options: {
-      sessionId?: string
-      parentContext?: TraceContext
-      attributes?: SpanAttributes
+      sessionId?: string;
+      parentContext?: TraceContext;
+      attributes?: SpanAttributes;
     } = {}
   ): AgentSpan {
     const span = this.startSpan(`agent.${agentId}`, {
-      kind: 'internal',
+      kind: "internal",
       parentContext: options.parentContext,
       attributes: {
-        'agent.id': agentId,
-        'agent.name': agentName,
-        'agent.session_id': options.sessionId || '',
-        ...options.attributes
-      }
-    }) as AgentSpan
+        "agent.id": agentId,
+        "agent.name": agentName,
+        "agent.session_id": options.sessionId || "",
+        ...options.attributes,
+      },
+    }) as AgentSpan;
 
-    span.agentId = agentId
-    span.agentName = agentName
-    span.sessionId = options.sessionId
-    span.toolsUsed = []
+    span.agentId = agentId;
+    span.agentName = agentName;
+    span.sessionId = options.sessionId;
+    span.toolsUsed = [];
 
-    return span
+    return span;
   }
 
   /**
@@ -389,30 +385,30 @@ class TracingService {
   startLLMSpan(
     model: string,
     options: {
-      parentContext?: TraceContext
-      temperature?: number
-      maxTokens?: number
-      attributes?: SpanAttributes
+      parentContext?: TraceContext;
+      temperature?: number;
+      maxTokens?: number;
+      attributes?: SpanAttributes;
     } = {}
   ): LLMSpan {
     const span = this.startSpan(`llm.${model}`, {
-      kind: 'client',
+      kind: "client",
       parentContext: options.parentContext,
       attributes: {
-        'llm.model': model,
-        'llm.temperature': options.temperature,
-        'llm.max_tokens': options.maxTokens,
-        ...options.attributes
-      }
-    }) as LLMSpan
+        "llm.model": model,
+        "llm.temperature": options.temperature,
+        "llm.max_tokens": options.maxTokens,
+        ...options.attributes,
+      },
+    }) as LLMSpan;
 
-    span.model = model
-    span.promptTokens = 0
-    span.completionTokens = 0
-    span.totalTokens = 0
-    span.responseTime = 0
+    span.model = model;
+    span.promptTokens = 0;
+    span.completionTokens = 0;
+    span.totalTokens = 0;
+    span.responseTime = 0;
 
-    return span
+    return span;
   }
 
   /**
@@ -421,127 +417,127 @@ class TracingService {
   async endLLMSpan(
     span: LLMSpan,
     result: {
-      promptTokens: number
-      completionTokens: number
-      success: boolean
-      error?: Error
+      promptTokens: number;
+      completionTokens: number;
+      success: boolean;
+      error?: Error;
     }
   ): Promise<void> {
-    span.promptTokens = result.promptTokens
-    span.completionTokens = result.completionTokens
-    span.totalTokens = result.promptTokens + result.completionTokens
-    span.responseTime = Date.now() - span.startTime
+    span.promptTokens = result.promptTokens;
+    span.completionTokens = result.completionTokens;
+    span.totalTokens = result.promptTokens + result.completionTokens;
+    span.responseTime = Date.now() - span.startTime;
 
     this.setAttributes(span, {
-      'llm.prompt_tokens': result.promptTokens,
-      'llm.completion_tokens': result.completionTokens,
-      'llm.total_tokens': span.totalTokens,
-      'llm.response_time_ms': span.responseTime
-    })
+      "llm.prompt_tokens": result.promptTokens,
+      "llm.completion_tokens": result.completionTokens,
+      "llm.total_tokens": span.totalTokens,
+      "llm.response_time_ms": span.responseTime,
+    });
 
     if (result.error) {
-      this.recordException(span, result.error)
+      this.recordException(span, result.error);
     }
 
-    await this.endSpan(span, result.success ? 'ok' : 'error')
+    await this.endSpan(span, result.success ? "ok" : "error");
   }
 
   /**
    * Add exporter
    */
   addExporter(exporter: TraceExporter): void {
-    this.exporters.push(exporter)
+    this.exporters.push(exporter);
   }
 
   /**
    * Configure HTTP exporter
    */
   configureHTTPExporter(endpoint: string, headers?: Record<string, string>): void {
-    this.exporters.push(new HTTPExporter(endpoint, headers))
+    this.exporters.push(new HTTPExporter(endpoint, headers));
   }
 
   /**
    * Set sampling rate (0.0 - 1.0)
    */
   setSamplingRate(rate: number): void {
-    this.samplingRate = Math.max(0, Math.min(1, rate))
+    this.samplingRate = Math.max(0, Math.min(1, rate));
   }
 
   /**
    * Enable/disable tracing
    */
   setEnabled(enabled: boolean): void {
-    this.enabled = enabled
+    this.enabled = enabled;
   }
 
   /**
    * Get all traces from memory
    */
   getTraces(): Span[] {
-    return this.memoryExporter.getSpans()
+    return this.memoryExporter.getSpans();
   }
 
   /**
    * Get traces by trace ID
    */
   getTraceById(traceId: string): Span[] {
-    return this.memoryExporter.getSpansByTraceId(traceId)
+    return this.memoryExporter.getSpansByTraceId(traceId);
   }
 
   /**
    * Get traces by name
    */
   getTracesByName(name: string): Span[] {
-    return this.memoryExporter.getSpansByName(name)
+    return this.memoryExporter.getSpansByName(name);
   }
 
   /**
    * Clear all traces from memory
    */
   clearTraces(): void {
-    this.memoryExporter.clear()
+    this.memoryExporter.clear();
   }
 
   /**
    * Get tracing statistics
    */
   getStats(): {
-    totalSpans: number
-    activeSpans: number
-    exporters: string[]
-    samplingRate: number
-    enabled: boolean
+    totalSpans: number;
+    activeSpans: number;
+    exporters: string[];
+    samplingRate: number;
+    enabled: boolean;
   } {
     return {
       totalSpans: this.memoryExporter.getSpans().length,
       activeSpans: this.activeSpans.size,
-      exporters: this.exporters.map(e => e.name),
+      exporters: this.exporters.map((e) => e.name),
       samplingRate: this.samplingRate,
-      enabled: this.enabled
-    }
+      enabled: this.enabled,
+    };
   }
 
   /**
    * Shutdown all exporters
    */
   async shutdown(): Promise<void> {
-    await Promise.all(this.exporters.map(e => e.shutdown()))
+    await Promise.all(this.exporters.map((e) => e.shutdown()));
   }
 }
 
 // Export singleton instance
-export const tracingService = new TracingService()
+export const tracingService = new TracingService();
 
 // Convenience functions
-export const startSpan = tracingService.startSpan.bind(tracingService)
-export const endSpan = tracingService.endSpan.bind(tracingService)
-export const startAgentSpan = tracingService.startAgentSpan.bind(tracingService)
-export const startLLMSpan = tracingService.startLLMSpan.bind(tracingService)
-export const endLLMSpan = tracingService.endLLMSpan.bind(tracingService)
-export const addEvent = tracingService.addEvent.bind(tracingService)
-export const setAttribute = tracingService.setAttribute.bind(tracingService)
-export const recordException = tracingService.recordException.bind(tracingService)
-export const getTraces = tracingService.getTraces.bind(tracingService)
+export const startSpan = tracingService.startSpan.bind(tracingService);
+export const endSpan = tracingService.endSpan.bind(tracingService);
+export const startAgentSpan = tracingService.startAgentSpan.bind(tracingService);
+export const startLLMSpan = tracingService.startLLMSpan.bind(tracingService);
+export const endLLMSpan = tracingService.endLLMSpan.bind(tracingService);
+export const addEvent = tracingService.addEvent.bind(tracingService);
+export const setAttribute = tracingService.setAttribute.bind(tracingService);
+export const recordException = tracingService.recordException.bind(tracingService);
+export const getTraces = tracingService.getTraces.bind(tracingService);
 
 /**
  * Decorator-style tracing for async functions
@@ -550,22 +546,22 @@ export function withTracing<T>(
   name: string,
   fn: (span: Span) => Promise<T>,
   options?: {
-    kind?: SpanKind
-    attributes?: SpanAttributes
+    kind?: SpanKind;
+    attributes?: SpanAttributes;
   }
 ): Promise<T> {
-  const span = tracingService.startSpan(name, options)
+  const span = tracingService.startSpan(name, options);
 
   return fn(span)
-    .then(result => {
-      tracingService.endSpan(span, 'ok')
-      return result
+    .then((result) => {
+      tracingService.endSpan(span, "ok");
+      return result;
     })
-    .catch(error => {
-      tracingService.recordException(span, error as Error)
-      tracingService.endSpan(span, 'error', (error as Error).message)
-      throw error
-    })
+    .catch((error) => {
+      tracingService.recordException(span, error as Error);
+      tracingService.endSpan(span, "error", (error as Error).message);
+      throw error;
+    });
 }
 
 /**
@@ -575,32 +571,32 @@ export function injectTraceContext(
   span: Span,
   headers: Record<string, string>
 ): Record<string, string> {
-  const flagsHex = span.context.traceFlags.toString(16).padStart(2, '0')
+  const flagsHex = span.context.traceFlags.toString(16).padStart(2, "0");
 
   return {
     ...headers,
     // W3C traceparent: version-traceId-spanId-flags
     traceparent: `00-${span.context.traceId}-${span.context.spanId}-${flagsHex}`,
-    tracestate: span.context.traceState || ''
-  }
+    tracestate: span.context.traceState || "",
+  };
 }
 
 export function extractTraceContext(
   headers: Record<string, string | string[] | undefined>
 ): TraceContext | undefined {
-  const traceparent = headers['traceparent']
-  if (!traceparent || typeof traceparent !== 'string') {
-    return undefined
+  const traceparent = headers["traceparent"];
+  if (!traceparent || typeof traceparent !== "string") {
+    return undefined;
   }
 
-  const parts = traceparent.split('-')
+  const parts = traceparent.split("-");
   if (parts.length !== 4) {
-    return undefined
+    return undefined;
   }
 
   return {
     traceId: parts[1],
     spanId: parts[2],
-    traceFlags: Number.parseInt(parts[3], 16)
-  }
+    traceFlags: Number.parseInt(parts[3], 16),
+  };
 }

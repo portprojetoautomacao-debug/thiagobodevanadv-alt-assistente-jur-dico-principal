@@ -1,39 +1,45 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { UserPlus } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import type { Cliente } from '@/types'
+import { useState } from "react";
+import { useKV } from "@/hooks/use-kv";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { UserPlus } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import type { Cliente } from "@/types";
 
 export default function CadastrarCliente() {
-  const [_clientes, setClientes] = useKV<Cliente[]>('clientes', [])
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [_clientes, setClientes] = useKV<Cliente[]>("clientes", []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    nome: '',
-    cpfCnpj: '',
-    email: '',
-    telefone: '',
-    endereco: '',
-    cidade: '',
-    estado: '',
-    cep: '',
-    tipo: 'fisica' as 'fisica' | 'juridica',
-    observacoes: ''
-  })
+    nome: "",
+    cpfCnpj: "",
+    email: "",
+    telefone: "",
+    endereco: "",
+    cidade: "",
+    estado: "",
+    cep: "",
+    tipo: "fisica" as "fisica" | "juridica",
+    observacoes: "",
+  });
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const novoCliente: Cliente = {
@@ -47,35 +53,35 @@ export default function CadastrarCliente() {
         estado: formData.estado,
         cep: formData.cep,
         tipo: formData.tipo,
-        status: 'ativo',
+        status: "ativo",
         observacoes: formData.observacoes,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      };
 
-      setClientes((current = []) => [...current, novoCliente])
+      setClientes((current = []) => [...current, novoCliente]);
 
-      toast.success('Cliente cadastrado com sucesso!')
+      toast.success("Cliente cadastrado com sucesso!");
 
       setFormData({
-        nome: '',
-        cpfCnpj: '',
-        email: '',
-        telefone: '',
-        endereco: '',
-        cidade: '',
-        estado: '',
-        cep: '',
-        tipo: 'fisica',
-        observacoes: ''
-      })
+        nome: "",
+        cpfCnpj: "",
+        email: "",
+        telefone: "",
+        endereco: "",
+        cidade: "",
+        estado: "",
+        cep: "",
+        tipo: "fisica",
+        observacoes: "",
+      });
     } catch (error) {
-      toast.error('Erro ao cadastrar cliente')
-      console.error(error)
+      toast.error("Erro ao cadastrar cliente");
+      console.error(error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -96,7 +102,7 @@ export default function CadastrarCliente() {
                 <Label htmlFor="tipo">Tipo de Pessoa *</Label>
                 <Select
                   value={formData.tipo}
-                  onValueChange={(value) => handleChange('tipo', value)}
+                  onValueChange={(value) => handleChange("tipo", value)}
                 >
                   <SelectTrigger id="tipo">
                     <SelectValue />
@@ -113,7 +119,7 @@ export default function CadastrarCliente() {
                 <Input
                   id="nome"
                   value={formData.nome}
-                  onChange={(e) => handleChange('nome', e.target.value)}
+                  onChange={(e) => handleChange("nome", e.target.value)}
                   placeholder="Nome completo ou razão social"
                   required
                 />
@@ -124,8 +130,8 @@ export default function CadastrarCliente() {
                 <Input
                   id="cpfCnpj"
                   value={formData.cpfCnpj}
-                  onChange={(e) => handleChange('cpfCnpj', e.target.value)}
-                  placeholder={formData.tipo === 'fisica' ? 'CPF' : 'CNPJ'}
+                  onChange={(e) => handleChange("cpfCnpj", e.target.value)}
+                  placeholder={formData.tipo === "fisica" ? "CPF" : "CNPJ"}
                   required
                 />
               </div>
@@ -135,7 +141,7 @@ export default function CadastrarCliente() {
                 <Input
                   id="telefone"
                   value={formData.telefone}
-                  onChange={(e) => handleChange('telefone', e.target.value)}
+                  onChange={(e) => handleChange("telefone", e.target.value)}
                   placeholder="(00) 00000-0000"
                   required
                 />
@@ -147,7 +153,7 @@ export default function CadastrarCliente() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="email@exemplo.com"
                   required
                 />
@@ -158,7 +164,7 @@ export default function CadastrarCliente() {
                 <Input
                   id="endereco"
                   value={formData.endereco}
-                  onChange={(e) => handleChange('endereco', e.target.value)}
+                  onChange={(e) => handleChange("endereco", e.target.value)}
                   placeholder="Rua, número, complemento"
                 />
               </div>
@@ -168,7 +174,7 @@ export default function CadastrarCliente() {
                 <Input
                   id="cidade"
                   value={formData.cidade}
-                  onChange={(e) => handleChange('cidade', e.target.value)}
+                  onChange={(e) => handleChange("cidade", e.target.value)}
                   placeholder="Cidade"
                 />
               </div>
@@ -178,7 +184,7 @@ export default function CadastrarCliente() {
                 <Input
                   id="estado"
                   value={formData.estado}
-                  onChange={(e) => handleChange('estado', e.target.value)}
+                  onChange={(e) => handleChange("estado", e.target.value)}
                   placeholder="UF"
                   maxLength={2}
                 />
@@ -189,7 +195,7 @@ export default function CadastrarCliente() {
                 <Input
                   id="cep"
                   value={formData.cep}
-                  onChange={(e) => handleChange('cep', e.target.value)}
+                  onChange={(e) => handleChange("cep", e.target.value)}
                   placeholder="00000-000"
                 />
               </div>
@@ -199,7 +205,7 @@ export default function CadastrarCliente() {
                 <Textarea
                   id="observacoes"
                   value={formData.observacoes}
-                  onChange={(e) => handleChange('observacoes', e.target.value)}
+                  onChange={(e) => handleChange("observacoes", e.target.value)}
                   placeholder="Informações adicionais sobre o cliente"
                   rows={4}
                 />
@@ -207,28 +213,26 @@ export default function CadastrarCliente() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                {isSubmitting ? 'Cadastrando...' : 'Cadastrar Cliente'}
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? "Cadastrando..." : "Cadastrar Cliente"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setFormData({
-                  nome: '',
-                  cpfCnpj: '',
-                  email: '',
-                  telefone: '',
-                  endereco: '',
-                  cidade: '',
-                  estado: '',
-                  cep: '',
-                  tipo: 'fisica',
-                  observacoes: ''
-                })}
+                onClick={() =>
+                  setFormData({
+                    nome: "",
+                    cpfCnpj: "",
+                    email: "",
+                    telefone: "",
+                    endereco: "",
+                    cidade: "",
+                    estado: "",
+                    cep: "",
+                    tipo: "fisica",
+                    observacoes: "",
+                  })
+                }
               >
                 Limpar
               </Button>
@@ -237,5 +241,5 @@ export default function CadastrarCliente() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

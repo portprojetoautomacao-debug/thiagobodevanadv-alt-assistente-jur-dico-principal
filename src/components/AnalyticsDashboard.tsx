@@ -1,19 +1,7 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAnalytics } from "@/hooks/use-analytics";
-import {
-  ChartBar,
-  Eye,
-  MouseSimple,
-  Trash,
-  Warning,
-} from "@phosphor-icons/react";
+import { ChartBar, Eye, MouseSimple, Trash, Warning } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 
@@ -70,9 +58,7 @@ export default function AnalyticsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold gradient-text">Analytics</h1>
-          <p className="text-muted-foreground mt-1">
-            Acompanhe o uso e comportamento do sistema
-          </p>
+          <p className="text-muted-foreground mt-1">Acompanhe o uso e comportamento do sistema</p>
         </div>
         <Button
           variant="outline"
@@ -88,15 +74,11 @@ export default function AnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total de Eventos
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
             <ChartBar size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold gradient-text">
-              {safeAnalytics.last24h.total}
-            </div>
+            <div className="text-2xl font-bold gradient-text">{safeAnalytics.last24h.total}</div>
             <p className="text-xs text-muted-foreground">
               {safeAnalytics.last7d.total} nos últimos 7 dias
             </p>
@@ -105,9 +87,7 @@ export default function AnalyticsDashboard() {
 
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Visualizações (24h)
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Visualizações (24h)</CardTitle>
             <Eye size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -126,12 +106,8 @@ export default function AnalyticsDashboard() {
             <MouseSimple size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-accent">
-              {safeAnalytics.last24h.actions}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Interações do usuário
-            </p>
+            <div className="text-2xl font-bold text-accent">{safeAnalytics.last24h.actions}</div>
+            <p className="text-xs text-muted-foreground">Interações do usuário</p>
           </CardContent>
         </Card>
 
@@ -175,10 +151,7 @@ export default function AnalyticsDashboard() {
                         <div
                           className="h-full button-gradient"
                           style={{
-                            width: `${Math.max(
-                              5,
-                              (count / pageMaxCount) * 100
-                            )}%`,
+                            width: `${Math.max(5, (count / pageMaxCount) * 100)}%`,
                           }}
                         />
                       </div>
@@ -206,10 +179,7 @@ export default function AnalyticsDashboard() {
             ) : (
               <div className="space-y-4">
                 {sortedActions.map(([action, count]) => (
-                  <div
-                    key={action}
-                    className="flex items-center justify-between"
-                  >
+                  <div key={action} className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate capitalize">
                         {action.replaceAll("-", " ")}
@@ -220,10 +190,7 @@ export default function AnalyticsDashboard() {
                         <div
                           className="h-full bg-linear-to-r from-secondary to-accent"
                           style={{
-                            width: `${Math.max(
-                              5,
-                              (count / actionMaxCount) * 100
-                            )}%`,
+                            width: `${Math.max(5, (count / actionMaxCount) * 100)}%`,
                           }}
                         />
                       </div>
@@ -265,24 +232,19 @@ export default function AnalyticsDashboard() {
                         event.type === "pageview"
                           ? "bg-secondary"
                           : event.type === "action"
-                          ? "bg-accent"
-                          : "bg-destructive"
+                            ? "bg-accent"
+                            : "bg-destructive"
                       }`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium capitalize">
-                          {event.type === "pageview" &&
-                            `Visualização: ${event.data?.path ?? "-"}`}
-                          {event.type === "action" &&
-                            `Ação: ${event.data?.action ?? "-"}`}
-                          {event.type === "error" &&
-                            `Erro: ${event.data?.error ?? "-"}`}
+                          {event.type === "pageview" && `Visualização: ${event.data?.path ?? "-"}`}
+                          {event.type === "action" && `Ação: ${event.data?.action ?? "-"}`}
+                          {event.type === "error" && `Erro: ${event.data?.error ?? "-"}`}
                         </p>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(event.timestamp).toLocaleTimeString(
-                            "pt-BR"
-                          )}
+                          {new Date(event.timestamp).toLocaleTimeString("pt-BR")}
                         </span>
                       </div>
                       {event.data?.category && (

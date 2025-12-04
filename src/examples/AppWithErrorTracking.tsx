@@ -5,11 +5,7 @@ import { usePageTracking, useUserTracking } from "../hooks/useErrorTracking";
 import { getEnv } from "../lib/env-helper.js";
 import { captureMessage, setErrorTag } from "../services/error-tracking";
 
-export function AppWithErrorTracking({
-  user,
-}: {
-  user?: { id: string; email: string };
-}) {
+export function AppWithErrorTracking({ user }: { user?: { id: string; email: string } }) {
   // Rastrear usuário logado
   useUserTracking(user?.id, user?.email);
 
@@ -18,8 +14,7 @@ export function AppWithErrorTracking({
 
   // Rastrear versão do app
   useEffect(() => {
-    const version =
-      getEnv("REACT_APP_VERSION") || getEnv("VITE_APP_VERSION") || "unknown";
+    const version = getEnv("REACT_APP_VERSION") || getEnv("VITE_APP_VERSION") || "unknown";
     const env = getEnv("NODE_ENV") || "development";
 
     setErrorTag("app_version", version);
