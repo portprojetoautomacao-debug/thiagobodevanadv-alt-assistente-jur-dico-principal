@@ -735,20 +735,20 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
       descricao: task.data?.description || "Sem descrição",
       processo:
         task.data?.processNumber ||
-        task.data?.processo?.numero ||
+        (task.data?.processo as { numero?: string })?.numero ||
         task.data?.numeroProcesso ||
         "N/A",
       prioridade: task.priority || "normal",
       // Detalhes específicos por tipo de tarefa
-      ...(task.type === "DRAFT_PETITION" && {
+      ...(task.type === AgentTaskType.DRAFT_PETITION && {
         tipoPeticao: task.data?.petitionType || "Não especificado",
         partes: task.data?.parts || "Não especificado",
       }),
-      ...(task.type === "CALCULATE_DEADLINE" && {
+      ...(task.type === AgentTaskType.CALCULATE_DEADLINE && {
         dataPublicacao: task.data?.publicationDate || "N/A",
         diasPrazo: task.data?.daysCount || "N/A",
       }),
-      ...(task.type === "ANALYZE_INTIMATION" && {
+      ...(task.type === AgentTaskType.ANALYZE_INTIMATION && {
         tribunal: task.data?.tribunal || "N/A",
         instancia: task.data?.instancia || "N/A",
       }),
@@ -822,7 +822,9 @@ async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskRes
       await logAgentThinking(task, agent, "CONCLUÍDO", {
         resultado: result.summary || "Tarefa concluída com sucesso",
         tempoProcessamento: `${enrichedResult.processingTimeMs}ms`,
-        proximasAcoes: result.nextActions?.join(", ") || "Nenhuma",
+        proximasAcoes: Array.isArray(result.nextActions)
+          ? result.nextActions.join(", ")
+          : "Nenhuma",
       });
 
       logger.info("Task processed successfully (Gemini)", {

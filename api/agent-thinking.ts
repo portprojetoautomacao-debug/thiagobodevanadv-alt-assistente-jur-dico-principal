@@ -5,7 +5,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Redis from "@upstash/redis";
+import { Redis } from "@upstash/redis";
 
 const getKv = (): Redis => {
   const url = process.env.UPSTASH_REDIS_REST_URL;
