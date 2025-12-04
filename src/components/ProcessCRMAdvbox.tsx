@@ -37,18 +37,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-// Helper para obter cor do status (evita ternário aninhado S3358)
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "green":
-      return "bg-green-500";
-    case "yellow":
-      return "bg-yellow-500";
-    default:
-      return "bg-red-500";
-  }
-}
-
 const PROCESS_PHASES = [
   "Marketing",
   "Negociação",
