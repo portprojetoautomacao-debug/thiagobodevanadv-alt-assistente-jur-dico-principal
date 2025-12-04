@@ -198,7 +198,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const requestedModel = body.model || 'gpt-4o';
+    
+    // Modelo padrão baseado no provedor
+    const defaultModel = provider.name === 'OpenAI' ? 'gpt-4o-mini' : 'gemini-2.5-pro';
+    const requestedModel = body.model || defaultModel;
 
     // Construir URL e body baseado no provedor
     let targetUrl = provider.baseUrl;
@@ -207,6 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (provider.name === 'Gemini') {
       // Mapear modelo e construir URL específica do Gemini
       const geminiModel = MODEL_MAPPING.gemini[requestedModel] || 'gemini-2.5-pro';
+      console.log(`[Gemini] Modelo solicitado: ${requestedModel} → ${geminiModel}`);
       targetUrl = `${provider.baseUrl}/${geminiModel}:generateContent?key=${provider.apiKey}`;
       requestBody = provider.transformRequest!(body);
     } else if (provider.name === 'OpenAI') {
