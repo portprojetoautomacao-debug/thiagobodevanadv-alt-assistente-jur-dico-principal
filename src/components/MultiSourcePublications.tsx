@@ -1,4 +1,4 @@
-import {Check, Download} from "lucide-react";
+import { CheckCircle, Download, AlertCircle, RefreshCw, Calendar, FileText, ExternalLink, Filter, Search as SearchLucide } from "lucide-react";
 /**
  * Multi-Source Publications Component
  *
@@ -27,15 +27,7 @@ import {
   type PublicationSource,
   type UnifiedPublication,
 } from "@/lib/multi-source-publications";
-import {
-  ArrowClockwise,
-  CheckCircle,
-  Copy,
-  Database,
-  Download,
-  Info,
-  Warning,
-} from "@phosphor-icons/react";
+import { ArrowClockwise, Copy, Database, Info, Warning } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 

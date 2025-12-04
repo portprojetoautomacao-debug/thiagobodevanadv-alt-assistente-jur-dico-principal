@@ -1,4 +1,3 @@
-import {Clock, FileText, Trash, X} from "@phosphor-icons/react";
 /**
  * NotificationCenter - Sistema de notificações em tempo real
  *

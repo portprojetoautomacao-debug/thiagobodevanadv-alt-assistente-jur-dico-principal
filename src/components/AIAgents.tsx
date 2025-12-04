@@ -1,4 +1,3 @@
-import {Brain, Clock, FileText, Gavel, Sparkle} from "@phosphor-icons/react";
 import AgentMetrics from "@/components/AgentMetrics";
 import AgentThinkingPanel from "@/components/AgentThinkingPanel";
 import FailedTasksAnalysis from "@/components/FailedTasksAnalysis";

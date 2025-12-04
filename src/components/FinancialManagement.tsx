@@ -1,4 +1,3 @@
-import {Plus} from "@phosphor-icons/react";
 import { useState } from "react";
 import { useKV } from "@/hooks/use-kv";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
