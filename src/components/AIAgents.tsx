@@ -228,6 +228,7 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     serverLogs,
     legalMemory,
     refreshServerData,
+    clearOldLogs, // ✅ Nova função para limpar logs
     setAgents: _setAgents, // mantido para compatibilidade futura
   } = useAutonomousAgents();
 
@@ -784,8 +785,23 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
         {/* Atividade em tempo real */}
         <TabsContent value="activity" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Registro de Atividades</CardTitle>
+              {activityLog.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    clearOldLogs();
+                    toast.success("Logs antigos removidos (mantidos últimas 24h)");
+                  }}
+                  aria-label="Limpar logs antigos"
+                  title="Remover logs com mais de 24 horas"
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  Limpar Antigos
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
