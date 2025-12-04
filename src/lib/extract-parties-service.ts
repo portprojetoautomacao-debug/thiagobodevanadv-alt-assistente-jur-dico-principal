@@ -123,20 +123,22 @@ Responda APENAS com o JSON, sem texto adicional.`,
 
 /**
  * Tenta extrair partes via regex (fallback rápido sem IA)
+ * Regex dividida em partes para reduzir complexidade cognitiva (SonarCloud S3776)
  */
 export function extractPartiesRegex(teor: string): ExtractedParties {
-  // Padrões comuns em publicações (S5869: removido duplicatas, S5843: simplificado complexidade)
-  const patterns = {
-    // "AUTOR: Nome" ou "Requerente: Nome"
-    // Simplificado: removido alguns alternadores desnecessários para reduzir complexidade
-    autor:
-      /(?:autor|requerente|exequente|embargante|apelante|agravante|impetrante)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\s]+?)(?:\s*(?:x|vs?\.?|contra|CPF|CNPJ|RG|\d|[,;.\n]|$))/i,
-    // "RÉU: Nome" ou "Requerido: Nome"
-    reu: /(?:r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\s]+?)(?:\s*(?:CPF|CNPJ|RG|\d|[,;.\n]|$))/i,
-  };
+  // Termos separados para melhor legibilidade e manutenibilidade
+  const AUTOR_TERMS = "autor|requerente|exequente|embargante|apelante|agravante|impetrante";
+  const REU_TERMS = "r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado";
+  const NAME_CAPTURE = "([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\\s]+?)";
+  const END_AUTOR = "(?:\\s*(?:x|vs?\\.?|contra|CPF|CNPJ|RG|\\d|[,;.\\n]|$))";
+  const END_REU = "(?:\\s*(?:CPF|CNPJ|RG|\\d|[,;.\\n]|$))";
 
-  const matchAutor = teor.match(patterns.autor);
-  const matchReu = teor.match(patterns.reu);
+  // Construir regex dinamicamente para maior clareza
+  const autorRegex = new RegExp(`(?:${AUTOR_TERMS})[:\\s]+${NAME_CAPTURE}${END_AUTOR}`, "i");
+  const reuRegex = new RegExp(`(?:${REU_TERMS})[:\\s]+${NAME_CAPTURE}${END_REU}`, "i");
+
+  const matchAutor = teor.match(autorRegex);
+  const matchReu = teor.match(reuRegex);
 
   return {
     autor: matchAutor?.[1]?.trim() || "",

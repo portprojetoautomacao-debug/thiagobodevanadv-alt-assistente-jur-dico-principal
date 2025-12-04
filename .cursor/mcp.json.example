@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "todoist": {
+      "command": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npx",
+      "args": ["-y", "mcp-remote", "https://ai.todoist.net/mcp"],
+      "env": {
+        "PATH": "/usr/local/share/nvm/versions/node/v22.21.1/bin:${PATH}"
+      }
+    }
+  }
+}
