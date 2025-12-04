@@ -76,8 +76,8 @@ export function ConfigurationError() {
                     </div>
                     <div>GEMINI_MODEL=gemini-2.5-pro</div>
                     <div>
-                      VITE_BACKEND_API_URL=
-                      <span className="italic"> https://seu-projeto.vercel.app</span>
+                      VITE_BACKEND_API_URL={" "}
+                      <span className="italic">https://seu-projeto.vercel.app</span>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">

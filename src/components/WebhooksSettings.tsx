@@ -38,6 +38,106 @@ const TeamsIcon = ({ size = 20 }: { size?: number }) => (
   </svg>
 );
 
+// Componente para renderizar ícone do webhook por tipo
+function WebhookTypeIcon({ type, size = 20 }: { type: WebhookType; size?: number }) {
+  switch (type) {
+    case "slack":
+      return <SlackLogo size={size} />;
+    case "discord":
+      return <DiscordLogo size={size} />;
+    case "teams":
+      return <TeamsIcon size={size} />;
+    case "generic":
+    default:
+      return <Globe size={size} />;
+  }
+}
+
+// Props para componente de lista de webhooks
+interface WebhookListContentProps {
+  loading: boolean;
+  webhooks: WebhookConfig[];
+  testingWebhook: string | null;
+  onTest: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+// Componente extraído para evitar ternário aninhado (S3358)
+function WebhookListContent({
+  loading,
+  webhooks,
+  testingWebhook,
+  onTest,
+  onDelete,
+}: WebhookListContentProps) {
+  if (loading) {
+    return (
+      <div className="flex justify-center py-4">
+        <Spinner className="animate-spin text-primary" size={24} />
+      </div>
+    );
+  }
+
+  if (webhooks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
+        <Globe size={32} className="mb-2 opacity-50" />
+        <p className="text-sm">Nenhum webhook configurado</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {webhooks.map((webhook) => (
+        <div key={webhook.id} className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-muted p-2">
+              <WebhookTypeIcon type={webhook.type} size={20} />
+            </div>
+            <div>
+              <p className="font-medium text-sm">{webhook.name}</p>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] h-5">
+                  {webhook.type}
+                </Badge>
+                <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                  {webhook.url}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onTest(webhook.id)}
+              disabled={testingWebhook === webhook.id}
+              title="Testar webhook"
+            >
+              {testingWebhook === webhook.id ? (
+                <Spinner className="animate-spin" size={14} />
+              ) : (
+                <TestTube size={14} />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => onDelete(webhook.id)}
+              title="Remover"
+            >
+              <Trash size={14} />
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type WebhookType = "slack" | "discord" | "teams" | "generic";
 
 interface WebhookConfig {
@@ -291,70 +391,13 @@ export function WebhooksSettings() {
         )}
 
         {/* Lista de webhooks */}
-        {loadingWebhooks ? (
-          <div className="flex justify-center py-4">
-            <Spinner className="animate-spin text-primary" size={24} />
-          </div>
-        ) : webhooks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
-            <Globe size={32} className="mb-2 opacity-50" />
-            <p className="text-sm">Nenhum webhook configurado</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {webhooks.map((webhook) => (
-              <div
-                key={webhook.id}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-muted p-2">
-                    {webhook.type === "slack" && <SlackLogo size={20} />}
-                    {webhook.type === "discord" && <DiscordLogo size={20} />}
-                    {webhook.type === "teams" && <TeamsIcon size={20} />}
-                    {webhook.type === "generic" && <Globe size={20} />}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{webhook.name}</p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px] h-5">
-                        {webhook.type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                        {webhook.url}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => testWebhook(webhook.id)}
-                    disabled={testingWebhook === webhook.id}
-                    title="Testar webhook"
-                  >
-                    {testingWebhook === webhook.id ? (
-                      <Spinner className="animate-spin" size={14} />
-                    ) : (
-                      <TestTube size={14} />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => deleteWebhook(webhook.id)}
-                    title="Remover"
-                  >
-                    <Trash size={14} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <WebhookListContent
+          loading={loadingWebhooks}
+          webhooks={webhooks}
+          testingWebhook={testingWebhook}
+          onTest={testWebhook}
+          onDelete={deleteWebhook}
+        />
 
         {webhooks.length > 0 && (
           <div className="flex items-start gap-2 rounded-md bg-yellow-500/10 p-3 text-xs text-yellow-600 dark:text-yellow-400">

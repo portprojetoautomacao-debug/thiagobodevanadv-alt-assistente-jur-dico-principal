@@ -6,6 +6,7 @@
  */
 
 import type { Appointment } from "@/types";
+import { parseDeadlineDate } from "./date-utils";
 import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 
 // Tipos para integração
@@ -55,58 +56,6 @@ function normalizePriorityForCalendar(
 }
 
 /**
- * Valida componentes numéricos de uma data no formato DD/MM/YYYY
- */
-function validateDateComponents(day: number, month: number, year: number): boolean {
-  return (
-    !Number.isNaN(day) &&
-    !Number.isNaN(month) &&
-    !Number.isNaN(year) &&
-    day >= 1 &&
-    day <= 31 &&
-    month >= 1 &&
-    month <= 12 &&
-    year >= 2000
-  );
-}
-
-/**
- * Parseia data no formato brasileiro DD/MM/YYYY para Date
- * Retorna null se formato inválido
- */
-function parseBrazilianDate(dateStr: string): Date | null {
-  const parts = dateStr.split("/").map((p) => p.trim());
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  const [day, month, year] = parts;
-  const dayNum = Number.parseInt(day, 10);
-  const monthNum = Number.parseInt(month, 10);
-  const yearNum = Number.parseInt(year, 10);
-
-  if (!validateDateComponents(dayNum, monthNum, yearNum)) {
-    return null;
-  }
-
-  // Criar data em UTC para evitar problemas de timezone
-  return new Date(Date.UTC(yearNum, monthNum - 1, dayNum, 12, 0, 0));
-}
-
-/**
- * Converte string de data para objeto Date
- * Suporta formato brasileiro (DD/MM/YYYY) e ISO
- */
-function parseDeadlineDate(endDate: string): Date | null {
-  if (endDate.includes("/")) {
-    return parseBrazilianDate(endDate);
-  }
-
-  const date = new Date(endDate);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-/**
  * Constrói descrição rica para compromisso de prazo
  */
 function buildAppointmentDescription(analysis: IntimationAnalysisResult): string {
@@ -137,6 +86,50 @@ function buildAppointmentTitle(intimationTitle: string): string {
 }
 
 /**
+ * Obter lembretes baseados na prioridade
+ * (valores em minutos antes do evento)
+ */
+function getPriorityReminders(priority: IntimationAnalysisResult["priority"]): number[] {
+  switch (priority) {
+    case "crítica":
+      // 1 hora, 4 horas, 1 dia, 2 dias, 3 dias antes
+      return [60, 240, 1440, 2880, 4320];
+    case "alta":
+      // 1 hora, 1 dia, 2 dias antes
+      return [60, 1440, 2880];
+    case "média":
+      // 1 hora, 1 dia antes
+      return [60, 1440];
+    case "baixa":
+    default:
+      // 1 hora antes
+      return [60];
+  }
+}
+
+function buildAppointment(
+  analysis: IntimationAnalysisResult,
+  intimationTitle: string,
+  deadlineDate: Date
+): Appointment {
+  const dateStr = deadlineDate.toISOString().split("T")[0];
+  const type: Appointment["type"] =
+    analysis.priority === "crítica" || analysis.priority === "alta" ? "prazo" : "outro";
+
+  return {
+    id: crypto.randomUUID(),
+    title: buildAppointmentTitle(intimationTitle),
+    description: buildAppointmentDescription(analysis),
+    type,
+    date: dateStr,
+    time: "09:00", // Padrão: manhã
+    duration: 60,
+    location: analysis.court || "",
+    reminders: getPriorityReminders(analysis.priority),
+  };
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
@@ -164,50 +157,6 @@ export function createLocalAppointmentFromAnalysis(
   });
 
   return appointment;
-}
-
-function buildAppointment(
-  analysis: IntimationAnalysisResult,
-  intimationTitle: string,
-  deadlineDate: Date
-): Appointment {
-  const dateStr = deadlineDate.toISOString().split("T")[0];
-  const type: Appointment["type"] =
-    analysis.priority === "crítica" || analysis.priority === "alta" ? "prazo" : "outro";
-
-  return {
-    id: crypto.randomUUID(),
-    title: buildAppointmentTitle(intimationTitle),
-    description: buildAppointmentDescription(analysis),
-    type,
-    date: dateStr,
-    time: "09:00", // Padrão: manhã
-    duration: 60,
-    location: analysis.court || "",
-    reminders: getPriorityReminders(analysis.priority),
-  };
-}
-
-/**
- * Obter lembretes baseados na prioridade
- * (valores em minutos antes do evento)
- */
-function getPriorityReminders(priority: IntimationAnalysisResult["priority"]): number[] {
-  switch (priority) {
-    case "crítica":
-      // 1 hora, 4 horas, 1 dia, 2 dias, 3 dias antes
-      return [60, 240, 1440, 2880, 4320];
-    case "alta":
-      // 1 hora, 1 dia, 2 dias antes
-      return [60, 1440, 2880];
-    case "média":
-      // 1 hora, 1 dia antes
-      return [60, 1440];
-    case "baixa":
-    default:
-      // 1 hora antes
-      return [60];
-  }
 }
 
 /**
@@ -327,6 +276,56 @@ export async function createDeadlineFromAnalysis(
   }
 }
 
+function processSingleAnalysis(
+  item: { analysis: IntimationAnalysisResult; title: string },
+  currentAppointments: Appointment[],
+  newAppointments: Appointment[]
+): { result: DeadlineCreationResult; appointment?: Appointment } {
+  const { analysis, title } = item;
+  const localAppointment = createLocalAppointmentFromAnalysis(analysis, title);
+
+  if (!localAppointment) {
+    return { result: { success: false, error: "Sem prazo" } };
+  }
+
+  const isDuplicate = [...currentAppointments, ...newAppointments].some(
+    (apt) => apt.date === localAppointment.date && apt.title.includes(title.substring(0, 30))
+  );
+
+  if (isDuplicate) {
+    return { result: { success: true, localAppointmentId: "existing" } };
+  }
+
+  return {
+    result: { success: true, localAppointmentId: localAppointment.id },
+    appointment: localAppointment,
+  };
+}
+
+async function syncBatchToGoogle(
+  analysesWithDeadlines: Array<{ analysis: IntimationAnalysisResult; title: string }>,
+  results: DeadlineCreationResult[]
+): Promise<void> {
+  if (!googleCalendarService.getStatus().authenticated) return;
+
+  const googlePromises = analysesWithDeadlines.map(({ analysis, title }) =>
+    syncDeadlineToGoogleCalendar(analysis, title)
+  );
+
+  try {
+    const googleResults = await Promise.allSettled(googlePromises);
+    googleResults.forEach((res, index) => {
+      if (res.status === "fulfilled" && res.value) {
+        if (results[index]) {
+          results[index].googleEventId = res.value;
+        }
+      }
+    });
+  } catch (error) {
+    console.error("[DeadlineIntegration] Error syncing to Google:", error);
+  }
+}
+
 /**
  * Processar múltiplas análises e criar prazos em lote
  */
@@ -354,26 +353,17 @@ export async function batchCreateDeadlines(
   // Coletar todos os novos appointments primeiro
   const newAppointments: Appointment[] = [];
 
-  for (const { analysis, title } of analysesWithDeadlines) {
-    const localAppointment = createLocalAppointmentFromAnalysis(analysis, title);
-
-    if (!localAppointment) {
-      results.push({ success: false, error: "Sem prazo" });
-      continue;
-    }
-
-    // Verificar duplicata (nos existentes e nos novos)
-    const isDuplicate = [...currentAppointments, ...newAppointments].some(
-      (apt) => apt.date === localAppointment.date && apt.title.includes(title.substring(0, 30))
+  for (const item of analysesWithDeadlines) {
+    const { result, appointment } = processSingleAnalysis(
+      item,
+      currentAppointments,
+      newAppointments
     );
+    results.push(result);
 
-    if (isDuplicate) {
-      results.push({ success: true, localAppointmentId: "existing" });
-      continue;
+    if (appointment) {
+      newAppointments.push(appointment);
     }
-
-    newAppointments.push(localAppointment);
-    results.push({ success: true, localAppointmentId: localAppointment.id });
   }
 
   // Adicionar todos de uma vez ao estado
@@ -394,28 +384,4 @@ export async function batchCreateDeadlines(
     errors: results.filter((r) => !r.success).length,
     details: results,
   };
-}
-
-async function syncBatchToGoogle(
-  analysesWithDeadlines: Array<{ analysis: IntimationAnalysisResult; title: string }>,
-  results: DeadlineCreationResult[]
-): Promise<void> {
-  if (!googleCalendarService.getStatus().authenticated) return;
-
-  const googlePromises = analysesWithDeadlines.map(({ analysis, title }) =>
-    syncDeadlineToGoogleCalendar(analysis, title)
-  );
-
-  try {
-    const googleResults = await Promise.allSettled(googlePromises);
-    googleResults.forEach((res, index) => {
-      if (res.status === "fulfilled" && res.value) {
-        if (results[index]) {
-          results[index].googleEventId = res.value;
-        }
-      }
-    });
-  } catch (error) {
-    console.error("[DeadlineIntegration] Error syncing to Google:", error);
-  }
 }

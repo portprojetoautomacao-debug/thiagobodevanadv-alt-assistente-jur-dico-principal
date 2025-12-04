@@ -7,8 +7,8 @@
  * POST /api/djen-sync - Executa sincronização para advogados monitorados
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 
 // Rate limiting para evitar abuso
@@ -109,10 +109,10 @@ async function getKv(): Promise<Redis> {
 
 function parseOAB(oab: string): { numero?: string; uf?: string } {
   if (!oab || oab.length > 50) return {};
-  const match = oab.match(/(\d+)\s*[/-]?\s*([A-Z]{2})/i);
+  const match = /(\d+)\s*[/-]?\s*([A-Z]{2})/i.exec(oab);
   if (match) return { numero: match[1], uf: match[2].toUpperCase() };
 
-  const numOnly = oab.match(/^(\d+)$/);
+  const numOnly = /^(\d+)$/.exec(oab);
   if (numOnly) return { numero: numOnly[1] };
 
   return {};
