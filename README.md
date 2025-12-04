@@ -1,6 +1,7 @@
 # Assistente Jurídico PJe
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thiagobodevan-a11y_assistente-juridico-p&metric=alert_status&token=f6b2364c458b1c0f3ad4d08e55779f7c8b051e67)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thiagobodevan-a11y_assistente-juridico-p&metric=alert_status&token=c645526c74f7c19f7b14446c8464ad231ad26023)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
+[![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=thiagobodevan-a11y_assistente-juridico-p&token=c645526c74f7c19f7b14446c8464ad231ad26023)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
 
 > ⚠️ **MODO MANUTENÇÃO**: O desenvolvimento de novas funcionalidades está encerrado. O sistema está em produção estável e o foco atual é exclusivamente manter todas as funcionalidades operando corretamente.
 
