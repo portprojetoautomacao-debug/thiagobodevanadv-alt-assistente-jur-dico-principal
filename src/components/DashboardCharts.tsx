@@ -44,8 +44,8 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <div style={{ width: '100%', height: CHART_HEIGHT }}>
-        <ResponsiveContainer width="99%" height="100%" minWidth={200}>
+      <div style={{ width: '100%', minHeight: CHART_HEIGHT }}>
+        <ResponsiveContainer width="100%" aspect={1.8} minHeight={CHART_HEIGHT}>
           <PieChart>
             <Pie
               data={chartData.statusData}
@@ -90,8 +90,8 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <div style={{ width: '100%', height: CHART_HEIGHT }}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={200}>
+      <div style={{ width: '100%', minHeight: CHART_HEIGHT }}>
+        <ResponsiveContainer width="100%" aspect={2} minHeight={CHART_HEIGHT}>
           <BarChart data={chartData.varaChartData}>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -150,8 +150,8 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     }
 
     return (
-      <div style={{ width: '100%', height: CHART_HEIGHT }}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={200}>
+      <div style={{ width: '100%', minHeight: CHART_HEIGHT }}>
+        <ResponsiveContainer width="100%" aspect={2} minHeight={CHART_HEIGHT}>
           <LineChart data={chartData.trendData}>
             <CartesianGrid
               strokeDasharray="3 3"
