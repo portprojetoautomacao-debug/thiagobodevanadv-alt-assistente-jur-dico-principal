@@ -48,8 +48,8 @@ export default function AudioTranscription() {
     setSummary("");
     setActionItems([]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognitionClass =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass() as SpeechRecognition;
 
