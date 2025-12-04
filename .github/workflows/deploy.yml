@@ -394,7 +394,9 @@ jobs:
           echo "## 🔔 Deployment Notification" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "${{ needs.deploy-vercel.result }}" == "success" ]]; then
+          RESULT="${{ needs.deploy-vercel.result }}"
+
+          if [[ "$RESULT" == "success" ]]; then
             echo "✅ **All deployment steps completed successfully**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 📌 Deployment Information" >> $GITHUB_STEP_SUMMARY
@@ -410,6 +412,21 @@ jobs:
             echo "- [x] Build completed" >> $GITHUB_STEP_SUMMARY
             echo "- [x] Vercel deployment successful" >> $GITHUB_STEP_SUMMARY
             echo "- [x] Preview URL available" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$RESULT" == "skipped" ]]; then
+            echo "⏭️ **Deployment was skipped**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ℹ️ Skip Reason" >> $GITHUB_STEP_SUMMARY
+            echo "The deployment job was skipped because one of the following conditions was not met:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **workflow_run**: CI workflow must complete successfully on main branch" >> $GITHUB_STEP_SUMMARY
+            echo "- **pull_request**: PR must not be in draft mode" >> $GITHUB_STEP_SUMMARY
+            echo "- **workflow_dispatch**: Manual trigger from GitHub Actions UI" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔍 Current Context" >> $GITHUB_STEP_SUMMARY
+            echo "- **Event:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Workflow Run Conclusion:** ${{ github.event.workflow_run.conclusion || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+            # Skipped is not a failure, don't exit 1
           else
             echo "❌ **Deployment failed**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
