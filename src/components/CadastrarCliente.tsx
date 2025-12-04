@@ -1,11 +1,6 @@
-import {UserPlus} from "lucide-react";
-import {Plus} from "@phosphor-icons/react";
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -14,8 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { useKV } from "@/hooks/use-kv";
 import type { Cliente } from "@/types";
+import { UserPlus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function CadastrarCliente() {
   const [_clientes, setClientes] = useKV<Cliente[]>("clientes", []);

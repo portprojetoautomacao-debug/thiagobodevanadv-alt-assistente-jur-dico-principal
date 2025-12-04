@@ -16,8 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, CalendarDots } from "@phosphor-icons/react";
-import { Sparkles } from "lucide-react";
+import { Calculator, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -205,7 +204,7 @@ export default function DeadlineCalculator() {
             {result ? (
               <div className="space-y-4">
                 <div className="p-6 bg-accent rounded-lg text-center">
-                  <CalendarDots className="w-12 h-12 text-accent-foreground mx-auto mb-3" />
+                  <Calendar className="w-12 h-12 text-accent-foreground mx-auto mb-3" />
                   <p className="text-sm text-accent-foreground/80 mb-2">Prazo Final</p>
                   <p className="text-3xl font-bold text-accent-foreground">
                     {new Date(result.finalDate + "T12:00:00").toLocaleDateString("pt-BR")}

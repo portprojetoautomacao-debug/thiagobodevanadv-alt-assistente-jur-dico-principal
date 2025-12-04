@@ -1,5 +1,3 @@
-import {Download} from "lucide-react";
-import {Sparkle, X} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
+import { Download, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

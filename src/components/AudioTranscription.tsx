@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, Sparkles, StopCircle, Upload } from "lucide-react";
+import { AlertCircle, Mic, Sparkles, StopCircle, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -198,14 +198,14 @@ Responda APENAS com JSON válido, sem texto adicional.`,
 
       {error && (
         <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
-          <WarningCircle className="w-5 h-5 shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
       )}
 
       {!isSpeechSupported && (
         <div className="flex items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400">
-          <WarningCircle className="w-5 h-5 shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">
             Gravação em tempo real não disponível neste navegador. Cole o texto manualmente na área
             de transcrição.
@@ -224,7 +224,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
               {isRecording ? (
                 <div className="relative">
                   <div className="w-24 h-24 bg-destructive rounded-full flex items-center justify-center animate-pulse">
-                    <MicrophoneStage className="w-12 h-12 text-destructive-foreground" />
+                    <Mic className="w-12 h-12 text-destructive-foreground" />
                   </div>
                   <div className="absolute inset-0 rounded-full border-4 border-destructive animate-ping" />
                 </div>

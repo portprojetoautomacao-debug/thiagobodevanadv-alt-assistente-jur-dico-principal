@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash } from "@phosphor-icons/react";
-import { Download, Upload } from "lucide-react";
+import { Download, FileText, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 
 interface Template {
@@ -113,7 +112,7 @@ export function DocumentTemplates() {
           <Card key={template.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <File className="h-8 w-8 text-primary mb-2" />
+                <FileText className="h-8 w-8 text-primary mb-2" />
                 <span className="text-xs bg-secondary px-2 py-1 rounded uppercase">
                   {template.type}
                 </span>
@@ -138,7 +137,7 @@ export function DocumentTemplates() {
                   onClick={() => handleDelete(template.id)}
                   aria-label={`Excluir template ${template.name}`}
                 >
-                  <Trash className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>

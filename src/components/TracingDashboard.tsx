@@ -1,5 +1,15 @@
-import {ArrowClockwise, Brain, Clock, Trash, X} from "@phosphor-icons/react";
-import { Bot, Brain, CheckCircle, Clock, XCircle } from "lucide-react";
+import { ArrowClockwise } from "@phosphor-icons/react";
+import {
+  ArrowRight,
+  Bot,
+  Brain,
+  CheckCircle,
+  Clock,
+  LineChart,
+  Trash2,
+  XCircle,
+  Zap,
+} from "lucide-react";
 /**
  * Tracing Dashboard Component
  *
