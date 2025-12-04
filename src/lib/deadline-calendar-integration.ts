@@ -5,8 +5,8 @@
  * ao calendário local e Google Calendar.
  */
 
-import { googleCalendarService, type DeadlineEvent } from './google-calendar-service'
 import type { Appointment } from '@/types'
+import { googleCalendarService, type DeadlineEvent } from './google-calendar-service'
 
 // Tipos para integração
 export interface AnalysisDeadline {
@@ -66,7 +66,16 @@ export function createLocalAppointmentFromAnalysis(
     return null
   }
 
-  const deadlineDate = new Date(analysis.deadline.endDate)
+  // Converter data do formato brasileiro DD/MM/YYYY para ISO
+  let deadlineDate: Date
+  
+  if (typeof analysis.deadline.endDate === 'string' && analysis.deadline.endDate.includes('/')) {
+    // Formato brasileiro DD/MM/YYYY
+    const [day, month, year] = analysis.deadline.endDate.split('/')
+    deadlineDate = new Date(`${year}-${month}-${day}`)
+  } else {
+    deadlineDate = new Date(analysis.deadline.endDate)
+  }
 
   // Validar se a data é válida antes de usar toISOString()
   if (isNaN(deadlineDate.getTime())) {
