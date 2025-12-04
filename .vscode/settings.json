@@ -13,6 +13,11 @@
   "github.copilot.chat.codesearch.enabled": true,
   "github.copilot.editor.enableAutoCompletions": true,
 
+  // 🛠️ FERRAMENTAS DE EDIÇÃO - Habilitar edição de arquivos no Chat
+  "chat.editing.enabled": true,
+  "chat.editing.confirmEditRequestRemoval": true,
+  "chat.extensionTools.enabled": true,
+
   // 🚀 AUTOMAÇÃO MÁXIMA - Copilot trabalha sozinho
   "github.copilot.enable": {
     "*": true,

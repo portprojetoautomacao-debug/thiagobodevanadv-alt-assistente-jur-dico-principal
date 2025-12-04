@@ -81,23 +81,24 @@ async function handleWatchdogRequest (req: VercelRequest, res: VercelResponse)
   }
 }
 
-async function handleCronHealthRequest (req: VercelRequest, res: VercelResponse)
-{
+async function handleCronHealthRequest(req: VercelRequest, res: VercelResponse) {
   try {
     const kv = await getKv();
-    const queueHistory = kv
-      ? ((await kv.get("agent-queue-depth-history")) as Array<{
-        timestamp: string;
-        queueLength: number;
-        pendingCount: number;
-      }>)
-      : [];
+    
+    // Buscar dados do KV de forma segura
+    const queueHistory = kv 
+      ? await kv.get<Array<{ timestamp: string; queueLength: number; pendingCount: number }>>("agent-queue-depth-history")
+      : null;
     const watchdog = kv ? await kv.get("watchdog-last-result") : null;
     const lastBackup = kv ? await kv.get("backup-list") : null;
+    
+    // Processar histórico de fila
+    const processedHistory = Array.isArray(queueHistory) ? queueHistory.slice(0, 20) : [];
+    
     res.status(200).json({
       status: "ok",
       timestamp: new Date().toISOString(),
-      queue_history: Array.isArray(queueHistory) ? queueHistory.slice(0, 20) : [],
+      queue_history: processedHistory,
       last_watchdog: watchdog || null,
       backups: lastBackup || [],
     });
@@ -110,12 +111,27 @@ async function handleCronHealthRequest (req: VercelRequest, res: VercelResponse)
 }
 
 /**
+ * Determina a fonte da chave Gemini para diagnóstico
+ */
+function getGeminiVarSource(geminiKey: string | undefined): string {
+  if (!geminiKey) return "none";
+  if (process.env.GEMINI_API_KEY) return "GEMINI_API_KEY";
+  return "VITE_GOOGLE_API_KEY";
+}
+
+/**
+ * Gera preview seguro de uma chave API
+ */
+function getKeyPreview(key: string | undefined, prefix = ""): string {
+  if (!key) return "not set";
+  return `${prefix}...${key.slice(-4)}`;
+}
+
+/**
  * Gera resposta de health check
  */
-function generateHealthCheck (res: VercelResponse): void
-{
-  const geminiKey =
-    process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
+function generateHealthCheck(res: VercelResponse): void {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
 
   const checks = {
     openai_api_key: !!process.env.OPENAI_API_KEY,
@@ -126,24 +142,18 @@ function generateHealthCheck (res: VercelResponse): void
   };
 
   const aiProvider = getAIProvider(process.env.OPENAI_API_KEY, geminiKey);
+  const aiConfigured = checks.openai_api_key || checks.gemini_api_key;
 
   const info = {
     ai_provider: aiProvider,
     ai_configured: aiProvider !== "none",
-    openai_key_preview: process.env.OPENAI_API_KEY
-      ? `sk-...${process.env.OPENAI_API_KEY.slice(-4)}`
-      : "not set",
-    gemini_key_preview: geminiKey ? `...${geminiKey.slice(-4)}` : "not set",
-    gemini_var_source: geminiKey
-      ? process.env.GEMINI_API_KEY
-        ? "GEMINI_API_KEY"
-        : "VITE_GOOGLE_API_KEY"
-      : "none",
+    openai_key_preview: getKeyPreview(process.env.OPENAI_API_KEY, "sk-"),
+    gemini_key_preview: getKeyPreview(geminiKey),
+    gemini_var_source: getGeminiVarSource(geminiKey),
     app_env: process.env.VITE_APP_ENV || "not set",
     node_env: process.env.NODE_ENV || "not set",
   };
 
-  const aiConfigured = checks.openai_api_key || checks.gemini_api_key;
   const statusCode = aiConfigured ? 200 : 500;
 
   res.status(statusCode).json({
