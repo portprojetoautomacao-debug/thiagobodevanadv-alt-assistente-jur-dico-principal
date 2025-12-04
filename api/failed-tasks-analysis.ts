@@ -1,12 +1,12 @@
 /**
  * API endpoint para diagnóstico de tarefas falhadas
  * GET /api/failed-tasks-analysis
- * 
+ *
  * Analisa todas as tarefas falhadas e agrupa por tipo de erro
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Redis from "@upstash/redis";
+import { Redis } from "@upstash/redis";
 
 const getKv = (): Redis => {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -153,7 +153,9 @@ function extractErrorKey(errorMsg: string): string {
 /**
  * Analisa padrões nos erros
  */
-function analyzeErrorPatterns(failedTasks: Array<{ agentId: string; type: string; error?: string; createdAt: string }>) {
+function analyzeErrorPatterns(
+  failedTasks: Array<{ agentId: string; type: string; error?: string; createdAt: string }>
+) {
   const patterns: Record<string, unknown> = {};
 
   // Padrão 1: Todos os erros de um mesmo agente

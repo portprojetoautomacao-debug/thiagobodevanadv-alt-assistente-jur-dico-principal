@@ -30,7 +30,7 @@ interface ThinkingLog {
   agentName: string;
   taskType: string;
   stage: string;
-  details: Record<string, unknown>;
+  details: Record<string, string | number | boolean>;
   timestamp: string;
 }
 
@@ -41,12 +41,12 @@ interface ActiveTask {
   taskType: string;
   status: string;
   priority?: string;
-  data?: Record<string, unknown>;
+  data?: Record<string, string | number | boolean>;
   createdAt: string;
   startedAt?: string;
   thinking: ThinkingLog[];
   currentStage: string;
-  currentDetails: Record<string, unknown>;
+  currentDetails: Record<string, string | number | boolean>;
   thinkingCount: number;
 }
 
