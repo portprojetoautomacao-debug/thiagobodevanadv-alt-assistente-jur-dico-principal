@@ -194,7 +194,7 @@ export default function DeadlineCalculator() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {result && <Sparkle className="w-5 h-5 text-accent" />}
+              {result && <Sparkles className="w-5 h-5 text-accent" />}
               Resultado
             </CardTitle>
             <CardDescription>Prazo final e raciocínio detalhado</CardDescription>
@@ -232,7 +232,7 @@ export default function DeadlineCalculator() {
                   <AccordionItem value="reasoning">
                     <AccordionTrigger className="text-sm font-semibold">
                       <div className="flex items-center gap-2">
-                        <Sparkle className="w-4 h-4 text-accent" />
+                        <Sparkles className="w-4 h-4 text-accent" />
                         Ver Raciocínio Passo a Passo (AI)
                       </div>
                     </AccordionTrigger>

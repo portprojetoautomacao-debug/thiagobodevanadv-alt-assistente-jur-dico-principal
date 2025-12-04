@@ -383,7 +383,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                         {result.type}
                       </Badge>
                       {index === selectedIndex && (
-                        <CaretRight className="w-4 h-4 text-muted-foreground" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       )}
                     </button>
                   ))}
