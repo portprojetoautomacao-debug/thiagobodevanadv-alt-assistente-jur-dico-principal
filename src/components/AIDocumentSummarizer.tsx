@@ -102,17 +102,15 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
     const formattedPoints = keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n");
     const timestamp = new Date().toLocaleString("pt-BR");
 
-    const fullText = [
-      "RESUMO DO DOCUMENTO",
-      separator,
-      "",
-      summary,
-      "",
-      "PONTOS-CHAVE:",
-      formattedPoints,
-      "",
-      `Gerado em: ${timestamp}`,
-    ].join("\n");
+    const fullText = `RESUMO DO DOCUMENTO
+${separator}
+
+${summary}
+
+PONTOS-CHAVE:
+${formattedPoints}
+
+Gerado em: ${timestamp}`;
 
     const blob = new Blob([fullText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);

@@ -342,17 +342,17 @@ Retorne um objeto JSON com a seguinte estrutura:
           <CardContent>
             <ScrollArea className="h-[500px] pr-4">
               <div className="space-y-4">
-                {unresolvedDocs
-                  .slice()
-                  .sort((a, b) => {
+                {(() => {
+                  const sortedDocs = [...unresolvedDocs].sort((a, b) => {
                     const urgencyOrder: Record<MissingDocument["urgency"], number> = {
                       high: 0,
                       medium: 1,
                       low: 2,
                     };
                     return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
-                  })
-                  .map((doc) => (
+                  });
+
+                  return sortedDocs.map((doc) => (
                     <Card
                       key={doc.id}
                       className="border-l-4"
