@@ -228,47 +228,6 @@ export default function ProcessDetailsDialog({
               </div>
             )}
           </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function PrazoStatusBadge({
-  concluido,
-  urgente,
-  diasRestantes,
-}: {
-  concluido: boolean;
-  urgente: boolean;
-  diasRestantes: number;
-}) {
-  if (concluido) {
-    return <Badge variant="secondary">Concluído</Badge>;
-  }
-
-  return (
-    <>
-      <Badge variant={urgente ? "destructive" : "default"}>
-        {formatDiasRestantes(diasRestantes)}
-      </Badge>
-      {urgente && (
-        <Badge variant="outline" className="text-xs">
-          Urgente
-        </Badge>
-      )}
-    </>
-  );
-}
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <CalendarCheck size={48} className="mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum prazo cadastrado</p>
-              </div>
-            )}
-          </TabsContent>
 
           <TabsContent value="documentos" className="space-y-4">
             <DocumentUploader processoId={process.id} />
@@ -305,5 +264,32 @@ function PrazoStatusBadge({
         error={premonicaoError}
       />
     </Dialog>
+  );
+}
+
+function PrazoStatusBadge({
+  concluido,
+  urgente,
+  diasRestantes,
+}: {
+  concluido: boolean;
+  urgente: boolean;
+  diasRestantes: number;
+}) {
+  if (concluido) {
+    return <Badge variant="secondary">Concluído</Badge>;
+  }
+
+  return (
+    <>
+      <Badge variant={urgente ? "destructive" : "default"}>
+        {formatDiasRestantes(diasRestantes)}
+      </Badge>
+      {urgente && (
+        <Badge variant="outline" className="text-xs">
+          Urgente
+        </Badge>
+      )}
+    </>
   );
 }

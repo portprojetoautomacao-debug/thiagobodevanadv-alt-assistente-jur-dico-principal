@@ -409,7 +409,8 @@ Retorne um objeto JSON com a seguinte estrutura:
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                  ));
+                })()}
               </div>
             </ScrollArea>
           </CardContent>
