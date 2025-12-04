@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Brain, Sparkle } from "@phosphor-icons/react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAIStreaming } from "@/hooks/use-ai-streaming";
+import { Brain, Sparkle } from "@phosphor-icons/react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 interface MrsJustinEModalProps {
@@ -120,9 +120,9 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
           <div>
             <h3 className="text-base font-semibold text-foreground mb-3">Minhas Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {SKILLS.map((skill, index) => (
+              {SKILLS.map((skill) => (
                 <Badge
-                  key={index}
+                  key={skill}
                   variant="outline"
                   className="text-sm py-1.5 px-3 bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors"
                 >

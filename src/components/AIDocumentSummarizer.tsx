@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Sparkle, Copy, Download } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
+import { Copy, Download, FileText, Sparkle } from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface SummarizerResult {
   summary: string;
@@ -198,7 +198,10 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                       </h3>
                       <ul className="space-y-2">
                         {keyPoints.map((point, index) => (
-                          <li key={index} className="text-sm flex gap-2">
+                          <li
+                            key={`keypoint-${index}-${point.slice(0, 20).replace(/\W/g, "")}`}
+                            className="text-sm flex gap-2"
+                          >
                             {point.startsWith("---") ? (
                               <span className="font-bold text-primary mt-2">{point}</span>
                             ) : (

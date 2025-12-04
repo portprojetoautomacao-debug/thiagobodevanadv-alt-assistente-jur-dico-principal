@@ -635,11 +635,11 @@ IMPORTANTE:
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {QUICK_INSIGHTS.map((insight, index) => {
+                  {QUICK_INSIGHTS.map((insight) => {
                     const Icon = insight.icon;
                     return (
                       <Card
-                        key={index}
+                        key={insight.title}
                         className="p-4 hover:bg-accent/5 cursor-pointer transition-colors"
                         onClick={() => handleQuickQuestion(insight.query)}
                       >
@@ -662,9 +662,9 @@ IMPORTANTE:
                     Perguntas Sugeridas:
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {SAMPLE_QUESTIONS.map((question, index) => (
+                    {SAMPLE_QUESTIONS.map((question) => (
                       <Button
-                        key={index}
+                        key={question}
                         variant="outline"
                         size="sm"
                         onClick={() => handleQuickQuestion(question)}

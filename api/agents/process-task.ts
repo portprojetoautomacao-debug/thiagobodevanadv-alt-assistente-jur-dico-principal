@@ -9,8 +9,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-interface AgentTask
-{
+interface AgentTask {
   id: string;
   agentId: string;
   type: string;
@@ -25,19 +24,17 @@ interface AgentTask
     type?: string;
     source?: string;
     description?: string;
-    [ key: string ]: unknown;
+    [key: string]: unknown;
   };
 }
 
-interface Agent
-{
+interface Agent {
   id: string;
   type: string;
   name: string;
 }
 
-interface AnalysisResult
-{
+interface AnalysisResult {
   success: boolean;
   data?: {
     summary: string;
@@ -61,11 +58,7 @@ interface AnalysisResult
 }
 
 // Função para chamar Gemini API
-async function analyzeWithGemini (
-  text: string,
-  context: string
-): Promise<string>
-{
+async function analyzeWithGemini(text: string, context: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
 
   if (!apiKey) {
@@ -112,7 +105,7 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [ { parts: [ { text: prompt } ] } ],
+        contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: 2048,
@@ -127,7 +120,7 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
   }
 
   const data = await response.json();
-  const generatedText = data.candidates?.[ 0 ]?.content?.parts?.[ 0 ]?.text;
+  const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!generatedText) {
     throw new Error("No response from Gemini");
@@ -137,10 +130,7 @@ Retorne APENAS o JSON, sem markdown ou explicações.`;
 }
 
 // Função para processar análise de intimação
-async function processIntimationAnalysis (
-  task: AgentTask
-): Promise<AnalysisResult>
-{
+async function processIntimationAnalysis(task: AgentTask): Promise<AnalysisResult> {
   const text = task.data.text || "";
   const processNumber = task.data.processNumber || "N/A";
   const tribunal = task.data.tribunal || "N/A";
@@ -167,22 +157,21 @@ async function processIntimationAnalysis (
     return {
       success: true,
       data: analysisData,
-      message: `Análise concluída por Mrs. Justin-e - ${analysisData.suggestedActions?.length || 0
-        } ações sugeridas`,
+      message: `Análise concluída por Mrs. Justin-e - ${
+        analysisData.suggestedActions?.length || 0
+      } ações sugeridas`,
     };
   } catch (error) {
     console.error("[Process Task] Error analyzing intimation:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Erro desconhecido na análise",
+      error: error instanceof Error ? error.message : "Erro desconhecido na análise",
     };
   }
 }
 
 // Helper to parse AI's response into a structured AnalysisResult.data
-function parseAIResponse (aiResponse: string, documentType: string)
-{
+function parseAIResponse(aiResponse: string, documentType: string) {
   try {
     const cleanJson = aiResponse
       .replaceAll(/```json\n?/g, "")
@@ -192,17 +181,16 @@ function parseAIResponse (aiResponse: string, documentType: string)
   } catch {
     return {
       summary: aiResponse.substring(0, 500),
-      suggestedActions: [ "Revisar intimação manualmente" ],
+      suggestedActions: ["Revisar intimação manualmente"],
       priority: "medium",
       documentType: documentType,
-      nextSteps: [ "Análise manual requerida" ],
-    } as unknown as AnalysisResult[ "data" ];
+      nextSteps: ["Análise manual requerida"],
+    } as unknown as AnalysisResult["data"];
   }
 }
 
 // Helper to compute and assign startDate/endDate from a 'deadline' object
-function applyDeadlineDates (analysisData: AnalysisResult["data"] | null | undefined)
-{
+function applyDeadlineDates(analysisData: AnalysisResult["data"] | null | undefined) {
   if (!analysisData?.deadline?.days) return;
 
   const startDate = new Date();
@@ -222,16 +210,12 @@ function applyDeadlineDates (analysisData: AnalysisResult["data"] | null | undef
     endDate.setDate(endDate.getDate() + analysisData.deadline.days);
   }
 
-  analysisData.deadline.startDate = startDate.toISOString().split("T")[ 0 ];
-  analysisData.deadline.endDate = endDate.toISOString().split("T")[ 0 ];
+  analysisData.deadline.startDate = startDate.toISOString().split("T")[0];
+  analysisData.deadline.endDate = endDate.toISOString().split("T")[0];
 }
 
 // Handler principal
-export async function dispatchTask (
-  task: AgentTask,
-  _agent: Agent
-): Promise<AnalysisResult>
-{
+export async function dispatchTask(task: AgentTask, _agent: Agent): Promise<AnalysisResult> {
   // Roteia para o processador correto baseado no tipo de tarefa
   switch (task.type) {
     case "analyze_intimation":
@@ -258,8 +242,7 @@ export async function dispatchTask (
   }
 }
 
-export default async function handler (req: VercelRequest, res: VercelResponse)
-{
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -281,16 +264,13 @@ export default async function handler (req: VercelRequest, res: VercelResponse)
     });
   }
 
-  console.log(
-    `[Process Task] Processing task ${task.id} for agent ${agent.name} (${agent.id})`
-  );
+  console.log(`[Process Task] Processing task ${task.id} for agent ${agent.name} (${agent.id})`);
 
   try {
     const result: AnalysisResult = await dispatchTask(task, agent);
 
     console.log(
-      `[Process Task] Task ${task.id} completed: ${result.success ? "success" : "failed"
-      }`
+      `[Process Task] Task ${task.id} completed: ${result.success ? "success" : "failed"}`
     );
 
     return res.status(200).json({
