@@ -668,7 +668,9 @@ export function TiptapEditor({
         types: ["heading", "paragraph"],
       }),
       Underline,
-      Link.configure({
+      Link.extend({
+        inclusive: false,
+      }).configure({
         openOnClick: false,
         HTMLAttributes: {
           class: "text-primary underline cursor-pointer",

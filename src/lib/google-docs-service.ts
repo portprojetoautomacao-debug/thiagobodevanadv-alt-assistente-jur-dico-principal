@@ -1,17 +1,17 @@
 import type { Minuta } from '@/types'
 import { config } from './config'
 import type {
-  DocsBatchUpdateResponse,
-  DocsClient,
-  DocsCreateResponse,
-  DocsDocument,
-  DocsGetResponse,
-  DocumentElement,
-  GapiGlobal,
-  GoogleAuthResponse,
-  GoogleGisGlobal,
-  ParagraphElement,
-  TokenClient,
+    DocsBatchUpdateResponse,
+    DocsClient,
+    DocsCreateResponse,
+    DocsDocument,
+    DocsGetResponse,
+    DocumentElement,
+    GapiGlobal,
+    GoogleAuthResponse,
+    GoogleGisGlobal,
+    ParagraphElement,
+    TokenClient,
 } from './google-types'
 
 const GOOGLE_DOCS_CLIENT_ID = config.google.clientId
@@ -67,6 +67,7 @@ class GoogleDocsService {
   private gisInited = false
   private initPromise: Promise<void> | null = null
   private lastError: string | null = null
+  private initInProgress = false
 
   constructor() {
     // Tentar carregar token do localStorage ao inicializar
@@ -138,6 +139,15 @@ class GoogleDocsService {
   }
 
   async initialize(): Promise<void> {
+    // Prevenir múltiplas inicializações simultâneas
+    if (this.initInProgress) {
+      debug('Initialization already in progress, skipping duplicate call')
+      if (this.initPromise) {
+        await this.initPromise
+      }
+      return
+    }
+
     debug('Initializing Google Docs Service...')
 
     // Segurança para SSR / Vercel serverless
@@ -166,12 +176,14 @@ class GoogleDocsService {
       return
     }
 
+    this.initInProgress = true
     this.initPromise = this._doInitialize()
 
     try {
       await this.initPromise
     } finally {
       this.initPromise = null
+      this.initInProgress = false
     }
   }
 
