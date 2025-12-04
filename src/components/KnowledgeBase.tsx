@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Books, Sparkles, MagnifyingGlass, User } from "lucide-react";
+import { BookOpen, Sparkles, Search, User } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -157,7 +157,7 @@ export default function KnowledgeBase() {
             <div className="space-y-3">
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Petições Modelo</p>
                     <p className="text-xs text-muted-foreground">
@@ -168,7 +168,7 @@ export default function KnowledgeBase() {
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Doutrina</p>
                     <p className="text-xs text-muted-foreground">
@@ -179,7 +179,7 @@ export default function KnowledgeBase() {
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Jurisprudência</p>
                     <p className="text-xs text-muted-foreground">
@@ -190,7 +190,7 @@ export default function KnowledgeBase() {
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Anotações Internas</p>
                     <p className="text-xs text-muted-foreground">
@@ -224,7 +224,7 @@ export default function KnowledgeBase() {
               <ScrollArea className="flex-1 pr-4 mb-4">
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Books className="w-16 h-16 text-muted-foreground mb-4" />
+                    <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
                     <p className="text-lg font-medium text-foreground">Como posso ajudar?</p>
                     <p className="text-sm text-muted-foreground mt-2 max-w-md">
                       Pergunte sobre precedentes, modelos de petições, estratégias processuais ou
@@ -319,7 +319,7 @@ export default function KnowledgeBase() {
 
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Textarea
                     placeholder="Digite sua pergunta..."
                     value={query}

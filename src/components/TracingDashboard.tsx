@@ -13,7 +13,7 @@ import { getAgentMetrics, getLLMMetrics } from "@/lib/agent-tracing";
 import { tracingService, type Span } from "@/lib/tracing";
 import {
   ArrowRight,
-  ArrowsClockwise,
+  ArrowClockwise,
   Brain,
   ChartLine,
   CheckCircle,
@@ -189,7 +189,7 @@ export default function TracingDashboard({
       {/* Action Buttons */}
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={refreshData}>
-          <ArrowsClockwise className="h-4 w-4 mr-2" />
+          <ArrowClockwise className="h-4 w-4 mr-2" />
           Atualizar
         </Button>
         <Button variant="outline" size="sm" onClick={handleClearTraces}>
@@ -205,7 +205,7 @@ export default function TracingDashboard({
             Traces
           </TabsTrigger>
           <TabsTrigger value="agents">
-            <Robot className="h-4 w-4 mr-2" />
+            <Bot className="h-4 w-4 mr-2" />
             Agentes
           </TabsTrigger>
           <TabsTrigger value="llm">
@@ -352,7 +352,7 @@ export default function TracingDashboard({
               <Card key={agentId}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Robot className="h-5 w-5" />
+                    <Bot className="h-5 w-5" />
                     {agentId}
                   </CardTitle>
                 </CardHeader>

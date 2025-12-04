@@ -18,14 +18,14 @@ import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
 import {
   Bell,
-  BellRinging,
+  BellRing,
   CheckCircle,
   Clock,
   FileText,
   Info,
   Bot,
   Trash2,
-  Tray,
+  Inbox,
   AlertTriangle,
   X,
 } from "lucide-react";
@@ -85,7 +85,7 @@ const notificationConfig: Record<
     bgColor: "bg-blue-100 dark:bg-blue-900/30",
   },
   nova_intimacao: {
-    icon: <Tray className="w-4 h-4" />,
+    icon: <Inbox className="w-4 h-4" />,
     color: "text-purple-500",
     bgColor: "bg-purple-100 dark:bg-purple-900/30",
   },
@@ -261,7 +261,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           title={unreadCount > 0 ? `${unreadCount} notificação(ões) não lida(s)` : "Notificações"}
         >
           {hasNewNotifications || unreadCount > 0 ? (
-            <BellRinging className="w-5 h-5 animate-pulse" />
+            <BellRing className="w-5 h-5 animate-pulse" />
           ) : (
             <Bell className="w-5 h-5" />
           )}

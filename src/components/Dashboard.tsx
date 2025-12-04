@@ -6,16 +6,16 @@ import { useKV } from "@/hooks/use-kv";
 import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
+  ArrowRight,
   CalendarCheck,
   ChartPie,
   CheckCircle,
   Clock,
   Gavel,
-  TrendUp,
+  TrendingUp,
   Upload,
-  WarningCircle,
-} from "@phosphor-icons/react";
-import { ArrowRight } from "lucide-react";
+  AlertCircle,
+} from "lucide-react";
 import { lazy, Suspense, useMemo } from "react";
 
 // Lazy load dashboard sections for better code splitting
@@ -245,10 +245,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Urgentes</CardTitle>
-            <WarningCircle
+            <AlertCircle
               className={stats.prazosUrgentes > 0 ? "text-destructive neon-glow" : "text-primary"}
               size={24}
-             
             />
           </CardHeader>
           <CardContent>
@@ -357,7 +356,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic lg:col-span-2 xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <TrendUp size={24} />
+              <TrendingUp size={24} />
               Evolução (6 meses)
             </CardTitle>
           </CardHeader>
@@ -487,7 +486,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="border-destructive bg-destructive/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
-              <WarningCircle size={24} />
+              <AlertCircle size={24} />
               Atenção: Prazos Urgentes
             </CardTitle>
           </CardHeader>

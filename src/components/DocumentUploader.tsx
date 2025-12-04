@@ -1,12 +1,3 @@
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { FileText, FilePdf, FileDoc, Trash, Download, Eye, Upload } from "@phosphor-icons/react";
-import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +8,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useKV } from "@/hooks/use-kv";
+import { Download, Eye, FileText, Trash, Upload } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export interface Document {
   id: string;
@@ -123,7 +123,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
   };
 
   const getFileIcon = (tipo: string) => {
-    if (tipo.includes("pdf")) return <FilePdf size={24} className="text-red-500" />;
+    if (tipo.includes("pdf")) return <FileText size={24} className="text-red-500" />;
     if (tipo.includes("word") || tipo.includes("document"))
       return <FileDoc size={24} className="text-blue-500" />;
     return <FileText size={24} className="text-gray-500" />;

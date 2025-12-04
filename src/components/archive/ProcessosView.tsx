@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  MagnifyingGlass,
+  Search,
   Plus,
   Gavel,
-  DownloadSimple,
+  Download,
   Funnel,
   Sparkles,
 } from "lucide-react";
@@ -160,7 +160,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExportCSV} variant="outline">
-            <DownloadSimple size={20} />
+            <Download size={20} />
             Exportar CSV
           </Button>
           <Button
@@ -177,7 +177,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlass
+          <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             size={20}
           />

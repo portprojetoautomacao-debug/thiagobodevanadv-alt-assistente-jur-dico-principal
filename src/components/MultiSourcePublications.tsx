@@ -8,7 +8,7 @@
  * - Faz validação básica de critérios de busca
  * - Ordena resultados por data (mais recentes primeiro)
  * - Tipagem mais segura para estatísticas de busca
- * - Ícone de loading corrigido (ArrowsClockwise em vez de Spinner)
+ * - Ícone de loading corrigido (RefreshCw em vez de Spinner)
  */
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -27,13 +27,12 @@ import {
   type UnifiedPublication,
 } from "@/lib/multi-source-publications";
 import {
-  ArrowsClockwise,
+  ArrowClockwise,
   CheckCircle,
   Copy,
   Database,
   Download,
   Info,
-  MagnifyingGlass,
   Warning,
 } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -384,12 +383,12 @@ export default function MultiSourcePublications() {
           <Button onClick={handleSearch} disabled={loading} className="w-full">
             {loading ? (
               <>
-                <ArrowsClockwise className="w-4 h-4 mr-2 animate-spin" />
+                <ArrowClockwise className="w-4 h-4 mr-2 animate-spin" />
                 Buscando...
               </>
             ) : (
               <>
-                <MagnifyingGlass className="w-4 h-4 mr-2" />
+                <Search className="w-4 h-4 mr-2" />
                 Buscar Publicações
               </>
             )}

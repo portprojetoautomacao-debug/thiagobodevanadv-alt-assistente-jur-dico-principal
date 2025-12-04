@@ -5,7 +5,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, ChartPie, TrendUp } from "lucide-react";
+import { Upload, ChartPie, TrendingUp } from "lucide-react";
 import type { ViewType } from "@/types";
 
 interface DashboardActionsProps {
@@ -39,7 +39,7 @@ export function DashboardActions({ onNavigate }: DashboardActionsProps) {
           variant="outline"
           className="w-full justify-start border-neutral-6 hover:bg-neutral-4"
         >
-          <TrendUp className="mr-2 h-4 w-4" />
+          <TrendingUp className="mr-2 h-4 w-4" />
           Agentes IA
         </Button>
       </CardContent>

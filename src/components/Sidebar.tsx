@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User, ViewType } from "@/types";
 import {
-  Books,
+  BookOpen,
   Briefcase,
   Calculator,
   CalendarDots,
@@ -18,7 +18,6 @@ import {
   PencilLine,
   Robot,
   SignOut,
-  Tray,
 } from "@phosphor-icons/react";
 
 interface SidebarProps {
@@ -30,10 +29,10 @@ interface SidebarProps {
 
 const NAVIGATION_ITEMS = [
   { id: "dashboard", label: "Meu Painel", icon: House },
-  { id: "donna", label: "Harvey Specter", icon: Robot, featured: true },
-  { id: "ai-agents", label: "Agentes de IA", icon: Robot },
+  { id: "donna", label: "Harvey Specter", icon: Bot, featured: true },
+  { id: "ai-agents", label: "Agentes de IA", icon: Bot },
   { id: "processes", label: "Acervo (CRM)", icon: Briefcase },
-  { id: "expedientes", label: "Expedientes", icon: Tray },
+  { id: "expedientes", label: "Expedientes", icon: Inbox },
   { id: "minutas", label: "Minutas", icon: PencilLine },
   { id: "batch", label: "Análise em Lote", icon: FileText },
   { id: "audio", label: "Transcrição", icon: MicrophoneStage },
@@ -42,7 +41,7 @@ const NAVIGATION_ITEMS = [
   { id: "datajud", label: "DataJud Checklist", icon: Newspaper },
   { id: "calendar", label: "Agenda", icon: CalendarDots },
   { id: "financial", label: "Financeiro", icon: CurrencyCircleDollar },
-  { id: "knowledge", label: "Base Conhecimento", icon: Books },
+  { id: "knowledge", label: "Base Conhecimento", icon: BookOpen },
 ];
 
 export default function Sidebar({ currentView, onViewChange, user, onLogout }: SidebarProps) {
@@ -50,7 +49,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-2 mb-2">
-          <Robot className="w-6 h-6 text-primary" />
+          <Bot className="w-6 h-6 text-primary" />
           <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
         </div>
         <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>

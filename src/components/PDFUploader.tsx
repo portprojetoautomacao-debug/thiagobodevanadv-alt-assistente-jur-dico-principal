@@ -10,10 +10,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
   Upload,
-  FilePdf,
+  FileText,
   CheckCircle,
   XCircle,
-  SpinnerGap,
+  Circle,
   Clock,
   User,
   Trash,
@@ -280,7 +280,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
       case "processing":
         return (
           <Badge variant="secondary" className="gap-1">
-            <SpinnerGap size={12} className="animate-spin" /> Processando
+            <Loader2 size={12} className="animate-spin" /> Processando
           </Badge>
         );
       case "success":
@@ -349,7 +349,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {selectedFile && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <FilePdf className="text-destructive" size={24} />
+                    <FileText className="text-destructive" size={24} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{selectedFile.name}</p>
                       <p className="text-xs text-muted-foreground">
@@ -369,7 +369,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                 >
                   {isProcessing ? (
                     <>
-                      <SpinnerGap className="animate-spin" size={20} />
+                      <Loader2 className="animate-spin" size={20} />
                       Processando...
                     </>
                   ) : (
@@ -382,7 +382,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "processing" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <SpinnerGap className="animate-spin text-primary" size={16} />
+                    <Loader2 className="animate-spin text-primary" size={16} />
                     <AlertDescription>
                       Processando documento... Isso pode levar alguns segundos.
                     </AlertDescription>
@@ -420,7 +420,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
               <CardContent>
                 {!extractedData ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <FilePdf className="text-muted-foreground/30 mb-4" size={64} />
+                    <FileText className="text-muted-foreground/30 mb-4" size={64} />
                     <p className="text-muted-foreground">Nenhum dado extraído ainda</p>
                     <p className="text-sm text-muted-foreground/70 mt-1">
                       Faça upload de um PDF para começar
@@ -602,7 +602,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <FilePdf
+                        <FileText
                           className="text-destructive shrink-0 mt-1"
                           size={24}
                          

@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { config } from "@/lib/config";
-import { ArrowSquareOut, AlertTriangle } from "lucide-react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
@@ -211,7 +211,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
             className="mt-3 gap-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900"
             onClick={() => window.open(PRODUCTION_DOMAIN, "_blank")}
           >
-            <ArrowSquareOut className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
             Abrir em Produção
           </Button>
         </AlertDescription>

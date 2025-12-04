@@ -13,7 +13,7 @@ import { useKV } from "@/hooks/use-kv";
 import { useMemo, useState } from "react";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import type { FinancialEntry, Process } from "@/types";
-import { Clock, CurrencyDollar, TrendUp, Users, AlertTriangle } from "lucide-react";
+import { Clock, DollarSign, TrendingUp, Users, AlertTriangle } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -259,7 +259,7 @@ export default function OfficeManagement() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-green-500/10 rounded-lg">
-                      <TrendUp size={24} className="text-green-500" />
+                      <TrendingUp size={24} className="text-green-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{produtividadeData.processosAtivos}</p>
@@ -287,7 +287,7 @@ export default function OfficeManagement() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-yellow-500/10 rounded-lg">
-                      <CurrencyDollar size={24} className="text-yellow-500" />
+                      <DollarSign size={24} className="text-yellow-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{produtividadeData.taxa}%</p>
