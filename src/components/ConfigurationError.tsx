@@ -1,7 +1,7 @@
-import { Warning, ArrowSquareOut } from "@phosphor-icons/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowSquareOut, Warning } from "@phosphor-icons/react";
 
 export function ConfigurationError() {
   return (
@@ -76,7 +76,7 @@ export function ConfigurationError() {
                     </div>
                     <div>GEMINI_MODEL=gemini-2.5-pro</div>
                     <div>
-                      VITE_BACKEND_API_URL=
+                      VITE_BACKEND_API_URL={" "}
                       <span className="italic">https://seu-projeto.vercel.app</span>
                     </div>
                   </div>

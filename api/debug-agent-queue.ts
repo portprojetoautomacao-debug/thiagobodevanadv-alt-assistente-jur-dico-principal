@@ -3,8 +3,8 @@
  * GET /api/debug-agent-queue
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const getKv = (): Redis => {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -107,6 +107,7 @@ export default async function handler(
 
     // Tarefas completadas recentemente
     const recentCompleted = completedTasks
+      .slice()
       .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
       .slice(0, 10)
       .map((t) => ({

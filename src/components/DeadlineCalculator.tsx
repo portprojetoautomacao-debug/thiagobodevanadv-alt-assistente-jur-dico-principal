@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,14 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Calculator, Sparkle, CalendarDots } from "@phosphor-icons/react";
+import { Calculator, CalendarDots, Sparkle } from "@phosphor-icons/react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function DeadlineCalculator() {
@@ -220,8 +220,8 @@ export default function DeadlineCalculator() {
                       Feriados Considerados
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {result.holidays.map((holiday, idx) => (
-                        <Badge key={idx} variant="outline" className="bg-white">
+                      {result.holidays.map((holiday) => (
+                        <Badge key={holiday} variant="outline" className="bg-white">
                           {holiday}
                         </Badge>
                       ))}

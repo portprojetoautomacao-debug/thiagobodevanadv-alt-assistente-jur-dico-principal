@@ -49,6 +49,7 @@ Este repositório está **100% configurado para trabalho autônomo do GitHub Cop
 O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
 
 #### 🕐 **Diariamente às 9h BRT** (sem você fazer nada):
+
 - ✅ Detecta erros TypeScript e ESLint automaticamente
 - ✅ Aplica correções (auto-fix)
 - ✅ Organiza imports e formata código
@@ -58,16 +59,19 @@ O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
 - ✅ **Abre issue** se encontrar erros críticos que precisam de atenção
 
 #### 💾 **Ao salvar qualquer arquivo** (instantâneo):
+
 - ✅ Auto-save após 1 segundo
 - ✅ Prettier formata código automaticamente
 - ✅ ESLint corrige erros na hora
 - ✅ Remove imports não utilizados
 
 #### 🔄 **A cada push** que você faz:
+
 - ✅ Workflow roda automaticamente
 - ✅ Mesmas verificações e correções aplicadas
 
 #### 🔍 **Em background contínuo**:
+
 - ✅ Servidor dev sempre rodando
 - ✅ Testes em watch mode
 - ✅ Type checking a cada 30 segundos
@@ -75,24 +79,29 @@ O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
 ### 👤 Sua Intervenção (apenas 10 minutos/dia)
 
 **Diariamente:**
+
 - ⏰ Revisar commits automáticos do bot
 - ⏰ Verificar issues abertas (se houver)
 - ⏰ Aprovar PRs criadas (se houver)
 
 **Quando necessário:**
+
 - 🆘 Resolver erros críticos que o bot não conseguiu corrigir
 
 **Resto do tempo:**
+
 - ☕ **Tomar café enquanto o bot trabalha!**
 
 ### 🔐 Segurança e Limites
 
 **Arquivos protegidos** (nunca modificados automaticamente):
+
 - ❌ `.env`, `package.json`, `vercel.json`
 - ❌ `.github/workflows/*`
 - ⚠️ `api/**/*.ts` (APIs críticas - requer revisão humana)
 
 **Modo MANUTENÇÃO respeitado:**
+
 - ✅ Bot **SÓ** corrige bugs
 - ❌ Bot **NUNCA** adiciona novas funcionalidades
 - ❌ Bot **NUNCA** altera arquitetura ou fluxos de produção
@@ -115,12 +124,12 @@ gh workflow run copilot-auto-fix.yml
 
 ### 📚 Documentação Completa
 
-| Guia | Descrição |
-|------|-----------|
-| **[Setup do Agente](.github/COPILOT_AGENT_SETUP.md)** | Como usar comandos `@workspace`, `/fix`, `/tests` |
-| **[Automação Total](.github/COPILOT_AUTONOMOUS.md)** | 3 níveis de automação, configuração completa |
-| **[Referência Rápida](.github/COPILOT_QUICK_REFERENCE.md)** | Comandos úteis, troubleshooting, checklist |
-| **[Instruções do Projeto](.github/copilot-instructions.md)** | Contexto completo do repositório para o Copilot |
+| Guia                                                         | Descrição                                         |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| **[Setup do Agente](.github/COPILOT_AGENT_SETUP.md)**        | Como usar comandos `@workspace`, `/fix`, `/tests` |
+| **[Automação Total](.github/COPILOT_AUTONOMOUS.md)**         | 3 níveis de automação, configuração completa      |
+| **[Referência Rápida](.github/COPILOT_QUICK_REFERENCE.md)**  | Comandos úteis, troubleshooting, checklist        |
+| **[Instruções do Projeto](.github/copilot-instructions.md)** | Contexto completo do repositório para o Copilot   |
 
 ### 🎯 Recursos do Copilot Neste Projeto
 
@@ -475,12 +484,7 @@ interface Minuta {
   processId?: string;
   tipo: "peticao" | "contrato" | "parecer" | "recurso" | "procuracao" | "outro";
   conteudo: string;
-  status:
-    | "rascunho"
-    | "em-revisao"
-    | "pendente-revisao"
-    | "finalizada"
-    | "arquivada";
+  status: "rascunho" | "em-revisao" | "pendente-revisao" | "finalizada" | "arquivada";
   criadoEm: string;
   atualizadoEm: string;
   autor: string;
@@ -756,12 +760,10 @@ curl https://seu-app.vercel.app/api/expedientes
 ### ⚠️ Detalhes Técnicos Importantes
 
 1. **Parâmetro `meio=D` é OBRIGATÓRIO**
-
    - Sem ele, a API retorna erro ou resultados vazios
    - `D` = Diário Digital (padrão dos tribunais)
 
 2. **Região do Vercel deve ser `gru1` (São Paulo)**
-
    - A API DJEN bloqueia requests de fora do Brasil
    - Configure em `vercel.json`:
 
@@ -772,7 +774,6 @@ curl https://seu-app.vercel.app/api/expedientes
    ```
 
 3. **Rate Limit**
-
    - A API do CNJ pode ter limitações
    - O sistema implementa cache de 5 minutos entre chamadas
 

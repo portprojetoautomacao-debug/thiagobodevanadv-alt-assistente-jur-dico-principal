@@ -1,11 +1,10 @@
-import { useState, FormEvent } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -14,25 +13,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Spinner,
-  Warning,
+  consultarProcessoDatajud,
+  getTribunaisDisponiveis,
+  isApiKeyConfigured,
+  validarNumeroCNJ,
+  type DatajudProcesso,
+} from "@/lib/datajud-api";
+import { geminiGenerateText } from "@/lib/gemini-client";
+import {
+  CalendarBlank as CalendarIcon,
+  CheckCircle,
   Copy,
+  FileText,
   Gavel,
   MagnifyingGlass,
   Sparkle,
-  FileText,
-  CheckCircle,
-  CalendarBlank as CalendarIcon,
+  Spinner,
+  Warning,
 } from "@phosphor-icons/react";
+import { FormEvent, useState } from "react";
 import { toast } from "sonner";
-import { geminiGenerateText } from "@/lib/gemini-client";
-import {
-  consultarProcessoDatajud,
-  validarNumeroCNJ,
-  getTribunaisDisponiveis,
-  isApiKeyConfigured,
-  type DatajudProcesso,
-} from "@/lib/datajud-api";
 
 const TRIBUNAIS = getTribunaisDisponiveis().filter((t) =>
   ["tjsp", "tjrj", "tjmg", "trf1", "trf2", "trf3", "trf4", "tst"].includes(t.value)
@@ -340,6 +340,7 @@ Mantenha a resposta objetiva e profissional.`;
 
                 <div className="space-y-3">
                   {processoData.movimentos
+                    .slice()
                     .sort((a, b) => new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime())
                     .slice(0, 10)
                     .map((movimento, index) => (

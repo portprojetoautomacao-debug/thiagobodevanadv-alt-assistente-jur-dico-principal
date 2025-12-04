@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { Copy, Check, Lightbulb, X, CaretRight, Link as LinkIcon } from "@phosphor-icons/react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { PremonicaoJuridica } from "@/types";
+import { CaretRight, Check, Copy, Lightbulb, Link as LinkIcon, X } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface PremonicaoModalProps {
   isOpen: boolean;
@@ -184,7 +184,7 @@ export default function PremonicaoModal({
                     <div className="space-y-3">
                       {data.estrategias_recomendadas.map((estrategia, idx) => (
                         <div
-                          key={idx}
+                          key={`estrategia-${idx}-${estrategia.slice(0, 30).replace(/\W/g, "")}`}
                           className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow group"
                         >
                           <CaretRight

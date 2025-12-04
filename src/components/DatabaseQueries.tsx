@@ -1,23 +1,23 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import DJENConsulta from "@/components/DJENConsulta";
+import MultiSourcePublications from "@/components/MultiSourcePublications";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Database, MagnifyingGlass, Warning, CircleNotch } from "@phosphor-icons/react";
-import { toast } from "sonner";
-import DJENConsulta from "@/components/DJENConsulta";
-import MultiSourcePublications from "@/components/MultiSourcePublications";
 import {
   consultarProcessoDatajud,
-  validarNumeroCNJ,
   extrairTribunalDoCNJ,
   isApiKeyConfigured,
-  type DatajudProcesso,
   TRIBUNAIS_DATAJUD,
+  validarNumeroCNJ,
+  type DatajudProcesso,
 } from "@/lib/datajud-api";
+import { CircleNotch, Database, MagnifyingGlass, Warning } from "@phosphor-icons/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function DatabaseQueries() {
   const [cnjQuery, setCnjQuery] = useState("");
@@ -161,10 +161,10 @@ export default function DatabaseQueries() {
                 <Alert variant="destructive">
                   <Warning className="h-4 w-4" />
                   <AlertDescription>
-                    API Key do DataJud não configurada. Configure
+                    API Key do DataJud não configurada. Configure{" "}
                     <code className="mx-1 px-1 py-0.5 rounded bg-muted text-xs">
                       VITE_DATAJUD_API_KEY
-                    </code>
+                    </code>{" "}
                     no arquivo <code className="px-1 py-0.5 rounded bg-muted text-xs">.env</code>{" "}
                     para usar este recurso.
                     <br />

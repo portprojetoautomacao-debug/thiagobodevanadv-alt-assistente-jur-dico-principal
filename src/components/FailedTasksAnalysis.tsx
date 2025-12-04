@@ -229,9 +229,9 @@ export default function FailedTasksAnalysis() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {data.recommendations.map((rec, idx) => (
+              {data.recommendations.map((rec) => (
                 <div
-                  key={idx}
+                  key={`rec-${rec.slice(0, 50)}`}
                   className="p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/5"
                 >
                   <p className="text-sm">{rec}</p>
@@ -251,13 +251,13 @@ export default function FailedTasksAnalysis() {
         <CardContent>
           <ScrollArea className="h-[400px]">
             <div className="space-y-3">
-              {data.errorGroups.map((group, idx) => {
+              {data.errorGroups.map((group) => {
                 const IconComponent = errorTypeIcons[group.errorType] || AlertTriangle;
                 const label = errorTypeLabels[group.errorType] || group.errorType;
 
                 return (
                   <div
-                    key={idx}
+                    key={`group-${group.errorType}`}
                     className="p-4 rounded-lg border border-destructive/30 bg-destructive/5"
                   >
                     {/* Header do grupo */}
@@ -288,8 +288,11 @@ export default function FailedTasksAnalysis() {
                         <p className="text-xs font-medium text-muted-foreground">
                           Exemplos de mensagens:
                         </p>
-                        {group.examples.slice(0, 2).map((example, exIdx) => (
-                          <div key={exIdx} className="p-2 rounded bg-muted/50 text-xs">
+                        {group.examples.slice(0, 2).map((example) => (
+                          <div
+                            key={`ex-${example.createdAt}-${example.type}`}
+                            className="p-2 rounded bg-muted/50 text-xs"
+                          >
                             <p className="font-mono text-destructive break-all">
                               {example.error.substring(0, 150)}
                               {example.error.length > 150 && "..."}

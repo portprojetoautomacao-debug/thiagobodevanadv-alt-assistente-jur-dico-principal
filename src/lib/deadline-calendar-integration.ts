@@ -75,14 +75,14 @@ export function createLocalAppointmentFromAnalysis(
     if (parts.length === 3) {
       const [day, month, year] = parts;
       // Validar partes numéricas
-      const dayNum = parseInt(day, 10);
-      const monthNum = parseInt(month, 10);
-      const yearNum = parseInt(year, 10);
+      const dayNum = Number.parseInt(day, 10);
+      const monthNum = Number.parseInt(month, 10);
+      const yearNum = Number.parseInt(year, 10);
 
       if (
-        !isNaN(dayNum) &&
-        !isNaN(monthNum) &&
-        !isNaN(yearNum) &&
+        !Number.isNaN(dayNum) &&
+        !Number.isNaN(monthNum) &&
+        !Number.isNaN(yearNum) &&
         dayNum >= 1 &&
         dayNum <= 31 &&
         monthNum >= 1 &&
@@ -104,7 +104,7 @@ export function createLocalAppointmentFromAnalysis(
   }
 
   // Validar se a data é válida antes de usar toISOString()
-  if (isNaN(deadlineDate.getTime())) {
+  if (Number.isNaN(deadlineDate.getTime())) {
     console.warn("[DeadlineIntegration] Invalid deadline date:", analysis.deadline.endDate);
     return null;
   }

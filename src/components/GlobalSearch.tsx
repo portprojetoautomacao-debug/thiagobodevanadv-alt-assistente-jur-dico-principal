@@ -9,26 +9,26 @@
  * - Navegação por teclado
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useKV } from "@/hooks/use-kv";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useKV } from "@/hooks/use-kv";
+import type { Expediente, Minuta, Process } from "@/types";
 import {
-  MagnifyingGlass,
-  Folder,
-  User,
-  FileText,
-  Tray,
-  X,
-  Command,
-  ArrowUp,
   ArrowDown,
+  ArrowUp,
   CaretRight,
+  Command,
+  FileText,
+  Folder,
+  MagnifyingGlass,
+  Tray,
+  User,
+  X,
 } from "@phosphor-icons/react";
-import type { Process, Minuta, Expediente } from "@/types";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Tipo para cliente (simplificado)
 interface Cliente {
@@ -404,12 +404,11 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                 navegar
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">↵</kbd>
+                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">↵</kbd>{" "}
                 selecionar
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">esc</kbd>
-                fechar
+                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">esc</kbd> fechar
               </span>
             </div>
             <div className="flex items-center gap-1">
