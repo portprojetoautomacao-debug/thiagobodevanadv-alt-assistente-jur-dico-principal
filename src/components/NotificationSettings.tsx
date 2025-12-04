@@ -94,22 +94,6 @@ export default function NotificationSettings() {
     return true;
   };
 
-  const runApiWithToast = async <T,>(
-    fn: () => Promise<T>,
-    onSuccess?: (data: T) => void,
-    successMsg?: string,
-    errorPrefix = "Erro"
-  ) => {
-    try {
-      const data = await fn();
-      if (onSuccess) onSuccess(data);
-      if (successMsg) toast.success(successMsg);
-    } catch (error) {
-      console.error("[NotificationSettings]", error);
-      toast.error(`${errorPrefix}`);
-    }
-  };
-
   // Buscar webhooks do backend
   const fetchWebhooks = useCallback(async () => {
     setLoadingWebhooks(true);
@@ -142,46 +126,44 @@ export default function NotificationSettings() {
   const addWebhook = async () => {
     if (!hasNewWebhookFields()) return;
     setSavingWebhook(true);
-    await runApiWithToast(
-      async () => {
-        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...newWebhook, events: ["all"] }),
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      },
-      (data: { webhook?: WebhookConfig }) => {
-        if (data.webhook) {
-          // Cast explícito evita tipo opcional na atualização do estado
-          setWebhooks((prev) => [...prev, data.webhook as WebhookConfig]);
-        }
-        setNewWebhook({ name: "", url: "", type: "slack" });
-        setShowAddForm(false);
-      },
-      "Webhook adicionado!",
-      "Erro ao adicionar webhook"
-    );
-    setSavingWebhook(false);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/webhook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newWebhook, events: ["all"] }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = (await response.json()) as { webhook?: WebhookConfig };
+      if (data.webhook) {
+        setWebhooks((prev) => [...prev, data.webhook as WebhookConfig]);
+      }
+      setNewWebhook({ name: "", url: "", type: "slack" });
+      setShowAddForm(false);
+      toast.success("Webhook adicionado!");
+    } catch (error) {
+      console.error("[NotificationSettings]", error);
+      toast.error("Erro ao adicionar webhook");
+    } finally {
+      setSavingWebhook(false);
+    }
   };
 
   // Remover webhook
   const deleteWebhook = async (id: string) => {
-    await runApiWithToast(
-      async () => {
-        const response = await fetch(`${API_BASE_URL}/api/notifications/webhook/${id}`, {
-          method: "DELETE",
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return { id };
-      },
-      () => {
-        setWebhooks((prev) => prev.filter((w) => w.id !== id));
-      },
-      "Webhook removido",
-      "Erro ao remover webhook"
-    );
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/webhook/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      setWebhooks((prev) => prev.filter((w) => w.id !== id));
+      toast.success("Webhook removido");
+    } catch (error) {
+      console.error("[NotificationSettings]", error);
+      toast.error("Erro ao remover webhook");
+    }
   };
 
   // Helper: Fazer requisição de teste de webhook
@@ -209,13 +191,15 @@ export default function NotificationSettings() {
   // Testar webhook
   const testWebhookFn = async (webhookId: string) => {
     setTestingWebhook(webhookId);
-    await runApiWithToast(
-      () => performWebhookTest(webhookId),
-      handleTestResult,
-      undefined,
-      "Erro ao testar webhook"
-    );
-    setTestingWebhook(null);
+    try {
+      const data = await performWebhookTest(webhookId);
+      handleTestResult(data);
+    } catch (error) {
+      console.error("[NotificationSettings]", error);
+      toast.error("Erro ao testar webhook");
+    } finally {
+      setTestingWebhook(null);
+    }
   };
 
   const getWebhookIcon = (type: WebhookType) => {

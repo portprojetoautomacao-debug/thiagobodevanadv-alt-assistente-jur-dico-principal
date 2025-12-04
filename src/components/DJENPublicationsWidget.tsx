@@ -302,6 +302,11 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
     lawyersCount,
   } = props;
 
+  // Wrapper para evitar void operator (S3735)
+  const handleSyncClick = () => {
+    handleSync(fetchPublications);
+  };
+
   return (
     <CardHeader className="pb-2">
       <div className="flex items-center justify-between">
@@ -345,9 +350,7 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    handleSync(fetchPublications);
-                  }}
+                  onClick={handleSyncClick}
                   disabled={syncing}
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
@@ -564,7 +567,7 @@ export default function DJENPublicationsWidget({
   // getRelativeDateDescription importado de util para reduzir complexidade
 
   // Função pura reutilizável para verificar não cadastrados (facilita testes e reduz nesting)
-  function getHasUnregistered(pubs: DJENPublication[]): boolean {
+  function _getHasUnregistered(pubs: DJENPublication[]): boolean {
     return pubs.some((p) => p.numeroProcesso && !isAlreadyRegistered(p));
   }
 
