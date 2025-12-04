@@ -522,7 +522,7 @@ export default function MinutasManager() {
     setFormData((prev) => ({
       ...prev,
       titulo: prev.titulo || template.nome,
-      tipo: template.tipo as Minuta["tipo"],
+      tipo: template.tipo,
       conteudo: template.conteudo,
     }));
     toast.success(`Template "${template.nome}" aplicado!`);

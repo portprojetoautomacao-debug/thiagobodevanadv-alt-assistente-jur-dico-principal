@@ -112,8 +112,8 @@ function parseOAB(oab: string): { numero?: string; uf?: string } {
   const match = /(\d+)\s*[/-]?\s*([A-Z]{2})/i.exec(oab);
   if (match) return { numero: match[1], uf: match[2].toUpperCase() };
 
-  const numOnly = /^(\d+)$/.exec(oab);
-  if (numOnly) return { numero: numOnly[1] };
+  const numOnlyMatch = /^(\d+)$/.exec(oab);
+  if (numOnlyMatch) return { numero: numOnlyMatch[1] };
 
   return {};
 }
@@ -294,9 +294,8 @@ async function processLawyerPublications(
       continue;
     }
 
-    const publication = createPublication(item, lawyer);
-    existingPubs.unshift(publication);
-    existingHashes.add(hash);
+    const newPublication = createPublication(item, lawyer);
+    existingPubs.unshift(newPublication);
     newCount++;
   }
 

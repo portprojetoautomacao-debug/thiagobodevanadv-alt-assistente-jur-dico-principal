@@ -74,7 +74,7 @@ export function ServerLogsViewer({
         <AlertDescription>
           Não foi possível carregar os logs do servidor.
           <br />
-          {(error as Error).message}
+          {error instanceof Error ? error.message : String(error)}
         </AlertDescription>
       </Alert>
     );

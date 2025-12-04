@@ -7,6 +7,9 @@ import { SafeLogger } from "./safe-logger.js";
 
 const logger = new SafeLogger("DJEN");
 
+// Type aliases para evitar repetição de union types (SonarCloud S4323)
+export type DJENMatchType = "nome" | "oab" | "ambos";
+
 export interface DJENComunicacao {
   id: number;
   data_disponibilizacao: string;
@@ -64,7 +67,7 @@ export interface DJENFilteredResult {
   meio: string;
   link: string;
   hash: string;
-  matchType: "nome" | "oab" | "ambos";
+  matchType: DJENMatchType;
   advogados: Array<{
     nome: string;
     numero_oab: string;
@@ -97,7 +100,7 @@ export function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replaceAll(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
@@ -105,26 +108,21 @@ export function normalizeText(text: string): string {
 
 function parseOABWithPattern(value: string): { numero?: string; uf?: string } | null {
   const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i.exec(value);
-  if (matchOABPattern) {
-    return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-  }
-  return null;
+  return matchOABPattern
+    ? { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() }
+    : null;
 }
 
 function parseOABNumericUF(value: string): { numero?: string; uf?: string } | null {
   const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
-  if (matchNumericUF) {
-    return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
-  }
-  return null;
+  return matchNumericUF
+    ? { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() }
+    : null;
 }
 
 function parseOABNumericOnly(value: string): { numero?: string; uf?: string } | null {
   const matchNumeric = /^(\d+)$/.exec(value);
-  if (matchNumeric) {
-    return { numero: matchNumeric[1] };
-  }
-  return null;
+  return matchNumeric ? { numero: matchNumeric[1] } : null;
 }
 
 export function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {

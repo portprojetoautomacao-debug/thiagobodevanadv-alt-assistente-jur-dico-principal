@@ -57,8 +57,8 @@ function App() {
   // Fallback de roteamento: sincroniza currentView com o hash da URL
   useEffect(() => {
     const applyHashView = () => {
-      if (typeof window === "undefined") return;
-      const hash = window.location.hash.replace(/^#/, "").trim();
+      if (typeof globalThis.window === "undefined") return;
+      const hash = globalThis.window.location.hash.replace(/^#/, "").trim();
       if (hash) {
         setCurrentView(hash as ViewType);
       }
@@ -66,8 +66,8 @@ function App() {
     // aplica na carga inicial
     applyHashView();
     // escuta alterações de hash
-    window.addEventListener("hashchange", applyHashView);
-    return () => window.removeEventListener("hashchange", applyHashView);
+    globalThis.window.addEventListener("hashchange", applyHashView);
+    return () => globalThis.window.removeEventListener("hashchange", applyHashView);
   }, []);
 
   // Handler legado de Google removido

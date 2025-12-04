@@ -133,8 +133,8 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
       const temMov = !!p.dataUltimaMovimentacao;
       let atrasado = false;
 
-      if (temMov) {
-        const mov = new Date(p.dataUltimaMovimentacao!);
+      if (temMov && p.dataUltimaMovimentacao) {
+        const mov = new Date(p.dataUltimaMovimentacao);
         if (!Number.isNaN(mov.getTime())) {
           atrasado = mov < limite;
         }
