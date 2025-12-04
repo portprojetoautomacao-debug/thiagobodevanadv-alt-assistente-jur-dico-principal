@@ -1,6 +1,5 @@
 import { ComponentProps } from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { CaretDown as ChevronDownIcon } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 

@@ -16,7 +16,6 @@ import {
   PaperPlaneTilt,
   Stop,
   Warning,
-} from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 

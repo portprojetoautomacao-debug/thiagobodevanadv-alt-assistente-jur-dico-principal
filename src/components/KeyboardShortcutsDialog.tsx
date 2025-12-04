@@ -7,7 +7,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Keyboard } from "@phosphor-icons/react";
 
 interface ShortcutItemProps {
   keys: string[];

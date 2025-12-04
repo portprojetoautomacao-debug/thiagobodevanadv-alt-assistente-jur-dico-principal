@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, CalendarDots, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 

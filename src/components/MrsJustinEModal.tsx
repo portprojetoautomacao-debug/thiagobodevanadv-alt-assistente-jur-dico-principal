@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAIStreaming } from "@/hooks/use-ai-streaming";
-import { Brain, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 

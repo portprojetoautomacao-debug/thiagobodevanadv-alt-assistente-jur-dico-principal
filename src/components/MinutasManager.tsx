@@ -35,24 +35,24 @@ import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
 import type { Minuta, Process } from "@/types";
 import {
-  RefreshCw,
-  ChevronDown,
+  AlertTriangle,
+  Bot,
   CheckCircle,
+  ChevronDown,
+  Chrome,
   Clock,
   Copy,
   Download,
   Eye,
   FileText,
   FolderOpen,
-  Chrome,
-  Search,
+  Loader2,
   Pencil,
   Plus,
-  Bot,
+  RefreshCw,
+  Search,
   Sparkle,
-  Loader2,
   Trash,
-  AlertTriangle,
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -1236,7 +1236,6 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                             className={`mr-2 h-4 w-4 ${
                               isSyncing === minuta.id ? "animate-spin" : ""
                             }`}
-                           
                           />
                           Sincronizar
                         </Button>

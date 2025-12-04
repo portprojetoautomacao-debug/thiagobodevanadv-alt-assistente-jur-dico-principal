@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import type { Cliente } from "@/types";
 

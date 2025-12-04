@@ -4,7 +4,6 @@ import {
   Check as CheckIcon,
   CaretDown as ChevronDownIcon,
   CaretUp as ChevronUpIcon,
-} from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 

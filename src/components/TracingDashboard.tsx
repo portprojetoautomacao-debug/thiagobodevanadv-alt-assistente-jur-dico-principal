@@ -1,3 +1,4 @@
+import { Search, Inbox, Bot, Loader2, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
 /**
  * Tracing Dashboard Component
  *
@@ -22,7 +23,6 @@ import {
   Robot,
   Trash,
   XCircle,
-} from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
