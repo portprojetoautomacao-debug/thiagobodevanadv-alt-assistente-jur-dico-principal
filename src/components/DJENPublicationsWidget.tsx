@@ -302,11 +302,6 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
     lawyersCount,
   } = props;
 
-  // Wrapper para evitar void operator (S3735)
-  const handleSyncClick = () => {
-    handleSync(fetchPublications);
-  };
-
   return (
     <CardHeader className="pb-2">
       <div className="flex items-center justify-between">
