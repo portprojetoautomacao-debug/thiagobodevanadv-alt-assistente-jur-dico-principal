@@ -96,6 +96,7 @@ export interface Expediente {
   titulo?: string
   conteudo?: string
   content?: string
+  descricao?: string
   dataRecebimento: string
   receivedAt?: string
   prazoFatal?: string
@@ -111,6 +112,8 @@ export interface Expediente {
   lido?: boolean
   arquivado?: boolean
   analyzed?: boolean
+  processado?: boolean
+  urgente?: boolean
   tags?: string[]
   summary?: string
   suggestedAction?: string

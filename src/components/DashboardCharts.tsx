@@ -1,20 +1,22 @@
+// ✅ DADOS REAIS: Este componente recebe dados reais via props do Dashboard
+// Os gráficos exibem estatísticas calculadas a partir de processos, expedientes e dados financeiros reais
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
 import { ChartPie, Gavel, TrendUp } from '@phosphor-icons/react';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from 'recharts';
 
 // Altura padrão dos gráficos para consistência visual

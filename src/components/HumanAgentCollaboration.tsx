@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import {
-  Robot,
-  User,
-  ArrowsLeftRight,
-  CheckCircle,
-  Clock,
-  Sparkle,
-  PencilSimple,
-  Brain,
-  Play,
+    ArrowsLeftRight,
+    Brain,
+    CheckCircle,
+    Clock,
+    PencilSimple,
+    Play,
+    Robot,
+    Sparkle,
+    User,
 } from '@phosphor-icons/react'
+import { useEffect, useRef, useState } from 'react'
 
 interface CollaborationDemoProps {
   readonly agentName: string
@@ -126,9 +126,6 @@ export default function HumanAgentCollaboration({
 
     return createProgressInterval(setProgress, onComplete)
   }, [phase, onComplete])
-
-  // Track previous phase for transition detection
-  const previousPhaseRef = useRef(phase)
   
   // Mover reset de inatividade para useEffect para evitar setState durante render
   useEffect(() => {
@@ -156,14 +153,10 @@ export default function HumanAgentCollaboration({
     if (prevPhase !== 'human_editing') {
       setTimeWithoutActivity(0)
     }
-    
-    // Schedule reset on next tick to avoid synchronous setState in effect
-    const timeoutId = setTimeout(resetTimer, 0)
 
     const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
     
     return () => {
-      clearTimeout(timeoutId)
       cleanup()
     }
   }, [phase, isHumanActive])

@@ -12,24 +12,26 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useExpedientes } from "@/hooks/use-expedientes";
 import { useKV } from "@/hooks/use-kv";
+import type { Expediente } from "@/types";
 import {
-  Bell,
-  BellRinging,
-  CheckCircle,
-  Clock,
-  FileText,
-  Info,
-  Robot,
-  Trash,
-  Tray,
-  Warning,
-  X,
+    Bell,
+    BellRinging,
+    CheckCircle,
+    Clock,
+    FileText,
+    Info,
+    Robot,
+    Trash,
+    Tray,
+    Warning,
+    X,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -133,6 +135,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   );
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const prevCountRef = useRef(0);
+  const { expedientes } = useExpedientes();  // ✅ Expedientes reais para notificações
+  const prevExpedientesCountRef = useRef(0);
 
   // Contagem de não lidas
   const unreadCount = (notifications || []).filter((n) => !n.read).length;
@@ -215,6 +219,31 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       onNavigate?.(notification.action.view, notification.action.payload);
     }
   };
+
+  // Criar notificações automáticas para novos expedientes
+  useEffect(() => {
+    const currentCount = expedientes?.length || 0;
+    
+    if (currentCount > prevExpedientesCountRef.current && prevExpedientesCountRef.current > 0) {
+      const novosExpedientes = expedientes?.slice(0, currentCount - prevExpedientesCountRef.current) || [];
+      
+      novosExpedientes.forEach((exp: Expediente) => {
+        addNotification({
+          type: 'nova_intimacao',
+          title: 'Nova Intimação Detectada',
+          message: exp.descricaoIntimacao || 'Nova intimação processada automaticamente',
+          data: { expedienteId: exp.id },
+          action: {
+            label: 'Ver detalhes',
+            view: 'processos',
+            payload: { expedienteId: exp.id },
+          },
+        });
+      });
+    }
+    
+    prevExpedientesCountRef.current = currentCount;
+  }, [expedientes, addNotification]);
 
   // Expor função global para adicionar notificações (útil para agentes / websockets)
   useEffect(() => {

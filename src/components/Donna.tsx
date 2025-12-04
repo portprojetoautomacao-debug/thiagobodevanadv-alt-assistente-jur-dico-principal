@@ -1,23 +1,24 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { useAIStreaming } from '@/hooks/use-ai-streaming'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { useAIStreaming } from '@/hooks/use-ai-streaming'
+import { useExpedientes } from '@/hooks/use-expedientes'
+import { useKV } from '@/hooks/use-kv'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+import type { Expediente, FinancialEntry, Process } from '@/types'
 import {
-  PaperPlaneTilt,
-  ChartBar,
-  Briefcase,
-  Bell,
-  CurrencyCircleDollar,
-  Warning,
-  Stop,
+    Bell,
+    Briefcase,
+    ChartBar,
+    CurrencyCircleDollar,
+    PaperPlaneTilt,
+    Stop,
+    Warning,
 } from '@phosphor-icons/react'
-import type { Process, FinancialEntry } from '@/types'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 // Função auxiliar para conteúdo de streaming
 function getMessageContent(
@@ -130,6 +131,7 @@ export default function HarveySpecter() {
   const [financialRecords] = useKV<FinancialEntry[]>('financialEntries', [])  // CORRIGIDO: era 'financial-records'
   const [taskQueue] = useKV<AgentTask[]>('agent-task-queue', [])  // CORRIGIDO: era 'tasks'
   const [completedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
+  const { expedientes } = useExpedientes()  // ✅ Expedientes/intimações reais do sistema
 
   // Calcular estatísticas REAIS
   const realStats = useMemo(() => {
@@ -183,6 +185,11 @@ export default function HarveySpecter() {
     const inProgressTasks = taskQueue?.filter(t => t.status === 'in_progress').length || 0
     const totalCompletedTasks = completedTasks?.length || 0
 
+    // Expedientes/Intimações - NOVO
+    const totalExpedientes = expedientes?.length || 0
+    const expedientesUrgentes = expedientes?.filter((e: Expediente) => e.urgente && !e.processado).length || 0
+    const expedientesNaoProcessados = expedientes?.filter((e: Expediente) => !e.processado).length || 0
+
     return {
       totalProcesses,
       processesByStatus,
@@ -194,9 +201,12 @@ export default function HarveySpecter() {
       pendingTasks,
       inProgressTasks,
       totalCompletedTasks,
-      hasData: totalProcesses > 0 || financialRecords?.length > 0 || taskQueue?.length > 0 || completedTasks?.length > 0,
+      totalExpedientes,
+      expedientesUrgentes,
+      expedientesNaoProcessados,
+      hasData: totalProcesses > 0 || financialRecords?.length > 0 || taskQueue?.length > 0 || completedTasks?.length > 0 || totalExpedientes > 0,
     }
-  }, [processes, financialRecords, taskQueue, completedTasks])
+  }, [processes, financialRecords, taskQueue, completedTasks, expedientes])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -252,8 +262,8 @@ export default function HarveySpecter() {
       return insights
     }
 
-    if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent')) {
-      return [
+    if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent') || lowerQuery.includes('expediente')) {
+      const insights: Insight[] = [
         {
           type: 'alert',
           title: 'Prazos Urgentes',
@@ -267,6 +277,35 @@ export default function HarveySpecter() {
           description: 'Total de prazos',
         },
       ]
+
+      if (realStats.totalExpedientes > 0) {
+        insights.push({
+          type: 'statistics',
+          title: 'Expedientes',
+          value: String(realStats.totalExpedientes),
+          description: 'Total registrado',
+        })
+      }
+
+      if (realStats.expedientesUrgentes > 0) {
+        insights.push({
+          type: 'alert',
+          title: 'Expedientes Urgentes',
+          value: String(realStats.expedientesUrgentes),
+          description: 'Requerem atenção',
+        })
+      }
+
+      if (realStats.expedientesNaoProcessados > 0) {
+        insights.push({
+          type: 'trend',
+          title: 'Não Processados',
+          value: String(realStats.expedientesNaoProcessados),
+          description: 'Aguardando análise',
+        })
+      }
+
+      return insights
     }
 
     if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
