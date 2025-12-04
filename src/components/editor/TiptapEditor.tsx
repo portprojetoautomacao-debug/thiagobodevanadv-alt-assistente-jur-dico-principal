@@ -632,10 +632,10 @@ export function TiptapEditor({
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
+      // ✅ Underline não está no StarterKit - adicionamos apenas 1x
       Underline,
-      Link.extend({
-        inclusive: false,
-      }).configure({
+      // ✅ Link configurado apenas 1x (removido .extend para evitar duplicação)
+      Link.configure({
         openOnClick: false,
         HTMLAttributes: {
           class: "text-primary underline cursor-pointer",

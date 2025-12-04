@@ -89,6 +89,34 @@ const DEFAULT_TIMEOUT_MS = 25_000;
 // ============================================================================
 
 /**
+ * Valida formato da API key do Gemini
+ * API keys do Gemini começam com "AIza" e têm ~39 caracteres
+ */
+function validateGeminiApiKeyFormat(apiKey: string | undefined): boolean {
+  if (!apiKey) {
+    if (import.meta.env.DEV) {
+      console.warn('[GeminiService] ⚠️ API key não fornecida');
+      console.warn('[GeminiService] Configure VITE_GEMINI_API_KEY no .env.local');
+      console.warn('[GeminiService] Obtenha em: https://aistudio.google.com/app/apikey');
+    }
+    return false;
+  }
+  
+  if (!apiKey.startsWith('AIza')) {
+    console.warn('[GeminiService] ⚠️ Formato de API key inválido - deve começar com "AIza"');
+    console.warn('[GeminiService] Verifique VITE_GEMINI_API_KEY no .env.local');
+    return false;
+  }
+  
+  if (apiKey.length < 30) {
+    console.warn('[GeminiService] ⚠️ API key muito curta - verifique a configuração');
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * Normaliza a resposta do Gemini numa estrutura GeminiResponse.
  */
 function normalizeGeminiResponse(
@@ -183,10 +211,12 @@ export async function callGemini(
   let apiKey: string;
   try {
     apiKey = getGeminiApiKey();
-    if (!validateGeminiApiKey(apiKey)) {
+    
+    // ✅ Validar formato da API key
+    if (!validateGeminiApiKeyFormat(apiKey)) {
       return {
         text: "",
-        error: "API key do Gemini parece estar em formato inválido",
+        error: "API key do Gemini em formato inválido. Deve começar com 'AIza'",
       };
     }
   } catch (error) {

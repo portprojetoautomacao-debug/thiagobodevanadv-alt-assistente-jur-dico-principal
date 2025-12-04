@@ -162,6 +162,18 @@ class GoogleDocsService {
       throw new Error(this.lastError);
     }
 
+    // ✅ Validação para desenvolvimento: pular init se API key inválida
+    if (import.meta.env.DEV) {
+      const apiKey = GOOGLE_DOCS_API_KEY;
+      if (!apiKey || apiKey === 'your-google-api-key' || apiKey.length < 30) {
+        console.warn('[GoogleDocs] ⚠️ API key inválida em modo dev - pulando inicialização');
+        console.warn('[GoogleDocs] Configure VITE_GOOGLE_API_KEY no arquivo .env.local');
+        console.warn('[GoogleDocs] Obtenha em: https://console.cloud.google.com/apis/credentials');
+        this.lastError = 'API key não configurada (modo dev - não crítico)';
+        return; // Sai silenciosamente em dev
+      }
+    }
+
     if (!GOOGLE_DOCS_CLIENT_ID || !GOOGLE_DOCS_API_KEY) {
       this.lastError =
         "Credenciais do Google Docs não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.";

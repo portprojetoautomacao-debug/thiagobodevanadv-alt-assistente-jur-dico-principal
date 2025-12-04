@@ -5,8 +5,8 @@
  * Remove tarefas com status 'failed' mais antigas que 24 horas
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const getKv = (): Redis => {
   const url = process.env.UPSTASH_REDIS_REST_URL;
