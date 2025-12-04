@@ -1,5 +1,6 @@
 import AgentMetrics from "@/components/AgentMetrics";
 import AgentThinkingPanel from "@/components/AgentThinkingPanel";
+import FailedTasksAnalysis from "@/components/FailedTasksAnalysis";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -682,6 +683,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
         {/* Atividade em tempo real */}
         <TabsContent value="activity" className="space-y-4">
+          {/* Análise de Tarefas Falhadas - URGENTE */}
+          <FailedTasksAnalysis />
+
           {/* Painel de Pensamento em Tempo Real */}
           <AgentThinkingPanel />
 
