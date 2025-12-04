@@ -283,7 +283,7 @@ interface PublicationsHeaderProps {
   filter: "all" | "unread";
   setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void;
   syncing: boolean;
-  handleSync: (fn?: () => void) => Promise<void>;
+  handleSync: (fn?: () => void | Promise<void>) => Promise<void>;
   fetchPublications: () => Promise<void>;
   lastCheck: string | null;
   lawyersCount: number;
@@ -627,7 +627,9 @@ export default function DJENPublicationsWidget({
           showRegisterAll={showRegisterAll}
           showViewAll={showViewAll}
           autoRegistering={autoRegistering}
-          onRegisterAll={() => handleAutoRegisterAll(publications)}
+          onRegisterAll={() => {
+            void handleAutoRegisterAll(publications);
+          }}
           onViewAll={onViewAll}
         />
       </>

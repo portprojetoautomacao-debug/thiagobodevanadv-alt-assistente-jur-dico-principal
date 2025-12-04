@@ -213,14 +213,10 @@ Gerado em: ${timestamp}`;
                           return (
                             <li key={uniqueKey} className="text-sm flex gap-2">
                               {point.startsWith("---") ? (
-                                <span className="font-bold text-primary mt-2">
-                                  {point}
-                                </span>
+                                <span className="font-bold text-primary mt-2">{point}</span>
                               ) : (
                                 <>
-                                  <span className="text-primary shrink-0">
-                                    •
-                                  </span>
+                                  <span className="text-primary shrink-0">•</span>
                                   <span>{point}</span>
                                 </>
                               )}

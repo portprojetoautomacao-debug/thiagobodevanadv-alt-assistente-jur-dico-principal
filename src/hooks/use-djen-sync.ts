@@ -74,7 +74,7 @@ export function useDJENSync() {
     });
   };
 
-  const handleSync = async (onSuccess?: () => void) => {
+  const handleSync = async (onSuccess?: () => void | Promise<void>) => {
     setSyncing(true);
 
     try {
@@ -82,7 +82,7 @@ export function useDJENSync() {
       showSyncToast(result);
 
       if (result.success && onSuccess) {
-        onSuccess();
+        await onSuccess();
       }
     } catch (err) {
       console.error("[DJENWidget] Sync error:", err);

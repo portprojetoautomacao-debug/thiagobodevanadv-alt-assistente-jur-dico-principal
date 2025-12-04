@@ -161,11 +161,11 @@ export default function DatabaseQueries() {
                 <Alert variant="destructive">
                   <Warning className="h-4 w-4" />
                   <AlertDescription>
-                    API Key do DataJud não configurada. Configure{" "}
+                    API Key do DataJud não configurada. Configure
                     <code className="mx-1 px-1 py-0.5 rounded bg-muted text-xs">
                       VITE_DATAJUD_API_KEY
-                    </code>{" "}
-                    no arquivo <code className="px-1 py-0.5 rounded bg-muted text-xs">.env</code>{" "}
+                    </code>
+                    no arquivo <code className="px-1 py-0.5 rounded bg-muted text-xs">.env</code>
                     para usar este recurso.
                     <br />
                     <a

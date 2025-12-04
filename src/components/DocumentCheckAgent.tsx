@@ -343,7 +343,7 @@ Retorne um objeto JSON com a seguinte estrutura:
             <ScrollArea className="h-[500px] pr-4">
               <div className="space-y-4">
                 {(() => {
-                  const sortedDocs = [...unresolvedDocs].sort((a, b) => {
+                  const sortedDocs = unresolvedDocs.slice().sort((a, b) => {
                     const urgencyOrder: Record<MissingDocument["urgency"], number> = {
                       high: 0,
                       medium: 1,
