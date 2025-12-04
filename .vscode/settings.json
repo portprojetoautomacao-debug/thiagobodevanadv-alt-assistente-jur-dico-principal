@@ -220,5 +220,11 @@
 
   // IntelliSense
   "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-  "cSpell.words": ["sonarlint"]
+  "cSpell.words": ["sonarlint"],
+  "chat.customAgentInSubagent.enabled": true,
+  "chat.edits2.enabled": true,
+  "chat.mcp.assisted.nuget.enabled": true,
+  "chat.mcp.gallery.enabled": true,
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "chat.useNestedAgentsMdFiles": true
 }

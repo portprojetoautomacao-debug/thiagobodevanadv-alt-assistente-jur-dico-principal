@@ -2,13 +2,9 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 let _kv: Redis | null = null;
-async function getKv (): Promise<Redis | null>
-{
+async function getKv(): Promise<Redis | null> {
   if (_kv) return _kv;
-  if (
-    process.env.UPSTASH_REDIS_REST_URL &&
-    process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     _kv = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL.trim(),
       token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
@@ -21,8 +17,7 @@ async function getKv (): Promise<Redis | null>
 /**
  * Get AI provider name based on available keys
  */
-function getAIProvider (openaiKey?: string, geminiKey?: string): string
-{
+function getAIProvider(openaiKey?: string, geminiKey?: string): string {
   if (openaiKey) return "OpenAI";
   if (geminiKey) return "Gemini";
   return "none";
@@ -31,8 +26,7 @@ function getAIProvider (openaiKey?: string, geminiKey?: string): string
 /**
  * Configura headers CORS
  */
-function setCorsHeaders (res: VercelResponse): void
-{
+function setCorsHeaders(res: VercelResponse): void {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -41,8 +35,7 @@ function setCorsHeaders (res: VercelResponse): void
 /**
  * Handler para Spark Loaded Logic
  */
-function handleSparkLoaded (req: VercelRequest, res: VercelResponse): boolean
-{
+function handleSparkLoaded(req: VercelRequest, res: VercelResponse): boolean {
   if (req.method === "POST") {
     res.status(200).json({
       status: "loaded",
@@ -63,8 +56,7 @@ function handleSparkLoaded (req: VercelRequest, res: VercelResponse): boolean
   return false;
 }
 
-async function handleWatchdogRequest (req: VercelRequest, res: VercelResponse)
-{
+async function handleWatchdogRequest(req: VercelRequest, res: VercelResponse) {
   try {
     const kv = await getKv();
     const data = kv ? await kv.get("watchdog-last-result") : null;
@@ -84,17 +76,19 @@ async function handleWatchdogRequest (req: VercelRequest, res: VercelResponse)
 async function handleCronHealthRequest(req: VercelRequest, res: VercelResponse) {
   try {
     const kv = await getKv();
-    
+
     // Buscar dados do KV de forma segura
-    const queueHistory = kv 
-      ? await kv.get<Array<{ timestamp: string; queueLength: number; pendingCount: number }>>("agent-queue-depth-history")
+    const queueHistory = kv
+      ? await kv.get<Array<{ timestamp: string; queueLength: number; pendingCount: number }>>(
+          "agent-queue-depth-history"
+        )
       : null;
     const watchdog = kv ? await kv.get("watchdog-last-result") : null;
     const lastBackup = kv ? await kv.get("backup-list") : null;
-    
+
     // Processar histórico de fila
     const processedHistory = Array.isArray(queueHistory) ? queueHistory.slice(0, 20) : [];
-    
+
     res.status(200).json({
       status: "ok",
       timestamp: new Date().toISOString(),
@@ -172,8 +166,7 @@ function generateHealthCheck(res: VercelResponse): void {
  * - /api/status?type=health (Health Check)
  * - /api/status?type=loaded (Spark Loaded)
  */
-export default async function handler (req: VercelRequest, res: VercelResponse)
-{
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     setCorsHeaders(res);
