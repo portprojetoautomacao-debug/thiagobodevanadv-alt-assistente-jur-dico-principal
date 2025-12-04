@@ -118,7 +118,7 @@ export default function HumanAgentCollaboration({
 
   // Refs para controlar timers e evitar vazamentos de memória
   const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const previousPhaseRef = useRef(phase)
+  const previousPhaseRef = useRef<Phase>(phase)
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
@@ -127,15 +127,7 @@ export default function HumanAgentCollaboration({
     return createProgressInterval(setProgress, onComplete)
   }, [phase, onComplete])
   
-  // Mover reset de inatividade para useEffect para evitar setState durante render
-  useEffect(() => {
-    if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
-    }
-    previousPhaseRef.current = phase
-  }, [phase])
-
-  // Timer de inatividade durante edição humana
+  // Timer de inatividade durante edição humana + reset ao trocar de fase
   useEffect(() => {
     const prevPhase = previousPhaseRef.current
     previousPhaseRef.current = phase

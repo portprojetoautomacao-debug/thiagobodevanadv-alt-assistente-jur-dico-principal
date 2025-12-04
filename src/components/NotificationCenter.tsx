@@ -150,12 +150,12 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       const timeoutId = setTimeout(() => {
         setHasNewNotifications(true);
       }, 0);
-      // Atualiza ref dentro do if e retorna cleanup
+      // Atualiza ref e retorna cleanup
       prevCountRef.current = currentCount;
       return () => clearTimeout(timeoutId);
     }
     
-    // Atualiza ref apenas quando não houve notificação nova
+    // Atualiza ref quando não houve notificação nova
     prevCountRef.current = currentCount;
   }, [notifications]);
 
