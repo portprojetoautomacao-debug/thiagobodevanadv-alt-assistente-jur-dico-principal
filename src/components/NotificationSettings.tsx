@@ -177,23 +177,18 @@ export default function NotificationSettings() {
     return response.json();
   };
 
-  // Helper: Processar resultado do teste
-  const handleTestResult = (data: { success?: boolean; webhook?: { name?: string } }) => {
-    if (data.success) {
-      toast.success("Teste enviado!", {
-        description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
-      });
-    } else {
-      toast.error("Falha no teste do webhook");
-    }
-  };
-
   // Testar webhook
   const testWebhookFn = async (webhookId: string) => {
     setTestingWebhook(webhookId);
     try {
       const data = await performWebhookTest(webhookId);
-      handleTestResult(data);
+      if (data.success) {
+        toast.success("Teste enviado!", {
+          description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
+        });
+      } else {
+        toast.error("Falha no teste do webhook");
+      }
     } catch (error) {
       console.error("[NotificationSettings]", error);
       toast.error("Erro ao testar webhook");

@@ -107,6 +107,27 @@ function parseDeadlineDate(endDate: string): Date | null {
 }
 
 /**
+ * Constrói descrição rica para compromisso de prazo
+ */
+function buildAppointmentDescription(analysis: IntimationAnalysisResult): string {
+  const descriptionParts = [
+    analysis.summary,
+    "",
+    `📅 Prazo: ${analysis.deadline?.days} dias ${analysis.deadline?.type}`,
+    analysis.processNumber ? `📋 Processo: ${analysis.processNumber}` : "",
+    analysis.court ? `🏛️ Tribunal: ${analysis.court}` : "",
+    analysis.documentType ? `📄 Tipo: ${analysis.documentType}` : "",
+    "",
+    "📌 Próximos Passos:",
+    ...(analysis.nextSteps || []).map((step, i) => `${i + 1}. ${step}`),
+    "",
+    analysis.suggestedAction ? `⚡ Ação Recomendada: ${analysis.suggestedAction}` : "",
+  ].filter(Boolean);
+
+  return descriptionParts.join("\n");
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
@@ -131,27 +152,12 @@ export function createLocalAppointmentFromAnalysis(
   const type: Appointment["type"] =
     analysis.priority === "crítica" || analysis.priority === "alta" ? "prazo" : "outro";
 
-  // Construir descrição rica
-  const descriptionParts = [
-    analysis.summary,
-    "",
-    `📅 Prazo: ${analysis.deadline.days} dias ${analysis.deadline.type}`,
-    analysis.processNumber ? `📋 Processo: ${analysis.processNumber}` : "",
-    analysis.court ? `🏛️ Tribunal: ${analysis.court}` : "",
-    analysis.documentType ? `📄 Tipo: ${analysis.documentType}` : "",
-    "",
-    "📌 Próximos Passos:",
-    ...(analysis.nextSteps || []).map((step, i) => `${i + 1}. ${step}`),
-    "",
-    analysis.suggestedAction ? `⚡ Ação Recomendada: ${analysis.suggestedAction}` : "",
-  ].filter(Boolean);
-
   const appointment: Appointment = {
     id: crypto.randomUUID(),
     title: `⚠️ PRAZO: ${intimationTitle.substring(0, 50)}${
       intimationTitle.length > 50 ? "..." : ""
     }`,
-    description: descriptionParts.join("\n"),
+    description: buildAppointmentDescription(analysis),
     type,
     date: dateStr,
     time: "09:00", // Padrão: manhã
