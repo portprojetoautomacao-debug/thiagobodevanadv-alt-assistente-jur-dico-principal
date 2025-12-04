@@ -580,7 +580,7 @@ export default function DJENPublicationsWidget({
     <DJENErrorCard
       compact={compact}
       error={errorMessage ?? "Erro desconhecido"}
-      onRetry={fetchPublications}
+      onRetry={() => void fetchPublications()}
     />
   );
 
@@ -617,7 +617,7 @@ export default function DJENPublicationsWidget({
           showRegisterAll={showRegisterAll}
           showViewAll={showViewAll}
           autoRegistering={autoRegistering}
-          onRegisterAll={() => handleAutoRegisterAll(publications)}
+          onRegisterAll={() => void handleAutoRegisterAll(publications)}
           onViewAll={onViewAll}
         />
       </>
