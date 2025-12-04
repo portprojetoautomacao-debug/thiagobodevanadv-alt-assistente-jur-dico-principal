@@ -92,18 +92,11 @@ export function createLocalAppointmentFromAnalysis(
         // Criar data em UTC para evitar problemas de timezone
         deadlineDate = new Date(Date.UTC(yearNum, monthNum - 1, dayNum, 12, 0, 0));
       } else {
-        console.warn("[DeadlineIntegration] Invalid date parts:", {
-          day: dayNum,
-          month: monthNum,
-          year: yearNum,
-        });
+        // Data com componentes inválidos - ignorar silenciosamente
         return null;
       }
     } else {
-      console.warn(
-        "[DeadlineIntegration] Invalid date format (expected DD/MM/YYYY):",
-        analysis.deadline.endDate
-      );
+      // Formato não reconhecido - ignorar silenciosamente
       return null;
     }
   } else {

@@ -11,7 +11,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useKV } from "@/hooks/use-kv";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -305,6 +306,9 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         }}
       >
         <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+          <VisuallyHidden>
+            <DialogTitle>Busca Global</DialogTitle>
+          </VisuallyHidden>
           {/* Header com input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b">
             <MagnifyingGlass className="w-5 h-5 text-muted-foreground" />
