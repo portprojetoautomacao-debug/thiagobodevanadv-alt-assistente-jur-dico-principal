@@ -277,17 +277,31 @@ interface DJENPublicationsWidgetProps {
   readonly maxItems?: number;
 }
 
+// Interface para props do PublicationsHeader (reduz parâmetros para conformidade S107)
+interface PublicationsHeaderProps {
+  publicationsCount: number;
+  filter: "all" | "unread";
+  setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void;
+  syncing: boolean;
+  handleSync: (fn: () => void) => void;
+  fetchPublications: () => void;
+  lastCheck: string | null;
+  lawyersCount: number;
+}
+
 // Helpers de renderização extraídos para reduzir complexidade (S3776)
-function PublicationsHeader(
-  publicationsCount: number,
-  filter: "all" | "unread",
-  setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void,
-  syncing: boolean,
-  handleSync: (fn: () => void) => void,
-  fetchPublications: () => void,
-  lastCheck: string | null,
-  lawyersCount: number
-) {
+function PublicationsHeader(props: PublicationsHeaderProps) {
+  const {
+    publicationsCount,
+    filter,
+    setFilter,
+    syncing,
+    handleSync,
+    fetchPublications,
+    lastCheck,
+    lawyersCount,
+  } = props;
+
   return (
     <CardHeader className="pb-2">
       <div className="flex items-center justify-between">
@@ -578,16 +592,16 @@ export default function DJENPublicationsWidget({
 
   // Renderiza header do card
   const renderCardHeader = () =>
-    PublicationsHeader(
-      publications.length,
+    PublicationsHeader({
+      publicationsCount: publications.length,
       filter,
       setFilter,
       syncing,
       handleSync,
       fetchPublications,
       lastCheck,
-      lawyersCount
-    );
+      lawyersCount,
+    });
 
   // Renderiza conteúdo principal
   const showFooter = publications.length > 0;
