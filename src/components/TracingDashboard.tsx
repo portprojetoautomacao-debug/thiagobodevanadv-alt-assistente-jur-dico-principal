@@ -1,4 +1,14 @@
-import { , ArrowRight, Bot, Brain, CheckCircle, Clock, LineChart, RefreshCw, Trash2, XCircle, Zap } from "lucide-react";
+import {
+  Bot,
+  Brain,
+  CheckCircle,
+  Clock,
+  LineChart,
+  RefreshCw,
+  Trash2,
+  XCircle,
+  Zap,
+} from "lucide-react";
 /**
  * Tracing Dashboard Component
  *
