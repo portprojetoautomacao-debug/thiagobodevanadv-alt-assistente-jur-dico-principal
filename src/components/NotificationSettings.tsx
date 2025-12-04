@@ -184,28 +184,34 @@ export default function NotificationSettings() {
     );
   };
 
+  // Helper: Fazer requisição de teste de webhook
+  const performWebhookTest = async (webhookId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/notifications/test`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ webhookId }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  };
+
+  // Helper: Processar resultado do teste
+  const handleTestResult = (data: { success?: boolean; webhook?: { name?: string } }) => {
+    if (data.success) {
+      toast.success("Teste enviado!", {
+        description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
+      });
+    } else {
+      toast.error("Falha no teste do webhook");
+    }
+  };
+
   // Testar webhook
   const testWebhookFn = async (webhookId: string) => {
     setTestingWebhook(webhookId);
     await runApiWithToast(
-      async () => {
-        const response = await fetch(`${API_BASE_URL}/api/notifications/test`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ webhookId }),
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      },
-      (data: { success?: boolean; webhook?: { name?: string } }) => {
-        if (data.success) {
-          toast.success("Teste enviado!", {
-            description: data.webhook?.name ? `Webhook: ${data.webhook.name}` : undefined,
-          });
-        } else {
-          toast.error("Falha no teste do webhook");
-        }
-      },
+      () => performWebhookTest(webhookId),
+      handleTestResult,
       undefined,
       "Erro ao testar webhook"
     );
