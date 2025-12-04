@@ -140,17 +140,18 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   // Detectar novas notificações
   useEffect(() => {
     const currentCount = notifications?.length || 0;
+    
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
       // Schedule state update to avoid synchronous setState in effect
-      const timeoutId = globalThis.setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         setHasNewNotifications(true);
       }, 0);
-      // FUTURE: Som de notificação pode ser adicionado aqui se necessário
-      // Exemplo: playNotificationSound()
+      // Atualiza ref dentro do if e retorna cleanup
       prevCountRef.current = currentCount;
-      return () => globalThis.clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId);
     }
-    // Update ref only when count changes without triggering notification
+    
+    // Atualiza ref apenas quando não houve notificação nova
     prevCountRef.current = currentCount;
   }, [notifications]);
 
