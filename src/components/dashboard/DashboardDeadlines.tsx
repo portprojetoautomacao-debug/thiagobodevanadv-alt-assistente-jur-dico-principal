@@ -15,7 +15,10 @@ interface DashboardDeadlinesProps {
   onNavigate: (view: ViewType) => void;
 }
 
-export function DashboardDeadlines({ prazosProximos, onNavigate }: DashboardDeadlinesProps) {
+export function DashboardDeadlines({
+  prazosProximos,
+  onNavigate,
+}: Readonly<DashboardDeadlinesProps>) {
   return (
     <Card className="bg-linear-to-br from-neutral-2 to-neutral-3 border-neutral-6">
       <CardHeader className="flex flex-row items-center justify-between">

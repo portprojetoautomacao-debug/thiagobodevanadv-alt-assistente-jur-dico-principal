@@ -3,16 +3,16 @@
  * Quick access buttons for common tasks
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, ChartPie, TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ViewType } from "@/types";
+import { ChartPie, TrendingUp, Upload } from "lucide-react";
 
 interface DashboardActionsProps {
   onNavigate: (view: ViewType) => void;
 }
 
-export function DashboardActions({ onNavigate }: DashboardActionsProps) {
+export function DashboardActions({ onNavigate }: Readonly<DashboardActionsProps>) {
   return (
     <Card className="bg-linear-to-br from-neutral-2 to-neutral-3 border-neutral-6">
       <CardHeader>

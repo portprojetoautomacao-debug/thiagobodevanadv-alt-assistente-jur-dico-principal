@@ -12,7 +12,7 @@ import { geminiGenerateJSON } from "@/lib/gemini-client";
 import type { PDFUploadHistory } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle, Loader2, Upload, User, XCircle } from "lucide-react";
+import { CheckCircle, Clock, FileText, Loader2, Trash2, Upload, User, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -32,7 +32,7 @@ interface ExtractedData {
 }
 
 export default function PDFUploader() {
-  const [selectedFile, setSelectedFile] = useState<FileText | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [extractionStatus, setExtractionStatus] = useState<

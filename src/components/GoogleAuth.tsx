@@ -1,9 +1,8 @@
-import {SignOut} from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { config } from "@/lib/config";
-import { ExternalLink, AlertTriangle } from "lucide-react";
+import { AlertTriangle, ExternalLink } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
@@ -67,7 +66,7 @@ interface GoogleAuthButtonProps {
   onError?: (error: Error) => void;
 }
 
-export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButtonProps>) {
   const [error, setError] = useState<string>("");
   const [isConfigured, setIsConfigured] = useState(false);
 
