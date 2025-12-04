@@ -210,6 +210,11 @@ export default function CalculadoraPrazos() {
     setSelectedExpedienteId("");
   };
 
+  const prazoDescription =
+    tipoPrazo === "cpc"
+      ? "Conta apenas dias úteis (exclui sábados, domingos e feriados). Se o prazo final cair em dia não útil, prorroga para o próximo dia útil."
+      : "Conta dias corridos a partir da data de início. Se o prazo final cair em dia não útil, prorroga para o próximo dia útil.";
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8">
       <div className="flex flex-col gap-2">
@@ -333,15 +338,7 @@ export default function CalculadoraPrazos() {
 
             <Alert>
               <Info size={16} />
-              <AlertDescription className="text-xs">
-                {(() => {
-                  const prazoDescription =
-                    tipoPrazo === "cpc"
-                      ? "Conta apenas dias úteis (exclui sábados, domingos e feriados). Se o prazo final cair em dia não útil, prorroga para o próximo dia útil."
-                      : "Conta dias corridos a partir da data de início. Se o prazo final cair em dia não útil, prorroga para o próximo dia útil.";
-                  return prazoDescription;
-                })()}
-              </AlertDescription>
+              <AlertDescription className="text-xs">{prazoDescription}</AlertDescription>
             </Alert>
 
             <Button onClick={handleCalcular} className="w-full">

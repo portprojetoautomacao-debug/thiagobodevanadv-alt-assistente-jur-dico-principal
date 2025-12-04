@@ -212,23 +212,54 @@ export default function ProcessDetailsDialog({
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        {prazo.concluido ? (
-                          <Badge variant="secondary">Concluído</Badge>
-                        ) : (
-                          <>
-                            <Badge variant={urgente ? "destructive" : "default"}>
-                              {formatDiasRestantes(diasRestantes)}
-                            </Badge>
-                            {urgente && (
-                              <Badge variant="outline" className="text-xs">
-                                Urgente
-                              </Badge>
-                            )}
-                          </>
-                        )}
+                        <PrazoStatusBadge
+                          concluido={prazo.concluido}
+                          urgente={urgente}
+                          diasRestantes={diasRestantes}
+                        />
                       </div>
                     </div>
                   );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhum prazo cadastrado para este processo.</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PrazoStatusBadge({
+  concluido,
+  urgente,
+  diasRestantes,
+}: {
+  concluido: boolean;
+  urgente: boolean;
+  diasRestantes: number;
+}) {
+  if (concluido) {
+    return <Badge variant="secondary">Concluído</Badge>;
+  }
+
+  return (
+    <>
+      <Badge variant={urgente ? "destructive" : "default"}>
+        {formatDiasRestantes(diasRestantes)}
+      </Badge>
+      {urgente && (
+        <Badge variant="outline" className="text-xs">
+          Urgente
+        </Badge>
+      )}
+    </>
+  );
+}
                 })}
               </div>
             ) : (

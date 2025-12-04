@@ -11,6 +11,7 @@
     "dev:local": "node ./scripts/start-dev.cjs",
     "kill": "fuser -k 5000/tcp",
     "build": "tsc && vite build",
+    "type-check": "tsc --noEmit --skipLibCheck",
     "start": "serve -s dist -l 10000",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint 'src/**/*.{ts,tsx}' 'api/**/*.ts' --ext ts,tsx --report-unused-disable-directives --max-warnings 150 --ignore-pattern 'coverage-api/**'",
     "lint:sarif": "eslint 'src/**/*.{ts,tsx}' 'api/**/*.ts' --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif --ignore-pattern 'coverage-api/**'",
