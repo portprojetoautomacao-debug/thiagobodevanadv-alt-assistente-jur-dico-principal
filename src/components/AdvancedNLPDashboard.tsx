@@ -27,7 +27,6 @@ import {
   FileText,
   Lightning,
   Tag,
-} from "@phosphor-icons/react";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

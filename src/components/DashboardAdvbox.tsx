@@ -11,7 +11,6 @@ import {
   Clock,
   FileText,
   Trophy,
-} from "@phosphor-icons/react";
 import { memo, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,

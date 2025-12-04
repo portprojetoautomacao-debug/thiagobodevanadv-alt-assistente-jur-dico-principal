@@ -125,7 +125,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
   const getFileIcon = (tipo: string) => {
     if (tipo.includes("pdf")) return <FileText size={24} className="text-red-500" />;
     if (tipo.includes("word") || tipo.includes("document"))
-      return <FileDoc size={24} className="text-blue-500" />;
+      return <FileText size={24} className="text-blue-500" />;
     return <FileText size={24} className="text-gray-500" />;
   };
 

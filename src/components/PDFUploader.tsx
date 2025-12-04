@@ -1,3 +1,4 @@
+import { Search, Inbox, Bot, CircleNotch, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useKV } from "@/hooks/use-kv";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ import {
   Clock,
   User,
   Trash,
-} from "@phosphor-icons/react";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import type { PDFUploadHistory } from "@/types";
@@ -280,7 +280,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
       case "processing":
         return (
           <Badge variant="secondary" className="gap-1">
-            <Loader2 size={12} className="animate-spin" /> Processando
+            <CircleNotch size={12} className="animate-spin" /> Processando
           </Badge>
         );
       case "success":
@@ -369,7 +369,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="animate-spin" size={20} />
+                      <CircleNotch className="animate-spin" size={20} />
                       Processando...
                     </>
                   ) : (
@@ -382,7 +382,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "processing" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <Loader2 className="animate-spin text-primary" size={16} />
+                    <CircleNotch className="animate-spin text-primary" size={16} />
                     <AlertDescription>
                       Processando documento... Isso pode levar alguns segundos.
                     </AlertDescription>

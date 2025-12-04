@@ -1,5 +1,4 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "@phosphor-icons/react";
 
 interface InfoTooltipProps {
   content: string;

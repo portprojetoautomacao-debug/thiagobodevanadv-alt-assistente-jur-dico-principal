@@ -1,8 +1,13 @@
+import { Search, Inbox, Bot, Loader2, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
 import PremonicaoModal from "@/components/PremonicaoModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Search as SearchLucide,
+  Bot as BotLucide,
+  Search as SearchLucide,
+  Bot as BotLucide,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,6 +18,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Search as SearchLucide,
+  Bot as BotLucide,
+  Search as SearchLucide,
+  Bot as BotLucide,
   Select,
   SelectContent,
   SelectItem,
@@ -25,7 +34,6 @@ import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import { createProcessTasks, initializeTodoistClient } from "@/lib/todoist-integration";
 import type { Expediente, PremonicaoJuridica, Process } from "@/types";
-import { Search, Plus, Bot, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 

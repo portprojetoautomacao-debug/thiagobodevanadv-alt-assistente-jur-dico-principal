@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
-import { Download, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 

@@ -1,3 +1,6 @@
+import { DollarSign, Search as SearchLucide, TrendingUp } from "lucide-react";
+import { DollarSign, Search as SearchLucide, TrendingUp } from "lucide-react";
+import { Search, Inbox, Bot, Loader2, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -31,7 +34,6 @@ import {
   Funnel,
   TrendUp,
   X,
-} from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 

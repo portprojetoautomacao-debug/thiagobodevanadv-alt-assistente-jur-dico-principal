@@ -19,7 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, TrendUp, TrendDown, Paperclip, X, File } from "@phosphor-icons/react";
 import { toast } from "sonner";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import {

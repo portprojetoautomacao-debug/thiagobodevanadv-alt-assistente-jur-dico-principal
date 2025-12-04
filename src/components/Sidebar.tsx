@@ -1,3 +1,6 @@
+import { Bot as BotLucide } from "lucide-react";
+import { Bot as BotLucide } from "lucide-react";
+import { Search, Inbox, Bot, Loader2, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,7 +21,6 @@ import {
   PencilLine,
   Robot,
   SignOut,
-} from "@phosphor-icons/react";
 
 interface SidebarProps {
   currentView: string;
