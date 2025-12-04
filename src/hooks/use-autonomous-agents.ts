@@ -327,9 +327,7 @@ export function useAutonomousAgents() {
           setServerLogs(data.logs);
         }
       } else if (logsRes.status === 401) {
-        console.warn(
-          "[Agents] API requer autenticação - ignorando sync de logs"
-        );
+        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
       }
 
       // Fetch memory com timeout
@@ -348,9 +346,7 @@ export function useAutonomousAgents() {
           setLegalMemory(data.memory);
         }
       } else if (memoryRes.status === 401) {
-        console.warn(
-          "[Agents] API requer autenticação - ignorando sync de memória"
-        );
+        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
       }
     } catch (error) {
       // Silenciar erros de rede em dev (servidor pode não estar rodando)
