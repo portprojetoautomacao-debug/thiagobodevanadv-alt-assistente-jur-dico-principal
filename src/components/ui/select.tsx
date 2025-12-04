@@ -1,6 +1,6 @@
 import {
-  Check as CheckIcon,
-  CaretDown as ChevronDownIcon,
+  Check as Check,
+  CaretDown as ChevronDown,
   CaretUp as ChevronUpIcon,
 } from "@phosphor-icons/react";
 import * as SelectPrimitive from "@radix-ui/react-select";
@@ -40,7 +40,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+        <ChevronDown className="size-4 opacity-50" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -107,7 +107,7 @@ function SelectItem({
     >
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
+          <Check className="size-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -153,7 +153,7 @@ function SelectScrollDownButton({
       className={cn("flex cursor-default items-center justify-center py-1", className)}
       {...props}
     >
-      <ChevronDownIcon className="size-4" />
+      <ChevronDown className="size-4" />
     </SelectPrimitive.ScrollDownButton>
   );
 }

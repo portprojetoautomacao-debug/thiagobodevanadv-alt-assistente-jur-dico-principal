@@ -1,29 +1,20 @@
-import { Search, Inbox, Bot, CircleNotch, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import {
-  Upload,
-  FileText,
-  CheckCircle,
-  XCircle,
-  Circle,
-  Clock,
-  User,
-  Trash,
-import { geminiGenerateJSON } from "@/lib/gemini-client";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
+import { useKV } from "@/hooks/use-kv";
+import { geminiGenerateJSON } from "@/lib/gemini-client";
 import type { PDFUploadHistory } from "@/types";
-import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CheckCircle, Clock, FileText, Trash, Upload, User, XCircle } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface ExtractedData {
   nome?: string;
@@ -602,11 +593,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <FileText
-                          className="text-destructive shrink-0 mt-1"
-                          size={24}
-                         
-                        />
+                        <FileText className="text-destructive shrink-0 mt-1" size={24} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-medium truncate">{item.fileName}</p>

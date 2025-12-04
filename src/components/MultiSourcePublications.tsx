@@ -1,6 +1,3 @@
-import { Search as SearchLucide } from "lucide-react";
-import { Search as SearchLucide } from "lucide-react";
-import { Search, Inbox, Bot, Loader2, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
 /**
  * Multi-Source Publications Component
  *
@@ -37,6 +34,7 @@ import {
   Download,
   Info,
   Warning,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
