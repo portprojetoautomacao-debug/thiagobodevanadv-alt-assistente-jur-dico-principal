@@ -91,7 +91,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         return () => document.removeEventListener('keydown', handleKeyDown)
     }, [])
 
-    // Reset de estado da busca (única função, sem duplicação)
+    // Reset state quando modal fecha
     const resetSearch = useCallback(() => {
         setQuery('')
         setCategory('all')

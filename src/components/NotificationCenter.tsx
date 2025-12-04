@@ -151,7 +151,6 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       prevCountRef.current = currentCount;
       return () => globalThis.clearTimeout(timeoutId);
     }
-    // Atualiza ref somente quando não há novas notificações (fora do if)
     prevCountRef.current = currentCount;
   }, [notifications]);
 
