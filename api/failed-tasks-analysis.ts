@@ -79,12 +79,10 @@ export default async function handler(
 
     // Estatísticas
     const errorStats = Object.entries(errorGroups).map(([errorKey, tasks]) => {
-      const sortedTasks = tasks
-        .slice()
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
+      const sortedTasks = tasks.toSorted(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
 
       return {
         errorType: errorKey,

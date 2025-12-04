@@ -127,6 +127,18 @@ function buildAppointmentDescription(analysis: IntimationAnalysisResult): string
   return descriptionParts.join("\n");
 }
 
+
+/**
+ * Constrói o título do compromisso
+ */
+function buildAppointmentTitle(intimationTitle: string): string {
+  const truncatedTitle =
+    intimationTitle.length > 50
+      ? `${intimationTitle.substring(0, 50)}...`
+      : intimationTitle;
+  return `⚠️ PRAZO: ${truncatedTitle}`;
+}
+
 /**
  * Criar compromisso local a partir de análise de intimação
  */

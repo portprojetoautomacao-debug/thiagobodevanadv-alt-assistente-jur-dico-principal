@@ -300,8 +300,6 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         onOpenChange={(isDialogOpen) => {
           if (!isDialogOpen) {
             closeSearch();
-          } else {
-            setIsOpen(true);
           }
         }}
       >
