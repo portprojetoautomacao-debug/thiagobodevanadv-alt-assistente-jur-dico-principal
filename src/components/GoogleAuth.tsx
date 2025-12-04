@@ -183,19 +183,19 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
         <Warning className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800 dark:text-amber-200">
           <strong>
-            {isCodespace
-              ? "GitHub Codespace Detectado"
-              : isLocalhost
-                ? "Ambiente Local Detectado"
-                : "Ambiente de Desenvolvimento Detectado"}
+            {(() => {
+              if (isCodespace) return "GitHub Codespace Detectado";
+              if (isLocalhost) return "Ambiente Local Detectado";
+              return "Ambiente de Desenvolvimento Detectado";
+            })()}
           </strong>
           <p className="mt-2 text-sm">
             O login com Google não funciona em{" "}
-            {isCodespace
-              ? "Codespaces"
-              : isLocalhost
-                ? "localhost"
-                : "ambientes de desenvolvimento"}{" "}
+            {(() => {
+              if (isCodespace) return "Codespaces";
+              if (isLocalhost) return "localhost";
+              return "ambientes de desenvolvimento";
+            })()}{" "}
             porque a origem{" "}
             <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">
               {window.location.origin}

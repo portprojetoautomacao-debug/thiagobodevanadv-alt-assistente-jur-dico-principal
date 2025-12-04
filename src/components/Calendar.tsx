@@ -364,14 +364,14 @@ export default function Calendar() {
                     "0"
                   )}`
                 : `empty-${idx}`;
-              const dayAppointments = isValidDay ? getAppointmentsForDay(day as number) : [];
+              const dayAppointments = isValidDay ? getAppointmentsForDay(day) : [];
               return (
                 <div key={keyForCell} className={getDayClassName(day)}>
                   {isValidDay && (
                     <>
                       <div
                         className={`text-sm font-medium mb-1 ${
-                          isToday(day as number) ? "text-primary" : "text-foreground"
+                          isToday(day) ? "text-primary" : "text-foreground"
                         }`}
                       >
                         {day}
@@ -395,7 +395,7 @@ export default function Calendar() {
                               type="button"
                               className="underline text-primary"
                               onClick={() => {
-                                const aptForDay = getAppointmentsForDay(day as number);
+                                const aptForDay = getAppointmentsForDay(day);
                                 if (aptForDay.length) {
                                   setSelectedAppointment(aptForDay[0]);
                                   setShowDetailsDialog(true);

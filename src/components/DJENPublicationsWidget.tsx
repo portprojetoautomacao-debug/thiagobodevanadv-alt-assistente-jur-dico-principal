@@ -283,8 +283,8 @@ interface PublicationsHeaderProps {
   filter: "all" | "unread";
   setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void;
   syncing: boolean;
-  handleSync: (fn?: () => void) => void;
-  fetchPublications: () => void;
+  handleSync: (fn?: () => void) => Promise<void>;
+  fetchPublications: () => Promise<void>;
   lastCheck: string | null;
   lawyersCount: number;
 }
@@ -301,11 +301,6 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
     lastCheck,
     lawyersCount,
   } = props;
-
-  // Wrapper para evitar void operator (S3735)
-  const handleSyncClick = () => {
-    handleSync(fetchPublications).catch((err) => console.error("[DJENWidget] Sync failed:", err));
-  };
 
   return (
     <CardHeader className="pb-2">
@@ -350,7 +345,7 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleSyncClick}
+                  onClick={() => void handleSync(fetchPublications)}
                   disabled={syncing}
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
@@ -585,7 +580,7 @@ export default function DJENPublicationsWidget({
     <DJENErrorCard
       compact={compact}
       error={errorMessage ?? "Erro desconhecido"}
-      onRetry={() => void fetchPublications()}
+      onRetry={fetchPublications}
     />
   );
 
@@ -622,7 +617,7 @@ export default function DJENPublicationsWidget({
           showRegisterAll={showRegisterAll}
           showViewAll={showViewAll}
           autoRegistering={autoRegistering}
-          onRegisterAll={() => void handleAutoRegisterAll(publications)}
+          onRegisterAll={() => handleAutoRegisterAll(publications)}
           onViewAll={onViewAll}
         />
       </>
@@ -646,12 +641,8 @@ export default function DJENPublicationsWidget({
       filter,
       setFilter,
       syncing,
-      handleSync: (onSuccess?: () => void) => {
-        void handleSync(onSuccess);
-      },
-      fetchPublications: () => {
-        void fetchPublications();
-      },
+      handleSync: (onSuccess?: () => void) => handleSync(onSuccess),
+      fetchPublications: () => fetchPublications(),
       lastCheck,
       lawyersCount,
     });

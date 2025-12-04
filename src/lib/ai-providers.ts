@@ -216,16 +216,18 @@ export class GeminiClient {
    */
   constructor(apiKey?: string, retryConfig?: Partial<RetryConfig>) {
     // Tenta pegar API key de forma flexível
-    this.apiKey = apiKey
-      ? String(apiKey)
-      : (typeof import.meta !== "undefined"
-          ? String(
-              import.meta.env.VITE_GOOGLE_API_KEY ||
-                import.meta.env.VITE_GEMINI_API_KEY ||
-                import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
-                ""
-            )
-          : "") || null;
+    if (apiKey) {
+      this.apiKey = String(apiKey);
+    } else if (typeof import.meta !== "undefined") {
+      const envKey =
+        import.meta.env.VITE_GOOGLE_API_KEY ||
+        import.meta.env.VITE_GEMINI_API_KEY ||
+        import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
+        "";
+      this.apiKey = envKey ? String(envKey) : null;
+    } else {
+      this.apiKey = null;
+    }
 
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
 

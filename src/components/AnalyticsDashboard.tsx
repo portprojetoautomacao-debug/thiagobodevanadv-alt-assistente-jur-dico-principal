@@ -233,13 +233,9 @@ export default function AnalyticsDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium capitalize">
-                          {(() => {
-                            if (event.type === "pageview")
-                              return `Visualização: ${event.data?.path ?? "-"}`;
-                            if (event.type === "action")
-                              return `Ação: ${event.data?.action ?? "-"}`;
-                            return `Erro: ${event.data?.error ?? "-"}`;
-                          })()}
+                          {event.type === "pageview" && `Visualização: ${event.data?.path ?? "-"}`}
+                          {event.type === "action" && `Ação: ${event.data?.action ?? "-"}`}
+                          {event.type === "error" && `Erro: ${event.data?.error ?? "-"}`}
                         </p>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {new Date(event.timestamp).toLocaleTimeString("pt-BR")}
@@ -259,18 +255,4 @@ export default function AnalyticsDashboard() {
       </Card>
     </div>
   );
-}
-
-// Helper para definir cor do ponto conforme tipo de evento
-function getEventTypeColor(type: string | undefined): string {
-  switch (type) {
-    case "pageview":
-      return "bg-blue-500";
-    case "action":
-      return "bg-green-500";
-    case "error":
-      return "bg-red-500";
-    default:
-      return "bg-muted-foreground/50";
-  }
 }
