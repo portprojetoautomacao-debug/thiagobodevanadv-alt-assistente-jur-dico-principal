@@ -705,6 +705,16 @@ export function useAutonomousAgents() {
     setUseStreaming((prev) => !prev);
   }, []);
 
+  // Clear old activity logs (older than 24h)
+  const clearOldLogs = useCallback(() => {
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    setActivityLog((current) =>
+      (current || []).filter(
+        (log) => new Date(log.timestamp).getTime() > oneDayAgo
+      )
+    );
+  }, [setActivityLog]);
+
   return {
     agents: agents || [],
     taskQueue: taskQueue || [],
@@ -723,5 +733,6 @@ export function useAutonomousAgents() {
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
     setAgents,
+    clearOldLogs, // Clear logs older than 24h
   };
 }
