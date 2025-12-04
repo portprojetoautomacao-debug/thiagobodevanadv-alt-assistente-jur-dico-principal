@@ -6,6 +6,131 @@
 
 Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
 
+---
+
+## 🚀 NOVO: Automação Copilot 24/7
+
+<table>
+<tr>
+<td width="50%">
+
+### 🤖 O Bot Trabalha Sozinho
+
+- ✅ **Diariamente às 9h BRT**: Corrige bugs automaticamente
+- ✅ **Ao salvar**: Auto-format + auto-fix instantâneo
+- ✅ **Commits automáticos**: Push sem intervenção
+- ✅ **Issues automáticas**: Alerta erros críticos
+
+</td>
+<td width="50%">
+
+### 👤 Você Faz (10 min/dia)
+
+- ⏰ Revisar commits do bot
+- ⏰ Verificar issues (se houver)
+- ⏰ Aprovar PRs (se houver)
+- ☕ **Tomar café!**
+
+</td>
+</tr>
+</table>
+
+**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md)
+
+---
+
+## 🤖 GitHub Copilot - Automação Completa com Mínima Intervenção
+
+Este repositório está **100% configurado para trabalho autônomo do GitHub Copilot**!
+
+### ✨ Trabalho Automático 24/7
+
+O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
+
+#### 🕐 **Diariamente às 9h BRT** (sem você fazer nada):
+- ✅ Detecta erros TypeScript e ESLint automaticamente
+- ✅ Aplica correções (auto-fix)
+- ✅ Organiza imports e formata código
+- ✅ Roda testes de validação
+- ✅ **Cria commit automático** com as correções
+- ✅ **Faz push automático** para o repositório
+- ✅ **Abre issue** se encontrar erros críticos que precisam de atenção
+
+#### 💾 **Ao salvar qualquer arquivo** (instantâneo):
+- ✅ Auto-save após 1 segundo
+- ✅ Prettier formata código automaticamente
+- ✅ ESLint corrige erros na hora
+- ✅ Remove imports não utilizados
+
+#### 🔄 **A cada push** que você faz:
+- ✅ Workflow roda automaticamente
+- ✅ Mesmas verificações e correções aplicadas
+
+#### 🔍 **Em background contínuo**:
+- ✅ Servidor dev sempre rodando
+- ✅ Testes em watch mode
+- ✅ Type checking a cada 30 segundos
+
+### 👤 Sua Intervenção (apenas 10 minutos/dia)
+
+**Diariamente:**
+- ⏰ Revisar commits automáticos do bot
+- ⏰ Verificar issues abertas (se houver)
+- ⏰ Aprovar PRs criadas (se houver)
+
+**Quando necessário:**
+- 🆘 Resolver erros críticos que o bot não conseguiu corrigir
+
+**Resto do tempo:**
+- ☕ **Tomar café enquanto o bot trabalha!**
+
+### 🔐 Segurança e Limites
+
+**Arquivos protegidos** (nunca modificados automaticamente):
+- ❌ `.env`, `package.json`, `vercel.json`
+- ❌ `.github/workflows/*`
+- ⚠️ `api/**/*.ts` (APIs críticas - requer revisão humana)
+
+**Modo MANUTENÇÃO respeitado:**
+- ✅ Bot **SÓ** corrige bugs
+- ❌ Bot **NUNCA** adiciona novas funcionalidades
+- ❌ Bot **NUNCA** altera arquitetura ou fluxos de produção
+
+### 📊 Monitoramento
+
+```bash
+# Ver commits automáticos do bot hoje
+git log --since="1 day ago" --author="github-actions" --oneline
+
+# Ver issues abertas pelo Copilot
+gh issue list --label "copilot"
+
+# Ver última execução do workflow
+gh run list --workflow=copilot-auto-fix.yml --limit 1
+
+# Executar workflow manualmente agora
+gh workflow run copilot-auto-fix.yml
+```
+
+### 📚 Documentação Completa
+
+| Guia | Descrição |
+|------|-----------|
+| **[Setup do Agente](.github/COPILOT_AGENT_SETUP.md)** | Como usar comandos `@workspace`, `/fix`, `/tests` |
+| **[Automação Total](.github/COPILOT_AUTONOMOUS.md)** | 3 níveis de automação, configuração completa |
+| **[Referência Rápida](.github/COPILOT_QUICK_REFERENCE.md)** | Comandos úteis, troubleshooting, checklist |
+| **[Instruções do Projeto](.github/copilot-instructions.md)** | Contexto completo do repositório para o Copilot |
+
+### 🎯 Recursos do Copilot Neste Projeto
+
+- 🔍 **Busca inteligente** de código e funcionalidades
+- 🐛 **Correção automática** de bugs TypeScript/ESLint
+- 🧪 **Geração de testes** unitários
+- 📝 **Documentação automática** de código
+- 💬 **Chat contextual** com conhecimento total da arquitetura
+- ⚡ **Sugestões inline** enquanto você digita (GPT-4o)
+- 🤖 **15 agentes IA** documentados e conhecidos pelo Copilot
+
 ## 🚀 Funcionalidades Principais
 
 - 🤖 **IA Jurídica**: Chatbot inteligente com Harvey Specter (Gemini 2.5 Pro)

@@ -118,6 +118,7 @@ export default function HumanAgentCollaboration({
 
   // Refs para controlar timers e evitar vazamentos de memória
   const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previousPhaseRef = useRef(phase)
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function HumanAgentCollaboration({
     return createProgressInterval(setProgress, onComplete)
   }, [phase, onComplete])
 
-  // Reset de inatividade quando sai do modo edição humana
+  // Track previous phase for transition detection
   const previousPhaseRef = useRef(phase)
   useEffect(() => {
     if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
@@ -137,22 +138,26 @@ export default function HumanAgentCollaboration({
 
   // Timer de inatividade durante edição humana
   useEffect(() => {
+    const prevPhase = previousPhaseRef.current
+    previousPhaseRef.current = phase
+    
+    // Reset timer when transitioning out of human_editing phase
+    if (prevPhase === 'human_editing' && phase !== 'human_editing') {
+      setTimeWithoutActivity(0)
+    }
+    
     if (phase !== 'human_editing') {
       return // No cleanup needed when not in human_editing phase
     }
 
     // Reset timer when entering human_editing phase
-    const resetTimer = () => {
+    if (prevPhase !== 'human_editing') {
       setTimeWithoutActivity(0)
     }
-    
-    // Schedule reset on next tick to avoid synchronous setState in effect
-    const timeoutId = globalThis.setTimeout(resetTimer, 0)
 
     const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
     
     return () => {
-      globalThis.clearTimeout(timeoutId)
       cleanup()
     }
   }, [phase, isHumanActive])

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import type { Process } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -50,13 +50,12 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
   // Initialize form data with lazy initialization
   const [formData, setFormData] = useState(() => createInitialFormData(process))
 
-  // Sync form data when process or dialog state changes
+  // Sync form data when process changes and dialog is open
   useEffect(() => {
-    // Schedule to avoid synchronous setState in effect
-    const timeoutId = globalThis.setTimeout(() => {
-      setFormData(createInitialFormData(process))
-    }, 0)
-    return () => globalThis.clearTimeout(timeoutId)
+    if (!open) return // Only update when dialog is open
+    
+    // Update form data with new process data
+    setFormData(createInitialFormData(process))
   }, [process, open])
 
   const handleSubmit = (e: React.FormEvent) => {
