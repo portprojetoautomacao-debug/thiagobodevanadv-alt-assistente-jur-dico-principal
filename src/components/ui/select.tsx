@@ -1,8 +1,4 @@
-import {
-  Check as Check,
-  CaretDown as ChevronDown,
-  CaretUp as ChevronUpIcon,
-} from "@phosphor-icons/react";
+import { Check, CaretDown as ChevronDown, CaretUp as ChevronUpIcon } from "@phosphor-icons/react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { ComponentProps } from "react";
 

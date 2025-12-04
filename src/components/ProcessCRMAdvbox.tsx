@@ -25,7 +25,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { DotsThree, Funnel, X } from "@phosphor-icons/react";
-import { Calendar, DollarSign, Search, TrendingUp } from "lucide-react";
+import { Calendar, DollarSign, File, Search, TrendingUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
