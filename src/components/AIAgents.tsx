@@ -1,4 +1,5 @@
 import AgentMetrics from "@/components/AgentMetrics";
+import AgentThinkingPanel from "@/components/AgentThinkingPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -681,6 +682,10 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
         {/* Atividade em tempo real */}
         <TabsContent value="activity" className="space-y-4">
+          {/* Painel de Pensamento em Tempo Real */}
+          <AgentThinkingPanel />
+
+          {/* Registro de Atividades Original */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Registro de Atividades</CardTitle>
