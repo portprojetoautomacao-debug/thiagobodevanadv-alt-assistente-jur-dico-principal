@@ -2,37 +2,38 @@ import AgentMetrics from "@/components/AgentMetrics";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAgentBackup } from "@/hooks/use-agent-backup";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
+import { useExpedientes } from "@/hooks/use-expedientes";
 import { useKV } from "@/hooks/use-kv";
 import {
-  AlertTriangle,
-  ArrowLeftRight,
-  Bot,
-  Brain,
-  Calendar,
-  CheckCircle,
-  Clock,
-  CloudUpload,
-  Database,
-  FileText,
-  Gavel,
-  History,
-  Info,
-  LineChart,
-  ListChecks,
-  MessageSquare,
-  Sparkles,
-  Zap,
+    AlertTriangle,
+    ArrowLeftRight,
+    Bot,
+    Brain,
+    Calendar,
+    CheckCircle,
+    Clock,
+    CloudUpload,
+    Database,
+    FileText,
+    Gavel,
+    History,
+    Info,
+    LineChart,
+    ListChecks,
+    MessageSquare,
+    Sparkles,
+    Zap,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 // HumanAgentCollaboration - disponível para uso futuro
@@ -42,7 +43,7 @@ import AgentStatusFloater from "@/components/AgentStatusFloater";
 import { LegalMemoryViewer } from "@/components/LegalMemoryViewer";
 import MrsJustinEModal from "@/components/MrsJustinEModal";
 import { ServerLogsViewer } from "@/components/ServerLogsViewer";
-import type { User, ViewType } from "@/types";
+import type { Expediente, User, ViewType } from "@/types";
 import { toast } from "sonner";
 
 // ===========================
@@ -230,6 +231,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     setAgents: _setAgents, // mantido para compatibilidade futura
   } = useAutonomousAgents();
 
+  const { expedientes } = useExpedientes();  // ✅ Expedientes/intimações reais
+
   const [user] = useKV<User | null>("user", null);
   const userId = user?.email || "default-user";
 
@@ -361,6 +364,21 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {getProcessingText(processingTasks)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expedientes</CardTitle>
+            <Database className="w-4 h-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {expedientes?.filter((e: Expediente) => !e.processado).length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {expedientes?.filter((e: Expediente) => e.urgente && !e.processado).length || 0} urgentes
             </p>
           </CardContent>
         </Card>

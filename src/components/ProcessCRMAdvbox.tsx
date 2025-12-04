@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { MagnifyingGlass, Funnel, DotsThree, CurrencyDollar, TrendUp, X, Calendar, File } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core'
+import { useKV } from '@/hooks/use-kv'
+import type { Process } from '@/types'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, closestCorners, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Process } from '@/types'
+import { Calendar, CurrencyDollar, DotsThree, File, Funnel, MagnifyingGlass, TrendUp, X } from '@phosphor-icons/react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 const PROCESS_PHASES = [
   'Marketing',
@@ -140,6 +140,15 @@ export default function ProcessCRMAdvbox() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({})
   const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
+  
+  // Configuração dos sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
 
   // Helper function for status color
