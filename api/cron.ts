@@ -68,8 +68,6 @@ interface MonitoredLawyer {
 type DJENMatchType = "nome" | "oab" | "ambos";
 
 interface StoredPublication {
-
-interface StoredPublication {
   id: string;
   djenId?: number;
   tribunal: string;

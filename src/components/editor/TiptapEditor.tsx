@@ -806,7 +806,7 @@ export function TiptapEditor({
     if (!editor || readOnly) return;
 
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("URL do link:", previousUrl);
+    const url = globalThis.window?.prompt("URL do link:", previousUrl);
 
     if (url === null) return;
 
@@ -821,7 +821,7 @@ export function TiptapEditor({
   const addImage = useCallback(() => {
     if (!editor || readOnly) return;
 
-    const url = window.prompt("URL da imagem:");
+    const url = globalThis.window?.prompt("URL da imagem:");
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
@@ -832,7 +832,7 @@ export function TiptapEditor({
     if (!editor) return;
 
     const html = editor.getHTML();
-    const printWindow = window.open("", "_blank");
+    const printWindow = globalThis.window?.open("", "_blank");
 
     if (!printWindow) {
       toast.error("Habilite pop-ups para imprimir/exportar PDF");

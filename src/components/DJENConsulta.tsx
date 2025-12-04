@@ -14,17 +14,16 @@ import {
   validarNumeroOAB,
   type DJENConfig,
   type DJENFilteredResult,
-} from "@/lib/djen-api";
+} from "@/lib/djen-api"; // X - disponível para botões de fechar
 import {
+  AlertTriangle,
   CheckCircle,
-  // X - disponível para botões de fechar
   Copy,
   Download,
-  MagnifyingGlass,
+  Loader2,
   Newspaper,
-  Spinner,
-  Warning,
-} from "@phosphor-icons/react";
+  Search,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -259,12 +258,12 @@ export default function DJENConsulta() {
           <Button className="w-full" size="lg" onClick={handleConsultar} disabled={isLoading}>
             {isLoading ? (
               <>
-                <Spinner className="animate-spin mr-2" />
+                <Loader2 className="animate-spin mr-2" />
                 Consultando...
               </>
             ) : (
               <>
-                <MagnifyingGlass className="mr-2" />
+                <Search className="mr-2" />
                 Consultar DJEN
               </>
             )}
@@ -284,7 +283,7 @@ export default function DJENConsulta() {
 
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
-              <Spinner size={40} className="animate-spin text-primary" />
+              <Loader2 size={40} className="animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Consultando tribunais selecionados...</p>
             </div>
           )}
@@ -313,7 +312,7 @@ export default function DJENConsulta() {
 
               {erros.length > 0 && (
                 <Alert variant="destructive">
-                  <Warning className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     <div className="font-semibold mb-2">Erros ao consultar alguns tribunais:</div>
                     <ul className="text-xs space-y-1">

@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useKV } from "@/hooks/use-kv";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 import type { Process } from "@/types";
-import { Bell, CheckCircle, Clock, FileText, Info, Robot, Warning } from "@phosphor-icons/react";
+import { AlertTriangle, Bell, Bot, CheckCircle, Clock, FileText, Info } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -220,7 +220,7 @@ Retorne um objeto JSON com a seguinte estrutura:
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Robot className="w-6 h-6 text-primary" weight="fill" />
+                <Bot className="w-6 h-6 text-primary" />
               </div>
               <div>
                 <CardTitle>Agente de Verificação Documental</CardTitle>
@@ -282,7 +282,7 @@ Retorne um objeto JSON com a seguinte estrutura:
                     <p className="text-sm text-muted-foreground">Alta Urgência</p>
                     <p className="text-2xl font-bold text-destructive">{highUrgency}</p>
                   </div>
-                  <Warning className="w-8 h-8 text-destructive" weight="fill" />
+                  <AlertTriangle className="w-8 h-8 text-destructive" />
                 </div>
               </CardContent>
             </Card>
@@ -324,7 +324,7 @@ Retorne um objeto JSON com a seguinte estrutura:
 
       {unresolvedDocs.length === 0 ? (
         <Alert>
-          <CheckCircle className="w-4 h-4" weight="fill" />
+          <CheckCircle className="w-4 h-4" />
           <AlertDescription>
             {processes.length === 0
               ? "Nenhum processo cadastrado para análise."

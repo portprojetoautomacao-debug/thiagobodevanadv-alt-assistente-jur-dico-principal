@@ -11,19 +11,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ArrowsClockwise,
+  Activity,
+  AlertCircle,
   CheckCircle,
   Clock,
   Cpu,
   GitBranch,
-  Graph,
-  Lightning,
+  LineChart,
   PlayCircle,
-  Pulse,
-  UsersThree,
-  WarningCircle,
+  RefreshCw,
+  Users,
   XCircle,
-} from "@phosphor-icons/react";
+  Zap,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -248,11 +248,11 @@ export default function AgentOrchestrationPanel() {
       case "CLOSED":
         return <CheckCircle className="h-4 w-4" />;
       case "HALF_OPEN":
-        return <WarningCircle className="h-4 w-4" />;
+        return <AlertCircle className="h-4 w-4" />;
       case "OPEN":
         return <XCircle className="h-4 w-4" />;
       default:
-        return <Pulse className="h-4 w-4" />;
+        return <Activity className="h-4 w-4" />;
     }
   };
 
@@ -262,7 +262,7 @@ export default function AgentOrchestrationPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Graph className="h-6 w-6 text-primary" />
+            <LineChart className="h-6 w-6 text-primary" />
             Orquestração de Agentes
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -271,11 +271,11 @@ export default function AgentOrchestrationPanel() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setAutoRefresh((prev) => !prev)}>
-            <ArrowsClockwise className={`h-4 w-4 ${autoRefresh ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${autoRefresh ? "animate-spin" : ""}`} />
             {autoRefresh ? "Auto-refresh" : "Manual"}
           </Button>
           <Button onClick={fetchMetrics} size="sm">
-            <ArrowsClockwise className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
         </div>
@@ -284,11 +284,11 @@ export default function AgentOrchestrationPanel() {
       <Tabs defaultValue="agents" className="w-full">
         <TabsList>
           <TabsTrigger value="agents">
-            <UsersThree className="h-4 w-4 mr-2" />
+            <Users className="h-4 w-4 mr-2" />
             Agentes
           </TabsTrigger>
           <TabsTrigger value="circuit-breakers">
-            <Lightning className="h-4 w-4 mr-2" />
+            <Zap className="h-4 w-4 mr-2" />
             Circuit Breakers
           </TabsTrigger>
           <TabsTrigger value="traces">
@@ -302,9 +302,7 @@ export default function AgentOrchestrationPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent) => {
               const buttonText =
-                loading && selectedAgent === agent.id
-                  ? "Executando..."
-                  : "Executar";
+                loading && selectedAgent === agent.id ? "Executando..." : "Executar";
               return (
                 <Card key={agent.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -364,7 +362,7 @@ export default function AgentOrchestrationPanel() {
                 <Card className="border-yellow-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-yellow-600 flex items-center gap-1">
-                      <WarningCircle className="h-4 w-4" />
+                      <AlertCircle className="h-4 w-4" />
                       Degradadas
                     </CardTitle>
                   </CardHeader>
@@ -471,10 +469,7 @@ export default function AgentOrchestrationPanel() {
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
                       {execution.traces.map((trace) => (
-                        <TraceItem
-                          key={`trace-${trace.timestamp}-${trace.step}`}
-                          trace={trace}
-                        />
+                        <TraceItem key={`trace-${trace.timestamp}-${trace.step}`} trace={trace} />
                       ))}
                     </div>
                   </ScrollArea>
@@ -501,20 +496,14 @@ function TraceItem({ trace }: { trace: AgentTrace }) {
   return (
     <div className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded">
       <div className="shrink-0">
-        <Badge variant={getTraceVariant(trace.type)}>
-          {trace.type.toUpperCase()}
-        </Badge>
+        <Badge variant={getTraceVariant(trace.type)}>{trace.type.toUpperCase()}</Badge>
       </div>
       <div className="flex-1">
         <p className="text-sm whitespace-pre-wrap">{trace.content}</p>
         {trace.toolUsed && (
-          <p className="text-xs text-muted-foreground mt-1">
-            🔧 {trace.toolUsed}
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">🔧 {trace.toolUsed}</p>
         )}
-        {trace.error && (
-          <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>
-        )}
+        {trace.error && <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>}
       </div>
       <div className="shrink-0 text-xs text-muted-foreground">
         {typeof trace.duration === "number" ? `${trace.duration}ms` : "-- ms"}

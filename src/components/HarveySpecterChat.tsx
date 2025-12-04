@@ -20,21 +20,21 @@ import { useKV } from "@/hooks/use-kv";
 import { cn } from "@/lib/utils";
 import type { FinancialEntry, Process, ViewType } from "@/types";
 import {
+  AlertTriangle,
   ArrowRight,
+  BarChart2,
   Bell,
+  Bot,
   Briefcase,
-  ChartBar,
   Check,
   Copy,
-  CurrencyCircleDollar,
-  PaperPlaneTilt,
-  Robot,
-  Sparkle,
-  Stop,
-  Trash,
+  DollarSign,
+  Send,
+  Sparkles,
+  Square,
+  Trash2,
   User,
-  Warning,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -144,7 +144,7 @@ const DEFAULT_MAX_MESSAGES = 50;
 
 const QUICK_ACTIONS = [
   {
-    icon: ChartBar,
+    icon: BarChart2,
     title: "Processos",
     description: "Status do acervo",
     query: "Qual o status dos meus processos?",
@@ -158,7 +158,7 @@ const QUICK_ACTIONS = [
     color: "text-red-500 bg-red-500/10",
   },
   {
-    icon: CurrencyCircleDollar,
+    icon: DollarSign,
     title: "Financeiro",
     description: "Resumo do mês",
     query: "Como está o financeiro do escritório?",
@@ -281,11 +281,7 @@ const ChatMessage = ({
               : "bg-linear-to-br from-primary/20 to-accent/20"
           )}
         >
-          {isUser ? (
-            <User className="w-4 h-4" weight="fill" />
-          ) : (
-            <Robot className="w-4 h-4" weight="fill" />
-          )}
+          {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
         </div>
 
         {/* Content */}
@@ -335,10 +331,12 @@ const ChatMessage = ({
                   onClick={() => onInsightClick(insight.action)}
                 >
                   {insight.type === "alert" && <Bell className="w-3 h-3 text-red-500" />}
-                  {insight.type === "statistics" && <ChartBar className="w-3 h-3 text-blue-500" />}
-                  {insight.type === "trend" && <ChartBar className="w-3 h-3 text-green-500" />}
-                  {insight.type === "suggestion" && <Sparkle className="w-3 h-3 text-purple-500" />}
-                  {insight.type === "info" && <Warning className="w-3 h-3 text-amber-500" />}
+                  {insight.type === "statistics" && <BarChart2 className="w-3 h-3 text-blue-500" />}
+                  {insight.type === "trend" && <BarChart2 className="w-3 h-3 text-green-500" />}
+                  {insight.type === "suggestion" && (
+                    <Sparkles className="w-3 h-3 text-purple-500" />
+                  )}
+                  {insight.type === "info" && <AlertTriangle className="w-3 h-3 text-amber-500" />}
                   <span className="font-medium">{insight.title}</span>
                   {insight.value && <span className="font-bold">{insight.value}</span>}
                   {insight.action && <ArrowRight className="w-3 h-3" />}
@@ -769,7 +767,7 @@ Regras:
       <div className="border-b bg-card/50 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center">
-            <Sparkle className="w-5 h-5 text-white" weight="fill" />
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold">Harvey Specter</h1>
@@ -784,7 +782,7 @@ Regras:
             </Badge>
           )}
           <Button variant="ghost" size="sm" onClick={handleClear} aria-label="Limpar conversa">
-            <Trash className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -815,7 +813,7 @@ Regras:
                       >
                         <div className="flex items-center gap-2">
                           <div className={cn("p-2 rounded-lg", action.color)}>
-                            <Icon className="w-4 h-4" weight="fill" />
+                            <Icon className="w-4 h-4" />
                           </div>
                           <div>
                             <p className="font-medium text-sm">{action.title}</p>
@@ -891,7 +889,7 @@ Regras:
 
           {isStreaming ? (
             <Button onClick={handleCancel} variant="destructive" size="icon" aria-label="Parar">
-              <Stop className="w-4 h-4" weight="fill" />
+              <Square className="w-4 h-4" />
             </Button>
           ) : (
             <Button
@@ -900,7 +898,7 @@ Regras:
               size="icon"
               aria-label="Enviar"
             >
-              <PaperPlaneTilt className="w-4 h-4" weight="fill" />
+              <Send className="w-4 h-4" />
             </Button>
           )}
         </div>
