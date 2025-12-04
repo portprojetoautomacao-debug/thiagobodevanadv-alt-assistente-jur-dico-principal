@@ -200,26 +200,38 @@ export default function GeminiExample() {
             <CardDescription>Análise gerada pelo Google Gemini</CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center min-h-[300px]">
-                <div className="space-y-3 text-center">
-                  <Sparkle
-                    size={48}
-                    className="text-primary animate-pulse mx-auto"
-                    weight="duotone"
-                  />
-                  <p className="text-muted-foreground">Processando com IA...</p>
+            {(() => {
+              if (loading) {
+                return (
+                  <div className="flex items-center justify-center min-h-[300px]">
+                    <div className="space-y-3 text-center">
+                      <Sparkle
+                        size={48}
+                        className="text-primary animate-pulse mx-auto"
+                        weight="duotone"
+                      />
+                      <p className="text-muted-foreground">Processando com IA...</p>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (result) {
+                return (
+                  <div className="prose prose-sm max-w-none">
+                    <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg text-sm">
+                      {result}
+                    </pre>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
+                  Resultado aparecerá aqui após a análise
                 </div>
-              </div>
-            ) : result ? (
-              <div className="prose prose-sm max-w-none">
-                <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg text-sm">{result}</pre>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
-                Resultado aparecerá aqui após a análise
-              </div>
-            )}
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
