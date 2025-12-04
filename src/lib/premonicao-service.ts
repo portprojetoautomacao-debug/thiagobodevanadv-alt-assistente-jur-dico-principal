@@ -33,7 +33,7 @@ function extractResponseText(data: Record<string, unknown>): string {
  */
 function parseJsonResponse(responseText: string): Record<string, unknown> {
   // Remover markdown code blocks
-  let cleaned = responseText
+  const cleaned = responseText
     .replace(/```json\s*/gi, '')
     .replace(/```\s*/g, '')
     .trim()
