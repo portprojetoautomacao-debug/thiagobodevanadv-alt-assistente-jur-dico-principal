@@ -600,7 +600,13 @@ export default function DJENPublicationsWidget({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => void handleSync(fetchPublications)}
+        onClick={async () => {
+          try {
+            await handleSync(fetchPublications);
+          } catch (err) {
+            console.error("[DJENWidget] Sync failed:", err);
+          }
+        }}
         className="mt-4"
         disabled={syncing}
       >
