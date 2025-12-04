@@ -118,6 +118,7 @@ export default function HumanAgentCollaboration({
 
   // Refs para controlar timers e evitar vazamentos de memória
   const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previousPhaseRef = useRef(phase)
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {

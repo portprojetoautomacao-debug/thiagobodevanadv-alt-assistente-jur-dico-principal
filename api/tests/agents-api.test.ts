@@ -17,6 +17,7 @@ function mockRes() {
         res.body = data;
         return res;
       },
+      end: () => res,
     };
   };
   res.end = () => res;
