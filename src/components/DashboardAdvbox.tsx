@@ -309,8 +309,8 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="h-[300px]">
-                <ResponsiveContainer width="99%" height="100%">
+              <div className="h-[300px] min-h-[300px]">
+                <ResponsiveContainer width="99%" height="100%" minHeight={300}>
                   <LineChart data={performanceData}>
                     <defs>
                       <linearGradient id="colorEste" x1="0" y1="0" x2="0" y2="1">

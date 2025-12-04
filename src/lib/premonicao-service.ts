@@ -175,11 +175,14 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
 
     console.log(
       "[PremonicaoService] Resposta recebida (preview):",
-      typeof responseText === "string" ? responseText.substring(0, 200) : "[non-string]"
+      typeof responseText === "string" && responseText.length > 0
+        ? responseText.substring(0, 200)
+        : `[empty or non-string: ${typeof responseText}]`
     );
 
-    if (!responseText || typeof responseText !== "string") {
-      throw new Error("Resposta vazia ou em formato inesperado da API de IA");
+    if (!responseText || typeof responseText !== "string" || responseText.trim().length === 0) {
+      console.warn("[PremonicaoService] Resposta vazia da IA - tentando novamente pode ajudar");
+      throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
     }
 
     const parsed = parseJsonResponse(responseText);

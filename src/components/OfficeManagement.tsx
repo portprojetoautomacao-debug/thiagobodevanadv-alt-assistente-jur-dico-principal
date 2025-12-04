@@ -307,8 +307,8 @@ export default function OfficeManagement() {
                 {financeiroData.length === 0 ? (
                   <NoDataMessage message="Nenhum registro financeiro encontrado" />
                 ) : (
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="99%" height="100%">
+                  <div className="h-[300px] min-h-[300px]">
+                    <ResponsiveContainer width="99%" height="100%" minHeight={300}>
                       <BarChart data={financeiroData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
                         <XAxis dataKey="mes" stroke="#6b7280" />
@@ -345,8 +345,8 @@ export default function OfficeManagement() {
                 {estoqueData.length === 0 ? (
                   <NoDataMessage message="Nenhum processo cadastrado" />
                 ) : (
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="99%" height="100%">
+                  <div className="h-[300px] min-h-[300px]">
+                    <ResponsiveContainer width="99%" height="100%" minHeight={300}>
                       <PieChart>
                         <Pie
                           data={estoqueData}
@@ -422,8 +422,8 @@ export default function OfficeManagement() {
               {financeiroData.length === 0 ? (
                 <NoDataMessage message="Nenhum registro financeiro encontrado" />
               ) : (
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="99%" height="100%">
+                <div className="h-[400px] min-h-[400px]">
+                  <ResponsiveContainer width="99%" height="100%" minHeight={400}>
                     <BarChart data={financeiroData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" />
                       <XAxis dataKey="mes" stroke="#6b7280" />
@@ -466,8 +466,8 @@ export default function OfficeManagement() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[250px]">
-                      <ResponsiveContainer width="99%" height="100%">
+                    <div className="h-[250px] min-h-[250px]">
+                      <ResponsiveContainer width="99%" height="100%" minHeight={250}>
                         <PieChart>
                           <Pie
                             data={custosData}
