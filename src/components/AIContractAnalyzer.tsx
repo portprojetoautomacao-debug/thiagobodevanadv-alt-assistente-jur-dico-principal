@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   FileText,
   Sparkles,
-  ShieldWarning,
+  ShieldAlert,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
@@ -108,7 +108,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <ShieldWarning size={32} className="text-primary neon-glow" />
+          <ShieldAlert size={32} className="text-primary neon-glow" />
           Analisador de Contratos IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -147,7 +147,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
           {!analysis ? (
             <Card className="glassmorphic">
               <CardContent className="flex flex-col items-center justify-center py-24 text-center">
-                <ShieldWarning size={64} className="text-muted-foreground mb-4" />
+                <ShieldAlert size={64} className="text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
                   A análise de riscos aparecerá aqui após processar o contrato
                 </p>

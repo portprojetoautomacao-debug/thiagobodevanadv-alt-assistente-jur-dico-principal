@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  ArrowsLeftRight,
+  ArrowLeftRight,
   Brain,
   CheckCircle,
   Clock,
-  PencilSimple,
+  Pencil,
   Play,
   Bot,
   Sparkles,
@@ -250,7 +250,7 @@ export default function HumanAgentCollaboration({
           </div>
           {phase === "agent_working" && (
             <Button variant="outline" size="sm" onClick={handleHumanIntervention}>
-              <PencilSimple className="w-4 h-4 mr-2" />
+              <Pencil className="w-4 h-4 mr-2" />
               Intervir
             </Button>
           )}
@@ -310,7 +310,7 @@ export default function HumanAgentCollaboration({
           </div>
 
           <div className="text-center">
-            <ArrowsLeftRight className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <ArrowLeftRight className="w-8 h-8 mx-auto mb-2 text-primary" />
             <p className="text-xs font-medium">Colaboração</p>
             <p className="text-xs text-muted-foreground">Handoff inteligente</p>
           </div>

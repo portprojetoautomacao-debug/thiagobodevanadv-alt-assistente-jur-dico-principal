@@ -15,19 +15,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente, Minuta, Process } from "@/types";
-import {
-  ArrowDown,
-  ArrowUp,
-  CaretRight,
-  Command,
-  FileText,
-  Folder,
-  MagnifyingGlass,
-  Tray,
-  User,
-  X,
-} from "@phosphor-icons/react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { ArrowDown, ArrowUp, Command, FileText, Folder, User, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Tipo para cliente (simplificado)
@@ -198,7 +187,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             type: "expediente" as const,
             title: e.numeroProcesso || "Expediente",
             subtitle: e.summary?.slice(0, 60) + "..." || e.tribunal || "Sem resumo",
-            icon: <Tray className="w-4 h-4 text-orange-500" />,
+            icon: <Inbox className="w-4 h-4 text-orange-500" />,
             data: e,
           }));
         newResults.push(...matchedExpedientes);
@@ -287,7 +276,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         onClick={() => setIsOpen(true)}
         className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 rounded-md border border-border hover:bg-muted transition-colors"
       >
-        <MagnifyingGlass className="w-4 h-4" />
+        <Search className="w-4 h-4" />
         <span>Buscar...</span>
         <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono bg-background rounded border">
           /
@@ -309,7 +298,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
           </VisuallyHidden>
           {/* Header com input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b">
-            <MagnifyingGlass className="w-5 h-5 text-muted-foreground" />
+            <Search className="w-5 h-5 text-muted-foreground" />
             <Input
               ref={inputRef}
               value={query}
@@ -354,7 +343,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
               if (!query) {
                 return (
                   <div className="p-8 text-center text-muted-foreground">
-                    <MagnifyingGlass className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <Search className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Digite para pesquisar em todo o sistema</p>
                     <p className="text-xs mt-1 opacity-70">
                       Processos, clientes, minutas, expedientes...

@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowSquareOut, AlertTriangle } from "lucide-react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
 
 export function ConfigurationError() {
   return (
@@ -54,7 +54,7 @@ export function ConfigurationError() {
                       globalThis.window?.open("https://aistudio.google.com/app/apikey", "_blank")
                     }
                   >
-                    <ArrowSquareOut size={16} />
+                    <ExternalLink size={16} />
                     Abrir AI Studio
                   </Button>
                 </div>
@@ -119,7 +119,7 @@ export function ConfigurationError() {
                   )
                 }
               >
-                <ArrowSquareOut size={16} />
+                <ExternalLink size={16} />
                 Guia Rápido
               </Button>
               <Button
@@ -132,7 +132,7 @@ export function ConfigurationError() {
                   )
                 }
               >
-                <ArrowSquareOut size={16} />
+                <ExternalLink size={16} />
                 Guia Completo
               </Button>
             </div>

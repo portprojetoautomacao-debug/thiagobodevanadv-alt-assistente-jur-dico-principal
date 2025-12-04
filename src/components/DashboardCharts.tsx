@@ -2,7 +2,7 @@
 // Os gráficos exibem estatísticas calculadas a partir de processos, expedientes e dados financeiros reais
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
-import { ChartPie, Gavel, TrendUp } from "lucide-react";
+import { ChartPie, Gavel, TrendingUp } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -134,7 +134,7 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     if (!chartData?.trendData || chartData.trendData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <TrendUp size={48} className="text-muted-foreground mb-2" />
+          <TrendingUp size={48} className="text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
         </div>
       );
@@ -189,7 +189,7 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     console.error("Error rendering TrendChart:", error);
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <TrendUp size={48} className="text-muted-foreground mb-2" />
+        <TrendingUp size={48} className="text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
       </div>
     );

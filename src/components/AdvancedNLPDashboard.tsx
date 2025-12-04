@@ -26,9 +26,9 @@ import {
   Download,
   FileText,
   Lightning,
-  MagnifyingGlass,
   Tag,
 } from "@phosphor-icons/react";
+import { Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -257,7 +257,7 @@ export default function AdvancedNLPDashboard() {
               disabled={isProcessing || !inputText.trim()}
               variant="outline"
             >
-              <MagnifyingGlass size={20} />
+              <Search size={20} />
               Classificar
             </Button>
             <Button
@@ -447,7 +447,7 @@ export default function AdvancedNLPDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      <MagnifyingGlass size={20} />
+                      <Search size={20} />
                       Classificação do Documento
                     </CardTitle>
                     <CardDescription>Categoria, subcategoria e tags identificadas</CardDescription>
@@ -496,7 +496,7 @@ export default function AdvancedNLPDashboard() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                <MagnifyingGlass size={48} className="mx-auto mb-4 opacity-50" />
+                <Search size={48} className="mx-auto mb-4 opacity-50" />
                 <p>Nenhuma classificação ainda</p>
                 <p className="text-sm mt-2">Execute a análise para ver os resultados</p>
               </CardContent>
@@ -557,11 +557,7 @@ export default function AdvancedNLPDashboard() {
                           key={`${String(point).slice(0, 20)}-${index}`}
                           className="flex items-start gap-2 p-3 rounded-lg border border-border"
                         >
-                          <CheckCircle
-                            size={20}
-                            className="text-primary shrink-0 mt-0.5"
-                           
-                          />
+                          <CheckCircle size={20} className="text-primary shrink-0 mt-0.5" />
                           <span>{point}</span>
                         </div>
                       ))}

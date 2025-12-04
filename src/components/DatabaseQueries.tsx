@@ -15,7 +15,7 @@ import {
   validarNumeroCNJ,
   type DatajudProcesso,
 } from "@/lib/datajud-api";
-import { CircleNotch, Database, MagnifyingGlass, AlertTriangle } from "lucide-react";
+import { Loader, Database, Search, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -144,12 +144,12 @@ export default function DatabaseQueries() {
                   <Button onClick={handleDatajudQuery} disabled={loading}>
                     {loading ? (
                       <>
-                        <CircleNotch className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader className="w-4 h-4 mr-2 animate-spin" />
                         Consultando...
                       </>
                     ) : (
                       <>
-                        <MagnifyingGlass className="w-4 h-4 mr-2" />
+                        <Search className="w-4 h-4 mr-2" />
                         Consultar
                       </>
                     )}

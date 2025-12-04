@@ -32,12 +32,12 @@ import {
 } from "@/components/ui/table";
 import {
   Plus,
-  MagnifyingGlass,
-  PencilSimple,
+  Search,
+  Pencil,
   Trash2,
   User,
-  Buildings,
-  DownloadSimple,
+  Building,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Cliente } from "@/types";
@@ -168,7 +168,7 @@ export default function ClientesView() {
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
-            <DownloadSimple size={20} />
+            <Download size={20} />
             Exportar CSV
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -331,7 +331,7 @@ export default function ClientesView() {
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
-              <MagnifyingGlass
+              <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 size={20}
               />
@@ -373,7 +373,7 @@ export default function ClientesView() {
                         {cliente.tipo === "fisica" ? (
                           <User size={20} className="text-primary" />
                         ) : (
-                          <Buildings size={20} className="text-secondary" />
+                          <Building size={20} className="text-secondary" />
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{cliente.nome}</TableCell>
@@ -390,7 +390,7 @@ export default function ClientesView() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(cliente)}>
-                            <PencilSimple size={18} />
+                            <Pencil size={18} />
                           </Button>
                           <Button
                             variant="ghost"

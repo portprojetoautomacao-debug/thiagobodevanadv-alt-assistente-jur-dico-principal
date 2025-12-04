@@ -25,7 +25,7 @@ import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import { createProcessTasks, initializeTodoistClient } from "@/lib/todoist-integration";
 import type { Expediente, PremonicaoJuridica, Process } from "@/types";
-import { MagnifyingGlass, Plus, Robot, Sparkle } from "@phosphor-icons/react";
+import { Search, Plus, Bot, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -280,7 +280,7 @@ export default function ProcessCRM() {
               onClick={handleUpdateIncompleteParties}
               disabled={updatingParties}
             >
-              <Robot className="w-4 h-4 mr-2" />
+              <Bot className="w-4 h-4 mr-2" />
               {updatingParties
                 ? "Atualizando..."
                 : `Completar ${incompleteProcesses.length} processo(s)`}
@@ -384,7 +384,7 @@ export default function ProcessCRM() {
       {/* Barra de filtros */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             placeholder="Buscar por CNJ, título ou parte..."
             value={filter}

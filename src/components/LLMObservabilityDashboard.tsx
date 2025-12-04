@@ -23,7 +23,7 @@ import {
   DollarSign,
   Database,
   Zap,
-  TrendUp,
+  TrendingUp,
   AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -289,7 +289,7 @@ export default function LLMObservabilityDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendUp size={20} />
+                  <TrendingUp size={20} />
                   Performance de Cache
                 </CardTitle>
               </CardHeader>

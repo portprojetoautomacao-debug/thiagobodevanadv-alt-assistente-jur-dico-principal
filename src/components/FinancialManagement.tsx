@@ -24,9 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   DollarSign,
   Plus,
-  TrendUp,
-  TrendDown,
-  DownloadSimple,
+  TrendingUp,
+  TrendingDown,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { FinancialEntry } from "@/types";
@@ -101,7 +101,7 @@ export default function FinancialManagement() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
-            <DownloadSimple className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 mr-2" />
             Exportar CSV
           </Button>
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -190,7 +190,7 @@ export default function FinancialManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-            <TrendUp className="w-4 h-4 text-green-600" />
+            <TrendingUp className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
@@ -201,7 +201,7 @@ export default function FinancialManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-            <TrendDown className="w-4 h-4 text-red-600" />
+            <TrendingDown className="w-4 h-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
@@ -251,9 +251,9 @@ export default function FinancialManagement() {
                       }`}
                     >
                       {entry.type === "income" ? (
-                        <TrendUp className="w-5 h-5 text-green-600" />
+                        <TrendingUp className="w-5 h-5 text-green-600" />
                       ) : (
-                        <TrendDown className="w-5 h-5 text-red-600" />
+                        <TrendingDown className="w-5 h-5 text-red-600" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
