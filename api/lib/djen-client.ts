@@ -97,14 +97,14 @@ export function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
 // ===== OAB parsing helpers (reduces S3776) =====
 
 function parseOABWithPattern(value: string): { numero?: string; uf?: string } | null {
-  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
+  const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i.exec(value);
   if (matchOABPattern) {
     return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
   }
@@ -112,7 +112,7 @@ function parseOABWithPattern(value: string): { numero?: string; uf?: string } | 
 }
 
 function parseOABNumericUF(value: string): { numero?: string; uf?: string } | null {
-  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
+  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
   if (matchNumericUF) {
     return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
   }
@@ -120,7 +120,7 @@ function parseOABNumericUF(value: string): { numero?: string; uf?: string } | nu
 }
 
 function parseOABNumericOnly(value: string): { numero?: string; uf?: string } | null {
-  const matchNumeric = value.match(/^(\d+)$/);
+  const matchNumeric = /^(\d+)$/.exec(value);
   if (matchNumeric) {
     return { numero: matchNumeric[1] };
   }

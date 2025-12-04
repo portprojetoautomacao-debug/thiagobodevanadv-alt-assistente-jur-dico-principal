@@ -69,9 +69,7 @@ function isFeriado(date: Date, tribunalCode?: string): boolean {
 
 function isRecessoForense(date: Date): boolean {
   const dateStr = date.toISOString().split("T")[0];
-  return (
-    dateStr >= recessoForense2025.start && dateStr <= recessoForense2025.end
-  );
+  return dateStr >= recessoForense2025.start && dateStr <= recessoForense2025.end;
 }
 
 function isDiaUtil(date: Date, tribunalCode?: string): boolean {
@@ -99,8 +97,10 @@ function calcularPrazo(
   let daysAdded = 0;
   let calendarDays = 0;
 
-  reasoning.push(`Data inicial: ${currentDate.toLocaleDateString("pt-BR")}`);
-  reasoning.push(`Dias úteis a contar: ${businessDays}`);
+  reasoning.push(
+    `Data inicial: ${currentDate.toLocaleDateString("pt-BR")}`,
+    `Dias úteis a contar: ${businessDays}`
+  );
 
   while (daysAdded < businessDays) {
     currentDate.setDate(currentDate.getDate() + 1);
@@ -112,16 +112,14 @@ function calcularPrazo(
       const reason = getHolidayReason(currentDate, tribunalCode);
 
       holidays.push(`${currentDate.toLocaleDateString("pt-BR")} - ${reason}`);
-      reasoning.push(
-        `Dia ${currentDate.toLocaleDateString(
-          "pt-BR"
-        )} desconsiderado (${reason})`
-      );
+      reasoning.push(`Dia ${currentDate.toLocaleDateString("pt-BR")} desconsiderado (${reason})`);
     }
   }
 
-  reasoning.push(`Total de dias corridos: ${calendarDays}`);
-  reasoning.push(`Vencimento: ${currentDate.toLocaleDateString("pt-BR")}`);
+  reasoning.push(
+    `Total de dias corridos: ${calendarDays}`,
+    `Vencimento: ${currentDate.toLocaleDateString("pt-BR")}`
+  );
 
   return {
     deadline: currentDate.toISOString(),
@@ -181,15 +179,14 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
     );
 
     // Usar API real do DJEN (Comunica PJe)
-    const { resultados, erros, rateLimitWarning } =
-      await consultarDJENForLawyer(
-        tribunais,
-        lawyerName,
-        `${oab}/${ufOab}`,
-        undefined, // dataInicio (padrão: hoje)
-        undefined, // dataFim (padrão: dataInicio)
-        "D" // Diário Eletrônico
-      );
+    const { resultados, erros, rateLimitWarning } = await consultarDJENForLawyer(
+      tribunais,
+      lawyerName,
+      `${oab}/${ufOab}`,
+      undefined, // dataInicio (padrão: hoje)
+      undefined, // dataFim (padrão: dataInicio)
+      "D" // Diário Eletrônico
+    );
 
     console.log(`[DJEN Check] Encontradas ${resultados.length} comunicações`);
 
@@ -264,10 +261,7 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function handleDeadlineCalculation(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+async function handleDeadlineCalculation(req: VercelRequest, res: VercelResponse) {
   try {
     const {
       startDate,
@@ -318,70 +312,62 @@ async function handleDeadlineCalculation(
 
 // --- MAIN HANDLER ---
 
-export default withErrorHandler(
-  async (req: VercelRequest, res: VercelResponse) => {
-    // Apply authentication
-    const authResult = await requireAuth(req, res);
-    if (!authResult.authenticated) {
-      sendAuthError(res, authResult);
-      return;
-    }
+export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) => {
+  // Apply authentication
+  const authResult = await requireAuth(req, res);
+  if (!authResult.authenticated) {
+    sendAuthError(res, authResult);
+    return;
+  }
 
-    // Apply rate limiting
-    const clientIP =
-      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-      (req.headers["x-real-ip"] as string) ||
-      "unknown";
+  // Apply rate limiting
+  const clientIP =
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+    (req.headers["x-real-ip"] as string) ||
+    "unknown";
 
-    const rateLimitResult = await rateLimitMiddleware(clientIP);
-    if (!rateLimitResult.allowed) {
-      res.setHeader(
-        "Retry-After",
-        Math.ceil((Date.now() + 60000) / 1000).toString()
-      );
-      Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
-        res.setHeader(key, value);
-      });
-      res.status(429).json({
-        error: rateLimitResult.error || "Rate limit exceeded",
-      });
-      return;
-    }
-
-    // Set rate limit headers
+  const rateLimitResult = await rateLimitMiddleware(clientIP);
+  if (!rateLimitResult.allowed) {
+    res.setHeader("Retry-After", Math.ceil((Date.now() + 60000) / 1000).toString());
     Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
       res.setHeader(key, value);
     });
-
-    logger.info("Legal services request", {
-      method: req.method,
-      service: req.query.service,
-      userId: authResult.userId,
-      ip: clientIP,
+    res.status(429).json({
+      error: rateLimitResult.error || "Rate limit exceeded",
     });
-
-    if (req.method !== "POST") {
-      res.status(405).json({ error: "Method not allowed" });
-      return;
-    }
-
-    const service = req.query.service as string;
-
-    if (service === "djen") {
-      handleDJENCheck(req, res);
-      return;
-    }
-
-    if (service === "deadline") {
-      handleDeadlineCalculation(req, res);
-      return;
-    }
-
-    res
-      .status(400)
-      .json({
-        error:
-          "Invalid service specified. Use ?service=djen or ?service=deadline",
-      });
+    return;
   }
-);
+
+  // Set rate limit headers
+  Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  logger.info("Legal services request", {
+    method: req.method,
+    service: req.query.service,
+    userId: authResult.userId,
+    ip: clientIP,
+  });
+
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const service = req.query.service as string;
+
+  if (service === "djen") {
+    handleDJENCheck(req, res);
+    return;
+  }
+
+  if (service === "deadline") {
+    handleDeadlineCalculation(req, res);
+    return;
+  }
+
+  res.status(400).json({
+    error: "Invalid service specified. Use ?service=djen or ?service=deadline",
+  });
+});

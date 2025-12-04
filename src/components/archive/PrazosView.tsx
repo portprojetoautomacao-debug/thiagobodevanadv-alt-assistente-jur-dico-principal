@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
-import { useKV } from "@/hooks/use-kv";
-import type { Process, Prazo } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, CheckCircle, Clock, DownloadSimple } from "@phosphor-icons/react";
-import { calcularDiasRestantes, isUrgente, formatarData } from "@/lib/prazos";
-import { toast } from "sonner";
+import { useKV } from "@/hooks/use-kv";
+import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import { exportToCSV } from "@/lib/utils";
+import type { Prazo, Process } from "@/types";
+import { CalendarCheck, CheckCircle, Clock, Download as DownloadSimple } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 // ===== Helpers for PrazosView (reduces S3776 Cognitive Complexity) =====
 

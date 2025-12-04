@@ -6,7 +6,6 @@ import { useKV } from "@/hooks/use-kv";
 import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
-  ArrowRight,
   CalendarCheck,
   ChartPie,
   CheckCircle,
@@ -16,6 +15,7 @@ import {
   Upload,
   WarningCircle,
 } from "@phosphor-icons/react";
+import { ArrowRight } from "lucide-react";
 import { lazy, Suspense, useMemo } from "react";
 
 // Lazy load dashboard sections for better code splitting
