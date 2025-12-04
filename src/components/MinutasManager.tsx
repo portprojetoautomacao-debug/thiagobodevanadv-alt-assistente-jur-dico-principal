@@ -1,79 +1,62 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAIStreaming } from "@/hooks/use-ai-streaming";
 import { useGoogleDocs } from "@/hooks/use-google-docs";
 import { useKV } from "@/hooks/use-kv";
 import {
-    documentTemplates,
-    extractUnfilledVariables,
-    replaceTemplateVariables,
-    type DocumentTemplate,
+  documentTemplates,
+  extractUnfilledVariables,
+  replaceTemplateVariables,
+  type DocumentTemplate,
 } from "@/lib/document-templates";
 import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
 import type { Minuta, Process } from "@/types";
 import {
-    ArrowsClockwise,
-    CaretDown,
-    CheckCircle,
-    Clock,
-    Copy,
-    DownloadSimple,
-    Eye,
-    FileDoc,
-    FilePdf,
-    FileText,
-    FolderOpen,
-    GoogleLogo,
-    MagnifyingGlass,
-    PencilSimple,
-    Plus,
-    Robot,
-    Sparkle,
-    SpinnerGap,
-    Trash,
-    Warning,
+  ArrowsClockwise,
+  CaretDown,
+  CheckCircle,
+  Clock,
+  Copy,
+  DownloadSimple,
+  Eye,
+  FileDoc,
+  FilePdf,
+  FileText,
+  FolderOpen,
+  GoogleLogo,
+  MagnifyingGlass,
+  PencilSimple,
+  Plus,
+  Robot,
+  Sparkle,
+  SpinnerGap,
+  Trash,
+  Warning,
 } from "@phosphor-icons/react";
-import {
-    lazy,
-    Suspense,
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 // ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
 // Isso reduz o bundle inicial e melhora First Contentful Paint (FCP)
@@ -117,11 +100,8 @@ export default function MinutasManager() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("editor");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<DocumentTemplate | null>(null);
-  const [variableValues, setVariableValues] = useState<Record<string, string>>(
-    {}
-  );
+  const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterTipo, setFilterTipo] = useState<string>("all");
   const [error, setError] = useState<string | null>(null);
@@ -180,9 +160,7 @@ export default function MinutasManager() {
   // Carregar variáveis do processo selecionado
   useEffect(() => {
     if (formData.processId && formData.processId !== "_none") {
-      const processo = (processes || []).find(
-        (p) => p.id === formData.processId
-      );
+      const processo = (processes || []).find((p) => p.id === formData.processId);
       if (processo) {
         setVariableValues((prev) => ({
           ...prev,
@@ -203,12 +181,21 @@ export default function MinutasManager() {
         toast.error("Google não está configurado no ambiente (.env)");
         return;
       }
+
+      // CRÍTICO: Garantir que está inicializado ANTES de chamar authenticate()
+      // Se não estiver inicializado, authenticate() retorna false
+      await googleDocsService.initialize();
+
+      // IMPORTANTE: authenticate() DEVE ser chamado diretamente do handler de clique
+      // (sem await entre o clique e requestAccessToken) para evitar popup blocker
       const success = await googleDocsService.authenticate();
+
       if (success) {
         setIsAuthenticated(true);
         toast.success("Autenticado com Google Docs!");
       } else {
-        toast.error("Falha na autenticação");
+        const lastError = googleDocsService.getLastError();
+        toast.error(lastError || "Falha na autenticação - verifique se popups estão permitidos");
       }
     } catch (error) {
       toast.error("Erro ao autenticar com Google");
@@ -225,8 +212,7 @@ export default function MinutasManager() {
     const novaMinuta: Minuta = {
       id: `minuta-${Date.now()}`,
       titulo: formData.titulo,
-      processId:
-        formData.processId !== "_none" ? formData.processId : undefined,
+      processId: formData.processId !== "_none" ? formData.processId : undefined,
       tipo: formData.tipo,
       conteudo: formData.conteudo,
       status: formData.status,
@@ -255,8 +241,7 @@ export default function MinutasManager() {
           ? {
               ...m,
               titulo: formData.titulo,
-              processId:
-                formData.processId !== "_none" ? formData.processId : undefined,
+              processId: formData.processId !== "_none" ? formData.processId : undefined,
               tipo: formData.tipo,
               conteudo: formData.conteudo,
               status: formData.status,
@@ -274,9 +259,7 @@ export default function MinutasManager() {
       if (success) {
         toast.success("Minuta atualizada localmente e no Google Docs!");
       } else {
-        toast.warning(
-          "Minuta atualizada localmente, mas erro ao sincronizar com Google Docs"
-        );
+        toast.warning("Minuta atualizada localmente, mas erro ao sincronizar com Google Docs");
       }
     } else {
       toast.success("Minuta atualizada!");
@@ -342,8 +325,7 @@ export default function MinutasManager() {
         });
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast.error(`Erro ao abrir no Google Docs: ${errorMessage}`, {
         id: toastId,
       });
@@ -380,10 +362,9 @@ export default function MinutasManager() {
               : m
           )
         );
-        toast.success(
-          `✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`,
-          { id: toastId }
-        );
+        toast.success(`✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`, {
+          id: toastId,
+        });
       } else {
         const lastError = googleDocsService.getLastError();
         toast.error(lastError || "Erro ao sincronizar do Google Docs", {
@@ -391,8 +372,7 @@ export default function MinutasManager() {
         });
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast.error(`Erro ao sincronizar: ${errorMessage}`, { id: toastId });
       console.error(error);
     } finally {
@@ -539,60 +519,53 @@ export default function MinutasManager() {
   const handleFillVariables = () => {
     if (!selectedTemplate) return;
 
-    const filledContent = replaceTemplateVariables(
-      formData.conteudo,
-      variableValues
-    );
+    const filledContent = replaceTemplateVariables(formData.conteudo, variableValues);
     setFormData((prev) => ({ ...prev, conteudo: filledContent }));
     toast.success("Variáveis preenchidas!");
   };
 
   // IA integrada ao Tiptap (usando Gemini 2.5 Pro)
-  const handleAIGenerate = useCallback(
-    async (userPrompt: string): Promise<string> => {
-      if (!userPrompt.trim()) {
-        throw new Error("Prompt vazio");
-      }
+  const handleAIGenerate = useCallback(async (userPrompt: string): Promise<string> => {
+    if (!userPrompt.trim()) {
+      throw new Error("Prompt vazio");
+    }
 
-      if (!isGeminiConfigured()) {
-        const msg =
-          "Gemini não está configurado. Verifique VITE_GEMINI_API_KEY no .env.";
-        toast.error(msg);
-        throw new Error(msg);
-      }
+    if (!isGeminiConfigured()) {
+      const msg = "Gemini não está configurado. Verifique VITE_GEMINI_API_KEY no .env.";
+      toast.error(msg);
+      throw new Error(msg);
+    }
 
-      try {
-        const fullPrompt = `${AI_EDITOR_SYSTEM_PROMPT}
+    try {
+      const fullPrompt = `${AI_EDITOR_SYSTEM_PROMPT}
 
 Instrução específica do usuário:
 ${userPrompt}`;
 
-        const response = await callGemini(fullPrompt, {
-          temperature: 0.6,
-          maxOutputTokens: 4096,
-        });
+      const response = await callGemini(fullPrompt, {
+        temperature: 0.6,
+        maxOutputTokens: 4096,
+      });
 
-        if (response.error) {
-          console.error("[MinutasManager] Erro Gemini:", response.error);
-          toast.error("Erro ao gerar texto com Gemini.");
-          throw new Error(response.error);
-        }
-
-        const text = response.text?.trim();
-        if (!text) {
-          const msg = "Gemini retornou resposta vazia.";
-          toast.error(msg);
-          throw new Error(msg);
-        }
-
-        return text;
-      } catch (err) {
-        console.error("[MinutasManager] Erro inesperado na IA:", err);
-        throw err;
+      if (response.error) {
+        console.error("[MinutasManager] Erro Gemini:", response.error);
+        toast.error("Erro ao gerar texto com Gemini.");
+        throw new Error(response.error);
       }
-    },
-    []
-  );
+
+      const text = response.text?.trim();
+      if (!text) {
+        const msg = "Gemini retornou resposta vazia.";
+        toast.error(msg);
+        throw new Error(msg);
+      }
+
+      return text;
+    } catch (err) {
+      console.error("[MinutasManager] Erro inesperado na IA:", err);
+      throw err;
+    }
+  }, []);
 
   // 🎯 Função de streaming para IA no editor (usa SSE para resposta em tempo real)
   const handleAIStream = useCallback(
@@ -624,9 +597,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
         ]);
       } catch (err) {
         console.error("[MinutasManager] Erro no streaming:", err);
-        callbacks.onError(
-          err instanceof Error ? err : new Error("Erro no streaming")
-        );
+        callbacks.onError(err instanceof Error ? err : new Error("Erro no streaming"));
       }
     },
     [streamChat]
@@ -636,8 +607,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
     const colors = {
       rascunho: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
       "em-revisao": "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      "pendente-revisao":
-        "bg-orange-500/10 text-orange-500 border-orange-500/20",
+      "pendente-revisao": "bg-orange-500/10 text-orange-500 border-orange-500/20",
       finalizada: "bg-green-500/10 text-green-500 border-green-500/20",
       arquivada: "bg-gray-500/10 text-gray-500 border-gray-500/20",
     };
@@ -670,8 +640,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
   // Filtrar minutas
   const filteredMinutas = (minutas || []).filter((m) => {
     const matchesSearch =
-      searchQuery === "" ||
-      m.titulo.toLowerCase().includes(searchQuery.toLowerCase());
+      searchQuery === "" || m.titulo.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || m.status === filterStatus;
     const matchesTipo = filterTipo === "all" || m.tipo === filterTipo;
     return matchesSearch && matchesStatus && matchesTipo;
@@ -701,10 +670,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
 
         <div className="flex gap-3 flex-wrap">
           {!isGoogleConfigured ? (
-            <Badge
-              variant="outline"
-              className="px-4 py-2 border-amber-500/50 text-amber-600"
-            >
+            <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
               <Warning className="mr-2 h-4 w-4" />
               Google não configurado
             </Badge>
@@ -749,8 +715,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   )}
                 </DialogTitle>
                 <DialogDescription>
-                  Use o editor rico para criar sua minuta. Use o botão de IA
-                  para gerar conteúdo automaticamente com Gemini 2.5 Pro.
+                  Use o editor rico para criar sua minuta. Use o botão de IA para gerar conteúdo
+                  automaticamente com Gemini 2.5 Pro.
                 </DialogDescription>
               </DialogHeader>
 
@@ -776,9 +742,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       <Input
                         id="titulo"
                         value={formData.titulo}
-                        onChange={(e) =>
-                          setFormData({ ...formData, titulo: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
                         placeholder="Ex: Petição Inicial - Ação de Cobrança"
                       />
                     </div>
@@ -833,14 +797,10 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
 
                   <div>
-                    <Label htmlFor="processo">
-                      Vincular a Processo (opcional)
-                    </Label>
+                    <Label htmlFor="processo">Vincular a Processo (opcional)</Label>
                     <Select
                       value={formData.processId}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, processId: value })
-                      }
+                      onValueChange={(value) => setFormData({ ...formData, processId: value })}
                     >
                       <SelectTrigger id="processo">
                         <SelectValue placeholder="Selecione um processo" />
@@ -873,9 +833,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       <TiptapEditor
                         key={editingMinuta?.id || "new-minuta"}
                         content={formData.conteudo}
-                        onChange={(content) =>
-                          setFormData({ ...formData, conteudo: content })
-                        }
+                        onChange={(content) => setFormData({ ...formData, conteudo: content })}
                         onAIGenerate={handleAIGenerate}
                         onAIStream={handleAIStream}
                         variables={variableValues}
@@ -890,12 +848,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
                       <Warning className="h-4 w-4 text-amber-600" />
                       <AlertDescription className="text-amber-800 dark:text-amber-200">
-                        <strong>
-                          {unfilledVariables.length} variáveis não preenchidas:
-                        </strong>{" "}
+                        <strong>{unfilledVariables.length} variáveis não preenchidas:</strong>{" "}
                         {unfilledVariables.slice(0, 5).join(", ")}
-                        {unfilledVariables.length > 5 &&
-                          ` e mais ${unfilledVariables.length - 5}`}
+                        {unfilledVariables.length > 5 && ` e mais ${unfilledVariables.length - 5}`}
                         <Button
                           variant="link"
                           size="sm"
@@ -910,17 +865,12 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
 
                   {error && (
                     <Alert variant="destructive">
-                      <AlertDescription className="text-xs">
-                        {error}
-                      </AlertDescription>
+                      <AlertDescription className="text-xs">{error}</AlertDescription>
                     </Alert>
                   )}
                 </TabsContent>
 
-                <TabsContent
-                  value="templates"
-                  className="flex-1 overflow-hidden mt-4"
-                >
+                <TabsContent value="templates" className="flex-1 overflow-hidden mt-4">
                   <div className="space-y-4 h-full flex flex-col">
                     <div className="flex gap-2">
                       <div className="relative flex-1">
@@ -940,12 +890,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           .filter(
                             (t) =>
                               searchQuery === "" ||
-                              t.nome
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase()) ||
-                              t.categoria
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase())
+                              t.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              t.categoria.toLowerCase().includes(searchQuery.toLowerCase())
                           )
                           .map((template) => (
                             <Card
@@ -971,10 +917,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                                   <Badge variant="outline" className="text-xs">
                                     {template.categoria}
                                   </Badge>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
+                                  <Badge variant="secondary" className="text-xs">
                                     {template.variaveis.length} variáveis
                                   </Badge>
                                 </div>
@@ -986,39 +929,30 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   </div>
                 </TabsContent>
 
-                <TabsContent
-                  value="variaveis"
-                  className="flex-1 overflow-hidden mt-4"
-                >
+                <TabsContent value="variaveis" className="flex-1 overflow-hidden mt-4">
                   <div className="space-y-4 h-full flex flex-col">
                     <p className="text-sm text-muted-foreground">
-                      Preencha as variáveis para substituir automaticamente no
-                      documento. Use o formato{" "}
-                      <code className="bg-muted px-1 rounded">
-                        {"{{variavel}}"}
-                      </code>
-                      .
+                      Preencha as variáveis para substituir automaticamente no documento. Use o
+                      formato <code className="bg-muted px-1 rounded">{"{{variavel}}"}</code>.
                     </p>
 
                     <ScrollArea className="flex-1">
                       <div className="grid grid-cols-2 gap-4">
-                        {(selectedTemplate?.variaveis || unfilledVariables).map(
-                          (variable) => (
-                            <div key={variable}>
-                              <Label className="text-xs">{variable}</Label>
-                              <Input
-                                value={variableValues[variable] || ""}
-                                onChange={(e) =>
-                                  setVariableValues((prev) => ({
-                                    ...prev,
-                                    [variable]: e.target.value,
-                                  }))
-                                }
-                                placeholder={`Valor para ${variable}`}
-                              />
-                            </div>
-                          )
-                        )}
+                        {(selectedTemplate?.variaveis || unfilledVariables).map((variable) => (
+                          <div key={variable}>
+                            <Label className="text-xs">{variable}</Label>
+                            <Input
+                              value={variableValues[variable] || ""}
+                              onChange={(e) =>
+                                setVariableValues((prev) => ({
+                                  ...prev,
+                                  [variable]: e.target.value,
+                                }))
+                              }
+                              placeholder={`Valor para ${variable}`}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </ScrollArea>
 
@@ -1042,11 +976,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                 >
                   Cancelar
                 </Button>
-                <Button
-                  onClick={
-                    editingMinuta ? handleUpdateMinuta : handleCreateMinuta
-                  }
-                >
+                <Button onClick={editingMinuta ? handleUpdateMinuta : handleCreateMinuta}>
                   {editingMinuta ? "Atualizar" : "Criar"} Minuta
                 </Button>
               </div>
@@ -1060,10 +990,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
         <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
           <Robot className="h-4 w-4 text-orange-600" weight="fill" />
           <AlertDescription className="text-orange-800 dark:text-orange-200">
-            <strong>
-              {minutasPendentes.length} minuta(s) pendente(s) de revisão
-            </strong>{" "}
-            criada(s) pelos agentes IA.
+            <strong>{minutasPendentes.length} minuta(s) pendente(s) de revisão</strong> criada(s)
+            pelos agentes IA.
             <div className="flex gap-2 mt-2">
               {minutasPendentes.slice(0, 3).map((m) => (
                 <Button
@@ -1130,11 +1058,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       {filteredMinutas.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText
-              size={64}
-              className="text-muted-foreground mb-4"
-              weight="thin"
-            />
+            <FileText size={64} className="text-muted-foreground mb-4" weight="thin" />
             <p className="text-muted-foreground text-center">
               {searchQuery || filterStatus !== "all" || filterTipo !== "all"
                 ? "Nenhuma minuta encontrada com os filtros aplicados."
@@ -1147,9 +1071,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       ) : (
         <div className="grid gap-4">
           {filteredMinutas.map((minuta) => {
-            const processo = (processes || []).find(
-              (p) => p.id === minuta.processId
-            );
+            const processo = (processes || []).find((p) => p.id === minuta.processId);
 
             return (
               <Card
@@ -1173,20 +1095,11 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         <Badge className={getStatusColor(minuta.status)}>
                           {getStatusLabel(minuta.status)}
                         </Badge>
-                        <Badge variant="outline">
-                          {getTipoLabel(minuta.tipo)}
-                        </Badge>
-                        {processo && (
-                          <Badge variant="secondary">
-                            {processo.numeroCNJ}
-                          </Badge>
-                        )}
+                        <Badge variant="outline">{getTipoLabel(minuta.tipo)}</Badge>
+                        {processo && <Badge variant="secondary">{processo.numeroCNJ}</Badge>}
                         {minuta.googleDocsId && (
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            <GoogleLogo
-                              className="mr-1 h-3 w-3"
-                              weight="bold"
-                            />
+                            <GoogleLogo className="mr-1 h-3 w-3" weight="bold" />
                             Google Docs
                           </Badge>
                         )}
@@ -1211,27 +1124,20 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock weight="bold" className="h-3 w-3" />
-                        Atualizado em{" "}
-                        {new Date(minuta.atualizadoEm).toLocaleString("pt-BR")}
+                        Atualizado em {new Date(minuta.atualizadoEm).toLocaleString("pt-BR")}
                       </span>
                       {minuta.ultimaSincronizacao && (
                         <span className="flex items-center gap-1">
                           <ArrowsClockwise className="h-3 w-3" />
                           Sincronizado em{" "}
-                          {new Date(minuta.ultimaSincronizacao).toLocaleString(
-                            "pt-BR"
-                          )}
+                          {new Date(minuta.ultimaSincronizacao).toLocaleString("pt-BR")}
                         </span>
                       )}
                     </div>
 
                     {/* Ações */}
                     <div className="flex gap-2 flex-wrap">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditMinuta(minuta)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleEditMinuta(minuta)}>
                         <PencilSimple className="mr-2 h-4 w-4" weight="bold" />
                         Editar
                       </Button>
@@ -1261,10 +1167,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button size="sm" variant="outline">
-                            <DownloadSimple
-                              className="mr-2 h-4 w-4"
-                              weight="bold"
-                            />
+                            <DownloadSimple className="mr-2 h-4 w-4" weight="bold" />
                             Exportar
                             <CaretDown className="ml-1 h-3 w-3" />
                           </Button>
@@ -1296,12 +1199,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               disabled={!isAuthenticated}
                               className="justify-start"
                             >
-                              <GoogleLogo
-                                className="mr-2 h-4 w-4"
-                                weight="bold"
-                              />
-                              {minuta.googleDocsUrl ? "Abrir no" : "Criar no"}{" "}
-                              Google Docs
+                              <GoogleLogo className="mr-2 h-4 w-4" weight="bold" />
+                              {minuta.googleDocsUrl ? "Abrir no" : "Criar no"} Google Docs
                             </Button>
                           </div>
                         </PopoverContent>
