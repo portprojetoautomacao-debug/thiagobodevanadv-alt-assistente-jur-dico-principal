@@ -575,17 +575,17 @@ IMPORTANTE:
   const getInsightIcon = (type: string) => {
     switch (type) {
       case "statistics":
-        return <ChartBar className="w-5 h-5" weight="fill" />;
+        return <ChartBar className="w-5 h-5" />;
       case "alert":
-        return <Bell className="w-5 h-5" weight="fill" />;
+        return <Bell className="w-5 h-5" />;
       case "trend":
-        return <ChartBar className="w-5 h-5" weight="fill" />;
+        return <ChartBar className="w-5 h-5" />;
       case "suggestion":
-        return <Briefcase className="w-5 h-5" weight="fill" />;
+        return <Briefcase className="w-5 h-5" />;
       case "info":
-        return <Warning className="w-5 h-5" weight="fill" />;
+        return <Warning className="w-5 h-5" />;
       default:
-        return <ChartBar className="w-5 h-5" weight="fill" />;
+        return <ChartBar className="w-5 h-5" />;
     }
   };
 
@@ -645,7 +645,7 @@ IMPORTANTE:
                       >
                         <div className="flex items-start gap-3">
                           <div className="p-2 rounded-lg bg-primary/10">
-                            <Icon className="w-5 h-5 text-primary" weight="fill" />
+                            <Icon className="w-5 h-5 text-primary" />
                           </div>
                           <div>
                             <h3 className="font-semibold text-foreground">{insight.title}</h3>
@@ -789,7 +789,7 @@ IMPORTANTE:
                 aria-label="Parar resposta"
                 title="Parar resposta"
               >
-                <Stop className="w-5 h-5" weight="fill" />
+                <Stop className="w-5 h-5" />
               </Button>
             ) : (
               <Button
@@ -798,7 +798,7 @@ IMPORTANTE:
                 size="icon"
                 aria-label="Enviar mensagem"
               >
-                <PaperPlaneTilt className="w-5 h-5" weight="fill" />
+                <PaperPlaneTilt className="w-5 h-5" />
               </Button>
             )}
           </div>

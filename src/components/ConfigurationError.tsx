@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowSquareOut, Warning } from "@phosphor-icons/react";
+import { ArrowSquareOut, AlertTriangle } from "lucide-react";
 
 export function ConfigurationError() {
   return (
@@ -10,7 +10,7 @@ export function ConfigurationError() {
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-destructive/10">
-              <Warning size={32} className="text-destructive" weight="duotone" />
+              <AlertTriangle size={32} className="text-destructive" />
             </div>
             <div>
               <CardTitle className="text-2xl">Erro de Configuração</CardTitle>
@@ -23,7 +23,7 @@ export function ConfigurationError() {
 
         <CardContent className="space-y-4">
           <Alert variant="destructive">
-            <Warning className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Erro 401 - Não Autorizado</AlertTitle>
             <AlertDescription>
               As variáveis de ambiente necessárias para o backend de IA não estão configuradas no

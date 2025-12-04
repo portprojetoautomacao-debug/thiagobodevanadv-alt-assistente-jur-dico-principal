@@ -7,11 +7,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import {
   FileText,
-  Sparkle,
+  Sparkles,
   ShieldWarning,
   CheckCircle,
-  WarningCircle,
-} from "@phosphor-icons/react";
+  AlertCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 
@@ -108,7 +108,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <ShieldWarning size={32} weight="duotone" className="text-primary neon-glow" />
+          <ShieldWarning size={32} className="text-primary neon-glow" />
           Analisador de Contratos IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -136,7 +136,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                 disabled={isAnalyzing || !contractText.trim()}
                 className="button-gradient"
               >
-                <Sparkle size={20} className={isAnalyzing ? "animate-spin" : ""} />
+                <Sparkles size={20} className={isAnalyzing ? "animate-spin" : ""} />
                 {isAnalyzing ? "Analisando..." : "Analisar Riscos"}
               </Button>
             </div>
@@ -147,7 +147,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
           {!analysis ? (
             <Card className="glassmorphic">
               <CardContent className="flex flex-col items-center justify-center py-24 text-center">
-                <ShieldWarning size={64} className="text-muted-foreground mb-4" weight="duotone" />
+                <ShieldWarning size={64} className="text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
                   A análise de riscos aparecerá aqui após processar o contrato
                 </p>
@@ -179,10 +179,10 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
 
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="p-3 bg-destructive/10 rounded-lg">
-                      <WarningCircle
+                      <AlertCircle
                         size={24}
                         className="mx-auto mb-1 text-destructive"
-                        weight="duotone"
+                       
                       />
                       <p className="text-2xl font-bold text-destructive">{analysis.risks.length}</p>
                       <p className="text-xs text-muted-foreground">Riscos</p>
@@ -191,7 +191,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       <CheckCircle
                         size={24}
                         className="mx-auto mb-1 text-primary"
-                        weight="duotone"
+                       
                       />
                       <p className="text-2xl font-bold text-primary">
                         {analysis.protections.length}
@@ -202,7 +202,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       <FileText
                         size={24}
                         className="mx-auto mb-1 text-secondary"
-                        weight="duotone"
+                       
                       />
                       <p className="text-2xl font-bold text-secondary">
                         {analysis.keyTerms.length}
@@ -223,7 +223,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       {analysis.risks.length > 0 && (
                         <div>
                           <h3 className="font-semibold mb-3 flex items-center gap-2 text-destructive">
-                            <WarningCircle size={20} weight="duotone" />
+                            <AlertCircle size={20} />
                             Riscos Identificados
                           </h3>
                           <ul className="space-y-2">
@@ -243,7 +243,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       {analysis.protections.length > 0 && (
                         <div>
                           <h3 className="font-semibold mb-3 flex items-center gap-2 text-primary">
-                            <CheckCircle size={20} weight="duotone" />
+                            <CheckCircle size={20} />
                             Proteções Existentes
                           </h3>
                           <ul className="space-y-2">
@@ -263,7 +263,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       {analysis.recommendations.length > 0 && (
                         <div>
                           <h3 className="font-semibold mb-3 flex items-center gap-2">
-                            <Sparkle size={20} weight="duotone" />
+                            <Sparkles size={20} />
                             Recomendações
                           </h3>
                           <ul className="space-y-2">
@@ -280,7 +280,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       {analysis.missingClauses.length > 0 && (
                         <div>
                           <h3 className="font-semibold mb-3 flex items-center gap-2 text-yellow-500">
-                            <WarningCircle size={20} weight="duotone" />
+                            <AlertCircle size={20} />
                             Cláusulas Ausentes
                           </h3>
                           <ul className="space-y-2">

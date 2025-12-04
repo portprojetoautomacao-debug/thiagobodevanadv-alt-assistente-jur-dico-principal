@@ -13,7 +13,7 @@ import { useKV } from "@/hooks/use-kv";
 import { useMemo, useState } from "react";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import type { FinancialEntry, Process } from "@/types";
-import { Clock, CurrencyDollar, TrendUp, Users, Warning } from "@phosphor-icons/react";
+import { Clock, CurrencyDollar, TrendUp, Users, AlertTriangle } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -43,7 +43,7 @@ interface SafraData {
 function NoDataMessage({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <Warning size={48} className="text-muted-foreground/50 mb-4" />
+      <AlertTriangle size={48} className="text-muted-foreground/50 mb-4" />
       <p className="text-muted-foreground">{message}</p>
       <p className="text-sm text-muted-foreground/70 mt-2">
         Adicione dados através do sistema para visualizar as estatísticas
@@ -475,7 +475,10 @@ export default function OfficeManagement() {
                             cy="50%"
                             labelLine={false}
                             label={(props) => {
-                              const payload: any = props?.payload || {};
+                              const payload = (props?.payload || {}) as {
+                                categoria?: string;
+                                percentual?: number;
+                              };
                               const categoria = payload?.categoria ?? "";
                               const percentual = payload?.percentual ?? "";
                               return `${categoria} ${percentual}%`;

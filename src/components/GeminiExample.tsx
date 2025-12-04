@@ -11,7 +11,7 @@ import {
   suggestStrategy,
   summarizeJurisprudence,
 } from "@/lib/gemini-service";
-import { ArrowRight, Sparkle, Warning } from "@phosphor-icons/react";
+import { ArrowRight, Sparkles, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -124,7 +124,7 @@ export default function GeminiExample() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Sparkle size={32} className="text-primary" weight="duotone" />
+          <Sparkles size={32} className="text-primary" />
           Assistente IA com Google Gemini
         </h1>
         <p className="text-muted-foreground">
@@ -134,7 +134,7 @@ export default function GeminiExample() {
 
       {!isConfigured && (
         <Alert variant="destructive">
-          <Warning size={20} />
+          <AlertTriangle size={20} />
           <AlertDescription>
             API do Gemini não configurada. Configure a variável{" "}
             <code className="bg-destructive/20 px-1 rounded">VITE_GEMINI_API_KEY</code> no arquivo{" "}
@@ -205,10 +205,10 @@ export default function GeminiExample() {
                 return (
                   <div className="flex items-center justify-center min-h-[300px]">
                     <div className="space-y-3 text-center">
-                      <Sparkle
+                      <Sparkles
                         size={48}
                         className="text-primary animate-pulse mx-auto"
-                        weight="duotone"
+                       
                       />
                       <p className="text-muted-foreground">Processando com IA...</p>
                     </div>

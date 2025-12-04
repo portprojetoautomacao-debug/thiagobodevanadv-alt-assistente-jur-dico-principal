@@ -201,7 +201,7 @@ export default function AdvancedNLPDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold gradient-text flex items-center gap-2">
-          <Brain size={32} weight="duotone" className="text-primary neon-glow" />
+          <Brain size={32} className="text-primary neon-glow" />
           Processamento NLP Avançado
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -560,7 +560,7 @@ export default function AdvancedNLPDashboard() {
                           <CheckCircle
                             size={20}
                             className="text-primary shrink-0 mt-0.5"
-                            weight="fill"
+                           
                           />
                           <span>{point}</span>
                         </div>

@@ -22,12 +22,12 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
-  CurrencyCircleDollar,
+  DollarSign,
   Plus,
   TrendUp,
   TrendDown,
   DownloadSimple,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { toast } from "sonner";
 import type { FinancialEntry } from "@/types";
 import { exportToCSV, formatCurrency } from "@/lib/utils";
@@ -212,7 +212,7 @@ export default function FinancialManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-            <CurrencyCircleDollar className="w-4 h-4 text-primary" />
+            <DollarSign className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div
@@ -233,7 +233,7 @@ export default function FinancialManagement() {
         <CardContent>
           {(entries || []).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <CurrencyCircleDollar className="w-16 h-16 text-muted-foreground mb-4" />
+              <DollarSign className="w-16 h-16 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground">Nenhum lançamento</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Adicione sua primeira receita ou despesa
@@ -251,9 +251,9 @@ export default function FinancialManagement() {
                       }`}
                     >
                       {entry.type === "income" ? (
-                        <TrendUp className="w-5 h-5 text-green-600" weight="bold" />
+                        <TrendUp className="w-5 h-5 text-green-600" />
                       ) : (
-                        <TrendDown className="w-5 h-5 text-red-600" weight="bold" />
+                        <TrendDown className="w-5 h-5 text-red-600" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

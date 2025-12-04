@@ -50,7 +50,7 @@ export default function Sidebar({ currentView, onViewChange, user, onLogout }: S
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-2 mb-2">
-          <Robot className="w-6 h-6 text-primary" weight="fill" />
+          <Robot className="w-6 h-6 text-primary" />
           <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
         </div>
         <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>

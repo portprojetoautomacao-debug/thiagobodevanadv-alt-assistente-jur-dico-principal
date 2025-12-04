@@ -110,7 +110,7 @@ async function getKv(): Promise<Redis> {
 function parseOAB(oab: string): { numero?: string; uf?: string } {
   if (!oab || oab.length > 50) return {};
   const match = /^(?<numero>\d+)\s*[/-]?\s*(?<uf>[A-Z]{2})$/i.exec(oab);
-  if (match) return { numero: match[1], uf: match[2].toUpperCase() };
+  if (match?.groups) return { numero: match.groups.numero, uf: match.groups.uf?.toUpperCase() };
 
   const numOnlyMatch = /^\d+$/.exec(oab);
   if (numOnlyMatch) return { numero: numOnlyMatch[0] };

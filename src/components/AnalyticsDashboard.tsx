@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAnalytics } from "@/hooks/use-analytics";
-import { ChartBar, Eye, MouseSimple, Trash, Warning } from "@phosphor-icons/react";
+import { AlertTriangle, BarChart2, Eye, MousePointer, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 
@@ -12,7 +12,10 @@ function getEventTypeColor(type: string): string {
   return "bg-destructive";
 }
 
-function getEventTitle(event: { type: string; data?: { path?: string; action?: string; error?: string } }): string {
+function getEventTitle(event: {
+  type: string;
+  data?: { path?: string; action?: string; error?: string };
+}): string {
   if (event.type === "pageview") {
     return `Visualização: ${event.data?.path ?? "-"}`;
   }
@@ -82,7 +85,7 @@ export default function AnalyticsDashboard() {
           onClick={handleClearEvents}
           className="hover:border-destructive/50 hover:text-destructive"
         >
-          <Trash size={20} />
+          <Trash2 size={20} />
           Limpar Dados
         </Button>
       </div>
@@ -92,7 +95,7 @@ export default function AnalyticsDashboard() {
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
-            <ChartBar size={20} className="text-muted-foreground" />
+            <BarChart2 size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold gradient-text">{safeAnalytics.last24h.total}</div>
@@ -120,7 +123,7 @@ export default function AnalyticsDashboard() {
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ações (24h)</CardTitle>
-            <MouseSimple size={20} className="text-muted-foreground" />
+            <MousePointer size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-accent">{safeAnalytics.last24h.actions}</div>
@@ -131,7 +134,7 @@ export default function AnalyticsDashboard() {
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Erros (24h)</CardTitle>
-            <Warning size={20} className="text-muted-foreground" />
+            <AlertTriangle size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
@@ -249,9 +252,7 @@ export default function AnalyticsDashboard() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium capitalize">
-                          {getEventTitle(event)}
-                        </p>
+                        <p className="text-sm font-medium capitalize">{getEventTitle(event)}</p>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {new Date(event.timestamp).toLocaleTimeString("pt-BR")}
                         </span>

@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Robot, X, CaretDown, CaretUp, Lightning, CheckCircle } from "@phosphor-icons/react";
+import { Card } from "@/components/ui/card";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bot, CheckCircle, ChevronDown, ChevronUp, X, Zap } from "lucide-react";
+import { useState } from "react";
 
 export default function AgentStatusFloater() {
   const { agents, activityLog } = useAutonomousAgents();
@@ -36,7 +36,7 @@ export default function AgentStatusFloater() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <Robot className="w-5 h-5 text-primary" weight="fill" />
+                    <Bot className="w-5 h-5 text-primary" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   </div>
                   <div>
@@ -63,9 +63,9 @@ export default function AgentStatusFloater() {
                     }
                   >
                     {isExpanded ? (
-                      <CaretDown className="w-4 h-4" />
+                      <ChevronDown className="w-4 h-4" />
                     ) : (
-                      <CaretUp className="w-4 h-4" />
+                      <ChevronUp className="w-4 h-4" />
                     )}
                   </Button>
                   <Button
@@ -83,7 +83,7 @@ export default function AgentStatusFloater() {
               {processingAgents.length > 0 && (
                 <div className="mb-3 p-2 rounded-lg bg-primary/10 border border-primary/20">
                   <div className="flex items-center gap-2">
-                    <Lightning className="w-4 h-4 text-accent animate-pulse" weight="fill" />
+                    <Zap className="w-4 h-4 text-accent animate-pulse" />
                     <p className="text-xs font-medium text-foreground">
                       {processingAgents.length} tarefa
                       {processingAgents.length !== 1 ? "s" : ""} em processamento
@@ -109,10 +109,7 @@ export default function AgentStatusFloater() {
                               key={log.id}
                               className="flex items-start gap-2 p-2 rounded-lg bg-muted text-xs"
                             >
-                              <CheckCircle
-                                className="w-3 h-3 text-green-600 shrink-0 mt-0.5"
-                                weight="fill"
-                              />
+                              <CheckCircle className="w-3 h-3 text-green-600 shrink-0 mt-0.5" />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-foreground line-clamp-1">
                                   {agent?.name ?? "Agente desconhecido"}

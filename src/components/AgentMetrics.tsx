@@ -1,18 +1,18 @@
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  TrendUp,
-  Clock,
-  CheckCircle,
-  Lightning,
-  ChartLine,
-  Timer,
-  Pulse,
-  LightningSlash,
-} from "@phosphor-icons/react";
-import { useState, useEffect, useMemo, useRef } from "react";
 import type { Agent, AgentTask } from "@/lib/agents";
+import {
+  Activity,
+  CheckCircle,
+  Clock,
+  LineChart,
+  Timer,
+  TrendingUp,
+  Zap,
+  ZapOff,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface AgentMetricsProps {
   readonly agents: Agent[];
@@ -119,7 +119,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <LightningSlash className="w-5 h-5 text-blue-600" weight="fill" />
+                  <ZapOff className="w-5 h-5 text-blue-600" />
                   Circuit Breakers (Arquitetura V2)
                 </CardTitle>
                 <CardDescription>Monitoramento de resiliência das APIs externas</CardDescription>
@@ -132,21 +132,21 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-1" weight="fill" />
+                <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-1" />
                 <div className="text-2xl font-bold text-green-600">
                   {circuitBreakers.summary.healthy}
                 </div>
                 <div className="text-xs text-muted-foreground">Saudáveis</div>
               </div>
               <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                <Pulse className="w-6 h-6 text-yellow-600 mx-auto mb-1" weight="fill" />
+                <Activity className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
                 <div className="text-2xl font-bold text-yellow-600">
                   {circuitBreakers.summary.degraded}
                 </div>
                 <div className="text-xs text-muted-foreground">Degradadas</div>
               </div>
               <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                <Lightning className="w-6 h-6 text-red-600 mx-auto mb-1" weight="fill" />
+                <Zap className="w-6 h-6 text-red-600 mx-auto mb-1" />
                 <div className="text-2xl font-bold text-red-600">
                   {circuitBreakers.summary.down}
                 </div>
@@ -161,7 +161,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" weight="fill" />
+              <CheckCircle className="w-4 h-4 text-green-600" />
               Taxa de Sucesso
             </CardTitle>
           </CardHeader>
@@ -178,7 +178,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" weight="fill" />
+              <Clock className="w-4 h-4 text-primary" />
               Tarefas Hoje
             </CardTitle>
           </CardHeader>
@@ -193,7 +193,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" weight="fill" />
+              <Clock className="w-4 h-4 text-primary" />
               Tempo Médio
             </CardTitle>
           </CardHeader>
@@ -206,7 +206,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Lightning className="w-4 h-4 text-accent" weight="fill" />
+              <Zap className="w-4 h-4 text-accent" />
               Produtividade
             </CardTitle>
           </CardHeader>
@@ -222,7 +222,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
       <Card className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-900">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Timer className="w-5 h-5 text-green-600" weight="fill" />
+            <Timer className="w-5 h-5 text-green-600" />
             Economia de Tempo
           </CardTitle>
           <CardDescription>Tempo economizado pela automação dos agentes</CardDescription>
@@ -249,7 +249,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <ChartLine className="w-5 h-5 text-primary" weight="fill" />
+            <LineChart className="w-5 h-5 text-primary" />
             Desempenho por Agente
           </CardTitle>
           <CardDescription>Estatísticas individuais de cada agente</CardDescription>
@@ -280,7 +280,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <TrendUp className="w-3 h-3 text-green-600" weight="fill" />
+                    <TrendingUp className="w-3 h-3 text-green-600" />
                     <span className="text-xs font-medium text-green-600">{agentSuccessRate}%</span>
                   </div>
                 </div>

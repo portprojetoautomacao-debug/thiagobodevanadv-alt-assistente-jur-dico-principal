@@ -233,7 +233,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-linear-to-br from-green-500/20 to-green-500/5 rounded-xl shadow-lg">
-                <CheckCircle size={32} weight="duotone" className="text-green-500" />
+                <CheckCircle size={32} className="text-green-500" />
               </div>
               <div className="flex-1">
                 <p className="text-4xl font-bold text-foreground mb-1 bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">
@@ -250,7 +250,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-linear-to-br from-yellow-500/20 to-yellow-500/5 rounded-xl shadow-lg">
-                <Clock size={32} weight="duotone" className="text-yellow-500" />
+                <Clock size={32} className="text-yellow-500" />
               </div>
               <div className="flex-1">
                 <p className="text-4xl font-bold text-foreground mb-1">{stats.tarefasPendentes}</p>
@@ -265,7 +265,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-linear-to-br from-primary/20 to-primary/5 rounded-xl shadow-lg">
-                <Trophy size={32} weight="duotone" className="text-primary" />
+                <Trophy size={32} className="text-primary" />
               </div>
               <div className="flex-1">
                 <p className="text-4xl font-bold text-foreground mb-1">{stats.pontosAcumulados}</p>

@@ -14,7 +14,11 @@ interface LegalMemoryViewerProps {
 // Permite peso (weight) para ícones do Phosphor
 const typeIcons: Record<
   string,
-  React.ComponentType<{ className?: string; size?: number; weight?: any }>
+  React.ComponentType<{
+    className?: string;
+    size?: number;
+    weight?: "thin" | "light" | "regular" | "bold" | "fill" | "duotone";
+  }>
 > = {
   peca_processual: FileText,
   precedente: Gavel,
@@ -64,7 +68,7 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
                     className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                   >
                     <div className="mt-0.5 p-1 rounded-full bg-primary/10 text-primary">
-                      <IconComponent className="w-4 h-4" weight="fill" />
+                      <IconComponent className="w-4 h-4" />
                     </div>
 
                     <div className="flex-1 min-w-0">

@@ -286,13 +286,13 @@ Retorne APENAS o JSON válido, sem explicações.`;
       case "success":
         return (
           <Badge variant="default" className="gap-1 bg-primary">
-            <CheckCircle size={12} weight="fill" /> Sucesso
+            <CheckCircle size={12} /> Sucesso
           </Badge>
         );
       case "error":
         return (
           <Badge variant="destructive" className="gap-1">
-            <XCircle size={12} weight="fill" /> Erro
+            <XCircle size={12} /> Erro
           </Badge>
         );
     }
@@ -315,11 +315,11 @@ Retorne APENAS o JSON válido, sem explicações.`;
       <Tabs defaultValue="upload" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="upload">
-            <Upload size={16} weight="duotone" className="mr-2" />
+            <Upload size={16} className="mr-2" />
             Upload
           </TabsTrigger>
           <TabsTrigger value="history">
-            <Clock size={16} weight="duotone" className="mr-2" />
+            <Clock size={16} className="mr-2" />
             Histórico ({sortedHistory.length})
           </TabsTrigger>
         </TabsList>
@@ -329,7 +329,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
             <Card className="glassmorphic border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Upload className="text-primary" size={24} weight="duotone" />
+                  <Upload className="text-primary" size={24} />
                   Upload de Documento
                 </CardTitle>
                 <CardDescription>Selecione um arquivo PDF (máximo 10MB)</CardDescription>
@@ -349,7 +349,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {selectedFile && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <FilePdf className="text-destructive" size={24} weight="duotone" />
+                    <FilePdf className="text-destructive" size={24} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{selectedFile.name}</p>
                       <p className="text-xs text-muted-foreground">
@@ -391,7 +391,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "success" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <CheckCircle className="text-primary" size={16} weight="fill" />
+                    <CheckCircle className="text-primary" size={16} />
                     <AlertDescription>
                       Dados extraídos com sucesso! Revise os campos ao lado e salve o cliente.
                     </AlertDescription>
@@ -400,7 +400,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "error" && (
                   <Alert className="border-destructive/50 bg-destructive/5">
-                    <XCircle className="text-destructive" size={16} weight="fill" />
+                    <XCircle className="text-destructive" size={16} />
                     <AlertDescription>
                       Erro ao processar o documento. Tente novamente ou cadastre manualmente.
                     </AlertDescription>
@@ -412,7 +412,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
             <Card className="glassmorphic border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="text-primary" size={24} weight="duotone" />
+                  <CheckCircle className="text-primary" size={24} />
                   Dados Extraídos
                 </CardTitle>
                 <CardDescription>Revise e edite os dados antes de salvar</CardDescription>
@@ -420,7 +420,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
               <CardContent>
                 {!extractedData ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <FilePdf className="text-muted-foreground/30 mb-4" size={64} weight="duotone" />
+                    <FilePdf className="text-muted-foreground/30 mb-4" size={64} />
                     <p className="text-muted-foreground">Nenhum dado extraído ainda</p>
                     <p className="text-sm text-muted-foreground/70 mt-1">
                       Faça upload de um PDF para começar
@@ -567,7 +567,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                       size="lg"
                       disabled={!extractedData.nome || !extractedData.cpfCnpj}
                     >
-                      <CheckCircle size={20} weight="fill" />
+                      <CheckCircle size={20} />
                       Salvar Cliente
                     </Button>
 
@@ -585,7 +585,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
           {sortedHistory.length === 0 ? (
             <Card className="glassmorphic border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Clock className="text-muted-foreground/30 mb-4" size={64} weight="duotone" />
+                <Clock className="text-muted-foreground/30 mb-4" size={64} />
                 <p className="text-muted-foreground">Nenhum upload realizado ainda</p>
                 <p className="text-sm text-muted-foreground/70 mt-1">
                   O histórico de PDFs processados aparecerá aqui
@@ -605,7 +605,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <FilePdf
                           className="text-destructive shrink-0 mt-1"
                           size={24}
-                          weight="duotone"
+                         
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -622,7 +622,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                           {item.extractedData && (
                             <div className="mt-2 pt-2 border-t border-border/30">
                               <div className="flex items-center gap-2 text-xs">
-                                <User size={14} className="text-primary" weight="duotone" />
+                                <User size={14} className="text-primary" />
                                 <span className="font-medium">
                                   {item.extractedData.nome || "Nome não extraído"}
                                 </span>

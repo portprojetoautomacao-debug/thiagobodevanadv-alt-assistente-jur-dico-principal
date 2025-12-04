@@ -287,7 +287,7 @@ export default function BatchAnalysis() {
               disabled={analyzing || (!inputText.trim() && selectedFiles.length === 0)}
               className="w-full"
             >
-              <Sparkle className="w-4 h-4 mr-2" weight="fill" />
+              <Sparkle className="w-4 h-4 mr-2" />
               {analyzing ? "Analisando com IA..." : "Analisar com Gemini 2.5 Pro"}
             </Button>
           </CardContent>

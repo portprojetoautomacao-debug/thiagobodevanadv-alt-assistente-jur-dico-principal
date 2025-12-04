@@ -12,8 +12,8 @@ import {
   Gavel,
   DownloadSimple,
   Funnel,
-  Sparkle,
-} from "@phosphor-icons/react";
+  Sparkles,
+} from "lucide-react";
 import ProcessDialog from "../ProcessDialog";
 import ProcessDetailsDialog from "../ProcessDetailsDialog";
 import {
@@ -151,7 +151,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Gavel size={32} weight="duotone" className="text-primary" />
+            <Gavel size={32} className="text-primary" />
             Processos
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -206,7 +206,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
       {filteredProcesses.length === 0 ? (
         <Card className="windows-mica">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Gavel size={48} className="text-muted-foreground mb-4" weight="duotone" />
+            <Gavel size={48} className="text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">
               {search ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
             </h3>
@@ -290,7 +290,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
                     }}
                     disabled={analyzingProcess === process.id}
                   >
-                    <Sparkle
+                    <Sparkles
                       size={16}
                       className={analyzingProcess === process.id ? "animate-spin" : ""}
                     />
