@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -5,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Keyboard } from "@phosphor-icons/react";
 
@@ -19,8 +19,8 @@ function ShortcutItem({ keys, description }: ShortcutItemProps) {
     <div className="flex items-center justify-between gap-4 py-2">
       <span className="text-sm text-muted-foreground">{description}</span>
       <div className="flex gap-1">
-        {keys.map((key, i) => (
-          <Badge key={i} variant="outline" className="font-mono">
+        {keys.map((key) => (
+          <Badge key={key} variant="outline" className="font-mono">
             {key}
           </Badge>
         ))}
