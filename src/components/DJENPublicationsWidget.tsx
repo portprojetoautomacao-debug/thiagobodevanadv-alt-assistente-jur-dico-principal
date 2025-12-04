@@ -345,7 +345,9 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => void handleSync(fetchPublications)}
+                  onClick={() => {
+                    handleSync(fetchPublications);
+                  }}
                   disabled={syncing}
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
