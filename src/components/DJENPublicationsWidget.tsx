@@ -350,7 +350,9 @@ function PublicationsHeader(props: PublicationsHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleSyncClick}
+                  onClick={() => {
+                    handleSync(fetchPublications).catch(console.error);
+                  }}
                   disabled={syncing}
                   className="h-8 w-8 p-0"
                   aria-label="Sincronizar publicações agora"
@@ -585,7 +587,9 @@ export default function DJENPublicationsWidget({
     <DJENErrorCard
       compact={compact}
       error={errorMessage ?? "Erro desconhecido"}
-      onRetry={fetchPublications}
+      onRetry={() => {
+        fetchPublications().catch((err) => console.error("[DJENWidget] Retry failed:", err));
+      }}
     />
   );
 
