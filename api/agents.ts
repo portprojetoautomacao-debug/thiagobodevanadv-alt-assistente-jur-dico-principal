@@ -15,27 +15,6 @@ import { agentMonitor } from '../src/lib/agent-monitoring.js'
 import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from '../src/lib/agent-schemas.js'
 import { legalMemory, type LegalContextType } from '../src/lib/legal-memory.js'
 
-// ===== Middleware de Autenticação =====
-function requireAuth(req: VercelRequest): boolean {
-  const authHeader = req.headers.authorization
-  
-  // Permitir acesso em desenvolvimento/localhost
-  if (!authHeader) {
-    const isDev = process.env.NODE_ENV === 'development' || 
-                  req.headers.host?.includes('localhost') === true ||
-                  req.headers.host?.includes('vercel.app') === true
-    return Boolean(isDev)
-  }
-  
-  if (!authHeader.startsWith('Bearer ')) {
-    return false
-  }
-  
-  const token = authHeader.substring(7)
-  // TODO: Implementar validação real de token (JWT, etc.)
-  return token.length > 0
-}
-
 // ===== Redis singleton (Upstash) =====
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
