@@ -71,8 +71,28 @@ export function createLocalAppointmentFromAnalysis(
   
   if (typeof analysis.deadline.endDate === 'string' && analysis.deadline.endDate.includes('/')) {
     // Formato brasileiro DD/MM/YYYY
-    const [day, month, year] = analysis.deadline.endDate.split('/')
-    deadlineDate = new Date(`${year}-${month}-${day}`)
+    const parts = analysis.deadline.endDate.split('/').map(p => p.trim())
+    if (parts.length === 3) {
+      const [day, month, year] = parts
+      // Validar partes numéricas
+      const dayNum = parseInt(day, 10)
+      const monthNum = parseInt(month, 10)
+      const yearNum = parseInt(year, 10)
+      
+      if (!isNaN(dayNum) && !isNaN(monthNum) && !isNaN(yearNum) && 
+          dayNum >= 1 && dayNum <= 31 && 
+          monthNum >= 1 && monthNum <= 12 && 
+          yearNum >= 2000) {
+        // Criar data em UTC para evitar problemas de timezone
+        deadlineDate = new Date(Date.UTC(yearNum, monthNum - 1, dayNum, 12, 0, 0))
+      } else {
+        console.warn('[DeadlineIntegration] Invalid date parts:', { day: dayNum, month: monthNum, year: yearNum })
+        return null
+      }
+    } else {
+      console.warn('[DeadlineIntegration] Invalid date format (expected DD/MM/YYYY):', analysis.deadline.endDate)
+      return null
+    }
   } else {
     deadlineDate = new Date(analysis.deadline.endDate)
   }
