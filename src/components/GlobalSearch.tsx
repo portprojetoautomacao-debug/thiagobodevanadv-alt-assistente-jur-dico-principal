@@ -297,8 +297,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
       {/* Dialog de busca */}
       <Dialog
         open={isOpen}
-        onOpenChange={(open) => {
-          if (!open) {
+        onOpenChange={(isDialogOpen) => {
+          if (!isDialogOpen) {
             closeSearch();
           } else {
             setIsOpen(true);
@@ -352,47 +352,59 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
 
           {/* Resultados */}
           <ScrollArea className="max-h-[400px]">
-            {!query ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <MagnifyingGlass className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Digite para pesquisar em todo o sistema</p>
-                <p className="text-xs mt-1 opacity-70">
-                  Processos, clientes, minutas, expedientes...
-                </p>
-              </div>
-            ) : results.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <p className="text-sm">Nenhum resultado para "{query}"</p>
-                <p className="text-xs mt-1 opacity-70">Tente outro termo de busca</p>
-              </div>
-            ) : (
-              <div className="py-2">
-                {results.map((result, index) => (
-                  <button
-                    key={`${result.type}-${result.id}`}
-                    onClick={() => handleSelect(result)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                      index === selectedIndex ? "bg-muted" : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-background rounded-lg border">
-                      {result.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{result.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {result.type}
-                    </Badge>
-                    {index === selectedIndex && (
-                      <CaretRight className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+            {(() => {
+              if (!query) {
+                return (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <MagnifyingGlass className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">Digite para pesquisar em todo o sistema</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      Processos, clientes, minutas, expedientes...
+                    </p>
+                  </div>
+                );
+              }
+
+              if (results.length === 0) {
+                return (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <p className="text-sm">Nenhum resultado para "{query}"</p>
+                    <p className="text-xs mt-1 opacity-70">Tente outro termo de busca</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="py-2">
+                  {results.map((result, index) => (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      onClick={() => handleSelect(result)}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                        index === selectedIndex ? "bg-muted" : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-background rounded-lg border">
+                        {result.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{result.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {result.subtitle}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {result.type}
+                      </Badge>
+                      {index === selectedIndex && (
+                        <CaretRight className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </ScrollArea>
 
           {/* Footer com atalhos */}
