@@ -5,6 +5,13 @@ import { ChartBar, Eye, MouseSimple, Trash, Warning } from "@phosphor-icons/reac
 import { useMemo } from "react";
 import { toast } from "sonner";
 
+// Helper para cores de tipo de evento
+function getEventTypeColor(type: string): string {
+  if (type === "pageview") return "bg-secondary";
+  if (type === "action") return "bg-accent";
+  return "bg-destructive";
+}
+
 export default function AnalyticsDashboard() {
   const { getAnalytics, clearEvents, events } = useAnalytics();
   const analytics = getAnalytics();
