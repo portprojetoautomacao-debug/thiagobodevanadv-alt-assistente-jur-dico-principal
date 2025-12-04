@@ -5,6 +5,11 @@ function mockRes() {
   const res: any = {};
   res.statusCode = 200;
   res.body = null;
+  res.headers = {};
+  res.setHeader = (name: string, value: string) => {
+    res.headers[name] = value;
+    return res;
+  };
   res.status = (code: number) => {
     res.statusCode = code;
     return {
@@ -12,8 +17,10 @@ function mockRes() {
         res.body = data;
         return res;
       },
+      end: () => res,
     };
   };
+  res.end = () => res;
   return res;
 }
 
