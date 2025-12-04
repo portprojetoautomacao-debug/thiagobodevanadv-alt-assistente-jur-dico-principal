@@ -231,7 +231,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         addNotification({
           type: 'nova_intimacao',
           title: 'Nova Intimação Detectada',
-          message: exp.descricaoIntimacao || 'Nova intimação processada automaticamente',
+          message: exp.descricao || exp.conteudo || exp.summary || 'Nova intimação processada automaticamente',
           data: { expedienteId: exp.id },
           action: {
             label: 'Ver detalhes',

@@ -1,3 +1,4 @@
+import type { Minuta } from '@/types'
 import { useState } from 'react'
 
 /**
