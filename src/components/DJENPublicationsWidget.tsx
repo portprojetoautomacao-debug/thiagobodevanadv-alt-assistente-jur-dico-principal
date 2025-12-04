@@ -514,6 +514,25 @@ function FooterButtonsSection({
   );
 }
 
+// === HELPER FUNCTIONS (extraídos para evitar S7721) ===
+
+/**
+ * Verifica se há publicações não cadastradas (decisor puro para exibição)
+ */
+function shouldShowRegisterAll(
+  pubs: DJENPublication[],
+  isAlreadyRegistered: (pub: DJENPublication) => boolean
+): boolean {
+  return pubs.length > 0 && pubs.some((p) => p.numeroProcesso && !isAlreadyRegistered(p));
+}
+
+/**
+ * Verifica se deve exibir botão "Ver todas" (decisor puro para exibição)
+ */
+function shouldShowViewAll(pubs: DJENPublication[], onView?: () => void): boolean {
+  return pubs.length > 0 && typeof onView === "function";
+}
+
 export default function DJENPublicationsWidget({
   onViewAll,
   compact = false,
@@ -589,7 +608,7 @@ export default function DJENPublicationsWidget({
   // Constrói seção de rodapé com botões
   function buildFooterSection(showFooter: boolean): React.ReactNode {
     if (!showFooter) return null;
-    const showRegisterAll = shouldShowRegisterAll(publications);
+    const showRegisterAll = shouldShowRegisterAll(publications, isAlreadyRegistered);
     const showViewAll = shouldShowViewAll(publications, onViewAll);
     return (
       <>
@@ -603,15 +622,6 @@ export default function DJENPublicationsWidget({
         />
       </>
     );
-  }
-
-  // Decisores puros para exibição (reduzem nested ifs)
-  function shouldShowRegisterAll(pubs: DJENPublication[]): boolean {
-    return pubs.length > 0 && getHasUnregistered(pubs);
-  }
-
-  function shouldShowViewAll(pubs: DJENPublication[], onView?: () => void): boolean {
-    return pubs.length > 0 && typeof onView === "function";
   }
 
   // Early return: Loading state
