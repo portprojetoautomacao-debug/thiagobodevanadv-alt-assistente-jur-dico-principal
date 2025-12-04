@@ -228,13 +228,7 @@ export default function AnalyticsDashboard() {
                     className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-card/50 transition-colors"
                   >
                     <div
-                      className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                        event.type === "pageview"
-                          ? "bg-secondary"
-                          : event.type === "action"
-                            ? "bg-accent"
-                            : "bg-destructive"
-                      }`}
+                      className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${getEventTypeColor(event.type)}`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
@@ -261,4 +255,18 @@ export default function AnalyticsDashboard() {
       </Card>
     </div>
   );
+}
+
+// Helper para definir cor do ponto conforme tipo de evento
+function getEventTypeColor(type: string | undefined): string {
+  switch (type) {
+    case "pageview":
+      return "bg-blue-500";
+    case "action":
+      return "bg-green-500";
+    case "error":
+      return "bg-red-500";
+    default:
+      return "bg-muted-foreground/50";
+  }
 }

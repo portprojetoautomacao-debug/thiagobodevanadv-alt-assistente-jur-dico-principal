@@ -9,30 +9,28 @@
  * Suporta Upstash Redis (recomendado em Vercel)
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { Redis } from '@upstash/redis'
-import { rateLimitMiddleware } from './lib/rate-limit.js'
-import { handleError, withErrorHandler } from './lib/error-handler.js'
-import { SafeLogger } from './lib/safe-logger.js'
+import { Redis } from "@upstash/redis";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { handleError, withErrorHandler } from "./lib/error-handler.js";
+import { rateLimitMiddleware } from "./lib/rate-limit.js";
+import { SafeLogger } from "./lib/safe-logger.js";
 
-const logger = new SafeLogger('KV')
+const logger = new SafeLogger("KV");
 
 // ===== Redis singleton (Upstash) =====
 
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
 
-let _redisClient: Redis | null = null
+let _redisClient: Redis | null = null;
 
 function getRedisOrNull(): Redis | null {
-  if (!redisUrl || !redisToken) return null
-  if (!_redisClient) {
-    _redisClient = new Redis({
-      url: redisUrl,
-      token: redisToken
-    })
-  }
-  return _redisClient
+  if (!redisUrl || !redisToken) return null;
+  _redisClient ??= new Redis({
+    url: redisUrl,
+    token: redisToken,
+  });
+  return _redisClient;
 }
 
 // ===== Configuração inicial dos agentes =====
@@ -40,162 +38,162 @@ function getRedisOrNull(): Redis | null {
 function getDefaultAgentes() {
   return [
     {
-      id: 'agent-djen-monitor',
-      name: 'Agente de Monitoramento DJEN',
-      type: 'monitor',
+      id: "agent-djen-monitor",
+      name: "Agente de Monitoramento DJEN",
+      type: "monitor",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Monitoramento 24/7',
-        'Detecção de publicações',
-        'Alertas em tempo real',
-        'Análise de relevância'
+        "Monitoramento 24/7",
+        "Detecção de publicações",
+        "Alertas em tempo real",
+        "Análise de relevância",
       ],
-      lastActivity: null as string | null
+      lastActivity: null as string | null,
     },
     {
-      id: 'agent-deadline-calculator',
-      name: 'Agente Calculador de Prazos',
-      type: 'calculator',
+      id: "agent-deadline-calculator",
+      name: "Agente Calculador de Prazos",
+      type: "calculator",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Cálculo de prazos processuais',
-        'Considera feriados e recessos',
-        'Alertas de vencimento',
-        'Análise de urgência'
+        "Cálculo de prazos processuais",
+        "Considera feriados e recessos",
+        "Alertas de vencimento",
+        "Análise de urgência",
       ],
-      lastActivity: null as string | null
+      lastActivity: null as string | null,
     },
     {
-      id: 'agent-document-analyzer',
-      name: 'Agente Analisador de Documentos',
-      type: 'analyzer',
+      id: "agent-document-analyzer",
+      name: "Agente Analisador de Documentos",
+      type: "analyzer",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Análise de petições',
-        'Extração de dados',
-        'Identificação de prazos',
-        'Resumo automático'
+        "Análise de petições",
+        "Extração de dados",
+        "Identificação de prazos",
+        "Resumo automático",
       ],
-      lastActivity: null as string | null
+      lastActivity: null as string | null,
     },
     {
-      id: 'agent-legal-writer',
-      name: 'Agente Redator Jurídico',
-      type: 'writer',
+      id: "agent-legal-writer",
+      name: "Agente Redator Jurídico",
+      type: "writer",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Redação de peças',
-        'Sugestão de teses',
-        'Formatação ABNT',
-        'Revisão jurídica'
+        "Redação de peças",
+        "Sugestão de teses",
+        "Formatação ABNT",
+        "Revisão jurídica",
       ],
-      lastActivity: null as string | null
+      lastActivity: null as string | null,
     },
     {
-      id: 'agent-jurisprudence-researcher',
-      name: 'Agente Pesquisador de Jurisprudência',
-      type: 'researcher',
+      id: "agent-jurisprudence-researcher",
+      name: "Agente Pesquisador de Jurisprudência",
+      type: "researcher",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Busca de precedentes',
-        'Análise de tendências',
-        'Resumo de decisões',
-        'Recomendações estratégicas'
+        "Busca de precedentes",
+        "Análise de tendências",
+        "Resumo de decisões",
+        "Recomendações estratégicas",
       ],
-      lastActivity: null as string | null
+      lastActivity: null as string | null,
     },
     {
-      id: 'agent-strategic-advisor',
-      name: 'Agente Estratégico',
-      type: 'strategic',
+      id: "agent-strategic-advisor",
+      name: "Agente Estratégico",
+      type: "strategic",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Análise de riscos',
-        'Planejamento processual',
-        'Probabilidade de êxito',
-        'Sugestões táticas'
+        "Análise de riscos",
+        "Planejamento processual",
+        "Probabilidade de êxito",
+        "Sugestões táticas",
       ],
-      lastActivity: null as string | null
+      lastActivity: null as string | null,
     },
     {
-      id: 'agent-calendar-sync',
-      name: 'Agente de Sincronização de Agenda',
-      type: 'calendar',
+      id: "agent-calendar-sync",
+      name: "Agente de Sincronização de Agenda",
+      type: "calendar",
       enabled: true,
-      status: 'active',
+      status: "active",
       capabilities: [
-        'Sincronização Google Calendar',
-        'Lembretes automáticos',
-        'Gestão de compromissos',
-        'Alertas de audiências'
+        "Sincronização Google Calendar",
+        "Lembretes automáticos",
+        "Gestão de compromissos",
+        "Alertas de audiências",
       ],
-      lastActivity: null as string | null
-    }
-  ]
+      lastActivity: null as string | null,
+    },
+  ];
 }
 
 function getDefaultAdvogado() {
   return {
-    id: 'lawyer-thiago-bodevan',
-    name: 'Thiago Bodevan Veiga',
-    oab: '184404/MG',
-    email: 'thiagobodevanadvocacia@gmail.com',
-    tribunals: ['TJMG', 'TRT3', 'TST', 'STJ', 'TRF1'],
-    enabled: true
-  }
+    id: "lawyer-thiago-bodevan",
+    name: "Thiago Bodevan Veiga",
+    oab: "184404/MG",
+    email: "thiagobodevanadvocacia@gmail.com",
+    tribunals: ["TJMG", "TRT3", "TST", "STJ", "TRF1"],
+    enabled: true,
+  };
 }
 
 // ===== Init de configuração (agentes + advogado monitorado) =====
 
 async function handleInitConfig(_req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
-    const agentes = getDefaultAgentes()
-    const advogado = getDefaultAdvogado()
+    const agentes = getDefaultAgentes();
+    const advogado = getDefaultAdvogado();
 
-    const redis = getRedisOrNull()
+    const redis = getRedisOrNull();
     if (!redis) {
-      throw new Error('No KV storage available (Upstash Redis required)')
+      throw new Error("No KV storage available (Upstash Redis required)");
     }
 
     await Promise.all([
-      redis.set('autonomous-agents', agentes),
-      redis.set('monitored-lawyers', [advogado]),
-      redis.set('agent-task-queue', []),
-      redis.set('completed-agent-tasks', [])
-    ])
+      redis.set("autonomous-agents", agentes),
+      redis.set("monitored-lawyers", [advogado]),
+      redis.set("agent-task-queue", []),
+      redis.set("completed-agent-tasks", []),
+    ]);
 
     res.status(200).json({
       ok: true,
-      message: 'Configuração inicializada com sucesso!',
+      message: "Configuração inicializada com sucesso!",
       data: {
         agentes: agentes.length,
         advogado: {
           name: advogado.name,
           oab: advogado.oab,
           email: advogado.email,
-          tribunals: advogado.tribunals
+          tribunals: advogado.tribunals,
         },
         keys: [
-          'autonomous-agents',
-          'monitored-lawyers',
-          'agent-task-queue',
-          'completed-agent-tasks'
-        ]
-      }
-    })
+          "autonomous-agents",
+          "monitored-lawyers",
+          "agent-task-queue",
+          "completed-agent-tasks",
+        ],
+      },
+    });
   } catch (error) {
-    console.error('Error initializing config:', error)
+    console.error("Error initializing config:", error);
     res.status(500).json({
       ok: false,
-      error: 'Failed to initialize configuration',
-      details: error instanceof Error ? error.message : String(error)
-    })
+      error: "Failed to initialize configuration",
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -205,60 +203,62 @@ async function handleInitConfig(_req: VercelRequest, res: VercelResponse): Promi
  * Configura headers CORS
  */
 function setupCorsHeaders(res: VercelResponse): void {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
 /**
  * Extrai IP do cliente
  */
 function getClientIP(req: VercelRequest): string {
-  return (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ||
-    (req.headers['x-real-ip'] as string | undefined) ||
-    'unknown'
+  return (
+    (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ||
+    (req.headers["x-real-ip"] as string | undefined) ||
+    "unknown"
+  );
 }
 
 /**
  * Aplica rate limiting
  */
 async function applyRateLimit(req: VercelRequest, res: VercelResponse): Promise<boolean> {
-  const clientIP = getClientIP(req)
-  const rateLimitResult = await rateLimitMiddleware(clientIP)
+  const clientIP = getClientIP(req);
+  const rateLimitResult = await rateLimitMiddleware(clientIP);
 
   Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
-    res.setHeader(key, value)
-  })
+    res.setHeader(key, value);
+  });
 
   if (!rateLimitResult.allowed) {
     const resetSeconds = Math.max(
       1,
-      Math.ceil((Number(rateLimitResult.headers['X-RateLimit-Reset']) - Date.now()) / 1000)
-    )
+      Math.ceil((Number(rateLimitResult.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+    );
 
-    res.setHeader('Retry-After', resetSeconds.toString())
+    res.setHeader("Retry-After", resetSeconds.toString());
     res.status(429).json({
-      error: rateLimitResult.error || 'Rate limit exceeded'
-    })
-    return false
+      error: rateLimitResult.error || "Rate limit exceeded",
+    });
+    return false;
   }
 
-  return true
+  return true;
 }
 
 /**
  * Handler GET /api/kv?key=...
  */
 async function handleGetKey(redis: Redis, req: VercelRequest, res: VercelResponse): Promise<void> {
-  const { key } = req.query
+  const { key } = req.query;
 
-  if (!key || typeof key !== 'string') {
-    res.status(400).json({ error: 'Key parameter is required' })
-    return
+  if (!key || typeof key !== "string") {
+    res.status(400).json({ error: "Key parameter is required" });
+    return;
   }
 
-  const value = await redis.get(key)
-  res.status(200).json({ key, value: value ?? null })
+  const value = await redis.get(key);
+  res.status(200).json({ key, value: value ?? null });
 }
 
 /**
@@ -266,24 +266,24 @@ async function handleGetKey(redis: Redis, req: VercelRequest, res: VercelRespons
  */
 async function handleBatchGet(redis: Redis, keys: unknown, res: VercelResponse): Promise<void> {
   const validKeys = (keys as unknown[])
-    .filter((k: unknown): k is string => typeof k === 'string')
-    .slice(0, 50)
+    .filter((k: unknown): k is string => typeof k === "string")
+    .slice(0, 50);
 
-  const values: Record<string, unknown> = {}
+  const values: Record<string, unknown> = {};
 
   if (validKeys.length > 0) {
-    const pipeline = redis.pipeline()
+    const pipeline = redis.pipeline();
     for (const k of validKeys) {
-      pipeline.get(k)
+      pipeline.get(k);
     }
-    const results = await pipeline.exec()
+    const results = await pipeline.exec();
 
     for (let i = 0; i < validKeys.length; i++) {
-      values[validKeys[i]] = results[i] ?? null
+      values[validKeys[i]] = results[i] ?? null;
     }
   }
 
-  res.status(200).json({ success: true, values })
+  res.status(200).json({ success: true, values });
 }
 
 /**
@@ -294,54 +294,63 @@ async function handleBatchSet(redis: Redis, entries: unknown, res: VercelRespons
     .filter(
       (e: unknown): e is { key: string; value: unknown } =>
         !!e &&
-        typeof e === 'object' &&
-        'key' in e &&
-        'value' in e &&
-        typeof (e as Record<string, unknown>).key === 'string'
+        typeof e === "object" &&
+        "key" in e &&
+        "value" in e &&
+        typeof (e as Record<string, unknown>).key === "string"
     )
-    .slice(0, 50)
+    .slice(0, 50);
 
   if (validEntries.length > 0) {
-    const pipeline = redis.pipeline()
+    const pipeline = redis.pipeline();
     for (const entry of validEntries) {
-      pipeline.set(entry.key, entry.value)
+      pipeline.set(entry.key, entry.value);
     }
-    await pipeline.exec()
+    await pipeline.exec();
   }
 
-  res.status(200).json({ success: true, count: validEntries.length })
+  res.status(200).json({ success: true, count: validEntries.length });
 }
 
 /**
  * Handler set simples key/value
  */
-async function handleSetKey(redis: Redis, key: string, value: unknown, res: VercelResponse): Promise<void> {
-  await redis.set(key, value)
-  res.status(200).json({ success: true, key })
+async function handleSetKey(
+  redis: Redis,
+  key: string,
+  value: unknown,
+  res: VercelResponse
+): Promise<void> {
+  await redis.set(key, value);
+  res.status(200).json({ success: true, key });
 }
 
 /**
  * Resposta fallback quando não há KV configurado
  */
-function handleFallbackResponse(req: VercelRequest, res: VercelResponse, body: Record<string, unknown> | null): void {
-  console.warn('No KV storage available')
-  if (req.method === 'GET') {
-    res.status(200).json({ key: req.query.key, value: null, fallback: true })
-  } else if (req.method === 'POST') {
-    res.status(200).json({ success: true, key: body?.key ?? null, fallback: true })
+function handleFallbackResponse(
+  req: VercelRequest,
+  res: VercelResponse,
+  body: Record<string, unknown> | null
+): void {
+  console.warn("No KV storage available");
+  if (req.method === "GET") {
+    res.status(200).json({ key: req.query.key, value: null, fallback: true });
+  } else if (req.method === "POST") {
+    res.status(200).json({ success: true, key: body?.key ?? null, fallback: true });
   } else {
-    res.status(405).json({ error: 'Method not allowed' })
+    res.status(405).json({ error: "Method not allowed" });
   }
 }
 
 // ===== POST request handlers - Extracted to reduce CC =====
 
 interface PostRequestBody {
-  key?: unknown
-  value?: unknown
-  action?: unknown
-  keys?: unknown
-  entries?: unknown
+  key?: unknown;
+  value?: unknown;
+  action?: unknown;
+  keys?: unknown;
+  entries?: unknown;
 }
 
 /**
@@ -352,11 +361,11 @@ async function tryHandleBatchGet(
   body: PostRequestBody,
   res: VercelResponse
 ): Promise<boolean> {
-  if (body.action !== 'batch-get' || !Array.isArray(body.keys)) {
-    return false
+  if (body.action !== "batch-get" || !Array.isArray(body.keys)) {
+    return false;
   }
-  await handleBatchGet(redis, body.keys, res)
-  return true
+  await handleBatchGet(redis, body.keys, res);
+  return true;
 }
 
 /**
@@ -367,21 +376,21 @@ async function tryHandleBatchSet(
   body: PostRequestBody,
   res: VercelResponse
 ): Promise<boolean> {
-  if (body.action !== 'batch-set' || !Array.isArray(body.entries)) {
-    return false
+  if (body.action !== "batch-set" || !Array.isArray(body.entries)) {
+    return false;
   }
-  await handleBatchSet(redis, body.entries, res)
-  return true
+  await handleBatchSet(redis, body.entries, res);
+  return true;
 }
 
 /**
  * Resultado de validação do POST request
  */
 interface ValidationResult {
-  valid: boolean
-  key?: string
-  value?: unknown
-  errorMessage?: string
+  valid: boolean;
+  key?: string;
+  value?: unknown;
+  errorMessage?: string;
 }
 
 /**
@@ -389,17 +398,17 @@ interface ValidationResult {
  * Retorna resultado da validação sem efeitos colaterais
  */
 function validateSetInput(body: PostRequestBody): ValidationResult {
-  const { key, value } = body
+  const { key, value } = body;
 
-  if (!key || typeof key !== 'string') {
-    return { valid: false, errorMessage: 'Key is required in request body' }
+  if (!key || typeof key !== "string") {
+    return { valid: false, errorMessage: "Key is required in request body" };
   }
 
   if (value === undefined) {
-    return { valid: false, errorMessage: 'Value is required in request body' }
+    return { valid: false, errorMessage: "Value is required in request body" };
   }
 
-  return { valid: true, key, value }
+  return { valid: true, key, value };
 }
 
 /**
@@ -411,15 +420,15 @@ async function tryHandleSimpleSet(
   body: PostRequestBody,
   res: VercelResponse
 ): Promise<boolean> {
-  const validation = validateSetInput(body)
+  const validation = validateSetInput(body);
 
   if (!validation.valid) {
-    res.status(400).json({ error: validation.errorMessage })
-    return false // validation error - not successfully handled
+    res.status(400).json({ error: validation.errorMessage });
+    return false; // validation error - not successfully handled
   }
 
-  await handleSetKey(redis, validation.key!, validation.value, res)
-  return true // success
+  await handleSetKey(redis, validation.key!, validation.value, res);
+  return true; // success
 }
 
 /**
@@ -432,14 +441,14 @@ async function handlePostRequest(
   res: VercelResponse
 ): Promise<void> {
   // Tenta cada handler em sequência
-  if (await tryHandleBatchGet(redis, body, res)) return
-  if (await tryHandleBatchSet(redis, body, res)) return
+  if (await tryHandleBatchGet(redis, body, res)) return;
+  if (await tryHandleBatchSet(redis, body, res)) return;
 
   // Simple set é o fallback - se validação falhar, a resposta de erro já foi enviada
-  const setResult = await tryHandleSimpleSet(redis, body, res)
+  const setResult = await tryHandleSimpleSet(redis, body, res);
   if (!setResult) {
     // Validation error response already sent by tryHandleSimpleSet
-    return
+    return;
   }
 }
 
@@ -447,76 +456,73 @@ async function handlePostRequest(
  * Parse body se vier como string
  */
 function parseRequestBody(body: unknown): Record<string, unknown> | null {
-  if (typeof body === 'string') {
+  if (typeof body === "string") {
     try {
-      return JSON.parse(body)
+      return JSON.parse(body);
     } catch {
-      console.warn('Failed to parse request body')
-      return null
+      console.warn("Failed to parse request body");
+      return null;
     }
   }
-  return body as Record<string, unknown> | null
+  return body as Record<string, unknown> | null;
 }
 
 // ===== Handler principal - Refactored =====
 
-export default withErrorHandler(
-  async (req: VercelRequest, res: VercelResponse): Promise<void> => {
-    // CORS / preflight
-    if (req.method === 'OPTIONS') {
-      setupCorsHeaders(res)
-      res.status(200).end()
-      return
+export default withErrorHandler(async (req: VercelRequest, res: VercelResponse): Promise<void> => {
+  // CORS / preflight
+  if (req.method === "OPTIONS") {
+    setupCorsHeaders(res);
+    res.status(200).end();
+    return;
+  }
+
+  setupCorsHeaders(res);
+
+  // Rate limiting por IP
+  const rateLimitPassed = await applyRateLimit(req, res);
+  if (!rateLimitPassed) return;
+
+  const clientIP = getClientIP(req);
+  logger.info("KV API request", {
+    method: req.method,
+    url: req.url,
+    ip: clientIP,
+  });
+
+  const action = typeof req.query.action === "string" ? req.query.action : undefined;
+
+  // POST ?action=init → inicializa configuração
+  if (action === "init" && req.method === "POST") {
+    await handleInitConfig(req, res);
+    return;
+  }
+
+  const body = parseRequestBody(req.body);
+  const redis = getRedisOrNull();
+
+  // Se não houver KV configurado, responde em modo "fallback"
+  if (!redis) {
+    handleFallbackResponse(req, res, body);
+    return;
+  }
+
+  try {
+    // GET /api/kv?key=...
+    if (req.method === "GET") {
+      await handleGetKey(redis, req, res);
+      return;
     }
 
-    setupCorsHeaders(res)
-
-    // Rate limiting por IP
-    const rateLimitPassed = await applyRateLimit(req, res)
-    if (!rateLimitPassed) return
-
-    const clientIP = getClientIP(req)
-    logger.info('KV API request', {
-      method: req.method,
-      url: req.url,
-      ip: clientIP
-    })
-
-    const action = typeof req.query.action === 'string' ? req.query.action : undefined
-
-    // POST ?action=init → inicializa configuração
-    if (action === 'init' && req.method === 'POST') {
-      await handleInitConfig(req, res)
-      return
+    // POST /api/kv
+    if (req.method === "POST") {
+      await handlePostRequest(redis, body ?? {}, res);
+      return;
     }
 
-    const body = parseRequestBody(req.body)
-    const redis = getRedisOrNull()
-
-    // Se não houver KV configurado, responde em modo "fallback"
-    if (!redis) {
-      handleFallbackResponse(req, res, body)
-      return
-    }
-
-    try {
-      // GET /api/kv?key=...
-      if (req.method === 'GET') {
-        await handleGetKey(redis, req, res)
-        return
-      }
-
-      // POST /api/kv
-      if (req.method === 'POST') {
-        await handlePostRequest(redis, body ?? {}, res)
-        return
-      }
-
-      res.status(405).json({ error: 'Method not allowed' })
-    } catch (error) {
-      logger.error('KV API Error', error)
-      handleError(error, res, 'KV API')
-    }
-  },
-  'KV API'
-)
+    res.status(405).json({ error: "Method not allowed" });
+  } catch (error) {
+    logger.error("KV API Error", error);
+    handleError(error, res, "KV API");
+  }
+}, "KV API");

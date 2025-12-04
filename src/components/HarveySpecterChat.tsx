@@ -35,6 +35,7 @@ import {
   User,
   Warning,
 } from "@phosphor-icons/react";
+import type { ComponentType, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -71,6 +72,67 @@ interface AgentTask {
 interface HarveySpecterChatProps {
   readonly onNavigate?: (view: ViewType) => void;
   readonly maxMessages?: number; // Limite de mensagens no histórico
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+// Helper para renderizar conteúdo da mensagem (evita ternário aninhado S3358)
+interface MessageContentParams {
+  messageId: string;
+  streamingMessageId: string | null;
+  isStreaming: boolean;
+  streamingContent: string;
+  messageContent: string;
+}
+
+function renderMessageContent(
+  params: MessageContentParams,
+  SimpleMarkdown: ComponentType<{ content: string }>
+): ReactNode {
+  const { messageId, streamingMessageId, isStreaming, streamingContent, messageContent } = params;
+
+  // Caso 1: Mensagem em streaming ativo
+  if (messageId === streamingMessageId && isStreaming) {
+    return (
+      <div className="text-sm">
+        <SimpleMarkdown content={streamingContent || ""} />
+        <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
+      </div>
+    );
+  }
+
+  // Caso 2: Mensagem com conteúdo
+  if (messageContent) {
+    return (
+      <div className="text-sm">
+        <SimpleMarkdown content={messageContent} />
+      </div>
+    );
+  }
+
+  // Caso 3: Mensagem de streaming aguardando (loading)
+  if (messageId === streamingMessageId) {
+    return (
+      <div className="flex gap-1">
+        <div
+          className="w-2 h-2 rounded-full bg-current animate-bounce"
+          style={{ animationDelay: "0ms" }}
+        />
+        <div
+          className="w-2 h-2 rounded-full bg-current animate-bounce"
+          style={{ animationDelay: "150ms" }}
+        />
+        <div
+          className="w-2 h-2 rounded-full bg-current animate-bounce"
+          style={{ animationDelay: "300ms" }}
+        />
+      </div>
+    );
+  }
+
+  return null;
 }
 
 // ============================================
@@ -725,31 +787,16 @@ Regras:
                           )}
                         >
                           {/* Streaming ou conteúdo final */}
-                          {message.id === streamingMessageId && isStreaming ? (
-                            <div className="text-sm">
-                              <SimpleMarkdown content={streamingContent || ""} />
-                              <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
-                            </div>
-                          ) : message.content ? (
-                            <div className="text-sm">
-                              <SimpleMarkdown content={message.content} />
-                            </div>
-                          ) : message.id === streamingMessageId ? (
-                            <div className="flex gap-1">
-                              <div
-                                className="w-2 h-2 rounded-full bg-current animate-bounce"
-                                style={{ animationDelay: "0ms" }}
-                              />
-                              <div
-                                className="w-2 h-2 rounded-full bg-current animate-bounce"
-                                style={{ animationDelay: "150ms" }}
-                              />
-                              <div
-                                className="w-2 h-2 rounded-full bg-current animate-bounce"
-                                style={{ animationDelay: "300ms" }}
-                              />
-                            </div>
-                          ) : null}
+                          {renderMessageContent(
+                            {
+                              messageId: message.id,
+                              streamingMessageId,
+                              isStreaming,
+                              streamingContent,
+                              messageContent: message.content,
+                            },
+                            SimpleMarkdown
+                          )}
                         </Card>
 
                         {/* Copy button para assistente */}

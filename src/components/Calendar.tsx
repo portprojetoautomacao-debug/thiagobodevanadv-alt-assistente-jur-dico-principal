@@ -23,6 +23,24 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+// Helper para obter texto de status da conexão (evita ternário aninhado S3358)
+function getConnectionStatus(
+  isConfigured: boolean,
+  isConnected: boolean,
+  isInitializing: boolean
+): string {
+  if (!isConfigured) {
+    return "Configure as credenciais do Google para habilitar a sincronização";
+  }
+  if (isConnected) {
+    return "Conectado - seus eventos podem ser sincronizados";
+  }
+  if (isInitializing) {
+    return "Inicializando conexão...";
+  }
+  return "Desconectado";
+}
+
 const EVENT_COLORS: Record<string, string> = {
   audiencia: "bg-red-100 text-red-800 border-red-300",
   reuniao: "bg-blue-100 text-blue-800 border-blue-300",
@@ -226,13 +244,7 @@ export default function Calendar() {
               <div>
                 <CardTitle>Integração Google Calendar</CardTitle>
                 <CardDescription>
-                  {isGoogleConfigured
-                    ? isGoogleConnected
-                      ? "Conectado - seus eventos podem ser sincronizados"
-                      : isInitializing
-                        ? "Inicializando conexão..."
-                        : "Desconectado"
-                    : "Configure as credenciais do Google para habilitar a sincronização"}
+                  {getConnectionStatus(isGoogleConfigured, isGoogleConnected, isInitializing)}
                 </CardDescription>
               </div>
             </div>
