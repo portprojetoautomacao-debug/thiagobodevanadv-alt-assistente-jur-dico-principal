@@ -173,17 +173,29 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
 
     const responseText = extractResponseText(data);
 
-    console.log(
-      "[PremonicaoService] Resposta recebida (preview):",
-      typeof responseText === "string" && responseText.length > 0
-        ? responseText.substring(0, 200)
-        : `[empty or non-string: ${typeof responseText}]`
-    );
-
-    if (!responseText || typeof responseText !== "string" || responseText.trim().length === 0) {
-      console.warn("[PremonicaoService] Resposta vazia da IA - tentando novamente pode ajudar");
+    // Debug melhorado para identificar problema
+    if (!responseText || typeof responseText !== "string") {
+      console.warn("[PremonicaoService] Resposta inválida:", {
+        type: typeof responseText,
+        isEmpty: !responseText,
+        dataKeys: Object.keys(data),
+        hasChoices: "choices" in data,
+        hasMessage: (data as any).choices?.[0]?.message,
+      });
       throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
     }
+
+    if (responseText.trim().length === 0) {
+      console.warn("[PremonicaoService] Resposta vazia (string vazia)");
+      throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
+    }
+
+    console.log(
+      "[PremonicaoService] Resposta recebida (",
+      responseText.length,
+      "chars):",
+      responseText.substring(0, 200)
+    );
 
     const parsed = parseJsonResponse(responseText);
 
