@@ -24,10 +24,7 @@ export const AnalyzeIntimationInputSchema = z.object({
   tribunal: z.string().optional(),
   publicationId: z.string().optional(),
   expedienteId: z.string().optional(),
-  source: z
-    .enum(["DJEN", "DataJud", "PJe", "manual"])
-    .optional()
-    .default("manual"),
+  source: z.enum(["DJEN", "DataJud", "PJe", "manual"]).optional().default("manual"),
 });
 
 /**
@@ -62,9 +59,7 @@ export const DraftPetitionInputSchema = z.object({
 export const CalculateDeadlineInputSchema = z.object({
   startDate: z.string().datetime().optional(),
   businessDays: z.number().int().positive().max(365),
-  tipoPrazo: z
-    .enum(["cpc", "clt", "trabalhista", "penal", "administrativo"])
-    .default("cpc"),
+  tipoPrazo: z.enum(["cpc", "clt", "trabalhista", "penal", "administrativo"]).default("cpc"),
   comarca: z.string().optional(),
   tribunal: z.string().optional(),
   incluirFeriados: z.boolean().default(true),
@@ -78,9 +73,7 @@ export const ResearchPrecedentsInputSchema = z.object({
   tribunais: z.array(z.string()).optional(),
   dataInicio: z.string().optional(),
   dataFim: z.string().optional(),
-  tipoDecisao: z
-    .enum(["sentenca", "acordao", "sumula", "todos"])
-    .default("todos"),
+  tipoDecisao: z.enum(["sentenca", "acordao", "sumula", "todos"]).default("todos"),
   maxResults: z.number().int().min(1).max(50).default(10),
 });
 
@@ -91,14 +84,7 @@ export const RiskAnalysisInputSchema = z.object({
   processNumber: z.string().optional(),
   description: z.string().min(20),
   area: z
-    .enum([
-      "civel",
-      "trabalhista",
-      "previdenciario",
-      "penal",
-      "tributario",
-      "outro",
-    ])
+    .enum(["civel", "trabalhista", "previdenciario", "penal", "tributario", "outro"])
     .default("civel"),
   valorCausa: z.number().optional(),
   precedents: z.array(z.string()).optional(),
@@ -110,13 +96,7 @@ export const RiskAnalysisInputSchema = z.object({
 export const ClientCommunicationInputSchema = z.object({
   clientName: z.string().min(2),
   processNumber: z.string().optional(),
-  tipo: z.enum([
-    "atualizacao",
-    "urgente",
-    "informativo",
-    "cobranca",
-    "felicitacao",
-  ]),
+  tipo: z.enum(["atualizacao", "urgente", "informativo", "cobranca", "felicitacao"]),
   conteudo: z.string().min(10),
   canal: z.enum(["email", "whatsapp", "sms", "carta"]).default("email"),
 });
@@ -154,9 +134,7 @@ export const ContractReviewInputSchema = z.object({
  */
 export const AnalyzeDocumentInputSchema = z.object({
   content: z.string().min(50, "Documento muito curto"),
-  tipo: z
-    .enum(["intimacao", "sentenca", "acordao", "peticao", "contrato", "outro"])
-    .optional(),
+  tipo: z.enum(["intimacao", "sentenca", "acordao", "peticao", "contrato", "outro"]).optional(),
   extractEntities: z.boolean().default(true),
   summarize: z.boolean().default(true),
 });
@@ -299,9 +277,10 @@ export const GenericOutputSchema = z.object({
 /**
  * Verifica se a saída de redação de petição é confiável
  */
-export function isOutputConfiavelPeticao(
-  output: z.infer<typeof DraftPetitionOutputSchema>
-): { confiavel: boolean; motivos: string[] } {
+export function isOutputConfiavelPeticao(output: z.infer<typeof DraftPetitionOutputSchema>): {
+  confiavel: boolean;
+  motivos: string[];
+} {
   const motivos: string[] = [];
 
   // Confiança mínima de 70%
@@ -328,9 +307,10 @@ export function isOutputConfiavelPeticao(
 /**
  * Verifica se a análise de intimação é confiável
  */
-export function isOutputConfiavelIntimacao(
-  output: z.infer<typeof AnalyzeIntimationOutputSchema>
-): { confiavel: boolean; motivos: string[] } {
+export function isOutputConfiavelIntimacao(output: z.infer<typeof AnalyzeIntimationOutputSchema>): {
+  confiavel: boolean;
+  motivos: string[];
+} {
   const motivos: string[] = [];
 
   // Confiança mínima de 75%
@@ -362,9 +342,10 @@ export function isOutputConfiavelIntimacao(
 /**
  * Verifica se a análise de risco é confiável
  */
-export function isOutputConfiavelRisco(
-  output: z.infer<typeof RiskAnalysisOutputSchema>
-): { confiavel: boolean; motivos: string[] } {
+export function isOutputConfiavelRisco(output: z.infer<typeof RiskAnalysisOutputSchema>): {
+  confiavel: boolean;
+  motivos: string[];
+} {
   const motivos: string[] = [];
 
   // Confiança mínima de 65%
@@ -407,9 +388,7 @@ export function validarEntradaTarefa<T>(
 
   return {
     success: false,
-    errors: result.error.issues.map(
-      (issue) => `${issue.path.join(".")}: ${issue.message}`
-    ),
+    errors: result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),
   };
 }
 
@@ -455,35 +434,21 @@ export function extrairJSONDeResposta(content: string): unknown | null {
 // TIPOS EXPORTADOS
 // ============================================================================
 
-export type AnalyzeIntimationInput = z.infer<
-  typeof AnalyzeIntimationInputSchema
->;
-export type AnalyzeIntimationOutput = z.infer<
-  typeof AnalyzeIntimationOutputSchema
->;
+export type AnalyzeIntimationInput = z.infer<typeof AnalyzeIntimationInputSchema>;
+export type AnalyzeIntimationOutput = z.infer<typeof AnalyzeIntimationOutputSchema>;
 
 export type DraftPetitionInput = z.infer<typeof DraftPetitionInputSchema>;
 export type DraftPetitionOutput = z.infer<typeof DraftPetitionOutputSchema>;
 
-export type CalculateDeadlineInput = z.infer<
-  typeof CalculateDeadlineInputSchema
->;
-export type CalculateDeadlineOutput = z.infer<
-  typeof CalculateDeadlineOutputSchema
->;
+export type CalculateDeadlineInput = z.infer<typeof CalculateDeadlineInputSchema>;
+export type CalculateDeadlineOutput = z.infer<typeof CalculateDeadlineOutputSchema>;
 
-export type ResearchPrecedentsInput = z.infer<
-  typeof ResearchPrecedentsInputSchema
->;
-export type ResearchPrecedentsOutput = z.infer<
-  typeof ResearchPrecedentsOutputSchema
->;
+export type ResearchPrecedentsInput = z.infer<typeof ResearchPrecedentsInputSchema>;
+export type ResearchPrecedentsOutput = z.infer<typeof ResearchPrecedentsOutputSchema>;
 
 export type RiskAnalysisInput = z.infer<typeof RiskAnalysisInputSchema>;
 export type RiskAnalysisOutput = z.infer<typeof RiskAnalysisOutputSchema>;
 
-export type ClientCommunicationInput = z.infer<
-  typeof ClientCommunicationInputSchema
->;
+export type ClientCommunicationInput = z.infer<typeof ClientCommunicationInputSchema>;
 export type ContractReviewInput = z.infer<typeof ContractReviewInputSchema>;
 export type AnalyzeDocumentInput = z.infer<typeof AnalyzeDocumentInputSchema>;

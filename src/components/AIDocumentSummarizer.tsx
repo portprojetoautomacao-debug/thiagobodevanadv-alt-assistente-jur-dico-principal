@@ -1,39 +1,33 @@
-import { useState } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { FileText, Sparkle, Copy, Download } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { geminiGenerateJSON } from '@/lib/gemini-client'
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { FileText, Sparkle, Copy, Download } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { geminiGenerateJSON } from "@/lib/gemini-client";
 
 interface SummarizerResult {
-  summary: string
-  keyPoints: string[]
-  deadlines: string[]
-  actions: string[]
+  summary: string;
+  keyPoints: string[];
+  deadlines: string[];
+  actions: string[];
 }
 
 export default function AIDocumentSummarizer() {
-  const [documentText, setDocumentText] = useState('')
-  const [summary, setSummary] = useState('')
-  const [keyPoints, setKeyPoints] = useState<string[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [documentText, setDocumentText] = useState("");
+  const [summary, setSummary] = useState("");
+  const [keyPoints, setKeyPoints] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSummarize = async () => {
     if (!documentText.trim()) {
-      toast.error('Por favor, insira o texto do documento')
-      return
+      toast.error("Por favor, insira o texto do documento");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
 
     try {
       const prompt = `Você é um assistente jurídico especializado em resumir documentos legais.
@@ -55,93 +49,77 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
   "keyPoints": ["ponto 1", "ponto 2"],
   "deadlines": ["prazo 1", "prazo 2"],
   "actions": ["ação 1", "ação 2"]
-}`
+}`;
 
-      const result = await geminiGenerateJSON<SummarizerResult>(prompt)
+      const result = await geminiGenerateJSON<SummarizerResult>(prompt);
 
-      const safeSummary = result.summary ?? ''
-      const safeKeyPoints = Array.isArray(result.keyPoints) ? result.keyPoints : []
-      const safeDeadlines = Array.isArray(result.deadlines) ? result.deadlines : []
-      const safeActions = Array.isArray(result.actions) ? result.actions : []
+      const safeSummary = result.summary ?? "";
+      const safeKeyPoints = Array.isArray(result.keyPoints) ? result.keyPoints : [];
+      const safeDeadlines = Array.isArray(result.deadlines) ? result.deadlines : [];
+      const safeActions = Array.isArray(result.actions) ? result.actions : [];
 
-      setSummary(safeSummary)
+      setSummary(safeSummary);
       setKeyPoints([
         ...safeKeyPoints,
-        ...(safeDeadlines.length > 0
-          ? ['--- PRAZOS ---', ...safeDeadlines]
-          : []),
-        ...(safeActions.length > 0
-          ? ['--- AÇÕES RECOMENDADAS ---', ...safeActions]
-          : []),
-      ])
+        ...(safeDeadlines.length > 0 ? ["--- PRAZOS ---", ...safeDeadlines] : []),
+        ...(safeActions.length > 0 ? ["--- AÇÕES RECOMENDADAS ---", ...safeActions] : []),
+      ]);
 
-      toast.success('Documento resumido com sucesso!')
+      toast.success("Documento resumido com sucesso!");
     } catch (error) {
-      console.error('Erro ao resumir documento:', error)
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Falha ao resumir documento',
-      )
+      console.error("Erro ao resumir documento:", error);
+      toast.error(error instanceof Error ? error.message : "Falha ao resumir documento");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleCopySummary = () => {
     if (!summary) {
-      toast.info('Nenhum resumo para copiar ainda')
-      return
+      toast.info("Nenhum resumo para copiar ainda");
+      return;
     }
 
-    const fullText = `RESUMO:\n${summary}\n\nPONTOS-CHAVE:\n${keyPoints.join(
-      '\n',
-    )}`
+    const fullText = `RESUMO:\n${summary}\n\nPONTOS-CHAVE:\n${keyPoints.join("\n")}`;
     navigator.clipboard
       .writeText(fullText)
       .then(() => {
-        toast.success('Resumo copiado para área de transferência')
+        toast.success("Resumo copiado para área de transferência");
       })
       .catch(() => {
-        toast.error('Não foi possível copiar para a área de transferência')
-      })
-  }
+        toast.error("Não foi possível copiar para a área de transferência");
+      });
+  };
 
   const handleDownload = () => {
     if (!summary) {
-      toast.info('Nenhum resumo para baixar ainda')
-      return
+      toast.info("Nenhum resumo para baixar ainda");
+      return;
     }
 
     const fullText =
-      `RESUMO DO DOCUMENTO\n${'='.repeat(50)}\n\n` +
+      `RESUMO DO DOCUMENTO\n${"=".repeat(50)}\n\n` +
       `${summary}\n\n` +
-      `PONTOS-CHAVE:\n${keyPoints
-        .map((p, i) => `${i + 1}. ${p}`)
-        .join('\n')}\n\n` +
-      `Gerado em: ${new Date().toLocaleString('pt-BR')}`
+      `PONTOS-CHAVE:\n${keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n")}\n\n` +
+      `Gerado em: ${new Date().toLocaleString("pt-BR")}`;
 
-    const blob = new Blob([fullText], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `resumo-${Date.now()}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Resumo baixado com sucesso')
-  }
+    const blob = new Blob([fullText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `resumo-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Resumo baixado com sucesso");
+  };
 
-  const approxTokens = Math.ceil(documentText.length / 4)
+  const approxTokens = Math.ceil(documentText.length / 4);
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <FileText
-            size={32}
-            weight="duotone"
-            className="text-primary neon-glow"
-          />
+          <FileText size={32} weight="duotone" className="text-primary neon-glow" />
           Resumidor de Documentos IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -153,9 +131,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
         <Card className="glassmorphic">
           <CardHeader>
             <CardTitle>Documento Original</CardTitle>
-            <CardDescription>
-              Cole o texto do documento para análise
-            </CardDescription>
+            <CardDescription>Cole o texto do documento para análise</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
@@ -173,11 +149,8 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                 disabled={isProcessing || !documentText.trim()}
                 className="button-gradient"
               >
-                <Sparkle
-                  size={20}
-                  className={isProcessing ? 'animate-spin' : ''}
-                />
-                {isProcessing ? 'Analisando...' : 'Resumir com IA'}
+                <Sparkle size={20} className={isProcessing ? "animate-spin" : ""} />
+                {isProcessing ? "Analisando..." : "Resumir com IA"}
               </Button>
             </div>
           </CardContent>
@@ -189,11 +162,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               <span>Resumo Executivo</span>
               {summary && (
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleCopySummary}
-                  >
+                  <Button size="sm" variant="outline" onClick={handleCopySummary}>
                     <Copy size={16} />
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleDownload}>
@@ -207,11 +176,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
           <CardContent>
             {!summary ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Sparkle
-                  size={48}
-                  className="text-muted-foreground mb-4"
-                  weight="duotone"
-                />
+                <Sparkle size={48} className="text-muted-foreground mb-4" weight="duotone" />
                 <p className="text-muted-foreground">
                   O resumo aparecerá aqui após processar o documento
                 </p>
@@ -223,9 +188,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                     <h3 className="font-semibold mb-2 flex items-center gap-2">
                       <Badge variant="outline">Resumo</Badge>
                     </h3>
-                    <p className="text-sm leading-relaxed whitespace-pre-line">
-                      {summary}
-                    </p>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{summary}</p>
                   </div>
 
                   {keyPoints.length > 0 && (
@@ -236,10 +199,8 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                       <ul className="space-y-2">
                         {keyPoints.map((point, index) => (
                           <li key={index} className="text-sm flex gap-2">
-                            {point.startsWith('---') ? (
-                              <span className="font-bold text-primary mt-2">
-                                {point}
-                              </span>
+                            {point.startsWith("---") ? (
+                              <span className="font-bold text-primary mt-2">{point}</span>
                             ) : (
                               <>
                                 <span className="text-primary shrink-0">•</span>
@@ -266,10 +227,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
           <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <li className="flex gap-2">
               <span className="text-primary">•</span>
-              <span>
-                Funciona com petições, sentenças, contratos e documentos
-                jurídicos
-              </span>
+              <span>Funciona com petições, sentenças, contratos e documentos jurídicos</span>
             </li>
             <li className="flex gap-2">
               <span className="text-primary">•</span>
@@ -283,5 +241,5 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

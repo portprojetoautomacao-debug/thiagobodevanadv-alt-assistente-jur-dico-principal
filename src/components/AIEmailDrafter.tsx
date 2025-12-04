@@ -1,83 +1,72 @@
-import { useState } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  EnvelopeSimple,
-  Sparkle,
-  Copy,
-  PaperPlaneTilt,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { geminiGenerateJSON } from '@/lib/gemini-client'
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { EnvelopeSimple, Sparkle, Copy, PaperPlaneTilt } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { geminiGenerateJSON } from "@/lib/gemini-client";
 
 type EmailType =
-  | 'cliente-inicial'
-  | 'cliente-atualizacao'
-  | 'adversa-negociacao'
-  | 'tribunal-peticao'
-  | 'perito-solicitacao'
-  | 'formal-profissional'
-  | 'informal-cliente'
+  | "cliente-inicial"
+  | "cliente-atualizacao"
+  | "adversa-negociacao"
+  | "tribunal-peticao"
+  | "perito-solicitacao"
+  | "formal-profissional"
+  | "informal-cliente";
 
 interface EmailDraft {
-  subject: string
-  body: string
-  tone: string
-  type: string
+  subject: string;
+  body: string;
+  tone: string;
+  type: string;
 }
 
 export default function AIEmailDrafter() {
-  const [emailType, setEmailType] = useState<EmailType>('cliente-atualizacao')
-  const [context, setContext] = useState('')
-  const [recipientName, setRecipientName] = useState('')
-  const [processNumber, setProcessNumber] = useState('')
-  const [draft, setDraft] = useState<EmailDraft | null>(null)
-  const [isDrafting, setIsDrafting] = useState(false)
+  const [emailType, setEmailType] = useState<EmailType>("cliente-atualizacao");
+  const [context, setContext] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [processNumber, setProcessNumber] = useState("");
+  const [draft, setDraft] = useState<EmailDraft | null>(null);
+  const [isDrafting, setIsDrafting] = useState(false);
 
   const emailTypes: Record<EmailType, string> = {
-    'cliente-inicial': 'Cliente - Primeiro Contato',
-    'cliente-atualizacao': 'Cliente - Atualização Processual',
-    'adversa-negociacao': 'Parte Adversa - Negociação',
-    'tribunal-peticao': 'Tribunal - Encaminhamento de Petição',
-    'perito-solicitacao': 'Perito - Solicitação de Laudo',
-    'formal-profissional': 'Formal Profissional',
-    'informal-cliente': 'Informal Cliente',
-  }
+    "cliente-inicial": "Cliente - Primeiro Contato",
+    "cliente-atualizacao": "Cliente - Atualização Processual",
+    "adversa-negociacao": "Parte Adversa - Negociação",
+    "tribunal-peticao": "Tribunal - Encaminhamento de Petição",
+    "perito-solicitacao": "Perito - Solicitação de Laudo",
+    "formal-profissional": "Formal Profissional",
+    "informal-cliente": "Informal Cliente",
+  };
 
   const handleDraft = async () => {
     if (!context.trim()) {
-      toast.error('Por favor, forneça o contexto do email')
-      return
+      toast.error("Por favor, forneça o contexto do email");
+      return;
     }
 
-    setIsDrafting(true)
+    setIsDrafting(true);
 
     try {
-      const typeDescription = emailTypes[emailType]
+      const typeDescription = emailTypes[emailType];
 
       const prompt = `Você é um assistente de redação de emails jurídicos. Redija um email profissional com as seguintes informações:
 
 Tipo de email: ${typeDescription}
-Nome do destinatário: ${recipientName || 'não especificado'}
-Número do processo: ${processNumber || 'não especificado'}
+Nome do destinatário: ${recipientName || "não especificado"}
+Número do processo: ${processNumber || "não especificado"}
 Contexto e informações a incluir:
 ${context}
 
@@ -97,78 +86,72 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
   "body": "corpo completo do email com quebras de linha (use \\n)",
   "tone": "descrição breve do tom usado (ex: formal, cordial, técnico)",
   "type": "${typeDescription}"
-}`
+}`;
 
-      const result = await geminiGenerateJSON<EmailDraft>(prompt)
+      const result = await geminiGenerateJSON<EmailDraft>(prompt);
 
       const safeDraft: EmailDraft = {
-        subject: result.subject || 'Assunto do email',
-        body: result.body || '',
-        tone: result.tone || 'formal',
+        subject: result.subject || "Assunto do email",
+        body: result.body || "",
+        tone: result.tone || "formal",
         type: result.type || typeDescription,
-      }
+      };
 
-      setDraft(safeDraft)
-      toast.success('Email rascunhado com sucesso!')
+      setDraft(safeDraft);
+      toast.success("Email rascunhado com sucesso!");
     } catch (error) {
-      console.error('Erro ao rascunhar email:', error)
-      toast.error(
-        error instanceof Error ? error.message : 'Falha ao gerar rascunho',
-      )
+      console.error("Erro ao rascunhar email:", error);
+      toast.error(error instanceof Error ? error.message : "Falha ao gerar rascunho");
     } finally {
-      setIsDrafting(false)
+      setIsDrafting(false);
     }
-  }
+  };
 
   const handleCopy = () => {
-    if (!draft) return
+    if (!draft) return;
 
-    const fullEmail = `Assunto: ${draft.subject}\n\n${draft.body}`
+    const fullEmail = `Assunto: ${draft.subject}\n\n${draft.body}`;
     navigator.clipboard
       .writeText(fullEmail)
       .then(() => {
-        toast.success('Email copiado para área de transferência')
+        toast.success("Email copiado para área de transferência");
       })
       .catch(() => {
-        toast.error('Não foi possível copiar o email')
-      })
-  }
+        toast.error("Não foi possível copiar o email");
+      });
+  };
 
   const handleCopyBody = () => {
-    if (!draft) return
+    if (!draft) return;
 
     navigator.clipboard
       .writeText(draft.body)
       .then(() => {
-        toast.success('Corpo do email copiado')
+        toast.success("Corpo do email copiado");
       })
       .catch(() => {
-        toast.error('Não foi possível copiar o corpo do email')
-      })
-  }
+        toast.error("Não foi possível copiar o corpo do email");
+      });
+  };
 
   const handleCopySubject = () => {
-    if (!draft) return
+    if (!draft) return;
 
     navigator.clipboard
       .writeText(draft.subject)
       .then(() => {
-        toast.success('Assunto copiado')
+        toast.success("Assunto copiado");
       })
       .catch(() => {
-        toast.error('Não foi possível copiar o assunto')
-      })
-  }
+        toast.error("Não foi possível copiar o assunto");
+      });
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <EnvelopeSimple
-            size={32}
-            weight="duotone"
-            className="text-primary neon-glow"
-          />
+          <EnvelopeSimple size={32} weight="duotone" className="text-primary neon-glow" />
           Rascunho de Emails IA
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -180,17 +163,12 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
         <Card className="glassmorphic">
           <CardHeader>
             <CardTitle>Informações do Email</CardTitle>
-            <CardDescription>
-              Preencha os detalhes para gerar o rascunho
-            </CardDescription>
+            <CardDescription>Preencha os detalhes para gerar o rascunho</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tipo de Email</Label>
-              <Select
-                value={emailType}
-                onValueChange={(value) => setEmailType(value as EmailType)}
-              >
+              <Select value={emailType} onValueChange={(value) => setEmailType(value as EmailType)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo de email" />
                 </SelectTrigger>
@@ -240,11 +218,8 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               disabled={isDrafting || !context.trim()}
               className="w-full button-gradient"
             >
-              <Sparkle
-                size={20}
-                className={isDrafting ? 'animate-spin' : ''}
-              />
-              {isDrafting ? 'Gerando...' : 'Gerar Rascunho'}
+              <Sparkle size={20} className={isDrafting ? "animate-spin" : ""} />
+              {isDrafting ? "Gerando..." : "Gerar Rascunho"}
             </Button>
           </CardContent>
         </Card>
@@ -285,14 +260,8 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                   <div className="space-y-4 pr-4">
                     <div className="p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs text-muted-foreground font-semibold">
-                          ASSUNTO
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleCopySubject}
-                        >
+                        <p className="text-xs text-muted-foreground font-semibold">ASSUNTO</p>
+                        <Button size="sm" variant="ghost" onClick={handleCopySubject}>
                           <Copy size={14} />
                         </Button>
                       </div>
@@ -304,16 +273,12 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         <p className="text-xs text-muted-foreground font-semibold">
                           CORPO DO EMAIL
                         </p>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleCopyBody}
-                        >
+                        <Button size="sm" variant="ghost" onClick={handleCopyBody}>
                           <Copy size={14} />
                         </Button>
                       </div>
                       <div className="prose prose-sm max-w-none">
-                        {draft.body.split('\n').map((line, index) => (
+                        {draft.body.split("\n").map((line, index) => (
                           <p
                             key={`line-${index}-${line.substring(0, 10)}`}
                             className="text-sm leading-relaxed mb-2"
@@ -349,33 +314,29 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="font-semibold text-sm mb-2">
-                📧 Atualização para Cliente
-              </p>
+              <p className="font-semibold text-sm mb-2">📧 Atualização para Cliente</p>
               <p className="text-xs text-muted-foreground">
-                "Sentença favorável publicada hoje. Aguardando trânsito em
-                julgado. Prazo recursal de 15 dias para parte adversa."
+                "Sentença favorável publicada hoje. Aguardando trânsito em julgado. Prazo recursal
+                de 15 dias para parte adversa."
               </p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="font-semibold text-sm mb-2">🤝 Proposta de Acordo</p>
               <p className="text-xs text-muted-foreground">
-                "Propor acordo extrajudicial de R$ 50.000 parcelados em 10x.
-                Renúncia mútua de honorários."
+                "Propor acordo extrajudicial de R$ 50.000 parcelados em 10x. Renúncia mútua de
+                honorários."
               </p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="font-semibold text-sm mb-2">
-                📋 Solicitação de Documentos
-              </p>
+              <p className="font-semibold text-sm mb-2">📋 Solicitação de Documentos</p>
               <p className="text-xs text-muted-foreground">
-                "Solicitar ao perito envio do laudo até 20/03. Processo em fase
-                de prova pericial técnica."
+                "Solicitar ao perito envio do laudo até 20/03. Processo em fase de prova pericial
+                técnica."
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,17 +1,17 @@
 /**
  * Agente de IA para Todoist
- * 
+ *
  * Responsável por:
  * 1. Interpretar comandos em linguagem natural vindos do Todoist
  * 2. Sincronizar tarefas entre Sistema Jurídico <-> Todoist <-> Google Calendar
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import { updateLegalTask } from '../todoist-integration';
-import { todoistClient } from '../todoist-client';
-import { llmService } from '../llm-service';
-import { googleCalendarService } from '../google-calendar-service';
-import type { TodoistClient } from '../todoist-client';
+import { updateLegalTask } from "../todoist-integration";
+import { todoistClient } from "../todoist-client";
+import { llmService } from "../llm-service";
+import { googleCalendarService } from "../google-calendar-service";
+import type { TodoistClient } from "../todoist-client";
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {
@@ -33,7 +33,7 @@ interface TodoistEventData {
 
 // Interface para comandos interpretados pela IA
 interface InterpretedCommand {
-  action: 'reschedule' | 'delegate' | 'complete' | 'create_event' | 'update_status' | 'unknown';
+  action: "reschedule" | "delegate" | "complete" | "create_event" | "update_status" | "unknown";
   parameters: {
     date?: string;
     assignee?: string;
@@ -62,20 +62,20 @@ export class TodoistAgent {
    * Processa um evento vindo do Webhook do Todoist
    */
   async processWebhookEvent(event: TodoistWebhookEvent) {
-    console.log('🤖 Agente Todoist processando evento:', event.event_name);
+    console.log("🤖 Agente Todoist processando evento:", event.event_name);
 
     switch (event.event_name) {
-      case 'item:updated':
+      case "item:updated":
         await this.handleItemUpdated(event.event_data);
         break;
-      case 'item:completed':
+      case "item:completed":
         await this.handleItemCompleted(event.event_data);
         break;
-      case 'note:added':
+      case "note:added":
         await this.handleCommentAdded(event.event_data);
         break;
       default:
-        console.log('Evento ignorado pelo agente:', event.event_name);
+        console.log("Evento ignorado pelo agente:", event.event_name);
     }
   }
 
@@ -92,9 +92,9 @@ export class TodoistAgent {
       try {
         // TODO: Implementar busca inteligente no Calendar
         // Por enquanto, apenas logamos a intenção
-        console.log('🔄 Sincronizando com Google Calendar...');
+        console.log("🔄 Sincronizando com Google Calendar...");
       } catch (error) {
-        console.error('Erro ao sincronizar com Calendar:', error);
+        console.error("Erro ao sincronizar com Calendar:", error);
       }
     }
   }
@@ -127,7 +127,7 @@ export class TodoistAgent {
     const text = comment.content;
 
     // Verificar se é um comando para o agente (ex: "@Harvey ...")
-    if (text.toLowerCase().includes('@harvey') || text.toLowerCase().includes('urgente:')) {
+    if (text.toLowerCase().includes("@harvey") || text.toLowerCase().includes("urgente:")) {
       console.log(`🧠 Interpretando comando: "${text}"`);
 
       const command = await this.interpretCommandWithAI(text, comment.item_id || comment.id);
@@ -145,7 +145,7 @@ export class TodoistAgent {
       
       Comando: "${text}"
       ID da Tarefa: "${taskId}"
-      Data Atual: "${new Date().toISOString().split('T')[0]}"
+      Data Atual: "${new Date().toISOString().split("T")[0]}"
       
       Responda APENAS com um JSON no seguinte formato:
       {
@@ -165,9 +165,9 @@ export class TodoistAgent {
 
     try {
       const response = await llmService.execute(prompt, {
-        model: 'gpt-4o',
+        model: "gpt-4o",
         temperature: 0.1,
-        feature: 'todoist-agent'
+        feature: "todoist-agent",
       });
 
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -175,25 +175,25 @@ export class TodoistAgent {
         return JSON.parse(jsonMatch[0]) as InterpretedCommand;
       }
     } catch (error) {
-      console.error('Erro ao interpretar comando com IA:', error);
+      console.error("Erro ao interpretar comando com IA:", error);
     }
 
     // Fallback simples se a IA falhar
     const lowerText = text.toLowerCase();
-    if (lowerText.includes('urgente')) {
+    if (lowerText.includes("urgente")) {
       return {
-        action: 'update_status',
+        action: "update_status",
         parameters: { taskId, priority: 4 },
         confidence: 0.8,
-        originalText: text
+        originalText: text,
       };
     }
 
     return {
-      action: 'unknown',
+      action: "unknown",
       parameters: {},
       confidence: 0,
-      originalText: text
+      originalText: text,
     };
   }
 
@@ -201,33 +201,33 @@ export class TodoistAgent {
    * Executa o comando interpretado
    */
   private async executeCommand(command: InterpretedCommand) {
-    console.log('🚀 Executando ação:', command.action);
+    console.log("🚀 Executando ação:", command.action);
 
     switch (command.action) {
-      case 'reschedule':
+      case "reschedule":
         if (command.parameters.taskId && command.parameters.date) {
           await updateLegalTask(command.parameters.taskId, {
-            dueDate: command.parameters.date
+            dueDate: command.parameters.date,
           });
           // Responder no Todoist
           // await this.client.addComment({ taskId: command.parameters.taskId, content: "✅ Remarcado para " + command.parameters.date });
         }
         break;
 
-      case 'update_status':
+      case "update_status":
         if (command.parameters.taskId && command.parameters.priority) {
           // Validar prioridade (1-4)
           const priority = Math.min(Math.max(command.parameters.priority, 1), 4) as 1 | 2 | 3 | 4;
           await updateLegalTask(command.parameters.taskId, {
-            priority: priority
+            priority: priority,
           });
         }
         break;
 
-      case 'create_event':
+      case "create_event":
         if (command.parameters.date && command.parameters.description) {
           // Criar evento no Google Calendar
-          const startTime = command.parameters.startTime || '09:00';
+          const startTime = command.parameters.startTime || "09:00";
 
           try {
             await googleCalendarService.createEvent({
@@ -237,11 +237,11 @@ export class TodoistAgent {
               date: command.parameters.date,
               time: startTime,
               duration: 60, // Default 1h
-              type: 'outro'
+              type: "outro",
             });
-            console.log('📅 Evento criado no Google Calendar');
+            console.log("📅 Evento criado no Google Calendar");
           } catch (e) {
-            console.error('Erro ao criar evento no Calendar:', e);
+            console.error("Erro ao criar evento no Calendar:", e);
           }
         }
         break;
@@ -256,14 +256,13 @@ export class TodoistAgent {
     // Placeholder - em produção, usar IA real para gerar sugestões
     // baseadas no histórico do processo e padrões identificados
     const suggestions = [
-      { content: `Verificar publicação - Processo ${processNumber}`, due: 'tomorrow' }
+      { content: `Verificar publicação - Processo ${processNumber}`, due: "tomorrow" },
     ];
 
     // TODO: Criar tarefas sugeridas via API real
     // await addLegalTasks(...)
-    console.log('💡 Sugestões geradas (placeholder):', suggestions);
+    console.log("💡 Sugestões geradas (placeholder):", suggestions);
   }
 }
 
 export const todoistAgent = new TodoistAgent();
-

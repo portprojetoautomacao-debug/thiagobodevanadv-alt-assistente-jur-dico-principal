@@ -1,10 +1,10 @@
-import DJENPublicationsWidget from '@/components/DJENPublicationsWidget'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useKV } from '@/hooks/use-kv'
-import { calcularDiasRestantes, formatarData, isUrgente } from '@/lib/prazos'
-import type { Prazo, Process, ViewType } from '@/types'
+import DJENPublicationsWidget from "@/components/DJENPublicationsWidget";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useKV } from "@/hooks/use-kv";
+import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
+import type { Prazo, Process, ViewType } from "@/types";
 import {
   ArrowRight,
   CalendarCheck,
@@ -14,185 +14,183 @@ import {
   Gavel,
   TrendUp,
   Upload,
-  WarningCircle
-} from '@phosphor-icons/react'
-import { lazy, Suspense, useMemo } from 'react'
+  WarningCircle,
+} from "@phosphor-icons/react";
+import { lazy, Suspense, useMemo } from "react";
 
 // Lazy load dashboard sections for better code splitting
 const StatusChart = lazy(() =>
-  import('@/components/DashboardCharts').then((m) => ({ default: m.StatusChart }))
-)
+  import("@/components/DashboardCharts").then((m) => ({ default: m.StatusChart }))
+);
 const VaraChart = lazy(() =>
-  import('@/components/DashboardCharts').then((m) => ({ default: m.VaraChart }))
-)
+  import("@/components/DashboardCharts").then((m) => ({ default: m.VaraChart }))
+);
 const TrendChart = lazy(() =>
-  import('@/components/DashboardCharts').then((m) => ({ default: m.TrendChart }))
-)
+  import("@/components/DashboardCharts").then((m) => ({ default: m.TrendChart }))
+);
 
 // Funções auxiliares para evitar ternários aninhados
 function formatDiasRestantes(diasRestantes: number): string {
-  if (diasRestantes < 0) return 'Vencido'
-  if (diasRestantes === 0) return 'Hoje'
-  if (diasRestantes === 1) return 'Amanhã'
-  return `${diasRestantes} dias`
+  if (diasRestantes < 0) return "Vencido";
+  if (diasRestantes === 0) return "Hoje";
+  if (diasRestantes === 1) return "Amanhã";
+  return `${diasRestantes} dias`;
 }
 
-function getStatusVariant(status: string): 'default' | 'secondary' | 'outline' | 'destructive' {
-  if (status === 'ativo') return 'default'
-  if (status === 'concluido') return 'secondary'
-  if (status === 'suspenso') return 'outline'
-  return 'destructive'
+function getStatusVariant(status: string): "default" | "secondary" | "outline" | "destructive" {
+  if (status === "ativo") return "default";
+  if (status === "concluido") return "secondary";
+  if (status === "suspenso") return "outline";
+  return "destructive";
 }
 
 interface DashboardProps {
-  onNavigate: (view: ViewType) => void
+  onNavigate: (view: ViewType) => void;
 }
 
 function getSafeDate(value?: string) {
-  if (!value) return 0
-  const ts = new Date(value).getTime()
-  return Number.isNaN(ts) ? 0 : ts
+  if (!value) return 0;
+  const ts = new Date(value).getTime();
+  return Number.isNaN(ts) ? 0 : ts;
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const [processes] = useKV<Process[]>('processes', [])
+  const [processes] = useKV<Process[]>("processes", []);
 
   const stats = useMemo(() => {
-    const processesList = processes || []
-    const ativos = processesList.filter((p) => p.status === 'ativo').length
-    const concluidos = processesList.filter((p) => p.status === 'concluido').length
+    const processesList = processes || [];
+    const ativos = processesList.filter((p) => p.status === "ativo").length;
+    const concluidos = processesList.filter((p) => p.status === "concluido").length;
 
-    const todosPrazos: (Prazo & { processoTitulo: string })[] = []
+    const todosPrazos: (Prazo & { processoTitulo: string })[] = [];
     processesList.forEach((process) => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach((prazo) => {
           todosPrazos.push({
             ...prazo,
-            processoTitulo: process.titulo
-          })
-        })
+            processoTitulo: process.titulo,
+          });
+        });
       }
-    })
+    });
 
-    const prazosPendentes = todosPrazos.filter((p) => !p.concluido).length
+    const prazosPendentes = todosPrazos.filter((p) => !p.concluido).length;
     const prazosUrgentes = todosPrazos.filter((p) => {
-      if (p.concluido) return false
-      const dias = calcularDiasRestantes(p.dataFinal)
-      return isUrgente(dias)
-    }).length
+      if (p.concluido) return false;
+      const dias = calcularDiasRestantes(p.dataFinal);
+      return isUrgente(dias);
+    }).length;
 
     return {
       ativos,
       concluidos,
       prazosPendentes,
       prazosUrgentes,
-      todosPrazos: todosPrazos.filter((p) => !p.concluido).slice(0, 5)
-    }
-  }, [processes])
+      todosPrazos: todosPrazos.filter((p) => !p.concluido).slice(0, 5),
+    };
+  }, [processes]);
 
   const prazosProximos = useMemo(() => {
-    const todosPrazos: (Prazo & { processoTitulo: string })[] = []
-    const processesList = processes || []
+    const todosPrazos: (Prazo & { processoTitulo: string })[] = [];
+    const processesList = processes || [];
 
     processesList.forEach((process) => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach((prazo) => {
           todosPrazos.push({
             ...prazo,
-            processoTitulo: process.titulo
-          })
-        })
+            processoTitulo: process.titulo,
+          });
+        });
       }
-    })
+    });
 
     return todosPrazos
       .filter((p) => !p.concluido)
       .sort((a, b) => {
-        const diasA = calcularDiasRestantes(a.dataFinal)
-        const diasB = calcularDiasRestantes(b.dataFinal)
-        return diasA - diasB
+        const diasA = calcularDiasRestantes(a.dataFinal);
+        const diasB = calcularDiasRestantes(b.dataFinal);
+        return diasA - diasB;
       })
-      .slice(0, 5)
-  }, [processes])
+      .slice(0, 5);
+  }, [processes]);
 
   const processosRecentes = useMemo(() => {
     return [...(processes || [])]
       .sort(
-        (a, b) =>
-          getSafeDate(b.updatedAt || b.createdAt) -
-          getSafeDate(a.updatedAt || a.createdAt)
+        (a, b) => getSafeDate(b.updatedAt || b.createdAt) - getSafeDate(a.updatedAt || a.createdAt)
       )
-      .slice(0, 5)
-  }, [processes])
+      .slice(0, 5);
+  }, [processes]);
 
   const chartData = useMemo(() => {
-    const processesList = processes || []
+    const processesList = processes || [];
 
     const statusData = [
       {
-        name: 'Ativo',
-        value: processesList.filter((p) => p.status === 'ativo').length,
-        color: '#3b82f6' // blue-500
+        name: "Ativo",
+        value: processesList.filter((p) => p.status === "ativo").length,
+        color: "#3b82f6", // blue-500
       },
       {
-        name: 'Concluído',
-        value: processesList.filter((p) => p.status === 'concluido').length,
-        color: '#22c55e' // green-500
+        name: "Concluído",
+        value: processesList.filter((p) => p.status === "concluido").length,
+        color: "#22c55e", // green-500
       },
       {
-        name: 'Suspenso',
-        value: processesList.filter((p) => p.status === 'suspenso').length,
-        color: '#f59e0b' // amber-500
+        name: "Suspenso",
+        value: processesList.filter((p) => p.status === "suspenso").length,
+        color: "#f59e0b", // amber-500
       },
       {
-        name: 'Arquivado',
-        value: processesList.filter((p) => p.status === 'arquivado').length,
-        color: '#6b7280' // gray-500
-      }
-    ].filter((item) => item.value > 0)
+        name: "Arquivado",
+        value: processesList.filter((p) => p.status === "arquivado").length,
+        color: "#6b7280", // gray-500
+      },
+    ].filter((item) => item.value > 0);
 
-    const varaData: { [key: string]: number } = {}
+    const varaData: { [key: string]: number } = {};
     processesList.forEach((p) => {
-      const vara = p.vara || 'Não especificada'
-      varaData[vara] = (varaData[vara] || 0) + 1
-    })
+      const vara = p.vara || "Não especificada";
+      varaData[vara] = (varaData[vara] || 0) + 1;
+    });
     const varaChartData = Object.entries(varaData)
       .map(([name, value]) => ({
-        name: name.length > 25 ? name.substring(0, 25) + '...' : name,
-        value
+        name: name.length > 25 ? name.substring(0, 25) + "..." : name,
+        value,
       }))
-      .slice(0, 5)
+      .slice(0, 5);
 
     const monthlyData: {
-      [key: string]: { ativos: number; concluidos: number }
-    } = {}
+      [key: string]: { ativos: number; concluidos: number };
+    } = {};
 
     processesList.forEach((p) => {
-      if (!p.createdAt) return
-      const created = new Date(p.createdAt)
-      if (Number.isNaN(created.getTime())) return
+      if (!p.createdAt) return;
+      const created = new Date(p.createdAt);
+      if (Number.isNaN(created.getTime())) return;
 
-      const month = created.toLocaleDateString('pt-BR', {
-        month: 'short',
-        year: '2-digit'
-      })
+      const month = created.toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "2-digit",
+      });
 
       if (!monthlyData[month]) {
-        monthlyData[month] = { ativos: 0, concluidos: 0 }
+        monthlyData[month] = { ativos: 0, concluidos: 0 };
       }
-      if (p.status === 'concluido') {
-        monthlyData[month].concluidos++
+      if (p.status === "concluido") {
+        monthlyData[month].concluidos++;
       } else {
-        monthlyData[month].ativos++
+        monthlyData[month].ativos++;
       }
-    })
+    });
 
     const trendData = Object.entries(monthlyData)
       .map(([month, data]) => ({ month, ...data }))
-      .slice(-6)
+      .slice(-6);
 
-    return { statusData, varaChartData, trendData }
-  }, [processes])
+    return { statusData, varaChartData, trendData };
+  }, [processes]);
 
   return (
     <div className="p-4 lg:p-8 flex flex-col gap-6">
@@ -200,9 +198,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Visão geral da sua gestão processual
-            </p>
+            <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
           </div>
         </div>
       </div>
@@ -211,93 +207,59 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-glow-hover status-gradient-active">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Processos Ativos
-            </CardTitle>
-            <Gavel
-              className="text-secondary neon-glow"
-              size={24}
-              weight="duotone"
-            />
+            <CardTitle className="text-sm font-medium">Processos Ativos</CardTitle>
+            <Gavel className="text-secondary neon-glow" size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold gradient-text">
-              {stats.ativos}
-            </div>
+            <div className="text-3xl font-bold gradient-text">{stats.ativos}</div>
             <p className="text-xs text-muted-foreground mt-1">Em andamento</p>
           </CardContent>
         </Card>
 
         <Card className="card-glow-hover status-gradient-completed">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Processos Concluídos
-            </CardTitle>
-            <CheckCircle
-              className="text-accent neon-glow"
-              size={24}
-              weight="duotone"
-            />
+            <CardTitle className="text-sm font-medium">Processos Concluídos</CardTitle>
+            <CheckCircle className="text-accent neon-glow" size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold gradient-text">
-              {stats.concluidos}
-            </div>
+            <div className="text-3xl font-bold gradient-text">{stats.concluidos}</div>
             <p className="text-xs text-muted-foreground mt-1">Finalizados</p>
           </CardContent>
         </Card>
 
         <Card className="card-glow-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Prazos Pendentes
-            </CardTitle>
-            <Clock
-              className="text-primary neon-glow"
-              size={24}
-              weight="duotone"
-            />
+            <CardTitle className="text-sm font-medium">Prazos Pendentes</CardTitle>
+            <Clock className="text-primary neon-glow" size={24} weight="duotone" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold gradient-text">
-              {stats.prazosPendentes}
-            </div>
+            <div className="text-3xl font-bold gradient-text">{stats.prazosPendentes}</div>
             <p className="text-xs text-muted-foreground mt-1">Não concluídos</p>
           </CardContent>
         </Card>
 
         <Card
-          className={`card-glow-hover ${stats.prazosUrgentes > 0
-            ? 'status-gradient-urgent border-destructive/50'
-            : ''
-            }`}
+          className={`card-glow-hover ${
+            stats.prazosUrgentes > 0 ? "status-gradient-urgent border-destructive/50" : ""
+          }`}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Prazos Urgentes
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Prazos Urgentes</CardTitle>
             <WarningCircle
-              className={
-                stats.prazosUrgentes > 0
-                  ? 'text-destructive neon-glow'
-                  : 'text-primary'
-              }
+              className={stats.prazosUrgentes > 0 ? "text-destructive neon-glow" : "text-primary"}
               size={24}
               weight="duotone"
             />
           </CardHeader>
           <CardContent>
             <div
-              className={`text-3xl font-bold ${stats.prazosUrgentes > 0
-                ? 'text-destructive'
-                : 'gradient-text'
-                }`}
+              className={`text-3xl font-bold ${
+                stats.prazosUrgentes > 0 ? "text-destructive" : "gradient-text"
+              }`}
             >
               {stats.prazosUrgentes}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Próximos 5 dias
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Próximos 5 dias</p>
           </CardContent>
         </Card>
       </div>
@@ -314,8 +276,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm">
-                Agora você pode fazer upload de procurações e contratos em PDF
-                para extrair automaticamente os dados do cliente usando IA!
+                Agora você pode fazer upload de procurações e contratos em PDF para extrair
+                automaticamente os dados do cliente usando IA!
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="gap-1">
@@ -332,7 +294,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 </Badge>
               </div>
               <Button
-                onClick={() => onNavigate('upload-pdf')}
+                onClick={() => onNavigate("upload-pdf")}
                 className="button-gradient w-full sm:w-auto"
                 size="lg"
               >
@@ -344,7 +306,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
 
         <DJENPublicationsWidget
-          onViewAll={() => onNavigate('expedientes')}
+          onViewAll={() => onNavigate("expedientes")}
           compact={true}
           maxItems={4}
         />
@@ -421,7 +383,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onNavigate('prazos')}
+              onClick={() => onNavigate("prazos")}
               className="hover:button-gradient hover:text-primary-foreground"
             >
               Ver todos
@@ -431,30 +393,24 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <CardContent>
             {prazosProximos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <CalendarCheck
-                  size={48}
-                  className="text-muted-foreground mb-2"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Nenhum prazo pendente
-                </p>
+                <CalendarCheck size={48} className="text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Nenhum prazo pendente</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {prazosProximos.map((prazo) => {
-                  const diasRestantes = calcularDiasRestantes(prazo.dataFinal)
-                  const urgente = isUrgente(diasRestantes)
+                  const diasRestantes = calcularDiasRestantes(prazo.dataFinal);
+                  const urgente = isUrgente(diasRestantes);
 
                   return (
                     <div
                       key={prazo.id}
-                      className={`flex items-start justify-between gap-3 pb-3 border-b last:border-0 p-3 rounded-lg transition-all ${urgente ? 'status-gradient-urgent' : 'hover:bg-card/50'
-                        }`}
+                      className={`flex items-start justify-between gap-3 pb-3 border-b last:border-0 p-3 rounded-lg transition-all ${
+                        urgente ? "status-gradient-urgent" : "hover:bg-card/50"
+                      }`}
                     >
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {prazo.descricao}
-                        </p>
+                        <p className="font-medium text-sm truncate">{prazo.descricao}</p>
                         <p className="text-xs text-muted-foreground truncate">
                           {prazo.processoTitulo}
                         </p>
@@ -463,13 +419,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         </p>
                       </div>
                       <Badge
-                        variant={urgente ? 'destructive' : 'default'}
-                        className={`shrink-0 ${urgente ? 'neon-glow' : ''}`}
+                        variant={urgente ? "destructive" : "default"}
+                        className={`shrink-0 ${urgente ? "neon-glow" : ""}`}
                       >
                         {formatDiasRestantes(diasRestantes)}
                       </Badge>
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -478,13 +434,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
         <Card className="card-glow-hover glassmorphic">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="gradient-text">
-              Processos Recentes
-            </CardTitle>
+            <CardTitle className="gradient-text">Processos Recentes</CardTitle>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onNavigate('processos')}
+              onClick={() => onNavigate("processos")}
               className="hover:button-gradient hover:text-primary-foreground"
             >
               Ver todos
@@ -494,17 +448,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <CardContent>
             {processosRecentes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Gavel
-                  size={48}
-                  className="text-muted-foreground mb-2"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Nenhum processo cadastrado
-                </p>
+                <Gavel size={48} className="text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Nenhum processo cadastrado</p>
                 <Button
                   size="sm"
                   className="mt-3 button-gradient"
-                  onClick={() => onNavigate('processos')}
+                  onClick={() => onNavigate("processos")}
                 >
                   Adicionar Processo
                 </Button>
@@ -514,21 +463,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 {processosRecentes.map((process) => (
                   <div
                     key={process.id}
-                    className={`flex items-start justify-between gap-3 pb-3 border-b last:border-0 p-3 rounded-lg transition-all hover:bg-card/50 ${process.status === 'ativo' ? 'status-gradient-active' : ''
-                      }`}
+                    className={`flex items-start justify-between gap-3 pb-3 border-b last:border-0 p-3 rounded-lg transition-all hover:bg-card/50 ${
+                      process.status === "ativo" ? "status-gradient-active" : ""
+                    }`}
                   >
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {process.titulo}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {process.numeroCNJ}
-                      </p>
+                      <p className="font-medium text-sm truncate">{process.titulo}</p>
+                      <p className="text-xs text-muted-foreground truncate">{process.numeroCNJ}</p>
                     </div>
-                    <Badge
-                      variant={getStatusVariant(process.status)}
-                      className="shrink-0"
-                    >
+                    <Badge variant={getStatusVariant(process.status)} className="shrink-0">
                       {process.status}
                     </Badge>
                   </div>
@@ -551,19 +494,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <CardContent>
             <p className="text-sm mb-4">
               Você tem {stats.prazosUrgentes} prazo
-              {stats.prazosUrgentes > 1 ? 's' : ''} vencendo nos próximos 5 dias.
-              Certifique-se de tomar as providências necessárias.
+              {stats.prazosUrgentes > 1 ? "s" : ""} vencendo nos próximos 5 dias. Certifique-se de
+              tomar as providências necessárias.
             </p>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onNavigate('prazos')}
-            >
+            <Button variant="destructive" size="sm" onClick={() => onNavigate("prazos")}>
               Ver Prazos Urgentes
             </Button>
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

@@ -81,9 +81,7 @@ describe("TodoistAgent", () => {
       await todoistAgent.processWebhookEvent(event);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Tarefa Processo 1234567-89.2023.8.26.0100 concluída!"
-        )
+        expect.stringContaining("Tarefa Processo 1234567-89.2023.8.26.0100 concluída!")
       );
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Atualizando progresso do processo")
@@ -130,10 +128,7 @@ describe("TodoistAgent", () => {
 
       await todoistAgent.processWebhookEvent(event);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Evento ignorado pelo agente:",
-        "unknown:event"
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Evento ignorado pelo agente:", "unknown:event");
     });
   });
 

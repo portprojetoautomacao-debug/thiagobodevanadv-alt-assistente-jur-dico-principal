@@ -6,92 +6,92 @@
 /* ----------------------- AUTENTICAÇÃO ----------------------- */
 
 export interface GoogleAuthResponse {
-  access_token?: string
-  expires_in?: number
-  token_type?: string
-  error?: string
+  access_token?: string;
+  expires_in?: number;
+  token_type?: string;
+  error?: string;
 }
 
 export interface TokenClient {
-  callback: (resp: GoogleAuthResponse) => void
-  requestAccessToken: (opts?: { prompt?: string }) => void
+  callback: (resp: GoogleAuthResponse) => void;
+  requestAccessToken: (opts?: { prompt?: string }) => void;
 }
 
 /* ----------------------- CALENDAR API ----------------------- */
 
 export interface CalendarEventsApi {
-  list?: (params: Record<string, unknown>) => Promise<unknown>
-  insert?: (params: Record<string, unknown>) => Promise<unknown>
-  update?: (params: Record<string, unknown>) => Promise<unknown>
-  delete?: (params: Record<string, unknown>) => Promise<unknown>
+  list?: (params: Record<string, unknown>) => Promise<unknown>;
+  insert?: (params: Record<string, unknown>) => Promise<unknown>;
+  update?: (params: Record<string, unknown>) => Promise<unknown>;
+  delete?: (params: Record<string, unknown>) => Promise<unknown>;
 }
 
 export interface CalendarClient {
-  events?: CalendarEventsApi
+  events?: CalendarEventsApi;
 }
 
 /* ----------------------- GOOGLE DOCS API ----------------------- */
 
 export interface DocsClient {
   documents?: {
-    create?: (opts: unknown) => Promise<DocsCreateResponse>
-    batchUpdate?: (opts: unknown) => Promise<DocsBatchUpdateResponse>
-    get?: (opts: unknown) => Promise<DocsGetResponse>
-  }
+    create?: (opts: unknown) => Promise<DocsCreateResponse>;
+    batchUpdate?: (opts: unknown) => Promise<DocsBatchUpdateResponse>;
+    get?: (opts: unknown) => Promise<DocsGetResponse>;
+  };
 }
 
 export interface ParagraphElement {
   textRun?: {
-    content?: string
-  }
+    content?: string;
+  };
 }
 
 export interface DocumentElement {
   paragraph?: {
-    elements?: ParagraphElement[]
-  }
-  endIndex?: number
+    elements?: ParagraphElement[];
+  };
+  endIndex?: number;
 }
 
 export interface DocsDocument {
-  documentId?: string
+  documentId?: string;
   body?: {
-    content?: DocumentElement[]
-  }
+    content?: DocumentElement[];
+  };
 }
 
 export interface DocsCreateResponse {
-  documentId?: string
+  documentId?: string;
   body?: {
-    content?: DocumentElement[]
-  }
+    content?: DocumentElement[];
+  };
 }
 
 export interface DocsCreateResponse {
   result?: {
-    documentId?: string
-  }
+    documentId?: string;
+  };
 }
 
 export interface DocsGetResponse {
-  result?: DocsDocument
+  result?: DocsDocument;
 }
 
 export interface DocsBatchUpdateResponse {
-  result?: unknown
+  result?: unknown;
 }
 
 /* ----------------------- GAPI (Google API JS SDK) ----------------------- */
 
 export interface GapiGlobal {
-  load: (module: string, cb: () => void) => void
+  load: (module: string, cb: () => void) => void;
   client?: {
-    init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>
+    init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>;
 
     // IMPORTANTE: gapi.client.calendar e gapi.client.docs podem existir
-    calendar?: CalendarClient
-    docs?: DocsClient
-  }
+    calendar?: CalendarClient;
+    docs?: DocsClient;
+  };
 }
 
 /* ----------------------- GIS (Google Identity Services) ----------------------- */
@@ -100,12 +100,12 @@ export interface GoogleGisGlobal {
   accounts: {
     oauth2: {
       initTokenClient: (opts: {
-        client_id: string
-        scope: string
-        callback: (resp: GoogleAuthResponse) => void
-      }) => TokenClient
+        client_id: string;
+        scope: string;
+        callback: (resp: GoogleAuthResponse) => void;
+      }) => TokenClient;
 
-      revoke: (token: string) => void
-    }
-  }
+      revoke: (token: string) => void;
+    };
+  };
 }

@@ -49,14 +49,9 @@ function buildProcessNotes(
     advogadoReu?: string;
   }
 ): string {
-  const advAutor = parties.advogadoAutor
-    ? `\nAdvogado Autor: ${parties.advogadoAutor}`
-    : "";
-  const advReu = parties.advogadoReu
-    ? `\nAdvogado Réu: ${parties.advogadoReu}`
-    : "";
-  const teorTruncado =
-    pub.teor.length > 500 ? pub.teor.substring(0, 500) + "..." : pub.teor;
+  const advAutor = parties.advogadoAutor ? `\nAdvogado Autor: ${parties.advogadoAutor}` : "";
+  const advReu = parties.advogadoReu ? `\nAdvogado Réu: ${parties.advogadoReu}` : "";
+  const teorTruncado = pub.teor.length > 500 ? pub.teor.substring(0, 500) + "..." : pub.teor;
 
   return `Origem: DJEN\nAdvogado: ${pub.lawyerName}\nTipo de match: ${pub.matchType}${advAutor}${advReu}\n\nTeor da intimação:\n${teorTruncado}`;
 }
@@ -102,10 +97,7 @@ function parseOrgaoLocation(orgao?: string): {
   };
 }
 
-function formatPartiesDescription(parties: {
-  autor: string;
-  reu: string;
-}): string {
+function formatPartiesDescription(parties: { autor: string; reu: string }): string {
   if (parties.autor === "Não identificado") return "";
   return ` - ${parties.autor} x ${parties.reu}`;
 }
@@ -113,9 +105,7 @@ function formatPartiesDescription(parties: {
 export function useDJENProcessRegistration(
   processes: Process[] | null,
   setProcesses: (updater: (current: Process[] | null) => Process[]) => void,
-  setExpedientes: (
-    updater: (current: Expediente[] | null) => Expediente[]
-  ) => void
+  setExpedientes: (updater: (current: Expediente[] | null) => Expediente[]) => void
 ) {
   const [autoRegistering, setAutoRegistering] = useState(false);
   const { createOrUpdateFromDjenIntimacao } = useClientesManager();
@@ -126,8 +116,7 @@ export function useDJENProcessRegistration(
     return currentProcesses.some(
       (p) =>
         p.numeroCNJ === numeroProcesso ||
-        p.numeroCNJ.replaceAll(/\D/g, "") ===
-          numeroProcesso.replaceAll(/\D/g, "")
+        p.numeroCNJ.replaceAll(/\D/g, "") === numeroProcesso.replaceAll(/\D/g, "")
     );
   };
 
@@ -165,11 +154,7 @@ export function useDJENProcessRegistration(
     registerClientFromParties(parties, pub);
 
     const newProcess = createProcessFromPublication(pub, parties, now);
-    const newExpediente = createExpedienteFromPublication(
-      pub,
-      newProcess.id,
-      now
-    );
+    const newExpediente = createExpedienteFromPublication(pub, newProcess.id, now);
 
     return { process: newProcess, expediente: newExpediente };
   };
@@ -203,9 +188,7 @@ export function useDJENProcessRegistration(
 
     const parties = await extractPartiesWithFallback(pub.teor);
     toast.success("Processo cadastrado!", {
-      description: `${
-        pub.numeroProcesso
-      } adicionado ao Acervo${formatPartiesDescription(parties)}`,
+      description: `${pub.numeroProcesso} adicionado ao Acervo${formatPartiesDescription(parties)}`,
     });
   };
 

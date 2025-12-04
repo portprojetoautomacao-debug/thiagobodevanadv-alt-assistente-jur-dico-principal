@@ -1,59 +1,70 @@
-import { motion, HTMLMotionProps, Variants, Transition, TargetAndTransition, MotionProps } from 'framer-motion'
-import { ReactNode } from 'react'
-import { fluentTransitions, fluentVariants } from '@/hooks/use-fluent-motion'
+import {
+  motion,
+  HTMLMotionProps,
+  Variants,
+  Transition,
+  TargetAndTransition,
+  MotionProps,
+} from "framer-motion";
+import { ReactNode } from "react";
+import { fluentTransitions, fluentVariants } from "@/hooks/use-fluent-motion";
 
-type FluentVariantKey = keyof typeof fluentVariants
-type FluentTransitionKey = keyof typeof fluentTransitions
+type FluentVariantKey = keyof typeof fluentVariants;
+type FluentTransitionKey = keyof typeof fluentTransitions;
 
-interface FluentMotionProps extends Omit<HTMLMotionProps<'div'>, 'transition'> {
-  children: ReactNode
-  variant?: FluentVariantKey
-  transition?: FluentTransitionKey
-  delay?: number
-  stagger?: boolean
-  hover?: boolean
-  tap?: boolean
+interface FluentMotionProps extends Omit<HTMLMotionProps<"div">, "transition"> {
+  children: ReactNode;
+  variant?: FluentVariantKey;
+  transition?: FluentTransitionKey;
+  delay?: number;
+  stagger?: boolean;
+  hover?: boolean;
+  tap?: boolean;
 }
 
 export function FluentMotion({
   children,
-  variant = 'fadeInUp',
-  transition = 'standard',
+  variant = "fadeInUp",
+  transition = "standard",
   delay = 0,
   stagger = false,
   hover = false,
   tap = false,
   ...props
 }: FluentMotionProps) {
-  const selectedVariant = fluentVariants[variant]
+  const selectedVariant = fluentVariants[variant];
   const selectedTransition: Transition = {
     ...fluentTransitions[transition],
-    delay
-  }
+    delay,
+  };
 
-  const hoverEffect: TargetAndTransition | undefined = hover ? {
-    scale: 1.02,
-    transition: fluentTransitions.decelerate
-  } : undefined
-  const tapEffect: TargetAndTransition | undefined = tap ? {
-    scale: 0.98,
-    transition: fluentTransitions.accelerate
-  } : undefined
+  const hoverEffect: TargetAndTransition | undefined = hover
+    ? {
+        scale: 1.02,
+        transition: fluentTransitions.decelerate,
+      }
+    : undefined;
+  const tapEffect: TargetAndTransition | undefined = tap
+    ? {
+        scale: 0.98,
+        transition: fluentTransitions.accelerate,
+      }
+    : undefined;
 
   const variants: Variants = stagger
     ? {
-      initial: selectedVariant.initial,
-      animate: {
-        ...selectedVariant.animate,
-        transition: {
-          ...selectedTransition,
-          staggerChildren: 0.05,
-          delayChildren: 0.1
-        }
-      },
-      exit: selectedVariant.exit
-    }
-    : selectedVariant
+        initial: selectedVariant.initial,
+        animate: {
+          ...selectedVariant.animate,
+          transition: {
+            ...selectedTransition,
+            staggerChildren: 0.05,
+            delayChildren: 0.1,
+          },
+        },
+        exit: selectedVariant.exit,
+      }
+    : selectedVariant;
 
   return (
     <motion.div
@@ -68,7 +79,7 @@ export function FluentMotion({
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
 export function FluentStaggerItem({
@@ -79,38 +90,39 @@ export function FluentStaggerItem({
     <motion.div
       variants={{
         initial: { opacity: 0, y: 20 },
-        animate: { opacity: 1, y: 0 }
+        animate: { opacity: 1, y: 0 },
       }}
       {...props}
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
 export function FluentReveal({
   children,
-  direction = 'left',
+  direction = "left",
   ...props
-}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { direction?: 'left' | 'right' | 'up' | 'down' }) {
+}: MotionProps &
+  React.HTMLAttributes<HTMLDivElement> & { direction?: "left" | "right" | "up" | "down" }) {
   const variants = {
     left: {
-      initial: { clipPath: 'inset(0 100% 0 0)' },
-      animate: { clipPath: 'inset(0 0% 0 0)' }
+      initial: { clipPath: "inset(0 100% 0 0)" },
+      animate: { clipPath: "inset(0 0% 0 0)" },
     },
     right: {
-      initial: { clipPath: 'inset(0 0 0 100%)' },
-      animate: { clipPath: 'inset(0 0% 0 0)' }
+      initial: { clipPath: "inset(0 0 0 100%)" },
+      animate: { clipPath: "inset(0 0% 0 0)" },
     },
     up: {
-      initial: { clipPath: 'inset(100% 0 0 0)' },
-      animate: { clipPath: 'inset(0% 0 0 0)' }
+      initial: { clipPath: "inset(100% 0 0 0)" },
+      animate: { clipPath: "inset(0% 0 0 0)" },
     },
     down: {
-      initial: { clipPath: 'inset(0 0 100% 0)' },
-      animate: { clipPath: 'inset(0 0 0% 0)' }
-    }
-  }
+      initial: { clipPath: "inset(0 0 100% 0)" },
+      animate: { clipPath: "inset(0 0 0% 0)" },
+    },
+  };
 
   return (
     <motion.div
@@ -122,7 +134,7 @@ export function FluentReveal({
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
 export function FluentFade({
@@ -140,21 +152,25 @@ export function FluentFade({
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
 export function FluentSlide({
   children,
-  direction = 'up',
+  direction = "up",
   delay = 0,
   ...props
-}: MotionProps & React.HTMLAttributes<HTMLDivElement> & { direction?: 'up' | 'down' | 'left' | 'right'; delay?: number }) {
+}: MotionProps &
+  React.HTMLAttributes<HTMLDivElement> & {
+    direction?: "up" | "down" | "left" | "right";
+    delay?: number;
+  }) {
   const variants = {
     up: { initial: { y: 40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
     down: { initial: { y: -40, opacity: 0 }, animate: { y: 0, opacity: 1 } },
     left: { initial: { x: 40, opacity: 0 }, animate: { x: 0, opacity: 1 } },
-    right: { initial: { x: -40, opacity: 0 }, animate: { x: 0, opacity: 1 } }
-  }
+    right: { initial: { x: -40, opacity: 0 }, animate: { x: 0, opacity: 1 } },
+  };
 
   return (
     <motion.div
@@ -167,7 +183,7 @@ export function FluentSlide({
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
 export function FluentScale({
@@ -185,7 +201,7 @@ export function FluentScale({
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
 export function FluentHover({
@@ -202,5 +218,5 @@ export function FluentHover({
     >
       {children}
     </motion.div>
-  )
+  );
 }

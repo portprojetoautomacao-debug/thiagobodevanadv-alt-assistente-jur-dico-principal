@@ -7,8 +7,20 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAutoMinuta } from "@/hooks/use-auto-minuta";
 import { useKV } from "@/hooks/use-kv";
 import type { User, ViewType } from "@/types";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { lazy, Suspense, useEffect, useState } from "react";
+
+// QueryClient global (criado fora do componente para evitar recriação)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // ⚡ COMPONENTES PRINCIPAIS - Carregados diretamente (sem lazy loading)
 // Sistema 100% automático requer componentes prontos imediatamente
@@ -132,70 +144,68 @@ function App() {
 
   if (!user) {
     return (
-      <div
-        className="min-h-screen bg-background flex items-center justify-center p-4 notranslate"
-        translate="no"
-      >
-        <div className="max-w-md w-full space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Assistente Jurídico PJe
-            </h1>
-            <p className="text-muted-foreground">
-              Sistema inteligente de gestão jurídica com IA
-            </p>
-          </div>
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="min-h-screen bg-background flex items-center justify-center p-4 notranslate"
+          translate="no"
+        >
+          <div className="max-w-md w-full space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-foreground mb-2">Assistente Jurídico PJe</h1>
+              <p className="text-muted-foreground">Sistema inteligente de gestão jurídica com IA</p>
+            </div>
 
-          <div className="space-y-4">
-            {/* Login simples local (adm/adm123) */}
-            <SimpleAuth onSuccess={handleSimpleAuthSuccess} />
+            <div className="space-y-4">
+              {/* Login simples local (adm/adm123) */}
+              <SimpleAuth onSuccess={handleSimpleAuthSuccess} />
 
-            {/* GoogleAuth removido definitivamente */}
+              {/* GoogleAuth removido definitivamente */}
+            </div>
           </div>
+          <Toaster />
+          <SpeedInsights />
         </div>
-        <Toaster />
-        <SpeedInsights />
-      </div>
+      </QueryClientProvider>
     );
   }
 
   return (
-    <div className="flex h-screen bg-background notranslate" translate="no">
-      <Sidebar
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        user={user}
-        onLogout={handleLogout}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar com Busca Global e Notificações */}
-        <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 shrink-0">
-          <div className="flex items-center gap-2">
-            <GlobalSearch onNavigate={handleNavigate} />
-            <span className="text-xs text-muted-foreground hidden sm:inline">
-              Pressione{" "}
-              <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">
-                /
-              </kbd>{" "}
-              para buscar
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationCenter onNavigate={handleNavigate} />
-          </div>
-        </header>
-        <main
-          id="main-content"
-          role="main"
-          aria-label="Conteúdo principal"
-          className="flex-1 overflow-hidden"
-        >
-          <div className="h-full overflow-y-auto p-6">{renderContent()}</div>
-        </main>
+    <QueryClientProvider client={queryClient}>
+      <div className="flex h-screen bg-background notranslate" translate="no">
+        <Sidebar
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          user={user}
+          onLogout={handleLogout}
+        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Bar com Busca Global e Notificações */}
+          <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 shrink-0">
+            <div className="flex items-center gap-2">
+              <GlobalSearch onNavigate={handleNavigate} />
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                Pressione{" "}
+                <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">/</kbd>{" "}
+                para buscar
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <NotificationCenter onNavigate={handleNavigate} />
+            </div>
+          </header>
+          <main
+            id="main-content"
+            role="main"
+            aria-label="Conteúdo principal"
+            className="flex-1 overflow-hidden"
+          >
+            <div className="h-full overflow-y-auto p-6">{renderContent()}</div>
+          </main>
+        </div>
+        <Toaster />
+        <SpeedInsights />
       </div>
-      <Toaster />
-      <SpeedInsights />
-    </div>
+    </QueryClientProvider>
   );
 }
 

@@ -1,187 +1,191 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { MicrophoneStage, Sparkle, Stop, Upload, WarningCircle } from '@phosphor-icons/react'
-import { useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { MicrophoneStage, Sparkle, Stop, Upload, WarningCircle } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 /**
  * AudioTranscription - Componente para transcrição de áudio com IA REAL
- * 
+ *
  * IMPORTANTE: Este componente usa APIs reais para transcrição:
  * - Web Speech API para gravação em tempo real
  * - API Gemini para análise e sumarização do texto transcrito
- * 
+ *
  * NÃO há dados simulados ou mock neste componente.
  */
 
 interface TranscriptionAnalysis {
-  summary: string
-  actionItems: string[]
+  summary: string;
+  actionItems: string[];
 }
 
 export default function AudioTranscription() {
-  const [isRecording, setIsRecording] = useState(false)
-  const [transcription, setTranscription] = useState('')
-  const [summary, setSummary] = useState('')
-  const [actionItems, setActionItems] = useState<string[]>([])
-  const [processing, setProcessing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const audioFileRef = useRef<File | null>(null)
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState("");
+  const [summary, setSummary] = useState("");
+  const [actionItems, setActionItems] = useState<string[]>([]);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const audioFileRef = useRef<File | null>(null);
 
   // Verifica suporte a Web Speech API
-  const isSpeechSupported = typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+  const isSpeechSupported =
+    typeof window !== "undefined" &&
+    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   const handleStartRecording = () => {
     if (!isSpeechSupported) {
-      toast.error('Seu navegador não suporta gravação de áudio')
-      setError('Web Speech API não suportada. Use Chrome ou Edge.')
-      return
+      toast.error("Seu navegador não suporta gravação de áudio");
+      setError("Web Speech API não suportada. Use Chrome ou Edge.");
+      return;
     }
 
-    setError(null)
-    setTranscription('')
-    setSummary('')
-    setActionItems([])
+    setError(null);
+    setTranscription("");
+    setSummary("");
+    setActionItems([]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    const recognition = new SpeechRecognitionClass() as SpeechRecognition
+    const SpeechRecognitionClass =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionClass() as SpeechRecognition;
 
-    recognition.lang = 'pt-BR'
-    recognition.continuous = true
-    recognition.interimResults = true
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.interimResults = true;
 
-    let finalTranscript = ''
+    let finalTranscript = "";
 
     recognition.onresult = (event) => {
-      let interimTranscript = ''
+      let interimTranscript = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i]
+        const result = event.results[i];
         if (result.isFinal) {
-          finalTranscript += result[0].transcript + ' '
+          finalTranscript += result[0].transcript + " ";
         } else {
-          interimTranscript += result[0].transcript
+          interimTranscript += result[0].transcript;
         }
       }
 
-      setTranscription(finalTranscript + interimTranscript)
-    }
+      setTranscription(finalTranscript + interimTranscript);
+    };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error)
-      setError(`Erro na gravação: ${event.error}`)
-      toast.error('Erro na gravação de áudio')
-      setIsRecording(false)
-    }
+      console.error("Speech recognition error:", event.error);
+      setError(`Erro na gravação: ${event.error}`);
+      toast.error("Erro na gravação de áudio");
+      setIsRecording(false);
+    };
 
     recognition.onend = () => {
-      setIsRecording(false)
+      setIsRecording(false);
       if (finalTranscript.trim()) {
-        analyzeTranscription(finalTranscript.trim())
+        analyzeTranscription(finalTranscript.trim());
       }
-    }
+    };
 
-    recognitionRef.current = recognition
-    recognition.start()
-    setIsRecording(true)
-    toast.success('Gravação iniciada - fale agora')
-  }
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    toast.success("Gravação iniciada - fale agora");
+  };
 
   const handleStopRecording = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop()
+      recognitionRef.current.stop();
     }
-    setIsRecording(false)
-  }
+    setIsRecording(false);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    audioFileRef.current = file
-    toast.info(`Arquivo "${file.name}" selecionado`)
+    audioFileRef.current = file;
+    toast.info(`Arquivo "${file.name}" selecionado`);
 
     // Para arquivos de áudio, informamos que precisaria de um serviço de transcrição
-    setError('Transcrição de arquivos de áudio requer integração com serviço de Speech-to-Text (ex: Google Cloud Speech, Azure Speech). Use a gravação em tempo real ou cole o texto manualmente.')
-    toast.warning('Upload de arquivos ainda não implementado com API real')
-  }
+    setError(
+      "Transcrição de arquivos de áudio requer integração com serviço de Speech-to-Text (ex: Google Cloud Speech, Azure Speech). Use a gravação em tempo real ou cole o texto manualmente."
+    );
+    toast.warning("Upload de arquivos ainda não implementado com API real");
+  };
 
   const analyzeTranscription = async (text: string) => {
     if (!text.trim()) {
-      toast.error('Nenhum texto para analisar')
-      return
+      toast.error("Nenhum texto para analisar");
+      return;
     }
 
-    setProcessing(true)
-    setError(null)
+    setProcessing(true);
+    setError(null);
 
     try {
       // Chama a API real do Gemini via proxy
-      const response = await fetch('/api/llm-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/llm-proxy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
             {
-              role: 'system',
+              role: "system",
               content: `Você é um assistente jurídico especializado em análise de audiências e reuniões.
 Analise a transcrição fornecida e retorne um JSON com:
 - summary: resumo executivo em 2-3 frases
 - actionItems: array de 3-5 itens de ação específicos identificados
 
-Responda APENAS com JSON válido, sem texto adicional.`
+Responda APENAS com JSON válido, sem texto adicional.`,
             },
             {
-              role: 'user',
-              content: `Analise esta transcrição de audiência/reunião jurídica:\n\n${text}`
-            }
+              role: "user",
+              content: `Analise esta transcrição de audiência/reunião jurídica:\n\n${text}`,
+            },
           ],
-          temperature: 0.3
-        })
-      })
+          temperature: 0.3,
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`)
+        throw new Error(`Erro na API: ${response.status}`);
       }
 
-      const data = await response.json()
-      const content = data.response || data.choices?.[0]?.message?.content || ''
+      const data = await response.json();
+      const content = data.response || data.choices?.[0]?.message?.content || "";
 
       // Parse do JSON da resposta
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const analysis: TranscriptionAnalysis = JSON.parse(jsonMatch[0])
-        setSummary(analysis.summary || 'Não foi possível gerar sumário')
-        setActionItems(analysis.actionItems || [])
-        toast.success('Análise concluída com IA Gemini')
+        const analysis: TranscriptionAnalysis = JSON.parse(jsonMatch[0]);
+        setSummary(analysis.summary || "Não foi possível gerar sumário");
+        setActionItems(analysis.actionItems || []);
+        toast.success("Análise concluída com IA Gemini");
       } else {
         // Se não retornou JSON, usa o texto como sumário
-        setSummary(content)
-        setActionItems([])
-        toast.success('Análise concluída')
+        setSummary(content);
+        setActionItems([]);
+        toast.success("Análise concluída");
       }
     } catch (err) {
-      console.error('Erro ao analisar transcrição:', err)
-      setError('Erro ao analisar com IA. Verifique a conexão.')
-      toast.error('Erro na análise com IA')
+      console.error("Erro ao analisar transcrição:", err);
+      setError("Erro ao analisar com IA. Verifique a conexão.");
+      toast.error("Erro na análise com IA");
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   // Permite análise manual de texto colado
   const handleManualAnalysis = () => {
     if (transcription.trim()) {
-      analyzeTranscription(transcription.trim())
+      analyzeTranscription(transcription.trim());
     } else {
-      toast.error('Cole ou digite um texto para analisar')
+      toast.error("Cole ou digite um texto para analisar");
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -202,7 +206,10 @@ Responda APENAS com JSON válido, sem texto adicional.`
       {!isSpeechSupported && (
         <div className="flex items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400">
           <WarningCircle className="w-5 h-5 shrink-0" />
-          <p className="text-sm">Gravação em tempo real não disponível neste navegador. Cole o texto manualmente na área de transcrição.</p>
+          <p className="text-sm">
+            Gravação em tempo real não disponível neste navegador. Cole o texto manualmente na área
+            de transcrição.
+          </p>
         </div>
       )}
 
@@ -217,7 +224,10 @@ Responda APENAS com JSON válido, sem texto adicional.`
               {isRecording ? (
                 <div className="relative">
                   <div className="w-24 h-24 bg-destructive rounded-full flex items-center justify-center animate-pulse">
-                    <MicrophoneStage className="w-12 h-12 text-destructive-foreground" weight="fill" />
+                    <MicrophoneStage
+                      className="w-12 h-12 text-destructive-foreground"
+                      weight="fill"
+                    />
                   </div>
                   <div className="absolute inset-0 rounded-full border-4 border-destructive animate-ping" />
                 </div>
@@ -229,7 +239,7 @@ Responda APENAS com JSON válido, sem texto adicional.`
 
               <Button
                 size="lg"
-                variant={isRecording ? 'destructive' : 'default'}
+                variant={isRecording ? "destructive" : "default"}
                 onClick={isRecording ? handleStopRecording : handleStartRecording}
                 disabled={processing || !isSpeechSupported}
                 className="w-full"
@@ -278,13 +288,9 @@ Responda APENAS com JSON válido, sem texto adicional.`
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 Transcrição
-                {transcription && (
-                  <Badge variant="default">Gemini AI</Badge>
-                )}
+                {transcription && <Badge variant="default">Gemini AI</Badge>}
               </CardTitle>
-              <CardDescription>
-                Texto convertido do áudio ou colado manualmente
-              </CardDescription>
+              <CardDescription>Texto convertido do áudio ou colado manualmente</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {processing ? (
@@ -322,9 +328,7 @@ Responda APENAS com JSON válido, sem texto adicional.`
                     <Sparkle className="w-5 h-5 text-accent" weight="fill" />
                     Sumário Executivo
                   </CardTitle>
-                  <CardDescription>
-                    Resumo dos pontos principais
-                  </CardDescription>
+                  <CardDescription>Resumo dos pontos principais</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
@@ -339,9 +343,7 @@ Responda APENAS com JSON válido, sem texto adicional.`
                     <Sparkle className="w-5 h-5 text-accent" weight="fill" />
                     Itens de Ação
                   </CardTitle>
-                  <CardDescription>
-                    Próximos passos identificados
-                  </CardDescription>
+                  <CardDescription>Próximos passos identificados</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
@@ -361,5 +363,5 @@ Responda APENAS com JSON válido, sem texto adicional.`
         </div>
       </div>
     </div>
-  )
+  );
 }

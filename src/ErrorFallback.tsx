@@ -3,10 +3,7 @@ interface ErrorFallbackProps {
   resetErrorBoundary: () => void;
 }
 
-export const ErrorFallback = ({
-  error,
-  resetErrorBoundary,
-}: ErrorFallbackProps) => {
+export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps) => {
   // Fallback extremamente simples que NÃO depende de componentes externos
   // Isso garante que erros de carregamento de chunks sejam exibidos
   return (
@@ -43,8 +40,7 @@ export const ErrorFallback = ({
             ⚠️ Erro na aplicação
           </h2>
           <p style={{ fontSize: "0.875rem", color: "#7f1d1d" }}>
-            Algo inesperado aconteceu. Tente recarregar a página ou limpar o
-            cache do navegador.
+            Algo inesperado aconteceu. Tente recarregar a página ou limpar o cache do navegador.
           </p>
         </div>
 

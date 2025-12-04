@@ -1,7 +1,14 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { FluentMotion, FluentFade, FluentSlide, FluentScale, FluentHover, FluentStaggerItem } from '@/components/FluentMotion'
-import { Sparkle, Wind, Lightning, Atom } from '@phosphor-icons/react'
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  FluentMotion,
+  FluentFade,
+  FluentSlide,
+  FluentScale,
+  FluentHover,
+  FluentStaggerItem,
+} from "@/components/FluentMotion";
+import { Sparkle, Wind, Lightning, Atom } from "@phosphor-icons/react";
 
 export default function FluentAnimationsShowcase() {
   return (
@@ -155,14 +162,12 @@ export default function FluentAnimationsShowcase() {
             <div className="text-center space-y-4">
               <h3 className="text-xl font-semibold">Sistema Completo Implementado</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Todas as animações seguem as diretrizes de Fluent Motion do Windows 11, 
-                com curvas de easing personalizadas, durações otimizadas e suporte para 
-                redução de movimento (prefers-reduced-motion).
+                Todas as animações seguem as diretrizes de Fluent Motion do Windows 11, com curvas
+                de easing personalizadas, durações otimizadas e suporte para redução de movimento
+                (prefers-reduced-motion).
               </p>
               <div className="flex gap-4 justify-center pt-4">
-                <Button className="windows-button">
-                  Explorar Componentes
-                </Button>
+                <Button className="windows-button">Explorar Componentes</Button>
                 <Button variant="outline" className="reveal-hover">
                   Ver Documentação
                 </Button>
@@ -172,5 +177,5 @@ export default function FluentAnimationsShowcase() {
         </Card>
       </FluentFade>
     </div>
-  )
+  );
 }

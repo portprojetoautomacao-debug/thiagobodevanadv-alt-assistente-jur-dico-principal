@@ -10,11 +10,7 @@ interface DJENErrorCardProps {
   readonly onRetry: () => void;
 }
 
-export function DJENErrorCard({
-  compact = false,
-  error,
-  onRetry,
-}: DJENErrorCardProps) {
+export function DJENErrorCard({ compact = false, error, onRetry }: DJENErrorCardProps) {
   return (
     <Card className={cn("card-glow-hover glassmorphic", compact && "h-fit")}>
       <CardHeader className="pb-2">
@@ -28,12 +24,7 @@ export function DJENErrorCard({
           <AlertTriangle size={16} />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onRetry}
-          className="mt-3 w-full"
-        >
+        <Button variant="outline" size="sm" onClick={onRetry} className="mt-3 w-full">
           <RefreshCw size={16} />
           Tentar novamente
         </Button>

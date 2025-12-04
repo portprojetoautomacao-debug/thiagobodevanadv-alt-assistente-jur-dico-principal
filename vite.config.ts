@@ -74,11 +74,24 @@ export default defineConfig({
         clientsClaim: true,
         // Limpar caches antigos automaticamente
         cleanupOutdatedCaches: true,
-        // ✅ EXCLUIR chunks do editor do precache para evitar carregamento prematuro
-        // Esses chunks são lazy-loaded e não devem ser pré-cacheados
+        // ✅ INCLUIR todos os chunks no precache (inclusive lazy-loaded)
+        // O cleanupOutdatedCaches vai remover versões antigas automaticamente
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        globIgnores: ["**/TiptapEditor*.js", "**/MinutasManager*.js"],
+        // ❌ REMOVIDO globIgnores - chunks lazy devem ser precacheados
+        // O problema de 404 acontecia porque chunks eram excluídos do cache
+        // mas o SW interceptava a request e não encontrava no cache
         runtimeCaching: [
+          {
+            // ✅ Lazy-loaded chunks: NetworkFirst para sempre buscar versão atualizada
+            // Se rede falhar, usa cache. Isso resolve o 404 de chunks com hash diferente
+            urlPattern: /\/assets\/(MinutasManager|TiptapEditor|DashboardCharts|animation|three|dnd|files)-[a-zA-Z0-9]+\.js$/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "lazy-chunks",
+              expiration: { maxEntries: 20, maxAgeSeconds: 86400 * 7 }, // 7 dias
+              networkTimeoutSeconds: 10, // Timeout rápido para fallback ao cache
+            },
+          },
           {
             urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
             handler: "NetworkFirst",

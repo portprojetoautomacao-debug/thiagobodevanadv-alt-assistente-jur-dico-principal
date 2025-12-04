@@ -1,24 +1,24 @@
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { useAIStreaming } from '@/hooks/use-ai-streaming'
-import { useExpedientes } from '@/hooks/use-expedientes'
-import { useKV } from '@/hooks/use-kv'
-import { cn } from '@/lib/utils'
-import type { Expediente, FinancialEntry, Process } from '@/types'
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { useAIStreaming } from "@/hooks/use-ai-streaming";
+import { useExpedientes } from "@/hooks/use-expedientes";
+import { useKV } from "@/hooks/use-kv";
+import { cn } from "@/lib/utils";
+import type { Expediente, FinancialEntry, Process } from "@/types";
 import {
-    Bell,
-    Briefcase,
-    ChartBar,
-    CurrencyCircleDollar,
-    PaperPlaneTilt,
-    Stop,
-    Warning,
-} from '@phosphor-icons/react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
+  Bell,
+  Briefcase,
+  ChartBar,
+  CurrencyCircleDollar,
+  PaperPlaneTilt,
+  Stop,
+  Warning,
+} from "@phosphor-icons/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // Função auxiliar para conteúdo de streaming
 function getMessageContent(
@@ -28,40 +28,40 @@ function getMessageContent(
   streamingContent: string
 ): string {
   if (message.id === streamingMessageId && isStreaming) {
-    return streamingContent || '▋'
+    return streamingContent || "▋";
   }
-  if (message.content) return message.content
-  if (message.id === streamingMessageId) return '▋'
-  return ''
+  if (message.content) return message.content;
+  if (message.id === streamingMessageId) return "▋";
+  return "";
 }
 
 interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: string
-  insights?: Insight[]
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  insights?: Insight[];
 }
 
 interface Insight {
-  type: 'statistics' | 'alert' | 'trend' | 'suggestion' | 'info'
-  title: string
-  value?: string
-  description: string
-  action?: string
+  type: "statistics" | "alert" | "trend" | "suggestion" | "info";
+  title: string;
+  value?: string;
+  description: string;
+  action?: string;
 }
 
 // AgentTask - estrutura usada pelo sistema de agentes autônomos
 interface AgentTask {
-  id: string
-  agentId: string
-  type: string
-  priority: 'high' | 'medium' | 'low'
-  status: 'pending' | 'in_progress' | 'completed' | 'failed'
-  description: string
-  createdAt: string
-  completedAt?: string
-  result?: string
+  id: string;
+  agentId: string;
+  type: string;
+  priority: "high" | "medium" | "low";
+  status: "pending" | "in_progress" | "completed" | "failed";
+  description: string;
+  createdAt: string;
+  completedAt?: string;
+  result?: string;
 }
 
 const SAMPLE_QUESTIONS = [
@@ -69,41 +69,41 @@ const SAMPLE_QUESTIONS = [
   "Quais são os prazos urgentes?",
   "Resumo financeiro",
   "O que posso fazer?",
-]
+];
 
 const QUICK_INSIGHTS = [
   {
     icon: ChartBar,
-    title: 'Processos',
-    description: 'Ver meus processos',
-    query: 'Status dos meus processos',
+    title: "Processos",
+    description: "Ver meus processos",
+    query: "Status dos meus processos",
   },
   {
     icon: Bell,
-    title: 'Prazos',
-    description: 'Prazos urgentes',
-    query: 'Quais são os prazos urgentes?',
+    title: "Prazos",
+    description: "Prazos urgentes",
+    query: "Quais são os prazos urgentes?",
   },
   {
     icon: CurrencyCircleDollar,
-    title: 'Financeiro',
-    description: 'Resumo financeiro',
-    query: 'Resumo financeiro',
+    title: "Financeiro",
+    description: "Resumo financeiro",
+    query: "Resumo financeiro",
   },
   {
     icon: Briefcase,
-    title: 'Ajuda',
-    description: 'O que posso fazer',
-    query: 'O que você pode fazer?',
+    title: "Ajuda",
+    description: "O que posso fazer",
+    query: "O que você pode fazer?",
   },
-]
+];
 
 export default function HarveySpecter() {
-  const [messages, setMessages] = useKV<Message[]>('harvey-messages', [])
-  const [input, setInput] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [messages, setMessages] = useKV<Message[]>("harvey-messages", []);
+  const [input, setInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Hook de streaming de IA
   const {
@@ -111,84 +111,95 @@ export default function HarveySpecter() {
     isStreaming,
     streamChat,
     cancelStream,
-    reset: resetStreaming
+    reset: resetStreaming,
   } = useAIStreaming({
     onChunk: () => {
       // Scroll para baixo a cada chunk
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     },
     onComplete: (fullContent, provider) => {
-      console.log(`[Harvey] Streaming completo via ${provider}`)
+      console.log(`[Harvey] Streaming completo via ${provider}`);
     },
     onError: (error) => {
-      console.error('[Harvey] Erro no streaming:', error)
-      toast.error('Erro ao processar resposta')
-    }
-  })
+      console.error("[Harvey] Erro no streaming:", error);
+      toast.error("Erro ao processar resposta");
+    },
+  });
 
   // Buscar dados REAIS do KV storage (usando as MESMAS chaves dos outros componentes)
-  const [processes] = useKV<Process[]>('processes', [])
-  const [financialRecords] = useKV<FinancialEntry[]>('financialEntries', [])  // CORRIGIDO: era 'financial-records'
-  const [taskQueue] = useKV<AgentTask[]>('agent-task-queue', [])  // CORRIGIDO: era 'tasks'
-  const [completedTasks] = useKV<AgentTask[]>('completed-agent-tasks', [])
-  const { expedientes } = useExpedientes()  // ✅ Expedientes/intimações reais do sistema
+  const [processes] = useKV<Process[]>("processes", []);
+  const [financialRecords] = useKV<FinancialEntry[]>("financialEntries", []); // CORRIGIDO: era 'financial-records'
+  const [taskQueue] = useKV<AgentTask[]>("agent-task-queue", []); // CORRIGIDO: era 'tasks'
+  const [completedTasks] = useKV<AgentTask[]>("completed-agent-tasks", []);
+  const { expedientes } = useExpedientes(); // ✅ Expedientes/intimações reais do sistema
 
   // Calcular estatísticas REAIS
   const realStats = useMemo(() => {
-    const now = new Date()
-    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000)
-    const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const now = new Date();
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     // Processos
-    const totalProcesses = processes?.length || 0
+    const totalProcesses = processes?.length || 0;
     const processesByStatus = {
-      'Em Andamento': processes?.filter(p => p.status === 'ativo').length || 0,
-      'Aguardando': processes?.filter(p => p.status === 'suspenso').length || 0,
-      'Concluído': processes?.filter(p => p.status === 'concluido').length || 0,
-      'Arquivado': processes?.filter(p => p.status === 'arquivado').length || 0,
-    }
+      "Em Andamento": processes?.filter((p) => p.status === "ativo").length || 0,
+      Aguardando: processes?.filter((p) => p.status === "suspenso").length || 0,
+      Concluído: processes?.filter((p) => p.status === "concluido").length || 0,
+      Arquivado: processes?.filter((p) => p.status === "arquivado").length || 0,
+    };
 
     // Prazos urgentes (próximas 48h) - baseado nos prazos dos processos
-    const urgentDeadlines = processes?.reduce((count, p) => {
-      const urgentPrazos = p.prazos?.filter(prazo => {
-        if (prazo.concluido) return false
-        const deadline = new Date(prazo.dataFinal)
-        return deadline <= in48h && deadline >= now
-      }).length || 0
-      return count + urgentPrazos
-    }, 0) || 0
+    const urgentDeadlines =
+      processes?.reduce((count, p) => {
+        const urgentPrazos =
+          p.prazos?.filter((prazo) => {
+            if (prazo.concluido) return false;
+            const deadline = new Date(prazo.dataFinal);
+            return deadline <= in48h && deadline >= now;
+          }).length || 0;
+        return count + urgentPrazos;
+      }, 0) || 0;
 
     // Prazos próximos (7 dias)
-    const upcomingDeadlines = processes?.reduce((count, p) => {
-      const upcomingPrazos = p.prazos?.filter(prazo => {
-        if (prazo.concluido) return false
-        const deadline = new Date(prazo.dataFinal)
-        return deadline <= in7days && deadline >= now
-      }).length || 0
-      return count + upcomingPrazos
-    }, 0) || 0
+    const upcomingDeadlines =
+      processes?.reduce((count, p) => {
+        const upcomingPrazos =
+          p.prazos?.filter((prazo) => {
+            if (prazo.concluido) return false;
+            const deadline = new Date(prazo.dataFinal);
+            return deadline <= in7days && deadline >= now;
+          }).length || 0;
+        return count + upcomingPrazos;
+      }, 0) || 0;
 
     // Financeiro - CORRIGIDO: usar 'income'/'expense' (tipo real do FinancialEntry)
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-    const monthlyRecords = financialRecords?.filter(r => {
-      const date = new Date(r.date)
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear
-    }) || []
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const monthlyRecords =
+      financialRecords?.filter((r) => {
+        const date = new Date(r.date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      }) || [];
 
-    const receita = monthlyRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0)
-    const despesas = monthlyRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0)
-    const margem = receita > 0 ? ((receita - despesas) / receita * 100).toFixed(1) : '0'
+    const receita = monthlyRecords
+      .filter((r) => r.type === "income")
+      .reduce((sum, r) => sum + r.amount, 0);
+    const despesas = monthlyRecords
+      .filter((r) => r.type === "expense")
+      .reduce((sum, r) => sum + r.amount, 0);
+    const margem = receita > 0 ? (((receita - despesas) / receita) * 100).toFixed(1) : "0";
 
     // Tarefas dos Agentes - CORRIGIDO: usar taskQueue e completedTasks
-    const pendingTasks = taskQueue?.filter(t => t.status === 'pending').length || 0
-    const inProgressTasks = taskQueue?.filter(t => t.status === 'in_progress').length || 0
-    const totalCompletedTasks = completedTasks?.length || 0
+    const pendingTasks = taskQueue?.filter((t) => t.status === "pending").length || 0;
+    const inProgressTasks = taskQueue?.filter((t) => t.status === "in_progress").length || 0;
+    const totalCompletedTasks = completedTasks?.length || 0;
 
     // Expedientes/Intimações - NOVO
-    const totalExpedientes = expedientes?.length || 0
-    const expedientesUrgentes = expedientes?.filter((e: Expediente) => e.urgente && !e.processado).length || 0
-    const expedientesNaoProcessados = expedientes?.filter((e: Expediente) => !e.processado).length || 0
+    const totalExpedientes = expedientes?.length || 0;
+    const expedientesUrgentes =
+      expedientes?.filter((e: Expediente) => e.urgente && !e.processado).length || 0;
+    const expedientesNaoProcessados =
+      expedientes?.filter((e: Expediente) => !e.processado).length || 0;
 
     return {
       totalProcesses,
@@ -204,176 +215,199 @@ export default function HarveySpecter() {
       totalExpedientes,
       expedientesUrgentes,
       expedientesNaoProcessados,
-      hasData: totalProcesses > 0 || financialRecords?.length > 0 || taskQueue?.length > 0 || completedTasks?.length > 0 || totalExpedientes > 0,
-    }
-  }, [processes, financialRecords, taskQueue, completedTasks, expedientes])
+      hasData:
+        totalProcesses > 0 ||
+        financialRecords?.length > 0 ||
+        taskQueue?.length > 0 ||
+        completedTasks?.length > 0 ||
+        totalExpedientes > 0,
+    };
+  }, [processes, financialRecords, taskQueue, completedTasks, expedientes]);
 
   useEffect(() => {
     if (scrollRef.current) {
-      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      const scrollElement = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
       if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight
+        scrollElement.scrollTop = scrollElement.scrollHeight;
       }
     }
-  }, [messages])
+  }, [messages]);
 
   const getInsights = (query: string): Insight[] => {
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = query.toLowerCase();
 
     // Aviso se não há dados
     if (!realStats.hasData) {
       return [
         {
-          type: 'info',
-          title: 'Sem Dados Cadastrados',
-          description: 'Cadastre processos, financeiro ou tarefas para ver estatísticas reais.',
+          type: "info",
+          title: "Sem Dados Cadastrados",
+          description: "Cadastre processos, financeiro ou tarefas para ver estatísticas reais.",
         },
-      ]
+      ];
     }
 
-    if (lowerQuery.includes('processo') || lowerQuery.includes('acervo') || lowerQuery.includes('status')) {
+    if (
+      lowerQuery.includes("processo") ||
+      lowerQuery.includes("acervo") ||
+      lowerQuery.includes("status")
+    ) {
       const insights: Insight[] = [
         {
-          type: 'statistics',
-          title: 'Processos Ativos',
+          type: "statistics",
+          title: "Processos Ativos",
           value: String(realStats.totalProcesses),
-          description: 'Total cadastrado no sistema',
+          description: "Total cadastrado no sistema",
         },
-      ]
+      ];
 
-      if (realStats.processesByStatus['Em Andamento'] > 0) {
+      if (realStats.processesByStatus["Em Andamento"] > 0) {
         insights.push({
-          type: 'trend',
-          title: 'Em Andamento',
-          value: String(realStats.processesByStatus['Em Andamento']),
-          description: 'Processos ativos',
-        })
+          type: "trend",
+          title: "Em Andamento",
+          value: String(realStats.processesByStatus["Em Andamento"]),
+          description: "Processos ativos",
+        });
       }
 
       if (realStats.urgentDeadlines > 0) {
         insights.push({
-          type: 'alert',
-          title: 'Prazos Urgentes',
+          type: "alert",
+          title: "Prazos Urgentes",
           value: String(realStats.urgentDeadlines),
-          description: 'Nas próximas 48h',
-        })
+          description: "Nas próximas 48h",
+        });
       }
 
-      return insights
+      return insights;
     }
 
-    if (lowerQuery.includes('intimaç') || lowerQuery.includes('prazo') || lowerQuery.includes('urgent') || lowerQuery.includes('expediente')) {
+    if (
+      lowerQuery.includes("intimaç") ||
+      lowerQuery.includes("prazo") ||
+      lowerQuery.includes("urgent") ||
+      lowerQuery.includes("expediente")
+    ) {
       const insights: Insight[] = [
         {
-          type: 'alert',
-          title: 'Prazos Urgentes',
+          type: "alert",
+          title: "Prazos Urgentes",
           value: String(realStats.urgentDeadlines),
-          description: 'Nas próximas 48h',
+          description: "Nas próximas 48h",
         },
         {
-          type: 'statistics',
-          title: 'Próximos 7 dias',
+          type: "statistics",
+          title: "Próximos 7 dias",
           value: String(realStats.upcomingDeadlines),
-          description: 'Total de prazos',
+          description: "Total de prazos",
         },
-      ]
+      ];
 
       if (realStats.totalExpedientes > 0) {
         insights.push({
-          type: 'statistics',
-          title: 'Expedientes',
+          type: "statistics",
+          title: "Expedientes",
           value: String(realStats.totalExpedientes),
-          description: 'Total registrado',
-        })
+          description: "Total registrado",
+        });
       }
 
       if (realStats.expedientesUrgentes > 0) {
         insights.push({
-          type: 'alert',
-          title: 'Expedientes Urgentes',
+          type: "alert",
+          title: "Expedientes Urgentes",
           value: String(realStats.expedientesUrgentes),
-          description: 'Requerem atenção',
-        })
+          description: "Requerem atenção",
+        });
       }
 
       if (realStats.expedientesNaoProcessados > 0) {
         insights.push({
-          type: 'trend',
-          title: 'Não Processados',
+          type: "trend",
+          title: "Não Processados",
           value: String(realStats.expedientesNaoProcessados),
-          description: 'Aguardando análise',
-        })
+          description: "Aguardando análise",
+        });
       }
 
-      return insights
+      return insights;
     }
 
-    if (lowerQuery.includes('financ') || lowerQuery.includes('receita') || lowerQuery.includes('despesa')) {
+    if (
+      lowerQuery.includes("financ") ||
+      lowerQuery.includes("receita") ||
+      lowerQuery.includes("despesa")
+    ) {
       return [
         {
-          type: 'statistics',
-          title: 'Receita do Mês',
-          value: `R$ ${realStats.receita.toLocaleString('pt-BR')}`,
-          description: 'Total recebido',
+          type: "statistics",
+          title: "Receita do Mês",
+          value: `R$ ${realStats.receita.toLocaleString("pt-BR")}`,
+          description: "Total recebido",
         },
         {
-          type: 'trend',
-          title: 'Despesas',
-          value: `R$ ${realStats.despesas.toLocaleString('pt-BR')}`,
-          description: 'Total de custos',
+          type: "trend",
+          title: "Despesas",
+          value: `R$ ${realStats.despesas.toLocaleString("pt-BR")}`,
+          description: "Total de custos",
         },
         {
-          type: 'statistics',
-          title: 'Margem',
+          type: "statistics",
+          title: "Margem",
           value: `${realStats.margem}%`,
-          description: 'Lucro líquido',
+          description: "Lucro líquido",
         },
-      ]
+      ];
     }
 
-    if (lowerQuery.includes('tarefa') || lowerQuery.includes('pendente') || lowerQuery.includes('equipe')) {
+    if (
+      lowerQuery.includes("tarefa") ||
+      lowerQuery.includes("pendente") ||
+      lowerQuery.includes("equipe")
+    ) {
       return [
         {
-          type: 'statistics',
-          title: 'Tarefas Pendentes',
+          type: "statistics",
+          title: "Tarefas Pendentes",
           value: String(realStats.pendingTasks),
-          description: 'Aguardando execução',
+          description: "Aguardando execução",
         },
         {
-          type: 'trend',
-          title: 'Em Progresso',
+          type: "trend",
+          title: "Em Progresso",
           value: String(realStats.inProgressTasks),
-          description: 'Sendo executadas',
+          description: "Sendo executadas",
         },
-      ]
+      ];
     }
 
     return [
       {
-        type: 'suggestion',
-        title: 'Experimente Perguntar',
-        description: 'Status dos processos, Prazos urgentes, Resumo financeiro, ou Tarefas pendentes',
+        type: "suggestion",
+        title: "Experimente Perguntar",
+        description:
+          "Status dos processos, Prazos urgentes, Resumo financeiro, ou Tarefas pendentes",
       },
-    ]
-  }
+    ];
+  };
 
   // Constrói o system prompt com contexto real
   const buildSystemPrompt = useCallback(() => {
     const contextData = realStats.hasData
       ? `Contexto REAL do escritório (dados do sistema):
 - ${realStats.totalProcesses} processos cadastrados
-  - Em Andamento: ${realStats.processesByStatus['Em Andamento']}
-  - Aguardando: ${realStats.processesByStatus['Aguardando']}
-  - Concluídos: ${realStats.processesByStatus['Concluído']}
-  - Arquivados: ${realStats.processesByStatus['Arquivado']}
+  - Em Andamento: ${realStats.processesByStatus["Em Andamento"]}
+  - Aguardando: ${realStats.processesByStatus["Aguardando"]}
+  - Concluídos: ${realStats.processesByStatus["Concluído"]}
+  - Arquivados: ${realStats.processesByStatus["Arquivado"]}
 - ${realStats.urgentDeadlines} prazos urgentes (próximas 48h)
 - ${realStats.upcomingDeadlines} prazos nos próximos 7 dias
-- Receita do mês: R$ ${realStats.receita.toLocaleString('pt-BR')}
-- Despesas do mês: R$ ${realStats.despesas.toLocaleString('pt-BR')}
+- Receita do mês: R$ ${realStats.receita.toLocaleString("pt-BR")}
+- Despesas do mês: R$ ${realStats.despesas.toLocaleString("pt-BR")}
 - Margem: ${realStats.margem}%
 - ${realStats.pendingTasks} tarefas pendentes
 - ${realStats.inProgressTasks} tarefas em progresso`
-      : `Contexto: O sistema ainda não possui dados cadastrados.`
+      : `Contexto: O sistema ainda não possui dados cadastrados.`;
 
     return `Você é Harvey Specter, um assistente jurídico inteligente e estratégico.
 
@@ -383,196 +417,194 @@ IMPORTANTE:
 - Use APENAS os dados fornecidos acima. NÃO invente dados.
 - Seja honesto sobre a situação real do sistema.
 - Responda de forma profissional e objetiva.
-- Use markdown para formatação.`
-  }, [realStats])
+- Use markdown para formatação.`;
+  }, [realStats]);
 
   const handleSend = async () => {
-    if (!input.trim() || isProcessing || isStreaming) return
+    if (!input.trim() || isProcessing || isStreaming) return;
 
-    const query = input.trim()
-    setInput('')
-    setIsProcessing(true)
-    resetStreaming()
+    const query = input.trim();
+    setInput("");
+    setIsProcessing(true);
+    resetStreaming();
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: query,
       timestamp: new Date().toISOString(),
-    }
+    };
 
     // Adiciona mensagem do usuário
-    setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+    setMessages((currentMessages) => [...(currentMessages || []), userMessage]);
 
     // Cria mensagem do assistente para streaming
-    const assistantId = `assistant-${Date.now()}`
-    setStreamingMessageId(assistantId)
+    const assistantId = `assistant-${Date.now()}`;
+    setStreamingMessageId(assistantId);
 
     const streamingMessage: Message = {
       id: assistantId,
-      role: 'assistant',
-      content: '', // Será preenchido pelo streaming
+      role: "assistant",
+      content: "", // Será preenchido pelo streaming
       timestamp: new Date().toISOString(),
       insights: getInsights(query),
-    }
+    };
 
-    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage])
+    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage]);
 
     try {
-      const systemPrompt = buildSystemPrompt()
+      const systemPrompt = buildSystemPrompt();
 
       const finalContent = await streamChat([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: query }
-      ])
+        { role: "system", content: systemPrompt },
+        { role: "user", content: query },
+      ]);
 
       // Atualiza a mensagem com o conteúdo final
       setMessages((currentMessages) =>
-        (currentMessages || []).map(msg =>
-          msg.id === assistantId
-            ? { ...msg, content: finalContent }
-            : msg
+        (currentMessages || []).map((msg) =>
+          msg.id === assistantId ? { ...msg, content: finalContent } : msg
         )
-      )
-
+      );
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error("Error sending message:", error);
 
       // Atualiza com mensagem de erro
       setMessages((currentMessages) =>
-        (currentMessages || []).map(msg =>
+        (currentMessages || []).map((msg) =>
           msg.id === assistantId
-            ? { ...msg, content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.' }
+            ? {
+                ...msg,
+                content:
+                  "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
+              }
             : msg
         )
-      )
-      toast.error('Erro ao processar mensagem')
+      );
+      toast.error("Erro ao processar mensagem");
     } finally {
-      setIsProcessing(false)
-      setStreamingMessageId(null)
+      setIsProcessing(false);
+      setStreamingMessageId(null);
     }
-  }
+  };
 
   // Cancelar streaming
   const handleCancelStream = useCallback(() => {
-    cancelStream()
-    setIsProcessing(false)
+    cancelStream();
+    setIsProcessing(false);
 
     if (streamingMessageId) {
       // Mantém o conteúdo parcial já recebido
       setMessages((currentMessages) =>
-        (currentMessages || []).map(msg =>
+        (currentMessages || []).map((msg) =>
           msg.id === streamingMessageId
-            ? { ...msg, content: streamingContent + '\n\n*[Resposta interrompida]*' }
+            ? { ...msg, content: streamingContent + "\n\n*[Resposta interrompida]*" }
             : msg
         )
-      )
-      setStreamingMessageId(null)
+      );
+      setStreamingMessageId(null);
     }
-  }, [cancelStream, streamingMessageId, streamingContent, setMessages])
+  }, [cancelStream, streamingMessageId, streamingContent, setMessages]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
-  }
+  };
 
   const handleQuickQuestion = async (question: string) => {
-    if (isProcessing || isStreaming) return
+    if (isProcessing || isStreaming) return;
 
-    setIsProcessing(true)
-    resetStreaming()
+    setIsProcessing(true);
+    resetStreaming();
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: question,
       timestamp: new Date().toISOString(),
-    }
+    };
 
-    setMessages((currentMessages) => [...(currentMessages || []), userMessage])
+    setMessages((currentMessages) => [...(currentMessages || []), userMessage]);
 
     // Cria mensagem do assistente para streaming
-    const assistantId = `assistant-${Date.now()}`
-    setStreamingMessageId(assistantId)
+    const assistantId = `assistant-${Date.now()}`;
+    setStreamingMessageId(assistantId);
 
     const streamingMessage: Message = {
       id: assistantId,
-      role: 'assistant',
-      content: '',
+      role: "assistant",
+      content: "",
       timestamp: new Date().toISOString(),
       insights: getInsights(question),
-    }
+    };
 
-    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage])
+    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage]);
 
     try {
-      const systemPrompt = buildSystemPrompt()
+      const systemPrompt = buildSystemPrompt();
 
       const finalContent = await streamChat([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: question }
-      ])
+        { role: "system", content: systemPrompt },
+        { role: "user", content: question },
+      ]);
 
       setMessages((currentMessages) =>
-        (currentMessages || []).map(msg =>
-          msg.id === assistantId
-            ? { ...msg, content: finalContent }
-            : msg
+        (currentMessages || []).map((msg) =>
+          msg.id === assistantId ? { ...msg, content: finalContent } : msg
         )
-      )
-
+      );
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error("Error sending message:", error);
 
       setMessages((currentMessages) =>
-        (currentMessages || []).map(msg =>
+        (currentMessages || []).map((msg) =>
           msg.id === assistantId
-            ? { ...msg, content: 'Desculpe, ocorreu um erro ao processar sua mensagem.' }
+            ? { ...msg, content: "Desculpe, ocorreu um erro ao processar sua mensagem." }
             : msg
         )
-      )
-      toast.error('Erro ao processar mensagem')
+      );
+      toast.error("Erro ao processar mensagem");
     } finally {
-      setIsProcessing(false)
-      setStreamingMessageId(null)
+      setIsProcessing(false);
+      setStreamingMessageId(null);
     }
-  }
+  };
 
   const getInsightIcon = (type: string) => {
     switch (type) {
-      case 'statistics':
-        return <ChartBar className="w-5 h-5" weight="fill" />
-      case 'alert':
-        return <Bell className="w-5 h-5" weight="fill" />
-      case 'trend':
-        return <ChartBar className="w-5 h-5" weight="fill" />
-      case 'suggestion':
-        return <Briefcase className="w-5 h-5" weight="fill" />
-      case 'info':
-        return <Warning className="w-5 h-5" weight="fill" />
+      case "statistics":
+        return <ChartBar className="w-5 h-5" weight="fill" />;
+      case "alert":
+        return <Bell className="w-5 h-5" weight="fill" />;
+      case "trend":
+        return <ChartBar className="w-5 h-5" weight="fill" />;
+      case "suggestion":
+        return <Briefcase className="w-5 h-5" weight="fill" />;
+      case "info":
+        return <Warning className="w-5 h-5" weight="fill" />;
       default:
-        return <ChartBar className="w-5 h-5" weight="fill" />
+        return <ChartBar className="w-5 h-5" weight="fill" />;
     }
-  }
+  };
 
   const getInsightColor = (type: string) => {
     switch (type) {
-      case 'statistics':
-        return 'text-primary bg-primary/10'
-      case 'alert':
-        return 'text-destructive bg-destructive/10'
-      case 'trend':
-        return 'text-accent bg-accent/10'
-      case 'suggestion':
-        return 'text-secondary bg-secondary/10'
-      case 'info':
-        return 'text-amber-600 bg-amber-100 dark:bg-amber-900/20'
+      case "statistics":
+        return "text-primary bg-primary/10";
+      case "alert":
+        return "text-destructive bg-destructive/10";
+      case "trend":
+        return "text-accent bg-accent/10";
+      case "suggestion":
+        return "text-secondary bg-secondary/10";
+      case "info":
+        return "text-amber-600 bg-amber-100 dark:bg-amber-900/20";
       default:
-        return 'text-primary bg-primary/10'
+        return "text-primary bg-primary/10";
     }
-  }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -582,11 +614,7 @@ IMPORTANTE:
             <h1 className="text-2xl font-bold text-foreground">Harvey Specter</h1>
             <p className="text-sm text-muted-foreground">Seu assistente jurídico inteligente</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setMessages([])}
-          >
+          <Button variant="outline" size="sm" onClick={() => setMessages([])}>
             Limpar Conversa
           </Button>
         </div>
@@ -608,7 +636,7 @@ IMPORTANTE:
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {QUICK_INSIGHTS.map((insight, index) => {
-                    const Icon = insight.icon
+                    const Icon = insight.icon;
                     return (
                       <Card
                         key={index}
@@ -625,7 +653,7 @@ IMPORTANTE:
                           </div>
                         </div>
                       </Card>
-                    )
+                    );
                   })}
                 </div>
 
@@ -651,20 +679,21 @@ IMPORTANTE:
             ) : (
               <div className="space-y-6 pb-4">
                 {(messages || []).map((message) => (
-                  <div
-                    key={message.id}
-                  >
+                  <div key={message.id}>
                     <Card
                       className={cn(
-                        'p-4',
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-card'
+                        "p-4",
+                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-card"
                       )}
                     >
                       <div className="whitespace-pre-wrap text-sm">
                         {/* Mostra streaming content se esta é a mensagem sendo streamada */}
-                        {getMessageContent(message, streamingMessageId, isStreaming, streamingContent)}
+                        {getMessageContent(
+                          message,
+                          streamingMessageId,
+                          isStreaming,
+                          streamingContent
+                        )}
                         {/* Cursor piscante durante streaming */}
                         {message.id === streamingMessageId && isStreaming && (
                           <span className="animate-pulse">▋</span>
@@ -675,12 +704,11 @@ IMPORTANTE:
                     {message.insights && message.insights.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                         {message.insights.map((insight, idx) => (
-                          <Card
-                            key={idx}
-                            className="p-3 bg-card border"
-                          >
+                          <Card key={idx} className="p-3 bg-card border">
                             <div className="flex items-start gap-2">
-                              <div className={cn('p-1.5 rounded-md', getInsightColor(insight.type))}>
+                              <div
+                                className={cn("p-1.5 rounded-md", getInsightColor(insight.type))}
+                              >
                                 {getInsightIcon(insight.type)}
                               </div>
                               <div className="flex-1 min-w-0">
@@ -705,9 +733,9 @@ IMPORTANTE:
                     )}
 
                     <span className="text-xs text-muted-foreground px-2">
-                      {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
+                      {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </span>
                   </div>
@@ -717,9 +745,18 @@ IMPORTANTE:
                   <div className="flex gap-3">
                     <Card className="p-4 bg-card">
                       <div className="flex gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <div
+                          className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        />
+                        <div
+                          className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        />
+                        <div
+                          className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        />
                       </div>
                     </Card>
                   </div>
@@ -770,5 +807,5 @@ IMPORTANTE:
         </div>
       </div>
     </div>
-  )
+  );
 }

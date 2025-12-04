@@ -3,13 +3,13 @@
  * Quick access buttons for common tasks
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Upload, ChartPie, TrendUp } from '@phosphor-icons/react'
-import type { ViewType } from '@/types'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Upload, ChartPie, TrendUp } from "@phosphor-icons/react";
+import type { ViewType } from "@/types";
 
 interface DashboardActionsProps {
-  onNavigate: (view: ViewType) => void
+  onNavigate: (view: ViewType) => void;
 }
 
 export function DashboardActions({ onNavigate }: DashboardActionsProps) {
@@ -20,14 +20,14 @@ export function DashboardActions({ onNavigate }: DashboardActionsProps) {
       </CardHeader>
       <CardContent className="grid gap-2">
         <Button
-          onClick={() => onNavigate('upload-pdf')}
+          onClick={() => onNavigate("upload-pdf")}
           className="w-full justify-start bg-accent-4 hover:bg-accent-5 text-accent-11"
         >
           <Upload className="mr-2 h-4 w-4" />
           Upload de PDF
         </Button>
         <Button
-          onClick={() => onNavigate('analytics')}
+          onClick={() => onNavigate("analytics")}
           variant="outline"
           className="w-full justify-start border-neutral-6 hover:bg-neutral-4"
         >
@@ -35,7 +35,7 @@ export function DashboardActions({ onNavigate }: DashboardActionsProps) {
           Analytics
         </Button>
         <Button
-          onClick={() => onNavigate('agentes')}
+          onClick={() => onNavigate("agentes")}
           variant="outline"
           className="w-full justify-start border-neutral-6 hover:bg-neutral-4"
         >
@@ -44,5 +44,5 @@ export function DashboardActions({ onNavigate }: DashboardActionsProps) {
         </Button>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,31 +1,31 @@
-import { useKV } from '@/hooks/use-kv'
+import { useKV } from "@/hooks/use-kv";
 
 interface AnalyticsEvent {
-  id: string
-  type: 'pageview' | 'action' | 'error'
-  timestamp: number
+  id: string;
+  type: "pageview" | "action" | "error";
+  timestamp: number;
   data: {
-    path?: string
-    action?: string
-    category?: string
-    label?: string
-    value?: number
-    error?: string
-    userAgent?: string
+    path?: string;
+    action?: string;
+    category?: string;
+    label?: string;
+    value?: number;
+    error?: string;
+    userAgent?: string;
     viewport?: {
-      width: number
-      height: number
-    }
-  }
+      width: number;
+      height: number;
+    };
+  };
 }
 
 export function useAnalytics() {
-  const [events, setEvents] = useKV<AnalyticsEvent[]>('analytics-events', [])
+  const [events, setEvents] = useKV<AnalyticsEvent[]>("analytics-events", []);
 
   const trackPageView = (path: string) => {
     const event: AnalyticsEvent = {
       id: crypto.randomUUID(),
-      type: 'pageview',
+      type: "pageview",
       timestamp: Date.now(),
       data: {
         path,
@@ -35,19 +35,19 @@ export function useAnalytics() {
           height: window.innerHeight,
         },
       },
-    }
+    };
 
     setEvents((currentEvents) => {
-      const eventsList = currentEvents || []
-      const newEvents = [...eventsList, event]
-      return newEvents.slice(-1000)
-    })
-  }
+      const eventsList = currentEvents || [];
+      const newEvents = [...eventsList, event];
+      return newEvents.slice(-1000);
+    });
+  };
 
   const trackAction = (action: string, category?: string, label?: string, value?: number) => {
     const event: AnalyticsEvent = {
       id: crypto.randomUUID(),
-      type: 'action',
+      type: "action",
       timestamp: Date.now(),
       data: {
         action,
@@ -60,19 +60,19 @@ export function useAnalytics() {
           height: window.innerHeight,
         },
       },
-    }
+    };
 
     setEvents((currentEvents) => {
-      const eventsList = currentEvents || []
-      const newEvents = [...eventsList, event]
-      return newEvents.slice(-1000)
-    })
-  }
+      const eventsList = currentEvents || [];
+      const newEvents = [...eventsList, event];
+      return newEvents.slice(-1000);
+    });
+  };
 
   const trackError = (error: string, path?: string) => {
     const event: AnalyticsEvent = {
       id: crypto.randomUUID(),
-      type: 'error',
+      type: "error",
       timestamp: Date.now(),
       data: {
         error,
@@ -83,48 +83,54 @@ export function useAnalytics() {
           height: window.innerHeight,
         },
       },
-    }
+    };
 
     setEvents((currentEvents) => {
-      const eventsList = currentEvents || []
-      const newEvents = [...eventsList, event]
-      return newEvents.slice(-1000)
-    })
-  }
+      const eventsList = currentEvents || [];
+      const newEvents = [...eventsList, event];
+      return newEvents.slice(-1000);
+    });
+  };
 
   const clearEvents = () => {
-    setEvents(() => [])
-  }
+    setEvents(() => []);
+  };
 
   const getAnalytics = () => {
-    const eventsList = events || []
-    const now = Date.now()
-    const last24h = eventsList.filter(e => now - e.timestamp < 24 * 60 * 60 * 1000)
-    const last7d = eventsList.filter(e => now - e.timestamp < 7 * 24 * 60 * 60 * 1000)
+    const eventsList = events || [];
+    const now = Date.now();
+    const last24h = eventsList.filter((e) => now - e.timestamp < 24 * 60 * 60 * 1000);
+    const last7d = eventsList.filter((e) => now - e.timestamp < 7 * 24 * 60 * 60 * 1000);
 
-    const pageViews = last24h.filter(e => e.type === 'pageview')
-    const actions = last24h.filter(e => e.type === 'action')
-    const errors = last24h.filter(e => e.type === 'error')
+    const pageViews = last24h.filter((e) => e.type === "pageview");
+    const actions = last24h.filter((e) => e.type === "action");
+    const errors = last24h.filter((e) => e.type === "error");
 
     const popularPages = Object.entries(
-      pageViews.reduce((acc, e) => {
-        const path = e.data.path || 'unknown'
-        acc[path] = (acc[path] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      pageViews.reduce(
+        (acc, e) => {
+          const path = e.data.path || "unknown";
+          acc[path] = (acc[path] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      )
     )
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 5);
 
     const topActions = Object.entries(
-      actions.reduce((acc, e) => {
-        const action = e.data.action || 'unknown'
-        acc[action] = (acc[action] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      actions.reduce(
+        (acc, e) => {
+          const action = e.data.action || "unknown";
+          acc[action] = (acc[action] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      )
     )
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 5);
 
     return {
       last24h: {
@@ -137,13 +143,13 @@ export function useAnalytics() {
       },
       last7d: {
         total: last7d.length,
-        pageViews: last7d.filter(e => e.type === 'pageview').length,
-        actions: last7d.filter(e => e.type === 'action').length,
-        errors: last7d.filter(e => e.type === 'error').length,
+        pageViews: last7d.filter((e) => e.type === "pageview").length,
+        actions: last7d.filter((e) => e.type === "action").length,
+        errors: last7d.filter((e) => e.type === "error").length,
       },
       allEvents: eventsList,
-    }
-  }
+    };
+  };
 
   return {
     trackPageView,
@@ -152,5 +158,5 @@ export function useAnalytics() {
     clearEvents,
     getAnalytics,
     events: events || [],
-  }
+  };
 }
