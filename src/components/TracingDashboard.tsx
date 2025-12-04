@@ -1,4 +1,4 @@
-import { Search, Inbox, Bot, Loader2, DollarSign, TrendingUp, ChevronRight } from "lucide-react";
+import { Bot, Brain, CheckCircle, Clock, XCircle } from "lucide-react";
 /**
  * Tracing Dashboard Component
  *
@@ -12,17 +12,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAgentMetrics, getLLMMetrics } from "@/lib/agent-tracing";
 import { tracingService, type Span } from "@/lib/tracing";
-import {
-  ArrowRight,
-  ArrowClockwise,
-  Brain,
-  ChartLine,
-  CheckCircle,
-  Clock,
-  Pulse,
-  Robot,
-  Trash,
-  XCircle,
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -108,7 +97,7 @@ export default function TracingDashboard({
       case "client":
         return <ArrowRight className="h-4 w-4" />;
       case "server":
-        return <Pulse className="h-4 w-4" />;
+        return <Zap className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -193,7 +182,7 @@ export default function TracingDashboard({
           Atualizar
         </Button>
         <Button variant="outline" size="sm" onClick={handleClearTraces}>
-          <Trash className="h-4 w-4 mr-2" />
+          <Trash2 className="h-4 w-4 mr-2" />
           Limpar Traces
         </Button>
       </div>
@@ -201,7 +190,7 @@ export default function TracingDashboard({
       <Tabs defaultValue="traces">
         <TabsList>
           <TabsTrigger value="traces">
-            <Pulse className="h-4 w-4 mr-2" />
+            <Zap className="h-4 w-4 mr-2" />
             Traces
           </TabsTrigger>
           <TabsTrigger value="agents">
@@ -489,7 +478,7 @@ export default function TracingDashboard({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <ChartLine className="h-5 w-5" />
+                  <LineChart className="h-5 w-5" />
                   Configuração de Tracing
                 </CardTitle>
               </CardHeader>
