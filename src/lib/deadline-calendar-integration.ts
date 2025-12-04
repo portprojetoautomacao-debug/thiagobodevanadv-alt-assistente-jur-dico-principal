@@ -55,6 +55,58 @@ function normalizePriorityForCalendar(
 }
 
 /**
+ * Valida componentes numéricos de uma data no formato DD/MM/YYYY
+ */
+function validateDateComponents(day: number, month: number, year: number): boolean {
+  return (
+    !Number.isNaN(day) &&
+    !Number.isNaN(month) &&
+    !Number.isNaN(year) &&
+    day >= 1 &&
+    day <= 31 &&
+    month >= 1 &&
+    month <= 12 &&
+    year >= 2000
+  );
+}
+
+/**
+ * Parseia data no formato brasileiro DD/MM/YYYY para Date
+ * Retorna null se formato inválido
+ */
+function parseBrazilianDate(dateStr: string): Date | null {
+  const parts = dateStr.split("/").map((p) => p.trim());
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [day, month, year] = parts;
+  const dayNum = Number.parseInt(day, 10);
+  const monthNum = Number.parseInt(month, 10);
+  const yearNum = Number.parseInt(year, 10);
+
+  if (!validateDateComponents(dayNum, monthNum, yearNum)) {
+    return null;
+  }
+
+  // Criar data em UTC para evitar problemas de timezone
+  return new Date(Date.UTC(yearNum, monthNum - 1, dayNum, 12, 0, 0));
+}
+
+/**
+ * Converte string de data para objeto Date
+ * Suporta formato brasileiro (DD/MM/YYYY) e ISO
+ */
+function parseDeadlineDate(endDate: string): Date | null {
+  if (endDate.includes("/")) {
+    return parseBrazilianDate(endDate);
+  }
+
+  const date = new Date(endDate);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
@@ -66,45 +118,8 @@ export function createLocalAppointmentFromAnalysis(
     return null;
   }
 
-  // Converter data do formato brasileiro DD/MM/YYYY para ISO
-  let deadlineDate: Date;
-
-  if (typeof analysis.deadline.endDate === "string" && analysis.deadline.endDate.includes("/")) {
-    // Formato brasileiro DD/MM/YYYY
-    const parts = analysis.deadline.endDate.split("/").map((p) => p.trim());
-    if (parts.length === 3) {
-      const [day, month, year] = parts;
-      // Validar partes numéricas
-      const dayNum = Number.parseInt(day, 10);
-      const monthNum = Number.parseInt(month, 10);
-      const yearNum = Number.parseInt(year, 10);
-
-      if (
-        !Number.isNaN(dayNum) &&
-        !Number.isNaN(monthNum) &&
-        !Number.isNaN(yearNum) &&
-        dayNum >= 1 &&
-        dayNum <= 31 &&
-        monthNum >= 1 &&
-        monthNum <= 12 &&
-        yearNum >= 2000
-      ) {
-        // Criar data em UTC para evitar problemas de timezone
-        deadlineDate = new Date(Date.UTC(yearNum, monthNum - 1, dayNum, 12, 0, 0));
-      } else {
-        // Data com componentes inválidos - ignorar silenciosamente
-        return null;
-      }
-    } else {
-      // Formato não reconhecido - ignorar silenciosamente
-      return null;
-    }
-  } else {
-    deadlineDate = new Date(analysis.deadline.endDate);
-  }
-
-  // Validar se a data é válida antes de usar toISOString()
-  if (Number.isNaN(deadlineDate.getTime())) {
+  const deadlineDate = parseDeadlineDate(analysis.deadline.endDate);
+  if (!deadlineDate) {
     console.warn("[DeadlineIntegration] Invalid deadline date:", analysis.deadline.endDate);
     return null;
   }

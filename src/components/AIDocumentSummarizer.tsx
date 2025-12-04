@@ -97,11 +97,15 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
       return;
     }
 
+    const separator = "=".repeat(50);
+    const formattedPoints = keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n");
+    const timestamp = new Date().toLocaleString("pt-BR");
+
     const fullText =
-      `RESUMO DO DOCUMENTO\n${"=".repeat(50)}\n\n` +
+      `RESUMO DO DOCUMENTO\n${separator}\n\n` +
       `${summary}\n\n` +
-      `PONTOS-CHAVE:\n${keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n")}\n\n` +
-      `Gerado em: ${new Date().toLocaleString("pt-BR")}`;
+      `PONTOS-CHAVE:\n${formattedPoints}\n\n` +
+      `Gerado em: ${timestamp}`;
 
     const blob = new Blob([fullText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
