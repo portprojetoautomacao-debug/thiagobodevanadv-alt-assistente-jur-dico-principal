@@ -1265,11 +1265,10 @@ async function sendEmailNotification(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">${notification.title}</h2>
           <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
-            /\n/g,
-          <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
             "\n",
             "<br>"
-          )}</p>le="color: #999; font-size: 12px;">
+          )}</p>
+          <p style="color: #999; font-size: 12px;">
             Enviado automaticamente pelo Assistente Jurídico PJe<br>
             ${new Date().toLocaleString("pt-BR", {
               timeZone: "America/Sao_Paulo",
