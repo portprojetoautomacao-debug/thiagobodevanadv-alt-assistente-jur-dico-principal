@@ -1,13 +1,15 @@
-import { useEffect, useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useKV } from "./use-kv";
 
 /**
- * Hook para backup local dos dados dos agentes IA
- * Usa localStorage do navegador com backup redundante
+ * Hook para backup dos dados dos agentes IA
  *
- * NOTA: Para backup em servidor (cross-device), configure:
- * - Vercel KV (requer plano Pro)
- * - Ou Supabase (free tier disponível)
+ * Arquitetura de Storage:
+ * - PRIMÁRIO: Upstash KV (servidor) - 256MB+, persistente, cross-device
+ * - CACHE: localStorage (browser) - 5MB limite, apenas cache local
+ *
+ * O localStorage é usado apenas como cache rápido.
+ * Todos os backups são salvos primariamente no servidor (Upstash KV).
  */
 
 interface BackupOptions {
@@ -16,7 +18,23 @@ interface BackupOptions {
   enableAutoBackup?: boolean;
 }
 
+// Constantes de configuração
 const BACKUP_KEY_PREFIX = "agent-backup";
+const MAX_HISTORY_SIZE = 10; // Máximo de backups no histórico
+const MAX_TASKS_IN_BACKUP = 100; // Limitar tarefas para economizar espaço
+const LOCAL_CACHE_KEY = "agent-backup-cache"; // Cache local simplificado
+
+interface BackupData {
+  timestamp: number;
+  userId: string;
+  data: {
+    agents: unknown[];
+    monitoredLawyers: unknown[];
+    taskQueue: unknown[];
+    completedTasks: unknown[];
+    lastDjenCheck: unknown;
+  };
+}
 
 export function useAgentBackup(options: BackupOptions) {
   const { userId, autoBackupInterval = 5, enableAutoBackup = true } = options;
@@ -27,132 +45,288 @@ export function useAgentBackup(options: BackupOptions) {
   const [completedTasks] = useKV("completed-agent-tasks", []);
   const [lastDjenCheck] = useKV("last-djen-check", null);
 
-  // Use state instead of ref for lastBackup to avoid accessing ref during render
   const [lastBackup, setLastBackup] = useState<number>(0);
+  const [storageType, setStorageType] = useState<"server" | "local">("server");
+  const backupInProgress = useRef(false);
 
-  // Função para criar backup local
-  const createBackup = useCallback(async () => {
+  /**
+   * Salva backup no servidor (Upstash KV) - Storage primário
+   */
+  const saveToServer = useCallback(
+    async (backupData: BackupData): Promise<boolean> => {
+      try {
+        const serverKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
+
+        const response = await fetch("/api/kv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            key: serverKey,
+            value: backupData,
+            // TTL de 30 dias para backups
+            ex: 60 * 60 * 24 * 30,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+
+        // Salvar no histórico do servidor
+        const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
+        const historyResponse = await fetch(`/api/kv?key=${encodeURIComponent(historyKey)}`);
+        let history: BackupData[] = [];
+
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json();
+          history = historyData.value || [];
+        }
+
+        // Adicionar ao início e limitar tamanho
+        history.unshift(backupData);
+        if (history.length > MAX_HISTORY_SIZE) {
+          history = history.slice(0, MAX_HISTORY_SIZE);
+        }
+
+        await fetch("/api/kv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            key: historyKey,
+            value: history,
+            ex: 60 * 60 * 24 * 30,
+          }),
+        });
+
+        console.log("✅ Backup salvo no servidor (Upstash KV)");
+        return true;
+      } catch (error) {
+        console.warn("⚠️ Falha ao salvar no servidor:", error);
+        return false;
+      }
+    },
+    [userId]
+  );
+
+  /**
+   * Carrega backup do servidor (Upstash KV)
+   */
+  const loadFromServer = useCallback(async (): Promise<BackupData | null> => {
     try {
-      const backupData = {
+      const serverKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
+      const response = await fetch(`/api/kv?key=${encodeURIComponent(serverKey)}`);
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      return data.value || null;
+    } catch (error) {
+      console.warn("⚠️ Falha ao carregar do servidor:", error);
+      return null;
+    }
+  }, [userId]);
+
+  /**
+   * Salva cache local (apenas resumo, para performance)
+   */
+  const saveToLocalCache = useCallback((backupData: BackupData) => {
+    try {
+      // Salvar apenas metadados no localStorage (sem dados completos)
+      const cacheData = {
+        timestamp: backupData.timestamp,
+        userId: backupData.userId,
+        agentCount: backupData.data.agents?.length || 0,
+        taskCount: backupData.data.taskQueue?.length || 0,
+        hasServerBackup: true,
+      };
+
+      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cacheData));
+    } catch {
+      // Ignorar erros de localStorage - não é crítico
+      console.log("ℹ️ Cache local não disponível");
+    }
+  }, []);
+
+  /**
+   * Limpa dados antigos do localStorage para evitar QuotaExceededError
+   */
+  const cleanLocalStorage = useCallback(() => {
+    try {
+      // Remover chaves antigas do sistema de backup anterior
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(BACKUP_KEY_PREFIX)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((key) => {
+        if (key !== LOCAL_CACHE_KEY) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      console.log(`🧹 Limpeza: ${keysToRemove.length} chaves antigas removidas`);
+    } catch {
+      // Ignorar erros
+    }
+  }, []);
+
+  /**
+   * Cria backup - Salva no servidor (primário) e cache local (secundário)
+   */
+  const createBackup = useCallback(async () => {
+    // Evitar backups simultâneos
+    if (backupInProgress.current) {
+      console.log("ℹ️ Backup já em andamento, ignorando...");
+      return { success: false, reason: "backup_in_progress" };
+    }
+
+    backupInProgress.current = true;
+
+    try {
+      const backupData: BackupData = {
         timestamp: Date.now(),
         userId,
         data: {
           agents,
           monitoredLawyers,
-          taskQueue,
-          completedTasks,
+          // Limitar tarefas para economizar espaço
+          taskQueue: Array.isArray(taskQueue) ? taskQueue.slice(0, MAX_TASKS_IN_BACKUP) : [],
+          completedTasks: Array.isArray(completedTasks)
+            ? completedTasks.slice(-MAX_TASKS_IN_BACKUP)
+            : [],
           lastDjenCheck,
         },
       };
 
-      // Salvar no localStorage como backup redundante
-      const backupKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
-      localStorage.setItem(backupKey, JSON.stringify(backupData));
+      // 1. Tentar salvar no servidor (primário)
+      const serverSuccess = await saveToServer(backupData);
 
-      // Manter histórico dos últimos 7 backups
-      const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
-      const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
-      history.unshift(backupData);
+      if (serverSuccess) {
+        setStorageType("server");
+        // 2. Salvar cache local (apenas metadados)
+        saveToLocalCache(backupData);
+        // 3. Limpar dados antigos do localStorage
+        cleanLocalStorage();
+      } else {
+        // Fallback: tentar localStorage se servidor falhar
+        console.warn("⚠️ Servidor indisponível, backup local será tentado...");
+        setStorageType("local");
 
-      if (history.length > 7) {
-        history.splice(7);
-      }
-
-      localStorage.setItem(historyKey, JSON.stringify(history));
-
-      // Salvar timestamp do último backup
-      localStorage.setItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`, String(Date.now()));
-
-      setLastBackup(backupData.timestamp);
-
-      console.log("✅ Backup local criado:", new Date(backupData.timestamp).toLocaleString());
-
-      // Validar com servidor (opcional - não bloqueia se falhar)
-      try {
-        await fetch("/api/backup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, data: backupData.data }),
-        });
-      } catch {
-        console.log("ℹ️ Server validation skipped (offline or unavailable)");
-      }
-
-      return { success: true, timestamp: backupData.timestamp };
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "QuotaExceededError") {
-        console.warn("⚠️ Quota excedida, limpando histórico antigo...");
-
-        // Remover histórico para liberar espaço
-        const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
-        localStorage.removeItem(historyKey);
-
-        // Tentar salvar backup mínimo (sem histórico)
         try {
-          const minimalBackupKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
+          // Salvar dados mínimos no localStorage
           const minimalData = {
-            timestamp: Date.now(),
+            timestamp: backupData.timestamp,
             userId,
             data: {
-              agents: agents.slice(0, 15), // Apenas agentes ativos
-              taskQueue: taskQueue.slice(0, 50), // Últimas 50 tarefas
-              // Não incluir histórico completo
+              agents: agents.slice(0, 15),
+              taskQueue: Array.isArray(taskQueue) ? taskQueue.slice(0, 20) : [],
             },
           };
-          localStorage.setItem(minimalBackupKey, JSON.stringify(minimalData));
-          console.log("✅ Backup mínimo criado após limpeza");
-          return { success: true, timestamp: minimalData.timestamp };
-        } catch (retryError) {
-          console.error("❌ Não foi possível criar backup mesmo após limpeza");
-          throw retryError;
+          localStorage.setItem(`${BACKUP_KEY_PREFIX}:fallback`, JSON.stringify(minimalData));
+        } catch (localError) {
+          if (localError instanceof DOMException && localError.name === "QuotaExceededError") {
+            cleanLocalStorage();
+            console.warn("⚠️ localStorage cheio, limpeza realizada");
+          }
         }
       }
-      console.error("❌ Erro ao criar backup:", error);
-      throw error;
-    }
-  }, [userId, agents, monitoredLawyers, taskQueue, completedTasks, lastDjenCheck]);
 
-  // Função para restaurar backup local
+      setLastBackup(backupData.timestamp);
+      console.log("✅ Backup criado:", new Date(backupData.timestamp).toLocaleString());
+
+      return { success: true, timestamp: backupData.timestamp, storage: storageType };
+    } catch (error) {
+      console.error("❌ Erro ao criar backup:", error);
+      return { success: false, error };
+    } finally {
+      backupInProgress.current = false;
+    }
+  }, [
+    userId,
+    agents,
+    monitoredLawyers,
+    taskQueue,
+    completedTasks,
+    lastDjenCheck,
+    saveToServer,
+    saveToLocalCache,
+    cleanLocalStorage,
+    storageType,
+  ]);
+
+  /**
+   * Restaura backup do servidor ou cache local
+   */
   const restoreBackup = useCallback(async () => {
     try {
-      const backupKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
-      const backupStr = localStorage.getItem(backupKey);
+      // 1. Tentar restaurar do servidor primeiro
+      const serverBackup = await loadFromServer();
 
-      if (!backupStr) {
-        console.log("ℹ️ Nenhum backup local encontrado");
-        return null;
+      if (serverBackup) {
+        console.log(
+          "✅ Backup restaurado do servidor:",
+          new Date(serverBackup.timestamp).toLocaleString()
+        );
+        return serverBackup;
       }
 
-      const backup = JSON.parse(backupStr);
-      console.log("✅ Backup local restaurado:", new Date(backup.timestamp).toLocaleString());
+      // 2. Fallback: tentar localStorage
+      const fallbackStr = localStorage.getItem(`${BACKUP_KEY_PREFIX}:fallback`);
+      if (fallbackStr) {
+        const fallback = JSON.parse(fallbackStr);
+        console.log(
+          "ℹ️ Backup local restaurado (fallback):",
+          new Date(fallback.timestamp).toLocaleString()
+        );
+        return fallback;
+      }
 
-      return backup;
+      console.log("ℹ️ Nenhum backup encontrado");
+      return null;
     } catch (error) {
       console.error("❌ Erro ao restaurar backup:", error);
       throw error;
     }
-  }, [userId]);
+  }, [loadFromServer]);
 
-  // Função para obter histórico local
+  /**
+   * Obtém histórico de backups do servidor
+   */
   const getBackupHistory = useCallback(async () => {
     try {
       const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
-      const historyStr = localStorage.getItem(historyKey);
-      const history = historyStr ? JSON.parse(historyStr) : [];
+      const response = await fetch(`/api/kv?key=${encodeURIComponent(historyKey)}`);
 
-      const lastBackupStr = localStorage.getItem(`${BACKUP_KEY_PREFIX}:${userId}:lastBackup`);
-      const lastBackup = lastBackupStr ? Number.parseInt(lastBackupStr, 10) : null;
+      let history: BackupData[] = [];
+      if (response.ok) {
+        const data = await response.json();
+        history = data.value || [];
+      }
 
       return {
         success: true,
-        lastBackup,
+        lastBackup: history[0]?.timestamp || null,
         backupCount: history.length,
         history,
-        storage: "local",
+        storage: "server",
+        maxCapacity: "256MB+ (Upstash KV)",
       };
     } catch (error) {
       console.error("❌ Erro ao buscar histórico:", error);
-      throw error;
+      return {
+        success: false,
+        lastBackup: null,
+        backupCount: 0,
+        history: [],
+        storage: "server",
+        error,
+      };
     }
   }, [userId]);
 
@@ -163,11 +337,13 @@ export function useAgentBackup(options: BackupOptions) {
     const intervalMs = autoBackupInterval * 60 * 1000;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    // Backup imediato se houver dados e não houver backup recente (via timeout)
+    // Limpar dados antigos do localStorage na inicialização
+    cleanLocalStorage();
+
+    // Backup inicial após curto delay (evita múltiplos backups simultâneos)
     const now = Date.now();
     if (agents.length > 0 && now - lastBackup > intervalMs) {
-      // Schedule to avoid synchronous setState in effect
-      timeoutId = globalThis.setTimeout(createBackup, 0);
+      timeoutId = globalThis.setTimeout(createBackup, 5000);
     }
 
     // Configurar backup periódico
@@ -183,16 +359,21 @@ export function useAgentBackup(options: BackupOptions) {
       }
       clearInterval(timer);
     };
-  }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup, lastBackup]);
-
-  // Não tenta restaurar automaticamente - dados já estão no Spark KV
-  // Restauração manual disponível via botão
+  }, [
+    enableAutoBackup,
+    autoBackupInterval,
+    userId,
+    agents,
+    createBackup,
+    lastBackup,
+    cleanLocalStorage,
+  ]);
 
   return {
     createBackup,
     restoreBackup,
     getBackupHistory,
     lastBackup,
-    storageType: "local" as const,
+    storageType,
   };
 }
