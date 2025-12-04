@@ -41,13 +41,13 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
 
   try {
     return JSON.parse(cleaned) as Record<string, unknown>;
-  } catch (firstError) {
+  } catch {
     // Tentar extrair o primeiro bloco JSON da resposta
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      } catch (secondError) {
+      } catch {
         // Tentar encontrar JSON truncado e completá-lo
         const truncatedMatch = cleaned.match(/\{[\s\S]*/);
         if (truncatedMatch) {
