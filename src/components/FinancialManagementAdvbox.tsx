@@ -1,5 +1,4 @@
-import {TrendingDown, TrendingUp} from "lucide-react";
-import {Paperclip, Plus, X} from "@phosphor-icons/react";
+import { FileText, TrendingDown, TrendingUp, Paperclip, Plus, X } from "lucide-react";
 import { useState, useMemo, useRef } from "react";
 import { useKV } from "@/hooks/use-kv";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -296,7 +295,7 @@ export default function FinancialManagementAdvbox() {
                         className="flex items-center justify-between p-2 bg-muted rounded-lg border border-border"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <File size={16} className="text-primary shrink-0" />
+                          <FileText size={16} className="text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate">{file.name}</p>
                             <p className="text-xs text-muted-foreground">
