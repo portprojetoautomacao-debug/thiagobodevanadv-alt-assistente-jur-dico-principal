@@ -159,7 +159,7 @@ export function useAgentBackup(options: BackupOptions) {
 
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith(BACKUP_KEY_PREFIX)) {
+        if (key && key.startsWith(BACKUP_KEY_PREFIX)) {
           keysToRemove.push(key);
         }
       }

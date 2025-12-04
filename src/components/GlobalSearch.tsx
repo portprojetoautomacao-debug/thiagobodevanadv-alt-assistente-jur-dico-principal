@@ -390,9 +390,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{result.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {result.subtitle}
-                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
                       </div>
                       <Badge variant="outline" className="text-xs capitalize">
                         {result.type}
