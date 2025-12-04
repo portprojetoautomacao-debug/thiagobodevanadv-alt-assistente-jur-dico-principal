@@ -7,8 +7,20 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAutoMinuta } from "@/hooks/use-auto-minuta";
 import { useKV } from "@/hooks/use-kv";
 import type { User, ViewType } from "@/types";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { lazy, Suspense, useEffect, useState } from "react";
+
+// QueryClient global (criado fora do componente para evitar recriação)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // ⚡ COMPONENTES PRINCIPAIS - Carregados diretamente (sem lazy loading)
 // Sistema 100% automático requer componentes prontos imediatamente
@@ -132,31 +144,34 @@ function App() {
 
   if (!user) {
     return (
-      <div
-        className="min-h-screen bg-background flex items-center justify-center p-4 notranslate"
-        translate="no"
-      >
-        <div className="max-w-md w-full space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Assistente Jurídico PJe</h1>
-            <p className="text-muted-foreground">Sistema inteligente de gestão jurídica com IA</p>
-          </div>
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="min-h-screen bg-background flex items-center justify-center p-4 notranslate"
+          translate="no"
+        >
+          <div className="max-w-md w-full space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-foreground mb-2">Assistente Jurídico PJe</h1>
+              <p className="text-muted-foreground">Sistema inteligente de gestão jurídica com IA</p>
+            </div>
 
-          <div className="space-y-4">
-            {/* Login simples local (adm/adm123) */}
-            <SimpleAuth onSuccess={handleSimpleAuthSuccess} />
+            <div className="space-y-4">
+              {/* Login simples local (adm/adm123) */}
+              <SimpleAuth onSuccess={handleSimpleAuthSuccess} />
 
-            {/* GoogleAuth removido definitivamente */}
+              {/* GoogleAuth removido definitivamente */}
+            </div>
           </div>
+          <Toaster />
+          <SpeedInsights />
         </div>
-        <Toaster />
-        <SpeedInsights />
-      </div>
+      </QueryClientProvider>
     );
   }
 
   return (
-    <div className="flex h-screen bg-background notranslate" translate="no">
+    <QueryClientProvider client={queryClient}>
+      <div className="flex h-screen bg-background notranslate" translate="no">
       <Sidebar
         currentView={currentView}
         onViewChange={setCurrentView}
@@ -190,6 +205,7 @@ function App() {
       <Toaster />
       <SpeedInsights />
     </div>
+    </QueryClientProvider>
   );
 }
 
