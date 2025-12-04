@@ -682,22 +682,30 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
         </div>
 
         <div className="flex gap-3 flex-wrap">
-          {!isGoogleConfigured ? (
-            <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
-              <Warning className="mr-2 h-4 w-4" />
-              Google não configurado
-            </Badge>
-          ) : !isAuthenticated ? (
-            <Button onClick={handleAuthGoogle} variant="outline">
-              <GoogleLogo className="mr-2" weight="bold" />
-              Conectar Google Docs
-            </Button>
-          ) : (
-            <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
-              <GoogleLogo className="mr-2" weight="bold" />
-              Google Conectado
-            </Badge>
-          )}
+          {(() => {
+            if (!isGoogleConfigured) {
+              return (
+                <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
+                  <Warning className="mr-2 h-4 w-4" />
+                  Google não configurado
+                </Badge>
+              );
+            }
+            if (!isAuthenticated) {
+              return (
+                <Button onClick={handleAuthGoogle} variant="outline">
+                  <GoogleLogo className="mr-2" weight="bold" />
+                  Conectar Google Docs
+                </Button>
+              );
+            }
+            return (
+              <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
+                <GoogleLogo className="mr-2" weight="bold" />
+                Google Conectado
+              </Badge>
+            );
+          })()}
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

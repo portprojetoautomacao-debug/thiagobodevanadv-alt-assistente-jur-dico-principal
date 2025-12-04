@@ -466,8 +466,8 @@ export default function ProcessCRMAdvbox() {
                             selectedCard.status === "green"
                               ? "bg-green-500"
                               : selectedCard.status === "yellow"
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
                           }`}
                         ></div>
                         <span className="capitalize">{selectedCard.status}</span>

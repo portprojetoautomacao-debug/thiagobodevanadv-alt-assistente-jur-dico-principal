@@ -3,12 +3,12 @@
  * Shows upcoming deadlines with urgency indicators
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { calcularDiasRestantes, isUrgente, formatarData } from "@/lib/prazos";
-import { CalendarCheck, ArrowRight } from "@phosphor-icons/react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import type { Prazo, ViewType } from "@/types";
+import { ArrowRight, CalendarCheck } from "@phosphor-icons/react";
 
 interface DashboardDeadlinesProps {
   prazosProximos: (Prazo & { processoTitulo: string })[];
@@ -55,11 +55,11 @@ export function DashboardDeadlines({ prazosProximos, onNavigate }: DashboardDead
                     </p>
                   </div>
                   <Badge variant={urgente ? "destructive" : "secondary"} className="ml-2">
-                    {diasRestantes === 0
-                      ? "Hoje"
-                      : diasRestantes === 1
-                        ? "1 dia"
-                        : `${diasRestantes} dias`}
+                    {(() => {
+                      if (diasRestantes === 0) return "Hoje";
+                      if (diasRestantes === 1) return "1 dia";
+                      return `${diasRestantes} dias`;
+                    })()}
                   </Badge>
                 </div>
               );
