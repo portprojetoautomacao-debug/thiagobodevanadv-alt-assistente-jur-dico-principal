@@ -1003,7 +1003,7 @@ export function TiptapEditor({
       {/* Área do editor */}
       <div className="p-4 bg-background">
         <div
-          className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm mx-auto"
+          className="bg-card rounded-lg border shadow-sm mx-auto"
           style={{ maxWidth: "800px", minHeight: "300px" }}
         >
           <EditorContent
