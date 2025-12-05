@@ -28,7 +28,7 @@ export interface Document {
 }
 
 interface DocumentUploaderProps {
-  processoId: string;
+  readonly processoId: string;
 }
 
 export default function DocumentUploader({ processoId }: DocumentUploaderProps) {
@@ -44,8 +44,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
     setUploading(true);
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const uploadedFile = files[i];
+      for (const uploadedFile of files) {
 
         // Validate file size (max 50MB)
         if (uploadedFile.size > 50 * 1024 * 1024) {
