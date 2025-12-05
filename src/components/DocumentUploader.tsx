@@ -45,11 +45,11 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
 
     try {
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const uploadedFile = files[i];
 
         // Validate file size (max 50MB)
-        if (file.size > 50 * 1024 * 1024) {
-          toast.error(`Arquivo ${file.name} é muito grande. Máximo: 50MB`);
+        if (uploadedFile.size > 50 * 1024 * 1024) {
+          toast.error(`Arquivo ${uploadedFile.name} é muito grande. Máximo: 50MB`);
           continue;
         }
 
@@ -63,8 +63,8 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
           "image/png",
         ];
 
-        if (!allowedTypes.includes(file.type)) {
-          toast.error(`Tipo de arquivo não suportado: ${file.name}`);
+        if (!allowedTypes.includes(uploadedFile.type)) {
+          toast.error(`Tipo de arquivo não suportado: ${uploadedFile.name}`);
           continue;
         }
 
@@ -73,21 +73,21 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = reject;
-          reader.readAsDataURL(file);
+          reader.readAsDataURL(uploadedFile);
         });
 
         // Add document
         const newDoc: Document = {
           id: crypto.randomUUID(),
-          nome: file.name,
-          tipo: file.type,
-          tamanho: file.size,
+          nome: uploadedFile.name,
+          tipo: uploadedFile.type,
+          tamanho: uploadedFile.size,
           data: new Date().toISOString(),
           conteudo: base64,
         };
 
         setDocumentos((docs) => [...(docs || []), newDoc]);
-        toast.success(`${file.name} enviado com sucesso!`);
+        toast.success(`${uploadedFile.name} enviado com sucesso!`);
       }
     } catch (error) {
       console.error("Erro ao fazer upload:", error);

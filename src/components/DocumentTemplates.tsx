@@ -73,11 +73,11 @@ export function DocumentTemplates() {
     input.type = "file";
     input.accept = ".pdf,.docx";
     input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
+      const uploadedFile = (e.target as HTMLInputElement).files?.[0];
+      if (uploadedFile) {
         toast({
           title: "Upload bem-sucedido",
-          description: `${file.name} adicionado aos templates via Git LFS`,
+          description: `${uploadedFile.name} adicionado aos templates via Git LFS`,
         });
       }
     };

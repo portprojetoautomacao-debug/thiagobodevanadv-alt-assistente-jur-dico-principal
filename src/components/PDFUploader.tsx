@@ -44,20 +44,20 @@ export default function PDFUploader() {
   const { clientes, createOrUpdateFromDocumento } = useClientesManager();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const pdfFile = e.target.files?.[0];
+    if (!pdfFile) return;
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (pdfFile.size > 10 * 1024 * 1024) {
       toast.error("Arquivo muito grande. Máximo: 10MB");
       return;
     }
 
-    if (file.type !== "application/pdf") {
+    if (pdfFile.type !== "application/pdf") {
       toast.error("Apenas arquivos PDF são permitidos");
       return;
     }
 
-    setSelectedFile(file);
+    setSelectedFile(pdfFile);
     setExtractedData(null);
     setExtractionStatus("idle");
   };
