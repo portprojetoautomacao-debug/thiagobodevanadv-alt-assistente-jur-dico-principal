@@ -282,12 +282,12 @@ export function initTrustedTypes(): void {
     });
 
     // Política para o React (innerHTML interno)
-    globalThis.trustedTypes!.createPolicy("react", {
+    globalThis.window.trustedTypes!.createPolicy("react", {
       createHTML: (input: string) => input, // React já sanitiza
     });
 
     // Política para GTM
-    globalThis.trustedTypes!.createPolicy("gtm", {
+    globalThis.window.trustedTypes!.createPolicy("gtm", {
       createScript: (input: string) => input,
       createScriptURL: (input: string) => {
         if (input.includes("googletagmanager.com") || input.includes("google-analytics.com")) {
@@ -298,7 +298,7 @@ export function initTrustedTypes(): void {
     });
 
     // Política para Sentry
-    globalThis.trustedTypes!.createPolicy("sentry", {
+    globalThis.window.trustedTypes!.createPolicy("sentry", {
       createScriptURL: (input: string) => {
         if (input.includes("sentry.io") || input.includes("browser.sentry-cdn.com")) {
           return input;
