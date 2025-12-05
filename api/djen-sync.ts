@@ -5,8 +5,10 @@
  * uma sincronização com a API do DJEN.
  *
  * POST /api/djen-sync - Executa sincronização para advogados monitorados
+ * 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
  */
 
+import * as Sentry from "@sentry/node";
 import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
@@ -304,54 +306,82 @@ async function processLawyerPublications(
 
 // ===========================
 // Main sync logic
+// 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
 // ===========================
 async function executeSyncForLawyers(
   kv: Redis,
   enabledLawyers: MonitoredLawyer[]
 ): Promise<{ totalPublications: number; newPublications: number; errors: string[] }> {
-  const hoje = new Date();
-  const dataFim = formatDate(hoje);
-  const dataInicio = formatDate(new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000));
+  return Sentry.startSpan(
+    {
+      name: "invoke_agent Monitor DJEN",
+      op: "gen_ai.invoke_agent",
+      attributes: {
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "Monitor DJEN",
+        "gen_ai.system": "custom-llm", // Não usa LLM diretamente
+        "job.type": "background-sync",
+        "job.name": "djen-monitor",
+        "lawyers.count": enabledLawyers.length,
+        "server.side": true,
+        "vercel.function": "djen-sync",
+      },
+    },
+    async (span) => {
+      const hoje = new Date();
+      const dataFim = formatDate(hoje);
+      const dataInicio = formatDate(new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000));
 
-  let totalPublications = 0;
-  let newPublications = 0;
-  const errors: string[] = [];
+      let totalPublications = 0;
+      let newPublications = 0;
+      const errors: string[] = [];
 
-  const existingPubs = (await kv.get<StoredPublication[]>(KV_KEYS.PUBLICATIONS)) ?? [];
-  const existingHashes = new Set(
-    existingPubs.map((p) => p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso ?? ""}`)
-  );
-
-  for (const lawyer of enabledLawyers) {
-    try {
-      const result = await processLawyerPublications(
-        lawyer,
-        dataInicio,
-        dataFim,
-        existingPubs,
-        existingHashes
+      const existingPubs = (await kv.get<StoredPublication[]>(KV_KEYS.PUBLICATIONS)) ?? [];
+      const existingHashes = new Set(
+        existingPubs.map((p) => p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso ?? ""}`)
       );
-      totalPublications += result.total;
-      newPublications += result.newCount;
 
-      // Delay to avoid rate limit
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Erro desconhecido";
-      errors.push(`${lawyer.name}: ${errorMsg}`);
-      console.error(`[DJEN-Sync] Erro para ${lawyer.name}:`, error);
+      for (const lawyer of enabledLawyers) {
+        try {
+          const result = await processLawyerPublications(
+            lawyer,
+            dataInicio,
+            dataFim,
+            existingPubs,
+            existingHashes
+          );
+          totalPublications += result.total;
+          newPublications += result.newCount;
+
+          // Delay to avoid rate limit
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : "Erro desconhecido";
+          errors.push(`${lawyer.name}: ${errorMsg}`);
+          console.error(`[DJEN-Sync] Erro para ${lawyer.name}:`, error);
+        }
+      }
+
+      // Save publications (max 1000)
+      await kv.set(KV_KEYS.PUBLICATIONS, existingPubs.slice(0, 1000));
+
+      // Update timestamps
+      const now = new Date().toISOString();
+      await kv.set(KV_KEYS.LAST_SYNC, now);
+      await kv.set(KV_KEYS.LAST_CHECK, now);
+
+      // Atributos de conclusão para Sentry
+      span?.setAttribute("publications.total", totalPublications);
+      span?.setAttribute("publications.new", newPublications);
+      span?.setAttribute("errors.count", errors.length);
+      span?.setAttribute("sync.completed", true);
+      if (errors.length > 0) {
+        span?.setAttribute("sync.errors", JSON.stringify(errors.slice(0, 5))); // Max 5 erros
+      }
+
+      return { totalPublications, newPublications, errors };
     }
-  }
-
-  // Save publications (max 1000)
-  await kv.set(KV_KEYS.PUBLICATIONS, existingPubs.slice(0, 1000));
-
-  // Update timestamps
-  const now = new Date().toISOString();
-  await kv.set(KV_KEYS.LAST_SYNC, now);
-  await kv.set(KV_KEYS.LAST_CHECK, now);
-
-  return { totalPublications, newPublications, errors };
+  );
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
