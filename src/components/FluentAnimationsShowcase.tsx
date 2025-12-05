@@ -1,14 +1,14 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  FluentMotion,
   FluentFade,
-  FluentSlide,
-  FluentScale,
   FluentHover,
+  FluentMotion,
+  FluentScale,
+  FluentSlide,
   FluentStaggerItem,
 } from "@/components/FluentMotion";
-import { Sparkles, Wind, Zap, Atom } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Atom, Sparkles, Wind, Zap } from "lucide-react";
 
 export default function FluentAnimationsShowcase() {
   return (

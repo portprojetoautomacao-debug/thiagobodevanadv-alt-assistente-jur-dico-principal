@@ -174,7 +174,7 @@ export default function DJENConsulta() {
   return (
     <div className="h-full p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Newspaper size={32} className="text-primary"  />
+        <Newspaper size={32} className="text-primary" />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Consulta DJEN</h1>
           <p className="text-sm text-muted-foreground">
@@ -290,7 +290,7 @@ export default function DJENConsulta() {
 
           {!isLoading && resultados.length === 0 && erros.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-              <Newspaper size={48} className="text-muted-foreground"  />
+              <Newspaper size={48} className="text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 Nenhuma consulta realizada ainda.
                 <br />
