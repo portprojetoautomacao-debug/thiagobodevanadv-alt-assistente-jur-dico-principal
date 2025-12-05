@@ -35,7 +35,7 @@ interface MissingDocument {
 }
 
 interface DocumentCheckAgentProps {
-  processes: Process[];
+  readonly processes: Process[];
 }
 
 export default function DocumentCheckAgent({ processes }: DocumentCheckAgentProps) {

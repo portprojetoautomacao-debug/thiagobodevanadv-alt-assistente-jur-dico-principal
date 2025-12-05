@@ -11,12 +11,12 @@ import { BellRing, CheckCircle, ChevronDown, ChevronUp, Copy, Plus } from "lucid
 import { toast } from "sonner";
 
 interface PublicationItemProps {
-  pub: DJENPublication;
-  expanded: string | null;
-  onToggleExpand: (id: string | null) => void;
-  onRegister: (pub: DJENPublication) => void;
-  isAlreadyRegistered: boolean;
-  formatRelativeDate: (dateStr: string) => string;
+  readonly pub: DJENPublication;
+  readonly expanded: string | null;
+  readonly onToggleExpand: (id: string | null) => void;
+  readonly onRegister: (pub: DJENPublication) => void;
+  readonly isAlreadyRegistered: boolean;
+  readonly formatRelativeDate: (dateStr: string) => string;
 }
 
 const MATCH_BADGE_VARIANTS = {

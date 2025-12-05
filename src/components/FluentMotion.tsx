@@ -13,13 +13,13 @@ type FluentVariantKey = keyof typeof fluentVariants;
 type FluentTransitionKey = keyof typeof fluentTransitions;
 
 interface FluentMotionProps extends Omit<HTMLMotionProps<"div">, "transition"> {
-  children: ReactNode;
-  variant?: FluentVariantKey;
-  transition?: FluentTransitionKey;
-  delay?: number;
-  stagger?: boolean;
-  hover?: boolean;
-  tap?: boolean;
+  readonly children: ReactNode;
+  readonly variant?: FluentVariantKey;
+  readonly transition?: FluentTransitionKey;
+  readonly delay?: number;
+  readonly stagger?: boolean;
+  readonly hover?: boolean;
+  readonly tap?: boolean;
 }
 
 export function FluentMotion({
