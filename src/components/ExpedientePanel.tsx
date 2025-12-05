@@ -1,5 +1,3 @@
-import {Check, Mic} from "lucide-react";
-import {X} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
 import { useKV } from "@/hooks/use-kv";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
+import * as Sentry from "@sentry/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -215,8 +215,8 @@ interface AnalysisData {
 function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisData {
   try {
     const jsonText = responseText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
+      .replaceAll(/```json\n?/g, "")
+      .replaceAll(/```\n?/g, "")
       .trim();
     const parsed = JSON.parse(jsonText) as AnalysisData;
 
@@ -452,18 +452,47 @@ export default function ExpedientePanel() {
   );
 
   // Função para analisar um único expediente (retorna o expediente analisado)
+  // 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
   const analyzeExpediente = useCallback(
     async (exp: Expediente): Promise<Expediente> => {
-      try {
-        const response = await fetch("/api/llm-proxy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gemini-2.5-pro",
-            messages: [
-              {
-                role: "system",
-                content: `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
+      // Session ID único por expediente
+      const sessionId = `expediente-${exp.id}-${Date.now()}`;
+
+      return createInvokeAgentSpan(
+        {
+          agentName: "Mrs. Justin-e",
+          system: "gcp.gemini",
+          model: "gemini-2.5-pro",
+          temperature: 0.3,
+          maxTokens: 2000,
+        },
+        {
+          sessionId,
+          turn: 1,
+          messages: [
+            {
+              role: "user",
+              content: `Analise intimação do processo ${exp.numeroProcesso || "desconhecido"}`,
+            },
+          ],
+        },
+        async (span: Sentry.Span | undefined) => {
+          try {
+            // Atributos específicos da tarefa
+            span?.setAttribute("expediente.id", exp.id);
+            span?.setAttribute("expediente.processo", exp.numeroProcesso || "unknown");
+            span?.setAttribute("expediente.tribunal", exp.tribunal || "unknown");
+            span?.setAttribute("task.type", "ANALYZE_INTIMATION");
+
+            const response = await fetch("/api/llm-proxy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "gemini-2.5-pro",
+                messages: [
+                  {
+                    role: "system",
+                    content: `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
 
 INSTRUÇÕES CRÍTICAS:
 1. Identifique EXATAMENTE o tipo de processo (ex: Inventário, Ação Cível, Execução)
@@ -486,10 +515,10 @@ Retorne APENAS JSON neste formato:
   "suggestedActions": ["Ação EXATA solicitada na intimação"],
   "nextSteps": ["Próximos passos específicos para a ação solicitada"]
 }`,
-              },
-              {
-                role: "user",
-                content: `Analise esta intimação:
+                  },
+                  {
+                    role: "user",
+                    content: `Analise esta intimação:
 
 PROCESSO: ${exp.numeroProcesso || "Não informado"}
 TRIBUNAL: ${exp.tribunal || "Não informado"}
@@ -503,62 +532,79 @@ IMPORTANTE:
 - Se mencionar "Primeiras Declarações", a ação é "Apresentar Primeiras Declarações de Inventário"
 - Calcule a data final considerando APENAS dias ÚTEIS (segunda a sexta, excluindo feriados)
 - Use o ANO 2025 para calcular a data limite`,
-              },
-            ],
-          }),
-        });
+                  },
+                ],
+              }),
+            });
 
-        const data = await response.json();
-        const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
-        const analysisData = parseAnalysisResponse(responseText, exp);
+            const data = await response.json();
+            const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
+            const analysisData = parseAnalysisResponse(responseText, exp);
 
-        const analyzedExp: Expediente = {
-          ...exp,
-          analyzed: true,
-          summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
-          suggestedAction: analysisData.suggestedActions?.[0] || "Verificar prazo",
-          pendingDocs: analysisData.nextSteps || [],
-          deadline: analysisData.deadline,
-          priority: mapPriority(analysisData.priority),
-          draftPetition: buildDraftPetition(analysisData, exp),
-        };
-
-        // Criar tarefas para outros agentes com base na análise
-        const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData);
-        let createdTasks = 0;
-
-        for (const taskData of agentTasks) {
-          // Só cria tarefa se o agente estiver habilitado
-          const agent = agents.find((a) => a.id === taskData.agentId);
-          if (agent?.enabled) {
-            const task: AgentTask = {
-              id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-              agentId: taskData.agentId!,
-              type: taskData.type!,
-              priority: taskData.priority as "low" | "medium" | "high" | "critical",
-              status: "queued",
-              createdAt: new Date().toISOString(),
-              data: taskData.data as Record<string, unknown>,
+            const analyzedExp: Expediente = {
+              ...exp,
+              analyzed: true,
+              summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
+              suggestedAction: analysisData.suggestedActions?.[0] || "Verificar prazo",
+              pendingDocs: analysisData.nextSteps || [],
+              deadline: analysisData.deadline,
+              priority: mapPriority(analysisData.priority),
+              draftPetition: buildDraftPetition(analysisData, exp),
             };
-            addTask(task);
-            createdTasks++;
+
+            // Criar tarefas para outros agentes com base na análise
+            const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData);
+            let createdTasks = 0;
+
+            for (const taskData of agentTasks) {
+              // Só cria tarefa se o agente estiver habilitado
+              const agent = agents.find((a) => a.id === taskData.agentId);
+              if (agent?.enabled) {
+                const task: AgentTask = {
+                  id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+                  agentId: taskData.agentId!,
+                  type: taskData.type!,
+                  priority: taskData.priority as "low" | "medium" | "high" | "critical",
+                  status: "queued",
+                  createdAt: new Date().toISOString(),
+                  data: taskData.data as Record<string, unknown>,
+                };
+                addTask(task);
+                createdTasks++;
+              }
+            }
+
+            if (createdTasks > 0) {
+              setTasksCreated((prev) => prev + createdTasks);
+            }
+
+            // Atributos de conclusão para Sentry
+            span?.setAttribute("analysis.completed", true);
+            span?.setAttribute("tasks.created", createdTasks);
+            span?.setAttribute("priority", analyzedExp.priority || "medium");
+
+            // Deadline pode ser string ou objeto
+            const deadlineDays =
+              typeof analyzedExp.deadline === "object" ? analyzedExp.deadline?.days : 0;
+            span?.setAttribute("deadline.days", deadlineDays || 0);
+            span?.setAttribute(
+              "suggested_actions",
+              JSON.stringify(analysisData.suggestedActions || [])
+            );
+
+            // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
+            if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
+              createCalendarDeadline(exp, analysisData);
+            }
+
+            return analyzedExp;
+          } catch (error) {
+            console.error("Erro ao analisar expediente:", error);
+            // Sentry captura erro automaticamente via span
+            throw error;
           }
         }
-
-        if (createdTasks > 0) {
-          setTasksCreated((prev) => prev + createdTasks);
-        }
-
-        // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
-        if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
-          createCalendarDeadline(exp, analysisData);
-        }
-
-        return analyzedExp;
-      } catch (error) {
-        console.error("Erro ao analisar expediente:", error);
-        throw error;
-      }
+      );
     },
     [addTask, agents, createCalendarDeadline]
   );
@@ -677,8 +723,8 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
       try {
         // Remove possíveis marcadores de código
         const jsonText = responseText
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
+          .replaceAll(/```json\n?/g, "")
+          .replaceAll(/```\n?/g, "")
           .trim();
         analysisData = JSON.parse(jsonText);
       } catch {
@@ -784,8 +830,8 @@ Crie o workflow de controladoria para esta tarefa.`,
         let analysisData;
         try {
           const jsonText = responseText
-            .replace(/```json\n?/g, "")
-            .replace(/```\n?/g, "")
+            .replaceAll(/```json\n?/g, "")
+            .replaceAll(/```\n?/g, "")
             .trim();
           analysisData = JSON.parse(jsonText);
         } catch {

@@ -4,11 +4,11 @@
 
 import { type Appointment } from "@/types";
 import type {
-  GoogleAuthResponse,
-  TokenClient,
-  GapiGlobal,
-  GoogleGisGlobal,
   CalendarClient,
+  GapiGlobal,
+  GoogleAuthResponse,
+  GoogleGisGlobal,
+  TokenClient,
 } from "./google-types";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -669,7 +669,7 @@ class GoogleCalendarService {
 
   openGoogleCalendar(): void {
     if (typeof window === "undefined") return;
-    window.open("https://calendar.google.com", "_blank");
+    globalThis.window.open("https://calendar.google.com", "_blank");
   }
 
   logout(): void {

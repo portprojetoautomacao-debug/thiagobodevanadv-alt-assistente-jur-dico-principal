@@ -58,7 +58,7 @@ function App() {
   useEffect(() => {
     const applyHashView = () => {
       if (window === undefined) return;
-      const hash = window.location.hash.replace(/^#/, "").trim();
+      const hash = globalThis.window.location.hash.replace(/^#/, "").trim();
       if (hash) {
         setCurrentView(hash as ViewType);
       }
@@ -66,8 +66,8 @@ function App() {
     // aplica na carga inicial
     applyHashView();
     // escuta alterações de hash
-    window.addEventListener("hashchange", applyHashView);
-    return () => window.removeEventListener("hashchange", applyHashView);
+    globalThis.window.addEventListener("hashchange", applyHashView);
+    return () => globalThis.window.removeEventListener("hashchange", applyHashView);
   }, []);
 
   // Handler legado de Google removido

@@ -52,8 +52,8 @@ export const LegalContextItemSchema = z.object({
   content: z.string(),
   metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
   relevanceScore: z.number().optional(), // 0 a 1
 });
 

@@ -264,7 +264,7 @@ export function useGoogleDocs() {
    */
   const openDocument = useCallback((docId: string) => {
     const url = `https://docs.google.com/document/d/${docId}/edit`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    globalThis.window.open(url, "_blank", "noopener,noreferrer");
   }, []);
 
   const isAuthenticated = isConnected;

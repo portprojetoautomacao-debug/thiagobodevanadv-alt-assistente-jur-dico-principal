@@ -253,7 +253,7 @@ export function initTrustedTypes(): void {
 
   try {
     // Política padrão (fallback) - mais permissiva, para compatibilidade
-    defaultPolicy = window.trustedTypes!.createPolicy("default", {
+    defaultPolicy = globalThis.window.trustedTypes!.createPolicy("default", {
       createHTML: (input: string) => {
         // Log para debugging em dev
         if (import.meta.env.DEV) {
@@ -277,7 +277,7 @@ export function initTrustedTypes(): void {
     });
 
     // Política para sanitização de HTML do usuário
-    sanitizerPolicy = window.trustedTypes!.createPolicy("sanitizer", {
+    sanitizerPolicy = globalThis.window.trustedTypes!.createPolicy("sanitizer", {
       createHTML: (input: string) => sanitizeHTML(input),
     });
 
@@ -333,7 +333,7 @@ export function isTrustedHTML(value: unknown): value is TrustedHTML {
   if (!isTrustedTypesSupported()) {
     return typeof value === "string";
   }
-  return window.trustedTypes!.isHTML(value);
+  return globalThis.window.trustedTypes!.isHTML(value);
 }
 
 /**

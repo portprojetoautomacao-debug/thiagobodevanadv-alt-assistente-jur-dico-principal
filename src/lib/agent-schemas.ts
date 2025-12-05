@@ -57,7 +57,7 @@ export const DraftPetitionInputSchema = z.object({
  * Schema para cálculo de prazo
  */
 export const CalculateDeadlineInputSchema = z.object({
-  startDate: z.string().datetime().optional(),
+  startDate: z.coerce.date().optional(),
   businessDays: z.number().int().positive().max(365),
   tipoPrazo: z.enum(["cpc", "clt", "trabalhista", "penal", "administrativo"]).default("cpc"),
   comarca: z.string().optional(),
@@ -196,7 +196,7 @@ export const DraftPetitionOutputSchema = z.object({
  * Schema de saída para cálculo de prazo
  */
 export const CalculateDeadlineOutputSchema = z.object({
-  deadline: z.string().datetime(),
+  deadline: z.coerce.date(),
   businessDays: z.number().int(),
   calendarDays: z.number().int(),
   holidays: z.array(

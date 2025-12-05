@@ -3,11 +3,13 @@
 // 1) Gera minuta com Gemini
 // 2) Salva no Google Docs
 // 3) Cria prazo automático no Google Calendar (opcional)
+// 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
 
 import { generatePeticao } from "@/lib/gemini-service";
 import type { Minuta } from "@/types";
 import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 import { googleDocsService } from "./google-docs-service";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 
 // Mesmo shape do módulo de integração de prazos (deadline-integration)
 export interface MinutaAgentDeadline {
@@ -267,19 +269,47 @@ async function createCalendarEvent(
  * - Gera minuta com Gemini
  * - Opcionalmente salva no Google Docs
  * - Opcionalmente cria prazo no Google Calendar
+ * 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
  */
 export async function criarMinutaComAgenteIA(
   params: MinutaAgentParams
 ): Promise<MinutaAgentResult> {
-  const errors: string[] = [];
-  const { tipoMinuta, detalhesCaso, titulo, numeroProcesso, tribunal, prazo, sync } = params;
+  const sessionId = `minuta-${Date.now()}`;
+  
+  return createInvokeAgentSpan(
+    {
+      agentName: "Redação de Petições",
+      system: "gcp.gemini",
+      model: "gemini-2.5-pro",
+      temperature: 0.7,
+      maxTokens: 4000,
+    },
+    {
+      sessionId,
+      turn: 1,
+      messages: [
+        {
+          role: "user",
+          content: `Gerar ${params.tipoMinuta} para ${params.numeroProcesso || "processo"}`,
+        },
+      ],
+    },
+    async (span) => {
+      const errors: string[] = [];
+      const { tipoMinuta, detalhesCaso, titulo, numeroProcesso, tribunal, prazo, sync } = params;
 
-  const syncDocs = sync?.docs ?? true;
-  const syncCalendar = sync?.calendar ?? true;
+      const syncDocs = sync?.docs ?? true;
+      const syncCalendar = sync?.calendar ?? true;
 
-  try {
-    // 1) Gera a minuta usando Gemini
-    const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso);
+      // Atributos específicos
+      span?.setAttribute("minuta.tipo", tipoMinuta);
+      span?.setAttribute("minuta.processo", numeroProcesso || "unknown");
+      span?.setAttribute("minuta.tribunal", tribunal || "unknown");
+      span?.setAttribute("sync.docs", syncDocs);
+      span?.setAttribute("sync.calendar", syncCalendar);
+
+      // 1) Gera a minuta usando Gemini
+      const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso);
 
     if (geminiError || !content) {
       errors.push(geminiError || "Erro ao gerar minuta");
@@ -317,27 +347,25 @@ export async function criarMinutaComAgenteIA(
       prazoNormalizado = calendarResult.prazoNormalizado;
     }
 
-    logSuccess("Minuta gerada com sucesso");
+      logSuccess("Minuta gerada com sucesso");
 
-    return {
-      success: errors.length === 0,
-      provider: "gemini-2.5-pro",
-      minuta,
-      docsId,
-      docsUrl,
-      calendarEventId,
-      prazo: prazoNormalizado,
-      errors,
-    };
-  } catch (error) {
-    console.error("[MinutaAgent] Falha inesperada:", error);
-    const errorMsg =
-      error instanceof Error
-        ? `Falha inesperada: ${error.message}`
-        : "Falha inesperada ao executar o agente de minuta";
-    errors.push(errorMsg);
-    logError("Erro inesperado na execução");
+      // Atributos de conclusão para Sentry
+      span?.setAttribute("minuta.generated", true);
+      span?.setAttribute("minuta.id", minuta.id);
+      span?.setAttribute("docs.saved", docsId !== null);
+      span?.setAttribute("calendar.created", calendarEventId !== null);
+      span?.setAttribute("errors.count", errors.length);
 
-    return createErrorResult(errors, prazo ?? null);
-  }
+      return {
+        success: errors.length === 0,
+        provider: "gemini-2.5-pro",
+        minuta,
+        docsId,
+        docsUrl,
+        calendarEventId,
+        prazo: prazoNormalizado,
+        errors,
+      };
+    }
+  );
 }

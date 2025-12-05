@@ -15,7 +15,7 @@ import {
   validarNumeroCNJ,
   type DatajudProcesso,
 } from "@/lib/datajud-api";
-import { Loader, Database, Search, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Database, Loader, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ export default function DatabaseQueries() {
       return;
     }
 
-    const normalized = raw.replace(/\s/g, "");
+    const normalized = raw.replaceAll(/\s/g, "");
 
     if (!validarNumeroCNJ(normalized)) {
       toast.error("Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO");
