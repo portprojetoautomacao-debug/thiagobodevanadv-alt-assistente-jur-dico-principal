@@ -718,7 +718,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+            <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col bg-card">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   {editingMinuta ? (
