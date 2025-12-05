@@ -199,7 +199,7 @@ export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButt
           <p className="mt-2 text-sm">
             O login com Google não funciona em {getEnvironmentName()} porque a origem{" "}
             <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">
-              {window.location.origin}
+              {globalThis.location.origin}
             </code>{" "}
             não está autorizada no Google Cloud Console.
           </p>
@@ -210,7 +210,7 @@ export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButt
             variant="outline"
             size="sm"
             className="mt-3 gap-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900"
-            onClick={() => window.open(PRODUCTION_DOMAIN, "_blank")}
+            onClick={() => globalThis.open(PRODUCTION_DOMAIN, "_blank")}
           >
             <ExternalLink className="h-4 w-4" />
             Abrir em Produção

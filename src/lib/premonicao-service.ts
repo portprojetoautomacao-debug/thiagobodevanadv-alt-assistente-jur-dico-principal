@@ -52,6 +52,13 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
         const truncatedMatch = cleaned.match(/\{[\s\S]*/);
         if (truncatedMatch) {
           let truncated = truncatedMatch[0];
+
+          // Fechar strings abertas (aspas duplas sem par)
+          const quoteCount = (truncated.match(/"/g) || []).length;
+          if (quoteCount % 2 !== 0) {
+            truncated += '"';
+          }
+
           // Contar chaves abertas e fechadas
           const openBraces = (truncated.match(/\{/g) || []).length;
           const closeBraces = (truncated.match(/\}/g) || []).length;

@@ -135,6 +135,22 @@ function validateAnalysisDeadline(
 }
 
 /**
+ * Converte data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
+ */
+function convertBRDateToISO(dateStr: string): string | null {
+  // Regex para DD/MM/YYYY
+  const brDatePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = dateStr.match(brDatePattern);
+
+  if (match) {
+    const [, day, month, year] = match;
+    return `${year}-${month}-${day}`;
+  }
+
+  return null;
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
@@ -147,14 +163,24 @@ export function createLocalAppointmentFromAnalysis(
   }
 
   // Type guard above ensures analysis.deadline is defined
-  const endDateStr = analysis.deadline.endDate;
+  let endDateStr = analysis.deadline.endDate;
   if (!endDateStr) {
     console.log("[DeadlineIntegration] endDate is missing");
     return null;
   }
 
+  // Converter data BR para ISO se necessário
+  const convertedDate = convertBRDateToISO(endDateStr);
+  if (convertedDate) {
+    endDateStr = convertedDate;
+  }
+
   const deadlineDate = new Date(endDateStr);
   if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
+    // Modo silencioso em produção
+    if (process.env.VITE_APP_ENV === "production") {
+      return null;
+    }
     console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
     return null;
   }

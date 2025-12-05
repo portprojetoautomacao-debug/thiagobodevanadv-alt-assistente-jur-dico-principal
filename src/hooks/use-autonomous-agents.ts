@@ -199,17 +199,17 @@ function getInitialAgents(): Agent[] {
   if (typeof window === "undefined") return initializeAgents();
 
   try {
-    const storedVersion = window.localStorage.getItem("agents-data-version");
+    const storedVersion = globalThis.localStorage.getItem("agents-data-version");
     const version = storedVersion ? JSON.parse(storedVersion) : 0;
 
     // Handle outdated data version
     if (isDataVersionOutdated(version, AGENTS_DATA_VERSION)) {
       clearOutdatedLocalStorage();
-      window.localStorage.setItem("agents-data-version", JSON.stringify(AGENTS_DATA_VERSION));
+      globalThis.localStorage.setItem("agents-data-version", JSON.stringify(AGENTS_DATA_VERSION));
       return initializeAgents();
     }
 
-    const storedAgents = window.localStorage.getItem("autonomous-agents");
+    const storedAgents = globalThis.localStorage.getItem("autonomous-agents");
 
     // Handle stored agents
     if (storedAgents) {

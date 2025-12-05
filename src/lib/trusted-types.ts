@@ -226,10 +226,10 @@ function matchesWildcardOrigin(
  */
 function validateScriptURL(url: string): boolean {
   try {
-    const parsed = new URL(url, window.location.origin);
+    const parsed = new URL(url, globalThis.location.origin);
 
     // Permite URLs relativas (mesma origem)
-    if (parsed.origin === window.location.origin) {
+    if (parsed.origin === globalThis.location.origin) {
       return true;
     }
 
@@ -282,12 +282,12 @@ export function initTrustedTypes(): void {
     });
 
     // Política para o React (innerHTML interno)
-    window.trustedTypes!.createPolicy("react", {
+    globalThis.trustedTypes!.createPolicy("react", {
       createHTML: (input: string) => input, // React já sanitiza
     });
 
     // Política para GTM
-    window.trustedTypes!.createPolicy("gtm", {
+    globalThis.trustedTypes!.createPolicy("gtm", {
       createScript: (input: string) => input,
       createScriptURL: (input: string) => {
         if (input.includes("googletagmanager.com") || input.includes("google-analytics.com")) {
@@ -298,7 +298,7 @@ export function initTrustedTypes(): void {
     });
 
     // Política para Sentry
-    window.trustedTypes!.createPolicy("sentry", {
+    globalThis.trustedTypes!.createPolicy("sentry", {
       createScriptURL: (input: string) => {
         if (input.includes("sentry.io") || input.includes("browser.sentry-cdn.com")) {
           return input;

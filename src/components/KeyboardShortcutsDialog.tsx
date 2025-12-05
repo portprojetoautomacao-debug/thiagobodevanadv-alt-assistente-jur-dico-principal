@@ -85,7 +85,9 @@ export default function KeyboardShortcutsDialog({
   // Usar userAgent ao invés de navigator.platform (deprecated)
   const isMac =
     typeof navigator !== "undefined" &&
-    (navigator.userAgent.includes("Mac") || navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad"));
+    (navigator.userAgent.includes("Mac") ||
+      navigator.userAgent.includes("iPhone") ||
+      navigator.userAgent.includes("iPad"));
 
   const ctrlKeyLabel = isMac ? "⌘" : "Ctrl";
 
