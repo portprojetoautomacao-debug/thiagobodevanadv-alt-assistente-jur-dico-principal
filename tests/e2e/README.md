@@ -211,7 +211,20 @@ test("deve fazer X", async ({ page }) => {
 ```env
 TEST_USER_EMAIL=adm
 TEST_USER_PASSWORD=adm123
+VITE_AUTH_MODE=simple
 ```
+
+### ❌ "Timeout waiting for input fields"
+
+**Problema:** Global-setup não encontra campos de login.
+
+**Solução:**
+1. ✅ **JÁ CORRIGIDO**: SimpleAuth agora tem atributos testáveis
+2. Execute teste rápido: `./test-e2e-login.sh`
+3. Verifique se VITE_AUTH_MODE=simple no .env
+4. Teste login manual em http://127.0.0.1:5173 (adm/adm123)
+5. Use debug mode: `npx playwright test --debug`
+6. Ver guia completo: `E2E_LOGIN_TROUBLESHOOTING.md`
 
 ### ❌ "Element not found"
 

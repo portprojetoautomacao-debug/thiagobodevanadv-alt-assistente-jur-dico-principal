@@ -39,29 +39,52 @@ async function globalSetup(config: FullConfig) {
     console.log("🔐 Attempting login...");
     await page.goto(`${baseURL}/login`, { waitUntil: "networkidle" });
 
-    // Aguardar campos de login aparecerem
-    await page.waitForSelector(
-      'input[name="email"], input[type="email"], input[placeholder*="email" i]',
-      { timeout: 10_000 }
-    );
+    // Aguardar página carregar completamente
+    await page.waitForLoadState("domcontentloaded");
+    console.log("📄 Page loaded");
 
-    // Preencher formulário de login
+    // Aguardar campos de login aparecerem (suporta SimpleAuth e Google OAuth)
+    await page.waitForSelector(
+      'input[name="username"], input[name="email"], input[type="email"], input[type="text"], input[placeholder*="usuário" i], input[placeholder*="email" i]',
+      { timeout: 15_000 }
+    );
+    console.log("📝 Login fields detected");
+
+    // Preencher formulário de login (detecta automaticamente SimpleAuth ou Google)
+    const usernameInput = page
+      .locator(
+        'input[name="username"], input[data-testid="login-username"], input[placeholder*="usuário" i]'
+      )
+      .first();
     const emailInput = page
       .locator('input[name="email"], input[type="email"], input[placeholder*="email" i]')
       .first();
     const passwordInput = page
       .locator(
-        'input[name="password"], input[type="password"], input[placeholder*="senha" i], input[placeholder*="password" i]'
+        'input[name="password"], input[data-testid="login-password"], input[type="password"], input[placeholder*="senha" i], input[placeholder*="password" i]'
       )
       .first();
 
-    await emailInput.fill(TEST_USER_EMAIL);
-    await passwordInput.fill(TEST_USER_PASSWORD);
+    // Detectar qual tipo de formulário (SimpleAuth ou Google OAuth)
+    const isSimpleAuth = (await usernameInput.count()) > 0;
+    console.log(`🔍 Auth mode detected: ${isSimpleAuth ? "SimpleAuth" : "Google OAuth"}`);
 
-    console.log(`✏️ Filled credentials for ${TEST_USER_EMAIL}`);
+    if (isSimpleAuth) {
+      await usernameInput.fill(TEST_USER_EMAIL);
+      await passwordInput.fill(TEST_USER_PASSWORD);
+      console.log(`✏️ Filled SimpleAuth credentials: ${TEST_USER_EMAIL}`);
+    } else {
+      await emailInput.fill(TEST_USER_EMAIL);
+      await passwordInput.fill(TEST_USER_PASSWORD);
+      console.log(`✏️ Filled Google OAuth credentials: ${TEST_USER_EMAIL}`);
+    }
 
-    // Clicar em submit
-    const submitButton = page.locator('button[type="submit"]').first();
+    // Clicar em submit (detecta botão automaticamente)
+    const submitButton = page
+      .locator(
+        'button[type="submit"], button[data-testid="login-submit"], button:has-text("Entrar")'
+      )
+      .first();
     await submitButton.click({ timeout: 10_000 });
 
     console.log("⏳ Waiting for navigation...");
