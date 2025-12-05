@@ -92,6 +92,8 @@ async function getKv(): Promise<Redis> {
 }
 
 // Gera ID único
+// SECURITY: Math.random() é seguro aqui - usado apenas para IDs de notificação
+// não-críticos (não são tokens de autenticação). Combina timestamp + random.
 function generateId(): string {
   return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }

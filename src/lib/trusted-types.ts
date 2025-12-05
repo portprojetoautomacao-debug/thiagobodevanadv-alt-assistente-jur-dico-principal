@@ -114,6 +114,10 @@ export function isTrustedTypesSupported(): boolean {
 
 /**
  * Verifica se um atributo href/src contém valor perigoso
+ *
+ * SECURITY: Esta função VALIDA e BLOQUEIA código javascript:
+ * O uso de javascript: aqui é seguro pois é apenas para DETECÇÃO,
+ * não para execução. Qualquer URL começando com javascript: será REJEITADA.
  */
 function isDangerousUrlValue(value: string): boolean {
   const normalizedValue = value.toLowerCase().trim();

@@ -53,15 +53,16 @@ function fixTruncatedJson(truncated: string): Record<string, unknown> {
  * Tenta extrair e parsear JSON truncado
  */
 function tryParseTruncatedJson(cleaned: string): Record<string, unknown> | null {
-  const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
-  if (!truncatedMatch) return null;
+  const startIdx = cleaned.indexOf("{");
+  if (startIdx === -1) return null;
 
+  const truncatedStr = cleaned.substring(startIdx);
   try {
-    return fixTruncatedJson(truncatedMatch[0]);
+    return fixTruncatedJson(truncatedStr);
   } catch {
     console.warn(
       "[PremonicaoService] JSON truncado não pôde ser corrigido:",
-      truncatedMatch[0].substring(0, 200)
+      truncatedStr.substring(0, 200)
     );
     return null;
   }
@@ -71,11 +72,14 @@ function tryParseTruncatedJson(cleaned: string): Record<string, unknown> | null 
  * Tenta extrair o primeiro bloco JSON da resposta
  */
 function tryParseJsonBlock(cleaned: string): Record<string, unknown> | null {
-  const jsonMatch = /\{[\s\S]*\}/.exec(cleaned);
-  if (!jsonMatch) return null;
+  // Buscar JSON de forma segura sem regex greedy
+  const startIdx = cleaned.indexOf("{");
+  const endIdx = cleaned.lastIndexOf("}");
+  if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return null;
 
   try {
-    return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    const jsonStr = cleaned.substring(startIdx, endIdx + 1);
+    return JSON.parse(jsonStr) as Record<string, unknown>;
   } catch {
     return tryParseTruncatedJson(cleaned);
   }

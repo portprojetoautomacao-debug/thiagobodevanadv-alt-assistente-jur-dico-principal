@@ -389,9 +389,9 @@ function normalizeText(text: string): string {
 function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
   if (!numeroOAB) return {};
   const value = numeroOAB.trim();
-  const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i.exec(value);
+  const matchOABPattern = /OAB\s?\/\s?([A-Z]{2})\s+(\d+)/i.exec(value);
   if (matchOABPattern) return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
+  const matchNumericUF = /(\d+)\s?\/\s?([A-Z]{2})/i.exec(value);
   if (matchNumericUF) return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
   const matchNumeric = /^(\d+)$/.exec(value);
   if (matchNumeric) return { numero: matchNumeric[1] };

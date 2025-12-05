@@ -152,10 +152,11 @@ export default function BatchAnalysis() {
         // Cadastra/atualiza cliente automaticamente a partir das partes
         // O campo 'parties' geralmente tem formato "Autor vs Réu" ou "Autor x Réu"
         if (data.parties) {
-          const partiesMatch = /^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i.exec(data.parties);
-          if (partiesMatch) {
-            const autor = partiesMatch[1].trim();
-            // const reu = partiesMatch[2].trim() // Unused
+          // Usar split ao invés de regex para evitar ReDoS
+          const parts = data.parties.split(/\s+(?:vs?\.?|x)\s+/i);
+          if (parts.length >= 2) {
+            const autor = parts[0].trim();
+            // const reu = parts[1].trim() // Unused
             // Cadastra o autor como cliente
             if (autor && autor !== "Não identificado") {
               createOrUpdateFromDjenIntimacao({

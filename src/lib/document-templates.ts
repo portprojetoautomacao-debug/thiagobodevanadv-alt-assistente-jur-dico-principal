@@ -543,9 +543,9 @@ export function replaceTemplateVariables(
 export function extractUnfilledVariables(content: string): string[] {
   const regex = /\{\{\s*([^}]+)\s*\}\}/g;
   const matches: string[] = [];
-  let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(content)) !== null) {
+  // Usar matchAll ao invés de exec em loop (mais seguro)
+  for (const match of content.matchAll(regex)) {
     const variable = match[1].trim();
     if (!matches.includes(variable)) {
       matches.push(variable);

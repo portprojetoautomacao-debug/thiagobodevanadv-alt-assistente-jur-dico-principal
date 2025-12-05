@@ -402,21 +402,25 @@ export const validarSaidaAgente = validarEntradaTarefa;
  * Tenta extrair JSON de resposta de LLM
  */
 export function extrairJSONDeResposta(content: string): unknown | null {
-  // Tenta extrair JSON entre ```json e ```
-  const jsonBlockMatch = /```json\s*([\s\S]*?)\s*```/.exec(content);
-  if (jsonBlockMatch) {
+  // Tenta extrair JSON entre ```json e ``` sem regex greedy
+  const jsonStart = content.indexOf("```json");
+  const jsonEnd = content.indexOf("```", jsonStart + 7);
+  if (jsonStart !== -1 && jsonEnd !== -1) {
     try {
-      return JSON.parse(jsonBlockMatch[1]);
+      const jsonContent = content.substring(jsonStart + 7, jsonEnd).trim();
+      return JSON.parse(jsonContent);
     } catch {
       // Continua tentando outros métodos
     }
   }
 
-  // Tenta extrair primeiro objeto JSON (não guloso)
-  const jsonMatch = /\{[\s\S]*?\}/.exec(content);
-  if (jsonMatch) {
+  // Tenta extrair primeiro objeto JSON sem regex greedy
+  const startIdx = content.indexOf("{");
+  const endIdx = content.lastIndexOf("}");
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
     try {
-      return JSON.parse(jsonMatch[0]);
+      const jsonStr = content.substring(startIdx, endIdx + 1);
+      return JSON.parse(jsonStr);
     } catch {
       // Continua tentando outros métodos
     }
