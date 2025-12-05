@@ -839,7 +839,8 @@ export function TiptapEditor({
       return;
     }
 
-    printWindow.document.write(`
+    // Usar innerHTML ao invés de document.write (deprecated)
+    printWindow.document.documentElement.innerHTML = `
       <!DOCTYPE html>
       <html lang="pt-BR">
         <head>
@@ -906,7 +907,7 @@ export function TiptapEditor({
           <div class="page-footer"></div>
         </body>
       </html>
-    `);
+    `;
 
     printWindow.document.close();
     printWindow.focus();

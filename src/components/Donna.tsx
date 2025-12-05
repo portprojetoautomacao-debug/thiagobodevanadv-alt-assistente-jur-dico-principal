@@ -777,7 +777,7 @@ IMPORTANTE:
               placeholder="Pergunte sobre processos, prazos, financeiro, equipe..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               disabled={isProcessing || isStreaming}
               className="flex-1"
             />
