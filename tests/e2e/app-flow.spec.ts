@@ -25,10 +25,10 @@ test.describe("Fluxo Principal da Aplicação", () => {
   });
 
   test("deve carregar o Dashboard quando autenticado", async ({ page }) => {
-    // Verifica se o dashboard carregou usando ARIA heading
-    await expect(
-      page.getByRole("heading", { level: 1 }).or(page.getByRole("heading", { level: 2 }))
-    ).toBeVisible({ timeout: 10000 });
+    // Verifica se o dashboard carregou - aceita tanto "Dashboard" quanto "PJe Assistente"
+    // Usa .first() para evitar strict mode violation quando ambos estão presentes
+    const heading = page.getByRole("heading", { name: /Dashboard|PJe Assistente/i }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     // Verifica se navegação está presente
     await expect(page.getByRole("navigation")).toBeVisible();
