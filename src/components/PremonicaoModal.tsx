@@ -180,7 +180,7 @@ export default function PremonicaoModal({
                     <div className="space-y-3">
                       {data.estrategias_recomendadas.map((estrategia, idx) => (
                         <div
-                          key={`estrategia-${idx}-${estrategia.slice(0, 30).replace(/\W/g, "")}`}
+                          key={`estrategia-${idx}-${estrategia.slice(0, 30).replaceAll(/\W/g, "")}`}
                           className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow group"
                         >
                           <ChevronRight className="w-5 h-5 text-primary shrink-0 mt-0.5" />

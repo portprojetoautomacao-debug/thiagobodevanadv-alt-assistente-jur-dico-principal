@@ -234,7 +234,7 @@ export async function consultarComunicacoes(
   const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
 
   try {
-    logger.debug("Consultando DJEN", { url: url.replace(/numeroOab=[^&]*/, "numeroOab=***") });
+    logger.debug("Consultando DJEN", { url: url.replaceAll(/numeroOab=[^&]*/g, "numeroOab=***") });
 
     const response = await fetch(url, {
       method: "GET",
