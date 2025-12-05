@@ -128,16 +128,15 @@ function formatDate(date: Date): string {
 // Helper: Build DJEN query URL
 // ===========================
 function buildDJENQueryUrl(params: DJENQueryParams): string {
-  const queryParts: string[] = [];
-
-  if (params.numeroOab) queryParts.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
-  if (params.ufOab) queryParts.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
-  if (params.nomeAdvogado)
-    queryParts.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
-  if (params.dataInicio) queryParts.push(`dataDisponibilizacaoInicio=${params.dataInicio}`);
-  if (params.dataFim) queryParts.push(`dataDisponibilizacaoFim=${params.dataFim}`);
-  queryParts.push("itensPorPagina=50");
-  queryParts.push(`meio=${params.meio || "D"}`); // D = Digital (intimações eletrônicas)
+  const queryParts: string[] = [
+    ...(params.numeroOab ? [`numeroOab=${encodeURIComponent(params.numeroOab)}`] : []),
+    ...(params.ufOab ? [`ufOab=${encodeURIComponent(params.ufOab)}`] : []),
+    ...(params.nomeAdvogado ? [`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`] : []),
+    ...(params.dataInicio ? [`dataDisponibilizacaoInicio=${params.dataInicio}`] : []),
+    ...(params.dataFim ? [`dataDisponibilizacaoFim=${params.dataFim}`] : []),
+    "itensPorPagina=50",
+    `meio=${params.meio || "D"}`, // D = Digital (intimações eletrônicas)
+  ];
 
   return `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryParts.join("&")}`;
 }

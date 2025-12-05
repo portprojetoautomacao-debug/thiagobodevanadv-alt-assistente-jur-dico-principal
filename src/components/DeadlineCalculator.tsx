@@ -62,14 +62,14 @@ export default function DeadlineCalculator() {
       const base = new Date(baseDate + "T12:00:00");
       const currentDate = new Date(base);
       let workingDays = 0;
-      const reasoning: string[] = [];
+      const reasoning: string[] = [
+        `Data base: ${base.toLocaleDateString("pt-BR")}`,
+        `Prazo: ${days} dias úteis (${procedureType})`,
+        `Tipo: ${selectedDeadline?.label}`,
+        "",
+        "Cálculo passo a passo:",
+      ];
       const holidays: string[] = [];
-
-      reasoning.push(`Data base: ${base.toLocaleDateString("pt-BR")}`);
-      reasoning.push(`Prazo: ${days} dias úteis (${procedureType})`);
-      reasoning.push(`Tipo: ${selectedDeadline?.label}`);
-      reasoning.push("");
-      reasoning.push("Cálculo passo a passo:");
 
       // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
       // TODO: Integrar com API de feriados real ou permitir configuração por tribunal
@@ -94,8 +94,7 @@ export default function DeadlineCalculator() {
         }
       }
 
-      reasoning.push("");
-      reasoning.push(`✓ Prazo final: ${currentDate.toLocaleDateString("pt-BR")}`);
+      reasoning.push("", `✓ Prazo final: ${currentDate.toLocaleDateString("pt-BR")}`);
 
       setResult({
         finalDate: currentDate.toISOString().split("T")[0],
