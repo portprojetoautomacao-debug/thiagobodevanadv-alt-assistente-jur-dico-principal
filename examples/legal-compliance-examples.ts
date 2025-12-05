@@ -91,15 +91,24 @@ export class DataProtectionService {
   private async getUserData(userId: string): Promise<any> {
     return {};
   }
-  private async logDataRequest(request: any): Promise<void> {}
+  private async logDataRequest(request: any): Promise<void> {
+    // TODO: Implementar log de requisições LGPD (Art. 18)
+    console.log("[LGPD] Data request logged:", request);
+  }
   private async getAllUserData(userId: string): Promise<any> {
     return {};
   }
   private async checkRetentionObligation(userId: string): Promise<boolean> {
     return false;
   }
-  private async anonymizeData(userId: string): Promise<void> {}
-  private async logDeletion(userId: string, reason: string): Promise<void> {}
+  private async anonymizeData(userId: string): Promise<void> {
+    // TODO: Implementar anonimização de dados (LGPD Art. 16)
+    console.log("[LGPD] Data anonymized for user:", userId);
+  }
+  private async logDeletion(userId: string, reason: string): Promise<void> {
+    // TODO: Implementar log de deleção (LGPD Art. 18 §6)
+    console.log("[LGPD] Data deleted:", { userId, reason });
+  }
 }
 
 // JURIDICO: Gestão de processos jurídicos
@@ -179,11 +188,17 @@ export class ProcessManagementService {
   private getDaysUntil(date: Date): number {
     return 5;
   }
-  private async sendUrgentAlert(intimation: any): Promise<void> {}
+  private async sendUrgentAlert(intimation: any): Promise<void> {
+    // TODO: Implementar alerta urgente (Telegram/Email) para prazos críticos
+    console.log("[ALERT] Urgent intimation:", intimation);
+  }
   private classifyIntimation(intimation: any): string {
     return "despacho";
   }
-  private async logIntimationReceipt(intimation: any): Promise<void> {}
+  private async logIntimationReceipt(intimation: any): Promise<void> {
+    // TODO: Registrar recebimento de intimação (auditoria CPC)
+    console.log("[AUDIT] Intimation received:", intimation);
+  }
   private checkFormalRequirements(petition: any): boolean {
     return true;
   }
