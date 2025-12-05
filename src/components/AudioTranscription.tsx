@@ -102,11 +102,11 @@ export default function AudioTranscription() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const audioFile = e.target.files?.[0];
+    if (!audioFile) return;
 
-    audioFileRef.current = file;
-    toast.info(`Arquivo "${file.name}" selecionado`);
+    audioFileRef.current = audioFile;
+    toast.info(`Arquivo "${audioFile.name}" selecionado`);
 
     // Para arquivos de áudio, informamos que precisaria de um serviço de transcrição
     setError(

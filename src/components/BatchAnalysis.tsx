@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
-import { CheckCircle, Download, FileText, Loader2, Sparkles, Upload, XCircle } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
