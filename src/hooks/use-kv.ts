@@ -223,16 +223,15 @@ function scheduleLoad(key: string): Promise<unknown | null> {
     pendingKeys.add(key);
 
     // Adiciona resolver para esta chave
-    const resolvers = pendingResolvers.get(key) ?? [];
-    resolvers.push(resolve);
-    pendingResolvers.set(key, resolvers);
+    if (!pendingResolvers.has(key)) {
+      pendingResolvers.set(key, []);
+    }
+    pendingResolvers.get(key)!.push(resolve);
 
     // Agenda o batch se não estiver agendado
-    if (!batchTimeout) {
-      batchTimeout = setTimeout(() => {
-        processBatch();
-      }, BATCH_DELAY_MS);
-    }
+    batchTimeout ??= setTimeout(() => {
+      processBatch();
+    }, BATCH_DELAY_MS);
   });
 }
 

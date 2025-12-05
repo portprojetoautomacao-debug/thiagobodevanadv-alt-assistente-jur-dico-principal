@@ -147,15 +147,14 @@ export function createLocalAppointmentFromAnalysis(
   }
 
   // Type guard above ensures analysis.deadline is defined
-  // Use non-null assertion after guard check for TypeScript strict mode
-  const endDateStr = analysis.deadline!.endDate;
+  const endDateStr = analysis.deadline.endDate;
   if (!endDateStr) {
     console.log("[DeadlineIntegration] endDate is missing");
     return null;
   }
 
   const deadlineDate = new Date(endDateStr);
-  if (!deadlineDate || isNaN(deadlineDate.getTime())) {
+  if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
     console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
     return null;
   }
@@ -210,7 +209,7 @@ export async function syncDeadlineToGoogleCalendar(
     const deadlineEvent: DeadlineEvent = {
       title: intimationTitle.substring(0, 100),
       description: buildAppointmentDescription(analysis),
-      deadline: new Date(analysis.deadline!.endDate).toISOString(),
+      deadline: new Date(analysis.deadline.endDate).toISOString(),
       type: analysis.type === "intimacao_judicial" ? "prazo" : "reuniao",
       priority: mapPriorityToCalendarFormat(analysis.priority),
       reminders: getPriorityReminders(analysis.priority),

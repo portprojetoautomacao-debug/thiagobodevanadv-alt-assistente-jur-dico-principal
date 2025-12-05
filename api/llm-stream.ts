@@ -232,7 +232,7 @@ async function streamOpenAI(
       if (!reader) throw new Error("No reader available");
 
       await processStream(reader, processOpenAILine, sendEvent);
-      
+
       // Adicionar atributos de conclusão
       span?.setAttribute("stream.completed", true);
       sendEvent({ type: "done", provider: "OpenAI" });
@@ -261,35 +261,30 @@ async function streamGemini(
     console.log(`[LLM-Stream] Modelo normalizado: ${requestedModel} → ${model}`);
   }
 
-  return createBackendChatSpan(
-    "gemini",
-    model,
-    body.messages || [],
-    async (span) => {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${geminiKey}&alt=sse`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(geminiBody),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini error: ${response.status} - ${errorText}`);
+  return createBackendChatSpan("gemini", model, body.messages || [], async (span) => {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${geminiKey}&alt=sse`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(geminiBody),
       }
+    );
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader available");
-
-      await processStream(reader, processGeminiLine, sendEvent);
-      
-      // Adicionar atributos de conclusão
-      span?.setAttribute("stream.completed", true);
-      sendEvent({ type: "done", provider: "Gemini" });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini error: ${response.status} - ${errorText}`);
     }
-  );
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("No reader available");
+
+    await processStream(reader, processGeminiLine, sendEvent);
+
+    // Adicionar atributos de conclusão
+    span?.setAttribute("stream.completed", true);
+    sendEvent({ type: "done", provider: "Gemini" });
+  });
 }
 
 /**
