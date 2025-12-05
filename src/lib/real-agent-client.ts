@@ -360,23 +360,29 @@ export async function processTaskWithRealAI(
 
     // Finalizar spans com dados da resposta
     const dataDescription = data.result.data?.description;
-    const resultOutput = data.result.message 
-      || (typeof dataDescription === 'string' ? dataDescription : undefined)
-      || "Task completed";
-    
+    const resultOutput =
+      data.result.message ||
+      (typeof dataDescription === "string" ? dataDescription : undefined) ||
+      "Task completed";
+
     finishAgentInvokeSpan(agentSpan, {
       output: resultOutput,
-      tokensUsed: data.result.tokensUsed ? {
-        total: data.result.tokensUsed
-      } : undefined,
+      tokensUsed: data.result.tokensUsed
+        ? {
+            total: data.result.tokensUsed,
+          }
+        : undefined,
     });
 
     finishAIChatSpan(chatSpan, {
       text: resultOutput,
-      tokensUsed: data.result.tokensUsed ? {
-        total: data.result.tokensUsed
-      } : undefined,
-    });    return data.result;
+      tokensUsed: data.result.tokensUsed
+        ? {
+            total: data.result.tokensUsed,
+          }
+        : undefined,
+    });
+    return data.result;
   } catch (error) {
     console.error("[Real Agent Client] Error processing task:", error);
 
