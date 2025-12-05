@@ -143,6 +143,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
   try {
     console.log("[PremonicaoService] Gerando análise preditiva para:", cnj);
 
+    // Aumenta max_tokens para evitar truncamento (finish_reason: max_tokens)
     const response = await fetch("/api/llm-proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -159,7 +160,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
             content: promptText,
           },
         ],
-        max_tokens: 2000,
+        max_tokens: 4000, // ⚠️ Aumentado de 2000 para 4000 (evita truncamento)
         temperature: 0.7,
       }),
     });
@@ -170,6 +171,19 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
     }
 
     const data = (await response.json()) as Record<string, unknown>;
+
+    // ⚠️ Verifica finish_reason antes de processar
+    if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
+      const firstChoice = data.choices[0] as Record<string, unknown>;
+      if (firstChoice.finish_reason === "max_tokens") {
+        console.warn(
+          "[PremonicaoService] Resposta truncada (max_tokens). Considere aumentar max_tokens."
+        );
+        throw new Error(
+          "Análise incompleta - resposta muito longa. Tente novamente com um processo mais simples."
+        );
+      }
+    }
 
     const responseText = extractResponseText(data);
 

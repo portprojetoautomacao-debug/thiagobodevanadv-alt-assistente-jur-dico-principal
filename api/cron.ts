@@ -362,9 +362,11 @@ interface DJENFilteredResult {
   meio: string;
   link: string;
   hash: string;
-  matchType: "nome" | "oab" | "ambos";
+  matchType: MatchType;
   advogados: Array<{ nome: string; numero_oab: string; uf_oab: string }>;
 }
+
+type MatchType = "nome" | "oab" | "ambos";
 
 interface DJENQueryParams {
   numeroOab?: string;
@@ -924,8 +926,8 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
         pendingCount: pendingTasks.length,
       });
       await kv.set(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY, history.slice(0, 200));
-    } catch (histErr) {
-      console.warn("[Cron Agent Queue] Falha registrar histórico fila:", histErr);
+    } catch (error_) {
+      console.warn("[Cron Agent Queue] Falha registrar histórico fila:", error_);
     }
 
     console.log(`[Cron Agent Queue] Found ${pendingTasks.length} pending tasks`);

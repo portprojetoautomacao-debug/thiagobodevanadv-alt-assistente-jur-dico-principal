@@ -3,10 +3,10 @@
  * Valida tokens de acesso e autoriza operações
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { SafeLogger } from './safe-logger.js';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { SafeLogger } from "./safe-logger.js";
 
-const logger = new SafeLogger('Auth');
+const logger = new SafeLogger("Auth");
 
 export interface AuthResult {
   authenticated: boolean;
@@ -21,7 +21,7 @@ export interface AuthResult {
 function extractToken(req: VercelRequest): string | null {
   // Header Authorization
   const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith('Bearer ')) {
+  if (authHeader?.startsWith("Bearer ")) {
     return authHeader.substring(7);
   }
 
@@ -32,7 +32,7 @@ function extractToken(req: VercelRequest): string | null {
   }
 
   // Body (para POST requests)
-  if (req.method === 'POST' && req.body?.token) {
+  if (req.method === "POST" && req.body?.token) {
     return req.body.token;
   }
 
@@ -45,47 +45,44 @@ function extractToken(req: VercelRequest): string | null {
 export async function validateAuthToken(token: string): Promise<AuthResult> {
   try {
     // Token vazio ou inválido
-    if (!token || typeof token !== 'string' || token.length < 10) {
+    if (!token || typeof token !== "string" || token.length < 10) {
       return {
         authenticated: false,
-        error: 'Token inválido ou ausente',
-        code: 'INVALID_TOKEN'
+        error: "Token inválido ou ausente",
+        code: "INVALID_TOKEN",
       };
     }
 
     // Para desenvolvimento: aceitar tokens de teste
-    if (process.env.NODE_ENV === 'development') {
-      const testTokens = [
-        process.env.TEST_AUTH_TOKEN,
-        'test-token-123',
-        'dev-token-456'
-      ].filter(Boolean);
+    if (process.env.NODE_ENV === "development") {
+      const testTokens = [process.env.TEST_AUTH_TOKEN, "test-token-123", "dev-token-456"].filter(
+        Boolean
+      );
 
       if (testTokens.includes(token)) {
         return {
           authenticated: true,
-          userId: 'dev-user'
+          userId: "dev-user",
         };
       }
     }
 
-    // TODO: Implementar validação real de JWT ou sessão
+    // FIXME: Implementar validação real de JWT ou sessão (issue #SECURITY-001)
     // Por enquanto, aceita qualquer token não vazio em produção
-    // Isso deve ser substituído por validação real de JWT
+    // Deve usar jsonwebtoken ou similar para validar signature e claims
 
-    logger.warn('Usando validação de token temporária - implementar JWT real');
+    logger.warn("Usando validação de token temporária - implementar JWT real");
 
     return {
       authenticated: true,
-      userId: 'authenticated-user'
+      userId: "authenticated-user",
     };
-
   } catch (error) {
-    logger.error('Erro na validação de token', error);
+    logger.error("Erro na validação de token", error);
     return {
       authenticated: false,
-      error: 'Erro interno na validação',
-      code: 'VALIDATION_ERROR'
+      error: "Erro interno na validação",
+      code: "VALIDATION_ERROR",
     };
   }
 }
@@ -93,33 +90,30 @@ export async function validateAuthToken(token: string): Promise<AuthResult> {
 /**
  * Middleware de autenticação obrigatório
  */
-export async function requireAuth(
-  req: VercelRequest,
-  _res: VercelResponse
-): Promise<AuthResult> {
+export async function requireAuth(req: VercelRequest, _res: VercelResponse): Promise<AuthResult> {
   const token = extractToken(req);
 
   if (!token) {
-    logger.warn('Tentativa de acesso sem token', {
+    logger.warn("Tentativa de acesso sem token", {
       method: req.method,
       url: req.url,
-      ip: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown'
+      ip: req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown",
     });
 
     return {
       authenticated: false,
-      error: 'Autenticação obrigatória',
-      code: 'AUTH_REQUIRED'
+      error: "Autenticação obrigatória",
+      code: "AUTH_REQUIRED",
     };
   }
 
   const authResult = await validateAuthToken(token);
 
   if (!authResult.authenticated) {
-    logger.warn('Token inválido rejeitado', {
+    logger.warn("Token inválido rejeitado", {
       method: req.method,
       url: req.url,
-      error: authResult.error
+      error: authResult.error,
     });
   }
 
@@ -129,15 +123,13 @@ export async function requireAuth(
 /**
  * Middleware de autenticação opcional
  */
-export async function optionalAuth(
-  req: VercelRequest
-): Promise<AuthResult> {
+export async function optionalAuth(req: VercelRequest): Promise<AuthResult> {
   const token = extractToken(req);
 
   if (!token) {
     return {
       authenticated: false,
-      userId: undefined
+      userId: undefined,
     };
   }
 
@@ -148,13 +140,13 @@ export async function optionalAuth(
  * Helper para responder com erro de autenticação
  */
 export function sendAuthError(res: VercelResponse, result: AuthResult): void {
-  const statusCode = result.code === 'AUTH_REQUIRED' ? 401 : 403;
+  const statusCode = result.code === "AUTH_REQUIRED" ? 401 : 403;
 
   res.status(statusCode).json({
     ok: false,
-    error: result.error || 'Não autorizado',
+    error: result.error || "Não autorizado",
     code: result.code,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 

@@ -408,6 +408,19 @@ function validateSetInput(body: PostRequestBody): ValidationResult {
     return { valid: false, errorMessage: "Value is required in request body" };
   }
 
+  // ⚠️ Valida tamanho do payload (max 4.5MB para evitar 413)
+  const valueStr = JSON.stringify(value);
+  const sizeInMB = Buffer.byteLength(valueStr, "utf8") / 1024 / 1024;
+  const MAX_SIZE_MB = 4.5; // Vercel limit: 4.5MB body size
+
+  if (sizeInMB > MAX_SIZE_MB) {
+    logger.warn(`Payload muito grande: ${sizeInMB.toFixed(2)}MB (max ${MAX_SIZE_MB}MB)`, { key });
+    return {
+      valid: false,
+      errorMessage: `Payload muito grande: ${sizeInMB.toFixed(2)}MB. Máximo: ${MAX_SIZE_MB}MB. Considere dividir os dados ou limpar dados antigos.`,
+    };
+  }
+
   return { valid: true, key, value };
 }
 

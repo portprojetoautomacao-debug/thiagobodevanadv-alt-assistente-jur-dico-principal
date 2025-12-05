@@ -45,7 +45,6 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
 
     try {
       for (const uploadedFile of files) {
-
         // Validate file size (max 50MB)
         if (uploadedFile.size > 50 * 1024 * 1024) {
           toast.error(`Arquivo ${uploadedFile.name} é muito grande. Máximo: 50MB`);

@@ -290,10 +290,7 @@ function createChainedTask(
     priority: mapping.priority,
     status: TaskStatus.QUEUED,
     createdAt: new Date().toISOString(),
-    data: { ...sourceTask.data,
-      instruction: actionText,
-      sourceTask: sourceTask.id,
-    },
+    data: { ...sourceTask.data, instruction: actionText, sourceTask: sourceTask.id },
   };
 }
 
