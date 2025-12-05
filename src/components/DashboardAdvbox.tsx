@@ -5,13 +5,13 @@ import { useKV } from "@/hooks/use-kv";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
   ArrowUp,
-  CaretLeft,
-  CaretRight,
+  ChevronLeft as CaretLeft,
+  ChevronRight as CaretRight,
   CheckCircle,
   Clock,
   FileText,
   Trophy,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { memo, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,

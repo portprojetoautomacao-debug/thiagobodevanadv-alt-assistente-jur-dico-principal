@@ -34,7 +34,7 @@ const MATCH_BADGE_VARIANTS = {
   },
 };
 
-function MatchBadge({ type }: { type: "nome" | "oab" | "ambos" }) {
+function MatchBadge({ type }: Readonly<{ type: "nome" | "oab" | "ambos" }>) {
   const variant = MATCH_BADGE_VARIANTS[type];
   return (
     <Badge variant="outline" className={variant.className}>

@@ -45,7 +45,12 @@ const NAVIGATION_ITEMS = [
   { id: "knowledge", label: "Base Conhecimento", icon: BookOpen },
 ];
 
-export default function Sidebar({ currentView, onViewChange, user, onLogout }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  user,
+  onLogout,
+}: Readonly<SidebarProps>) {
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">

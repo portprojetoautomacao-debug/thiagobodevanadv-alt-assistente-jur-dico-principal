@@ -1,5 +1,5 @@
-import { Check, CaretDown as ChevronDown, CaretUp as ChevronUpIcon } from "@phosphor-icons/react";
 import * as SelectPrimitive from "@radix-ui/react-select";
+import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
@@ -134,7 +134,7 @@ function SelectScrollUpButton({
       className={cn("flex cursor-default items-center justify-center py-1", className)}
       {...props}
     >
-      <ChevronUpIcon className="size-4" />
+      <ChevronUp className="size-4" />
     </SelectPrimitive.ScrollUpButton>
   );
 }

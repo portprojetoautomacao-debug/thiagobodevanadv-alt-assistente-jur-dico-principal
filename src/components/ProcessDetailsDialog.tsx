@@ -54,7 +54,7 @@ export default function ProcessDetailsDialog({
   process,
   onEdit,
   onDelete,
-}: ProcessDetailsDialogProps) {
+}: Readonly<ProcessDetailsDialogProps>) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [premonicaoOpen, setPremonicaoOpen] = useState(false);
   const [premonicaoLoading, setPremonicaoLoading] = useState(false);
@@ -271,11 +271,11 @@ function PrazoStatusBadge({
   concluido,
   urgente,
   diasRestantes,
-}: {
+}: Readonly<{
   concluido: boolean;
   urgente: boolean;
   diasRestantes: number;
-}) {
+}>) {
   if (concluido) {
     return <Badge variant="secondary">Concluído</Badge>;
   }

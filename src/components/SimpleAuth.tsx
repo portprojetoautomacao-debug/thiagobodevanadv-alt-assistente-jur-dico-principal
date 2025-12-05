@@ -8,7 +8,7 @@ interface SimpleAuthProps {
   onSuccess: (user: User) => void;
 }
 
-export function SimpleAuth({ onSuccess }: SimpleAuthProps) {
+export function SimpleAuth({ onSuccess }: Readonly<SimpleAuthProps>) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");

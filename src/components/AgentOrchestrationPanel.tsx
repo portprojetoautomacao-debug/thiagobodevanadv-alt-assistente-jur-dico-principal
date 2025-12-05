@@ -492,7 +492,7 @@ export default function AgentOrchestrationPanel() {
   );
 }
 
-function TraceItem({ trace }: { trace: AgentTrace }) {
+function TraceItem({ trace }: Readonly<{ trace: AgentTrace }>) {
   return (
     <div className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded">
       <div className="shrink-0">
