@@ -33,8 +33,8 @@ export default function AudioTranscription() {
 
   // Verifica suporte a Web Speech API
   const isSpeechSupported =
-    typeof window !== "undefined" &&
-    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+    typeof globalThis !== "undefined" &&
+    ("SpeechRecognition" in globalThis || "webkitSpeechRecognition" in globalThis);
 
   const handleStartRecording = () => {
     if (!isSpeechSupported) {
@@ -50,7 +50,7 @@ export default function AudioTranscription() {
 
     const SpeechRecognitionClass =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (globalThis as any).SpeechRecognition || (globalThis as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass() as SpeechRecognition;
 
     recognition.lang = "pt-BR";

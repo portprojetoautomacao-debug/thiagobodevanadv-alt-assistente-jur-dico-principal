@@ -152,7 +152,7 @@ export default function BatchAnalysis() {
         // Cadastra/atualiza cliente automaticamente a partir das partes
         // O campo 'parties' geralmente tem formato "Autor vs Réu" ou "Autor x Réu"
         if (data.parties) {
-          const partiesMatch = data.parties.match(/^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i);
+          const partiesMatch = /^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i.exec(data.parties);
           if (partiesMatch) {
             const autor = partiesMatch[1].trim();
             // const reu = partiesMatch[2].trim() // Unused
@@ -218,7 +218,7 @@ export default function BatchAnalysis() {
       ["CNJ", "Partes", "Prazo", "Tipo"].join(","),
       ...extractedData.map((d) =>
         [d.cnj, d.parties, d.deadline, d.type]
-          .map((field) => `"${(field || "").replace(/"/g, '""')}"`)
+          .map((field) => `"${(field || "").replaceAll('"', '""')}"`)
           .join(",")
       ),
     ].join("\n");
