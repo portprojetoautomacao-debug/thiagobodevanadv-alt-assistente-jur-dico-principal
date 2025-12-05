@@ -403,7 +403,7 @@ export const validarSaidaAgente = validarEntradaTarefa;
  */
 export function extrairJSONDeResposta(content: string): unknown | null {
   // Tenta extrair JSON entre ```json e ```
-  const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+  const jsonBlockMatch = /```json\s*([\s\S]*?)\s*```/.exec(content);
   if (jsonBlockMatch) {
     try {
       return JSON.parse(jsonBlockMatch[1]);
@@ -413,7 +413,7 @@ export function extrairJSONDeResposta(content: string): unknown | null {
   }
 
   // Tenta extrair primeiro objeto JSON (não guloso)
-  const jsonMatch = content.match(/\{[\s\S]*?\}/);
+  const jsonMatch = /\{[\s\S]*?\}/.exec(content);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
