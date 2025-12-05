@@ -296,7 +296,7 @@ export function initErrorTracking(): void {
     // Dynamic import para evitar erro de módulo não encontrado durante type-check
     setTimeout(async () => {
       try {
-        const { initGeminiIntegration } = await import("../lib/sentry-gemini-integration");
+        const { initGeminiIntegration } = await import("../lib/sentry-gemini-integration.js");
         initGeminiIntegration({
           includePrompts: true,
           captureErrors: true,
