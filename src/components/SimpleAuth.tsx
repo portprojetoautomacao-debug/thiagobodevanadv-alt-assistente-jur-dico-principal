@@ -37,20 +37,25 @@ export function SimpleAuth({ onSuccess }: Readonly<SimpleAuthProps>) {
       </CardHeader>
       <CardContent className="space-y-3">
         <Input
+          name="username"
+          type="text"
           placeholder="Usuário"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           aria-label="Usuário"
+          data-testid="login-username"
         />
         <Input
-          placeholder="Senha"
+          name="password"
           type="password"
+          placeholder="Senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           aria-label="Senha"
+          data-testid="login-password"
         />
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button className="w-full" onClick={handleLogin}>
+        <Button className="w-full" onClick={handleLogin} type="submit" data-testid="login-submit">
           Entrar
         </Button>
       </CardContent>
