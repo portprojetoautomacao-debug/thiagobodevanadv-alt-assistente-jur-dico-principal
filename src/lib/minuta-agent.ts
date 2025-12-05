@@ -6,10 +6,10 @@
 // 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
 
 import { generatePeticao } from "@/lib/gemini-service";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { Minuta } from "@/types";
 import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 import { googleDocsService } from "./google-docs-service";
-import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 
 // Mesmo shape do módulo de integração de prazos (deadline-integration)
 export interface MinutaAgentDeadline {
@@ -275,7 +275,7 @@ export async function criarMinutaComAgenteIA(
   params: MinutaAgentParams
 ): Promise<MinutaAgentResult> {
   const sessionId = `minuta-${Date.now()}`;
-  
+
   return createInvokeAgentSpan(
     {
       agentName: "Redação de Petições",
@@ -311,41 +311,41 @@ export async function criarMinutaComAgenteIA(
       // 1) Gera a minuta usando Gemini
       const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso);
 
-    if (geminiError || !content) {
-      errors.push(geminiError || "Erro ao gerar minuta");
-      logError(geminiError || "Erro ao gerar minuta");
-      return createErrorResult(errors, prazo ?? null);
-    }
+      if (geminiError || !content) {
+        errors.push(geminiError || "Erro ao gerar minuta");
+        logError(geminiError || "Erro ao gerar minuta");
+        return createErrorResult(errors, prazo ?? null);
+      }
 
-    // 2) Monta objeto Minuta
-    const minuta = buildMinutaObject(titulo, tipoMinuta, numeroProcesso, content);
+      // 2) Monta objeto Minuta
+      const minuta = buildMinutaObject(titulo, tipoMinuta, numeroProcesso, content);
 
-    // 3) Salvar no Google Docs (se habilitado)
-    let docsId: string | null = null;
-    let docsUrl: string | null = null;
+      // 3) Salvar no Google Docs (se habilitado)
+      let docsId: string | null = null;
+      let docsUrl: string | null = null;
 
-    if (syncDocs) {
-      const docsResult = await saveToGoogleDocs(minuta, errors);
-      docsId = docsResult.docsId;
-      docsUrl = docsResult.docsUrl;
-    }
+      if (syncDocs) {
+        const docsResult = await saveToGoogleDocs(minuta, errors);
+        docsId = docsResult.docsId;
+        docsUrl = docsResult.docsUrl;
+      }
 
-    // 4) Criar prazo no Google Calendar (se houver prazo + sync ativo)
-    let calendarEventId: string | null = null;
-    let prazoNormalizado: MinutaAgentDeadline | null = prazo ?? null;
+      // 4) Criar prazo no Google Calendar (se houver prazo + sync ativo)
+      let calendarEventId: string | null = null;
+      let prazoNormalizado: MinutaAgentDeadline | null = prazo ?? null;
 
-    if (prazo && syncCalendar) {
-      const calendarResult = await createCalendarEvent(
-        prazo,
-        minuta.titulo,
-        tipoMinuta,
-        numeroProcesso,
-        tribunal,
-        errors
-      );
-      calendarEventId = calendarResult.eventId;
-      prazoNormalizado = calendarResult.prazoNormalizado;
-    }
+      if (prazo && syncCalendar) {
+        const calendarResult = await createCalendarEvent(
+          prazo,
+          minuta.titulo,
+          tipoMinuta,
+          numeroProcesso,
+          tribunal,
+          errors
+        );
+        calendarEventId = calendarResult.eventId;
+        prazoNormalizado = calendarResult.prazoNormalizado;
+      }
 
       logSuccess("Minuta gerada com sucesso");
 
