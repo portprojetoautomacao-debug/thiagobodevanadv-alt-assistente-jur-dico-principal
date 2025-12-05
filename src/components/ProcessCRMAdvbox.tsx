@@ -74,7 +74,7 @@ interface SortableCardProps {
   onOpenDetails: (card: ProcessCardData) => void;
 }
 
-function SortableCard({ card, onOpenDetails }: SortableCardProps) {
+function SortableCard({ card, onOpenDetails }: Readonly<SortableCardProps>) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
   });

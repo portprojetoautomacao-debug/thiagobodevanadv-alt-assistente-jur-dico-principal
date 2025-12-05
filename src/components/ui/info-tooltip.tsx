@@ -13,7 +13,7 @@ export function InfoTooltip({
   side = "top",
   className = "",
   ariaLabel = "Mais informações",
-}: InfoTooltipProps) {
+}: Readonly<InfoTooltipProps>) {
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>

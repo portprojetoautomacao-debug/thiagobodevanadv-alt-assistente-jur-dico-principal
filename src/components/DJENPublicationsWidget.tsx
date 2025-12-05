@@ -534,7 +534,7 @@ export default function DJENPublicationsWidget({
   onViewAll,
   compact = false,
   maxItems = 5,
-}: DJENPublicationsWidgetProps) {
+}: Readonly<DJENPublicationsWidgetProps>) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 

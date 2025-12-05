@@ -1,5 +1,5 @@
-import { ComponentProps } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
@@ -12,7 +12,7 @@ function DialogTrigger({ ...props }: ComponentProps<typeof DialogPrimitive.Trigg
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
-function DialogPortal({ ...props }: ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal({ ...props }: Readonly<ComponentProps<typeof DialogPrimitive.Portal>>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 

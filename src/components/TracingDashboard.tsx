@@ -67,7 +67,7 @@ export default function TracingDashboard({
   agentIds: _agentIds = [],
   autoRefresh = true,
   refreshInterval = 5000,
-}: TracingDashboardProps) {
+}: Readonly<TracingDashboardProps>) {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);

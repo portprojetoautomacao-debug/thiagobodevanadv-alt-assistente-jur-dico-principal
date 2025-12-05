@@ -11,12 +11,12 @@ import type { Expediente, FinancialEntry, Process } from "@/types";
 import {
   Bell,
   Briefcase,
-  ChartBar,
-  CurrencyCircleDollar,
-  PaperPlaneTilt,
-  Stop,
-  Warning,
-} from "@phosphor-icons/react";
+  BarChart3 as ChartBar,
+  DollarSign as CurrencyCircleDollar,
+  Send as PaperPlaneTilt,
+  Square as Stop,
+  AlertTriangle as Warning,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 

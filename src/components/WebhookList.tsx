@@ -42,7 +42,7 @@ export function WebhookList({
   testingWebhookId,
   onTest,
   onDelete,
-}: WebhookListProps) {
+}: Readonly<WebhookListProps>) {
   const getWebhookIcon = (type: WebhookType) => {
     switch (type) {
       case "slack":

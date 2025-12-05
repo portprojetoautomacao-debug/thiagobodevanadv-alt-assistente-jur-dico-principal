@@ -16,7 +16,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente, Minuta, Process } from "@/types";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { ArrowDown, ArrowUp, ChevronRight, Command, FileText, Folder, Inbox, Search, User, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronRight,
+  Command,
+  FileText,
+  Folder,
+  Inbox,
+  Search,
+  User,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Tipo para cliente (simplificado)
@@ -45,7 +56,7 @@ interface GlobalSearchProps {
   onNavigate?: (view: string, data?: unknown) => void;
 }
 
-export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
+export function GlobalSearch({ onNavigate }: Readonly<GlobalSearchProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<SearchCategory>("all");
