@@ -152,6 +152,13 @@ USE_PROD_BASE_URL=true npm run test:e2e
 BASE_URL=https://staging.example.com npm run test:e2e
 ```
 
+### Teste Rápido de Login
+
+```bash
+# Script automatizado que testa apenas o login
+./test-e2e-login.sh
+```
+
 ### Browsers Específicos
 
 ```bash
