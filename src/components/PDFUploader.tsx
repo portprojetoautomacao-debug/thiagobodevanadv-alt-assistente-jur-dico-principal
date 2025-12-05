@@ -16,6 +16,9 @@ import { CheckCircle, Clock, FileText, Loader2, Trash2, Upload, User, XCircle } 
 import { useState } from "react";
 import { toast } from "sonner";
 
+// Type alias para tipo de pessoa (S6571)
+type TipoPessoa = "fisica" | "juridica";
+
 interface ExtractedData {
   nome?: string;
   cpfCnpj?: string;
@@ -25,7 +28,7 @@ interface ExtractedData {
   cidade?: string;
   estado?: string;
   cep?: string;
-  tipo?: "fisica" | "juridica";
+  tipo?: TipoPessoa;
   numeroProcesso?: string;
   dataDocumento?: string;
   observacoes?: string;
@@ -201,7 +204,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
     }
   };
 
-  const handleEditField = (field: keyof ExtractedData, value: string | "fisica" | "juridica") => {
+  const handleEditField = (field: keyof ExtractedData, value: string | TipoPessoa) => {
     setExtractedData((prev) => ({
       ...prev,
       [field]: value,

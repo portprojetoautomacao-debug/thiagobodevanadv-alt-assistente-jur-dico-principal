@@ -104,7 +104,7 @@ function extractTokenUsage(
   span: ReturnType<typeof Sentry.startInactiveSpan>,
   metadata: Record<string, unknown>
 ): void {
-  const meta = metadata as Record<string, unknown>;
+  const meta = metadata;
 
   if (typeof meta.promptTokens === "number") {
     span?.setAttribute("gen_ai.usage.input_tokens", meta.promptTokens);

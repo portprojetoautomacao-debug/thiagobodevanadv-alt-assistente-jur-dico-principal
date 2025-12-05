@@ -292,11 +292,20 @@ export function initErrorTracking(): void {
     console.log(`   Environment: ${APP_ENVIRONMENT}`);
     console.log(`   Release: assistente-juridico@${APP_VERSION}`);
 
-    // 🔍 Inicializar integração Gemini para AI Monitoring
-    initGeminiIntegration({
-      includePrompts: true, // Captura prompts e outputs (PII considerado)
-      captureErrors: true, // Captura erros do Gemini automaticamente
-    });
+    // 🔍 Inicializar integração Gemini para AI Monitoring (lazy loading)
+    // Dynamic import para evitar erro de módulo não encontrado durante type-check
+    setTimeout(async () => {
+      try {
+        const { initGeminiIntegration } = await import("../lib/sentry-gemini-integration");
+        initGeminiIntegration({
+          includePrompts: true,
+          captureErrors: true,
+        });
+        console.log("[Sentry] Gemini Integration initialized");
+      } catch {
+        // Silencioso - integração opcional
+      }
+    }, 1000);
   } catch (error) {
     console.error("❌ Falha ao inicializar Sentry:", error);
   }

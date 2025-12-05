@@ -597,10 +597,10 @@ class GoogleDocsService {
           if (!docsApi.documents?.batchUpdate) {
             throw new Error("docsApi.documents.batchUpdate not available");
           }
-          return await (docsApi.documents.batchUpdate({
+          return (await docsApi.documents.batchUpdate({
             documentId: docId,
             requests,
-          }) as Promise<DocsBatchUpdateResponse>);
+          })) as DocsBatchUpdateResponse;
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,

@@ -39,10 +39,11 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-type SourceStatus = "success" | "error" | string;
+// Type aliases para evitar union overrides (S6571)
+type SourceStatus = "success" | "error";
 
 interface SourceStatsItem {
-  source: PublicationSource | string;
+  source: string; // Aceita any string durante runtime
   status: SourceStatus;
   count: number;
   duration: number;

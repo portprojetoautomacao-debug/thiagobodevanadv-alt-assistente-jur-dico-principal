@@ -43,6 +43,9 @@ interface CircuitBreakerStatus {
   timeSinceLastFailure: number | null;
 }
 
+// Type alias para estados do circuit breaker (S6571)
+type CircuitBreakerState = CircuitBreakerStatus["state"];
+
 interface AgentTrace {
   timestamp: string;
   step: number;
@@ -230,7 +233,7 @@ export default function AgentOrchestrationPanel() {
     };
   }, [autoRefresh]);
 
-  const getStateColor = (state: CircuitBreakerStatus["state"] | string) => {
+  const getStateColor = (state: CircuitBreakerState) => {
     switch (state) {
       case "CLOSED":
         return "text-green-600 bg-green-100 dark:bg-green-900/20";
@@ -243,7 +246,7 @@ export default function AgentOrchestrationPanel() {
     }
   };
 
-  const getStateIcon = (state: CircuitBreakerStatus["state"] | string) => {
+  const getStateIcon = (state: CircuitBreakerState) => {
     switch (state) {
       case "CLOSED":
         return <CheckCircle className="h-4 w-4" />;
