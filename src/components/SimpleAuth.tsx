@@ -29,35 +29,44 @@ export function SimpleAuth({ onSuccess }: Readonly<SimpleAuthProps>) {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLogin();
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Login Simples</CardTitle>
         <CardDescription>Entre com credenciais locais</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <Input
-          name="username"
-          type="text"
-          placeholder="Usuário"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          aria-label="Usuário"
-          data-testid="login-username"
-        />
-        <Input
-          name="password"
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          aria-label="Senha"
-          data-testid="login-password"
-        />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button className="w-full" onClick={handleLogin} type="submit" data-testid="login-submit">
-          Entrar
-        </Button>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <Input
+            name="username"
+            type="text"
+            placeholder="Usuário"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            aria-label="Usuário"
+            data-testid="login-username"
+            autoComplete="username"
+          />
+          <Input
+            name="password"
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-label="Senha"
+            data-testid="login-password"
+            autoComplete="current-password"
+          />
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button className="w-full" type="submit" data-testid="login-submit">
+            Entrar
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

@@ -30,6 +30,58 @@ function extractResponseText(data: Record<string, unknown>): string {
 }
 
 /**
+ * Corrige JSON truncado fechando strings e chaves abertas
+ */
+function fixTruncatedJson(truncated: string): Record<string, unknown> {
+  let fixed = truncated;
+
+  // PASSO 1: Fechar strings abertas PRIMEIRO (antes de adicionar chaves)
+  const quoteCount = (fixed.match(/"/g) || []).length;
+  if (quoteCount % 2 !== 0) {
+    fixed += '"';
+  }
+
+  // PASSO 2: Contar e adicionar chaves faltantes
+  const openBraces = (fixed.match(/\{/g) || []).length;
+  const closeBraces = (fixed.match(/\}/g) || []).length;
+  fixed += "}".repeat(Math.max(0, openBraces - closeBraces));
+
+  return JSON.parse(fixed) as Record<string, unknown>;
+}
+
+/**
+ * Tenta extrair e parsear JSON truncado
+ */
+function tryParseTruncatedJson(cleaned: string): Record<string, unknown> | null {
+  const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
+  if (!truncatedMatch) return null;
+
+  try {
+    return fixTruncatedJson(truncatedMatch[0]);
+  } catch {
+    console.warn(
+      "[PremonicaoService] JSON truncado não pôde ser corrigido:",
+      truncatedMatch[0].substring(0, 200)
+    );
+    return null;
+  }
+}
+
+/**
+ * Tenta extrair o primeiro bloco JSON da resposta
+ */
+function tryParseJsonBlock(cleaned: string): Record<string, unknown> | null {
+  const jsonMatch = /\{[\s\S]*\}/.exec(cleaned);
+  if (!jsonMatch) return null;
+
+  try {
+    return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+  } catch {
+    return tryParseTruncatedJson(cleaned);
+  }
+}
+
+/**
  * Limpa e faz parse do JSON da resposta
  */
 function parseJsonResponse(responseText: string): Record<string, unknown> {
@@ -42,43 +94,8 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
   try {
     return JSON.parse(cleaned) as Record<string, unknown>;
   } catch {
-    // Tentar extrair o primeiro bloco JSON da resposta
-    const jsonMatch = /\{[\s\S]*\}/.exec(cleaned);
-    if (jsonMatch) {
-      try {
-        return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      } catch {
-        // Tentar encontrar JSON truncado e completá-lo
-        const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
-        if (truncatedMatch) {
-          let truncated = truncatedMatch[0];
-
-          // PASSO 1: Fechar strings abertas PRIMEIRO (antes de adicionar chaves)
-          // Isso garante que {"key": "value... vire {"key": "value"} e não {"key": "value...}
-          const quoteCount = (truncated.match(/"/g) || []).length;
-          if (quoteCount % 2 !== 0) {
-            // String aberta - fechar com aspas
-            truncated += '"';
-          }
-
-          // PASSO 2: Contar chaves abertas e fechadas
-          const openBraces = (truncated.match(/\{/g) || []).length;
-          const closeBraces = (truncated.match(/\}/g) || []).length;
-
-          // PASSO 3: Adicionar chaves faltantes (APÓS fechar strings)
-          truncated += "}".repeat(Math.max(0, openBraces - closeBraces));
-
-          try {
-            return JSON.parse(truncated) as Record<string, unknown>;
-          } catch {
-            console.warn(
-              "[PremonicaoService] JSON truncado não pôde ser corrigido:",
-              truncated.substring(0, 200)
-            );
-          }
-        }
-      }
-    }
+    const parsed = tryParseJsonBlock(cleaned);
+    if (parsed) return parsed;
 
     console.error("[PremonicaoService] Falha ao parsear JSON:", cleaned.substring(0, 500));
     throw new Error("Resposta não contém JSON reconhecível");
@@ -92,6 +109,102 @@ function normalizeProbability(value: unknown): number {
   let prob = Number(value);
   if (!Number.isFinite(prob)) prob = 50;
   return Math.min(100, Math.max(0, prob));
+}
+
+/**
+ * Valida e faz fetch para API LLM
+ */
+async function fetchLLMResponse(promptText: string) {
+  const response = await fetch("/api/llm-proxy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gemini-2.5-pro",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você é um assistente jurídico especializado em análise preditiva de processos judiciais brasileiros. Sempre responda apenas com JSON válido, sem markdown, sem comentários e sem texto fora do objeto JSON.",
+        },
+        { role: "user", content: promptText },
+      ],
+      max_tokens: 4000,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("[PremonicaoService] Erro na resposta:", response.status, response.statusText);
+    throw new Error(`Erro na API: ${response.status}`);
+  }
+
+  return response.json() as Promise<Record<string, unknown>>;
+}
+
+/**
+ * Valida se resposta foi truncada (finish_reason: max_tokens)
+ */
+function checkResponseTruncation(data: Record<string, unknown>): void {
+  if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+    return;
+  }
+
+  const firstChoice = data.choices[0] as Record<string, unknown>;
+  if (firstChoice.finish_reason === "max_tokens") {
+    console.warn(
+      "[PremonicaoService] Resposta truncada (max_tokens). Considere aumentar max_tokens."
+    );
+    throw new Error(
+      "Análise incompleta - resposta muito longa. Tente novamente com um processo mais simples."
+    );
+  }
+}
+
+/**
+ * Normaliza os dados brutos do parse em PremonicaoJuridica
+ */
+function normalizePremonicaoData(cnj: string, parsed: Record<string, unknown>): PremonicaoJuridica {
+  const prob = normalizeProbability(parsed.probabilidade_exito);
+  const analise =
+    typeof parsed.analise_ia === "string" && parsed.analise_ia.trim()
+      ? parsed.analise_ia.trim()
+      : "Análise não disponível";
+
+  const estrategias: string[] = Array.isArray(parsed.estrategias_recomendadas)
+    ? parsed.estrategias_recomendadas.filter(
+        (e): e is string => typeof e === "string" && e.trim() !== ""
+      )
+    : [];
+
+  type PrecedenteRaw = {
+    id?: string;
+    tribunal?: string;
+    numero?: string;
+    tema?: string;
+    resumo_relevancia?: string;
+    link?: string;
+  };
+
+  const precedentes: PremonicaoJuridica["precedentes_relevantes"] = Array.isArray(
+    parsed.precedentes_relevantes
+  )
+    ? (parsed.precedentes_relevantes as PrecedenteRaw[]).map((p) => ({
+        id: p.id || crypto.randomUUID(),
+        tribunal: p.tribunal || "N/A",
+        numero: p.numero || "N/A",
+        tema: p.tema || "N/A",
+        resumo_relevancia: p.resumo_relevancia || "N/A",
+        link: p.link || "",
+      }))
+    : [];
+
+  return {
+    processo_cnj: cnj,
+    probabilidade_exito: prob,
+    analise_ia: analise,
+    estrategias_recomendadas: estrategias,
+    precedentes_relevantes: precedentes,
+  };
 }
 
 export async function generatePremonicaoJuridica(
@@ -152,51 +265,12 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
   try {
     console.log("[PremonicaoService] Gerando análise preditiva para:", cnj);
 
-    // Aumenta max_tokens para evitar truncamento (finish_reason: max_tokens)
-    const response = await fetch("/api/llm-proxy", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gemini-2.5-pro",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é um assistente jurídico especializado em análise preditiva de processos judiciais brasileiros. Sempre responda apenas com JSON válido, sem markdown, sem comentários e sem texto fora do objeto JSON.",
-          },
-          {
-            role: "user",
-            content: promptText,
-          },
-        ],
-        max_tokens: 4000, // ⚠️ Aumentado de 2000 para 4000 (evita truncamento)
-        temperature: 0.7,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("[PremonicaoService] Erro na resposta:", response.status, response.statusText);
-      throw new Error(`Erro na API: ${response.status}`);
-    }
-
-    const data = (await response.json()) as Record<string, unknown>;
-
-    // ⚠️ Verifica finish_reason antes de processar
-    if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
-      const firstChoice = data.choices[0] as Record<string, unknown>;
-      if (firstChoice.finish_reason === "max_tokens") {
-        console.warn(
-          "[PremonicaoService] Resposta truncada (max_tokens). Considere aumentar max_tokens."
-        );
-        throw new Error(
-          "Análise incompleta - resposta muito longa. Tente novamente com um processo mais simples."
-        );
-      }
-    }
+    const data = await fetchLLMResponse(promptText);
+    checkResponseTruncation(data);
 
     const responseText = extractResponseText(data);
 
-    // Debug melhorado para identificar problema
+    // Validações de resposta vazia
     if (!responseText || typeof responseText !== "string") {
       console.warn("[PremonicaoService] Resposta inválida:", {
         type: typeof responseText,
@@ -223,53 +297,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
     );
 
     const parsed = parseJsonResponse(responseText);
-
-    // Normalização defensiva
-    const prob = normalizeProbability(parsed.probabilidade_exito);
-
-    const analise =
-      typeof parsed.analise_ia === "string" && parsed.analise_ia.trim()
-        ? parsed.analise_ia.trim()
-        : "Análise não disponível";
-
-    const estrategias: string[] = Array.isArray(parsed.estrategias_recomendadas)
-      ? parsed.estrategias_recomendadas.filter(
-          (e): e is string => typeof e === "string" && e.trim() !== ""
-        )
-      : [];
-
-    // Type for precedentes from API response
-    type PrecedenteRaw = {
-      id?: string;
-      tribunal?: string;
-      numero?: string;
-      tema?: string;
-      resumo_relevancia?: string;
-      link?: string;
-    };
-
-    const precedentes: PremonicaoJuridica["precedentes_relevantes"] = Array.isArray(
-      parsed.precedentes_relevantes
-    )
-      ? (parsed.precedentes_relevantes as PrecedenteRaw[]).map((p) => ({
-          id: p.id || crypto.randomUUID(),
-          tribunal: p.tribunal || "N/A",
-          numero: p.numero || "N/A",
-          tema: p.tema || "N/A",
-          resumo_relevancia: p.resumo_relevancia || "N/A",
-          link: p.link || "",
-        }))
-      : [];
-
-    const result: PremonicaoJuridica = {
-      processo_cnj: cnj,
-      probabilidade_exito: prob,
-      analise_ia: analise,
-      estrategias_recomendadas: estrategias,
-      precedentes_relevantes: precedentes,
-    };
-
-    return result;
+    return normalizePremonicaoData(cnj, parsed);
   } catch (error) {
     console.error("[PremonicaoService] Erro ao gerar premonição:", error);
     throw new Error("Não foi possível gerar a análise preditiva. Tente novamente.");

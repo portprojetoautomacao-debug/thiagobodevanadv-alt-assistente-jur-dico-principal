@@ -23,6 +23,7 @@ dist-ssr
 !.vscode/extensions.json
 .vscode/mcp.json
 .vscode/sonar-config.json
+.vscode/sonar-copilot-assistant.user.json
 .cursor/mcp.json
 .idea
 .DS_Store
@@ -97,4 +98,5 @@ eslint-results.sarif
 # SonarCloud
 .scannerwork/
 .sonar/
+.sonar-copilot/logs/
 coverage-api/

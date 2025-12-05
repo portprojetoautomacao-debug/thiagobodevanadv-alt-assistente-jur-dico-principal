@@ -41,7 +41,8 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      // Use Chromium bundled by Playwright to avoid relying on system Google Chrome
+      use: { ...devices["Desktop Chromium"], channel: "chromium" },
     },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },

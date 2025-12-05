@@ -170,7 +170,9 @@ export function useAgentBackup(options: BackupOptions) {
         }
       });
 
-      console.log(`🧹 Limpeza: ${keysToRemove.length} chaves antigas removidas`);
+      if (keysToRemove.length > 0 && import.meta.env.DEV) {
+        console.log(`🧹 Limpeza: ${keysToRemove.length} chaves antigas removidas`);
+      }
     } catch {
       // Ignorar erros
     }

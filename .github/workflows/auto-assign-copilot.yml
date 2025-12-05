@@ -1,0 +1,62 @@
+name: 🤖 Auto-Assign Copilot to Issues
+
+# Atribui automaticamente @copilot a issues com labels específicas
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-assign to Copilot
+        if: |
+          contains(github.event.issue.labels.*.name, 'auto-copilot') ||
+          contains(github.event.issue.labels.*.name, 'enhancement') ||
+          contains(github.event.issue.labels.*.name, 'feature') ||
+          contains(github.event.issue.labels.*.name, 'refactor')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Atribuir issue ao @copilot automaticamente
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: ['copilot']
+            });
+
+            // Adicionar comentário explicativo
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🤖 **Copilot Coding Agent ativado automaticamente!**
+              
+              Este issue foi atribuído ao agente de codificação por conter label de automação.
+              
+              **Próximos passos:**
+              1. ✅ Agente está analisando o issue agora
+              2. ⏳ Implementação em andamento (GitHub Actions)
+              3. 🔀 Pull Request será criado automaticamente
+              4. 👤 Você será atribuído para revisão
+              
+              **Acompanhe o progresso:**
+              - VS Code → Pull Requests → "Copilot on My Behalf"
+              - GitHub Actions → Workflow "Copilot Coding Agent"
+              
+              _Para cancelar: remova a atribuição @copilot_`
+            });
+
+            console.log('✅ Issue atribuído ao @copilot automaticamente');
+
+      - name: Notify Slack/Discord (Opcional)
+        if: |
+          contains(github.event.issue.labels.*.name, 'auto-copilot')
+        run: |
+          echo "🔔 Notificar equipe sobre nova tarefa do agente"
+          # Adicione integração Slack/Discord aqui se desejar

@@ -41,9 +41,7 @@ export function initGTM(): void {
   if (!isBrowser()) return;
 
   if (isGTMLoaded || !GTM_ID) {
-    if (!GTM_ID) {
-      console.info("📊 GTM: Não configurado (VITE_GTM_ID não definido)");
-    }
+    // GTM não configurado ou já carregado - silencioso em dev
     return;
   }
 
@@ -52,7 +50,7 @@ export function initGTM(): void {
 
   // Adiciona evento de inicialização
   globalThis.window.dataLayer.push({
-    "gtm.start": new Date().getTime(),
+    "gtm.start": Date.now(),
     event: "gtm.js",
   });
 
@@ -143,9 +141,8 @@ export function initGA4(): void {
 export function initAnalytics(): void {
   if (!isBrowser()) return;
 
-  // Só inicializa em desenvolvimento se forçado
+  // Só inicializa em desenvolvimento se forçado (silencioso)
   if (import.meta.env.DEV && !import.meta.env.VITE_FORCE_ANALYTICS) {
-    console.info("📊 Analytics: Desabilitado em desenvolvimento");
     return;
   }
 

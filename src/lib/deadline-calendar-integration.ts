@@ -176,7 +176,7 @@ export function createLocalAppointmentFromAnalysis(
     endDateStr = convertedDate;
   } else if (!/^\d{4}-\d{2}-\d{2}$/.test(endDateStr)) {
     // Não é BR e nem ISO - rejeitar silenciosamente strings como "Verificar"
-    if (process.env.VITE_APP_ENV !== "production") {
+    if (import.meta.env.DEV) {
       console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
     }
     return null;
@@ -185,7 +185,7 @@ export function createLocalAppointmentFromAnalysis(
   const deadlineDate = new Date(endDateStr);
   if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
     // Modo silencioso em produção
-    if (process.env.VITE_APP_ENV !== "production") {
+    if (import.meta.env.DEV) {
       console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
     }
     return null;

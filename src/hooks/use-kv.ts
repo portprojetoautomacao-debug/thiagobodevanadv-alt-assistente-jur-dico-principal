@@ -269,7 +269,11 @@ async function processWriteBatch(): Promise<void> {
 
     if (response.ok) {
       recordApiSuccess();
-    } else if (response.status === 429) {
+    } else if (response.status === 429 || response.status === 413) {
+      // 429 = Rate limit, 413 = Payload muito grande
+      if (response.status === 413 && import.meta.env.DEV) {
+        console.warn("[KV] Payload excede limite do Upstash - considere reduzir tamanho dos dados");
+      }
       recordApiError();
     }
   } catch (error) {
