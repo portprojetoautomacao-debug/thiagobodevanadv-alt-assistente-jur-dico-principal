@@ -43,7 +43,10 @@ export function getShortcutLabel(shortcut: KeyboardShortcut): string {
   const parts: string[] = [];
 
   // Usar userAgent ao invés de navigator.platform (deprecated)
-  const isMac = navigator.userAgent.includes("Mac") || navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad");
+  const isMac =
+    navigator.userAgent.includes("Mac") ||
+    navigator.userAgent.includes("iPhone") ||
+    navigator.userAgent.includes("iPad");
 
   if (shortcut.ctrl || shortcut.meta) {
     parts.push(isMac ? "⌘" : "Ctrl");
