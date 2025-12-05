@@ -182,10 +182,10 @@ function isDataVersionOutdated(storedVersion: number, currentVersion: number): b
 
 function clearOutdatedLocalStorage(): void {
   console.log("[Agents] Versão desatualizada → limpando dados locais…");
-  window.localStorage.removeItem("autonomous-agents");
-  window.localStorage.removeItem("agent-task-queue");
-  window.localStorage.removeItem("completed-agent-tasks");
-  window.localStorage.removeItem("agent-activity-log");
+  globalThis.window.localStorage.removeItem("autonomous-agents");
+  globalThis.window.localStorage.removeItem("agent-task-queue");
+  globalThis.window.localStorage.removeItem("completed-agent-tasks");
+  globalThis.window.localStorage.removeItem("agent-activity-log");
 }
 
 /**

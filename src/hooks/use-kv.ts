@@ -41,8 +41,9 @@ const CIRCUIT_BREAKER_COOLDOWN = 60000; // 60 segundos de cooldown
 
 // Flag para verificar se estamos em produção
 const isProd =
-  typeof window !== "undefined" &&
-  (window.location.hostname.includes("vercel.app") || window.location.hostname !== "localhost");
+  typeof globalThis.window !== "undefined" &&
+  (globalThis.window.location.hostname.includes("vercel.app") ||
+    globalThis.window.location.hostname !== "localhost");
 
 /**
  * Verifica se o circuit breaker está ativo
@@ -113,7 +114,7 @@ function loadFromLocalStorage(keys: string[]): Map<string, unknown> {
   const results = new Map<string, unknown>();
   for (const key of keys) {
     try {
-      const item = window.localStorage.getItem(key);
+      const item = globalThis.window.localStorage.getItem(key);
       if (item) {
         const value = JSON.parse(item);
         results.set(key, value);
@@ -286,7 +287,7 @@ async function processWriteBatch(): Promise<void> {
 function scheduleWrite<T>(key: string, value: T): void {
   // Sempre salva no localStorage imediatamente
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    globalThis.window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // localStorage cheio ou indisponível
   }
@@ -326,7 +327,7 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: 
 
     // Tenta localStorage
     try {
-      const item = window.localStorage.getItem(key);
+      const item = globalThis.window.localStorage.getItem(key);
       if (item) {
         const parsed = JSON.parse(item);
         setInCache(key, parsed);
