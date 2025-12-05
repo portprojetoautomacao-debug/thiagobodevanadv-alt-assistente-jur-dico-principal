@@ -42,7 +42,10 @@ export class UnitTestExample {
   private async authenticate(userId: string): Promise<any> {
     return {};
   }
-  private async authorize(user: any): Promise<void> {}
+  private async authorize(user: any): Promise<void> {
+    // TODO: Implementar validação de permissões RBAC
+    console.log("[AUTH] User authorized:", user);
+  }
   private async performOperation(user: any): Promise<any> {
     return {};
   }
@@ -127,7 +130,10 @@ export class CodeReviewExample {
   private async getData(id: string): Promise<any> {
     return {};
   }
-  private async updateData(id: string, data: any): Promise<void> {}
+  private async updateData(id: string, data: any): Promise<void> {
+    // TODO: Implementar atualização de dados com lock otimista
+    console.log("[UPDATE] Data updated:", { id, data });
+  }
 }
 
 // ENHANCEMENT: Melhorias incrementais planejadas

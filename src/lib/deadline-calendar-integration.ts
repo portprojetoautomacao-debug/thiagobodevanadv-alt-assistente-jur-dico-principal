@@ -151,6 +151,47 @@ function convertBRDateToISO(dateStr: string): string | null {
 }
 
 /**
+ * Valida e converte string de data para ISO format
+ * Retorna null se inválida
+ */
+function parseAndValidateDeadlineDate(endDateStr: string): string | null {
+  if (!endDateStr) {
+    console.log("[DeadlineIntegration] endDate is missing");
+    return null;
+  }
+
+  // Tentar converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
+  const convertedDate = convertBRDateToISO(endDateStr);
+  if (convertedDate) {
+    return convertedDate;
+  }
+
+  // Verificar se já é ISO válido (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(endDateStr)) {
+    return endDateStr;
+  }
+
+  // Formato inválido - rejeitar silenciosamente strings como "Verificar"
+  if (import.meta.env.DEV) {
+    console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
+  }
+  return null;
+}
+
+/**
+ * Valida se Date object é válido
+ */
+function isValidDateObject(date: Date, originalStr: string): boolean {
+  if (!date || Number.isNaN(date.getTime())) {
+    if (import.meta.env.DEV) {
+      console.log("[DeadlineIntegration] Invalid deadline date:", originalStr);
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
@@ -162,32 +203,16 @@ export function createLocalAppointmentFromAnalysis(
     return null;
   }
 
-  // Type guard above ensures analysis.deadline is defined
-  let endDateStr = analysis.deadline.endDate;
-  if (!endDateStr) {
-    console.log("[DeadlineIntegration] endDate is missing");
-    return null;
+  // Type guard acima garante que analysis.deadline está definido
+  const originalDateStr = analysis.deadline.endDate;
+  const validatedDateStr = parseAndValidateDeadlineDate(originalDateStr);
+
+  if (!validatedDateStr) {
+    return null; // Logs já emitidos por parseAndValidateDeadlineDate
   }
 
-  // Converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD) se necessário
-  const convertedDate = convertBRDateToISO(endDateStr);
-  if (convertedDate) {
-    // Data convertida com sucesso de DD/MM/YYYY → YYYY-MM-DD
-    endDateStr = convertedDate;
-  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(endDateStr)) {
-    // Não é BR e nem ISO - rejeitar silenciosamente strings como "Verificar"
-    if (import.meta.env.DEV) {
-      console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
-    }
-    return null;
-  }
-
-  const deadlineDate = new Date(endDateStr);
-  if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
-    // Modo silencioso em produção
-    if (import.meta.env.DEV) {
-      console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
-    }
+  const deadlineDate = new Date(validatedDateStr);
+  if (!isValidDateObject(deadlineDate, validatedDateStr)) {
     return null;
   }
 
