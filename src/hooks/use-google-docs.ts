@@ -245,7 +245,9 @@ export function useGoogleDocs() {
         }
       }
 
-      // TODO: Implementar lógica de sincronização bidirecional
+      // FIXME: Implementar lógica de sincronização bidirecional (issue #GDOCS-002)
+      // Requirido: detectar conflitos, merge automático, versionamento
+      // Ver documentação: docs/GOOGLE_DOCS_SYNC_STRATEGY.md
       toast.info("Sincronização com Google Docs em desenvolvimento");
 
       return true;

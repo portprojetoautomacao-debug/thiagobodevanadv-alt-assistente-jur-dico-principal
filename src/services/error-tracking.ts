@@ -16,7 +16,6 @@
 
 /// <reference types="vite/client" />
 
-import { initGeminiIntegration } from "@/lib/sentry-gemini-integration";
 import * as Sentry from "@sentry/react";
 
 // Configuração
