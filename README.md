@@ -806,6 +806,282 @@ curl https://seu-app.vercel.app/api/expedientes
 - **Forms**: React Hook Form + Zod
 - **AI**: Google Gemini 2.5 Pro
 - **Deployment**: Vercel + GitHub Actions
+- **Monitoring**: Sentry AI Agents Monitoring v2 (OpenTelemetry)
+
+---
+
+## 🔍 Sentry AI Agents Monitoring v2
+
+> **Status**: ✅ Implementado - Fase 1 completa (Harvey Specter instrumentado)  
+> **Versão**: 2.0.0 - Seguindo convenções oficiais OpenTelemetry  
+> **Última atualização**: Dezembro 5, 2025
+
+### 📊 Visão Geral
+
+Sistema de **monitoramento e observabilidade** para os 15 agentes de IA, seguindo as **convenções oficiais do Sentry AI Agents Monitoring** e **OpenTelemetry Semantic Conventions**.
+
+**Benefícios:**
+
+- 📈 **Métricas em tempo real**: Latência, tokens, taxa de erro
+- 🔍 **Rastreamento de conversações**: SessionID + Turn tracking
+- 🛠️ **Tool calling visibility**: Instrumentação de function calls
+- 🔄 **Handoffs entre agentes**: Visibilidade completa de transferências
+- 🚨 **Alertas inteligentes**: Notificações de degradação de performance
+- 📊 **Dashboard AI Agents**: Visualização dedicada em Sentry.io
+
+### 🎯 Status de Instrumentação por Agente
+
+| #    | Agente              | Status      | Fase | Spans         | Atributos |
+| ---- | ------------------- | ----------- | ---- | ------------- | --------- |
+| 1    | **Harvey Specter**  | ✅ Ativo    | 1    | `gen_ai.chat` | Completo  |
+| 2    | Mrs. Justin-e       | ⏳ Pendente | 2    | -             | -         |
+| 3    | Análise Documental  | ⏳ Pendente | 2    | -             | -         |
+| 4    | Monitor DJEN        | ⏳ Pendente | 2    | -             | -         |
+| 5    | Gestão de Prazos    | ⏳ Pendente | 2    | -             | -         |
+| 6    | Redação de Petições | ⏳ Pendente | 2    | -             | -         |
+| 7-15 | Outros agentes      | ⏳ Pendente | 3    | -             | -         |
+
+**Progresso**: 1/15 agentes (6.7%) - Fase 1 completa
+
+### 🛠️ Arquivos da Instrumentação
+
+| Arquivo                                   | Descrição                                   | Status           |
+| ----------------------------------------- | ------------------------------------------- | ---------------- |
+| `src/lib/sentry-gemini-integration-v2.ts` | API oficial OpenTelemetry (448 linhas)      | ✅ Implementado  |
+| `src/hooks/use-ai-streaming.ts`           | Hook instrumentado com `createChatSpan()`   | ✅ Instrumentado |
+| `src/components/HarveySpecterChat.tsx`    | Tracking de conversação (sessionId, turn)   | ✅ Instrumentado |
+| `docs/SENTRY_AI_MONITORING.md`            | Guia completo v2.0.0                        | ✅ Atualizado    |
+| `docs/SENTRY_AI_AGENTS_EXAMPLES.tsx`      | 6 exemplos práticos                         | ✅ Criado        |
+| `docs/SENTRY_AI_TESTING_GUIDE.md`         | Guia de testes e validação                  | ✅ Criado        |
+| `api/llm-stream.ts`                       | Backend streaming (pendente instrumentação) | ⏳ Pendente      |
+
+### 📋 Convenções OpenTelemetry Implementadas
+
+#### Operações de Span
+
+| Operação              | Função                             | Usado em          |
+| --------------------- | ---------------------------------- | ----------------- |
+| `gen_ai.invoke_agent` | Rastrear agente completo           | -                 |
+| `gen_ai.chat`         | Rastrear chamada LLM individual    | ✅ Harvey Specter |
+| `gen_ai.execute_tool` | Rastrear tool calling              | -                 |
+| `gen_ai.handoff`      | Marcar transferência entre agentes | -                 |
+
+#### Atributos Semânticos
+
+**Atributos de Sistema:**
+
+- `gen_ai.system` → `"gemini"` ou `"openai"`
+- `gen_ai.request.model` → `"gemini-2.5-pro"`, `"gpt-4o-mini"`
+- `gen_ai.request.temperature` → `0.7`
+- `gen_ai.request.max_tokens` → `2000`
+- `gen_ai.request.messages` → JSON array de mensagens
+
+**Atributos de Resposta:**
+
+- `gen_ai.response.text` → JSON array com resposta
+- `gen_ai.usage.input_tokens` → Tokens de entrada
+- `gen_ai.usage.output_tokens` → Tokens de saída
+- `gen_ai.usage.total_tokens` → Total de tokens
+
+**Atributos de Conversação:**
+
+- `conversation.session_id` → ID único da sessão (ex: `harvey-1733432...`)
+- `conversation.turn` → Contador de turnos (0, 1, 2, ...)
+
+**Atributos de Agente:**
+
+- `gen_ai.agent.name` → Nome do agente (ex: `"harvey-specter"`)
+- `gen_ai.operation.name` → Operação executada
+
+### 🔧 Como Usar
+
+#### 1. Instrumentar um Agente com `createChatSpan()`
+
+```typescript
+import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+
+const result = await createChatSpan(
+  {
+    agentName: "harvey-specter",
+    system: "gemini",
+    model: "gemini-2.5-pro",
+    temperature: 0.7,
+    maxTokens: 2000,
+  },
+  messages,
+  async (span) => {
+    // Adicionar atributos de conversação
+    span?.setAttribute("conversation.session_id", sessionId);
+    span?.setAttribute("conversation.turn", turnNumber);
+
+    // Fazer chamada LLM
+    const response = await callGeminiAPI(messages);
+
+    // Adicionar resposta
+    span?.setAttribute("gen_ai.response.text", JSON.stringify([response]));
+
+    return response;
+  }
+);
+```
+
+#### 2. Instrumentar Tool Calling com `createExecuteToolSpan()`
+
+```typescript
+import { createExecuteToolSpan } from "@/lib/sentry-gemini-integration-v2";
+
+const toolResult = await createExecuteToolSpan(
+  { agentName: "harvey", system: "gemini", model: "gemini-2.5-pro" },
+  {
+    toolName: "search_knowledge_base",
+    toolType: "function",
+    toolInput: JSON.stringify({ query: "prazo recursal" }),
+  },
+  async (span) => {
+    const result = await searchKnowledgeBase("prazo recursal");
+    span?.setAttribute("gen_ai.tool.output", JSON.stringify(result));
+    return result;
+  }
+);
+```
+
+#### 3. Implementar Handoff entre Agentes
+
+```typescript
+import { createHandoffSpan } from "@/lib/sentry-gemini-integration-v2";
+
+await createHandoffSpan(
+  { agentName: "harvey", system: "gemini", model: "gemini-2.5-pro" },
+  {
+    fromAgent: "harvey-specter",
+    toAgent: "mrs-justin-e",
+    handoffReason: "Análise de intimação detectada",
+  },
+  async (span) => {
+    // Lógica de transferência
+    await transferTaskToAgent("mrs-justin-e", task);
+  }
+);
+```
+
+### 📊 Dashboard Sentry.io
+
+**Acessar:** https://sentry.io → **Insights** → **AI** → **AI Agents**
+
+**Métricas disponíveis:**
+
+- 📈 Latência média por agente
+- 💰 Custo de tokens (input/output)
+- 🎯 Taxa de sucesso vs erro
+- 🔄 Throughput (chamadas/minuto)
+- 📊 Distribuição de modelos (Gemini vs OpenAI)
+- 🕐 Duração de conversações
+
+**Filtros úteis:**
+
+```
+gen_ai.agent.name = "harvey-specter"
+gen_ai.system = "gemini"
+conversation.session_id = "harvey-1733432..."
+```
+
+### 🧪 Testes e Validação
+
+**Guia completo:** [`docs/SENTRY_AI_TESTING_GUIDE.md`](docs/SENTRY_AI_TESTING_GUIDE.md)
+
+**Checklist rápido:**
+
+```bash
+# 1. Rodar app
+npm run dev
+
+# 2. Abrir Harvey Specter Chat
+# 3. Enviar 3 mensagens de teste
+# 4. Verificar console (sem erros)
+# 5. Acessar Sentry.io e validar spans
+```
+
+**Critérios de sucesso:**
+
+- ✅ Spans aparecem no dashboard AI Agents
+- ✅ Atributos `gen_ai.*` corretos
+- ✅ Atributos `conversation.*` presentes
+- ✅ Contador de turnos incrementa (0 → 1 → 2)
+- ✅ sessionId único por conversa
+- ✅ Sem erros TypeScript/ESLint
+
+### 🚀 Roadmap de Migração
+
+#### ✅ Fase 1: Piloto (Concluída)
+
+- [x] Harvey Specter instrumentado
+- [x] Hook `useAIStreaming` com `createChatSpan()`
+- [x] Tracking de conversação (sessionId, turn)
+- [x] Documentação completa
+- [x] Guia de testes
+
+#### ⏳ Fase 2: Agentes Core (Próxima)
+
+- [ ] Mrs. Justin-e (análise de intimações)
+- [ ] Redação de Petições (geração de minutas)
+- [ ] Monitor DJEN (background job)
+- [ ] Tool calling com `createExecuteToolSpan()`
+- [ ] Handoffs Harvey→Justin-e com `createHandoffSpan()`
+
+#### ⏳ Fase 3: Agentes Restantes
+
+- [ ] Migrar 12 agentes restantes
+- [ ] Configurar LGPD (`recordInputs: false`, `recordOutputs: false`)
+- [ ] Validar todos spans no dashboard
+
+#### ⏳ Fase 4: Produção
+
+- [ ] Alertas configurados (latência > 5s, erro > 5%)
+- [ ] Runbooks de incidentes
+- [ ] Treinamento da equipe
+- [ ] Documentação de processos
+
+### 📚 Documentação de Referência
+
+| Documento                    | Link                                                                                                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Guia Completo v2.0.0**     | [`docs/SENTRY_AI_MONITORING.md`](docs/SENTRY_AI_MONITORING.md)                                                                                 |
+| **Exemplos Práticos**        | [`docs/SENTRY_AI_AGENTS_EXAMPLES.tsx`](docs/SENTRY_AI_AGENTS_EXAMPLES.tsx)                                                                     |
+| **Guia de Testes**           | [`docs/SENTRY_AI_TESTING_GUIDE.md`](docs/SENTRY_AI_TESTING_GUIDE.md)                                                                           |
+| **API OpenTelemetry**        | [`src/lib/sentry-gemini-integration-v2.ts`](src/lib/sentry-gemini-integration-v2.ts)                                                           |
+| **Sentry Docs - Python**     | https://docs.sentry.io/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/                                       |
+| **Sentry Docs - JavaScript** | https://docs.sentry.io/platforms/javascript/guides/react/tracing/span-metrics/examples/#manual-llm-instrumentation-custom-ai-agent--tool-calls |
+| **OpenTelemetry GenAI**      | https://opentelemetry.io/docs/specs/semconv/gen-ai/                                                                                            |
+
+### 🔐 Configuração LGPD/GDPR
+
+**Para produção, desabilite gravação de inputs/outputs sensíveis:**
+
+```typescript
+// src/main.tsx
+Sentry.init({
+  dsn: "...",
+  integrations: [
+    googleGenAIIntegration({
+      recordInputs: false, // 🔒 Não grava prompts
+      recordOutputs: false, // 🔒 Não grava respostas
+    }),
+  ],
+});
+```
+
+**Atributos que continuam sendo enviados:**
+
+- ✅ Metadados (model, temperature, tokens)
+- ✅ IDs de sessão/conversação
+- ✅ Latência e métricas de performance
+- ✅ Status de erro/sucesso
+
+**Atributos bloqueados:**
+
+- ❌ Conteúdo de mensagens (`gen_ai.request.messages`)
+- ❌ Texto de resposta (`gen_ai.response.text`)
+- ❌ Dados pessoais identificáveis (PII)
 
 ---
 

@@ -917,6 +917,50 @@ const tasks = await fetch("/api/todoist-tasks").then((r) => r.json());
 | ESLint 9       | Linting com flat config    |
 | Prettier       | Formatação de código       |
 
+### Monitoring & Observability
+
+| Ferramenta                    | Versão/Status | Uso                                  |
+| ----------------------------- | ------------- | ------------------------------------ |
+| Sentry                        | Latest        | Error tracking e performance         |
+| Sentry AI Agents Monitoring   | v2.0.0 ✅     | Monitoramento de agentes IA          |
+| OpenTelemetry                 | Spec 1.0      | Convenções semânticas                |
+| Vercel Speed Insights         | Integrado     | Core Web Vitals                      |
+
+#### 🔍 Sentry AI Agents Monitoring v2
+
+**Status**: ✅ Fase 1 completa - Harvey Specter instrumentado
+
+**Arquivos principais:**
+- `src/lib/sentry-gemini-integration-v2.ts` - API oficial OpenTelemetry (448 linhas)
+- `src/hooks/use-ai-streaming.ts` - Hook instrumentado com `createChatSpan()`
+- `src/components/HarveySpecterChat.tsx` - Tracking de conversação
+- `docs/SENTRY_AI_MONITORING.md` - Guia completo v2.0.0
+- `docs/SENTRY_AI_TESTING_GUIDE.md` - Guia de testes
+
+**Funções disponíveis:**
+```typescript
+import {
+  createInvokeAgentSpan,  // Rastrear agente completo
+  createChatSpan,          // Rastrear chamada LLM
+  createExecuteToolSpan,   // Rastrear tool calling
+  createHandoffSpan,       // Marcar handoff entre agentes
+  useAIInstrumentation,    // Hook React
+} from "@/lib/sentry-gemini-integration-v2";
+```
+
+**Convenções OpenTelemetry:**
+- Operations: `gen_ai.invoke_agent`, `gen_ai.chat`, `gen_ai.execute_tool`, `gen_ai.handoff`
+- Atributos: `gen_ai.system`, `gen_ai.request.model`, `gen_ai.usage.*`
+- Conversação: `conversation.session_id`, `conversation.turn`
+
+**Progresso de migração:**
+- ✅ Fase 1: Harvey Specter (1/15 agentes)
+- ⏳ Fase 2: Mrs. Justin-e, Redação, Monitor DJEN + tool calling + handoffs
+- ⏳ Fase 3: 12 agentes restantes + LGPD
+- ⏳ Fase 4: Alertas, runbooks, produção
+
+**Dashboard:** Sentry.io → Insights → AI → AI Agents
+
 ## 📁 Project Structure
 
 ```
