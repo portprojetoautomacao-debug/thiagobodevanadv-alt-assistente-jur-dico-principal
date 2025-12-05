@@ -66,7 +66,7 @@ export class RateLimiter {
       // com withScores, o Redis retorna [member, score, member, score, ...]
       multi.zrange(redisKey, 0, -1, { withScores: true })
 
-      const results = (await multi.exec()) as [unknown, number, (string | number)[] | null]
+      const results = await multi.exec()
 
       const currentCount = typeof results[1] === 'number' ? results[1] : 0
       const rawRange = results[2]

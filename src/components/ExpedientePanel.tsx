@@ -238,7 +238,7 @@ function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisD
 
     // ✅ VALIDAÇÃO: Corrigir ano da data (deve ser 2025, não anos anteriores)
     if (parsed.deadline?.endDate) {
-      const dataParts = parsed.deadline.endDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      const dataParts = /(\d{2})\/(\d{2})\/(\d{4})/.exec(parsed.deadline.endDate);
       if (dataParts && Number.parseInt(dataParts[3], 10) < 2025) {
         const day = dataParts[1];
         const month = dataParts[2];
