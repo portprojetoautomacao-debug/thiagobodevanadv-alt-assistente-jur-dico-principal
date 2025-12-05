@@ -86,10 +86,16 @@ export async function generateJSON<T = unknown>(
   });
 
   try {
-    // Try to extract JSON from response
-    const jsonMatch = /\{[\s\S]*\}|\[[\s\S]*\]/.exec(response);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as T;
+    // Try to extract JSON from response without greedy regex
+    const startIdx = Math.min(
+      response.indexOf("{") !== -1 ? response.indexOf("{") : Infinity,
+      response.indexOf("[") !== -1 ? response.indexOf("[") : Infinity
+    );
+    const endIdx = Math.max(response.lastIndexOf("}"), response.lastIndexOf("]"));
+
+    if (startIdx !== Infinity && endIdx !== -1 && endIdx >= startIdx) {
+      const jsonStr = response.substring(startIdx, endIdx + 1);
+      return JSON.parse(jsonStr) as T;
     }
     return JSON.parse(response) as T;
   } catch (error) {

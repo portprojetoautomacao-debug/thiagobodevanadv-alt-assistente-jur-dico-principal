@@ -100,3 +100,7 @@ eslint-results.sarif
 .sonar/
 .sonar-copilot/logs/
 coverage-api/
+
+# Security: Never commit backup files with secrets
+*.backup
+.env.*.backup

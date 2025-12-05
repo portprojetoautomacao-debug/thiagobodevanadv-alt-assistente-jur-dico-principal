@@ -189,9 +189,15 @@ export async function geminiGenerateJSON<T = unknown>(
 
   // Tenta extrair JSON de bloco de código markdown se presente
   let jsonText = rawText;
-  const jsonBlockMatch = /```(?:json)?\s*([\s\S]*?)```/.exec(rawText);
-  if (jsonBlockMatch) {
-    jsonText = jsonBlockMatch[1].trim();
+  const codeBlockStart = rawText.indexOf("```");
+  const codeBlockEnd = rawText.indexOf("```", codeBlockStart + 3);
+  if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
+    let blockContent = rawText.substring(codeBlockStart + 3, codeBlockEnd).trim();
+    // Remove 'json' prefix if present
+    if (blockContent.startsWith("json")) {
+      blockContent = blockContent.substring(4).trim();
+    }
+    jsonText = blockContent;
   }
 
   try {
@@ -317,9 +323,14 @@ export async function geminiGenerateJSONWithSystem<T = unknown>(
 
   // Tenta extrair JSON de bloco de código markdown se presente
   let jsonText = rawText;
-  const jsonBlockMatch = /```(?:json)?\s*([\s\S]*?)```/.exec(rawText);
-  if (jsonBlockMatch) {
-    jsonText = jsonBlockMatch[1].trim();
+  const codeBlockStart = rawText.indexOf("```");
+  const codeBlockEnd = rawText.indexOf("```", codeBlockStart + 3);
+  if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
+    let blockContent = rawText.substring(codeBlockStart + 3, codeBlockEnd).trim();
+    if (blockContent.startsWith("json")) {
+      blockContent = blockContent.substring(4).trim();
+    }
+    jsonText = blockContent;
   }
 
   try {

@@ -171,9 +171,12 @@ export class TodoistAgent {
         feature: "todoist-agent",
       });
 
-      const jsonMatch = /\{[\s\S]*\}/.exec(response);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as InterpretedCommand;
+      // Buscar JSON de forma segura sem regex greedy
+      const startIdx = response.indexOf("{");
+      const endIdx = response.lastIndexOf("}");
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        const jsonStr = response.substring(startIdx, endIdx + 1);
+        return JSON.parse(jsonStr) as InterpretedCommand;
       }
     } catch (error) {
       console.error("Erro ao interpretar comando com IA:", error);

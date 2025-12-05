@@ -96,11 +96,13 @@ Responda APENAS com o JSON, sem texto adicional.`,
       content = data;
     }
 
-    // Parse do JSON - tenta encontrar JSON na resposta
-    const jsonMatch = /\{[\s\S]*\}/.exec(content);
-    if (jsonMatch) {
+    // Parse do JSON - tenta encontrar JSON na resposta sem regex greedy
+    const startIdx = content.indexOf("{");
+    const endIdx = content.lastIndexOf("}");
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
       try {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const jsonStr = content.substring(startIdx, endIdx + 1);
+        const parsed = JSON.parse(jsonStr);
         return {
           autor: parsed.autor || "Não identificado",
           reu: parsed.reu || "Não identificado",

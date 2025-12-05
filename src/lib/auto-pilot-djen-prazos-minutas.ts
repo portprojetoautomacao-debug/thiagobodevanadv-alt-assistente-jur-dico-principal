@@ -191,13 +191,15 @@ ${pub.teor}`;
     }
 
     try {
-      const jsonMatch = /\{[\s\S]*\}/.exec(response.text);
-      if (!jsonMatch) {
+      const startIdx = response.text.indexOf("{");
+      const endIdx = response.text.lastIndexOf("}");
+      if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) {
         this.log("Resposta Gemini sem JSON reconhecível (intimação)", "warn");
         return null;
       }
 
-      const parsed = JSON.parse(jsonMatch[0]);
+      const jsonStr = response.text.substring(startIdx, endIdx + 1);
+      const parsed = JSON.parse(jsonStr);
 
       // Normaliza campos mínimos
       const result: IntimationAnalysisResult = {

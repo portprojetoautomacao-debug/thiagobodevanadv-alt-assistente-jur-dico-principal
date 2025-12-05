@@ -156,10 +156,12 @@ Responda APENAS com JSON válido, sem texto adicional.`,
       const data = await response.json();
       const content = data.response || data.choices?.[0]?.message?.content || "";
 
-      // Parse do JSON da resposta
-      const jsonMatch = /\{[\s\S]*\}/.exec(content);
-      if (jsonMatch) {
-        const analysis: TranscriptionAnalysis = JSON.parse(jsonMatch[0]);
+      // Parse do JSON da resposta sem regex greedy
+      const startIdx = content.indexOf("{");
+      const endIdx = content.lastIndexOf("}");
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        const jsonStr = content.substring(startIdx, endIdx + 1);
+        const analysis: TranscriptionAnalysis = JSON.parse(jsonStr);
         setSummary(analysis.summary || "Não foi possível gerar sumário");
         setActionItems(analysis.actionItems || []);
         toast.success("Análise concluída com IA Gemini");

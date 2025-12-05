@@ -105,7 +105,7 @@ function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
     return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
   }
 
-  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
+  const matchNumericUF = /(\d+)\s?\/\s?([A-Z]{2})/i.exec(value);
   if (matchNumericUF) {
     return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
   }
