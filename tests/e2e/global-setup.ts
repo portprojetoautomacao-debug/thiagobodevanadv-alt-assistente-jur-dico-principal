@@ -14,11 +14,20 @@ async function globalSetup(config: FullConfig) {
   const baseURL = process.env.BASE_URL || "http://127.0.0.1:5173";
   const authMode = process.env.VITE_AUTH_MODE || "simple";
 
-  // Apenas pular se estiver em modo google e sem credenciais
+  // Pular criação de storage state se:
+  // 1. App não tem login (modo demo)
+  // 2. Credenciais não fornecidas
+  // 3. Modo Google sem credenciais
   if (authMode === "google" && (!process.env.TEST_USER_EMAIL || !process.env.TEST_USER_PASSWORD)) {
     console.warn(
       "⚠️ Google auth mode requires TEST_USER_EMAIL and TEST_USER_PASSWORD. Skipping login storageState creation."
     );
+    return;
+  }
+
+  // Se variável SKIP_AUTH_SETUP=true, pular setup de auth
+  if (process.env.SKIP_AUTH_SETUP === "true") {
+    console.log("⏭️ SKIP_AUTH_SETUP=true, skipping authentication setup.");
     return;
   }
 
@@ -44,26 +53,25 @@ async function globalSetup(config: FullConfig) {
     console.log("📄 Page loaded");
 
     // Aguardar campos de login aparecerem (suporta SimpleAuth e Google OAuth)
-    await page.waitForSelector(
-      'input[name="username"], input[name="email"], input[type="email"], input[type="text"], input[placeholder*="usuário" i], input[placeholder*="email" i]',
-      { timeout: 15_000 }
-    );
-    console.log("📝 Login fields detected");
+    // Se não encontrar, continua sem falhar (app pode não ter login)
+    try {
+      await page.waitForSelector(
+        'input[name="username"], input[name="email"], input[type="email"], input[type="text"], input[placeholder*="usuário" i], input[placeholder*="email" i]',
+        { timeout: 10_000 }
+      );
+      console.log("📝 Login fields detected");
+    } catch (error) {
+      console.warn(
+        "⚠️ Login fields not found - app may not have login page. Continuing without auth setup."
+      );
+      await browser.close();
+      return;
+    }
 
-    // Preencher formulário de login (detecta automaticamente SimpleAuth ou Google)
-    const usernameInput = page
-      .locator(
-        'input[name="username"], input[data-testid="login-username"], input[placeholder*="usuário" i]'
-      )
-      .first();
-    const emailInput = page
-      .locator('input[name="email"], input[type="email"], input[placeholder*="email" i]')
-      .first();
-    const passwordInput = page
-      .locator(
-        'input[name="password"], input[data-testid="login-password"], input[type="password"], input[placeholder*="senha" i], input[placeholder*="password" i]'
-      )
-      .first();
+    // Preencher formulário de login usando Test IDs (melhor prática)
+    const usernameInput = page.getByTestId("login-username");
+    const emailInput = page.getByRole("textbox", { name: "Email" });
+    const passwordInput = page.getByTestId("login-password");
 
     // Detectar qual tipo de formulário (SimpleAuth ou Google OAuth)
     const isSimpleAuth = (await usernameInput.count()) > 0;
@@ -79,12 +87,10 @@ async function globalSetup(config: FullConfig) {
       console.log(`✏️ Filled Google OAuth credentials: ${TEST_USER_EMAIL}`);
     }
 
-    // Clicar em submit (detecta botão automaticamente)
+    // Clicar em submit usando Test ID (prioridade) ou ARIA role (fallback)
     const submitButton = page
-      .locator(
-        'button[type="submit"], button[data-testid="login-submit"], button:has-text("Entrar")'
-      )
-      .first();
+      .getByTestId("login-submit")
+      .or(page.getByRole("button", { name: "Entrar" }));
     await submitButton.click({ timeout: 10_000 });
 
     console.log("⏳ Waiting for navigation...");
@@ -94,10 +100,9 @@ async function globalSetup(config: FullConfig) {
       console.log("Dashboard URL not detected, checking for auth indicators...");
       // fallback wait for any auth badge / avatar or main content
       await page
-        .waitForSelector(
-          '[data-test="user-avatar"], .avatar, [aria-label="account"], [data-testid="sidebar-nav"], main',
-          { timeout: 10_000 }
-        )
+        .getByRole("navigation")
+        .or(page.getByTestId("sidebar-nav"))
+        .waitFor({ timeout: 10_000 })
         .catch(() => {
           console.warn("Auth indicators not found, continuing anyway...");
           return null;

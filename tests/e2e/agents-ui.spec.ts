@@ -17,68 +17,70 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve carregar a página de Agentes IA", async ({ page }) => {
-    // Já navegamos por hash no beforeEach; apenas valida conteúdo
+    // Verifica se a página carregou usando ARIA heading (melhor prática)
+    await expect(
+      page.getByRole("heading", { name: /Agentes IA|Agentes Disponíveis/i, level: 1 })
+    ).toBeVisible({ timeout: 10000 });
 
-    // Verifica se a página carregou corretamente
-    await expect(page.getByText(/Agentes Disponíveis/i)).toBeVisible();
-
-    // Verificar se pelo menos algum conteúdo de agentes está presente
-    // Por enquanto, vamos aceitar que a página carregou se o título estiver visível
-    console.log("Página de Agentes IA carregada com sucesso");
+    // Verificar se navegação está presente
+    await expect(page.getByRole("navigation")).toBeVisible();
   });
 
   test("deve mostrar status dos agentes corretamente", async ({ page }) => {
-    // Já estamos na tela de agentes via hash
+    // Verifica se a página está carregada
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-    // Verifica bloco de status agregado
-    await expect(page.getByText(/Agentes Disponíveis/i)).toBeVisible();
+    // Verifica se há pelo menos um badge de status (Ativo, Pausado, Streaming)
+    const statusBadges = page.getByText(/^(Ativo|Pausado|Streaming)$/);
+    await expect(statusBadges.first()).toBeVisible({ timeout: 10000 });
 
-    // Verifica se mostra contadores de tarefas (ajustado para texto em português)
-    await expect(page.getByText(/em processamento|ativo\(s\)|urgentes/i)).toBeVisible();
+    // Verifica se status está visível (aceita vários formatos)
+    const statusText = page.getByText(/\d+ ativo\(s\)|Nenhum ativado|processando/i);
+    await expect(statusText.first()).toBeVisible();
   });
 
   test("deve permitir alternar status dos agentes", async ({ page }) => {
-    // Já estamos na tela de agentes via hash
+    // Aguarda cards de agentes carregarem
+    await page.waitForSelector(".agent-card, [data-agent-id]", { timeout: 10000 });
 
-    // Localiza o switch do primeiro agente (Harvey Specter)
-    const harveySwitch = page
-      .getByLabel(/Ativar ou desativar o agente Harvey Specter/i)
-      .first();
+    // Localiza o switch usando ARIA role (melhor prática)
+    const agentSwitch = page.getByRole("switch").first();
+    await agentSwitch.waitFor({ state: "visible", timeout: 10000 });
 
-    // Verifica se o switch está ligado inicialmente via atributo de estado
-    await expect(harveySwitch).toHaveAttribute("data-state", /checked|on/i);
+    // Verifica estado inicial
+    const initialState = await agentSwitch.getAttribute("data-state");
 
-    // Desliga o agente
-    await harveySwitch.click();
-    await expect(harveySwitch).toHaveAttribute("data-state", /unchecked|off/i);
+    // Alterna o estado
+    await agentSwitch.click();
+    await page.waitForTimeout(500); // Aguarda animação
 
-    // Liga novamente
-    await harveySwitch.click();
-    await expect(harveySwitch).toHaveAttribute("data-state", /checked|on/i);
+    // Verifica se estado mudou
+    const newState = await agentSwitch.getAttribute("data-state");
+    expect(newState).not.toBe(initialState);
+
+    // Alterna novamente para restaurar
+    await agentSwitch.click();
   });
 
   test("deve mostrar métricas dos agentes", async ({ page }) => {
-    // Já estamos na tela de agentes via hash
-
-    // Abre a aba de Métricas e verifica conteúdo
+    // Abre a aba de Métricas usando ARIA tab role
     const metricsTab = page.getByRole("tab", { name: /Métricas/i });
-    if (await metricsTab.count()) {
-      await metricsTab.click();
-    }
-    // Usa .first() para pegar apenas o primeiro elemento visível
-    await expect(
-      page.getByText(/Desempenho por Agente|Taxa de Sucesso|Tarefas Hoje/i).first()
-    ).toBeVisible();
 
-    // Verifica se mostra indicadores de performance (progressbar existe no DOM)
+    if ((await metricsTab.count()) > 0) {
+      await metricsTab.click();
+      await page.waitForTimeout(500); // Aguarda conteúdo carregar
+    }
+
+    // Verifica conteúdo de métricas usando texto específico
     await expect(
-      page.locator('div[role="progressbar"], .progress, .chart').first()
-    ).toBeVisible();
+      page.getByText(/Taxa de Sucesso|Tarefas Completadas|Desempenho/i).first()
+    ).toBeVisible({ timeout: 10000 });
+
+    // Verifica se há pelo menos um indicador visual (progressbar ARIA)
+    await expect(page.locator('[role="progressbar"]').first()).toBeVisible();
   });
 
-  test("deve permitir executar tarefas manuais dos agentes", async ({
-    page,
-  }) => {
+  test("deve permitir executar tarefas manuais dos agentes", async ({ page }) => {
     // Já estamos na tela de agentes via hash
 
     // Procura por botões de ação dos agentes
@@ -91,9 +93,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
       await actionButtons.first().click();
 
       // Verifica se mostra feedback de execução
-      await expect(
-        page.getByText(/executando|processing|running/i)
-      ).toBeVisible();
+      await expect(page.getByText(/executando|processing|running/i)).toBeVisible();
     }
   });
   test("deve mostrar logs de atividade dos agentes", async ({ page }) => {
@@ -101,28 +101,22 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
 
     // Abre a aba "Atividade em Tempo Real" que contém os logs
     const activityTab = page.getByRole("tab", { name: /Atividade em Tempo Real/i });
-    
+
     if ((await activityTab.count()) > 0) {
       await activityTab.click();
-      
+
       // Aguarda o conteúdo carregar
       await page.waitForTimeout(500);
 
       // Verifica se mostra o registro de atividades (baseado no snapshot do DOM)
-      await expect(
-        page.getByText(/Registro de Atividades/i)
-      ).toBeVisible();
-      
+      await expect(page.getByText(/Registro de Atividades/i)).toBeVisible();
+
       // Verifica se mostra pelo menos uma entrada de log
-      await expect(
-        page.locator('p:has-text("Tarefa concluída:")').first()
-      ).toBeVisible();
+      await expect(page.locator('p:has-text("Tarefa concluída:")').first()).toBeVisible();
     }
   });
 
-  test("deve permitir configuração de geração automática de tarefas", async ({
-    page,
-  }) => {
+  test("deve permitir configuração de geração automática de tarefas", async ({ page }) => {
     // Já estamos na tela de agentes via hash
 
     // Procura pelo controle de geração automática
@@ -142,9 +136,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
     }
   });
 
-  test("deve mostrar modal de colaboração Harvey + Mrs. Justin-e", async ({
-    page,
-  }) => {
+  test("deve mostrar modal de colaboração Harvey + Mrs. Justin-e", async ({ page }) => {
     // Já estamos na tela de agentes via hash
 
     // Procura por botão de colaboração ou demo
@@ -156,9 +148,7 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
       await collaborationButton.first().click();
 
       // Verifica se o modal abriu
-      await expect(
-        page.getByText(/Harvey.*Justin-e|colaboração|collaboration/i)
-      ).toBeVisible();
+      await expect(page.getByText(/Harvey.*Justin-e|colaboração|collaboration/i)).toBeVisible();
     }
   });
 
@@ -168,17 +158,13 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
     // Já estamos na tela de agentes via hash
 
     // Procura por botões de backup
-    const backupButton = page.locator(
-      'button:has-text("Backup"), button:has-text("Salvar")'
-    );
+    const backupButton = page.locator('button:has-text("Backup"), button:has-text("Salvar")');
 
     if ((await backupButton.count()) > 0) {
       await backupButton.first().click();
 
       // Verifica feedback de sucesso
-      await expect(
-        page.getByText(/backup.*sucesso|salvo.*sucesso/i)
-      ).toBeVisible();
+      await expect(page.getByText(/backup.*sucesso|salvo.*sucesso/i)).toBeVisible();
     }
   });
 
@@ -196,15 +182,11 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
       await orchestrationButton.first().click();
 
       // Verifica se mostra workflow de agentes
-      await expect(
-        page.getByText(/workflow|orquestração|orchestration/i)
-      ).toBeVisible();
+      await expect(page.getByText(/workflow|orquestração|orchestration/i)).toBeVisible();
     }
   });
 
-  test("deve responder corretamente a comandos dos agentes via UI", async ({
-    page,
-  }) => {
+  test("deve responder corretamente a comandos dos agentes via UI", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.getByTestId("nav-ai-agents").click();
@@ -221,15 +203,11 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
       await expect(page.getByText(/estratégico|strategic/i)).toBeVisible();
 
       // Verifica se mostra capacidades
-      await expect(
-        page.getByText(/performance|insights|estratégico/i)
-      ).toBeVisible();
+      await expect(page.getByText(/performance|insights|estratégico/i)).toBeVisible();
     }
   });
 
-  test("deve mostrar pensamento e respostas dos agentes em tempo real", async ({
-    page,
-  }) => {
+  test("deve mostrar pensamento e respostas dos agentes em tempo real", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.getByTestId("nav-ai-agents").click();

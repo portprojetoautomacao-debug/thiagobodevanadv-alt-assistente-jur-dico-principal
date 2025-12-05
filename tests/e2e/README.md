@@ -226,6 +226,7 @@ VITE_AUTH_MODE=simple
 **Problema:** Global-setup não encontra campos de login.
 
 **Solução:**
+
 1. ✅ **JÁ CORRIGIDO**: SimpleAuth agora tem atributos testáveis
 2. Execute teste rápido: `./test-e2e-login.sh`
 3. Verifique se VITE_AUTH_MODE=simple no .env

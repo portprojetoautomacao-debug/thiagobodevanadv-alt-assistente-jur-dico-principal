@@ -25,52 +25,46 @@ test.describe("Fluxo Principal da Aplicação", () => {
   });
 
   test("deve carregar o Dashboard quando autenticado", async ({ page }) => {
-    // Após beforeEach, já estamos autenticados e com shell pronto
-    // Verifica se o dashboard ou header principal está visível
+    // Verifica se o dashboard carregou usando ARIA heading
     await expect(
-      page.locator('h1, h2, [role="heading"]').first()
+      page.getByRole("heading", { level: 1 }).or(page.getByRole("heading", { level: 2 }))
     ).toBeVisible({ timeout: 10000 });
+
+    // Verifica se navegação está presente
+    await expect(page.getByRole("navigation")).toBeVisible();
   });
 
   test("deve navegar para o CRM de Processos", async ({ page }) => {
-    // Clica via test id ou fallback por texto
-    const navProcesses = page.getByTestId("nav-processes");
-    const navCount = await navProcesses.count();
-    
-    if (navCount > 0) {
-      await navProcesses.click();
-    } else {
-      // Tenta encontrar link contendo "Acervo" ou "Processos"
-      await page.getByRole("link", { name: /Acervo|Processos/i }).click();
-    }
+    // Clica no link de navegação usando Test ID ou ARIA link
+    const navLink = page
+      .getByTestId("nav-processes")
+      .or(page.getByRole("link", { name: /Processos|CRM/i }));
 
-    // Aguarda navegação e verifica se carregou a página de processos
-    await page.waitForURL(/.*processos.*|.*acervo.*/i, { timeout: 10000 });
-    
-    // Verifica se a view de processos está presente (busca por headings ou main content)
-    await expect(
-      page.locator("h1, h2, main").first()
-    ).toBeVisible({ timeout: 10000 });
+    await navLink.click({ timeout: 10000 });
+
+    // Aguarda hash change para #processes
+    await page.waitForURL(/.*#processes/, { timeout: 10000 });
+
+    // Verifica se a página de processos carregou usando heading
+    await expect(page.getByRole("heading", { name: /Processos|CRM/i })).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("deve navegar para a Calculadora de Prazos", async ({ page }) => {
-    // Clica via test id ou fallback por texto
-    const navCalc = page.getByTestId("nav-calculator");
-    const calcCount = await navCalc.count();
-    
-    if (calcCount > 0) {
-      await navCalc.click();
-    } else {
-      // Tenta encontrar link contendo "Calc" ou "Prazos"
-      await page.getByRole("link", { name: /Calc|Prazos/i }).click();
-    }
+    // Clica no link de navegação usando Test ID ou ARIA link
+    const navLink = page
+      .getByTestId("nav-calculator")
+      .or(page.getByRole("link", { name: /Calculadora.*Prazos/i }));
 
-    // Aguarda navegação e verifica se carregou a calculadora
-    await page.waitForURL(/.*calculadora.*|.*prazos.*/i, { timeout: 10000 });
-    
-    // Verifica se a calculadora está presente (busca por heading ou form)
+    await navLink.click({ timeout: 10000 });
+
+    // Aguarda hash change para #calculator
+    await page.waitForURL(/.*#calculator/, { timeout: 10000 });
+
+    // Verifica se a calculadora carregou usando heading ou form
     await expect(
-      page.locator("h1, h2, form, main").first()
+      page.getByRole("heading", { name: /Calculadora/i }).or(page.locator("form").first())
     ).toBeVisible({ timeout: 10000 });
   });
 });

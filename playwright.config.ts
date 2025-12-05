@@ -14,14 +14,16 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [["html", { open: "never" }], ["list"]],
   // Inicia servidor de desenvolvimento automaticamente
-  webServer: USE_PROD ? undefined : {
-    command: `npm run dev -- --port ${PORT} --host 127.0.0.1`,
-    url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: !IS_CI,
-    timeout: 120_000,
-    stdout: "pipe",
-    stderr: "pipe",
-  },
+  webServer: USE_PROD
+    ? undefined
+    : {
+        command: `npm run dev -- --port ${PORT} --host 127.0.0.1`,
+        url: `http://127.0.0.1:${PORT}`,
+        reuseExistingServer: !IS_CI,
+        timeout: 120_000,
+        stdout: "pipe",
+        stderr: "pipe",
+      },
   use: {
     // Preferir ambiente local por padrão para maior estabilidade dos seletores.
     // Permite sobrescrever via BASE_URL ou setando USE_PROD_BASE_URL=true
@@ -29,6 +31,7 @@ export default defineConfig({
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
+    // Sempre usar headless para evitar erro X11 em dev containers
     headless: true,
     storageState: fs.existsSync("tests/e2e/storageState.json")
       ? "tests/e2e/storageState.json"
@@ -37,9 +40,9 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices[ "Desktop Chrome" ] },
+      use: { ...devices["Desktop Chrome"] },
     },
-    { name: "firefox", use: { ...devices[ "Desktop Firefox" ] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });
