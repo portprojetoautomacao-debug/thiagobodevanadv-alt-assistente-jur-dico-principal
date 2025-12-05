@@ -148,9 +148,15 @@ export function createLocalAppointmentFromAnalysis(
 
   // Type guard above ensures analysis.deadline is defined
   // Use non-null assertion after guard check for TypeScript strict mode
-  const deadlineDate = new Date(analysis.deadline!.endDate);
-  if (!deadlineDate) {
-    console.log("[DeadlineIntegration] Invalid deadline date");
+  const endDateStr = analysis.deadline!.endDate;
+  if (!endDateStr) {
+    console.log("[DeadlineIntegration] endDate is missing");
+    return null;
+  }
+
+  const deadlineDate = new Date(endDateStr);
+  if (!deadlineDate || isNaN(deadlineDate.getTime())) {
+    console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
     return null;
   }
 

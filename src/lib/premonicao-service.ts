@@ -180,9 +180,9 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
         isEmpty: !responseText,
         dataKeys: Object.keys(data),
         hasChoices: "choices" in data,
-        hasMessage: (data as Record<string, unknown>).choices !== undefined,
+        dataPreview: JSON.stringify(data).substring(0, 500),
       });
-      throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
+      throw new Error("Resposta vazia da API de IA. Verifique a chave API (Gemini API key reportada como leaked).");
     }
 
     if (responseText.trim().length === 0) {
