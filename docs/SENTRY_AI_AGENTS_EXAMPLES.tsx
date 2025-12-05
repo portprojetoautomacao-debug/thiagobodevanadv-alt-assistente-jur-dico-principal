@@ -9,6 +9,8 @@
  * - https://docs.sentry.io/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/
  */
 
+import * as Sentry from "@sentry/react";
+import { useEffect, useState } from "react";
 import {
   createChatSpan,
   createExecuteToolSpan,
@@ -17,9 +19,7 @@ import {
   useAIInstrumentation,
   type AIAgentConfig,
   type AIConversationMetadata,
-} from "@/lib/sentry-gemini-integration-v2";
-import * as Sentry from "@sentry/react";
-import { useEffect, useState } from "react";
+} from "../src/lib/sentry-gemini-integration-v2";
 
 // ============================================
 // EXEMPLO 1: Chamada simples de agente
@@ -31,7 +31,6 @@ export async function exemploInvokeAgentSimples() {
     system: "gcp.gemini",
     model: "gemini-2.5-pro",
     temperature: 0.7,
-    maxTokens: 500,
   };
 
   const conversationMetadata: AIConversationMetadata = {

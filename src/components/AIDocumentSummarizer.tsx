@@ -209,7 +209,7 @@ Gerado em: ${timestamp}`;
                         {keyPoints.map((point, index) => {
                           const uniqueKey = `keypoint-${index}-${point
                             .slice(0, 20)
-                            .replace(/\W/g, "")}`;
+                            .replaceAll(/\W/g, "")}`;
                           return (
                             <li key={uniqueKey} className="text-sm flex gap-2">
                               {point.startsWith("---") ? (
