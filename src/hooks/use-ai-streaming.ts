@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useRef, useState } from "react";
+import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 
 interface Message {
   role: "system" | "user" | "assistant";
@@ -36,6 +37,10 @@ interface UseAIStreamingOptions {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  // Novos parâmetros para Sentry AI Monitoring
+  agentId?: string;
+  sessionId?: string;
+  conversationTurn?: number;
 }
 
 interface UseAIStreamingReturn {
@@ -131,6 +136,9 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
     model = "gpt-4o-mini",
     temperature = 0.7,
     maxTokens = 2000,
+    agentId = "harvey-specter",
+    sessionId,
+    conversationTurn = 0,
   } = options;
 
   const reset = useCallback(() => {
@@ -159,42 +167,68 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
 
       abortControllerRef.current = new AbortController();
 
+      // 🔥 SENTRY AI MONITORING V2 - Instrumentação oficial
+      const finalSessionId = sessionId || `harvey-${Date.now()}`;
+
       try {
         const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
 
-        const response = await fetch(`${baseUrl}/api/llm-stream`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        // Criar span Sentry para rastrear a chamada LLM completa
+        const result = await createChatSpan(
+          {
+            agentName: agentId,
+            system: "gemini" as const,
             model,
-            messages,
             temperature,
-            max_tokens: maxTokens,
-          }),
-          signal: abortControllerRef.current.signal,
-        });
+            maxTokens,
+          },
+          messages,
+          async (span) => {
+            // Adicionar atributos de conversação ao span
+            span?.setAttribute("conversation.session_id", finalSessionId);
+            span?.setAttribute("conversation.turn", conversationTurn);
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+            const response = await fetch(`${baseUrl}/api/llm-stream`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model,
+                messages,
+                temperature,
+                max_tokens: maxTokens,
+              }),
+              signal: abortControllerRef.current!.signal,
+            });
 
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error("Streaming não suportado");
-        }
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
 
-        await processStreamResponse(
-          reader,
-          contentRef,
-          setStreamingContent,
-          setProvider,
-          onChunk,
-          onComplete
+            const reader = response.body?.getReader();
+            if (!reader) {
+              throw new Error("Streaming não suportado");
+            }
+
+            await processStreamResponse(
+              reader,
+              contentRef,
+              setStreamingContent,
+              setProvider,
+              onChunk,
+              onComplete
+            );
+
+            // Adicionar atributos de resultado ao span
+            span?.setAttribute("gen_ai.response.text", JSON.stringify([contentRef.current]));
+            // Nota: tokens serão adicionados pelo backend quando disponível
+
+            return contentRef.current;
+          }
         );
 
-        return contentRef.current;
+        return result;
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           // Cancelamento intencional, não é erro
@@ -210,7 +244,19 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
         abortControllerRef.current = null;
       }
     },
-    [model, temperature, maxTokens, onChunk, onComplete, onError, cancelStream, reset]
+    [
+      model,
+      temperature,
+      maxTokens,
+      onChunk,
+      onComplete,
+      onError,
+      cancelStream,
+      reset,
+      sessionId,
+      conversationTurn,
+      agentId,
+    ]
   );
 
   return {
