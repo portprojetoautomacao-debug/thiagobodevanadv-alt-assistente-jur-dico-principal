@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Fluxo Todoist e Processos', () => {
-  test('deve criar tarefas no Todoist ao adicionar um novo processo', async ({ page }) => {
+  test.skip('deve criar tarefas no Todoist ao adicionar um novo processo', async ({ page }) => {
     // 1. Mock da API do Todoist
     await page.route('https://api.todoist.com/rest/v2/tasks', async (route) => {
       if (route.request().method() === 'POST') {

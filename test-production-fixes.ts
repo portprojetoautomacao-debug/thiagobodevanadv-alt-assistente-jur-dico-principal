@@ -6,6 +6,28 @@
  * 2. DeadlineIntegration - Rejeição de datas brasileiras DD/MM/YYYY
  */
 
+// ===== FUNÇÕES AUXILIARES =====
+
+/**
+ * Corrige JSON truncado fechando aspas e chaves abertas
+ */
+function fixTruncatedJson(json: string): string {
+  let fixed = json;
+
+  // PASSO 1: Fechar strings abertas PRIMEIRO
+  const quoteCount = (fixed.match(/"/g) || []).length;
+  if (quoteCount % 2 !== 0) {
+    fixed += '"';
+  }
+
+  // PASSO 2: Contar e fechar chaves
+  const openBraces = (fixed.match(/\{/g) || []).length;
+  const closeBraces = (fixed.match(/\}/g) || []).length;
+  fixed += "}".repeat(Math.max(0, openBraces - closeBraces));
+
+  return fixed;
+}
+
 // ===== TESTE 1: PremonicaoService - Parse de JSON Truncado =====
 console.log("\n🧪 TESTE 1: Parse de JSON Truncado (PremonicaoService)");
 console.log("=".repeat(60));
@@ -25,7 +47,7 @@ const jsonCompleto = `{
 }`;
 
 function parseJsonResponse(text: string): Record<string, unknown> {
-  // Limpar markdown e text envoltório
+  // Limpar markdown e texto envoltório
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```json\s*/, "").replace(/\s*```$/, "");
 
@@ -42,25 +64,12 @@ function parseJsonResponse(text: string): Record<string, unknown> {
         // Tentar encontrar JSON truncado e completá-lo
         const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
         if (truncatedMatch) {
-          let truncated = truncatedMatch[0];
-
-          // PASSO 1: Fechar strings abertas PRIMEIRO
-          const quoteCount = (truncated.match(/"/g) || []).length;
-          if (quoteCount % 2 !== 0) {
-            truncated += '"';
-          }
-
-          // PASSO 2: Contar chaves
-          const openBraces = (truncated.match(/\{/g) || []).length;
-          const closeBraces = (truncated.match(/\}/g) || []).length;
-
-          // PASSO 3: Adicionar chaves faltantes
-          truncated += "}".repeat(Math.max(0, openBraces - closeBraces));
+          const fixed = fixTruncatedJson(truncatedMatch[0]);
 
           try {
-            return JSON.parse(truncated) as Record<string, unknown>;
+            return JSON.parse(fixed) as Record<string, unknown>;
           } catch (err) {
-            console.error("Erro ao parsear JSON corrigido:", err);
+            console.error("Erro ao parsear JSON corrigido:", { error: err, fixed });
             throw new Error("JSON inválido");
           }
         }
@@ -73,20 +82,7 @@ function parseJsonResponse(text: string): Record<string, unknown> {
 // Testes - forçando o caminho de JSON truncado
 console.log("\n📝 Teste 1.1: JSON truncado com string aberta");
 try {
-  // Simular falha no parse completo e ir direto para truncado
-  const truncated = jsonTruncado1;
-
-  // Aplicar lógica de correção
-  const quoteCount = (truncated.match(/"/g) || []).length;
-  let fixed = truncated;
-  if (quoteCount % 2 !== 0) {
-    fixed += '"';
-  }
-
-  const openBraces = (fixed.match(/\{/g) || []).length;
-  const closeBraces = (fixed.match(/\}/g) || []).length;
-  fixed += "}".repeat(Math.max(0, openBraces - closeBraces));
-
+  const fixed = fixTruncatedJson(jsonTruncado1);
   const result1 = JSON.parse(fixed);
   console.log("✅ Sucesso:", JSON.stringify(result1));
 } catch (err) {
@@ -95,18 +91,7 @@ try {
 
 console.log("\n📝 Teste 1.2: JSON truncado sem fechar objeto");
 try {
-  const truncated = jsonTruncado2;
-
-  const quoteCount = (truncated.match(/"/g) || []).length;
-  let fixed = truncated;
-  if (quoteCount % 2 !== 0) {
-    fixed += '"';
-  }
-
-  const openBraces = (fixed.match(/\{/g) || []).length;
-  const closeBraces = (fixed.match(/\}/g) || []).length;
-  fixed += "}".repeat(Math.max(0, openBraces - closeBraces));
-
+  const fixed = fixTruncatedJson(jsonTruncado2);
   const result2 = JSON.parse(fixed);
   console.log("✅ Sucesso:", JSON.stringify(result2));
 } catch (err) {
@@ -171,7 +156,7 @@ function validateDate(dateStr: string): boolean {
 
   // Validar com Date()
   const deadlineDate = new Date(finalDateStr);
-  if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
+  if (Number.isNaN(deadlineDate.getTime())) {
     console.log(`   ⚠️  Date() rejeitou: "${finalDateStr}"`);
     return false;
   }
