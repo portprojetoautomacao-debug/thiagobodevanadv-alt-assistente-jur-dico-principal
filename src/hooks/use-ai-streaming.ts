@@ -15,8 +15,8 @@
  * // streamingContent será atualizado em tempo real
  */
 
-import { useCallback, useRef, useState } from "react";
 import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+import { useCallback, useRef, useState } from "react";
 
 interface Message {
   role: "system" | "user" | "assistant";

@@ -64,7 +64,7 @@ interface DashboardMetrics {
 }
 
 export default function TracingDashboard({
-  agentIds = [],
+  agentIds: _agentIds = [],
   autoRefresh = true,
   refreshInterval = 5000,
 }: TracingDashboardProps) {
@@ -262,13 +262,13 @@ export default function TracingDashboard({
               <CardContent className="pl-2">
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-4 p-4">
-                    {spans.slice(0, 10).map((span) => {
+                    {spans.slice(0, 10).map((span, index) => {
                       const duration = span.endTime ? span.endTime - span.startTime : 0;
                       const agentId = span.attributes["agent.id"] as string;
 
                       return (
                         <div
-                          key={span.context.spanId}
+                          key={`${span.context.spanId}-${span.startTime}-${index}`}
                           className="flex items-center justify-between border-b pb-2 last:border-0"
                         >
                           <div className="flex items-center gap-2">
@@ -386,7 +386,7 @@ export default function TracingDashboard({
                     {spans
                       .filter((s) => s.attributes["ai.model"])
                       .slice(0, 5)
-                      .map((span) => {
+                      .map((span, index) => {
                         const duration = span.endTime ? span.endTime - span.startTime : 0;
                         const model = span.attributes["ai.model"] as string;
                         const promptTokens = (span.attributes["ai.prompt_tokens"] as number) || 0;
@@ -395,7 +395,7 @@ export default function TracingDashboard({
 
                         return (
                           <div
-                            key={span.context.spanId}
+                            key={`${span.context.spanId}-llm-${span.startTime}-${index}`}
                             className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                           >
                             <div className="flex items-center gap-3">
@@ -434,12 +434,15 @@ export default function TracingDashboard({
             <CardContent>
               <ScrollArea className="h-[500px]">
                 <div className="space-y-4">
-                  {spans.map((span) => {
+                  {spans.map((span, index) => {
                     const duration = span.endTime ? span.endTime - span.startTime : 0;
                     const agentId = span.attributes["agent.id"] as string;
 
                     return (
-                      <div key={span.context.spanId} className="border rounded-lg p-4 space-y-3">
+                      <div
+                        key={`${span.context.spanId}-trace-${span.startTime}-${index}`}
+                        className="border rounded-lg p-4 space-y-3"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getStatusIcon(span.status)}
