@@ -104,16 +104,14 @@ function extractTokenUsage(
   span: ReturnType<typeof Sentry.startInactiveSpan>,
   metadata: Record<string, unknown>
 ): void {
-  const meta = metadata as Record<string, unknown>;
-
-  if (typeof meta.promptTokens === "number") {
-    span?.setAttribute("gen_ai.usage.input_tokens", meta.promptTokens);
+  if (typeof metadata.promptTokens === "number") {
+    span?.setAttribute("gen_ai.usage.input_tokens", metadata.promptTokens);
   }
-  if (typeof meta.responseTokens === "number") {
-    span?.setAttribute("gen_ai.usage.output_tokens", meta.responseTokens);
+  if (typeof metadata.responseTokens === "number") {
+    span?.setAttribute("gen_ai.usage.output_tokens", metadata.responseTokens);
   }
-  if (typeof meta.totalTokens === "number") {
-    span?.setAttribute("gen_ai.usage.total_tokens", meta.totalTokens);
+  if (typeof metadata.totalTokens === "number") {
+    span?.setAttribute("gen_ai.usage.total_tokens", metadata.totalTokens);
   }
 }
 
@@ -124,13 +122,13 @@ function processGeminiResponse<T>(
   includePrompts: boolean
 ): void {
   if (!result || typeof result !== "object") return;
-  
+
   const response = result as Record<string, unknown>;
-  
+
   if (includePrompts && response.text) {
     span?.setAttribute("gen_ai.response.text", JSON.stringify([String(response.text)]));
   }
-  
+
   if (response.metadata && typeof response.metadata === "object") {
     extractTokenUsage(span, response.metadata as Record<string, unknown>);
   }

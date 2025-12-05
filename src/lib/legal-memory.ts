@@ -97,7 +97,7 @@ export class LegalMemory {
         return;
       }
 
-      const items = (await redis.get("legal-memory")) as LegalContextItem[] | null;
+      const items = await redis.get<LegalContextItem[]>("legal-memory");
       if (items && Array.isArray(items)) {
         this.memoryCache.clear();
         for (const item of items) {
@@ -141,7 +141,7 @@ export class LegalMemory {
     if (redis) {
       try {
         // Buscar memória existente
-        const existingMemory = (await redis.get("legal-memory")) as LegalContextItem[] | null;
+        const existingMemory = await redis.get<LegalContextItem[]>("legal-memory");
         const memory = existingMemory ?? [];
 
         // Adicionar novo item
