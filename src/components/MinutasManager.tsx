@@ -39,7 +39,6 @@ import {
   Bot,
   CheckCircle,
   ChevronDown,
-  Chrome,
   Clock,
   Copy,
   Download,
@@ -448,7 +447,8 @@ export default function MinutasManager() {
       return;
     }
 
-    printWindow.document.write(`
+    // Usar innerHTML ao invés de document.write (deprecated)
+    printWindow.document.documentElement.innerHTML = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -476,7 +476,7 @@ export default function MinutasManager() {
           ${minuta.conteudo}
         </body>
       </html>
-    `);
+    `;
     printWindow.document.close();
     printWindow.print();
     toast.success("Janela de impressão aberta - salve como PDF");
@@ -692,14 +692,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             if (!isAuthenticated) {
               return (
                 <Button onClick={handleAuthGoogle} variant="outline">
-                  <Chrome className="mr-2" />
+                  <FileText className="mr-2" />
                   Conectar Google Docs
                 </Button>
               );
             }
             return (
               <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
-                <Chrome className="mr-2" />
+                <FileText className="mr-2" />
                 Google Conectado
               </Badge>
             );
@@ -1118,7 +1118,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         {processo && <Badge variant="secondary">{processo.numeroCNJ}</Badge>}
                         {minuta.googleDocsId && (
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            <Chrome className="mr-1 h-3 w-3" />
+                            <FileText className="mr-1 h-3 w-3" />
                             Google Docs
                           </Badge>
                         )}
@@ -1218,7 +1218,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               disabled={!isAuthenticated}
                               className="justify-start"
                             >
-                              <Chrome className="mr-2 h-4 w-4" />
+                              <FileText className="mr-2 h-4 w-4" />
                               {minuta.googleDocsUrl ? "Abrir no" : "Criar no"} Google Docs
                             </Button>
                           </div>

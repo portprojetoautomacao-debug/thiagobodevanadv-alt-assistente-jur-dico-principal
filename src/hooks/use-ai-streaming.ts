@@ -72,7 +72,7 @@ function parseEventLine(line: string): StreamEvent | null {
  */
 function processStreamEvent(
   event: StreamEvent,
-  contentRef: React.MutableRefObject<string>,
+  contentRef: { current: string },
   setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
   setProvider: React.Dispatch<React.SetStateAction<string | null>>,
   onChunk?: (chunk: string) => void,
@@ -95,7 +95,7 @@ function processStreamEvent(
  */
 async function processStreamResponse(
   reader: ReadableStreamDefaultReader<Uint8Array>,
-  contentRef: React.MutableRefObject<string>,
+  contentRef: { current: string },
   setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
   setProvider: React.Dispatch<React.SetStateAction<string | null>>,
   onChunk?: (chunk: string) => void,

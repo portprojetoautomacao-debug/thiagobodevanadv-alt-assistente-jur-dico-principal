@@ -42,7 +42,8 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
 export function getShortcutLabel(shortcut: KeyboardShortcut): string {
   const parts: string[] = [];
 
-  const isMac = navigator.platform.toUpperCase().includes("MAC");
+  // Usar userAgent ao invés de navigator.platform (deprecated)
+  const isMac = navigator.userAgent.includes("Mac") || navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad");
 
   if (shortcut.ctrl || shortcut.meta) {
     parts.push(isMac ? "⌘" : "Ctrl");

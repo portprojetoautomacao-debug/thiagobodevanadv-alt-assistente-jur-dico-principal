@@ -82,10 +82,10 @@ export default function KeyboardShortcutsDialog({
   onOpenChange,
 }: KeyboardShortcutsDialogProps) {
   // SSR-safe: navigator pode não existir no build / server
+  // Usar userAgent ao invés de navigator.platform (deprecated)
   const isMac =
     typeof navigator !== "undefined" &&
-    typeof navigator.platform === "string" &&
-    navigator.platform.toUpperCase().includes("MAC");
+    (navigator.userAgent.includes("Mac") || navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad"));
 
   const ctrlKeyLabel = isMac ? "⌘" : "Ctrl";
 
