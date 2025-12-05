@@ -45,8 +45,8 @@ export default function AgentStatusFloater() {
                     </h3>
                     <p className="text-xs text-muted-foreground">
                       {activeAgents.length} agente
-                      {activeAgents.length !== 1 ? "s" : ""} ativo
-                      {activeAgents.length !== 1 ? "s" : ""}
+                      {activeAgents.length === 1 ? "" : "s"} ativo
+                      {activeAgents.length === 1 ? "" : "s"}
                     </p>
                   </div>
                 </div>
@@ -86,7 +86,7 @@ export default function AgentStatusFloater() {
                     <Zap className="w-4 h-4 text-accent animate-pulse" />
                     <p className="text-xs font-medium text-foreground">
                       {processingAgents.length} tarefa
-                      {processingAgents.length !== 1 ? "s" : ""} em processamento
+                      {processingAgents.length === 1 ? "" : "s"} em processamento
                     </p>
                   </div>
                 </div>

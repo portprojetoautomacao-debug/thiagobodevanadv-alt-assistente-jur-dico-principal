@@ -79,15 +79,15 @@ class RedisCache {
         'redis'
       );
 
-      if (result !== null) {
-        this.stats.hits++;
-        logger.debug(`Cache hit: ${key}`);
-        return result as T;
-      } else {
+      if (result === null) {
         this.stats.misses++;
         logger.debug(`Cache miss: ${key}`);
         return null;
       }
+
+      this.stats.hits++;
+      logger.debug(`Cache hit: ${key}`);
+      return result as T;
     } catch (error) {
       this.stats.errors++;
       logger.error('Erro ao obter do cache', error, { key });

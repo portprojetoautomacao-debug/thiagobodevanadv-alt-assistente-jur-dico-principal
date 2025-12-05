@@ -141,21 +141,22 @@ async function storePublication(publication: StoredPublication): Promise<void> {
       return existingHash === pubHash;
     });
 
-    if (!isDuplicate) {
-      existing.unshift(publication);
-      // Use pipeline for atomic operations
-      await kv.set(key, existing.slice(0, 1000));
-
-      // Update hash index for fast duplicate checking
-      const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${publication.lawyerId}`;
-      const hashes = ((await kv.get(hashKey)) as string[]) || [];
-      hashes.unshift(pubHash);
-      await kv.set(hashKey, hashes.slice(0, 2000));
-
-      console.log(`[KV] Stored publication: ${pubHash}`);
-    } else {
+    if (isDuplicate) {
       console.log(`[KV] Skipped duplicate: ${pubHash}`);
+      return;
     }
+
+    existing.unshift(publication);
+    // Use pipeline for atomic operations
+    await kv.set(key, existing.slice(0, 1000));
+
+    // Update hash index for fast duplicate checking
+    const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${publication.lawyerId}`;
+    const hashes = ((await kv.get(hashKey)) as string[]) || [];
+    hashes.unshift(pubHash);
+    await kv.set(hashKey, hashes.slice(0, 2000));
+
+    console.log(`[KV] Stored publication: ${pubHash}`);
   } catch (error) {
     console.error("[KV] Error storing publication:", error);
     throw error;
