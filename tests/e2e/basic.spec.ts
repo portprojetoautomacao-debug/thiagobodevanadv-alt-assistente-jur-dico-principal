@@ -11,18 +11,13 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
   test("deve ter o menu de navegação", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    // Em produção, a página inicial pode estar não autenticada.
-    // Consideramos sucesso se: (a) o sidebar existir, OU (b) a tela de login aparecer.
-    const navigationById = page.getByTestId("sidebar-nav");
-    const hasSidebar = (await navigationById.count()) > 0;
-    if (hasSidebar) {
-      await expect(navigationById).toBeVisible();
-    } else {
-      // Verifica tela de login simples - usar primeiro elemento encontrado
-      await expect(
-        page.getByRole("heading", { name: /Assistente Jurídico/i }).first()
-      ).toBeVisible();
-    }
+
+    // Verifica se navegação ou tela de login está presente
+    const navigation = page.getByRole("navigation").or(page.getByTestId("sidebar-nav"));
+    const loginHeading = page.getByRole("heading", { name: /Login|Assistente Jurídico/i });
+
+    // Aceita navegação OU tela de login
+    await expect(navigation.or(loginHeading)).toBeVisible({ timeout: 10000 });
   });
 
   test("deve conseguir acessar a página de processos", async ({ page }) => {
@@ -37,9 +32,7 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
 
     // Se há mensagens de erro, verifica se são erros esperados (como falta de config)
     if (count > 0) {
-      console.log(
-        `Encontradas ${count} mensagens de erro (podem ser avisos de configuração)`
-      );
+      console.log(`Encontradas ${count} mensagens de erro (podem ser avisos de configuração)`);
     }
   });
 

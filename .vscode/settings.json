@@ -152,6 +152,27 @@
 
   // Completions de issues (sugestões automáticas)
   "githubIssues.issueCompletions.enabled": true,
+
+  // Evitar autocomplete de "#" em linguagens onde "#" é comentário
+  "githubIssues.ignoreCompletionTrigger": [
+    "coffeescript",
+    "crystal",
+    "diff",
+    "dockerfile",
+    "dockercompose",
+    "ignore",
+    "ini",
+    "julia",
+    "makefile",
+    "perl",
+    "powershell",
+    "python",
+    "r",
+    "ruby",
+    "shellscript",
+    "yaml"
+  ],
+
   "githubIssues.queries": [
     {
       "label": "🔥 Críticos",
