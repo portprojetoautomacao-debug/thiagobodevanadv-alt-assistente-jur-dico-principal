@@ -31,7 +31,8 @@ export default defineConfig({
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
-    // Sempre usar headless para evitar erro X11 em dev containers
+    // Sempre usar headless: true em dev containers sem servidor X11 (Linux, CI, Codespaces, etc).
+    // Para debug local com interface gráfica, execute: npx playwright test --headed
     headless: true,
     storageState: fs.existsSync("tests/e2e/storageState.json")
       ? "tests/e2e/storageState.json"

@@ -299,7 +299,6 @@ export default function HumanAgentCollaboration({
                   ? "text-primary animate-pulse"
                   : "text-muted-foreground"
               }`}
-             
             />
             <p className="text-xs font-medium">Agente de IA</p>
             <p className="text-xs text-muted-foreground">
@@ -320,7 +319,6 @@ export default function HumanAgentCollaboration({
               className={`w-8 h-8 mx-auto mb-2 ${
                 phase === "human_editing" ? "text-accent" : "text-muted-foreground"
               }`}
-             
             />
             <p className="text-xs font-medium">Você</p>
             <p className="text-xs text-muted-foreground">

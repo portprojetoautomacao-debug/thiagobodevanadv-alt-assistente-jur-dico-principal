@@ -5,15 +5,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import
-  {
-    createMinuta,
-    createMinutaFromAgentTask,
-    determineMinutaTipo,
-    updateMinuta,
-    validateMinutaForFinalization,
-    type MinutaInput,
-  } from "./minuta-service";
+import {
+  createMinuta,
+  createMinutaFromAgentTask,
+  determineMinutaTipo,
+  updateMinuta,
+  validateMinutaForFinalization,
+  type MinutaInput,
+} from "./minuta-service";
 
 describe("minuta-service", () => {
   describe("determineMinutaTipo", () => {

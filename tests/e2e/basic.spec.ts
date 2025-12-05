@@ -16,8 +16,28 @@ test.describe("Assistente Jurídico - Testes Básicos", () => {
     const navigation = page.getByRole("navigation").or(page.getByTestId("sidebar-nav"));
     const loginHeading = page.getByRole("heading", { name: /Login|Assistente Jurídico/i });
 
-    // Aceita navegação OU tela de login
-    await expect(navigation.or(loginHeading)).toBeVisible({ timeout: 10000 });
+    // Aceita navegação OU tela de login, com mensagens de erro descritivas
+    let navigationVisible = false;
+    let loginVisible = false;
+    try {
+      await expect(navigation).toBeVisible({ timeout: 5000 });
+      navigationVisible = true;
+    } catch {
+      // Ignora, tenta o próximo
+    }
+    if (!navigationVisible) {
+      try {
+        await expect(loginHeading).toBeVisible({ timeout: 5000 });
+        loginVisible = true;
+      } catch {
+        // Ignora, vai lançar erro abaixo
+      }
+    }
+    if (!navigationVisible && !loginVisible) {
+      throw new Error(
+        "Nenhum dos elementos esperados está visível: nem navegação (menu lateral) nem heading de login. Verifique se o app está carregando corretamente."
+      );
+    }
   });
 
   test("deve conseguir acessar a página de processos", async ({ page }) => {

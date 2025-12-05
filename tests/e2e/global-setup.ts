@@ -60,7 +60,7 @@ async function globalSetup(config: FullConfig) {
         { timeout: 10_000 }
       );
       console.log("📝 Login fields detected");
-    } catch (error) {
+    } catch {
       console.warn(
         "⚠️ Login fields not found - app may not have login page. Continuing without auth setup."
       );
@@ -68,10 +68,20 @@ async function globalSetup(config: FullConfig) {
       return;
     }
 
-    // Preencher formulário de login usando Test IDs (melhor prática)
-    const usernameInput = page.getByTestId("login-username");
-    const emailInput = page.getByRole("textbox", { name: "Email" });
-    const passwordInput = page.getByTestId("login-password");
+    // Preencher formulário de login usando Test IDs com fallbacks robustos
+    const usernameInput = page
+      .getByTestId("login-username")
+      .or(page.locator('input[name="username"], input[placeholder*="usuário" i]'));
+    const emailInput = page
+      .getByRole("textbox", { name: "Email" })
+      .or(page.locator('input[name="email"], input[type="email"], input[placeholder*="email" i]'));
+    const passwordInput = page
+      .getByTestId("login-password")
+      .or(
+        page.locator(
+          'input[name="password"], input[type="password"], input[placeholder*="senha" i], input[placeholder*="password" i]'
+        )
+      );
 
     // Detectar qual tipo de formulário (SimpleAuth ou Google OAuth)
     const isSimpleAuth = (await usernameInput.count()) > 0;
