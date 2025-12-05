@@ -1310,7 +1310,7 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     const kv = await getKv();
 
     // Get all processes with deadlines
-    const processes = ((await kv.get("processes")) as ProcessWithDeadlines[]) || [];
+    const processes = (await kv.get("processes") as ProcessWithDeadlines[]) || [];
 
     console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
 

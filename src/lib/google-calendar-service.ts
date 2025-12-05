@@ -421,7 +421,7 @@ class GoogleCalendarService {
         return [];
       }
 
-      const response = (await eventsApi.list(params)) as unknown as {
+      const response = (await eventsApi.list(params)) as {
         result?: { items?: GoogleCalendarEvent[] };
       };
       const events = response.result?.items || [];
@@ -488,7 +488,7 @@ class GoogleCalendarService {
       const response = (await eventsApi.insert({
         calendarId: "primary",
         resource: event,
-      })) as unknown as { result?: { id?: string } };
+      })) as { result?: { id?: string } };
 
       const eventId = response.result?.id ?? null;
       debug("Event created successfully", { eventId });

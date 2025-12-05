@@ -20,7 +20,7 @@ import { useKV } from "@/hooks/use-kv";
 import { getRelativeDateDescription } from "@/lib/date-utils";
 import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { cn } from "@/lib/utils";
-import type { Expediente, Process } from "@/types";
+import type { Expediente, Process, TipoExpediente } from "@/types";
 import { ArrowRight, Bot, CheckCircle, Clock, Filter, Newspaper, RefreshCw } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -99,7 +99,7 @@ function createExpedienteFromPublication(
   return {
     id: crypto.randomUUID(),
     processId,
-    tipo: pub.tipo || "intimacao",
+    tipo: (pub.tipo || "intimacao") as TipoExpediente,
     titulo: `${pub.tipo || "Intimação"} - ${pub.numeroProcesso}`,
     conteudo: pub.teor,
     content: pub.teor,

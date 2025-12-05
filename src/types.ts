@@ -88,10 +88,13 @@ export interface FinancialEntry {
   date: string;
 }
 
+// Type alias para tipos de expediente (S6571)
+export type TipoExpediente = "intimacao" | "citacao" | "documento" | "outro";
+
 export interface Expediente {
   id: string;
   processId?: string;
-  tipo: "intimacao" | "citacao" | "documento" | "outro" | string;
+  tipo: TipoExpediente;
   type?: string;
   titulo?: string;
   conteudo?: string;
