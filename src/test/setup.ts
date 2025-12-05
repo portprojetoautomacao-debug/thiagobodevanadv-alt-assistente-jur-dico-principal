@@ -54,9 +54,6 @@ Object.defineProperty(window, "matchMedia", {
 
 // Mock do IntersectionObserver
 globalThis.IntersectionObserver = class IntersectionObserver {
-  constructor() {
-    /* Mock constructor - intentionally empty */
-  }
   disconnect() {
     /* Mock method - intentionally empty */
   }
@@ -73,9 +70,6 @@ globalThis.IntersectionObserver = class IntersectionObserver {
 
 // Mock do ResizeObserver
 globalThis.ResizeObserver = class ResizeObserver {
-  constructor() {
-    /* Mock constructor - intentionally empty */
-  }
   disconnect() {
     /* Mock method - intentionally empty */
   }

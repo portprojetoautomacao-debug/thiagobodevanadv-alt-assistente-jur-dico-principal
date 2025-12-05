@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, Sparkles } from "lucide-react";
+import { Calculator, Calendar, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
