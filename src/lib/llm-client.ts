@@ -87,7 +87,7 @@ export async function generateJSON<T = unknown>(
 
   try {
     // Try to extract JSON from response
-    const jsonMatch = response.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    const jsonMatch = /\{[\s\S]*\}|\[[\s\S]*\]/.exec(response);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]) as T;
     }

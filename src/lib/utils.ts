@@ -159,7 +159,7 @@ export function formatDateTimeTz(date: string | Date, timeZone: string = DEFAULT
  */
 export function parsePjeDate(dateStr: string): Date | null {
   if (!dateStr) return null;
-  const match = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateStr);
   if (!match) return null;
 
   const [, dd, mm, yyyy] = match;
@@ -181,7 +181,7 @@ export function parsePjeDateTime(dateStr: string, timeStr?: string): Date | null
 
   if (!timeStr) return baseDate;
 
-  const match = timeStr.match(/^(\d{2}):(\d{2})$/);
+  const match = /^(\d{2}):(\d{2})$/.exec(timeStr);
   if (!match) return baseDate;
 
   const [, hh, mm] = match;

@@ -169,19 +169,25 @@ export function createLocalAppointmentFromAnalysis(
     return null;
   }
 
-  // Converter data BR para ISO se necessário
+  // Converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD) se necessário
   const convertedDate = convertBRDateToISO(endDateStr);
   if (convertedDate) {
+    // Data convertida com sucesso de DD/MM/YYYY → YYYY-MM-DD
     endDateStr = convertedDate;
+  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(endDateStr)) {
+    // Não é BR e nem ISO - rejeitar silenciosamente strings como "Verificar"
+    if (process.env.VITE_APP_ENV !== "production") {
+      console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
+    }
+    return null;
   }
 
   const deadlineDate = new Date(endDateStr);
   if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
     // Modo silencioso em produção
-    if (process.env.VITE_APP_ENV === "production") {
-      return null;
+    if (process.env.VITE_APP_ENV !== "production") {
+      console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
     }
-    console.log("[DeadlineIntegration] Invalid deadline date:", endDateStr);
     return null;
   }
 
