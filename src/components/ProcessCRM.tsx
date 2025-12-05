@@ -74,7 +74,7 @@ function findExpedienteForProcess(
     (e) =>
       e.processId === process.id ||
       e.numeroProcesso === process.numeroCNJ ||
-      e.numeroProcesso?.replace(/\D/g, "") === process.numeroCNJ.replace(/\D/g, "")
+      e.numeroProcesso?.replaceAll(/\D/g, "") === process.numeroCNJ.replaceAll(/\D/g, "")
   );
 }
 

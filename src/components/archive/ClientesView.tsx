@@ -1,8 +1,5 @@
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -13,6 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,8 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -30,18 +27,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Plus,
-  Search,
-  Pencil,
-  Trash2,
-  User,
-  Building,
-  Download,
-} from "lucide-react";
-import { toast } from "sonner";
-import type { Cliente } from "@/types";
+import { Textarea } from "@/components/ui/textarea";
+import { useKV } from "@/hooks/use-kv";
 import { exportToCSV } from "@/lib/utils";
+import type { Cliente } from "@/types";
+import { Building, Download, Pencil, Plus, Search, Trash2, User } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function ClientesView() {
   const [clientes, setClientes] = useKV<Cliente[]>("clientes", []);
@@ -131,7 +123,7 @@ export default function ClientesView() {
   );
 
   const formatCpfCnpj = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
+    const numbers = value.replaceAll(/\D/g, "");
     if (numbers.length <= 11) {
       return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     }

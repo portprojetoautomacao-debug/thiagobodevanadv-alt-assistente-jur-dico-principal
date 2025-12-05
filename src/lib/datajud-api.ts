@@ -160,7 +160,7 @@ function getApiKey(configApiKey?: string): string | null {
  * Formato: NNNNNNN-DD.AAAA.J.TR.OOOO
  */
 export function validarNumeroCNJ(numero: string): boolean {
-  const numeroLimpo = numero.replace(/[^\d.-]/g, "");
+  const numeroLimpo = numero.replaceAll(/[^\d.-]/g, "");
 
   const regex = /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/;
 
@@ -340,7 +340,7 @@ export async function consultarProcessoDatajud(
 
   const { apiKey, tribunalAlias } = validateDatajudParams(numeroProcesso, tribunal, configApiKey);
 
-  const numeroProcessoLimpo = numeroProcesso.replace(/[^\d]/g, "");
+  const numeroProcessoLimpo = numeroProcesso.replaceAll(/[^\d]/g, "");
   const url = `${baseUrl}/${tribunalAlias}/_search`;
 
   const controller = new AbortController();
@@ -572,7 +572,7 @@ export function isApiKeyConfigured(): boolean {
  * Formata o número CNJ para exibição
  */
 export function formatarNumeroCNJ(numero: string): string {
-  const digitos = numero.replace(/\D/g, "");
+  const digitos = numero.replaceAll(/\D/g, "");
 
   if (digitos.length === 20) {
     return `${digitos.slice(0, 7)}-${digitos.slice(7, 9)}.${digitos.slice(

@@ -5,11 +5,11 @@
  * automaticamente cria minutas no sistema com status 'pendente-revisao'
  */
 
-import { useEffect, useRef, useState, useMemo } from "react";
 import { useKV } from "@/hooks/use-kv";
-import { toast } from "sonner";
-import type { Minuta } from "@/types";
 import type { AgentTask } from "@/lib/agents";
+import type { Minuta } from "@/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // Tipos de documento para mapeamento
 const DOCUMENT_TYPE_MAP: Record<string, Minuta["tipo"]> = {
@@ -156,7 +156,7 @@ export function useAutoMinuta() {
           label: "Ver Minutas",
           onClick: () => {
             // Navegar para minutas (se tiver router)
-            window.location.hash = "#minutas";
+            globalThis.window.location.hash = "#minutas";
           },
         },
       });

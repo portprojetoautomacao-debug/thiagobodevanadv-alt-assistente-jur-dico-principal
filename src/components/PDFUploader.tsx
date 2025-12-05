@@ -75,8 +75,8 @@ export default function PDFUploader() {
           const text = new TextDecoder("utf-8").decode(uint8Array);
 
           const cleanedText = text
-            .replace(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
-            .replace(/\s+/g, " ")
+            .replaceAll(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
+            .replaceAll(/\s+/g, " ")
             .trim();
 
           resolve(cleanedText);

@@ -36,7 +36,7 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
   // Remover markdown code blocks
   const cleaned = responseText
     .replace(/```json\s*/gi, "")
-    .replace(/```\s*/g, "")
+    .replaceAll(/```\s*/g, "")
     .trim();
 
   try {

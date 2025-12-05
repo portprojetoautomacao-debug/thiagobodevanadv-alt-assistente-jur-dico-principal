@@ -442,7 +442,7 @@ export default function MinutasManager() {
   };
 
   const handleExportPDF = async (minuta: Minuta) => {
-    const printWindow = window.open("", "_blank");
+    const printWindow = globalThis.window.open("", "_blank");
     if (!printWindow) {
       toast.error("Habilite pop-ups para exportar PDF");
       return;
