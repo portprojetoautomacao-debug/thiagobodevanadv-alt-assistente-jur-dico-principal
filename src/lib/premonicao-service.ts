@@ -182,7 +182,9 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
         hasChoices: "choices" in data,
         dataPreview: JSON.stringify(data).substring(0, 500),
       });
-      throw new Error("Resposta vazia da API de IA. Verifique a chave API (Gemini API key reportada como leaked).");
+      throw new Error(
+        "Resposta vazia da API de IA. Verifique a chave API (Gemini API key reportada como leaked)."
+      );
     }
 
     if (responseText.trim().length === 0) {
