@@ -1,36 +1,63 @@
 /**
- * Sentry Google Gen AI Integration
+ * Sentry Google Gen AI Integration (Official SDK Implementation)
  *
- * Integração automática para monitorar chamadas ao Google Gemini no Sentry.
- * Baseado em: https://docs.sentry.io/platforms/python/integrations/google-genai/
+ * Integração OFICIAL do Sentry para monitorar Google Gemini SDK.
+ * Usa googleGenAIIntegration() disponível em @sentry/react v10.14.0+
  *
- * Esta integração intercepta chamadas ao Gemini e cria spans automaticamente,
- * incluindo dados de prompts, respostas e uso de tokens.
+ * Baseado em:
+ * - https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/integrations/google-genai/
+ * - https://docs.sentry.io/platforms/javascript/guides/react/tracing/span-metrics/examples/#manual-llm-instrumentation-custom-ai-agent--tool-calls
+ * - https://docs.sentry.io/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/
+ *
+ * A integração oficial captura automaticamente:
+ * - models.generateContent()
+ * - models.generateContentStream()
+ * - chats.create()
+ * - sendMessage()
+ * - sendMessageStream()
+ *
+ * Spans criados seguem convenções OpenTelemetry:
+ * - op: gen_ai.chat, gen_ai.invoke_agent, gen_ai.execute_tool
+ * - Atributos: gen_ai.system, gen_ai.request.model, gen_ai.usage.*, etc.
  *
  * @module sentry-gemini-integration
- * @version 1.0.0
+ * @version 2.0.0 - Migrado para SDK oficial
  */
 
 import * as Sentry from "@sentry/react";
 
 /**
- * Opções de configuração da integração Gemini
+ * Opções de configuração da integração Gemini (padrão oficial SDK)
  */
 export interface GeminiIntegrationOptions {
   /**
-   * Se deve incluir prompts e outputs nos spans do Sentry.
+   * Se deve gravar INPUTS (prompts, messages) nos spans do Sentry.
    *
    * O Sentry considera inputs/outputs de LLM como PII (Personally Identifiable Information).
-   * Para incluir esses dados, defina `send_default_pii=true` na inicialização do Sentry
-   * OU configure `includePrompts=true` aqui.
+   * Por padrão, usa o valor de `send_default_pii` na inicialização do Sentry.
    *
-   * @default true (se send_default_pii estiver ativo)
+   * @default true se send_default_pii=true, false caso contrário
+   */
+  recordInputs?: boolean;
+
+  /**
+   * Se deve gravar OUTPUTS (respostas, generated text) nos spans do Sentry.
+   *
+   * O Sentry considera inputs/outputs de LLM como PII (Personally Identifiable Information).
+   * Por padrão, usa o valor de `send_default_pii` na inicialização do Sentry.
+   *
+   * @default true se send_default_pii=true, false caso contrário
+   */
+  recordOutputs?: boolean;
+
+  /**
+   * Se deve incluir prompts na instrumentação (alias para recordInputs)
+   * @default true
    */
   includePrompts?: boolean;
 
   /**
-   * Se deve capturar erros automaticamente
-   *
+   * Se deve capturar erros no Sentry
    * @default true
    */
   captureErrors?: boolean;
@@ -46,6 +73,90 @@ interface GeminiCallMetadata {
   temperature?: number;
   maxTokens?: number;
   startTime: number;
+}
+
+// Helper: Adiciona atributos opcionais ao span
+function addOptionalAttributes(
+  span: ReturnType<typeof Sentry.startInactiveSpan>,
+  metadata: GeminiCallMetadata
+): void {
+  if (metadata.temperature !== undefined) {
+    span?.setAttribute("gen_ai.request.temperature", metadata.temperature);
+  }
+  if (metadata.maxTokens !== undefined) {
+    span?.setAttribute("gen_ai.request.max_tokens", metadata.maxTokens);
+  }
+}
+
+// Helper: Adiciona prompts ao span
+function addPromptAttributes(
+  span: ReturnType<typeof Sentry.startInactiveSpan>,
+  prompt: string | string[]
+): void {
+  const messages = Array.isArray(prompt)
+    ? prompt.map((p) => ({ role: "user", content: p }))
+    : [{ role: "user", content: prompt }];
+  span?.setAttribute("gen_ai.request.messages", JSON.stringify(messages));
+}
+
+// Helper: Extrai e adiciona tokens usage
+function extractTokenUsage(
+  span: ReturnType<typeof Sentry.startInactiveSpan>,
+  metadata: Record<string, unknown>
+): void {
+  const meta = metadata as Record<string, unknown>;
+
+  if (typeof meta.promptTokens === "number") {
+    span?.setAttribute("gen_ai.usage.input_tokens", meta.promptTokens);
+  }
+  if (typeof meta.responseTokens === "number") {
+    span?.setAttribute("gen_ai.usage.output_tokens", meta.responseTokens);
+  }
+  if (typeof meta.totalTokens === "number") {
+    span?.setAttribute("gen_ai.usage.total_tokens", meta.totalTokens);
+  }
+}
+
+// Helper: Processa resposta do Gemini
+function processGeminiResponse<T>(
+  span: ReturnType<typeof Sentry.startInactiveSpan>,
+  result: T,
+  includePrompts: boolean
+): void {
+  if (!result || typeof result !== "object") return;
+  
+  const response = result as Record<string, unknown>;
+  
+  if (includePrompts && response.text) {
+    span?.setAttribute("gen_ai.response.text", JSON.stringify([String(response.text)]));
+  }
+  
+  if (response.metadata && typeof response.metadata === "object") {
+    extractTokenUsage(span, response.metadata as Record<string, unknown>);
+  }
+}
+
+// Helper: Captura erro no Sentry
+function captureGeminiError(
+  error: unknown,
+  metadata: GeminiCallMetadata,
+  captureErrors: boolean
+): void {
+  if (!captureErrors) return;
+
+  Sentry.captureException(error, {
+    tags: {
+      "ai.model": metadata.model,
+      "ai.operation": metadata.operation,
+    },
+    contexts: {
+      gemini: {
+        model: metadata.model,
+        operation: metadata.operation,
+        duration_ms: Date.now() - metadata.startTime,
+      },
+    },
+  });
 }
 
 /**
@@ -71,7 +182,6 @@ export function instrumentGeminiCall<T>(
   const { includePrompts = true, captureErrors = true } = options;
 
   return async (fn: () => Promise<T>): Promise<T> => {
-    // Criar span para a chamada LLM
     const span = Sentry.startInactiveSpan({
       op: "gen_ai.chat",
       name: `chat ${metadata.model}`,
@@ -82,84 +192,21 @@ export function instrumentGeminiCall<T>(
       },
     });
 
-    // Adicionar atributos opcionais
-    if (metadata.temperature !== undefined) {
-      span?.setAttribute("gen_ai.request.temperature", metadata.temperature);
-    }
+    addOptionalAttributes(span, metadata);
 
-    if (metadata.maxTokens !== undefined) {
-      span?.setAttribute("gen_ai.request.max_tokens", metadata.maxTokens);
-    }
-
-    // Adicionar prompts se permitido
     if (includePrompts && metadata.prompt) {
-      const messages = Array.isArray(metadata.prompt)
-        ? metadata.prompt.map((p) => ({ role: "user", content: p }))
-        : [{ role: "user", content: metadata.prompt }];
-
-      span?.setAttribute("gen_ai.request.messages", JSON.stringify(messages));
+      addPromptAttributes(span, metadata.prompt);
     }
 
     try {
       const result = await fn();
-
-      // Extrair informações da resposta
-      if (result && typeof result === "object") {
-        const response = result as Record<string, unknown>;
-
-        // Capturar texto da resposta
-        if (includePrompts && response.text) {
-          span?.setAttribute("gen_ai.response.text", JSON.stringify([String(response.text)]));
-        }
-
-        // Capturar uso de tokens
-        if (response.metadata && typeof response.metadata === "object") {
-          const meta = response.metadata as Record<string, unknown>;
-
-          if (typeof meta.promptTokens === "number") {
-            span?.setAttribute("gen_ai.usage.input_tokens", meta.promptTokens);
-          }
-
-          if (typeof meta.responseTokens === "number") {
-            span?.setAttribute("gen_ai.usage.output_tokens", meta.responseTokens);
-          }
-
-          if (typeof meta.totalTokens === "number") {
-            span?.setAttribute("gen_ai.usage.total_tokens", meta.totalTokens);
-          }
-        }
-      }
-
-      // Marcar como sucesso
+      processGeminiResponse(span, result, includePrompts);
       span?.setStatus({ code: 1 });
-
       return result;
     } catch (error) {
-      // Capturar erro
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-
-      span?.setStatus({
-        code: 2,
-        message: errorMessage,
-      });
-
-      // Reportar erro ao Sentry se habilitado
-      if (captureErrors) {
-        Sentry.captureException(error, {
-          tags: {
-            "ai.model": metadata.model,
-            "ai.operation": metadata.operation,
-          },
-          contexts: {
-            gemini: {
-              model: metadata.model,
-              operation: metadata.operation,
-              duration_ms: Date.now() - metadata.startTime,
-            },
-          },
-        });
-      }
-
+      span?.setStatus({ code: 2, message: errorMessage });
+      captureGeminiError(error, metadata, captureErrors);
       throw error;
     } finally {
       span?.end();
