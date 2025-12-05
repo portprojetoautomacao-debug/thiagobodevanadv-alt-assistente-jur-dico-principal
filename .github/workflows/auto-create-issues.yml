@@ -1,0 +1,83 @@
+name: 🤖 Auto Create Issues from Code Comments
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  auto-create-issues:
+    name: Scan and Create Issues
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Scan for TODO/FIXME/etc
+        id: scan
+        uses: alstr/todo-to-issue-action@v4
+        with:
+          # Triggers configurados (mesmo do settings.json)
+          TODO_PATTERN: "(TODO|FIXME|ISSUE|HACK|PENDENTE|REVISAR|CORRIGIR|VERIFICAR|ATENÇÃO|URGENTE|BUG|JURIDICO|PRAZO|INTIMACAO|VALIDAR|COMPLIANCE|LGPD|SEGURANCA|REFACTOR|OPTIMIZE|DEPRECATED|BREAKING|PERFORMANCE|ACCESSIBILITY|A11Y|SECURITY|TEST|DOC|DOCS)"
+
+          # Criar issues automaticamente
+          AUTO_ASSIGN: true
+          AUTO_P: true
+
+          # Labels automáticas
+          LABEL: "auto-created,needs-triage"
+
+          # Fechar issues quando TODO é removido
+          CLOSE_ISSUES: true
+
+          # Idioma português
+          ISSUE_TEMPLATE: |
+            **Detectado automaticamente no código**
+
+            📁 **Arquivo**: `{{ FILE_PATH }}`
+            📍 **Linha**: {{ LINE_NUMBER }}
+            🏷️ **Tipo**: {{ TODO_TYPE }}
+
+            ---
+
+            ### 📝 Comentário Original
+
+            ```{{ LANGUAGE }}
+            {{ COMMENT }}
+            ```
+
+            ---
+
+            ### 🔗 Links Úteis
+
+            - [Ver no código]({{ PERMALINK }})
+            - [Ver diff]({{ DIFF_URL }})
+
+            ---
+
+            🤖 *Issue criado automaticamente pelo workflow Auto Create Issues*
+
+          # Assignees automáticos (autor do commit)
+          ASSIGN_TO_AUTHOR: true
+
+          # Não duplicar issues
+          UPDATE_EXISTING: true
+
+          # Milestones automáticas
+          MILESTONE: "Backlog"
+
+      - name: 📊 Summary
+        if: steps.scan.outputs.issues_created > 0
+        run: |
+          echo "✅ ${{ steps.scan.outputs.issues_created }} issue(s) criado(s) automaticamente!"
+          echo "🔗 Veja em: https://github.com/${{ github.repository }}/issues"

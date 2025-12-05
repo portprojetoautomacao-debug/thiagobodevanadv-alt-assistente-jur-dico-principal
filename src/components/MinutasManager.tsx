@@ -33,7 +33,9 @@ import {
 } from "@/lib/document-templates";
 import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
+import { createMinuta, updateMinuta, validateMinutaForFinalization, type MinutaInput } from "@/services/minuta-service";
 import type { Minuta, Process } from "@/types";
+import { m } from "framer-motion";
 import {
   AlertTriangle,
   Bot,
@@ -219,24 +221,30 @@ export default function MinutasManager() {
       return;
     }
 
-    const novaMinuta: Minuta = {
-      id: `minuta-${Date.now()}`,
-      titulo: formData.titulo,
-      processId: formData.processId !== "_none" ? formData.processId : undefined,
-      tipo: formData.tipo,
-      conteudo: formData.conteudo,
-      status: formData.status,
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
-      autor: "current-user",
-      criadoPorAgente: false,
-    };
+    try {
+      // ✅ Usar serviço centralizado com validação
+      const minutaInput: MinutaInput = {
+        titulo: formData.titulo,
+        processId: formData.processId !== "_none" ? formData.processId : undefined,
+        tipo: formData.tipo,
+        conteudo: formData.conteudo,
+        status: formData.status,
+        autor: "current-user",
+        criadoPorAgente: false,
+      };
 
-    setMinutas((current = []) => [...current, novaMinuta]);
+      const novaMinuta = createMinuta(minutaInput);
 
-    resetForm();
-    setIsDialogOpen(false);
-    toast.success("Minuta criada com sucesso!");
+      setMinutas((current = []) => [...current, novaMinuta]);
+
+      resetForm();
+      setIsDialogOpen(false);
+      toast.success("Minuta criada com sucesso!");
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao criar minuta";
+      toast.error(errorMsg);
+      console.error("[MinutasManager] Erro ao criar minuta:", error);
+    }
   };
 
   const handleUpdateMinuta = async () => {
@@ -245,9 +253,47 @@ export default function MinutasManager() {
       return;
     }
 
-    setMinutas((current = []) =>
-      current.map((m) =>
-        m.id === editingMinuta.id
+    try {
+      // ✅ Validar antes de finalizar
+      if (formData.status === "finalizada") {
+        const validation = validateMinutaForFinalization({
+          ...editingMinuta,
+          titulo: formData.titulo,
+          conteudo: formData.conteudo,
+        });
+
+        if (!validation.valid) {
+          toast.error("Minuta não pode ser finalizada", {
+            description: validation.errors.join(", "),
+          });
+          return;
+        }
+      }
+
+      // ✅ Usar serviço centralizado
+      const minutaAtualizada = updateMinuta(editingMinuta, {
+        titulo: formData.titulo,
+        processId: formData.processId !== "_none" ? formData.processId : undefined,
+        tipo: formData.tipo,
+        conteudo: formData.conteudo,
+        status: formData.status,
+      });
+
+      setMinutas((current = []) =>
+        current.map((m) =>
+          m.id === editingMinuta.id ? minutaAtualizada : m
+        )
+      );
+
+      resetForm();
+      setIsDialogOpen(false);
+      toast.success("Minuta atualizada com sucesso!");
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao atualizar minuta";
+      toast.error(errorMsg);
+      console.error("[MinutasManager] Erro ao atualizar minuta:", error);
+    }
+  };
           ? {
               ...m,
               titulo: formData.titulo,

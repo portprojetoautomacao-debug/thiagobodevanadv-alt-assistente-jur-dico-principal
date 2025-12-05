@@ -24,6 +24,8 @@
     "test:api": "vitest run --config vitest.config.node.ts",
     "test:all": "npm run test:run && npm run test:api",
     "test:e2e": "playwright test --project=chromium",
+    "test:e2e:headed": "xvfb-run playwright test --project=chromium --headed",
+    "test:e2e:debug": "xvfb-run playwright test --project=chromium --headed --debug",
     "test:e2e:report": "playwright show-report",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"",
     "sonar:local": "node sonar-run.mjs",
