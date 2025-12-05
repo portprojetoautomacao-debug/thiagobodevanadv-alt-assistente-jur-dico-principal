@@ -11,7 +11,7 @@ import {
   suggestStrategy,
   summarizeJurisprudence,
 } from "@/lib/gemini-service";
-import { ArrowRight, Sparkles, AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -205,11 +205,7 @@ export default function GeminiExample() {
                 return (
                   <div className="flex items-center justify-center min-h-[300px]">
                     <div className="space-y-3 text-center">
-                      <Sparkles
-                        size={48}
-                        className="text-primary animate-pulse mx-auto"
-                       
-                      />
+                      <Sparkles size={48} className="text-primary animate-pulse mx-auto" />
                       <p className="text-muted-foreground">Processando com IA...</p>
                     </div>
                   </div>
