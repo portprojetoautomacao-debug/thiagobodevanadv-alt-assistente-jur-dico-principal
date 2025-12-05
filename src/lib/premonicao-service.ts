@@ -43,27 +43,29 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
     return JSON.parse(cleaned) as Record<string, unknown>;
   } catch {
     // Tentar extrair o primeiro bloco JSON da resposta
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    const jsonMatch = /\{[\s\S]*\}/.exec(cleaned);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
       } catch {
         // Tentar encontrar JSON truncado e completá-lo
-        const truncatedMatch = cleaned.match(/\{[\s\S]*/);
+        const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
         if (truncatedMatch) {
           let truncated = truncatedMatch[0];
 
-          // Fechar strings abertas (aspas duplas sem par)
+          // PASSO 1: Fechar strings abertas PRIMEIRO (antes de adicionar chaves)
+          // Isso garante que {"key": "value... vire {"key": "value"} e não {"key": "value...}
           const quoteCount = (truncated.match(/"/g) || []).length;
           if (quoteCount % 2 !== 0) {
+            // String aberta - fechar com aspas
             truncated += '"';
           }
 
-          // Contar chaves abertas e fechadas
+          // PASSO 2: Contar chaves abertas e fechadas
           const openBraces = (truncated.match(/\{/g) || []).length;
           const closeBraces = (truncated.match(/\}/g) || []).length;
 
-          // Adicionar chaves faltantes
+          // PASSO 3: Adicionar chaves faltantes (APÓS fechar strings)
           truncated += "}".repeat(Math.max(0, openBraces - closeBraces));
 
           try {

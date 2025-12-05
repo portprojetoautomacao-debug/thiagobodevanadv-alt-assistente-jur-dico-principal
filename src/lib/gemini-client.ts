@@ -189,7 +189,7 @@ export async function geminiGenerateJSON<T = unknown>(
 
   // Tenta extrair JSON de bloco de código markdown se presente
   let jsonText = rawText;
-  const jsonBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonBlockMatch = /```(?:json)?\s*([\s\S]*?)```/.exec(rawText);
   if (jsonBlockMatch) {
     jsonText = jsonBlockMatch[1].trim();
   }
@@ -317,7 +317,7 @@ export async function geminiGenerateJSONWithSystem<T = unknown>(
 
   // Tenta extrair JSON de bloco de código markdown se presente
   let jsonText = rawText;
-  const jsonBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonBlockMatch = /```(?:json)?\s*([\s\S]*?)```/.exec(rawText);
   if (jsonBlockMatch) {
     jsonText = jsonBlockMatch[1].trim();
   }

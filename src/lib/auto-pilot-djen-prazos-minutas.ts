@@ -2,25 +2,25 @@
 // Integra DJEN → Agente de Gestão de Prazos → Agente de Minutas (Gemini + Docs + Calendar)
 // Modo: Auto-Pilot Jurídico para intimações DJEN
 
-import type { Appointment } from "@/types";
+import {
+  createDeadlineFromAnalysis,
+  type IntimationAnalysisResult,
+} from "@/lib/deadline-calendar-integration";
+import type { DJENFilteredResult } from "@/lib/djen-api";
 import {
   criarMonitorDJEN,
   type DJENMonitorAgent,
   type DJENMonitorConfig,
   type DJENMonitorTask,
 } from "@/lib/djen-monitor-agent";
-import type { DJENFilteredResult } from "@/lib/djen-api";
-import {
-  createDeadlineFromAnalysis,
-  type IntimationAnalysisResult,
-} from "@/lib/deadline-calendar-integration";
+import { callGemini } from "@/lib/gemini-service";
 import {
   criarMinutaComAgenteIA,
   type MinutaAgentDeadline,
   type MinutaAgentParams,
   type MinutaAgentResult,
 } from "@/lib/minuta-agent";
-import { callGemini } from "@/lib/gemini-service";
+import type { Appointment } from "@/types";
 
 /**
  * Configuração do Auto-Pilot DJEN + Prazos + Minutas
@@ -191,7 +191,7 @@ ${pub.teor}`;
     }
 
     try {
-      const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+      const jsonMatch = /\{[\s\S]*\}/.exec(response.text);
       if (!jsonMatch) {
         this.log("Resposta Gemini sem JSON reconhecível (intimação)", "warn");
         return null;

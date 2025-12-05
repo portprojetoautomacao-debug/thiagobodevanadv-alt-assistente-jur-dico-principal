@@ -157,7 +157,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
       const content = data.response || data.choices?.[0]?.message?.content || "";
 
       // Parse do JSON da resposta
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = /\{[\s\S]*\}/.exec(content);
       if (jsonMatch) {
         const analysis: TranscriptionAnalysis = JSON.parse(jsonMatch[0]);
         setSummary(analysis.summary || "Não foi possível gerar sumário");

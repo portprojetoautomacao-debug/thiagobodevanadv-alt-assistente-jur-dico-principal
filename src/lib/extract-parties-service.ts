@@ -97,7 +97,7 @@ Responda APENAS com o JSON, sem texto adicional.`,
     }
 
     // Parse do JSON - tenta encontrar JSON na resposta
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonMatch = /\{[\s\S]*\}/.exec(content);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -137,8 +137,8 @@ export function extractPartiesRegex(teor: string): ExtractedParties {
   const autorRegex = new RegExp(`(?:${AUTOR_TERMS})[:\\s]+${NAME_CAPTURE}${END_AUTOR}`, "i");
   const reuRegex = new RegExp(`(?:${REU_TERMS})[:\\s]+${NAME_CAPTURE}${END_REU}`, "i");
 
-  const matchAutor = teor.match(autorRegex);
-  const matchReu = teor.match(reuRegex);
+  const matchAutor = autorRegex.exec(teor);
+  const matchReu = reuRegex.exec(teor);
 
   return {
     autor: matchAutor?.[1]?.trim() || "",

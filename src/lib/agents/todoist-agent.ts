@@ -7,11 +7,11 @@
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import { updateLegalTask } from "../todoist-integration";
-import { todoistClient } from "../todoist-client";
-import { llmService } from "../llm-service";
 import { googleCalendarService } from "../google-calendar-service";
+import { llmService } from "../llm-service";
 import type { TodoistClient } from "../todoist-client";
+import { todoistClient } from "../todoist-client";
+import { updateLegalTask } from "../todoist-integration";
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {
@@ -106,7 +106,7 @@ export class TodoistAgent {
     console.log(`✅ Tarefa ${item.content} concluída!`);
 
     // Verificar se é uma tarefa de processo
-    const processMatch = item.content.match(/Processo\s+(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
+    const processMatch = /Processo\s+(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/.exec(item.content);
     if (processMatch) {
       const processNumber = processMatch[1];
       console.log(`🔄 Atualizando progresso do processo ${processNumber}...`);
@@ -170,7 +170,7 @@ export class TodoistAgent {
         feature: "todoist-agent",
       });
 
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      const jsonMatch = /\{[\s\S]*\}/.exec(response);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]) as InterpretedCommand;
       }
