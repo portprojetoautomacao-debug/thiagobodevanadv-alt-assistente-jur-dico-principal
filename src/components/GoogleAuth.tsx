@@ -16,7 +16,7 @@ const PRODUCTION_URLS = new Set([
 
 // Detecta se está em ambiente de desenvolvimento/preview (URL dinâmica)
 const isDevelopmentEnvironment = (): boolean => {
-  const hostname = window.location.hostname;
+  const hostname = globalThis.window.location.hostname;
 
   // Produção autorizada - permite login
   if (PRODUCTION_URLS.has(hostname)) {
@@ -174,9 +174,10 @@ export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButt
 
   // Verificação de ambiente de desenvolvimento - deve vir antes das outras verificações
   if (isDevelopmentEnvironment()) {
-    const isCodespace = window.location.hostname.includes(".app.github.dev");
+    const isCodespace = globalThis.window.location.hostname.includes(".app.github.dev");
     const isLocalhost =
-      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      globalThis.window.location.hostname === "localhost" ||
+      globalThis.window.location.hostname === "127.0.0.1";
 
     const getEnvironmentTitle = () => {
       if (isCodespace) return "GitHub Codespace Detectado";
