@@ -100,22 +100,22 @@ function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
   if (!numeroOAB) return {};
   const value = numeroOAB.trim();
 
-  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
+  const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i.exec(value);
   if (matchOABPattern) {
     return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
   }
 
-  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
+  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
   if (matchNumericUF) {
     return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
   }
 
-  const matchNumeric = value.match(/^(\d+)$/);
+  const matchNumeric = /^(\d+)$/.exec(value);
   if (matchNumeric) {
     return { numero: matchNumeric[1] };
   }
 
-  const matchOABOnly = value.match(/OAB\s*\/\s*([A-Z]{2})/i);
+  const matchOABOnly = /OAB\s*\/\s*([A-Z]{2})/i.exec(value);
   if (matchOABOnly) {
     return { uf: matchOABOnly[1].toUpperCase() };
   }
