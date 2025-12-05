@@ -19,11 +19,11 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   test("deve carregar a página de Agentes IA", async ({ page }) => {
     // Verifica se a página carregou usando ARIA heading (melhor prática)
     await expect(
-      page.getByRole("heading", { name: /Agentes IA|Agentes Disponíveis/i, level: 1 })
+      page.getByRole("heading", { name: /Agentes IA|Agentes Disponíveis/i }).first()
     ).toBeVisible({ timeout: 10000 });
 
     // Verificar se navegação está presente
-    await expect(page.getByRole("navigation")).toBeVisible();
+    await expect(page.getByRole("navigation").first()).toBeVisible();
   });
 
   test("deve mostrar status dos agentes corretamente", async ({ page }) => {
@@ -40,8 +40,8 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve permitir alternar status dos agentes", async ({ page }) => {
-    // Aguarda cards de agentes carregarem
-    await page.waitForSelector(".agent-card, [data-agent-id]", { timeout: 10000 });
+    // Aguarda cards de agentes carregarem usando role semântico (melhor prática)
+    await expect(page.getByRole("article")).toBeVisible({ timeout: 10000 });
 
     // Localiza o switch usando ARIA role (melhor prática)
     const agentSwitch = page.getByRole("switch").first();

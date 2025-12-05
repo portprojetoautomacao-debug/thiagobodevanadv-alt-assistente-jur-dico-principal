@@ -21,13 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import {
-  DollarSign,
-  Plus,
-  TrendingUp,
-  TrendingDown,
-  Download,
-} from "lucide-react";
+import { DollarSign, Plus, TrendingUp, TrendingDown, Download } from "lucide-react";
 import { toast } from "sonner";
 import type { FinancialEntry } from "@/types";
 import { exportToCSV, formatCurrency } from "@/lib/utils";

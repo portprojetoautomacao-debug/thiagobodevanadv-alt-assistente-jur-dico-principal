@@ -279,7 +279,7 @@ await page.waitForFunction(
 ### 2. Buttons vs Links no Sidebar
 ```typescript
 // ❌ ERRADO (Sidebar usa <Button>, não <a>)
-await page.getByRole("link", { name: /Acervo/ }).click();
+// await page.getByRole("link", { name: /Acervo/ }).click(); // NÃO USAR!
 
 // ✅ CORRETO
 await page.getByRole("button", { name: /Acervo/ }).click();

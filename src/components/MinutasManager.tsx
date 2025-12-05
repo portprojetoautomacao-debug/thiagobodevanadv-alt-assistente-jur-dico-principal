@@ -33,9 +33,13 @@ import {
 } from "@/lib/document-templates";
 import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
-import { createMinuta, updateMinuta, validateMinutaForFinalization, type MinutaInput } from "@/services/minuta-service";
+import {
+  createMinuta,
+  updateMinuta,
+  validateMinutaForFinalization,
+  type MinutaInput,
+} from "@/services/minuta-service";
 import type { Minuta, Process } from "@/types";
-import { m } from "framer-motion";
 import {
   AlertTriangle,
   Bot,
@@ -280,9 +284,7 @@ export default function MinutasManager() {
       });
 
       setMinutas((current = []) =>
-        current.map((m) =>
-          m.id === editingMinuta.id ? minutaAtualizada : m
-        )
+        current.map((m) => (m.id === editingMinuta.id ? minutaAtualizada : m))
       );
 
       resetForm();
@@ -294,23 +296,12 @@ export default function MinutasManager() {
       console.error("[MinutasManager] Erro ao atualizar minuta:", error);
     }
   };
-          ? {
-              ...m,
-              titulo: formData.titulo,
-              processId: formData.processId !== "_none" ? formData.processId : undefined,
-              tipo: formData.tipo,
-              conteudo: formData.conteudo,
-              status: formData.status,
-              atualizadoEm: new Date().toISOString(),
-            }
-          : m
-      )
-    );
 
-    if (editingMinuta.googleDocsId) {
+  const handleSaveGoogleDoc = async (minuta: Minuta) => {
+    if (minuta.googleDocsId) {
       const success = await googleDocsService.updateDocumentContent(
-        editingMinuta.googleDocsId,
-        formData.conteudo
+        minuta.googleDocsId,
+        minuta.conteudo
       );
       if (success) {
         toast.success("Minuta atualizada localmente e no Google Docs!");

@@ -293,10 +293,7 @@ export default function KnowledgeBase() {
                     {loading && (
                       <div className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
-                          <Sparkles
-                            className="w-5 h-5 text-accent-foreground animate-pulse"
-                           
-                          />
+                          <Sparkles className="w-5 h-5 text-accent-foreground animate-pulse" />
                         </div>
                         <div className="bg-muted p-4 rounded-lg">
                           <p className="text-sm text-muted-foreground">

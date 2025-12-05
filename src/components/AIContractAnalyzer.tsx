@@ -5,13 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import {
-  FileText,
-  Sparkles,
-  ShieldAlert,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { FileText, Sparkles, ShieldAlert, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 
@@ -179,31 +173,19 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
 
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="p-3 bg-destructive/10 rounded-lg">
-                      <AlertCircle
-                        size={24}
-                        className="mx-auto mb-1 text-destructive"
-                       
-                      />
+                      <AlertCircle size={24} className="mx-auto mb-1 text-destructive" />
                       <p className="text-2xl font-bold text-destructive">{analysis.risks.length}</p>
                       <p className="text-xs text-muted-foreground">Riscos</p>
                     </div>
                     <div className="p-3 bg-primary/10 rounded-lg">
-                      <CheckCircle
-                        size={24}
-                        className="mx-auto mb-1 text-primary"
-                       
-                      />
+                      <CheckCircle size={24} className="mx-auto mb-1 text-primary" />
                       <p className="text-2xl font-bold text-primary">
                         {analysis.protections.length}
                       </p>
                       <p className="text-xs text-muted-foreground">Proteções</p>
                     </div>
                     <div className="p-3 bg-secondary/10 rounded-lg">
-                      <FileText
-                        size={24}
-                        className="mx-auto mb-1 text-secondary"
-                       
-                      />
+                      <FileText size={24} className="mx-auto mb-1 text-secondary" />
                       <p className="text-2xl font-bold text-secondary">
                         {analysis.keyTerms.length}
                       </p>

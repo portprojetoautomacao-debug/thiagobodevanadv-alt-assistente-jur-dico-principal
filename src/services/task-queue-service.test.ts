@@ -4,18 +4,17 @@
 
 import { describe, expect, it } from "vitest";
 import type { TaskWithRetry } from "./task-queue-service";
-import
-  {
-    calculateQueueMetrics,
-    calculateRetryDelay,
-    canRetryTask,
-    getFailedTasks,
-    getReadyTasks,
-    handleTaskResult,
-    isTaskReadyForRetry,
-    moveTaskToDLQ,
-    prepareTaskForRetry,
-  } from "./task-queue-service";
+import {
+  calculateQueueMetrics,
+  calculateRetryDelay,
+  canRetryTask,
+  getFailedTasks,
+  getReadyTasks,
+  handleTaskResult,
+  isTaskReadyForRetry,
+  moveTaskToDLQ,
+  prepareTaskForRetry,
+} from "./task-queue-service";
 
 describe("task-queue-service", () => {
   describe("calculateRetryDelay", () => {

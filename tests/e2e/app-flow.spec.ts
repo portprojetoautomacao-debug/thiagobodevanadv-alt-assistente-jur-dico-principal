@@ -35,12 +35,12 @@ test.describe("Fluxo Principal da Aplicação", () => {
   });
 
   test("deve navegar para o CRM de Processos", async ({ page }) => {
-    // Clica no link de navegação usando Test ID ou ARIA link
-    const navLink = page
+    // Clica no botão de navegação usando Test ID ou ARIA button (Sidebar usa Button, não link)
+    const navButton = page
       .getByTestId("nav-processes")
-      .or(page.getByRole("link", { name: /Processos|CRM/i }));
+      .or(page.getByRole("button", { name: /Processos|CRM|Acervo/i }));
 
-    await navLink.click({ timeout: 10000 });
+    await navButton.click({ timeout: 10000 });
 
     // Aguarda hash change para #processes
     await page.waitForURL(/.*#processes/, { timeout: 10000 });
@@ -55,7 +55,7 @@ test.describe("Fluxo Principal da Aplicação", () => {
     // Clica no link de navegação usando Test ID ou ARIA link
     const navLink = page
       .getByTestId("nav-calculator")
-      .or(page.getByRole("link", { name: /Calculadora.*Prazos/i }));
+      .or(page.getByRole("button", { name: /Calculadora.*Prazos/i }));
 
     await navLink.click({ timeout: 10000 });
 
