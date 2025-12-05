@@ -8,6 +8,7 @@ import { SafeLogger } from "./safe-logger.js";
 const logger = new SafeLogger("DJEN");
 
 // Type aliases para evitar repetição de union types (SonarCloud S4323)
+type DJENMeio = "D" | "E";
 export type DJENMatchType = "nome" | "oab" | "ambos";
 
 export interface DJENComunicacao {
@@ -298,7 +299,7 @@ function buildDJENQueryParams(
   nomeAdvogado: string | undefined,
   numeroOabNumerico: string | undefined,
   ufOab: string | undefined,
-  meio: "D" | "E" | undefined
+  meio: DJENMeio | undefined
 ): DJENQueryParams {
   const queryParams: DJENQueryParams = {
     siglaTribunal: tribunal,

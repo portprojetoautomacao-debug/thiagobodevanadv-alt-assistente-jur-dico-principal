@@ -1,13 +1,13 @@
+import { fluentTransitions, fluentVariants } from "@/hooks/use-fluent-motion";
 import {
-  motion,
   HTMLMotionProps,
-  Variants,
-  Transition,
-  TargetAndTransition,
+  motion,
   MotionProps,
+  TargetAndTransition,
+  Transition,
+  Variants,
 } from "framer-motion";
 import { ReactNode } from "react";
-import { fluentTransitions, fluentVariants } from "@/hooks/use-fluent-motion";
 
 type FluentVariantKey = keyof typeof fluentVariants;
 type FluentTransitionKey = keyof typeof fluentTransitions;

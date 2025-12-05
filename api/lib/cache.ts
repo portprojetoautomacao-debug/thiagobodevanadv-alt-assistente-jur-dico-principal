@@ -3,16 +3,16 @@
  * Cache inteligente para reduzir chamadas a APIs externas
  */
 
-import { Redis } from '@upstash/redis';
-import { withCircuitBreaker } from './circuit-breaker.js';
-import { SafeLogger } from './safe-logger.js';
+import { Redis } from "@upstash/redis";
+import { withCircuitBreaker } from "./circuit-breaker.js";
+import { SafeLogger } from "./safe-logger.js";
 
-const logger = new SafeLogger('Cache');
+const logger = new SafeLogger("Cache");
 
 export interface CacheConfig {
-  ttl: number;          // Tempo de vida em segundos
-  prefix?: string;      // Prefixo para chaves
-  compress?: boolean;   // Compressão de dados grandes
+  ttl: number; // Tempo de vida em segundos
+  prefix?: string; // Prefixo para chaves
+  compress?: boolean; // Compressão de dados grandes
 }
 
 export interface CacheStats {
@@ -32,7 +32,7 @@ class RedisCache {
 
   constructor(name: string, config: CacheConfig) {
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-      throw new Error('Upstash Redis não configurado para cache');
+      throw new Error("Upstash Redis não configurado para cache");
     }
 
     this.redis = new Redis({
@@ -42,9 +42,9 @@ class RedisCache {
 
     this.name = name;
     this.config = {
-      prefix: 'cache:',
+      prefix: "cache:",
       compress: false,
-      ...config
+      ...config,
     };
 
     this.stats = {
@@ -53,7 +53,7 @@ class RedisCache {
       sets: 0,
       deletes: 0,
       errors: 0,
-      hitRate: 0
+      hitRate: 0,
     };
   }
 
@@ -71,13 +71,10 @@ class RedisCache {
     try {
       const cacheKey = this.getKey(key);
 
-      const result = await withCircuitBreaker(
-        async () => {
-          const value = await this.redis.get(cacheKey);
-          return value;
-        },
-        'redis'
-      );
+      const result = await withCircuitBreaker(async () => {
+        const value = await this.redis.get(cacheKey);
+        return value;
+      }, "redis");
 
       if (result === null) {
         this.stats.misses++;
@@ -90,7 +87,7 @@ class RedisCache {
       return result as T;
     } catch (error) {
       this.stats.errors++;
-      logger.error('Erro ao obter do cache', error, { key });
+      logger.error("Erro ao obter do cache", error, { key });
       return null;
     }
   }
@@ -103,13 +100,10 @@ class RedisCache {
       const cacheKey = this.getKey(key);
       const expiry = ttl ?? this.config.ttl;
 
-      const result = await withCircuitBreaker(
-        async () => {
-          await this.redis.setex(cacheKey, expiry, value);
-          return true;
-        },
-        'redis'
-      );
+      const result = await withCircuitBreaker(async () => {
+        await this.redis.setex(cacheKey, expiry, value);
+        return true;
+      }, "redis");
 
       if (result) {
         this.stats.sets++;
@@ -119,7 +113,7 @@ class RedisCache {
       return result;
     } catch (error) {
       this.stats.errors++;
-      logger.error('Erro ao salvar no cache', error, { key });
+      logger.error("Erro ao salvar no cache", error, { key });
       return false;
     }
   }
@@ -131,13 +125,10 @@ class RedisCache {
     try {
       const cacheKey = this.getKey(key);
 
-      const result = await withCircuitBreaker(
-        async () => {
-          await this.redis.del(cacheKey);
-          return true;
-        },
-        'redis'
-      );
+      const result = await withCircuitBreaker(async () => {
+        await this.redis.del(cacheKey);
+        return true;
+      }, "redis");
 
       if (result) {
         this.stats.deletes++;
@@ -147,7 +138,7 @@ class RedisCache {
       return result;
     } catch (error) {
       this.stats.errors++;
-      logger.error('Erro ao remover do cache', error, { key });
+      logger.error("Erro ao remover do cache", error, { key });
       return false;
     }
   }
@@ -159,16 +150,13 @@ class RedisCache {
     try {
       const cacheKey = this.getKey(key);
 
-      return await withCircuitBreaker(
-        async () => {
-          const result = await this.redis.exists(cacheKey);
-          return result === 1;
-        },
-        'redis'
-      );
+      return await withCircuitBreaker(async () => {
+        const result = await this.redis.exists(cacheKey);
+        return result === 1;
+      }, "redis");
     } catch (error) {
       this.stats.errors++;
-      logger.error('Erro ao verificar existência no cache', error, { key });
+      logger.error("Erro ao verificar existência no cache", error, { key });
       return false;
     }
   }
@@ -176,11 +164,7 @@ class RedisCache {
   /**
    * Obtém ou define valor (cache aside pattern)
    */
-  async getOrSet<T>(
-    key: string,
-    factory: () => Promise<T>,
-    ttl?: number
-  ): Promise<T> {
+  async getOrSet<T>(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
     // Tenta obter do cache
     const cached = await this.get<T>(key);
     if (cached !== null) {
@@ -191,8 +175,8 @@ class RedisCache {
     const value = await factory();
 
     // Salva no cache (não bloqueia a resposta)
-    this.set(key, value, ttl).catch(error => {
-      logger.error('Erro ao salvar no cache após factory', error, { key });
+    this.set(key, value, ttl).catch((error) => {
+      logger.error("Erro ao salvar no cache após factory", error, { key });
     });
 
     return value;
@@ -204,31 +188,28 @@ class RedisCache {
   async clear(): Promise<boolean> {
     try {
       // Usa SCAN para encontrar todas as chaves com o prefixo
-      const pattern = this.getKey('*');
+      const pattern = this.getKey("*");
 
-      return await withCircuitBreaker(
-        async () => {
-          let cursor = 0;
-          const keys: string[] = [];
+      return await withCircuitBreaker(async () => {
+        let cursor = 0;
+        const keys: string[] = [];
 
-          do {
-            const result = await this.redis.scan(cursor, { match: pattern, count: 100 });
-            cursor = Number(result[0]);
-            keys.push(...result[1]);
-          } while (cursor !== 0);
+        do {
+          const result = await this.redis.scan(cursor, { match: pattern, count: 100 });
+          cursor = Number(result[0]);
+          keys.push(...result[1]);
+        } while (cursor !== 0);
 
-          if (keys.length > 0) {
-            await this.redis.del(...keys);
-            logger.info(`Cache cleared: ${keys.length} keys removed`);
-          }
+        if (keys.length > 0) {
+          await this.redis.del(...keys);
+          logger.info(`Cache cleared: ${keys.length} keys removed`);
+        }
 
-          return true;
-        },
-        'redis'
-      );
+        return true;
+      }, "redis");
     } catch (error) {
       this.stats.errors++;
-      logger.error('Erro ao limpar cache', error);
+      logger.error("Erro ao limpar cache", error);
       return false;
     }
   }
@@ -253,25 +234,25 @@ class RedisCache {
       sets: 0,
       deletes: 0,
       errors: 0,
-      hitRate: 0
+      hitRate: 0,
     };
   }
 }
 
 // Instâncias globais de cache
-export const djenCache = new RedisCache('djen', {
-  ttl: 3600,      // 1 hora
-  prefix: 'cache:'
+export const djenCache = new RedisCache("djen", {
+  ttl: 3600, // 1 hora
+  prefix: "cache:",
 });
 
-export const sparkCache = new RedisCache('spark', {
-  ttl: 1800,      // 30 minutos
-  prefix: 'cache:'
+export const sparkCache = new RedisCache("spark", {
+  ttl: 1800, // 30 minutos
+  prefix: "cache:",
 });
 
-export const generalCache = new RedisCache('general', {
-  ttl: 300,       // 5 minutos
-  prefix: 'cache:'
+export const generalCache = new RedisCache("general", {
+  ttl: 300, // 5 minutos
+  prefix: "cache:",
 });
 
 /**
@@ -308,10 +289,10 @@ export async function cachedOperation<T>(
       if (attempt < maxRetries) {
         // Exponential backoff
         const delay = Math.pow(2, attempt) * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
 
-  throw lastError || new Error('Operação falhou após todas as tentativas');
+  throw lastError || new Error("Operação falhou após todas as tentativas");
 }

@@ -154,9 +154,8 @@ export function initAnalytics(): void {
     initGTM();
   } else if (GA_MEASUREMENT_ID) {
     initGA4();
-  } else {
-    console.info("📊 Analytics: Nenhuma configuração encontrada");
   }
+  // 🔇 Modo silencioso - não loga em produção quando não configurado
 }
 
 /**
