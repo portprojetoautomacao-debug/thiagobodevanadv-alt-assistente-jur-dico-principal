@@ -31,15 +31,12 @@ jobs:
         id: scan
         uses: alstr/todo-to-issue-action@v4
         with:
-          # Triggers configurados (mesmo do settings.json)
-          TODO_PATTERN: "(TODO|FIXME|ISSUE|HACK|PENDENTE|REVISAR|CORRIGIR|VERIFICAR|ATENÇÃO|URGENTE|BUG|JURIDICO|PRAZO|INTIMACAO|VALIDAR|COMPLIANCE|LGPD|SEGURANCA|REFACTOR|OPTIMIZE|DEPRECATED|BREAKING|PERFORMANCE|ACCESSIBILITY|A11Y|SECURITY|TEST|DOC|DOCS)"
-
           # Criar issues automaticamente
           AUTO_ASSIGN: true
           AUTO_P: true
 
-          # Labels automáticas
-          LABEL: "auto-created,needs-triage"
+          # Labels automáticas - INCLUI auto-copilot para delegação automática!
+          LABEL: "auto-created,needs-triage,auto-copilot"
 
           # Fechar issues quando TODO é removido
           CLOSE_ISSUES: true
@@ -70,15 +67,6 @@ jobs:
             ---
 
             🤖 *Issue criado automaticamente pelo workflow Auto Create Issues*
-
-          # Assignees automáticos (autor do commit)
-          ASSIGN_TO_AUTHOR: true
-
-          # Não duplicar issues
-          UPDATE_EXISTING: true
-
-          # Milestones automáticas
-          MILESTONE: "Backlog"
 
       - name: 📊 Summary
         if: steps.scan.outputs.issues_created > 0

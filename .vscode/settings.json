@@ -57,6 +57,30 @@
   ],
 
   // ========================================
+  // 🤖 AGENTE DE CODIFICAÇÃO COPILOT (EXPERIMENTAL)
+  // ========================================
+
+  // Habilitar integração UI do agente de codificação
+  // Mostra botão "Delegar ao agente de codificação" no chat
+  "githubPullRequests.codingAgent.uiIntegration": true,
+
+  // Habilitar visualização de sessões do agente
+  // Opções: "view" (Side Bar), "showChatsMenu" (menu de chats)
+  "chat.agentSessionsViewLocation": "view",
+
+  // Habilitar renderização de PR como cards no chat
+  "githubPullRequests.pullRequestCardEnabled": true,
+
+  // Habilitar preview do agente de codificação
+  "githubPullRequests.codingAgent.enabled": true,
+
+  // Delegar automaticamente TODOs ao agente
+  // ⚠️ ATENÇÃO: true = Automação total (use com cuidado!)
+  // ✅ false = Controle manual (mais seguro para produção)
+  // 💡 Recomendado: false para código crítico, true para desenvolvimento
+  "githubPullRequests.codingAgent.autoDelegate": true, // ✅ AUTOMAÇÃO TOTAL ATIVADA!
+
+  // ========================================
   // 🔌 EXTENSÕES - COMPATIBILIDADE
   // ========================================
 
@@ -510,16 +534,19 @@
 
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+
+  // 📋 LOGS DETALHADOS (conforme documentação oficial SonarQube)
+  // Habilitar temporariamente para diagnóstico
   "sonarlint.output.showAnalyzerLogs": true,
-  "sonarlint.output.showVerboseLogs": false,
+  "sonarlint.output.showVerboseLogs": true,
+
+  // Aumentar timeout para evitar erros RPC
+  "sonarlint.ls.vmargs": "-Xmx512m -XX:+UseG1GC",
 
   // ========================================
-  // 🔥 ANÁLISE AUTOMÁTICA - CRÍTICO
+  // 🔥 ANÁLISE AUTOMÁTICA
   // ========================================
 
-  "sonarlint.disableTelemetry": true,
-
-  // Análise automática ATIVADA (essencial para funcionar)
   "sonarlint.automaticAnalysis": {
     "enabled": true
   },
@@ -769,67 +796,45 @@
   // 🔗 SONARLINT - CONNECTED MODE
   // ========================================
 
-  // Configuração de conexão com SonarCloud
+  // ✅ CONNECTED MODE ATIVADO - SonarCloud
+  // Configuração para sincronizar com análise do SonarCloud
   "sonarlint.connectedMode.connections.sonarcloud": [
     {
       "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
       "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
+      "token": "83fa42a2bd87d9a864fa385b7e9b1f66438013db",
       "disableNotifications": false
     }
   ],
 
-  // Projeto vinculado
+  // Projeto vinculado ao SonarCloud
   "sonarlint.connectedMode.project": {
     "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
     "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
   },
 
-  // ========================================
-  // 🔔 NOTIFICAÇÕES INTELIGENTES
-  // ========================================
-
-  // Receber alertas quando:
-  // - Status do Quality Gate mudar
-  // - Novos problemas introduzidos por você
-  // - Perfil de Qualidade atualizado
-  "sonarlint.output.showVerboseLogs": false,
-
-  // ========================================
-  // 🎯 FOCAR EM CÓDIGO NOVO
-  // ========================================
-
-  // Detectar problemas apenas em código novo (conforme definido no servidor)
-  "sonarlint.focusOnNewCode": true,
-
-  // ========================================
-  // 🔒 PRIVACIDADE
-  // ========================================
-
-  "sonarlint.enableTelemetry": false,
+  // Telemetria desabilitada
   "sonarlint.disableTelemetry": true,
 
-  // ========================================
-  // 🌿 BRANCH AWARENESS (Reconhecimento de Branch)
-  // ========================================
-
-  // Sincronizar com o branch correto analisado no servidor
-  // Requer: Git repository
-  // Métodos de matching:
-  //   1. Correspondência exata (mesmo nome)
-  //   2. Branch mais próximo (menor distância de commits)
-  //   3. Branch principal (fallback padrão)
-  //
-  // Veja o status do branch na barra inferior do VS Code
-
-  // ========================================
-  // 📁 CONFIGURAÇÕES ESPECÍFICAS
-  // ========================================
+  // Detectar problemas apenas em código novo
+  "sonarlint.focusOnNewCode": true,
 
   // Padrão para identificar arquivos de teste
   "sonarlint.testFilePattern": "**/*{test,spec}.{ts,tsx,js,jsx}",
 
   // Compilação C/C++ (se necessário no futuro)
   "sonarlint.pathToCompileCommands": "${workspaceFolder}/compile_commands.json",
+
+  // ========================================
+  // 🔒 PRIVACIDADE & TELEMETRIA
+  // ========================================
+
+  "sonarlint.enableTelemetry": false,
+
+  // ========================================
+  // 🔧 OUTRAS CONFIGURAÇÕES
+  // ========================================
+
   "git.autofetch": true,
   "typescript.disableAutomaticTypeAcquisition": false,
   "redhat.telemetry.enabled": false,

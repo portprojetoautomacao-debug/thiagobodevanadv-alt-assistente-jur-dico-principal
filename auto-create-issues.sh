@@ -60,6 +60,11 @@ grep -rn -E "//\s*($PATTERN)" \
   --exclude-dir=.git \
   . 2>/dev/null | while IFS=: read -r file line content; do
   
+  # Ignorar comentários de teste/exemplo
+  if echo "$content" | grep -qiE "(TESTE [0-9]+:|exemplo|sample|demo|FEITO EM|OBSOLETO)"; then
+    continue
+  fi
+  
   # Extrair tipo de trigger
   TRIGGER=$(echo "$content" | grep -oE "($PATTERN)" | head -1)
   

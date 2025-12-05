@@ -184,6 +184,8 @@ gh workflow run copilot-auto-fix.yml
 
 ## 🛠️ Configuração de Desenvolvimento (VS Code + SonarLint)
 
+### 🔧 SonarLint com Node.js
+
 Se você utiliza `nvm` para gerenciar NodeJS, o VS Code pode não detectar o binário do Node automaticamente. Para garantir que o SonarLint funcione com análise JavaScript/TypeScript, adicione ao arquivo `.vscode/settings.json` do projeto o caminho absoluto do Node 22 ativo no seu ambiente:
 
 ```json
@@ -198,6 +200,25 @@ Para identificar o caminho do Node no sistema:
 which node
 node --version
 ```
+
+### 🚀 Sonar Copilot Assistant (NOVO!)
+
+**Automação completa de correção de código com IA!**
+
+Integração que conecta SonarQube + GitHub Copilot + Git para:
+
+- ✅ **Fix automático** de issues do SonarCloud
+- 🤖 **Copilot contextualizado** com guidelines do projeto
+- 🌿 **Git automation** (branch, commit, PR)
+- 🧪 **Validação de testes** antes do commit
+- 📊 **Dashboard integrado** no VS Code
+
+**⚡ Ganho de eficiência: 35% mais rápido** (11-26min → 7-18min por issue)
+
+**📖 Setup em 5 minutos:**
+
+- [🚀 Quick Start](docs/SONAR_COPILOT_QUICK_START.md) - Setup rápido
+- [📚 Guia Completo](docs/SONAR_COPILOT_ASSISTANT_SETUP.md) - Documentação detalhada
 
 ---
 

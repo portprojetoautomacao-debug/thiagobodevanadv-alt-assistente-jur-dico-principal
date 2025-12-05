@@ -83,7 +83,7 @@ export function canRetryTask(
 export function isTaskReadyForRetry(task: TaskWithRetry): boolean {
   if (!task.nextRetryAt) return true;
 
-  const now = new Date().getTime();
+  const now = Date.now();
   const retryAt = new Date(task.nextRetryAt).getTime();
 
   return now >= retryAt;
@@ -298,15 +298,4 @@ export function calculateQueueMetrics(queue: TaskWithRetry[], dlq: DeadLetterTas
   }
 
   return metrics;
-
-  return {
-    total,
-    queued,
-    processing,
-    completed,
-    failed,
-    inDLQ,
-    averageRetries: Number(averageRetries.toFixed(2)),
-    successRate: Number(successRate.toFixed(2)),
-  };
 }

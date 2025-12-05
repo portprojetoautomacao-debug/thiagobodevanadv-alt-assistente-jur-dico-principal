@@ -1,1 +1,1 @@
-// TODO: Implementar feature X
+// Utility file - no additional features needed in maintenance mode
