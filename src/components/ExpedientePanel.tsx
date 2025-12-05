@@ -297,7 +297,7 @@ function buildCalendarAnalysisResult(
     analysisData.deadline?.days !== undefined
       ? {
           days: analysisData.deadline.days,
-          type: (analysisData.deadline.type || "úteis") as "úteis" | "corridos",
+          type: analysisData.deadline.type || "úteis",
           endDate: analysisData.deadline.endDate || "",
           description: analysisData.deadline.description,
         }

@@ -172,7 +172,7 @@ export class AgentMonitor {
     if (redis) {
       try {
         // Buscar logs existentes
-        const existingLogs = (await redis.get("agent-logs")) as AgentActionLog[] | null;
+        const existingLogs = await redis.get<AgentActionLog[]>("agent-logs");
         const logs = existingLogs ?? [];
 
         // Manter apenas os últimos 50 logs para não estourar o limite
