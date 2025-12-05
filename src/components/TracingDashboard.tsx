@@ -70,7 +70,6 @@ export default function TracingDashboard({
 }: TracingDashboardProps) {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
-  const [activeTab, setActiveTab] = useState("overview");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
@@ -246,7 +245,7 @@ export default function TracingDashboard({
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
