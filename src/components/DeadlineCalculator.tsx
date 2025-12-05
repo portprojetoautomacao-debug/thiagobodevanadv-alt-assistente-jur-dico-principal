@@ -72,7 +72,9 @@ export default function DeadlineCalculator() {
       const holidays: string[] = [];
 
       // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
-      // TODO: Integrar com API de feriados real ou permitir configuração por tribunal
+      // FIXME: Integrar com API de feriados real (issue #PRAZOS-003)
+      // Opções: Calendarific API, Brasil API, ou tabela customizável por tribunal/comarca
+      // Ver: https://calendarific.com/api-documentation ou https://brasilapi.com.br/docs
       const nationalHolidays = getNationalHolidays(base.getFullYear());
 
       while (workingDays < days) {
