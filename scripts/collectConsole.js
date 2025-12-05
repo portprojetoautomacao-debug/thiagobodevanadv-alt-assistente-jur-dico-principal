@@ -4,6 +4,7 @@ import { chromium } from "playwright";
   const url = process.argv[2] || "http://localhost:4175";
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  /** @type {Array<{type: string, text: string}>} */
   const messages = [];
 
   page.on("console", (msg) => {
@@ -27,9 +28,10 @@ import { chromium } from "playwright";
     // Wait a bit for runtime console messages
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const title = await page.title();
-    console.log("Title:", title);
   } catch (err) {
-    console.error("Navigation error:", err.message || err);
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error("Navigation error:", error.message || error);
+  } finally {
   } finally {
     await browser.close();
     // Summary

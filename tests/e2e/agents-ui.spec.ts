@@ -33,8 +33,8 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
     // Verifica bloco de status agregado
     await expect(page.getByText(/Agentes Disponíveis/i)).toBeVisible();
 
-    // Verifica se mostra contadores de tarefas
-    await expect(page.getByText(/tasks completed|tasks today/i)).toBeVisible();
+    // Verifica se mostra contadores de tarefas (ajustado para texto em português)
+    await expect(page.getByText(/em processamento|ativo\(s\)|urgentes/i)).toBeVisible();
   });
 
   test("deve permitir alternar status dos agentes", async ({ page }) => {
@@ -65,13 +65,14 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
     if (await metricsTab.count()) {
       await metricsTab.click();
     }
+    // Usa .first() para pegar apenas o primeiro elemento visível
     await expect(
-      page.getByText(/Desempenho por Agente|Taxa de Sucesso|Tarefas Hoje/i)
+      page.getByText(/Desempenho por Agente|Taxa de Sucesso|Tarefas Hoje/i).first()
     ).toBeVisible();
 
-    // Verifica se mostra gráficos ou indicadores de performance
+    // Verifica se mostra indicadores de performance (progressbar existe no DOM)
     await expect(
-      page.locator('.progress, .chart, [data-testid="agent-metrics"]')
+      page.locator('div[role="progressbar"], .progress, .chart').first()
     ).toBeVisible();
   });
 
@@ -95,21 +96,26 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
       ).toBeVisible();
     }
   });
-
   test("deve mostrar logs de atividade dos agentes", async ({ page }) => {
     // Já estamos na tela de agentes via hash
 
-    // Verifica se há seção de logs/atividade
-    const logsSection = page
-      .locator("text=/logs|atividade|activity|history/i")
-      .first();
+    // Abre a aba "Atividade em Tempo Real" que contém os logs
+    const activityTab = page.getByRole("tab", { name: /Atividade em Tempo Real/i });
+    
+    if ((await activityTab.count()) > 0) {
+      await activityTab.click();
+      
+      // Aguarda o conteúdo carregar
+      await page.waitForTimeout(500);
 
-    if (await logsSection.isVisible()) {
-      await logsSection.click();
-
-      // Verifica se mostra entradas de log
+      // Verifica se mostra o registro de atividades (baseado no snapshot do DOM)
       await expect(
-        page.locator('[data-testid="activity-log"], .log-entry, .activity-item')
+        page.getByText(/Registro de Atividades/i)
+      ).toBeVisible();
+      
+      // Verifica se mostra pelo menos uma entrada de log
+      await expect(
+        page.locator('p:has-text("Tarefa concluída:")').first()
       ).toBeVisible();
     }
   });

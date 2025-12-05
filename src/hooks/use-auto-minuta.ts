@@ -3,51 +3,16 @@
  *
  * Este hook monitora tarefas completadas pelo agente 'redacao-peticoes' e
  * automaticamente cria minutas no sistema com status 'pendente-revisao'
+ *
+ * ✨ REFATORADO: Usa minuta-service.ts centralizado
  */
 
 import { useKV } from "@/hooks/use-kv";
 import type { AgentTask } from "@/lib/agents";
+import { createMinutaFromAgentTask } from "@/services/minuta-service";
 import type { Minuta } from "@/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-
-// Tipos de documento para mapeamento
-const DOCUMENT_TYPE_MAP: Record<string, Minuta["tipo"]> = {
-  petição: "peticao",
-  peticao: "peticao",
-  "petição inicial": "peticao",
-  contestação: "peticao",
-  contestacao: "peticao",
-  manifestação: "peticao",
-  manifestacao: "peticao",
-  defesa: "peticao",
-  recurso: "recurso",
-  apelação: "recurso",
-  apelacao: "recurso",
-  agravo: "recurso",
-  embargos: "recurso",
-  contrato: "contrato",
-  acordo: "contrato",
-  parecer: "parecer",
-  procuração: "procuracao",
-  procuracao: "procuracao",
-};
-
-function determineMinutaTipo(documentType?: string): Minuta["tipo"] {
-  if (!documentType) return "peticao";
-
-  const type = documentType.toLowerCase().trim();
-
-  // Busca correspondência exata primeiro
-  if (DOCUMENT_TYPE_MAP[type]) return DOCUMENT_TYPE_MAP[type];
-
-  // Busca parcial
-  for (const [key, value] of Object.entries(DOCUMENT_TYPE_MAP)) {
-    if (type.includes(key)) return value;
-  }
-
-  return "outro";
-}
 
 export function useAutoMinuta() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
@@ -106,31 +71,26 @@ export function useAutoMinuta() {
 
       if (!resultData.draft) continue;
 
-      const taskData = task.data as {
-        expedienteId?: string;
-        processNumber?: string;
-        processId?: string;
-        documentType?: string;
-        suggestedActions?: string[];
-      };
+      // ✅ Usar serviço centralizado para criar minuta
+      let newMinuta: Minuta | null = null;
 
-      // Criar nova minuta
-      const newMinuta: Minuta = {
-        id: crypto.randomUUID(),
-        titulo: `[Agente] ${taskData.documentType || "Petição"} - ${taskData.processNumber || "Novo Processo"}`,
-        processId: taskData.processId,
-        tipo: determineMinutaTipo(taskData.documentType),
-        conteudo: resultData.draft,
-        status: "pendente-revisao",
-        criadoEm: new Date().toISOString(),
-        atualizadoEm: new Date().toISOString(),
-        autor: "Agente Redação (IA)",
-        criadoPorAgente: true,
-        agenteId: task.agentId,
-        expedienteId: taskData.expedienteId,
-        variaveis: {},
-      }; // Adicionar minuta
-      setMinutas((current) => [...(current || []), newMinuta]);
+      try {
+        newMinuta = createMinutaFromAgentTask(task);
+
+        if (!newMinuta) {
+          console.warn("[AutoMinuta] createMinutaFromAgentTask retornou null para task:", task.id);
+          continue;
+        }
+
+        // Adicionar minuta validada
+        setMinutas((current) => [...(current || []), newMinuta!]);
+      } catch (error) {
+        console.error("[AutoMinuta] Erro ao criar minuta:", error);
+        toast.error("Erro ao criar minuta automática", {
+          description: error instanceof Error ? error.message : "Erro desconhecido",
+        });
+        continue;
+      }
 
       // Marcar como processada
       processedTasksRef.current.add(task.id);

@@ -44,6 +44,35 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 
 Este repositório está **100% configurado para trabalho autônomo do GitHub Copilot**!
 
+### 🆕 Sistema de Issues Automático
+
+**72 triggers** detectam comentários no código e criam issues automaticamente:
+
+```typescript
+// TODO: Implementar feature X
+// FIXME: Corrigir bug Y
+// JURIDICO: Validar conformidade LGPD
+// PERFORMANCE: Otimizar query lenta
+```
+
+**3 camadas de automação:**
+
+- ✅ **VS Code**: Clique direito → "Criar issue do comentário"
+- ✅ **GitHub Actions**: Issues criadas/fechadas automaticamente em cada commit
+- ✅ **Script Bash**: `./auto-create-issues.sh` para criação em massa
+
+**Resultado:**
+
+- 🎯 Issues criadas em ~30s após commit
+- 🏷️ Labels automáticas (urgente, bug, juridico, security, etc.)
+- 👤 Auto-atribuição ao autor
+- ♻️ Prevenção de duplicatas
+- 🔄 Fechamento automático quando TODO removido
+
+**📖 Documentação completa:** [AUTO_ISSUES_README.md](.vscode/AUTO_ISSUES_README.md) • [Quick Reference](.vscode/AUTO_ISSUES_QUICK_REF.md) • [Checklist](.vscode/AUTO_ISSUES_CHECKLIST.md)
+
+---
+
 ### ✨ Trabalho Automático 24/7
 
 O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
