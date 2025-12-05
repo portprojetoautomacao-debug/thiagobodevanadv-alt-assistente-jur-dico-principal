@@ -16,6 +16,7 @@
 
 /// <reference types="vite/client" />
 
+import { initGeminiIntegration } from "@/lib/sentry-gemini-integration";
 import * as Sentry from "@sentry/react";
 
 // Configuração
@@ -291,6 +292,12 @@ export function initErrorTracking(): void {
     console.log("✅ Sentry Error Tracking inicializado");
     console.log(`   Environment: ${APP_ENVIRONMENT}`);
     console.log(`   Release: assistente-juridico@${APP_VERSION}`);
+
+    // 🔍 Inicializar integração Gemini para AI Monitoring
+    initGeminiIntegration({
+      includePrompts: true, // Captura prompts e outputs (PII considerado)
+      captureErrors: true, // Captura erros do Gemini automaticamente
+    });
   } catch (error) {
     console.error("❌ Falha ao inicializar Sentry:", error);
   }
