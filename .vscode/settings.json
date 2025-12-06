@@ -207,15 +207,15 @@
   // Conexão com SonarCloud
   "sonarlint.connectedMode.connections.sonarcloud": [
     {
-      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
-      "token": "${env:SONARQUBE_TOKEN}"
+      "connectionId": "sonarcloud-assistente-juridico",
+      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p"
     }
   ],
 
   // Binding do projeto
   "sonarlint.connectedMode.project": {
     "projectKey": "thiagobodevan-a11y_assistente-juridico-p",
-    "connectionId": "thiagobodevan-a11y-assistente-juridico-p"
+    "connectionId": "sonarcloud-assistente-juridico"
   },
 
   // Análise automática
