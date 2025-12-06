@@ -5,9 +5,14 @@
 
 const SONAR_CONFIG = {
   url: 'https://sonarcloud.io',
-  token: process.env.SONAR_TOKEN || '',
+  token: process.env.SONAR_TOKEN,
   projectKey: 'thiagobodevan-a11y_assistente-juridico-p',
 };
+
+if (!SONAR_CONFIG.token) {
+  console.error("Error: SONAR_TOKEN environment variable is not set.");
+  process.exit(1);
+}
 
 async function fetch(url, options = {}) {
   const { default: nodeFetch } = await import('node-fetch');
