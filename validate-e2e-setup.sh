@@ -3,47 +3,49 @@
 
 set -e
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🔍 VALIDAÇÃO COMPLETA DO SETUP DE TESTES E2E"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
+# Carregar biblioteca comum
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/common.sh
+source "${SCRIPT_DIR}/scripts/lib/common.sh" || {
+    echo "❌ Erro: não foi possível carregar scripts/lib/common.sh"
+    exit 1
+}
 
-# Cores
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+print_header "VALIDAÇÃO COMPLETA DO SETUP DE TESTES E2E"
 
 SUCCESS=0
 WARNINGS=0
 ERRORS=0
 
 check_ok() {
-    echo -e "${GREEN}✅ $1${NC}"
+    local msg="$1"
+    log_success "$msg"
     SUCCESS=$((SUCCESS + 1))
 }
 
 check_warn() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    local msg="$1"
+    log_warning "$msg"
     WARNINGS=$((WARNINGS + 1))
 }
 
 check_error() {
-    echo -e "${RED}❌ $1${NC}"
+    local msg="$1"
+    log_error "$msg"
     ERRORS=$((ERRORS + 1))
 }
 
-echo "📋 1. VERIFICANDO ARQUIVOS DE CONFIGURAÇÃO..."
+log_info "📋 1. VERIFICANDO ARQUIVOS DE CONFIGURAÇÃO..."
 echo ""
 
 # Verificar .env
-if [ -f .env ]; then
+if [[ -f .env ]]; then
     check_ok "Arquivo .env encontrado"
     
     # Verificar variáveis críticas
     if grep -q "TEST_USER_EMAIL" .env; then
         EMAIL=$(grep "TEST_USER_EMAIL" .env | cut -d '=' -f2 | tr -d ' ')
-        if [ -n "$EMAIL" ]; then
+        if [[ -n "$EMAIL" ]]; then
             check_ok "TEST_USER_EMAIL configurado: $EMAIL"
         else
             check_warn "TEST_USER_EMAIL vazio no .env"
@@ -54,7 +56,7 @@ if [ -f .env ]; then
     
     if grep -q "VITE_AUTH_MODE" .env; then
         MODE=$(grep "VITE_AUTH_MODE" .env | cut -d '=' -f2 | tr -d ' ')
-        if [ -n "$MODE" ]; then
+        if [[ -n "$MODE" ]]; then
             check_ok "VITE_AUTH_MODE: $MODE"
         else
             check_warn "VITE_AUTH_MODE vazio (padrão: simple)"
@@ -67,11 +69,11 @@ else
 fi
 
 echo ""
-echo "📦 2. VERIFICANDO DEPENDÊNCIAS..."
+log_info "📦 2. VERIFICANDO DEPENDÊNCIAS..."
 echo ""
 
 # Verificar Node.js
-if command -v node &> /dev/null; then
+if command_exists node; then
     NODE_VERSION=$(node --version)
     check_ok "Node.js instalado: $NODE_VERSION"
 else
@@ -79,7 +81,7 @@ else
 fi
 
 # Verificar npm
-if command -v npm &> /dev/null; then
+if command_exists npm; then
     NPM_VERSION=$(npm --version)
     check_ok "npm instalado: $NPM_VERSION"
 else
@@ -95,11 +97,11 @@ else
 fi
 
 echo ""
-echo "🌐 3. VERIFICANDO BROWSERS..."
+log_info "🌐 3. VERIFICANDO BROWSERS..."
 echo ""
 
 # Verificar browsers instalados
-if [ -d ~/.cache/ms-playwright ] || [ -d ~/Library/Caches/ms-playwright ]; then
+if [[ -d ~/.cache/ms-playwright ]] || [[ -d ~/Library/Caches/ms-playwright ]]; then
     if npx playwright list-files 2>/dev/null | grep -q "chromium"; then
         check_ok "Browser Chromium instalado"
     else
@@ -116,11 +118,11 @@ else
 fi
 
 echo ""
-echo "📁 4. VERIFICANDO ESTRUTURA DE TESTES..."
+log_info "📁 4. VERIFICANDO ESTRUTURA DE TESTES..."
 echo ""
 
 # Verificar diretório de testes
-if [ -d tests/e2e ]; then
+if [[ -d tests/e2e ]]; then
     check_ok "Diretório tests/e2e/ existe"
     
     # Contar arquivos de teste
@@ -128,14 +130,14 @@ if [ -d tests/e2e ]; then
     check_ok "Encontrados $TEST_COUNT arquivo(s) de teste"
     
     # Verificar global-setup
-    if [ -f tests/e2e/global-setup.ts ]; then
+    if [[ -f tests/e2e/global-setup.ts ]]; then
         check_ok "global-setup.ts encontrado"
     else
         check_warn "global-setup.ts não encontrado"
     fi
     
     # Verificar storageState
-    if [ -f tests/e2e/storageState.json ]; then
+    if [[ -f tests/e2e/storageState.json ]]; then
         check_ok "storageState.json existe (sessão salva)"
     else
         check_warn "storageState.json não existe (será criado no primeiro teste)"
@@ -145,14 +147,14 @@ else
 fi
 
 # Verificar playwright.config.ts
-if [ -f playwright.config.ts ]; then
+if [[ -f playwright.config.ts ]]; then
     check_ok "playwright.config.ts encontrado"
 else
     check_error "playwright.config.ts não encontrado"
 fi
 
 echo ""
-echo "🔧 5. VERIFICANDO SCRIPTS NPM..."
+log_info "🔧 5. VERIFICANDO SCRIPTS NPM..."
 echo ""
 
 # Verificar scripts no package.json
