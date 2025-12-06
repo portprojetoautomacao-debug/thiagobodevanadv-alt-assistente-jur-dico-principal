@@ -112,7 +112,7 @@ export interface AIConversationMetadata {
   /**
    * Histórico de mensagens (opcional)
    */
-  messages?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+  messages?: ChatMessage[];
 }
 
 /**
@@ -223,7 +223,7 @@ export async function createInvokeAgentSpan<T>(
  */
 export async function createChatSpan<T>(
   config: AIAgentConfig,
-  messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+  messages: ChatMessage[],
   callback: (span: Sentry.Span | undefined) => Promise<T>
 ): Promise<T> {
   return Sentry.startSpan(
@@ -401,7 +401,7 @@ export function useAIInstrumentation() {
 
   const chat = async <T>(
     config: AIAgentConfig,
-    messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+    messages: ChatMessage[],
     callback: (span: Sentry.Span | undefined) => Promise<T>
   ): Promise<T> => {
     return createChatSpan(config, messages, callback);
