@@ -33,12 +33,11 @@ import "@/components/tiptap-node/paragraph-node/paragraph-node.scss";
 // --- Tiptap UI ---
 import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button";
 import { CodeBlockButton } from "@/components/tiptap-ui/code-block-button";
-import
-  {
-    ColorHighlightPopover,
-    ColorHighlightPopoverButton,
-    ColorHighlightPopoverContent,
-  } from "@/components/tiptap-ui/color-highlight-popover";
+import {
+  ColorHighlightPopover,
+  ColorHighlightPopoverButton,
+  ColorHighlightPopoverContent,
+} from "@/components/tiptap-ui/color-highlight-popover";
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu";
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button";
 import { LinkButton, LinkContent, LinkPopover } from "@/components/tiptap-ui/link-popover";
