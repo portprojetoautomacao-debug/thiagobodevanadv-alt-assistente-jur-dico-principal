@@ -218,7 +218,7 @@ export class GeminiClient {
     // Tenta pegar API key de forma flexível
     if (apiKey) {
       this.apiKey = String(apiKey);
-    } else if (typeof import.meta === "undefined") {
+    } else if (import.meta === undefined) {
       this.apiKey = null;
     } else {
       const env = import.meta.env;
@@ -463,9 +463,7 @@ export class GitHubModelsClient {
 
   constructor(apiKey?: string) {
     this.apiKey =
-      apiKey ||
-      (typeof import.meta === "undefined" ? "" : import.meta.env.VITE_GITHUB_TOKEN || "") ||
-      "";
+      apiKey || (import.meta === undefined ? "" : import.meta.env.VITE_GITHUB_TOKEN || "") || "";
   }
 
   async chat(
@@ -525,7 +523,7 @@ export class AzureOpenAIClient {
     this.endpoint = endpoint || AZURE_AI_CONFIG.endpoint;
     this.apiKey =
       apiKey ||
-      (typeof import.meta === "undefined" ? "" : import.meta.env.VITE_AZURE_OPENAI_KEY || "") ||
+      (import.meta === undefined ? "" : import.meta.env.VITE_AZURE_OPENAI_KEY || "") ||
       "";
   }
 

@@ -113,7 +113,7 @@ function handleTaskCompletion(
   setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
   setCompletedTasks: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
   setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
-  logActivity: (agentId: string, action: string, result: "success" | "warning" | "error") => void
+  logActivity: (agentId: string, action: string, result: ActivityResult) => void
 ): void {
   const completed: AgentTask = {
     ...task,

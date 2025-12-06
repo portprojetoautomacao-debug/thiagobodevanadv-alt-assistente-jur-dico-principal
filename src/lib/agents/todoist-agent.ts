@@ -33,6 +33,10 @@ interface TodoistEventData {
 }
 
 // Interface para comandos interpretados pela IA
+
+/** Prioridade Todoist: 1 = baixa, 4 = urgente */
+type TodoistPriority = 1 | 2 | 3 | 4;
+
 interface InterpretedCommand {
   action: "reschedule" | "delegate" | "complete" | "create_event" | "update_status" | "unknown";
   parameters: {
@@ -221,7 +225,7 @@ export class TodoistAgent {
       case "update_status":
         if (command.parameters.taskId && command.parameters.priority) {
           // Validar prioridade (1-4)
-          const priority = Math.min(Math.max(command.parameters.priority, 1), 4) as 1 | 2 | 3 | 4;
+          const priority = Math.min(Math.max(command.parameters.priority, 1), 4) as TodoistPriority;
           await updateLegalTask(command.parameters.taskId, {
             priority: priority,
           });

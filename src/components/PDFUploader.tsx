@@ -428,9 +428,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <select
                           id="tipo"
                           value={extractedData.tipo || "fisica"}
-                          onChange={(e) =>
-                            handleEditField("tipo", e.target.value as "fisica" | "juridica")
-                          }
+                          onChange={(e) => handleEditField("tipo", e.target.value as TipoPessoa)}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="fisica">Pessoa Física</option>
