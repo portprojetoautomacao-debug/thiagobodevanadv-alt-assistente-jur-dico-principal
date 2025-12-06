@@ -70,9 +70,9 @@ export async function exportToXLSX(data: Record<string, unknown>[], filename: st
         .map((h) => {
           const val = row[h];
           if (val === null || val === undefined) return "";
-          const str = String(val);
+          const str = typeof val === "object" ? JSON.stringify(val) : String(val);
           return str.includes(",") || str.includes('"') || str.includes("\n")
-            ? `"${str.replace(/"/g, '""')}"`
+            ? `"${str.replaceAll('"', '""')}"`
             : str;
         })
         .join(",")

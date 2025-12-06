@@ -41,7 +41,7 @@ const CIRCUIT_BREAKER_COOLDOWN = 60000; // 60 segundos de cooldown
 
 // Flag para verificar se estamos em produção
 const isProd =
-  typeof globalThis.window !== "undefined" &&
+  globalThis.window !== undefined &&
   (globalThis.window.location.hostname.includes("vercel.app") ||
     globalThis.window.location.hostname !== "localhost");
 
