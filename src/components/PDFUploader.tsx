@@ -345,11 +345,11 @@ Retorne APENAS o JSON válido, sem explicações.`;
       <Tabs defaultValue="upload" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="upload">
-            <Upload size={16} weight="duotone" className="mr-2" />
+            <Upload size={16} className="mr-2" />
             Upload
           </TabsTrigger>
           <TabsTrigger value="history">
-            <Clock size={16} weight="duotone" className="mr-2" />
+            <Clock size={16} className="mr-2" />
             Histórico ({sortedHistory.length})
           </TabsTrigger>
         </TabsList>
@@ -359,7 +359,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
             <Card className="glassmorphic border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Upload className="text-primary" size={24} weight="duotone" />
+                  <Upload className="text-primary" size={24} />
                   Upload de Documento
                 </CardTitle>
                 <CardDescription>
@@ -430,7 +430,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                     <CheckCircle
                       className="text-primary"
                       size={16}
-                      weight="fill"
+                     
                     />
                     <AlertDescription>
                       Dados extraídos com sucesso! Revise os campos ao lado e
@@ -444,7 +444,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                     <XCircle
                       className="text-destructive"
                       size={16}
-                      weight="fill"
+                     
                     />
                     <AlertDescription>
                       Erro ao processar o documento. Tente novamente ou cadastre
@@ -461,7 +461,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                   <CheckCircle
                     className="text-primary"
                     size={24}
-                    weight="duotone"
+                   
                   />
                   Dados Extraídos
                 </CardTitle>
@@ -475,7 +475,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                     <FilePdf
                       className="text-muted-foreground/30 mb-4"
                       size={64}
-                      weight="duotone"
+                     
                     />
                     <p className="text-muted-foreground">
                       Nenhum dado extraído ainda
@@ -651,7 +651,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                       className="w-full button-gradient"
                       size="lg"
                       disabled={!extractedData.nome || !extractedData.cpfCnpj}>
-                      <CheckCircle size={20} weight="fill" />
+                      <CheckCircle size={20} />
                       Salvar Cliente
                     </Button>
 
@@ -672,7 +672,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                 <Clock
                   className="text-muted-foreground/30 mb-4"
                   size={64}
-                  weight="duotone"
+                 
                 />
                 <p className="text-muted-foreground">
                   Nenhum upload realizado ainda
@@ -694,7 +694,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <FilePdf
                           className="text-destructive shrink-0 mt-1"
                           size={24}
-                          weight="duotone"
+                         
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -720,7 +720,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                                 <User
                                   size={14}
                                   className="text-primary"
-                                  weight="duotone"
+                                 
                                 />
                                 <span className="font-medium">
                                   {item.extractedData.nome ||

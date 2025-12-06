@@ -27,15 +27,15 @@ import {
   type UnifiedPublication,
 } from "@/lib/multi-source-publications";
 import {
-  ArrowsClockwise,
+  RotateCw as ArrowsClockwise,
   CheckCircle,
   Copy,
   Database,
   Download,
   Info,
-  MagnifyingGlass,
-  Warning,
-} from "@phosphor-icons/react";
+  Search as MagnifyingGlass,
+  AlertTriangle as Warning,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

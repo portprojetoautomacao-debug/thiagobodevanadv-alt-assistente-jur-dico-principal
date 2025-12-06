@@ -21,16 +21,16 @@ import {
 } from "@/lib/datajud-api";
 import { geminiGenerateText } from "@/lib/gemini-client";
 import {
-  CalendarBlank as CalendarIcon,
+  Calendar as CalendarIcon,
   CheckCircle,
   Copy,
   FileText,
   Gavel,
-  MagnifyingGlass,
-  Sparkle,
-  Spinner,
-  Warning,
-} from "@phosphor-icons/react";
+  Search as MagnifyingGlass,
+  Sparkles as Sparkle,
+  Loader2 as Spinner,
+  AlertTriangle as Warning,
+} from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 
@@ -193,7 +193,7 @@ Mantenha a resposta objetiva e profissional.`;
                   </>
                 ) : (
                   <>
-                    <MagnifyingGlass className="w-5 h-5 mr-2" weight="bold" />
+                    <MagnifyingGlass className="w-5 h-5 mr-2" />
                     Buscar Processo
                   </>
                 )}
@@ -233,7 +233,7 @@ Mantenha a resposta objetiva e profissional.`;
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Gavel className="w-6 h-6 text-primary" weight="fill" />
+                      <Gavel className="w-6 h-6 text-primary" />
                       <h2 className="text-xl font-bold text-foreground">
                         {processoData.classe?.nome || "Processo Judicial"}
                       </h2>
@@ -292,7 +292,7 @@ Mantenha a resposta objetiva e profissional.`;
                     </>
                   ) : (
                     <>
-                      <Sparkle className="w-5 h-5 mr-2" weight="fill" />
+                      <Sparkle className="w-5 h-5 mr-2" />
                       Analisar Andamentos com IA
                     </>
                   )}
@@ -309,7 +309,7 @@ Mantenha a resposta objetiva e profissional.`;
               {analysis && (
                 <Card className="p-6 bg-linear-to-br from-accent/5 to-primary/5">
                   <div className="flex items-center gap-2 mb-4">
-                    <Sparkle className="w-6 h-6 text-accent" weight="fill" />
+                    <Sparkle className="w-6 h-6 text-accent" />
                     <h3 className="text-lg font-bold text-foreground">Análise da IA</h3>
                   </div>
                   <div className="prose prose-sm max-w-none">
@@ -332,7 +332,7 @@ Mantenha a resposta objetiva e profissional.`;
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-primary" weight="fill" />
+                    <FileText className="w-6 h-6 text-primary" />
                     <h3 className="text-lg font-bold text-foreground">Últimos Andamentos</h3>
                   </div>
                   <Badge variant="outline">{processoData.movimentos.length} movimento(s)</Badge>
@@ -350,7 +350,7 @@ Mantenha a resposta objetiva e profissional.`;
                       >
                         <div className="shrink-0 mt-1">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-primary" weight="fill" />
+                            <CheckCircle className="w-5 h-5 text-primary" />
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">

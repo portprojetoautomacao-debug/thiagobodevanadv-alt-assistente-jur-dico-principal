@@ -1,21 +1,7 @@
-import { useState, useMemo } from "react";
-import { llm } from "@/lib/llm-client";
-import { useProcesses } from "@/hooks/use-processes";
-import type { Process } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  MagnifyingGlass,
-  Plus,
-  Gavel,
-  DownloadSimple,
-  Funnel,
-  Sparkle,
-} from "@phosphor-icons/react";
-import ProcessDialog from "../ProcessDialog";
-import ProcessDetailsDialog from "../ProcessDetailsDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,8 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProcesses } from "@/hooks/use-processes";
+import { llm } from "@/lib/llm-client";
 import { exportToCSV } from "@/lib/utils";
+import type { Process } from "@/types";
+import {
+  Download as DownloadSimple,
+  Filter as Funnel,
+  Gavel,
+  Search as MagnifyingGlass,
+  Plus,
+  Sparkles as Sparkle,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import ProcessDetailsDialog from "../ProcessDetailsDialog";
+import ProcessDialog from "../ProcessDialog";
 
 export default function ProcessosView() {
   const { processes, addProcess, updateProcess, deleteProcess } = useProcesses();
@@ -151,7 +151,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Gavel size={32} weight="duotone" className="text-primary" />
+            <Gavel size={32} className="text-primary" />
             Processos
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -206,7 +206,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
       {filteredProcesses.length === 0 ? (
         <Card className="windows-mica">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Gavel size={48} className="text-muted-foreground mb-4" weight="duotone" />
+            <Gavel size={48} className="text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">
               {search ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
             </h3>

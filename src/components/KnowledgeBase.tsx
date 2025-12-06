@@ -301,7 +301,7 @@ export default function KnowledgeBase() {
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
                             <Sparkle
                               className="w-5 h-5 text-accent-foreground"
-                              weight="fill"
+                             
                             />
                           </div>
                         )}
@@ -319,7 +319,7 @@ export default function KnowledgeBase() {
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
                             <User
                               className="w-5 h-5 text-primary-foreground"
-                              weight="fill"
+                             
                             />
                           </div>
                         )}
@@ -330,7 +330,7 @@ export default function KnowledgeBase() {
                         <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
                           <Sparkle
                             className="w-5 h-5 text-accent-foreground animate-pulse"
-                            weight="fill"
+                           
                           />
                         </div>
                         <div className="bg-muted p-4 rounded-lg">
@@ -371,7 +371,7 @@ export default function KnowledgeBase() {
                   onClick={() => void handleQuery()}
                   disabled={loading}
                   size="lg">
-                  <Sparkle className="w-5 h-5" weight="fill" />
+                  <Sparkle className="w-5 h-5" />
                 </Button>
               </div>
             </CardContent>

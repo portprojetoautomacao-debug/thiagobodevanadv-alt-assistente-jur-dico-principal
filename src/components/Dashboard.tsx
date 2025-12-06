@@ -225,7 +225,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <Gavel
               className="text-secondary neon-glow"
               size={24}
-              weight="duotone"
+             
             />
           </CardHeader>
           <CardContent>
@@ -244,7 +244,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <CheckCircle
               className="text-accent neon-glow"
               size={24}
-              weight="duotone"
+             
             />
           </CardHeader>
           <CardContent>
@@ -263,7 +263,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <Clock
               className="text-primary neon-glow"
               size={24}
-              weight="duotone"
+             
             />
           </CardHeader>
           <CardContent>
@@ -291,7 +291,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   : "text-primary"
               }
               size={24}
-              weight="duotone"
+             
             />
           </CardHeader>
           <CardContent>
@@ -314,7 +314,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <Card className="card-glow border-primary/30 bg-linear-to-br from-primary/10 via-secondary/10 to-accent/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 gradient-text">
-                <Upload size={24} weight="duotone" />
+                <Upload size={24} />
                 Nova Funcionalidade: Upload de PDF
               </CardTitle>
             </CardHeader>
@@ -325,15 +325,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle size={14} weight="fill" />
+                  <CheckCircle size={14} />
                   Extração automática
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle size={14} weight="fill" />
+                  <CheckCircle size={14} />
                   Powered by Gemini 2.5 Pro
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle size={14} weight="fill" />
+                  <CheckCircle size={14} />
                   Salva automaticamente
                 </Badge>
               </div>
@@ -360,7 +360,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <ChartPie size={24} weight="duotone" />
+              <ChartPie size={24} />
               Processos por Status
             </CardTitle>
           </CardHeader>
@@ -379,7 +379,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <Gavel size={24} weight="duotone" />
+              <Gavel size={24} />
               Top 5 Varas
             </CardTitle>
           </CardHeader>
@@ -398,7 +398,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic lg:col-span-2 xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <TrendUp size={24} weight="duotone" />
+              <TrendUp size={24} />
               Evolução (6 meses)
             </CardTitle>
           </CardHeader>

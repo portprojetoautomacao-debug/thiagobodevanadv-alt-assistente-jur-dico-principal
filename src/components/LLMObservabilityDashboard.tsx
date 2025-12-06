@@ -14,18 +14,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LLMMetrics } from "@/lib/llm-service";
 import { llmService, type AuditLogEntry } from "@/lib/llm-service";
 import {
-  ArrowsClockwise,
-  ChartBar,
-  ChartLine,
+  RotateCw as ArrowsClockwise,
+  BarChart3 as ChartBar,
+  LineChart as ChartLine,
   CheckCircle,
   Clock,
   Cpu,
-  CurrencyCircleDollar,
+  DollarSign as CurrencyCircleDollar,
   Database,
-  Lightning,
-  TrendUp,
-  Warning,
-} from "@phosphor-icons/react";
+  Zap as Lightning,
+  TrendingUp as TrendUp,
+  AlertTriangle as Warning,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -97,7 +97,7 @@ export default function LLMObservabilityDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <Lightning size={48} className="text-primary neon-glow mx-auto mb-4" weight="duotone" />
+          <Lightning size={48} className="text-primary neon-glow mx-auto mb-4" />
           <p className="text-muted-foreground">Carregando métricas...</p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function LLMObservabilityDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold gradient-text flex items-center gap-2">
-            <ChartBar size={32} weight="duotone" className="text-primary neon-glow" />
+            <ChartBar size={32} className="text-primary neon-glow" />
             Observabilidade LLM
           </h1>
           <p className="text-muted-foreground mt-1">Monitoramento e análise de operações de IA</p>
@@ -397,9 +397,9 @@ export default function LLMObservabilityDashboard() {
                             {formatCurrency(metric.cost)}
                           </span>
                           {metric.success ? (
-                            <CheckCircle size={12} className="text-green-500" weight="fill" />
+                            <CheckCircle size={12} className="text-green-500" />
                           ) : (
-                            <Warning size={12} className="text-red-500" weight="fill" />
+                            <Warning size={12} className="text-red-500" />
                           )}
                         </div>
                       </div>
@@ -431,9 +431,9 @@ export default function LLMObservabilityDashboard() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {entry.success ? (
-                            <CheckCircle size={16} className="text-green-500" weight="fill" />
+                            <CheckCircle size={16} className="text-green-500" />
                           ) : (
-                            <Warning size={16} className="text-red-500" weight="fill" />
+                            <Warning size={16} className="text-red-500" />
                           )}
                           <Badge variant="outline">{entry.model}</Badge>
                           {entry.feature && (

@@ -142,7 +142,7 @@ export default function GeminiExample() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Sparkle size={32} className="text-primary" weight="duotone" />
+          <Sparkle size={32} className="text-primary" />
           Assistente IA com Google Gemini
         </h1>
         <p className="text-muted-foreground">
@@ -232,7 +232,7 @@ export default function GeminiExample() {
                       <Sparkle
                         size={48}
                         className="text-primary animate-pulse mx-auto"
-                        weight="duotone"
+                       
                       />
                       <p className="text-muted-foreground">
                         Processando com IA...

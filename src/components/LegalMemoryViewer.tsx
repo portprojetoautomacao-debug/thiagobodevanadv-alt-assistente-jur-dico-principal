@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type MemoryItem } from "@/hooks/use-autonomous-agents";
-import { Brain, Clock, FileText, Gavel, Lightbulb } from "@phosphor-icons/react";
+import { Brain, Clock, FileText, Gavel, Lightbulb } from "lucide-react";
 import React from "react";
 
 interface LegalMemoryViewerProps {
@@ -11,11 +11,8 @@ interface LegalMemoryViewerProps {
   readonly onRefresh?: () => void;
 }
 
-// Permite peso (weight) para ícones do Phosphor
-const typeIcons: Record<
-  string,
-  React.ComponentType<{ className?: string; size?: number; weight?: any }>
-> = {
+// Ícones lucide-react
+const typeIcons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
   peca_processual: FileText,
   precedente: Gavel,
   estrategia: Lightbulb,
@@ -64,7 +61,7 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
                     className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                   >
                     <div className="mt-0.5 p-1 rounded-full bg-primary/10 text-primary">
-                      <IconComponent className="w-4 h-4" weight="fill" />
+                      <IconComponent className="w-4 h-4" />
                     </div>
 
                     <div className="flex-1 min-w-0">

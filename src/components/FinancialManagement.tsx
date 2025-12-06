@@ -290,12 +290,12 @@ export default function FinancialManagement() {
                       {entry.type === "income" ? (
                         <TrendUp
                           className="w-5 h-5 text-green-600"
-                          weight="bold"
+                         
                         />
                       ) : (
                         <TrendDown
                           className="w-5 h-5 text-red-600"
-                          weight="bold"
+                         
                         />
                       )}
                     </div>

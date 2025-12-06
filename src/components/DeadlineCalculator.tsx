@@ -235,7 +235,7 @@ export default function DeadlineCalculator() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {result && (
-                <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+                <Sparkle className="w-5 h-5 text-accent" />
               )}
               Resultado
             </CardTitle>
@@ -249,7 +249,7 @@ export default function DeadlineCalculator() {
                 <div className="p-6 bg-accent rounded-lg text-center">
                   <CalendarDots
                     className="w-12 h-12 text-accent-foreground mx-auto mb-3"
-                    weight="fill"
+                   
                   />
                   <p className="text-sm text-accent-foreground/80 mb-2">
                     Prazo Final
@@ -285,7 +285,7 @@ export default function DeadlineCalculator() {
                       <div className="flex items-center gap-2">
                         <Sparkle
                           className="w-4 h-4 text-accent"
-                          weight="fill"
+                         
                         />
                         Ver Raciocínio Passo a Passo (AI)
                       </div>
