@@ -68,5 +68,28 @@ stopMonitoring();
 1. ✅ Implementação base de DocumentExtractor
 2. ✅ Monitoramento em tempo real
 3. ✅ Integração com content.ts
-4. ⏳ Testes E2E com PJe real
-5. ⏳ Documentação de usuário
+4. ✅ Integração com Frontend (React Hooks + Widget)
+5. ✅ Documentação de usuário
+6. ⏳ Testes E2E com PJe real
+
+## 📦 Instalação e Uso
+
+### Instalação
+1.  Navegue até a pasta `chrome-extension-pje`.
+2.  Instale as dependências: `npm install`.
+3.  Gere o build: `npm run build`.
+4.  No Chrome, acesse `chrome://extensions`.
+5.  Ative o "Modo do desenvolvedor".
+6.  Clique em "Carregar sem compactação" e selecione a pasta `chrome-extension-pje/dist`.
+
+### Como Usar
+1.  Abra o **Assistente Jurídico** em uma aba.
+2.  Abra o **PJe** em outra aba e navegue até um processo.
+3.  Ao abrir um documento (despacho, sentença, petição) no PJe, a extensão detectará automaticamente.
+4.  Uma notificação (Toast) aparecerá no Assistente Jurídico: "📄 PETIÇÃO capturado...".
+5.  O documento aparecerá no widget "Documentos PJe" no topo do Dashboard.
+6.  Clique em "Salvar" para converter o documento em uma Minuta ou Tarefa.
+
+### Troubleshooting
+*   **Status "Desconectado"**: Certifique-se de que a extensão está instalada e ativa. Recarregue a página do Assistente Jurídico.
+*   **Documento não aparece**: A extensão monitora iframes específicos. Tente clicar no documento novamente na árvore do PJe.
