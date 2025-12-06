@@ -12,25 +12,26 @@
 
 set -e
 
-echo "🔍 Procurando por triggers no código..."
+# Carregar biblioteca comum
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/common.sh
+source "${SCRIPT_DIR}/scripts/lib/common.sh" || {
+    echo "❌ Erro: não foi possível carregar scripts/lib/common.sh"
+    exit 1
+}
 
-# Cores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+log_info "🔍 Procurando por triggers no código..."
 
 # Verificar se gh CLI está instalado
-if ! command -v gh &> /dev/null; then
-    echo -e "${RED}❌ GitHub CLI (gh) não está instalado${NC}"
+if ! command_exists gh; then
+    log_error "GitHub CLI (gh) não está instalado"
     echo "Instale com: https://cli.github.com/"
     exit 1
 fi
 
 # Verificar se está autenticado
 if ! gh auth status &> /dev/null; then
-    echo -e "${RED}❌ GitHub CLI não está autenticado${NC}"
+    log_error "GitHub CLI não está autenticado"
     echo "Execute: gh auth login"
     exit 1
 fi
@@ -42,7 +43,7 @@ PATTERN='TODO|FIXME|ISSUE|HACK|PENDENTE|REVISAR|CORRIGIR|VERIFICAR|ATENÇÃO|URG
 ISSUES_CREATED=0
 
 # Buscar por triggers no código
-echo -e "${BLUE}📂 Procurando em arquivos TypeScript, JavaScript, CSS, HTML...${NC}"
+log_info "📂 Procurando em arquivos TypeScript, JavaScript, CSS, HTML..."
 
 # Buscar em arquivos relevantes (excluir node_modules, dist, etc)
 grep -rn -E "//\s*($PATTERN)" \
@@ -75,7 +76,7 @@ grep -rn -E "//\s*($PATTERN)" \
   TITLE="[$TRIGGER] $COMMENT"
   
   # Limitar tamanho do título
-  if [ ${#TITLE} -gt 100 ]; then
+  if [[ ${#TITLE} -gt 100 ]]; then
     TITLE="${TITLE:0:97}..."
   fi
   
@@ -144,15 +145,15 @@ $content
   # Criar issue (verificar se já existe antes)
   EXISTING=$(gh issue list --search "$TITLE" --json number --jq '.[0].number' 2>/dev/null || echo "")
   
-  if [ -z "$EXISTING" ]; then
-    echo -e "${GREEN}✅ Criando issue: $TITLE${NC}"
+  if [[ -z "$EXISTING" ]]; then
+    log_success "Criando issue: $TITLE"
     
     gh issue create \
       --title "$TITLE" \
       --body "$BODY" \
       --label "$LABELS" \
       --assignee "@me" 2>/dev/null || {
-        echo -e "${RED}❌ Erro ao criar issue: $TITLE${NC}"
+        log_error "Erro ao criar issue: $TITLE"
         continue
       }
     
@@ -161,11 +162,11 @@ $content
     # Pequeno delay para não sobrecarregar a API
     sleep 0.5
   else
-    echo -e "${YELLOW}⏭️  Issue já existe: $TITLE (#$EXISTING)${NC}"
+    log_warning "Issue já existe: $TITLE (#$EXISTING)"
   fi
 done
 
 echo ""
-echo -e "${GREEN}🎉 Concluído!${NC}"
-echo -e "${BLUE}📊 Total de issues criados: $ISSUES_CREATED${NC}"
-echo -e "${BLUE}🔗 Ver issues: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/issues${NC}"
+log_success "🎉 Concluído!"
+log_info "📊 Total de issues criados: $ISSUES_CREATED"
+log_info "🔗 Ver issues: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/issues"

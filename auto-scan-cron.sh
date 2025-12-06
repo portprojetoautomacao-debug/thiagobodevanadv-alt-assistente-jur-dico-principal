@@ -24,42 +24,16 @@ set -e
 # ═══════════════════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Carregar biblioteca comum
+# shellcheck source=scripts/lib/common.sh
+source "${SCRIPT_DIR}/scripts/lib/common.sh" || {
+    echo "❌ Erro: não foi possível carregar scripts/lib/common.sh"
+    exit 1
+}
+
 LOG_FILE="${SCRIPT_DIR}/logs/auto-scan-cron.log"
 LOCK_FILE="/tmp/auto-scan-cron.lock"
-
-# Cores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# ═══════════════════════════════════════════════════════════════════════════
-# FUNÇÕES AUXILIARES
-# ═══════════════════════════════════════════════════════════════════════════
-
-log() {
-  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-  echo -e "${timestamp} - $1" | tee -a "${LOG_FILE}"
-}
-
-log_success() {
-  log "${GREEN}✅ $1${NC}"
-}
-
-log_error() {
-  log "${RED}❌ $1${NC}"
-}
-
-log_warning() {
-  log "${YELLOW}⚠️  $1${NC}"
-}
-
-log_info() {
-  log "${BLUE}ℹ️  $1${NC}"
-}
 
 # ═══════════════════════════════════════════════════════════════════════════
 # VERIFICAÇÕES INICIAIS
@@ -69,14 +43,11 @@ log_info() {
 mkdir -p "${SCRIPT_DIR}/logs"
 
 # Banner
-echo ""
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${CYAN}🤖 AUTO SCAN ISSUES - EXECUÇÃO PERIÓDICA${NC}"
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+print_header "AUTO SCAN ISSUES - EXECUÇÃO PERIÓDICA"
 log_info "Iniciando scan automático de TODOs..."
 
 # Verificar se já está rodando
-if [ -f "${LOCK_FILE}" ]; then
+if [[ -f "${LOCK_FILE}" ]]; then
   PID=$(cat "${LOCK_FILE}")
   if ps -p "${PID}" > /dev/null 2>&1; then
     log_warning "Script já está em execução (PID: ${PID})"
@@ -94,7 +65,7 @@ echo $$ > "${LOCK_FILE}"
 trap "rm -f ${LOCK_FILE}" EXIT
 
 # Verificar GitHub CLI
-if ! command -v gh &> /dev/null; then
+if ! command_exists gh; then
   log_error "GitHub CLI (gh) não está instalado!"
   log_info "Instale com: brew install gh (Mac) ou apt install gh (Ubuntu)"
   exit 1
@@ -136,7 +107,7 @@ TODOS=$(grep -rn -E "($PATTERN)" . \
   --exclude-dir=logs \
   2>/dev/null || true)
 
-if [ -z "$TODOS" ]; then
+if [[ -z "$TODOS" ]]; then
   log_success "Nenhum TODO encontrado no código!"
   log_info "Sistema está limpo ✨"
   exit 0
@@ -207,7 +178,7 @@ _Issue criada automaticamente pelo scan periódico_"
   # Verificar se já existe
   EXISTING=$(gh issue list --search "$TITLE" --json number --jq '.[0].number' 2>/dev/null || echo "")
   
-  if [ -n "$EXISTING" ]; then
+  if [[ -n "$EXISTING" ]]; then
     log_info "Issue já existe: #${EXISTING} - ${TITLE:0:50}..."
   else
     # Criar issue
@@ -218,7 +189,7 @@ _Issue criada automaticamente pelo scan periódico_"
       --assignee "@me" \
       2>/dev/null || echo "")
     
-    if [ -n "$ISSUE_NUM" ]; then
+    if [[ -n "$ISSUE_NUM" ]]; then
       log_success "Issue criada: ${ISSUE_NUM}"
       ISSUES_CREATED=$((ISSUES_CREATED + 1))
       sleep 0.5 # Rate limiting
@@ -245,7 +216,7 @@ echo "   📝 Log: ${LOG_FILE}"
 log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Notificação (opcional - requer notify-send)
-if command -v notify-send &> /dev/null; then
+if command_exists notify-send; then
   notify-send "🤖 Auto Scan Issues" "Scan completo! ${TODO_COUNT} TODOs encontrados" 2>/dev/null || true
 fi
 

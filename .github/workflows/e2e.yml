@@ -43,6 +43,21 @@ jobs:
           VITE_REDIRECT_URI: "http://localhost:5173"
           VITE_APP_ENV: "ci"
 
+      - name: Install Chrome Extension dependencies
+        run: |
+          cd chrome-extension-pje
+          npm ci
+
+      - name: Test Chrome Extension
+        run: |
+          cd chrome-extension-pje
+          npm test
+
+      - name: Build Chrome Extension
+        run: |
+          cd chrome-extension-pje
+          npm run build
+
       - name: Run Playwright tests
         run: npx playwright test
         env:
