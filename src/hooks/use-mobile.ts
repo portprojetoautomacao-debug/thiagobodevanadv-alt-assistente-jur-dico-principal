@@ -4,7 +4,7 @@ const MOBILE_BREAKPOINT = 768;
 
 // Get initial mobile state safely for SSR
 function getInitialMobileState(): boolean | undefined {
-  if (typeof globalThis.window === "undefined") return undefined;
+  if (globalThis.window === undefined) return undefined;
   return globalThis.window.innerWidth < MOBILE_BREAKPOINT;
 }
 
