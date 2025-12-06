@@ -1,5 +1,5 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePJeDocumentSync } from "./use-pje-document-sync";
 
 // Mock do useKV
@@ -43,39 +43,45 @@ describe("usePJeDocumentSync", () => {
     chromeMock.tabs.sendMessage.mockResolvedValue({ status: "ok" });
   });
 
-  it("deve inicializar com estado padrão", () => {
+  it("deve inicializar com estado padrão", async () => {
     const { result } = renderHook(() => usePJeDocumentSync());
 
     expect(result.current.documentosPendentes).toEqual([]);
     expect(result.current.documentosProcessados).toEqual([]);
     expect(result.current.carregando).toBe(false);
     expect(result.current.extensaoAtivaNoTab).toBe(false);
+
+    // Aguardar efeito inicial para evitar warnings
+    await waitFor(() => {
+      expect(chromeMock.tabs.query).toHaveBeenCalled();
+    });
   });
 
   it("deve verificar se a extensão está ativa", async () => {
     chromeMock.tabs.sendMessage.mockResolvedValueOnce({ type: "PONG" });
 
-    const { result } = renderHook(() => usePJeDocumentSync());
+    renderHook(() => usePJeDocumentSync());
 
     // Aguardar efeitos
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    await waitFor(() => {
+      expect(chromeMock.tabs.query).toHaveBeenCalled();
     });
 
-    expect(chromeMock.tabs.query).toHaveBeenCalled();
-    expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(
-      123,
-      expect.objectContaining({ type: "PING" })
-    );
-    // O estado deve atualizar (precisamos esperar a promise resolver dentro do hook)
-    // Nota: Testar async useEffect pode ser tricky, mas vamos verificar se a chamada foi feita
+    await waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(
+        123,
+        expect.objectContaining({ type: "PING" })
+      );
+    });
   });
 
-  it("deve descartar documento", () => {
+  it("deve descartar documento", async () => {
     const { result } = renderHook(() => usePJeDocumentSync());
 
-    // Simular documento pendente (precisaria de acesso ao setter interno ou mockar useState,
-    // mas como é hook, vamos testar a função pública)
+    // Aguardar inicialização para evitar warnings
+    await waitFor(() => {
+      expect(chromeMock.tabs.query).toHaveBeenCalled();
+    });
 
     act(() => {
       result.current.descartarDocumento("doc-123");

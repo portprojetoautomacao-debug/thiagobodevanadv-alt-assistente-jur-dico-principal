@@ -18,9 +18,9 @@
         "GitHub.copilot",
         "GitHub.copilot-chat",
         "ms-playwright.playwright",
-        "SonarSource.sonarlint-vscode"
-        ,
-        "vscjava.vscode-java-pack"
+        "SonarSource.sonarlint-vscode",
+        "vscjava.vscode-java-pack",
+        "GitHub.codespaces"
       ],
       "settings": {
         "editor.formatOnSave": true,
