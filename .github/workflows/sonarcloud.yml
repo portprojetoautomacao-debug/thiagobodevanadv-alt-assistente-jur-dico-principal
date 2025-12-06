@@ -81,6 +81,25 @@ jobs:
         run: cd chrome-extension-pje && npm run build
         continue-on-error: true
 
+      - name: Analyze Issue #161 files (Google Docs sync)
+        run: |
+          echo "📊 Analisando arquivos modificados na Issue #161..."
+          echo "Files to analyze:"
+          echo "  - src/hooks/use-google-docs.ts"
+          echo "  - src/components/MinutasManager.tsx"
+          
+          # Verificar se os arquivos existem
+          if [ -f "src/hooks/use-google-docs.ts" ]; then
+            echo "✅ use-google-docs.ts encontrado"
+            wc -l src/hooks/use-google-docs.ts
+          fi
+          
+          if [ -f "src/components/MinutasManager.tsx" ]; then
+            echo "✅ MinutasManager.tsx encontrado"
+            wc -l src/components/MinutasManager.tsx
+          fi
+        continue-on-error: true
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v5
         continue-on-error: true # Não bloqueia CI se Quality Gate falhar
@@ -92,6 +111,7 @@ jobs:
             -Dsonar.verbose=false
             -Dsonar.scm.revision=${{ github.sha }}
             -Dsonar.links.ci=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            -Dsonar.inclusions=src/hooks/use-google-docs.ts,src/components/MinutasManager.tsx,src/**/*.ts,src/**/*.tsx,api/**/*.ts
             ${{ github.event_name == 'pull_request' && format('-Dsonar.pullrequest.key={0} -Dsonar.pullrequest.branch={1} -Dsonar.pullrequest.base={2}', github.event.pull_request.number, github.head_ref, github.base_ref) || format('-Dsonar.branch.name={0}', github.ref_name) }}
 
       - name: SonarCloud Quality Gate
