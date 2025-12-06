@@ -84,7 +84,7 @@ export default defineConfig({
           {
             // ✅ Lazy-loaded chunks: NetworkFirst para sempre buscar versão atualizada
             // Se rede falhar, usa cache. Isso resolve o 404 de chunks com hash diferente
-            urlPattern: /\/assets\/(MinutasManager|TiptapEditor|DashboardCharts|animation|three|dnd|files)-[a-zA-Z0-9]+\.js$/,
+            urlPattern: /\/assets\/(MinutasManager|TiptapEditorV2|DashboardCharts|animation|three|dnd|files)-[a-zA-Z0-9]+\.js$/,
             handler: "NetworkFirst",
             options: {
               cacheName: "lazy-chunks",
