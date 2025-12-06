@@ -23,13 +23,21 @@ import {
 const CHART_HEIGHT = 250;
 
 interface ChartData {
-  statusData: Array<{ name: string; value: number; color: string }>;
-  varaChartData: Array<{ name: string; value: number }>;
-  trendData: Array<{ month: string; ativos: number; concluidos: number }>;
+  readonly statusData: ReadonlyArray<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  readonly varaChartData: ReadonlyArray<{ name: string; value: number }>;
+  readonly trendData: ReadonlyArray<{
+    month: string;
+    ativos: number;
+    concluidos: number;
+  }>;
 }
 
 interface DashboardChartsProps {
-  chartData: ChartData;
+  readonly chartData: ChartData;
 }
 
 export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
@@ -37,7 +45,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <ChartPie size={48} className="text-muted-foreground mb-2" />
+          <PieChartIcon size={48} className="text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
         </div>
       );
@@ -69,7 +77,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
     console.error("Error rendering StatusChart:", error);
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <ChartPie size={48} className="text-muted-foreground mb-2" />
+        <PieChart size={48} className="text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
       </div>
     );

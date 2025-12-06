@@ -38,7 +38,13 @@ interface TodoistEventData {
 type TodoistPriority = 1 | 2 | 3 | 4;
 
 interface InterpretedCommand {
-  action: "reschedule" | "delegate" | "complete" | "create_event" | "update_status" | "unknown";
+  action:
+    | "reschedule"
+    | "delegate"
+    | "complete"
+    | "create_event"
+    | "update_status"
+    | "unknown";
   parameters: {
     date?: string;
     assignee?: string;
@@ -90,7 +96,9 @@ export class TodoistAgent {
   private async handleItemUpdated(item: TodoistEventData) {
     // Se a data mudou, sincronizar com Google Calendar
     if (item.due) {
-      console.log(`📅 Data da tarefa ${item.id} atualizada para ${item.due.date}`);
+      console.log(
+        `📅 Data da tarefa ${item.id} atualizada para ${item.due.date}`
+      );
 
       // Tenta encontrar evento correspondente no Calendar (pelo ID da tarefa na descrição ou título)
       // Como não temos link direto, vamos buscar eventos do dia
@@ -135,10 +143,16 @@ export class TodoistAgent {
     const text = comment.content;
 
     // Verificar se é um comando para o agente (ex: "@Harvey ...")
-    if (text.toLowerCase().includes("@harvey") || text.toLowerCase().includes("urgente:")) {
+    if (
+      text.toLowerCase().includes("@harvey") ||
+      text.toLowerCase().includes("urgente:")
+    ) {
       console.log(`🧠 Interpretando comando: "${text}"`);
 
-      const command = await this.interpretCommandWithAI(text, comment.item_id || comment.id);
+      const command = await this.interpretCommandWithAI(
+        text,
+        comment.item_id || comment.id
+      );
       await this.executeCommand(command);
     }
   }
@@ -146,7 +160,10 @@ export class TodoistAgent {
   /**
    * Interpreta comandos via LLM (GPT-4)
    */
-  private async interpretCommandWithAI(text: string, taskId: string): Promise<InterpretedCommand> {
+  private async interpretCommandWithAI(
+    text: string,
+    taskId: string
+  ): Promise<InterpretedCommand> {
     const prompt = `
       Você é um assistente jurídico inteligente (Harvey) integrado ao Todoist.
       Analise o seguinte comando do usuário e extraia a intenção e parâmetros.

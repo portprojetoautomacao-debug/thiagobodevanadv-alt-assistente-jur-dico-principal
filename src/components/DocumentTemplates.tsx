@@ -96,9 +96,12 @@ export function DocumentTemplates() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Templates de Documentos</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Templates de Documentos
+          </h2>
           <p className="text-muted-foreground">
-            Gerencie modelos de petições e documentos jurídicos (armazenados via Git LFS)
+            Gerencie modelos de petições e documentos jurídicos (armazenados via
+            Git LFS)
           </p>
         </div>
         <Button onClick={handleUpload} aria-label="Upload de Template">
@@ -151,8 +154,9 @@ export function DocumentTemplates() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           <p>
-            Os templates são armazenados usando <strong>Git LFS (Large File Storage)</strong>, que
-            permite versionar arquivos grandes sem aumentar o tamanho do repositório. Você tem{" "}
+            Os templates são armazenados usando{" "}
+            <strong>Git LFS (Large File Storage)</strong>, que permite versionar
+            arquivos grandes sem aumentar o tamanho do repositório. Você tem{" "}
             <strong>$10 de orçamento mensal</strong> para armazenamento e banda.
           </p>
           <ul className="list-disc list-inside mt-2 space-y-1">

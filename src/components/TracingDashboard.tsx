@@ -28,7 +28,7 @@ import { useCallback, useEffect, useState } from "react";
 function getStatusIcon(status: string): ReactNode {
   switch (status) {
     case "ok":
-      return <CheckCircle className="h-3 w-3" />;
+      return <CheckCircle2 className="h-3 w-3" />;
     case "error":
       return <XCircle className="h-3 w-3" />;
     default:

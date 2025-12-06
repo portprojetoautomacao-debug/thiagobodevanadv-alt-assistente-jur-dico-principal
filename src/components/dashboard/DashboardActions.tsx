@@ -9,7 +9,7 @@ import type { ViewType } from "@/types";
 import { ChartPie, TrendingUp, Upload } from "lucide-react";
 
 interface DashboardActionsProps {
-  onNavigate: (view: ViewType) => void;
+  readonly onNavigate: (view: ViewType) => void;
 }
 
 export function DashboardActions({ onNavigate }: Readonly<DashboardActionsProps>) {
@@ -21,17 +21,15 @@ export function DashboardActions({ onNavigate }: Readonly<DashboardActionsProps>
       <CardContent className="grid gap-2">
         <Button
           onClick={() => onNavigate("upload-pdf")}
-          className="w-full justify-start bg-accent-4 hover:bg-accent-5 text-accent-11"
-        >
+          className="w-full justify-start bg-accent-4 hover:bg-accent-5 text-accent-11">
           <Upload className="mr-2 h-4 w-4" />
           Upload de PDF
         </Button>
         <Button
           onClick={() => onNavigate("analytics")}
           variant="outline"
-          className="w-full justify-start border-neutral-6 hover:bg-neutral-4"
-        >
-          <ChartPie className="mr-2 h-4 w-4" />
+          className="w-full justify-start border-neutral-6 hover:bg-neutral-4">
+          <PieChart className="mr-2 h-4 w-4" />
           Analytics
         </Button>
         <Button

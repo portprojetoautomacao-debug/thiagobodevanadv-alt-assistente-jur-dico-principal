@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, Clock, Gavel } from "lucide-react";
 
 interface DashboardStatsProps {
-  stats: {
+  readonly stats: Readonly<{
     ativos: number;
     concluidos: number;
     prazosPendentes: number;
     prazosUrgentes: number;
-  };
+  }>;
 }
 
 export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {
@@ -24,7 +24,9 @@ export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {
           <Gavel className="h-4 w-4 text-accent-9" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-accent-12">{stats.ativos}</div>
+          <div className="text-2xl font-bold text-accent-12">
+            {stats.ativos}
+          </div>
           <p className="text-xs text-accent-11">Em andamento</p>
         </CardContent>
       </Card>
@@ -35,7 +37,9 @@ export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {
           <CheckCircle className="h-4 w-4 text-accent-secondary-9" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-accent-secondary-12">{stats.concluidos}</div>
+          <div className="text-2xl font-bold text-accent-secondary-12">
+            {stats.concluidos}
+          </div>
           <p className="text-xs text-accent-secondary-11">Finalizados</p>
         </CardContent>
       </Card>
@@ -46,7 +50,9 @@ export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {
           <Clock className="h-4 w-4 text-neutral-9" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-neutral-12">{stats.prazosPendentes}</div>
+          <div className="text-2xl font-bold text-neutral-12">
+            {stats.prazosPendentes}
+          </div>
           <p className="text-xs text-neutral-11">A vencer</p>
         </CardContent>
       </Card>
@@ -57,7 +63,9 @@ export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {
           <AlertTriangle className="h-4 w-4 text-red-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-200">{stats.prazosUrgentes}</div>
+          <div className="text-2xl font-bold text-red-200">
+            {stats.prazosUrgentes}
+          </div>
           <p className="text-xs text-red-300">Atenção imediata</p>
         </CardContent>
       </Card>

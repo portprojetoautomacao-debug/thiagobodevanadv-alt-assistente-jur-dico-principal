@@ -24,9 +24,9 @@ async function fetchServerLogs() {
 }
 
 interface ServerLogsViewerProps {
-  logs?: AgentActionLog[];
-  isLoading?: boolean;
-  onRefresh?: () => void;
+  readonly logs?: AgentActionLog[];
+  readonly isLoading?: boolean;
+  readonly onRefresh?: () => void;
 }
 
 export function ServerLogsViewer({

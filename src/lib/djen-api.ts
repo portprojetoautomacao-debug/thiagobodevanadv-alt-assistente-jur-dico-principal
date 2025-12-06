@@ -43,7 +43,15 @@ export interface DJENConfig {
   delayBetweenRequests?: number;
 }
 
-const DEFAULT_TRIBUNAIS = ["TST", "TRT3", "TJMG", "TRF1", "TJES", "TJSP", "STJ"];
+const DEFAULT_TRIBUNAIS = [
+  "TST",
+  "TRT3",
+  "TJMG",
+  "TRF1",
+  "TJES",
+  "TJSP",
+  "STJ",
+];
 const DEFAULT_TIMEOUT = 60000;
 const DEFAULT_DELAY = 1500;
 
@@ -62,18 +70,38 @@ export class DJENAPIError extends Error {
 // ===== Error handling helpers (reduces S3776 Cognitive Complexity) =====
 
 function createTimeoutError(timeout: number, tribunal: string): DJENAPIError {
-  return new DJENAPIError(`Timeout após ${timeout}ms aguardando resposta`, tribunal);
+  return new DJENAPIError(
+    `Timeout após ${timeout}ms aguardando resposta`,
+    tribunal
+  );
 }
 
 function createNetworkError(error: Error, tribunal: string): DJENAPIError {
-  return new DJENAPIError(`Erro de rede: ${error.message}`, tribunal, undefined, error);
+  return new DJENAPIError(
+    `Erro de rede: ${error.message}`,
+    tribunal,
+    undefined,
+    error
+  );
 }
 
-function createUnknownError(tribunal: string, originalError?: unknown): DJENAPIError {
-  return new DJENAPIError("Erro desconhecido ao consultar API", tribunal, undefined, originalError);
+function createUnknownError(
+  tribunal: string,
+  originalError?: unknown
+): DJENAPIError {
+  return new DJENAPIError(
+    "Erro desconhecido ao consultar API",
+    tribunal,
+    undefined,
+    originalError
+  );
 }
 
-function handleFetchError(error: unknown, tribunal: string, timeout: number): never {
+function handleFetchError(
+  error: unknown,
+  tribunal: string,
+  timeout: number
+): never {
   if (error instanceof DJENAPIError) {
     throw error;
   }
@@ -178,7 +206,10 @@ function validateResponseStatus(response: Response, tribunal: string): void {
   }
 }
 
-function validateResponseContentType(response: Response, tribunal: string): void {
+function validateResponseContentType(
+  response: Response,
+  tribunal: string
+): void {
   const contentType = response.headers.get("content-type");
   if (!contentType?.includes("application/json")) {
     throw new DJENAPIError(
@@ -290,7 +321,9 @@ interface OABParsedParams {
   ufOAB?: string;
 }
 
-function resolveOABParams(searchTerms: DJENConfig["searchTerms"]): OABParsedParams {
+function resolveOABParams(
+  searchTerms: DJENConfig["searchTerms"]
+): OABParsedParams {
   if (!searchTerms.numeroOAB) {
     return {};
   }
@@ -314,7 +347,9 @@ function filterPublicationsToResults(
     const { matches, matchType } = matchesSearchTerms(pubText, searchTerms);
 
     if (matches && matchType) {
-      results.push(parsePublicationToResult(pub, tribunal, queryDataInicio, matchType));
+      results.push(
+        parsePublicationToResult(pub, tribunal, queryDataInicio, matchType)
+      );
     }
   }
 
@@ -324,7 +359,10 @@ function filterPublicationsToResults(
 /**
  * Handles error from tribunal query - extracted to reduce CC
  */
-function handleTribunalError(error: unknown, tribunal: string): { tribunal: string; erro: string } {
+function handleTribunalError(
+  error: unknown,
+  tribunal: string
+): { tribunal: string; erro: string } {
   if (error instanceof DJENAPIError) {
     return { tribunal, erro: error.message };
   }
@@ -346,7 +384,10 @@ async function processTribunalQuery(
   error?: { tribunal: string; erro: string };
 }> {
   try {
-    const publicacoes = await consultarPublicacoesTribunal(queryParams, timeout);
+    const publicacoes = await consultarPublicacoesTribunal(
+      queryParams,
+      timeout
+    );
     const results = filterPublicationsToResults(
       publicacoes,
       tribunal,
@@ -384,7 +425,9 @@ export async function consultarDJEN(config: DJENConfig): Promise<{
   } = config;
 
   if (!searchTerms.nomeAdvogado && !searchTerms.numeroOAB) {
-    throw new Error("É necessário fornecer pelo menos um termo de busca (nome ou OAB)");
+    throw new Error(
+      "É necessário fornecer pelo menos um termo de busca (nome ou OAB)"
+    );
   }
 
   // Use extracted helpers to reduce cognitive complexity
@@ -441,7 +484,11 @@ export function validarFormatoData(data: string): boolean {
 
   // Verifica se a data não foi ajustada (ex: 2025-04-31 vira 2025-05-01)
   const [year, month, day] = data.split("-").map(Number);
-  return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() + 1 === month &&
+    date.getDate() === day
+  );
 }
 
 export function validarNumeroOAB(oab: string): boolean {

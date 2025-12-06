@@ -105,7 +105,10 @@ let _kvClient: Redis | null = null;
 
 async function getKv() {
   if (_kvClient) return _kvClient;
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (
+    process.env.UPSTASH_REDIS_REST_URL &&
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     _kvClient = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL.trim(),
       token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
@@ -137,7 +140,8 @@ async function storePublication(publication: StoredPublication): Promise<void> {
       publication.hash ||
       `${publication.tribunal}-${publication.data}-${publication.numeroProcesso}`;
     const isDuplicate = existing.some((p) => {
-      const existingHash = p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso}`;
+      const existingHash =
+        p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso}`;
       return existingHash === pubHash;
     });
 
@@ -164,7 +168,10 @@ async function storePublication(publication: StoredPublication): Promise<void> {
 }
 
 // Check if publication already exists (fast hash lookup)
-async function publicationExists(lawyerId: string, hash: string): Promise<boolean> {
+async function publicationExists(
+  lawyerId: string,
+  hash: string
+): Promise<boolean> {
   try {
     const kv = await getKv();
     const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${lawyerId}`;
@@ -280,7 +287,10 @@ async function sendRealTimeNotification(notification: {
       }),
     });
   } catch (error) {
-    console.error("[Notification] Failed to send real-time notification:", error);
+    console.error(
+      "[Notification] Failed to send real-time notification:",
+      error
+    );
   }
 }
 
@@ -351,6 +361,8 @@ interface DJENResponse {
   length?: number;
 }
 
+type DJENMatchType = "nome" | "oab" | "ambos";
+
 interface DJENFilteredResult {
   id: number;
   tribunal: string;
@@ -409,18 +421,27 @@ function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
 
 function buildDJENQueryString(params: DJENQueryParams): string {
   const queryParams: string[] = [];
-  if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
-  if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
+  if (params.numeroOab)
+    queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
+  if (params.ufOab)
+    queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
   if (params.nomeAdvogado)
     queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
   if (params.dataDisponibilizacaoInicio)
-    queryParams.push(`dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`);
+    queryParams.push(
+      `dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`
+    );
   if (params.dataDisponibilizacaoFim)
-    queryParams.push(`dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`);
+    queryParams.push(
+      `dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`
+    );
   if (params.siglaTribunal)
-    queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`);
+    queryParams.push(
+      `siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`
+    );
   if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
-  if (params.itensPorPagina) queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
+  if (params.itensPorPagina)
+    queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
   if (params.meio) queryParams.push(`meio=${params.meio}`);
   return queryParams.join("&");
 }
@@ -463,10 +484,16 @@ async function consultarComunicacoes(
 
     // Erro 429 - Conforme doc: aguardar 1 minuto para retomar
     if (response.status === 429) {
-      console.warn(`[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.`);
+      console.warn(
+        `[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.`
+      );
       if (retryOnRateLimit) {
-        console.log(`[DJEN] Aguardando ${DJEN_RATE_LIMIT_WAIT / 1000}s antes de retry...`);
-        await new Promise((resolve) => setTimeout(resolve, DJEN_RATE_LIMIT_WAIT));
+        console.log(
+          `[DJEN] Aguardando ${DJEN_RATE_LIMIT_WAIT / 1000}s antes de retry...`
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, DJEN_RATE_LIMIT_WAIT)
+        );
         return consultarComunicacoes(params, false); // Tenta novamente sem retry
       }
       return { response: null, rateLimitInfo, rateLimitHit: true };
@@ -482,7 +509,11 @@ async function consultarComunicacoes(
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = (await response.json()) as DJENResponse;
-    console.log(`[DJEN] Consulta retornou ${data.count || data.items?.length || 0} comunicações`);
+    console.log(
+      `[DJEN] Consulta retornou ${
+        data.count || data.items?.length || 0
+      } comunicações`
+    );
     return { response: data, rateLimitInfo };
   } catch (error) {
     clearTimeout(timeoutId);
@@ -520,7 +551,10 @@ function parseOABInfo(numeroOAB?: string): OABParsed {
   return { numero: parsed.numero, uf: parsed.uf };
 }
 
-function buildDJENQueryParams(tribunal: string, ctx: LawyerQueryContext): DJENQueryParams {
+function buildDJENQueryParams(
+  tribunal: string,
+  ctx: LawyerQueryContext
+): DJENQueryParams {
   const params: DJENQueryParams = {
     siglaTribunal: tribunal,
     dataDisponibilizacaoInicio: ctx.queryDataInicio,
@@ -545,7 +579,8 @@ function determineAdvogadoMatchType(
     ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado))
     : false;
   const matchOab = numeroOabNumerico
-    ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab
+    ? dest.advogado.numero_oab === numeroOabNumerico &&
+      dest.advogado.uf_oab === ufOab
     : false;
 
   if (matchNome && matchOab) return "ambos";
@@ -565,7 +600,12 @@ function findAdvogadoMatch(
   let matchType: AdvogadoMatchType = "nome";
   const found =
     comunicacao.destinatarioadvogados?.some((dest) => {
-      const type = determineAdvogadoMatchType(dest, nomeAdvogado, numeroOabNumerico, ufOab);
+      const type = determineAdvogadoMatchType(
+        dest,
+        nomeAdvogado,
+        numeroOabNumerico,
+        ufOab
+      );
       if (type) {
         matchType = type;
         return true;
@@ -579,14 +619,16 @@ function mapComunicacaoToResult(
   comunicacao: DJENComunicacao,
   matchType: AdvogadoMatchType
 ): DJENFilteredResult {
-  const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || "";
+  const dataDisp =
+    comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || "";
   return {
     id: comunicacao.id,
     tribunal: comunicacao.siglaTribunal,
     data: dataDisp,
     tipo: comunicacao.tipoComunicacao,
     teor: comunicacao.texto,
-    numeroProcesso: comunicacao.numeroprocessocommascara || comunicacao.numero_processo,
+    numeroProcesso:
+      comunicacao.numeroprocessocommascara || comunicacao.numero_processo,
     orgao: comunicacao.nomeOrgao,
     meio: comunicacao.meiocompleto || comunicacao.meio,
     link: comunicacao.link,
@@ -607,9 +649,15 @@ async function processTribunalQuery(
   resultados: DJENFilteredResult[],
   erros: Array<{ tribunal: string; erro: string }>
 ): Promise<boolean> {
-  console.log(`[DJEN] Consultando ${tribunal} para ${ctx.nomeAdvogado || ctx.numeroOabNumerico}`);
+  console.log(
+    `[DJEN] Consultando ${tribunal} para ${
+      ctx.nomeAdvogado || ctx.numeroOabNumerico
+    }`
+  );
   const queryParams = buildDJENQueryParams(tribunal, ctx);
-  const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
+  const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(
+    queryParams
+  );
 
   if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
     console.warn(
@@ -625,9 +673,13 @@ async function processTribunalQuery(
     return rateLimitHit || false;
   }
 
-  const comunicacoes: DJENComunicacao[] = Array.isArray(response) ? response : response.items || [];
+  const comunicacoes: DJENComunicacao[] = Array.isArray(response)
+    ? response
+    : response.items || [];
 
-  console.log(`[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`);
+  console.log(
+    `[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`
+  );
 
   for (const comunicacao of comunicacoes) {
     const { found, matchType } = findAdvogadoMatch(
@@ -659,7 +711,9 @@ async function consultarDJENForLawyer(
   rateLimitWarning?: boolean;
 }> {
   if (!nomeAdvogado && !numeroOAB) {
-    throw new Error("É necessário fornecer pelo menos nomeAdvogado ou numeroOAB");
+    throw new Error(
+      "É necessário fornecer pelo menos nomeAdvogado ou numeroOAB"
+    );
   }
 
   const defaultDate = formatDJENDate(new Date());
@@ -681,7 +735,12 @@ async function consultarDJENForLawyer(
   for (let i = 0; i < tribunais.length; i++) {
     const tribunal = tribunais[i];
     try {
-      const hitRateLimit = await processTribunalQuery(tribunal, ctx, resultados, erros);
+      const hitRateLimit = await processTribunalQuery(
+        tribunal,
+        ctx,
+        resultados,
+        erros
+      );
       rateLimitWarning = rateLimitWarning || hitRateLimit;
 
       if (i < tribunais.length - 1) {
@@ -695,7 +754,9 @@ async function consultarDJENForLawyer(
     }
   }
 
-  console.log(`[DJEN] Consulta finalizada: ${resultados.length} comunicações encontradas`);
+  console.log(
+    `[DJEN] Consulta finalizada: ${resultados.length} comunicações encontradas`
+  );
   return { resultados, erros, rateLimitWarning: rateLimitWarning || undefined };
 }
 
@@ -866,12 +927,16 @@ async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
 
     await updateAgents(updatedAgents);
     result.agentsReset = agents.length;
-    console.log(`[Cron Daily Reset] Reset counters for ${agents.length} agents`);
+    console.log(
+      `[Cron Daily Reset] Reset counters for ${agents.length} agents`
+    );
   }
 
   // Archive old completed tasks (>30 days)
   const completedTasks = (await getCompletedTasks()) as CompletedTask[];
-  console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
+  console.log(
+    `[Cron Daily Reset] Found ${completedTasks.length} completed tasks`
+  );
 
   if (completedTasks.length > 0) {
     const cutoffDate = new Date();
@@ -886,7 +951,9 @@ async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
 
     if (result.tasksArchived > 0) {
       await updateCompletedTasks(tasksToKeep);
-      console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
+      console.log(
+        `[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`
+      );
     }
   }
 
@@ -898,7 +965,9 @@ async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
  * Handle process-agent-queue action
  * Processes pending tasks from the agent queue
  */
-async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueResult> {
+async function handleProcessAgentQueue(
+  timestamp: string
+): Promise<AgentQueueResult> {
   console.log(`[Cron Agent Queue] Starting execution at ${timestamp}`);
 
   const result: AgentQueueResult = {
@@ -912,7 +981,9 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
   try {
     const kv = await getKv();
     const taskQueue = ((await kv.get("agent-task-queue")) as AgentTask[]) || [];
-    const pendingTasks = taskQueue.filter((t) => t.status === "pending" || t.status === "queued");
+    const pendingTasks = taskQueue.filter(
+      (t) => t.status === "pending" || t.status === "queued"
+    );
 
     // Histórico de profundidade da fila (mantém últimos 200 registros)
     try {
@@ -932,7 +1003,9 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
       console.warn("[Cron Agent Queue] Falha registrar histórico fila:", error_);
     }
 
-    console.log(`[Cron Agent Queue] Found ${pendingTasks.length} pending tasks`);
+    console.log(
+      `[Cron Agent Queue] Found ${pendingTasks.length} pending tasks`
+    );
 
     if (pendingTasks.length === 0) {
       return result;
@@ -950,9 +1023,17 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
         }>) || [];
       const recent = history.slice(0, 12);
       const avgPending =
-        recent.reduce((acc, h) => acc + h.pendingCount, 0) / Math.max(recent.length, 1);
-      const maxPending = recent.reduce((acc, h) => Math.max(acc, h.pendingCount), 0);
-      if (avgPending >= 100 || maxPending >= 150 || pendingTasks.length >= 150) {
+        recent.reduce((acc, h) => acc + h.pendingCount, 0) /
+        Math.max(recent.length, 1);
+      const maxPending = recent.reduce(
+        (acc, h) => Math.max(acc, h.pendingCount),
+        0
+      );
+      if (
+        avgPending >= 100 ||
+        maxPending >= 150 ||
+        pendingTasks.length >= 150
+      ) {
         tasksLimit = 40; // crítico
       } else if (avgPending >= 50 || pendingTasks.length >= 80) {
         tasksLimit = 25; // alto
@@ -983,11 +1064,17 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
           });
           await kv.set("agent-queue-scaling-events", events.slice(0, 100));
         } catch (error_) {
-          console.warn("[Cron Agent Queue] Falha registrar scaling event:", error_);
+          console.warn(
+            "[Cron Agent Queue] Falha registrar scaling event:",
+            error_
+          );
         }
       }
     } catch (error_) {
-      console.warn("[Cron Agent Queue] Falha computar estatísticas fila:", error_);
+      console.warn(
+        "[Cron Agent Queue] Falha computar estatísticas fila:",
+        error_
+      );
     }
 
     const agents = await getAgents();
@@ -1001,9 +1088,13 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
     await processBatch(pendingTasks.slice(0, tasksLimit));
 
     // Segunda passagem opcional (boost) se ainda há muitas pendentes e cenário alto/crítico
-    const remaining = taskQueue.filter((t) => t.status === "pending" || t.status === "queued");
+    const remaining = taskQueue.filter(
+      (t) => t.status === "pending" || t.status === "queued"
+    );
     if (tasksLimit > 10 && remaining.length > tasksLimit) {
-      console.log(`[Cron Agent Queue] Boost pass iniciada (remaining=${remaining.length})`);
+      console.log(
+        `[Cron Agent Queue] Boost pass iniciada (remaining=${remaining.length})`
+      );
       await processBatch(remaining.slice(0, tasksLimit));
     }
 
@@ -1016,7 +1107,9 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
     );
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1035,7 +1128,9 @@ async function processAgentTask(
     const agent = agents.find((a) => a.id === task.agentId);
 
     if (!agent?.enabled) {
-      console.log(`[Cron Agent Queue] Skipping task ${task.id} - agent not found or disabled`);
+      console.log(
+        `[Cron Agent Queue] Skipping task ${task.id} - agent not found or disabled`
+      );
       return;
     }
 
@@ -1051,11 +1146,14 @@ async function processAgentTask(
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000";
 
-    const agentResponse = await fetch(`${baseUrl}/api/agents?action=process-task`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ task, agent }),
-    });
+    const agentResponse = await fetch(
+      `${baseUrl}/api/agents?action=process-task`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task, agent }),
+      }
+    );
 
     if (agentResponse.ok) {
       task.status = "completed";
@@ -1076,7 +1174,9 @@ async function processAgentTask(
     task.status = "failed";
     result.tasksFailed++;
     result.errors.push(
-      `Task ${task.id}: ${taskError instanceof Error ? taskError.message : "Unknown error"}`
+      `Task ${task.id}: ${
+        taskError instanceof Error ? taskError.message : "Unknown error"
+      }`
     );
   }
 }
@@ -1084,10 +1184,16 @@ async function processAgentTask(
 /**
  * Move completed tasks to history
  */
-async function moveCompletedTasks(kv: Redis, taskQueue: AgentTask[]): Promise<void> {
-  const completedTasksInQueue = taskQueue.filter((t) => t.status === "completed");
+async function moveCompletedTasks(
+  kv: Redis,
+  taskQueue: AgentTask[]
+): Promise<void> {
+  const completedTasksInQueue = taskQueue.filter(
+    (t) => t.status === "completed"
+  );
   if (completedTasksInQueue.length > 0) {
-    const existingCompleted = ((await kv.get(KV_KEYS.COMPLETED_TASKS)) as AgentTask[]) || [];
+    const existingCompleted =
+      ((await kv.get(KV_KEYS.COMPLETED_TASKS)) as AgentTask[]) || [];
     existingCompleted.unshift(...completedTasksInQueue);
     await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
 
@@ -1101,7 +1207,9 @@ async function moveCompletedTasks(kv: Redis, taskQueue: AgentTask[]): Promise<vo
  * Handle process-notifications action
  * Sends pending notifications via webhooks and email
  */
-async function handleProcessNotifications(timestamp: string): Promise<NotificationResult> {
+async function handleProcessNotifications(
+  timestamp: string
+): Promise<NotificationResult> {
   console.log(`[Cron Notifications] Starting execution at ${timestamp}`);
 
   const result: NotificationResult = {
@@ -1127,7 +1235,9 @@ async function handleProcessNotifications(timestamp: string): Promise<Notificati
       }>) || [];
 
     const pendingNotifications = notificationQueue.filter((n) => !n.sent);
-    console.log(`[Cron Notifications] Found ${pendingNotifications.length} pending notifications`);
+    console.log(
+      `[Cron Notifications] Found ${pendingNotifications.length} pending notifications`
+    );
 
     if (pendingNotifications.length === 0) {
       return result;
@@ -1148,7 +1258,9 @@ async function handleProcessNotifications(timestamp: string): Promise<Notificati
     );
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1182,7 +1294,8 @@ async function processNotification(
 ): Promise<void> {
   try {
     // Send via webhook if configured
-    const webhookUrl = process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
+    const webhookUrl =
+      process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
     if (webhookUrl) {
       await sendRealTimeNotification({
         type: notification.type,
@@ -1219,7 +1332,8 @@ async function sendEmailNotification(
   result: NotificationResult
 ): Promise<void> {
   const resendApiKey = process.env.RESEND_API_KEY;
-  const recipientEmail = notification.recipientEmail || process.env.NOTIFICATION_EMAIL;
+  const recipientEmail =
+    notification.recipientEmail || process.env.NOTIFICATION_EMAIL;
 
   if (!resendApiKey || !recipientEmail) {
     return;
@@ -1266,7 +1380,8 @@ async function sendEmailNotification(
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM || "Assistente Jurídico <noreply@resend.dev>",
+      from:
+        process.env.EMAIL_FROM || "Assistente Jurídico <noreply@resend.dev>",
       to: recipientEmail,
       subject: notification.title,
       html: `
@@ -1296,7 +1411,9 @@ async function sendEmailNotification(
  * Handle calendar-sync action
  * Synchronizes deadlines with Google Calendar
  */
-async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult> {
+async function handleCalendarSync(
+  timestamp: string
+): Promise<CalendarSyncResult> {
   console.log(`[Cron Calendar Sync] Starting execution at ${timestamp}`);
 
   const result: CalendarSyncResult = {
@@ -1312,7 +1429,8 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     const kv = await getKv();
 
     // Get all processes with deadlines
-    const processes = ((await kv.get("processes")) as ProcessWithDeadlines[]) || [];
+    const processes =
+      ((await kv.get("processes")) as ProcessWithDeadlines[]) || [];
 
     console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
 
@@ -1320,7 +1438,9 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     const calendarSettings = await kv.get<CalendarSettings | null>("calendar-settings");
 
     if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
-      console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);
+      console.log(
+        `[Cron Calendar Sync] Calendar sync not configured or disabled`
+      );
       return result;
     }
 
@@ -1342,10 +1462,14 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     // Update last sync time
     await kv.set("calendar-last-sync", timestamp);
 
-    console.log(`[Cron Calendar Sync] Completed: ${result.eventsCreated} events created`);
+    console.log(
+      `[Cron Calendar Sync] Completed: ${result.eventsCreated} events created`
+    );
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1404,7 +1528,9 @@ async function syncDeadlineToCalendar(
       result.deadlinesSynced++;
     } else {
       const errorText = await eventResponse.text();
-      result.errors.push(`Failed to create event for prazo ${prazo.id}: ${errorText}`);
+      result.errors.push(
+        `Failed to create event for prazo ${prazo.id}: ${errorText}`
+      );
     }
   } catch (calError) {
     result.errors.push(
@@ -1433,7 +1559,9 @@ async function backupSingleKey(
     }
   } catch (keyError) {
     result.errors.push(
-      `Failed to backup ${key}: ${keyError instanceof Error ? keyError.message : "Unknown"}`
+      `Failed to backup ${key}: ${
+        keyError instanceof Error ? keyError.message : "Unknown"
+      }`
     );
   }
   return 0;
@@ -1448,7 +1576,8 @@ async function backupLawyerPublications(
   result: BackupResult
 ): Promise<number> {
   let totalBytes = 0;
-  const lawyers = ((await kv.get(KV_KEYS.MONITORED_LAWYERS)) as MonitoredLawyer[]) || [];
+  const lawyers =
+    ((await kv.get(KV_KEYS.MONITORED_LAWYERS)) as MonitoredLawyer[]) || [];
 
   for (const lawyer of lawyers) {
     const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
@@ -1530,10 +1659,14 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
     });
 
     await cleanOldBackups(kv, backupKey);
-    console.log(`[Cron Backup] Completed: ${result.keysBackedUp} keys, ${result.totalSize}`);
+    console.log(
+      `[Cron Backup] Completed: ${result.keysBackedUp} keys, ${result.totalSize}`
+    );
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1542,7 +1675,10 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
 /**
  * Clean old backups, keeping only last 7
  */
-async function cleanOldBackups(kv: Redis, currentBackupKey: string): Promise<void> {
+async function cleanOldBackups(
+  kv: Redis,
+  currentBackupKey: string
+): Promise<void> {
   const backupList = ((await kv.get("backup-list")) as string[]) || [];
   backupList.unshift(currentBackupKey);
   const keysToKeep = backupList.slice(0, 7);
@@ -1578,12 +1714,15 @@ async function handleDataJudMonitor(timestamp: string): Promise<DataJudResult> {
     const kv = await getKv();
 
     // Get all active processes
-    const processes = ((await kv.get("processes")) as ProcessWithMovements[]) || [];
+    const processes =
+      ((await kv.get("processes")) as ProcessWithMovements[]) || [];
 
     const activeProcesses = processes.filter(
       (p) => p.status === "ativo" || p.status === "em_andamento"
     );
-    console.log(`[Cron DataJud Monitor] Found ${activeProcesses.length} active processes`);
+    console.log(
+      `[Cron DataJud Monitor] Found ${activeProcesses.length} active processes`
+    );
 
     // DataJud API key (optional - public API has rate limits)
     const datajudApiKey = process.env.DATAJUD_API_KEY;
@@ -1608,7 +1747,9 @@ async function handleDataJudMonitor(timestamp: string): Promise<DataJudResult> {
     );
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1683,8 +1824,12 @@ async function processDataJudHits(
   const movimentos = source?.movimentos || [];
 
   // Check for new movements
-  const lastCheck = processo.ultimaAtualizacao ? new Date(processo.ultimaAtualizacao) : new Date(0);
-  const newMovimentos = movimentos.filter((m) => new Date(m.dataHora) > lastCheck);
+  const lastCheck = processo.ultimaAtualizacao
+    ? new Date(processo.ultimaAtualizacao)
+    : new Date(0);
+  const newMovimentos = movimentos.filter(
+    (m) => new Date(m.dataHora) > lastCheck
+  );
 
   if (newMovimentos.length === 0) {
     return;
@@ -1737,7 +1882,9 @@ async function processDataJudHits(
  * Handle deadline-alerts action
  * Sends alerts for upcoming and urgent deadlines
  */
-async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertResult> {
+async function handleDeadlineAlerts(
+  timestamp: string
+): Promise<DeadlineAlertResult> {
   console.log(`[Cron Deadline Alerts] Starting execution at ${timestamp}`);
 
   const result: DeadlineAlertResult = {
@@ -1753,7 +1900,8 @@ async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertRes
     const kv = await getKv();
 
     // Get all processes
-    const processes = ((await kv.get("processes")) as ProcessWithAlertDeadlines[]) || [];
+    const processes =
+      ((await kv.get("processes")) as ProcessWithAlertDeadlines[]) || [];
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1764,7 +1912,13 @@ async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertRes
     // Collect deadlines
     for (const processo of processes) {
       if (!processo.prazos) continue;
-      collectProcessDeadlines(processo, today, urgentDeadlines, upcomingDeadlines, result);
+      collectProcessDeadlines(
+        processo,
+        today,
+        urgentDeadlines,
+        upcomingDeadlines,
+        result
+      );
     }
 
     // Send urgent alerts
@@ -1782,7 +1936,9 @@ async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertRes
     );
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1802,7 +1958,9 @@ function collectProcessDeadlines(
     const deadline = new Date(prazo.dataFinal);
     deadline.setHours(0, 0, 0, 0);
 
-    const diasRestantes = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const diasRestantes = Math.ceil(
+      (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     if (diasRestantes < 0) continue; // Skip past deadlines
 
@@ -1834,7 +1992,10 @@ async function sendUrgentDeadlineAlert(
 ): Promise<void> {
   const urgentMessage = urgentDeadlines
     .map(
-      (d) => `🚨 ${d.processo}\n   ${d.prazo}\n   ${d.diasRestantes === 0 ? "HOJE!" : "AMANHÃ!"}`
+      (d) =>
+        `🚨 ${d.processo}\n   ${d.prazo}\n   ${
+          d.diasRestantes === 0 ? "HOJE!" : "AMANHÃ!"
+        }`
     )
     .join("\n\n");
 
@@ -1872,7 +2033,9 @@ async function sendUpcomingDeadlineSummary(
 ): Promise<void> {
   const summaryMessage = upcomingDeadlines
     .slice(0, 10)
-    .map((d) => `📅 ${d.processo}\n   ${d.prazo}\n   Em ${d.diasRestantes} dia(s)`)
+    .map(
+      (d) => `📅 ${d.processo}\n   ${d.prazo}\n   Em ${d.diasRestantes} dia(s)`
+    )
     .join("\n\n");
 
   await sendRealTimeNotification({
@@ -1925,7 +2088,9 @@ async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
     }
   } catch (error) {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push(
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
 
   return result;
@@ -1934,7 +2099,10 @@ async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
 /**
  * Check and reset stuck agents
  */
-async function checkAndResetStuckAgents(agents: Agent[], result: WatchdogResult): Promise<void> {
+async function checkAndResetStuckAgents(
+  agents: Agent[],
+  result: WatchdogResult
+): Promise<void> {
   const STUCK_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
   const now = Date.now();
 
@@ -1942,7 +2110,9 @@ async function checkAndResetStuckAgents(agents: Agent[], result: WatchdogResult)
     if (agent.status === "processing" && agent.lastActivity) {
       const lastActivityTime = new Date(agent.lastActivity).getTime();
       if (now - lastActivityTime > STUCK_THRESHOLD_MS) {
-        console.warn(`[Watchdog] Resetting stuck agent: ${agent.name} (${agent.id})`);
+        console.warn(
+          `[Watchdog] Resetting stuck agent: ${agent.name} (${agent.id})`
+        );
         result.agentsReset++;
         return {
           ...agent,
@@ -1997,19 +2167,29 @@ async function checkAndTimeoutStuckTasks(
 /**
  * Move timed out tasks to history
  */
-async function moveTimedOutTasksToHistory(kv: Redis, updatedQueue: AgentTask[]): Promise<void> {
+async function moveTimedOutTasksToHistory(
+  kv: Redis,
+  updatedQueue: AgentTask[]
+): Promise<void> {
   const failedTasks = updatedQueue.filter(
-    (t) => t.status === "failed" && t.result === "Watchdog: Task timed out (stuck in progress)"
+    (t) =>
+      t.status === "failed" &&
+      t.result === "Watchdog: Task timed out (stuck in progress)"
   );
 
   if (failedTasks.length > 0) {
-    const existingCompleted = ((await kv.get(KV_KEYS.COMPLETED_TASKS)) as AgentTask[]) || [];
+    const existingCompleted =
+      ((await kv.get(KV_KEYS.COMPLETED_TASKS)) as AgentTask[]) || [];
     existingCompleted.unshift(...failedTasks);
     await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
 
     // Remove from queue
     const remainingQueue = updatedQueue.filter(
-      (t) => !(t.status === "failed" && t.result === "Watchdog: Task timed out (stuck in progress)")
+      (t) =>
+        !(
+          t.status === "failed" &&
+          t.result === "Watchdog: Task timed out (stuck in progress)"
+        )
     );
     await kv.set("agent-task-queue", remainingQueue);
   } else {
@@ -2021,7 +2201,9 @@ async function moveTimedOutTasksToHistory(kv: Redis, updatedQueue: AgentTask[]):
  * Handle DJEN monitor action
  * Monitors DJEN for new legal publications
  */
-async function handleDJENMonitor(timestamp: string): Promise<DJENMonitorResult> {
+async function handleDJENMonitor(
+  timestamp: string
+): Promise<DJENMonitorResult> {
   console.log(`[Cron DJEN Monitor] Starting execution at ${timestamp}`);
 
   const defaultTribunais = process.env.DJEN_TRIBUNAIS?.split(",") || [
@@ -2055,24 +2237,31 @@ async function handleDJENMonitor(timestamp: string): Promise<DJENMonitorResult> 
   console.log(`[Cron DJEN Monitor] Found ${lawyers.length} monitored lawyers`);
 
   if (lawyers.length === 0) {
-    console.log(`[Cron DJEN Monitor] Using default lawyer: ${defaultLawyer.name}`);
+    console.log(
+      `[Cron DJEN Monitor] Using default lawyer: ${defaultLawyer.name}`
+    );
     lawyers = [defaultLawyer];
   }
 
   for (const lawyer of lawyers) {
     if (!lawyer.enabled) {
-      console.log(`[Cron DJEN Monitor] Skipping disabled lawyer: ${lawyer.name}`);
+      console.log(
+        `[Cron DJEN Monitor] Skipping disabled lawyer: ${lawyer.name}`
+      );
       continue;
     }
 
     result.lawyersChecked++;
-    const tribunais = lawyer.tribunals?.length > 0 ? lawyer.tribunals : defaultTribunais;
+    const tribunais =
+      lawyer.tribunals?.length > 0 ? lawyer.tribunals : defaultTribunais;
 
     await checkDJENForLawyer(lawyer, tribunais, timestamp, result);
   }
 
   await updateLastDJENCheck();
-  console.log(`[Cron DJEN Monitor] Completed: ${result.publicationsFound} communications found`);
+  console.log(
+    `[Cron DJEN Monitor] Completed: ${result.publicationsFound} communications found`
+  );
 
   if (result.rateLimitWarning) {
     result.errors.push(
@@ -2100,21 +2289,24 @@ async function checkDJENForLawyer(
       `[Cron DJEN Monitor] Checking ${lawyer.name} (${lawyer.oab}) in ${tribunais.length} tribunais`
     );
 
-    const { resultados, erros, rateLimitWarning } = await consultarDJENForLawyer(
-      tribunais,
-      lawyer.name,
-      lawyer.oab,
-      undefined,
-      undefined,
-      "D"
-    );
+    const { resultados, erros, rateLimitWarning } =
+      await consultarDJENForLawyer(
+        tribunais,
+        lawyer.name,
+        lawyer.oab,
+        undefined,
+        undefined,
+        "D"
+      );
 
     if (rateLimitWarning) {
       result.rateLimitWarning = true;
       console.warn(`[Cron DJEN Monitor] Rate limit warning for ${lawyer.name}`);
     }
 
-    console.log(`[Cron DJEN Monitor] Found ${resultados.length} communications for ${lawyer.name}`);
+    console.log(
+      `[Cron DJEN Monitor] Found ${resultados.length} communications for ${lawyer.name}`
+    );
 
     for (const comunicacao of resultados) {
       await processDJENPublication(comunicacao, lawyer, timestamp, result);
@@ -2218,7 +2410,9 @@ async function processDJENPublication(
     await queueNotification({
       type: "publication",
       title: `Nova Comunicação DJEN - ${comunicacao.tribunal}`,
-      message: `${comunicacao.tipo} encontrada no processo ${comunicacao.numeroProcesso || "N/A"}`,
+      message: `${comunicacao.tipo} encontrada no processo ${
+        comunicacao.numeroProcesso || "N/A"
+      }`,
       data: {
         tribunal: comunicacao.tribunal,
         tipo: comunicacao.tipo,
@@ -2258,7 +2452,9 @@ async function sendDJENDailyReport(result: DJENMonitorResult): Promise<void> {
         `👤 Advogados verificados: ${result.lawyersChecked}\n` +
         `📋 Publicações encontradas: 0\n` +
         `🏛️ Tribunais consultados: ${result.tribunaisChecked.join(", ")}\n\n` +
-        (result.errors.length > 0 ? `⚠️ Erros: ${result.errors.join(", ")}\n\n` : "") +
+        (result.errors.length > 0
+          ? `⚠️ Erros: ${result.errors.join(", ")}\n\n`
+          : "") +
         `Próxima verificação: amanhã às 11:00 BRT`,
       recipientEmail: notificationEmail,
     });
@@ -2276,7 +2472,9 @@ async function sendDJENDailyReport(result: DJENMonitorResult): Promise<void> {
     });
   }
 
-  console.log(`[Cron DJEN Monitor] Email de relatório enviado para ${notificationEmail}`);
+  console.log(
+    `[Cron DJEN Monitor] Email de relatório enviado para ${notificationEmail}`
+  );
 }
 
 // ===== Action Handlers Registry (reduces cognitive complexity S3776) =====
@@ -2381,15 +2579,20 @@ function isAuthorized(req: VercelRequest): boolean {
   const mode = req.query.mode;
   const isReadOnlyWatchdog =
     req.method === "GET" &&
-    (action === "watchdog" || (Array.isArray(action) && action[0] === "watchdog")) &&
+    (action === "watchdog" ||
+      (Array.isArray(action) && action[0] === "watchdog")) &&
     mode === "read";
-  return hasVercelCronHeader || isBearerAuth || isLocalTest || isReadOnlyWatchdog;
+  return (
+    hasVercelCronHeader || isBearerAuth || isLocalTest || isReadOnlyWatchdog
+  );
 }
 
 /**
  * Valida e obtém a configuração da ação
  */
-function getActionConfig(action: string | string[] | undefined): ActionConfig | null {
+function getActionConfig(
+  action: string | string[] | undefined
+): ActionConfig | null {
   const actionStr = typeof action === "string" ? action : "";
   return ACTION_HANDLERS[actionStr] || null;
 }
@@ -2431,7 +2634,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!isAuthorized(req)) {
     return res.status(401).json({
-      error: "Unauthorized - This endpoint is restricted to Vercel Cron or local development",
+      error:
+        "Unauthorized - This endpoint is restricted to Vercel Cron or local development",
     });
   }
 

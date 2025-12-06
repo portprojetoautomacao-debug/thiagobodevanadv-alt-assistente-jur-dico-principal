@@ -66,7 +66,11 @@ export default function ClientesView() {
       setClientes((current) =>
         (current || []).map((c) =>
           c.id === editingCliente.id
-            ? ({ ...formData, id: c.id, updatedAt: new Date().toISOString() } as Cliente)
+            ? ({
+                ...formData,
+                id: c.id,
+                updatedAt: new Date().toISOString(),
+              } as Cliente)
             : c
         )
       );
@@ -294,7 +298,12 @@ export default function ClientesView() {
                     <Textarea
                       id="observacoes"
                       value={formData.observacoes}
-                      onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          observacoes: e.target.value,
+                        })
+                      }
                       rows={3}
                     />
                   </div>

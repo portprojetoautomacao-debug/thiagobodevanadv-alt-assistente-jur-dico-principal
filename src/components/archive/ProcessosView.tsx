@@ -1,10 +1,4 @@
-import { useState, useMemo } from "react";
-import { llm } from "@/lib/llm-client";
-import { useProcesses } from "@/hooks/use-processes";
-import type { Process } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Gavel, Download, Funnel, Sparkles } from "lucide-react";
 import ProcessDialog from "../ProcessDialog";
@@ -16,8 +10,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProcesses } from "@/hooks/use-processes";
+import { llm } from "@/lib/llm-client";
 import { exportToCSV } from "@/lib/utils";
+import type { Process } from "@/types";
+import {
+  Download as DownloadSimple,
+  Filter as Funnel,
+  Gavel,
+  Search as MagnifyingGlass,
+  Plus,
+  Sparkles as Sparkle,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import ProcessDetailsDialog from "../ProcessDetailsDialog";
+import ProcessDialog from "../ProcessDialog";
 
 export default function ProcessosView() {
   const { processes, addProcess, updateProcess, deleteProcess } = useProcesses();

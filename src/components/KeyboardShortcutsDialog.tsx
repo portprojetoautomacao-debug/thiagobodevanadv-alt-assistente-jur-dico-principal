@@ -53,7 +53,10 @@ const NAVIGATION_SHORTCUTS: ShortcutConfig[] = [
 
 const QUICK_ACTION_SHORTCUTS: ShortcutConfig[] = [
   { keys: ["{CTRL}", "N"], description: "Novo processo (mostra dica)" },
-  { keys: ["{CTRL}", "Shift", "C"], description: "Abrir Calculadora de Prazos" },
+  {
+    keys: ["{CTRL}", "Shift", "C"],
+    description: "Abrir Calculadora de Prazos",
+  },
 ];
 
 const GENERAL_SHORTCUTS: ShortcutConfig[] = [
@@ -121,7 +124,9 @@ export default function KeyboardShortcutsDialog({
                   />
                 ))}
               </div>
-              {idx < SHORTCUT_GROUPS.length - 1 && <Separator className="mt-4" />}
+              {idx < SHORTCUT_GROUPS.length - 1 && (
+                <Separator className="mt-4" />
+              )}
             </div>
           ))}
 

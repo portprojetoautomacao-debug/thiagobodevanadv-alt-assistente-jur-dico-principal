@@ -75,8 +75,7 @@ export function FluentMotion({
       transition={selectedTransition}
       whileHover={hoverEffect}
       whileTap={tapEffect}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
@@ -92,8 +91,7 @@ export function FluentStaggerItem({
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
       }}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
@@ -104,7 +102,9 @@ export function FluentReveal({
   direction = "left",
   ...props
 }: MotionProps &
-  React.HTMLAttributes<HTMLDivElement> & { direction?: "left" | "right" | "up" | "down" }) {
+  React.HTMLAttributes<HTMLDivElement> & {
+    direction?: "left" | "right" | "up" | "down";
+  }) {
   const variants = {
     left: {
       initial: { clipPath: "inset(0 100% 0 0)" },
@@ -130,8 +130,7 @@ export function FluentReveal({
       animate="animate"
       variants={variants[direction]}
       transition={fluentTransitions.emphasized}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
@@ -148,8 +147,7 @@ export function FluentFade({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ ...fluentTransitions.standard, delay }}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
@@ -179,8 +177,7 @@ export function FluentSlide({
       exit="initial"
       variants={variants[direction]}
       transition={{ ...fluentTransitions.emphasized, delay }}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
@@ -197,8 +194,7 @@ export function FluentScale({
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}
       transition={{ ...fluentTransitions.emphasized, delay }}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
@@ -214,8 +210,7 @@ export function FluentHover({
       whileHover={{ scale }}
       whileTap={{ scale: 0.98 }}
       transition={fluentTransitions.decelerate}
-      {...props}
-    >
+      {...props}>
       {children}
     </motion.div>
   );
