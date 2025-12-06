@@ -347,6 +347,9 @@ interface DJENResponse {
   length?: number;
 }
 
+/** Tipo de match de advogado: nome, OAB ou ambos */
+type AdvogadoMatchType = "nome" | "oab" | "ambos";
+
 interface DJENFilteredResult {
   id: number;
   tribunal: string;
@@ -358,7 +361,7 @@ interface DJENFilteredResult {
   meio: string;
   link: string;
   hash: string;
-  matchType: "nome" | "oab" | "ambos";
+  matchType: AdvogadoMatchType;
   advogados: Array<{ nome: string; numero_oab: string; uf_oab: string }>;
 }
 
