@@ -341,10 +341,7 @@ export default function ExpedientePanel() {
 
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false);
-  const [analysisProgress, setAnalysisProgress] = useState({
-    current: 0,
-    total: 0,
-  });
+  const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 });
   const [tasksCreated, setTasksCreated] = useState(0);
   const [deadlinesCreated, setDeadlinesCreated] = useState(0);
   const autoAnalysisRanRef = useRef(false);
