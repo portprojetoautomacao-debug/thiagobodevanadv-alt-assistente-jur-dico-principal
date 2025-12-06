@@ -231,37 +231,107 @@ export function useGoogleDocs() {
   );
 
   /**
-   * Sincronizar todas as minutas com Google Docs
+   * Importar conteúdo do Google Docs para minuta local (sincronização bidirecional)
+   * Fluxo: Google Docs → Local
+   */
+  const importFromGoogleDocs = useCallback(
+    async (
+      minutaId: string,
+      minutas: Minuta[],
+      setMinutas: (updater: (prev: Minuta[]) => Minuta[]) => void
+    ): Promise<boolean> => {
+      setIsSyncing(true);
+      setError(null);
+
+      try {
+        if (!isConnected) {
+          const authenticated = await authenticate();
+          if (!authenticated) {
+            throw new Error("Autenticação necessária");
+          }
+        }
+
+        const minuta = minutas.find((m) => m.id === minutaId);
+        if (!minuta || !minuta.googleDocsId) {
+          throw new Error("Minuta não encontrada ou sem Google Docs vinculado");
+        }
+
+        const toastId = toast.loading("Importando do Google Docs...");
+
+        // Buscar conteúdo atualizado do Google Docs
+        const remoteContent = await googleDocsService.getDocumentContent(minuta.googleDocsId);
+
+        if (remoteContent === null) {
+          const lastError = googleDocsService.getLastError();
+          toast.error(lastError || "Erro ao buscar documento do Google Docs", { id: toastId });
+          return false;
+        }
+
+        // Detectar conflitos: comparar timestamps
+        const localUpdateTime = new Date(minuta.atualizadoEm).getTime();
+        const lastSyncTime = minuta.ultimaSincronizacao
+          ? new Date(minuta.ultimaSincronizacao).getTime()
+          : 0;
+        const hasLocalChanges = localUpdateTime > lastSyncTime;
+
+        // Se houver mudanças locais recentes, confirmar com usuário
+        if (hasLocalChanges) {
+          const confirm = window.confirm(
+            `Esta minuta foi modificada localmente após a última sincronização.\n\n` +
+              `Última modificação local: ${new Date(minuta.atualizadoEm).toLocaleString("pt-BR")}\n` +
+              `Última sincronização: ${lastSyncTime ? new Date(lastSyncTime).toLocaleString("pt-BR") : "Nunca"}\n\n` +
+              `Deseja substituir as alterações locais pelo conteúdo do Google Docs?`
+          );
+
+          if (!confirm) {
+            toast.info("Importação cancelada", { id: toastId });
+            return false;
+          }
+        }
+
+        // Atualizar minuta local com conteúdo do Google Docs
+        setMinutas((current) =>
+          current.map((m) =>
+            m.id === minutaId
+              ? {
+                  ...m,
+                  conteudo: remoteContent,
+                  atualizadoEm: new Date().toISOString(),
+                  ultimaSincronizacao: new Date().toISOString(),
+                }
+              : m
+          )
+        );
+
+        toast.success(
+          `✅ Importado do Google Docs! (${remoteContent.length.toLocaleString()} caracteres)`,
+          { id: toastId }
+        );
+
+        return true;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Erro ao importar";
+        setError(errorMessage);
+        toast.error(errorMessage);
+        return false;
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    [isConnected, authenticate]
+  );
+
+  /**
+   * @deprecated Use importFromGoogleDocs para importar do GDocs ou exportToGoogleDocs para exportar para GDocs
+   * Sincronizar todas as minutas com Google Docs (legacy stub)
    */
   const syncWithGoogleDocs = useCallback(async () => {
-    setIsSyncing(true);
-    setError(null);
-
-    try {
-      if (!isConnected) {
-        const authenticated = await authenticate();
-        if (!authenticated) {
-          throw new Error("Autenticação necessária");
-        }
-      }
-
-      // FIXME(GDOCS-002): Implementar sincronização bidirecional completa
-      // Atualmente: Local → Google Docs (apenas upload)
-      // Escopo: detectar conflitos, merge automático, versionamento
-      // Ref: docs/GOOGLE_DOCS_SYNC_STRATEGY.md
-      // Status: Funcionalidade planejada para próxima versão
-      toast.info("Sincronização com Google Docs em desenvolvimento");
-
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro ao sincronizar";
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return false;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isConnected, authenticate]);
+    console.warn(
+      "[useGoogleDocs] syncWithGoogleDocs is deprecated. Use importFromGoogleDocs or exportToGoogleDocs instead."
+    );
+    toast.info("Use 'Importar do GDocs' ou 'Exportar para GDocs'");
+    return false;
+  }, []);
 
   /**
    * Abrir documento no Google Docs (nova aba)
@@ -271,6 +341,7 @@ export function useGoogleDocs() {
     globalThis.window.open(url, "_blank", "noopener,noreferrer");
   }, []);
 
+  // Alias para compatibilidade
   const isAuthenticated = isConnected;
 
   return {
@@ -286,7 +357,8 @@ export function useGoogleDocs() {
     createDocument,
     updateDocument,
     getDocument,
-    syncWithGoogleDocs,
+    importFromGoogleDocs, // ✅ NOVO: Importar do Google Docs (bidirecional)
+    syncWithGoogleDocs, // @deprecated - use importFromGoogleDocs
     exportToGoogleDocs,
     openDocument,
   };

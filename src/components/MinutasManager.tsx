@@ -96,7 +96,12 @@ Responda apenas com o conteúdo solicitado (trecho ou minuta), sem explicações
 export default function MinutasManager() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
   const [processes] = useKV<Process[]>("processes", []);
-  const { exportToGoogleDocs, openDocument, isAuthenticated: isGoogleDocsAuth } = useGoogleDocs();
+  const {
+    exportToGoogleDocs,
+    importFromGoogleDocs,
+    openDocument,
+    isAuthenticated: isGoogleDocsAuth,
+  } = useGoogleDocs();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
@@ -386,36 +391,16 @@ export default function MinutasManager() {
     }
 
     setIsSyncing(minuta.id);
-    const toastId = toast.loading("Sincronizando do Google Docs...");
 
     try {
-      const content = await googleDocsService.syncDocument(minuta.googleDocsId);
+      const success = await importFromGoogleDocs(minuta.id, minutas, setMinutas);
 
-      if (content === null) {
-        const lastError = googleDocsService.getLastError();
-        toast.error(lastError || "Erro ao sincronizar do Google Docs", {
-          id: toastId,
-        });
-      } else {
-        setMinutas((current = []) =>
-          current.map((m) =>
-            m.id === minuta.id
-              ? {
-                  ...m,
-                  conteudo: content,
-                  atualizadoEm: new Date().toISOString(),
-                  ultimaSincronizacao: new Date().toISOString(),
-                }
-              : m
-          )
-        );
-        toast.success(`✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`, {
-          id: toastId,
-        });
+      if (!success) {
+        console.error("[MinutasManager] Importação cancelada ou falhou");
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error(`Erro ao sincronizar: ${errorMessage}`, { id: toastId });
+      toast.error(`Erro ao importar: ${errorMessage}`);
       console.error(error);
     } finally {
       setIsSyncing(null);
@@ -1263,13 +1248,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           variant="outline"
                           onClick={() => handleSyncFromGoogleDocs(minuta)}
                           disabled={isSyncing === minuta.id}
+                          title="Importar alterações do Google Docs (Google → Local)"
                         >
                           <RefreshCw
                             className={`mr-2 h-4 w-4 ${
                               isSyncing === minuta.id ? "animate-spin" : ""
                             }`}
                           />
-                          Sincronizar
+                          {isSyncing === minuta.id ? "Importando..." : "Importar do GDocs"}
                         </Button>
                       )}
 
