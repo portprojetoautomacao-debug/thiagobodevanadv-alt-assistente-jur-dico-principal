@@ -7,16 +7,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DJENPublication } from "@/types/djen-publication";
-import { BellRing, CheckCircle, ChevronDown, ChevronUp, Copy, Plus } from "lucide-react";
+import {
+  BellRing,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Plus,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface PublicationItemProps {
-  pub: DJENPublication;
-  expanded: string | null;
-  onToggleExpand: (id: string | null) => void;
-  onRegister: (pub: DJENPublication) => void;
-  isAlreadyRegistered: boolean;
-  formatRelativeDate: (dateStr: string) => string;
+  readonly pub: DJENPublication;
+  readonly expanded: string | null;
+  readonly onToggleExpand: (id: string | null) => void;
+  readonly onRegister: (pub: DJENPublication) => void;
+  readonly isAlreadyRegistered: boolean;
+  readonly formatRelativeDate: (dateStr: string) => string;
 }
 
 const MATCH_BADGE_VARIANTS = {
@@ -66,8 +73,7 @@ export function PublicationItem({
         "hover:bg-accent/50 hover:border-primary/30",
         expanded === pub.id && "bg-accent/30 border-primary/50"
       )}
-      onClick={() => onToggleExpand(expanded === pub.id ? null : pub.id)}
-    >
+      onClick={() => onToggleExpand(expanded === pub.id ? null : pub.id)}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -83,7 +89,9 @@ export function PublicationItem({
             )}
           </div>
 
-          <p className="text-xs font-medium truncate">{pub.tipo || "Intimação"}</p>
+          <p className="text-xs font-medium truncate">
+            {pub.tipo || "Intimação"}
+          </p>
 
           <p className="text-xs text-muted-foreground truncate">
             {pub.numeroProcesso && `Processo: ${pub.numeroProcesso}`}
@@ -91,7 +99,9 @@ export function PublicationItem({
         </div>
 
         <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className="text-xs text-muted-foreground">{formatRelativeDate(pub.createdAt)}</span>
+          <span className="text-xs text-muted-foreground">
+            {formatRelativeDate(pub.createdAt)}
+          </span>
           {expanded === pub.id ? (
             <ChevronUp size={14} className="text-muted-foreground" />
           ) : (
@@ -129,21 +139,22 @@ export function PublicationItem({
               onClick={(e) => {
                 e.stopPropagation();
                 handleCopy(pub.teor);
-              }}
-            >
+              }}>
               <Copy size={12} />
               Copiar
             </Button>
             <Button
               variant={isAlreadyRegistered ? "ghost" : "default"}
               size="sm"
-              className={cn("h-7 text-xs flex-1", !isAlreadyRegistered && "button-gradient")}
+              className={cn(
+                "h-7 text-xs flex-1",
+                !isAlreadyRegistered && "button-gradient"
+              )}
               disabled={isAlreadyRegistered}
               onClick={(e) => {
                 e.stopPropagation();
                 onRegister(pub);
-              }}
-            >
+              }}>
               {isAlreadyRegistered ? (
                 <>
                   <CheckCircle size={12} />

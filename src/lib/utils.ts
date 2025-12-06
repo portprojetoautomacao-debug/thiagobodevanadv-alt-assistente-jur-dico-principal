@@ -21,7 +21,7 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string) {
       .map((header) => {
         const value = row[header];
         if (value === null || value === undefined) return "";
-        const stringValue = String(value).replace(/"/g, '""');
+        const stringValue = String(value).replaceAll('"', '""');
         return `"${stringValue}"`;
       })
       .join(",")
@@ -72,7 +72,7 @@ export async function exportToXLSX(data: Record<string, unknown>[], filename: st
           if (val === null || val === undefined) return "";
           const str = String(val);
           return str.includes(",") || str.includes('"') || str.includes("\n")
-            ? `"${str.replace(/"/g, '""')}"`
+            ? `"${str.replaceAll('"', '""')}"`
             : str;
         })
         .join(",")
@@ -159,7 +159,7 @@ export function formatDateTimeTz(date: string | Date, timeZone: string = DEFAULT
  */
 export function parsePjeDate(dateStr: string): Date | null {
   if (!dateStr) return null;
-  const match = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateStr);
   if (!match) return null;
 
   const [, dd, mm, yyyy] = match;
@@ -181,7 +181,7 @@ export function parsePjeDateTime(dateStr: string, timeStr?: string): Date | null
 
   if (!timeStr) return baseDate;
 
-  const match = timeStr.match(/^(\d{2}):(\d{2})$/);
+  const match = /^(\d{2}):(\d{2})$/.exec(timeStr);
   if (!match) return baseDate;
 
   const [, hh, mm] = match;

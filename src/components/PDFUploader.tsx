@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useKV } from "@/hooks/use-kv";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -10,14 +16,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
   Upload,
-  FilePdf,
-  CheckCircle,
+  FileText,
+  CheckCircle2,
   XCircle,
-  SpinnerGap,
+  Loader2,
   Clock,
   User,
-  Trash,
-} from "@phosphor-icons/react";
+  Trash2,
+} from "lucide-react";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import type { PDFUploadHistory } from "@/types";
@@ -43,11 +49,16 @@ interface ExtractedData {
 export default function PDFUploader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(
+    null
+  );
   const [extractionStatus, setExtractionStatus] = useState<
     "idle" | "processing" | "success" | "error"
   >("idle");
-  const [uploadHistory, setUploadHistory] = useKV<PDFUploadHistory[]>("pdf-upload-history", []);
+  const [uploadHistory, setUploadHistory] = useKV<PDFUploadHistory[]>(
+    "pdf-upload-history",
+    []
+  );
 
   // Hook centralizado para cadastro de clientes
   const { clientes, createOrUpdateFromDocumento } = useClientesManager();
@@ -84,8 +95,8 @@ export default function PDFUploader() {
           const text = new TextDecoder("utf-8").decode(uint8Array);
 
           const cleanedText = text
-            .replace(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
-            .replace(/\s+/g, " ")
+            .replaceAll(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
+            .replaceAll(/\s+/g, " ")
             .trim();
 
           resolve(cleanedText);
@@ -198,7 +209,8 @@ Retorne APENAS o JSON válido, sem explicações.`;
                 ...item,
                 status: "error" as const,
                 processedAt: new Date().toISOString(),
-                errorMessage: error instanceof Error ? error.message : "Erro desconhecido",
+                errorMessage:
+                  error instanceof Error ? error.message : "Erro desconhecido",
               }
             : item
         )
@@ -210,7 +222,10 @@ Retorne APENAS o JSON válido, sem explicações.`;
     }
   };
 
-  const handleEditField = (field: keyof ExtractedData, value: string | "fisica" | "juridica") => {
+  const handleEditField = (
+    field: keyof ExtractedData,
+    value: string | "fisica" | "juridica"
+  ) => {
     setExtractedData((prev) => ({
       ...prev,
       [field]: value,
@@ -224,13 +239,17 @@ Retorne APENAS o JSON válido, sem explicações.`;
     }
 
     // Verifica se já existe (o hook também faz upsert, mas é bom informar)
-    const existingClient = clientes?.find((c) => c.cpfCnpj === extractedData.cpfCnpj);
+    const existingClient = clientes?.find(
+      (c) => c.cpfCnpj === extractedData.cpfCnpj
+    );
 
     // Montar observações separadamente (SonarCloud S5765)
     const processoInfo = extractedData.numeroProcesso
       ? ` - Processo: ${extractedData.numeroProcesso}`
       : "";
-    const documentoOrigem = `Extraído de documento: ${selectedFile?.name || "PDF"}${processoInfo}`;
+    const documentoOrigem = `Extraído de documento: ${
+      selectedFile?.name || "PDF"
+    }${processoInfo}`;
 
     // Usa o hook centralizado para criar/atualizar cliente
     createOrUpdateFromDocumento({
@@ -251,12 +270,18 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
     // Atualiza histórico com referência ao cliente
     const currentHistory = uploadHistory || [];
-    const latestUpload = currentHistory.find((h) => h.extractedData === extractedData);
+    const latestUpload = currentHistory.find(
+      (h) => h.extractedData === extractedData
+    );
     if (latestUpload) {
       setUploadHistory((current) =>
         (current || []).map((item) =>
           item.id === latestUpload.id
-            ? { ...item, clienteId: existingClient?.id || `cliente-${extractedData.cpfCnpj}` }
+            ? {
+                ...item,
+                clienteId:
+                  existingClient?.id || `cliente-${extractedData.cpfCnpj}`,
+              }
             : item
         )
       );
@@ -271,7 +296,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
   };
 
   const handleDeleteHistory = (id: string) => {
-    setUploadHistory((current) => (current || []).filter((item) => item.id !== id));
+    setUploadHistory((current) =>
+      (current || []).filter((item) => item.id !== id)
+    );
     toast.success("Item removido do histórico");
   };
 
@@ -280,35 +307,38 @@ Retorne APENAS o JSON válido, sem explicações.`;
       case "processing":
         return (
           <Badge variant="secondary" className="gap-1">
-            <SpinnerGap size={12} className="animate-spin" /> Processando
+            <Loader2 size={12} className="animate-spin" /> Processando
           </Badge>
         );
       case "success":
         return (
           <Badge variant="default" className="gap-1 bg-primary">
-            <CheckCircle size={12} weight="fill" /> Sucesso
+            <CheckCircle2 size={12} /> Sucesso
           </Badge>
         );
       case "error":
         return (
           <Badge variant="destructive" className="gap-1">
-            <XCircle size={12} weight="fill" /> Erro
+            <XCircle size={12} /> Erro
           </Badge>
         );
     }
   };
 
   const sortedHistory = [...(uploadHistory || [])].sort(
-    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    (a, b) =>
+      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
   );
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold gradient-text mb-2">Upload de Procuração/Contrato</h1>
+        <h1 className="text-3xl font-bold gradient-text mb-2">
+          Upload de Procuração/Contrato
+        </h1>
         <p className="text-muted-foreground">
-          Faça upload de uma procuração ou contrato em PDF para extrair automaticamente os dados do
-          cliente
+          Faça upload de uma procuração ou contrato em PDF para extrair
+          automaticamente os dados do cliente
         </p>
       </div>
 
@@ -332,7 +362,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                   <Upload className="text-primary" size={24} weight="duotone" />
                   Upload de Documento
                 </CardTitle>
-                <CardDescription>Selecione um arquivo PDF (máximo 10MB)</CardDescription>
+                <CardDescription>
+                  Selecione um arquivo PDF (máximo 10MB)
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -349,9 +381,11 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {selectedFile && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <FilePdf className="text-destructive" size={24} weight="duotone" />
+                    <FileText className="text-destructive" size={24} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                      <p className="text-sm font-medium truncate">
+                        {selectedFile.name}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {(selectedFile.size / 1024).toFixed(2)} KB
                       </p>
@@ -365,8 +399,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                   onClick={handleExtract}
                   disabled={!selectedFile || isProcessing}
                   className="w-full button-gradient"
-                  size="lg"
-                >
+                  size="lg">
                   {isProcessing ? (
                     <>
                       <SpinnerGap className="animate-spin" size={20} />
@@ -382,7 +415,10 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "processing" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <SpinnerGap className="animate-spin text-primary" size={16} />
+                    <SpinnerGap
+                      className="animate-spin text-primary"
+                      size={16}
+                    />
                     <AlertDescription>
                       Processando documento... Isso pode levar alguns segundos.
                     </AlertDescription>
@@ -391,18 +427,28 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "success" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <CheckCircle className="text-primary" size={16} weight="fill" />
+                    <CheckCircle
+                      className="text-primary"
+                      size={16}
+                      weight="fill"
+                    />
                     <AlertDescription>
-                      Dados extraídos com sucesso! Revise os campos ao lado e salve o cliente.
+                      Dados extraídos com sucesso! Revise os campos ao lado e
+                      salve o cliente.
                     </AlertDescription>
                   </Alert>
                 )}
 
                 {extractionStatus === "error" && (
                   <Alert className="border-destructive/50 bg-destructive/5">
-                    <XCircle className="text-destructive" size={16} weight="fill" />
+                    <XCircle
+                      className="text-destructive"
+                      size={16}
+                      weight="fill"
+                    />
                     <AlertDescription>
-                      Erro ao processar o documento. Tente novamente ou cadastre manualmente.
+                      Erro ao processar o documento. Tente novamente ou cadastre
+                      manualmente.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -412,16 +458,28 @@ Retorne APENAS o JSON válido, sem explicações.`;
             <Card className="glassmorphic border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="text-primary" size={24} weight="duotone" />
+                  <CheckCircle
+                    className="text-primary"
+                    size={24}
+                    weight="duotone"
+                  />
                   Dados Extraídos
                 </CardTitle>
-                <CardDescription>Revise e edite os dados antes de salvar</CardDescription>
+                <CardDescription>
+                  Revise e edite os dados antes de salvar
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {!extractedData ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <FilePdf className="text-muted-foreground/30 mb-4" size={64} weight="duotone" />
-                    <p className="text-muted-foreground">Nenhum dado extraído ainda</p>
+                    <FilePdf
+                      className="text-muted-foreground/30 mb-4"
+                      size={64}
+                      weight="duotone"
+                    />
+                    <p className="text-muted-foreground">
+                      Nenhum dado extraído ainda
+                    </p>
                     <p className="text-sm text-muted-foreground/70 mt-1">
                       Faça upload de um PDF para começar
                     </p>
@@ -433,7 +491,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                       <Input
                         id="nome"
                         value={extractedData.nome || ""}
-                        onChange={(e) => handleEditField("nome", e.target.value)}
+                        onChange={(e) =>
+                          handleEditField("nome", e.target.value)
+                        }
                         placeholder="Nome do cliente"
                       />
                     </div>
@@ -445,10 +505,12 @@ Retorne APENAS o JSON válido, sem explicações.`;
                           id="tipo"
                           value={extractedData.tipo || "fisica"}
                           onChange={(e) =>
-                            handleEditField("tipo", e.target.value as "fisica" | "juridica")
+                            handleEditField(
+                              "tipo",
+                              e.target.value as "fisica" | "juridica"
+                            )
                           }
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                           <option value="fisica">Pessoa Física</option>
                           <option value="juridica">Pessoa Jurídica</option>
                         </select>
@@ -461,8 +523,12 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <Input
                           id="cpfCnpj"
                           value={extractedData.cpfCnpj || ""}
-                          onChange={(e) => handleEditField("cpfCnpj", e.target.value)}
-                          placeholder={extractedData.tipo === "juridica" ? "CNPJ" : "CPF"}
+                          onChange={(e) =>
+                            handleEditField("cpfCnpj", e.target.value)
+                          }
+                          placeholder={
+                            extractedData.tipo === "juridica" ? "CNPJ" : "CPF"
+                          }
                         />
                       </div>
                     </div>
@@ -474,7 +540,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                           id="email"
                           type="email"
                           value={extractedData.email || ""}
-                          onChange={(e) => handleEditField("email", e.target.value)}
+                          onChange={(e) =>
+                            handleEditField("email", e.target.value)
+                          }
                           placeholder="email@exemplo.com"
                         />
                       </div>
@@ -484,7 +552,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <Input
                           id="telefone"
                           value={extractedData.telefone || ""}
-                          onChange={(e) => handleEditField("telefone", e.target.value)}
+                          onChange={(e) =>
+                            handleEditField("telefone", e.target.value)
+                          }
                           placeholder="(00) 00000-0000"
                         />
                       </div>
@@ -495,7 +565,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                       <Input
                         id="endereco"
                         value={extractedData.endereco || ""}
-                        onChange={(e) => handleEditField("endereco", e.target.value)}
+                        onChange={(e) =>
+                          handleEditField("endereco", e.target.value)
+                        }
                         placeholder="Rua, número, bairro"
                       />
                     </div>
@@ -506,7 +578,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <Input
                           id="cidade"
                           value={extractedData.cidade || ""}
-                          onChange={(e) => handleEditField("cidade", e.target.value)}
+                          onChange={(e) =>
+                            handleEditField("cidade", e.target.value)
+                          }
                           placeholder="Cidade"
                         />
                       </div>
@@ -516,7 +590,12 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <Input
                           id="estado"
                           value={extractedData.estado || ""}
-                          onChange={(e) => handleEditField("estado", e.target.value.toUpperCase())}
+                          onChange={(e) =>
+                            handleEditField(
+                              "estado",
+                              e.target.value.toUpperCase()
+                            )
+                          }
                           placeholder="UF"
                           maxLength={2}
                         />
@@ -535,11 +614,15 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                     {extractedData.numeroProcesso && (
                       <div className="space-y-2">
-                        <Label htmlFor="numeroProcesso">Número do Processo</Label>
+                        <Label htmlFor="numeroProcesso">
+                          Número do Processo
+                        </Label>
                         <Input
                           id="numeroProcesso"
                           value={extractedData.numeroProcesso || ""}
-                          onChange={(e) => handleEditField("numeroProcesso", e.target.value)}
+                          onChange={(e) =>
+                            handleEditField("numeroProcesso", e.target.value)
+                          }
                           placeholder="0000000-00.0000.0.00.0000"
                           disabled
                         />
@@ -552,7 +635,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <textarea
                           id="observacoes"
                           value={extractedData.observacoes || ""}
-                          onChange={(e) => handleEditField("observacoes", e.target.value)}
+                          onChange={(e) =>
+                            handleEditField("observacoes", e.target.value)
+                          }
                           className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           placeholder="Informações adicionais"
                         />
@@ -565,8 +650,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                       onClick={handleSaveClient}
                       className="w-full button-gradient"
                       size="lg"
-                      disabled={!extractedData.nome || !extractedData.cpfCnpj}
-                    >
+                      disabled={!extractedData.nome || !extractedData.cpfCnpj}>
                       <CheckCircle size={20} weight="fill" />
                       Salvar Cliente
                     </Button>
@@ -585,8 +669,14 @@ Retorne APENAS o JSON válido, sem explicações.`;
           {sortedHistory.length === 0 ? (
             <Card className="glassmorphic border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Clock className="text-muted-foreground/30 mb-4" size={64} weight="duotone" />
-                <p className="text-muted-foreground">Nenhum upload realizado ainda</p>
+                <Clock
+                  className="text-muted-foreground/30 mb-4"
+                  size={64}
+                  weight="duotone"
+                />
+                <p className="text-muted-foreground">
+                  Nenhum upload realizado ainda
+                </p>
                 <p className="text-sm text-muted-foreground/70 mt-1">
                   O histórico de PDFs processados aparecerá aqui
                 </p>
@@ -597,8 +687,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
               {sortedHistory.map((item) => (
                 <Card
                   key={item.id}
-                  className="glassmorphic border-border/50 hover:border-primary/30 transition-colors"
-                >
+                  className="glassmorphic border-border/50 hover:border-primary/30 transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -609,22 +698,33 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium truncate">{item.fileName}</p>
+                            <p className="text-sm font-medium truncate">
+                              {item.fileName}
+                            </p>
                             {getStatusBadge(item.status)}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(item.uploadedAt), "dd/MM/yyyy 'às' HH:mm", {
-                              locale: ptBR,
-                            })}{" "}
+                            {format(
+                              new Date(item.uploadedAt),
+                              "dd/MM/yyyy 'às' HH:mm",
+                              {
+                                locale: ptBR,
+                              }
+                            )}{" "}
                             · {(item.fileSize / 1024).toFixed(2)} KB
                           </p>
 
                           {item.extractedData && (
                             <div className="mt-2 pt-2 border-t border-border/30">
                               <div className="flex items-center gap-2 text-xs">
-                                <User size={14} className="text-primary" weight="duotone" />
+                                <User
+                                  size={14}
+                                  className="text-primary"
+                                  weight="duotone"
+                                />
                                 <span className="font-medium">
-                                  {item.extractedData.nome || "Nome não extraído"}
+                                  {item.extractedData.nome ||
+                                    "Nome não extraído"}
                                 </span>
                                 {item.extractedData.cpfCnpj && (
                                   <span className="text-muted-foreground">
@@ -633,7 +733,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                                 )}
                               </div>
                               {item.clienteId && (
-                                <Badge variant="outline" className="mt-1 text-xs">
+                                <Badge
+                                  variant="outline"
+                                  className="mt-1 text-xs">
                                   Cliente cadastrado
                                 </Badge>
                               )}
@@ -641,7 +743,9 @@ Retorne APENAS o JSON válido, sem explicações.`;
                           )}
 
                           {item.errorMessage && (
-                            <p className="text-xs text-destructive mt-2">{item.errorMessage}</p>
+                            <p className="text-xs text-destructive mt-2">
+                              {item.errorMessage}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -651,9 +755,8 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         size="icon"
                         className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => handleDeleteHistory(item.id)}
-                        aria-label="Excluir item do histórico"
-                      >
-                        <Trash size={16} />
+                        aria-label="Excluir item do histórico">
+                        <Trash2 size={16} />
                       </Button>
                     </div>
                   </CardContent>

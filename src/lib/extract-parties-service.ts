@@ -15,16 +15,22 @@ export interface ExtractedParties {
 
 // Endpoint e modelo configuráveis via .env (com defaults seguros)
 const PARTIES_LLM_ENDPOINT = String(
-  import.meta.env.VITE_LLM_ENDPOINT || import.meta.env.VITE_GEMINI_LLM_ENDPOINT || "/api/llm-proxy"
+  import.meta.env.VITE_LLM_ENDPOINT ||
+    import.meta.env.VITE_GEMINI_LLM_ENDPOINT ||
+    "/api/llm-proxy"
 ); // endpoint principal do Gemini 2.5 Pro
 
 const PARTIES_LLM_MODEL =
-  import.meta.env.VITE_LLM_MODEL || import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-pro";
+  import.meta.env.VITE_LLM_MODEL ||
+  import.meta.env.VITE_GEMINI_MODEL ||
+  "gemini-2.5-pro";
 
 /**
  * Extrai autor e réu do teor de uma publicação jurídica usando IA
  */
-export async function extractPartiesFromTeor(teor: string): Promise<ExtractedParties> {
+export async function extractPartiesFromTeor(
+  teor: string
+): Promise<ExtractedParties> {
   try {
     const response = await fetch(PARTIES_LLM_ENDPOINT, {
       method: "POST",
@@ -68,7 +74,11 @@ Responda APENAS com o JSON, sem texto adicional.`,
     });
 
     if (!response.ok) {
-      console.error("[ExtractParties] Erro HTTP:", response.status, PARTIES_LLM_ENDPOINT);
+      console.error(
+        "[ExtractParties] Erro HTTP:",
+        response.status,
+        PARTIES_LLM_ENDPOINT
+      );
       return { autor: "Não identificado", reu: "Não identificado" };
     }
 
@@ -97,7 +107,7 @@ Responda APENAS com o JSON, sem texto adicional.`,
     }
 
     // Parse do JSON - tenta encontrar JSON na resposta
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonMatch = /\{[\s\S]*\}/.exec(content);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -127,18 +137,26 @@ Responda APENAS com o JSON, sem texto adicional.`,
  */
 export function extractPartiesRegex(teor: string): ExtractedParties {
   // Termos separados para melhor legibilidade e manutenibilidade
-  const AUTOR_TERMS = "autor|requerente|exequente|embargante|apelante|agravante|impetrante";
-  const REU_TERMS = "r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado";
+  const AUTOR_TERMS =
+    "autor|requerente|exequente|embargante|apelante|agravante|impetrante";
+  const REU_TERMS =
+    "r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado";
   const NAME_CAPTURE = "([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\\s]+?)";
   const END_AUTOR = "(?:\\s*(?:x|vs?\\.?|contra|CPF|CNPJ|RG|\\d|[,;.\\n]|$))";
   const END_REU = "(?:\\s*(?:CPF|CNPJ|RG|\\d|[,;.\\n]|$))";
 
   // Construir regex dinamicamente para maior clareza
-  const autorRegex = new RegExp(`(?:${AUTOR_TERMS})[:\\s]+${NAME_CAPTURE}${END_AUTOR}`, "i");
-  const reuRegex = new RegExp(`(?:${REU_TERMS})[:\\s]+${NAME_CAPTURE}${END_REU}`, "i");
+  const autorRegex = new RegExp(
+    `(?:${AUTOR_TERMS})[:\\s]+${NAME_CAPTURE}${END_AUTOR}`,
+    "i"
+  );
+  const reuRegex = new RegExp(
+    `(?:${REU_TERMS})[:\\s]+${NAME_CAPTURE}${END_REU}`,
+    "i"
+  );
 
-  const matchAutor = teor.match(autorRegex);
-  const matchReu = teor.match(reuRegex);
+  const matchAutor = autorRegex.exec(teor);
+  const matchReu = reuRegex.exec(teor);
 
   return {
     autor: matchAutor?.[1]?.trim() || "",
@@ -149,7 +167,9 @@ export function extractPartiesRegex(teor: string): ExtractedParties {
 /**
  * Extrai partes com fallback: primeiro tenta regex, se não encontrar, usa IA
  */
-export async function extractPartiesWithFallback(teor: string): Promise<ExtractedParties> {
+export async function extractPartiesWithFallback(
+  teor: string
+): Promise<ExtractedParties> {
   // Primeiro tenta regex (mais rápido, sem custo de IA)
   const regexResult = extractPartiesRegex(teor);
 
@@ -160,6 +180,9 @@ export async function extractPartiesWithFallback(teor: string): Promise<Extracte
   }
 
   // Senão, usa IA (Gemini 2.5 Pro ou o modelo configurado)
-  console.log("[ExtractParties] Regex incompleto, usando IA em", PARTIES_LLM_ENDPOINT);
+  console.log(
+    "[ExtractParties] Regex incompleto, usando IA em",
+    PARTIES_LLM_ENDPOINT
+  );
   return extractPartiesFromTeor(teor);
 }

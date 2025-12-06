@@ -3,7 +3,13 @@ import MultiSourcePublications from "@/components/MultiSourcePublications";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,14 +21,16 @@ import {
   validarNumeroCNJ,
   type DatajudProcesso,
 } from "@/lib/datajud-api";
-import { CircleNotch, Database, MagnifyingGlass, Warning } from "@phosphor-icons/react";
+import { Loader2, Database, Search, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function DatabaseQueries() {
   const [cnjQuery, setCnjQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [datajudResult, setDatajudResult] = useState<DatajudProcesso | null>(null);
+  const [datajudResult, setDatajudResult] = useState<DatajudProcesso | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const apiKeyConfigured = isApiKeyConfigured();
 
@@ -34,10 +42,12 @@ export default function DatabaseQueries() {
       return;
     }
 
-    const normalized = raw.replace(/\s/g, "");
+    const normalized = raw.replaceAll(/\s/g, "");
 
     if (!validarNumeroCNJ(normalized)) {
-      toast.error("Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO");
+      toast.error(
+        "Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO"
+      );
       return;
     }
 
@@ -57,7 +67,9 @@ export default function DatabaseQueries() {
       // Extrai o código do tribunal do número CNJ
       const codigoTribunal = extrairTribunalDoCNJ(normalized);
       if (!codigoTribunal) {
-        throw new Error("Não foi possível identificar o tribunal do número CNJ");
+        throw new Error(
+          "Não foi possível identificar o tribunal do número CNJ"
+        );
       }
 
       // Determina o tribunal baseado no código
@@ -81,7 +93,8 @@ export default function DatabaseQueries() {
       setDatajudResult(resultado);
       toast.success("Processo encontrado no DataJud");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao consultar DataJud";
+      const message =
+        err instanceof Error ? err.message : "Erro ao consultar DataJud";
       setError(message);
       toast.error(message);
       console.error("Erro ao consultar DataJud:", err);
@@ -100,7 +113,9 @@ export default function DatabaseQueries() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Consultas a Bases de Dados</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Consultas a Bases de Dados
+        </h1>
         <p className="text-muted-foreground mt-1">
           DataJud, DJEN e múltiplas fontes oficiais de publicações jurídicas
         </p>
@@ -165,15 +180,17 @@ export default function DatabaseQueries() {
                     <code className="mx-1 px-1 py-0.5 rounded bg-muted text-xs">
                       VITE_DATAJUD_API_KEY
                     </code>{" "}
-                    no arquivo <code className="px-1 py-0.5 rounded bg-muted text-xs">.env</code>{" "}
+                    no arquivo{" "}
+                    <code className="px-1 py-0.5 rounded bg-muted text-xs">
+                      .env
+                    </code>{" "}
                     para usar este recurso.
                     <br />
                     <a
                       href="https://www.cnj.jus.br/sistemas/datajud/api-publica/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline text-sm mt-1 inline-block"
-                    >
+                      className="underline text-sm mt-1 inline-block">
                       Obtenha sua API Key gratuita aqui
                     </a>
                   </AlertDescription>
@@ -192,64 +209,87 @@ export default function DatabaseQueries() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">CNJ</p>
-                      <p className="text-sm font-mono">{datajudResult.numeroProcesso}</p>
+                      <p className="text-sm font-mono">
+                        {datajudResult.numeroProcesso}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Tribunal</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Tribunal
+                      </p>
                       <p className="text-sm">{datajudResult.tribunal}</p>
                     </div>
                     {datajudResult.classe && (
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Classe</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Classe
+                        </p>
                         <p className="text-sm">{datajudResult.classe.nome}</p>
                       </div>
                     )}
                     {datajudResult.dataAjuizamento && (
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Distribuição</p>
-                        <p className="text-sm">{formatDateSafe(datajudResult.dataAjuizamento)}</p>
-                      </div>
-                    )}
-                    {datajudResult.assuntos && datajudResult.assuntos.length > 0 && (
-                      <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">Assunto</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Distribuição
+                        </p>
                         <p className="text-sm">
-                          {datajudResult.assuntos.map((a) => a.nome).join(", ")}
+                          {formatDateSafe(datajudResult.dataAjuizamento)}
                         </p>
                       </div>
                     )}
+                    {datajudResult.assuntos &&
+                      datajudResult.assuntos.length > 0 && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            Assunto
+                          </p>
+                          <p className="text-sm">
+                            {datajudResult.assuntos
+                              .map((a) => a.nome)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      )}
                     {datajudResult.orgaoJulgador && (
                       <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">Órgão Julgador</p>
-                        <p className="text-sm">{datajudResult.orgaoJulgador.nome}</p>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Órgão Julgador
+                        </p>
+                        <p className="text-sm">
+                          {datajudResult.orgaoJulgador.nome}
+                        </p>
                       </div>
                     )}
                   </div>
 
-                  {datajudResult.movimentos && datajudResult.movimentos.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3">Movimentações</h3>
-                      <div className="space-y-2">
-                        {datajudResult.movimentos.slice(0, 10).map((mov) => (
-                          <div
-                            key={`${mov.dataHora}-${mov.nome}`}
-                            className="flex gap-3 p-3 bg-muted rounded-lg"
-                          >
-                            <div className="shrink-0 w-32">
-                              <Badge variant="outline">{formatDateSafe(mov.dataHora)}</Badge>
+                  {datajudResult.movimentos &&
+                    datajudResult.movimentos.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3">
+                          Movimentações
+                        </h3>
+                        <div className="space-y-2">
+                          {datajudResult.movimentos.slice(0, 10).map((mov) => (
+                            <div
+                              key={`${mov.dataHora}-${mov.nome}`}
+                              className="flex gap-3 p-3 bg-muted rounded-lg">
+                              <div className="shrink-0 w-32">
+                                <Badge variant="outline">
+                                  {formatDateSafe(mov.dataHora)}
+                                </Badge>
+                              </div>
+                              <p className="text-sm flex-1">{mov.nome}</p>
                             </div>
-                            <p className="text-sm flex-1">{mov.nome}</p>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                        {datajudResult.movimentos.length > 10 && (
+                          <p className="text-xs text-muted-foreground mt-2 text-center">
+                            Mostrando os 10 movimentos mais recentes de{" "}
+                            {datajudResult.movimentos.length} total
+                          </p>
+                        )}
                       </div>
-                      {datajudResult.movimentos.length > 10 && (
-                        <p className="text-xs text-muted-foreground mt-2 text-center">
-                          Mostrando os 10 movimentos mais recentes de{" "}
-                          {datajudResult.movimentos.length} total
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </CardContent>

@@ -1,4 +1,10 @@
-import { addDays, isWeekend, format, differenceInDays, parseISO } from "date-fns";
+import {
+  addDays,
+  isWeekend,
+  format,
+  differenceInDays,
+  parseISO,
+} from "date-fns";
 import type { Feriado } from "@/types";
 
 /**
@@ -114,7 +120,7 @@ export function formatarData(dataISO: string): string {
  * NNNNNNN-DD.AAAA.J.TR.OOOO
  */
 export function formatarNumeroCNJ(numero: string): string {
-  const cleanNumber = numero.replace(/\D/g, "");
+  const cleanNumber = numero.replaceAll(/\D/g, "");
 
   if (cleanNumber.length !== 20) return numero;
 
@@ -135,7 +141,7 @@ export function formatarNumeroCNJ(numero: string): string {
  * (não valida dígitos verificadores aqui).
  */
 export function validarNumeroCNJ(numero: string): boolean {
-  const cleanNumber = numero.replace(/\D/g, "");
+  const cleanNumber = numero.replaceAll(/\D/g, "");
 
   if (cleanNumber.length !== 20) return false;
 

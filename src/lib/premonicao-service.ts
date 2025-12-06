@@ -21,8 +21,9 @@ function extractResponseText(data: Record<string, unknown>): string {
   return (
     (data.response as { text?: string })?.text ??
     (data.response as string) ??
-    (data.choices as Array<{ message?: { content?: string }; text?: string }>)?.[0]?.message
-      ?.content ??
+    (
+      data.choices as Array<{ message?: { content?: string }; text?: string }>
+    )?.[0]?.message?.content ??
     (data.choices as Array<{ text?: string }>)?.[0]?.text ??
     (data.message as { content?: string })?.content ??
     ""
@@ -35,21 +36,21 @@ function extractResponseText(data: Record<string, unknown>): string {
 function parseJsonResponse(responseText: string): Record<string, unknown> {
   // Remover markdown code blocks
   const cleaned = responseText
-    .replace(/```json\s*/gi, "")
-    .replace(/```\s*/g, "")
+    .replaceAll(/```json\s*/gi, "")
+    .replaceAll(/```\s*/g, "")
     .trim();
 
   try {
     return JSON.parse(cleaned) as Record<string, unknown>;
   } catch {
     // Tentar extrair o primeiro bloco JSON da resposta
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    const jsonMatch = /\{[\s\S]*\}/.exec(cleaned);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
       } catch {
         // Tentar encontrar JSON truncado e completá-lo
-        const truncatedMatch = cleaned.match(/\{[\s\S]*/);
+        const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
         if (truncatedMatch) {
           let truncated = truncatedMatch[0];
           // Contar chaves abertas e fechadas
@@ -71,7 +72,10 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
       }
     }
 
-    console.error("[PremonicaoService] Falha ao parsear JSON:", cleaned.substring(0, 500));
+    console.error(
+      "[PremonicaoService] Falha ao parsear JSON:",
+      cleaned.substring(0, 500)
+    );
     throw new Error("Resposta não contém JSON reconhecível");
   }
 }
@@ -165,7 +169,11 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
     });
 
     if (!response.ok) {
-      console.error("[PremonicaoService] Erro na resposta:", response.status, response.statusText);
+      console.error(
+        "[PremonicaoService] Erro na resposta:",
+        response.status,
+        response.statusText
+      );
       throw new Error(`Erro na API: ${response.status}`);
     }
 
@@ -182,12 +190,16 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
         hasChoices: "choices" in data,
         hasMessage: (data as any).choices?.[0]?.message,
       });
-      throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
+      throw new Error(
+        "Resposta vazia da API de IA. Tente novamente em alguns segundos."
+      );
     }
 
     if (responseText.trim().length === 0) {
       console.warn("[PremonicaoService] Resposta vazia (string vazia)");
-      throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
+      throw new Error(
+        "Resposta vazia da API de IA. Tente novamente em alguns segundos."
+      );
     }
 
     console.log(
@@ -223,18 +235,17 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
       link?: string;
     };
 
-    const precedentes: PremonicaoJuridica["precedentes_relevantes"] = Array.isArray(
-      parsed.precedentes_relevantes
-    )
-      ? (parsed.precedentes_relevantes as PrecedenteRaw[]).map((p) => ({
-          id: p.id || crypto.randomUUID(),
-          tribunal: p.tribunal || "N/A",
-          numero: p.numero || "N/A",
-          tema: p.tema || "N/A",
-          resumo_relevancia: p.resumo_relevancia || "N/A",
-          link: p.link || "",
-        }))
-      : [];
+    const precedentes: PremonicaoJuridica["precedentes_relevantes"] =
+      Array.isArray(parsed.precedentes_relevantes)
+        ? (parsed.precedentes_relevantes as PrecedenteRaw[]).map((p) => ({
+            id: p.id || crypto.randomUUID(),
+            tribunal: p.tribunal || "N/A",
+            numero: p.numero || "N/A",
+            tema: p.tema || "N/A",
+            resumo_relevancia: p.resumo_relevancia || "N/A",
+            link: p.link || "",
+          }))
+        : [];
 
     const result: PremonicaoJuridica = {
       processo_cnj: cnj,
@@ -247,6 +258,8 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
     return result;
   } catch (error) {
     console.error("[PremonicaoService] Erro ao gerar premonição:", error);
-    throw new Error("Não foi possível gerar a análise preditiva. Tente novamente.");
+    throw new Error(
+      "Não foi possível gerar a análise preditiva. Tente novamente."
+    );
   }
 }

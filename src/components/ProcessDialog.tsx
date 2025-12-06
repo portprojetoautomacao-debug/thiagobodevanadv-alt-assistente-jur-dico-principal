@@ -22,10 +22,10 @@ import { validarNumeroCNJ, formatarNumeroCNJ } from "@/lib/prazos";
 import { toast } from "sonner";
 
 interface ProcessDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  process?: Process;
-  onSave: (process: Process) => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly process?: Process;
+  readonly onSave: (process: Process) => void;
 }
 
 // Helper to create initial form data
@@ -58,9 +58,16 @@ function createInitialFormData(process?: Process) {
   };
 }
 
-export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
+export default function ProcessDialog({
+  open,
+  onOpenChange,
+  process,
+  onSave,
+}: ProcessDialogProps) {
   // Initialize form data with lazy initialization
-  const [formData, setFormData] = useState(() => createInitialFormData(process));
+  const [formData, setFormData] = useState(() =>
+    createInitialFormData(process)
+  );
 
   // Sync form data when process changes and dialog is opened
   useEffect(() => {
@@ -83,7 +90,11 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
       return;
     }
 
-    if (!formData.titulo.trim() || !formData.autor.trim() || !formData.reu.trim()) {
+    if (
+      !formData.titulo.trim() ||
+      !formData.autor.trim() ||
+      !formData.reu.trim()
+    ) {
       toast.error("Campos obrigatórios", {
         description: "Preencha todos os campos obrigatórios",
       });
@@ -117,7 +128,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{process ? "Editar Processo" : "Novo Processo"}</DialogTitle>
+          <DialogTitle>
+            {process ? "Editar Processo" : "Novo Processo"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -128,7 +141,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="numeroCNJ"
                 placeholder="0000000-00.0000.0.00.0000"
                 value={formData.numeroCNJ}
-                onChange={(e) => setFormData((f) => ({ ...f, numeroCNJ: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, numeroCNJ: e.target.value }))
+                }
                 required
               />
             </div>
@@ -139,7 +154,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="titulo"
                 placeholder="Ex: Ação de Cobrança"
                 value={formData.titulo}
-                onChange={(e) => setFormData((f) => ({ ...f, titulo: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, titulo: e.target.value }))
+                }
                 required
               />
             </div>
@@ -150,7 +167,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="autor"
                 placeholder="Nome do autor"
                 value={formData.autor}
-                onChange={(e) => setFormData((f) => ({ ...f, autor: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, autor: e.target.value }))
+                }
                 required
               />
             </div>
@@ -161,7 +180,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="reu"
                 placeholder="Nome do réu"
                 value={formData.reu}
-                onChange={(e) => setFormData((f) => ({ ...f, reu: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, reu: e.target.value }))
+                }
                 required
               />
             </div>
@@ -172,7 +193,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="comarca"
                 placeholder="Ex: São Paulo"
                 value={formData.comarca}
-                onChange={(e) => setFormData((f) => ({ ...f, comarca: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, comarca: e.target.value }))
+                }
               />
             </div>
 
@@ -182,7 +205,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="vara"
                 placeholder="Ex: 1ª Vara Cível"
                 value={formData.vara}
-                onChange={(e) => setFormData((f) => ({ ...f, vara: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, vara: e.target.value }))
+                }
               />
             </div>
 
@@ -191,9 +216,11 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
-                  setFormData((f) => ({ ...f, status: value as Process["status"] }))
-                }
-              >
+                  setFormData((f) => ({
+                    ...f,
+                    status: value as Process["status"],
+                  }))
+                }>
                 <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
@@ -212,7 +239,12 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="dataDistribuicao"
                 type="date"
                 value={formData.dataDistribuicao}
-                onChange={(e) => setFormData((f) => ({ ...f, dataDistribuicao: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({
+                    ...f,
+                    dataDistribuicao: e.target.value,
+                  }))
+                }
               />
             </div>
 
@@ -224,7 +256,9 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 step="0.01"
                 placeholder="0.00"
                 value={formData.valor}
-                onChange={(e) => setFormData((f) => ({ ...f, valor: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, valor: e.target.value }))
+                }
               />
             </div>
 
@@ -234,17 +268,24 @@ export default function ProcessDialog({ open, onOpenChange, process, onSave }: P
                 id="notas"
                 placeholder="Adicione notas ou observações sobre o processo..."
                 value={formData.notas}
-                onChange={(e) => setFormData((f) => ({ ...f, notas: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, notas: e.target.value }))
+                }
                 rows={4}
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">{process ? "Salvar Alterações" : "Criar Processo"}</Button>
+            <Button type="submit">
+              {process ? "Salvar Alterações" : "Criar Processo"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -7,17 +7,23 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity,
-  AlertCircle,
-  CheckCircle,
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
   Clock,
   Cpu,
   GitBranch,
-  LineChart,
   PlayCircle,
   RefreshCw,
   Users,
@@ -119,7 +125,9 @@ export default function AgentOrchestrationPanel() {
   // Fetch circuit breakers status
   const fetchMetrics = async (): Promise<void> => {
     try {
-      const response = await fetch("/api/observability?action=circuit-breakers");
+      const response = await fetch(
+        "/api/observability?action=circuit-breakers"
+      );
       if (!response.ok) return;
 
       const data = (await response.json()) as unknown;
@@ -181,7 +189,9 @@ export default function AgentOrchestrationPanel() {
             : ["gemini-2.5-pro"];
 
         const answer =
-          data.result?.analysis || data.result?.message || "Tarefa executada com sucesso";
+          data.result?.analysis ||
+          data.result?.message ||
+          "Tarefa executada com sucesso";
 
         setExecution({
           agentId,
@@ -246,9 +256,9 @@ export default function AgentOrchestrationPanel() {
   const getStateIcon = (state: CircuitBreakerStatus["state"] | string) => {
     switch (state) {
       case "CLOSED":
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle2 className="h-4 w-4" />;
       case "HALF_OPEN":
-        return <AlertCircle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4" />;
       case "OPEN":
         return <XCircle className="h-4 w-4" />;
       default:
@@ -262,7 +272,7 @@ export default function AgentOrchestrationPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <LineChart className="h-6 w-6 text-primary" />
+            <BarChart3 className="h-6 w-6 text-primary" />
             Orquestração de Agentes
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -270,8 +280,13 @@ export default function AgentOrchestrationPanel() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAutoRefresh((prev) => !prev)}>
-            <RefreshCw className={`h-4 w-4 ${autoRefresh ? "animate-spin" : ""}`} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAutoRefresh((prev) => !prev)}>
+            <RefreshCw
+              className={`h-4 w-4 ${autoRefresh ? "animate-spin" : ""}`}
+            />
             {autoRefresh ? "Auto-refresh" : "Manual"}
           </Button>
           <Button onClick={fetchMetrics} size="sm">
@@ -302,9 +317,13 @@ export default function AgentOrchestrationPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent) => {
               const buttonText =
-                loading && selectedAgent === agent.id ? "Executando..." : "Executar";
+                loading && selectedAgent === agent.id
+                  ? "Executando..."
+                  : "Executar";
               return (
-                <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                <Card
+                  key={agent.id}
+                  className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <span className="text-2xl">{agent.icon}</span>
@@ -316,8 +335,7 @@ export default function AgentOrchestrationPanel() {
                     <Button
                       onClick={() => executeAgent(agent.id)}
                       disabled={loading}
-                      className="w-full"
-                    >
+                      className="w-full">
                       <PlayCircle className="h-4 w-4 mr-2" />
                       {buttonText}
                     </Button>
@@ -341,14 +359,16 @@ export default function AgentOrchestrationPanel() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{metrics.summary.total}</div>
+                    <div className="text-3xl font-bold">
+                      {metrics.summary.total}
+                    </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-green-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-green-600 flex items-center gap-1">
-                      <CheckCircle className="h-4 w-4" />
+                      <CheckCircle2 className="h-4 w-4" />
                       Saudáveis
                     </CardTitle>
                   </CardHeader>
@@ -362,7 +382,7 @@ export default function AgentOrchestrationPanel() {
                 <Card className="border-yellow-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-yellow-600 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
+                      <AlertTriangle className="h-4 w-4" />
                       Degradadas
                     </CardTitle>
                   </CardHeader>
@@ -381,7 +401,9 @@ export default function AgentOrchestrationPanel() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-red-600">{metrics.summary.down}</div>
+                    <div className="text-3xl font-bold text-red-600">
+                      {metrics.summary.down}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -390,7 +412,9 @@ export default function AgentOrchestrationPanel() {
               <Card>
                 <CardHeader>
                   <CardTitle>Status dos Circuit Breakers</CardTitle>
-                  <CardDescription>Monitoramento de resiliência das APIs externas</CardDescription>
+                  <CardDescription>
+                    Monitoramento de resiliência das APIs externas
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[400px]">
@@ -398,8 +422,7 @@ export default function AgentOrchestrationPanel() {
                       {metrics.breakers.map((breaker) => (
                         <div
                           key={breaker.name}
-                          className="flex items-center justify-between p-4 border rounded-lg"
-                        >
+                          className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex items-center gap-3">
                             <Badge className={getStateColor(breaker.state)}>
                               {getStateIcon(breaker.state)}
@@ -408,13 +431,16 @@ export default function AgentOrchestrationPanel() {
                             <div>
                               <p className="font-medium">{breaker.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                Falhas: {breaker.failures} | Sucessos: {breaker.successes}
+                                Falhas: {breaker.failures} | Sucessos:{" "}
+                                {breaker.successes}
                               </p>
                             </div>
                           </div>
                           {breaker.timeSinceLastFailure !== null && (
                             <div className="text-sm text-muted-foreground">
-                              Última falha: {Math.floor(breaker.timeSinceLastFailure / 1000)}s atrás
+                              Última falha:{" "}
+                              {Math.floor(breaker.timeSinceLastFailure / 1000)}s
+                              atrás
                             </div>
                           )}
                         </div>
@@ -440,19 +466,24 @@ export default function AgentOrchestrationPanel() {
                   </Badge>
                 </CardTitle>
                 <CardDescription>
-                  {execution.steps} passos | {execution.usedTools.length} ferramentas usadas
+                  {execution.steps} passos | {execution.usedTools.length}{" "}
+                  ferramentas usadas
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Answer */}
                 <div className="p-4 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-2">Resposta Final:</p>
-                  <p className="text-sm whitespace-pre-wrap">{execution.answer}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {execution.answer}
+                  </p>
                 </div>
 
                 {/* Tools Used */}
                 <div>
-                  <p className="text-sm font-medium mb-2">Ferramentas Utilizadas:</p>
+                  <p className="text-sm font-medium mb-2">
+                    Ferramentas Utilizadas:
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {[...new Set(execution.usedTools)].map((tool) => (
                       <Badge key={tool} variant="secondary">
@@ -465,11 +496,16 @@ export default function AgentOrchestrationPanel() {
 
                 {/* Traces Timeline */}
                 <div>
-                  <p className="text-sm font-medium mb-3">Timeline de Execução (ReAct):</p>
+                  <p className="text-sm font-medium mb-3">
+                    Timeline de Execução (ReAct):
+                  </p>
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
                       {execution.traces.map((trace) => (
-                        <TraceItem key={`trace-${trace.timestamp}-${trace.step}`} trace={trace} />
+                        <TraceItem
+                          key={`trace-${trace.timestamp}-${trace.step}`}
+                          trace={trace}
+                        />
                       ))}
                     </div>
                   </ScrollArea>
@@ -496,14 +532,20 @@ function TraceItem({ trace }: { trace: AgentTrace }) {
   return (
     <div className="flex gap-3 p-3 border-l-4 border-primary/20 bg-muted/50 rounded">
       <div className="shrink-0">
-        <Badge variant={getTraceVariant(trace.type)}>{trace.type.toUpperCase()}</Badge>
+        <Badge variant={getTraceVariant(trace.type)}>
+          {trace.type.toUpperCase()}
+        </Badge>
       </div>
       <div className="flex-1">
         <p className="text-sm whitespace-pre-wrap">{trace.content}</p>
         {trace.toolUsed && (
-          <p className="text-xs text-muted-foreground mt-1">🔧 {trace.toolUsed}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            🔧 {trace.toolUsed}
+          </p>
         )}
-        {trace.error && <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>}
+        {trace.error && (
+          <p className="text-xs text-red-600 mt-1">❌ {trace.error}</p>
+        )}
       </div>
       <div className="shrink-0 text-xs text-muted-foreground">
         {typeof trace.duration === "number" ? `${trace.duration}ms` : "-- ms"}
