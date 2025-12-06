@@ -84,7 +84,8 @@ export default defineConfig({
           {
             // ✅ Lazy-loaded chunks: NetworkFirst para sempre buscar versão atualizada
             // Se rede falhar, usa cache. Isso resolve o 404 de chunks com hash diferente
-            urlPattern: /\/assets\/(MinutasManager|TiptapEditorV2|DashboardCharts|animation|three|dnd|files)-[a-zA-Z0-9]+\.js$/,
+            urlPattern:
+              /\/assets\/(MinutasManager|TiptapEditorV2|DashboardCharts|animation|three|dnd|files)-[a-zA-Z0-9]+\.js$/,
             handler: "NetworkFirst",
             options: {
               cacheName: "lazy-chunks",
@@ -113,10 +114,7 @@ export default defineConfig({
     alias: {
       "@": resolve(projectRoot, "src"),
       // Stub local pro Todoist (evita dependência externa em runtime)
-      "@doist/todoist-api-typescript": resolve(
-        projectRoot,
-        "src/lib/todoist-stub.ts"
-      ),
+      "@doist/todoist-api-typescript": resolve(projectRoot, "src/lib/todoist-stub.ts"),
       // REMOVIDO: @github/spark - agora usando Gemini 2.5 Pro diretamente
     },
   },
@@ -181,19 +179,11 @@ export default defineConfig({
     modulePreload: {
       polyfill: true,
       // Não fazer preload de chunks que contêm ProseMirror/Tiptap
-      resolveDependencies: (
-        _filename,
-        deps,
-        { hostId: _hostId, hostType: _hostType }
-      ) => {
+      resolveDependencies: (_filename, deps, { hostId: _hostId, hostType: _hostType }) => {
         // Filtrar dependências que não devem ser preloaded
         return deps.filter((dep) => {
           // Não preload editor chunks - eles serão carregados sob demanda
-          if (
-            dep.includes("editor") ||
-            dep.includes("tiptap") ||
-            dep.includes("prosemirror")
-          ) {
+          if (dep.includes("editor") || dep.includes("tiptap") || dep.includes("prosemirror")) {
             return false;
           }
           // Não preload Minutas - lazy loaded
