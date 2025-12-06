@@ -394,7 +394,7 @@ export class LLMService {
     // Simple hash function (in production, use crypto.subtle)
     let hash = 0;
     for (let i = 0; i < prompt.length; i++) {
-      const char = prompt.codePointAt(i) ?? 0;
+      const char = prompt.charCodeAt(i) ?? 0;
       hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }

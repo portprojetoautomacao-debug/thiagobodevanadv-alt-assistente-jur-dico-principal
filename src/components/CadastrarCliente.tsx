@@ -92,7 +92,7 @@ export default function CadastrarCliente() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <UserPlus size={32} className="text-primary" weight="duotone" />
+        <UserPlus size={32} className="text-primary" />
         <h1 className="text-3xl font-bold">Cadastrar Cliente</h1>
       </div>
 

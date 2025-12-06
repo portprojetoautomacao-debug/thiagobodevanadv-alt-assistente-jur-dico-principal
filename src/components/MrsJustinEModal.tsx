@@ -91,7 +91,7 @@ export default function MrsJustinEModal({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Brain className="w-8 h-8 text-primary" weight="fill" />
+              <Brain className="w-8 h-8 text-primary" />
               Mrs. Justin-e
             </DialogTitle>
           </div>
@@ -245,7 +245,7 @@ export default function MrsJustinEModal({
             <div className="flex items-start gap-3">
               <Sparkle
                 className="w-6 h-6 text-primary shrink-0 mt-0.5"
-                weight="fill"
+               
               />
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground">
@@ -271,7 +271,7 @@ export default function MrsJustinEModal({
 
           <div className="flex gap-3 pt-4">
             <Button className="flex-1" size="lg" onClick={handleActivate}>
-              <Brain className="w-5 h-5 mr-2" weight="fill" />
+              <Brain className="w-5 h-5 mr-2" />
               Ativar Mrs. Justin-e
             </Button>
             <Button

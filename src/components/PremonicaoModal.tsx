@@ -215,7 +215,7 @@ export default function PremonicaoModal({
                               className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow group">
                               <CaretRight
                                 className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                                weight="bold"
+                               
                               />
                               <p className="flex-1 text-foreground">
                                 {estrategia}

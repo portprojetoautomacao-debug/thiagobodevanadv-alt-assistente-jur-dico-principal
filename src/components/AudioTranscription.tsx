@@ -237,7 +237,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                   <div className="w-24 h-24 bg-destructive rounded-full flex items-center justify-center animate-pulse">
                     <MicrophoneStage
                       className="w-12 h-12 text-destructive-foreground"
-                      weight="fill"
+                     
                     />
                   </div>
                   <div className="absolute inset-0 rounded-full border-4 border-destructive animate-ping" />
@@ -246,7 +246,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                 <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
                   <MicrophoneStage
                     className="w-12 h-12 text-primary-foreground"
-                    weight="fill"
+                   
                   />
                 </div>
               )}
@@ -261,12 +261,12 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                 className="w-full">
                 {isRecording ? (
                   <>
-                    <Stop className="w-5 h-5 mr-2" weight="fill" />
+                    <Stop className="w-5 h-5 mr-2" />
                     Parar Gravação
                   </>
                 ) : (
                   <>
-                    <MicrophoneStage className="w-5 h-5 mr-2" weight="fill" />
+                    <MicrophoneStage className="w-5 h-5 mr-2" />
                     Iniciar Gravação
                   </>
                 )}

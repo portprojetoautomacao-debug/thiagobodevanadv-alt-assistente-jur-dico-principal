@@ -42,8 +42,7 @@ const CIRCUIT_BREAKER_COOLDOWN = 60000; // 60 segundos de cooldown
 // Flag para verificar se estamos em produção
 const isProd =
   typeof window !== "undefined" &&
-  (window.location.hostname.includes("vercel.app") ||
-    window.location.hostname !== "localhost");
+  (window.location.hostname.includes("vercel.app") || window.location.hostname !== "localhost");
 
 /**
  * Verifica se o circuit breaker está ativo
@@ -145,9 +144,7 @@ function processApiResponse(
 /**
  * Carrega múltiplas chaves em uma única requisição
  */
-async function batchLoadFromVercelKV(
-  keys: string[]
-): Promise<Map<string, unknown>> {
+async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknown>> {
   const results = new Map<string, unknown>();
 
   if (keys.length === 0) return results;
@@ -322,10 +319,7 @@ function scheduleWrite<T>(key: string, value: T): void {
  * @param initialValue - Initial value if key doesn't exist
  * @returns [value, setValue] - Current value and setter function
  */
-export function useKV<T>(
-  key: string,
-  initialValue: T
-): [T, (value: T | ((prev: T) => T)) => void] {
+export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] {
   // Inicializa com valor do cache ou localStorage
   const [storedValue, setStoredValue] = useState<T>(() => {
     // Verifica cache em memória primeiro
@@ -362,9 +356,7 @@ export function useKV<T>(
   const setValue = useCallback((value: T | ((prev: T) => T)) => {
     setStoredValue((currentStoredValue) => {
       const valueToStore =
-        typeof value === "function"
-          ? (value as (prev: T) => T)(currentStoredValue)
-          : value;
+        typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
 
       // Agenda escrita (debounced)
       scheduleWrite(keyRef.current, valueToStore);

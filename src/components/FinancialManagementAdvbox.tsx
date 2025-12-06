@@ -1,7 +1,13 @@
-import { useState, useMemo, useRef } from "react";
-import { useKV } from "@/hooks/use-kv";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,29 +17,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useKV } from "@/hooks/use-kv";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Plus, TrendUp, TrendDown, Paperclip, X, File } from "@phosphor-icons/react";
+  File,
+  Paperclip,
+  Plus,
+  TrendingDown as TrendDown,
+  TrendingUp as TrendUp,
+  X,
+} from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
+import { formatCurrency } from "@/lib/utils";
+import type { FinancialEntry } from "@/types";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  CartesianGrid,
 } from "recharts";
-import type { FinancialEntry } from "@/types";
-import { formatCurrency } from "@/lib/utils";
 
 interface FileAttachment {
   id: string;

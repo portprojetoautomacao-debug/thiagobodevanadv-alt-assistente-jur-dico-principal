@@ -1,13 +1,7 @@
 import PremonicaoModal from "@/components/PremonicaoModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -29,22 +23,13 @@ import { useKV } from "@/hooks/use-kv";
 import { config } from "@/lib/config";
 import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
-import {
-  createProcessTasks,
-  initializeTodoistClient,
-} from "@/lib/todoist-integration";
+import { createProcessTasks, initializeTodoistClient } from "@/lib/todoist-integration";
 import type { Expediente, PremonicaoJuridica, Process } from "@/types";
-import { MagnifyingGlass, Plus, Robot, Sparkle } from "@phosphor-icons/react";
+import { Search as MagnifyingGlass, Plus, Bot as Robot, Sparkles as Sparkle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const PROCESS_STAGES = [
-  "Inicial",
-  "Instrução",
-  "Sentença",
-  "Recurso",
-  "Execução",
-];
+const PROCESS_STAGES = ["Inicial", "Instrução", "Sentença", "Recurso", "Execução"];
 const STATUS_COLORS: Record<string, string> = {
   ativo: "bg-blue-100 text-blue-800 border-blue-300",
   suspenso: "bg-yellow-100 text-yellow-800 border-yellow-300",
@@ -58,11 +43,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 function isProcessIncomplete(process: Process): boolean {
   const authorMissing =
-    !process.autor ||
-    process.autor === "" ||
-    process.autor === "Não identificado";
-  const defendantMissing =
-    !process.reu || process.reu === "" || process.reu === "Não identificado";
+    !process.autor || process.autor === "" || process.autor === "Não identificado";
+  const defendantMissing = !process.reu || process.reu === "" || process.reu === "Não identificado";
   return authorMissing || defendantMissing;
 }
 
@@ -76,10 +58,7 @@ function processMatchesFilter(process: Process, filter: string): boolean {
   );
 }
 
-function processMatchesStage(
-  process: Process,
-  selectedStage: string | null
-): boolean {
+function processMatchesStage(process: Process, selectedStage: string | null): boolean {
   return !selectedStage || process.fase === selectedStage;
 }
 
@@ -95,29 +74,16 @@ function findExpedienteForProcess(
     (e) =>
       e.processId === process.id ||
       e.numeroProcesso === process.numeroCNJ ||
-      e.numeroProcesso?.replaceAll(/\D/g, "") ===
-        process.numeroCNJ.replaceAll(/\D/g, "")
+      e.numeroProcesso?.replaceAll(/\D/g, "") === process.numeroCNJ.replaceAll(/\D/g, "")
   );
 }
 
-function getExpedienteTeor(
-  expediente: Expediente | undefined,
-  process: Process
-): string {
+function getExpedienteTeor(expediente: Expediente | undefined, process: Process): string {
   if (!expediente) return process.notas || "";
-  return (
-    expediente.teor ||
-    expediente.content ||
-    expediente.conteudo ||
-    process.notas ||
-    ""
-  );
+  return expediente.teor || expediente.content || expediente.conteudo || process.notas || "";
 }
 
-function shouldUpdateParties(
-  autor: string | undefined,
-  reu: string | undefined
-): boolean {
+function shouldUpdateParties(autor: string | undefined, reu: string | undefined): boolean {
   const authorValid = autor && autor !== "Não identificado";
   const defendantValid = reu && reu !== "Não identificado";
   return !!(authorValid || defendantValid);
@@ -141,17 +107,14 @@ export default function ProcessCRM() {
 
   const [premonicaoOpen, setPremonicaoOpen] = useState(false);
   const [premonicaoLoading, setPremonicaoLoading] = useState(false);
-  const [premonicaoData, setPremonicaoData] =
-    useState<PremonicaoJuridica | null>(null);
+  const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null);
   const [premonicaoError, setPremonicaoError] = useState<string | null>(null);
 
   // Conta processos sem autor/réu preenchidos
   const incompleteProcesses = (processes || []).filter(isProcessIncomplete);
 
   const filteredProcesses = (processes || []).filter((p) => {
-    return (
-      processMatchesFilter(p, filter) && processMatchesStage(p, selectedStage)
-    );
+    return processMatchesFilter(p, filter) && processMatchesStage(p, selectedStage);
   });
 
   const handleAddProcess = async () => {
@@ -190,9 +153,7 @@ export default function ProcessCRM() {
           deadlines: [
             {
               type: "Análise Inicial",
-              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0], // +2 dias
+              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // +2 dias
               description: "Analisar processo recém cadastrado",
             },
           ],
@@ -216,15 +177,10 @@ export default function ProcessCRM() {
     toast.success("Processo adicionado com sucesso");
   };
 
-  const handleStatusChange = (
-    processId: string,
-    newStatus: Process["status"]
-  ) => {
+  const handleStatusChange = (processId: string, newStatus: Process["status"]) => {
     setProcesses((current) =>
       (current || []).map((p) =>
-        p.id === processId
-          ? { ...p, status: newStatus, updatedAt: new Date().toISOString() }
-          : p
+        p.id === processId ? { ...p, status: newStatus, updatedAt: new Date().toISOString() } : p
       )
     );
     toast.success("Status atualizado");
@@ -240,9 +196,7 @@ export default function ProcessCRM() {
       const data = await generatePremonicaoJuridica(process.numeroCNJ, process);
       setPremonicaoData(data);
     } catch (error) {
-      setPremonicaoError(
-        error instanceof Error ? error.message : "Erro desconhecido"
-      );
+      setPremonicaoError(error instanceof Error ? error.message : "Erro desconhecido");
       toast.error("Erro ao gerar premonição jurídica");
     } finally {
       setPremonicaoLoading(false);
@@ -285,22 +239,15 @@ export default function ProcessCRM() {
           if (idx >= 0) {
             updatedProcesses[idx] = {
               ...updatedProcesses[idx],
-              autor:
-                parties.autor ||
-                updatedProcesses[idx].autor ||
-                "Não identificado",
-              reu:
-                parties.reu || updatedProcesses[idx].reu || "Não identificado",
+              autor: parties.autor || updatedProcesses[idx].autor || "Não identificado",
+              reu: parties.reu || updatedProcesses[idx].reu || "Não identificado",
               updatedAt: new Date().toISOString(),
             };
             updated++;
           }
         }
       } catch (error) {
-        console.error(
-          `[UpdateParties] Erro no processo ${process.numeroCNJ}:`,
-          error
-        );
+        console.error(`[UpdateParties] Erro no processo ${process.numeroCNJ}:`, error);
       }
     }
 
@@ -323,19 +270,16 @@ export default function ProcessCRM() {
       {/* Header com título e ações */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Acervo de Processos
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gestão visual CRM do fluxo de processos
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Acervo de Processos</h1>
+          <p className="text-muted-foreground mt-1">Gestão visual CRM do fluxo de processos</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {incompleteProcesses.length > 0 && (
             <Button
               variant="outline"
               onClick={handleUpdateIncompleteParties}
-              disabled={updatingParties}>
+              disabled={updatingParties}
+            >
               <Robot className="w-4 h-4 mr-2" />
               {updatingParties
                 ? "Atualizando..."
@@ -377,9 +321,7 @@ export default function ProcessCRM() {
                     id="titulo"
                     placeholder="Ex: Ação Trabalhista - Horas Extras"
                     value={newProcess.titulo}
-                    onChange={(e) =>
-                      setNewProcess({ ...newProcess, titulo: e.target.value })
-                    }
+                    onChange={(e) => setNewProcess({ ...newProcess, titulo: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -388,9 +330,7 @@ export default function ProcessCRM() {
                     id="autor"
                     placeholder="Nome do autor"
                     value={newProcess.autor}
-                    onChange={(e) =>
-                      setNewProcess({ ...newProcess, autor: e.target.value })
-                    }
+                    onChange={(e) => setNewProcess({ ...newProcess, autor: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -399,9 +339,7 @@ export default function ProcessCRM() {
                     id="reu"
                     placeholder="Nome do réu"
                     value={newProcess.reu}
-                    onChange={(e) =>
-                      setNewProcess({ ...newProcess, reu: e.target.value })
-                    }
+                    onChange={(e) => setNewProcess({ ...newProcess, reu: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -410,18 +348,15 @@ export default function ProcessCRM() {
                     id="advogado"
                     placeholder="Nome do advogado"
                     value={newProcess.advogado}
-                    onChange={(e) =>
-                      setNewProcess({ ...newProcess, advogado: e.target.value })
-                    }
+                    onChange={(e) => setNewProcess({ ...newProcess, advogado: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fase">Fase Processual</Label>
                   <Select
                     value={newProcess.fase}
-                    onValueChange={(value) =>
-                      setNewProcess({ ...newProcess, fase: value })
-                    }>
+                    onValueChange={(value) => setNewProcess({ ...newProcess, fase: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -459,9 +394,8 @@ export default function ProcessCRM() {
         </div>
         <Select
           value={selectedStage || "all"}
-          onValueChange={(value) =>
-            setSelectedStage(value === "all" ? null : value)
-          }>
+          onValueChange={(value) => setSelectedStage(value === "all" ? null : value)}
+        >
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Todas as fases" />
           </SelectTrigger>
@@ -479,32 +413,29 @@ export default function ProcessCRM() {
       {/* Grid de cards de processos */}
       <div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-        data-testid="process-grid">
+        data-testid="process-grid"
+      >
         {filteredProcesses.map((process) => (
           <Card
             key={process.id}
             className="hover:shadow-lg transition-shadow flex flex-col"
-            data-testid="process-card">
+            data-testid="process-card"
+          >
             <CardHeader className="space-y-2 pb-3">
               <div className="flex items-start justify-between gap-2">
                 <CardTitle className="text-base font-semibold line-clamp-2 flex-1">
                   {process.titulo}
                 </CardTitle>
-                <Badge
-                  className={`${getStatusColorClass(process.status)} shrink-0`}>
+                <Badge className={`${getStatusColorClass(process.status)} shrink-0`}>
                   {process.status}
                 </Badge>
               </div>
-              <CardDescription className="text-xs font-mono">
-                {process.numeroCNJ}
-              </CardDescription>
+              <CardDescription className="text-xs font-mono">{process.numeroCNJ}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 flex-1 flex flex-col">
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-0.5">Autor:</p>
-                <p className="font-medium line-clamp-1">
-                  {process.autor || "-"}
-                </p>
+                <p className="font-medium line-clamp-1">{process.autor || "-"}</p>
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs mb-0.5">Réu:</p>
@@ -521,7 +452,8 @@ export default function ProcessCRM() {
                   value={process.status}
                   onValueChange={(value) =>
                     handleStatusChange(process.id, value as Process["status"])
-                  }>
+                  }
+                >
                   <SelectTrigger className="w-full h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>
@@ -536,8 +468,9 @@ export default function ProcessCRM() {
                   variant="outline"
                   size="sm"
                   className="w-full gap-2"
-                  onClick={() => handlePremonicao(process)}>
-                  <Sparkle className="w-4 h-4" weight="fill" />
+                  onClick={() => handlePremonicao(process)}
+                >
+                  <Sparkle className="w-4 h-4" />
                   Premonição Jurídica
                 </Button>
               </div>
@@ -551,9 +484,7 @@ export default function ProcessCRM() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Plus className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-foreground">
-              Nenhum processo encontrado
-            </p>
+            <p className="text-lg font-medium text-foreground">Nenhum processo encontrado</p>
             <p className="text-sm text-muted-foreground mt-1">
               {filter || selectedStage
                 ? "Tente ajustar os filtros"

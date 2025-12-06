@@ -30,7 +30,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkle size={24} className="text-primary" weight="duotone" />
+                <Sparkle size={24} className="text-primary" />
                 Fade In Up
               </CardTitle>
             </CardHeader>
@@ -49,7 +49,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Wind size={24} className="text-accent-teal" weight="duotone" />
+                <Wind size={24} className="text-accent-teal" />
                 Fade In Scale
               </CardTitle>
             </CardHeader>
@@ -71,7 +71,7 @@ export default function FluentAnimationsShowcase() {
                 <Lightning
                   size={24}
                   className="text-accent-orange"
-                  weight="duotone"
+                 
                 />
                 Slide In
               </CardTitle>
@@ -92,7 +92,7 @@ export default function FluentAnimationsShowcase() {
         <Card className="windows-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Atom size={24} className="text-accent-purple" weight="duotone" />
+              <Atom size={24} className="text-accent-purple" />
               Stagger Animation
             </CardTitle>
           </CardHeader>
