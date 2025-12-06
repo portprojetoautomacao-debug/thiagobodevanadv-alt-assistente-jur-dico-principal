@@ -102,7 +102,8 @@ export default function CadastrarCliente() {
                 <Label htmlFor="tipo">Tipo de Pessoa *</Label>
                 <Select
                   value={formData.tipo}
-                  onValueChange={(value) => handleChange("tipo", value)}>
+                  onValueChange={(value) => handleChange("tipo", value)}
+                >
                   <SelectTrigger id="tipo">
                     <SelectValue />
                   </SelectTrigger>
@@ -231,7 +232,8 @@ export default function CadastrarCliente() {
                     tipo: "fisica",
                     observacoes: "",
                   })
-                }>
+                }
+              >
                 Limpar
               </Button>
             </div>

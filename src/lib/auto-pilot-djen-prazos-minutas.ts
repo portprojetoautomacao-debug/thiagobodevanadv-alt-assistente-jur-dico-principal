@@ -100,9 +100,7 @@ export class AutoPilotDjenPrazosMinutas {
       autoCreateMinutas: true,
       syncToGoogleCalendar: true,
       defaultMinutaTipo: "Manifestação Simples",
-      logCallback:
-        config.logCallback ??
-        ((msg, level) => console[level](`[AutoPilot] ${msg}`)),
+      logCallback: config.logCallback ?? ((msg, level) => console[level](`[AutoPilot] ${msg}`)),
       ...config,
     };
 
@@ -255,9 +253,7 @@ ${pub.teor}`;
 
     if (!result.success) {
       this.log(
-        `Falha ao criar prazo para "${title}": ${
-          result.error || "motivo desconhecido"
-        }`,
+        `Falha ao criar prazo para "${title}": ${result.error || "motivo desconhecido"}`,
         "warn"
       );
       return;
@@ -266,9 +262,7 @@ ${pub.teor}`;
     this.stats.totalPrazosCriados += 1;
     this.log(
       `Prazo criado com sucesso para "${title}" ` +
-        `(localId=${result.localAppointmentId}, googleId=${
-          result.googleEventId || "—"
-        })`,
+        `(localId=${result.localAppointmentId}, googleId=${result.googleEventId || "—"})`,
       "info"
     );
   }
@@ -291,9 +285,7 @@ Metadados:
 - Tribunal: ${pub.tribunal}
 - Data da disponibilização: ${pub.data}
 - Tipo de comunicação: ${pub.tipo}
-- Número do processo: ${
-      analysis?.processNumber || pub.numeroProcesso || "não identificado"
-    }
+- Número do processo: ${analysis?.processNumber || pub.numeroProcesso || "não identificado"}
 - Órgão julgador: ${analysis?.court || pub.orgao || "não identificado"}
 - Match: ${pub.matchType}
 
@@ -352,25 +344,18 @@ ${pub.teor}
   /**
    * Callback chamado pelo DJENMonitorAgent quando encontra novas publicações
    */
-  private async handleNewPublications(
-    publicacoes: DJENFilteredResult[]
-  ): Promise<void> {
+  private async handleNewPublications(publicacoes: DJENFilteredResult[]): Promise<void> {
     if (!publicacoes || publicacoes.length === 0) {
       this.log("Execução DJEN sem publicações relevantes", "info");
       return;
     }
 
-    this.log(
-      `Processando ${publicacoes.length} publicação(ões) do DJEN...`,
-      "info"
-    );
+    this.log(`Processando ${publicacoes.length} publicação(ões) do DJEN...`, "info");
 
     for (const pub of publicacoes) {
       try {
         this.stats.totalIntimacoesProcessadas += 1;
-        const title = `${pub.tribunal} - ${pub.tipo} - ${
-          pub.numeroProcesso || "sem número"
-        }`;
+        const title = `${pub.tribunal} - ${pub.tipo} - ${pub.numeroProcesso || "sem número"}`;
 
         // 1) Análise da intimação (IA)
         const analysis = await this.analyzeIntimationWithGemini(pub);

@@ -880,8 +880,12 @@
   // Telemetria desabilitada
   "sonarlint.disableTelemetry": true,
 
-  // Detectar problemas apenas em código novo
-  "sonarlint.focusOnNewCode": true,
+  // Detectar problemas em TODO o código (não apenas novo)
+  "sonarlint.focusOnNewCode": false,
+
+  // Mostrar logs detalhados para debug
+  "sonarlint.output.showVerboseLogs": true,
+  "sonarlint.output.showAnalyzerLogs": true,
 
   // Padrão para identificar arquivos de teste
   "sonarlint.testFilePattern": "**/*{test,spec}.{ts,tsx,js,jsx}",
