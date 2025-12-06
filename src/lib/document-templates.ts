@@ -501,9 +501,7 @@ export function getTemplateById(id: string): DocumentTemplate | undefined {
 }
 
 // Função para buscar templates por tipo
-export function getTemplatesByTipo(
-  tipo: DocumentTemplate["tipo"]
-): DocumentTemplate[] {
+export function getTemplatesByTipo(tipo: DocumentTemplate["tipo"]): DocumentTemplate[] {
   return documentTemplates.filter((t) => t.tipo === tipo);
 }
 

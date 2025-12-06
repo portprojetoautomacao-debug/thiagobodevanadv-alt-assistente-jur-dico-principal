@@ -1,13 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -37,9 +31,7 @@ export default function NotificationSettings() {
       toast.success("Notificações ativadas com sucesso!");
       testNotification();
     } else if (result === "denied") {
-      toast.error(
-        "Você bloqueou as notificações. Ative-as nas configurações do navegador."
-      );
+      toast.error("Você bloqueou as notificações. Ative-as nas configurações do navegador.");
     }
   };
 
@@ -72,12 +64,8 @@ export default function NotificationSettings() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold gradient-text mb-2">
-          Configurações de Notificações
-        </h1>
-        <p className="text-muted-foreground">
-          Configure os alertas que deseja receber
-        </p>
+        <h1 className="text-3xl font-bold gradient-text mb-2">Configurações de Notificações</h1>
+        <p className="text-muted-foreground">Configure os alertas que deseja receber</p>
       </div>
 
       <div className="space-y-6">
@@ -102,8 +90,7 @@ export default function NotificationSettings() {
               <Alert variant="destructive">
                 <XCircle size={16} />
                 <AlertDescription>
-                  Seu navegador não suporta notificações push. Tente usar
-                  Chrome, Firefox ou Edge.
+                  Seu navegador não suporta notificações push. Tente usar Chrome, Firefox ou Edge.
                 </AlertDescription>
               </Alert>
             )}
@@ -112,8 +99,7 @@ export default function NotificationSettings() {
               <Alert className="border-primary/50 bg-primary/5">
                 <AlertTriangle className="text-primary" size={16} />
                 <AlertDescription>
-                  Você ainda não permitiu notificações. Clique no botão abaixo
-                  para ativar.
+                  Você ainda não permitiu notificações. Clique no botão abaixo para ativar.
                 </AlertDescription>
               </Alert>
             )}
@@ -122,8 +108,8 @@ export default function NotificationSettings() {
               <Alert variant="destructive">
                 <XCircle size={16} />
                 <AlertDescription>
-                  Notificações bloqueadas. Para ativar, clique no ícone de
-                  cadeado ao lado da URL e permita notificações.
+                  Notificações bloqueadas. Para ativar, clique no ícone de cadeado ao lado da URL e
+                  permita notificações.
                 </AlertDescription>
               </Alert>
             )}
@@ -142,7 +128,8 @@ export default function NotificationSettings() {
                 <Button
                   onClick={handleEnableNotifications}
                   className="button-gradient"
-                  disabled={!isSupported || permission === "denied"}>
+                  disabled={!isSupported || permission === "denied"}
+                >
                   <Bell size={20} />
                   Ativar Notificações
                 </Button>
@@ -162,9 +149,7 @@ export default function NotificationSettings() {
         <Card className="glassmorphic border-border/50">
           <CardHeader>
             <CardTitle>Tipos de Notificações</CardTitle>
-            <CardDescription>
-              Escolha quais tipos de alertas deseja receber
-            </CardDescription>
+            <CardDescription>Escolha quais tipos de alertas deseja receber</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
@@ -173,8 +158,7 @@ export default function NotificationSettings() {
                   Alertas de Prazos
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receber notificações sobre prazos próximos do vencimento (D-7,
-                  D-2, D-1)
+                  Receber notificações sobre prazos próximos do vencimento (D-7, D-2, D-1)
                 </p>
               </div>
               <Switch
@@ -197,8 +181,7 @@ export default function NotificationSettings() {
                   Alertas de Agentes IA
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receber notificações quando agentes autônomos completarem
-                  tarefas
+                  Receber notificações quando agentes autônomos completarem tarefas
                 </p>
               </div>
               <Switch
@@ -217,14 +200,11 @@ export default function NotificationSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label
-                  htmlFor="financial-alerts"
-                  className="text-base font-medium">
+                <Label htmlFor="financial-alerts" className="text-base font-medium">
                   Alertas Financeiros
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receber notificações sobre honorários vencidos e pagamentos
-                  pendentes
+                  Receber notificações sobre honorários vencidos e pagamentos pendentes
                 </p>
               </div>
               <Switch
@@ -250,20 +230,17 @@ export default function NotificationSettings() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              <strong className="text-foreground">Prazos:</strong> Você receberá
-              alertas automáticos 7, 2 e 1 dia antes do vencimento de cada prazo
-              ativo.
+              <strong className="text-foreground">Prazos:</strong> Você receberá alertas automáticos
+              7, 2 e 1 dia antes do vencimento de cada prazo ativo.
             </p>
             <p>
-              <strong className="text-foreground">Privacidade:</strong> As
-              notificações são processadas localmente no seu navegador. Nenhum
-              dado é enviado para servidores externos apenas para exibir o
-              alerta.
+              <strong className="text-foreground">Privacidade:</strong> As notificações são
+              processadas localmente no seu navegador. Nenhum dado é enviado para servidores
+              externos apenas para exibir o alerta.
             </p>
             <p>
-              <strong className="text-foreground">Controle:</strong> Você pode
-              desativar as notificações a qualquer momento usando os switches
-              acima.
+              <strong className="text-foreground">Controle:</strong> Você pode desativar as
+              notificações a qualquer momento usando os switches acima.
             </p>
           </CardContent>
         </Card>

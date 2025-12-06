@@ -23,9 +23,8 @@ function extractResponseText(data: Record<string, unknown>): string {
   return (
     (data.response as { text?: string })?.text ??
     (data.response as string) ??
-    (
-      data.choices as Array<{ message?: { content?: string }; text?: string }>
-    )?.[0]?.message?.content ??
+    (data.choices as Array<{ message?: { content?: string }; text?: string }>)?.[0]?.message
+      ?.content ??
     (data.choices as Array<{ text?: string }>)?.[0]?.text ??
     (data.message as { content?: string })?.content ??
     ""
@@ -103,10 +102,7 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
     const parsed = tryParseJsonBlock(cleaned);
     if (parsed) return parsed;
 
-    console.error(
-      "[PremonicaoService] Falha ao parsear JSON:",
-      cleaned.substring(0, 500)
-    );
+    console.error("[PremonicaoService] Falha ao parsear JSON:", cleaned.substring(0, 500));
     throw new Error("Resposta não contém JSON reconhecível");
   }
 }
@@ -295,9 +291,7 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
 
     if (responseText.trim().length === 0) {
       console.warn("[PremonicaoService] Resposta vazia (string vazia)");
-      throw new Error(
-        "Resposta vazia da API de IA. Tente novamente em alguns segundos."
-      );
+      throw new Error("Resposta vazia da API de IA. Tente novamente em alguns segundos.");
     }
 
     console.log(
@@ -311,8 +305,6 @@ Retorne APENAS o objeto JSON, sem texto adicional antes ou depois.`;
     return normalizePremonicaoData(cnj, parsed);
   } catch (error) {
     console.error("[PremonicaoService] Erro ao gerar premonição:", error);
-    throw new Error(
-      "Não foi possível gerar a análise preditiva. Tente novamente."
-    );
+    throw new Error("Não foi possível gerar a análise preditiva. Tente novamente.");
   }
 }
