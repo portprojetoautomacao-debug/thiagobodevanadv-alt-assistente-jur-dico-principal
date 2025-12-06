@@ -276,6 +276,6 @@ export class DocumentExtractor {
    * Gera ID único
    */
   private generateId(): string {
-    return `doc-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    return crypto.randomUUID();
   }
 }
