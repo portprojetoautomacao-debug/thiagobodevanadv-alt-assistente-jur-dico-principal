@@ -3,11 +3,9 @@
  * Exibe documentos capturados pela extensão Chrome aguardando ação
  */
 
-import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
@@ -16,10 +14,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { FileText, Zap, AlertCircle, CheckCircle2, X, Download } from "lucide-react";
 import { usePJeDocumentSync, usePJeDocumentWidget } from "@/hooks/use-pje-document-sync";
 import { DocumentoPJe } from "@/types";
-import { toast } from "sonner";
+import { AlertCircle, CheckCircle2, Download, FileText, Loader2, X, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function PJeDocumentWidget() {
   const {
@@ -149,12 +147,17 @@ function PJeDocumentList() {
 
       {/* Vazio */}
       {documentosPendentes.length === 0 && documentosProcessados.length === 0 && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Nenhum documento capturado. Abra um documento no PJe para sincronizar.
-          </AlertDescription>
-        </Alert>
+        <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+          <div className="bg-muted p-4 rounded-full">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-medium">Nenhum documento capturado</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Navegue pelo PJe para capturar documentos automaticamente.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -200,7 +203,18 @@ function PJeDocumentCard({
 
   return (
     <Card className="cursor-pointer hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2 cursor-pointer hover:bg-muted/50" onClick={onToggleExpandir}>
+      <CardHeader
+        className="pb-2 cursor-pointer hover:bg-muted/50 focus:bg-muted/50 outline-none"
+        onClick={onToggleExpandir}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggleExpandir();
+          }
+        }}
+      >
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -266,7 +280,11 @@ function PJeDocumentCard({
               Descartar
             </Button>
             <Button size="sm" className="flex-1" onClick={handleSalvar} disabled={salvando}>
-              <Download className="h-4 w-4 mr-1" />
+              {salvando ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-1" />
+              )}
               {salvando ? "Salvando..." : "Salvar"}
             </Button>
           </div>

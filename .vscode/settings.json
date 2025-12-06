@@ -25,7 +25,7 @@
   "github.copilot.enable": {
     "*": true,
     "yaml": true,
-    "plaintext": false,
+    "plaintext": true,
     "markdown": true
   },
   "github.copilot.advanced": {
@@ -482,7 +482,7 @@
   "eslint.run": "onType",
   "eslint.autoFixOnSave": true,
   "eslint.codeActionsOnSave.mode": "all",
-  "eslint.codeActionsOnSave.rules": null,
+  "eslint.codeActionsOnSave.rules": {},
   "eslint.problems.shortenToSingleLine": true,
   "eslint.quiet": false,
   "eslint.onIgnoredFiles": "off",
@@ -552,7 +552,7 @@
   // ========================================
 
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/jdk-25.0.1-oracle-x64",
 
   // 📋 LOGS DETALHADOS (conforme documentação oficial SonarQube)
   // Habilitar temporariamente para diagnóstico
@@ -565,10 +565,6 @@
   // ========================================
   // 🔥 ANÁLISE AUTOMÁTICA
   // ========================================
-
-  "sonarlint.automaticAnalysis": {
-    "enabled": true
-  },
 
   // Analisar automaticamente ao abrir/salvar/modificar arquivo
   "sonarlint.analyzeOnOpen": true,
@@ -783,6 +779,29 @@
   "chat.mcp.serverSampling": {
     "assistente-juridico-p/.cursor/mcp.json: todoist": {
       "allowedModels": [
+        "copilot/claude-sonnet-4.5",
+        "copilot/auto",
+        "copilot/claude-haiku-4.5",
+        "copilot/claude-opus-41",
+        "copilot/claude-opus-4.5",
+        "copilot/claude-sonnet-4",
+        "copilot/gemini-2.5-pro",
+        "copilot/gemini-3-pro-preview",
+        "copilot/gpt-4.1",
+        "copilot/gpt-4o",
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-5-codex",
+        "copilot/gpt-5.1",
+        "copilot/gpt-5.1-codex",
+        "copilot/gpt-5.1-codex-max",
+        "copilot/gpt-5.1-codex-mini",
+        "copilot/grok-code-fast-1",
+        "copilot/oswe-vscode-prime"
+      ]
+    },
+    "assistente-juridico-p/.vscode/mcp.json: io.github.microsoft/EnterpriseMCP": {
+      "allowedModels": [
         "copilot/auto",
         "copilot/claude-haiku-4.5",
         "copilot/claude-opus-41",
@@ -849,6 +868,18 @@
   // ========================================
 
   "sonarlint.enableTelemetry": false,
+
+  // ========================================
+  // ⚡ TERMINAL - APROVAÇÃO AUTOMÁTICA (PERMISSÃO TOTAL)
+  // ========================================
+
+  // Permitir TODOS os comandos sem pedir confirmação
+  "chat.tools.terminal.autoApprove": {
+    "/.*/": true
+  },
+
+  // Ignorar regras padrão de bloqueio (CUIDADO: Remove proteções de segurança)
+  "chat.tools.terminal.ignoreDefaultAutoApproveRules": true,
 
   // ========================================
   // 🪄 P42 JS ASSISTANT - REFACTORING
@@ -932,6 +963,6 @@
   "typescript.disableAutomaticTypeAcquisition": false,
   "redhat.telemetry.enabled": false,
   "workbench.experimental.cloudChanges.autoStore": "onShutdown",
-  "playwright.showTrace": true,
+  "playwright.showTrace": false,
   "playwright.runGlobalSetupOnEachRun": true
 }
