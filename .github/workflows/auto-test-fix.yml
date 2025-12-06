@@ -43,6 +43,15 @@ jobs:
           npm ci --no-audit --no-fund
           npx playwright install ${{ matrix.browser }} --with-deps
 
+      - name: 🏗️ Build aplicação
+        id: build-app
+        run: npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: "dummy-client-id"
+          VITE_GOOGLE_API_KEY: "dummy-api-key"
+          VITE_REDIRECT_URI: "http://localhost:5173"
+          VITE_APP_ENV: "ci"
+
       - name: 🔍 Verificar TypeScript
         id: typecheck
         continue-on-error: true
@@ -69,17 +78,13 @@ jobs:
       - name: 💅 Formatar código
         run: npm run format
 
-      - name: 🏗️ Build
-        id: build
+      - name: 🔧 Verificar build (se falhou anteriormente)
+        id: build-check
+        if: steps.build-app.outcome == 'failure'
         continue-on-error: true
-        run: npm run build
-
-      - name: 🔧 Corrigir Build (se falhou)
-        if: steps.build.outcome == 'failure'
         run: |
-          echo "⚠️ Build falhou, limpando cache e tentando novamente..."
-          rm -rf node_modules/.vite dist .eslintcache
-          npm ci --no-audit --no-fund
+          echo "⚠️ Build anterior falhou, tentando novamente..."
+          rm -rf dist .eslintcache
           npm run build
 
       - name: 🧪 Executar testes unitários
@@ -91,7 +96,12 @@ jobs:
         id: e2e-tests
         continue-on-error: true
         env:
+          CI: true
           SKIP_AUTH_SETUP: true
+          VITE_GOOGLE_CLIENT_ID: "dummy-client-id"
+          VITE_GOOGLE_API_KEY: "dummy-api-key"
+          VITE_REDIRECT_URI: "http://localhost:5173"
+          VITE_APP_ENV: "ci"
         run: |
           # Executar com retry automático
           for i in {1..3}; do
@@ -136,7 +146,7 @@ jobs:
             const lintPassed = '${{ steps.lint.outcome }}' === 'success';
             const unitTestsPassed = '${{ steps.unit-tests.outcome }}' === 'success';
             const e2eTestsPassed = '${{ steps.e2e-tests.outcome }}' === 'success';
-            const buildPassed = '${{ steps.build.outcome }}' === 'success';
+            const buildPassed = '${{ steps.build-app.outcome }}' === 'success';
 
             const body = `
             ## 🤖 Relatório de Testes Automáticos - ${{ matrix.browser }}
@@ -172,7 +182,7 @@ jobs:
           echo ""
           echo "TypeScript: ${{ steps.typecheck.outcome }}"
           echo "ESLint: ${{ steps.lint.outcome }}"
-          echo "Build: ${{ steps.build.outcome }}"
+          echo "Build: ${{ steps.build-app.outcome }}"
           echo "Testes Unitários: ${{ steps.unit-tests.outcome }}"
           echo "Testes E2E: ${{ steps.e2e-tests.outcome }}"
           echo ""

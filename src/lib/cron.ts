@@ -357,6 +357,8 @@ interface AdvogadoInfo {
   uf_oab: string;
 }
 
+type DJENFilterCriteria = "nome" | "oab" | "processo" | "ambos";
+
 interface DJENFilteredResult {
   id: number;
   tribunal: string;
@@ -1207,12 +1209,12 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     const kv = await getKv();
 
     // Get all processes with deadlines
-    const processes = ((await kv.get("processes")) as ProcessWithDeadlines[]) || [];
+    const processes = (await kv.get<ProcessWithDeadlines[]>("processes")) || [];
 
     console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
 
     // Get calendar sync settings
-    const calendarSettings = (await kv.get("calendar-settings")) as CalendarSettings | null;
+    const calendarSettings = await kv.get<CalendarSettings>("calendar-settings");
 
     if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
       console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);

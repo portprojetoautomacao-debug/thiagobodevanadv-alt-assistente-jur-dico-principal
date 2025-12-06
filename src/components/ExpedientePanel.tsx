@@ -336,12 +336,8 @@ export default function ExpedientePanel() {
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false);
-  // Estado temporário para task selecionada (usado no futuro para UI de detalhes)
-  const [, setSelectedTask] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  // Contador de advogados configurados (reservado para estatísticas futuras)
-  const [, setLawyersCount] = useState(0);
 
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false);
@@ -366,10 +362,8 @@ export default function ExpedientePanel() {
       if (data.success && data.expedientes?.length > 0) {
         setExpedientes(data.expedientes);
         setLastSync(data.lastCheck);
-        setLawyersCount(data.lawyersConfigured || 0);
         toast.success(`${data.expedientes.length} expediente(s) carregado(s)`);
       } else {
-        setLawyersCount(data.lawyersConfigured || 0);
         if (data.lawyersConfigured === 0) {
           toast.info("Nenhum advogado configurado para monitoramento");
         }
@@ -782,7 +776,6 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
 
   // Análise com Mrs. Justin-e (tarefa específica)
   const handleSelectTask = async (task: string) => {
-    setSelectedTask(task);
     setAnalyzing(true);
 
     try {

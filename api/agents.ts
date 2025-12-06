@@ -13,11 +13,10 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 import { agentMonitor } from "../src/lib/agent-monitoring.js";
-import
-  {
-    AnalyzeIntimationInputSchema,
-    DraftPetitionInputSchema,
-  } from "../src/lib/agent-schemas.js";
+import {
+  AnalyzeIntimationInputSchema,
+  DraftPetitionInputSchema,
+} from "../src/lib/agent-schemas.js";
 import { legalMemory, type LegalContextType } from "../src/lib/legal-memory.js";
 import { createMinutaFromAgentTask } from "./lib/minuta-service-backend.js";
 
@@ -895,7 +894,7 @@ async function fetchAgents(): Promise<Agent[]> {
       return [];
     }
 
-    const agents = (await redis.get("autonomous-agents")) as Agent[] | null;
+    const agents = await redis.get<Agent[] | null>("autonomous-agents");
     return (agents ?? []).filter((a) => validateAgent(a));
   } catch (error) {
     logger.error("Failed to fetch agents from Redis", error);

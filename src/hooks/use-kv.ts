@@ -354,17 +354,20 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: 
   }, [key]);
 
   // Setter otimizado
-  const setValue = useCallback((value: T | ((prev: T) => T)) => {
-    setStoredValue((currentStoredValue) => {
-      const valueToStore =
-        typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      setStoredValue((currentStoredValue) => {
+        const valueToStore =
+          typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
 
-      // Agenda escrita (debounced)
-      scheduleWrite(keyRef.current, valueToStore);
+        // Agenda escrita (debounced)
+        scheduleWrite(keyRef.current, valueToStore);
 
-      return valueToStore;
-    });
-  }, []);
+        return valueToStore;
+      });
+    },
+    [scheduleWrite]
+  );
 
   // Carrega do Vercel KV em produção (batched)
   useEffect(() => {

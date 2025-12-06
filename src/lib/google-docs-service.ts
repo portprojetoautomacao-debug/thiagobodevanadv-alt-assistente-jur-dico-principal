@@ -1,11 +1,8 @@
 import type { Minuta } from "@/types";
 import { config } from "./config";
 import type {
-  DocsBatchUpdateResponse,
   DocsClient,
-  DocsCreateResponse,
   DocsDocument,
-  DocsGetResponse,
   DocumentElement,
   GapiGlobal,
   GoogleAuthResponse,
@@ -494,9 +491,9 @@ class GoogleDocsService {
           if (!docsApi.documents?.create) {
             throw new Error("docsApi.documents.create not available");
           }
-          return (await docsApi.documents.create({
+          return await docsApi.documents.create({
             title: minuta.titulo,
-          })) as DocsCreateResponse;
+          });
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,
@@ -597,10 +594,10 @@ class GoogleDocsService {
           if (!docsApi.documents?.batchUpdate) {
             throw new Error("docsApi.documents.batchUpdate not available");
           }
-          return (await docsApi.documents.batchUpdate({
+          return await docsApi.documents.batchUpdate({
             documentId: docId,
             requests,
-          })) as DocsBatchUpdateResponse;
+          });
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,
@@ -627,9 +624,9 @@ class GoogleDocsService {
         return null;
       }
 
-      const response = (await docsApi.documents.get({
+      const response = await docsApi.documents.get({
         documentId: docId,
-      })) as DocsGetResponse;
+      });
 
       return response.result ?? null;
     } catch (error) {
@@ -665,9 +662,9 @@ class GoogleDocsService {
           if (!docsApi.documents?.get) {
             throw new Error("docsApi.documents.get not available");
           }
-          return (await docsApi.documents.get({
+          return await docsApi.documents.get({
             documentId: docId,
-          })) as DocsGetResponse;
+          });
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,
