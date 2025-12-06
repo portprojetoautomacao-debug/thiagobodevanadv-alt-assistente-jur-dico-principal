@@ -3,10 +3,10 @@
  * Monitora documentos extraídos da extensão e auto-salva como minutas
  */
 
-import { useEffect, useRef, useState } from "react";
-import { useKV } from "./use-kv";
 import { DocumentoPJe } from "@/types";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useKV } from "./use-kv";
 
 export interface PJeDocumentSync {
   documentosPendentes: DocumentoPJe[];
@@ -35,9 +35,9 @@ export function usePJeDocumentSync(): PJeDocumentSync {
   // Detectar aba ativa
   useEffect(() => {
     const detectarAbaAtiva = async () => {
-      // @ts-ignore - chrome API types might be missing in web context
+      // @ts-expect-error - chrome API types might be missing in web context
       if (typeof chrome !== "undefined" && chrome.tabs) {
-        // @ts-ignore
+        // @ts-expect-error - chrome API types might be missing in web context
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tabs.length > 0) {
           tabIdRef.current = tabs[0].id || null;
@@ -54,7 +54,7 @@ export function usePJeDocumentSync(): PJeDocumentSync {
     if (!tabIdRef.current) return;
 
     try {
-      // @ts-ignore
+      // @ts-expect-error - chrome API types might be missing in web context
       const response = await chrome.tabs.sendMessage(tabIdRef.current, {
         type: "PING",
         timestamp: Date.now(),
@@ -93,11 +93,11 @@ export function usePJeDocumentSync(): PJeDocumentSync {
       }
     };
 
-    // @ts-ignore
+    // @ts-expect-error - chrome API types might be missing in web context
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
-      // @ts-ignore
+      // @ts-expect-error - chrome API types might be missing in web context
       chrome.runtime.onMessage.addListener(handleMessage);
-      // @ts-ignore
+      // @ts-expect-error - chrome API types might be missing in web context
       return () => chrome.runtime.onMessage.removeListener(handleMessage);
     }
   }, []);
@@ -110,7 +110,7 @@ export function usePJeDocumentSync(): PJeDocumentSync {
     setProximaSincronizacao(Date.now() + 2000);
 
     try {
-      // @ts-ignore
+      // @ts-expect-error - chrome API types might be missing in web context
       await chrome.tabs.sendMessage(tabIdRef.current, {
         type: "FORCE_SYNC",
         timestamp: Date.now(),
