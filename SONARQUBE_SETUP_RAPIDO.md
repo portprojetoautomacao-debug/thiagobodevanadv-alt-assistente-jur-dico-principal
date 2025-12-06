@@ -57,32 +57,39 @@ SONARQUBE_TOKEN=squ_1234567890abcdef1234567890abcdef12345678
 echo "SONARQUBE_TOKEN=seu_token_aqui" >> .env
 ```
 
-### 3️⃣ Verificar Configuração
+### 3️⃣ Configurar via Interface Visual (Recomendado)
 
-```bash
-./verificar-sonarqube.sh
-```
+**IMPORTANTE**: Não use comandos! Use a interface visual do SonarLint:
 
-Você deve ver:
-```
-✅ Variável SONARQUBE_TOKEN definida
-✅ Token SonarCloud válido e autenticado
-```
+1. **Abra a barra lateral** (Activity Bar) do VS Code
+2. **Clique no ícone SonarQube** ou procure por "CONNECTED MODE"
+3. **Clique em** "Add SonarQube Cloud Connection"
+4. **Preencha**:
+   - **Organization Key**: `thiagobodevan-a11y-assistente-juridico-p`
+   - **User Token**: Cole o token gerado no passo 1
+   - **Connection Name**: `SonarCloud Assistente Jurídico`
+5. **Clique em** "Save Connection"
+6. **Bind o projeto**:
+   - Na mesma interface, clique em "Bind Project"
+   - **Project Key**: `thiagobodevan-a11y_assistente-juridico-p`
+   - Confirme
 
-### 4️⃣ Reiniciar VS Code
+### 4️⃣ Verificar Conexão
 
-**IMPORTANTE**: Recarregue o VS Code para ativar a extensão SonarLint:
+Na barra inferior (status bar) do VS Code, você verá:
+- ✅ Ícone do SonarLint (verde = conectado)
+- ✅ Branch name sendo sincronizado
 
-1. Pressione `Ctrl+Shift+P` (ou `Cmd+Shift+P` no Mac)
-2. Digite: `Developer: Reload Window`
-3. Pressione Enter
-4. Aguarde o SonarLint inicializar (veja no status bar)
+### 5️⃣ Testar Análise
 
-> **Nota**: A extensão SonarLint v4.35.1 já está instalada, mas precisa ser recarregada para ativar os comandos.
+1. **Abra** qualquer arquivo `.ts` ou `.tsx`
+2. **Faça uma modificação**
+3. **Salve** (`Ctrl+S`)
+4. **Veja** os issues automaticamente no painel **Problems** (`Ctrl+Shift+M`)
+
+**Pronto!** O SonarLint agora analisa automaticamente seu código! 🎉
 
 ---
-
-## 🎯 Como Usar
 
 ### Análise Automática
 

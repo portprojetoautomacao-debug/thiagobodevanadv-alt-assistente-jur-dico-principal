@@ -249,7 +249,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Prazos Urgentes</CardTitle>
-            <WarningCircle
+            <AlertCircle
               className={stats.prazosUrgentes > 0 ? "text-destructive neon-glow" : "text-primary"}
               size={24}
             />

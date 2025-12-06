@@ -7,34 +7,36 @@ Erro ao executar o comando SonarLint.ConnectToSonarCloud:
 command 'SonarLint.ConnectToSonarCloud' not found.
 ```
 
-## ✅ Status da Instalação
+## ✅ Solução: Use a Interface Visual!
 
-| Item | Status |
-|------|--------|
-| **Extensão SonarLint** | ✅ Instalado (v4.35.1) |
-| **Sonar Copilot Assistant** | ✅ Instalado (v1.0.13) |
-| **Configuração VS Code** | ✅ Completa |
-| **Java 11** | ✅ Configurado |
+**O comando não existe!** A configuração correta é através da **interface visual CONNECTED MODE**.
 
-## 🔄 Soluções
+Veja o guia completo: **`SONARQUBE_INTERFACE_VISUAL.md`**
 
-### Solução 1: Recarregar VS Code (Recomendado)
+## 🚀 Passos Rápidos
 
-A extensão SonarLint precisa ser recarregada para ativar todos os comandos:
+### 1️⃣ Abrir Interface CONNECTED MODE
 
-1. **Pressione** `Ctrl+Shift+P` (ou `Cmd+Shift+P` no Mac)
-2. **Digite**: `Developer: Reload Window`
-3. **Pressione** Enter
-4. **Aguarde** a extensão SonarLint inicializar (veja no status bar)
+**Opção A**: Clique no ícone **SonarQube** na Activity Bar (barra lateral esquerda)
 
-### Solução 2: Verificar Output da Extensão
+**Opção B**: `Ctrl+Shift+P` → `SonarLint: Focus on SonarQube Setup View`
 
-1. **Pressione** `Ctrl+Shift+P`
-2. **Digite**: `Output: Show Output Channels`
-3. **Selecione**: `SonarLint Language Server`
-4. **Verifique** se há erros de inicialização
+### 2️⃣ Adicionar Conexão
 
-### Solução 3: Conectar ao SonarCloud Manualmente
+1. Clique em **"Add SonarQube Cloud Connection"**
+2. Preencha:
+   - **Organization**: `thiagobodevan-a11y-assistente-juridico-p`
+   - **Token**: Seu token do SonarCloud
+   - **Name**: `SonarCloud` (opcional)
+3. Clique em **"Save Connection"**
+
+### 3️⃣ Bind Projeto
+
+1. Clique em **"Bind Project"**
+2. Selecione: `thiagobodevan-a11y_assistente-juridico-p`
+3. Confirme
+
+**Pronto!** Veja o status na barra inferior do VS Code.
 
 Em vez de usar o comando, configure diretamente no arquivo de configuração:
 
