@@ -132,6 +132,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const typecheckPassed = '${{ steps.typecheck.outcome }}' === 'success';
+            const lintPassed = '${{ steps.lint.outcome }}' === 'success';
             const unitTestsPassed = '${{ steps.unit-tests.outcome }}' === 'success';
             const e2eTestsPassed = '${{ steps.e2e-tests.outcome }}' === 'success';
             const buildPassed = '${{ steps.build.outcome }}' === 'success';
@@ -141,8 +143,8 @@ jobs:
 
             | Check | Status |
             |-------|--------|
-            | TypeScript | ${{ steps.typecheck.outcome == 'success' ? '✅' : '❌' }} |
-            | ESLint | ${{ steps.lint.outcome == 'success' ? '✅' : '⚠️' }} (auto-fix aplicado) |
+            | TypeScript | ${typecheckPassed ? '✅' : '❌'} |
+            | ESLint | ${lintPassed ? '✅' : '⚠️'} (auto-fix aplicado) |
             | Build | ${buildPassed ? '✅' : '❌'} |
             | Testes Unitários | ${unitTestsPassed ? '✅' : '❌'} |
             | Testes E2E | ${e2eTestsPassed ? '✅' : '❌'} |
