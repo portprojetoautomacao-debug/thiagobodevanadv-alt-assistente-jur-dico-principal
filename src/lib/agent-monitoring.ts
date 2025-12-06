@@ -38,7 +38,7 @@ interface SentryFunctions {
 // STUBS PARA AMBIENTE SERVERLESS (Node.js / Vercel Functions)
 // ============================================================================
 
-const isServerSide = typeof window === "undefined";
+const isServerSide = typeof globalThis.window === "undefined";
 
 // Funções stub para ambiente serverless
 const stubFunctions: SentryFunctions = {

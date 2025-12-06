@@ -11,20 +11,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { LLMMetrics } from "@/lib/llm-service";
-import { llmService, type AuditLogEntry } from "@/lib/llm-service";
+import { llmService, type AuditLogEntry, type LLMMetrics } from "@/lib/llm-service";
 import {
-  RefreshCw,
+  AlertTriangle,
   BarChart2,
   ChartLine,
   CheckCircle,
   Clock,
   Cpu,
-  DollarSign,
   Database,
-  Zap,
+  DollarSign,
+  RefreshCw,
   TrendingUp,
-  AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

@@ -1,16 +1,13 @@
-import { useState, useEffect } from "react";
-import type { Process } from "@/types";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { validarNumeroCNJ, formatarNumeroCNJ } from "@/lib/prazos";
+import { Textarea } from "@/components/ui/textarea";
+import { formatarNumeroCNJ, validarNumeroCNJ } from "@/lib/prazos";
+import type { Process } from "@/types";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ProcessDialogProps {
@@ -58,7 +58,12 @@ function createInitialFormData(process?: Process) {
   };
 }
 
-export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
+export default function ProcessDialog({
+  open,
+  onOpenChange,
+  process,
+  onSave,
+}: Readonly<ProcessDialogProps>) {
   // Initialize form data with lazy initialization
   const [formData, setFormData] = useState(() => createInitialFormData(process));
 

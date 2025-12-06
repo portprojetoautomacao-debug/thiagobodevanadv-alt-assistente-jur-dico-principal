@@ -5,7 +5,7 @@ import { usePageTracking, useUserTracking } from "../hooks/useErrorTracking";
 import { getEnv } from "../lib/env-helper.js";
 import { captureMessage, setErrorTag } from "../services/error-tracking";
 
-export function AppWithErrorTracking({ user }: { user?: { id: string; email: string } }) {
+export function AppWithErrorTracking({ user }: Readonly<{ user?: { id: string; email: string } }>) {
   // Rastrear usuário logado
   useUserTracking(user?.id, user?.email);
 

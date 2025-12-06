@@ -184,6 +184,7 @@ export function captureCheckin(options: CaptureCheckinOptions): string {
  * await syncDJEN();
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function monitorCron<T extends (...args: any[]) => Promise<any>>(
   monitorSlug: string,
   fn: T,

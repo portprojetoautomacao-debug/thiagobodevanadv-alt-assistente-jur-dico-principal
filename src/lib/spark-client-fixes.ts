@@ -359,7 +359,7 @@ function handleDiagnosticError(diagnosticError: unknown, originalError: unknown)
 
 export function applySparkLLMFixes() {
   if (typeof globalThis.window === "undefined") return;
-  const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
+  const w = globalThis.window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
   if (!w.spark?.llm) return;
 
   try {

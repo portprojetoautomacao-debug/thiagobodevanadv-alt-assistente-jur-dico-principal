@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
 import { useKV } from "@/hooks/use-kv";
 import type { Prazo, Process } from "@/types";
+import { useEffect, useMemo } from "react";
 
 interface NotificationPreferences {
   enabled: boolean;
@@ -44,7 +44,7 @@ export function useNotifications() {
   useEffect(() => {
     if (!preferences?.enabled) return;
 
-    if ("Notification" in window && Notification.permission === "default") {
+    if ("Notification" in globalThis && Notification.permission === "default") {
       Notification.requestPermission().then((permission) => {
         if (permission === "granted") {
           new Notification("🔔 Notificações Ativadas", {
@@ -112,7 +112,7 @@ export function useNotifications() {
   }, [prazos, preferences]);
 
   const requestPermission = async () => {
-    if (!("Notification" in window)) {
+    if (!("Notification" in globalThis)) {
       return "not-supported";
     }
 
@@ -161,7 +161,7 @@ export function useNotifications() {
     setPreferences: updatePreferences,
     requestPermission,
     testNotification,
-    isSupported: "Notification" in window,
-    permission: "Notification" in window ? Notification.permission : "denied",
+    isSupported: "Notification" in globalThis.window,
+    permission: "Notification" in globalThis.window ? Notification.permission : "denied",
   };
 }

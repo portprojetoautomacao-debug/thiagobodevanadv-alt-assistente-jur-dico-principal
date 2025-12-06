@@ -373,10 +373,10 @@ Com base no histórico de tarefas concluídas, sugira as próximas 3 ações mai
    * Busca histórico de tarefas do processo
    * TODO: Implementar busca real no Todoist por processo
    */
-  private async getProcessTaskHistory(processNumber: string): Promise<string[]> {
+  private async getProcessTaskHistory(_processNumber: string): Promise<string[]> {
     // Placeholder - em produção, buscar tarefas concluídas via API
     // const client = getTodoistClient();
-    // const tasks = await client.getTasks({ filter: `${processNumber} & completed` });
+    // const tasks = await client.getTasks({ filter: `${_processNumber} & completed` });
 
     // Por enquanto, retorna histórico simulado baseado em padrões comuns
     return ["Protocolar contestação", "Juntar documentos", "Notificar cliente sobre andamento"];

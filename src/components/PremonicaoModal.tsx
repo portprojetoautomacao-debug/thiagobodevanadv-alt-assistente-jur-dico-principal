@@ -8,15 +8,15 @@ import { Check, ChevronRight, Copy, ExternalLink, Lightbulb, X } from "lucide-re
 import { useState } from "react";
 
 interface PremonicaoModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  data: PremonicaoJuridica | null;
-  isLoading: boolean;
-  error: string | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly data: PremonicaoJuridica | null;
+  readonly isLoading: boolean;
+  readonly error: string | null;
 }
 
 interface ProbabilityMeterProps {
-  percentage: number;
+  readonly percentage: number;
 }
 
 function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
@@ -86,7 +86,7 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
 }
 
 interface CopyButtonProps {
-  text: string;
+  readonly text: string;
 }
 
 function CopyButton({ text }: CopyButtonProps) {

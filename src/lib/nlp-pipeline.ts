@@ -48,6 +48,13 @@ export interface DocumentClassification {
   tags: string[];
 }
 
+// NLP Operation Result type alias
+export type NLPOperationResult =
+  | NamedEntity[]
+  | SentimentAnalysis
+  | DocumentClassification
+  | ExtractedInformation;
+
 // Information extraction result
 export interface ExtractedInformation {
   summary: string;
@@ -271,7 +278,7 @@ export class NLPPipeline {
   ): Promise<
     Array<{
       id: string;
-      result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation;
+      result: NLPOperationResult;
       error?: string;
     }>
   > {
