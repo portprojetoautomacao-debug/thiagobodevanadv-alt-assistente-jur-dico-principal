@@ -287,34 +287,29 @@ export default function MinutasManager() {
         current.map((m) => (m.id === editingMinuta.id ? minutaAtualizada : m))
       );
 
+      // Sincronizar com Google Docs se houver documento vinculado
+      if (minutaAtualizada.googleDocsId) {
+        const syncSuccess = await googleDocsService.updateDocumentContent(
+          minutaAtualizada.googleDocsId,
+          minutaAtualizada.conteudo
+        );
+        if (syncSuccess) {
+          toast.success("Minuta atualizada localmente e no Google Docs!");
+        } else {
+          toast.warning("Minuta atualizada localmente, mas erro ao sincronizar com Google Docs");
+        }
+      } else {
+        toast.success("Minuta atualizada com sucesso!");
+      }
+
+      setEditingMinuta(null);
       resetForm();
       setIsDialogOpen(false);
-      toast.success("Minuta atualizada com sucesso!");
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Erro ao atualizar minuta";
       toast.error(errorMsg);
       console.error("[MinutasManager] Erro ao atualizar minuta:", error);
     }
-  };
-
-  const handleSaveGoogleDoc = async (minuta: Minuta) => {
-    if (minuta.googleDocsId) {
-      const success = await googleDocsService.updateDocumentContent(
-        minuta.googleDocsId,
-        minuta.conteudo
-      );
-      if (success) {
-        toast.success("Minuta atualizada localmente e no Google Docs!");
-      } else {
-        toast.warning("Minuta atualizada localmente, mas erro ao sincronizar com Google Docs");
-      }
-    } else {
-      toast.success("Minuta atualizada!");
-    }
-
-    setEditingMinuta(null);
-    resetForm();
-    setIsDialogOpen(false);
   };
 
   const resetForm = () => {

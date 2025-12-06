@@ -492,6 +492,18 @@
   "vitest.enable": true,
   "vitest.commandLine": "npm run test",
 
+  // Incluir testes da extensão Chrome no Test Explorer
+  "vitest.workspaceConfig": [
+    {
+      "root": "${workspaceFolder}",
+      "configFile": "vitest.config.ts"
+    },
+    {
+      "root": "${workspaceFolder}/chrome-extension-pje",
+      "configFile": "vitest.config.ts"
+    }
+  ],
+
   // ========================================
   // 🚀 TASKS AUTOMÁTICAS
   // ========================================

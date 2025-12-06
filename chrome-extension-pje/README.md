@@ -7,11 +7,13 @@
 ### Para Usuários
 
 **Opção 1: Chrome Web Store** (Em breve)
+
 ```
 https://chrome.google.com/webstore/detail/pje-sync/...
 ```
 
 **Opção 2: Instalação Manual**
+
 1. Baixe o arquivo `pje-sync-v1.0.0.zip`
 2. Descompacte em uma pasta
 3. Abra `chrome://extensions`
@@ -60,12 +62,14 @@ npm run package
 ### Sincronização Automática
 
 A extensão monitora automaticamente:
+
 - ✅ Painel do Advogado no PJe
 - ✅ Novos processos distribuídos
 - ✅ Movimentações processuais
 - ✅ Intimações e citações
 
 **Dados sincronizados:**
+
 - Número do processo (CNJ)
 - Partes (autor e réu)
 - Classe e assunto
@@ -83,6 +87,7 @@ A extensão monitora automaticamente:
 ### Badge Visual
 
 Um badge aparece no canto superior direito do PJe:
+
 - 🟢 **Verde (✓)**: Sincronizado
 - 🟡 **Amarelo (⟳)**: Sincronizando
 - 🔴 **Vermelho (✗)**: Erro
@@ -93,6 +98,7 @@ Um badge aparece no canto superior direito do PJe:
 ### Dados Coletados
 
 A extensão coleta apenas:
+
 - ✅ Dados públicos visíveis no painel do PJe
 - ✅ Informações processuais (número, partes, movimentos)
 - ✅ Estatísticas de uso (para melhorias)
@@ -151,13 +157,35 @@ npm run package          # Gerar ZIP
 
 ### Testes
 
+A extensão possui **48 testes unitários** cobrindo todas as funcionalidades:
+
+| Arquivo                        | Testes | Descrição                       |
+| ------------------------------ | ------ | ------------------------------- |
+| `utils.test.ts`                | 18     | Validação CNJ, formatação, hash |
+| `popup.test.ts`                | 10     | Interface do popup e interações |
+| `expediente-extractor.test.ts` | 8      | Extração de intimações/citações |
+| `content-script.test.ts`       | 7      | Observador DOM e detecção       |
+| `process-extractor.test.ts`    | 5      | Extração de processos do PJe    |
+
 ```bash
-# Testes unitários
+# Rodar todos os testes
 npm run test
 
-# Testes de integração
-npm run test:e2e
+# Testes em modo watch
+npm run test:watch
+
+# Cobertura de código
+npm run test:coverage
+
+# CI (sem watch, saída limpa)
+npm run test:ci
 ```
+
+**Integração com CI/CD:**
+
+- O workflow `chrome-extension.yml` executa testes automaticamente
+- O script `npm run test:all` (raiz) inclui testes da extensão
+- Build falha se qualquer teste não passar
 
 ## 📊 Fluxo de Dados
 

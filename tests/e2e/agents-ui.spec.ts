@@ -17,10 +17,15 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve carregar a página de Agentes IA", async ({ page }) => {
-    // Verifica se a página carregou usando ARIA heading (melhor prática)
+    // Aguarda a página carregar completamente
+    await page.waitForLoadState("networkidle");
+
+    // Verifica se a página de agentes carregou usando o título real do componente
     await expect(
-      page.getByRole("heading", { name: /Agentes IA|Agentes Disponíveis/i }).first()
-    ).toBeVisible({ timeout: 10000 });
+      page
+        .getByRole("heading", { name: /Agentes de IA Autônomos|Harvey Specter|Mrs\. Justin-e/i })
+        .first()
+    ).toBeVisible({ timeout: 15000 });
 
     // Verificar se navegação está presente
     await expect(page.getByRole("navigation").first()).toBeVisible();
@@ -40,8 +45,10 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
   });
 
   test("deve permitir alternar status dos agentes", async ({ page }) => {
-    // Aguarda cards de agentes carregarem usando role semântico (melhor prática)
-    await expect(page.getByRole("article")).toBeVisible({ timeout: 10000 });
+    // Aguarda cards de agentes carregarem usando heading de agente
+    await expect(
+      page.getByRole("heading", { name: /Harvey|Justin|Monitor|Análise/i }).first()
+    ).toBeVisible({ timeout: 10000 });
 
     // Localiza o switch usando ARIA role (melhor prática)
     const agentSwitch = page.getByRole("switch").first();
