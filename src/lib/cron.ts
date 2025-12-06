@@ -357,7 +357,8 @@ interface AdvogadoInfo {
   uf_oab: string;
 }
 
-type DJENFilterCriteria = "nome" | "oab" | "processo" | "ambos";
+// Tipo reservado para futuras implementações de filtros
+type _DJENFilterCriteria = "nome" | "oab" | "processo" | "ambos";
 
 interface DJENFilteredResult {
   id: number;

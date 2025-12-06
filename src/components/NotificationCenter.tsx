@@ -392,46 +392,4 @@ export function NotificationCenter({ onNavigate }: Readonly<NotificationCenterPr
   );
 }
 
-// Hook interno para gerenciar notificações no componente NotificationCenter
-export function useNotificationManager() {
-  const [notifications, setNotifications] = useKV<Notification[]>("notifications", []);
-
-  const addNotification = useCallback(
-    (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
-      const newNotification: Notification = {
-        ...notification,
-        id: generateId(),
-        createdAt: new Date().toISOString(),
-        read: false,
-      };
-
-      setNotifications((current) => [newNotification, ...(current || [])].slice(0, 100));
-
-      return newNotification.id;
-    },
-    [setNotifications]
-  );
-
-  const markAsRead = useCallback(
-    (id: string) => {
-      setNotifications((current) =>
-        (current || []).map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-    },
-    [setNotifications]
-  );
-
-  const clearAll = useCallback(() => {
-    setNotifications([]);
-  }, [setNotifications]);
-
-  return {
-    notifications: notifications || [],
-    unreadCount: (notifications || []).filter((n) => !n.read).length,
-    addNotification,
-    markAsRead,
-    clearAll,
-  };
-}
-
 export default NotificationCenter;

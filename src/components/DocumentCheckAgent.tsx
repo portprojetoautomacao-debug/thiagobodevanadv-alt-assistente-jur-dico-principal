@@ -12,16 +12,6 @@ import { AlertTriangle, Bell, Bot, CheckCircle, Clock, FileText, Info } from "lu
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-// Helper: mapeia urgência para cor da borda (S3358)
-function getUrgencyColor(urgency: "high" | "medium" | "low"): string {
-  if (urgency === "high") return "hsl(var(--destructive))";
-  if (urgency === "medium") return "hsl(var(--primary))";
-  return "hsl(var(--muted-foreground))";
-}
-
-// Exported para uso em outros componentes (evita warning unused)
-export { getUrgencyColor };
-
 interface MissingDocument {
   id: string;
   processId: string;

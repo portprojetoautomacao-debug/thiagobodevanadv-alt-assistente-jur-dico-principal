@@ -40,6 +40,10 @@ dist-ssr
 .env.production
 .env.vercel
 .env.staging
+*.backup
+.env.backup
+.env.local.backup
+.env.vercel.backup
 
 # Test output and coverage
 playwright-report/

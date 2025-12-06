@@ -366,7 +366,7 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: 
         return valueToStore;
       });
     },
-    [scheduleWrite]
+    [] // scheduleWrite é função estável, não precisa estar nas dependências
   );
 
   // Carrega do Vercel KV em produção (batched)
