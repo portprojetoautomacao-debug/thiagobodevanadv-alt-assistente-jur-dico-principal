@@ -368,7 +368,11 @@ export function createSafeScriptURL(url: string): TrustedScriptURL | string {
  */
 export function getSafeInnerHTML(html: string): string {
   const safe = createSafeHTML(html);
-  return typeof safe === "string" ? safe : safe.toString();
+  return typeof safe === "string"
+    ? safe
+    : typeof safe === "object"
+      ? JSON.stringify(safe)
+      : String(safe);
 }
 
 /**

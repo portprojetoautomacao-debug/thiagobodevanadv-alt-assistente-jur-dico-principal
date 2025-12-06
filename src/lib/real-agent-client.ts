@@ -289,7 +289,7 @@ function buildTaskPrompt(task: AgentTask): string {
   prompt += `Prioridade: ${task.priority}\n\n`;
 
   if (data.description) {
-    prompt += `Descrição: ${String(data.description)}\n\n`;
+    prompt += `Descrição: ${typeof data.description === "object" ? JSON.stringify(data.description) : String(data.description)}\n\n`;
   }
 
   if (data.content || data.teor) {
@@ -298,11 +298,11 @@ function buildTaskPrompt(task: AgentTask): string {
   }
 
   if (data.processNumber) {
-    prompt += `Processo: ${String(data.processNumber)}\n`;
+    prompt += `Processo: ${typeof data.processNumber === "object" ? JSON.stringify(data.processNumber) : String(data.processNumber)}\n`;
   }
 
   if (data.expedienteId) {
-    prompt += `ID do Expediente: ${String(data.expedienteId)}\n`;
+    prompt += `ID do Expediente: ${typeof data.expedienteId === "object" ? JSON.stringify(data.expedienteId) : String(data.expedienteId)}\n`;
   }
 
   prompt += `\nExecute a tarefa e forneça uma resposta estruturada.`;

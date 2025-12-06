@@ -126,7 +126,12 @@ function processGeminiResponse<T>(
   const response = result as Record<string, unknown>;
 
   if (includePrompts && response.text) {
-    span?.setAttribute("gen_ai.response.text", JSON.stringify([String(response.text)]));
+    span?.setAttribute(
+      "gen_ai.response.text",
+      JSON.stringify([
+        typeof response.text === "object" ? JSON.stringify(response.text) : String(response.text),
+      ])
+    );
   }
 
   if (response.metadata && typeof response.metadata === "object") {

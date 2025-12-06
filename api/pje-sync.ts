@@ -134,7 +134,8 @@ export default async function handler(req: Request) {
 
 async function validateApiKey(key: string): Promise<boolean> {
   // Por ora, aceita qualquer key não-vazia
-  // TODO: Implementar validação real com KV storage
+  // FIXME: Implementar validação real com KV storage
+  // Validação atual é stub, precisa verificar duplicatas no Redis
   return key.length > 10;
 }
 

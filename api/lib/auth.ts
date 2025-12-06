@@ -67,7 +67,8 @@ export async function validateAuthToken(token: string): Promise<AuthResult> {
       }
     }
 
-    // TODO(SECURITY-001): Implementar validação JWT real
+    // FIXME(SECURITY-001): Implementar validação JWT real com refresh tokens
+    // Ref: https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues/security-001
     // ⚠️ IMPORTANTE: Implementação temporária - aceita qualquer token em produção
     // Ação necessária: Usar jsonwebtoken para validar signature + claims
     // Prazo sugerido: Sprint de segurança antes de lançamento público
