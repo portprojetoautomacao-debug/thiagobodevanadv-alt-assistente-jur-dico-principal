@@ -20,7 +20,8 @@
         "ms-playwright.playwright",
         "SonarSource.sonarlint-vscode",
         "vscjava.vscode-java-pack",
-        "GitHub.codespaces"
+        "GitHub.codespaces",
+        "google.geminicodeassist"
       ],
       "settings": {
         "editor.formatOnSave": true,
