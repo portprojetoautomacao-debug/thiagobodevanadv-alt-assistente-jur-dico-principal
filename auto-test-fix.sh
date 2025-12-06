@@ -220,7 +220,7 @@ fix_port_conflict() {
     if lsof -ti:5173 > /dev/null 2>&1; then
         log "Liberando porta 5173..."
         local pids_5173
-        pids_5173=$(lsof -ti:5173)
+        pids_5173=$(lsof -ti:5173 || true)
         graceful_kill "$pids_5173" "5173"
         log_success "Porta 5173 liberada"
     fi
@@ -229,7 +229,7 @@ fix_port_conflict() {
     if lsof -ti:5000 > /dev/null 2>&1; then
         log "Liberando porta 5000..."
         local pids_5000
-        pids_5000=$(lsof -ti:5000)
+        pids_5000=$(lsof -ti:5000 || true)
         graceful_kill "$pids_5000" "5000"
         log_success "Porta 5000 liberada"
     fi
