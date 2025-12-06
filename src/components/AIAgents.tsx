@@ -1,6 +1,4 @@
 import AgentMetrics from "@/components/AgentMetrics";
-import AgentThinkingPanel from "@/components/AgentThinkingPanel";
-import FailedTasksAnalysis from "@/components/FailedTasksAnalysis";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAgentBackup } from "@/hooks/use-agent-backup";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
-import { useExpedientes } from "@/hooks/use-expedientes";
 import { useKV } from "@/hooks/use-kv";
 import {
   AlertTriangle,
@@ -39,7 +36,7 @@ import AgentStatusFloater from "@/components/AgentStatusFloater";
 import { LegalMemoryViewer } from "@/components/LegalMemoryViewer";
 import MrsJustinEModal from "@/components/MrsJustinEModal";
 import { ServerLogsViewer } from "@/components/ServerLogsViewer";
-import type { Expediente, User, ViewType } from "@/types";
+import type { User, ViewType } from "@/types";
 import { toast } from "sonner";
 
 // ===========================
@@ -187,7 +184,7 @@ const agentIcons: Record<string, React.ElementType> = {
 };
 
 interface AIAgentsProps {
-  readonly onNavigate?: (view: ViewType) => void;
+  onNavigate?: (view: ViewType) => void;
 }
 
 export default function AIAgents({ onNavigate }: AIAgentsProps) {
@@ -203,11 +200,8 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
     serverLogs,
     legalMemory,
     refreshServerData,
-    clearOldLogs, // ✅ Nova função para limpar logs
     setAgents: _setAgents, // mantido para compatibilidade futura
   } = useAutonomousAgents();
-
-  const { expedientes } = useExpedientes(); // ✅ Expedientes/intimações reais
 
   const [user] = useKV<User | null>("user", null);
   const userId = user?.email || "default-user";
@@ -321,22 +315,6 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
             <div className="text-2xl font-bold">{queuedTasks + processingTasks}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {getProcessingText(processingTasks)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expedientes</CardTitle>
-            <Database className="w-4 h-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {expedientes?.filter((e: Expediente) => !e.processado).length || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {expedientes?.filter((e: Expediente) => e.urgente && !e.processado).length || 0}{" "}
-              urgentes
             </p>
           </CardContent>
         </Card>
@@ -683,31 +661,9 @@ export default function AIAgents({ onNavigate }: AIAgentsProps) {
 
         {/* Atividade em tempo real */}
         <TabsContent value="activity" className="space-y-4">
-          {/* Análise de Tarefas Falhadas - URGENTE */}
-          <FailedTasksAnalysis />
-
-          {/* Painel de Pensamento em Tempo Real */}
-          <AgentThinkingPanel />
-
-          {/* Registro de Atividades Original */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>Registro de Atividades</CardTitle>
-              {activityLog.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    clearOldLogs();
-                    toast.success("Logs antigos removidos (mantidos últimas 24h)");
-                  }}
-                  aria-label="Limpar logs antigos"
-                  title="Remover logs com mais de 24 horas"
-                >
-                  <History className="w-4 h-4 mr-2" />
-                  Limpar Antigos
-                </Button>
-              )}
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
