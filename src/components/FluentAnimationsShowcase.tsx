@@ -1,14 +1,14 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  FluentMotion,
   FluentFade,
-  FluentSlide,
-  FluentScale,
   FluentHover,
+  FluentMotion,
+  FluentScale,
+  FluentSlide,
   FluentStaggerItem,
 } from "@/components/FluentMotion";
-import { Sparkles, Wind, Zap, Atom } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Atom, Sparkles, Wind, Zap } from "lucide-react";
 
 export default function FluentAnimationsShowcase() {
   return (
@@ -19,8 +19,7 @@ export default function FluentAnimationsShowcase() {
             Animações Fluent Motion
           </h1>
           <p className="text-muted-foreground">
-            Sistema completo de animações suaves e sofisticadas inspirado no
-            Windows 11
+            Sistema completo de animações suaves e sofisticadas inspirado no Windows 11
           </p>
         </div>
       </FluentMotion>
@@ -30,7 +29,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkle size={24} className="text-primary" />
+                <Sparkles size={24} className="text-primary" />
                 Fade In Up
               </CardTitle>
             </CardHeader>
@@ -68,11 +67,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lightning
-                  size={24}
-                  className="text-accent-orange"
-                 
-                />
+                <Zap size={24} className="text-accent-orange" />
                 Slide In
               </CardTitle>
             </CardHeader>
@@ -104,9 +99,7 @@ export default function FluentAnimationsShowcase() {
               {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
                 <FluentStaggerItem key={item}>
                   <div className="windows-card p-4 text-center reveal-hover">
-                    <div className="text-2xl font-bold text-primary">
-                      {item}
-                    </div>
+                    <div className="text-2xl font-bold text-primary">{item}</div>
                     <div className="text-xs text-muted-foreground">Item</div>
                   </div>
                 </FluentStaggerItem>
@@ -129,9 +122,7 @@ export default function FluentAnimationsShowcase() {
               </FluentHover>
               <div className="windows-card p-4 text-center reveal-hover cursor-pointer">
                 <p className="font-medium">Reveal Effect</p>
-                <p className="text-xs text-muted-foreground">
-                  Windows 11 signature
-                </p>
+                <p className="text-xs text-muted-foreground">Windows 11 signature</p>
               </div>
             </CardContent>
           </Card>
@@ -169,13 +160,10 @@ export default function FluentAnimationsShowcase() {
         <Card className="windows-card border-primary/20">
           <CardContent className="p-6">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">
-                Sistema Completo Implementado
-              </h3>
+              <h3 className="text-xl font-semibold">Sistema Completo Implementado</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Todas as animações seguem as diretrizes de Fluent Motion do
-                Windows 11, com curvas de easing personalizadas, durações
-                otimizadas e suporte para redução de movimento
+                Todas as animações seguem as diretrizes de Fluent Motion do Windows 11, com curvas
+                de easing personalizadas, durações otimizadas e suporte para redução de movimento
                 (prefers-reduced-motion).
               </p>
               <div className="flex gap-4 justify-center pt-4">

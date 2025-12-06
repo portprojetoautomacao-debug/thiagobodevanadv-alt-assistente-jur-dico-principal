@@ -9,6 +9,7 @@ import { useKV } from "@/hooks/use-kv";
 import { cn } from "@/lib/utils";
 import type { Expediente, FinancialEntry, Process } from "@/types";
 import {
+  BarChart3,
   Bell,
   Briefcase,
   DollarSign as CurrencyCircleDollar,
@@ -72,7 +73,7 @@ const SAMPLE_QUESTIONS = [
 
 const QUICK_INSIGHTS = [
   {
-    icon: ChartBar,
+    icon: BarChart3,
     title: "Processos",
     description: "Ver meus processos",
     query: "Status dos meus processos",
@@ -580,17 +581,17 @@ IMPORTANTE:
   const getInsightIcon = (type: string) => {
     switch (type) {
       case "statistics":
-        return <ChartBar className="w-5 h-5" />;
+        return <BarChart3 className="w-5 h-5" />;
       case "alert":
         return <Bell className="w-5 h-5" />;
       case "trend":
-        return <ChartBar className="w-5 h-5" />;
+        return <BarChart3 className="w-5 h-5" />;
       case "suggestion":
         return <Briefcase className="w-5 h-5" />;
       case "info":
         return <Warning className="w-5 h-5" />;
       default:
-        return <ChartBar className="w-5 h-5" />;
+        return <BarChart3 className="w-5 h-5" />;
     }
   };
 
