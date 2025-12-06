@@ -6,7 +6,7 @@ O token de autenticação do SonarCloud está **exposto publicamente** no arquiv
 
 ### Token Exposto
 ```
-83fa42a2bd87d9a864fa385b7e9b1f66438013db
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ## 📋 AÇÕES IMEDIATAS (EXECUTAR AGORA!)

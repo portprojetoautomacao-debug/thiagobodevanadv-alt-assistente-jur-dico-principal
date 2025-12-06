@@ -110,9 +110,7 @@ export function debounce<T extends (...args: any[]) => any>(
       func(...args);
     };
     
-    if (timeout !== null) {
-      clearTimeout(timeout);
-    }
+    clearTimeout(timeout);
     timeout = window.setTimeout(later, wait);
   };
 }
