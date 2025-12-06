@@ -1,8 +1,3 @@
-import { useState, type KeyboardEvent, type SVGProps } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BookOpen, Sparkles, Search, User } from "lucide-react";
 import { toast } from "sonner";
@@ -67,7 +62,11 @@ export default function KnowledgeBase() {
       return;
     }
 
-    const userMessage: Message = { id: crypto.randomUUID(), role: "user", content: raw };
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: raw,
+    };
     setMessages((prev) => [...prev, userMessage]);
 
     // Se veio de atalho, a caixa de texto pode ficar igual ou ser limpa.

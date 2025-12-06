@@ -743,6 +743,32 @@
     }
   },
 
+  // Conexão com SonarCloud
+  "sonarlint.connectedMode.connections.sonarcloud": [
+    {
+      "connectionId": "sonarcloud-assistente-juridico",
+      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
+      "token": "${env:SONARQUBE_TOKEN}"
+    }
+  ],
+
+  // Binding do projeto
+  "sonarlint.connectedMode.project": {
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+    "connectionId": "sonarcloud-assistente-juridico"
+  },
+
+  // Análise automática
+  "sonarlint.analyser.automaticAnalysis.enabled": true,
+  "sonarlint.analyser.analyzeOnCommit.enabled": true,
+  "sonarlint.analyser.analyzeOnSave.enabled": true,
+
+  // Focus on new code
+  "sonarlint.focusOnNewCode": true,
+
+  // Desabilitar telemetria
+  "sonarlint.disableTelemetry": true,
+
   // ========================================
   // 🎯 EXPERIENCE & UI
   // ========================================

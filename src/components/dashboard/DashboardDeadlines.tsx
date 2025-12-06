@@ -11,8 +11,8 @@ import type { Prazo, ViewType } from "@/types";
 import { ArrowRight, CalendarCheck } from "lucide-react";
 
 interface DashboardDeadlinesProps {
-  prazosProximos: (Prazo & { processoTitulo: string })[];
-  onNavigate: (view: ViewType) => void;
+  readonly prazosProximos: ReadonlyArray<Prazo & { processoTitulo: string }>;
+  readonly onNavigate: (view: ViewType) => void;
 }
 
 export function DashboardDeadlines({
@@ -30,10 +30,9 @@ export function DashboardDeadlines({
           variant="ghost"
           size="sm"
           onClick={() => onNavigate("prazos")}
-          className="text-accent-11 hover:text-accent-12"
-        >
+          className="text-accent-11 hover:text-accent-12">
           Ver todos
-          <ArrowRight className="ml-2 h-4 w-4" />
+          <ArrowRightIcon className="ml-2 h-4 w-4" />
         </Button>
       </CardHeader>
       <CardContent>
@@ -48,16 +47,21 @@ export function DashboardDeadlines({
               return (
                 <div
                   key={prazo.id}
-                  className="flex items-start justify-between p-3 rounded-lg bg-neutral-3 border border-neutral-6 hover:border-accent-6 transition-colors"
-                >
+                  className="flex items-start justify-between p-3 rounded-lg bg-neutral-3 border border-neutral-6 hover:border-accent-6 transition-colors">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-neutral-12">{prazo.descricao}</p>
-                    <p className="text-xs text-neutral-11 mt-1">{prazo.processoTitulo}</p>
+                    <p className="text-sm font-medium text-neutral-12">
+                      {prazo.descricao}
+                    </p>
+                    <p className="text-xs text-neutral-11 mt-1">
+                      {prazo.processoTitulo}
+                    </p>
                     <p className="text-xs text-neutral-10 mt-1">
                       Vencimento: {formatarData(prazo.dataFinal)}
                     </p>
                   </div>
-                  <Badge variant={urgente ? "destructive" : "secondary"} className="ml-2">
+                  <Badge
+                    variant={urgente ? "destructive" : "secondary"}
+                    className="ml-2">
                     {(() => {
                       if (diasRestantes === 0) return "Hoje";
                       if (diasRestantes === 1) return "1 dia";

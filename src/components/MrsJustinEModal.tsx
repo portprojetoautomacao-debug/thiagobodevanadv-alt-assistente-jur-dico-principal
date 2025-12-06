@@ -1,6 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAIStreaming } from "@/hooks/use-ai-streaming";
 import { Brain, Sparkles } from "lucide-react";
 import { useState } from "react";
@@ -23,7 +28,11 @@ const SKILLS: string[] = [
   "Refaz análise sempre que há nova informação",
 ];
 
-export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJustinEModalProps) {
+export default function MrsJustinEModal({
+  open,
+  onOpenChange,
+  onActivate,
+}: MrsJustinEModalProps) {
   const [hasPreviewStarted, setHasPreviewStarted] = useState(false);
 
   const {
@@ -100,32 +109,35 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
 
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
             <p className="text-sm text-foreground">
-              Eu analiso intimações usando IA jurídica treinada para contexto brasileiro, geralmente
-              em menos de <span className="font-bold text-primary">1 minuto</span>,
+              Eu analiso intimações usando IA jurídica treinada para contexto
+              brasileiro, geralmente em menos de{" "}
+              <span className="font-bold text-primary">1 minuto</span>,
             </p>
             <p className="text-sm text-foreground">
-              enquanto humanos podem levar vários minutos e correr risco de esquecer detalhes
-              importantes.
+              enquanto humanos podem levar vários minutos e correr risco de
+              esquecer detalhes importantes.
             </p>
           </div>
 
           <div className="bg-accent/10 p-4 rounded-lg border border-accent/30">
             <p className="text-sm text-foreground">
               Em cenários típicos, meu uso pode representar{" "}
-              <span className="font-bold text-accent">dezenas de horas</span> economizadas a cada
-              lote de intimações, além de reduzir o risco de prazos perdidos.
+              <span className="font-bold text-accent">dezenas de horas</span>{" "}
+              economizadas a cada lote de intimações, além de reduzir o risco de
+              prazos perdidos.
             </p>
           </div>
 
           <div>
-            <h3 className="text-base font-semibold text-foreground mb-3">Minhas Skills</h3>
+            <h3 className="text-base font-semibold text-foreground mb-3">
+              Minhas Skills
+            </h3>
             <div className="flex flex-wrap gap-2">
               {SKILLS.map((skill) => (
                 <Badge
                   key={skill}
                   variant="outline"
-                  className="text-sm py-1.5 px-3 bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors"
-                >
+                  className="text-sm py-1.5 px-3 bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
                   {skill}
                 </Badge>
               ))}
@@ -177,8 +189,11 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
                     Na tela de intimações, clique em{" "}
-                    <span className="font-semibold">“Ativar Mrs. Justin-e”</span> para receber um
-                    resumo estruturado da intimação e sugestões de tarefas.
+                    <span className="font-semibold">
+                      “Ativar Mrs. Justin-e”
+                    </span>{" "}
+                    para receber um resumo estruturado da intimação e sugestões
+                    de tarefas.
                   </p>
                 </div>
               </div>
@@ -189,8 +204,8 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Entre as opções sugeridas, selecione a tarefa (ou combinação de tarefas) mais
-                    adequada ao caso concreto.
+                    Entre as opções sugeridas, selecione a tarefa (ou combinação
+                    de tarefas) mais adequada ao caso concreto.
                   </p>
                 </div>
               </div>
@@ -201,8 +216,9 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Mrs. Justin-e irá montar um workflow completo de controladoria (prazos, D-1,
-                    D-2, responsável, checagens) com base na análise.
+                    Mrs. Justin-e irá montar um workflow completo de
+                    controladoria (prazos, D-1, D-2, responsável, checagens) com
+                    base na análise.
                   </p>
                 </div>
               </div>
@@ -213,8 +229,9 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-foreground">
-                    Se surgirem novas informações (petições, decisões ou documentos), basta enviar
-                    novamente: ela refaz a análise e ajusta o workflow automaticamente.
+                    Se surgirem novas informações (petições, decisões ou
+                    documentos), basta enviar novamente: ela refaz a análise e
+                    ajusta o workflow automaticamente.
                   </p>
                 </div>
               </div>
@@ -225,12 +242,20 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
             <div className="flex items-start gap-3">
               <Sparkles className="w-6 h-6 text-primary shrink-0 mt-0.5" />
               <div className="space-y-2">
-                <h4 className="font-semibold text-foreground">Benefícios principais</h4>
+                <h4 className="font-semibold text-foreground">
+                  Benefícios principais
+                </h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   <li>✓ Análise muito mais rápida que a leitura manual</li>
-                  <li>✓ Foco em contexto jurídico, não só em palavras soltas</li>
-                  <li>✓ Menos risco de intimações esquecidas ou mal classificadas</li>
-                  <li>✓ Workflow de controladoria padronizado e automatizado</li>
+                  <li>
+                    ✓ Foco em contexto jurídico, não só em palavras soltas
+                  </li>
+                  <li>
+                    ✓ Menos risco de intimações esquecidas ou mal classificadas
+                  </li>
+                  <li>
+                    ✓ Workflow de controladoria padronizado e automatizado
+                  </li>
                   <li>✓ Economia significativa de horas da equipe</li>
                   <li>✓ Funciona 24/7 sem pausas ou fadiga</li>
                 </ul>
@@ -243,7 +268,10 @@ export default function MrsJustinEModal({ open, onOpenChange, onActivate }: MrsJ
               <Brain className="w-5 h-5 mr-2" />
               Ativar Mrs. Justin-e
             </Button>
-            <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => onOpenChange(false)}>
               Depois
             </Button>
           </div>

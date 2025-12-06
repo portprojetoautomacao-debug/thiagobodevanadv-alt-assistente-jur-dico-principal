@@ -62,8 +62,8 @@ export interface GoogleUser {
 }
 
 interface GoogleAuthButtonProps {
-  onSuccess?: (user: GoogleUser) => void;
-  onError?: (error: Error) => void;
+  readonly onSuccess?: (user: GoogleUser) => void;
+  readonly onError?: (error: Error) => void;
 }
 
 export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButtonProps>) {

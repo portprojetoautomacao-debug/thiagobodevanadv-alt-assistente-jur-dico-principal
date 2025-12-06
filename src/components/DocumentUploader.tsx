@@ -31,8 +31,13 @@ interface DocumentUploaderProps {
   readonly processoId: string;
 }
 
-export default function DocumentUploader({ processoId }: DocumentUploaderProps) {
-  const [documentos, setDocumentos] = useKV<Document[]>(`docs-${processoId}`, []);
+export default function DocumentUploader({
+  processoId,
+}: DocumentUploaderProps) {
+  const [documentos, setDocumentos] = useKV<Document[]>(
+    `docs-${processoId}`,
+    []
+  );
   const [uploading, setUploading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
@@ -146,12 +151,20 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
           multiple
           className="flex-1"
         />
-        <Button disabled={uploading} variant="outline" size="icon" aria-label="Enviar arquivos">
+        <Button
+          disabled={uploading}
+          variant="outline"
+          size="icon"
+          aria-label="Enviar arquivos">
           <Upload size={20} />
         </Button>
       </div>
 
-      {uploading && <div className="text-sm text-muted-foreground">Enviando arquivo(s)...</div>}
+      {uploading && (
+        <div className="text-sm text-muted-foreground">
+          Enviando arquivo(s)...
+        </div>
+      )}
 
       <div className="text-xs text-muted-foreground">
         Tipos aceitos: PDF, DOC, DOCX, TXT, JPG, PNG (máx. 50MB por arquivo)
@@ -167,12 +180,16 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                     <div className="shrink-0">{getFileIcon(doc.tipo)}</div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{doc.nome}</div>
+                      <div className="font-medium text-sm truncate">
+                        {doc.nome}
+                      </div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <Badge variant="secondary" className="text-xs">
                           {formatFileSize(doc.tamanho)}
                         </Badge>
-                        <span>{new Date(doc.data).toLocaleDateString("pt-BR")}</span>
+                        <span>
+                          {new Date(doc.data).toLocaleDateString("pt-BR")}
+                        </span>
                       </div>
                     </div>
 
@@ -183,8 +200,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                           variant="ghost"
                           onClick={() => handlePreview(doc)}
                           aria-label="Visualizar documento"
-                          title="Visualizar"
-                        >
+                          title="Visualizar">
                           <Eye size={16} />
                         </Button>
                       )}
@@ -193,8 +209,7 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                         variant="ghost"
                         onClick={() => handleDownload(doc)}
                         aria-label="Baixar documento"
-                        title="Baixar"
-                      >
+                        title="Baixar">
                         <Download size={16} />
                       </Button>
                       <Button
@@ -203,9 +218,8 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
                         onClick={() => setDeleteId(doc.id)}
                         aria-label="Excluir documento"
                         title="Excluir"
-                        className="text-destructive"
-                      >
-                        <Trash size={16} />
+                        className="text-destructive">
+                        <Trash2 size={16} />
                       </Button>
                     </div>
                   </div>
@@ -219,26 +233,30 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
           <CardContent className="p-8 text-center text-muted-foreground">
             <FileText size={48} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">Nenhum documento anexado</p>
-            <p className="text-xs mt-1">Selecione arquivos acima para fazer upload</p>
+            <p className="text-xs mt-1">
+              Selecione arquivos acima para fazer upload
+            </p>
           </CardContent>
         </Card>
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir este documento? Esta ação não pode
+              ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && handleDelete(deleteId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -246,7 +264,9 @@ export default function DocumentUploader({ processoId }: DocumentUploaderProps) 
       </AlertDialog>
 
       {/* PDF Preview Dialog */}
-      <AlertDialog open={previewDoc !== null} onOpenChange={() => setPreviewDoc(null)}>
+      <AlertDialog
+        open={previewDoc !== null}
+        onOpenChange={() => setPreviewDoc(null)}>
         <AlertDialogContent className="max-w-4xl max-h-[80vh]">
           <AlertDialogHeader>
             <AlertDialogTitle>{previewDoc?.nome}</AlertDialogTitle>

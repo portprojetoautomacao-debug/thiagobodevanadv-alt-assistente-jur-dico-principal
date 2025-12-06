@@ -29,8 +29,7 @@ export default function AgentStatusFloater() {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-6 right-6 z-50 w-80"
-        >
+          className="fixed bottom-6 right-6 z-50 w-80">
           <Card className="border-primary/30 bg-linear-to-br from-background/95 to-primary/5 backdrop-blur-sm shadow-lg">
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -60,8 +59,7 @@ export default function AgentStatusFloater() {
                       isExpanded
                         ? "Recolher painel de status dos agentes"
                         : "Expandir painel de status dos agentes"
-                    }
-                  >
+                    }>
                     {isExpanded ? (
                       <ChevronDown className="w-4 h-4" />
                     ) : (
@@ -73,8 +71,7 @@ export default function AgentStatusFloater() {
                     size="sm"
                     className="h-6 w-6 p-0"
                     onClick={() => setIsVisible(false)}
-                    aria-label="Fechar painel de status dos agentes"
-                  >
+                    aria-label="Fechar painel de status dos agentes">
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
@@ -98,12 +95,13 @@ export default function AgentStatusFloater() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="space-y-2 overflow-hidden"
-                  >
+                    className="space-y-2 overflow-hidden">
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {recentActivity.length > 0 ? (
                         recentActivity.map((log) => {
-                          const agent = agents.find((a) => a.id === log.agentId);
+                          const agent = agents.find(
+                            (a) => a.id === log.agentId
+                          );
                           return (
                             <div
                               key={log.id}
@@ -114,12 +112,17 @@ export default function AgentStatusFloater() {
                                 <p className="font-medium text-foreground line-clamp-1">
                                   {agent?.name ?? "Agente desconhecido"}
                                 </p>
-                                <p className="text-muted-foreground line-clamp-1">{log.action}</p>
+                                <p className="text-muted-foreground line-clamp-1">
+                                  {log.action}
+                                </p>
                                 <p className="text-muted-foreground">
-                                  {new Date(log.timestamp).toLocaleTimeString("pt-BR", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
+                                  {new Date(log.timestamp).toLocaleTimeString(
+                                    "pt-BR",
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -134,7 +137,9 @@ export default function AgentStatusFloater() {
 
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Agentes ativos</span>
+                        <span className="text-muted-foreground">
+                          Agentes ativos
+                        </span>
                         <Badge variant="secondary">
                           {enabledAgentsCount}/{agents.length}
                         </Badge>
@@ -146,7 +151,9 @@ export default function AgentStatusFloater() {
 
               {!isExpanded && (
                 <div className="flex items-center justify-between text-xs pt-2 border-t">
-                  <span className="text-muted-foreground">Clique para ver detalhes</span>
+                  <span className="text-muted-foreground">
+                    Clique para ver detalhes
+                  </span>
                   <Badge variant="secondary" className="text-xs">
                     {enabledAgentsCount} ativos
                   </Badge>

@@ -65,7 +65,9 @@ interface GeminiResponse {
  */
 function ensureGeminiConfigured(): void {
   if (!GEMINI_API_KEY) {
-    throw new Error("Chave do Gemini não configurada. Defina VITE_GEMINI_API_KEY no .env");
+    throw new Error(
+      "Chave do Gemini não configurada. Defina VITE_GEMINI_API_KEY no .env"
+    );
   }
 }
 
@@ -136,7 +138,9 @@ export async function geminiGenerateText(
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => "");
-    throw new Error(`Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`);
+    throw new Error(
+      `Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`
+    );
   }
 
   const data = (await res.json()) as GeminiResponse;
@@ -279,7 +283,9 @@ export async function geminiGenerateWithSystem(
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => "");
-    throw new Error(`Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`);
+    throw new Error(
+      `Erro ao chamar Gemini: ${res.status} ${res.statusText} ${errorText}`
+    );
   }
 
   const data = (await res.json()) as GeminiResponse;
@@ -319,7 +325,11 @@ export async function geminiGenerateJSONWithSystem<T = unknown>(
   userPrompt: string,
   options: GeminiOptions = {}
 ): Promise<T> {
-  const rawText = await geminiGenerateWithSystem(systemPrompt, userPrompt, options);
+  const rawText = await geminiGenerateWithSystem(
+    systemPrompt,
+    userPrompt,
+    options
+  );
 
   // Tenta extrair JSON de bloco de código markdown se presente
   let jsonText = rawText;

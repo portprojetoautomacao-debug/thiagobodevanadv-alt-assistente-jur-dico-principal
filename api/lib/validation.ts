@@ -24,7 +24,12 @@ export const AgentTaskTypeSchema = z.enum([
 
 export const TaskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
-export const TaskStatusSchema = z.enum(["QUEUED", "PROCESSING", "COMPLETED", "FAILED"]);
+export const TaskStatusSchema = z.enum([
+  "QUEUED",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+]);
 
 export const AgentTaskSchema = z.object({
   id: z.uuid(),
@@ -85,7 +90,10 @@ export function validateProcessQueueRequest(data: unknown) {
     if (err instanceof z.ZodError) {
       return { success: false, error: handleValidationError(err) };
     }
-    return { success: false, error: { ok: false, error: "Unknown validation error" } };
+    return {
+      success: false,
+      error: { ok: false, error: "Unknown validation error" },
+    };
   }
 }
 
@@ -97,6 +105,9 @@ export function validateProcessTaskRequest(data: unknown) {
     if (err instanceof z.ZodError) {
       return { success: false, error: handleValidationError(err) };
     }
-    return { success: false, error: { ok: false, error: "Unknown validation error" } };
+    return {
+      success: false,
+      error: { ok: false, error: "Unknown validation error" },
+    };
   }
 }

@@ -53,7 +53,7 @@ interface SearchResult {
 type SearchCategory = "all" | "processos" | "clientes" | "minutas" | "expedientes";
 
 interface GlobalSearchProps {
-  onNavigate?: (view: string, data?: unknown) => void;
+  readonly onNavigate?: (view: string, data?: unknown) => void;
 }
 
 export function GlobalSearch({ onNavigate }: Readonly<GlobalSearchProps>) {
@@ -271,8 +271,16 @@ export function GlobalSearch({ onNavigate }: Readonly<GlobalSearchProps>) {
       label: "Processos",
       count: results.filter((r) => r.type === "processo").length,
     },
-    { id: "clientes", label: "Pessoas", count: results.filter((r) => r.type === "cliente").length },
-    { id: "minutas", label: "Minutas", count: results.filter((r) => r.type === "minuta").length },
+    {
+      id: "clientes",
+      label: "Pessoas",
+      count: results.filter((r) => r.type === "cliente").length,
+    },
+    {
+      id: "minutas",
+      label: "Minutas",
+      count: results.filter((r) => r.type === "minuta").length,
+    },
     {
       id: "expedientes",
       label: "Expedientes",

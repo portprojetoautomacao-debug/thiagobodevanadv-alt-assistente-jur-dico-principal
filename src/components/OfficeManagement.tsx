@@ -491,21 +491,27 @@ export default function OfficeManagement() {
                             dataKey="valor"
                             nameKey="categoria"
                           >
-                            {custosData.map((entry, index) => (
-                              <Cell
-                                key={`cell-custo-${entry.categoria}-${entry.valor}`}
-                                fill={
-                                  [
-                                    "#ef4444",
-                                    "#f97316",
-                                    "#fbbf24",
-                                    "#84cc16",
-                                    "#22c55e",
-                                    "#14b8a6",
-                                  ][index % 6]
-                                }
-                              />
-                            ))}
+                            {custosData.map((entry) => {
+                              // Use categoria hash to determine color index
+                              const colorIndex =
+                                entry.categoria
+                                  .split("")
+                                  .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 6;
+                              const colors = [
+                                "#ef4444",
+                                "#f97316",
+                                "#fbbf24",
+                                "#84cc16",
+                                "#22c55e",
+                                "#14b8a6",
+                              ];
+                              return (
+                                <Cell
+                                  key={`cell-custo-${entry.categoria}-${entry.valor}`}
+                                  fill={colors[colorIndex]}
+                                />
+                              );
+                            })}
                           </Pie>
                           <Tooltip
                             contentStyle={{

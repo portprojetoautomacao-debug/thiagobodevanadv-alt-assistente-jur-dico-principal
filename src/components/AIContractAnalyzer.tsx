@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { FileText, Sparkles, ShieldAlert, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
+import { AlertCircle, CheckCircle2, FileText, ShieldAlert, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 /**
  * Interface para resultado da análise de risco de contratos

@@ -36,8 +36,16 @@ export default function DeadlineCalculator() {
       { value: "alegacoes-finais", label: "Alegações Finais", days: 15 },
       { value: "contestacao", label: "Contestação", days: 15 },
       { value: "recurso-ordinario", label: "Recurso Ordinário", days: 15 },
-      { value: "embargos-declaracao", label: "Embargos de Declaração", days: 5 },
-      { value: "cumprimento-sentenca", label: "Cumprimento de Sentença", days: 15 },
+      {
+        value: "embargos-declaracao",
+        label: "Embargos de Declaração",
+        days: 5,
+      },
+      {
+        value: "cumprimento-sentenca",
+        label: "Cumprimento de Sentença",
+        days: 15,
+      },
     ],
     CLT: [
       { value: "razoes-finais", label: "Razões Finais", days: 5 },

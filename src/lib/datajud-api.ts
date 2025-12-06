@@ -77,19 +77,31 @@ export interface TribunalInfo {
  * Referência: https://api-publica.datajud.cnj.jus.br/api_publica
  */
 export const TRIBUNAIS_DATAJUD: Record<string, TribunalInfo> = {
-  tjsp: { alias: "api_publica_tjsp", nome: "Tribunal de Justiça de São Paulo", codigo: "8.26" },
+  tjsp: {
+    alias: "api_publica_tjsp",
+    nome: "Tribunal de Justiça de São Paulo",
+    codigo: "8.26",
+  },
   tjrj: {
     alias: "api_publica_tjrj",
     nome: "Tribunal de Justiça do Rio de Janeiro",
     codigo: "8.19",
   },
-  tjmg: { alias: "api_publica_tjmg", nome: "Tribunal de Justiça de Minas Gerais", codigo: "8.13" },
+  tjmg: {
+    alias: "api_publica_tjmg",
+    nome: "Tribunal de Justiça de Minas Gerais",
+    codigo: "8.13",
+  },
   tjrs: {
     alias: "api_publica_tjrs",
     nome: "Tribunal de Justiça do Rio Grande do Sul",
     codigo: "8.21",
   },
-  tjpr: { alias: "api_publica_tjpr", nome: "Tribunal de Justiça do Paraná", codigo: "8.16" },
+  tjpr: {
+    alias: "api_publica_tjpr",
+    nome: "Tribunal de Justiça do Paraná",
+    codigo: "8.16",
+  },
   tjsc: {
     alias: "api_publica_tjsc",
     nome: "Tribunal de Justiça de Santa Catarina",
@@ -120,9 +132,21 @@ export const TRIBUNAIS_DATAJUD: Record<string, TribunalInfo> = {
     nome: "Tribunal Regional do Trabalho da 2ª Região",
     codigo: "5.02",
   },
-  tst: { alias: "api_publica_tst", nome: "Tribunal Superior do Trabalho", codigo: "TST" },
-  stj: { alias: "api_publica_stj", nome: "Superior Tribunal de Justiça", codigo: "STJ" },
-  stf: { alias: "api_publica_stf", nome: "Supremo Tribunal Federal", codigo: "STF" },
+  tst: {
+    alias: "api_publica_tst",
+    nome: "Tribunal Superior do Trabalho",
+    codigo: "TST",
+  },
+  stj: {
+    alias: "api_publica_stj",
+    nome: "Superior Tribunal de Justiça",
+    codigo: "STJ",
+  },
+  stf: {
+    alias: "api_publica_stf",
+    nome: "Supremo Tribunal Federal",
+    codigo: "STF",
+  },
 };
 
 const DEFAULT_BASE_URL = "https://api-publica.datajud.cnj.jus.br";
@@ -201,7 +225,10 @@ export function determinarAliasTribunal(tribunalInput: string): string | null {
 
   // Procura pelo código do tribunal ou parte do nome
   for (const [, info] of Object.entries(TRIBUNAIS_DATAJUD)) {
-    if (info.codigo === tribunalInput || info.nome.toLowerCase().includes(tribunalLower)) {
+    if (
+      info.codigo === tribunalInput ||
+      info.nome.toLowerCase().includes(tribunalLower)
+    ) {
       return info.alias;
     }
   }
@@ -299,7 +326,13 @@ function handleDatajudCatchError(
   }
 
   if (error instanceof Error) {
-    throw new DatajudAPIError(`Erro de rede: ${error.message}`, 0, tribunal, numeroProcesso, error);
+    throw new DatajudAPIError(
+      `Erro de rede: ${error.message}`,
+      0,
+      tribunal,
+      numeroProcesso,
+      error
+    );
   }
 
   throw new DatajudAPIError(
@@ -338,7 +371,11 @@ export async function consultarProcessoDatajud(
     timeout = DEFAULT_TIMEOUT,
   } = config || {};
 
-  const { apiKey, tribunalAlias } = validateDatajudParams(numeroProcesso, tribunal, configApiKey);
+  const { apiKey, tribunalAlias } = validateDatajudParams(
+    numeroProcesso,
+    tribunal,
+    configApiKey
+  );
 
   const numeroProcessoLimpo = numeroProcesso.replaceAll(/[^\d]/g, "");
   const url = `${baseUrl}/${tribunalAlias}/_search`;
@@ -372,7 +409,12 @@ export async function consultarProcessoDatajud(
     const data = await response.json();
 
     if (!data.hits?.hits?.length) {
-      throw new DatajudAPIError("Processo não encontrado", 404, tribunal, numeroProcesso);
+      throw new DatajudAPIError(
+        "Processo não encontrado",
+        404,
+        tribunal,
+        numeroProcesso
+      );
     }
 
     const processo = data.hits.hits[0]._source as DatajudProcesso;
@@ -501,19 +543,21 @@ export async function consultarAtualizacoesRecentesDatajud(
       return [];
     }
 
-    const processos: DatajudProcesso[] = data.hits.hits.map((hit: { _source: DatajudProcesso }) => {
-      const proc = hit._source;
+    const processos: DatajudProcesso[] = data.hits.hits.map(
+      (hit: { _source: DatajudProcesso }) => {
+        const proc = hit._source;
 
-      if (proc.movimentos && Array.isArray(proc.movimentos)) {
-        proc.movimentos.sort((a, b) => {
-          const dateA = new Date(a.dataHora).getTime();
-          const dateB = new Date(b.dataHora).getTime();
-          return dateB - dateA;
-        });
+        if (proc.movimentos && Array.isArray(proc.movimentos)) {
+          proc.movimentos.sort((a, b) => {
+            const dateA = new Date(a.dataHora).getTime();
+            const dateB = new Date(b.dataHora).getTime();
+            return dateB - dateA;
+          });
+        }
+
+        return proc;
       }
-
-      return proc;
-    });
+    );
 
     return processos;
   } catch (error) {
@@ -554,7 +598,10 @@ export async function consultarAtualizacoesRecentesDatajud(
 /**
  * Retorna a lista de tribunais disponíveis
  */
-export function getTribunaisDisponiveis(): Array<{ value: string; label: string }> {
+export function getTribunaisDisponiveis(): Array<{
+  value: string;
+  label: string;
+}> {
   return Object.entries(TRIBUNAIS_DATAJUD).map(([key, info]) => ({
     value: key,
     label: info.nome,
@@ -578,7 +625,10 @@ export function formatarNumeroCNJ(numero: string): string {
     return `${digitos.slice(0, 7)}-${digitos.slice(7, 9)}.${digitos.slice(
       9,
       13
-    )}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(16, 20)}`;
+    )}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(
+      16,
+      20
+    )}`;
   }
 
   return numero;

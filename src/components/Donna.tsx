@@ -9,6 +9,7 @@ import { useKV } from "@/hooks/use-kv";
 import { cn } from "@/lib/utils";
 import type { Expediente, FinancialEntry, Process } from "@/types";
 import {
+  BarChart3,
   Bell,
   Briefcase,
   BarChart3 as ChartBar,
@@ -73,7 +74,7 @@ const SAMPLE_QUESTIONS = [
 
 const QUICK_INSIGHTS = [
   {
-    icon: ChartBar,
+    icon: BarChart3,
     title: "Processos",
     description: "Ver meus processos",
     query: "Status dos meus processos",
@@ -498,7 +499,10 @@ IMPORTANTE:
       setMessages((currentMessages) =>
         (currentMessages || []).map((msg) =>
           msg.id === streamingMessageId
-            ? { ...msg, content: streamingContent + "\n\n*[Resposta interrompida]*" }
+            ? {
+                ...msg,
+                content: streamingContent + "\n\n*[Resposta interrompida]*",
+              }
             : msg
         )
       );
@@ -561,7 +565,10 @@ IMPORTANTE:
       setMessages((currentMessages) =>
         (currentMessages || []).map((msg) =>
           msg.id === assistantId
-            ? { ...msg, content: "Desculpe, ocorreu um erro ao processar sua mensagem." }
+            ? {
+                ...msg,
+                content: "Desculpe, ocorreu um erro ao processar sua mensagem.",
+              }
             : msg
         )
       );
