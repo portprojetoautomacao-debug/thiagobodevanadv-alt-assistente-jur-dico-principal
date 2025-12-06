@@ -32,7 +32,7 @@ const chromeMock = {
   },
 };
 
-// @ts-ignore
+// @ts-expect-error - Mocking global chrome object
 global.chrome = chromeMock;
 
 describe("usePJeDocumentSync", () => {

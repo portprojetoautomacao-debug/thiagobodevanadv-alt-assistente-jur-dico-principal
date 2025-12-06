@@ -1,52 +1,36 @@
 import { renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { useTiptapEditor } from "./use-tiptap-editor";
 
+// Mock @tiptap/react
+vi.mock("@tiptap/react", () => ({
+  useCurrentEditor: () => ({
+    editor: {
+      state: {},
+      can: () => true,
+      chain: () => ({ focus: () => ({ run: () => {} }) }),
+    },
+  }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  useEditorState: ({ selector }: any) =>
+    selector({
+      editor: {
+        state: {},
+        can: () => true,
+      },
+    }),
+}));
+
 describe("useTiptapEditor", () => {
-  it("initializes editor with default options", () => {
-    const { result } = renderHook(() =>
-      useTiptapEditor({
-        content: "<p>Initial content</p>",
-        onUpdate: () => {},
-      })
-    );
-
-    expect(result.current).toBeDefined();
+  it("returns editor from context", () => {
+    const { result } = renderHook(() => useTiptapEditor());
+    expect(result.current.editor).toBeDefined();
   });
 
-  it("initializes editor with custom placeholder", () => {
-    const { result } = renderHook(() =>
-      useTiptapEditor({
-        content: "",
-        onUpdate: () => {},
-        placeholder: "Digite algo...",
-      })
-    );
-
-    expect(result.current).toBeDefined();
-  });
-
-  it("handles readOnly mode", () => {
-    const { result } = renderHook(() =>
-      useTiptapEditor({
-        content: "<p>Content</p>",
-        onUpdate: () => {},
-        editable: false,
-      })
-    );
-
-    expect(result.current?.isEditable).toBe(false);
-  });
-
-  it("cleans up on unmount", () => {
-    const { unmount } = renderHook(() =>
-      useTiptapEditor({
-        content: "<p>Content</p>",
-        onUpdate: () => {},
-      })
-    );
-
-    unmount();
-    // Editor should be destroyed
+  it("returns provided editor if passed", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockEditor = { state: {}, can: () => true } as any;
+    const { result } = renderHook(() => useTiptapEditor(mockEditor));
+    expect(result.current.editor).toBe(mockEditor);
   });
 });
