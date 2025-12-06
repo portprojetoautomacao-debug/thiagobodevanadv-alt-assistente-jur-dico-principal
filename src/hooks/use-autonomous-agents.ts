@@ -9,13 +9,16 @@ import {
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Type alias for activity result
+type ActivityResult = "success" | "warning" | "error";
+
 // Type alias para log de atividade
 type ActivityLogEntry = {
   id: string;
   agentId: string;
   timestamp: string;
   action: string;
-  result: "success" | "warning" | "error";
+  result: ActivityResult;
 };
 
 // ===========================
@@ -65,7 +68,7 @@ function createStreamingCallbacks(
   agentId: string,
   setStreamingContent: React.Dispatch<React.SetStateAction<Record<string, string>>>,
   setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
-  logActivity: (agentId: string, action: string, result: "success" | "warning" | "error") => void
+  logActivity: (agentId: string, action: string, result: ActivityResult) => void
 ): StreamingCallbacks {
   return {
     onChunk: (chunk: string) => {
@@ -198,7 +201,7 @@ const AGENTS_DATA_VERSION = 7;
 
 function getInitialAgents(): Agent[] {
   // Early return for server-side rendering
-  if (typeof globalThis.window === "undefined") return initializeAgents();
+  if (globalThis.window === undefined) return initializeAgents();
 
   try {
     const storedVersion = globalThis.localStorage.getItem("agents-data-version");

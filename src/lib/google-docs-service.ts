@@ -156,7 +156,7 @@ class GoogleDocsService {
     debug("Initializing Google Docs Service...");
 
     // Segurança para SSR / Vercel serverless
-    if (typeof globalThis.window === "undefined" || typeof document === "undefined") {
+    if (globalThis.window === undefined || typeof document === "undefined") {
       this.lastError = "Google Docs Service só pode ser inicializado no browser.";
       debugError(this.lastError);
       throw new Error(this.lastError);
@@ -238,7 +238,7 @@ class GoogleDocsService {
     return new Promise((resolve, reject) => {
       debug("Loading Google scripts for Docs...");
 
-      if (typeof globalThis.window === "undefined" || typeof document === "undefined") {
+      if (globalThis.window === undefined || typeof document === "undefined") {
         reject(new Error("Google scripts só podem ser carregados no browser"));
         return;
       }
@@ -707,7 +707,7 @@ class GoogleDocsService {
   }
 
   openDocument(url: string): void {
-    if (typeof globalThis.window === "undefined") return;
+    if (globalThis.window === undefined) return;
     globalThis.window.open(url, "_blank", "noopener,noreferrer");
   }
 

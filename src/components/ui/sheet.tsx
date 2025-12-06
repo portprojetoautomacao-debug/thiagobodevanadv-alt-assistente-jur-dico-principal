@@ -4,7 +4,7 @@ import { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
-function Sheet({ ...props }: ComponentProps<typeof SheetPrimitive.Root>) {
+function Sheet({ ...props }: Readonly<ComponentProps<typeof SheetPrimitive.Root>>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 

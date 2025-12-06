@@ -45,7 +45,7 @@ export function isValidCNJ(numero: string): boolean {
  */
 export function formatCNJ(numero: string): string {
   // Remove tudo que não é dígito ou hífen
-  const cleaned = numero.replace(/[^\d-]/g, "");
+  const cleaned = numero.replaceAll(/[^\d-]/g, "");
 
   // Se já está formatado
   if (/^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/.test(numero)) {

@@ -115,8 +115,8 @@ export function extractAndParseJSON<T = unknown>(response: string, fallback?: T)
  */
 export function cleanMarkdown(text: string): string {
   return text
-    .replace(/```json\s*/g, "")
-    .replace(/```\s*/g, "")
-    .replace(/^\s*[\r\n]/gm, "")
+    .replaceAll(/```json\s*/g, "")
+    .replaceAll(/```\s*/g, "")
+    .replaceAll(/^\s*[\r\n]/gm, "")
     .trim();
 }
