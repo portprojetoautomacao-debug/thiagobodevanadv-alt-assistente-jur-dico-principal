@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente, Minuta, Process } from "@/types";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   ArrowDown,
   ArrowUp,
@@ -22,12 +23,10 @@ import {
   Command,
   FileText,
   Folder,
-  Search,
   Inbox,
   User,
   X,
 } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Tipo para cliente (simplificado)
@@ -50,12 +49,7 @@ interface SearchResult {
 }
 
 // Categorias de busca
-type SearchCategory =
-  | "all"
-  | "processos"
-  | "clientes"
-  | "minutas"
-  | "expedientes";
+type SearchCategory = "all" | "processos" | "clientes" | "minutas" | "expedientes";
 
 interface GlobalSearchProps {
   readonly onNavigate?: (view: string, data?: unknown) => void;
@@ -80,11 +74,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignorar se estiver em um input/textarea
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
         return;
       }
 
@@ -178,9 +168,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
       if (searchCategory === "all" || searchCategory === "minutas") {
         const matchedMinutas = (minutas || [])
           .filter(
-            (m) =>
-              m.titulo?.toLowerCase().includes(q) ||
-              m.conteudo?.toLowerCase().includes(q)
+            (m) => m.titulo?.toLowerCase().includes(q) || m.conteudo?.toLowerCase().includes(q)
           )
           .slice(0, 5)
           .map((m) => ({
@@ -188,9 +176,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             type: "minuta" as const,
             title: m.titulo || "Minuta sem título",
             subtitle: `${m.tipo} • ${m.status}`,
-            icon: (
-              <FileText className="w-4 h-4 text-purple-500" />
-            ),
+            icon: <FileText className="w-4 h-4 text-purple-500" />,
             data: m,
           }));
         newResults.push(...matchedMinutas);
@@ -210,9 +196,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
             id: e.id,
             type: "expediente" as const,
             title: e.numeroProcesso || "Expediente",
-            subtitle:
-              e.summary?.slice(0, 60) + "..." || e.tribunal || "Sem resumo",
-            icon: <Tray className="w-4 h-4 text-orange-500" />,
+            subtitle: e.summary?.slice(0, 60) + "..." || e.tribunal || "Sem resumo",
+            icon: <Inbox className="w-4 h-4 text-orange-500" />,
             data: e,
           }));
         newResults.push(...matchedExpedientes);
@@ -307,8 +292,9 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
       {/* Botão de atalho (opcional, pode ser usado na navbar) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 rounded-md border border-border hover:bg-muted transition-colors">
-        <MagnifyingGlass className="w-4 h-4" />
+        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 rounded-md border border-border hover:bg-muted transition-colors"
+      >
+        <Search className="w-4 h-4" />
         <span>Buscar...</span>
         <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono bg-background rounded border">
           /
@@ -322,14 +308,15 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
           if (!isDialogOpen) {
             closeSearch();
           }
-        }}>
+        }}
+      >
         <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
           <VisuallyHidden>
             <DialogTitle>Busca Global</DialogTitle>
           </VisuallyHidden>
           {/* Header com input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b">
-            <MagnifyingGlass className="w-5 h-5 text-muted-foreground" />
+            <Search className="w-5 h-5 text-muted-foreground" />
             <Input
               ref={inputRef}
               value={query}
@@ -339,9 +326,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
               className="flex-1 border-0 shadow-none focus-visible:ring-0 text-base"
             />
             {query && (
-              <button
-                onClick={() => setQuery("")}
-                className="p-1 hover:bg-muted rounded">
+              <button onClick={() => setQuery("")} className="p-1 hover:bg-muted rounded">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
@@ -360,7 +345,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                   category === cat.id
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted text-muted-foreground"
-                }`}>
+                }`}
+              >
                 {cat.label}
                 {query && cat.count > 0 && (
                   <span className="ml-1 text-xs opacity-70">({cat.count})</span>
@@ -375,10 +361,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
               if (!query) {
                 return (
                   <div className="p-8 text-center text-muted-foreground">
-                    <MagnifyingGlass className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm">
-                      Digite para pesquisar em todo o sistema
-                    </p>
+                    <Search className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">Digite para pesquisar em todo o sistema</p>
                     <p className="text-xs mt-1 opacity-70">
                       Processos, clientes, minutas, expedientes...
                     </p>
@@ -390,9 +374,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                 return (
                   <div className="p-8 text-center text-muted-foreground">
                     <p className="text-sm">Nenhum resultado para "{query}"</p>
-                    <p className="text-xs mt-1 opacity-70">
-                      Tente outro termo de busca
-                    </p>
+                    <p className="text-xs mt-1 opacity-70">Tente outro termo de busca</p>
                   </div>
                 );
               }
@@ -405,24 +387,21 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                       onClick={() => handleSelect(result)}
                       onMouseEnter={() => setSelectedIndex(index)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                        index === selectedIndex
-                          ? "bg-muted"
-                          : "hover:bg-muted/50"
-                      }`}>
+                        index === selectedIndex ? "bg-muted" : "hover:bg-muted/50"
+                      }`}
+                    >
                       <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-background rounded-lg border">
                         {result.icon}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{result.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {result.subtitle}
-                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
                       </div>
                       <Badge variant="outline" className="text-xs capitalize">
                         {result.type}
                       </Badge>
                       {index === selectedIndex && (
-                        <CaretRight className="w-4 h-4 text-muted-foreground" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       )}
                     </button>
                   ))}
@@ -440,16 +419,11 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                 navegar
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">
-                  ↵
-                </kbd>{" "}
+                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">↵</kbd>{" "}
                 selecionar
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">
-                  esc
-                </kbd>{" "}
-                fechar
+                <kbd className="px-1.5 py-0.5 bg-background rounded border text-xs">esc</kbd> fechar
               </span>
             </div>
             <div className="flex items-center gap-1">
