@@ -198,7 +198,7 @@ const AGENTS_DATA_VERSION = 7;
 
 function getInitialAgents(): Agent[] {
   // Early return for server-side rendering
-  if (typeof window === "undefined") return initializeAgents();
+  if (typeof globalThis.window === "undefined") return initializeAgents();
 
   try {
     const storedVersion = globalThis.localStorage.getItem("agents-data-version");

@@ -289,19 +289,20 @@ function buildTaskPrompt(task: AgentTask): string {
   prompt += `Prioridade: ${task.priority}\n\n`;
 
   if (data.description) {
-    prompt += `Descrição: ${data.description}\n\n`;
+    prompt += `Descrição: ${String(data.description)}\n\n`;
   }
 
   if (data.content || data.teor) {
-    prompt += `Conteúdo:\n${data.content || data.teor}\n\n`;
+    const contentValue = data.content || data.teor;
+    prompt += `Conteúdo:\n${String(contentValue)}\n\n`;
   }
 
   if (data.processNumber) {
-    prompt += `Processo: ${data.processNumber}\n`;
+    prompt += `Processo: ${String(data.processNumber)}\n`;
   }
 
   if (data.expedienteId) {
-    prompt += `ID do Expediente: ${data.expedienteId}\n`;
+    prompt += `ID do Expediente: ${String(data.expedienteId)}\n`;
   }
 
   prompt += `\nExecute a tarefa e forneça uma resposta estruturada.`;

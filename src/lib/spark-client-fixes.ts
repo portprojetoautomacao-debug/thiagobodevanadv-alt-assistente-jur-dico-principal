@@ -18,9 +18,7 @@ interface SparkKV {
   [key: string]: unknown;
 }
 
-interface SparkLLM {
-  (prompt: string, modelName?: string, jsonMode?: boolean): Promise<string>;
-}
+type SparkLLM = (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>;
 
 // Extend Window interface to include spark
 declare global {
@@ -295,7 +293,9 @@ function extractChoicesContent(data: unknown): string | null {
   if (data && typeof data === "object" && "choices" in data) {
     const choices = (data as { choices: Array<{ message?: { content?: unknown } }> }).choices;
     const content = choices?.[0]?.message?.content;
-    if (content) return String(content);
+    if (content) {
+      return typeof content === "object" ? JSON.stringify(content) : String(content);
+    }
   }
   return null;
 }

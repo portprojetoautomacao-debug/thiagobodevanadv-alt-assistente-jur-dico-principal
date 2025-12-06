@@ -140,7 +140,7 @@ function validateAnalysisDeadline(
 function convertBRDateToISO(dateStr: string): string | null {
   // Regex para DD/MM/YYYY
   const brDatePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-  const match = dateStr.match(brDatePattern);
+  const match = brDatePattern.exec(dateStr);
 
   if (match) {
     const [, day, month, year] = match;

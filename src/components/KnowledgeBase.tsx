@@ -343,7 +343,7 @@ export default function KnowledgeBase() {
   );
 }
 
-function Plus(props: SVGProps<SVGSVGElement>) {
+function Plus(props: Readonly<SVGProps<SVGSVGElement>>) {
   return (
     <svg
       {...props}
