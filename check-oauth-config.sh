@@ -1,40 +1,46 @@
 #!/bin/bash
 # Diagnóstico de configuração OAuth
 
-echo "🔍 DIAGNÓSTICO GOOGLE OAUTH - Vercel"
-echo "===================================="
-echo ""
+# Carregar biblioteca comum
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/common.sh
+source "${SCRIPT_DIR}/scripts/lib/common.sh" || {
+    echo "❌ Erro: não foi possível carregar scripts/lib/common.sh"
+    exit 1
+}
 
-echo "📋 URLs de Produção Configuradas:"
+print_header "DIAGNÓSTICO GOOGLE OAUTH - Vercel"
+
+log_info "📋 URLs de Produção Configuradas:"
 echo "  - https://assistente-juridico-p.vercel.app"
 echo "  - https://assistente-juridico-github.vercel.app"
 echo ""
 
-echo "🔑 Variáveis de Ambiente Necessárias:"
+log_info "🔑 Variáveis de Ambiente Necessárias:"
 echo ""
 echo "VITE_GOOGLE_CLIENT_ID:"
-if [ -n "$VITE_GOOGLE_CLIENT_ID" ]; then
-  echo "  ✅ Configurado: ${VITE_GOOGLE_CLIENT_ID:0:40}..."
+if [[ -n "$VITE_GOOGLE_CLIENT_ID" ]]; then
+  log_success "Configurado: ${VITE_GOOGLE_CLIENT_ID:0:40}..."
 else
-  echo "  ❌ NÃO CONFIGURADO"
+  log_error "NÃO CONFIGURADO"
   echo "  👉 Adicione no Vercel Dashboard: Settings → Environment Variables"
 fi
 echo ""
 
 echo "VITE_REDIRECT_URI:"
-if [ -n "$VITE_REDIRECT_URI" ]; then
-  echo "  ✅ Configurado: $VITE_REDIRECT_URI"
+if [[ -n "$VITE_REDIRECT_URI" ]]; then
+  log_success "Configurado: $VITE_REDIRECT_URI"
 else
-  echo "  ⚠️  Não configurado (usará origin automático)"
+  log_warning "Não configurado (usará origin automático)"
   echo "  👉 Opcional, mas recomendado para produção"
 fi
 echo ""
 
 echo "VITE_GOOGLE_API_KEY:"
-if [ -n "$VITE_GOOGLE_API_KEY" ]; then
-  echo "  ✅ Configurado: ${VITE_GOOGLE_API_KEY:0:20}..."
+if [[ -n "$VITE_GOOGLE_API_KEY" ]]; then
+  log_success "Configurado: ${VITE_GOOGLE_API_KEY:0:20}..."
 else
-  echo "  ⚠️  Não configurado (opcional para algumas features)"
+  log_warning "Não configurado (opcional para algumas features)"
 fi
 echo ""
 
