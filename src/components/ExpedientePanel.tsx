@@ -360,10 +360,8 @@ export default function ExpedientePanel() {
         setExpedientes(data.expedientes);
         setLastSync(data.lastCheck);
         toast.success(`${data.expedientes.length} expediente(s) carregado(s)`);
-      } else {
-        if (data.lawyersConfigured === 0) {
-          toast.info("Nenhum advogado configurado para monitoramento");
-        }
+      } else if (data.lawyersConfigured === 0) {
+        toast.info("Nenhum advogado configurado para monitoramento");
       }
     } catch (error) {
       console.error("Erro ao buscar expedientes:", error);
