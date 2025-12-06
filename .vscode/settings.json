@@ -847,11 +847,87 @@
   "sonarlint.enableTelemetry": false,
 
   // ========================================
+  // 🪄 P42 JS ASSISTANT - REFACTORING
+  // ========================================
+
+  // Habilitar P42 JS Assistant
+  "p42.enable": true,
+
+  // Mostrar sugestões inline (underlining)
+  "p42.showSuggestions": "always",
+
+  // Mostrar painel de sugestões
+  "p42.suggestionPanel.visible": true,
+
+  // Modernizações JavaScript automáticas
+  "p42.codeAssist.convertFunctionToArrowFunction.enabled": true,
+  "p42.codeAssist.convertVarToLetConst.enabled": true,
+  "p42.codeAssist.convertToOptionalChaining.enabled": true,
+  "p42.codeAssist.useNullishCoalescence.enabled": true,
+  "p42.codeAssist.convertToTemplateString.enabled": true,
+  "p42.codeAssist.convertLoopToForOf.enabled": true,
+  "p42.codeAssist.convertArrayIndexOfToIncludes.enabled": true,
+  "p42.codeAssist.useStringStartsEndsWith.enabled": true,
+
+  // React refactorings
+  "p42.codeAssist.extractReactFunctionComponent.enabled": true,
+  "p42.codeAssist.removeUnnecessaryJsxFragment.enabled": true,
+
+  // Lodash modernizations (nosso projeto não usa Lodash, mas deixar habilitado)
+  "p42.codeAssist.replaceLodashWithNative.enabled": true,
+
+  // Code cleanups automáticos
+  "p42.codeAssist.removeConsoleLog.enabled": false, // Manter logs
+  "p42.codeAssist.removeDoubleNegation.enabled": true,
+  "p42.codeAssist.removeUnnecessaryConditionalExpression.enabled": true,
+  "p42.codeAssist.removeUnnecessaryElse.enabled": true,
+  "p42.codeAssist.removeUnusedVariable.enabled": true,
+  "p42.codeAssist.simplifyBinaryExpression.enabled": true,
+
+  // Refatorações de lógica booleana
+  "p42.codeAssist.invertCondition.enabled": true,
+  "p42.codeAssist.pullUpNegation.enabled": true,
+  "p42.codeAssist.pushDownNegation.enabled": true,
+
+  // Refatorações de branching
+  "p42.codeAssist.introduceEarlyReturn.enabled": true,
+  "p42.codeAssist.mergeNestedIf.enabled": true,
+  "p42.codeAssist.convertIfElseToSwitch.enabled": true,
+  "p42.codeAssist.convertConditionalExpressionToIfElse.enabled": true,
+  "p42.codeAssist.convertIfElseToConditionalExpression.enabled": true,
+
+  // Extrair variáveis e funções
+  "p42.codeAssist.extractVariable.enabled": true,
+  "p42.codeAssist.inlineVariable.enabled": true,
+
+  // TypeScript específico
+  "p42.codeAssist.convertTypeArrayToGeneric.enabled": true,
+  "p42.codeAssist.convertPrivateToHash.enabled": false, // Preferir TypeScript private
+
+  // AI Actions (necessita P42 Cloud - opcional)
+  "p42.ai.enabled": false, // Desabilitado por padrão para manter controle
+
+  // Nível de automação (aggressive, moderate, minimal)
+  "p42.automation": "moderate",
+
+  // Excluir padrões (node_modules, dist, etc já excluídos por padrão)
+  "p42.exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.next/**",
+    "**/build/**",
+    "**/*.min.js",
+    "**/coverage/**"
+  ],
+
+  // ========================================
   // 🔧 OUTRAS CONFIGURAÇÕES
   // ========================================
 
   "git.autofetch": true,
   "typescript.disableAutomaticTypeAcquisition": false,
   "redhat.telemetry.enabled": false,
-  "workbench.experimental.cloudChanges.autoStore": "onShutdown"
+  "workbench.experimental.cloudChanges.autoStore": "onShutdown",
+  "playwright.showTrace": true,
+  "playwright.runGlobalSetupOnEachRun": true
 }

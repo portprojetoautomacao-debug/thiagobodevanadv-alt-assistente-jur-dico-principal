@@ -248,6 +248,41 @@ Se você utiliza `nvm` para gerenciar NodeJS, o VS Code pode não detectar o bin
 "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node"
 ```
 
+### 🪄 P42 JS Assistant - Refatoração Inteligente
+
+**P42 JS Assistant** adiciona 120+ code actions para refatoração automática de JavaScript/TypeScript/React:
+
+#### ✨ Principais Features
+
+- **Modernizações automáticas**: `var`→`let/const`, `function`→arrow, optional chaining, nullish coalescing
+- **React refactorings**: Extract component, remove fragments, move attributes
+- **Code cleanups**: Remove código não usado, simplificar expressões, early returns
+- **Branching**: if-else ↔ switch, ternário ↔ if-else, merge nested if
+- **Quick fixes**: Atalhos para Extract (Ctrl+Alt+X), Inline (Ctrl+Alt+I), Move Up/Down (Ctrl+Alt+U/J)
+
+#### 📚 Documentação
+
+Ver **[docs/P42_GUIA_USO.md](docs/P42_GUIA_USO.md)** para:
+
+- Atalhos de teclado completos
+- Workflows recomendados
+- Exemplos práticos (optional chaining, nested ternary, etc.)
+- Integração com ESLint/SonarCloud
+- Regras para modo MANUTENÇÃO
+
+#### ⚙️ Configuração
+
+✅ **Já configurado** em `.vscode/settings.json` e `.vscode/keybindings.json`
+
+**Atalhos principais:**
+
+- `Ctrl + .` - Quick Fix
+- `Ctrl + Alt + R` - Refactor menu
+- `Ctrl + Alt + X` - Extract variable/function
+- `Ctrl + Alt + P` - Suggestion panel (recomendações para o arquivo)
+
+**Modo**: `moderate` automation (balanceado - não muito agressivo)
+
 Substitua o path acima pelo caminho do seu Node se a versão ou o local for diferente. No Windows, use `C:\\Program Files\\nodejs\\node.exe` (duas barras invertidas).
 
 Para identificar o caminho do Node no sistema:
