@@ -552,7 +552,7 @@
   // ========================================
 
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/jdk-25.0.1-oracle-x64",
+  "sonarlint.ls.javaHome": "/usr/lib/jvm/default-java",
 
   // 📋 LOGS DETALHADOS (conforme documentação oficial SonarQube)
   // Habilitar temporariamente para diagnóstico
