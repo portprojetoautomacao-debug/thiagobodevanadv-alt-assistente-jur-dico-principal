@@ -146,6 +146,10 @@
     "lgpd",
     "SEGURANCA",
     "seguranca",
+    "SONAR",
+    "sonar",
+    "QUALIDADE",
+    "qualidade",
 
     // ========================================
     // TRIGGERS TÉCNICOS AVANÇADOS

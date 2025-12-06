@@ -23,10 +23,7 @@ export interface PJeDocumentSync {
  * Hook para gerenciar sincronização de documentos PJe
  */
 export function usePJeDocumentSync(): PJeDocumentSync {
-  const { data: documentosSalvos, setData: setDocumentosSalvos } = useKV<DocumentoPJe[]>(
-    "pje_documentos",
-    []
-  );
+  const [documentosSalvos, setDocumentosSalvos] = useKV<DocumentoPJe[]>("pje_documentos", []);
 
   const [documentosPendentes, setDocumentosPendentes] = useState<DocumentoPJe[]>([]);
   const [documentosProcessados, setDocumentosProcessados] = useState<DocumentoPJe[]>([]);

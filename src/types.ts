@@ -244,3 +244,20 @@ export type ViewType =
   | "calendario"
   | "donna"
   | "ai-agents";
+
+export interface DocumentoPJe {
+  id: string;
+  tipo: "certidao" | "mandado" | "despacho" | "sentenca" | "outro";
+  conteudo: string;
+  dataExtracao: string; // ISO 8601
+  metadados: {
+    numeroProcesso?: string;
+    classe?: string;
+    autor?: string;
+    reu?: string;
+    comarca?: string;
+    vara?: string;
+    cpfs?: string[];
+    datas?: string[];
+  };
+}

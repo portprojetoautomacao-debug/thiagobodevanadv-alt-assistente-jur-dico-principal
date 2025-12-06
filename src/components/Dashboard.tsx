@@ -1,4 +1,5 @@
 import DJENPublicationsWidget from "@/components/DJENPublicationsWidget";
+import { PJeDocumentWidget, PJeStatusBadge } from "@/components/PJeDocumentWidget";
 import { PjeImageImporter } from "@/components/PjeImageImporter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -202,7 +203,11 @@ export default function Dashboard({ onNavigate }: Readonly<DashboardProps>) {
             <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
           </div>
 
-          <PjeImageImporter />
+          <div className="flex items-center gap-2">
+            <PJeStatusBadge />
+            <PJeDocumentWidget />
+            <PjeImageImporter />
+          </div>
         </div>
       </div>
 

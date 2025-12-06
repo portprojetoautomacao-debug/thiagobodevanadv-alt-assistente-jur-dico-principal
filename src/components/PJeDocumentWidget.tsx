@@ -9,13 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { FileText, Zap, AlertCircle, CheckCircle2, X, Download } from "lucide-react";
 import { usePJeDocumentSync, usePJeDocumentWidget } from "@/hooks/use-pje-document-sync";
 import { DocumentoPJe } from "@/types";
@@ -37,32 +37,33 @@ export function PJeDocumentWidget() {
   }
 
   return (
-    <Drawer open={visivel} onOpenChange={(open) => (open ? abrirPainel() : fecharPainel())}>
-      <DrawerTrigger asChild>
+    <Sheet open={visivel} onOpenChange={(open) => (open ? abrirPainel() : fecharPainel())}>
+      <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="relative gap-2" onClick={abrirPainel}>
           <FileText className="h-4 w-4" />
           <span>PJe Sync</span>
           {documentosNovos > 0 && (
-            <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
+            <Badge
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center"
+            >
               {documentosNovos}
             </Badge>
           )}
         </Button>
-      </DrawerTrigger>
+      </SheetTrigger>
 
-      <DrawerContent className="h-[80vh]">
-        <DrawerHeader>
-          <DrawerTitle>📄 Documentos PJe Capturados</DrawerTitle>
-          <DrawerDescription>
-            Sincronização em tempo real da extensão Chrome
-          </DrawerDescription>
-        </DrawerHeader>
+      <SheetContent className="w-[400px] sm:w-[540px] flex flex-col h-full">
+        <SheetHeader>
+          <SheetTitle>📄 Documentos PJe Capturados</SheetTitle>
+          <SheetDescription>Sincronização em tempo real da extensão Chrome</SheetDescription>
+        </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="flex-1 overflow-y-auto py-4">
           <PJeDocumentList />
         </div>
 
-        <div className="border-t p-4 flex gap-2 justify-between">
+        <div className="border-t pt-4 flex gap-2 justify-between mt-auto">
           <Button variant="outline" onClick={fecharPainel}>
             Fechar
           </Button>
@@ -71,8 +72,8 @@ export function PJeDocumentWidget() {
             Sincronizar Agora
           </Button>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -188,20 +189,18 @@ function PJeDocumentCard({
     }
   };
 
-  const tipoEmoji = {
-    certidao: "📜",
-    sentenca: "⚖️",
-    despacho: "📋",
-    mandado: "📬",
-    outro: "📄",
-  }[documento.tipo] || "📄";
+  const tipoEmoji =
+    {
+      certidao: "📜",
+      sentenca: "⚖️",
+      despacho: "📋",
+      mandado: "📬",
+      outro: "📄",
+    }[documento.tipo] || "📄";
 
   return (
     <Card className="cursor-pointer hover:shadow-md transition-shadow">
-      <CardHeader
-        className="pb-2 cursor-pointer hover:bg-muted/50"
-        onClick={onToggleExpandir}
-      >
+      <CardHeader className="pb-2 cursor-pointer hover:bg-muted/50" onClick={onToggleExpandir}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -286,16 +285,11 @@ export function PJeStatusBadge() {
   const [statusLabel, setStatusLabel] = useState("Detectando...");
 
   useEffect(() => {
-    setStatusLabel(
-      extensaoAtivaNoTab ? "✓ Extensão Ativa" : "✗ Extensão Inativa"
-    );
+    setStatusLabel(extensaoAtivaNoTab ? "✓ Extensão Ativa" : "✗ Extensão Inativa");
   }, [extensaoAtivaNoTab]);
 
   return (
-    <Badge
-      variant={extensaoAtivaNoTab ? "default" : "secondary"}
-      className="gap-1"
-    >
+    <Badge variant={extensaoAtivaNoTab ? "default" : "secondary"} className="gap-1">
       <div
         className={`h-2 w-2 rounded-full ${extensaoAtivaNoTab ? "bg-green-500" : "bg-gray-500"}`}
       />
