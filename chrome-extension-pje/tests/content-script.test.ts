@@ -43,6 +43,8 @@ describe("Content Script - DOM Observer", () => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     observer.stop();
+
+    expect(observer).toBeDefined();
   });
 
   it("deve parar observação quando stop é chamado", async () => {
@@ -60,6 +62,7 @@ describe("Content Script - DOM Observer", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // O callback não deve ter sido chamado após stop
+    expect(callback).not.toHaveBeenCalled();
   });
 });
 
