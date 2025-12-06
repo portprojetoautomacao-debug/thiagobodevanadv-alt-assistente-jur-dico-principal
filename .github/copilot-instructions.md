@@ -963,6 +963,187 @@ import {
 
 **Dashboard:** Sentry.io → Insights → AI → AI Agents
 
+### 🔍 SonarCloud MCP Server - Análise de Código
+
+O projeto está integrado com SonarCloud via MCP Server para análise contínua de qualidade de código.
+
+#### 📊 Configuração Principal
+
+| Configuração | Valor |
+|--------------|-------|
+| **URL** | `https://sonarcloud.io` |
+| **Organization** | `thiagobodevan-a11y-assistente-juridico-p` |
+| **Project Key** | `thiagobodevan-a11y_assistente-juridico-p` |
+| **Connected Mode** | ✅ Ativado |
+
+**Dashboard:** https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+
+#### 📁 Arquivos de Configuração
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `.vscode/mcp.json` | Configuração MCP Server principal |
+| `.vscode/sonar-copilot-assistant.json` | Integração Sonar + Copilot + Git |
+| `.vscode/settings.json` | SonarLint Connected Mode |
+| `.github/instructions/sonarqube_mcp.instructions.md` | Instruções de uso das ferramentas MCP |
+
+#### 🔧 Ferramentas MCP Disponíveis
+
+| Ferramenta | Uso |
+|------------|-----|
+| `search_my_sonarqube_projects` | Buscar projetos disponíveis no SonarCloud |
+| `search_sonar_issues_in_projects` | Buscar issues (bugs, vulnerabilities, code smells) |
+| `analyze_file_list` | Analisar arquivos modificados após edição |
+| `toggle_automatic_analysis` | Ativar/desativar análise automática |
+
+#### ⚡ Workflow de Análise
+
+**Ao iniciar uma tarefa:**
+1. Desabilitar análise automática: `toggle_automatic_analysis` (se existir)
+2. Realizar modificações de código
+3. Ao finalizar: `analyze_file_list` nos arquivos modificados
+4. Re-habilitar análise automática: `toggle_automatic_analysis`
+
+**Para buscar issues:**
+```bash
+# Buscar projetos
+search_my_sonarqube_projects
+
+# Buscar issues por severidade
+search_sonar_issues_in_projects (severities: BLOCKER, CRITICAL, MAJOR)
+```
+
+#### 🎯 Filtros de Issues Configurados
+
+```json
+{
+  "defaultSeverities": ["BLOCKER", "CRITICAL", "MAJOR"],
+  "excludeResolved": true,
+  "focusOnNewCode": true,
+  "excludePatterns": ["**/node_modules/**", "**/dist/**", "**/*.test.ts"],
+  "includePatterns": ["src/**/*.ts", "src/**/*.tsx", "api/**/*.ts"]
+}
+```
+
+#### 🔑 Autenticação
+
+- **Tipo de Token**: USER token (não project token)
+- **Gerar Token**: https://sonarcloud.io/account/security
+- **Armazenamento**: User Settings do VS Code (não workspace settings)
+- **Erro comum**: `SonarQube answered with Not authorized` → verificar tipo de token
+
+#### 📋 SonarLint Connected Mode (settings.json)
+
+```json
+"sonarlint.connectedMode.connections.sonarcloud": [
+  {
+    "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
+    "connectionId": "thiagobodevan-a11y-assistente-juridico-p"
+  }
+],
+"sonarlint.connectedMode.project": {
+  "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
+  "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+}
+```
+
+#### 🤖 Sonar Copilot Assistant Features
+
+| Feature | Status | Descrição |
+|---------|--------|-----------|
+| **Smart Fix** | ✅ Ativo | Fix automático com confirmação |
+| **Batch Processing** | ✅ Ativo | Processar múltiplos issues |
+| **Auto Branch** | ✅ Ativo | Criar branch `fix/sonar-*` |
+| **Auto Commit** | ✅ Ativo | Commit com template padronizado |
+| **Test Verification** | ✅ Ativo | Rodar testes antes de commit |
+| **AI Training** | ✅ Ativo | Aprender com fixes aprovados |
+
+**Diretório de treinamento IA:** `.sonar-copilot/training`
+
+#### 🌐 SonarCloud API - Endpoints Úteis
+
+A API REST do SonarCloud pode ser usada para consultas diretas. Base URL: `https://sonarcloud.io/api`
+
+**Autenticação:**
+```bash
+# Usar token como usuário, senha vazia
+curl -u "SEU_TOKEN:" "https://sonarcloud.io/api/..."
+```
+
+**Endpoints principais:**
+
+| Endpoint | Método | Descrição |
+|----------|--------|-----------|
+| `/api/issues/search` | GET | Buscar issues do projeto |
+| `/api/measures/component` | GET | Métricas (duplicação, cobertura, etc.) |
+| `/api/project_analyses/search` | GET | Histórico de análises |
+| `/api/qualitygates/project_status` | GET | Status do Quality Gate |
+| `/api/hotspots/search` | GET | Security Hotspots |
+| `/api/sources/lines` | GET | Código fonte com anotações |
+
+**Exemplos de uso:**
+
+```bash
+# Buscar issues OPEN ordenados por severidade
+curl -u "TOKEN:" "https://sonarcloud.io/api/issues/search?\
+componentKeys=thiagobodevan-a11y_assistente-juridico-p&\
+statuses=OPEN&\
+ps=100&\
+s=SEVERITY&\
+asc=false"
+
+# Buscar métricas de duplicação e cobertura
+curl -u "TOKEN:" "https://sonarcloud.io/api/measures/component?\
+component=thiagobodevan-a11y_assistente-juridico-p&\
+metricKeys=duplicated_lines_density,coverage,bugs,vulnerabilities,code_smells"
+
+# Status do Quality Gate
+curl -u "TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?\
+projectKey=thiagobodevan-a11y_assistente-juridico-p"
+
+# Security Hotspots
+curl -u "TOKEN:" "https://sonarcloud.io/api/hotspots/search?\
+projectKey=thiagobodevan-a11y_assistente-juridico-p&\
+status=TO_REVIEW"
+```
+
+**Parâmetros comuns:**
+
+| Parâmetro | Descrição | Exemplo |
+|-----------|-----------|---------|
+| `componentKeys` | Project key | `thiagobodevan-a11y_assistente-juridico-p` |
+| `statuses` | Status dos issues | `OPEN`, `CONFIRMED`, `RESOLVED` |
+| `severities` | Severidades | `BLOCKER`, `CRITICAL`, `MAJOR`, `MINOR`, `INFO` |
+| `types` | Tipos | `BUG`, `VULNERABILITY`, `CODE_SMELL` |
+| `ps` | Page size | `1` a `500` |
+| `p` | Página | `1`, `2`, etc. |
+| `s` | Sort field | `SEVERITY`, `CREATION_DATE`, `UPDATE_DATE` |
+| `asc` | Ordem | `true` (ASC), `false` (DESC) |
+| `branch` | Branch específica | `main`, `develop` |
+
+**Métricas disponíveis:**
+
+| Métrica | Descrição |
+|---------|-----------|
+| `duplicated_lines_density` | % de linhas duplicadas |
+| `coverage` | Cobertura de testes |
+| `bugs` | Contagem de bugs |
+| `vulnerabilities` | Vulnerabilidades de segurança |
+| `code_smells` | Code smells |
+| `security_hotspots` | Security hotspots |
+| `sqale_index` | Débito técnico (minutos) |
+| `reliability_rating` | Rating A-E para bugs |
+| `security_rating` | Rating A-E para vulnerabilidades |
+
+**Documentação completa:** https://sonarcloud.io/web_api
+
+#### ⚠️ Boas Práticas
+
+1. **Não verificar fixes imediatamente** - O servidor demora para refletir mudanças
+2. **Buscar project key primeiro** - Use `search_my_sonarqube_projects` antes de consultas
+3. **Especificar linguagem** - Ao analisar snippets, informar a linguagem
+4. **Branch context** - Incluir parâmetro de branch quando relevante
+
 ## 📁 Project Structure
 
 ```

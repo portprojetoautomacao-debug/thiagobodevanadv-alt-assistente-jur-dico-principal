@@ -104,3 +104,6 @@ coverage-api/
 # Security: Never commit backup files with secrets
 *.backup
 .env.*.backup
+
+# SonarQube Auto Analysis Results
+.sonar-results/

@@ -362,6 +362,9 @@ interface DJENFilteredResult {
   advogados: Array<{ nome: string; numero_oab: string; uf_oab: string }>;
 }
 
+/** Meio de publicação: E = Eletrônico, D = Digital */
+type MeioPublicacao = "E" | "D";
+
 interface DJENQueryParams {
   numeroOab?: string;
   ufOab?: string;
@@ -371,7 +374,7 @@ interface DJENQueryParams {
   dataDisponibilizacaoFim?: string;
   pagina?: number;
   itensPorPagina?: number;
-  meio?: "E" | "D";
+  meio?: MeioPublicacao;
 }
 
 const DJEN_TIMEOUT = 30000;
@@ -1154,7 +1157,7 @@ async function sendEmailNotification(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">${notification.title}</h2>
           <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
-            /\n/g,
+            "\n",
             "<br>"
           )}</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />

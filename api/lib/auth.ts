@@ -67,9 +67,11 @@ export async function validateAuthToken(token: string): Promise<AuthResult> {
       }
     }
 
-    // FIXME: Implementar validação real de JWT ou sessão (issue #SECURITY-001)
-    // Por enquanto, aceita qualquer token não vazio em produção
-    // Deve usar jsonwebtoken ou similar para validar signature e claims
+    // TODO(SECURITY-001): Implementar validação JWT real
+    // ⚠️ IMPORTANTE: Implementação temporária - aceita qualquer token em produção
+    // Ação necessária: Usar jsonwebtoken para validar signature + claims
+    // Prazo sugerido: Sprint de segurança antes de lançamento público
+    // Documentação: docs/SECURITY_AUTH_ROADMAP.md
 
     logger.warn("Usando validação de token temporária - implementar JWT real");
 

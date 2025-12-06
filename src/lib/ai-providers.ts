@@ -372,10 +372,7 @@ export class HuggingFaceClient {
   private readonly baseUrl = HUGGINGFACE_CONFIG.baseUrl;
 
   constructor(apiKey?: string) {
-    this.apiKey =
-      apiKey ||
-      (typeof import.meta !== "undefined" ? import.meta.env.VITE_HUGGINGFACE_API_KEY || "" : "") ||
-      null;
+    this.apiKey = apiKey || (import.meta?.env?.VITE_HUGGINGFACE_API_KEY ?? "") || null;
   }
 
   async chat(
