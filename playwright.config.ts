@@ -42,9 +42,10 @@ export default defineConfig({
     {
       name: "chromium",
       // Use Chromium bundled by Playwright to avoid relying on system Google Chrome
-      use: { ...devices["Desktop Chromium"], channel: "chromium" },
+      // Força headless explicitamente para evitar erro de XServer em containers
+      use: { ...devices["Desktop Chromium"], channel: "chromium", headless: true },
     },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"], headless: true } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

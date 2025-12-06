@@ -3,19 +3,19 @@ import { useReducedMotion } from "framer-motion";
 export const fluentTransitions = {
   standard: {
     duration: 0.3,
-    ease: [0.4, 0.0, 0.2, 1.0] as [number, number, number, number],
+    ease: [0.4, 0, 0.2, 1.0] as [number, number, number, number],
   },
   emphasized: {
     duration: 0.4,
-    ease: [0.2, 0.0, 0, 1.0] as [number, number, number, number],
+    ease: [0.2, 0, 0, 1.0] as [number, number, number, number],
   },
   decelerate: {
     duration: 0.25,
-    ease: [0.0, 0.0, 0.2, 1.0] as [number, number, number, number],
+    ease: [0, 0, 0.2, 1.0] as [number, number, number, number],
   },
   accelerate: {
     duration: 0.2,
-    ease: [0.4, 0.0, 1.0, 1.0] as [number, number, number, number],
+    ease: [0.4, 0, 1.0, 1.0] as [number, number, number, number],
   },
 };
 
