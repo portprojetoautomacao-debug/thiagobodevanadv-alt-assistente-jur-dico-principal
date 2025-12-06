@@ -61,13 +61,12 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-// ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
+// ✅ LAZY LOADING: TiptapEditorV2 é carregado apenas quando necessário
 // Isso reduz o bundle inicial e melhora First Contentful Paint (FCP)
-// Nota: O erro "Cannot set properties of undefined (setting 'Activity')" dos ícones Phosphor
-// foi corrigido movendo lucide-react para o chunk 'react-vendor' no vite.config.ts
-const TiptapEditor = lazy(() =>
-  import("@/components/editor/TiptapEditor").then((m) => ({
-    default: m.TiptapEditor,
+// TiptapEditorV2 combina UI moderna do Tiptap CLI oficial + comandos de IA
+const TiptapEditorV2 = lazy(() =>
+  import("@/components/editor/TiptapEditorV2").then((m) => ({
+    default: m.TiptapEditorV2,
   }))
 );
 
@@ -866,7 +865,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         </div>
                       }
                     >
-                      <TiptapEditor
+                      <TiptapEditorV2
                         key={editingMinuta?.id || "new-minuta"}
                         content={formData.conteudo}
                         onChange={(content) => setFormData({ ...formData, conteudo: content })}
