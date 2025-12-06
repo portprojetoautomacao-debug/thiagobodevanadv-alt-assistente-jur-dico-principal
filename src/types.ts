@@ -15,6 +15,13 @@ export interface Process {
   prazos: Prazo[];
   createdAt: string;
   updatedAt: string;
+  // Contadores de documentos vinculados (atualizados automaticamente)
+  expedientesCount?: number;
+  intimacoesCount?: number;
+  minutasCount?: number;
+  documentosCount?: number;
+  lastExpedienteAt?: string;
+  lastMinutaAt?: string;
 }
 
 export interface Prazo {
