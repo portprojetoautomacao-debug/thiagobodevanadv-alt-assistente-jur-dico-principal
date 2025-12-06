@@ -21,7 +21,15 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string) {
       .map((header) => {
         const value = row[header];
         if (value === null || value === undefined) return "";
-        const stringValue = typeof value === "object" ? JSON.stringify(value) : String(value);
+        // Garantir stringify seguro
+        let stringValue: string;
+        if (typeof value === "string") {
+          stringValue = value;
+        } else if (typeof value === "object" && value !== null) {
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
+        }
         return `"${stringValue.replaceAll('"', '""')}"`;
       })
       .join(",")
@@ -70,7 +78,15 @@ export async function exportToXLSX(data: Record<string, unknown>[], filename: st
         .map((h) => {
           const val = row[h];
           if (val === null || val === undefined) return "";
-          const str = typeof val === "object" ? JSON.stringify(val) : String(val);
+          // Garantir stringify seguro
+          let str: string;
+          if (typeof val === "string") {
+            str = val;
+          } else if (typeof val === "object" && val !== null) {
+            str = JSON.stringify(val);
+          } else {
+            str = String(val);
+          }
           return str.includes(",") || str.includes('"') || str.includes("\n")
             ? `"${str.replaceAll('"', '""')}"`
             : str;

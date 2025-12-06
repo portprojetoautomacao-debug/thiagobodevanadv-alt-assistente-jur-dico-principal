@@ -368,11 +368,15 @@ export function createSafeScriptURL(url: string): TrustedScriptURL | string {
  */
 export function getSafeInnerHTML(html: string): string {
   const safe = createSafeHTML(html);
-  return typeof safe === "string"
-    ? safe
-    : typeof safe === "object"
-      ? JSON.stringify(safe)
-      : String(safe);
+
+  // Extrair lógica de conversão para evitar nested ternary
+  if (typeof safe === "string") {
+    return safe;
+  }
+  if (typeof safe === "object") {
+    return JSON.stringify(safe);
+  }
+  return String(safe);
 }
 
 /**

@@ -288,8 +288,15 @@ function buildTaskPrompt(task: AgentTask): string {
   let prompt = `**Tarefa: ${task.type}**\n`;
   prompt += `Prioridade: ${task.priority}\n\n`;
 
+  // Helper para stringify seguro
+  const safeStringify = (val: unknown): string => {
+    if (typeof val === "string") return val;
+    if (typeof val === "object" && val !== null) return JSON.stringify(val);
+    return String(val);
+  };
+
   if (data.description) {
-    prompt += `Descrição: ${typeof data.description === "object" ? JSON.stringify(data.description) : String(data.description)}\n\n`;
+    prompt += `Descrição: ${safeStringify(data.description)}\n\n`;
   }
 
   if (data.content || data.teor) {
@@ -298,11 +305,11 @@ function buildTaskPrompt(task: AgentTask): string {
   }
 
   if (data.processNumber) {
-    prompt += `Processo: ${typeof data.processNumber === "object" ? JSON.stringify(data.processNumber) : String(data.processNumber)}\n`;
+    prompt += `Processo: ${safeStringify(data.processNumber)}\n`;
   }
 
   if (data.expedienteId) {
-    prompt += `ID do Expediente: ${typeof data.expedienteId === "object" ? JSON.stringify(data.expedienteId) : String(data.expedienteId)}\n`;
+    prompt += `ID do Expediente: ${safeStringify(data.expedienteId)}\n`;
   }
 
   prompt += `\nExecute a tarefa e forneça uma resposta estruturada.`;

@@ -307,13 +307,11 @@ export default function ProcessDetailsDialog({
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline">{min.tipo}</Badge>
                           <Badge
-                            variant={
-                              min.status === "finalizada"
-                                ? "default"
-                                : min.status === "pendente-revisao"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
+                            variant={(() => {
+                              if (min.status === "finalizada") return "default";
+                              if (min.status === "pendente-revisao") return "destructive";
+                              return "secondary";
+                            })()}
                           >
                             {min.status}
                           </Badge>
