@@ -37,8 +37,8 @@ export interface Expediente {
 }
 
 export interface SyncMessage {
-  type: "SYNC_PROCESSOS" | "SYNC_EXPEDIENTES" | "FORCE_SYNC" | "PING";
-  data?: ProcessoPJe[] | Expediente[];
+  type: "SYNC_PROCESSOS" | "SYNC_EXPEDIENTES" | "SYNC_DOCUMENTO" | "EXTRACT_DOCUMENT" | "FORCE_SYNC" | "PING";
+  data?: ProcessoPJe[] | Expediente[] | DocumentoPJe;
   timestamp: number;
 }
 
@@ -49,11 +49,32 @@ export interface SyncResponse {
   error?: string;
 }
 
+/**
+ * Documento extraído do PJe (certidão, mandado, etc)
+ */
+export interface DocumentoPJe {
+  id: string;
+  tipo: "certidao" | "mandado" | "despacho" | "sentenca" | "outro";
+  conteudo: string;
+  dataExtracao: string; // ISO 8601
+  metadados: {
+    numeroProcesso?: string;
+    classe?: string;
+    autor?: string;
+    reu?: string;
+    comarca?: string;
+    vara?: string;
+    cpfs?: string[];
+    datas?: string[];
+  };
+}
+
 export interface StorageData {
   apiKey?: string;
   processos?: ProcessoPJe[];
   processos_timestamp?: number;
   expedientes_today?: Expediente[];
+  documentos?: DocumentoPJe[];
   lastSync?: number;
   enabled?: boolean;
 }

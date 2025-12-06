@@ -3,6 +3,7 @@
  */
 
 import { SyncMessage } from "../shared/types";
+import { DocumentExtractor } from "./extractors/document-extractor";
 import { ExpedienteExtractor } from "./extractors/expediente-extractor";
 import { ProcessExtractor } from "./extractors/process-extractor";
 import { DOMObserver } from "./observers/dom-observer";
@@ -10,6 +11,7 @@ import { DOMObserver } from "./observers/dom-observer";
 class PJeContentScript {
   private processExtractor: ProcessExtractor;
   private expedienteExtractor: ExpedienteExtractor;
+  private documentExtractor: DocumentExtractor;
   private domObserver: DOMObserver;
   private lastSync: number = 0;
   private syncInProgress: boolean = false;
@@ -17,6 +19,7 @@ class PJeContentScript {
   constructor() {
     this.processExtractor = new ProcessExtractor();
     this.expedienteExtractor = new ExpedienteExtractor();
+    this.documentExtractor = new DocumentExtractor();
     this.domObserver = new DOMObserver(() => this.handleDOMChange());
 
     this.init();
@@ -85,6 +88,11 @@ class PJeContentScript {
       sendResponse({ success: true });
     } else if (message.type === "PING") {
       sendResponse({ success: true, active: true });
+    } else if (message.type === "EXTRACT_DOCUMENT") {
+      // Novo: extrai documento visível na tela
+      console.log("[PJe Sync] Extraindo documento da tela...");
+      const documento = this.documentExtractor.extractDocumento();
+      sendResponse({ success: !!documento, documento });
     }
   }
 
@@ -98,6 +106,15 @@ class PJeContentScript {
     this.updateBadge("⟳", "#FFC107"); // Amarelo = sincronizando
 
     try {
+      // Verifica se há documento aberto para extrair
+      if (this.documentExtractor.isDocumentoAberto()) {
+        const documento = this.documentExtractor.extractDocumento();
+        if (documento) {
+          console.log("[PJe Sync] Documento detectado:", documento.tipo);
+          await this.sendToBackground("SYNC_DOCUMENTO", documento);
+        }
+      }
+
       // Extrai processos
       const processos = this.processExtractor.extractProcessos();
 
