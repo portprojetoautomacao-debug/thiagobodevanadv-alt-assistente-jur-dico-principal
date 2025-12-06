@@ -92,7 +92,7 @@ function tryParseJsonBlock(cleaned: string): Record<string, unknown> | null {
 function parseJsonResponse(responseText: string): Record<string, unknown> {
   // Remover markdown code blocks
   const cleaned = responseText
-    .replace(/```json\s*/gi, "")
+    .replaceAll(/```json\s*/gi, "")
     .replaceAll(/```\s*/g, "")
     .trim();
 

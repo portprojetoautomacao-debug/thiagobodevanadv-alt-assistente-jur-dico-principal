@@ -66,7 +66,7 @@ function normalizeDateToISO(dateStr: string): string {
 
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) {
-    throw new Error(`Data de prazo inválida: ${dateStr}`);
+    throw new TypeError(`Data de prazo inválida: ${dateStr}`);
   }
   return date.toISOString().split("T")[0];
 }

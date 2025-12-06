@@ -80,7 +80,7 @@ export function parseJSONSafe<T = unknown>(jsonStr: string, fallback?: T): T | n
     const cleaned = jsonStr.trim();
 
     // Remover trailing commas
-    const withoutTrailingCommas = cleaned.replace(/,(\s*[}\]])/g, "$1");
+    const withoutTrailingCommas = cleaned.replaceAll(/,(\s*[}\]])/g, "$1");
 
     try {
       return JSON.parse(withoutTrailingCommas) as T;
