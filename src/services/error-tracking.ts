@@ -285,7 +285,7 @@ export function initErrorTracking(): void {
 
       // URLs permitidas (apenas rastrear erros dessas origens)
       allowUrls: [
-        typeof globalThis.window !== "undefined" ? globalThis.window.location.origin : "",
+        globalThis.window !== undefined ? globalThis.window.location.origin : "",
         /^https:\/\/.*\.vercel\.app/,
       ],
     });

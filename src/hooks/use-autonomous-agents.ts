@@ -12,6 +12,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // Type alias for activity result
 type ActivityResult = "success" | "warning" | "error";
 
+// Type alias for state setter functions
+type StateSetter<T> = (fn: (current: T | null) => T) => void;
+
 // Type alias para log de atividade
 type ActivityLogEntry = {
   id: string;
@@ -110,9 +113,9 @@ function handleTaskCompletion(
   task: AgentTask,
   result: AgentTask["result"],
   agentId: string,
-  setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
-  setCompletedTasks: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
-  setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
+  setTaskQueue: StateSetter<AgentTask[]>,
+  setCompletedTasks: StateSetter<AgentTask[]>,
+  setAgents: StateSetter<Agent[]>,
   logActivity: (agentId: string, action: string, result: ActivityResult) => void
 ): void {
   const completed: AgentTask = {
