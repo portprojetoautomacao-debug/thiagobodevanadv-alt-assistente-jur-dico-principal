@@ -479,7 +479,7 @@ class GoogleDocsService {
     }
 
     try {
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs;
 
       if (!docsApi || typeof docsApi.documents?.create !== "function") {

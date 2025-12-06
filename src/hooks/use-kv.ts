@@ -213,7 +213,7 @@ async function processBatch(): Promise<void> {
 /**
  * Agenda uma chave para carregamento em batch
  */
-function scheduleLoad(key: string): Promise<unknown | null> {
+function scheduleLoad(key: string): Promise<unknown> {
   // Verifica cache primeiro
   const cached = getFromCache(key);
   if (cached !== null) {

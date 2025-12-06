@@ -301,8 +301,7 @@ function buildCalendarAnalysisResult(
           type: analysisData.deadline.type || "úteis",
           endDate: analysisData.deadline.endDate || "",
           description: analysisData.deadline.description,
-        }
-      : undefined;
+        };
 
   const result: IntimationAnalysisResult = {
     summary: analysisData.summary || "Intimação analisada",

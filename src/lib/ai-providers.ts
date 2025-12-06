@@ -186,7 +186,7 @@ export function isValidApiKey(key: string | null | undefined, provider?: string)
       return /^hf_\w{20,}$/.test(key) || key.length >= 20;
     case "azure":
       // Chaves Azure: 32 caracteres hex
-      return /^[a-f0-9]{32}$/i.test(key) || key.length >= 20;
+      return /^[\da-f]{32}$/i.test(key) || key.length >= 20;
     default:
       // Validação genérica: pelo menos 20 caracteres alfanuméricos
       return key.length >= 20;

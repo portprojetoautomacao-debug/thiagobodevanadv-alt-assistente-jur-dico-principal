@@ -88,7 +88,7 @@ export function applySparkClientFixes() {
   // Apply FileReader patch to prevent crashes
   patchFileReader();
 
-  const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
+  const w = globalThis as typeof globalThis & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
 
   try {
     // Se spark não existir, cria um mock seguro para evitar crash

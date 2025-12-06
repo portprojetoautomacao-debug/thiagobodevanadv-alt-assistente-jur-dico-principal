@@ -88,8 +88,8 @@ export async function generateJSON<T = unknown>(
   try {
     // Try to extract JSON from response without greedy regex
     const startIdx = Math.min(
-      response.indexOf("{") !== -1 ? response.indexOf("{") : Infinity,
-      response.indexOf("[") !== -1 ? response.indexOf("[") : Infinity
+      response.indexOf("{") === -1 ? Infinity : response.indexOf("{"),
+      response.indexOf("[") === -1 ? Infinity : response.indexOf("[")
     );
     const endIdx = Math.max(response.lastIndexOf("}"), response.lastIndexOf("]"));
 

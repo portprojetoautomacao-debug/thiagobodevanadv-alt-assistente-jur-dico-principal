@@ -186,7 +186,7 @@ class TracingService {
   private readonly activeSpans: Map<string, Span> = new Map();
   private readonly memoryExporter: MemoryExporter;
   private enabled = true;
-  private samplingRate = 1.0; // 100% by default
+  private samplingRate = 1; // 100% by default
 
   constructor() {
     this.memoryExporter = new MemoryExporter();

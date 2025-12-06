@@ -5,9 +5,9 @@
  * Fornece instrumentação automática para execução de agentes e processamento de tarefas.
  */
 
-import { tracingService, withTracing } from "./tracing";
+import { tracingService } from "./tracing";
 
-import type { AgentSpan, Span, SpanAttributes, TraceContext } from "./tracing";
+import type { AgentSpan, Span, SpanAttributes } from "./tracing";
 
 import type { Agent, AgentTask, AgentTaskResult } from "./agents";
 
@@ -110,10 +110,15 @@ export function traceAgentStep(
   const spanAny = agentSpan as AgentSpan & { stepNumber?: number };
   spanAny.stepNumber = stepNumber;
 
-  tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
+  const eventAttributes: SpanAttributes = {
     "step.description": stepDescription,
-    ...attributes,
-  });
+  };
+
+  if (attributes) {
+    Object.assign(eventAttributes, attributes);
+  }
+
+  tracingService.addEvent(agentSpan, `step.${stepNumber}`, eventAttributes);
 }
 
 // ============================================================================
@@ -430,5 +435,5 @@ export function getLLMMetrics(): {
 // EXPORTS
 // ============================================================================
 
-export { tracingService, withTracing };
-export type { AgentSpan, Span, TraceContext };
+export { tracingService, withTracing } from "./tracing";
+export type { AgentSpan, Span, TraceContext } from "./tracing";

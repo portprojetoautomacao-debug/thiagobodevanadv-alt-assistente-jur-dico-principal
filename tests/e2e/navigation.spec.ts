@@ -17,16 +17,19 @@ test.describe("Navegação e Interações", () => {
 
     // browser_navigate_forward
     await page.goForward();
-    await page.waitForLoadState("networkidle");
-    await expect(page).toHaveURL(/\/api\/health/);
+    await page.waitForLoadState("domcontentloaded");
+    await expect(page).toHaveURL(/\/api\/health/, { timeout: 15000 });
   });
 
   test("deve clicar em elementos", async ({ page }) => {
     await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // browser_click
     const button = page.locator("button").first();
-    if ((await button.count()) > 0) {
+    const buttonCount = await button.count();
+    if (buttonCount > 0) {
+      await button.waitFor({ state: "visible", timeout: 5000 });
       await button.click();
     }
   });

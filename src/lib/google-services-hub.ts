@@ -12,15 +12,15 @@
 //   backend/cron/worker. Este hub garante a orquestração sempre que
 //   o app estiver aberto (aba ativa), e expõe uma API única para a UI.
 
+import { isGeminiConfigured } from "@/lib/gemini-config";
 import { googleCalendarService } from "@/lib/google-calendar-service";
 import { googleDocsService } from "@/lib/google-docs-service";
-import { isGeminiConfigured } from "@/lib/gemini-config";
 
 import {
   AutoPilotDjenPrazosMinutas,
+  criarAutoPilotDjenPrazosMinutas,
   type AutoPilotConfig,
   type AutoPilotStatus,
-  criarAutoPilotDjenPrazosMinutas,
 } from "@/lib/auto-pilot-djen-prazos-minutas";
 
 // ===== Tipos de status consolidados =====
@@ -134,7 +134,10 @@ export class GoogleServicesHub {
   configureAutoPilot(config: AutoPilotConfig): AutoPilotDjenPrazosMinutas {
     this.autoPilotConfig = config;
 
-    if (!this.autoPilot) {
+    if (this.autoPilot) {
+      // Já existia: apenas atualiza config da instância
+      this.autoPilot.atualizarConfig(config);
+    } else {
       this.autoPilot = criarAutoPilotDjenPrazosMinutas({
         ...config,
         logCallback: (msg, level) => {
@@ -146,9 +149,6 @@ export class GoogleServicesHub {
           }
         },
       });
-    } else {
-      // Já existia: apenas atualiza config da instância
-      this.autoPilot.atualizarConfig(config);
     }
 
     return this.autoPilot;
