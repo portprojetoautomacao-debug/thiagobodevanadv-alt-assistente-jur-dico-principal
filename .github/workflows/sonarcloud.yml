@@ -87,13 +87,13 @@ jobs:
           echo "Files to analyze:"
           echo "  - src/hooks/use-google-docs.ts"
           echo "  - src/components/MinutasManager.tsx"
-          
+
           # Verificar se os arquivos existem
           if [ -f "src/hooks/use-google-docs.ts" ]; then
             echo "✅ use-google-docs.ts encontrado"
             wc -l src/hooks/use-google-docs.ts
           fi
-          
+
           if [ -f "src/components/MinutasManager.tsx" ]; then
             echo "✅ MinutasManager.tsx encontrado"
             wc -l src/components/MinutasManager.tsx
