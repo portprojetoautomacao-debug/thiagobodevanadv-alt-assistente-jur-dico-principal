@@ -133,10 +133,17 @@ export default async function handler(req: Request) {
 }
 
 async function validateApiKey(key: string): Promise<boolean> {
-  // Por ora, aceita qualquer key não-vazia
-  // TODO: Implementar validação real com KV storage
-  // Validação atual é stub, precisa verificar duplicatas no Redis
-  return key.length > 10;
+  // Valida a chave consultando o conjunto Redis "api-keys:valid"
+  if (!redis) return false;
+  if (!key || key.length < 10) return false;
+  // As chaves válidas devem estar armazenadas em um conjunto Redis chamado "api-keys:valid"
+  try {
+    const exists = await redis.sismember("api-keys:valid", key);
+    return !!exists;
+  } catch (e) {
+    console.error("[PJe Sync] Erro ao validar API key:", e);
+    return false;
+  }
 }
 
 async function handleSyncProcessos(processos: ProcessoPJe[]): Promise<number> {
