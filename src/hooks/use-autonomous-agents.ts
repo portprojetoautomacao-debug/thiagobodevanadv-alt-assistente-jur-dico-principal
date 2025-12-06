@@ -137,6 +137,8 @@ function handleTaskCompletion(
   logActivity(agentId, `Tarefa concluída: ${task.type}`, "success");
 }
 
+type TaskQueueSetter = (fn: (current: AgentTask[] | null) => AgentTask[]) => void;
+
 /**
  * Handles task failure - extracted to reduce nesting (S2004)
  */
@@ -144,8 +146,8 @@ function handleTaskFailure(
   task: AgentTask,
   error: unknown,
   agentId: string,
-  setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
-  logActivity: (agentId: string, action: string, result: "success" | "warning" | "error") => void
+  setTaskQueue: TaskQueueSetter,
+  logActivity: ActivityLogger
 ): void {
   setTaskQueue((current) =>
     updateTaskInQueue(current || [], task.id, {

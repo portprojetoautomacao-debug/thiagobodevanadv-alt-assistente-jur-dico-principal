@@ -510,4 +510,4 @@ export function withSyncSpan<T>(
 // RE-EXPORT do Sentry para uso direto
 // ============================================
 
-export { Sentry };
+export * as Sentry from "@sentry/react";

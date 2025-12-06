@@ -402,11 +402,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                 <CardDescription>Revise e edite os dados antes de salvar</CardDescription>
               </CardHeader>
               <CardContent>
-                {!extractedData ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Faça upload de um PDF para extrair dados
-                  </div>
-                ) : (
+                {extractedData ? (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="nome">Nome Completo *</Label>
@@ -552,6 +548,10 @@ Retorne APENAS o JSON válido, sem explicações.`;
                     <p className="text-xs text-muted-foreground text-center">
                       * Campos obrigatórios
                     </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Faça upload de um PDF para extrair dados
                   </div>
                 )}
               </CardContent>

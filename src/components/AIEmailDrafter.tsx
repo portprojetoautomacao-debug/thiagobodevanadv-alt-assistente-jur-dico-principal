@@ -62,7 +62,7 @@ export default function AIEmailDrafter() {
     try {
       const typeDescription = emailTypes[emailType];
 
-      const prompt = `Você é um assistente de redação de emails jurídicos. Redija um email profissional com as seguintes informações:
+      const prompt = String.raw`Você é um assistente de redação de emails jurídicos. Redija um email profissional com as seguintes informações:
 
 Tipo de email: ${typeDescription}
 Nome do destinatário: ${recipientName || "não especificado"}
