@@ -86,11 +86,8 @@ export type AgentId =
   | "traducao-juridica"
   | "compliance";
 
-// Tipo flexível para Agent.id que aceita IDs não listados (S6571)
-export type AgentIdFlexible = AgentId | string;
-
 export interface Agent {
-  id: AgentIdFlexible;
+  id: string;
   name: string;
   description: string;
   type: string;

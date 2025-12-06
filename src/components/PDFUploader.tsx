@@ -194,7 +194,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
     }
   };
 
-  const handleEditField = (field: keyof ExtractedData, value: string | TipoPessoa) => {
+  const handleEditField = (field: keyof ExtractedData, value: string) => {
     setExtractedData((prev) => ({
       ...prev,
       [field]: value,

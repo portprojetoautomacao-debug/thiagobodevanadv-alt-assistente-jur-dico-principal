@@ -356,7 +356,8 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: 
   // Setter otimizado
   const setValue = useCallback((value: T | ((prev: T) => T)) => {
     setStoredValue((currentStoredValue) => {
-      const valueToStore = value instanceof Function ? value(currentStoredValue) : value;
+      const valueToStore =
+        typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
 
       // Agenda escrita (debounced)
       scheduleWrite(keyRef.current, valueToStore);
