@@ -1,14 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, Sparkles, StopCircle, Upload, AlertCircle } from "lucide-react";
+import { AlertCircle, Mic, Sparkles, StopCircle, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -56,8 +50,7 @@ export default function AudioTranscription() {
 
     const SpeechRecognitionClass =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass() as SpeechRecognition;
 
     recognition.lang = "pt-BR";
@@ -161,8 +154,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
       }
 
       const data = await response.json();
-      const content =
-        data.response || data.choices?.[0]?.message?.content || "";
+      const content = data.response || data.choices?.[0]?.message?.content || "";
 
       // Parse do JSON da resposta
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -198,28 +190,25 @@ Responda APENAS com JSON válido, sem texto adicional.`,
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Transcrição de Áudio
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">Transcrição de Áudio</h1>
         <p className="text-muted-foreground mt-1">
-          Transcreva audiências e reuniões com análise inteligente (IA Real -
-          Gemini)
+          Transcreva audiências e reuniões com análise inteligente (IA Real - Gemini)
         </p>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
-          <WarningCircle className="w-5 h-5 shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
       )}
 
       {!isSpeechSupported && (
         <div className="flex items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400">
-          <WarningCircle className="w-5 h-5 shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">
-            Gravação em tempo real não disponível neste navegador. Cole o texto
-            manualmente na área de transcrição.
+            Gravação em tempo real não disponível neste navegador. Cole o texto manualmente na área
+            de transcrição.
           </p>
         </div>
       )}
@@ -235,38 +224,31 @@ Responda APENAS com JSON válido, sem texto adicional.`,
               {isRecording ? (
                 <div className="relative">
                   <div className="w-24 h-24 bg-destructive rounded-full flex items-center justify-center animate-pulse">
-                    <MicrophoneStage
-                      className="w-12 h-12 text-destructive-foreground"
-                     
-                    />
+                    <Mic className="w-12 h-12 text-destructive-foreground" />
                   </div>
                   <div className="absolute inset-0 rounded-full border-4 border-destructive animate-ping" />
                 </div>
               ) : (
                 <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
-                  <MicrophoneStage
-                    className="w-12 h-12 text-primary-foreground"
-                   
-                  />
+                  <Mic className="w-12 h-12 text-primary-foreground" />
                 </div>
               )}
 
               <Button
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
-                onClick={
-                  isRecording ? handleStopRecording : handleStartRecording
-                }
+                onClick={isRecording ? handleStopRecording : handleStartRecording}
                 disabled={processing || !isSpeechSupported}
-                className="w-full">
+                className="w-full"
+              >
                 {isRecording ? (
                   <>
-                    <Stop className="w-5 h-5 mr-2" />
+                    <StopCircle className="w-5 h-5 mr-2" />
                     Parar Gravação
                   </>
                 ) : (
                   <>
-                    <MicrophoneStage className="w-5 h-5 mr-2" />
+                    <Mic className="w-5 h-5 mr-2" />
                     Iniciar Gravação
                   </>
                 )}
@@ -281,11 +263,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                className="w-full"
-                asChild
-                disabled={processing}>
+              <Button variant="outline" className="w-full" asChild disabled={processing}>
                 <label htmlFor="audio-upload" className="cursor-pointer">
                   <Upload className="w-5 h-5 mr-2" />
                   Enviar Arquivo
@@ -309,17 +287,13 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                 Transcrição
                 {transcription && <Badge variant="default">Gemini AI</Badge>}
               </CardTitle>
-              <CardDescription>
-                Texto convertido do áudio ou colado manualmente
-              </CardDescription>
+              <CardDescription>Texto convertido do áudio ou colado manualmente</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {processing ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <Sparkles className="w-16 h-16 text-accent animate-pulse mb-4" />
-                  <p className="text-lg font-medium text-foreground">
-                    Analisando com IA Gemini...
-                  </p>
+                  <p className="text-lg font-medium text-foreground">Analisando com IA Gemini...</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Aguarde enquanto processamos o texto
                   </p>
@@ -351,9 +325,7 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                     <Sparkles className="w-5 h-5 text-accent" />
                     Sumário Executivo
                   </CardTitle>
-                  <CardDescription>
-                    Resumo dos pontos principais
-                  </CardDescription>
+                  <CardDescription>Resumo dos pontos principais</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
@@ -368,18 +340,15 @@ Responda APENAS com JSON válido, sem texto adicional.`,
                     <Sparkles className="w-5 h-5 text-accent" />
                     Itens de Ação
                   </CardTitle>
-                  <CardDescription>
-                    Próximos passos identificados
-                  </CardDescription>
+                  <CardDescription>Próximos passos identificados</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     {actionItems.map((item, idx) => (
                       <li
-                        key={`action-${idx}-${item
-                          .slice(0, 20)
-                          .replaceAll(/\W/g, "")}`}
-                        className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                        key={`action-${idx}-${item.slice(0, 20).replaceAll(/\W/g, "")}`}
+                        className="flex items-start gap-3 p-3 bg-muted rounded-lg"
+                      >
                         <span className="shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
                           {idx + 1}
                         </span>
