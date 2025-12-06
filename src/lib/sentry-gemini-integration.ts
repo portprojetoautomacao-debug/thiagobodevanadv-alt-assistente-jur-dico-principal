@@ -126,12 +126,17 @@ function processGeminiResponse<T>(
   const response = result as Record<string, unknown>;
 
   if (includePrompts && response.text) {
-    span?.setAttribute(
-      "gen_ai.response.text",
-      JSON.stringify([
-        typeof response.text === "object" ? JSON.stringify(response.text) : String(response.text),
-      ])
-    );
+    // Garantir stringify seguro para evitar [object Object]
+    let textValue: string;
+    if (typeof response.text === "string") {
+      textValue = response.text;
+    } else if (typeof response.text === "object" && response.text !== null) {
+      textValue = JSON.stringify(response.text);
+    } else {
+      textValue = String(response.text);
+    }
+
+    span?.setAttribute("gen_ai.response.text", JSON.stringify([textValue]));
   }
 
   if (response.metadata && typeof response.metadata === "object") {

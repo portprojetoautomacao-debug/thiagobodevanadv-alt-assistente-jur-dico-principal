@@ -219,14 +219,14 @@ export function useProcessSync() {
       syncProcessStats();
     };
 
-    window.addEventListener("process-update-needed", handleProcessUpdate);
-    window.addEventListener("expediente-added", handleProcessUpdate);
-    window.addEventListener("minuta-added", handleProcessUpdate);
+    globalThis.addEventListener("process-update-needed", handleProcessUpdate);
+    globalThis.addEventListener("expediente-added", handleProcessUpdate);
+    globalThis.addEventListener("minuta-added", handleProcessUpdate);
 
     return () => {
-      window.removeEventListener("process-update-needed", handleProcessUpdate);
-      window.removeEventListener("expediente-added", handleProcessUpdate);
-      window.removeEventListener("minuta-added", handleProcessUpdate);
+      globalThis.removeEventListener("process-update-needed", handleProcessUpdate);
+      globalThis.removeEventListener("expediente-added", handleProcessUpdate);
+      globalThis.removeEventListener("minuta-added", handleProcessUpdate);
     };
   }, [syncProcessStats]);
 

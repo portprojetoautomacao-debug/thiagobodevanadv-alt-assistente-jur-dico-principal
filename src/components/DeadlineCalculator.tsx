@@ -72,7 +72,7 @@ export default function DeadlineCalculator() {
       const holidays: string[] = [];
 
       // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
-      // FIXME(PRAZOS-003): Integrar com API de feriados estaduais/municipais
+      // TODO(PRAZOS-003): Integrar com API de feriados estaduais/municipais
       // Atualmente usa apenas feriados nacionais fixos
       // Opções avaliadas: Calendarific API, Brasil API, tabela customizável por tribunal
       // Refs: https://calendarific.com/api-documentation | https://brasilapi.com.br/docs

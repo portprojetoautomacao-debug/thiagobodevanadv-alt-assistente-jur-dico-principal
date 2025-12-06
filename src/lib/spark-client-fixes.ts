@@ -294,7 +294,10 @@ function extractChoicesContent(data: unknown): string | null {
     const choices = (data as { choices: Array<{ message?: { content?: unknown } }> }).choices;
     const content = choices?.[0]?.message?.content;
     if (content) {
-      return typeof content === "object" ? JSON.stringify(content) : String(content);
+      // Garantir stringify seguro
+      if (typeof content === "string") return content;
+      if (typeof content === "object" && content !== null) return JSON.stringify(content);
+      return String(content);
     }
   }
   return null;

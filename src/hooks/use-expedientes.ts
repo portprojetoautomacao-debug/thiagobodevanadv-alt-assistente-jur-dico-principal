@@ -35,7 +35,7 @@ export function useExpedientes() {
    * Dispara evento para sincronização dos contadores do processo
    */
   const triggerProcessSync = () => {
-    window.dispatchEvent(new CustomEvent("expediente-added"));
+    globalThis.dispatchEvent(new CustomEvent("expediente-added"));
   };
 
   const addExpediente = (expediente: Expediente) => {
