@@ -177,10 +177,66 @@ gh workflow run copilot-auto-fix.yml
 - 📅 **Calculadora de Prazos**: Automação de prazos processuais
 - 🔗 **Integração Google Calendar**: Sincronização automática
 - 📊 **DJEN/DataJud**: Monitoramento de publicações
+- 🌐 **Extensão Chrome PJe Sync**: Acesso em tempo real ao PJe (NEW!)
 - 💰 **Gestão Financeira**: Controle de custos e honorários
 - ⚡ **15 Agentes Autônomos**: Trabalhando 24/7
 - ✏️ **Editor Tiptap com IA**: Redação automática de minutas
 - 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
+
+## 🌐 Extensão Chrome PJe Sync (NOVO!)
+
+### 📦 Acesso em Tempo Real ao PJe
+
+Integração completa com o PJe via extensão Chrome para monitoramento em tempo real.
+
+**Funcionalidades:**
+
+- ✅ **Extração automática** de processos do painel PJe
+- ✅ **Detecção em tempo real** de intimações, citações e despachos
+- ✅ **Sincronização automática** com o dashboard do Assistente Jurídico
+- ✅ **Disparo automático** da Mrs. Justin-e para análise
+- ✅ **Criação automática** de tarefas com prazos
+- ✅ **Notificações Chrome** para prazos urgentes
+- ✅ **Badge visual** no PJe (✓ verde = sincronizado)
+
+**Arquivos da Extensão:**
+
+```
+chrome-extension-pje/
+├── src/
+│   ├── background/       # Service Worker
+│   ├── content/          # Content Script (extração)
+│   ├── popup/            # Interface da extensão
+│   └── shared/           # Tipos e utilitários
+├── tests/                # 31 testes unitários
+├── dist/                 # Build (~100 KB)
+├── README.md             # Guia completo
+└── INSTALL.md            # Instalação e troubleshooting
+```
+
+**Como Instalar:**
+
+1. `cd chrome-extension-pje && npm install && npm run build`
+2. Chrome → `chrome://extensions` → Modo desenvolvedor → "Carregar sem compactação"
+3. Selecione pasta `chrome-extension-pje/dist`
+4. Configure API Key no popup da extensão
+5. Acesse https://pje.tjmg.jus.br/painel e veja a sincronização em tempo real!
+
+**Documentação:**
+
+- 📖 **[chrome-extension-pje/README.md](chrome-extension-pje/README.md)** - Guia completo
+- 📖 **[chrome-extension-pje/INSTALL.md](chrome-extension-pje/INSTALL.md)** - Instalação
+- 📖 **[docs/INTEGRACAO_PJE_TEMPO_REAL.md](docs/INTEGRACAO_PJE_TEMPO_REAL.md)** - Arquitetura
+
+**Segurança:**
+
+- ✅ Não armazena credenciais do PJe
+- ✅ Comunicação HTTPS criptografada
+- ✅ API Key armazenada localmente (Chrome Storage)
+- ✅ Código open-source auditável
+- ✅ Compliance com termos de uso do PJe
+
+---
 
 ## 🛠️ Configuração de Desenvolvimento (VS Code + SonarLint)
 
