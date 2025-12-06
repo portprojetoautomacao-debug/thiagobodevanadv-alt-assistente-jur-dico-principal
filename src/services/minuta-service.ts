@@ -16,17 +16,17 @@ import { z } from "zod";
 // ============================================================================
 
 export const MinutaSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   titulo: z.string().min(1, "Título é obrigatório"),
   processId: z.string().optional(),
   tipo: z.enum(["peticao", "contrato", "parecer", "recurso", "procuracao", "outro"]),
   conteudo: z.string().min(1, "Conteúdo é obrigatório"),
   status: z.enum(["rascunho", "em-revisao", "pendente-revisao", "finalizada", "arquivada"]),
-  criadoEm: z.string().datetime(),
-  atualizadoEm: z.string().datetime(),
+  criadoEm: z.iso.datetime(),
+  atualizadoEm: z.iso.datetime(),
   autor: z.string().min(1),
   googleDocsId: z.string().optional(),
-  googleDocsUrl: z.string().url().optional(),
+  googleDocsUrl: z.url().optional(),
   criadoPorAgente: z.boolean().optional(),
   agenteId: z.string().optional(),
   templateId: z.string().optional(),

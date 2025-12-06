@@ -27,15 +27,15 @@ export const TaskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const TaskStatusSchema = z.enum(["QUEUED", "PROCESSING", "COMPLETED", "FAILED"]);
 
 export const AgentTaskSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   agentId: z.string().min(1),
   type: AgentTaskTypeSchema,
   priority: TaskPrioritySchema,
   status: TaskStatusSchema,
-  createdAt: z.string().datetime(),
+  createdAt: z.iso.datetime(),
   data: z.record(z.string(), z.unknown()),
   error: z.string().optional(),
-  completedAt: z.string().datetime().optional(),
+  completedAt: z.iso.datetime().optional(),
   processingTimeMs: z.number().optional(),
 });
 
@@ -45,7 +45,7 @@ export const AgentSchema = z.object({
   type: z.string().min(1),
   capabilities: z.array(z.string()),
   status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]),
-  lastActive: z.string().datetime().optional(),
+  lastActive: z.iso.datetime().optional(),
 });
 
 // --- Validações de API ---

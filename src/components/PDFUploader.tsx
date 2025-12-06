@@ -66,30 +66,20 @@ export default function PDFUploader() {
   };
 
   const readPDFAsText = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const text = new TextDecoder("utf-8").decode(uint8Array);
 
-      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+      const cleanedText = text
+        .replaceAll(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
+        .replaceAll(/\s+/g, " ")
+        .trim();
 
-      reader.onload = async () => {
-        try {
-          const arrayBuffer = reader.result as ArrayBuffer;
-          const uint8Array = new Uint8Array(arrayBuffer);
-          const text = new TextDecoder("utf-8").decode(uint8Array);
-
-          const cleanedText = text
-            .replaceAll(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
-            .replaceAll(/\s+/g, " ")
-            .trim();
-
-          resolve(cleanedText);
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.readAsArrayBuffer(file);
-    });
+      return cleanedText;
+    } catch {
+      throw new Error("Erro ao ler arquivo");
+    }
   };
 
   const extractDataWithAI = async (text: string): Promise<ExtractedData> => {
