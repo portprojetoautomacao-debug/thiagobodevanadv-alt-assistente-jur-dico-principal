@@ -563,13 +563,15 @@ function determineAdvogadoMatchType(
   return null;
 }
 
+type AdvogadoMatchResult = "nome" | "oab" | "ambos";
+
 function findAdvogadoMatch(
   comunicacao: DJENComunicacao,
   nomeAdvogado?: string,
   numeroOabNumerico?: string,
   ufOab?: string
-): { found: boolean; matchType: "nome" | "oab" | "ambos" } {
-  let matchType: "nome" | "oab" | "ambos" = "nome";
+): { found: boolean; matchType: AdvogadoMatchResult } {
+  let matchType: AdvogadoMatchResult = "nome";
   const found =
     comunicacao.destinatarioadvogados?.some((dest) => {
       const type = determineAdvogadoMatchType(dest, nomeAdvogado, numeroOabNumerico, ufOab);
