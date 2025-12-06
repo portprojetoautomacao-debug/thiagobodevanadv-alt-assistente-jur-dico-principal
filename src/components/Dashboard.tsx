@@ -6,6 +6,7 @@ import { useKV } from "@/hooks/use-kv";
 import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
+  AlertCircle,
   ArrowRight,
   CalendarCheck,
   ChartPie,
@@ -14,7 +15,6 @@ import {
   Gavel,
   TrendingUp,
   Upload,
-  AlertCircle,
 } from "lucide-react";
 import { lazy, Suspense, useMemo } from "react";
 
@@ -54,7 +54,7 @@ function getSafeDate(value?: string) {
   return Number.isNaN(ts) ? 0 : ts;
 }
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
+export default function Dashboard({ onNavigate }: Readonly<DashboardProps>) {
   const [processes] = useKV<Process[]>("processes", []);
 
   const stats = useMemo(() => {

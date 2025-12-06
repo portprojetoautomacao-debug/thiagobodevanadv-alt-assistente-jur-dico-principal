@@ -177,13 +177,13 @@ export function isValidApiKey(key: string | null | undefined, provider?: string)
   switch (provider) {
     case "gemini":
       // Chaves Gemini: AIza... ou GEM-...
-      return /^(AIza[0-9A-Za-z_-]{20,}|GEM-[0-9A-Za-z_-]{16,}|[A-Za-z0-9_-]{32,})$/.test(key);
+      return /^(AIza[\w-]{20,}|GEM-[\w-]{16,}|[\w-]{32,})$/.test(key);
     case "github":
       // Tokens GitHub: ghp_... ou gho_...
-      return /^(ghp_|gho_|github_pat_)[A-Za-z0-9_]{20,}$/.test(key) || key.length >= 20;
+      return /^(ghp_|gho_|github_pat_)\w{20,}$/.test(key) || key.length >= 20;
     case "huggingface":
       // Tokens HuggingFace: hf_...
-      return /^hf_[A-Za-z0-9]{20,}$/.test(key) || key.length >= 20;
+      return /^hf_\w{20,}$/.test(key) || key.length >= 20;
     case "azure":
       // Chaves Azure: 32 caracteres hex
       return /^[a-f0-9]{32}$/i.test(key) || key.length >= 20;

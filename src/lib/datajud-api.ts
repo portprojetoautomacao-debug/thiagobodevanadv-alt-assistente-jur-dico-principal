@@ -162,7 +162,7 @@ function getApiKey(configApiKey?: string): string | null {
 export function validarNumeroCNJ(numero: string): boolean {
   const numeroLimpo = numero.replaceAll(/[^\d.-]/g, "");
 
-  const regex = /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/;
+  const regex = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/;
 
   return regex.test(numeroLimpo);
 }

@@ -232,6 +232,7 @@ export function trackUnleashFlag(name: string, value: boolean): void {
  * );
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withFeatureFlag<T extends (...args: any[]) => any>(
   flagName: string,
   flagValue: FeatureFlagValue,

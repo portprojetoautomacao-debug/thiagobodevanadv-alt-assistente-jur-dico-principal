@@ -530,10 +530,10 @@ export function replaceTemplateVariables(
   let result = content;
 
   Object.entries(variables).forEach(([key, value]) => {
-    // Corrigido: escapar TODOS os pontos da chave (autor.nome, processo.numero etc.)
-    const escapedKey = key.replace(/\./g, "\\.");
-    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g");
-    result = result.replace(regex, value || `[${key}]`);
+    // Escapar pontos da chave para uso em regex
+    const escapedKey = key.replaceAll(".", "\\\\.");
+    const regex = new RegExp(String.raw`\{\{\s*${escapedKey}\s*\}\}`, "g");
+    result = result.replaceAll(regex, value || `[${key}]`);
   });
 
   return result;

@@ -112,7 +112,7 @@ export function traceAgentStep(
 
   tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
     "step.description": stepDescription,
-    ...(attributes || {}),
+    ...attributes,
   });
 }
 

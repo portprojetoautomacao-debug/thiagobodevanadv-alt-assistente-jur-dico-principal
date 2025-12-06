@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 // ==== CSV EXPORT ============================================================
 
 export function exportToCSV(data: Record<string, unknown>[], filename: string) {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis.window === "undefined") return;
   if (!data || data.length === 0) return;
 
   const headers = Object.keys(data[0]);
@@ -52,7 +52,7 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string) {
  * E descomente o código abaixo.
  */
 export async function exportToXLSX(data: Record<string, unknown>[], filename: string) {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis.window === "undefined") return;
   if (!data || data.length === 0) return;
 
   // Funcionalidade desabilitada - xlsx não está instalado

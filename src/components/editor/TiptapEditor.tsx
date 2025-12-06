@@ -674,8 +674,8 @@ export function TiptapEditor({
     (text: string) => {
       let result = text;
       Object.entries(variables).forEach(([key, value]) => {
-        const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g");
-        result = result.replace(regex, value);
+        const regex = new RegExp(String.raw`\{\{\s*${key}\s*\}\}`, "g");
+        result = result.replaceAll(regex, value);
       });
       return result;
     },

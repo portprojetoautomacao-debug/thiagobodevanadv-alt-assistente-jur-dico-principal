@@ -133,7 +133,7 @@ function formatMetadataFields(
   return Object.entries(metadata)
     .filter(([, v]) => v !== undefined)
     .map(([k, v]) => ({
-      name: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, " $1"),
+      name: k.charAt(0).toUpperCase() + k.slice(1).replaceAll(/([A-Z])/g, " $1"),
       value: String(v),
       inline: true,
     }));
@@ -148,7 +148,7 @@ function formatMetadataFieldsAlt(
   return Object.entries(metadata)
     .filter(([, v]) => v !== undefined)
     .map(([k, v]) => ({
-      title: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, " $1"),
+      title: k.charAt(0).toUpperCase() + k.slice(1).replaceAll(/([A-Z])/g, " $1"),
       value: String(v),
       short: true,
     }));
@@ -249,7 +249,7 @@ async function sendTeamsWebhook(webhookUrl: string, notification: Notification):
             ? Object.entries(notification.metadata)
                 .filter(([, v]) => v !== undefined)
                 .map(([k, v]) => ({
-                  name: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, " $1"),
+                  name: k.charAt(0).toUpperCase() + k.slice(1).replaceAll(/([A-Z])/g, " $1"),
                   value: String(v),
                 }))
             : [],
