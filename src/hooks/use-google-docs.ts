@@ -245,7 +245,8 @@ export function useGoogleDocs() {
         }
       }
 
-      // TODO(GDOCS-002): Implementar sincronização bidirecional
+      // FIXME(GDOCS-002): Implementar sincronização bidirecional completa
+      // Atualmente: Local → Google Docs (apenas upload)
       // Escopo: detectar conflitos, merge automático, versionamento
       // Ref: docs/GOOGLE_DOCS_SYNC_STRATEGY.md
       // Status: Funcionalidade planejada para próxima versão

@@ -67,6 +67,20 @@ jobs:
         env:
           CI: true
 
+      - name: Install Chrome Extension dependencies
+        run: cd chrome-extension-pje && npm ci
+        continue-on-error: true
+
+      - name: Run Chrome Extension tests with coverage
+        run: cd chrome-extension-pje && npm run test:coverage
+        continue-on-error: true
+        env:
+          CI: true
+
+      - name: Build Chrome Extension
+        run: cd chrome-extension-pje && npm run build
+        continue-on-error: true
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v5
         env:

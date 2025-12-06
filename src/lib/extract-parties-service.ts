@@ -130,8 +130,8 @@ Responda APENAS com o JSON, sem texto adicional.`,
  */
 export function extractPartiesRegex(teor: string): ExtractedParties {
   // Termos separados para melhor legibilidade e manutenibilidade
-  const AUTOR_TERMS = "autor|requerente|exequente|embargante|apelante|agravante|impetrante";
-  const REU_TERMS = "r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado";
+  const AUTOR_TERMS = String.raw`autor|requerente|exequente|embargante|apelante|agravante|impetrante`;
+  const REU_TERMS = String.raw`r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado`;
   const NAME_CAPTURE = String.raw`([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\s]+?)`;
   const END_AUTOR = String.raw`(?:\s*(?:x|vs?\.?|contra|CPF|CNPJ|RG|\d|[,;.\n]|$))`;
   const END_REU = String.raw`(?:\s*(?:CPF|CNPJ|RG|\d|[,;.\n]|$))`;
