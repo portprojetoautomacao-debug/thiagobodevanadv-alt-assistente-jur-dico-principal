@@ -1,4 +1,5 @@
 /**
+import { extractAndParseJSON } from "@/lib/json-utils";
  * Serviço de Extração de Partes Processuais
  *
  * Usa IA (Gemini 2.5 Pro por padrão) para extrair autor e réu do teor de publicações jurídicas.
