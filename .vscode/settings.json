@@ -964,5 +964,10 @@
   "redhat.telemetry.enabled": false,
   "workbench.experimental.cloudChanges.autoStore": "onShutdown",
   "playwright.showTrace": false,
-  "playwright.runGlobalSetupOnEachRun": true
+  "playwright.runGlobalSetupOnEachRun": true,
+  "geminicodeassist.agentYoloMode": true,
+  "geminicodeassist.agentDebugMode": true,
+  "geminicodeassist.codeGenerationPaneViewEnabled": true,
+  "geminicodeassist.inlineSuggestions.nextEditPredictions": true,
+  "geminicodeassist.verboseLogging": true
 }
