@@ -1,4 +1,5 @@
 import DJENPublicationsWidget from "@/components/DJENPublicationsWidget";
+import { PjeImageImporter } from "@/components/PjeImageImporter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -200,6 +201,8 @@ export default function Dashboard({ onNavigate }: Readonly<DashboardProps>) {
             <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
             <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
           </div>
+
+          <PjeImageImporter />
         </div>
       </div>
 
