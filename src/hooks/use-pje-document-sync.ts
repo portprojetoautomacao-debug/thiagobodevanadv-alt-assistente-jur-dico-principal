@@ -98,7 +98,7 @@ export function usePJeDocumentSync(): PJeDocumentSync {
       // @ts-ignore
       chrome.runtime.onMessage.addListener(handleMessage);
       // @ts-ignore
-      return () => chrome.runtime.removeEventListener("message", handleMessage);
+      return () => chrome.runtime.onMessage.removeListener(handleMessage);
     }
   }, []);
 
