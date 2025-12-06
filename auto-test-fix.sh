@@ -187,22 +187,50 @@ fix_authentication() {
     log_success "SKIP_AUTH_SETUP=true aplicado"
 }
 
+graceful_kill() {
+    local pids="$1"
+    local port="$2"
+    
+    if [ -z "$pids" ]; then
+        return 0
+    fi
+    
+    # Tentar SIGTERM primeiro (graceful shutdown)
+    log "Enviando SIGTERM para processos na porta ${port}..."
+    echo "$pids" | xargs kill -15 2>/dev/null || true
+    
+    # Aguardar 3 segundos para shutdown gracioso
+    sleep 3
+    
+    # Verificar se ainda há processos rodando
+    local remaining_pids
+    remaining_pids=$(lsof -ti:"${port}" 2>/dev/null || true)
+    
+    if [ -n "$remaining_pids" ]; then
+        log_warning "Processos não terminaram graciosamente. Usando SIGKILL..."
+        echo "$remaining_pids" | xargs kill -9 2>/dev/null || true
+        sleep 1
+    fi
+}
+
 fix_port_conflict() {
     log_fix "Corrigindo conflito de porta..."
     
     # Matar processos na porta 5173
     if lsof -ti:5173 > /dev/null 2>&1; then
-        log "Matando processos na porta 5173..."
-        lsof -ti:5173 | xargs kill -9 2>/dev/null || true
-        sleep 2
+        log "Liberando porta 5173..."
+        local pids_5173
+        pids_5173=$(lsof -ti:5173)
+        graceful_kill "$pids_5173" "5173"
         log_success "Porta 5173 liberada"
     fi
     
     # Matar processos na porta 5000
     if lsof -ti:5000 > /dev/null 2>&1; then
-        log "Matando processos na porta 5000..."
-        lsof -ti:5000 | xargs kill -9 2>/dev/null || true
-        sleep 2
+        log "Liberando porta 5000..."
+        local pids_5000
+        pids_5000=$(lsof -ti:5000)
+        graceful_kill "$pids_5000" "5000"
         log_success "Porta 5000 liberada"
     fi
 }
