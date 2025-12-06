@@ -1,13 +1,6 @@
+import { normalizeProcessNumber } from "@/lib/process-number-utils";
 import type { Expediente, Process } from "@/types";
 import { useKV } from "./use-kv";
-
-/**
- * Normaliza número de processo removendo caracteres não numéricos
- */
-function normalizeProcessNumber(numero: string | undefined): string {
-  if (!numero) return "";
-  return numero.replace(/\D/g, "");
-}
 
 /**
  * Hook para gerenciar expedientes (intimações, publicações, etc.)

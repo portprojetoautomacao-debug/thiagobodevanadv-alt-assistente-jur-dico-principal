@@ -4,6 +4,7 @@
  */
 
 import { useKV } from "@/hooks/use-kv";
+import { processNumbersMatch } from "@/lib/process-number-utils";
 import type { Expediente, Minuta, Process } from "@/types";
 import { useCallback, useEffect, useMemo } from "react";
 
@@ -14,22 +15,6 @@ interface ProcessStats {
   documentos: number;
   lastExpediente?: string;
   lastMinuta?: string;
-}
-
-/**
- * Normaliza número de processo removendo caracteres não numéricos
- */
-function normalizeProcessNumber(numero: string | undefined): string {
-  if (!numero) return "";
-  return numero.replace(/\D/g, "");
-}
-
-/**
- * Verifica se dois números de processo são equivalentes
- */
-function processNumbersMatch(num1: string | undefined, num2: string | undefined): boolean {
-  if (!num1 || !num2) return false;
-  return normalizeProcessNumber(num1) === normalizeProcessNumber(num2);
 }
 
 export function useProcessSync() {
@@ -56,9 +41,17 @@ export function useProcessSync() {
    */
   const processStats = useMemo(() => {
     const stats = new Map<string, ProcessStats>();
+    const processList = processes || [];
+    const expedientesList = expedientes || [];
+    const minutasList = minutas || [];
+
+    // Early return se não houver processos
+    if (processList.length === 0) {
+      return stats;
+    }
 
     // Inicializar stats para todos os processos
-    (processes || []).forEach((p) => {
+    processList.forEach((p) => {
       stats.set(p.id, {
         expedientes: 0,
         intimacoes: 0,
@@ -68,7 +61,7 @@ export function useProcessSync() {
     });
 
     // Contar expedientes por processo
-    (expedientes || []).forEach((exp) => {
+    expedientesList.forEach((exp) => {
       // Tentar vincular pelo processId ou pelo numeroProcesso
       let processId = exp.processId;
       if (!processId && exp.numeroProcesso) {
@@ -81,7 +74,8 @@ export function useProcessSync() {
         current.documentos++;
 
         // Contar intimações especificamente
-        if (exp.tipo === "intimacao" || exp.type === "intimacao") {
+        const isIntimacao = exp.tipo === "intimacao" || exp.type === "intimacao";
+        if (isIntimacao) {
           current.intimacoes++;
         }
 
@@ -96,7 +90,7 @@ export function useProcessSync() {
     });
 
     // Contar minutas por processo
-    (minutas || []).forEach((min) => {
+    minutasList.forEach((min) => {
       if (min.processId && stats.has(min.processId)) {
         const current = stats.get(min.processId)!;
         current.minutas++;
@@ -129,13 +123,14 @@ export function useProcessSync() {
       if (!stats) return p;
 
       // Verificar se houve mudança nos contadores
-      const changed =
+      const hasStatChanges =
         p.expedientesCount !== stats.expedientes ||
         p.intimacoesCount !== stats.intimacoes ||
         p.minutasCount !== stats.minutas ||
-        p.documentosCount !== stats.documentos ||
-        p.lastExpedienteAt !== stats.lastExpediente ||
-        p.lastMinutaAt !== stats.lastMinuta;
+        p.documentosCount !== stats.documentos;
+      const hasDateChanges =
+        p.lastExpedienteAt !== stats.lastExpediente || p.lastMinutaAt !== stats.lastMinuta;
+      const changed = hasStatChanges || hasDateChanges;
 
       if (changed) {
         hasChanges = true;
