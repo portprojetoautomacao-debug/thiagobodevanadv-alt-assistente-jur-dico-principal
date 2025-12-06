@@ -89,7 +89,10 @@ export class LLMService {
   /**
    * Execute LLM request with full observability and caching
    */
-  async execute(prompt: string, config: LLMRequestConfig = {}): Promise<string> {
+  async execute(
+    prompt: string,
+    config: LLMRequestConfig = {}
+  ): Promise<string> {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
     const model = config.model || "gpt-4o";
@@ -118,7 +121,11 @@ export class LLMService {
       }
 
       // Execute LLM request with retry logic
-      const response = await this.executeWithRetry(prompt, model, config.retryAttempts || 3);
+      const response = await this.executeWithRetry(
+        prompt,
+        model,
+        config.retryAttempts || 3
+      );
 
       // Calculate metrics
       const latencyMs = Date.now() - startTime;
@@ -169,7 +176,8 @@ export class LLMService {
       return response;
     } catch (error) {
       const latencyMs = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
       // End tracing span with error
       await tracingService.endLLMSpan(span, {
@@ -245,7 +253,10 @@ export class LLMService {
   /**
    * Execute LLM request with structured JSON output
    */
-  async executeJSON<T = unknown>(prompt: string, config: LLMRequestConfig = {}): Promise<T> {
+  async executeJSON<T = unknown>(
+    prompt: string,
+    config: LLMRequestConfig = {}
+  ): Promise<T> {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
     const model = config.model || "gpt-4o";
@@ -255,7 +266,10 @@ export class LLMService {
       const response = await llmCall(jsonPrompt, model, true);
 
       const latencyMs = Date.now() - startTime;
-      const estimatedTokens = this.estimateTokens(prompt, JSON.stringify(response));
+      const estimatedTokens = this.estimateTokens(
+        prompt,
+        JSON.stringify(response)
+      );
       const cost = this.calculateCost(estimatedTokens, model);
 
       this.recordMetrics({
@@ -275,7 +289,8 @@ export class LLMService {
       return response as T;
     } catch (error) {
       const latencyMs = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
       this.recordMetrics({
         requestId,
@@ -348,7 +363,11 @@ export class LLMService {
   /**
    * Add response to cache
    */
-  private addToCache(promptHash: string, response: string, model: LLMModel): void {
+  private addToCache(
+    promptHash: string,
+    response: string,
+    model: LLMModel
+  ): void {
     const key = `${promptHash}-${model}`;
 
     // Implement LRU eviction if cache is full
@@ -375,7 +394,7 @@ export class LLMService {
     // Simple hash function (in production, use crypto.subtle)
     let hash = 0;
     for (let i = 0; i < prompt.length; i++) {
-      const char = prompt.charCodeAt(i);
+      const char = prompt.codePointAt(i) ?? 0;
       hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
@@ -411,7 +430,11 @@ export class LLMService {
   /**
    * Record cache hit
    */
-  private recordCacheHit(requestId: string, model: LLMModel, config: LLMRequestConfig): void {
+  private recordCacheHit(
+    requestId: string,
+    model: LLMModel,
+    config: LLMRequestConfig
+  ): void {
     this.recordMetrics({
       requestId,
       model,
@@ -468,30 +491,27 @@ export class LLMService {
     }
 
     const successCount = metrics.filter((m) => m.success).length;
-    const cacheHits = metrics.filter((m) => m.totalTokens === 0 && m.success).length;
+    const cacheHits = metrics.filter(
+      (m) => m.totalTokens === 0 && m.success
+    ).length;
 
-    const requestsByModel = metrics.reduce(
-      (acc, m) => {
-        acc[m.model] = (acc[m.model] || 0) + 1;
-        return acc;
-      },
-      {} as Record<LLMModel, number>
-    );
+    const requestsByModel = metrics.reduce((acc, m) => {
+      acc[m.model] = (acc[m.model] || 0) + 1;
+      return acc;
+    }, {} as Record<LLMModel, number>);
 
-    const requestsByFeature = metrics.reduce(
-      (acc, m) => {
-        if (m.feature) {
-          acc[m.feature] = (acc[m.feature] || 0) + 1;
-        }
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    const requestsByFeature = metrics.reduce((acc, m) => {
+      if (m.feature) {
+        acc[m.feature] = (acc[m.feature] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
 
     return {
       totalRequests: metrics.length,
       successRate: (successCount / metrics.length) * 100,
-      averageLatency: metrics.reduce((sum, m) => sum + m.latencyMs, 0) / metrics.length,
+      averageLatency:
+        metrics.reduce((sum, m) => sum + m.latencyMs, 0) / metrics.length,
       totalCost: metrics.reduce((sum, m) => sum + m.cost, 0),
       totalTokens: metrics.reduce((sum, m) => sum + m.totalTokens, 0),
       cacheHitRate: (cacheHits / metrics.length) * 100,
@@ -524,7 +544,8 @@ export class LLMService {
       totalHits: entries.reduce((sum, e) => sum + e.hitCount, 0),
       averageAge:
         entries.length > 0
-          ? entries.reduce((sum, e) => sum + (Date.now() - e.timestamp), 0) / entries.length
+          ? entries.reduce((sum, e) => sum + (Date.now() - e.timestamp), 0) /
+            entries.length
           : 0,
     };
   }

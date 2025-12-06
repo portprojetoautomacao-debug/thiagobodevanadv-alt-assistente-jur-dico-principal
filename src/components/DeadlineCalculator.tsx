@@ -6,7 +6,13 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, CalendarDots, Sparkle } from "@phosphor-icons/react";
+import { Calculator, CalendarDays, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -36,8 +42,16 @@ export default function DeadlineCalculator() {
       { value: "alegacoes-finais", label: "Alegações Finais", days: 15 },
       { value: "contestacao", label: "Contestação", days: 15 },
       { value: "recurso-ordinario", label: "Recurso Ordinário", days: 15 },
-      { value: "embargos-declaracao", label: "Embargos de Declaração", days: 5 },
-      { value: "cumprimento-sentenca", label: "Cumprimento de Sentença", days: 15 },
+      {
+        value: "embargos-declaracao",
+        label: "Embargos de Declaração",
+        days: 5,
+      },
+      {
+        value: "cumprimento-sentenca",
+        label: "Cumprimento de Sentença",
+        days: 15,
+      },
     ],
     CLT: [
       { value: "razoes-finais", label: "Razões Finais", days: 5 },
@@ -56,7 +70,9 @@ export default function DeadlineCalculator() {
     setCalculating(true);
 
     try {
-      const selectedDeadline = deadlineTypes[procedureType].find((d) => d.value === deadlineType);
+      const selectedDeadline = deadlineTypes[procedureType].find(
+        (d) => d.value === deadlineType
+      );
       const days = selectedDeadline?.days || 15;
 
       const base = new Date(baseDate + "T12:00:00");
@@ -65,11 +81,13 @@ export default function DeadlineCalculator() {
       const reasoning: string[] = [];
       const holidays: string[] = [];
 
-      reasoning.push(`Data base: ${base.toLocaleDateString("pt-BR")}`);
-      reasoning.push(`Prazo: ${days} dias úteis (${procedureType})`);
-      reasoning.push(`Tipo: ${selectedDeadline?.label}`);
-      reasoning.push("");
-      reasoning.push("Cálculo passo a passo:");
+      reasoning.push(
+        `Data base: ${base.toLocaleDateString("pt-BR")}`,
+        `Prazo: ${days} dias úteis (${procedureType})`,
+        `Tipo: ${selectedDeadline?.label}`,
+        "",
+        "Cálculo passo a passo:"
+      );
 
       // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
       // TODO: Integrar com API de feriados real ou permitir configuração por tribunal
@@ -82,20 +100,30 @@ export default function DeadlineCalculator() {
         const isHoliday = nationalHolidays.includes(currentDate.toDateString());
 
         if (isWeekend) {
-          reasoning.push(`${currentDate.toLocaleDateString("pt-BR")} - Final de semana (ignorado)`);
+          reasoning.push(
+            `${currentDate.toLocaleDateString(
+              "pt-BR"
+            )} - Final de semana (ignorado)`
+          );
         } else if (isHoliday) {
-          reasoning.push(`${currentDate.toLocaleDateString("pt-BR")} - Feriado (ignorado)`);
+          reasoning.push(
+            `${currentDate.toLocaleDateString("pt-BR")} - Feriado (ignorado)`
+          );
           holidays.push(currentDate.toLocaleDateString("pt-BR"));
         } else {
           workingDays++;
           reasoning.push(
-            `${currentDate.toLocaleDateString("pt-BR")} - Dia útil ${workingDays}/${days}`
+            `${currentDate.toLocaleDateString(
+              "pt-BR"
+            )} - Dia útil ${workingDays}/${days}`
           );
         }
       }
 
-      reasoning.push("");
-      reasoning.push(`✓ Prazo final: ${currentDate.toLocaleDateString("pt-BR")}`);
+      reasoning.push(
+        "",
+        `✓ Prazo final: ${currentDate.toLocaleDateString("pt-BR")}`
+      );
 
       setResult({
         finalDate: currentDate.toISOString().split("T")[0],
@@ -130,7 +158,9 @@ export default function DeadlineCalculator() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Calculadora de Prazos</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Calculadora de Prazos
+        </h1>
         <p className="text-muted-foreground mt-1">
           Cálculo inteligente com raciocínio auditável via Gemini AI
         </p>
@@ -140,21 +170,26 @@ export default function DeadlineCalculator() {
         <Card>
           <CardHeader>
             <CardTitle>Parâmetros do Cálculo</CardTitle>
-            <CardDescription>Configure os dados para calcular o prazo</CardDescription>
+            <CardDescription>
+              Configure os dados para calcular o prazo
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="procedure-type">Tipo de Procedimento</Label>
               <Select
                 value={procedureType}
-                onValueChange={(value) => setProcedureType(value as "CPC" | "CLT")}
-              >
+                onValueChange={(value) =>
+                  setProcedureType(value as "CPC" | "CLT")
+                }>
                 <SelectTrigger id="procedure-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="CPC">CPC - Processo Civil</SelectItem>
-                  <SelectItem value="CLT">CLT - Processo Trabalhista</SelectItem>
+                  <SelectItem value="CLT">
+                    CLT - Processo Trabalhista
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -185,7 +220,11 @@ export default function DeadlineCalculator() {
               />
             </div>
 
-            <Button onClick={handleCalculate} disabled={calculating} className="w-full" size="lg">
+            <Button
+              onClick={handleCalculate}
+              disabled={calculating}
+              className="w-full"
+              size="lg">
               <Calculator className="w-5 h-5 mr-2" />
               {calculating ? "Calculando..." : "Calcular Prazo"}
             </Button>
@@ -195,10 +234,14 @@ export default function DeadlineCalculator() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {result && <Sparkle className="w-5 h-5 text-accent" weight="fill" />}
+              {result && (
+                <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+              )}
               Resultado
             </CardTitle>
-            <CardDescription>Prazo final e raciocínio detalhado</CardDescription>
+            <CardDescription>
+              Prazo final e raciocínio detalhado
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {result ? (
@@ -208,9 +251,13 @@ export default function DeadlineCalculator() {
                     className="w-12 h-12 text-accent-foreground mx-auto mb-3"
                     weight="fill"
                   />
-                  <p className="text-sm text-accent-foreground/80 mb-2">Prazo Final</p>
+                  <p className="text-sm text-accent-foreground/80 mb-2">
+                    Prazo Final
+                  </p>
                   <p className="text-3xl font-bold text-accent-foreground">
-                    {new Date(result.finalDate + "T12:00:00").toLocaleDateString("pt-BR")}
+                    {new Date(
+                      result.finalDate + "T12:00:00"
+                    ).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
 
@@ -221,7 +268,10 @@ export default function DeadlineCalculator() {
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {result.holidays.map((holiday) => (
-                        <Badge key={holiday} variant="outline" className="bg-white">
+                        <Badge
+                          key={holiday}
+                          variant="outline"
+                          className="bg-white">
                           {holiday}
                         </Badge>
                       ))}
@@ -233,7 +283,10 @@ export default function DeadlineCalculator() {
                   <AccordionItem value="reasoning">
                     <AccordionTrigger className="text-sm font-semibold">
                       <div className="flex items-center gap-2">
-                        <Sparkle className="w-4 h-4 text-accent" weight="fill" />
+                        <Sparkle
+                          className="w-4 h-4 text-accent"
+                          weight="fill"
+                        />
                         Ver Raciocínio Passo a Passo (AI)
                       </div>
                     </AccordionTrigger>
@@ -250,7 +303,9 @@ export default function DeadlineCalculator() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Calculator className="w-16 h-16 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium text-foreground">Aguardando cálculo</p>
+                <p className="text-lg font-medium text-foreground">
+                  Aguardando cálculo
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Preencha os parâmetros e clique em calcular
                 </p>

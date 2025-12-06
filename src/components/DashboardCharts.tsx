@@ -2,7 +2,7 @@
 // Os gráficos exibem estatísticas calculadas a partir de processos, expedientes e dados financeiros reais
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
-import { ChartPie, Gavel, TrendUp } from "@phosphor-icons/react";
+import { Gavel, PieChart as PieChartIcon, TrendingUp } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -23,13 +23,21 @@ import {
 const CHART_HEIGHT = 250;
 
 interface ChartData {
-  statusData: Array<{ name: string; value: number; color: string }>;
-  varaChartData: Array<{ name: string; value: number }>;
-  trendData: Array<{ month: string; ativos: number; concluidos: number }>;
+  readonly statusData: ReadonlyArray<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  readonly varaChartData: ReadonlyArray<{ name: string; value: number }>;
+  readonly trendData: ReadonlyArray<{
+    month: string;
+    ativos: number;
+    concluidos: number;
+  }>;
 }
 
 interface DashboardChartsProps {
-  chartData: ChartData;
+  readonly chartData: ChartData;
 }
 
 export function StatusChart({ chartData }: DashboardChartsProps) {
@@ -37,7 +45,7 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <ChartPie size={48} className="text-muted-foreground mb-2" />
+          <PieChartIcon size={48} className="text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
         </div>
       );
@@ -54,8 +62,9 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
-              label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-            >
+              label={({ name, percent }) =>
+                `${name} ${((percent || 0) * 100).toFixed(0)}%`
+              }>
               {chartData.statusData.map((entry) => (
                 <Cell key={`cell-${entry.name}`} fill={entry.color} />
               ))}
@@ -70,7 +79,9 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <ChartPie size={48} className="text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
+        <p className="text-sm text-muted-foreground">
+          Erro ao carregar gráfico
+        </p>
       </div>
     );
   }
@@ -123,7 +134,9 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <Gavel size={48} className="text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
+        <p className="text-sm text-muted-foreground">
+          Erro ao carregar gráfico
+        </p>
       </div>
     );
   }
@@ -134,7 +147,7 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     if (!chartData?.trendData || chartData.trendData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <TrendUp size={48} className="text-muted-foreground mb-2" />
+          <TrendingUp size={48} className="text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
         </div>
       );
@@ -189,8 +202,10 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     console.error("Error rendering TrendChart:", error);
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <TrendUp size={48} className="text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
+        <TrendingUp size={48} className="text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">
+          Erro ao carregar gráfico
+        </p>
       </div>
     );
   }

@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useKV } from "@/hooks/use-kv";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -12,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus } from "@phosphor-icons/react";
+import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import type { Cliente } from "@/types";
 
@@ -102,8 +108,7 @@ export default function CadastrarCliente() {
                 <Label htmlFor="tipo">Tipo de Pessoa *</Label>
                 <Select
                   value={formData.tipo}
-                  onValueChange={(value) => handleChange("tipo", value)}
-                >
+                  onValueChange={(value) => handleChange("tipo", value)}>
                   <SelectTrigger id="tipo">
                     <SelectValue />
                   </SelectTrigger>
@@ -232,8 +237,7 @@ export default function CadastrarCliente() {
                     tipo: "fisica",
                     observacoes: "",
                   })
-                }
-              >
+                }>
                 Limpar
               </Button>
             </div>

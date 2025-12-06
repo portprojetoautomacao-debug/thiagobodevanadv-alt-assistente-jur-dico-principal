@@ -1,10 +1,16 @@
 import { useState, type KeyboardEvent, type SVGProps } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Books, Sparkle, MagnifyingGlass, User } from "@phosphor-icons/react";
+import { BookOpen, Sparkles, Search, User } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -67,7 +73,11 @@ export default function KnowledgeBase() {
       return;
     }
 
-    const userMessage: Message = { id: crypto.randomUUID(), role: "user", content: raw };
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: raw,
+    };
     setMessages((prev) => [...prev, userMessage]);
 
     // Se veio de atalho, a caixa de texto pode ficar igual ou ser limpa.
@@ -116,7 +126,10 @@ export default function KnowledgeBase() {
     } catch (err: unknown) {
       console.error("Erro ao consultar base de conhecimento:", err);
 
-      const message = err instanceof Error ? err.message : "Erro desconhecido ao consultar IA.";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Erro desconhecido ao consultar IA.";
 
       setError(
         message.includes("Erro na API")
@@ -140,7 +153,9 @@ export default function KnowledgeBase() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Base de Conhecimento (RAG)</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Base de Conhecimento (RAG)
+        </h1>
         <p className="text-muted-foreground mt-1">
           Sistema inteligente de recuperação e consulta de documentos
         </p>
@@ -151,13 +166,15 @@ export default function KnowledgeBase() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Documentos Indexados</CardTitle>
-            <CardDescription>Biblioteca do escritório (visual demonstrativo)</CardDescription>
+            <CardDescription>
+              Biblioteca do escritório (visual demonstrativo)
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Petições Modelo</p>
                     <p className="text-xs text-muted-foreground">
@@ -168,7 +185,7 @@ export default function KnowledgeBase() {
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Doutrina</p>
                     <p className="text-xs text-muted-foreground">
@@ -179,7 +196,7 @@ export default function KnowledgeBase() {
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Jurisprudência</p>
                     <p className="text-xs text-muted-foreground">
@@ -190,7 +207,7 @@ export default function KnowledgeBase() {
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Books className="w-4 h-4 text-primary shrink-0 mt-1" />
+                  <BookOpen className="w-4 h-4 text-primary shrink-0 mt-1" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Anotações Internas</p>
                     <p className="text-xs text-muted-foreground">
@@ -200,7 +217,11 @@ export default function KnowledgeBase() {
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full mt-4" type="button" disabled>
+              <Button
+                variant="outline"
+                className="w-full mt-4"
+                type="button"
+                disabled>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Documento (em breve)
               </Button>
@@ -213,7 +234,7 @@ export default function KnowledgeBase() {
           <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkle className="w-5 h-5 text-accent" weight="fill" />
+                <Sparkles className="w-5 h-5 text-accent" />
                 Assistente Inteligente
               </CardTitle>
               <CardDescription>
@@ -225,13 +246,18 @@ export default function KnowledgeBase() {
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <Books className="w-16 h-16 text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium text-foreground">Como posso ajudar?</p>
+                    <p className="text-lg font-medium text-foreground">
+                      Como posso ajudar?
+                    </p>
                     <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                      Pergunte sobre precedentes, modelos de petições, estratégias processuais ou
-                      qualquer conteúdo jurídico relevante.
+                      Pergunte sobre precedentes, modelos de petições,
+                      estratégias processuais ou qualquer conteúdo jurídico
+                      relevante.
                     </p>
                     <div className="mt-6 space-y-2 w-full max-w-md">
-                      <p className="text-xs text-muted-foreground text-left">Exemplos:</p>
+                      <p className="text-xs text-muted-foreground text-left">
+                        Exemplos:
+                      </p>
                       <Button
                         type="button"
                         variant="outline"
@@ -240,10 +266,10 @@ export default function KnowledgeBase() {
                           void handleQuery(
                             "Quais são os principais precedentes sobre horas extras?"
                           )
-                        }
-                      >
+                        }>
                         <span className="text-sm">
-                          Quais são os principais precedentes sobre horas extras?
+                          Quais são os principais precedentes sobre horas
+                          extras?
                         </span>
                       </Button>
                       <Button
@@ -251,9 +277,10 @@ export default function KnowledgeBase() {
                         variant="outline"
                         className="w-full justify-start text-left h-auto py-2 px-3"
                         onClick={() =>
-                          void handleQuery("Modelo de petição para reclamação trabalhista")
-                        }
-                      >
+                          void handleQuery(
+                            "Modelo de petição para reclamação trabalhista"
+                          )
+                        }>
                         <span className="text-sm">
                           Modelo de petição para reclamação trabalhista
                         </span>
@@ -266,12 +293,16 @@ export default function KnowledgeBase() {
                       <div
                         key={message.id}
                         className={`flex gap-3 ${
-                          message.role === "user" ? "justify-end" : "justify-start"
-                        }`}
-                      >
+                          message.role === "user"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}>
                         {message.role === "assistant" && (
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
-                            <Sparkle className="w-5 h-5 text-accent-foreground" weight="fill" />
+                            <Sparkle
+                              className="w-5 h-5 text-accent-foreground"
+                              weight="fill"
+                            />
                           </div>
                         )}
                         <div
@@ -279,13 +310,17 @@ export default function KnowledgeBase() {
                             message.role === "user"
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted"
-                          }`}
-                        >
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          }`}>
+                          <p className="text-sm whitespace-pre-wrap">
+                            {message.content}
+                          </p>
                         </div>
                         {message.role === "user" && (
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                            <User className="w-5 h-5 text-primary-foreground" weight="fill" />
+                            <User
+                              className="w-5 h-5 text-primary-foreground"
+                              weight="fill"
+                            />
                           </div>
                         )}
                       </div>
@@ -312,7 +347,9 @@ export default function KnowledgeBase() {
               {error && (
                 <div className="mb-3">
                   <Alert variant="destructive">
-                    <AlertDescription className="text-xs">{error}</AlertDescription>
+                    <AlertDescription className="text-xs">
+                      {error}
+                    </AlertDescription>
                   </Alert>
                 </div>
               )}
@@ -333,8 +370,7 @@ export default function KnowledgeBase() {
                   type="button"
                   onClick={() => void handleQuery()}
                   disabled={loading}
-                  size="lg"
-                >
+                  size="lg">
                   <Sparkle className="w-5 h-5" weight="fill" />
                 </Button>
               </div>
@@ -353,8 +389,7 @@ function Plus(props: SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 256 256"
       fill="currentColor"
-      aria-hidden="true"
-    >
+      aria-hidden="true">
       <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
     </svg>
   );

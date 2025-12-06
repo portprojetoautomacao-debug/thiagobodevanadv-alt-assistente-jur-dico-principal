@@ -33,7 +33,13 @@ interface TodoistEventData {
 
 // Interface para comandos interpretados pela IA
 interface InterpretedCommand {
-  action: "reschedule" | "delegate" | "complete" | "create_event" | "update_status" | "unknown";
+  action:
+    | "reschedule"
+    | "delegate"
+    | "complete"
+    | "create_event"
+    | "update_status"
+    | "unknown";
   parameters: {
     date?: string;
     assignee?: string;
@@ -85,7 +91,9 @@ export class TodoistAgent {
   private async handleItemUpdated(item: TodoistEventData) {
     // Se a data mudou, sincronizar com Google Calendar
     if (item.due) {
-      console.log(`📅 Data da tarefa ${item.id} atualizada para ${item.due.date}`);
+      console.log(
+        `📅 Data da tarefa ${item.id} atualizada para ${item.due.date}`
+      );
 
       // Tenta encontrar evento correspondente no Calendar (pelo ID da tarefa na descrição ou título)
       // Como não temos link direto, vamos buscar eventos do dia
@@ -106,7 +114,8 @@ export class TodoistAgent {
     console.log(`✅ Tarefa ${item.content} concluída!`);
 
     // Verificar se é uma tarefa de processo
-    const processMatch = item.content.match(/Processo\s+(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
+    const processMatch =
+      /Processo\s+(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/.exec(item.content);
     if (processMatch) {
       const processNumber = processMatch[1];
       console.log(`🔄 Atualizando progresso do processo ${processNumber}...`);
@@ -127,10 +136,16 @@ export class TodoistAgent {
     const text = comment.content;
 
     // Verificar se é um comando para o agente (ex: "@Harvey ...")
-    if (text.toLowerCase().includes("@harvey") || text.toLowerCase().includes("urgente:")) {
+    if (
+      text.toLowerCase().includes("@harvey") ||
+      text.toLowerCase().includes("urgente:")
+    ) {
       console.log(`🧠 Interpretando comando: "${text}"`);
 
-      const command = await this.interpretCommandWithAI(text, comment.item_id || comment.id);
+      const command = await this.interpretCommandWithAI(
+        text,
+        comment.item_id || comment.id
+      );
       await this.executeCommand(command);
     }
   }
@@ -138,7 +153,10 @@ export class TodoistAgent {
   /**
    * Interpreta comandos via LLM (GPT-4)
    */
-  private async interpretCommandWithAI(text: string, taskId: string): Promise<InterpretedCommand> {
+  private async interpretCommandWithAI(
+    text: string,
+    taskId: string
+  ): Promise<InterpretedCommand> {
     const prompt = `
       Você é um assistente jurídico inteligente (Harvey) integrado ao Todoist.
       Analise o seguinte comando do usuário e extraia a intenção e parâmetros.
@@ -170,7 +188,7 @@ export class TodoistAgent {
         feature: "todoist-agent",
       });
 
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      const jsonMatch = /\{[\s\S]*\}/.exec(response);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]) as InterpretedCommand;
       }
@@ -217,7 +235,10 @@ export class TodoistAgent {
       case "update_status":
         if (command.parameters.taskId && command.parameters.priority) {
           // Validar prioridade (1-4)
-          const priority = Math.min(Math.max(command.parameters.priority, 1), 4) as 1 | 2 | 3 | 4;
+          const priority = Math.min(
+            Math.max(command.parameters.priority, 1),
+            4
+          ) as 1 | 2 | 3 | 4;
           await updateLegalTask(command.parameters.taskId, {
             priority: priority,
           });
@@ -256,7 +277,10 @@ export class TodoistAgent {
     // Placeholder - em produção, usar IA real para gerar sugestões
     // baseadas no histórico do processo e padrões identificados
     const suggestions = [
-      { content: `Verificar publicação - Processo ${processNumber}`, due: "tomorrow" },
+      {
+        content: `Verificar publicação - Processo ${processNumber}`,
+        due: "tomorrow",
+      },
     ];
 
     // TODO: Criar tarefas sugeridas via API real

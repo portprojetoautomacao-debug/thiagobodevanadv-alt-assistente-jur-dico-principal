@@ -3,7 +3,13 @@ import { useKV } from "@/hooks/use-kv";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -74,7 +80,11 @@ export default function ClientesView() {
       setClientes((current) =>
         (current || []).map((c) =>
           c.id === editingCliente.id
-            ? ({ ...formData, id: c.id, updatedAt: new Date().toISOString() } as Cliente)
+            ? ({
+                ...formData,
+                id: c.id,
+                updatedAt: new Date().toISOString(),
+              } as Cliente)
             : c
         )
       );
@@ -131,11 +141,14 @@ export default function ClientesView() {
   );
 
   const formatCpfCnpj = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
+    const numbers = value.replaceAll(/\D/g, "");
     if (numbers.length <= 11) {
       return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     }
-    return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+    return numbers.replace(
+      /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+      "$1.$2.$3/$4-$5"
+    );
   };
 
   const handleExportCSV = () => {
@@ -180,8 +193,12 @@ export default function ClientesView() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingCliente ? "Editar Cliente" : "Novo Cliente"}</DialogTitle>
-                <DialogDescription>Preencha os dados do cliente</DialogDescription>
+                <DialogTitle>
+                  {editingCliente ? "Editar Cliente" : "Novo Cliente"}
+                </DialogTitle>
+                <DialogDescription>
+                  Preencha os dados do cliente
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -190,7 +207,9 @@ export default function ClientesView() {
                     <Input
                       id="nome"
                       value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nome: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -201,24 +220,29 @@ export default function ClientesView() {
                       value={formData.tipo}
                       onValueChange={(value: "fisica" | "juridica") =>
                         setFormData({ ...formData, tipo: value })
-                      }
-                    >
+                      }>
                       <SelectTrigger id="tipo">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="fisica">Pessoa Física</SelectItem>
-                        <SelectItem value="juridica">Pessoa Jurídica</SelectItem>
+                        <SelectItem value="juridica">
+                          Pessoa Jurídica
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cpfCnpj">{formData.tipo === "fisica" ? "CPF" : "CNPJ"} *</Label>
+                    <Label htmlFor="cpfCnpj">
+                      {formData.tipo === "fisica" ? "CPF" : "CNPJ"} *
+                    </Label>
                     <Input
                       id="cpfCnpj"
                       value={formData.cpfCnpj}
-                      onChange={(e) => setFormData({ ...formData, cpfCnpj: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cpfCnpj: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -229,7 +253,9 @@ export default function ClientesView() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                     />
                   </div>
 
@@ -238,7 +264,9 @@ export default function ClientesView() {
                     <Input
                       id="telefone"
                       value={formData.telefone}
-                      onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, telefone: e.target.value })
+                      }
                     />
                   </div>
 
@@ -247,7 +275,9 @@ export default function ClientesView() {
                     <Input
                       id="endereco"
                       value={formData.endereco}
-                      onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, endereco: e.target.value })
+                      }
                     />
                   </div>
 
@@ -256,7 +286,9 @@ export default function ClientesView() {
                     <Input
                       id="cidade"
                       value={formData.cidade}
-                      onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cidade: e.target.value })
+                      }
                     />
                   </div>
 
@@ -265,7 +297,9 @@ export default function ClientesView() {
                     <Input
                       id="estado"
                       value={formData.estado}
-                      onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, estado: e.target.value })
+                      }
                       maxLength={2}
                     />
                   </div>
@@ -275,7 +309,9 @@ export default function ClientesView() {
                     <Input
                       id="cep"
                       value={formData.cep}
-                      onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cep: e.target.value })
+                      }
                     />
                   </div>
 
@@ -285,8 +321,7 @@ export default function ClientesView() {
                       value={formData.status}
                       onValueChange={(value: "ativo" | "inativo") =>
                         setFormData({ ...formData, status: value })
-                      }
-                    >
+                      }>
                       <SelectTrigger id="status">
                         <SelectValue />
                       </SelectTrigger>
@@ -302,17 +337,27 @@ export default function ClientesView() {
                     <Textarea
                       id="observacoes"
                       value={formData.observacoes}
-                      onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          observacoes: e.target.value,
+                        })
+                      }
                       rows={3}
                     />
                   </div>
                 </div>
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseDialog}>
                     Cancelar
                   </Button>
-                  <Button type="submit">{editingCliente ? "Atualizar" : "Cadastrar"}</Button>
+                  <Button type="submit">
+                    {editingCliente ? "Atualizar" : "Cadastrar"}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -326,8 +371,9 @@ export default function ClientesView() {
             <div>
               <CardTitle>Lista de Clientes</CardTitle>
               <CardDescription>
-                {(clientes || []).length} cliente{(clientes || []).length !== 1 ? "s" : ""}{" "}
-                cadastrado{(clientes || []).length !== 1 ? "s" : ""}
+                {(clientes || []).length} cliente
+                {(clientes || []).length !== 1 ? "s" : ""} cadastrado
+                {(clientes || []).length !== 1 ? "s" : ""}
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
@@ -349,7 +395,9 @@ export default function ClientesView() {
             <div className="text-center py-12">
               <User size={48} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+                {searchTerm
+                  ? "Nenhum cliente encontrado"
+                  : "Nenhum cliente cadastrado"}
               </p>
             </div>
           ) : (
@@ -376,27 +424,34 @@ export default function ClientesView() {
                           <Buildings size={20} className="text-secondary" />
                         )}
                       </TableCell>
-                      <TableCell className="font-medium">{cliente.nome}</TableCell>
+                      <TableCell className="font-medium">
+                        {cliente.nome}
+                      </TableCell>
                       <TableCell className="font-mono text-sm">
                         {formatCpfCnpj(cliente.cpfCnpj)}
                       </TableCell>
                       <TableCell>{cliente.email || "-"}</TableCell>
                       <TableCell>{cliente.telefone || "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={cliente.status === "ativo" ? "default" : "secondary"}>
+                        <Badge
+                          variant={
+                            cliente.status === "ativo" ? "default" : "secondary"
+                          }>
                           {cliente.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(cliente)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(cliente)}>
                             <PencilSimple size={18} />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(cliente.id)}
-                          >
+                            onClick={() => handleDelete(cliente.id)}>
                             <Trash size={18} className="text-destructive" />
                           </Button>
                         </div>

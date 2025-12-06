@@ -5,13 +5,13 @@ import { useKV } from "@/hooks/use-kv";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
   ArrowUp,
-  CaretLeft,
-  CaretRight,
-  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
   Clock,
   FileText,
   Trophy,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { memo, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,
@@ -156,14 +156,20 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
     const processesList = processes || [];
     const year = selectedMonth.getFullYear();
     const month = selectedMonth.getMonth();
-    const map: Record<number, { count: number; urgente: boolean; descricoes: string[] }> = {};
+    const map: Record<
+      number,
+      { count: number; urgente: boolean; descricoes: string[] }
+    > = {};
 
     processesList.forEach((process) => {
       if (process.prazos && Array.isArray(process.prazos)) {
         process.prazos.forEach((prazo) => {
           if (prazo.concluido) return;
           const dataFinal = new Date(prazo.dataFinal);
-          if (dataFinal.getFullYear() === year && dataFinal.getMonth() === month) {
+          if (
+            dataFinal.getFullYear() === year &&
+            dataFinal.getMonth() === month
+          ) {
             const day = dataFinal.getDate();
             const hoje = new Date();
             const diasRestantes = Math.ceil(
@@ -176,7 +182,9 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             }
             map[day].count++;
             if (urgente) map[day].urgente = true;
-            map[day].descricoes.push(`${prazo.descricao || "Prazo"} - ${process.titulo}`);
+            map[day].descricoes.push(
+              `${prazo.descricao || "Prazo"} - ${process.titulo}`
+            );
           }
         });
       }
@@ -185,11 +193,15 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
   }, [processes, selectedMonth]);
 
   const nextMonth = () => {
-    setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1));
+    setSelectedMonth(
+      new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1)
+    );
   };
 
   const prevMonth = () => {
-    setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1));
+    setSelectedMonth(
+      new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1)
+    );
   };
 
   const today = new Date();
@@ -211,8 +223,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+            viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -233,13 +244,19 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-linear-to-br from-green-500/20 to-green-500/5 rounded-xl shadow-lg">
-                <CheckCircle size={32} weight="duotone" className="text-green-500" />
+                <CheckCircle
+                  size={32}
+                  weight="duotone"
+                  className="text-green-500"
+                />
               </div>
               <div className="flex-1">
                 <p className="text-4xl font-bold text-foreground mb-1 bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">
                   {stats.tarefasFinalizadas}
                 </p>
-                <p className="text-sm text-muted-foreground font-medium">Tarefas finalizadas</p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Tarefas finalizadas
+                </p>
               </div>
             </div>
           </CardContent>
@@ -253,8 +270,12 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                 <Clock size={32} weight="duotone" className="text-yellow-500" />
               </div>
               <div className="flex-1">
-                <p className="text-4xl font-bold text-foreground mb-1">{stats.tarefasPendentes}</p>
-                <p className="text-sm text-muted-foreground font-medium">Tarefas pendentes</p>
+                <p className="text-4xl font-bold text-foreground mb-1">
+                  {stats.tarefasPendentes}
+                </p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Tarefas pendentes
+                </p>
               </div>
             </div>
           </CardContent>
@@ -268,8 +289,12 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                 <Trophy size={32} weight="duotone" className="text-primary" />
               </div>
               <div className="flex-1">
-                <p className="text-4xl font-bold text-foreground mb-1">{stats.pontosAcumulados}</p>
-                <p className="text-sm text-muted-foreground font-medium">Pontos acumulados</p>
+                <p className="text-4xl font-bold text-foreground mb-1">
+                  {stats.pontosAcumulados}
+                </p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Pontos acumulados
+                </p>
               </div>
             </div>
           </CardContent>
@@ -291,17 +316,19 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 hover:bg-primary/10 rounded-lg"
-                    aria-label="Ver detalhes"
-                  >
+                    aria-label="Ver detalhes">
                     <ArrowUp size={18} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 hover:bg-primary/10 rounded-lg"
-                    aria-label="Alternar visualização"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+                    aria-label="Alternar visualização">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 16 16"
+                      fill="currentColor">
                       <path d="M2 2h4v4H2V2zm6 0h6v4H8V2zM2 8h4v6H2V8zm6 0h6v6H8V8z" />
                     </svg>
                   </Button>
@@ -313,16 +340,46 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                 <ResponsiveContainer width="99%" height="100%" minHeight={300}>
                   <LineChart data={performanceData}>
                     <defs>
-                      <linearGradient id="colorEste" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#52b788" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#52b788" stopOpacity={0} />
+                      <linearGradient
+                        id="colorEste"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#52b788"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#52b788"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
-                      <linearGradient id="colorMetas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#48cae4" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#48cae4" stopOpacity={0} />
+                      <linearGradient
+                        id="colorMetas"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#48cae4"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#48cae4"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3e" strokeOpacity={0.5} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#2a2d3e"
+                      strokeOpacity={0.5}
+                    />
                     <XAxis
                       dataKey="month"
                       stroke="#6b7280"
@@ -435,8 +492,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     size="icon"
                     className="h-8 w-8 hover:bg-primary/10 rounded-lg"
                     onClick={prevMonth}
-                    aria-label="Mês anterior"
-                  >
+                    aria-label="Mês anterior">
                     <CaretLeft size={18} />
                   </Button>
                   <Button
@@ -444,8 +500,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     size="icon"
                     className="h-8 w-8 hover:bg-primary/10 rounded-lg"
                     onClick={nextMonth}
-                    aria-label="Próximo mês"
-                  >
+                    aria-label="Próximo mês">
                     <CaretRight size={18} />
                   </Button>
                 </div>
@@ -454,7 +509,9 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             <CardContent className="pt-4">
               <div className="grid grid-cols-7 gap-2 mb-3">
                 {["D", "S", "T", "Q", "Q", "S", "S"].map((day) => (
-                  <div key={day} className="text-center text-xs text-primary/70 font-bold">
+                  <div
+                    key={day}
+                    className="text-center text-xs text-primary/70 font-bold">
                     {day}
                   </div>
                 ))}
@@ -502,15 +559,15 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     <div
                       key={keyForDay}
                       title={prazoInfo?.descricoes?.join("\n")}
-                      className={getDayClassName()}
-                    >
+                      className={getDayClassName()}>
                       {day}
                       {temPrazo && (
                         <span
                           className={`absolute -top-1 -right-1 w-4 h-4 text-[10px] flex items-center justify-center rounded-full ${
-                            prazoUrgente ? "bg-red-500 text-white" : "bg-yellow-500 text-black"
-                          }`}
-                        >
+                            prazoUrgente
+                              ? "bg-red-500 text-white"
+                              : "bg-yellow-500 text-black"
+                          }`}>
                           {prazoInfo.count}
                         </span>
                       )}
@@ -527,20 +584,20 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
       <Card className="bg-linear-to-br from-card via-card to-card/80 border-border/50 shadow-xl rounded-2xl overflow-hidden">
         <CardHeader className="border-b border-border/50 bg-linear-to-r from-card/50 to-transparent">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-bold text-foreground">COMPROMISSOS</CardTitle>
+            <CardTitle className="text-lg font-bold text-foreground">
+              COMPROMISSOS
+            </CardTitle>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs font-semibold hover:bg-primary/10 rounded-lg"
-              >
+                className="text-xs font-semibold hover:bg-primary/10 rounded-lg">
                 Tarefa
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs font-semibold hover:bg-primary/10 rounded-lg"
-              >
+                className="text-xs font-semibold hover:bg-primary/10 rounded-lg">
                 Pesquisar
               </Button>
             </div>
@@ -552,12 +609,13 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
             <div className="flex items-center gap-4 mb-4">
               <Button
                 variant="ghost"
-                className="text-xs h-9 bg-primary/10 hover:bg-primary/20 rounded-lg font-semibold"
-              >
+                className="text-xs h-9 bg-primary/10 hover:bg-primary/20 rounded-lg font-semibold">
                 <FileText size={16} className="mr-2" />
                 Intimações
               </Button>
-              <Badge variant="secondary" className="text-xs rounded-lg px-3 py-1">
+              <Badge
+                variant="secondary"
+                className="text-xs rounded-lg px-3 py-1">
                 Não lidas
               </Badge>
             </div>
@@ -569,8 +627,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
               return (
                 <div
                   key={`${item.numero || item.parte1}-${index}`}
-                  className="flex items-center justify-between py-3 px-4 hover:bg-linear-to-r hover:from-primary/5 hover:to-transparent rounded-xl cursor-pointer group transition-all border-b border-border/30 last:border-b-0"
-                >
+                  className="flex items-center justify-between py-3 px-4 hover:bg-linear-to-r hover:from-primary/5 hover:to-transparent rounded-xl cursor-pointer group transition-all border-b border-border/30 last:border-b-0">
                   <div className="flex items-center gap-3 flex-1">
                     <input
                       type="checkbox"
@@ -581,7 +638,9 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                         <div className="p-1.5 bg-primary/10 rounded-lg">
                           <FileText size={16} className="text-primary" />
                         </div>
-                        <span className="text-sm font-semibold text-foreground">{item.tipo}</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {item.tipo}
+                        </span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {item.parte1} x {item.parte2}
@@ -591,8 +650,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                   <div className="flex items-center gap-4">
                     <Badge
                       variant={item.atrasado ? "destructive" : "secondary"}
-                      className="text-xs"
-                    >
+                      className="text-xs">
                       {item.status}
                     </Badge>
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">

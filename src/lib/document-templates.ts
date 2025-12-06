@@ -501,7 +501,9 @@ export function getTemplateById(id: string): DocumentTemplate | undefined {
 }
 
 // Função para buscar templates por tipo
-export function getTemplatesByTipo(tipo: DocumentTemplate["tipo"]): DocumentTemplate[] {
+export function getTemplatesByTipo(
+  tipo: DocumentTemplate["tipo"]
+): DocumentTemplate[] {
   return documentTemplates.filter((t) => t.tipo === tipo);
 }
 
@@ -531,9 +533,9 @@ export function replaceTemplateVariables(
 
   Object.entries(variables).forEach(([key, value]) => {
     // Corrigido: escapar TODOS os pontos da chave (autor.nome, processo.numero etc.)
-    const escapedKey = key.replace(/\./g, "\\.");
+    const escapedKey = key.replaceAll(/\./g, "\\.");
     const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g");
-    result = result.replace(regex, value || `[${key}]`);
+    result = result.replaceAll(regex, value || `[${key}]`);
   });
 
   return result;

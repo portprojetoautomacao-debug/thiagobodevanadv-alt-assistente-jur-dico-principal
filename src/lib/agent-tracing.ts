@@ -5,9 +5,9 @@
  * Fornece instrumentação automática para execução de agentes e processamento de tarefas.
  */
 
-import { tracingService, withTracing } from "./tracing";
+import { tracingService } from "./tracing";
 
-import type { AgentSpan, Span, SpanAttributes, TraceContext } from "./tracing";
+import type { AgentSpan, SpanAttributes } from "./tracing";
 
 import type { Agent, AgentTask, AgentTaskResult } from "./agents";
 
@@ -127,7 +127,10 @@ export async function traceLLMCall<T>(
   parentSpan: Span,
   model: string,
   promptLength: number,
-  executor: () => Promise<{ result: T; tokens: { prompt: number; completion: number } }>
+  executor: () => Promise<{
+    result: T;
+    tokens: { prompt: number; completion: number };
+  }>
 ): Promise<T> {
   const parentContext = (parentSpan as Span & { context?: unknown }).context;
 
@@ -169,7 +172,10 @@ export async function traceLLMCall<T>(
 /**
  * Registra o resultado da tarefa no span
  */
-export function traceTaskResult(span: AgentSpan, result: AgentTaskResult): void {
+export function traceTaskResult(
+  span: AgentSpan,
+  result: AgentTaskResult
+): void {
   tracingService.setAttributes(span, {
     "task.success": result.success,
     "task.message": result.message || "",
@@ -222,7 +228,11 @@ export function traceAgentStateChange(
 /**
  * Trace de ativação/desativação de agente
  */
-export function traceAgentToggle(agentId: string, agentName: string, enabled: boolean): void {
+export function traceAgentToggle(
+  agentId: string,
+  agentName: string,
+  enabled: boolean
+): void {
   const span = tracingService.startSpan(`agent.toggle.${agentId}`, {
     kind: "internal",
     attributes: {
@@ -281,7 +291,10 @@ export function traceTaskDequeued(task: AgentTask, agentId: string): void {
 /**
  * Trace de solicitação de intervenção humana
  */
-export function traceHumanInterventionRequired(task: AgentTask, reason: string): void {
+export function traceHumanInterventionRequired(
+  task: AgentTask,
+  reason: string
+): void {
   const span = tracingService.startSpan("human.intervention_required", {
     kind: "internal",
     attributes: {
@@ -342,7 +355,9 @@ export function getAgentMetrics(agentId: string): {
   toolUsage: Record<string, number>;
   recentErrors: string[];
 } {
-  const traces = tracingService.getTracesByName(`agent.${agentId}`) as TraceEntry[];
+  const traces = tracingService.getTracesByName(
+    `agent.${agentId}`
+  ) as TraceEntry[];
 
   const executions = traces.filter((t) => t.endTime);
   const successful = executions.filter((t) => t.status === "ok");
@@ -371,11 +386,14 @@ export function getAgentMetrics(agentId: string): {
       });
   });
 
-  const recentErrors = failed.slice(-5).map((t) => t.statusMessage || "Unknown error");
+  const recentErrors = failed
+    .slice(-5)
+    .map((t) => t.statusMessage || "Unknown error");
 
   return {
     totalExecutions: executions.length,
-    successRate: executions.length > 0 ? (successful.length / executions.length) * 100 : 0,
+    successRate:
+      executions.length > 0 ? (successful.length / executions.length) * 100 : 0,
     avgDuration,
     toolUsage,
     recentErrors,
@@ -402,9 +420,12 @@ export function getLLMMetrics(): {
   const responseTimes: number[] = [];
 
   calls.forEach((t) => {
-    const tokens = (t.attributes?.["llm.total_tokens"] as number | undefined) ?? 0;
-    const model = (t.attributes?.["llm.model"] as string | undefined) || "unknown";
-    const responseTime = (t.attributes?.["llm.response_time_ms"] as number | undefined) ?? 0;
+    const tokens =
+      (t.attributes?.["llm.total_tokens"] as number | undefined) ?? 0;
+    const model =
+      (t.attributes?.["llm.model"] as string | undefined) || "unknown";
+    const responseTime =
+      (t.attributes?.["llm.response_time_ms"] as number | undefined) ?? 0;
 
     totalTokens += tokens;
     tokensByModel[model] = (tokensByModel[model] || 0) + tokens;
@@ -415,7 +436,9 @@ export function getLLMMetrics(): {
   });
 
   const avgResponseTime =
-    responseTimes.length > 0 ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
+    responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      : 0;
 
   return {
     totalCalls: calls.length,
@@ -430,5 +453,5 @@ export function getLLMMetrics(): {
 // EXPORTS
 // ============================================================================
 
-export { tracingService, withTracing };
-export type { AgentSpan, Span, TraceContext };
+export { tracingService, withTracing } from "./tracing";
+export type { AgentSpan, Span, TraceContext } from "./tracing";

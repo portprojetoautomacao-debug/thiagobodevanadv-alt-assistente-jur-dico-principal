@@ -11,12 +11,12 @@ import type { Expediente, FinancialEntry, Process } from "@/types";
 import {
   Bell,
   Briefcase,
-  ChartBar,
-  CurrencyCircleDollar,
-  PaperPlaneTilt,
-  Stop,
-  Warning,
-} from "@phosphor-icons/react";
+  BarChart3,
+  DollarSign,
+  Send,
+  Square,
+  AlertTriangle,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -102,7 +102,9 @@ export default function HarveySpecter() {
   const [messages, setMessages] = useKV<Message[]>("harvey-messages", []);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Hook de streaming de IA
@@ -142,7 +144,8 @@ export default function HarveySpecter() {
     // Processos
     const totalProcesses = processes?.length || 0;
     const processesByStatus = {
-      "Em Andamento": processes?.filter((p) => p.status === "ativo").length || 0,
+      "Em Andamento":
+        processes?.filter((p) => p.status === "ativo").length || 0,
       Aguardando: processes?.filter((p) => p.status === "suspenso").length || 0,
       Concluído: processes?.filter((p) => p.status === "concluido").length || 0,
       Arquivado: processes?.filter((p) => p.status === "arquivado").length || 0,
@@ -178,7 +181,9 @@ export default function HarveySpecter() {
     const monthlyRecords =
       financialRecords?.filter((r) => {
         const date = new Date(r.date);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        return (
+          date.getMonth() === currentMonth && date.getFullYear() === currentYear
+        );
       }) || [];
 
     const receita = monthlyRecords
@@ -187,17 +192,21 @@ export default function HarveySpecter() {
     const despesas = monthlyRecords
       .filter((r) => r.type === "expense")
       .reduce((sum, r) => sum + r.amount, 0);
-    const margem = receita > 0 ? (((receita - despesas) / receita) * 100).toFixed(1) : "0";
+    const margem =
+      receita > 0 ? (((receita - despesas) / receita) * 100).toFixed(1) : "0";
 
     // Tarefas dos Agentes - CORRIGIDO: usar taskQueue e completedTasks
-    const pendingTasks = taskQueue?.filter((t) => t.status === "pending").length || 0;
-    const inProgressTasks = taskQueue?.filter((t) => t.status === "in_progress").length || 0;
+    const pendingTasks =
+      taskQueue?.filter((t) => t.status === "pending").length || 0;
+    const inProgressTasks =
+      taskQueue?.filter((t) => t.status === "in_progress").length || 0;
     const totalCompletedTasks = completedTasks?.length || 0;
 
     // Expedientes/Intimações - NOVO
     const totalExpedientes = expedientes?.length || 0;
     const expedientesUrgentes =
-      expedientes?.filter((e: Expediente) => e.urgente && !e.processado).length || 0;
+      expedientes?.filter((e: Expediente) => e.urgente && !e.processado)
+        .length || 0;
     const expedientesNaoProcessados =
       expedientes?.filter((e: Expediente) => !e.processado).length || 0;
 
@@ -226,7 +235,9 @@ export default function HarveySpecter() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      const scrollElement = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
+      const scrollElement = scrollRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (scrollElement) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
@@ -242,7 +253,8 @@ export default function HarveySpecter() {
         {
           type: "info",
           title: "Sem Dados Cadastrados",
-          description: "Cadastre processos, financeiro ou tarefas para ver estatísticas reais.",
+          description:
+            "Cadastre processos, financeiro ou tarefas para ver estatísticas reais.",
         },
       ];
     }
@@ -450,7 +462,10 @@ IMPORTANTE:
       insights: getInsights(query),
     };
 
-    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage]);
+    setMessages((currentMessages) => [
+      ...(currentMessages || []),
+      streamingMessage,
+    ]);
 
     try {
       const systemPrompt = buildSystemPrompt();
@@ -498,7 +513,10 @@ IMPORTANTE:
       setMessages((currentMessages) =>
         (currentMessages || []).map((msg) =>
           msg.id === streamingMessageId
-            ? { ...msg, content: streamingContent + "\n\n*[Resposta interrompida]*" }
+            ? {
+                ...msg,
+                content: streamingContent + "\n\n*[Resposta interrompida]*",
+              }
             : msg
         )
       );
@@ -540,7 +558,10 @@ IMPORTANTE:
       insights: getInsights(question),
     };
 
-    setMessages((currentMessages) => [...(currentMessages || []), streamingMessage]);
+    setMessages((currentMessages) => [
+      ...(currentMessages || []),
+      streamingMessage,
+    ]);
 
     try {
       const systemPrompt = buildSystemPrompt();
@@ -561,7 +582,10 @@ IMPORTANTE:
       setMessages((currentMessages) =>
         (currentMessages || []).map((msg) =>
           msg.id === assistantId
-            ? { ...msg, content: "Desculpe, ocorreu um erro ao processar sua mensagem." }
+            ? {
+                ...msg,
+                content: "Desculpe, ocorreu um erro ao processar sua mensagem.",
+              }
             : msg
         )
       );
@@ -611,8 +635,12 @@ IMPORTANTE:
       <div className="border-b bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Harvey Specter</h1>
-            <p className="text-sm text-muted-foreground">Seu assistente jurídico inteligente</p>
+            <h1 className="text-2xl font-bold text-foreground">
+              Harvey Specter
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Seu assistente jurídico inteligente
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={() => setMessages([])}>
             Limpar Conversa
@@ -630,7 +658,8 @@ IMPORTANTE:
                     Bem-vindo ao Harvey Specter
                   </h2>
                   <p className="text-muted-foreground">
-                    Seu assistente jurídico inteligente para gestão completa do escritório
+                    Seu assistente jurídico inteligente para gestão completa do
+                    escritório
                   </p>
                 </div>
 
@@ -641,15 +670,21 @@ IMPORTANTE:
                       <Card
                         key={insight.title}
                         className="p-4 hover:bg-accent/5 cursor-pointer transition-colors"
-                        onClick={() => handleQuickQuestion(insight.query)}
-                      >
+                        onClick={() => handleQuickQuestion(insight.query)}>
                         <div className="flex items-start gap-3">
                           <div className="p-2 rounded-lg bg-primary/10">
-                            <Icon className="w-5 h-5 text-primary" weight="fill" />
+                            <Icon
+                              className="w-5 h-5 text-primary"
+                              weight="fill"
+                            />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-foreground">{insight.title}</h3>
-                            <p className="text-sm text-muted-foreground">{insight.description}</p>
+                            <h3 className="font-semibold text-foreground">
+                              {insight.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {insight.description}
+                            </p>
                           </div>
                         </div>
                       </Card>
@@ -668,8 +703,7 @@ IMPORTANTE:
                         variant="outline"
                         size="sm"
                         onClick={() => handleQuickQuestion(question)}
-                        className="text-sm"
-                      >
+                        className="text-sm">
                         {question}
                       </Button>
                     ))}
@@ -683,9 +717,10 @@ IMPORTANTE:
                     <Card
                       className={cn(
                         "p-4",
-                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-card"
-                      )}
-                    >
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card"
+                      )}>
                       <div className="whitespace-pre-wrap text-sm">
                         {/* Mostra streaming content se esta é a mensagem sendo streamada */}
                         {getMessageContent(
@@ -706,12 +741,13 @@ IMPORTANTE:
                         {message.insights.map((insight) => (
                           <Card
                             key={`insight-${insight.title}-${insight.type}`}
-                            className="p-3 bg-card border"
-                          >
+                            className="p-3 bg-card border">
                             <div className="flex items-start gap-2">
                               <div
-                                className={cn("p-1.5 rounded-md", getInsightColor(insight.type))}
-                              >
+                                className={cn(
+                                  "p-1.5 rounded-md",
+                                  getInsightColor(insight.type)
+                                )}>
                                 {getInsightIcon(insight.type)}
                               </div>
                               <div className="flex-1 min-w-0">
@@ -787,8 +823,7 @@ IMPORTANTE:
                 variant="destructive"
                 size="icon"
                 aria-label="Parar resposta"
-                title="Parar resposta"
-              >
+                title="Parar resposta">
                 <Stop className="w-5 h-5" weight="fill" />
               </Button>
             ) : (
@@ -796,8 +831,7 @@ IMPORTANTE:
                 onClick={handleSend}
                 disabled={!input.trim() || isProcessing}
                 size="icon"
-                aria-label="Enviar mensagem"
-              >
+                aria-label="Enviar mensagem">
                 <PaperPlaneTilt className="w-5 h-5" weight="fill" />
               </Button>
             )}

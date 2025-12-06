@@ -1,6 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
@@ -46,7 +52,13 @@ function needsAnalysis(exp: Expediente): boolean {
  */
 function checkNeedsResponse(suggestedActions?: string[]): boolean {
   if (!suggestedActions) return false;
-  const responseKeywords = ["resposta", "manifestar", "petição", "contestar", "recurso"];
+  const responseKeywords = [
+    "resposta",
+    "manifestar",
+    "petição",
+    "contestar",
+    "recurso",
+  ];
   return suggestedActions.some((a) =>
     responseKeywords.some((keyword) => a.toLowerCase().includes(keyword))
   );
@@ -71,7 +83,8 @@ function getTaskPriority(
   defaultPriority: "low" | "medium" | "high" = "medium"
 ): "low" | "medium" | "high" {
   const normalizedPriority = priority.toLowerCase();
-  if (normalizedPriority === "alta" || normalizedPriority === "urgente") return "high";
+  if (normalizedPriority === "alta" || normalizedPriority === "urgente")
+    return "high";
   return defaultPriority;
 }
 
@@ -87,7 +100,8 @@ function getAgentTasksFromAnalysis(
 ): Partial<AgentTask>[] {
   const tasks: Partial<AgentTask>[] = [];
   const priority = analysisData.priority?.toLowerCase() || "média";
-  const hasPrazo = analysisData.deadline?.days && analysisData.deadline.days > 0;
+  const hasPrazo =
+    analysisData.deadline?.days && analysisData.deadline.days > 0;
 
   // 1. Gestão de Prazos - sempre que há prazo identificado
   if (hasPrazo) {
@@ -153,7 +167,10 @@ function getAgentTasksFromAnalysis(
   }
 
   // 5. Pesquisa de Jurisprudência - para casos complexos
-  if (checkNeedsResearch(analysisData.suggestedActions) || getTaskPriority(priority) === "high") {
+  if (
+    checkNeedsResearch(analysisData.suggestedActions) ||
+    getTaskPriority(priority) === "high"
+  ) {
     tasks.push({
       agentId: "pesquisa-juris",
       type: "RESEARCH_PRECEDENTS",
@@ -210,33 +227,47 @@ interface AnalysisData {
 /**
  * Faz parse da resposta JSON da análise ou retorna fallback
  */
-function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisData {
+function parseAnalysisResponse(
+  responseText: string,
+  exp: Expediente
+): AnalysisData {
   try {
     const jsonText = responseText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
+      .replaceAll(/```json\n?/g, "")
+      .replaceAll(/```\n?/g, "")
       .trim();
     const parsed = JSON.parse(jsonText) as AnalysisData;
 
     // ✅ VALIDAÇÃO: Detectar divergências entre conteúdo e ação sugerida
     const content = (exp.content || exp.teor || "").toLowerCase();
-    const isInventario = content.includes("inventário") || content.includes("inventariante");
+    const isInventario =
+      content.includes("inventário") || content.includes("inventariante");
     const isPrimeirasDeclaracoes = content.includes("primeiras declarações");
     const suggestedAction = (parsed.suggestedActions?.[0] || "").toLowerCase();
 
     // Corrigir ação incorreta para inventário
-    if (isInventario && isPrimeirasDeclaracoes && suggestedAction.includes("rol de testemunhas")) {
+    if (
+      isInventario &&
+      isPrimeirasDeclaracoes &&
+      suggestedAction.includes("rol de testemunhas")
+    ) {
       console.warn(
         "⚠️ DIVERGÊNCIA DETECTADA: Processo de INVENTÁRIO com ação incorreta. Corrigindo..."
       );
-      parsed.suggestedActions = ["Apresentar Primeiras Declarações de Inventário"];
-      parsed.summary = `ALERTA: A tarefa sugerida anteriormente estava INCORRETA. Este é um processo de INVENTÁRIO que determina apresentar as Primeiras Declarações. ${parsed.summary || ""}`;
+      parsed.suggestedActions = [
+        "Apresentar Primeiras Declarações de Inventário",
+      ];
+      parsed.summary = `ALERTA: A tarefa sugerida anteriormente estava INCORRETA. Este é um processo de INVENTÁRIO que determina apresentar as Primeiras Declarações. ${
+        parsed.summary || ""
+      }`;
       parsed.documentType = "Intimação - Inventário";
     }
 
     // ✅ VALIDAÇÃO: Corrigir ano da data (deve ser 2025, não anos anteriores)
     if (parsed.deadline?.endDate) {
-      const dataParts = parsed.deadline.endDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      const dataParts = /(\d{2})\/(\d{2})\/(\d{4})/.exec(
+        parsed.deadline.endDate
+      );
       if (dataParts && Number.parseInt(dataParts[3], 10) < 2025) {
         const day = dataParts[1];
         const month = dataParts[2];
@@ -261,7 +292,10 @@ function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisD
 /**
  * Gera o texto do rascunho de petição
  */
-function buildDraftPetition(analysisData: AnalysisData, exp: Expediente): string {
+function buildDraftPetition(
+  analysisData: AnalysisData,
+  exp: Expediente
+): string {
   const actionsText = (analysisData.suggestedActions || [])
     .map((a: string, i: number) => `${i + 1}. ${a}`)
     .join("\n");
@@ -330,7 +364,10 @@ function buildCalendarAnalysisResult(
 
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>("expedientes", []);
-  const [appointments, setAppointments] = useKV<Appointment[]>("appointments", []);
+  const [appointments, setAppointments] = useKV<Appointment[]>(
+    "appointments",
+    []
+  );
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false);
@@ -435,15 +472,26 @@ export default function ExpedientePanel() {
 
         setAppointments((current) => [...(current || []), localAppointment]);
         setDeadlinesCreated((prev) => prev + 1);
-        console.log("[ExpedientePanel] Prazo adicionado ao calendário:", localAppointment.title);
+        console.log(
+          "[ExpedientePanel] Prazo adicionado ao calendário:",
+          localAppointment.title
+        );
 
         // Tentar sincronizar com Google Calendar em background
         syncDeadlineToGoogleCalendar(
           analysisResult,
           `${exp.type || "Intimação"} - ${exp.numeroProcesso || "Processo"}`
-        ).catch((err) => console.warn("[ExpedientePanel] Sync com Google Calendar falhou:", err));
+        ).catch((err) =>
+          console.warn(
+            "[ExpedientePanel] Sync com Google Calendar falhou:",
+            err
+          )
+        );
       } catch (calendarError) {
-        console.warn("[ExpedientePanel] Erro ao criar prazo no calendário:", calendarError);
+        console.warn(
+          "[ExpedientePanel] Erro ao criar prazo no calendário:",
+          calendarError
+        );
       }
     },
     [appointments, setAppointments, setDeadlinesCreated]
@@ -491,7 +539,11 @@ Retorne APENAS JSON neste formato:
 
 PROCESSO: ${exp.numeroProcesso || "Não informado"}
 TRIBUNAL: ${exp.tribunal || "Não informado"}
-DATA DE RECEBIMENTO: ${exp.receivedAt || exp.dataRecebimento || new Date().toISOString()}
+DATA DE RECEBIMENTO: ${
+                  exp.receivedAt ||
+                  exp.dataRecebimento ||
+                  new Date().toISOString()
+                }
 
 CONTEÚDO DA INTIMAÇÃO:
 ${exp.content || exp.teor || "Sem conteúdo"}
@@ -507,14 +559,17 @@ IMPORTANTE:
         });
 
         const data = await response.json();
-        const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
+        const responseText =
+          data.choices?.[0]?.message?.content || data.message?.content || "";
         const analysisData = parseAnalysisResponse(responseText, exp);
 
         const analyzedExp: Expediente = {
           ...exp,
           analyzed: true,
-          summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
-          suggestedAction: analysisData.suggestedActions?.[0] || "Verificar prazo",
+          summary:
+            analysisData.summary || "Análise concluída pela Mrs. Justin-e",
+          suggestedAction:
+            analysisData.suggestedActions?.[0] || "Verificar prazo",
           pendingDocs: analysisData.nextSteps || [],
           deadline: analysisData.deadline,
           priority: mapPriority(analysisData.priority),
@@ -530,10 +585,16 @@ IMPORTANTE:
           const agent = agents.find((a) => a.id === taskData.agentId);
           if (agent?.enabled) {
             const task: AgentTask = {
-              id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+              id: `task-${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2, 11)}`,
               agentId: taskData.agentId!,
               type: taskData.type!,
-              priority: taskData.priority as "low" | "medium" | "high" | "critical",
+              priority: taskData.priority as
+                | "low"
+                | "medium"
+                | "high"
+                | "critical",
               status: "queued",
               createdAt: new Date().toISOString(),
               data: taskData.data as Record<string, unknown>,
@@ -578,7 +639,9 @@ IMPORTANTE:
     for (const exp of pending) {
       try {
         const result = await analyzeExpediente(exp);
-        setExpedientes((current) => (current || []).map((e) => (e.id === exp.id ? result : e)));
+        setExpedientes((current) =>
+          (current || []).map((e) => (e.id === exp.id ? result : e))
+        );
         analyzed++;
         setAnalysisProgress({ current: analyzed, total: pending.length });
 
@@ -594,7 +657,9 @@ IMPORTANTE:
     setAutoAnalyzing(false);
     if (analyzed > 0) {
       const deadlineMsg =
-        deadlinesCreated > 0 ? ` e criou ${deadlinesCreated} prazo(s) na agenda` : "";
+        deadlinesCreated > 0
+          ? ` e criou ${deadlinesCreated} prazo(s) na agenda`
+          : "";
       toast.success(
         `✅ Mrs. Justin-e analisou ${analyzed} intimação(ões)${deadlineMsg} e distribuiu tarefas para os agentes!`,
         { duration: 5000 }
@@ -668,7 +733,8 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
       const data = await response.json();
 
       // Extrai o conteúdo da resposta
-      const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
+      const responseText =
+        data.choices?.[0]?.message?.content || data.message?.content || "";
 
       // Tenta fazer parse do JSON da resposta
       let analysisData;
@@ -686,7 +752,10 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
           documentType: exp.type || "Intimação",
           priority: "média",
           deadline: { days: 15, type: "úteis", endDate: "Verificar" },
-          suggestedActions: ["Verificar prazo processual", "Analisar providências"],
+          suggestedActions: [
+            "Verificar prazo processual",
+            "Analisar providências",
+          ],
           nextSteps: ["Revisar intimação", "Preparar resposta se necessário"],
         };
       }
@@ -695,7 +764,8 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
         ...exp,
         analyzed: true,
         summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
-        suggestedAction: analysisData.suggestedActions?.[0] || "Verificar prazo",
+        suggestedAction:
+          analysisData.suggestedActions?.[0] || "Verificar prazo",
         pendingDocs: analysisData.nextSteps || [],
         deadline: analysisData.deadline,
         priority: mapPriority(analysisData.priority),
@@ -716,7 +786,9 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
             .join("\n")}`,
       };
 
-      setExpedientes((current) => (current || []).map((e) => (e.id === exp.id ? analyzed : e)));
+      setExpedientes((current) =>
+        (current || []).map((e) => (e.id === exp.id ? analyzed : e))
+      );
       setSelectedExp(analyzed);
       toast.success("Mrs. Justin-e concluiu a análise!");
     } catch (error) {
@@ -777,7 +849,8 @@ Crie o workflow de controladoria para esta tarefa.`,
         });
 
         const data = await response.json();
-        const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
+        const responseText =
+          data.choices?.[0]?.message?.content || data.message?.content || "";
 
         let analysisData;
         try {
@@ -799,20 +872,31 @@ Crie o workflow de controladoria para esta tarefa.`,
         const analyzed: Expediente = {
           ...selectedExp,
           analyzed: true,
-          summary: analysisData.summary || `Mrs. Justin-e analisou a intimação para: ${task}`,
+          summary:
+            analysisData.summary ||
+            `Mrs. Justin-e analisou a intimação para: ${task}`,
           suggestedAction: `Executar: ${task}`,
-          pendingDocs: analysisData.checklist || analysisData.nextSteps || ["Documento Principal"],
+          pendingDocs: analysisData.checklist ||
+            analysisData.nextSteps || ["Documento Principal"],
           deadline: analysisData.deadline,
           priority: "high",
           draftPetition:
             `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
             `🎯 TAREFA: ${task}\n\n` +
-            `📋 RESUMO:\n${analysisData.summary || "Workflow em processamento"}\n\n` +
+            `📋 RESUMO:\n${
+              analysisData.summary || "Workflow em processamento"
+            }\n\n` +
             `📅 PRAZO: ${analysisData.deadline?.days || 15} dias ${
               analysisData.deadline?.type || "úteis"
             }\n` +
-            `   Data limite: ${analysisData.deadline?.endDate || "Calcular"}\n\n` +
-            `✅ CHECKLIST:\n${(analysisData.checklist || analysisData.nextSteps || [])
+            `   Data limite: ${
+              analysisData.deadline?.endDate || "Calcular"
+            }\n\n` +
+            `✅ CHECKLIST:\n${(
+              analysisData.checklist ||
+              analysisData.nextSteps ||
+              []
+            )
               .map((s: string, i: number) => `☐ ${i + 1}. ${s}`)
               .join("\n")}\n\n` +
             `📝 OBSERVAÇÕES:\n${analysisData.observations || "Nenhuma"}`,
@@ -854,7 +938,9 @@ Crie o workflow de controladoria para esta tarefa.`,
           : exp
       )
     );
-    toast.success(`${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`);
+    toast.success(
+      `${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`
+    );
   };
 
   const suggestedTasks = [
@@ -871,15 +957,19 @@ Crie o workflow de controladoria para esta tarefa.`,
       <div className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Painel de Expedientes
+            </h1>
             <p className="text-muted-foreground mt-1">
               Caixa de entrada inteligente com análise de IA
             </p>
             <p className="text-xs text-muted-foreground mt-2">
-              <span className="font-medium">Advogado:</span> Thiago Bodevan Veiga - OAB/MG 184.404
+              <span className="font-medium">Advogado:</span> Thiago Bodevan
+              Veiga - OAB/MG 184.404
               {lastSync && (
                 <span className="ml-2">
-                  • Última verificação: {new Date(lastSync).toLocaleString("pt-BR")}
+                  • Última verificação:{" "}
+                  {new Date(lastSync).toLocaleString("pt-BR")}
                 </span>
               )}
             </p>
@@ -890,8 +980,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                 onClick={handleClearFailedAnalysis}
                 variant="outline"
                 size="sm"
-                title="Limpar análises com erro para permitir re-análise"
-              >
+                title="Limpar análises com erro para permitir re-análise">
                 Limpar Análises Inválidas
               </Button>
             )}
@@ -900,8 +989,7 @@ Crie o workflow de controladoria para esta tarefa.`,
               disabled={loading}
               variant="outline"
               size="sm"
-              data-testid="expedientes-sync-btn"
-            >
+              data-testid="expedientes-sync-btn">
               {loading ? "Atualizando..." : "Atualizar"}
             </Button>
           </div>
@@ -916,21 +1004,26 @@ Crie o workflow de controladoria para esta tarefa.`,
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-foreground">
-                      🤖 Mrs. Justin-e analisando intimações e distribuindo tarefas...
+                      🤖 Mrs. Justin-e analisando intimações e distribuindo
+                      tarefas...
                     </p>
                     <span className="text-sm text-muted-foreground">
                       {analysisProgress.current}/{analysisProgress.total}
                     </span>
                   </div>
                   <Progress
-                    value={(analysisProgress.current / analysisProgress.total) * 100}
+                    value={
+                      (analysisProgress.current / analysisProgress.total) * 100
+                    }
                     className="h-2"
                   />
                   {tasksCreated > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
                       {tasksCreated} tarefa(s) distribuída(s) para agentes
                       {deadlinesCreated > 0 && (
-                        <span className="ml-2">{deadlinesCreated} prazo(s) na agenda</span>
+                        <span className="ml-2">
+                          {deadlinesCreated} prazo(s) na agenda
+                        </span>
                       )}
                     </p>
                   )}
@@ -949,16 +1042,21 @@ Crie o workflow de controladoria para esta tarefa.`,
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <p className="text-sm text-green-700 dark:text-green-400">
-                      ✅ Todas as {safeExpedientes.length} intimações analisadas pela Mrs. Justin-e
+                      ✅ Todas as {safeExpedientes.length} intimações analisadas
+                      pela Mrs. Justin-e
                     </p>
                   </div>
                   {tasksCreated > 0 && (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-700">
                       {tasksCreated} tarefas na fila dos agentes
                     </Badge>
                   )}
                   {deadlinesCreated > 0 && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-700">
                       {deadlinesCreated} prazos na agenda
                     </Badge>
                   )}
@@ -975,12 +1073,16 @@ Crie o workflow de controladoria para esta tarefa.`,
                   Expedientes Recentes
                   <Badge variant="secondary">{safeExpedientes.length}</Badge>
                 </CardTitle>
-                <CardDescription>Intimações do DJEN aguardando análise</CardDescription>
+                <CardDescription>
+                  Intimações do DJEN aguardando análise
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {safeExpedientes.length === 0 ? (
                   <div className="text-center py-8 space-y-3">
-                    <p className="text-sm text-muted-foreground">Nenhuma publicação encontrada</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma publicação encontrada
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       O monitor DJEN verifica automaticamente às 9h (UTC)
                     </p>
@@ -989,8 +1091,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                       disabled={loading}
                       variant="outline"
                       size="sm"
-                      className="mt-2"
-                    >
+                      className="mt-2">
                       Verificar Agora
                     </Button>
                   </div>
@@ -1004,16 +1105,19 @@ Crie o workflow de controladoria para esta tarefa.`,
                           : "bg-card border-border hover:bg-muted"
                       }`}
                       onClick={() => setSelectedExp(exp)}
-                      type="button"
-                    >
+                      type="button">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
+                          <p className="text-sm font-medium line-clamp-1">
+                            {exp.type || exp.tipo}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString(
-                              "pt-BR"
+                            {new Date(
+                              exp.receivedAt || exp.dataRecebimento
+                            ).toLocaleDateString("pt-BR")}
+                            {exp.tribunal && (
+                              <span className="ml-1">• {exp.tribunal}</span>
                             )}
-                            {exp.tribunal && <span className="ml-1">• {exp.tribunal}</span>}
                           </p>
                         </div>
                         {exp.analyzed ? (
@@ -1048,15 +1152,13 @@ Crie o workflow de controladoria para esta tarefa.`,
                         <Button
                           onClick={() => handleActivateMichaelRoss()}
                           disabled={analyzing}
-                          variant="default"
-                        >
+                          variant="default">
                           {analyzing ? "Analisando..." : "Ativar Michael Ross"}
                         </Button>
                         <Button
                           onClick={() => handleAnalyze(selectedExp)}
                           disabled={analyzing}
-                          variant="outline"
-                        >
+                          variant="outline">
                           Análise Padrão
                         </Button>
                       </div>
@@ -1066,8 +1168,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                         onClick={() => handleAnalyze(selectedExp)}
                         disabled={analyzing}
                         variant="outline"
-                        size="sm"
-                      >
+                        size="sm">
                         {analyzing ? "Re-analisando..." : "Re-analisar com IA"}
                       </Button>
                     )}
@@ -1075,7 +1176,9 @@ Crie o workflow de controladoria para esta tarefa.`,
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold mb-2">Conteúdo Original</h3>
+                    <h3 className="text-sm font-semibold mb-2">
+                      Conteúdo Original
+                    </h3>
                     <div className="p-4 bg-muted rounded-lg">
                       <p className="text-sm whitespace-pre-wrap document-content">
                         {selectedExp.content}
@@ -1095,24 +1198,31 @@ Crie o workflow de controladoria para esta tarefa.`,
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold mb-2">Ação Sugerida</h3>
+                        <h3 className="text-sm font-semibold mb-2">
+                          Ação Sugerida
+                        </h3>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-900">{selectedExp.suggestedAction}</p>
+                          <p className="text-sm text-blue-900">
+                            {selectedExp.suggestedAction}
+                          </p>
                         </div>
                       </div>
 
-                      {selectedExp.pendingDocs && selectedExp.pendingDocs.length > 0 && (
-                        <div>
-                          <h3 className="text-sm font-semibold mb-2">Documentos Pendentes</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedExp.pendingDocs.map((doc, _idx) => (
-                              <Badge key={doc} variant="outline">
-                                {doc}
-                              </Badge>
-                            ))}
+                      {selectedExp.pendingDocs &&
+                        selectedExp.pendingDocs.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-semibold mb-2">
+                              Documentos Pendentes
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedExp.pendingDocs.map((doc, _idx) => (
+                                <Badge key={doc} variant="outline">
+                                  {doc}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {selectedExp.draftPetition && (
                         <div>
@@ -1138,7 +1248,9 @@ Crie o workflow de controladoria para esta tarefa.`,
             ) : (
               <Card key="empty-selection">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <p className="text-lg font-medium text-foreground">Selecione um expediente</p>
+                  <p className="text-lg font-medium text-foreground">
+                    Selecione um expediente
+                  </p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Escolha um expediente da lista para visualizar e analisar
                   </p>
@@ -1149,14 +1261,18 @@ Crie o workflow de controladoria para esta tarefa.`,
         </div>
       </div>
 
-      <Dialog open={showMichaelRossDialog} onOpenChange={setShowMichaelRossDialog}>
+      <Dialog
+        open={showMichaelRossDialog}
+        onOpenChange={setShowMichaelRossDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               Mrs. Michael Ross - Análise de Intimação
             </DialogTitle>
             <DialogDescription>
-              Resumo: {selectedExp?.summary || "Intimação recebida aguardando análise detalhada"}
+              Resumo:{" "}
+              {selectedExp?.summary ||
+                "Intimação recebida aguardando análise detalhada"}
             </DialogDescription>
           </DialogHeader>
 
@@ -1166,26 +1282,31 @@ Crie o workflow de controladoria para esta tarefa.`,
                 📊 Análise Rápida (95% de precisão em menos de 1 minuto)
               </p>
               <p className="text-xs text-muted-foreground">
-                Identifiquei que esta intimação requer ação. Selecione a tarefa mais pertinente ao
-                caso:
+                Identifiquei que esta intimação requer ação. Selecione a tarefa
+                mais pertinente ao caso:
               </p>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-foreground mb-3">Tarefas Sugeridas:</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-3">
+                Tarefas Sugeridas:
+              </h4>
               <div className="grid grid-cols-1 gap-2">
                 {suggestedTasks.map((task, index) => (
                   <button
                     key={task}
                     onClick={() => handleSelectTask(task)}
                     disabled={analyzing}
-                    className="p-3 text-left rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                    className="p-3 text-left rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-primary">{index + 1}</span>
+                        <span className="text-xs font-bold text-primary">
+                          {index + 1}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-foreground">{task}</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {task}
+                      </span>
                     </div>
                   </button>
                 ))}

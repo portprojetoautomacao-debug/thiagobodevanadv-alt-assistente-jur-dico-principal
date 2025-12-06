@@ -1,6 +1,12 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { isGeminiConfigured } from "@/lib/gemini-config";
 import {
@@ -11,11 +17,17 @@ import {
   suggestStrategy,
   summarizeJurisprudence,
 } from "@/lib/gemini-service";
-import { ArrowRight, Sparkle, Warning } from "@phosphor-icons/react";
+import { ArrowRight, Sparkles, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-type AnalysisType = "document" | "question" | "deadline" | "strategy" | "jurisprudence" | "peticao";
+type AnalysisType =
+  | "document"
+  | "question"
+  | "deadline"
+  | "strategy"
+  | "jurisprudence"
+  | "peticao";
 
 interface AnalysisOption {
   id: AnalysisType;
@@ -40,7 +52,8 @@ const ANALYSIS_OPTIONS: AnalysisOption[] = [
   {
     id: "deadline",
     label: "Calcular Prazo",
-    placeholder: "Data de publicação: 15/01/2024\nPrazo: 15 dias\nContexto: Recurso de apelação",
+    placeholder:
+      "Data de publicação: 15/01/2024\nPrazo: 15 dias\nContexto: Recurso de apelação",
     description: "Analisa prazos processuais com base no CPC",
   },
   {
@@ -58,7 +71,8 @@ const ANALYSIS_OPTIONS: AnalysisOption[] = [
   {
     id: "peticao",
     label: "Gerar Minuta",
-    placeholder: "Tipo: Contestação\nDetalhes: Cliente é réu em ação de cobrança...",
+    placeholder:
+      "Tipo: Contestação\nDetalhes: Cliente é réu em ação de cobrança...",
     description: "Gera minutas de peças processuais",
   },
 ];
@@ -91,7 +105,11 @@ export default function GeminiExample() {
           response = await answerLegalQuestion(input);
           break;
         case "deadline":
-          response = await calculateDeadline(new Date().toISOString(), 15, input);
+          response = await calculateDeadline(
+            new Date().toISOString(),
+            15,
+            input
+          );
           break;
         case "strategy":
           response = await suggestStrategy(input);
@@ -137,10 +155,16 @@ export default function GeminiExample() {
           <Warning size={20} />
           <AlertDescription>
             API do Gemini não configurada. Configure a variável{" "}
-            <code className="bg-destructive/20 px-1 rounded">VITE_GEMINI_API_KEY</code> no arquivo{" "}
-            <code className="bg-destructive/20 px-1 rounded">.env</code>. Consulte{" "}
-            <code className="bg-destructive/20 px-1 rounded">GEMINI_API_SETUP.md</code> para
-            instruções.
+            <code className="bg-destructive/20 px-1 rounded">
+              VITE_GEMINI_API_KEY
+            </code>{" "}
+            no arquivo{" "}
+            <code className="bg-destructive/20 px-1 rounded">.env</code>.
+            Consulte{" "}
+            <code className="bg-destructive/20 px-1 rounded">
+              GEMINI_API_SETUP.md
+            </code>{" "}
+            para instruções.
           </AlertDescription>
         </Alert>
       )}
@@ -154,10 +178,11 @@ export default function GeminiExample() {
               selectedType === option.id
                 ? "border-primary bg-primary/5"
                 : "border-border hover:border-primary/50"
-            }`}
-          >
+            }`}>
             <h3 className="font-semibold mb-1">{option.label}</h3>
-            <p className="text-sm text-muted-foreground">{option.description}</p>
+            <p className="text-sm text-muted-foreground">
+              {option.description}
+            </p>
           </button>
         ))}
       </div>
@@ -180,8 +205,7 @@ export default function GeminiExample() {
               onClick={handleAnalyze}
               disabled={loading || !isConfigured || !input.trim()}
               className="w-full"
-              size="lg"
-            >
+              size="lg">
               {loading ? (
                 <>Analisando...</>
               ) : (
@@ -210,7 +234,9 @@ export default function GeminiExample() {
                         className="text-primary animate-pulse mx-auto"
                         weight="duotone"
                       />
-                      <p className="text-muted-foreground">Processando com IA...</p>
+                      <p className="text-muted-foreground">
+                        Processando com IA...
+                      </p>
                     </div>
                   </div>
                 );
@@ -242,16 +268,19 @@ export default function GeminiExample() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p>
-            • <strong>Documentos:</strong> Cole o texto completo para análise estruturada
+            • <strong>Documentos:</strong> Cole o texto completo para análise
+            estruturada
           </p>
           <p>
-            • <strong>Perguntas:</strong> Seja específico e contextual nas perguntas
+            • <strong>Perguntas:</strong> Seja específico e contextual nas
+            perguntas
           </p>
           <p>
             • <strong>Prazos:</strong> Inclua data de publicação e tipo de prazo
           </p>
           <p>
-            • <strong>Estratégia:</strong> Descreva o caso com detalhes relevantes
+            • <strong>Estratégia:</strong> Descreva o caso com detalhes
+            relevantes
           </p>
           <p>
             • <strong>Jurisprudência:</strong> Cole o texto completo do acórdão

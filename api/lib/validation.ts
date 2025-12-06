@@ -24,18 +24,36 @@ export const AgentTaskTypeSchema = z.enum([
 
 export const TaskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
-export const TaskStatusSchema = z.enum(["QUEUED", "PROCESSING", "COMPLETED", "FAILED"]);
+export const TaskStatusSchema = z.enum([
+  "QUEUED",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+]);
 
 export const AgentTaskSchema = z.object({
-  id: z.string().uuid({}),
+  id: z
+    .string()
+    .refine(
+      (val) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          val
+        ),
+      "Invalid UUID"
+    ),
   agentId: z.string().min(1),
   type: AgentTaskTypeSchema,
   priority: TaskPrioritySchema,
   status: TaskStatusSchema,
-  createdAt: z.string().datetime({}),
+  createdAt: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime"),
   data: z.record(z.string(), z.unknown()),
   error: z.string().optional(),
-  completedAt: z.string().datetime({}).optional(),
+  completedAt: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime")
+    .optional(),
   processingTimeMs: z.number().optional(),
 });
 
@@ -45,7 +63,10 @@ export const AgentSchema = z.object({
   type: z.string().min(1),
   capabilities: z.array(z.string()),
   status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]),
-  lastActive: z.string().datetime({}).optional(),
+  lastActive: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime")
+    .optional(),
 });
 
 // --- Validações de API ---
@@ -85,7 +106,10 @@ export function validateProcessQueueRequest(data: unknown) {
     if (err instanceof z.ZodError) {
       return { success: false, error: handleValidationError(err) };
     }
-    return { success: false, error: { ok: false, error: "Unknown validation error" } };
+    return {
+      success: false,
+      error: { ok: false, error: "Unknown validation error" },
+    };
   }
 }
 
@@ -97,6 +121,9 @@ export function validateProcessTaskRequest(data: unknown) {
     if (err instanceof z.ZodError) {
       return { success: false, error: handleValidationError(err) };
     }
-    return { success: false, error: { ok: false, error: "Unknown validation error" } };
+    return {
+      success: false,
+      error: { ok: false, error: "Unknown validation error" },
+    };
   }
 }
