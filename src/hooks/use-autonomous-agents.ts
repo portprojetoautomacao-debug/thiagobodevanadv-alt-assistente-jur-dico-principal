@@ -109,6 +109,8 @@ function createStreamingCallbacks(
 /**
  * Handles task completion - extracted to reduce nesting (S2004)
  */
+type ActivityLogger = (agentId: string, action: string, result: ActivityResult) => void;
+
 function handleTaskCompletion(
   task: AgentTask,
   result: AgentTask["result"],
@@ -116,7 +118,7 @@ function handleTaskCompletion(
   setTaskQueue: StateSetter<AgentTask[]>,
   setCompletedTasks: StateSetter<AgentTask[]>,
   setAgents: StateSetter<Agent[]>,
-  logActivity: (agentId: string, action: string, result: ActivityResult) => void
+  logActivity: ActivityLogger
 ): void {
   const completed: AgentTask = {
     ...task,

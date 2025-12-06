@@ -147,7 +147,7 @@ async function handleSyncProcessos(processos: ProcessoPJe[]): Promise<number> {
 
   for (const processo of processos) {
     const key = `processo:${processo.numero}`;
-    const existing = (await redis.get(key)) as ProcessoPJe | null;
+    const existing = await redis.get<ProcessoPJe>(key);
 
     // Detecta mudanças
     const hasChanges =

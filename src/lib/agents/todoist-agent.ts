@@ -227,7 +227,7 @@ export class TodoistAgent {
           // Validar prioridade (1-4)
           const priority = Math.min(Math.max(command.parameters.priority, 1), 4) as TodoistPriority;
           await updateLegalTask(command.parameters.taskId, {
-            priority: priority,
+            priority,
           });
         }
         break;

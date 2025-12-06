@@ -1317,7 +1317,7 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
 
     // Get calendar sync settings
-    const calendarSettings = (await kv.get("calendar-settings")) as CalendarSettings | null;
+    const calendarSettings = await kv.get<CalendarSettings | null>("calendar-settings");
 
     if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
       console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);
