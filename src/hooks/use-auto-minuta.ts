@@ -121,6 +121,9 @@ export function useAutoMinuta() {
         },
       });
 
+      // Disparar evento para sincronização de contadores no CRM
+      window.dispatchEvent(new CustomEvent("minuta-added"));
+
       console.log("[AutoMinuta] Minuta criada automaticamente:", {
         id: newMinuta.id,
         titulo: newMinuta.titulo,

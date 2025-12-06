@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useProcessSync } from "@/hooks/use-process-sync";
 import { calcularDiasRestantes, formatarData, formatarMoeda, isUrgente } from "@/lib/prazos";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import type { PremonicaoJuridica, Process } from "@/types";
-import { CalendarCheck, FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { CalendarCheck, FileText, Mail, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import DocumentUploader from "./DocumentUploader";
@@ -60,8 +61,13 @@ export default function ProcessDetailsDialog({
   const [premonicaoLoading, setPremonicaoLoading] = useState(false);
   const [premonicaoData, setPremonicaoData] = useState<PremonicaoJuridica | null>(null);
   const [premonicaoError, setPremonicaoError] = useState<string | null>(null);
+  const { getExpedientesForProcess, getMinutasForProcess } = useProcessSync();
 
   if (!process) return null;
+
+  // Obter expedientes e minutas vinculados ao processo
+  const expedientesVinculados = getExpedientesForProcess(process.id);
+  const minutasVinculadas = getMinutasForProcess(process.id);
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
@@ -120,16 +126,21 @@ export default function ProcessDetailsDialog({
         </DialogHeader>
 
         <Tabs defaultValue="detalhes" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
             <TabsTrigger value="prazos">
-              <CalendarCheck size={16} className="mr-2" />
-              Prazos {process.prazos?.length > 0 && `(${process.prazos.length})`}
+              <CalendarCheck size={16} className="mr-1" />
+              {process.prazos?.length > 0 ? `(${process.prazos.length})` : ""}
             </TabsTrigger>
-            <TabsTrigger value="documentos">
-              <FileText size={16} className="mr-2" />
-              Documentos
+            <TabsTrigger value="expedientes">
+              <Mail size={16} className="mr-1" />
+              {expedientesVinculados.length > 0 ? `(${expedientesVinculados.length})` : ""}
             </TabsTrigger>
+            <TabsTrigger value="minutas">
+              <FileText size={16} className="mr-1" />
+              {minutasVinculadas.length > 0 ? `(${minutasVinculadas.length})` : ""}
+            </TabsTrigger>
+            <TabsTrigger value="documentos">Anexos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="detalhes" className="space-y-6">
@@ -225,6 +236,109 @@ export default function ProcessDetailsDialog({
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <p>Nenhum prazo cadastrado para este processo.</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="expedientes" className="space-y-4">
+            {expedientesVinculados.length > 0 ? (
+              <div className="space-y-3">
+                {expedientesVinculados.map((exp) => (
+                  <div
+                    key={exp.id}
+                    className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={exp.tipo === "intimacao" ? "destructive" : "secondary"}>
+                            {exp.tipo || "expediente"}
+                          </Badge>
+                          {exp.priority === "high" && (
+                            <Badge variant="destructive" className="text-xs">
+                              Urgente
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium line-clamp-2">
+                          {exp.titulo || exp.summary || "Sem título"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatarData(
+                            exp.dataRecebimento || exp.receivedAt || exp.createdAt || ""
+                          )}
+                        </p>
+                      </div>
+                      {exp.analyzed && (
+                        <Badge variant="outline" className="text-xs">
+                          ✓ Analisado
+                        </Badge>
+                      )}
+                    </div>
+                    {exp.suggestedAction && (
+                      <p className="text-xs text-muted-foreground mt-2 p-2 bg-blue-50 rounded">
+                        💡 {exp.suggestedAction}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Nenhum expediente vinculado</p>
+                <p className="text-xs mt-1">
+                  Expedientes serão vinculados automaticamente pelo número CNJ
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="minutas" className="space-y-4">
+            {minutasVinculadas.length > 0 ? (
+              <div className="space-y-3">
+                {minutasVinculadas.map((min) => (
+                  <div
+                    key={min.id}
+                    className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">{min.tipo}</Badge>
+                          <Badge
+                            variant={
+                              min.status === "finalizada"
+                                ? "default"
+                                : min.status === "pendente-revisao"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                          >
+                            {min.status}
+                          </Badge>
+                          {min.criadoPorAgente && (
+                            <Badge variant="outline" className="text-xs">
+                              🤖 IA
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium line-clamp-2">{min.titulo}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Criada em {formatarData(min.criadoEm)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Nenhuma minuta vinculada</p>
+                <p className="text-xs mt-1">
+                  Minutas podem ser criadas manualmente ou pelos agentes de IA
+                </p>
               </div>
             )}
           </TabsContent>

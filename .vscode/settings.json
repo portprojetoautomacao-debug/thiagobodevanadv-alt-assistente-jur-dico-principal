@@ -280,6 +280,9 @@
   "editor.formatOnPaste": true,
   "editor.formatOnType": true,
 
+  // GPU Acceleration - OFF para estabilidade em Dev Container
+  "editor.experimentalGpuAcceleration": "off",
+
   // ESLint auto-fix on save (AGRESSIVO)
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always",
