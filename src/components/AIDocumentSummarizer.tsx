@@ -183,14 +183,7 @@ Gerado em: ${timestamp}`;
             <CardDescription>Análise gerada por IA</CardDescription>
           </CardHeader>
           <CardContent>
-            {!summary ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Sparkles size={48} className="text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  O resumo aparecerá aqui após processar o documento
-                </p>
-              </div>
-            ) : (
+            {summary ? (
               <ScrollArea className="h-[400px]">
                 <div className="space-y-6 pr-4">
                   <div>
@@ -228,6 +221,13 @@ Gerado em: ${timestamp}`;
                   )}
                 </div>
               </ScrollArea>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Sparkles size={48} className="text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  O resumo aparecerá aqui após processar o documento
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>

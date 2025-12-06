@@ -42,7 +42,7 @@ interface ResponseLike {
  * Patches Spark client to suppress localization errors that don't affect functionality
  */
 export function patchSparkLocalization() {
-  if (typeof globalThis.window === "undefined") return;
+  if (globalThis.window === undefined) return;
 
   // Intercept console errors to suppress RegisterClientLocalizationsError
   const originalError = console.error;
@@ -59,7 +59,7 @@ export function patchSparkLocalization() {
 }
 
 export function patchFileReader() {
-  if (typeof globalThis.window === "undefined") return;
+  if (globalThis.window === undefined) return;
 
   const originalReadAsText = FileReader.prototype.readAsText;
   FileReader.prototype.readAsText = function (blob, encoding) {
@@ -78,7 +78,7 @@ export function patchFileReader() {
 }
 
 export function applySparkClientFixes() {
-  if (typeof globalThis.window === "undefined") return;
+  if (globalThis.window === undefined) return;
 
   // Apply localization patch first
   patchSparkLocalization();
@@ -358,7 +358,7 @@ function handleDiagnosticError(diagnosticError: unknown, originalError: unknown)
 // ===== Main refactored function =====
 
 export function applySparkLLMFixes() {
-  if (typeof globalThis.window === "undefined") return;
+  if (globalThis.window === undefined) return;
   const w = globalThis.window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
   if (!w.spark?.llm) return;
 

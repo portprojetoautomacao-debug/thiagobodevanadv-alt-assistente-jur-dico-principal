@@ -4,7 +4,7 @@ import { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
-function Dialog({ ...props }: ComponentProps<typeof DialogPrimitive.Root>) {
+function Dialog({ ...props }: Readonly<ComponentProps<typeof DialogPrimitive.Root>>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 

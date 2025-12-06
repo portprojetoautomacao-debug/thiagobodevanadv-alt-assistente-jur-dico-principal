@@ -323,8 +323,8 @@ Com base no histórico de tarefas concluídas, sugira as próximas 3 ações mai
       try {
         // Limpar possíveis markdown code blocks
         const cleanJson = response.text
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
+          .replaceAll(/```json\n?/g, "")
+          .replaceAll(/```\n?/g, "")
           .trim();
         suggestions = JSON.parse(cleanJson);
       } catch (parseError) {

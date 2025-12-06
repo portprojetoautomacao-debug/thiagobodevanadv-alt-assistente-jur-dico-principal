@@ -229,7 +229,7 @@ export default function MinutasManager() {
       // ✅ Usar serviço centralizado com validação
       const minutaInput: MinutaInput = {
         titulo: formData.titulo,
-        processId: formData.processId !== "_none" ? formData.processId : undefined,
+        processId: formData.processId === "_none" ? undefined : formData.processId,
         tipo: formData.tipo,
         conteudo: formData.conteudo,
         status: formData.status,
@@ -277,7 +277,7 @@ export default function MinutasManager() {
       // ✅ Usar serviço centralizado
       const minutaAtualizada = updateMinuta(editingMinuta, {
         titulo: formData.titulo,
-        processId: formData.processId !== "_none" ? formData.processId : undefined,
+        processId: formData.processId === "_none" ? undefined : formData.processId,
         tipo: formData.tipo,
         conteudo: formData.conteudo,
         status: formData.status,
@@ -391,7 +391,12 @@ export default function MinutasManager() {
     try {
       const content = await googleDocsService.syncDocument(minuta.googleDocsId);
 
-      if (content !== null) {
+      if (content === null) {
+        const lastError = googleDocsService.getLastError();
+        toast.error(lastError || "Erro ao sincronizar do Google Docs", {
+          id: toastId,
+        });
+      } else {
         setMinutas((current = []) =>
           current.map((m) =>
             m.id === minuta.id
@@ -405,11 +410,6 @@ export default function MinutasManager() {
           )
         );
         toast.success(`✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`, {
-          id: toastId,
-        });
-      } else {
-        const lastError = googleDocsService.getLastError();
-        toast.error(lastError || "Erro ao sincronizar do Google Docs", {
           id: toastId,
         });
       }

@@ -244,14 +244,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               )}
             </CardHeader>
             <CardContent>
-              {!draft ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Mail size={64} className="text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    O email aparecerá aqui após gerar o rascunho
-                  </p>
-                </div>
-              ) : (
+              {draft ? (
                 <ScrollArea className="h-[500px]">
                   <div className="space-y-4 pr-4">
                     <div className="p-4 bg-muted/50 rounded-lg">
@@ -297,6 +290,13 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                     </div>
                   </div>
                 </ScrollArea>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Mail size={64} className="text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    O email aparecerá aqui após gerar o rascunho
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>

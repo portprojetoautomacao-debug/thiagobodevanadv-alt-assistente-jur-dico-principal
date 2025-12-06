@@ -96,7 +96,7 @@ class GoogleCalendarService {
     debug("Initializing Google Calendar Service...");
 
     // Segurança para SSR / Node (Vercel server functions)
-    if (typeof globalThis.window === "undefined") {
+    if (globalThis.window === undefined) {
       this.lastError = "Google Calendar só pode ser inicializado no ambiente de browser.";
       debugError(this.lastError);
       return false;
@@ -158,7 +158,7 @@ class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       debug("Loading Google scripts...");
 
-      if (typeof globalThis.window === "undefined" || typeof document === "undefined") {
+      if (globalThis.window === undefined || typeof document === "undefined") {
         reject(new Error("Google scripts só podem ser carregados no browser"));
         return;
       }
@@ -668,7 +668,7 @@ class GoogleCalendarService {
   }
 
   openGoogleCalendar(): void {
-    if (typeof globalThis.window === "undefined") return;
+    if (globalThis.window === undefined) return;
     globalThis.window.open("https://calendar.google.com", "_blank");
   }
 

@@ -89,7 +89,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1);
 
   const tasksLast24Hours = useMemo(() => {
-    const now = typeof globalThis !== "undefined" ? Date.now() : 0;
+    const now = globalThis === undefined ? 0 : Date.now();
     const last24h = new Date(now - 24 * 60 * 60 * 1000);
     return completedTasks.filter((task) => task.completedAt && new Date(task.completedAt) > last24h)
       .length;

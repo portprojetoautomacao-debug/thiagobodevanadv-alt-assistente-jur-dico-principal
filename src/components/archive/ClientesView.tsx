@@ -318,8 +318,8 @@ export default function ClientesView() {
             <div>
               <CardTitle>Lista de Clientes</CardTitle>
               <CardDescription>
-                {(clientes || []).length} cliente{(clientes || []).length !== 1 ? "s" : ""}{" "}
-                cadastrado{(clientes || []).length !== 1 ? "s" : ""}
+                {(clientes || []).length} cliente{(clientes || []).length === 1 ? "" : "s"}{" "}
+                cadastrado{(clientes || []).length === 1 ? "" : "s"}
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-64">

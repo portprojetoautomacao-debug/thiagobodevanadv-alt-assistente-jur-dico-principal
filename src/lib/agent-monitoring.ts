@@ -193,7 +193,7 @@ export class AgentMonitor {
     taskType: string,
     executionFn: () => Promise<T>
   ): Promise<T> {
-    const startTime = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const startTime = typeof performance === "undefined" ? Date.now() : performance.now();
     const sentry = await getSentryFunctions();
 
     try {
@@ -206,7 +206,7 @@ export class AgentMonitor {
       );
 
       const duration =
-        (typeof performance !== "undefined" ? performance.now() : Date.now()) - startTime;
+        (typeof performance === "undefined" ? Date.now() : performance.now()) - startTime;
       await this.logAction(agentId, `execute_task_${taskType}`, { taskId }, true, duration);
 
       sentry.trackMetric("agent_task_success", 1, { agentId, taskType });
@@ -214,7 +214,7 @@ export class AgentMonitor {
       return result;
     } catch (error) {
       const duration =
-        (typeof performance !== "undefined" ? performance.now() : Date.now()) - startTime;
+        (typeof performance === "undefined" ? Date.now() : performance.now()) - startTime;
       await this.logAction(agentId, `execute_task_${taskType}`, { taskId, error }, false, duration);
 
       sentry.trackMetric("agent_task_failure", 1, { agentId, taskType });

@@ -554,13 +554,15 @@ function determineAdvogadoMatchType(
   return null;
 }
 
+type AdvogadoMatchType = "nome" | "oab" | "ambos";
+
 function findAdvogadoMatch(
   comunicacao: DJENComunicacao,
   nomeAdvogado?: string,
   numeroOabNumerico?: string,
   ufOab?: string
-): { found: boolean; matchType: "nome" | "oab" | "ambos" } {
-  let matchType: "nome" | "oab" | "ambos" = "nome";
+): { found: boolean; matchType: AdvogadoMatchType } {
+  let matchType: AdvogadoMatchType = "nome";
   const found =
     comunicacao.destinatarioadvogados?.some((dest) => {
       const type = determineAdvogadoMatchType(dest, nomeAdvogado, numeroOabNumerico, ufOab);
@@ -575,7 +577,7 @@ function findAdvogadoMatch(
 
 function mapComunicacaoToResult(
   comunicacao: DJENComunicacao,
-  matchType: "nome" | "oab" | "ambos"
+  matchType: AdvogadoMatchType
 ): DJENFilteredResult {
   const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || "";
   return {

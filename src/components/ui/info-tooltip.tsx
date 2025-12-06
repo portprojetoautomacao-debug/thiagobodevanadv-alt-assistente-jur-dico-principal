@@ -40,7 +40,11 @@ interface LabelWithTooltipProps {
   required?: boolean;
 }
 
-export function LabelWithTooltip({ label, tooltip, required = false }: LabelWithTooltipProps) {
+export function LabelWithTooltip({
+  label,
+  tooltip,
+  required = false,
+}: Readonly<LabelWithTooltipProps>) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium">

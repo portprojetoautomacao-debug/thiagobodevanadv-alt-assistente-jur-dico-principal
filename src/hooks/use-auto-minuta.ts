@@ -25,7 +25,7 @@ export function useAutoMinuta() {
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
-    if (typeof globalThis.window !== "undefined") {
+    if (globalThis.window !== undefined) {
       // Schedule to avoid synchronous setState in effect
       const timeoutId = setTimeout(() => {
         try {

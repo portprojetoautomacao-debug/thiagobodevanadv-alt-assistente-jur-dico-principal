@@ -467,7 +467,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     selectedMonth.getMonth() === todayMonth &&
                     selectedMonth.getFullYear() === todayYear;
 
-                  const prazoInfo = day !== null ? prazosPorDia[day] : null;
+                  const prazoInfo = day === null ? null : prazosPorDia[day];
                   const temPrazo = prazoInfo && prazoInfo.count > 0;
                   const prazoUrgente = prazoInfo?.urgente;
 
