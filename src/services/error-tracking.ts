@@ -167,11 +167,11 @@ export function initErrorTracking(): void {
 
       // Sample rates
       // Performance: 10% em prod, 100% em dev
-      tracesSampleRate: APP_ENVIRONMENT === "production" ? 0.1 : 1.0,
+      tracesSampleRate: APP_ENVIRONMENT === "production" ? 0.1 : 1,
 
       // Replay: 10% das sessões normais, 100% das sessões com erro
       replaysSessionSampleRate: APP_ENVIRONMENT === "production" ? 0.1 : 0,
-      replaysOnErrorSampleRate: 1.0,
+      replaysOnErrorSampleRate: 1,
 
       // Debug mode apenas em desenvolvimento
       debug: APP_ENVIRONMENT === "development",

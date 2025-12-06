@@ -1,34 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import
-  {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useKV } from "@/hooks/use-kv";
 import { useMemo, useState } from "react";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import type { FinancialEntry, Process } from "@/types";
 import { AlertTriangle, Clock, DollarSign, TrendingUp, Users } from "lucide-react";
-import
-  {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    Legend,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-  } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface SafraData {
   ano: number;
@@ -40,13 +38,13 @@ interface SafraData {
   ganho: number;
   perdido: number;
 }
+
 interface NoDataMessageProps {
   readonly message: string;
 }
 
-function NoDataMessage({ message }: NoDataMessageProps) {
 // Componente para exibir quando não há dados
-function NoDataMessage({ message }: Readonly<{ message: string }>) {
+function NoDataMessage({ message }: Readonly<NoDataMessageProps>) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <AlertTriangle size={48} className="text-muted-foreground/50 mb-4" />

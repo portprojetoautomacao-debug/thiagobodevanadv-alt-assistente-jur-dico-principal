@@ -1,12 +1,11 @@
 import { Badge } from "@/components/ui/badge";
-import
-  {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-  } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Command } from "lucide-react";
 
@@ -14,7 +13,7 @@ interface ShortcutItemProps {
   readonly keys: string[];
   readonly description: string;
 }
-function ShortcutItem({ keys, description }: ShortcutItemProps) {
+
 function ShortcutItem({ keys, description }: Readonly<ShortcutItemProps>) {
   return (
     <div className="flex items-center justify-between gap-4 py-2">
