@@ -14,6 +14,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePJeDocumentSync, usePJeDocumentWidget } from "@/hooks/use-pje-document-sync";
 import { DocumentoPJe } from "@/types";
 import { AlertCircle, CheckCircle2, Download, FileText, Loader2, X, Zap } from "lucide-react";
@@ -208,6 +209,8 @@ function PJeDocumentCard({
         onClick={onToggleExpandir}
         role="button"
         tabIndex={0}
+        aria-label={expandido ? "Recolher detalhes do documento" : "Expandir detalhes do documento"}
+        aria-expanded={expandido}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -279,11 +282,17 @@ function PJeDocumentCard({
               <X className="h-4 w-4 mr-1" />
               Descartar
             </Button>
-            <Button size="sm" className="flex-1" onClick={handleSalvar} disabled={salvando}>
+            <Button
+              size="sm"
+              className="flex-1"
+              onClick={handleSalvar}
+              disabled={salvando}
+              aria-busy={salvando}
+            >
               {salvando ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" aria-hidden="true" />
               ) : (
-                <Download className="h-4 w-4 mr-1" />
+                <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               )}
               {salvando ? "Salvando..." : "Salvar"}
             </Button>
@@ -303,15 +312,40 @@ export function PJeStatusBadge() {
   const [statusLabel, setStatusLabel] = useState("Detectando...");
 
   useEffect(() => {
-    setStatusLabel(extensaoAtivaNoTab ? "✓ Extensão Ativa" : "✗ Extensão Inativa");
+    setStatusLabel(extensaoAtivaNoTab ? "PJe Conectado" : "PJe Desconectado");
   }, [extensaoAtivaNoTab]);
 
   return (
-    <Badge variant={extensaoAtivaNoTab ? "default" : "secondary"} className="gap-1">
-      <div
-        className={`h-2 w-2 rounded-full ${extensaoAtivaNoTab ? "bg-green-500" : "bg-gray-500"}`}
-      />
-      {statusLabel}
-    </Badge>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant={extensaoAtivaNoTab ? "outline" : "secondary"}
+            className={`gap-1.5 cursor-help transition-all ${
+              extensaoAtivaNoTab
+                ? "border-green-500/50 bg-green-500/10 text-green-700 hover:bg-green-500/20"
+                : "text-muted-foreground"
+            }`}
+          >
+            <div
+              className={`h-2 w-2 rounded-full shadow-sm transition-colors ${
+                extensaoAtivaNoTab ? "bg-green-500 animate-pulse" : "bg-gray-400"
+              }`}
+            />
+            {statusLabel}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-xs">
+          <p className="font-medium mb-1">
+            {extensaoAtivaNoTab ? "Conexão Estabelecida" : "Extensão não detectada"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {extensaoAtivaNoTab
+              ? "A extensão Chrome está ativa e monitorando esta aba do PJe."
+              : "Instale a extensão Chrome e acesse uma página do PJe para sincronizar documentos."}
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
