@@ -1,5 +1,7 @@
 import type { PremonicaoJuridica, Process } from "@/types";
 
+import { extractJSON } from "./json-utils";
+
 /**
  * Gera a informação do processo formatada
  */
@@ -53,16 +55,15 @@ function fixTruncatedJson(truncated: string): Record<string, unknown> {
  * Tenta extrair e parsear JSON truncado
  */
 function tryParseTruncatedJson(cleaned: string): Record<string, unknown> | null {
-  const startIdx = cleaned.indexOf("{");
-  if (startIdx === -1) return null;
+  const jsonStr = extractJSON(cleaned);
+  if (!jsonStr) return null;
 
-  const truncatedStr = cleaned.substring(startIdx);
   try {
-    return fixTruncatedJson(truncatedStr);
+    return fixTruncatedJson(jsonStr);
   } catch {
     console.warn(
       "[PremonicaoService] JSON truncado não pôde ser corrigido:",
-      truncatedStr.substring(0, 200)
+      jsonStr.substring(0, 200)
     );
     return null;
   }
