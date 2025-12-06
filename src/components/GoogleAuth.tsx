@@ -127,7 +127,7 @@ export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButt
   };
 
   const initializeGoogleSignIn = useCallback(() => {
-    const google = (window as unknown as { google?: GoogleAccount })?.google;
+    const google = (globalThis.window as unknown as { google?: GoogleAccount })?.google;
     if (!google) return;
 
     google.accounts.id.initialize({

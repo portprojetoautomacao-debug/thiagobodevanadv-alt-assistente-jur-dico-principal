@@ -55,16 +55,17 @@ test.describe("Fluxo Principal da Aplicação", () => {
     // Clica no link de navegação usando Test ID ou ARIA link
     const navLink = page
       .getByTestId("nav-calculator")
-      .or(page.getByRole("button", { name: /Calculadora.*Prazos/i }));
+      .or(page.getByRole("button", { name: /Calculadora/i }))
+      .or(page.getByRole("link", { name: /Calculadora/i }));
 
-    await navLink.click({ timeout: 10000 });
+    await navLink.first().click({ timeout: 10000 });
 
     // Aguarda hash change para #calculator
     await page.waitForURL(/.*#calculator/, { timeout: 10000 });
 
     // Verifica se a calculadora carregou usando heading ou form
-    await expect(
-      page.getByRole("heading", { name: /Calculadora/i }).or(page.locator("form").first())
-    ).toBeVisible({ timeout: 10000 });
+    const heading = page.getByRole("heading", { name: /Calculadora/i }).first();
+    const form = page.locator("form").first();
+    await expect(heading.or(form)).toBeVisible({ timeout: 10000 });
   });
 });

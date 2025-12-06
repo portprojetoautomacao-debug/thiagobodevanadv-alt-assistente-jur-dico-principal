@@ -52,6 +52,19 @@ export interface GeminiIntegrationOptions {
 }
 
 /**
+ * Tipos de role em uma mensagem de chat AI
+ */
+type ChatRole = "user" | "assistant" | "system";
+
+/**
+ * Mensagem de chat AI
+ */
+interface ChatMessage {
+  role: ChatRole;
+  content: string;
+}
+
+/**
  * Atributos de configuração de um agente AI (seguindo convenções OpenTelemetry)
  */
 export interface AIAgentConfig {

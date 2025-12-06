@@ -400,8 +400,9 @@ export const validarSaidaAgente = validarEntradaTarefa;
 
 /**
  * Tenta extrair JSON de resposta de LLM
+ * @returns O JSON parseado ou null se não for possível extrair
  */
-export function extrairJSONDeResposta(content: string): unknown | null {
+export function extrairJSONDeResposta(content: string): unknown {
   // Tenta extrair JSON entre ```json e ``` sem regex greedy
   const jsonStart = content.indexOf("```json");
   const jsonEnd = content.indexOf("```", jsonStart + 7);
