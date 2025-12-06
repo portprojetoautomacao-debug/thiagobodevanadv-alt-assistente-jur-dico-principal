@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,25 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import {
-  DollarSign,
-  Plus,
-  TrendingUp,
-  TrendingDown,
-  Download,
-} from "lucide-react";
-import { toast } from "sonner";
-import type { FinancialEntry } from "@/types";
+import { useKV } from "@/hooks/use-kv";
 import { exportToCSV, formatCurrency } from "@/lib/utils";
+import type { FinancialEntry } from "@/types";
+import { DollarSign, Download, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function FinancialManagement() {
   const [entries, setEntries] = useKV<FinancialEntry[]>("financialEntries", []);
@@ -102,12 +90,8 @@ export default function FinancialManagement() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Gestão Financeira
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Controle de receitas e despesas
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Gestão Financeira</h1>
+          <p className="text-muted-foreground mt-1">Controle de receitas e despesas</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
@@ -124,9 +108,7 @@ export default function FinancialManagement() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Lançamento</DialogTitle>
-                <DialogDescription>
-                  Registre uma receita ou despesa
-                </DialogDescription>
+                <DialogDescription>Registre uma receita ou despesa</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -138,7 +120,8 @@ export default function FinancialManagement() {
                         ...newEntry,
                         type: value as "income" | "expense",
                       })
-                    }>
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -157,9 +140,7 @@ export default function FinancialManagement() {
                       step="0.01"
                       placeholder="0,00"
                       value={newEntry.amount}
-                      onChange={(e) =>
-                        setNewEntry({ ...newEntry, amount: e.target.value })
-                      }
+                      onChange={(e) => setNewEntry({ ...newEntry, amount: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -168,9 +149,7 @@ export default function FinancialManagement() {
                       id="date"
                       type="date"
                       value={newEntry.date}
-                      onChange={(e) =>
-                        setNewEntry({ ...newEntry, date: e.target.value })
-                      }
+                      onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })}
                     />
                   </div>
                 </div>
@@ -180,9 +159,7 @@ export default function FinancialManagement() {
                     id="category"
                     placeholder="Ex: Honorários, Despesas Processuais, etc."
                     value={newEntry.category}
-                    onChange={(e) =>
-                      setNewEntry({ ...newEntry, category: e.target.value })
-                    }
+                    onChange={(e) => setNewEntry({ ...newEntry, category: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -191,9 +168,7 @@ export default function FinancialManagement() {
                     id="description"
                     placeholder="Detalhes sobre o lançamento"
                     value={newEntry.description}
-                    onChange={(e) =>
-                      setNewEntry({ ...newEntry, description: e.target.value })
-                    }
+                    onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
                   />
                 </div>
               </div>
@@ -215,9 +190,7 @@ export default function FinancialManagement() {
             <TrendingUp className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalIncome)}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
             <p className="text-xs text-muted-foreground mt-1">Total recebido</p>
           </CardContent>
         </Card>
@@ -228,9 +201,7 @@ export default function FinancialManagement() {
             <TrendingDown className="w-4 h-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(totalExpenses)}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
             <p className="text-xs text-muted-foreground mt-1">Total gasto</p>
           </CardContent>
         </Card>
@@ -242,14 +213,11 @@ export default function FinancialManagement() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${
-                balance >= 0 ? "text-green-600" : "text-red-600"
-              }`}>
+              className={`text-2xl font-bold ${balance >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrency(balance)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Resultado líquido
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Resultado líquido</p>
           </CardContent>
         </Card>
       </div>
@@ -257,17 +225,13 @@ export default function FinancialManagement() {
       <Card>
         <CardHeader>
           <CardTitle>Lançamentos Recentes</CardTitle>
-          <CardDescription>
-            Histórico de movimentações financeiras
-          </CardDescription>
+          <CardDescription>Histórico de movimentações financeiras</CardDescription>
         </CardHeader>
         <CardContent>
           {(entries || []).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <CurrencyCircleDollar className="w-16 h-16 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-foreground">
-                Nenhum lançamento
-              </p>
+              <DollarSign className="w-16 h-16 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium text-foreground">Nenhum lançamento</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Adicione sua primeira receita ou despesa
               </p>
@@ -275,28 +239,18 @@ export default function FinancialManagement() {
           ) : (
             <div className="space-y-3">
               {(entries || [])
-                .sort(
-                  (a, b) =>
-                    new Date(b.date).getTime() - new Date(a.date).getTime()
-                )
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="flex items-start gap-4 p-4 border rounded-lg">
+                  <div key={entry.id} className="flex items-start gap-4 p-4 border rounded-lg">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                         entry.type === "income" ? "bg-green-100" : "bg-red-100"
-                      }`}>
+                      }`}
+                    >
                       {entry.type === "income" ? (
-                        <TrendUp
-                          className="w-5 h-5 text-green-600"
-                         
-                        />
+                        <TrendingUp className="w-5 h-5 text-green-600" />
                       ) : (
-                        <TrendDown
-                          className="w-5 h-5 text-red-600"
-                         
-                        />
+                        <TrendingDown className="w-5 h-5 text-red-600" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -312,12 +266,10 @@ export default function FinancialManagement() {
                         <div className="text-right shrink-0">
                           <p
                             className={`text-lg font-bold ${
-                              entry.type === "income"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}>
-                            {entry.type === "income" ? "+" : "-"}{" "}
-                            {formatCurrency(entry.amount)}
+                              entry.type === "income" ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
                           </p>
                           <Badge variant="outline" className="mt-1">
                             {new Date(entry.date).toLocaleDateString("pt-BR")}
