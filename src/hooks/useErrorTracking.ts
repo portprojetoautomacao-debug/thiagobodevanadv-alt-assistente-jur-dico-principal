@@ -21,13 +21,13 @@ export function useUserTracking(userId?: string, email?: string, username?: stri
  * Útil para entender fluxo do usuário
  */
 export function usePageTracking() {
-  const [pathname, setPathname] = useState(window.location.pathname);
+  const [pathname, setPathname] = useState(globalThis.window.location.pathname);
 
   useEffect(() => {
     // Atualizar quando a URL mudar
-    const handleLocationChange = () => setPathname(window.location.pathname);
-    window.addEventListener("popstate", handleLocationChange);
-    return () => window.removeEventListener("popstate", handleLocationChange);
+    const handleLocationChange = () => setPathname(globalThis.window.location.pathname);
+    globalThis.window.addEventListener("popstate", handleLocationChange);
+    return () => globalThis.window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
   useEffect(() => {

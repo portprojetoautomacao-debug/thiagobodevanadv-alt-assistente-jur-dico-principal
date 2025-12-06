@@ -457,7 +457,7 @@ class TracingService {
   }
 
   /**
-   * Set sampling rate (0.0 - 1.0)
+   * Set sampling rate (0 - 1.0)
    */
   setSamplingRate(rate: number): void {
     this.samplingRate = Math.max(0, Math.min(1, rate));

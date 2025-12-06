@@ -1,5 +1,5 @@
 /*
- * Wraps window.spark.kv methods to add robust JSON detection and improved errors
+ * Wraps globalThis.window.spark.kv methods to add robust JSON detection and improved errors
  * when the runtime or proxy returns HTML (eg. index.html / login page / 404 HTML)
  * instead of the expected JSON payload.
  *
@@ -44,7 +44,7 @@ interface ResponseLike {
  * Patches Spark client to suppress localization errors that don't affect functionality
  */
 export function patchSparkLocalization() {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis.window === "undefined") return;
 
   // Intercept console errors to suppress RegisterClientLocalizationsError
   const originalError = console.error;
@@ -61,7 +61,7 @@ export function patchSparkLocalization() {
 }
 
 export function patchFileReader() {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis.window === "undefined") return;
 
   const originalReadAsText = FileReader.prototype.readAsText;
   FileReader.prototype.readAsText = function (blob, encoding) {
@@ -80,7 +80,7 @@ export function patchFileReader() {
 }
 
 export function applySparkClientFixes() {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis.window === "undefined") return;
 
   // Apply localization patch first
   patchSparkLocalization();
@@ -358,7 +358,7 @@ function handleDiagnosticError(diagnosticError: unknown, originalError: unknown)
 // ===== Main refactored function =====
 
 export function applySparkLLMFixes() {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis.window === "undefined") return;
   const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
   if (!w.spark?.llm) return;
 
