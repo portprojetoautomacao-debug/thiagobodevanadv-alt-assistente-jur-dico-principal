@@ -167,7 +167,11 @@ const logger = {
       console.log(`[Agents] ${message}`);
     }
   },
-  error: (message: string, error?: unknown, context?: Record<string, unknown>) => {
+  error: (
+    message: string,
+    error?: unknown,
+    context?: Record<string, unknown>
+  ) => {
     console.error(`[Agents] ERROR: ${message}`, {
       error: error instanceof Error ? error.message : String(error),
       ...context,
