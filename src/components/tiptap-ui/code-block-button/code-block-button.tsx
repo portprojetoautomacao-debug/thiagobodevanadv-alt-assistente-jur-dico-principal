@@ -96,8 +96,7 @@ export const CodeBlockButton = forwardRef<HTMLButtonElement, CodeBlockButtonProp
             <Icon className="tiptap-button-icon" />
             {text && <span className="tiptap-button-text">{text}</span>}
             {showShortcut && <CodeBlockShortcutBadge shortcutKeys={shortcutKeys} />}
-          </>
-        )}
+            // role and tabIndex removed — native button semantics retained
       </Button>
     );
   }

@@ -80,8 +80,7 @@ export const BlockquoteButton = forwardRef<HTMLButtonElement, BlockquoteButtonPr
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed for accessibility
         disabled={!canToggle}
         data-disabled={!canToggle}
         aria-label={label}

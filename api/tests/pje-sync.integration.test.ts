@@ -99,14 +99,24 @@ describe("pje-sync integration tests", () => {
     expect(body).toHaveProperty("error");
   });
 
-  it("should throw on import when redis environment is missing", async () => {
-    // Remove env
+  it("should import successfully and use fallback in-memory redis when UPSTASH env is missing", async () => {
+    // Ensure the fallback initializes with the TEST_PJE_API_KEY
+    process.env.TEST_PJE_API_KEY = "valid-api-key";
+    // Remove Upstash env
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
     await vi.resetModules();
 
-    // The module should throw during import due missing Redis
-    await expect(import("../pje-sync")).rejects.toThrow(/Redis não configurado/);
+    // The module should IMPORT successfully and fallback to InMemoryRedis
+    const handler = (await import("../pje-sync")).default;
+    expect(typeof handler).toBe("function");
+
+    // Now call the handler with a valid key seeded in fallback
+    const req = makeReq({ type: "SYNC_EXPEDIENTES", data: [] }, { "X-API-Key": "valid-api-key" });
+    const resp = await handler(req as any);
+    expect(resp.status).toBe(200);
+    const body = await resp.json();
+    expect(body).toHaveProperty("success", true);
   });
 });

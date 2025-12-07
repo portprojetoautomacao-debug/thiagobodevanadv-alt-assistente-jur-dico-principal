@@ -43,6 +43,8 @@ export GITHUB_TOOLSETS="repos,issues,pull_requests,actions,code_security"
 5) Versão para integração com o VS Code (arquivo `.vscode/mcp.json`)
 - O arquivo `.vscode/mcp.json` foi adicionado neste repositório com inputs para `github_mcp_pat` e `github_mcp_host`.
 - Ao abrir o workspace, você pode ser solicitado a informar o token (PAT) por prompt do VS Code.
+ - IMPORTANTE: por segurança, o arquivo `.vscode/mcp.json` está incluído no `.gitignore` do projeto e **não deve** ser commitado; é para configuração local do seu VS Code.
+ - Use o armazenamento de segredos do seu host (ex.: VS Code Secret Storage) quando possível para guardar o PAT.
 
 6) Modo Read-Only (segurança)
 - Para rodar somente ferramentas read-only, exporte `GITHUB_READ_ONLY=1` antes de executar o container. Isso evita ações de escrita por ferramentas.

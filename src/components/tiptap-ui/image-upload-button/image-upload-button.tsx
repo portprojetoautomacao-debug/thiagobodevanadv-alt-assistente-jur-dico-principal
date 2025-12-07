@@ -93,8 +93,7 @@ export const ImageUploadButton = forwardRef<HTMLButtonElement, ImageUploadButton
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed: <button> element is natively focusable and accessible
         disabled={!canInsert}
         data-disabled={!canInsert}
         aria-label={label}

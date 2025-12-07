@@ -36,7 +36,7 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 </tr>
 </table>
 
-**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md)
+**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md) • [GitHub MCP Server (local)](docs/MCP_SETUP.md)
 
 ---
 

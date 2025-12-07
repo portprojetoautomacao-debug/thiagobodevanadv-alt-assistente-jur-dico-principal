@@ -81,8 +81,7 @@ export const HeadingButton = forwardRef<HTMLButtonElement, HeadingButtonProps>(
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed — retain native semantics
         disabled={!canToggle}
         data-disabled={!canToggle}
         aria-label={label}

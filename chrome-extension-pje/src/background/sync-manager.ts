@@ -3,6 +3,7 @@
  */
 
 import { STORAGE_KEYS } from "../shared/constants";
+import { reportError } from "../shared/errorHandler";
 import { Expediente, ProcessoPJe, SyncMessage } from "../shared/types";
 import { APIClient } from "./api-client";
 
@@ -43,7 +44,8 @@ export class SyncManager {
             sendResponse({ success: true, alive: true });
           }
         } catch (error) {
-          console.error("[SyncManager] Erro:", error);
+          // report centralizado de erro
+          await reportError(error, { module: "background.sync-manager" });
           sendResponse({
             success: false,
             error: error instanceof Error ? error.message : "Unknown error",
