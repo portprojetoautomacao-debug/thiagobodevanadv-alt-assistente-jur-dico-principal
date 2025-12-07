@@ -56,7 +56,7 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Sparkle,
+  Sparkles,
   Trash,
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -992,7 +992,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     </ScrollArea>
 
                     <Button onClick={handleFillVariables} className="w-full">
-                      <Sparkle className="mr-2" />
+                      <Sparkles className="mr-2" />
                       Aplicar Variáveis no Documento
                     </Button>
                   </div>
