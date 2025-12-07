@@ -15,6 +15,7 @@ on:
 permissions:
   issues: write
   contents: read
+  pull-requests: read
 
 jobs:
   auto-create-issues:
@@ -33,7 +34,6 @@ jobs:
         with:
           # Criar issues automaticamente
           AUTO_ASSIGN: true
-          AUTO_P: true
 
           # Labels automáticas - INCLUI auto-copilot para delegação automática!
           LABEL: "auto-created,needs-triage,auto-copilot"

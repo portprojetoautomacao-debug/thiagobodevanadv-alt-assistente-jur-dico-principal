@@ -212,7 +212,10 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
         conteudo: comunicacao.teor || "Ver documento completo",
         advogado:
           comunicacao.advogados
-            ?.map((a) => (typeof a === "string" ? a : a.nome || String(a)))
+            ?.map((a) => {
+              if (typeof a === "string") return a;
+              return a.nome || JSON.stringify(a);
+            })
             .join(", ") || "",
         link: comunicacao.link,
       });
