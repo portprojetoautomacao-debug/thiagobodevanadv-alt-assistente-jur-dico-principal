@@ -10,12 +10,12 @@ type ResendResponse = {
 const resend = {
   emails: {
     send: async (_options: any): Promise<ResendResponse> => {
-      console.warn('RESEND_API_KEY não configurada ou dependência resend não instalada');
+      console.warn("RESEND_API_KEY não configurada ou dependência resend não instalada");
       return {
-        error: { message: 'Resend não configurado. Instale com: npm install resend' }
+        error: { message: "Resend não configurado. Instale com: npm install resend" },
       };
-    }
-  }
+    },
+  },
 };
 
 export interface EmailOptions {

@@ -4,9 +4,9 @@
  * Tests for LangGraph + DSPy + Qdrant + AutoGen integration
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
-import { QdrantService } from "../../src/lib/qdrant-service";
+import { beforeAll, describe, expect, it } from "vitest";
 import { monitorDJEN } from "../../src/agents/monitor-djen/monitor_graph";
+import { QdrantService } from "../../src/lib/qdrant-service";
 
 describe("Hybrid Architecture Integration", () => {
   describe("DJEN Monitor with LangGraph", () => {
@@ -20,9 +20,7 @@ describe("Hybrid Architecture Integration", () => {
     }, 10000); // 10s timeout
 
     it("should handle timeout gracefully", async () => {
-      const { DJENMonitorAgent } = await import(
-        "../../src/agents/monitor-djen/monitor_graph"
-      );
+      const { DJENMonitorAgent } = await import("../../src/agents/monitor-djen/monitor_graph");
 
       const agent = new DJENMonitorAgent({
         timeoutMs: 100, // Very short timeout

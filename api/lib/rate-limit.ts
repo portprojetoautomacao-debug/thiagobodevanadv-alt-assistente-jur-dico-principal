@@ -19,21 +19,23 @@ export interface RateLimitResult {
 }
 
 export class RateLimiter {
-  private readonly redis: Redis;
+  private readonly redis?: Redis;
+  private readonly inMemoryStore?: Map<string, number[]>;
   private readonly config: RateLimitConfig;
 
   constructor(config: RateLimitConfig) {
     const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
     const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
-
-    if (!url || !token) {
-      throw new Error("Upstash Redis não configurado para rate limiting");
+    if (url && token) {
+      this.redis = new Redis({
+        url,
+        token,
+      });
+    } else {
+      // Fallback to in-memory store for development/testing environments
+      console.warn("[RateLimit] Upstash Redis não configurado — usando fallback InMemoryRedis");
+      this.inMemoryStore = new Map();
     }
-
-    this.redis = new Redis({
-      url,
-      token,
-    });
 
     this.config = {
       keyPrefix: "ratelimit:",
@@ -56,54 +58,79 @@ export class RateLimiter {
     const redisKey = `${prefix}${key}`;
     const now = Date.now();
     const windowStart = now - this.config.windowMs;
-
     try {
-      // Remove requests fora da janela e conta requests atuais
-      const multi = this.redis.multi();
+      if (this.redis) {
+        // Remove requests fora da janela e conta requests atuais
+        const multi = this.redis.multi();
 
-      multi.zremrangebyscore(redisKey, 0, windowStart);
-      multi.zcard(redisKey);
-      // com withScores, o Redis retorna [member, score, member, score, ...]
-      multi.zrange(redisKey, 0, -1, { withScores: true });
+        multi.zremrangebyscore(redisKey, 0, windowStart);
+        multi.zcard(redisKey);
+        // com withScores, o Redis retorna [member, score, member, score, ...]
+        multi.zrange(redisKey, 0, -1, { withScores: true });
 
-      const results = await multi.exec();
+        const results = await multi.exec();
 
-      const currentCount = typeof results[1] === "number" ? results[1] : 0;
-      const rawRange = results[2];
+        const currentCount = typeof results[1] === "number" ? results[1] : 0;
+        const rawRange = results[2];
 
-      if (currentCount >= this.config.maxRequests) {
-        // Calcula quando a janela reseta
-        let resetTime = now + this.config.windowMs;
+        if (currentCount >= this.config.maxRequests) {
+          // Calcula quando a janela reseta
+          let resetTime = now + this.config.windowMs;
 
-        if (Array.isArray(rawRange) && rawRange.length >= 2) {
-          // Pega o score do primeiro par [member, score, ...]
-          const score = rawRange[1];
-          if (score !== undefined && score !== null && !Number.isNaN(Number(score))) {
-            const firstTs = typeof score === "number" ? score : Number.parseInt(String(score), 10);
-            resetTime = firstTs + this.config.windowMs;
+          if (Array.isArray(rawRange) && rawRange.length >= 2) {
+            // Pega o score do primeiro par [member, score, ...]
+            const score = rawRange[1];
+            if (score !== undefined && score !== null && !Number.isNaN(Number(score))) {
+              const firstTs =
+                typeof score === "number" ? score : Number.parseInt(String(score), 10);
+              resetTime = firstTs + this.config.windowMs;
+            }
           }
+
+          return {
+            allowed: false,
+            remaining: 0,
+            resetTime,
+            totalRequests: currentCount,
+          };
         }
 
+        // Adiciona o novo request
+        await this.redis.zadd(redisKey, { score: now, member: now.toString() });
+
+        // Define TTL para limpeza automática (2x a janela)
+        const ttlSeconds = Math.ceil(this.config.windowMs / 1000) * 2;
+        await this.redis.expire(redisKey, ttlSeconds);
+
         return {
-          allowed: false,
-          remaining: 0,
-          resetTime,
-          totalRequests: currentCount,
+          allowed: true,
+          remaining: this.config.maxRequests - currentCount - 1,
+          resetTime: now + this.config.windowMs,
+          totalRequests: currentCount + 1,
         };
       }
 
-      // Adiciona o novo request
-      await this.redis.zadd(redisKey, { score: now, member: now.toString() });
+      // In-memory fallback
+      const arr = this.inMemoryStore!.get(redisKey) || [];
+      const filtered = arr.filter((t) => t >= windowStart);
+      if (filtered.length >= this.config.maxRequests) {
+        const firstTs = filtered[0];
+        return {
+          allowed: false,
+          remaining: 0,
+          resetTime: firstTs + this.config.windowMs,
+          totalRequests: filtered.length,
+        };
+      }
 
-      // Define TTL para limpeza automática (2x a janela)
-      const ttlSeconds = Math.ceil(this.config.windowMs / 1000) * 2;
-      await this.redis.expire(redisKey, ttlSeconds);
+      const newArr = [...filtered, now];
+      this.inMemoryStore!.set(redisKey, newArr);
 
       return {
         allowed: true,
-        remaining: this.config.maxRequests - currentCount - 1,
+        remaining: this.config.maxRequests - newArr.length,
         resetTime: now + this.config.windowMs,
-        totalRequests: currentCount + 1,
+        totalRequests: newArr.length,
       };
     } catch (error) {
       console.error("[RateLimit] Erro:", error);
@@ -123,20 +150,24 @@ export class RateLimiter {
   async reset(key: string): Promise<void> {
     const prefix = this.config.keyPrefix ?? "ratelimit:";
     const redisKey = `${prefix}${key}`;
-    await this.redis.del(redisKey);
+    if (this.redis) {
+      await this.redis.del(redisKey);
+      return;
+    }
+    this.inMemoryStore?.delete(redisKey);
   }
 }
 
 // Instâncias globais de rate limiters
 export const globalRateLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minuto
-  maxRequests: 200, // 200 requests por minuto (aumentado para acomodar transição)
+  maxRequests: 100, // 100 requests por minuto
   keyPrefix: "ratelimit:global:",
 });
 
 export const apiRateLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minuto
-  maxRequests: 200, // 200 requests por minuto por IP (aumentado para suportar batching inicial)
+  maxRequests: 100, // 100 requests por minuto por IP
   keyPrefix: "ratelimit:api:",
 });
 

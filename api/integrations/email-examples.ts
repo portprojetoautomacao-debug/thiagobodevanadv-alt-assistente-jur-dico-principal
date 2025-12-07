@@ -120,7 +120,7 @@ export async function exampleSendDailySummary(
 /**
  * Exemplo 4: Usar a biblioteca email-service diretamente (dentro do Vercel)
  * Mais eficiente que fazer requisições HTTP ao próprio endpoint
- * 
+ *
  * NOTA: Requer instalação da dependência resend: npm install resend
  */
 export async function exampleDirectEmailServiceUsage() {
@@ -149,7 +149,7 @@ export async function exampleDirectEmailServiceUsage() {
     pendingReview: 2,
   });
   */
-  
+
   console.log("Email service não configurado. Instale resend: npm install resend");
 }
 

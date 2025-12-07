@@ -1,9 +1,57 @@
+import { z } from "zod";
+
+export const BaseEmailSchema = z.object({
+  type: z.enum(["test", "notification", "urgent", "daily_summary"]),
+  to: z.union([z.string().email(), z.array(z.string().email())]).optional(),
+  subject: z.string().max(256).optional(),
+  message: z.string().max(5000).optional(),
+});
+
+export const TestEmailSchema = BaseEmailSchema.extend({
+  type: z.literal("test"),
+  to: z.union([z.string().email(), z.array(z.string().email())]),
+});
+
+export const NotificationEmailSchema = BaseEmailSchema.extend({
+  type: z.literal("notification"),
+  to: z.union([z.string().email(), z.array(z.string().email())]),
+  subject: z.string().min(1).max(256),
+  message: z.string().min(1).max(5000),
+  actionUrl: z.string().url().optional(),
+});
+
+export const UrgentEmailSchema = BaseEmailSchema.extend({
+  type: z.literal("urgent"),
+  to: z.union([z.string().email(), z.array(z.string().email())]),
+  processNumber: z.string().min(3),
+  deadline: z.string().min(3),
+});
+
+export const DailySummarySchema = BaseEmailSchema.extend({
+  type: z.literal("daily_summary"),
+  to: z.union([z.string().email(), z.array(z.string().email())]),
+  summary: z.object({
+    processesMonitored: z.number().nonnegative(),
+    deadlinesFound: z.number().nonnegative(),
+    documentsGenerated: z.number().nonnegative(),
+    errorsCount: z.number().nonnegative(),
+  }),
+});
+
+export const EmailUnion = z.discriminatedUnion("type", [
+  TestEmailSchema,
+  NotificationEmailSchema,
+  UrgentEmailSchema,
+  DailySummarySchema,
+]);
+
+export type EmailRequest = z.infer<typeof EmailUnion>;
+
+export default EmailUnion;
 /**
  * Validações Zod para entrada de dados
  * Centraliza todas as validações de API
  */
-
-import { z } from "zod";
 
 // --- Tipos de Agente ---
 
@@ -27,7 +75,7 @@ export const TaskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const TaskStatusSchema = z.enum(["QUEUED", "PROCESSING", "COMPLETED", "FAILED"]);
 
 export const AgentTaskSchema = z.object({
-  id: z.uuid(),
+  id: z.string().min(1),
   agentId: z.string().min(1),
   type: AgentTaskTypeSchema,
   priority: TaskPrioritySchema,
@@ -39,13 +87,35 @@ export const AgentTaskSchema = z.object({
   processingTimeMs: z.number().optional(),
 });
 
+// Input-friendly schema for API requests that may not use UUIDs
+export const AgentTaskInputSchema = z.object({
+  id: z.string().min(1),
+  agentId: z.string().min(1),
+  type: z.string().min(1),
+  priority: z.string().min(1),
+  status: z.string().min(1),
+  createdAt: z.string().min(1),
+  startedAt: z.string().optional(),
+  completedAt: z.string().optional(),
+  data: z.record(z.string(), z.unknown()).optional().default({}),
+});
+
 export const AgentSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1),
+  name: z.string().min(1).optional(),
   type: z.string().min(1),
-  capabilities: z.array(z.string()),
-  status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]),
+  capabilities: z.array(z.string()).optional().default([]),
+  status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]).optional(),
   lastActive: z.iso.datetime().optional(),
+});
+
+export const AgentInputSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().optional(),
+  type: z.string().optional(),
+  capabilities: z.array(z.string()).optional(),
+  status: z.string().optional(),
+  lastActive: z.string().optional(),
 });
 
 // --- Validações de API ---

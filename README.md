@@ -207,6 +207,8 @@ gh workflow run copilot-auto-fix.yml
 - ⚡ **15 Agentes Autônomos**: Trabalhando 24/7
 - ✏️ **Editor Tiptap com IA**: Redação automática de minutas
 - 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
+- 🧭 **Qdrant Service (Busca Semântica)**: Busca vetorial para encontrar precedentes e documentos similares rapidamente (opcional - Requer signup no Qdrant Cloud)
+- 🔧 **DSPy Bridge (Otimização de Prompts)**: Serviço Python para otimização automática de prompts antes de enviar ao Gemini/GPT (opcional - Requer deploy no Railway/serviço python)
 
 ## 🌐 Extensão Chrome PJe Sync (NOVO!)
 
@@ -260,6 +262,113 @@ chrome-extension-pje/
 - ✅ API Key armazenada localmente (Chrome Storage)
 - ✅ Código open-source auditável
 - ✅ Compliance com termos de uso do PJe
+
+---
+
+## 🧭 Qdrant Service (Busca Vetorial)
+
+O Qdrant é um serviço de busca semântica vector DB usado para melhorar a pesquisa de precedentes e documentos no Assistente Jurídico.
+
+Principais usos:
+
+- Armazenar embeddings de minutas, peças processuais e jurisprudência
+- Realizar buscas semânticas (sem depender apenas de palavras-chave)
+- Recomendação de templates e precedentes similares
+
+Deploy:
+
+- Recomendamos usar o Qdrant Cloud (free tier disponível). Crie uma instância, copie o QDRANT_URL e QDRANT_API_KEY e configure no Vercel como `QDRANT_URL` e `QDRANT_API_KEY`.
+- O código do serviço está em `src/lib/qdrant-service.ts`.
+
+Variáveis de ambiente importantes:
+
+- `QDRANT_URL` - URL do serviço Qdrant (ex: https://your-cluster.qdrant.cloud)
+- `QDRANT_API_KEY` - API Key para acesso
+
+Quando usar:
+
+- Escritórios com muitos documentos (100s+)
+- Necessidade de recuperar documentos por similaridade semântica
+
+---
+
+## 🔧 DSPy Bridge (Otimização de Prompts)
+
+O DSPy Bridge é um serviço Python opcional (em `scripts/dspy_bridge.py`) que processa e otimiza prompts antes de enviá-los ao modelo de LLM (Gemini/GPT). Ele melhora a qualidade das saídas e reduz custos por chamadas melhores.
+
+Principais funções:
+
+- Reescrever prompts para maior precisão
+- Aplicar templates e instruções padrão ao prompt
+- Fazer pós-processamento das respostas quando necessário
+
+Deploy:
+
+- Recomendado deploy em Railway, Railway `railway.toml` e `scripts/dspy-bridge.service` disponíveis para produção.
+- Configure `DSPY_API_TOKEN` e `DSPY_BRIDGE_URL` (Vercel environment variables).
+
+Variáveis de ambiente importantes:
+
+- `DSPY_API_TOKEN` - Token compartilhado para autenticação
+- `DSPY_BRIDGE_URL` - URL do serviço em produção
+
+---
+
+## 📧 API de Emails (POST /api/emails)
+
+Rota Serverless para envio de emails centralizada:
+
+- **Endpoint:** `POST /api/emails`
+- **Autenticação:** Header `Authorization: Bearer <EMAIL_API_KEY>` (comparação em constant-time via `crypto.timingSafeEqual`)
+- **Rate limiting:** Implementado via Upstash Redis (IP-based)
+- **Validação:** Zod (EmailUnion) garante payloads válidos para cada tipo: `test`, `notification`, `urgent`, `daily_summary`.
+- **Retries:** `retryWithBackoff` com backoff exponencial
+- **Timeout:** 30s (via `withTimeout`)
+- **Sanitização:** `escapeHtml` protege contra injeção de HTML
+
+Exemplos de payloads e cURL estão em `docs/HYBRID_DEPLOYMENT_GUIDE.md`.
+
+Requisito para envio em produção:
+
+- Instale `resend` (`npm install resend`) e configure `RESEND_API_KEY`.
+- Você pode usar outro provider, mas atualize `api/lib/email-service.ts` conforme necessário.
+
+---
+
+## 🔐 Segurança e Configurações Novas (Resumo)
+
+- `requireApiKey` utiliza comparação `timingSafeEqual` para prevenção de timing attacks.
+- Rate-limits via Upstash (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`).
+- Timeout/AbortController em chamadas vetoriais e API.
+- Recomenda-se habilitar monitoramento Sentry e logs para envios de e-mail e falhas do DSPy Bridge.
+
+---
+
+## 🧪 Dicas de Testes Rápidos (Locais)
+
+1. Validar e-mail de teste (com stub):
+
+```bash
+curl -X POST 'http://localhost:3000/api/emails' \
+  -H 'Authorization: Bearer test-token-123' \
+  -H 'Content-Type: application/json' \
+  -d '{"type": "test", "to": "seu-email@exemplo.com"}'
+```
+
+2. Validar DSPy Bridge (se local):
+
+```bash
+curl -X POST "http://localhost:8000/optimize" -H "Authorization: Bearer $DSPY_API_TOKEN" \
+ -d '{"prompt":"Analise este documento e gere um sumário"}'
+```
+
+3. Validar Qdrant (chamada simples):
+
+```bash
+curl -sS "$QDRANT_URL/collections" -H "api-key: $QDRANT_API_KEY"
+```
+
+---
 
 ---
 
