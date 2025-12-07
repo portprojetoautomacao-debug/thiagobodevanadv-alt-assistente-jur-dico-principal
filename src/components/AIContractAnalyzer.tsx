@@ -2,10 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { FileText, Sparkles, ShieldAlert, CheckCircle, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
-import { AlertCircle, CheckCircle2, FileText, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle, FileText, ShieldAlert, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

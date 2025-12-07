@@ -33,7 +33,7 @@ export function DashboardDeadlines({
           className="text-accent-11 hover:text-accent-12"
         >
           Ver todos
-          <ArrowRightIcon className="ml-2 h-4 w-4" />
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardHeader>
       <CardContent>

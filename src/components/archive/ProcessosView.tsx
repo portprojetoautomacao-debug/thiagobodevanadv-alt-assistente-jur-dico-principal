@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Gavel, Download, Funnel, Sparkles } from "lucide-react";
-import ProcessDialog from "../ProcessDialog";
-import ProcessDetailsDialog from "../ProcessDetailsDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,14 +13,7 @@ import { useProcesses } from "@/hooks/use-processes";
 import { llm } from "@/lib/llm-client";
 import { exportToCSV } from "@/lib/utils";
 import type { Process } from "@/types";
-import {
-  Download as DownloadSimple,
-  Filter as Funnel,
-  Gavel,
-  Search as MagnifyingGlass,
-  Plus,
-  Sparkles as Sparkle,
-} from "lucide-react";
+import { Download, Filter as Funnel, Gavel, Plus, Search, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import ProcessDetailsDialog from "../ProcessDetailsDialog";
