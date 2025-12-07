@@ -90,4 +90,96 @@ describe("usePJeDocumentSync", () => {
     // Como não temos documentos iniciais, apenas verificamos se não quebra
     expect(result.current.documentosPendentes).toEqual([]);
   });
+
+  it("deve processar mensagem SYNC_DOCUMENTO", async () => {
+    const { result } = renderHook(() => usePJeDocumentSync());
+
+    await waitFor(() => {
+      expect(chromeMock.runtime.onMessage.addListener).toHaveBeenCalled();
+    });
+
+    const messageHandler = chromeMock.runtime.onMessage.addListener.mock.calls[0][0];
+    const documento = {
+      id: "doc-1",
+      tipo: "certidao",
+      conteudo: "Certidão de objeto e pé",
+      metadados: {
+        numeroProcesso: "1234567-89.2023.8.26.0100",
+        dataEmissao: "2023-10-15",
+      },
+    };
+
+    act(() => {
+      messageHandler({
+        type: "SYNC_DOCUMENTO",
+        data: documento,
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.documentosPendentes).toHaveLength(1);
+      expect(result.current.documentosPendentes[0].id).toBe("doc-1");
+    });
+  });
+
+  it("deve salvar documento e mover para processados", async () => {
+    const { result } = renderHook(() => usePJeDocumentSync());
+
+    await waitFor(() => {
+      expect(chromeMock.tabs.query).toHaveBeenCalled();
+    });
+
+    const documento = {
+      id: "doc-2",
+      tipo: "sentenca",
+      conteudo: "Sentença proferida",
+      metadados: {
+        numeroProcesso: "9876543-21.2023.5.02.0001",
+      },
+    };
+
+    // Adicionar documento aos pendentes primeiro
+    const messageHandler = chromeMock.runtime.onMessage.addListener.mock.calls[0][0];
+    act(() => {
+      messageHandler({
+        type: "SYNC_DOCUMENTO",
+        data: documento,
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.documentosPendentes).toHaveLength(1);
+    });
+
+    // Salvar documento
+    await act(async () => {
+      await result.current.salvarDocumento(documento);
+    });
+
+    await waitFor(() => {
+      expect(result.current.documentosPendentes).toHaveLength(0);
+      expect(result.current.documentosProcessados).toHaveLength(1);
+    });
+
+    expect(mockSetData).toHaveBeenCalled();
+  });
+
+  it("deve forçar sincronização quando solicitado", async () => {
+    const { result } = renderHook(() => usePJeDocumentSync());
+
+    await waitFor(() => {
+      expect(chromeMock.tabs.query).toHaveBeenCalled();
+    });
+
+    chromeMock.tabs.sendMessage.mockResolvedValueOnce({ success: true });
+
+    await act(async () => {
+      await result.current.forcarSincronizacao();
+    });
+
+    expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(
+      123,
+      expect.objectContaining({ type: "FORCE_SYNC" })
+    );
+  });
 });
