@@ -7,7 +7,7 @@
 
 import { tracingService } from "./tracing";
 
-import type { AgentSpan, Span, SpanAttributes } from "./tracing";
+import type { AgentSpan, SpanAttributes } from "./tracing";
 
 import type { Agent, AgentTask, AgentTaskResult } from "./agents";
 

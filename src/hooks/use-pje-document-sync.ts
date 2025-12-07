@@ -68,7 +68,7 @@ export function usePJeDocumentSync(): PJeDocumentSync {
 
   // Listener para mensagens da extensão
   useEffect(() => {
-    const handleMessage = (request: any) => {
+    const handleMessage = (request: { type: string; data: unknown }) => {
       if (request.type === "SYNC_DOCUMENTO") {
         const documento = request.data as DocumentoPJe;
 
