@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Mail, Sparkles, Copy, Send } from "lucide-react";
+import { EnvelopeSimple, PaperPlaneTilt, Sparkle } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 
