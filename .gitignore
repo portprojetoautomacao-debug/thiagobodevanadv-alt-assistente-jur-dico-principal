@@ -82,6 +82,7 @@ pids
 *.png
 !docs/**/*.png
 !public/**/*.png
+!chrome-extension-pje/src/assets/**/*.png
 
 # Temporary files
 *.tmp
