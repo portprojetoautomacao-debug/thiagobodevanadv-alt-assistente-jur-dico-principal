@@ -17,12 +17,18 @@ export default defineConfig({
   webServer: USE_PROD
     ? undefined
     : {
-        command: `npm run dev -- --port ${PORT} --host 127.0.0.1`,
+        command: `node ./scripts/start-dev-with-api.cjs -- --port ${PORT} --host 127.0.0.1`,
         url: `http://127.0.0.1:${PORT}`,
         reuseExistingServer: !IS_CI,
         timeout: 120_000,
         stdout: "pipe",
         stderr: "pipe",
+        // Configurar proxy do Vite para apontar as /api para a API local de testes
+        env: {
+          ...(process.env || {}),
+          DISABLE_API_PROXY: "false",
+          VITE_API_TARGET: `http://127.0.0.1:${process.env.DEV_API_PORT || 5252}`,
+        },
       },
   use: {
     // Preferir ambiente local por padrão para maior estabilidade dos seletores.

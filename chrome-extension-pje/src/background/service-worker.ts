@@ -82,7 +82,7 @@ self.addEventListener("unhandledrejection", (event) => {
 });
 
 // Escuta reports de erro vindos dos content scripts
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
   if (message?.type === "REPORT_ERROR" && message?.data) {
     const errorEvent = message.data as ExtensionErrorEvent;
     try {

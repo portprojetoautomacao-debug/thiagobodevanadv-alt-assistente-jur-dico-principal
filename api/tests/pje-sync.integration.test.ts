@@ -99,6 +99,36 @@ describe("pje-sync integration tests", () => {
     expect(body).toHaveProperty("error");
   });
 
+  it("should return 400 for invalid process data", async () => {
+    const invalidProcess = {
+      numero: "123",
+      numeroFormatado: "123",
+      ultimoMovimento: { descricao: "mov" /* missing timestamp */ },
+    };
+    const req = makeReq(
+      { type: "SYNC_PROCESSOS", data: [invalidProcess] },
+      { "X-API-Key": "valid-api-key" }
+    );
+    const handler = (await import("../pje-sync")).default;
+    const resp = await handler(req as any);
+    const body = await resp.json();
+    expect(resp.status).toBe(400);
+    expect(body).toHaveProperty("success", false);
+  });
+
+  it("should return 400 for invalid expediente data", async () => {
+    const invalidExp = { id: "1", processNumber: "", description: "", type: "nonexistent" };
+    const req = makeReq(
+      { type: "SYNC_EXPEDIENTES", data: [invalidExp] },
+      { "X-API-Key": "valid-api-key" }
+    );
+    const handler = (await import("../pje-sync")).default;
+    const resp = await handler(req as any);
+    expect(resp.status).toBe(400);
+    const body = await resp.json();
+    expect(body).toHaveProperty("success", false);
+  });
+
   it("should import successfully and use fallback in-memory redis when UPSTASH env is missing", async () => {
     // Ensure the fallback initializes with the TEST_PJE_API_KEY
     process.env.TEST_PJE_API_KEY = "valid-api-key";

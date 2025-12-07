@@ -13,9 +13,9 @@ import type { UndoRedoAction, UseUndoRedoConfig } from "@/components/tiptap-ui/u
 import { UNDO_REDO_SHORTCUT_KEYS, useUndoRedo } from "@/components/tiptap-ui/undo-redo-button";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 
 export interface UndoRedoButtonProps extends Omit<ButtonProps, "type">, UseUndoRedoConfig {
   /**
@@ -86,8 +86,7 @@ export const UndoRedoButton = forwardRef<HTMLButtonElement, UndoRedoButtonProps>
         disabled={!canExecute}
         data-style="ghost"
         data-disabled={!canExecute}
-        role="button"
-        tabIndex={-1}
+        // Allow native button focus behavior; role/tabIndex removed
         aria-label={label}
         tooltip={label}
         onClick={handleClick}

@@ -4,6 +4,9 @@
  */
 
 import { Redis } from "@upstash/redis";
+import { apiRetryConfig, httpWithRetry } from "./lib/retry";
+import { SafeLogger } from "./lib/safe-logger";
+import { validateExpedientes, validateProcessos } from "./lib/validation";
 
 // ===== Redis singleton (Upstash) =====
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
@@ -144,14 +147,29 @@ export default async function handler(req: Request) {
     console.log(`[PJe Sync] Recebido: ${type}`);
 
     if (type === "SYNC_PROCESSOS") {
-      const processos = data as ProcessoPJe[];
+      // Validação de entrada
+      const validation = validateProcessos(data);
+      if (!validation.success) {
+        return new Response(JSON.stringify({ success: false, error: validation.error }), {
+          status: 400,
+          headers,
+        });
+      }
+      const processos = validation.data as ProcessoPJe[];
       const synced = await handleSyncProcessos(processos);
 
       return new Response(JSON.stringify({ success: true, synced }), { status: 200, headers });
     }
 
     if (type === "SYNC_EXPEDIENTES") {
-      const expedientes = data as Expediente[];
+      const validation = validateExpedientes(data);
+      if (!validation.success) {
+        return new Response(JSON.stringify({ success: false, error: validation.error }), {
+          status: 400,
+          headers,
+        });
+      }
+      const expedientes = validation.data as Expediente[];
       const created = await handleSyncExpedientes(expedientes);
 
       return new Response(JSON.stringify({ success: true, created }), { status: 200, headers });
@@ -285,24 +303,32 @@ function detectExpedienteType(movimento: string): Expediente["type"] {
   return "outro";
 }
 
+const logger = new SafeLogger("PjeSync");
+
 async function triggerJustineAgent(expediente: Expediente): Promise<void> {
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:5173";
+  const url = `${baseUrl}/api/agents`;
+
   try {
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:5173";
+    // Use httpWithRetry para maior robustez
+    await httpWithRetry(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId: "justine",
+          action: "ANALYZE_EXPEDIENTE",
+          data: expediente,
+        }),
+      },
+      apiRetryConfig
+    );
 
-    await fetch(`${baseUrl}/api/agents`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        agentId: "justine",
-        action: "ANALYZE_EXPEDIENTE",
-        data: expediente,
-      }),
-    });
-
-    console.log(`[PJe Sync] Mrs. Justin-e disparada para ${expediente.processNumber}`);
+    logger.info(`Mrs. Justin-e disparada para ${expediente.processNumber}`);
   } catch (error) {
-    console.error("[PJe Sync] Erro ao disparar agente:", error);
+    logger.error("Erro ao disparar agente Justine", error);
   }
 }

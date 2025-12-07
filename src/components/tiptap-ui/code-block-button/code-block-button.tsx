@@ -11,9 +11,9 @@ import type { UseCodeBlockConfig } from "@/components/tiptap-ui/code-block-butto
 import { CODE_BLOCK_SHORTCUT_KEY, useCodeBlock } from "@/components/tiptap-ui/code-block-button";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 
 export interface CodeBlockButtonProps extends Omit<ButtonProps, "type">, UseCodeBlockConfig {
   /**
@@ -80,10 +80,8 @@ export const CodeBlockButton = forwardRef<HTMLButtonElement, CodeBlockButtonProp
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
         disabled={!canToggle}
         data-disabled={!canToggle}
-        tabIndex={-1}
         aria-label={label}
         aria-pressed={isActive}
         tooltip="Code Block"
@@ -96,7 +94,8 @@ export const CodeBlockButton = forwardRef<HTMLButtonElement, CodeBlockButtonProp
             <Icon className="tiptap-button-icon" />
             {text && <span className="tiptap-button-text">{text}</span>}
             {showShortcut && <CodeBlockShortcutBadge shortcutKeys={shortcutKeys} />}
-            // role and tabIndex removed — native button semantics retained
+          </>
+        )}
       </Button>
     );
   }

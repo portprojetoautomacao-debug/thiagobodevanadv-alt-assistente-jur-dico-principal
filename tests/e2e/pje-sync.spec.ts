@@ -84,8 +84,14 @@ test.describe("PJe Sync E2E", () => {
     expect(expedResp.status()).toBe(200);
     const expedJson = await expedResp.json();
     // Find by processNumber
-    const found = expedJson.expedientes.find((e: any) =>
-      e.numeroProcesso.includes(existingProcess.numero)
+    const found = expedJson.expedientes.find(
+      (e: any) =>
+        (e.numeroProcesso &&
+          (e.numeroProcesso.includes(existingProcess.numero) ||
+            e.numeroProcesso.includes(existingProcess.numeroFormatado))) ||
+        (e.processNumber &&
+          (e.processNumber.includes(existingProcess.numero) ||
+            e.processNumber.includes(existingProcess.numeroFormatado)))
     );
     expect(found).toBeTruthy();
   });
