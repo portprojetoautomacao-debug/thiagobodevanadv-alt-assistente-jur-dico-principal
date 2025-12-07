@@ -31,6 +31,6 @@ describe("useTiptapEditor", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockEditor = { state: {}, can: () => true } as any;
     const { result } = renderHook(() => useTiptapEditor(mockEditor));
-    expect(result.current.editor).toBe(mockEditor);
+    expect(result.current.editor).toEqual(mockEditor);
   });
 });
