@@ -143,9 +143,13 @@ describe("tiptap-utils", () => {
     });
 
     it("handles very large file gracefully", async () => {
-      const hugeFile = new File(["x".repeat(100 * 1024 * 1024)], "huge.jpg", {
+      // Avoid allocating a huge string in the test runner to prevent OOM.
+      // Create a lightweight fake File-like object with a size > MAX_FILE_SIZE.
+      const hugeFile = {
+        name: "huge.jpg",
+        size: 100 * 1024 * 1024,
         type: "image/jpeg",
-      });
+      } as unknown as File;
 
       const onProgress = vi.fn();
 
@@ -156,6 +160,6 @@ describe("tiptap-utils", () => {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toContain("5MB");
       }
-    }, 30000);
+    });
   });
 });
