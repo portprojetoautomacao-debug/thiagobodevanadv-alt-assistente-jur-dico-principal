@@ -16,12 +16,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProcessSync } from "@/hooks/use-process-sync";
 import { calcularDiasRestantes, formatarData, formatarMoeda, isUrgente } from "@/lib/prazos";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
+import { createProcessTimeline } from "@/lib/process-timeline-utils";
 import type { PremonicaoJuridica, Process } from "@/types";
-import { CalendarCheck, FileText, Mail, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { CalendarCheck, FileText, GitBranch, Mail, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import DocumentUploader from "./DocumentUploader";
 import PremonicaoModal from "./PremonicaoModal";
+import ProcessTimelineViewer from "./ProcessTimelineViewer";
 
 // Helper: mapeia status do processo para variant do Badge (S3358)
 function getProcessStatusVariant(
@@ -68,6 +70,9 @@ export default function ProcessDetailsDialog({
   // Obter expedientes e minutas vinculados ao processo
   const expedientesVinculados = getExpedientesForProcess(process.id);
   const minutasVinculadas = getMinutasForProcess(process.id);
+
+  // Criar timeline processual combinando expedientes e minutas
+  const timelineEvents = createProcessTimeline(expedientesVinculados, minutasVinculadas);
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
@@ -126,8 +131,12 @@ export default function ProcessDetailsDialog({
         </DialogHeader>
 
         <Tabs defaultValue="detalhes" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+            <TabsTrigger value="timeline">
+              <GitBranch size={16} className="mr-1" />
+              Timeline
+            </TabsTrigger>
             <TabsTrigger value="prazos">
               <CalendarCheck size={16} className="mr-1" />
               {process.prazos?.length > 0 ? `(${process.prazos.length})` : ""}
@@ -142,6 +151,10 @@ export default function ProcessDetailsDialog({
             </TabsTrigger>
             <TabsTrigger value="documentos">Anexos</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="timeline" className="mt-4">
+            <ProcessTimelineViewer process={process} events={timelineEvents} />
+          </TabsContent>
 
           <TabsContent value="detalhes" className="space-y-6">
             <div className="flex items-center gap-2">
