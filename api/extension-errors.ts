@@ -68,9 +68,16 @@ export default withErrorHandler(async (req: VercelRequest, res: VercelResponse) 
     let client: any = null;
     if (redisUrl && redisToken) client = new Redis({ url: redisUrl, token: redisToken });
 
-    if (client) {
+      if (client) {
       try {
         await client.lpush("extension-errors", JSON.stringify(body));
+        // Set an expiration of 30 days on the list to avoid unbounded growth
+        try {
+          await client.expire("extension-errors", 60 * 60 * 24 * 30);
+        } catch (e) {
+          // Not critical, log and continue
+          logger.warn("Failed setting TTL on extension-errors key", e);
+        }
       } catch (e) {
         // fallback: log
         logger.warn("Failed storing extension error in redis", e);
