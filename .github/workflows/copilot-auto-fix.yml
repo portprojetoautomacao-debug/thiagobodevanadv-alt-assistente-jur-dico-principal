@@ -12,6 +12,10 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  deployments: write
+  packages: write
+  checks: write
+  statuses: write
 
 jobs:
   auto-fix-errors:

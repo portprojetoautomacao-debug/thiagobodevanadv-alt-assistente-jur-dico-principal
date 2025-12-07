@@ -344,6 +344,34 @@ Quando solicitado ou detectando problemas, o Copilot deve fornecer relatórios c
 
 ---
 
+## GitHub MCP Server (local) - Instruções para Copilot
+
+Para aumentar a segurança e fornecer um ponto de integração padronizado para ações no GitHub, este repositório inclui uma configuração de **GitHub MCP Server local** — útil para executar integrações do Copilot de forma controlada no ambiente de desenvolvimento.
+
+Regras e recomendações para o Copilot:
+
+1. Sempre que for necessário acessar ou modificar o repositório (abrir issues, criar/atualizar PRs, executar actions, buscar ou editar arquivos), o Copilot deve preferir o MCP Server local se estiver disponível.
+2. Antes de executar ações que escrevem no repositório (ex.: abrir pull request, merge), o Copilot deve verificar se o servidor local está configurado com toolsets apropriados e, em caso de operações sensíveis, pedir confirmação do operador.
+3. Execute o MCP local em modo read-only por padrão em ambientes de desenvolvimento ou compartilhados. O operador humano pode autorizar toolsets adicionais quando necessário (`GITHUB_TOOLSETS` e `GITHUB_TOOLS`).
+
+Arquivos de referência no repositório:
+
+- `.vscode/mcp.json` — configuração local do MCP Server para ser usada pelo VS Code (arquivo ignorado no git por segurança).
+- `scripts/start-github-mcp.sh` — script para iniciar o MCP via Docker (usa `GITHUB_MCP_PAT`, `GITHUB_HOST`, `GITHUB_TOOLSETS`).
+- `docs/MCP_SETUP.md` — Guia com passo-a-passo, comandos e melhores práticas para configurar o MCP local e usar com segurança.
+- `.vscode/tasks.json` — task para iniciar facilmente o MCP Server do VS Code (Start GitHub MCP Server (Docker)).
+
+Boas práticas de segurança:
+
+- Nunca solicitar ou armazenar `GITHUB_MCP_PAT` em texto claro no repositório. Use Secret Storage do VS Code ou Secrets/Secrets Manager do host.
+- Evite executar containers com PATs em runners públicos; se necessário, use `GITHUB_READ_ONLY=1` e um conjunto mínimo de toolsets para auditoria.
+- Registrar (log) ações que envolvam escrita no repositório para fins de auditoria, incluindo quem autorizou a operação.
+
+Se o Copilot não encontrar um MCP Server local configurado e a ação requerer acesso write ao GitHub, ele deve pedir instruções ao operador humano antes de prosseguir (por exemplo, solicitar que o operador inicie o servidor local ou forneça autorização explícita).
+
+
+---
+
 ## Autonomous Agents System
 
 The system includes 7 autonomous AI agents that work continuously:

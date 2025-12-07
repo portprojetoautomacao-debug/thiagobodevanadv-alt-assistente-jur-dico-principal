@@ -16,6 +16,24 @@ export function ThemeToggle() {
   }, []);
 
   useEffect(() => {
+    // Priority order for theme preference:
+    // 1. explicit user preference in localStorage
+    // 2. meta tag color-scheme
+    // 3. user's system preference
+    try {
+      const stored = window.localStorage.getItem("theme");
+      if (stored === "dark") {
+        setIsDarkMode(true);
+        return;
+      }
+      if (stored === "light") {
+        setIsDarkMode(false);
+        return;
+      }
+    } catch (err) {
+      // ignore localStorage errors (e.g., blocked cookies)
+    }
+
     const initialDarkMode =
       !!document.querySelector('meta[name="color-scheme"][content="dark"]') ||
       window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -24,6 +42,11 @@ export function ThemeToggle() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
+    try {
+      window.localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+    } catch (err) {
+      // ignore
+    }
   }, [isDarkMode]);
 
   const toggleDarkMode = () => setIsDarkMode((isDark) => !isDark);

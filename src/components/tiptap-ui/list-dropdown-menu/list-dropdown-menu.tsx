@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
 import { type Editor } from "@tiptap/react";
+import { useCallback, useState } from "react";
 
 // --- Hooks ---
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
@@ -15,13 +15,13 @@ import { useListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu/u
 // --- UI Primitives ---
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button";
+import { Card, CardBody } from "@/components/tiptap-ui-primitive/card";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/tiptap-ui-primitive/dropdown-menu";
-import { Card, CardBody } from "@/components/tiptap-ui-primitive/card";
 
 export interface ListDropdownMenuProps extends Omit<ButtonProps, "type"> {
   /**
@@ -84,8 +84,7 @@ export function ListDropdownMenu({
           type="button"
           data-style="ghost"
           data-active-state={isActive ? "on" : "off"}
-          role="button"
-          tabIndex={-1}
+          // role and tabIndex removed
           disabled={!canToggle}
           data-disabled={!canToggle}
           aria-label="List options"

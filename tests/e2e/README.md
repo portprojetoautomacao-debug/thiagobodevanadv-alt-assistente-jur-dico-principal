@@ -13,6 +13,51 @@ npm install
 npx playwright install chromium firefox
 ```
 
+## 🧩 Teste da Extensão Chrome (PJe Sync)
+
+Este repositório inclui um teste E2E que valida a integração completa da extensão Chrome (background + content script + backend). Esse teste é sensível ao ambiente, pois precisa carregar uma extensão no Chrome (somente em modo headed) e interceptar chamadas ao backend.
+
+### Como executar localmente
+
+1. Construa a extensão:
+
+```bash
+cd chrome-extension-pje && npm install && npm run build
+```
+
+2. Execute os testes com suporte a interface (headed). Requer Xvfb no CI ou uma sessão gráfica local:
+
+```bash
+# Local (com interface)
+RUN_EXTENSION_E2E=true npm run test:e2e -- --project=chromium --headed
+
+# Em CI com Xvfb
+xvfb-run -a sh -c "RUN_EXTENSION_E2E=true npm run test:e2e -- --project=chromium --headed"
+```
+
+### Executando com API local (desenvolvimento com proxy local)
+
+Se quiser usar a API local (em vez do proxy para a produção), execute o servidor de frontend e API local:
+
+```bash
+# Inicia Vite + API dev local (porta 5252)
+npm run dev:with-api
+```
+
+Em seguida, em outro terminal, execute os testes E2E:
+
+```bash
+npm run test:e2e
+
+Você também pode apontar o proxy `/api` do Vite para um destino personalizado definindo a env var `VITE_API_TARGET` ou desabilitar o proxy com `DISABLE_API_PROXY=true`.
+```
+
+### Observações
+
+- O teste é **pulável por padrão** (usa `test.skip`) porque exige um navegador headed com suporte a extensões. Use `RUN_EXTENSION_E2E=true` para habilitá-lo.
+- Ao executar em CI, certifique-se de instalar dependências do Playwright e de um servidor X virtual (xvfb).
+- O teste injeta um conteúdo de exemplo para simular o painel PJe e intercepta a requisição ao endpoint `/api/pje-sync` para validar o payload.
+
 ### 2. Configurar Credenciais de Teste
 
 Copie `.env.example` para `.env` e configure:

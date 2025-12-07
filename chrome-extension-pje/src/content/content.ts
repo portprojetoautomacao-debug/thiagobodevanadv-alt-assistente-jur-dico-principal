@@ -2,6 +2,7 @@
  * Content Script - Injetado no painel PJe
  */
 
+import { initGlobalHandlers, reportError } from "../shared/errorHandler";
 import { SyncMessage } from "../shared/types";
 import { DocumentExtractor } from "./extractors/document-extractor";
 import { ExpedienteExtractor } from "./extractors/expediente-extractor";
@@ -23,6 +24,14 @@ class PJeContentScript {
     this.domObserver = new DOMObserver(() => this.handleDOMChange());
 
     this.init();
+    // Inicializa global handlers para capturar erros inesperados
+    try {
+      initGlobalHandlers();
+    } catch (e) {
+      // Ignore failures initializing global handlers
+      // eslint-disable-next-line no-console
+      console.warn("[PJe Sync] Falha ao inicializar global handlers", e);
+    }
   }
 
   private async init(): Promise<void> {
@@ -141,7 +150,8 @@ class PJeContentScript {
         `[PJe Sync] Sincronizado: ${processos.length} processos, ${expedientes.length} expedientes`
       );
     } catch (error) {
-      console.error("[PJe Sync] Erro na sincronização:", error);
+      // Report centralizado
+      await reportError(error, { module: "content.syncNow" });
       this.updateBadge("✗", "#F44336"); // Vermelho = erro
     } finally {
       this.syncInProgress = false;

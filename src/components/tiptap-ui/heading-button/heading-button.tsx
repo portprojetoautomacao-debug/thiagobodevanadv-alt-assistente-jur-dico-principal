@@ -8,9 +8,9 @@ import type { Level, UseHeadingConfig } from "@/components/tiptap-ui/heading-but
 import { HEADING_SHORTCUT_KEYS, useHeading } from "@/components/tiptap-ui/heading-button";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
 
 export interface HeadingButtonProps extends Omit<ButtonProps, "type">, UseHeadingConfig {
@@ -81,8 +81,7 @@ export const HeadingButton = forwardRef<HTMLButtonElement, HeadingButtonProps>(
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed — retain native semantics
         disabled={!canToggle}
         data-disabled={!canToggle}
         aria-label={label}

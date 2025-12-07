@@ -7,9 +7,9 @@ import { parseShortcutKeys } from "@/lib/tiptap-utils";
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 
 // --- Tiptap UI ---
 import type { ListType, UseListConfig } from "@/components/tiptap-ui/list-button";
@@ -83,8 +83,7 @@ export const ListButton = forwardRef<HTMLButtonElement, ListButtonProps>(
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed — allow default button focus
         disabled={!canToggle}
         data-disabled={!canToggle}
         aria-label={label}

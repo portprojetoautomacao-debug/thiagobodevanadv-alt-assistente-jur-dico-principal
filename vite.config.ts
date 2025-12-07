@@ -128,41 +128,47 @@ export default defineConfig({
       // Permite usar window.open com preview de PDF / impressão sem quebrar tudo
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
-    proxy: {
-      // Proxy para APIs - desenvolvimento aponta para Vercel produção
-      "/api": {
-        target: "https://assistente-juridico-github.vercel.app",
-        changeOrigin: true,
-        secure: true,
-        configure: (proxy, _options) => {
-          proxy.on("error", (err, _req, _res) => {
-            console.log("Proxy error:", err);
-          });
-          proxy.on("proxyReq", (proxyReq, req, _res) => {
-            console.log(
-              "Proxying request:",
-              req.method,
-              req.url,
-              "->",
-              proxyReq.getHeader("host") + proxyReq.path
-            );
-          });
-        },
-      },
-      // Proxy para endpoints legados /_spark/* -> /api/*
-      "/_spark/llm": {
-        target: "https://assistente-juridico-github.vercel.app",
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/_spark\/llm/, "/api/llm-proxy"),
-      },
-      "/_spark/kv": {
-        target: "https://assistente-juridico-github.vercel.app",
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/_spark\/kv/, "/api/kv"),
-      },
-    },
+    // Permite desabilitar o proxy que redireciona chamadas /api para produção
+    // útil para E2E locais para testar APIs localmente
+    proxy:
+      process.env.DISABLE_API_PROXY === "true"
+        ? undefined
+        : {
+            // Proxy para APIs - desenvolvimento aponta para Vercel produção
+            "/api": {
+              target:
+                process.env.VITE_API_TARGET || "https://assistente-juridico-github.vercel.app",
+              changeOrigin: true,
+              secure: true,
+              configure: (proxy, _options) => {
+                proxy.on("error", (err, _req, _res) => {
+                  console.log("Proxy error:", err);
+                });
+                proxy.on("proxyReq", (proxyReq, req, _res) => {
+                  console.log(
+                    "Proxying request:",
+                    req.method,
+                    req.url,
+                    "->",
+                    proxyReq.getHeader("host") + proxyReq.path
+                  );
+                });
+              },
+            },
+            // Proxy para endpoints legados /_spark/* -> /api/*
+            "/_spark/llm": {
+              target: "https://assistente-juridico-github.vercel.app",
+              changeOrigin: true,
+              secure: true,
+              rewrite: (path) => path.replace(/^\/_spark\/llm/, "/api/llm-proxy"),
+            },
+            "/_spark/kv": {
+              target: "https://assistente-juridico-github.vercel.app",
+              changeOrigin: true,
+              secure: true,
+              rewrite: (path) => path.replace(/^\/_spark\/kv/, "/api/kv"),
+            },
+          },
   },
   build: {
     cssMinify: "lightningcss",
