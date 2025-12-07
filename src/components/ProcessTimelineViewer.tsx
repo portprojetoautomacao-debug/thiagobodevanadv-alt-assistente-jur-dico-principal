@@ -4,15 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Process, ProcessEvent } from "@/types";
-import {
-  ArrowUpRight,
-  Clock,
-  DownloadSimple,
-  FilePdf,
-  FileText,
-  FlowArrow,
-  FunnelSimple,
-} from "@phosphor-icons/react";
+import { Clock, Download, ExternalLink, FileText, Filter, Workflow } from "lucide-react";
 import { useMemo, useState } from "react";
 
 /**
@@ -119,7 +111,7 @@ export default function ProcessTimelineViewer({
       <CardHeader className="border-b flex flex-row items-start justify-between gap-4">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <FlowArrow className="h-5 w-5 text-primary" />
+            <Workflow className="h-5 w-5 text-primary" />
             Linha do Tempo Processual
           </CardTitle>
           <CardDescription className="space-x-2">
@@ -156,7 +148,7 @@ export default function ProcessTimelineViewer({
             {process.status === "ativo" ? "Ativo" : process.status}
           </Badge>
           <Button variant="outline" size="sm">
-            <FunnelSimple className="h-4 w-4 mr-1" />
+            <Filter className="h-4 w-4 mr-1" />
             Filtros
           </Button>
         </div>
@@ -220,7 +212,7 @@ export default function ProcessTimelineViewer({
                               </Badge>
                               {ev.documentoUrl && (
                                 <span className="inline-flex items-center gap-1 text-[10px] text-primary">
-                                  <FilePdf className="h-3 w-3" />
+                                  <FileText className="h-3 w-3" />
                                   Ver documento
                                 </span>
                               )}
@@ -267,13 +259,13 @@ export default function ProcessTimelineViewer({
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <a href={selectedEvent.documentoUrl} target="_blank" rel="noreferrer">
-                            <ArrowUpRight className="h-4 w-4 mr-1" />
+                            <ExternalLink className="h-4 w-4 mr-1" />
                             Abrir em nova aba
                           </a>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
                           <a href={selectedEvent.documentoUrl} download>
-                            <DownloadSimple className="h-4 w-4 mr-1" />
+                            <Download className="h-4 w-4 mr-1" />
                             Baixar
                           </a>
                         </Button>
@@ -358,7 +350,7 @@ export default function ProcessTimelineViewer({
                                 rel="noreferrer"
                                 className="inline-flex items-center text-primary hover:underline"
                               >
-                                <FilePdf className="h-3 w-3 mr-1" />
+                                <FileText className="h-3 w-3 mr-1" />
                                 Abrir
                               </a>
                             </p>
