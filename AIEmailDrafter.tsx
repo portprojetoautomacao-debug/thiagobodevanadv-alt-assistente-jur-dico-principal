@@ -159,9 +159,8 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2 gradient-text">
-          <EnvelopeSimple
+          <Mail
             size={32}
-            weight="duotone"
             className="text-primary neon-glow"
           />
           Rascunho de Emails IA
@@ -261,10 +260,9 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
             <CardContent>
               {!draft ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <EnvelopeSimple
+                  <Mail
                     size={64}
                     className="text-muted-foreground mb-4"
-                    weight="duotone"
                   />
                   <p className="text-muted-foreground">
                     O email aparecerá aqui após gerar o rascunho
