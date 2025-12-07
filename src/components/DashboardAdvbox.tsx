@@ -5,9 +5,9 @@ import { useKV } from "@/hooks/use-kv";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
   ArrowUp,
-  ChevronLeft as CaretLeft,
-  ChevronRight as CaretRight,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   FileText,
   Trophy,
@@ -437,7 +437,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     onClick={prevMonth}
                     aria-label="Mês anterior"
                   >
-                    <CaretLeft size={18} />
+                    <ChevronLeft size={18} />
                   </Button>
                   <Button
                     variant="ghost"
@@ -446,7 +446,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     onClick={nextMonth}
                     aria-label="Próximo mês"
                   >
-                    <CaretRight size={18} />
+                    <ChevronRight size={18} />
                   </Button>
                 </div>
               </div>

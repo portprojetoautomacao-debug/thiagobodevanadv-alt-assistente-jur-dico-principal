@@ -1,7 +1,14 @@
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,19 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { DollarSign, Plus, TrendingUp, TrendingDown, Download } from "lucide-react";
-import { toast } from "sonner";
-import type { FinancialEntry } from "@/types";
+import { useKV } from "@/hooks/use-kv";
 import { exportToCSV, formatCurrency } from "@/lib/utils";
+import type { FinancialEntry } from "@/types";
+import { DollarSign, Download, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function FinancialManagement() {
   const [entries, setEntries] = useKV<FinancialEntry[]>("financialEntries", []);
@@ -116,7 +116,10 @@ export default function FinancialManagement() {
                   <Select
                     value={newEntry.type}
                     onValueChange={(value) =>
-                      setNewEntry({ ...newEntry, type: value as "income" | "expense" })
+                      setNewEntry({
+                        ...newEntry,
+                        type: value as "income" | "expense",
+                      })
                     }
                   >
                     <SelectTrigger>

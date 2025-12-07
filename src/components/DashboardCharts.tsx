@@ -23,13 +23,21 @@ import {
 const CHART_HEIGHT = 250;
 
 interface ChartData {
-  statusData: Array<{ name: string; value: number; color: string }>;
-  varaChartData: Array<{ name: string; value: number }>;
-  trendData: Array<{ month: string; ativos: number; concluidos: number }>;
+  readonly statusData: ReadonlyArray<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  readonly varaChartData: ReadonlyArray<{ name: string; value: number }>;
+  readonly trendData: ReadonlyArray<{
+    month: string;
+    ativos: number;
+    concluidos: number;
+  }>;
 }
 
 interface DashboardChartsProps {
-  chartData: ChartData;
+  readonly chartData: ChartData;
 }
 
 export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
@@ -48,7 +56,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <PieChart>
             <Pie
-              data={chartData.statusData}
+              data={[...chartData.statusData]}
               cx="50%"
               cy="50%"
               outerRadius={80}
@@ -90,8 +98,8 @@ export function VaraChart({ chartData }: Readonly<DashboardChartsProps>) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData.varaChartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+          <BarChart data={[...chartData.varaChartData]}>
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
               className="text-muted-foreground"
@@ -143,7 +151,7 @@ export function TrendChart({ chartData }: Readonly<DashboardChartsProps>) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <LineChart data={chartData.trendData}>
+          <LineChart data={[...chartData.trendData]}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
             <XAxis
               dataKey="month"

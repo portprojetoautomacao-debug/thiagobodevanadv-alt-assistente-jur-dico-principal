@@ -248,7 +248,9 @@ export default function AnalyticsDashboard() {
                     className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-card/50 transition-colors"
                   >
                     <div
-                      className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${getEventTypeColor(event.type)}`}
+                      className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${getEventTypeColor(
+                        event.type
+                      )}`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">

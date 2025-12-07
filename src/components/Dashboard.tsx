@@ -22,13 +22,17 @@ import { lazy, Suspense, useMemo } from "react";
 
 // Lazy load dashboard sections for better code splitting
 const StatusChart = lazy(() =>
-  import("@/components/DashboardCharts").then((m) => ({ default: m.StatusChart }))
+  import("@/components/DashboardCharts").then((m) => ({
+    default: m.StatusChart,
+  }))
 );
 const VaraChart = lazy(() =>
   import("@/components/DashboardCharts").then((m) => ({ default: m.VaraChart }))
 );
 const TrendChart = lazy(() =>
-  import("@/components/DashboardCharts").then((m) => ({ default: m.TrendChart }))
+  import("@/components/DashboardCharts").then((m) => ({
+    default: m.TrendChart,
+  }))
 );
 
 // Funções auxiliares para evitar ternários aninhados
@@ -47,7 +51,7 @@ function getStatusVariant(status: string): "default" | "secondary" | "outline" |
 }
 
 interface DashboardProps {
-  onNavigate: (view: ViewType) => void;
+  readonly onNavigate: (view: ViewType) => void;
 }
 
 function getSafeDate(value?: string) {

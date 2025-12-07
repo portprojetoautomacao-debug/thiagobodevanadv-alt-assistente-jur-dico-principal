@@ -12,12 +12,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity,
-  AlertCircle,
-  CheckCircle,
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
   Clock,
   Cpu,
   GitBranch,
-  LineChart,
   PlayCircle,
   RefreshCw,
   Users,
@@ -249,9 +249,9 @@ export default function AgentOrchestrationPanel() {
   const getStateIcon = (state: CircuitBreakerState) => {
     switch (state) {
       case "CLOSED":
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle2 className="h-4 w-4" />;
       case "HALF_OPEN":
-        return <AlertCircle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4" />;
       case "OPEN":
         return <XCircle className="h-4 w-4" />;
       default:
@@ -265,7 +265,7 @@ export default function AgentOrchestrationPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <LineChart className="h-6 w-6 text-primary" />
+            <BarChart3 className="h-6 w-6 text-primary" />
             Orquestração de Agentes
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -351,7 +351,7 @@ export default function AgentOrchestrationPanel() {
                 <Card className="border-green-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-green-600 flex items-center gap-1">
-                      <CheckCircle className="h-4 w-4" />
+                      <CheckCircle2 className="h-4 w-4" />
                       Saudáveis
                     </CardTitle>
                   </CardHeader>
@@ -365,7 +365,7 @@ export default function AgentOrchestrationPanel() {
                 <Card className="border-yellow-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-yellow-600 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
+                      <AlertTriangle className="h-4 w-4" />
                       Degradadas
                     </CardTitle>
                   </CardHeader>

@@ -334,9 +334,9 @@ ${pub.teor}
 
     this.stats.totalMinutasCriadas += 1;
     this.log(
-      `Minuta criada com sucesso (Docs: ${result.docsUrl || "—"}, CalendarEvent: ${
-        result.calendarEventId || "—"
-      })`,
+      `Minuta criada com sucesso (Docs: ${
+        result.docsUrl || "—"
+      }, CalendarEvent: ${result.calendarEventId || "—"})`,
       "info"
     );
   }

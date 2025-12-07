@@ -9,7 +9,7 @@ import type { ViewType } from "@/types";
 import { ChartPie, TrendingUp, Upload } from "lucide-react";
 
 interface DashboardActionsProps {
-  onNavigate: (view: ViewType) => void;
+  readonly onNavigate: (view: ViewType) => void;
 }
 
 export function DashboardActions({ onNavigate }: Readonly<DashboardActionsProps>) {

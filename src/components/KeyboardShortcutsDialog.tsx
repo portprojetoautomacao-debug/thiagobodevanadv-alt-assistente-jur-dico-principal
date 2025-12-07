@@ -53,7 +53,10 @@ const NAVIGATION_SHORTCUTS: ShortcutConfig[] = [
 
 const QUICK_ACTION_SHORTCUTS: ShortcutConfig[] = [
   { keys: ["{CTRL}", "N"], description: "Novo processo (mostra dica)" },
-  { keys: ["{CTRL}", "Shift", "C"], description: "Abrir Calculadora de Prazos" },
+  {
+    keys: ["{CTRL}", "Shift", "C"],
+    description: "Abrir Calculadora de Prazos",
+  },
 ];
 
 const GENERAL_SHORTCUTS: ShortcutConfig[] = [

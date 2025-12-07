@@ -97,7 +97,10 @@ let _kvClient: Redis | null = null;
 async function getKv(): Promise<Redis> {
   if (_kvClient) return _kvClient;
 
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     throw new Error("Upstash Redis not configured");
   }
 
@@ -138,7 +141,9 @@ function buildDJENQueryUrl(params: DJENQueryParams): string {
     `meio=${params.meio || "D"}`, // D = Digital (intimações eletrônicas)
   ];
 
-  return `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryParts.join("&")}`;
+  return `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryParts.join(
+    "&"
+  )}`;
 }
 
 // ===========================
@@ -150,7 +155,9 @@ function handleDJENResponseStatus(response: Response): void {
   }
 
   if (response.status === 403) {
-    console.error("[DJEN-Sync] Acesso bloqueado (403) - possível bloqueio geográfico");
+    console.error(
+      "[DJEN-Sync] Acesso bloqueado (403) - possível bloqueio geográfico"
+    );
     throw new Error(
       "API DJEN bloqueou acesso - verifique se a função está rodando no Brasil (gru1)"
     );
@@ -161,13 +168,18 @@ function handleDJENResponseStatus(response: Response): void {
   }
 }
 
-async function consultarDJEN(params: DJENQueryParams): Promise<DJENResponse | null> {
+async function consultarDJEN(
+  params: DJENQueryParams
+): Promise<DJENResponse | null> {
   const url = buildDJENQueryUrl(params);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
 
   try {
-    console.log("[DJEN-Sync] Consultando:", url.replace(/numeroOab=[^&]*/, "numeroOab=***"));
+    console.log(
+      "[DJEN-Sync] Consultando:",
+      url.replace(/numeroOab=[^&]*/, "numeroOab=***")
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -211,7 +223,10 @@ function setCorsHeaders(res: VercelResponse): void {
 // ===========================
 // Helper: Check rate limit
 // ===========================
-async function checkRateLimit(kv: Redis, res: VercelResponse): Promise<boolean> {
+async function checkRateLimit(
+  kv: Redis,
+  res: VercelResponse
+): Promise<boolean> {
   const lastSync = await kv.get<string>(KV_KEYS.LAST_SYNC);
   if (!lastSync) return false;
 
@@ -232,9 +247,13 @@ async function checkRateLimit(kv: Redis, res: VercelResponse): Promise<boolean> 
 // ===========================
 // Helper: Create publication from DJEN item
 // ===========================
-function createPublication(item: DJENComunicacao, lawyer: MonitoredLawyer): StoredPublication {
+function createPublication(
+  item: DJENComunicacao,
+  lawyer: MonitoredLawyer
+): StoredPublication {
   const hash =
-    item.hash || `${item.siglaTribunal}-${item.data_disponibilizacao}-${item.numero_processo}`;
+    item.hash ||
+    `${item.siglaTribunal}-${item.data_disponibilizacao}-${item.numero_processo}`;
 
   return {
     id: randomUUID(),
@@ -289,7 +308,8 @@ async function processLawyerPublications(
   let newCount = 0;
   for (const item of djenResponse.items) {
     const hash =
-      item.hash || `${item.siglaTribunal}-${item.data_disponibilizacao}-${item.numero_processo}`;
+      item.hash ||
+      `${item.siglaTribunal}-${item.data_disponibilizacao}-${item.numero_processo}`;
 
     if (existingHashes.has(hash)) {
       continue;
@@ -405,7 +425,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Get enabled lawyers
-    const lawyers = (await kv.get<MonitoredLawyer[]>(KV_KEYS.MONITORED_LAWYERS)) ?? [];
+    const lawyers =
+      (await kv.get<MonitoredLawyer[]>(KV_KEYS.MONITORED_LAWYERS)) ?? [];
     const enabledLawyers = lawyers.filter((l) => l.enabled);
 
     if (enabledLawyers.length === 0) {
@@ -418,10 +439,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Execute sync
-    const { totalPublications, newPublications, errors } = await executeSyncForLawyers(
-      kv,
-      enabledLawyers
-    );
+    const { totalPublications, newPublications, errors } =
+      await executeSyncForLawyers(kv, enabledLawyers);
 
     const duration = Date.now() - startTime;
 

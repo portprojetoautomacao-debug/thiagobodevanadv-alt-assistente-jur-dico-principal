@@ -167,7 +167,8 @@ function buildQueryString(params: DJENQueryParams): string {
     queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`);
   if (params.numeroComunicacao) queryParams.push(`numeroComunicacao=${params.numeroComunicacao}`);
   if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
-  if (params.itensPorPagina) queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
+  if (params.itensPorPagina)
+    queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
   if (params.meio) queryParams.push(`meio=${params.meio}`);
 
   return queryParams.join("&");
@@ -222,7 +223,9 @@ async function consultarComunicacoes(
 
     // Handle rate limiting
     if (response.status === 429) {
-      console.warn(`[DJEN] Rate limit exceeded. Aguarde 1 minuto antes de nova requisição.`);
+      console.warn(
+        `[DJEN] Rate limit exceeded. Aguarde 1 minuto antes de nova requisição.`
+      );
       return { response: null, rateLimitInfo };
     }
 
@@ -268,13 +271,19 @@ interface LawyerQueryContext {
   meio?: "D" | "E";
 }
 
-function parseOABForQuery(numeroOAB?: string): { numero?: string; uf?: string } {
+function parseOABForQuery(numeroOAB?: string): {
+  numero?: string;
+  uf?: string;
+} {
   if (!numeroOAB) return {};
   const parsed = parseOAB(numeroOAB);
   return { numero: parsed.numero, uf: parsed.uf };
 }
 
-function buildDJENQueryParams(tribunal: string, ctx: LawyerQueryContext): DJENQueryParams {
+function buildDJENQueryParams(
+  tribunal: string,
+  ctx: LawyerQueryContext
+): DJENQueryParams {
   const params: DJENQueryParams = {
     siglaTribunal: tribunal,
     dataDisponibilizacaoInicio: ctx.queryDataInicio,
@@ -294,10 +303,13 @@ function determineAdvogadoMatch(
   ctx: LawyerQueryContext
 ): "nome" | "oab" | "ambos" | null {
   const matchNome = ctx.nomeAdvogado
-    ? normalizeText(dest.advogado.nome).includes(normalizeText(ctx.nomeAdvogado))
+    ? normalizeText(dest.advogado.nome).includes(
+        normalizeText(ctx.nomeAdvogado)
+      )
     : false;
   const matchOab = ctx.numeroOabNumerico
-    ? dest.advogado.numero_oab === ctx.numeroOabNumerico && dest.advogado.uf_oab === ctx.ufOab
+    ? dest.advogado.numero_oab === ctx.numeroOabNumerico &&
+      dest.advogado.uf_oab === ctx.ufOab
     : false;
 
   if (matchNome && matchOab) return "ambos";
@@ -352,10 +364,17 @@ async function processTribunalQuery(
   resultados: DJENFilteredResult[],
   erros: Array<{ tribunal: string; erro: string }>
 ): Promise<boolean> {
-  console.log(`[DJEN] Consultando ${tribunal} para ${ctx.nomeAdvogado || ctx.numeroOabNumerico}`);
+  console.log(
+    `[DJEN] Consultando ${tribunal} para ${
+      ctx.nomeAdvogado || ctx.numeroOabNumerico
+    }`
+  );
 
   const queryParams = buildDJENQueryParams(tribunal, ctx);
-  const { response, rateLimitInfo } = await consultarComunicacoes(queryParams, DEFAULT_TIMEOUT);
+  const { response, rateLimitInfo } = await consultarComunicacoes(
+    queryParams,
+    DEFAULT_TIMEOUT
+  );
 
   if (!response) {
     console.warn(`[DJEN] Rate limit atingido ou erro na consulta de ${tribunal}`);
@@ -422,7 +441,12 @@ export async function consultarDJENForLawyer(
 
   for (let i = 0; i < tribunais.length; i++) {
     try {
-      const hitRateLimit = await processTribunalQuery(tribunais[i], ctx, resultados, erros);
+      const hitRateLimit = await processTribunalQuery(
+        tribunais[i],
+        ctx,
+        resultados,
+        erros
+      );
       rateLimitWarning = rateLimitWarning || hitRateLimit;
 
       if (i < tribunais.length - 1) {

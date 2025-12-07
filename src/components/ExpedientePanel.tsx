@@ -232,7 +232,9 @@ function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisD
         "⚠️ DIVERGÊNCIA DETECTADA: Processo de INVENTÁRIO com ação incorreta. Corrigindo..."
       );
       parsed.suggestedActions = ["Apresentar Primeiras Declarações de Inventário"];
-      parsed.summary = `ALERTA: A tarefa sugerida anteriormente estava INCORRETA. Este é um processo de INVENTÁRIO que determina apresentar as Primeiras Declarações. ${parsed.summary || ""}`;
+      parsed.summary = `ALERTA: A tarefa sugerida anteriormente estava INCORRETA. Este é um processo de INVENTÁRIO que determina apresentar as Primeiras Declarações. ${
+        parsed.summary || ""
+      }`;
       parsed.documentType = "Intimação - Inventário";
     }
 

@@ -252,7 +252,10 @@ async function processWriteBatch(): Promise<void> {
   }
 
   try {
-    const entries = Array.from(writes.entries()).map(([key, { value }]) => ({ key, value }));
+    const entries = Array.from(writes.entries()).map(([key, { value }]) => ({
+      key,
+      value,
+    }));
 
     // AbortController com timeout de 5s
     const controller = new AbortController();

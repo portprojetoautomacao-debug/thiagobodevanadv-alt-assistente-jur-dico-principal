@@ -240,7 +240,10 @@ Retorne APENAS o JSON válido, sem explicações.`;
       setUploadHistory((current) =>
         (current || []).map((item) =>
           item.id === latestUpload.id
-            ? { ...item, clienteId: existingClient?.id || `cliente-${extractedData.cpfCnpj}` }
+            ? {
+                ...item,
+                clienteId: existingClient?.id || `cliente-${extractedData.cpfCnpj}`,
+              }
             : item
         )
       );

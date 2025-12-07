@@ -29,11 +29,11 @@ export interface WebhookConfig {
 }
 
 interface WebhookListProps {
-  webhooks: WebhookConfig[];
-  loading: boolean;
-  testingWebhookId: string | null;
-  onTest: (id: string) => void;
-  onDelete: (id: string) => void;
+  readonly webhooks: WebhookConfig[];
+  readonly loading: boolean;
+  readonly testingWebhookId: string | null;
+  readonly onTest: (id: string) => void;
+  readonly onDelete: (id: string) => void;
 }
 
 export function WebhookList({

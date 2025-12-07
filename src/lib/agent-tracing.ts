@@ -129,12 +129,15 @@ export function traceAgentStep(
  * Trace de chamada ao LLM dentro da execução do agente
  */
 export async function traceLLMCall<T>(
-  parentSpan: Span,
+  parentSpan: AgentSpan,
   model: string,
   promptLength: number,
-  executor: () => Promise<{ result: T; tokens: { prompt: number; completion: number } }>
+  executor: () => Promise<{
+    result: T;
+    tokens: { prompt: number; completion: number };
+  }>
 ): Promise<T> {
-  const parentContext = (parentSpan as Span & { context?: unknown }).context;
+  const parentContext = (parentSpan as AgentSpan & { context?: unknown }).context;
 
   const llmSpan = tracingService.startLLMSpan(model, {
     parentContext,

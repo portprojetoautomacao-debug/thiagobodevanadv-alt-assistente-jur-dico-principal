@@ -348,25 +348,7 @@ interface DJENResponse {
   items?: DJENComunicacao[];
   // API pode retornar array direto em alguns casos
   [index: number]: DJENComunicacao;
-  length?: number;
 }
-
-interface DJENFilteredResult {
-  id: number;
-  tribunal: string;
-  data: string;
-  tipo: string;
-  teor: string;
-  numeroProcesso: string;
-  orgao: string;
-  meio: string;
-  link: string;
-  hash: string;
-  matchType: MatchType;
-  advogados: Array<{ nome: string; numero_oab: string; uf_oab: string }>;
-}
-
-type MatchType = "nome" | "oab" | "ambos";
 
 interface DJENQueryParams {
   numeroOab?: string;
@@ -556,6 +538,25 @@ function determineAdvogadoMatchType(
 
 type AdvogadoMatchType = "nome" | "oab" | "ambos";
 
+interface LocalDJENFilteredResult {
+  id: number;
+  tribunal: string;
+  data: string;
+  tipo: string;
+  teor: string;
+  numeroProcesso: string;
+  orgao: string;
+  meio: string;
+  link: string;
+  hash: string;
+  matchType: AdvogadoMatchType;
+  advogados: {
+    nome: string;
+    numero_oab: string;
+    uf_oab: string;
+  }[];
+}
+
 function findAdvogadoMatch(
   comunicacao: DJENComunicacao,
   nomeAdvogado?: string,
@@ -578,7 +579,7 @@ function findAdvogadoMatch(
 function mapComunicacaoToResult(
   comunicacao: DJENComunicacao,
   matchType: AdvogadoMatchType
-): DJENFilteredResult {
+): LocalDJENFilteredResult {
   const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || "";
   return {
     id: comunicacao.id,
@@ -604,7 +605,7 @@ function mapComunicacaoToResult(
 async function processTribunalQuery(
   tribunal: string,
   ctx: LawyerQueryContext,
-  resultados: DJENFilteredResult[],
+  resultados: LocalDJENFilteredResult[],
   erros: Array<{ tribunal: string; erro: string }>
 ): Promise<boolean> {
   console.log(`[DJEN] Consultando ${tribunal} para ${ctx.nomeAdvogado || ctx.numeroOabNumerico}`);
@@ -654,7 +655,7 @@ async function consultarDJENForLawyer(
   dataFim?: string,
   meio?: "D" | "E"
 ): Promise<{
-  resultados: DJENFilteredResult[];
+  resultados: LocalDJENFilteredResult[];
   erros: Array<{ tribunal: string; erro: string }>;
   rateLimitWarning?: boolean;
 }> {
@@ -674,7 +675,7 @@ async function consultarDJENForLawyer(
     meio,
   };
 
-  const resultados: DJENFilteredResult[] = [];
+  const resultados: LocalDJENFilteredResult[] = [];
   const erros: Array<{ tribunal: string; erro: string }> = [];
   let rateLimitWarning = false;
 
@@ -2138,7 +2139,7 @@ async function checkDJENForLawyer(
  * Process a single DJEN publication
  */
 async function processDJENPublication(
-  comunicacao: DJENFilteredResult,
+  comunicacao: LocalDJENFilteredResult,
   lawyer: MonitoredLawyer,
   timestamp: string,
   result: DJENMonitorResult

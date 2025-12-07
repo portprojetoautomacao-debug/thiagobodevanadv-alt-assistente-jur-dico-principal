@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type MemoryItem } from "@/hooks/use-autonomous-agents";
-import { Brain, Clock, FileText, Gavel, Lightbulb } from "lucide-react";
+import { Brain, Clock, FileText, Lightbulb, Scale } from "lucide-react";
 import React from "react";
 
 interface LegalMemoryViewerProps {
@@ -11,7 +11,7 @@ interface LegalMemoryViewerProps {
   readonly onRefresh?: () => void;
 }
 
-// Permite peso (weight) para ícones do Phosphor
+// Mapeamento de tipo para ícone
 const typeIcons: Record<
   string,
   React.ComponentType<{
@@ -21,7 +21,7 @@ const typeIcons: Record<
   }>
 > = {
   peca_processual: FileText,
-  precedente: Gavel,
+  precedente: Scale,
   estrategia: Lightbulb,
   default: Brain,
 };

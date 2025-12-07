@@ -85,7 +85,11 @@ Retorne um objeto JSON com a seguinte estrutura:
 }`;
 
         const result = await geminiGenerateJSON<{
-          missingDocuments: Array<{ documentType: string; reason: string; urgency?: string }>;
+          missingDocuments: Array<{
+            documentType: string;
+            reason: string;
+            urgency?: string;
+          }>;
         }>(prompt);
 
         if (result.missingDocuments && Array.isArray(result.missingDocuments)) {

@@ -265,21 +265,21 @@ function _showSyncToast(result: SyncResult): void {
 }
 
 interface DJENPublicationsWidgetProps {
-  onViewAll?: () => void;
+  readonly onViewAll?: () => void;
   readonly compact?: boolean;
   readonly maxItems?: number;
 }
 
 // Interface para props do PublicationsHeader (reduz parâmetros para conformidade S107)
 interface PublicationsHeaderProps {
-  publicationsCount: number;
-  filter: "all" | "unread";
-  setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void;
-  syncing: boolean;
-  handleSync: (fn?: () => void | Promise<void>) => Promise<void>;
-  fetchPublications: () => Promise<void>;
-  lastCheck: string | null;
-  lawyersCount: number;
+  readonly publicationsCount: number;
+  readonly filter: "all" | "unread";
+  readonly setFilter: (fn: (f: "all" | "unread") => "all" | "unread") => void;
+  readonly syncing: boolean;
+  readonly handleSync: (fn?: () => void | Promise<void>) => Promise<void>;
+  readonly fetchPublications: () => Promise<void>;
+  readonly lastCheck: string | null;
+  readonly lawyersCount: number;
 }
 
 // Helpers de renderização extraídos para reduzir complexidade (S3776)
@@ -623,7 +623,9 @@ export default function DJENPublicationsWidget({
           showViewAll={showViewAll}
           autoRegistering={autoRegistering}
           onRegisterAll={() => {
-            void handleAutoRegisterAll(publications);
+            handleAutoRegisterAll(publications).catch((err) =>
+              console.error("[DJENWidget] Auto-register failed:", err)
+            );
           }}
           onViewAll={onViewAll}
         />

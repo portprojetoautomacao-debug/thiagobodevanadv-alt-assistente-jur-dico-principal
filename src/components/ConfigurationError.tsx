@@ -74,7 +74,8 @@ export function ConfigurationError() {
                   </p>
                   <div className="bg-muted/50 p-3 rounded-lg text-xs font-mono space-y-1">
                     <div>
-                      GEMINI_API_KEY=<span className="italic">sua_chave_aqui</span>
+                      GEMINI_API_KEY=
+                      <span className="italic">sua_chave_aqui</span>
                     </div>
                     <div>GEMINI_MODEL=gemini-2.5-pro</div>
                     <div>

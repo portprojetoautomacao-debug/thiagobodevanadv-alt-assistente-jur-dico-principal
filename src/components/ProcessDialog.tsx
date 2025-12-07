@@ -22,10 +22,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ProcessDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  process?: Process;
-  onSave: (process: Process) => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly process?: Process;
+  readonly onSave: (process: Process) => void;
 }
 
 // Helper to create initial form data
@@ -196,7 +196,10 @@ export default function ProcessDialog({
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
-                  setFormData((f) => ({ ...f, status: value as Process["status"] }))
+                  setFormData((f) => ({
+                    ...f,
+                    status: value as Process["status"],
+                  }))
                 }
               >
                 <SelectTrigger id="status">
@@ -217,7 +220,12 @@ export default function ProcessDialog({
                 id="dataDistribuicao"
                 type="date"
                 value={formData.dataDistribuicao}
-                onChange={(e) => setFormData((f) => ({ ...f, dataDistribuicao: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((f) => ({
+                    ...f,
+                    dataDistribuicao: e.target.value,
+                  }))
+                }
               />
             </div>
 

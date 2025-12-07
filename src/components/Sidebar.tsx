@@ -22,10 +22,10 @@ import {
 } from "lucide-react";
 
 interface SidebarProps {
-  currentView: string;
-  onViewChange: (view: ViewType) => void;
-  user: User | null;
-  onLogout: () => void;
+  readonly currentView: string;
+  readonly onViewChange: (view: ViewType) => void;
+  readonly user: User | null;
+  readonly onLogout: () => void;
 }
 
 const NAVIGATION_ITEMS = [

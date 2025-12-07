@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, Clock, Gavel } from "lucide-react";
 
 interface DashboardStatsProps {
-  stats: {
+  readonly stats: Readonly<{
     ativos: number;
     concluidos: number;
     prazosPendentes: number;
     prazosUrgentes: number;
-  };
+  }>;
 }
 
 export function DashboardStats({ stats }: Readonly<DashboardStatsProps>) {

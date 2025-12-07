@@ -15,7 +15,6 @@ type ActivityResult = "success" | "warning" | "error";
 // Type alias for state setter functions
 type StateSetter<T> = (fn: (current: T | null) => T) => void;
 
-// Type alias para log de atividade
 type ActivityLogEntry = {
   id: string;
   agentId: string;

@@ -32,14 +32,26 @@
     "huggingface",
     "openai",
     "codespaces",
-    "devcontainer"
+    "devcontainer",
+    "atualizacao",
+    "negociacao",
+    "solicitacao",
+    "glassmorphic",
+    "juridico",
+    "juridica",
+    "processual",
+    "intimacao",
+    "intimacoes",
+    "expediente",
+    "expedientes",
+    "peticao",
+    "peticoes",
+    "minuta",
+    "minutas",
+    "prazo",
+    "prazos",
+    "advogado",
+    "advogados"
   ],
-  "ignorePaths": [
-    "node_modules",
-    "dist",
-    "*.lock",
-    "*.log",
-    "coverage",
-    ".git"
-  ]
+  "ignorePaths": ["node_modules", "dist", "*.lock", "*.log", "coverage", ".git"]
 }

@@ -6,6 +6,19 @@
       "env": {
         "PATH": "/usr/local/share/nvm/versions/node/v22.21.1/bin:${PATH}"
       }
+    },
+    "sonarqube": {
+      "command": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sonarqube"
+      ],
+      "env": {
+        "PATH": "/usr/local/share/nvm/versions/node/v22.21.1/bin:${PATH}",
+        "SONARQUBE_URL": "https://sonarcloud.io",
+        "SONARQUBE_TOKEN": "seu_token_aqui",
+        "SONARQUBE_ORGANIZATION": "thiagobodevan-a11y-assistente-juridico-p"
+      }
     }
   }
 }

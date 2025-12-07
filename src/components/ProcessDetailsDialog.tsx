@@ -42,11 +42,11 @@ function formatDiasRestantes(dias: number): string {
 }
 
 interface ProcessDetailsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  process: Process | null;
-  onEdit: (process: Process) => void;
-  onDelete: (id: string) => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly process: Process | null;
+  readonly onEdit: (process: Process) => void;
+  readonly onDelete: (id: string) => void;
 }
 
 export default function ProcessDetailsDialog({

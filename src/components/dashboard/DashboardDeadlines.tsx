@@ -11,8 +11,8 @@ import type { Prazo, ViewType } from "@/types";
 import { ArrowRight, CalendarCheck } from "lucide-react";
 
 interface DashboardDeadlinesProps {
-  prazosProximos: (Prazo & { processoTitulo: string })[];
-  onNavigate: (view: ViewType) => void;
+  readonly prazosProximos: ReadonlyArray<Prazo & { processoTitulo: string }>;
+  readonly onNavigate: (view: ViewType) => void;
 }
 
 export function DashboardDeadlines({

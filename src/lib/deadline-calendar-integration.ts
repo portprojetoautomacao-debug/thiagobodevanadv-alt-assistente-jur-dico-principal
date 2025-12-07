@@ -9,9 +9,12 @@ import type { Appointment } from "@/types";
 import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 
 // Tipos para integração
+export type AnalysisDeadlineType = "úteis" | "corridos";
+export type AnalysisPriority = "baixa" | "média" | "alta" | "crítica";
+
 export interface AnalysisDeadline {
   days: number;
-  type: "úteis" | "corridos";
+  type: AnalysisDeadlineType;
   endDate: string;
   description?: string;
 }
@@ -19,7 +22,7 @@ export interface AnalysisDeadline {
 export interface IntimationAnalysisResult {
   summary: string;
   deadline?: AnalysisDeadline;
-  priority: "baixa" | "média" | "alta" | "crítica";
+  priority: AnalysisPriority;
   type?: "intimacao_judicial" | "notificacao" | "outro";
   nextSteps?: string[];
   suggestedAction?: string;
@@ -280,7 +283,7 @@ export async function syncDeadlineToGoogleCalendar(
 
     return eventId;
   } catch (error) {
-    console.error("[DeadlineIntegration] Failed to sync deadline to Google Calendar", error);
+    console.error("[DeadlineIntegration] Failed to sync to Google Calendar:", error);
     return null;
   }
 }
@@ -385,7 +388,10 @@ function processSingleAnalysis(
 }
 
 async function syncBatchToGoogle(
-  analysesWithDeadlines: Array<{ analysis: IntimationAnalysisResult; title: string }>,
+  analysesWithDeadlines: Array<{
+    analysis: IntimationAnalysisResult;
+    title: string;
+  }>,
   results: DeadlineCreationResult[]
 ): Promise<void> {
   if (!googleCalendarService.getStatus().authenticated) return;
@@ -412,7 +418,10 @@ async function syncBatchToGoogle(
  * Coletar appointments novos de análises
  */
 function collectNewAppointments(
-  analysesWithDeadlines: Array<{ analysis: IntimationAnalysisResult; title: string }>,
+  analysesWithDeadlines: Array<{
+    analysis: IntimationAnalysisResult;
+    title: string;
+  }>,
   currentAppointments: Appointment[],
   results: DeadlineCreationResult[]
 ): Appointment[] {

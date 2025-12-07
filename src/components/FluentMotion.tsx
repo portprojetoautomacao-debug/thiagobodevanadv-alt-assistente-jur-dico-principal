@@ -104,7 +104,9 @@ export function FluentReveal({
   direction = "left",
   ...props
 }: MotionProps &
-  React.HTMLAttributes<HTMLDivElement> & { direction?: "left" | "right" | "up" | "down" }) {
+  React.HTMLAttributes<HTMLDivElement> & {
+    direction?: "left" | "right" | "up" | "down";
+  }) {
   const variants = {
     left: {
       initial: { clipPath: "inset(0 100% 0 0)" },
