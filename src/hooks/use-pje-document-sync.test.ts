@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePJeDocumentSync } from "./use-pje-document-sync";
 
@@ -89,5 +90,44 @@ describe("usePJeDocumentSync", () => {
 
     // Como não temos documentos iniciais, apenas verificamos se não quebra
     expect(result.current.documentosPendentes).toEqual([]);
+  });
+
+  it("deve processar mensagem SYNC_PROCESSOS", async () => {
+    renderHook(() => usePJeDocumentSync());
+
+    // Aguardar inicialização
+    await waitFor(() => {
+      expect(chromeMock.runtime.onMessage.addListener).toHaveBeenCalled();
+    });
+
+    // Simular recebimento de mensagem
+    const messageHandler = chromeMock.runtime.onMessage.addListener.mock.calls[0][0];
+    const processos = [
+      {
+        numero: "1234567-89.2023.8.26.0100",
+        classe: "Procedimento Comum",
+        assunto: "Danos Morais",
+        parteAutor: "João Silva",
+        parteReu: "Empresa X",
+        comarca: "São Paulo",
+        vara: "1ª Vara Cível",
+        situacao: "ativo",
+        distribuicao: "2023-01-01",
+        ultimoMovimento: { data: "2023-10-01" },
+      },
+    ];
+
+    act(() => {
+      messageHandler({
+        type: "SYNC_PROCESSOS",
+        data: processos,
+      });
+    });
+
+    // Verificar se toast foi chamado
+    expect(toast.success).toHaveBeenCalledWith(expect.stringContaining("processos sincronizados"));
+
+    // Verificar se mockSetData foi chamado (indicando salvamento no KV)
+    expect(mockSetData).toHaveBeenCalled();
   });
 });
