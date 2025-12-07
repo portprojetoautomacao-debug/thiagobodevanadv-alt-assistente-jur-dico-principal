@@ -14,9 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProcessSync } from "@/hooks/use-process-sync";
+import { useTimelineSync } from "@/hooks/use-timeline-sync";
 import { calcularDiasRestantes, formatarData, formatarMoeda, isUrgente } from "@/lib/prazos";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
-import { createProcessTimeline } from "@/lib/process-timeline-utils";
 import type { PremonicaoJuridica, Process } from "@/types";
 import { CalendarCheck, FileText, GitBranch, Mail, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -65,14 +65,24 @@ export default function ProcessDetailsDialog({
   const [premonicaoError, setPremonicaoError] = useState<string | null>(null);
   const { getExpedientesForProcess, getMinutasForProcess } = useProcessSync();
 
+  // Hook de sincronização automática da timeline (atualiza a cada 30s)
+  const {
+    events: timelineEvents,
+    newEventsCount,
+    markAsRead,
+    lastUpdate,
+    refresh,
+  } = useTimelineSync({
+    processId: process?.id,
+    autoRefresh: open, // Só atualiza quando dialog está aberto
+    refreshInterval: 30000, // 30 segundos
+  });
+
   if (!process) return null;
 
   // Obter expedientes e minutas vinculados ao processo
   const expedientesVinculados = getExpedientesForProcess(process.id);
   const minutasVinculadas = getMinutasForProcess(process.id);
-
-  // Criar timeline processual combinando expedientes e minutas
-  const timelineEvents = createProcessTimeline(expedientesVinculados, minutasVinculadas);
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
@@ -130,12 +140,30 @@ export default function ProcessDetailsDialog({
           </div>
         </DialogHeader>
 
-        <Tabs defaultValue="detalhes" className="w-full">
+        <Tabs
+          defaultValue="detalhes"
+          className="w-full"
+          onValueChange={(value) => {
+            // Marca como lido quando usuário abre a tab Timeline
+            if (value === "timeline" && newEventsCount > 0) {
+              markAsRead();
+            }
+          }}
+        >
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
-            <TabsTrigger value="timeline">
+            <TabsTrigger value="timeline" className="relative">
               <GitBranch size={16} className="mr-1" />
               Timeline
+              {newEventsCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] animate-pulse"
+                >
+                  {newEventsCount}
+                </Badge>
+              )}
+              {lastUpdate && <span className="ml-1 text-[10px] text-muted-foreground">•</span>}
             </TabsTrigger>
             <TabsTrigger value="prazos">
               <CalendarCheck size={16} className="mr-1" />
@@ -153,6 +181,28 @@ export default function ProcessDetailsDialog({
           </TabsList>
 
           <TabsContent value="timeline" className="mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium">Linha do Tempo do Processo</h3>
+                {lastUpdate && (
+                  <span className="text-xs text-muted-foreground">
+                    Atualizado: {new Date(lastUpdate).toLocaleTimeString("pt-BR")}
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await refresh();
+                  toast.success("Timeline atualizada!");
+                }}
+                title="Atualizar timeline manualmente"
+              >
+                <GitBranch size={14} className="mr-1" />
+                Atualizar
+              </Button>
+            </div>
             <ProcessTimelineViewer process={process} events={timelineEvents} />
           </TabsContent>
 
