@@ -33,8 +33,8 @@ export default function AudioTranscription() {
 
   // Verifica suporte a Web Speech API
   const isSpeechSupported =
-    typeof window !== "undefined" &&
-    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+    typeof globalThis !== "undefined" &&
+    ("SpeechRecognition" in globalThis || "webkitSpeechRecognition" in globalThis);
 
   const handleStartRecording = () => {
     if (!isSpeechSupported) {
@@ -50,7 +50,7 @@ export default function AudioTranscription() {
 
     const SpeechRecognitionClass =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (globalThis as any).SpeechRecognition || (globalThis as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass() as SpeechRecognition;
 
     recognition.lang = "pt-BR";
@@ -102,11 +102,11 @@ export default function AudioTranscription() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const audioFile = e.target.files?.[0];
+    if (!audioFile) return;
 
-    audioFileRef.current = file;
-    toast.info(`Arquivo "${file.name}" selecionado`);
+    audioFileRef.current = audioFile;
+    toast.info(`Arquivo "${audioFile.name}" selecionado`);
 
     // Para arquivos de áudio, informamos que precisaria de um serviço de transcrição
     setError(
@@ -156,10 +156,12 @@ Responda APENAS com JSON válido, sem texto adicional.`,
       const data = await response.json();
       const content = data.response || data.choices?.[0]?.message?.content || "";
 
-      // Parse do JSON da resposta
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const analysis: TranscriptionAnalysis = JSON.parse(jsonMatch[0]);
+      // Parse do JSON da resposta sem regex greedy
+      const startIdx = content.indexOf("{");
+      const endIdx = content.lastIndexOf("}");
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        const jsonStr = content.substring(startIdx, endIdx + 1);
+        const analysis: TranscriptionAnalysis = JSON.parse(jsonStr);
         setSummary(analysis.summary || "Não foi possível gerar sumário");
         setActionItems(analysis.actionItems || []);
         toast.success("Análise concluída com IA Gemini");

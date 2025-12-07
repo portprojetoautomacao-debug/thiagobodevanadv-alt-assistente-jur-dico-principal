@@ -1,9 +1,4 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 
 interface InfoTooltipProps {
@@ -18,7 +13,7 @@ export function InfoTooltip({
   side = "top",
   className = "",
   ariaLabel = "Mais informações",
-}: InfoTooltipProps) {
+}: Readonly<InfoTooltipProps>) {
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
@@ -26,12 +21,9 @@ export function InfoTooltip({
           <button
             type="button"
             className={`inline-flex items-center justify-center p-0.5 rounded-full hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 ${className}`}
-            aria-label={ariaLabel}>
-            <Info
-              size={16}
-              className="text-muted-foreground cursor-help"
-              aria-hidden="true"
-            />
+            aria-label={ariaLabel}
+          >
+            <Info size={16} className="text-muted-foreground cursor-help" aria-hidden="true" />
           </button>
         </TooltipTrigger>
         <TooltipContent side={side} className="max-w-xs">
@@ -52,7 +44,7 @@ export function LabelWithTooltip({
   label,
   tooltip,
   required = false,
-}: LabelWithTooltipProps) {
+}: Readonly<LabelWithTooltipProps>) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium">

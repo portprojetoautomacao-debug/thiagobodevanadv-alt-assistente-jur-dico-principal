@@ -2,7 +2,7 @@
 // Os gráficos exibem estatísticas calculadas a partir de processos, expedientes e dados financeiros reais
 // ✅ OTIMIZAÇÃO: Imports específicos de Recharts para melhor tree-shaking
 // (um único import já é suficiente; o bundler tree-shakeia pelos símbolos usados)
-import { Gavel, PieChart as PieChartIcon, TrendingUp } from "lucide-react";
+import { ChartPie, Gavel, TrendingUp } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -40,12 +40,12 @@ interface DashboardChartsProps {
   readonly chartData: ChartData;
 }
 
-export function StatusChart({ chartData }: DashboardChartsProps) {
+export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
   try {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <PieChartIcon size={48} className="text-muted-foreground mb-2" />
+          <ChartPie size={48} className="text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
         </div>
       );
@@ -56,7 +56,7 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <PieChart>
             <Pie
-              data={chartData.statusData}
+              data={[...chartData.statusData]}
               cx="50%"
               cy="50%"
               outerRadius={80}
@@ -77,14 +77,14 @@ export function StatusChart({ chartData }: DashboardChartsProps) {
     console.error("Error rendering StatusChart:", error);
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <PieChart size={48} className="text-muted-foreground mb-2" />
+        <ChartPie size={48} className="text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
       </div>
     );
   }
 }
 
-export function VaraChart({ chartData }: DashboardChartsProps) {
+export function VaraChart({ chartData }: Readonly<DashboardChartsProps>) {
   try {
     if (!chartData?.varaChartData || chartData.varaChartData.length === 0) {
       return (
@@ -98,8 +98,8 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData.varaChartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+          <BarChart data={[...chartData.varaChartData]}>
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
               className="text-muted-foreground"
@@ -137,7 +137,7 @@ export function VaraChart({ chartData }: DashboardChartsProps) {
   }
 }
 
-export function TrendChart({ chartData }: DashboardChartsProps) {
+export function TrendChart({ chartData }: Readonly<DashboardChartsProps>) {
   try {
     if (!chartData?.trendData || chartData.trendData.length === 0) {
       return (
@@ -151,7 +151,7 @@ export function TrendChart({ chartData }: DashboardChartsProps) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <LineChart data={chartData.trendData}>
+          <LineChart data={[...chartData.trendData]}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
             <XAxis
               dataKey="month"

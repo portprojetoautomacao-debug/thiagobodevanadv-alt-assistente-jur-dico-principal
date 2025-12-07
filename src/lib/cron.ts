@@ -138,7 +138,9 @@ async function storePublication(publication: StoredPublication): Promise<void> {
       return existingHash === pubHash;
     });
 
-    if (!isDuplicate) {
+    if (isDuplicate) {
+      console.log(`[KV] Skipped duplicate: ${pubHash}`);
+    } else {
       existing.unshift(publication);
       // Use pipeline for atomic operations
       await kv.set(key, existing.slice(0, 1000));
@@ -150,8 +152,6 @@ async function storePublication(publication: StoredPublication): Promise<void> {
       await kv.set(hashKey, hashes.slice(0, 2000));
 
       console.log(`[KV] Stored publication: ${pubHash}`);
-    } else {
-      console.log(`[KV] Skipped duplicate: ${pubHash}`);
     }
   } catch (error) {
     console.error("[KV] Error storing publication:", error);
@@ -347,6 +347,19 @@ interface DJENResponse {
   length?: number;
 }
 
+/** Tipo de match de advogado: nome, OAB ou ambos */
+type AdvogadoMatchType = "nome" | "oab" | "ambos";
+
+/** Informações de advogado extraídas de publicações */
+interface AdvogadoInfo {
+  nome: string;
+  numero_oab: string;
+  uf_oab: string;
+}
+
+// Tipo reservado para futuras implementações de filtros
+type _DJENFilterCriteria = "nome" | "oab" | "processo" | "ambos";
+
 interface DJENFilteredResult {
   id: number;
   tribunal: string;
@@ -358,9 +371,12 @@ interface DJENFilteredResult {
   meio: string;
   link: string;
   hash: string;
-  matchType: "nome" | "oab" | "ambos";
-  advogados: Array<{ nome: string; numero_oab: string; uf_oab: string }>;
+  matchType: AdvogadoMatchType;
+  advogados: AdvogadoInfo[];
 }
+
+/** Meio de publicação: E = Eletrônico, D = Digital */
+type MeioPublicacao = "E" | "D";
 
 interface DJENQueryParams {
   numeroOab?: string;
@@ -371,7 +387,7 @@ interface DJENQueryParams {
   dataDisponibilizacaoFim?: string;
   pagina?: number;
   itensPorPagina?: number;
-  meio?: "E" | "D";
+  meio?: MeioPublicacao;
 }
 
 const DJEN_TIMEOUT = 30000;
@@ -389,14 +405,14 @@ function normalizeText(text: string): string {
 function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
   if (!numeroOAB) return {};
   const value = numeroOAB.trim();
-  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
+  const matchOABPattern = /OAB\s?\/\s?([A-Z]{2})\s+(\d+)/i.exec(value);
   if (matchOABPattern) return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
+  const matchNumericUF = /(\d+)\s?\/\s?([A-Z]{2})/i.exec(value);
   if (matchNumericUF) return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
-  const matchNumeric = value.match(/^(\d+)$/);
+  const matchNumeric = /^(\d+)$/.exec(value);
   if (matchNumeric) return { numero: matchNumeric[1] };
   // Handle MG184404 format
-  const matchUFNum = value.match(/^([A-Z]{2})(\d+)$/i);
+  const matchUFNum = /^([A-Z]{2})(\d+)$/i.exec(value);
   if (matchUFNum) return { uf: matchUFNum[1].toUpperCase(), numero: matchUFNum[2] };
   return {};
 }
@@ -548,13 +564,15 @@ function determineAdvogadoMatchType(
   return null;
 }
 
+type AdvogadoMatchResult = "nome" | "oab" | "ambos";
+
 function findAdvogadoMatch(
   comunicacao: DJENComunicacao,
   nomeAdvogado?: string,
   numeroOabNumerico?: string,
   ufOab?: string
-): { found: boolean; matchType: "nome" | "oab" | "ambos" } {
-  let matchType: "nome" | "oab" | "ambos" = "nome";
+): { found: boolean; matchType: AdvogadoMatchResult } {
+  let matchType: AdvogadoMatchResult = "nome";
   const found =
     comunicacao.destinatarioadvogados?.some((dest) => {
       const type = determineAdvogadoMatchType(dest, nomeAdvogado, numeroOabNumerico, ufOab);
@@ -1154,7 +1172,7 @@ async function sendEmailNotification(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">${notification.title}</h2>
           <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
-            /\n/g,
+            "\n",
             "<br>"
           )}</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
@@ -1194,12 +1212,12 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     const kv = await getKv();
 
     // Get all processes with deadlines
-    const processes = ((await kv.get("processes")) as ProcessWithDeadlines[]) || [];
+    const processes = (await kv.get<ProcessWithDeadlines[]>("processes")) || [];
 
     console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
 
     // Get calendar sync settings
-    const calendarSettings = (await kv.get("calendar-settings")) as CalendarSettings | null;
+    const calendarSettings = await kv.get<CalendarSettings>("calendar-settings");
 
     if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
       console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);

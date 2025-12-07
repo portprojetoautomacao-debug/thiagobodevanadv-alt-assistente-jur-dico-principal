@@ -10,7 +10,7 @@
 // Safe origin resolver (evita erro se não houver window)
 const getOrigin = () => {
   try {
-    return typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    return globalThis.window === undefined ? "http://localhost" : globalThis.window.location.origin;
   } catch {
     return "http://localhost";
   }

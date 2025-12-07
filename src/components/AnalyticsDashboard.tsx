@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAnalytics } from "@/hooks/use-analytics";
-import { AlertTriangle, BarChart3, Eye, MousePointer2, Trash2 } from "lucide-react";
+import { AlertTriangle, BarChart2, Eye, MousePointer, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 
@@ -95,7 +95,7 @@ export default function AnalyticsDashboard() {
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
-            <BarChart3 size={20} className="text-muted-foreground" />
+            <BarChart2 size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold gradient-text">{safeAnalytics.last24h.total}</div>
@@ -123,7 +123,7 @@ export default function AnalyticsDashboard() {
         <Card className="glassmorphic border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ações (24h)</CardTitle>
-            <MousePointer2 size={20} className="text-muted-foreground" />
+            <MousePointer size={20} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-accent">{safeAnalytics.last24h.actions}</div>

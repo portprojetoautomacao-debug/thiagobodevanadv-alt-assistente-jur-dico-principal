@@ -1,11 +1,5 @@
-import {
-  addDays,
-  isWeekend,
-  format,
-  differenceInDays,
-  parseISO,
-} from "date-fns";
 import type { Feriado } from "@/types";
+import { addDays, differenceInDays, format, isWeekend, parseISO } from "date-fns";
 
 /**
  * Feriados nacionais fixos para 2025.

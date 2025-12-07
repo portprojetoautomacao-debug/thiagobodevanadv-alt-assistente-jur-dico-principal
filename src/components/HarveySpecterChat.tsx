@@ -209,8 +209,8 @@ const SimpleMarkdown = memo(({ content }: { content: string }) => {
         .replaceAll(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
         .replaceAll(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
         // Line breaks
-        .replaceAll(/\n\n/g, '</p><p class="mt-2">')
-        .replaceAll(/\n/g, "<br/>")
+        .replaceAll("\n\n", '</p><p class="mt-2">')
+        .replaceAll("\n", "<br/>")
     );
   }, [content]);
 
@@ -363,6 +363,8 @@ export default function HarveySpecterChat({
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [sessionId] = useState(`harvey-${Date.now()}`); // 🔥 Session ID para tracking
+  const [conversationTurn, setConversationTurn] = useState(0); // 🔥 Contador de turnos
 
   // Refs
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -382,6 +384,9 @@ export default function HarveySpecterChat({
     cancelStream,
     reset: resetStreaming,
   } = useAIStreaming({
+    agentId: "harvey-specter", // 🔥 ID do agente para Sentry
+    sessionId, // 🔥 Session ID único para rastrear conversação
+    conversationTurn, // 🔥 Contador de turnos
     onChunk: () => {
       // Scroll suave durante streaming
       requestAnimationFrame(() => {
@@ -661,6 +666,9 @@ Regras:
             msg.id === assistantId ? { ...msg, content: finalContent } : msg
           )
         );
+
+        // 🔥 Incrementar contador de turnos após sucesso
+        setConversationTurn((prev) => prev + 1);
       } catch (error) {
         console.error("[Harvey] Erro:", error);
         setMessages((current) =>

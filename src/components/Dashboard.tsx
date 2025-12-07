@@ -1,4 +1,6 @@
 import DJENPublicationsWidget from "@/components/DJENPublicationsWidget";
+import { PJeDocumentWidget, PJeStatusBadge } from "@/components/PJeDocumentWidget";
+import { PjeImageImporter } from "@/components/PjeImageImporter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +11,10 @@ import {
   AlertCircle,
   ArrowRight,
   CalendarCheck,
-  CheckCircle2,
+  ChartPie,
+  CheckCircle,
   Clock,
   Gavel,
-  PieChart,
   TrendingUp,
   Upload,
 } from "lucide-react";
@@ -58,7 +60,7 @@ function getSafeDate(value?: string) {
   return Number.isNaN(ts) ? 0 : ts;
 }
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
+export default function Dashboard({ onNavigate }: Readonly<DashboardProps>) {
   const [processes] = useKV<Process[]>("processes", []);
 
   const stats = useMemo(() => {
@@ -204,6 +206,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
             <p className="text-muted-foreground">Visão geral da sua gestão processual</p>
           </div>
+
+          <div className="flex items-center gap-2">
+            <PJeStatusBadge />
+            <PJeDocumentWidget />
+            <PjeImageImporter />
+          </div>
         </div>
       </div>
 
@@ -223,7 +231,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover status-gradient-completed">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Processos Concluídos</CardTitle>
-            <CheckCircle2 className="text-accent neon-glow" size={24} />
+            <CheckCircle className="text-accent neon-glow" size={24} />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold gradient-text">{stats.concluidos}</div>
@@ -284,15 +292,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle2 size={14} />
+                  <CheckCircle size={14} />
                   Extração automática
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle2 size={14} />
+                  <CheckCircle size={14} />
                   Powered by Gemini 2.5 Pro
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <CheckCircle2 size={14} />
+                  <CheckCircle size={14} />
                   Salva automaticamente
                 </Badge>
               </div>
@@ -320,7 +328,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="card-glow-hover glassmorphic">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 gradient-text">
-              <PieChart size={24} />
+              <ChartPie size={24} />
               Processos por Status
             </CardTitle>
           </CardHeader>

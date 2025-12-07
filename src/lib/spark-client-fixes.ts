@@ -1,5 +1,5 @@
 /*
- * Wraps window.spark.kv methods to add robust JSON detection and improved errors
+ * Wraps globalThis.window.spark.kv methods to add robust JSON detection and improved errors
  * when the runtime or proxy returns HTML (eg. index.html / login page / 404 HTML)
  * instead of the expected JSON payload.
  *
@@ -18,9 +18,7 @@ interface SparkKV {
   [key: string]: unknown;
 }
 
-interface SparkLLM {
-  (prompt: string, modelName?: string, jsonMode?: boolean): Promise<string>;
-}
+type SparkLLM = (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>;
 
 // Extend Window interface to include spark
 declare global {
@@ -44,7 +42,7 @@ interface ResponseLike {
  * Patches Spark client to suppress localization errors that don't affect functionality
  */
 export function patchSparkLocalization() {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
 
   // Intercept console errors to suppress RegisterClientLocalizationsError
   const originalError = console.error;
@@ -61,7 +59,7 @@ export function patchSparkLocalization() {
 }
 
 export function patchFileReader() {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
 
   const originalReadAsText = FileReader.prototype.readAsText;
   FileReader.prototype.readAsText = function (blob, encoding) {
@@ -80,7 +78,7 @@ export function patchFileReader() {
 }
 
 export function applySparkClientFixes() {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
 
   // Apply localization patch first
   patchSparkLocalization();
@@ -88,7 +86,7 @@ export function applySparkClientFixes() {
   // Apply FileReader patch to prevent crashes
   patchFileReader();
 
-  const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
+  const w = globalThis as typeof globalThis & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
 
   try {
     // Se spark não existir, cria um mock seguro para evitar crash
@@ -295,7 +293,12 @@ function extractChoicesContent(data: unknown): string | null {
   if (data && typeof data === "object" && "choices" in data) {
     const choices = (data as { choices: Array<{ message?: { content?: unknown } }> }).choices;
     const content = choices?.[0]?.message?.content;
-    if (content) return String(content);
+    if (content) {
+      // Garantir stringify seguro
+      if (typeof content === "string") return content;
+      if (typeof content === "object" && content !== null) return JSON.stringify(content);
+      return String(content);
+    }
   }
   return null;
 }
@@ -358,8 +361,8 @@ function handleDiagnosticError(diagnosticError: unknown, originalError: unknown)
 // ===== Main refactored function =====
 
 export function applySparkLLMFixes() {
-  if (typeof window === "undefined") return;
-  const w = window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
+  if (globalThis.window === undefined) return;
+  const w = globalThis.window as Window & { spark?: { kv?: SparkKV; llm?: SparkLLM } };
   if (!w.spark?.llm) return;
 
   try {

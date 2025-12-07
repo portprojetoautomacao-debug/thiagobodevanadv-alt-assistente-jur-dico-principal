@@ -8,10 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calcularDiasRestantes, formatarData, isUrgente } from "@/lib/prazos";
 import type { Prazo, ViewType } from "@/types";
-import {
-  ArrowRight as ArrowRightIcon,
-  CalendarCheck as CalendarCheckIcon,
-} from "lucide-react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
 
 interface DashboardDeadlinesProps {
   readonly prazosProximos: ReadonlyArray<Prazo & { processoTitulo: string }>;
@@ -21,21 +18,22 @@ interface DashboardDeadlinesProps {
 export function DashboardDeadlines({
   prazosProximos,
   onNavigate,
-}: DashboardDeadlinesProps) {
+}: Readonly<DashboardDeadlinesProps>) {
   return (
     <Card className="bg-linear-to-br from-neutral-2 to-neutral-3 border-neutral-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarCheckIcon className="h-5 w-5 text-accent-9" />
+          <CalendarCheck className="h-5 w-5 text-accent-9" />
           <CardTitle className="text-accent-11">Próximos Prazos</CardTitle>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onNavigate("prazos")}
-          className="text-accent-11 hover:text-accent-12">
+          className="text-accent-11 hover:text-accent-12"
+        >
           Ver todos
-          <ArrowRightIcon className="ml-2 h-4 w-4" />
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardHeader>
       <CardContent>
@@ -50,21 +48,16 @@ export function DashboardDeadlines({
               return (
                 <div
                   key={prazo.id}
-                  className="flex items-start justify-between p-3 rounded-lg bg-neutral-3 border border-neutral-6 hover:border-accent-6 transition-colors">
+                  className="flex items-start justify-between p-3 rounded-lg bg-neutral-3 border border-neutral-6 hover:border-accent-6 transition-colors"
+                >
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-neutral-12">
-                      {prazo.descricao}
-                    </p>
-                    <p className="text-xs text-neutral-11 mt-1">
-                      {prazo.processoTitulo}
-                    </p>
+                    <p className="text-sm font-medium text-neutral-12">{prazo.descricao}</p>
+                    <p className="text-xs text-neutral-11 mt-1">{prazo.processoTitulo}</p>
                     <p className="text-xs text-neutral-10 mt-1">
                       Vencimento: {formatarData(prazo.dataFinal)}
                     </p>
                   </div>
-                  <Badge
-                    variant={urgente ? "destructive" : "secondary"}
-                    className="ml-2">
+                  <Badge variant={urgente ? "destructive" : "secondary"} className="ml-2">
                     {(() => {
                       if (diasRestantes === 0) return "Hoje";
                       if (diasRestantes === 1) return "1 dia";

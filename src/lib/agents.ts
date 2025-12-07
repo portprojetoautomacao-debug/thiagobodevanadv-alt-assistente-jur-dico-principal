@@ -87,7 +87,7 @@ export type AgentId =
   | "compliance";
 
 export interface Agent {
-  id: AgentId | string;
+  id: string;
   name: string;
   description: string;
   type: string;

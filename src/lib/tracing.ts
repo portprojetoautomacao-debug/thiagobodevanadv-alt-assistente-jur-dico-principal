@@ -186,7 +186,7 @@ class TracingService {
   private readonly activeSpans: Map<string, Span> = new Map();
   private readonly memoryExporter: MemoryExporter;
   private enabled = true;
-  private samplingRate = 1.0; // 100% by default
+  private samplingRate = 1; // 100% by default
 
   constructor() {
     this.memoryExporter = new MemoryExporter();
@@ -457,7 +457,7 @@ class TracingService {
   }
 
   /**
-   * Set sampling rate (0.0 - 1.0)
+   * Set sampling rate (0 - 1.0)
    */
   setSamplingRate(rate: number): void {
     this.samplingRate = Math.max(0, Math.min(1, rate));
@@ -475,6 +475,13 @@ class TracingService {
    */
   getTraces(): Span[] {
     return this.memoryExporter.getSpans();
+  }
+
+  /**
+   * Alias for getTraces() for compatibility
+   */
+  getSpans(): Span[] {
+    return this.getTraces();
   }
 
   /**
@@ -496,6 +503,13 @@ class TracingService {
    */
   clearTraces(): void {
     this.memoryExporter.clear();
+  }
+
+  /**
+   * Alias for clearTraces() for compatibility
+   */
+  clear(): void {
+    this.clearTraces();
   }
 
   /**

@@ -5,7 +5,7 @@ import { useKV } from "@/hooks/use-kv";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
   ArrowUp,
-  CheckCircle2,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -233,7 +233,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-linear-to-br from-green-500/20 to-green-500/5 rounded-xl shadow-lg">
-                <CheckCircle2 size={32} className="text-green-500" />
+                <CheckCircle size={32} className="text-green-500" />
               </div>
               <div className="flex-1">
                 <p className="text-4xl font-bold text-foreground mb-1 bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">
@@ -467,7 +467,7 @@ function DashboardAdvbox({ onNavigate: _onNavigate }: DashboardAdvboxProps) {
                     selectedMonth.getMonth() === todayMonth &&
                     selectedMonth.getFullYear() === todayYear;
 
-                  const prazoInfo = day !== null ? prazosPorDia[day] : null;
+                  const prazoInfo = day === null ? null : prazosPorDia[day];
                   const temPrazo = prazoInfo && prazoInfo.count > 0;
                   const prazoUrgente = prazoInfo?.urgente;
 

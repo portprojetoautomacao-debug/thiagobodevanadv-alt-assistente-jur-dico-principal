@@ -48,6 +48,20 @@ export interface DocumentClassification {
   tags: string[];
 }
 
+// NLP Operation Result type alias
+export type NLPOperationResult =
+  | NamedEntity[]
+  | SentimentAnalysis
+  | DocumentClassification
+  | ExtractedInformation;
+
+// Batch processing result item
+export interface BatchProcessResultItem {
+  id: string;
+  result: NLPOperationResult;
+  error?: string;
+}
+
 // Information extraction result
 export interface ExtractedInformation {
   summary: string;
@@ -268,13 +282,7 @@ export class NLPPipeline {
     documents: Array<{ id: string; text: string }>,
     operation: "entities" | "sentiment" | "classify" | "extract",
     config: LLMRequestConfig = {}
-  ): Promise<
-    Array<{
-      id: string;
-      result: NamedEntity[] | SentimentAnalysis | DocumentClassification | ExtractedInformation;
-      error?: string;
-    }>
-  > {
+  ): Promise<BatchProcessResultItem[]> {
     const operations = {
       entities: this.extractEntities.bind(this),
       sentiment: this.analyzeSentiment.bind(this),

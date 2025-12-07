@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from "vitest";
 import handler from "../agents";
 
@@ -28,9 +29,7 @@ function makeReq(action: string, method: string, authorized = true): any {
   return {
     query: { action },
     method,
-    headers: authorized
-      ? { host: "localhost:3000" }
-      : { host: "prod.example.com" },
+    headers: authorized ? { host: "localhost:3000" } : { host: "prod.example.com" },
     body: {},
   };
 }

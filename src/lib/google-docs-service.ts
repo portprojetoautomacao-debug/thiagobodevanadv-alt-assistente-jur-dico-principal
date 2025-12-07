@@ -1,11 +1,8 @@
 import type { Minuta } from "@/types";
 import { config } from "./config";
 import type {
-  DocsBatchUpdateResponse,
   DocsClient,
-  DocsCreateResponse,
   DocsDocument,
-  DocsGetResponse,
   DocumentElement,
   GapiGlobal,
   GoogleAuthResponse,
@@ -156,7 +153,7 @@ class GoogleDocsService {
     debug("Initializing Google Docs Service...");
 
     // Segurança para SSR / Vercel serverless
-    if (typeof window === "undefined" || typeof document === "undefined") {
+    if (globalThis.window === undefined || typeof document === "undefined") {
       this.lastError = "Google Docs Service só pode ser inicializado no browser.";
       debugError(this.lastError);
       throw new Error(this.lastError);
@@ -238,13 +235,13 @@ class GoogleDocsService {
     return new Promise((resolve, reject) => {
       debug("Loading Google scripts for Docs...");
 
-      if (typeof window === "undefined" || typeof document === "undefined") {
+      if (globalThis.window === undefined || typeof document === "undefined") {
         reject(new Error("Google scripts só podem ser carregados no browser"));
         return;
       }
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
-      const googleWindow = window as unknown as { google?: GoogleGisGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
+      const googleWindow = globalThis.window as unknown as { google?: GoogleGisGlobal };
 
       // Se já tem gapi e google carregados, só segue
       if (gapiWindow.gapi && googleWindow.google) {
@@ -308,7 +305,7 @@ class GoogleDocsService {
     return new Promise((resolve, reject) => {
       debug("Initializing GAPI client for Docs...");
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
 
       if (!gapiWindow.gapi) {
         this.lastError = "Google API (gapi) não disponível para Docs";
@@ -358,7 +355,7 @@ class GoogleDocsService {
   private initializeGis(): void {
     debug("Initializing Google Identity Services for Docs...");
 
-    const google = (window as unknown as { google?: GoogleGisGlobal })?.google;
+    const google = (globalThis.window as unknown as { google?: GoogleGisGlobal })?.google;
     if (!google?.accounts?.oauth2) {
       this.lastError = "Google Identity Services não disponível (Docs)";
       debugError(this.lastError);
@@ -427,7 +424,7 @@ class GoogleDocsService {
         }
 
         // Conectar token do GIS com gapi.client (igual ao Calendar)
-        const gapiWindow = window as unknown as {
+        const gapiWindow = globalThis.window as unknown as {
           gapi?: GapiGlobal & {
             client?: { setToken?: (token: { access_token: string }) => void };
           };
@@ -479,7 +476,7 @@ class GoogleDocsService {
     }
 
     try {
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs;
 
       if (!docsApi || typeof docsApi.documents?.create !== "function") {
@@ -494,9 +491,9 @@ class GoogleDocsService {
           if (!docsApi.documents?.create) {
             throw new Error("docsApi.documents.create not available");
           }
-          return (await docsApi.documents.create({
+          return await docsApi.documents.create({
             title: minuta.titulo,
-          })) as DocsCreateResponse;
+          });
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,
@@ -549,7 +546,7 @@ class GoogleDocsService {
     }
 
     try {
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs;
 
       if (!docsApi || typeof docsApi.documents?.batchUpdate !== "function") {
@@ -597,10 +594,10 @@ class GoogleDocsService {
           if (!docsApi.documents?.batchUpdate) {
             throw new Error("docsApi.documents.batchUpdate not available");
           }
-          return await (docsApi.documents.batchUpdate({
+          return await docsApi.documents.batchUpdate({
             documentId: docId,
             requests,
-          }) as Promise<DocsBatchUpdateResponse>);
+          });
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,
@@ -620,16 +617,16 @@ class GoogleDocsService {
 
   private async getDocumentMetadata(docId: string): Promise<DocsDocument | null> {
     try {
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs;
 
       if (!docsApi || typeof docsApi.documents?.get !== "function") {
         return null;
       }
 
-      const response = (await docsApi.documents.get({
+      const response = await docsApi.documents.get({
         documentId: docId,
-      })) as DocsGetResponse;
+      });
 
       return response.result ?? null;
     } catch (error) {
@@ -650,7 +647,7 @@ class GoogleDocsService {
     }
 
     try {
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const docsApi = (gapiWindow.gapi?.client as { docs?: DocsClient }).docs;
 
       if (!docsApi || typeof docsApi.documents?.get !== "function") {
@@ -665,9 +662,9 @@ class GoogleDocsService {
           if (!docsApi.documents?.get) {
             throw new Error("docsApi.documents.get not available");
           }
-          return (await docsApi.documents.get({
+          return await docsApi.documents.get({
             documentId: docId,
-          })) as DocsGetResponse;
+          });
         },
         MAX_RETRIES,
         BASE_RETRY_DELAY,
@@ -707,8 +704,8 @@ class GoogleDocsService {
   }
 
   openDocument(url: string): void {
-    if (typeof window === "undefined") return;
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (globalThis.window === undefined) return;
+    globalThis.window.open(url, "_blank", "noopener,noreferrer");
   }
 
   isAuthenticated(): boolean {
@@ -745,7 +742,7 @@ class GoogleDocsService {
   revokeAccess(): void {
     debug("Revoking Docs access...");
     if (this.accessToken) {
-      const google = (window as unknown as { google?: GoogleGisGlobal })?.google;
+      const google = (globalThis.window as unknown as { google?: GoogleGisGlobal })?.google;
       try {
         google?.accounts.oauth2.revoke(this.accessToken);
         debug("Docs access revoked");

@@ -312,7 +312,7 @@ export default function Calendar() {
                       {syncToGoogleText}
                     </Button>
                     <Button
-                      onClick={() => window.open("https://calendar.google.com", "_blank")}
+                      onClick={() => globalThis.open("https://calendar.google.com", "_blank")}
                       variant="outline"
                     >
                       <LinkIcon className="w-4 h-4 mr-2" /> Abrir Google Calendar

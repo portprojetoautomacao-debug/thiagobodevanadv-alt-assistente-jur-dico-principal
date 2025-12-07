@@ -82,6 +82,27 @@ jobs:
           npm run test:all
         if: success()
 
+      - name: Install Chrome Extension dependencies
+        run: |
+          echo "Installing Chrome Extension dependencies..."
+          cd chrome-extension-pje
+          npm ci
+        if: success()
+
+      - name: Run Chrome Extension tests
+        run: |
+          echo "Running Chrome Extension tests..."
+          cd chrome-extension-pje
+          npm test
+        if: success()
+
+      - name: Build Chrome Extension
+        run: |
+          echo "Building Chrome Extension..."
+          cd chrome-extension-pje
+          npm run build
+        if: success()
+
       - name: Check package.json sync
         run: |
           if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "package.json"; then

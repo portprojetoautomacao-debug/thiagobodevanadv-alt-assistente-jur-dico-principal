@@ -23,6 +23,7 @@ dist-ssr
 !.vscode/extensions.json
 .vscode/mcp.json
 .vscode/sonar-config.json
+.vscode/sonar-copilot-assistant.user.json
 .cursor/mcp.json
 .idea
 .DS_Store
@@ -39,6 +40,10 @@ dist-ssr
 .env.production
 .env.vercel
 .env.staging
+*.backup
+.env.backup
+.env.local.backup
+.env.vercel.backup
 
 # Test output and coverage
 playwright-report/
@@ -97,4 +102,12 @@ eslint-results.sarif
 # SonarCloud
 .scannerwork/
 .sonar/
+.sonar-copilot/logs/
 coverage-api/
+
+# Security: Never commit backup files with secrets
+*.backup
+.env.*.backup
+
+# SonarQube Auto Analysis Results
+.sonar-results/

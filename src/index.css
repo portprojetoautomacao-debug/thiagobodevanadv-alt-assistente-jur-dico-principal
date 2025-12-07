@@ -1,3 +1,6 @@
+@import "./styles/_variables.scss";
+@import "./styles/_keyframe-animations.scss";
+
 /* ========================================
  * 📌 CSS IMPORTS - DEVEM VIR PRIMEIRO
  * Tailwind CSS + Radix Colors
@@ -36,7 +39,6 @@
 
 /* Theme Base Styles (from theme.css) */
 @layer base {
-
   *,
   ::after,
   ::before,
@@ -355,7 +357,6 @@ textarea {
 
 /* Suporte ao modo de alto contraste (forced-colors) */
 @media (forced-colors: active) {
-
   /* Garantir que elementos interativos mantenham suas cores no modo de alto contraste */
   button,
   a[href],

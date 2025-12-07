@@ -26,10 +26,10 @@ import {
   Copy,
   FileText,
   Gavel,
-  Search as MagnifyingGlass,
-  Sparkles as Sparkle,
-  Loader2 as Spinner,
-  AlertTriangle as Warning,
+  Search,
+  Sparkle,
+  Loader,
+  AlertTriangle,
 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
@@ -188,12 +188,12 @@ Mantenha a resposta objetiva e profissional.`;
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? (
                   <>
-                    <Spinner className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader className="w-5 h-5 mr-2 animate-spin" />
                     Consultando...
                   </>
                 ) : (
                   <>
-                    <MagnifyingGlass className="w-5 h-5 mr-2" />
+                    <Search className="w-5 h-5 mr-2" />
                     Buscar Processo
                   </>
                 )}
@@ -203,7 +203,7 @@ Mantenha a resposta objetiva e profissional.`;
 
           {!apiKeyConfigured && (
             <Alert variant="destructive">
-              <Warning className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env
                 para usar este recurso.
@@ -222,7 +222,7 @@ Mantenha a resposta objetiva e profissional.`;
 
           {error && (
             <Alert variant="destructive">
-              <Warning className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -287,7 +287,7 @@ Mantenha a resposta objetiva e profissional.`;
                 >
                   {isAnalyzing ? (
                     <>
-                      <Spinner className="w-5 h-5 mr-2 animate-spin" />
+                      <Loader className="w-5 h-5 mr-2 animate-spin" />
                       Analisando com IA...
                     </>
                   ) : (
@@ -301,7 +301,7 @@ Mantenha a resposta objetiva e profissional.`;
 
               {analysisError && (
                 <Alert variant="destructive">
-                  <Warning className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>{analysisError}</AlertDescription>
                 </Alert>
               )}

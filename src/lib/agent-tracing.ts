@@ -7,7 +7,7 @@
 
 import { tracingService } from "./tracing";
 
-import type { AgentSpan, SpanAttributes } from "./tracing";
+import type { AgentSpan, Span, SpanAttributes } from "./tracing";
 
 import type { Agent, AgentTask, AgentTaskResult } from "./agents";
 
@@ -110,10 +110,15 @@ export function traceAgentStep(
   const spanAny = agentSpan as AgentSpan & { stepNumber?: number };
   spanAny.stepNumber = stepNumber;
 
-  tracingService.addEvent(agentSpan, `step.${stepNumber}`, {
+  const eventAttributes: SpanAttributes = {
     "step.description": stepDescription,
-    ...(attributes || {}),
-  });
+  };
+
+  if (attributes) {
+    Object.assign(eventAttributes, attributes);
+  }
+
+  tracingService.addEvent(agentSpan, `step.${stepNumber}`, eventAttributes);
 }
 
 // ============================================================================

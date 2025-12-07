@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { PremonicaoJuridica } from "@/types";
 import { motion } from "framer-motion";
-import { Check, ChevronRight, Copy, Lightbulb, Link as LinkIcon, X } from "lucide-react";
+import { Check, ChevronRight, Copy, ExternalLink, Lightbulb, X } from "lucide-react";
 import { useState } from "react";
 
 interface PremonicaoModalProps {
@@ -86,7 +86,7 @@ function ProbabilityMeter({ percentage }: ProbabilityMeterProps) {
 }
 
 interface CopyButtonProps {
-  text: string;
+  readonly text: string;
 }
 
 function CopyButton({ text }: CopyButtonProps) {
@@ -121,7 +121,7 @@ export default function PremonicaoModal({
 }: PremonicaoModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 bg-card">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-accent/10">
@@ -231,7 +231,7 @@ export default function PremonicaoModal({
                                     rel="noopener noreferrer"
                                     title="Abrir jurisprudência"
                                   >
-                                    <LinkIcon className="h-4 w-4" />
+                                    <ExternalLink className="h-4 w-4" />
                                   </a>
                                 </Button>
                               )}

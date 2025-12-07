@@ -13,13 +13,7 @@ import { useKV } from "@/hooks/use-kv";
 import { useMemo, useState } from "react";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
 import type { FinancialEntry, Process } from "@/types";
-import {
-  Clock,
-  DollarSign as CurrencyDollar,
-  TrendingUp as TrendUp,
-  Users,
-  AlertTriangle as Warning,
-} from "lucide-react";
+import { AlertTriangle, Clock, DollarSign, TrendingUp, Users } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -45,11 +39,15 @@ interface SafraData {
   perdido: number;
 }
 
+interface NoDataMessageProps {
+  readonly message: string;
+}
+
 // Componente para exibir quando não há dados
-function NoDataMessage({ message }: { message: string }) {
+function NoDataMessage({ message }: Readonly<NoDataMessageProps>) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <Warning size={48} className="text-muted-foreground/50 mb-4" />
+      <AlertTriangle size={48} className="text-muted-foreground/50 mb-4" />
       <p className="text-muted-foreground">{message}</p>
       <p className="text-sm text-muted-foreground/70 mt-2">
         Adicione dados através do sistema para visualizar as estatísticas
@@ -265,7 +263,7 @@ export default function OfficeManagement() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-green-500/10 rounded-lg">
-                      <TrendUp size={24} className="text-green-500" />
+                      <TrendingUp size={24} className="text-green-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{produtividadeData.processosAtivos}</p>
@@ -293,7 +291,7 @@ export default function OfficeManagement() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-yellow-500/10 rounded-lg">
-                      <CurrencyDollar size={24} className="text-yellow-500" />
+                      <DollarSign size={24} className="text-yellow-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{produtividadeData.taxa}%</p>
@@ -481,7 +479,10 @@ export default function OfficeManagement() {
                             cy="50%"
                             labelLine={false}
                             label={(props) => {
-                              const payload: any = props?.payload || {};
+                              const payload = (props?.payload || {}) as {
+                                categoria?: string;
+                                percentual?: number;
+                              };
                               const categoria = payload?.categoria ?? "";
                               const percentual = payload?.percentual ?? "";
                               return `${categoria} ${percentual}%`;

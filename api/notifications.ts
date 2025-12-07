@@ -92,6 +92,8 @@ async function getKv(): Promise<Redis> {
 }
 
 // Gera ID único
+// SECURITY: Math.random() é seguro aqui - usado apenas para IDs de notificação
+// não-críticos (não são tokens de autenticação). Combina timestamp + random.
 function generateId(): string {
   return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
@@ -667,8 +669,8 @@ const ROUTES: RouteConfig[] = [
     pattern: (path) => path.startsWith("/webhook/"),
     handler: async (kv, _req, res) => {
       const url = new URL(_req.url || "", `http://${_req.headers.host}`);
-      const path = url.pathname.replace("/api/notifications", "");
-      const webhookId = path.replace("/webhook/", "");
+      const path = url.pathname.replaceAll("/api/notifications", "");
+      const webhookId = path.replaceAll("/webhook/", "");
       return handleDeleteWebhook(kv, webhookId, res);
     },
   },
@@ -709,7 +711,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const kv = await getKv();
     const url = new URL(req.url || "", `http://${req.headers.host}`);
-    const path = url.pathname.replace("/api/notifications", "");
+    const path = url.pathname.replaceAll("/api/notifications", "");
 
     const route = matchRoute(req.method || "", path);
     if (route) {

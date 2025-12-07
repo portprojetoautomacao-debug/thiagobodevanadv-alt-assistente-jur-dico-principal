@@ -12,19 +12,12 @@ import { geminiGenerateJSON } from "@/lib/gemini-client";
 import type { PDFUploadHistory } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  CheckCircle2,
-  Clock,
-  File,
-  FileText,
-  Loader2,
-  Trash2,
-  Upload,
-  User,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle, Clock, FileText, Loader2, Trash2, Upload, User, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+// Type alias para tipo de pessoa (S6571)
+type TipoPessoa = "fisica" | "juridica";
 
 interface ExtractedData {
   nome?: string;
@@ -35,7 +28,7 @@ interface ExtractedData {
   cidade?: string;
   estado?: string;
   cep?: string;
-  tipo?: "fisica" | "juridica";
+  tipo?: TipoPessoa;
   numeroProcesso?: string;
   dataDocumento?: string;
   observacoes?: string;
@@ -54,49 +47,39 @@ export default function PDFUploader() {
   const { clientes, createOrUpdateFromDocumento } = useClientesManager();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const pdfFile = e.target.files?.[0];
+    if (!pdfFile) return;
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (pdfFile.size > 10 * 1024 * 1024) {
       toast.error("Arquivo muito grande. Máximo: 10MB");
       return;
     }
 
-    if (file.type !== "application/pdf") {
+    if (pdfFile.type !== "application/pdf") {
       toast.error("Apenas arquivos PDF são permitidos");
       return;
     }
 
-    setSelectedFile(file);
+    setSelectedFile(pdfFile);
     setExtractedData(null);
     setExtractionStatus("idle");
   };
 
   const readPDFAsText = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const text = new TextDecoder("utf-8").decode(uint8Array);
 
-      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+      const cleanedText = text
+        .replaceAll(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
+        .replaceAll(/\s+/g, " ")
+        .trim();
 
-      reader.onload = async () => {
-        try {
-          const arrayBuffer = reader.result as ArrayBuffer;
-          const uint8Array = new Uint8Array(arrayBuffer);
-          const text = new TextDecoder("utf-8").decode(uint8Array);
-
-          const cleanedText = text
-            .replaceAll(/[^\x20-\x7E\n\r\u00C0-\u00FF]/g, " ")
-            .replaceAll(/\s+/g, " ")
-            .trim();
-
-          resolve(cleanedText);
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.readAsArrayBuffer(file);
-    });
+      return cleanedText;
+    } catch {
+      throw new Error("Erro ao ler arquivo");
+    }
   };
 
   const extractDataWithAI = async (text: string): Promise<ExtractedData> => {
@@ -211,7 +194,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
     }
   };
 
-  const handleEditField = (field: keyof ExtractedData, value: string | "fisica" | "juridica") => {
+  const handleEditField = (field: keyof ExtractedData, value: string) => {
     setExtractedData((prev) => ({
       ...prev,
       [field]: value,
@@ -290,7 +273,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
       case "success":
         return (
           <Badge variant="default" className="gap-1 bg-primary">
-            <CheckCircle2 size={12} /> Sucesso
+            <CheckCircle size={12} /> Sucesso
           </Badge>
         );
       case "error":
@@ -395,7 +378,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
 
                 {extractionStatus === "success" && (
                   <Alert className="border-primary/50 bg-primary/5">
-                    <CheckCircle2 className="text-primary" size={16} />
+                    <CheckCircle className="text-primary" size={16} />
                     <AlertDescription>
                       Dados extraídos com sucesso! Revise os campos ao lado e salve o cliente.
                     </AlertDescription>
@@ -416,21 +399,13 @@ Retorne APENAS o JSON válido, sem explicações.`;
             <Card className="glassmorphic border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="text-primary" size={24} />
+                  <CheckCircle className="text-primary" size={24} />
                   Dados Extraídos
                 </CardTitle>
                 <CardDescription>Revise e edite os dados antes de salvar</CardDescription>
               </CardHeader>
               <CardContent>
-                {!extractedData ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <File className="text-muted-foreground/30 mb-4" size={64} />
-                    <p className="text-muted-foreground">Nenhum dado extraído ainda</p>
-                    <p className="text-sm text-muted-foreground/70 mt-1">
-                      Faça upload de um PDF para começar
-                    </p>
-                  </div>
-                ) : (
+                {extractedData ? (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="nome">Nome Completo *</Label>
@@ -448,9 +423,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                         <select
                           id="tipo"
                           value={extractedData.tipo || "fisica"}
-                          onChange={(e) =>
-                            handleEditField("tipo", e.target.value as "fisica" | "juridica")
-                          }
+                          onChange={(e) => handleEditField("tipo", e.target.value as TipoPessoa)}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="fisica">Pessoa Física</option>
@@ -571,13 +544,17 @@ Retorne APENAS o JSON válido, sem explicações.`;
                       size="lg"
                       disabled={!extractedData.nome || !extractedData.cpfCnpj}
                     >
-                      <CheckCircle2 size={20} />
+                      <CheckCircle size={20} />
                       Salvar Cliente
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
                       * Campos obrigatórios
                     </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Faça upload de um PDF para extrair dados
                   </div>
                 )}
               </CardContent>
@@ -606,7 +583,7 @@ Retorne APENAS o JSON válido, sem explicações.`;
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <File className="text-destructive shrink-0 mt-1" size={24} />
+                        <FileText className="text-destructive shrink-0 mt-1" size={24} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-medium truncate">{item.fileName}</p>

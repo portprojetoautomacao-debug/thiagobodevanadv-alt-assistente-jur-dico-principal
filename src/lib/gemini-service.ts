@@ -15,6 +15,7 @@
 
 import { withRetry, type RetryConfig } from "@/lib/ai-providers";
 import { getGeminiApiKey, isGeminiConfigured, validateGeminiApiKey } from "@/lib/gemini-config";
+import { instrumentGeminiCall } from "@/lib/sentry-gemini-integration";
 
 /**
  * Extract error message from unknown error type
@@ -234,25 +235,43 @@ export async function callGemini(
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
+      // 🔍 Instrumentar chamada Gemini com Sentry
+      const geminiWrapper = instrumentGeminiCall<Response>(
+        {
+          model: finalConfig.model,
+          operation: "generate_content",
+          prompt,
+          temperature: finalConfig.temperature,
+          maxTokens: finalConfig.maxOutputTokens,
+          startTime: Date.now(),
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            temperature: finalConfig.temperature,
-            maxOutputTokens: finalConfig.maxOutputTokens,
+        {
+          includePrompts: true,
+          captureErrors: true,
+        }
+      );
+
+      const response = await geminiWrapper(async () =>
+        fetch(endpoint, {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
           },
-        }),
-      });
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: prompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: finalConfig.temperature,
+              maxOutputTokens: finalConfig.maxOutputTokens,
+            },
+          }),
+        })
+      );
 
       if (!response.ok) {
         let errorMessage = "Erro ao chamar API do Gemini";

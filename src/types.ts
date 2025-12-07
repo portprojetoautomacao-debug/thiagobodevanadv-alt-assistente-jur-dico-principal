@@ -15,6 +15,13 @@ export interface Process {
   prazos: Prazo[];
   createdAt: string;
   updatedAt: string;
+  // Contadores de documentos vinculados (atualizados automaticamente)
+  expedientesCount?: number;
+  intimacoesCount?: number;
+  minutasCount?: number;
+  documentosCount?: number;
+  lastExpedienteAt?: string;
+  lastMinutaAt?: string;
 }
 
 export interface Prazo {
@@ -88,10 +95,13 @@ export interface FinancialEntry {
   date: string;
 }
 
+// Type alias para tipos de expediente (S6571)
+export type TipoExpediente = "intimacao" | "citacao" | "documento" | "outro";
+
 export interface Expediente {
   id: string;
   processId?: string;
-  tipo: "intimacao" | "citacao" | "documento" | "outro" | string;
+  tipo: TipoExpediente;
   type?: string;
   titulo?: string;
   conteudo?: string;
@@ -234,3 +244,20 @@ export type ViewType =
   | "calendario"
   | "donna"
   | "ai-agents";
+
+export interface DocumentoPJe {
+  id: string;
+  tipo: "certidao" | "mandado" | "despacho" | "sentenca" | "outro";
+  conteudo: string;
+  dataExtracao: string; // ISO 8601
+  metadados: {
+    numeroProcesso?: string;
+    classe?: string;
+    autor?: string;
+    reu?: string;
+    comarca?: string;
+    vara?: string;
+    cpfs?: string[];
+    datas?: string[];
+  };
+}

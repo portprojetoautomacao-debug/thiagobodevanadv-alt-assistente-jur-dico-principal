@@ -41,8 +41,9 @@ const CIRCUIT_BREAKER_COOLDOWN = 60000; // 60 segundos de cooldown
 
 // Flag para verificar se estamos em produção
 const isProd =
-  typeof window !== "undefined" &&
-  (window.location.hostname.includes("vercel.app") || window.location.hostname !== "localhost");
+  globalThis.window !== undefined &&
+  (globalThis.window.location.hostname.includes("vercel.app") ||
+    globalThis.window.location.hostname !== "localhost");
 
 /**
  * Verifica se o circuit breaker está ativo
@@ -113,7 +114,7 @@ function loadFromLocalStorage(keys: string[]): Map<string, unknown> {
   const results = new Map<string, unknown>();
   for (const key of keys) {
     try {
-      const item = window.localStorage.getItem(key);
+      const item = globalThis.window.localStorage.getItem(key);
       if (item) {
         const value = JSON.parse(item);
         results.set(key, value);
@@ -212,7 +213,7 @@ async function processBatch(): Promise<void> {
 /**
  * Agenda uma chave para carregamento em batch
  */
-function scheduleLoad(key: string): Promise<unknown | null> {
+function scheduleLoad(key: string): Promise<unknown> {
   // Verifica cache primeiro
   const cached = getFromCache(key);
   if (cached !== null) {
@@ -223,16 +224,15 @@ function scheduleLoad(key: string): Promise<unknown | null> {
     pendingKeys.add(key);
 
     // Adiciona resolver para esta chave
-    const resolvers = pendingResolvers.get(key) ?? [];
-    resolvers.push(resolve);
-    pendingResolvers.set(key, resolvers);
+    if (!pendingResolvers.has(key)) {
+      pendingResolvers.set(key, []);
+    }
+    pendingResolvers.get(key)!.push(resolve);
 
     // Agenda o batch se não estiver agendado
-    if (!batchTimeout) {
-      batchTimeout = setTimeout(() => {
-        processBatch();
-      }, BATCH_DELAY_MS);
-    }
+    batchTimeout ??= setTimeout(() => {
+      processBatch();
+    }, BATCH_DELAY_MS);
   });
 }
 
@@ -272,7 +272,11 @@ async function processWriteBatch(): Promise<void> {
 
     if (response.ok) {
       recordApiSuccess();
-    } else if (response.status === 429) {
+    } else if (response.status === 429 || response.status === 413) {
+      // 429 = Rate limit, 413 = Payload muito grande
+      if (response.status === 413 && import.meta.env.DEV) {
+        console.warn("[KV] Payload excede limite do Upstash - considere reduzir tamanho dos dados");
+      }
       recordApiError();
     }
   } catch (error) {
@@ -290,7 +294,7 @@ async function processWriteBatch(): Promise<void> {
 function scheduleWrite<T>(key: string, value: T): void {
   // Sempre salva no localStorage imediatamente
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    globalThis.window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // localStorage cheio ou indisponível
   }
@@ -330,7 +334,7 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: 
 
     // Tenta localStorage
     try {
-      const item = window.localStorage.getItem(key);
+      const item = globalThis.window.localStorage.getItem(key);
       if (item) {
         const parsed = JSON.parse(item);
         setInCache(key, parsed);
@@ -353,17 +357,20 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: 
   }, [key]);
 
   // Setter otimizado
-  const setValue = useCallback((value: T | ((prev: T) => T)) => {
-    setStoredValue((currentStoredValue) => {
-      const valueToStore =
-        typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      setStoredValue((currentStoredValue) => {
+        const valueToStore =
+          typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
 
-      // Agenda escrita (debounced)
-      scheduleWrite(keyRef.current, valueToStore);
+        // Agenda escrita (debounced)
+        scheduleWrite(keyRef.current, valueToStore);
 
-      return valueToStore;
-    });
-  }, []);
+        return valueToStore;
+      });
+    },
+    [] // scheduleWrite é função estável, não precisa estar nas dependências
+  );
 
   // Carrega do Vercel KV em produção (batched)
   useEffect(() => {

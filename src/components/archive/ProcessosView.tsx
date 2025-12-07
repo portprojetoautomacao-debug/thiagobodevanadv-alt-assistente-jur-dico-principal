@@ -13,14 +13,7 @@ import { useProcesses } from "@/hooks/use-processes";
 import { llm } from "@/lib/llm-client";
 import { exportToCSV } from "@/lib/utils";
 import type { Process } from "@/types";
-import {
-  Download as DownloadSimple,
-  Filter as Funnel,
-  Gavel,
-  Search as MagnifyingGlass,
-  Plus,
-  Sparkles as Sparkle,
-} from "lucide-react";
+import { Download, Filter as Funnel, Gavel, Plus, Search, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import ProcessDetailsDialog from "../ProcessDetailsDialog";
@@ -160,7 +153,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExportCSV} variant="outline">
-            <DownloadSimple size={20} />
+            <Download size={20} />
             Exportar CSV
           </Button>
           <Button
@@ -177,7 +170,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlass
+          <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             size={20}
           />
@@ -290,7 +283,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
                     }}
                     disabled={analyzingProcess === process.id}
                   >
-                    <Sparkle
+                    <Sparkles
                       size={16}
                       className={analyzingProcess === process.id ? "animate-spin" : ""}
                     />

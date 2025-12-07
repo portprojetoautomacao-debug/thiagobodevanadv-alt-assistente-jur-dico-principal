@@ -21,7 +21,7 @@ import {
 import {
   BarChart3,
   Brain,
-  CheckCircle2,
+  CheckCircle,
   Copy,
   Download,
   FileText,
@@ -557,7 +557,7 @@ export default function AdvancedNLPDashboard() {
                           key={`${String(point).slice(0, 20)}-${index}`}
                           className="flex items-start gap-2 p-3 rounded-lg border border-border"
                         >
-                          <CheckCircle2 size={20} className="text-primary shrink-0 mt-0.5" />
+                          <CheckCircle size={20} className="text-primary shrink-0 mt-0.5" />
                           <span>{point}</span>
                         </div>
                       ))}

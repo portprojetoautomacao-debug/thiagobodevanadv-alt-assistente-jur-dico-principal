@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle, Clock, Bot as Robot, AlertCircle as WarningCircle } from "lucide-react";
+import { AlertCircle, Bot, CheckCircle, Clock } from "lucide-react";
 
 interface AgentActionLog {
   agentId: string;
@@ -69,7 +69,7 @@ export function ServerLogsViewer({
   if (error) {
     return (
       <Alert variant="destructive">
-        <WarningCircle className="h-4 w-4" />
+        <AlertCircle className="h-4 w-4" />
         <AlertTitle>Erro</AlertTitle>
         <AlertDescription>
           Não foi possível carregar os logs do servidor.
@@ -114,14 +114,14 @@ export function ServerLogsViewer({
                     {log.success ? (
                       <CheckCircle className="w-4 h-4" />
                     ) : (
-                      <WarningCircle className="w-4 h-4" />
+                      <AlertCircle className="w-4 h-4" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <Robot className="w-4 h-4 text-primary" />
+                        <Bot className="w-4 h-4 text-primary" />
                         {log.agentId}
                       </p>
                       <span className="text-xs text-muted-foreground">

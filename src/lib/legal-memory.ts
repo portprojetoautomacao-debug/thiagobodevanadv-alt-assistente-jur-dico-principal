@@ -52,8 +52,8 @@ export const LegalContextItemSchema = z.object({
   content: z.string(),
   metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
   relevanceScore: z.number().optional(), // 0 a 1
 });
 
@@ -97,7 +97,7 @@ export class LegalMemory {
         return;
       }
 
-      const items = (await redis.get("legal-memory")) as LegalContextItem[] | null;
+      const items = await redis.get<LegalContextItem[]>("legal-memory");
       if (items && Array.isArray(items)) {
         this.memoryCache.clear();
         for (const item of items) {
@@ -125,8 +125,8 @@ export class LegalMemory {
       content,
       metadata,
       tags,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       relevanceScore: 1,
     };
 
@@ -141,7 +141,7 @@ export class LegalMemory {
     if (redis) {
       try {
         // Buscar memória existente
-        const existingMemory = (await redis.get("legal-memory")) as LegalContextItem[] | null;
+        const existingMemory = await redis.get<LegalContextItem[]>("legal-memory");
         const memory = existingMemory ?? [];
 
         // Adicionar novo item

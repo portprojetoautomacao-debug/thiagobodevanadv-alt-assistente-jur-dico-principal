@@ -186,7 +186,7 @@ function getApiKey(configApiKey?: string): string | null {
 export function validarNumeroCNJ(numero: string): boolean {
   const numeroLimpo = numero.replaceAll(/[^\d.-]/g, "");
 
-  const regex = /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/;
+  const regex = /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/;
 
   return regex.test(numeroLimpo);
 }
@@ -225,10 +225,7 @@ export function determinarAliasTribunal(tribunalInput: string): string | null {
 
   // Procura pelo código do tribunal ou parte do nome
   for (const [, info] of Object.entries(TRIBUNAIS_DATAJUD)) {
-    if (
-      info.codigo === tribunalInput ||
-      info.nome.toLowerCase().includes(tribunalLower)
-    ) {
+    if (info.codigo === tribunalInput || info.nome.toLowerCase().includes(tribunalLower)) {
       return info.alias;
     }
   }
@@ -326,13 +323,7 @@ function handleDatajudCatchError(
   }
 
   if (error instanceof Error) {
-    throw new DatajudAPIError(
-      `Erro de rede: ${error.message}`,
-      0,
-      tribunal,
-      numeroProcesso,
-      error
-    );
+    throw new DatajudAPIError(`Erro de rede: ${error.message}`, 0, tribunal, numeroProcesso, error);
   }
 
   throw new DatajudAPIError(
@@ -371,11 +362,7 @@ export async function consultarProcessoDatajud(
     timeout = DEFAULT_TIMEOUT,
   } = config || {};
 
-  const { apiKey, tribunalAlias } = validateDatajudParams(
-    numeroProcesso,
-    tribunal,
-    configApiKey
-  );
+  const { apiKey, tribunalAlias } = validateDatajudParams(numeroProcesso, tribunal, configApiKey);
 
   const numeroProcessoLimpo = numeroProcesso.replaceAll(/[^\d]/g, "");
   const url = `${baseUrl}/${tribunalAlias}/_search`;
@@ -409,12 +396,7 @@ export async function consultarProcessoDatajud(
     const data = await response.json();
 
     if (!data.hits?.hits?.length) {
-      throw new DatajudAPIError(
-        "Processo não encontrado",
-        404,
-        tribunal,
-        numeroProcesso
-      );
+      throw new DatajudAPIError("Processo não encontrado", 404, tribunal, numeroProcesso);
     }
 
     const processo = data.hits.hits[0]._source as DatajudProcesso;
@@ -543,21 +525,19 @@ export async function consultarAtualizacoesRecentesDatajud(
       return [];
     }
 
-    const processos: DatajudProcesso[] = data.hits.hits.map(
-      (hit: { _source: DatajudProcesso }) => {
-        const proc = hit._source;
+    const processos: DatajudProcesso[] = data.hits.hits.map((hit: { _source: DatajudProcesso }) => {
+      const proc = hit._source;
 
-        if (proc.movimentos && Array.isArray(proc.movimentos)) {
-          proc.movimentos.sort((a, b) => {
-            const dateA = new Date(a.dataHora).getTime();
-            const dateB = new Date(b.dataHora).getTime();
-            return dateB - dateA;
-          });
-        }
-
-        return proc;
+      if (proc.movimentos && Array.isArray(proc.movimentos)) {
+        proc.movimentos.sort((a, b) => {
+          const dateA = new Date(a.dataHora).getTime();
+          const dateB = new Date(b.dataHora).getTime();
+          return dateB - dateA;
+        });
       }
-    );
+
+      return proc;
+    });
 
     return processos;
   } catch (error) {
@@ -625,10 +605,7 @@ export function formatarNumeroCNJ(numero: string): string {
     return `${digitos.slice(0, 7)}-${digitos.slice(7, 9)}.${digitos.slice(
       9,
       13
-    )}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(
-      16,
-      20
-    )}`;
+    )}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(16, 20)}`;
   }
 
   return numero;

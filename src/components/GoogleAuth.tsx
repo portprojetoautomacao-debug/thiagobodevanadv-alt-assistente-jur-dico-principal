@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { config } from "@/lib/config";
-import { ExternalLink as ArrowSquareOut, AlertTriangle as Warning } from "lucide-react";
+import { AlertTriangle, ExternalLink } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
@@ -16,7 +16,7 @@ const PRODUCTION_URLS = new Set([
 
 // Detecta se está em ambiente de desenvolvimento/preview (URL dinâmica)
 const isDevelopmentEnvironment = (): boolean => {
-  const hostname = window.location.hostname;
+  const hostname = globalThis.window.location.hostname;
 
   // Produção autorizada - permite login
   if (PRODUCTION_URLS.has(hostname)) {
@@ -66,7 +66,7 @@ interface GoogleAuthButtonProps {
   readonly onError?: (error: Error) => void;
 }
 
-export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButtonProps>) {
   const [error, setError] = useState<string>("");
   const [isConfigured, setIsConfigured] = useState(false);
 
@@ -127,7 +127,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   };
 
   const initializeGoogleSignIn = useCallback(() => {
-    const google = (window as unknown as { google?: GoogleAccount })?.google;
+    const google = (globalThis.window as unknown as { google?: GoogleAccount })?.google;
     if (!google) return;
 
     google.accounts.id.initialize({
@@ -174,9 +174,10 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
 
   // Verificação de ambiente de desenvolvimento - deve vir antes das outras verificações
   if (isDevelopmentEnvironment()) {
-    const isCodespace = window.location.hostname.includes(".app.github.dev");
+    const isCodespace = globalThis.window.location.hostname.includes(".app.github.dev");
     const isLocalhost =
-      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      globalThis.window.location.hostname === "localhost" ||
+      globalThis.window.location.hostname === "127.0.0.1";
 
     const getEnvironmentTitle = () => {
       if (isCodespace) return "GitHub Codespace Detectado";
@@ -192,13 +193,13 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
 
     return (
       <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-        <Warning className="h-4 w-4 text-amber-600" />
+        <AlertTriangle className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800 dark:text-amber-200">
           <strong>{getEnvironmentTitle()}</strong>
           <p className="mt-2 text-sm">
             O login com Google não funciona em {getEnvironmentName()} porque a origem{" "}
             <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">
-              {window.location.origin}
+              {globalThis.location.origin}
             </code>{" "}
             não está autorizada no Google Cloud Console.
           </p>
@@ -209,9 +210,9 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
             variant="outline"
             size="sm"
             className="mt-3 gap-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900"
-            onClick={() => window.open(PRODUCTION_DOMAIN, "_blank")}
+            onClick={() => globalThis.open(PRODUCTION_DOMAIN, "_blank")}
           >
-            <ArrowSquareOut className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
             Abrir em Produção
           </Button>
         </AlertDescription>
@@ -222,7 +223,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   if (!isConfigured) {
     return (
       <Alert variant="destructive">
-        <Warning className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           <strong>Configuração OAuth Necessária</strong>
           <p className="mt-2 text-sm">
@@ -247,7 +248,7 @@ export function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) 
   if (error) {
     return (
       <Alert variant="destructive">
-        <Warning className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );

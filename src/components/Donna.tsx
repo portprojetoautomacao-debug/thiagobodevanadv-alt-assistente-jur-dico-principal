@@ -12,6 +12,7 @@ import {
   BarChart3,
   Bell,
   Briefcase,
+  BarChart3 as ChartBar,
   DollarSign as CurrencyCircleDollar,
   Send as PaperPlaneTilt,
   Square as Stop,
@@ -581,17 +582,17 @@ IMPORTANTE:
   const getInsightIcon = (type: string) => {
     switch (type) {
       case "statistics":
-        return <BarChart3 className="w-5 h-5" />;
+        return <ChartBar className="w-5 h-5" />;
       case "alert":
         return <Bell className="w-5 h-5" />;
       case "trend":
-        return <BarChart3 className="w-5 h-5" />;
+        return <ChartBar className="w-5 h-5" />;
       case "suggestion":
         return <Briefcase className="w-5 h-5" />;
       case "info":
         return <Warning className="w-5 h-5" />;
       default:
-        return <BarChart3 className="w-5 h-5" />;
+        return <ChartBar className="w-5 h-5" />;
     }
   };
 
@@ -783,7 +784,7 @@ IMPORTANTE:
               placeholder="Pergunte sobre processos, prazos, financeiro, equipe..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               disabled={isProcessing || isStreaming}
               className="flex-1"
             />

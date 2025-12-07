@@ -61,20 +61,22 @@ const initSentry = () => {
 const initOnInteraction = () => {
   const events = ["click", "keydown", "scroll", "touchstart"];
   const handler = () => {
-    events.forEach((e) => window.removeEventListener(e, handler, { capture: true }));
+    events.forEach((e) => globalThis.window.removeEventListener(e, handler, { capture: true }));
     // Usar requestIdleCallback para não bloquear a interação
-    if ("requestIdleCallback" in window) {
+    if ("requestIdleCallback" in globalThis) {
       requestIdleCallback(() => initSentry(), { timeout: 2000 });
     } else {
       setTimeout(initSentry, 100);
     }
   };
-  events.forEach((e) => window.addEventListener(e, handler, { capture: true, passive: true }));
+  events.forEach((e) =>
+    globalThis.window.addEventListener(e, handler, { capture: true, passive: true })
+  );
 };
 
 // Estratégia 2: Fallback - carregar após 5s se usuário não interagir
 const initOnIdle = () => {
-  if ("requestIdleCallback" in window) {
+  if ("requestIdleCallback" in globalThis) {
     requestIdleCallback(
       () => {
         setTimeout(initSentry, 5000); // 5s delay após idle
@@ -99,7 +101,7 @@ createRoot(rootElement).render(
 
 // ✅ Limpa o timeout de loading quando o React carrega
 if (
-  typeof globalThis.window !== "undefined" &&
+  globalThis.window !== undefined &&
   (globalThis.window as unknown as { __clearLoadingTimeout?: () => void }).__clearLoadingTimeout
 ) {
   (globalThis.window as unknown as { __clearLoadingTimeout: () => void }).__clearLoadingTimeout();

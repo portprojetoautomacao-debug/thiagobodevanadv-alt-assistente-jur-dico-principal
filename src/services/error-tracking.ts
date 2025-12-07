@@ -167,11 +167,11 @@ export function initErrorTracking(): void {
 
       // Sample rates
       // Performance: 10% em prod, 100% em dev
-      tracesSampleRate: APP_ENVIRONMENT === "production" ? 0.1 : 1.0,
+      tracesSampleRate: APP_ENVIRONMENT === "production" ? 0.1 : 1,
 
       // Replay: 10% das sessões normais, 100% das sessões com erro
       replaysSessionSampleRate: APP_ENVIRONMENT === "production" ? 0.1 : 0,
-      replaysOnErrorSampleRate: 1.0,
+      replaysOnErrorSampleRate: 1,
 
       // Debug mode apenas em desenvolvimento
       debug: APP_ENVIRONMENT === "development",
@@ -284,13 +284,31 @@ export function initErrorTracking(): void {
       ],
 
       // URLs permitidas (apenas rastrear erros dessas origens)
-      allowUrls: [window.location.origin, /^https:\/\/.*\.vercel\.app/],
+      allowUrls: [
+        globalThis.window === undefined ? "" : globalThis.window.location.origin,
+        /^https:\/\/.*\.vercel\.app/,
+      ],
     });
 
     isInitialized = true;
     console.log("✅ Sentry Error Tracking inicializado");
     console.log(`   Environment: ${APP_ENVIRONMENT}`);
     console.log(`   Release: assistente-juridico@${APP_VERSION}`);
+
+    // 🔍 Inicializar integração Gemini para AI Monitoring (lazy loading)
+    // Dynamic import para evitar erro de módulo não encontrado durante type-check
+    setTimeout(async () => {
+      try {
+        const { initGeminiIntegration } = await import("../lib/sentry-gemini-integration.js");
+        initGeminiIntegration({
+          includePrompts: true,
+          captureErrors: true,
+        });
+        console.log("[Sentry] Gemini Integration initialized");
+      } catch {
+        // Silencioso - integração opcional
+      }
+    }, 1000);
   } catch (error) {
     console.error("❌ Falha ao inicializar Sentry:", error);
   }
@@ -492,4 +510,4 @@ export function withSyncSpan<T>(
 // RE-EXPORT do Sentry para uso direto
 // ============================================
 
-export { Sentry };
+export * as Sentry from "@sentry/react";

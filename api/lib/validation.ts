@@ -32,28 +32,15 @@ export const TaskStatusSchema = z.enum([
 ]);
 
 export const AgentTaskSchema = z.object({
-  id: z
-    .string()
-    .refine(
-      (val) =>
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          val
-        ),
-      "Invalid UUID"
-    ),
+  id: z.uuid(),
   agentId: z.string().min(1),
   type: AgentTaskTypeSchema,
   priority: TaskPrioritySchema,
   status: TaskStatusSchema,
-  createdAt: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime"),
+  createdAt: z.iso.datetime(),
   data: z.record(z.string(), z.unknown()),
   error: z.string().optional(),
-  completedAt: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime")
-    .optional(),
+  completedAt: z.iso.datetime().optional(),
   processingTimeMs: z.number().optional(),
 });
 
@@ -63,10 +50,7 @@ export const AgentSchema = z.object({
   type: z.string().min(1),
   capabilities: z.array(z.string()),
   status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]),
-  lastActive: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), "Invalid datetime")
-    .optional(),
+  lastActive: z.iso.datetime().optional(),
 });
 
 // --- Validações de API ---

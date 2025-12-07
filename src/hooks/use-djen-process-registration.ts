@@ -5,7 +5,7 @@
 
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
-import type { Expediente, Process } from "@/types";
+import type { Expediente, Process, TipoExpediente } from "@/types";
 import type { DJENPublication } from "@/types/djen-publication";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ function createExpedienteFromPublication(
   return {
     id: crypto.randomUUID(),
     processId,
-    tipo: pub.tipo || "intimacao",
+    tipo: (pub.tipo || "intimacao") as TipoExpediente,
     titulo: `${pub.tipo || "Intimação"} - ${pub.numeroProcesso}`,
     conteudo: pub.teor,
     content: pub.teor,

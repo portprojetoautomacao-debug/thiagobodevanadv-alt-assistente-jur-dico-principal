@@ -18,14 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useKV } from "@/hooks/use-kv";
-import {
-  File,
-  Paperclip,
-  Plus,
-  TrendingDown as TrendDown,
-  TrendingUp as TrendUp,
-  X,
-} from "lucide-react";
+import { FileText, Paperclip, Plus, TrendingDown, TrendingUp, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 // ✅ OTIMIZAÇÃO: Imports separados para melhor tree-shaking
@@ -172,11 +165,11 @@ export default function FinancialManagementAdvbox() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newAttachments: FileAttachment[] = Array.from(files).map((file) => ({
+      const newAttachments: FileAttachment[] = Array.from(files).map((fileItem) => ({
         id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
+        name: fileItem.name,
+        size: fileItem.size,
+        type: fileItem.type,
       }));
       setAttachments((prev) => [...prev, ...newAttachments]);
       toast.success(`${files.length} arquivo(s) anexado(s)`);
@@ -296,17 +289,17 @@ export default function FinancialManagementAdvbox() {
                 {/* Attachment List */}
                 {attachments.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    {attachments.map((file) => (
+                    {attachments.map((attachment) => (
                       <div
-                        key={file.id}
+                        key={attachment.id}
                         className="flex items-center justify-between p-2 bg-muted rounded-lg border border-border"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <File size={16} className="text-primary shrink-0" />
+                          <FileText size={16} className="text-primary shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm truncate">{file.name}</p>
+                            <p className="text-sm truncate">{attachment.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {formatFileSize(file.size)}
+                              {formatFileSize(attachment.size)}
                             </p>
                           </div>
                         </div>
@@ -315,7 +308,7 @@ export default function FinancialManagementAdvbox() {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 shrink-0"
-                          onClick={() => removeAttachment(file.id)}
+                          onClick={() => removeAttachment(attachment.id)}
                           aria-label="Remover anexo"
                         >
                           <X size={14} />
@@ -346,7 +339,7 @@ export default function FinancialManagementAdvbox() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Valor previsto este mês</p>
               <div className="flex items-center gap-2">
-                <TrendUp className="text-green-500" size={20} />
+                <TrendingUp className="text-green-500" size={20} />
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(stats.valorPrevisto)}
                 </span>
@@ -360,7 +353,7 @@ export default function FinancialManagementAdvbox() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">A receber esta semana</p>
               <div className="flex items-center gap-2">
-                <TrendUp className="text-green-500" size={20} />
+                <TrendingUp className="text-green-500" size={20} />
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(stats.aReceberSemana)}
                 </span>
@@ -374,7 +367,7 @@ export default function FinancialManagementAdvbox() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">A pagar esta semana</p>
               <div className="flex items-center gap-2">
-                <TrendDown className="text-red-500" size={20} />
+                <TrendingDown className="text-red-500" size={20} />
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(stats.aPagarSemana)}
                 </span>

@@ -33,36 +33,40 @@ import {
 } from "@/lib/document-templates";
 import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
+import {
+  createMinuta,
+  updateMinuta,
+  validateMinutaForFinalization,
+  type MinutaInput,
+} from "@/services/minuta-service";
 import type { Minuta, Process } from "@/types";
 import {
-  RotateCw as ArrowsClockwise,
-  ChevronDown as CaretDown,
+  AlertTriangle,
+  Bot,
   CheckCircle,
+  ChevronDown,
   Clock,
   Copy,
-  Download as DownloadSimple,
+  Download,
   Eye,
-  FileText as FileDoc,
-  FileText as FilePdf,
   FileText,
   FolderOpen,
-  Chrome as GoogleLogo,
-  Search as MagnifyingGlass,
-  Pencil as PencilSimple,
+  Loader2,
+  Pencil,
   Plus,
-  Bot as Robot,
-  Sparkles as Sparkle,
-  Loader2 as SpinnerGap,
+  RefreshCw,
+  Search,
+  Sparkle,
   Trash,
-  AlertTriangle as Warning,
 } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-// ✅ LAZY LOADING: TiptapEditor é carregado apenas quando necessário
+// ✅ LAZY LOADING: TiptapEditorV2 é carregado apenas quando necessário
 // Isso reduz o bundle inicial e melhora First Contentful Paint (FCP)
-const TiptapEditor = lazy(() =>
-  import("@/components/editor/TiptapEditor").then((m) => ({
-    default: m.TiptapEditor,
+// TiptapEditorV2 combina UI moderna do Tiptap CLI oficial + comandos de IA
+const TiptapEditorV2 = lazy(() =>
+  import("@/components/editor/TiptapEditorV2").then((m) => ({
+    default: m.TiptapEditorV2,
   }))
 );
 
@@ -91,7 +95,12 @@ Responda apenas com o conteúdo solicitado (trecho ou minuta), sem explicações
 export default function MinutasManager() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
   const [processes] = useKV<Process[]>("processes", []);
-  const { exportToGoogleDocs, openDocument, isAuthenticated: isGoogleDocsAuth } = useGoogleDocs();
+  const {
+    exportToGoogleDocs,
+    importFromGoogleDocs,
+    openDocument,
+    isAuthenticated: isGoogleDocsAuth,
+  } = useGoogleDocs();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
@@ -220,24 +229,30 @@ export default function MinutasManager() {
       return;
     }
 
-    const novaMinuta: Minuta = {
-      id: `minuta-${Date.now()}`,
-      titulo: formData.titulo,
-      processId: formData.processId !== "_none" ? formData.processId : undefined,
-      tipo: formData.tipo,
-      conteudo: formData.conteudo,
-      status: formData.status,
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
-      autor: "current-user",
-      criadoPorAgente: false,
-    };
+    try {
+      // ✅ Usar serviço centralizado com validação
+      const minutaInput: MinutaInput = {
+        titulo: formData.titulo,
+        processId: formData.processId === "_none" ? undefined : formData.processId,
+        tipo: formData.tipo,
+        conteudo: formData.conteudo,
+        status: formData.status,
+        autor: "current-user",
+        criadoPorAgente: false,
+      };
 
-    setMinutas((current = []) => [...current, novaMinuta]);
+      const novaMinuta = createMinuta(minutaInput);
 
-    resetForm();
-    setIsDialogOpen(false);
-    toast.success("Minuta criada com sucesso!");
+      setMinutas((current = []) => [...current, novaMinuta]);
+
+      resetForm();
+      setIsDialogOpen(false);
+      toast.success("Minuta criada com sucesso!");
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao criar minuta";
+      toast.error(errorMsg);
+      console.error("[MinutasManager] Erro ao criar minuta:", error);
+    }
   };
 
   const handleUpdateMinuta = async () => {
@@ -246,39 +261,59 @@ export default function MinutasManager() {
       return;
     }
 
-    setMinutas((current = []) =>
-      current.map((m) =>
-        m.id === editingMinuta.id
-          ? {
-              ...m,
-              titulo: formData.titulo,
-              processId: formData.processId !== "_none" ? formData.processId : undefined,
-              tipo: formData.tipo,
-              conteudo: formData.conteudo,
-              status: formData.status,
-              atualizadoEm: new Date().toISOString(),
-            }
-          : m
-      )
-    );
+    try {
+      // ✅ Validar antes de finalizar
+      if (formData.status === "finalizada") {
+        const validation = validateMinutaForFinalization({
+          ...editingMinuta,
+          titulo: formData.titulo,
+          conteudo: formData.conteudo,
+        });
 
-    if (editingMinuta.googleDocsId) {
-      const success = await googleDocsService.updateDocumentContent(
-        editingMinuta.googleDocsId,
-        formData.conteudo
-      );
-      if (success) {
-        toast.success("Minuta atualizada localmente e no Google Docs!");
-      } else {
-        toast.warning("Minuta atualizada localmente, mas erro ao sincronizar com Google Docs");
+        if (!validation.valid) {
+          toast.error("Minuta não pode ser finalizada", {
+            description: validation.errors.join(", "),
+          });
+          return;
+        }
       }
-    } else {
-      toast.success("Minuta atualizada!");
-    }
 
-    setEditingMinuta(null);
-    resetForm();
-    setIsDialogOpen(false);
+      // ✅ Usar serviço centralizado
+      const minutaAtualizada = updateMinuta(editingMinuta, {
+        titulo: formData.titulo,
+        processId: formData.processId === "_none" ? undefined : formData.processId,
+        tipo: formData.tipo,
+        conteudo: formData.conteudo,
+        status: formData.status,
+      });
+
+      setMinutas((current = []) =>
+        current.map((m) => (m.id === editingMinuta.id ? minutaAtualizada : m))
+      );
+
+      // Sincronizar com Google Docs se houver documento vinculado
+      if (minutaAtualizada.googleDocsId) {
+        const syncSuccess = await googleDocsService.updateDocumentContent(
+          minutaAtualizada.googleDocsId,
+          minutaAtualizada.conteudo
+        );
+        if (syncSuccess) {
+          toast.success("Minuta atualizada localmente e no Google Docs!");
+        } else {
+          toast.warning("Minuta atualizada localmente, mas erro ao sincronizar com Google Docs");
+        }
+      } else {
+        toast.success("Minuta atualizada com sucesso!");
+      }
+
+      setEditingMinuta(null);
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao atualizar minuta";
+      toast.error(errorMsg);
+      console.error("[MinutasManager] Erro ao atualizar minuta:", error);
+    }
   };
 
   const resetForm = () => {
@@ -355,36 +390,16 @@ export default function MinutasManager() {
     }
 
     setIsSyncing(minuta.id);
-    const toastId = toast.loading("Sincronizando do Google Docs...");
 
     try {
-      const content = await googleDocsService.syncDocument(minuta.googleDocsId);
+      const success = await importFromGoogleDocs(minuta.id, minutas, setMinutas);
 
-      if (content !== null) {
-        setMinutas((current = []) =>
-          current.map((m) =>
-            m.id === minuta.id
-              ? {
-                  ...m,
-                  conteudo: content,
-                  atualizadoEm: new Date().toISOString(),
-                  ultimaSincronizacao: new Date().toISOString(),
-                }
-              : m
-          )
-        );
-        toast.success(`✅ Minuta sincronizada! (${content.length.toLocaleString()} caracteres)`, {
-          id: toastId,
-        });
-      } else {
-        const lastError = googleDocsService.getLastError();
-        toast.error(lastError || "Erro ao sincronizar do Google Docs", {
-          id: toastId,
-        });
+      if (!success) {
+        console.error("[MinutasManager] Importação cancelada ou falhou");
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error(`Erro ao sincronizar: ${errorMessage}`, { id: toastId });
+      toast.error(`Erro ao importar: ${errorMessage}`);
       console.error(error);
     } finally {
       setIsSyncing(null);
@@ -442,13 +457,14 @@ export default function MinutasManager() {
   };
 
   const handleExportPDF = async (minuta: Minuta) => {
-    const printWindow = window.open("", "_blank");
+    const printWindow = globalThis.window.open("", "_blank");
     if (!printWindow) {
       toast.error("Habilite pop-ups para exportar PDF");
       return;
     }
 
-    printWindow.document.write(`
+    // Usar innerHTML ao invés de document.write (deprecated)
+    printWindow.document.documentElement.innerHTML = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -476,7 +492,7 @@ export default function MinutasManager() {
           ${minuta.conteudo}
         </body>
       </html>
-    `);
+    `;
     printWindow.document.close();
     printWindow.print();
     toast.success("Janela de impressão aberta - salve como PDF");
@@ -684,7 +700,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             if (!isGoogleConfigured) {
               return (
                 <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
-                  <Warning className="mr-2 h-4 w-4" />
+                  <AlertTriangle className="mr-2 h-4 w-4" />
                   Google não configurado
                 </Badge>
               );
@@ -692,14 +708,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             if (!isAuthenticated) {
               return (
                 <Button onClick={handleAuthGoogle} variant="outline">
-                  <GoogleLogo className="mr-2" />
+                  <FileText className="mr-2" />
                   Conectar Google Docs
                 </Button>
               );
             }
             return (
               <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
-                <GoogleLogo className="mr-2" />
+                <FileText className="mr-2" />
                 Google Conectado
               </Badge>
             );
@@ -718,12 +734,12 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+            <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col bg-card">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   {editingMinuta ? (
                     <>
-                      <PencilSimple />
+                      <Pencil />
                       Editar Minuta
                     </>
                   ) : (
@@ -841,7 +857,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       fallback={
                         <div className="h-[400px] flex items-center justify-center bg-muted rounded-lg border">
                           <div className="flex flex-col items-center gap-2">
-                            <SpinnerGap className="h-8 w-8 animate-spin text-primary" />
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             <span className="text-sm text-muted-foreground">
                               Carregando editor...
                             </span>
@@ -849,7 +865,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         </div>
                       }
                     >
-                      <TiptapEditor
+                      <TiptapEditorV2
                         key={editingMinuta?.id || "new-minuta"}
                         content={formData.conteudo}
                         onChange={(content) => setFormData({ ...formData, conteudo: content })}
@@ -865,7 +881,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   {/* Variáveis não preenchidas */}
                   {unfilledVariables.length > 0 && (
                     <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                      <Warning className="h-4 w-4 text-amber-600" />
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
                       <AlertDescription className="text-amber-800 dark:text-amber-200">
                         <strong>{unfilledVariables.length} variáveis não preenchidas:</strong>{" "}
                         {unfilledVariables.slice(0, 5).join(", ")}
@@ -893,7 +909,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                   <div className="space-y-4 h-full flex flex-col">
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           placeholder="Buscar templates..."
                           className="pl-9"
@@ -1007,7 +1023,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       {/* Alertas de minutas pendentes */}
       {minutasPendentes.length > 0 && (
         <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
-          <Robot className="h-4 w-4 text-orange-600" />
+          <Bot className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-800 dark:text-orange-200">
             <strong>{minutasPendentes.length} minuta(s) pendente(s) de revisão</strong> criada(s)
             pelos agentes IA.
@@ -1032,7 +1048,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       {/* Filtros */}
       <div className="flex gap-4 flex-wrap items-center">
         <div className="relative flex-1 max-w-sm">
-          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar minutas..."
             className="pl-9"
@@ -1105,7 +1121,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         {minuta.titulo}
                         {minuta.criadoPorAgente && (
                           <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                            <Robot className="mr-1 h-3 w-3" />
+                            <Bot className="mr-1 h-3 w-3" />
                             IA
                           </Badge>
                         )}
@@ -1118,7 +1134,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         {processo && <Badge variant="secondary">{processo.numeroCNJ}</Badge>}
                         {minuta.googleDocsId && (
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            <GoogleLogo className="mr-1 h-3 w-3" />
+                            <FileText className="mr-1 h-3 w-3" />
                             Google Docs
                           </Badge>
                         )}
@@ -1147,7 +1163,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       </span>
                       {minuta.ultimaSincronizacao && (
                         <span className="flex items-center gap-1">
-                          <ArrowsClockwise className="h-3 w-3" />
+                          <RefreshCw className="h-3 w-3" />
                           Sincronizado em{" "}
                           {new Date(minuta.ultimaSincronizacao).toLocaleString("pt-BR")}
                         </span>
@@ -1157,7 +1173,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                     {/* Ações */}
                     <div className="flex gap-2 flex-wrap">
                       <Button size="sm" variant="outline" onClick={() => handleEditMinuta(minuta)}>
-                        <PencilSimple className="mr-2 h-4 w-4" />
+                        <Pencil className="mr-2 h-4 w-4" />
                         Editar
                       </Button>
 
@@ -1186,9 +1202,9 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button size="sm" variant="outline">
-                            <DownloadSimple className="mr-2 h-4 w-4" />
+                            <Download className="mr-2 h-4 w-4" />
                             Exportar
-                            <CaretDown className="ml-1 h-3 w-3" />
+                            <ChevronDown className="ml-1 h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-2">
@@ -1200,7 +1216,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               className="justify-start"
                               data-testid="minuta-export-pdf"
                             >
-                              <FilePdf className="mr-2 h-4 w-4" /> Exportar PDF
+                              <FileText className="mr-2 h-4 w-4" /> Exportar PDF
                             </Button>
                             <Button
                               variant="ghost"
@@ -1209,7 +1225,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               className="justify-start"
                               data-testid="minuta-export-doc"
                             >
-                              <FileDoc className="mr-2 h-4 w-4" /> Exportar DOC
+                              <FileText className="mr-2 h-4 w-4" /> Exportar DOC
                             </Button>
                             <Button
                               variant="ghost"
@@ -1218,7 +1234,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                               disabled={!isAuthenticated}
                               className="justify-start"
                             >
-                              <GoogleLogo className="mr-2 h-4 w-4" />
+                              <FileText className="mr-2 h-4 w-4" />
                               {minuta.googleDocsUrl ? "Abrir no" : "Criar no"} Google Docs
                             </Button>
                           </div>
@@ -1231,13 +1247,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           variant="outline"
                           onClick={() => handleSyncFromGoogleDocs(minuta)}
                           disabled={isSyncing === minuta.id}
+                          title="Importar alterações do Google Docs (Google → Local)"
                         >
-                          <ArrowsClockwise
+                          <RefreshCw
                             className={`mr-2 h-4 w-4 ${
                               isSyncing === minuta.id ? "animate-spin" : ""
                             }`}
                           />
-                          Sincronizar
+                          {isSyncing === minuta.id ? "Importando..." : "Importar do GDocs"}
                         </Button>
                       )}
 

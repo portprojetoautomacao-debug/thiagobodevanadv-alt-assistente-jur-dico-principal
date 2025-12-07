@@ -2,25 +2,25 @@
 // Integra DJEN → Agente de Gestão de Prazos → Agente de Minutas (Gemini + Docs + Calendar)
 // Modo: Auto-Pilot Jurídico para intimações DJEN
 
-import type { Appointment } from "@/types";
+import {
+  createDeadlineFromAnalysis,
+  type IntimationAnalysisResult,
+} from "@/lib/deadline-calendar-integration";
+import type { DJENFilteredResult } from "@/lib/djen-api";
 import {
   criarMonitorDJEN,
   type DJENMonitorAgent,
   type DJENMonitorConfig,
   type DJENMonitorTask,
 } from "@/lib/djen-monitor-agent";
-import type { DJENFilteredResult } from "@/lib/djen-api";
-import {
-  createDeadlineFromAnalysis,
-  type IntimationAnalysisResult,
-} from "@/lib/deadline-calendar-integration";
+import { callGemini } from "@/lib/gemini-service";
 import {
   criarMinutaComAgenteIA,
   type MinutaAgentDeadline,
   type MinutaAgentParams,
   type MinutaAgentResult,
 } from "@/lib/minuta-agent";
-import { callGemini } from "@/lib/gemini-service";
+import type { Appointment } from "@/types";
 
 /**
  * Configuração do Auto-Pilot DJEN + Prazos + Minutas
@@ -100,9 +100,7 @@ export class AutoPilotDjenPrazosMinutas {
       autoCreateMinutas: true,
       syncToGoogleCalendar: true,
       defaultMinutaTipo: "Manifestação Simples",
-      logCallback:
-        config.logCallback ??
-        ((msg, level) => console[level](`[AutoPilot] ${msg}`)),
+      logCallback: config.logCallback ?? ((msg, level) => console[level](`[AutoPilot] ${msg}`)),
       ...config,
     };
 
@@ -193,13 +191,15 @@ ${pub.teor}`;
     }
 
     try {
-      const jsonMatch = /\{[\s\S]*\}/.exec(response.text);
-      if (!jsonMatch) {
+      const startIdx = response.text.indexOf("{");
+      const endIdx = response.text.lastIndexOf("}");
+      if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) {
         this.log("Resposta Gemini sem JSON reconhecível (intimação)", "warn");
         return null;
       }
 
-      const parsed = JSON.parse(jsonMatch[0]);
+      const jsonStr = response.text.substring(startIdx, endIdx + 1);
+      const parsed = JSON.parse(jsonStr);
 
       // Normaliza campos mínimos
       const result: IntimationAnalysisResult = {
@@ -253,9 +253,7 @@ ${pub.teor}`;
 
     if (!result.success) {
       this.log(
-        `Falha ao criar prazo para "${title}": ${
-          result.error || "motivo desconhecido"
-        }`,
+        `Falha ao criar prazo para "${title}": ${result.error || "motivo desconhecido"}`,
         "warn"
       );
       return;
@@ -264,9 +262,7 @@ ${pub.teor}`;
     this.stats.totalPrazosCriados += 1;
     this.log(
       `Prazo criado com sucesso para "${title}" ` +
-        `(localId=${result.localAppointmentId}, googleId=${
-          result.googleEventId || "—"
-        })`,
+        `(localId=${result.localAppointmentId}, googleId=${result.googleEventId || "—"})`,
       "info"
     );
   }
@@ -289,9 +285,7 @@ Metadados:
 - Tribunal: ${pub.tribunal}
 - Data da disponibilização: ${pub.data}
 - Tipo de comunicação: ${pub.tipo}
-- Número do processo: ${
-      analysis?.processNumber || pub.numeroProcesso || "não identificado"
-    }
+- Número do processo: ${analysis?.processNumber || pub.numeroProcesso || "não identificado"}
 - Órgão julgador: ${analysis?.court || pub.orgao || "não identificado"}
 - Match: ${pub.matchType}
 
@@ -350,25 +344,18 @@ ${pub.teor}
   /**
    * Callback chamado pelo DJENMonitorAgent quando encontra novas publicações
    */
-  private async handleNewPublications(
-    publicacoes: DJENFilteredResult[]
-  ): Promise<void> {
+  private async handleNewPublications(publicacoes: DJENFilteredResult[]): Promise<void> {
     if (!publicacoes || publicacoes.length === 0) {
       this.log("Execução DJEN sem publicações relevantes", "info");
       return;
     }
 
-    this.log(
-      `Processando ${publicacoes.length} publicação(ões) do DJEN...`,
-      "info"
-    );
+    this.log(`Processando ${publicacoes.length} publicação(ões) do DJEN...`, "info");
 
     for (const pub of publicacoes) {
       try {
         this.stats.totalIntimacoesProcessadas += 1;
-        const title = `${pub.tribunal} - ${pub.tipo} - ${
-          pub.numeroProcesso || "sem número"
-        }`;
+        const title = `${pub.tribunal} - ${pub.tipo} - ${pub.numeroProcesso || "sem número"}`;
 
         // 1) Análise da intimação (IA)
         const analysis = await this.analyzeIntimationWithGemini(pub);

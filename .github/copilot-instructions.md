@@ -63,16 +63,17 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 ### 🆕 Resumo Operational para Copilot
 
 - **Arquitetura**: Frontend React 19 + TypeScript + Vite em `src/`, backend serverless em `api/` (Vercel Functions). Persistência principal via Upstash Redis/KV (`api/kv.ts`, `src/hooks/use-kv.ts`).
-- **Fluxo de agentes**: DJEN/DataJud alimenta `expedientes`, `use-autonomous-agents` cria tarefas para 15 agentes descritos em `src/lib/agents.ts`/`TODOS_OS_15_AGENTES.md`. `redacao-peticoes` usa Gemini 2.5 (`src/lib/gemini-service.ts`) e entrega minutas ao `MinutasManager` com campos `criadoPorAgente`, `confidence`, `templateId`, `status`.
+- **Extensão Chrome PJe Sync**: Projeto separado em `chrome-extension-pje/` com Manifest v3, TypeScript, Webpack. Content Script extrai processos do PJe, Background Service Worker sincroniza com `/api/pje-sync`, Popup UI configura API Key. 31 testes, build em `dist/`. Documentação: `chrome-extension-pje/README.md` e `INSTALL.md`.
+- **Fluxo de agentes**: DJEN/DataJud/Chrome Extension alimenta `expedientes`, `use-autonomous-agents` cria tarefas para 15 agentes descritos em `src/lib/agents.ts`/`TODOS_OS_15_AGENTES.md`. `redacao-peticoes` usa Gemini 2.5 (`src/lib/gemini-service.ts`) e entrega minutas ao `MinutasManager` com campos `criadoPorAgente`, `confidence`, `templateId`, `status`.
 - **Conectividade dos agentes**: Todos os agentes devem manter comunicação por streaming (tempo real) com os serviços centrais; qualquer novo agente precisa expor interface streaming compatível com `use-autonomous-agents`.
 - **Editor/Documentos**: `src/components/editor/TiptapEditor.tsx`, `src/components/MinutasManager.tsx`, `src/lib/document-templates.ts` controlam commandos `/ai` e placeholders `{{variavel}}`. Alterou template? atualize `replaceTemplateVariables` + `docs/FLUXO_MINUTAS_AUTOMATICAS.md`.
-- **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
+- **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), PJe via Chrome Extension (`chrome-extension-pje/`, endpoint `/api/pje-sync`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
 - **Cron/automação**: Jobs descritos em `api/cron.ts` e `vercel.json` (DJEN monitor, filas de agentes, backup). Novos jobs exigem atualizar ambos + README.
-- **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Scripts novos precisam refletir em `.github/workflows/*`.
+- **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Extensão Chrome: `cd chrome-extension-pje && npm run build`. Scripts novos precisam refletir em `.github/workflows/*`.
 - **Padrões React/UI**: Apenas components funcionais, props `Props`, hooks no topo, alias `@/`. `src/components/ui/` (shadcn) é imutável. Manter lazy-loading/código dividido alinhado com `App.tsx`, skeleton loaders e `aria-label` em botões.
-- **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Ao adicionar campos, sincronize hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`) e contadores do dashboard.
-- **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`).
-- **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel.
+- **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Extensão usa tipos em `chrome-extension-pje/src/shared/types.ts` (`ProcessoPJe`, `Expediente`, `SyncMessage`). Ao adicionar campos, sincronize hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`, `api/pje-sync.ts`) e contadores do dashboard.
+- **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
+- **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
 ### 🌐 URLs de Produção
 
@@ -138,6 +139,7 @@ O sistema foi projetado para operar de forma **100% automática, 24/7, sem neces
 | Funcionalidade             | Nível Automação | Intervenção Humana                 |
 | -------------------------- | --------------- | ---------------------------------- |
 | Monitoramento DJEN/DataJud | 🟢 100%         | Opcional - revisar publicações     |
+| **Sync PJe Tempo Real**    | 🟢 100%         | Opcional - instalar extensão Chrome|
 | Análise de intimações      | 🟢 100%         | Opcional - confirmar classificação |
 | Cálculo de prazos          | 🟢 100%         | Opcional - ajustar feriados locais |
 | Geração de tarefas         | 🟢 100%         | Opcional - editar prioridades      |
@@ -916,6 +918,231 @@ const tasks = await fetch("/api/todoist-tasks").then((r) => r.json());
 | Vitest         | Testes unitários           |
 | ESLint 9       | Linting com flat config    |
 | Prettier       | Formatação de código       |
+
+### Monitoring & Observability
+
+| Ferramenta                    | Versão/Status | Uso                                  |
+| ----------------------------- | ------------- | ------------------------------------ |
+| Sentry                        | Latest        | Error tracking e performance         |
+| Sentry AI Agents Monitoring   | v2.0.0 ✅     | Monitoramento de agentes IA          |
+| OpenTelemetry                 | Spec 1.0      | Convenções semânticas                |
+| Vercel Speed Insights         | Integrado     | Core Web Vitals                      |
+
+#### 🔍 Sentry AI Agents Monitoring v2
+
+**Status**: ✅ Fase 1 completa - Harvey Specter instrumentado
+
+**Arquivos principais:**
+- `src/lib/sentry-gemini-integration-v2.ts` - API oficial OpenTelemetry (448 linhas)
+- `src/hooks/use-ai-streaming.ts` - Hook instrumentado com `createChatSpan()`
+- `src/components/HarveySpecterChat.tsx` - Tracking de conversação
+- `docs/SENTRY_AI_MONITORING.md` - Guia completo v2.0.0
+- `docs/SENTRY_AI_TESTING_GUIDE.md` - Guia de testes
+
+**Funções disponíveis:**
+```typescript
+import {
+  createInvokeAgentSpan,  // Rastrear agente completo
+  createChatSpan,          // Rastrear chamada LLM
+  createExecuteToolSpan,   // Rastrear tool calling
+  createHandoffSpan,       // Marcar handoff entre agentes
+  useAIInstrumentation,    // Hook React
+} from "@/lib/sentry-gemini-integration-v2";
+```
+
+**Convenções OpenTelemetry:**
+- Operations: `gen_ai.invoke_agent`, `gen_ai.chat`, `gen_ai.execute_tool`, `gen_ai.handoff`
+- Atributos: `gen_ai.system`, `gen_ai.request.model`, `gen_ai.usage.*`
+- Conversação: `conversation.session_id`, `conversation.turn`
+
+**Progresso de migração:**
+- ✅ Fase 1: Harvey Specter (1/15 agentes)
+- ⏳ Fase 2: Mrs. Justin-e, Redação, Monitor DJEN + tool calling + handoffs
+- ⏳ Fase 3: 12 agentes restantes + LGPD
+- ⏳ Fase 4: Alertas, runbooks, produção
+
+**Dashboard:** Sentry.io → Insights → AI → AI Agents
+
+### 🔍 SonarCloud MCP Server - Análise de Código
+
+O projeto está integrado com SonarCloud via MCP Server para análise contínua de qualidade de código.
+
+#### 📊 Configuração Principal
+
+| Configuração | Valor |
+|--------------|-------|
+| **URL** | `https://sonarcloud.io` |
+| **Organization** | `thiagobodevan-a11y-assistente-juridico-p` |
+| **Project Key** | `thiagobodevan-a11y_assistente-juridico-p` |
+| **Connected Mode** | ✅ Ativado |
+
+**Dashboard:** https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+
+#### 📁 Arquivos de Configuração
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `.vscode/mcp.json` | Configuração MCP Server principal |
+| `.vscode/sonar-copilot-assistant.json` | Integração Sonar + Copilot + Git |
+| `.vscode/settings.json` | SonarLint Connected Mode |
+| `.github/instructions/sonarqube_mcp.instructions.md` | Instruções de uso das ferramentas MCP |
+
+#### 🔧 Ferramentas MCP Disponíveis
+
+| Ferramenta | Uso |
+|------------|-----|
+| `search_my_sonarqube_projects` | Buscar projetos disponíveis no SonarCloud |
+| `search_sonar_issues_in_projects` | Buscar issues (bugs, vulnerabilities, code smells) |
+| `analyze_file_list` | Analisar arquivos modificados após edição |
+| `toggle_automatic_analysis` | Ativar/desativar análise automática |
+
+#### ⚡ Workflow de Análise
+
+**Ao iniciar uma tarefa:**
+1. Desabilitar análise automática: `toggle_automatic_analysis` (se existir)
+2. Realizar modificações de código
+3. Ao finalizar: `analyze_file_list` nos arquivos modificados
+4. Re-habilitar análise automática: `toggle_automatic_analysis`
+
+**Para buscar issues:**
+```bash
+# Buscar projetos
+search_my_sonarqube_projects
+
+# Buscar issues por severidade
+search_sonar_issues_in_projects (severities: BLOCKER, CRITICAL, MAJOR)
+```
+
+#### 🎯 Filtros de Issues Configurados
+
+```json
+{
+  "defaultSeverities": ["BLOCKER", "CRITICAL", "MAJOR"],
+  "excludeResolved": true,
+  "focusOnNewCode": true,
+  "excludePatterns": ["**/node_modules/**", "**/dist/**", "**/*.test.ts"],
+  "includePatterns": ["src/**/*.ts", "src/**/*.tsx", "api/**/*.ts"]
+}
+```
+
+#### 🔑 Autenticação
+
+- **Tipo de Token**: USER token (não project token)
+- **Gerar Token**: https://sonarcloud.io/account/security
+- **Armazenamento**: User Settings do VS Code (não workspace settings)
+- **Erro comum**: `SonarQube answered with Not authorized` → verificar tipo de token
+
+#### 📋 SonarLint Connected Mode (settings.json)
+
+```json
+"sonarlint.connectedMode.connections.sonarcloud": [
+  {
+    "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
+    "connectionId": "thiagobodevan-a11y-assistente-juridico-p"
+  }
+],
+"sonarlint.connectedMode.project": {
+  "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
+  "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+}
+```
+
+#### 🤖 Sonar Copilot Assistant Features
+
+| Feature | Status | Descrição |
+|---------|--------|-----------|
+| **Smart Fix** | ✅ Ativo | Fix automático com confirmação |
+| **Batch Processing** | ✅ Ativo | Processar múltiplos issues |
+| **Auto Branch** | ✅ Ativo | Criar branch `fix/sonar-*` |
+| **Auto Commit** | ✅ Ativo | Commit com template padronizado |
+| **Test Verification** | ✅ Ativo | Rodar testes antes de commit |
+| **AI Training** | ✅ Ativo | Aprender com fixes aprovados |
+
+**Diretório de treinamento IA:** `.sonar-copilot/training`
+
+#### 🌐 SonarCloud API - Endpoints Úteis
+
+A API REST do SonarCloud pode ser usada para consultas diretas. Base URL: `https://sonarcloud.io/api`
+
+**Autenticação:**
+```bash
+# Usar token como usuário, senha vazia
+curl -u "SEU_TOKEN:" "https://sonarcloud.io/api/..."
+```
+
+**Endpoints principais:**
+
+| Endpoint | Método | Descrição |
+|----------|--------|-----------|
+| `/api/issues/search` | GET | Buscar issues do projeto |
+| `/api/measures/component` | GET | Métricas (duplicação, cobertura, etc.) |
+| `/api/project_analyses/search` | GET | Histórico de análises |
+| `/api/qualitygates/project_status` | GET | Status do Quality Gate |
+| `/api/hotspots/search` | GET | Security Hotspots |
+| `/api/sources/lines` | GET | Código fonte com anotações |
+
+**Exemplos de uso:**
+
+```bash
+# Buscar issues OPEN ordenados por severidade
+curl -u "TOKEN:" "https://sonarcloud.io/api/issues/search?\
+componentKeys=thiagobodevan-a11y_assistente-juridico-p&\
+statuses=OPEN&\
+ps=100&\
+s=SEVERITY&\
+asc=false"
+
+# Buscar métricas de duplicação e cobertura
+curl -u "TOKEN:" "https://sonarcloud.io/api/measures/component?\
+component=thiagobodevan-a11y_assistente-juridico-p&\
+metricKeys=duplicated_lines_density,coverage,bugs,vulnerabilities,code_smells"
+
+# Status do Quality Gate
+curl -u "TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?\
+projectKey=thiagobodevan-a11y_assistente-juridico-p"
+
+# Security Hotspots
+curl -u "TOKEN:" "https://sonarcloud.io/api/hotspots/search?\
+projectKey=thiagobodevan-a11y_assistente-juridico-p&\
+status=TO_REVIEW"
+```
+
+**Parâmetros comuns:**
+
+| Parâmetro | Descrição | Exemplo |
+|-----------|-----------|---------|
+| `componentKeys` | Project key | `thiagobodevan-a11y_assistente-juridico-p` |
+| `statuses` | Status dos issues | `OPEN`, `CONFIRMED`, `RESOLVED` |
+| `severities` | Severidades | `BLOCKER`, `CRITICAL`, `MAJOR`, `MINOR`, `INFO` |
+| `types` | Tipos | `BUG`, `VULNERABILITY`, `CODE_SMELL` |
+| `ps` | Page size | `1` a `500` |
+| `p` | Página | `1`, `2`, etc. |
+| `s` | Sort field | `SEVERITY`, `CREATION_DATE`, `UPDATE_DATE` |
+| `asc` | Ordem | `true` (ASC), `false` (DESC) |
+| `branch` | Branch específica | `main`, `develop` |
+
+**Métricas disponíveis:**
+
+| Métrica | Descrição |
+|---------|-----------|
+| `duplicated_lines_density` | % de linhas duplicadas |
+| `coverage` | Cobertura de testes |
+| `bugs` | Contagem de bugs |
+| `vulnerabilities` | Vulnerabilidades de segurança |
+| `code_smells` | Code smells |
+| `security_hotspots` | Security hotspots |
+| `sqale_index` | Débito técnico (minutos) |
+| `reliability_rating` | Rating A-E para bugs |
+| `security_rating` | Rating A-E para vulnerabilidades |
+
+**Documentação completa:** https://sonarcloud.io/web_api
+
+#### ⚠️ Boas Práticas
+
+1. **Não verificar fixes imediatamente** - O servidor demora para refletir mudanças
+2. **Buscar project key primeiro** - Use `search_my_sonarqube_projects` antes de consultas
+3. **Especificar linguagem** - Ao analisar snippets, informar a linguagem
+4. **Branch context** - Incluir parâmetro de branch quando relevante
 
 ## 📁 Project Structure
 

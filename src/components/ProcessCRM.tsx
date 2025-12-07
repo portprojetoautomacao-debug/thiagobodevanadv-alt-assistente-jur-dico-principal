@@ -20,13 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useKV } from "@/hooks/use-kv";
+import { useProcessSync } from "@/hooks/use-process-sync";
 import { config } from "@/lib/config";
 import { extractPartiesWithFallback } from "@/lib/extract-parties-service";
 import { generatePremonicaoJuridica } from "@/lib/premonicao-service";
 import { createProcessTasks, initializeTodoistClient } from "@/lib/todoist-integration";
 import type { Expediente, PremonicaoJuridica, Process } from "@/types";
-import { Search as MagnifyingGlass, Plus, Bot as Robot, Sparkles as Sparkle } from "lucide-react";
-import { useState } from "react";
+import { Bot, FileText, Mail, Plus, Search, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const PROCESS_STAGES = ["Inicial", "Instrução", "Sentença", "Recurso", "Execução"];
@@ -92,6 +93,7 @@ function shouldUpdateParties(autor: string | undefined, reu: string | undefined)
 export default function ProcessCRM() {
   const [processes, setProcesses] = useKV<Process[]>("processes", []);
   const [expedientes] = useKV<Expediente[]>("expedientes", []);
+  const { syncProcessStats } = useProcessSync();
   const [filter, setFilter] = useState("");
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -104,6 +106,14 @@ export default function ProcessCRM() {
     advogado: "",
     fase: "Inicial",
   });
+
+  // Sincronizar contadores ao montar e quando expedientes/minutas mudarem
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      syncProcessStats();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [syncProcessStats]);
 
   const [premonicaoOpen, setPremonicaoOpen] = useState(false);
   const [premonicaoLoading, setPremonicaoLoading] = useState(false);
@@ -280,7 +290,7 @@ export default function ProcessCRM() {
               onClick={handleUpdateIncompleteParties}
               disabled={updatingParties}
             >
-              <Robot className="w-4 h-4 mr-2" />
+              <Bot className="w-4 h-4 mr-2" />
               {updatingParties
                 ? "Atualizando..."
                 : `Completar ${incompleteProcesses.length} processo(s)`}
@@ -384,7 +394,7 @@ export default function ProcessCRM() {
       {/* Barra de filtros */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             placeholder="Buscar por CNJ, título ou parte..."
             value={filter}
@@ -447,6 +457,26 @@ export default function ProcessCRM() {
                   {process.fase || "N/A"}
                 </Badge>
               </div>
+              {/* Contadores de documentos vinculados */}
+              <div className="flex flex-wrap gap-1.5 pt-2">
+                {(process.expedientesCount ?? 0) > 0 && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Mail className="w-3 h-3" />
+                    {process.expedientesCount}
+                  </Badge>
+                )}
+                {(process.intimacoesCount ?? 0) > 0 && (
+                  <Badge variant="destructive" className="text-xs gap-1">
+                    ⚠️ {process.intimacoesCount}
+                  </Badge>
+                )}
+                {(process.minutasCount ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <FileText className="w-3 h-3" />
+                    {process.minutasCount}
+                  </Badge>
+                )}
+              </div>
               <div className="mt-auto pt-3 space-y-2">
                 <Select
                   value={process.status}
@@ -470,7 +500,7 @@ export default function ProcessCRM() {
                   className="w-full gap-2"
                   onClick={() => handlePremonicao(process)}
                 >
-                  <Sparkle className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                   Premonição Jurídica
                 </Button>
               </div>

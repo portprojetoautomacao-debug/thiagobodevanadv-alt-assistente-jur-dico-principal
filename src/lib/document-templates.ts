@@ -501,9 +501,7 @@ export function getTemplateById(id: string): DocumentTemplate | undefined {
 }
 
 // Função para buscar templates por tipo
-export function getTemplatesByTipo(
-  tipo: DocumentTemplate["tipo"]
-): DocumentTemplate[] {
+export function getTemplatesByTipo(tipo: DocumentTemplate["tipo"]): DocumentTemplate[] {
   return documentTemplates.filter((t) => t.tipo === tipo);
 }
 
@@ -532,9 +530,9 @@ export function replaceTemplateVariables(
   let result = content;
 
   Object.entries(variables).forEach(([key, value]) => {
-    // Corrigido: escapar TODOS os pontos da chave (autor.nome, processo.numero etc.)
-    const escapedKey = key.replaceAll(/\./g, "\\.");
-    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g");
+    // Escapar pontos da chave para uso em regex
+    const escapedKey = key.replaceAll(".", String.raw`\.`);
+    const regex = new RegExp(String.raw`\{\{\s*${escapedKey}\s*\}\}`, "g");
     result = result.replaceAll(regex, value || `[${key}]`);
   });
 
@@ -545,9 +543,9 @@ export function replaceTemplateVariables(
 export function extractUnfilledVariables(content: string): string[] {
   const regex = /\{\{\s*([^}]+)\s*\}\}/g;
   const matches: string[] = [];
-  let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(content)) !== null) {
+  // Usar matchAll ao invés de exec em loop (mais seguro)
+  for (const match of content.matchAll(regex)) {
     const variable = match[1].trim();
     if (!matches.includes(variable)) {
       matches.push(variable);

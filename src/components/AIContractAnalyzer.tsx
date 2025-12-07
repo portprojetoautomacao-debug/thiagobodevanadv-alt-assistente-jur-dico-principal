@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
-import { AlertCircle, CheckCircle2, FileText, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle, FileText, ShieldAlert, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -138,16 +138,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
         </Card>
 
         <div className="space-y-6">
-          {!analysis ? (
-            <Card className="glassmorphic">
-              <CardContent className="flex flex-col items-center justify-center py-24 text-center">
-                <ShieldAlert size={64} className="text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  A análise de riscos aparecerá aqui após processar o contrato
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
+          {analysis ? (
             <>
               <Card className="glassmorphic card-glow">
                 <CardHeader>
@@ -178,7 +169,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       <p className="text-xs text-muted-foreground">Riscos</p>
                     </div>
                     <div className="p-3 bg-primary/10 rounded-lg">
-                      <CheckCircle2 size={24} className="mx-auto mb-1 text-primary" />
+                      <CheckCircle size={24} className="mx-auto mb-1 text-primary" />
                       <p className="text-2xl font-bold text-primary">
                         {analysis.protections.length}
                       </p>
@@ -225,7 +216,7 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                       {analysis.protections.length > 0 && (
                         <div>
                           <h3 className="font-semibold mb-3 flex items-center gap-2 text-primary">
-                            <CheckCircle2 size={20} />
+                            <CheckCircle size={20} />
                             Proteções Existentes
                           </h3>
                           <ul className="space-y-2">
@@ -296,6 +287,15 @@ Retorne EXATAMENTE um JSON válido (sem comentários, sem texto antes ou depois)
                 </CardContent>
               </Card>
             </>
+          ) : (
+            <Card className="glassmorphic">
+              <CardContent className="flex flex-col items-center justify-center py-24 text-center">
+                <ShieldAlert size={64} className="text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  A análise de riscos aparecerá aqui após processar o contrato
+                </p>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

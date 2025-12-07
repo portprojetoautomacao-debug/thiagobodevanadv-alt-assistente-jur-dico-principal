@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, Library, Plus, Search, Sparkles, User } from "lucide-react";
-import { useState, type KeyboardEvent } from "react";
+import { BookOpen, Search, Sparkles, User } from "lucide-react";
+import { useState, type KeyboardEvent, type SVGProps } from "react";
 import { toast } from "sonner";
 
 /**
@@ -228,7 +228,7 @@ export default function KnowledgeBase() {
               <ScrollArea className="flex-1 pr-4 mb-4">
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Library className="w-16 h-16 text-muted-foreground mb-4" />
+                    <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
                     <p className="text-lg font-medium text-foreground">Como posso ajudar?</p>
                     <p className="text-sm text-muted-foreground mt-2 max-w-md">
                       Pergunte sobre precedentes, modelos de petições, estratégias processuais ou
@@ -344,5 +344,19 @@ export default function KnowledgeBase() {
         </div>
       </div>
     </div>
+  );
+}
+
+function Plus(props: Readonly<SVGProps<SVGSVGElement>>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 256 256"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+    </svg>
   );
 }

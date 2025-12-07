@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  ArrowLeftRight as ArrowsLeftRight,
+  ArrowLeftRight,
   Brain,
   CheckCircle,
   Clock,
-  Pencil as PencilSimple,
+  Pencil,
   Play,
-  Bot as Robot,
-  Sparkles as Sparkle,
+  Bot,
+  Sparkles,
   User,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -194,7 +194,7 @@ export default function HumanAgentCollaboration({
   const getPhaseIcon = () => {
     switch (phase) {
       case "agent_working":
-        return <Robot className="w-6 h-6 text-primary animate-pulse" />;
+        return <Bot className="w-6 h-6 text-primary animate-pulse" />;
       case "human_editing":
         return <User className="w-6 h-6 text-accent" />;
       case "agent_resuming":
@@ -202,7 +202,7 @@ export default function HumanAgentCollaboration({
       case "completed":
         return <CheckCircle className="w-6 h-6 text-green-600" />;
       default:
-        return <Robot className="w-6 h-6 text-primary" />;
+        return <Bot className="w-6 h-6 text-primary" />;
     }
   };
 
@@ -250,7 +250,7 @@ export default function HumanAgentCollaboration({
           </div>
           {phase === "agent_working" && (
             <Button variant="outline" size="sm" onClick={handleHumanIntervention}>
-              <PencilSimple className="w-4 h-4 mr-2" />
+              <Pencil className="w-4 h-4 mr-2" />
               Intervir
             </Button>
           )}
@@ -293,13 +293,12 @@ export default function HumanAgentCollaboration({
 
         <div className="grid grid-cols-3 gap-4 pt-4 border-t">
           <div className="text-center">
-            <Robot
+            <Bot
               className={`w-8 h-8 mx-auto mb-2 ${
                 phase === "agent_working" || phase === "agent_resuming"
                   ? "text-primary animate-pulse"
                   : "text-muted-foreground"
               }`}
-             
             />
             <p className="text-xs font-medium">Agente de IA</p>
             <p className="text-xs text-muted-foreground">
@@ -310,7 +309,7 @@ export default function HumanAgentCollaboration({
           </div>
 
           <div className="text-center">
-            <ArrowsLeftRight className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <ArrowLeftRight className="w-8 h-8 mx-auto mb-2 text-primary" />
             <p className="text-xs font-medium">Colaboração</p>
             <p className="text-xs text-muted-foreground">Handoff inteligente</p>
           </div>
@@ -320,7 +319,6 @@ export default function HumanAgentCollaboration({
               className={`w-8 h-8 mx-auto mb-2 ${
                 phase === "human_editing" ? "text-accent" : "text-muted-foreground"
               }`}
-             
             />
             <p className="text-xs font-medium">Você</p>
             <p className="text-xs text-muted-foreground">
@@ -331,21 +329,21 @@ export default function HumanAgentCollaboration({
 
         <div className="pt-4 border-t space-y-2">
           <div className="flex items-start gap-2">
-            <Sparkle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               O agente detecta automaticamente quando você começa a editar e entra em modo de espera
               colaborativa.
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <Sparkle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               Após {INACTIVITY_LIMIT_SECONDS}s sem atividade humana, o agente retoma o trabalho
               automaticamente.
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <Sparkle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               Seu trabalho é preservado e o agente continua de onde parou.
             </p>

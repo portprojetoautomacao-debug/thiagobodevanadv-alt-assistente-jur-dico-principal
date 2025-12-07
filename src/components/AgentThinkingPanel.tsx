@@ -30,9 +30,11 @@ interface ThinkingLog {
   agentName: string;
   taskType: string;
   stage: string;
-  details: Record<string, string | number | boolean>;
+  details: Record<string, ThinkingDetailValue>;
   timestamp: string;
 }
+
+type ThinkingDetailValue = string | number | boolean;
 
 interface ActiveTask {
   taskId: string;

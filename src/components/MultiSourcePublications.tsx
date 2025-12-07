@@ -1,3 +1,13 @@
+import {
+  CheckCircle,
+  Copy,
+  Database,
+  Download,
+  Info,
+  RefreshCw,
+  Search,
+  TriangleAlert,
+} from "lucide-react";
 /**
  * Multi-Source Publications Component
  *
@@ -8,7 +18,7 @@
  * - Faz validação básica de critérios de busca
  * - Ordena resultados por data (mais recentes primeiro)
  * - Tipagem mais segura para estatísticas de busca
- * - Ícone de loading corrigido (ArrowsClockwise em vez de Spinner)
+ * - Ícone de loading corrigido (RefreshCw em vez de Spinner)
  */
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,23 +36,14 @@ import {
   type PublicationSource,
   type UnifiedPublication,
 } from "@/lib/multi-source-publications";
-import {
-  RotateCw as ArrowsClockwise,
-  CheckCircle,
-  Copy,
-  Database,
-  Download,
-  Info,
-  Search as MagnifyingGlass,
-  AlertTriangle as Warning,
-} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-type SourceStatus = "success" | "error" | string;
+// Type aliases para evitar union overrides (S6571)
+type SourceStatus = "success" | "error";
 
 interface SourceStatsItem {
-  source: PublicationSource | string;
+  source: string; // Aceita any string durante runtime
   status: SourceStatus;
   count: number;
   duration: number;
@@ -384,12 +385,12 @@ export default function MultiSourcePublications() {
           <Button onClick={handleSearch} disabled={loading} className="w-full">
             {loading ? (
               <>
-                <ArrowsClockwise className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Buscando...
               </>
             ) : (
               <>
-                <MagnifyingGlass className="w-4 h-4 mr-2" />
+                <Search className="w-4 h-4 mr-2" />
                 Buscar Publicações
               </>
             )}
@@ -444,7 +445,7 @@ export default function MultiSourcePublications() {
                         {source.status === "success" ? (
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         ) : (
-                          <Warning className="w-4 h-4 text-red-500" />
+                          <TriangleAlert className="w-4 h-4 text-red-500" />
                         )}
                         <span className="capitalize">
                           {String(source.source).replaceAll("_", " ")}

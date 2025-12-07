@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 // ==== CSV EXPORT ============================================================
 
 export function exportToCSV(data: Record<string, unknown>[], filename: string) {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
   if (!data || data.length === 0) return;
 
   const headers = Object.keys(data[0]);
@@ -21,8 +21,16 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string) {
       .map((header) => {
         const value = row[header];
         if (value === null || value === undefined) return "";
-        const stringValue = String(value).replaceAll('"', '""');
-        return `"${stringValue}"`;
+        // Garantir stringify seguro
+        let stringValue: string;
+        if (typeof value === "string") {
+          stringValue = value;
+        } else if (typeof value === "object" && value !== null) {
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
+        }
+        return `"${stringValue.replaceAll('"', '""')}"`;
       })
       .join(",")
   );
@@ -52,7 +60,7 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string) {
  * E descomente o código abaixo.
  */
 export async function exportToXLSX(data: Record<string, unknown>[], filename: string) {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
   if (!data || data.length === 0) return;
 
   // Funcionalidade desabilitada - xlsx não está instalado
@@ -70,7 +78,15 @@ export async function exportToXLSX(data: Record<string, unknown>[], filename: st
         .map((h) => {
           const val = row[h];
           if (val === null || val === undefined) return "";
-          const str = String(val);
+          // Garantir stringify seguro
+          let str: string;
+          if (typeof val === "string") {
+            str = val;
+          } else if (typeof val === "object" && val !== null) {
+            str = JSON.stringify(val);
+          } else {
+            str = String(val);
+          }
           return str.includes(",") || str.includes('"') || str.includes("\n")
             ? `"${str.replaceAll('"', '""')}"`
             : str;

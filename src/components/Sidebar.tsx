@@ -9,7 +9,7 @@ import {
   Bot,
   Briefcase,
   Calculator,
-  CalendarDays,
+  Calendar,
   Database,
   DollarSign,
   FileText,
@@ -40,12 +40,17 @@ const NAVIGATION_ITEMS = [
   { id: "calculator", label: "Calc. Prazos", icon: Calculator },
   { id: "queries", label: "Consultas", icon: Database },
   { id: "datajud", label: "DataJud Checklist", icon: Newspaper },
-  { id: "calendar", label: "Agenda", icon: CalendarDays },
+  { id: "calendar", label: "Agenda", icon: Calendar },
   { id: "financial", label: "Financeiro", icon: DollarSign },
   { id: "knowledge", label: "Base Conhecimento", icon: BookOpen },
 ];
 
-export default function Sidebar({ currentView, onViewChange, user, onLogout }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  user,
+  onLogout,
+}: Readonly<SidebarProps>) {
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">

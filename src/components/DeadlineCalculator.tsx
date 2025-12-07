@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, CalendarDays, Sparkles } from "lucide-react";
+import { Calculator, Calendar, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -70,19 +70,21 @@ export default function DeadlineCalculator() {
       const base = new Date(baseDate + "T12:00:00");
       const currentDate = new Date(base);
       let workingDays = 0;
-      const reasoning: string[] = [];
-      const holidays: string[] = [];
-
-      reasoning.push(
+      const reasoning: string[] = [
         `Data base: ${base.toLocaleDateString("pt-BR")}`,
         `Prazo: ${days} dias úteis (${procedureType})`,
         `Tipo: ${selectedDeadline?.label}`,
         "",
-        "Cálculo passo a passo:"
-      );
+        "Cálculo passo a passo:",
+      ];
+      const holidays: string[] = [];
 
       // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
-      // TODO: Integrar com API de feriados real ou permitir configuração por tribunal
+      // TODO(PRAZOS-003): Integrar com API de feriados estaduais/municipais
+      // Atualmente usa apenas feriados nacionais fixos
+      // Opções avaliadas: Calendarific API, Brasil API, tabela customizável por tribunal
+      // Refs: https://calendarific.com/api-documentation | https://brasilapi.com.br/docs
+      // Status: Usando lista estática de feriados nacionais como fallback
       const nationalHolidays = getNationalHolidays(base.getFullYear());
 
       while (workingDays < days) {
@@ -213,7 +215,7 @@ export default function DeadlineCalculator() {
             {result ? (
               <div className="space-y-4">
                 <div className="p-6 bg-accent rounded-lg text-center">
-                  <CalendarDays className="w-12 h-12 text-accent-foreground mx-auto mb-3" />
+                  <Calendar className="w-12 h-12 text-accent-foreground mx-auto mb-3" />
                   <p className="text-sm text-accent-foreground/80 mb-2">Prazo Final</p>
                   <p className="text-3xl font-bold text-accent-foreground">
                     {new Date(result.finalDate + "T12:00:00").toLocaleDateString("pt-BR")}

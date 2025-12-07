@@ -6,10 +6,7 @@
  */
 
 import type { Appointment } from "@/types";
-import {
-  googleCalendarService,
-  type DeadlineEvent,
-} from "./google-calendar-service";
+import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 
 // Tipos para integração
 export type AnalysisDeadlineType = "úteis" | "corridos";
@@ -43,20 +40,24 @@ export interface DeadlineCreationResult {
 
 /**
  * Mapeia prioridade do formato análise para o formato Google Calendar
- * (Usa identidade: já está em português com acento)
+ * (Converte de português com acento para sem acento)
  */
 function mapPriorityToCalendarFormat(
   priority: "baixa" | "média" | "alta" | "crítica"
-): "baixa" | "média" | "alta" | "crítica" {
-  return priority;
+): "baixa" | "media" | "alta" | "critica" {
+  const priorityMap: Record<string, "baixa" | "media" | "alta" | "critica"> = {
+    baixa: "baixa",
+    média: "media",
+    alta: "alta",
+    crítica: "critica",
+  };
+  return priorityMap[priority] || "media";
 }
 
 /**
  * Constrói descrição rica para compromisso de prazo
  */
-function buildAppointmentDescription(
-  analysis: IntimationAnalysisResult
-): string {
+function buildAppointmentDescription(analysis: IntimationAnalysisResult): string {
   const descriptionParts = [
     analysis.summary,
     "",
@@ -68,9 +69,7 @@ function buildAppointmentDescription(
     "📌 Próximos Passos:",
     ...(analysis.nextSteps || []).map((step, i) => `${i + 1}. ${step}`),
     "",
-    analysis.suggestedAction
-      ? `⚡ Ação Recomendada: ${analysis.suggestedAction}`
-      : "",
+    analysis.suggestedAction ? `⚡ Ação Recomendada: ${analysis.suggestedAction}` : "",
   ].filter(Boolean);
 
   return descriptionParts.join("\n");
@@ -81,9 +80,7 @@ function buildAppointmentDescription(
  */
 function buildAppointmentTitle(intimationTitle: string): string {
   const truncatedTitle =
-    intimationTitle.length > 50
-      ? `${intimationTitle.substring(0, 50)}...`
-      : intimationTitle;
+    intimationTitle.length > 50 ? `${intimationTitle.substring(0, 50)}...` : intimationTitle;
   return `⚠️ PRAZO: ${truncatedTitle}`;
 }
 
@@ -91,9 +88,7 @@ function buildAppointmentTitle(intimationTitle: string): string {
  * Obter lembretes baseados na prioridade
  * (valores em minutos antes do evento)
  */
-function getPriorityReminders(
-  priority: IntimationAnalysisResult["priority"]
-): number[] {
+function getPriorityReminders(priority: IntimationAnalysisResult["priority"]): number[] {
   switch (priority) {
     case "crítica":
       // 1 hora, 4 horas, 1 dia, 2 dias, 3 dias antes
@@ -118,9 +113,7 @@ function buildAppointment(
 ): Appointment {
   const dateStr = deadlineDate.toISOString().split("T")[0];
   const type: Appointment["type"] =
-    analysis.priority === "crítica" || analysis.priority === "alta"
-      ? "prazo"
-      : "outro";
+    analysis.priority === "crítica" || analysis.priority === "alta" ? "prazo" : "outro";
 
   return {
     id: crypto.randomUUID(),
@@ -145,6 +138,63 @@ function validateAnalysisDeadline(
 }
 
 /**
+ * Converte data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
+ */
+function convertBRDateToISO(dateStr: string): string | null {
+  // Regex para DD/MM/YYYY
+  const brDatePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = brDatePattern.exec(dateStr);
+
+  if (match) {
+    const [, day, month, year] = match;
+    return `${year}-${month}-${day}`;
+  }
+
+  return null;
+}
+
+/**
+ * Valida e converte string de data para ISO format
+ * Retorna null se inválida
+ */
+function parseAndValidateDeadlineDate(endDateStr: string): string | null {
+  if (!endDateStr) {
+    console.log("[DeadlineIntegration] endDate is missing");
+    return null;
+  }
+
+  // Tentar converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
+  const convertedDate = convertBRDateToISO(endDateStr);
+  if (convertedDate) {
+    return convertedDate;
+  }
+
+  // Verificar se já é ISO válido (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(endDateStr)) {
+    return endDateStr;
+  }
+
+  // Formato inválido - rejeitar silenciosamente strings como "Verificar"
+  if (import.meta.env.DEV) {
+    console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
+  }
+  return null;
+}
+
+/**
+ * Valida se Date object é válido
+ */
+function isValidDateObject(date: Date, originalStr: string): boolean {
+  if (!date || Number.isNaN(date.getTime())) {
+    if (import.meta.env.DEV) {
+      console.log("[DeadlineIntegration] Invalid deadline date:", originalStr);
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
  * Criar compromisso local a partir de análise de intimação
  */
 export function createLocalAppointmentFromAnalysis(
@@ -156,14 +206,16 @@ export function createLocalAppointmentFromAnalysis(
     return null;
   }
 
-  // Type guard above ensures analysis.deadline is defined
-  // Use non-null assertion after guard check for TypeScript strict mode
-  const deadlineDate = new Date(analysis.deadline!.endDate);
-  if (!deadlineDate) {
-    console.warn(
-      "[DeadlineIntegration] Invalid deadline date:",
-      analysis.deadline.endDate
-    );
+  // Type guard acima garante que analysis.deadline está definido
+  const originalDateStr = analysis.deadline.endDate;
+  const validatedDateStr = parseAndValidateDeadlineDate(originalDateStr);
+
+  if (!validatedDateStr) {
+    return null; // Logs já emitidos por parseAndValidateDeadlineDate
+  }
+
+  const deadlineDate = new Date(validatedDateStr);
+  if (!isValidDateObject(deadlineDate, validatedDateStr)) {
     return null;
   }
 
@@ -217,29 +269,21 @@ export async function syncDeadlineToGoogleCalendar(
     const deadlineEvent: DeadlineEvent = {
       title: intimationTitle.substring(0, 100),
       description: buildAppointmentDescription(analysis),
-      deadline: new Date(analysis.deadline!.endDate).toISOString(),
+      deadline: new Date(analysis.deadline.endDate).toISOString(),
       type: analysis.type === "intimacao_judicial" ? "prazo" : "reuniao",
       priority: mapPriorityToCalendarFormat(analysis.priority),
       reminders: getPriorityReminders(analysis.priority),
     };
 
-    const eventId = await googleCalendarService.createDeadlineEvent(
-      deadlineEvent
-    );
+    const eventId = await googleCalendarService.createDeadlineEvent(deadlineEvent);
 
     if (eventId) {
-      console.log(
-        "[DeadlineIntegration] Created Google Calendar event:",
-        eventId
-      );
+      console.log("[DeadlineIntegration] Created Google Calendar event:", eventId);
     }
 
     return eventId;
   } catch (error) {
-    console.error(
-      "[DeadlineIntegration] Failed to sync to Google Calendar:",
-      error
-    );
+    console.error("[DeadlineIntegration] Failed to sync to Google Calendar:", error);
     return null;
   }
 }
@@ -254,8 +298,7 @@ function isDuplicateAppointment(
 ): boolean {
   return existingAppointments.some(
     (apt) =>
-      apt.date === newAppointment.date &&
-      apt.title.includes(intimationTitle.substring(0, 30))
+      apt.date === newAppointment.date && apt.title.includes(intimationTitle.substring(0, 30))
   );
 }
 
@@ -293,39 +336,23 @@ export async function createDeadlineFromAnalysis(
   syncToGoogle: boolean = true
 ): Promise<DeadlineCreationResult> {
   // 1. Criar compromisso local
-  const localAppointment = createLocalAppointmentFromAnalysis(
-    analysis,
-    intimationTitle
-  );
+  const localAppointment = createLocalAppointmentFromAnalysis(analysis, intimationTitle);
   if (!localAppointment) {
     return { success: false, error: "Nenhum prazo encontrado na análise" };
   }
 
   // 2. Verificar se já existe
-  if (
-    isDuplicateAppointment(
-      localAppointment,
-      currentAppointments,
-      intimationTitle
-    )
-  ) {
+  if (isDuplicateAppointment(localAppointment, currentAppointments, intimationTitle)) {
     console.log("[DeadlineIntegration] Appointment already exists");
     return { success: true, localAppointmentId: localAppointment.id };
   }
 
   // 3. Adicionar ao calendário local
   addAppointmentToState(localAppointment, currentAppointments, setAppointments);
-  console.log(
-    "[DeadlineIntegration] Added local appointment:",
-    localAppointment.id
-  );
+  console.log("[DeadlineIntegration] Added local appointment:", localAppointment.id);
 
   // 4. Sincronizar com Google Calendar se habilitado
-  const googleEventId = await syncToGoogleIfEnabled(
-    syncToGoogle,
-    analysis,
-    intimationTitle
-  );
+  const googleEventId = await syncToGoogleIfEnabled(syncToGoogle, analysis, intimationTitle);
 
   return {
     success: true,
@@ -347,9 +374,7 @@ function processSingleAnalysis(
   }
 
   const isDuplicate = [...currentAppointments, ...newAppointments].some(
-    (apt) =>
-      apt.date === localAppointment.date &&
-      apt.title.includes(title.substring(0, 30))
+    (apt) => apt.date === localAppointment.date && apt.title.includes(title.substring(0, 30))
   );
 
   if (isDuplicate) {
@@ -427,9 +452,7 @@ function applyNewAppointments(
 ): void {
   if (newAppointments.length > 0) {
     setAppointments((current) => [...(current || []), ...newAppointments]);
-    console.log(
-      `[DeadlineIntegration] Added ${newAppointments.length} appointments to calendar`
-    );
+    console.log(`[DeadlineIntegration] Added ${newAppointments.length} appointments to calendar`);
   }
 }
 
@@ -451,9 +474,7 @@ export async function batchCreateDeadlines(
   const results: DeadlineCreationResult[] = [];
 
   // Filtrar apenas análises com prazos
-  const analysesWithDeadlines = analyses.filter(
-    (a) => a.analysis.deadline?.endDate
-  );
+  const analysesWithDeadlines = analyses.filter((a) => a.analysis.deadline?.endDate);
 
   console.log(
     `[DeadlineIntegration] Processing ${analysesWithDeadlines.length} deadlines from ${analyses.length} analyses`
@@ -476,12 +497,8 @@ export async function batchCreateDeadlines(
 
   return {
     total: analyses.length,
-    created: results.filter(
-      (r) => r.success && r.localAppointmentId !== "existing"
-    ).length,
-    skipped: results.filter(
-      (r) => r.success && r.localAppointmentId === "existing"
-    ).length,
+    created: results.filter((r) => r.success && r.localAppointmentId !== "existing").length,
+    skipped: results.filter((r) => r.success && r.localAppointmentId === "existing").length,
     errors: results.filter((r) => !r.success).length,
     details: results,
   };

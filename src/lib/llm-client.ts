@@ -59,10 +59,7 @@ export async function llm(
 /**
  * Generate text using Gemini
  */
-export async function generateText(
-  prompt: string,
-  options: LLMOptions = {}
-): Promise<string> {
+export async function generateText(prompt: string, options: LLMOptions = {}): Promise<string> {
   const messages: LLMMessage[] = [{ role: "user", content: prompt }];
 
   return callLLMProxy(messages, options);
@@ -89,10 +86,18 @@ export async function generateJSON<T = unknown>(
   });
 
   try {
-    // Try to extract JSON from response
-    const jsonMatch = /\{[\s\S]*\}|\[[\s\S]*\]/.exec(response);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as T;
+    // Try to extract JSON from response without greedy regex
+    const openBraceIdx = response.indexOf("{");
+    const openBracketIdx = response.indexOf("[");
+    const startIdx = Math.min(
+      openBraceIdx >= 0 ? openBraceIdx : Infinity,
+      openBracketIdx >= 0 ? openBracketIdx : Infinity
+    );
+    const endIdx = Math.max(response.lastIndexOf("}"), response.lastIndexOf("]"));
+
+    if (startIdx !== Infinity && endIdx !== -1 && endIdx >= startIdx) {
+      const jsonStr = response.substring(startIdx, endIdx + 1);
+      return JSON.parse(jsonStr) as T;
     }
     return JSON.parse(response) as T;
   } catch (error) {
@@ -150,9 +155,7 @@ export async function streamTextWithCallbacks(
     callbacks.onComplete?.(fullContent);
     return fullContent;
   } catch (error) {
-    callbacks.onError?.(
-      error instanceof Error ? error : new Error(String(error))
-    );
+    callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
@@ -160,10 +163,7 @@ export async function streamTextWithCallbacks(
 /**
  * Chat with Gemini using message history
  */
-export async function chat(
-  messages: LLMMessage[],
-  options: LLMOptions = {}
-): Promise<string> {
+export async function chat(messages: LLMMessage[], options: LLMOptions = {}): Promise<string> {
   return callLLMProxy(messages, options);
 }
 
@@ -198,10 +198,7 @@ export async function* chatStream(
 /**
  * Internal function to call the LLM proxy (non-streaming)
  */
-async function callLLMProxy(
-  messages: LLMMessage[],
-  options: LLMOptions = {}
-): Promise<string> {
+async function callLLMProxy(messages: LLMMessage[], options: LLMOptions = {}): Promise<string> {
   try {
     const response = await fetch(LLM_PROXY_URL, {
       method: "POST",
@@ -262,9 +259,7 @@ function processSSEJson(json: {
   error?: string;
 }): string | null {
   if (json.type === "error") {
-    throw new Error(
-      json.message || json.error || "Erro desconhecido no streaming"
-    );
+    throw new Error(json.message || json.error || "Erro desconhecido no streaming");
   }
   if (json.type === "content" && json.content) {
     return json.content;

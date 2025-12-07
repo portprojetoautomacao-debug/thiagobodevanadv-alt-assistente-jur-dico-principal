@@ -3,8 +3,10 @@
 // 1) Gera minuta com Gemini
 // 2) Salva no Google Docs
 // 3) Cria prazo automático no Google Calendar (opcional)
+// 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
 
 import { generatePeticao } from "@/lib/gemini-service";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { Minuta } from "@/types";
 import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
 import { googleDocsService } from "./google-docs-service";
@@ -64,7 +66,7 @@ function normalizeDateToISO(dateStr: string): string {
 
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) {
-    throw new Error(`Data de prazo inválida: ${dateStr}`);
+    throw new TypeError(`Data de prazo inválida: ${dateStr}`);
   }
   return date.toISOString().split("T")[0];
 }
@@ -267,77 +269,103 @@ async function createCalendarEvent(
  * - Gera minuta com Gemini
  * - Opcionalmente salva no Google Docs
  * - Opcionalmente cria prazo no Google Calendar
+ * 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
  */
 export async function criarMinutaComAgenteIA(
   params: MinutaAgentParams
 ): Promise<MinutaAgentResult> {
-  const errors: string[] = [];
-  const { tipoMinuta, detalhesCaso, titulo, numeroProcesso, tribunal, prazo, sync } = params;
+  const sessionId = `minuta-${Date.now()}`;
 
-  const syncDocs = sync?.docs ?? true;
-  const syncCalendar = sync?.calendar ?? true;
+  return createInvokeAgentSpan(
+    {
+      agentName: "Redação de Petições",
+      system: "gcp.gemini",
+      model: "gemini-2.5-pro",
+      temperature: 0.7,
+      maxTokens: 4000,
+    },
+    {
+      sessionId,
+      turn: 1,
+      messages: [
+        {
+          role: "user",
+          content: `Gerar ${params.tipoMinuta} para ${params.numeroProcesso || "processo"}`,
+        },
+      ],
+    },
+    async (span) => {
+      const errors: string[] = [];
+      const { tipoMinuta, detalhesCaso, titulo, numeroProcesso, tribunal, prazo, sync } = params;
 
-  try {
-    // 1) Gera a minuta usando Gemini
-    const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso);
+      const syncDocs = sync?.docs ?? true;
+      const syncCalendar = sync?.calendar ?? true;
 
-    if (geminiError || !content) {
-      errors.push(geminiError || "Erro ao gerar minuta");
-      logError(geminiError || "Erro ao gerar minuta");
-      return createErrorResult(errors, prazo ?? null);
+      // Atributos específicos
+      span?.setAttribute("minuta.tipo", tipoMinuta);
+      span?.setAttribute("minuta.processo", numeroProcesso || "unknown");
+      span?.setAttribute("minuta.tribunal", tribunal || "unknown");
+      span?.setAttribute("sync.docs", syncDocs);
+      span?.setAttribute("sync.calendar", syncCalendar);
+
+      // 1) Gera a minuta usando Gemini
+      const { content, error: geminiError } = await generateMinutaContent(tipoMinuta, detalhesCaso);
+
+      if (geminiError || !content) {
+        errors.push(geminiError || "Erro ao gerar minuta");
+        logError(geminiError || "Erro ao gerar minuta");
+        return createErrorResult(errors, prazo ?? null);
+      }
+
+      // 2) Monta objeto Minuta
+      const minuta = buildMinutaObject(titulo, tipoMinuta, numeroProcesso, content);
+
+      // 3) Salvar no Google Docs (se habilitado)
+      let docsId: string | null = null;
+      let docsUrl: string | null = null;
+
+      if (syncDocs) {
+        const docsResult = await saveToGoogleDocs(minuta, errors);
+        docsId = docsResult.docsId;
+        docsUrl = docsResult.docsUrl;
+      }
+
+      // 4) Criar prazo no Google Calendar (se houver prazo + sync ativo)
+      let calendarEventId: string | null = null;
+      let prazoNormalizado: MinutaAgentDeadline | null = prazo ?? null;
+
+      if (prazo && syncCalendar) {
+        const calendarResult = await createCalendarEvent(
+          prazo,
+          minuta.titulo,
+          tipoMinuta,
+          numeroProcesso,
+          tribunal,
+          errors
+        );
+        calendarEventId = calendarResult.eventId;
+        prazoNormalizado = calendarResult.prazoNormalizado;
+      }
+
+      logSuccess("Minuta gerada com sucesso");
+
+      // Atributos de conclusão para Sentry
+      span?.setAttribute("minuta.generated", true);
+      span?.setAttribute("minuta.id", minuta.id);
+      span?.setAttribute("docs.saved", docsId !== null);
+      span?.setAttribute("calendar.created", calendarEventId !== null);
+      span?.setAttribute("errors.count", errors.length);
+
+      return {
+        success: errors.length === 0,
+        provider: "gemini-2.5-pro",
+        minuta,
+        docsId,
+        docsUrl,
+        calendarEventId,
+        prazo: prazoNormalizado,
+        errors,
+      };
     }
-
-    // 2) Monta objeto Minuta
-    const minuta = buildMinutaObject(titulo, tipoMinuta, numeroProcesso, content);
-
-    // 3) Salvar no Google Docs (se habilitado)
-    let docsId: string | null = null;
-    let docsUrl: string | null = null;
-
-    if (syncDocs) {
-      const docsResult = await saveToGoogleDocs(minuta, errors);
-      docsId = docsResult.docsId;
-      docsUrl = docsResult.docsUrl;
-    }
-
-    // 4) Criar prazo no Google Calendar (se houver prazo + sync ativo)
-    let calendarEventId: string | null = null;
-    let prazoNormalizado: MinutaAgentDeadline | null = prazo ?? null;
-
-    if (prazo && syncCalendar) {
-      const calendarResult = await createCalendarEvent(
-        prazo,
-        minuta.titulo,
-        tipoMinuta,
-        numeroProcesso,
-        tribunal,
-        errors
-      );
-      calendarEventId = calendarResult.eventId;
-      prazoNormalizado = calendarResult.prazoNormalizado;
-    }
-
-    logSuccess("Minuta gerada com sucesso");
-
-    return {
-      success: errors.length === 0,
-      provider: "gemini-2.5-pro",
-      minuta,
-      docsId,
-      docsUrl,
-      calendarEventId,
-      prazo: prazoNormalizado,
-      errors,
-    };
-  } catch (error) {
-    console.error("[MinutaAgent] Falha inesperada:", error);
-    const errorMsg =
-      error instanceof Error
-        ? `Falha inesperada: ${error.message}`
-        : "Falha inesperada ao executar o agente de minuta";
-    errors.push(errorMsg);
-    logError("Erro inesperado na execução");
-
-    return createErrorResult(errors, prazo ?? null);
-  }
+  );
 }

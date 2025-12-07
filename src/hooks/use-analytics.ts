@@ -31,8 +31,8 @@ export function useAnalytics() {
         path,
         userAgent: navigator.userAgent,
         viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight,
+          width: globalThis.window.innerWidth,
+          height: globalThis.window.innerHeight,
         },
       },
     };
@@ -56,8 +56,8 @@ export function useAnalytics() {
         value,
         userAgent: navigator.userAgent,
         viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight,
+          width: globalThis.window.innerWidth,
+          height: globalThis.window.innerHeight,
         },
       },
     };
@@ -79,8 +79,8 @@ export function useAnalytics() {
         path,
         userAgent: navigator.userAgent,
         viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight,
+          width: globalThis.window.innerWidth,
+          height: globalThis.window.innerHeight,
         },
       },
     };

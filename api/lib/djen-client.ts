@@ -8,6 +8,7 @@ import { SafeLogger } from "./safe-logger.js";
 const logger = new SafeLogger("DJEN");
 
 // Type aliases para evitar repetição de union types (SonarCloud S4323)
+type DJENMeio = "D" | "E";
 export type DJENMatchType = "nome" | "oab" | "ambos";
 
 export interface DJENComunicacao {
@@ -115,7 +116,7 @@ function parseOABWithPattern(value: string): { numero?: string; uf?: string } | 
 }
 
 function parseOABNumericUF(value: string): { numero?: string; uf?: string } | null {
-  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
+  const matchNumericUF = /(\d+)\s?\/\s?([A-Z]{2})/i.exec(value);
   if (matchNumericUF) {
     return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
   }
@@ -234,7 +235,7 @@ export async function consultarComunicacoes(
   const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
 
   try {
-    logger.debug("Consultando DJEN", { url: url.replace(/numeroOab=[^&]*/, "numeroOab=***") });
+    logger.debug("Consultando DJEN", { url: url.replaceAll(/numeroOab=[^&]*/g, "numeroOab=***") });
 
     const response = await fetch(url, {
       method: "GET",
@@ -298,7 +299,7 @@ function buildDJENQueryParams(
   nomeAdvogado: string | undefined,
   numeroOabNumerico: string | undefined,
   ufOab: string | undefined,
-  meio: "D" | "E" | undefined
+  meio: DJENMeio | undefined
 ): DJENQueryParams {
   const queryParams: DJENQueryParams = {
     siglaTribunal: tribunal,

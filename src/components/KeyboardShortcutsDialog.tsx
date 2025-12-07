@@ -7,14 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Keyboard } from "lucide-react";
+import { Command } from "lucide-react";
 
 interface ShortcutItemProps {
   readonly keys: string[];
   readonly description: string;
 }
 
-function ShortcutItem({ keys, description }: ShortcutItemProps) {
+function ShortcutItem({ keys, description }: Readonly<ShortcutItemProps>) {
   return (
     <div className="flex items-center justify-between gap-4 py-2">
       <span className="text-sm text-muted-foreground">{description}</span>
@@ -85,10 +85,12 @@ export default function KeyboardShortcutsDialog({
   onOpenChange,
 }: KeyboardShortcutsDialogProps) {
   // SSR-safe: navigator pode não existir no build / server
+  // Usar userAgent ao invés de navigator.platform (deprecated)
   const isMac =
     typeof navigator !== "undefined" &&
-    typeof navigator.platform === "string" &&
-    navigator.platform.toUpperCase().includes("MAC");
+    (navigator.userAgent.includes("Mac") ||
+      navigator.userAgent.includes("iPhone") ||
+      navigator.userAgent.includes("iPad"));
 
   const ctrlKeyLabel = isMac ? "⌘" : "Ctrl";
 
@@ -101,7 +103,7 @@ export default function KeyboardShortcutsDialog({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Keyboard size={24} />
+            <Command size={24} />
             Atalhos de Teclado
           </DialogTitle>
           <DialogDescription>
@@ -122,9 +124,7 @@ export default function KeyboardShortcutsDialog({
                   />
                 ))}
               </div>
-              {idx < SHORTCUT_GROUPS.length - 1 && (
-                <Separator className="mt-4" />
-              )}
+              {idx < SHORTCUT_GROUPS.length - 1 && <Separator className="mt-4" />}
             </div>
           ))}
 

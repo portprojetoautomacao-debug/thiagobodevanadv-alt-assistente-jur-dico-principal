@@ -24,6 +24,7 @@ import {
   FileText,
   Folder,
   Inbox,
+  Search,
   User,
   X,
 } from "lucide-react";
@@ -55,7 +56,7 @@ interface GlobalSearchProps {
   readonly onNavigate?: (view: string, data?: unknown) => void;
 }
 
-export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
+export function GlobalSearch({ onNavigate }: Readonly<GlobalSearchProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<SearchCategory>("all");

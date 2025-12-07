@@ -109,7 +109,7 @@ function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replaceAll(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
@@ -123,25 +123,25 @@ function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
   const value = numeroOAB.trim();
 
   // Match patterns like "OAB/UF 123456" or "OAB/UF123456"
-  const matchOABPattern = value.match(/OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i);
+  const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s*(\d+)/i.exec(value);
   if (matchOABPattern) {
     return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
   }
 
   // Match numeric with UF: "123456/UF" or "123456/UF"
-  const matchNumericUF = value.match(/(\d+)\s*\/\s*([A-Z]{2})/i);
+  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
   if (matchNumericUF) {
     return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
   }
 
   // Match simple numeric OAB
-  const matchNumeric = value.match(/^(\d+)$/);
+  const matchNumeric = /^(\d+)$/.exec(value);
   if (matchNumeric) {
     return { numero: matchNumeric[1] };
   }
 
   // Match "OAB/UF" without number
-  const matchOABOnly = value.match(/OAB\s*\/\s*([A-Z]{2})/i);
+  const matchOABOnly = /OAB\s*\/\s*([A-Z]{2})/i.exec(value);
   if (matchOABOnly) {
     return { uf: matchOABOnly[1].toUpperCase() };
   }
@@ -152,32 +152,20 @@ function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
 function buildQueryString(params: DJENQueryParams): string {
   const queryParams: string[] = [];
 
-  if (params.numeroOab)
-    queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
-  if (params.ufOab)
-    queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
+  if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
+  if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
   if (params.nomeAdvogado)
     queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
-  if (params.nomeParte)
-    queryParams.push(`nomeParte=${encodeURIComponent(params.nomeParte)}`);
+  if (params.nomeParte) queryParams.push(`nomeParte=${encodeURIComponent(params.nomeParte)}`);
   if (params.numeroProcesso)
-    queryParams.push(
-      `numeroProcesso=${encodeURIComponent(params.numeroProcesso)}`
-    );
+    queryParams.push(`numeroProcesso=${encodeURIComponent(params.numeroProcesso)}`);
   if (params.dataDisponibilizacaoInicio)
-    queryParams.push(
-      `dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`
-    );
+    queryParams.push(`dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`);
   if (params.dataDisponibilizacaoFim)
-    queryParams.push(
-      `dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`
-    );
+    queryParams.push(`dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`);
   if (params.siglaTribunal)
-    queryParams.push(
-      `siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`
-    );
-  if (params.numeroComunicacao)
-    queryParams.push(`numeroComunicacao=${params.numeroComunicacao}`);
+    queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`);
+  if (params.numeroComunicacao) queryParams.push(`numeroComunicacao=${params.numeroComunicacao}`);
   if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
   if (params.itensPorPagina)
     queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
@@ -389,9 +377,7 @@ async function processTribunalQuery(
   );
 
   if (!response) {
-    console.warn(
-      `[DJEN] Rate limit atingido ou erro na consulta de ${tribunal}`
-    );
+    console.warn(`[DJEN] Rate limit atingido ou erro na consulta de ${tribunal}`);
     erros.push({
       tribunal,
       erro: "Rate limit excedido. Aguarde 1 minuto antes de nova tentativa.",
@@ -434,9 +420,7 @@ export async function consultarDJENForLawyer(
   rateLimitWarning?: boolean;
 }> {
   if (!nomeAdvogado && !numeroOAB) {
-    throw new Error(
-      "É necessário fornecer pelo menos nomeAdvogado ou numeroOAB"
-    );
+    throw new Error("É necessário fornecer pelo menos nomeAdvogado ou numeroOAB");
   }
 
   const defaultDate = formatDate(new Date());
@@ -469,8 +453,7 @@ export async function consultarDJENForLawyer(
         await new Promise((resolve) => setTimeout(resolve, DEFAULT_DELAY));
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       erros.push({ tribunal: tribunais[i], erro: errorMessage });
       console.error(`[DJEN] Erro consultando ${tribunais[i]}:`, errorMessage);
     }

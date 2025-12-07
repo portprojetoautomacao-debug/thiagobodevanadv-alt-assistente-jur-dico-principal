@@ -1,15 +1,6 @@
-import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -18,9 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus } from "lucide-react";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { useKV } from "@/hooks/use-kv";
 import type { Cliente } from "@/types";
+import { UserPlus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function CadastrarCliente() {
   const [_clientes, setClientes] = useKV<Cliente[]>("clientes", []);
@@ -108,7 +102,8 @@ export default function CadastrarCliente() {
                 <Label htmlFor="tipo">Tipo de Pessoa *</Label>
                 <Select
                   value={formData.tipo}
-                  onValueChange={(value) => handleChange("tipo", value)}>
+                  onValueChange={(value) => handleChange("tipo", value)}
+                >
                   <SelectTrigger id="tipo">
                     <SelectValue />
                   </SelectTrigger>
@@ -237,7 +232,8 @@ export default function CadastrarCliente() {
                     tipo: "fisica",
                     observacoes: "",
                   })
-                }>
+                }
+              >
                 Limpar
               </Button>
             </div>

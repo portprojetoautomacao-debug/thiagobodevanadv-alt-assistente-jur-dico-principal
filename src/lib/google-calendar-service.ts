@@ -4,11 +4,11 @@
 
 import { type Appointment } from "@/types";
 import type {
-  GoogleAuthResponse,
-  TokenClient,
-  GapiGlobal,
-  GoogleGisGlobal,
   CalendarClient,
+  GapiGlobal,
+  GoogleAuthResponse,
+  GoogleGisGlobal,
+  TokenClient,
 } from "./google-types";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -96,7 +96,7 @@ class GoogleCalendarService {
     debug("Initializing Google Calendar Service...");
 
     // Segurança para SSR / Node (Vercel server functions)
-    if (typeof window === "undefined") {
+    if (globalThis.window === undefined) {
       this.lastError = "Google Calendar só pode ser inicializado no ambiente de browser.";
       debugError(this.lastError);
       return false;
@@ -158,13 +158,13 @@ class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       debug("Loading Google scripts...");
 
-      if (typeof window === "undefined" || typeof document === "undefined") {
+      if (globalThis.window === undefined || typeof document === "undefined") {
         reject(new Error("Google scripts só podem ser carregados no browser"));
         return;
       }
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
-      const googleWindow = window as unknown as { google?: GoogleGisGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
+      const googleWindow = globalThis.window as unknown as { google?: GoogleGisGlobal };
 
       // Já carregados
       if (gapiWindow.gapi && googleWindow.google) {
@@ -228,7 +228,7 @@ class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       debug("Initializing GAPI client...");
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
 
       if (!gapiWindow.gapi) {
         this.lastError = "Google API (gapi) não disponível";
@@ -274,7 +274,7 @@ class GoogleCalendarService {
   private initializeGis(): void {
     debug("Initializing Google Identity Services...");
 
-    const google = (window as unknown as { google?: GoogleGisGlobal })?.google;
+    const google = (globalThis.window as unknown as { google?: GoogleGisGlobal })?.google;
 
     if (!google?.accounts?.oauth2) {
       this.lastError = "Google Identity Services não disponível";
@@ -341,7 +341,7 @@ class GoogleCalendarService {
         this.lastError = null;
 
         // Importante: conectar GIS com gapi (setar token no client)
-        const gapiWindow = window as unknown as {
+        const gapiWindow = globalThis.window as unknown as {
           gapi?: GapiGlobal & {
             client?: { setToken?: (token: { access_token: string }) => void };
           };
@@ -408,7 +408,7 @@ class GoogleCalendarService {
         params.timeMax = timeMax.toISOString();
       }
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const eventsApi = (
         gapiWindow.gapi?.client as {
           calendar?: CalendarClient;
@@ -421,7 +421,7 @@ class GoogleCalendarService {
         return [];
       }
 
-      const response = (await eventsApi.list(params)) as unknown as {
+      const response = (await eventsApi.list(params)) as {
         result?: { items?: GoogleCalendarEvent[] };
       };
       const events = response.result?.items || [];
@@ -472,7 +472,7 @@ class GoogleCalendarService {
         },
       };
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const eventsApi = (
         gapiWindow.gapi?.client as {
           calendar?: CalendarClient;
@@ -488,7 +488,7 @@ class GoogleCalendarService {
       const response = (await eventsApi.insert({
         calendarId: "primary",
         resource: event,
-      })) as unknown as { result?: { id?: string } };
+      })) as { result?: { id?: string } };
 
       const eventId = response.result?.id ?? null;
       debug("Event created successfully", { eventId });
@@ -575,7 +575,7 @@ class GoogleCalendarService {
         },
       };
 
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const eventsApi = (
         gapiWindow.gapi?.client as {
           calendar?: CalendarClient;
@@ -609,7 +609,7 @@ class GoogleCalendarService {
     }
 
     try {
-      const gapiWindow = window as unknown as { gapi?: GapiGlobal };
+      const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const eventsApi = (
         gapiWindow.gapi?.client as {
           calendar?: CalendarClient;
@@ -656,7 +656,7 @@ class GoogleCalendarService {
   revokeAccess(): void {
     debug("Revoking access...");
     if (this.accessToken) {
-      const google = (window as unknown as { google?: GoogleGisGlobal })?.google;
+      const google = (globalThis.window as unknown as { google?: GoogleGisGlobal })?.google;
       try {
         google?.accounts.oauth2.revoke(this.accessToken);
         debug("Access revoked");
@@ -668,8 +668,8 @@ class GoogleCalendarService {
   }
 
   openGoogleCalendar(): void {
-    if (typeof window === "undefined") return;
-    window.open("https://calendar.google.com", "_blank");
+    if (globalThis.window === undefined) return;
+    globalThis.window.open("https://calendar.google.com", "_blank");
   }
 
   logout(): void {

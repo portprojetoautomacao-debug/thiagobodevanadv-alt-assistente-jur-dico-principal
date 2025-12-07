@@ -44,6 +44,35 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 
 Este repositório está **100% configurado para trabalho autônomo do GitHub Copilot**!
 
+### 🆕 Sistema de Issues Automático
+
+**72 triggers** detectam comentários no código e criam issues automaticamente:
+
+```typescript
+// TODO: Implementar feature X
+// FIXME: Corrigir bug Y
+// JURIDICO: Validar conformidade LGPD
+// PERFORMANCE: Otimizar query lenta
+```
+
+**3 camadas de automação:**
+
+- ✅ **VS Code**: Clique direito → "Criar issue do comentário"
+- ✅ **GitHub Actions**: Issues criadas/fechadas automaticamente em cada commit
+- ✅ **Script Bash**: `./auto-create-issues.sh` para criação em massa
+
+**Resultado:**
+
+- 🎯 Issues criadas em ~30s após commit
+- 🏷️ Labels automáticas (urgente, bug, juridico, security, etc.)
+- 👤 Auto-atribuição ao autor
+- ♻️ Prevenção de duplicatas
+- 🔄 Fechamento automático quando TODO removido
+
+**📖 Documentação completa:** [AUTO_ISSUES_README.md](.vscode/AUTO_ISSUES_README.md) • [Quick Reference](.vscode/AUTO_ISSUES_QUICK_REF.md) • [Checklist](.vscode/AUTO_ISSUES_CHECKLIST.md)
+
+---
+
 ### ✨ Trabalho Automático 24/7
 
 O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
@@ -148,18 +177,111 @@ gh workflow run copilot-auto-fix.yml
 - 📅 **Calculadora de Prazos**: Automação de prazos processuais
 - 🔗 **Integração Google Calendar**: Sincronização automática
 - 📊 **DJEN/DataJud**: Monitoramento de publicações
+- 🌐 **Extensão Chrome PJe Sync**: Acesso em tempo real ao PJe (NEW!)
 - 💰 **Gestão Financeira**: Controle de custos e honorários
 - ⚡ **15 Agentes Autônomos**: Trabalhando 24/7
 - ✏️ **Editor Tiptap com IA**: Redação automática de minutas
 - 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
 
+## 🌐 Extensão Chrome PJe Sync (NOVO!)
+
+### 📦 Acesso em Tempo Real ao PJe
+
+Integração completa com o PJe via extensão Chrome para monitoramento em tempo real.
+
+**Funcionalidades:**
+
+- ✅ **Extração automática** de processos do painel PJe
+- ✅ **Detecção em tempo real** de intimações, citações e despachos
+- ✅ **Sincronização automática** com o dashboard do Assistente Jurídico
+- ✅ **Disparo automático** da Mrs. Justin-e para análise
+- ✅ **Criação automática** de tarefas com prazos
+- ✅ **Notificações Chrome** para prazos urgentes
+- ✅ **Badge visual** no PJe (✓ verde = sincronizado)
+
+**Arquivos da Extensão:**
+
+```
+chrome-extension-pje/
+├── src/
+│   ├── background/       # Service Worker
+│   ├── content/          # Content Script (extração)
+│   ├── popup/            # Interface da extensão
+│   └── shared/           # Tipos e utilitários
+├── tests/                # 31 testes unitários
+├── dist/                 # Build (~100 KB)
+├── README.md             # Guia completo
+└── INSTALL.md            # Instalação e troubleshooting
+```
+
+**Como Instalar:**
+
+1. `cd chrome-extension-pje && npm install && npm run build`
+2. Chrome → `chrome://extensions` → Modo desenvolvedor → "Carregar sem compactação"
+3. Selecione pasta `chrome-extension-pje/dist`
+4. Configure API Key no popup da extensão
+5. Acesse https://pje.tjmg.jus.br/painel e veja a sincronização em tempo real!
+
+**Documentação:**
+
+- 📖 **[chrome-extension-pje/README.md](chrome-extension-pje/README.md)** - Guia completo
+- 📖 **[chrome-extension-pje/INSTALL.md](chrome-extension-pje/INSTALL.md)** - Instalação
+- 📖 **[docs/INTEGRACAO_PJE_TEMPO_REAL.md](docs/INTEGRACAO_PJE_TEMPO_REAL.md)** - Arquitetura
+
+**Segurança:**
+
+- ✅ Não armazena credenciais do PJe
+- ✅ Comunicação HTTPS criptografada
+- ✅ API Key armazenada localmente (Chrome Storage)
+- ✅ Código open-source auditável
+- ✅ Compliance com termos de uso do PJe
+
+---
+
 ## 🛠️ Configuração de Desenvolvimento (VS Code + SonarLint)
+
+### 🔧 SonarLint com Node.js
 
 Se você utiliza `nvm` para gerenciar NodeJS, o VS Code pode não detectar o binário do Node automaticamente. Para garantir que o SonarLint funcione com análise JavaScript/TypeScript, adicione ao arquivo `.vscode/settings.json` do projeto o caminho absoluto do Node 22 ativo no seu ambiente:
 
 ```json
 "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node"
 ```
+
+### 🪄 P42 JS Assistant - Refatoração Inteligente
+
+**P42 JS Assistant** adiciona 120+ code actions para refatoração automática de JavaScript/TypeScript/React:
+
+#### ✨ Principais Features
+
+- **Modernizações automáticas**: `var`→`let/const`, `function`→arrow, optional chaining, nullish coalescing
+- **React refactorings**: Extract component, remove fragments, move attributes
+- **Code cleanups**: Remove código não usado, simplificar expressões, early returns
+- **Branching**: if-else ↔ switch, ternário ↔ if-else, merge nested if
+- **Quick fixes**: Atalhos para Extract (Ctrl+Alt+X), Inline (Ctrl+Alt+I), Move Up/Down (Ctrl+Alt+U/J)
+
+#### 📚 Documentação
+
+Ver **[docs/P42_GUIA_USO.md](docs/P42_GUIA_USO.md)** para:
+
+- Atalhos de teclado completos
+- Workflows recomendados
+- Exemplos práticos (optional chaining, nested ternary, etc.)
+- Integração com ESLint/SonarCloud
+- Regras para modo MANUTENÇÃO
+
+#### ⚙️ Configuração
+
+✅ **Já configurado** em `.vscode/settings.json` e `.vscode/keybindings.json`
+
+**Atalhos principais:**
+
+- `Ctrl + .` - Quick Fix
+- `Ctrl + Alt + R` - Refactor menu
+- `Ctrl + Alt + X` - Extract variable/function
+- `Ctrl + Alt + P` - Suggestion panel (recomendações para o arquivo)
+
+**Modo**: `moderate` automation (balanceado - não muito agressivo)
 
 Substitua o path acima pelo caminho do seu Node se a versão ou o local for diferente. No Windows, use `C:\\Program Files\\nodejs\\node.exe` (duas barras invertidas).
 
@@ -169,6 +291,25 @@ Para identificar o caminho do Node no sistema:
 which node
 node --version
 ```
+
+### 🚀 Sonar Copilot Assistant (NOVO!)
+
+**Automação completa de correção de código com IA!**
+
+Integração que conecta SonarQube + GitHub Copilot + Git para:
+
+- ✅ **Fix automático** de issues do SonarCloud
+- 🤖 **Copilot contextualizado** com guidelines do projeto
+- 🌿 **Git automation** (branch, commit, PR)
+- 🧪 **Validação de testes** antes do commit
+- 📊 **Dashboard integrado** no VS Code
+
+**⚡ Ganho de eficiência: 35% mais rápido** (11-26min → 7-18min por issue)
+
+**📖 Setup em 5 minutos:**
+
+- [🚀 Quick Start](docs/SONAR_COPILOT_QUICK_START.md) - Setup rápido
+- [📚 Guia Completo](docs/SONAR_COPILOT_ASSISTANT_SETUP.md) - Documentação detalhada
 
 ---
 
@@ -806,6 +947,282 @@ curl https://seu-app.vercel.app/api/expedientes
 - **Forms**: React Hook Form + Zod
 - **AI**: Google Gemini 2.5 Pro
 - **Deployment**: Vercel + GitHub Actions
+- **Monitoring**: Sentry AI Agents Monitoring v2 (OpenTelemetry)
+
+---
+
+## 🔍 Sentry AI Agents Monitoring v2
+
+> **Status**: ✅ Implementado - Fase 1 completa (Harvey Specter instrumentado)  
+> **Versão**: 2.0.0 - Seguindo convenções oficiais OpenTelemetry  
+> **Última atualização**: Dezembro 5, 2025
+
+### 📊 Visão Geral
+
+Sistema de **monitoramento e observabilidade** para os 15 agentes de IA, seguindo as **convenções oficiais do Sentry AI Agents Monitoring** e **OpenTelemetry Semantic Conventions**.
+
+**Benefícios:**
+
+- 📈 **Métricas em tempo real**: Latência, tokens, taxa de erro
+- 🔍 **Rastreamento de conversações**: SessionID + Turn tracking
+- 🛠️ **Tool calling visibility**: Instrumentação de function calls
+- 🔄 **Handoffs entre agentes**: Visibilidade completa de transferências
+- 🚨 **Alertas inteligentes**: Notificações de degradação de performance
+- 📊 **Dashboard AI Agents**: Visualização dedicada em Sentry.io
+
+### 🎯 Status de Instrumentação por Agente
+
+| #    | Agente              | Status      | Fase | Spans         | Atributos |
+| ---- | ------------------- | ----------- | ---- | ------------- | --------- |
+| 1    | **Harvey Specter**  | ✅ Ativo    | 1    | `gen_ai.chat` | Completo  |
+| 2    | Mrs. Justin-e       | ⏳ Pendente | 2    | -             | -         |
+| 3    | Análise Documental  | ⏳ Pendente | 2    | -             | -         |
+| 4    | Monitor DJEN        | ⏳ Pendente | 2    | -             | -         |
+| 5    | Gestão de Prazos    | ⏳ Pendente | 2    | -             | -         |
+| 6    | Redação de Petições | ⏳ Pendente | 2    | -             | -         |
+| 7-15 | Outros agentes      | ⏳ Pendente | 3    | -             | -         |
+
+**Progresso**: 1/15 agentes (6.7%) - Fase 1 completa
+
+### 🛠️ Arquivos da Instrumentação
+
+| Arquivo                                   | Descrição                                   | Status           |
+| ----------------------------------------- | ------------------------------------------- | ---------------- |
+| `src/lib/sentry-gemini-integration-v2.ts` | API oficial OpenTelemetry (448 linhas)      | ✅ Implementado  |
+| `src/hooks/use-ai-streaming.ts`           | Hook instrumentado com `createChatSpan()`   | ✅ Instrumentado |
+| `src/components/HarveySpecterChat.tsx`    | Tracking de conversação (sessionId, turn)   | ✅ Instrumentado |
+| `docs/SENTRY_AI_MONITORING.md`            | Guia completo v2.0.0                        | ✅ Atualizado    |
+| `docs/SENTRY_AI_AGENTS_EXAMPLES.tsx`      | 6 exemplos práticos                         | ✅ Criado        |
+| `docs/SENTRY_AI_TESTING_GUIDE.md`         | Guia de testes e validação                  | ✅ Criado        |
+| `api/llm-stream.ts`                       | Backend streaming (pendente instrumentação) | ⏳ Pendente      |
+
+### 📋 Convenções OpenTelemetry Implementadas
+
+#### Operações de Span
+
+| Operação              | Função                             | Usado em          |
+| --------------------- | ---------------------------------- | ----------------- |
+| `gen_ai.invoke_agent` | Rastrear agente completo           | -                 |
+| `gen_ai.chat`         | Rastrear chamada LLM individual    | ✅ Harvey Specter |
+| `gen_ai.execute_tool` | Rastrear tool calling              | -                 |
+| `gen_ai.handoff`      | Marcar transferência entre agentes | -                 |
+
+#### Atributos Semânticos
+
+**Atributos de Sistema:**
+
+- `gen_ai.system` → `"gemini"` ou `"openai"`
+- `gen_ai.request.model` → `"gemini-2.5-pro"`, `"gpt-4o-mini"`
+- `gen_ai.request.temperature` → `0.7`
+- `gen_ai.request.max_tokens` → `2000`
+- `gen_ai.request.messages` → JSON array de mensagens
+
+**Atributos de Resposta:**
+
+- `gen_ai.response.text` → JSON array com resposta
+- `gen_ai.usage.input_tokens` → Tokens de entrada
+- `gen_ai.usage.output_tokens` → Tokens de saída
+- `gen_ai.usage.total_tokens` → Total de tokens
+
+**Atributos de Conversação:**
+
+- `conversation.session_id` → ID único da sessão (ex: `harvey-1733432...`)
+- `conversation.turn` → Contador de turnos (0, 1, 2, ...)
+
+**Atributos de Agente:**
+
+- `gen_ai.agent.name` → Nome do agente (ex: `"harvey-specter"`)
+- `gen_ai.operation.name` → Operação executada
+
+### 🔧 Como Usar
+
+#### 1. Instrumentar um Agente com `createChatSpan()`
+
+```typescript
+import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+
+const result = await createChatSpan(
+  {
+    agentName: "harvey-specter",
+    system: "gemini",
+    model: "gemini-2.5-pro",
+    temperature: 0.7,
+    maxTokens: 2000,
+  },
+  messages,
+  async (span) => {
+    // Adicionar atributos de conversação
+    span?.setAttribute("conversation.session_id", sessionId);
+    span?.setAttribute("conversation.turn", turnNumber);
+
+    // Fazer chamada LLM
+    const response = await callGeminiAPI(messages);
+
+    // Adicionar resposta
+    span?.setAttribute("gen_ai.response.text", JSON.stringify([response]));
+
+    return response;
+  }
+);
+```
+
+#### 2. Instrumentar Tool Calling com `createExecuteToolSpan()`
+
+```typescript
+import { createExecuteToolSpan } from "@/lib/sentry-gemini-integration-v2";
+
+const toolResult = await createExecuteToolSpan(
+  { agentName: "harvey", system: "gemini", model: "gemini-2.5-pro" },
+  {
+    toolName: "search_knowledge_base",
+    toolType: "function",
+    toolInput: JSON.stringify({ query: "prazo recursal" }),
+  },
+  async (span) => {
+    const result = await searchKnowledgeBase("prazo recursal");
+    span?.setAttribute("gen_ai.tool.output", JSON.stringify(result));
+    return result;
+  }
+);
+```
+
+#### 3. Implementar Handoff entre Agentes
+
+```typescript
+import { createHandoffSpan } from "@/lib/sentry-gemini-integration-v2";
+
+await createHandoffSpan(
+  { agentName: "harvey", system: "gemini", model: "gemini-2.5-pro" },
+  {
+    fromAgent: "harvey-specter",
+    toAgent: "mrs-justin-e",
+    handoffReason: "Análise de intimação detectada",
+  },
+  async (span) => {
+    // Lógica de transferência
+    await transferTaskToAgent("mrs-justin-e", task);
+  }
+);
+```
+
+### 📊 Dashboard Sentry.io
+
+**Acessar:** https://sentry.io → **Insights** → **AI** → **AI Agents**
+
+**Métricas disponíveis:**
+
+- 📈 Latência média por agente
+- 💰 Custo de tokens (input/output)
+- 🎯 Taxa de sucesso vs erro
+- 🔄 Throughput (chamadas/minuto)
+- 📊 Distribuição de modelos (Gemini vs OpenAI)
+- 🕐 Duração de conversações
+
+**Filtros úteis:**
+
+```
+gen_ai.agent.name = "harvey-specter"
+gen_ai.system = "gemini"
+conversation.session_id = "harvey-1733432..."
+```
+
+### 🧪 Testes e Validação
+
+**Guia completo:** [`docs/SENTRY_AI_TESTING_GUIDE.md`](docs/SENTRY_AI_TESTING_GUIDE.md)
+
+**Checklist rápido:**
+
+```bash
+# 1. Rodar app
+npm run dev
+
+# 2. Abrir Harvey Specter Chat
+# 3. Enviar 3 mensagens de teste
+# 4. Verificar console (sem erros)
+# 5. Acessar Sentry.io e validar spans
+```
+
+**Critérios de sucesso:**
+
+- ✅ Spans aparecem no dashboard AI Agents
+- ✅ Atributos `gen_ai.*` corretos
+- ✅ Atributos `conversation.*` presentes
+- ✅ Contador de turnos incrementa (0 → 1 → 2)
+- ✅ sessionId único por conversa
+- ✅ Sem erros TypeScript/ESLint
+
+### 🚀 Roadmap de Migração
+
+#### ✅ Fase 1: Piloto (Concluída)
+
+- [x] Harvey Specter instrumentado
+- [x] Hook `useAIStreaming` com `createChatSpan()`
+- [x] Tracking de conversação (sessionId, turn)
+- [x] Documentação completa
+- [x] Guia de testes
+
+#### ⏳ Fase 2: Agentes Core (Próxima)
+
+- [ ] Mrs. Justin-e (análise de intimações)
+- [ ] Redação de Petições (geração de minutas)
+- [ ] Monitor DJEN (background job)
+- [ ] Tool calling com `createExecuteToolSpan()`
+- [ ] Handoffs Harvey→Justin-e com `createHandoffSpan()`
+
+#### ⏳ Fase 3: Agentes Restantes
+
+- [ ] Migrar 12 agentes restantes
+- [ ] Configurar LGPD (`recordInputs: false`, `recordOutputs: false`)
+- [ ] Validar todos spans no dashboard
+
+#### ⏳ Fase 4: Produção
+
+- [ ] Alertas configurados (latência > 5s, erro > 5%)
+- [ ] Runbooks de incidentes
+- [ ] Treinamento da equipe
+- [ ] Documentação de processos
+
+### 📚 Documentação de Referência
+
+| Documento                    | Link                                                                                                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Guia Completo v2.0.0**     | [`docs/SENTRY_AI_MONITORING.md`](docs/SENTRY_AI_MONITORING.md)                                                                                 |
+| **Exemplos Práticos**        | [`docs/SENTRY_AI_AGENTS_EXAMPLES.tsx`](docs/SENTRY_AI_AGENTS_EXAMPLES.tsx)                                                                     |
+| **Guia de Testes**           | [`docs/SENTRY_AI_TESTING_GUIDE.md`](docs/SENTRY_AI_TESTING_GUIDE.md)                                                                           |
+| **API OpenTelemetry**        | [`src/lib/sentry-gemini-integration-v2.ts`](src/lib/sentry-gemini-integration-v2.ts)                                                           |
+| **Sentry Docs - Python**     | https://docs.sentry.io/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/                                       |
+| **Sentry Docs - JavaScript** | https://docs.sentry.io/platforms/javascript/guides/react/tracing/span-metrics/examples/#manual-llm-instrumentation-custom-ai-agent--tool-calls |
+| **OpenTelemetry GenAI**      | https://opentelemetry.io/docs/specs/semconv/gen-ai/                                                                                            |
+
+### 🔐 Configuração LGPD/GDPR
+
+**Para produção, desabilite gravação de inputs/outputs sensíveis:**
+
+```typescript
+// src/main.tsx
+Sentry.init({
+  dsn: "...",
+  integrations: [
+    googleGenAIIntegration({
+      recordInputs: false, // 🔒 Não grava prompts
+      recordOutputs: false, // 🔒 Não grava respostas
+    }),
+  ],
+});
+```
+
+**Atributos que continuam sendo enviados:**
+
+- ✅ Metadados (model, temperature, tokens)
+- ✅ IDs de sessão/conversação
+- ✅ Latência e métricas de performance
+- ✅ Status de erro/sucesso
+
+**Atributos bloqueados:**
+
+- ❌ Conteúdo de mensagens (`gen_ai.request.messages`)
+- ❌ Texto de resposta (`gen_ai.response.text`)
+- ❌ Dados pessoais identificáveis (PII)
 
 ---
 

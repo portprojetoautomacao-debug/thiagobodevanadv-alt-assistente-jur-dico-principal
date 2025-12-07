@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useClientesManager } from "@/hooks/use-clientes-manager";
 import { useKV } from "@/hooks/use-kv";
 import type { Expediente } from "@/types";
-import { Download, Sparkles as Sparkle } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -152,10 +152,11 @@ export default function BatchAnalysis() {
         // Cadastra/atualiza cliente automaticamente a partir das partes
         // O campo 'parties' geralmente tem formato "Autor vs Réu" ou "Autor x Réu"
         if (data.parties) {
-          const partiesMatch = /^(.+?)\s*(?:vs?\.?|x)\s*(.+)$/i.exec(data.parties);
-          if (partiesMatch) {
-            const autor = partiesMatch[1].trim();
-            // const reu = partiesMatch[2].trim() // Unused
+          // Usar split ao invés de regex para evitar ReDoS
+          const parts = data.parties.split(/\s+(?:vs?\.?|x)\s+/i);
+          if (parts.length >= 2) {
+            const autor = parts[0].trim();
+            // const reu = parts[1].trim() // Unused
             // Cadastra o autor como cliente
             if (autor && autor !== "Não identificado") {
               createOrUpdateFromDjenIntimacao({
@@ -287,7 +288,7 @@ export default function BatchAnalysis() {
               disabled={analyzing || (!inputText.trim() && selectedFiles.length === 0)}
               className="w-full"
             >
-              <Sparkle className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2" />
               {analyzing ? "Analisando com IA..." : "Analisar com Gemini 2.5 Pro"}
             </Button>
           </CardContent>
@@ -314,7 +315,7 @@ export default function BatchAnalysis() {
           <CardContent>
             {extractedData.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Sparkle className="w-16 h-16 text-muted-foreground mb-4" />
+                <Sparkles className="w-16 h-16 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium text-foreground">Aguardando análise</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Cole os expedientes ou envie arquivos e clique em &quot;Analisar&quot;
