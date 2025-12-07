@@ -27,7 +27,7 @@ import {
   FileText,
   Gavel,
   Search,
-  Sparkle,
+  Sparkles,
   Loader,
   AlertTriangle,
 } from "lucide-react";
@@ -292,7 +292,7 @@ Mantenha a resposta objetiva e profissional.`;
                     </>
                   ) : (
                     <>
-                      <Sparkle className="w-5 h-5 mr-2" />
+                      <Sparkles className="w-5 h-5 mr-2" />
                       Analisar Andamentos com IA
                     </>
                   )}
@@ -309,7 +309,7 @@ Mantenha a resposta objetiva e profissional.`;
               {analysis && (
                 <Card className="p-6 bg-linear-to-br from-accent/5 to-primary/5">
                   <div className="flex items-center gap-2 mb-4">
-                    <Sparkle className="w-6 h-6 text-accent" />
+                    <Sparkles className="w-6 h-6 text-accent" />
                     <h3 className="text-lg font-bold text-foreground">Análise da IA</h3>
                   </div>
                   <div className="prose prose-sm max-w-none">
