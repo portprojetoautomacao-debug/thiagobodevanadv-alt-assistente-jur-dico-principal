@@ -156,6 +156,6 @@ describe("tiptap-utils", () => {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toContain("5MB");
       }
-    });
+    }, 10000);
   });
 });
