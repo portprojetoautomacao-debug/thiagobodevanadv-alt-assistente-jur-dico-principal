@@ -2,7 +2,7 @@
  * Background Service Worker
  */
 
-import { STORAGE_KEYS } from "../shared/constants";
+import { BACKEND_URL, STORAGE_KEYS } from "../shared/constants";
 import { ExtensionErrorEvent } from "../shared/errorHandler";
 import { SyncManager } from "./sync-manager";
 
@@ -95,5 +95,24 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
     } catch (e) {
       console.warn("[PJe Sync] Falha ao salvar report de erro do content", e);
     }
+    // Forward to backend when possible
+    (async () => {
+      try {
+        const storage = await chrome.storage.sync.get(["apiKey"]);
+        const apiKey = storage.apiKey;
+        if (!apiKey) return;
+        const baseUrl = BACKEND_URL;
+        await fetch(`${baseUrl}/api/extension-errors`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": apiKey,
+          },
+          body: JSON.stringify(errorEvent),
+        });
+      } catch (err) {
+        console.warn("[PJe Sync] Falha ao encaminhar erro para o backend", err);
+      }
+    })();
   }
 });

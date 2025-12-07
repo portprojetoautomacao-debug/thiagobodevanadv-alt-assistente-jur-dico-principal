@@ -250,8 +250,8 @@ describe("minuta-service", () => {
         autor: "Teste",
       });
 
-      // Aguarda 1ms para garantir timestamp diferente
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      // Aguarda 10ms para garantir timestamp diferente em ambientes com pouca resolução
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const updated = updateMinuta(existing, {
         titulo: "Título Atualizado",

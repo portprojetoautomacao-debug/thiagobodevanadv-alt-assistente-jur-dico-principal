@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:with-api": "node ./scripts/start-dev-with-api.cjs",
     "dev:local": "node ./scripts/start-dev.cjs",
     "kill": "fuser -k 5000/tcp",
     "build": "tsc && vite build",

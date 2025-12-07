@@ -431,7 +431,6 @@ export function TiptapEditorV2({
         if (dom) {
           dom.style.opacity = "1";
           dom.style.filter = "none";
-          // @ts-ignore - backdropFilter might not be part of style typings
           dom.style.backdropFilter = "none";
           dom.style.transform = "none";
           dom.style.willChange = "auto";
@@ -511,7 +510,6 @@ export function TiptapEditorV2({
     if (!el) return;
     el.style.opacity = "1";
     el.style.filter = "none";
-    // @ts-ignore
     el.style.backdropFilter = "none";
     el.style.transform = "none";
     el.style.willChange = "auto";

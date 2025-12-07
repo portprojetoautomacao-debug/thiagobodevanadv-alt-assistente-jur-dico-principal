@@ -35,6 +35,23 @@ RUN_EXTENSION_E2E=true npm run test:e2e -- --project=chromium --headed
 xvfb-run -a sh -c "RUN_EXTENSION_E2E=true npm run test:e2e -- --project=chromium --headed"
 ```
 
+### Executando com API local (desenvolvimento com proxy local)
+
+Se quiser usar a API local (em vez do proxy para a produção), execute o servidor de frontend e API local:
+
+```bash
+# Inicia Vite + API dev local (porta 5252)
+npm run dev:with-api
+```
+
+Em seguida, em outro terminal, execute os testes E2E:
+
+```bash
+npm run test:e2e
+
+Você também pode apontar o proxy `/api` do Vite para um destino personalizado definindo a env var `VITE_API_TARGET` ou desabilitar o proxy com `DISABLE_API_PROXY=true`.
+```
+
 ### Observações
 
 - O teste é **pulável por padrão** (usa `test.skip`) porque exige um navegador headed com suporte a extensões. Use `RUN_EXTENSION_E2E=true` para habilitá-lo.

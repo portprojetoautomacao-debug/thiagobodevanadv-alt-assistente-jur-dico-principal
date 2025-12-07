@@ -44,6 +44,31 @@ Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com Reac
 
 Este repositório está **100% configurado para trabalho autônomo do GitHub Copilot**!
 
+### 🚀 GitHub Codespaces - Copilot com Máxima Autonomia
+
+**Ambiente pronto em 2 cliques!** Configure o Codespaces para que o Copilot trabalhe sem depender de você:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/codespaces/new)
+
+**O que está pré-configurado:**
+
+- ✅ **Edição automática**: Copilot pode editar arquivos sem confirmação
+- ✅ **Terminal automático**: Executa comandos sem perguntar
+- ✅ **Coding Agent ativo**: Cria branches e PRs automaticamente
+- ✅ **Auto-save + Auto-format**: Código salvo e formatado instantaneamente
+- ✅ **25+ tasks automáticas**: Dev server, testes, linting rodando 24/7
+- ✅ **Git smart commit**: Push/pull sem confirmações
+
+**📖 Guia completo de configuração:** [.github/CODESPACES_SETUP.md](.github/CODESPACES_SETUP.md)
+
+**🧪 Testar configuração:**
+
+```bash
+./test-codespaces-config.sh
+```
+
+---
+
 ### 🆕 Sistema de Issues Automático
 
 **72 triggers** detectam comentários no código e criam issues automaticamente:

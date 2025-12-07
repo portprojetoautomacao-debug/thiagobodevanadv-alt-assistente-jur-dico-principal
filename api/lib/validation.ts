@@ -134,12 +134,14 @@ export const ExpedienteSchema = z.object({
   type: z.enum(["intimacao", "citacao", "despacho", "decisao", "sentenca", "outro"]),
   createdAt: z.string().min(1),
   source: z.string().optional(),
-  metadata: z.object({
-    vara: z.string().optional(),
-    comarca: z.string().optional(),
-    timestamp: z.number(),
-    previousMovement: z.string().optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      vara: z.string().optional(),
+      comarca: z.string().optional(),
+      timestamp: z.number(),
+      previousMovement: z.string().optional(),
+    })
+    .optional(),
 });
 
 export function validateProcessos(data: unknown) {
