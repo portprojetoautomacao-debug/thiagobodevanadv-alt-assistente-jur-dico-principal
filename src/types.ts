@@ -289,7 +289,7 @@ export interface ProcessEvent {
   tribunal?: string;
   orgao?: string;
   numeroDocumento?: string;
-  source?: "djen" | "datajud" | "pje" | "manual";
+  source?: "djen" | "datajud" | "pje" | "manual" | "ia";
 }
 
 /**

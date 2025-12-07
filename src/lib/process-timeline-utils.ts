@@ -36,7 +36,7 @@ export function minutasToProcessEvents(minutas: Minuta[]): ProcessEvent[] {
     tipo: mapMinutaTipoToEventType(minuta.tipo),
     documentoUrl: minuta.googleDocsUrl,
     documentoTipo: "html",
-    source: "manual", // TODO: diferenciar fonte quando suportado
+    source: minuta.criadoPorAgente ? "ia" : "manual",
     minutaId: minuta.id,
   }));
 }
