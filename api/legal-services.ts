@@ -210,9 +210,13 @@ async function handleDJENCheck(req: VercelRequest, res: VercelResponse) {
         processo: comunicacao.numeroProcesso,
         tipo: comunicacao.tipo,
         conteudo: comunicacao.teor || "Ver documento completo",
-        advogado: comunicacao.advogados
-          ?.map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
-          .join(", "),
+        advogado:
+          comunicacao.advogados
+            ?.map((a) => {
+              if (typeof a === "string") return a;
+              return a.nome || JSON.stringify(a);
+            })
+            .join(", ") || "",
         link: comunicacao.link,
       });
     }

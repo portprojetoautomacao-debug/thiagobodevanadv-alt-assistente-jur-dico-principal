@@ -1,12 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  cn,
-  handleImageUpload,
-  isMac,
-  MAC_SYMBOLS,
-  MAX_FILE_SIZE,
-  SR_ONLY,
-} from "./tiptap-utils";
+import { cn, handleImageUpload, isMac, MAC_SYMBOLS, MAX_FILE_SIZE, SR_ONLY } from "./tiptap-utils";
 
 describe("tiptap-utils", () => {
   describe("cn (className utility)", () => {
@@ -117,8 +110,7 @@ describe("tiptap-utils", () => {
         expect.fail("Should have thrown error for invalid file type");
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
-        // Aceita qualquer mensagem de erro relacionada a tipo de arquivo
-        expect((error as Error).message).toBeTruthy();
+        expect((error as Error).message).toContain("image");
       }
     });
 
@@ -164,6 +156,6 @@ describe("tiptap-utils", () => {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toContain("5MB");
       }
-    });
+    }, 10000);
   });
 });

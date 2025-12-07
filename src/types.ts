@@ -261,3 +261,66 @@ export interface DocumentoPJe {
     datas?: string[];
   };
 }
+
+/**
+ * Evento da Linha do Tempo Processual (Timeline PJe)
+ * Representa movimentações processuais exibidas na sidebar
+ */
+export interface ProcessEvent {
+  id: string;
+  processId: string;
+  dataHora: string; // ISO string
+  titulo: string; // Ex: "EXPEDIÇÃO DE CERTIDÃO"
+  descricao?: string;
+  tipo?:
+    | "certidao"
+    | "mandado"
+    | "despacho"
+    | "sentenca"
+    | "peticao"
+    | "intimacao"
+    | "juntada"
+    | "conclusos"
+    | "outro";
+  // URL do documento PDF/HTML visualizado à direita
+  documentoUrl?: string;
+  documentoTipo?: "pdf" | "html" | "texto";
+  // Metadados opcionais
+  tribunal?: string;
+  orgao?: string;
+  numeroDocumento?: string;
+  source?: "djen" | "datajud" | "pje" | "manual";
+}
+
+/**
+ * Evento da Linha do Tempo Processual (Timeline)
+ * Representa movimentações processuais no estilo PJe
+ * Usado no componente ProcessTimelineViewer
+ */
+export interface ProcessEvent {
+  id: string;
+  processId: string;
+  dataHora: string; // ISO string
+  titulo: string; // Ex: "EXPEDIÇÃO DE CERTIDÃO", "PETIÇÃO JUNTADA"
+  descricao?: string;
+  tipo?:
+    | "certidao"
+    | "mandado"
+    | "despacho"
+    | "sentenca"
+    | "peticao"
+    | "intimacao"
+    | "juntada"
+    | "conclusos"
+    | "outro";
+  // Documento vinculado (PDF/HTML)
+  documentoUrl?: string;
+  documentoTipo?: "pdf" | "html" | "texto";
+  // Metadados opcionais
+  tribunal?: string;
+  orgao?: string;
+  source?: "djen" | "datajud" | "pje" | "manual";
+  // Relacionamento com entidades existentes
+  expedienteId?: string;
+  minutaId?: string;
+}

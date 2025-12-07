@@ -339,6 +339,10 @@ export const handleImageUpload = async (
     throw new Error("No file provided");
   }
 
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Invalid file type. Only image files are allowed.");
+  }
+
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(`File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`);
   }

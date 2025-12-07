@@ -1,14 +1,3 @@
-import {
-  Bot,
-  Brain,
-  CheckCircle2,
-  Clock,
-  LineChart,
-  RefreshCw,
-  Trash2,
-  XCircle,
-  Zap,
-} from "lucide-react";
 /**
  * Tracing Dashboard Component
  *
@@ -21,6 +10,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { tracingService, type Span } from "@/lib/tracing";
+import {
+  Bot,
+  Brain,
+  CheckCircle2,
+  Clock,
+  LineChart,
+  RefreshCw,
+  Trash2,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 

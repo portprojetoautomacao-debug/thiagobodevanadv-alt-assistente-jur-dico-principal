@@ -41,7 +41,7 @@ const PATTERNS = {
   CLASSE_PROCESSUAL: /[Cc]lasse:\s*\[?([^\]\n]+)\]?/,
   AUTOR: /[Aa]utor[a]?:?\s*([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-záéíóúâêôãõçÀ-ÿ\s]+)/,
   REU: /[Rr][ée]u[s]?:?\s*([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-záéíóúâêôãõçÀ-ÿ\s]+)/,
-  COMARCA: /[Cc]omarca\s*(?:de\s+)?([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-záéíóúâêôãõçÀ-ÿ\s\/]+)/,
+  COMARCA: new RegExp("[Cc]omarca\\s*(?:de\\s+)?([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-záéíóúâêôãõçÀ-ÿ\\s/]+)"),
   VARA: /(\d+[ªº]?\s*[Vv]ara[^\n,]*)/,
   CERTIDAO: /[Cc]ertid[ãa]o|[Cc]ertifico/i,
   MANDADO: /[Mm]andado/i,

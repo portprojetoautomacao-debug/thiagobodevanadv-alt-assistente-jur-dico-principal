@@ -23,17 +23,17 @@ import {
 const CHART_HEIGHT = 250;
 
 interface ChartData {
-  readonly statusData: ReadonlyArray<{
+  statusData: {
     name: string;
     value: number;
     color: string;
-  }>;
-  readonly varaChartData: ReadonlyArray<{ name: string; value: number }>;
-  readonly trendData: ReadonlyArray<{
+  }[];
+  varaChartData: { name: string; value: number }[];
+  trendData: {
     month: string;
     ativos: number;
     concluidos: number;
-  }>;
+  }[];
 }
 
 interface DashboardChartsProps {
@@ -56,7 +56,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <PieChart>
             <Pie
-              data={[...chartData.statusData]}
+              data={Array.from(chartData.statusData)}
               cx="50%"
               cy="50%"
               outerRadius={80}
@@ -98,7 +98,7 @@ export function VaraChart({ chartData }: Readonly<DashboardChartsProps>) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={[...chartData.varaChartData]}>
+          <BarChart data={Array.from(chartData.varaChartData)}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
@@ -151,7 +151,7 @@ export function TrendChart({ chartData }: Readonly<DashboardChartsProps>) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <LineChart data={[...chartData.trendData]}>
+          <LineChart data={Array.from(chartData.trendData)}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
             <XAxis
               dataKey="month"

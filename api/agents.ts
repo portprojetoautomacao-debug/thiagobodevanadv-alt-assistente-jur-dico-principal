@@ -202,14 +202,7 @@ const TASK_MAPPINGS: TaskMapping[] = [
     priority: TaskPriority.HIGH,
   },
   {
-    keywords: [
-      "petição",
-      "peticao",
-      "defesa",
-      "recurso",
-      "manifestação",
-      "manifestacao",
-    ],
+    keywords: ["petição", "peticao", "defesa", "recurso", "manifestação", "manifestacao"],
     agentId: "petition-writer",
     type: AgentTaskType.DRAFT_PETITION,
     priority: TaskPriority.MEDIUM,
@@ -233,29 +226,13 @@ const TASK_MAPPINGS: TaskMapping[] = [
     priority: TaskPriority.MEDIUM,
   },
   {
-    keywords: [
-      "sentença",
-      "sentenca",
-      "decisão",
-      "decisao",
-      "acórdão",
-      "acordao",
-      "risco",
-    ],
+    keywords: ["sentença", "sentenca", "decisão", "decisao", "acórdão", "acordao", "risco"],
     agentId: "risk-analyst",
     type: AgentTaskType.RISK_ANALYSIS,
     priority: TaskPriority.HIGH,
   },
   {
-    keywords: [
-      "custas",
-      "honorários",
-      "honorarios",
-      "depósito",
-      "deposito",
-      "guia",
-      "pagamento",
-    ],
+    keywords: ["custas", "honorários", "honorarios", "depósito", "deposito", "guia", "pagamento"],
     agentId: "billing-analyst",
     type: AgentTaskType.BILLING_ANALYSIS,
     priority: TaskPriority.HIGH,
@@ -279,28 +256,13 @@ const TASK_MAPPINGS: TaskMapping[] = [
     priority: TaskPriority.MEDIUM,
   },
   {
-    keywords: [
-      "contrato",
-      "minuta",
-      "aditivo",
-      "cláusula",
-      "clausula",
-      "rescisão",
-      "rescissao",
-    ],
+    keywords: ["contrato", "minuta", "aditivo", "cláusula", "clausula", "rescisão", "rescissao"],
     agentId: "contract-reviewer",
     type: AgentTaskType.CONTRACT_REVIEW,
     priority: TaskPriority.HIGH,
   },
   {
-    keywords: [
-      "estratégia",
-      "estrategia",
-      "plano",
-      "probabilidade",
-      "tese",
-      "linha de defesa",
-    ],
+    keywords: ["estratégia", "estrategia", "plano", "probabilidade", "tese", "linha de defesa"],
     agentId: "case-strategist",
     type: AgentTaskType.CASE_STRATEGY,
     priority: TaskPriority.HIGH,
@@ -334,11 +296,7 @@ function createChainedTask(
     priority: mapping.priority,
     status: TaskStatus.QUEUED,
     createdAt: new Date().toISOString(),
-    data: {
-      ...sourceTask.data,
-      instruction: actionText,
-      sourceTask: sourceTask.id,
-    },
+    data: { ...sourceTask.data, instruction: actionText, sourceTask: sourceTask.id },
   };
 }
 
@@ -492,9 +450,7 @@ function validateTaskInputWithSchema(task: AgentTask): void {
   if (task.type === AgentTaskType.ANALYZE_INTIMATION) {
     const validation = AnalyzeIntimationInputSchema.safeParse(task.data);
     if (!validation.success) {
-      const error = new Error(
-        `Invalid input for ANALYZE_INTIMATION: ${validation.error.message}`
-      );
+      const error = new Error(`Invalid input for ANALYZE_INTIMATION: ${validation.error.message}`);
       logger.error("Schema validation failed", error, { data: task.data });
       throw error;
     }
@@ -504,9 +460,7 @@ function validateTaskInputWithSchema(task: AgentTask): void {
   if (task.type === AgentTaskType.DRAFT_PETITION) {
     const validation = DraftPetitionInputSchema.safeParse(task.data);
     if (!validation.success) {
-      const error = new Error(
-        `Invalid input for DRAFT_PETITION: ${validation.error.message}`
-      );
+      const error = new Error(`Invalid input for DRAFT_PETITION: ${validation.error.message}`);
       logger.error("Schema validation failed", error, { data: task.data });
       throw error;
     }
@@ -517,18 +471,14 @@ function validateTaskInputWithSchema(task: AgentTask): void {
  * Recupera contexto relevante da memória jurídica
  */
 async function retrieveMemoryContext(task: AgentTask): Promise<string> {
-  const query = (task.data?.description || task.data?.query) as
-    | string
-    | undefined;
+  const query = (task.data?.description || task.data?.query) as string | undefined;
   if (!query) return "";
 
   try {
     const relevantItems = await legalMemory.search({ query, limit: 3 });
     if (relevantItems.length === 0) return "";
 
-    logger.info(
-      `Found ${relevantItems.length} relevant memory items for task ${task.id}`
-    );
+    logger.info(`Found ${relevantItems.length} relevant memory items for task ${task.id}`);
     return `\n\n# Contexto Jurídico Relevante (Memória):\n${relevantItems
       .map((item) => `- ${item.content} (Score: ${item.relevanceScore})`)
       .join("\n")}`;
@@ -550,9 +500,7 @@ const MEMORY_SAVE_CONFIG: Record<
 > = {
   [AgentTaskType.DRAFT_PETITION]: {
     getContent: (result) =>
-      result.draft
-        ? `Minuta de petição: ${String(result.draft).substring(0, 200)}...`
-        : null,
+      result.draft ? `Minuta de petição: ${String(result.draft).substring(0, 200)}...` : null,
     category: "peca_processual",
   },
   [AgentTaskType.RESEARCH_PRECEDENTS]: {
@@ -587,10 +535,7 @@ const MEMORY_SAVE_CONFIG: Record<
 /**
  * Salva resultado na memória jurídica quando aplicável
  */
-async function saveResultToMemory(
-  task: AgentTask,
-  result: TaskResult
-): Promise<void> {
+async function saveResultToMemory(task: AgentTask, result: TaskResult): Promise<void> {
   const config = MEMORY_SAVE_CONFIG[task.type];
   if (!config) return;
 
@@ -653,8 +598,7 @@ function parseGeminiResponse(aiContent: string): TaskResult {
     return { rawResponse: aiContent };
   } catch (parseError) {
     logger.warn("Failed to parse Gemini JSON response", {
-      error:
-        parseError instanceof Error ? parseError.message : String(parseError),
+      error: parseError instanceof Error ? parseError.message : String(parseError),
       contentPreview: aiContent.slice(0, 500),
     });
     return { rawResponse: aiContent };
@@ -668,11 +612,7 @@ function parseGeminiResponse(aiContent: string): TaskResult {
 function prepareGeminiRequest(
   fullPrompt: string,
   timeoutMs: number
-): {
-  requestBody: unknown;
-  controller: AbortController;
-  timeoutId: NodeJS.Timeout;
-} {
+): { requestBody: unknown; controller: AbortController; timeoutId: NodeJS.Timeout } {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -714,9 +654,7 @@ async function callGeminiAPI(
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(
-      `Gemini error: ${response.status} ${response.statusText} ${text}`
-    );
+    throw new Error(`Gemini error: ${response.status} ${response.statusText} ${text}`);
   }
 
   const data = (await response.json()) as {
@@ -762,137 +700,120 @@ function enrichResultWithMetadata(
   };
 }
 
-async function processTaskWithAI(
-  task: AgentTask,
-  agent: Agent
-): Promise<TaskResult> {
+async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<TaskResult> {
   // ✨ PLANO MESTRE - FASE 4: Monitoramento
-  return await agentMonitor.trackTaskExecution(
-    task.id,
-    agent.id,
-    task.type,
-    async () => {
-      const startTime = Date.now();
+  return await agentMonitor.trackTaskExecution(task.id, agent.id, task.type, async () => {
+    const startTime = Date.now();
 
-      // Log inicial com contexto completo
-      await logAgentThinking(task, agent, "INICIANDO", {
-        descricao: task.data?.description || "Sem descrição",
-        processo:
-          task.data?.processNumber ||
-          (task.data?.processo as { numero?: string })?.numero ||
-          task.data?.numeroProcesso ||
-          "N/A",
-        prioridade: task.priority || "normal",
-        // Detalhes específicos por tipo de tarefa
-        ...(task.type === AgentTaskType.DRAFT_PETITION && {
-          tipoPeticao: task.data?.petitionType || "Não especificado",
-          partes: task.data?.parts || "Não especificado",
-        }),
-        ...(task.type === AgentTaskType.CALCULATE_DEADLINE && {
-          dataPublicacao: task.data?.publicationDate || "N/A",
-          diasPrazo: task.data?.daysCount || "N/A",
-        }),
-        ...(task.type === AgentTaskType.ANALYZE_INTIMATION && {
-          tribunal: task.data?.tribunal || "N/A",
-          instancia: task.data?.instancia || "N/A",
-        }),
+    // Log inicial com contexto completo
+    await logAgentThinking(task, agent, "INICIANDO", {
+      descricao: task.data?.description || "Sem descrição",
+      processo:
+        task.data?.processNumber ||
+        (task.data?.processo as { numero?: string })?.numero ||
+        task.data?.numeroProcesso ||
+        "N/A",
+      prioridade: task.priority || "normal",
+      // Detalhes específicos por tipo de tarefa
+      ...(task.type === AgentTaskType.DRAFT_PETITION && {
+        tipoPeticao: task.data?.petitionType || "Não especificado",
+        partes: task.data?.parts || "Não especificado",
+      }),
+      ...(task.type === AgentTaskType.CALCULATE_DEADLINE && {
+        dataPublicacao: task.data?.publicationDate || "N/A",
+        diasPrazo: task.data?.daysCount || "N/A",
+      }),
+      ...(task.type === AgentTaskType.ANALYZE_INTIMATION && {
+        tribunal: task.data?.tribunal || "N/A",
+        instancia: task.data?.instancia || "N/A",
+      }),
+    });
+
+    // Validações extraídas para helpers (SonarCloud S3776)
+    validateInputStructures(task, agent);
+    validateTaskInputWithSchema(task);
+
+    const apiKey = getGeminiApiKey();
+    const memoryContext = await retrieveMemoryContext(task);
+
+    await logAgentThinking(task, agent, "CONTEXTO_RECUPERADO", {
+      memoriaItens: memoryContext
+        ? `Contexto jurídico carregado (${memoryContext.split("\n").filter((l) => l.trim()).length} itens)`
+        : "Sem contexto prévio",
+    });
+
+    const systemPrompt = getSystemPrompt(agent.type);
+    const userPrompt = getUserPrompt(task);
+
+    await logAgentThinking(task, agent, "ANALISANDO", {
+      promptSize: `${userPrompt.length} caracteres`,
+      taskType: task.type,
+      agentRole: agent.name,
+      estimativaTokens: Math.ceil(userPrompt.length / 4),
+    });
+
+    logger.info("Processing task with Gemini", {
+      taskId: task.id,
+      agentId: agent.id,
+      taskType: task.type,
+      timeout: task.timeout || 30000,
+    });
+
+    const timeoutMs = task.timeout || 30000;
+    const fullPrompt = [
+      "# Instruções do agente (system):",
+      systemPrompt,
+      memoryContext, // Inserir contexto da memória
+      "",
+      "# Tarefa específica (user):",
+      userPrompt,
+    ].join("\n");
+
+    const { requestBody, controller, timeoutId } = prepareGeminiRequest(fullPrompt, timeoutMs);
+
+    try {
+      const { aiContent, tokensUsed } = await callGeminiAPI(apiKey, requestBody, controller);
+
+      // Parsear resposta usando helper (SonarCloud S3776)
+      const result = parseGeminiResponse(aiContent);
+
+      await logAgentThinking(task, agent, "RESPOSTA_GERADA", {
+        preview: aiContent.substring(0, 200) + "...",
+        tokensUsados: tokensUsed,
       });
 
-      // Validações extraídas para helpers (SonarCloud S3776)
-      validateInputStructures(task, agent);
-      validateTaskInputWithSchema(task);
-
-      const apiKey = getGeminiApiKey();
-      const memoryContext = await retrieveMemoryContext(task);
-
-      await logAgentThinking(task, agent, "CONTEXTO_RECUPERADO", {
-        memoriaItens: memoryContext
-          ? `Contexto jurídico carregado (${
-              memoryContext.split("\n").filter((l) => l.trim()).length
-            } itens)`
-          : "Sem contexto prévio",
-      });
-
-      const systemPrompt = getSystemPrompt(agent.type);
-      const userPrompt = getUserPrompt(task);
-
-      await logAgentThinking(task, agent, "ANALISANDO", {
-        promptSize: `${userPrompt.length} caracteres`,
-        taskType: task.type,
-        agentRole: agent.name,
-        estimativaTokens: Math.ceil(userPrompt.length / 4),
-      });
-
-      logger.info("Processing task with Gemini", {
-        taskId: task.id,
-        agentId: agent.id,
-        taskType: task.type,
-        timeout: task.timeout || 30000,
-      });
-
-      const timeoutMs = task.timeout || 30000;
-      const fullPrompt = [
-        "# Instruções do agente (system):",
-        systemPrompt,
-        memoryContext, // Inserir contexto da memória
-        "",
-        "# Tarefa específica (user):",
-        userPrompt,
-      ].join("\n");
-
-      const { requestBody, controller, timeoutId } = prepareGeminiRequest(
-        fullPrompt,
-        timeoutMs
+      // Enriquecer resultado com metadados
+      const enrichedResult = enrichResultWithMetadata(
+        result,
+        agent.id,
+        task.type,
+        tokensUsed,
+        startTime
       );
 
-      try {
-        const { aiContent, tokensUsed } = await callGeminiAPI(
-          apiKey,
-          requestBody,
-          controller
-        );
+      // Salvar na memória jurídica usando helper (SonarCloud S3776)
+      await saveResultToMemory(task, enrichedResult);
 
-        // Parsear resposta usando helper (SonarCloud S3776)
-        const result = parseGeminiResponse(aiContent);
+      await logAgentThinking(task, agent, "CONCLUÍDO", {
+        resultado: result.summary || "Tarefa concluída com sucesso",
+        tempoProcessamento: `${enrichedResult.processingTimeMs}ms`,
+        proximasAcoes: Array.isArray(result.nextActions)
+          ? result.nextActions.join(", ")
+          : "Nenhuma",
+      });
 
-        await logAgentThinking(task, agent, "RESPOSTA_GERADA", {
-          preview: aiContent.substring(0, 200) + "...",
-          tokensUsados: tokensUsed,
-        });
+      logger.info("Task processed successfully (Gemini)", {
+        taskId: task.id,
+        agentId: agent.id,
+        tokensUsed: enrichedResult.tokensUsed,
+        processingTimeMs: enrichedResult.processingTimeMs,
+      });
 
-        // Enriquecer resultado com metadados
-        const enrichedResult = enrichResultWithMetadata(
-          result,
-          agent.id,
-          task.type,
-          tokensUsed,
-          startTime
-        );
-
-        // Salvar na memória jurídica usando helper (SonarCloud S3776)
-        await saveResultToMemory(task, enrichedResult);
-
-        await logAgentThinking(task, agent, "CONCLUÍDO", {
-          resultado: result.summary || "Tarefa concluída com sucesso",
-          tempoProcessamento: `${enrichedResult.processingTimeMs}ms`,
-          proximasAcoes: Array.isArray(result.nextActions)
-            ? result.nextActions.join(", ")
-            : "Nenhuma",
-        });
-
-        logger.info("Task processed successfully (Gemini)", {
-          taskId: task.id,
-          agentId: agent.id,
-          tokensUsed: enrichedResult.tokensUsed,
-          processingTimeMs: enrichedResult.processingTimeMs,
-        });
-
-        return enrichedResult;
-      } finally {
-        clearTimeout(timeoutId);
-      }
+      return enrichedResult;
+    } finally {
+      clearTimeout(timeoutId);
     }
-  );
+  });
 }
 
 // ===========================
@@ -935,16 +856,13 @@ async function logAgentThinking(
 
     // Salvar no histórico de pensamentos (últimos 500)
     const thinkingHistory =
-      ((await redis.get("agent-thinking-logs")) as (typeof thinkingLog)[]) ||
-      [];
+      ((await redis.get("agent-thinking-logs")) as (typeof thinkingLog)[]) || [];
     thinkingHistory.unshift(thinkingLog);
     await redis.set("agent-thinking-logs", thinkingHistory.slice(0, 500));
 
     // Salvar também no log específico da tarefa para streaming
     const taskThinking =
-      ((await redis.get(
-        `task-thinking:${task.id}`
-      )) as (typeof thinkingLog)[]) || [];
+      ((await redis.get(`task-thinking:${task.id}`)) as (typeof thinkingLog)[]) || [];
     taskThinking.push(thinkingLog);
     await redis.set(`task-thinking:${task.id}`, taskThinking, { ex: 3600 }); // expira em 1h
 
@@ -1011,6 +929,7 @@ async function saveTaskQueue(taskQueue: AgentTask[]): Promise<void> {
 
 /**
  * Busca todas as minutas do Redis (compatível com nova estrutura atômica)
+ * Prefixado com _ pois é usado apenas em contextos específicos
  * @returns Array de minutas
  */
 async function _fetchAllMinutas(): Promise<unknown[]> {
@@ -1052,11 +971,7 @@ function canProcessTask(task: AgentTask, agent: Agent): boolean {
 /**
  * Processa ações encadeadas de uma tarefa
  */
-function processChainedActions(
-  task: AgentTask,
-  result: TaskResult,
-  taskQueue: AgentTask[]
-): void {
+function processChainedActions(task: AgentTask, result: TaskResult, taskQueue: AgentTask[]): void {
   if (
     task.type !== AgentTaskType.ANALYZE_DOCUMENT ||
     !result.suggestedActions ||
@@ -1079,10 +994,7 @@ function processChainedActions(
  * Salva minuta auto-gerada no KV usando serviço centralizado
  * ✨ REFATORADO: Usa createMinutaFromAgentTask do minuta-service-backend
  */
-async function saveAutoGeneratedMinuta(
-  task: AgentTask,
-  result: TaskResult
-): Promise<void> {
+async function saveAutoGeneratedMinuta(task: AgentTask, result: TaskResult): Promise<void> {
   if (task.type !== AgentTaskType.DRAFT_PETITION || !result.draft) return;
 
   try {
@@ -1090,9 +1002,7 @@ async function saveAutoGeneratedMinuta(
     const minuta = createMinutaFromAgentTask(task);
 
     if (!minuta) {
-      logger.warn("createMinutaFromAgentTask returned null", {
-        taskId: task.id,
-      });
+      logger.warn("createMinutaFromAgentTask returned null", { taskId: task.id });
       return;
     }
 
@@ -1111,7 +1021,7 @@ async function saveAutoGeneratedMinuta(
 
     // Tentar extrair processId de várias fontes possíveis
     const processId = (task.data?.processId ||
-      (task.data?.processo as { id?: string })?.id ||
+      (task.data?.processo as Record<string, unknown>)?.id ||
       task.data?.processNumber) as string | undefined;
 
     if (processId) {
@@ -1166,15 +1076,10 @@ async function processQueueTask(
       await saveAutoGeneratedMinuta(task, aiResult);
       minutaSaved = true;
     } catch (minutaError) {
-      logger.error(
-        `Critical: Failed to save minuta for task ${task.id}`,
-        minutaError
-      );
+      logger.error(`Critical: Failed to save minuta for task ${task.id}`, minutaError);
       // Minuta é crítica - falhar tarefa inteira
       throw new Error(
-        `Failed to save minuta: ${
-          minutaError instanceof Error ? minutaError.message : "Unknown error"
-        }`
+        `Failed to save minuta: ${minutaError instanceof Error ? minutaError.message : "Unknown error"}`
       );
     }
 
@@ -1183,10 +1088,7 @@ async function processQueueTask(
       processChainedActions(task, aiResult, taskQueue);
       chainedActionsProcessed = true;
     } catch (chainError) {
-      logger.warn(
-        `Non-critical: Failed chained actions for task ${task.id}`,
-        chainError
-      );
+      logger.warn(`Non-critical: Failed chained actions for task ${task.id}`, chainError);
       // Continuar mesmo se ações encadeadas falharem
     }
 
@@ -1205,14 +1107,11 @@ async function processQueueTask(
 
     // ⚠️ ROLLBACK: Se minuta foi salva mas tarefa falhou, registrar
     if (minutaSaved) {
-      logger.warn(
-        `Task ${task.id} failed but minuta was saved - may need manual cleanup`,
-        {
-          taskId: task.id,
-          minutaSaved,
-          chainedActionsProcessed,
-        }
-      );
+      logger.warn(`Task ${task.id} failed but minuta was saved - may need manual cleanup`, {
+        taskId: task.id,
+        minutaSaved,
+        chainedActionsProcessed,
+      });
     }
 
     task.status = TaskStatus.FAILED;
@@ -1225,9 +1124,7 @@ async function processQueueTask(
 /**
  * Handler: POST ?action=process-queue
  */
-async function handleProcessQueue(
-  res: VercelResponse
-): Promise<VercelResponse> {
+async function handleProcessQueue(res: VercelResponse): Promise<VercelResponse> {
   const taskQueue = await fetchTaskQueue();
   const validTasks = taskQueue.filter((t) => validateAgentTask(t));
   const pendingTasks = validTasks.filter((t) => t.status === TaskStatus.QUEUED);
@@ -1274,10 +1171,7 @@ async function handleProcessQueue(
 /**
  * Handler: POST ?action=process-task
  */
-async function handleProcessTask(
-  req: VercelRequest,
-  res: VercelResponse
-): Promise<VercelResponse> {
+async function handleProcessTask(req: VercelRequest, res: VercelResponse): Promise<VercelResponse> {
   const { task, agent } = req.body as { task: unknown; agent: unknown };
 
   if (!validateAgentTask(task)) {
@@ -1366,9 +1260,7 @@ function isAuthorized(req: VercelRequest): boolean {
     host.includes("127.0.0.1") ||
     process.env.NODE_ENV === "development";
   const isVercelApp =
-    host.includes("vercel.app") ||
-    origin.includes("vercel.app") ||
-    referer.includes("vercel.app");
+    host.includes("vercel.app") || origin.includes("vercel.app") || referer.includes("vercel.app");
   const hasApiKey = !!req.headers["x-api-key"];
 
   return !!(isVercelCron || isLocalDev || isVercelApp || hasApiKey);
@@ -1394,10 +1286,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader("Access-Control-Allow-Origin", origin || "*");
   }
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-api-key"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -1432,8 +1321,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(400).json({
-      error:
-        "Invalid action. Use: process-queue, process-task, logs, or memory",
+      error: "Invalid action. Use: process-queue, process-task, logs, or memory",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
