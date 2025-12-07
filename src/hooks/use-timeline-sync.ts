@@ -3,9 +3,9 @@
  * Monitora expedientes vindos da extensão Chrome PJe
  */
 
-import { useCallback, useEffect, useState } from "react";
-import type { Expediente, ProcessEvent } from "@/types";
 import { createProcessTimeline } from "@/lib/process-timeline-utils";
+import type { Expediente, ProcessEvent } from "@/types";
+import { useCallback, useEffect, useState } from "react";
 import { useKV } from "./use-kv";
 
 interface TimelineSyncOptions {
@@ -39,7 +39,8 @@ export function useTimelineSync(options: TimelineSyncOptions = {}) {
           // Tenta múltiplos formatos de número de processo
           const expNumber = exp.numeroProcesso || exp.processId || "";
           return (
-            expNumber === processId || expNumber.replace(/\D/g, "") === processId.replace(/\D/g, "")
+            expNumber === processId ||
+            expNumber.replaceAll(/\D/g, "") === processId.replaceAll(/\D/g, "")
           );
         })
       : expedientes;
@@ -71,7 +72,7 @@ export function useTimelineSync(options: TimelineSyncOptions = {}) {
   // Refresh inicial
   useEffect(() => {
     refreshTimeline();
-  }, [expedientes]);
+  }, [refreshTimeline]);
 
   // Marca notificação de novos eventos como lida
   const markAsRead = useCallback(() => {

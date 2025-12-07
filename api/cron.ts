@@ -161,7 +161,6 @@ async function storePublication(publication: StoredPublication): Promise<void> {
     console.error("[KV] Error storing publication:", error);
     throw error;
   }
-  return;
 }
 
 // Check if publication already exists (fast hash lookup)

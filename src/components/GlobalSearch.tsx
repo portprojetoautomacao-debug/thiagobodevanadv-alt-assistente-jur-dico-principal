@@ -112,7 +112,7 @@ export function GlobalSearch({ onNavigate }: Readonly<GlobalSearchProps>) {
   }, [isOpen]);
 
   // Função de busca
-  const search = useCallback(
+  const performSearch = useCallback(
     (searchQuery: string, searchCategory: SearchCategory) => {
       if (!searchQuery.trim()) {
         setResults([]);
@@ -213,11 +213,11 @@ export function GlobalSearch({ onNavigate }: Readonly<GlobalSearchProps>) {
   // Efeito para busca com debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      search(query, category);
+      performSearch(query, category);
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [query, category, search]);
+  }, [query, category, performSearch]);
 
   // Navegação por teclado
   const handleKeyDown = (e: React.KeyboardEvent) => {
