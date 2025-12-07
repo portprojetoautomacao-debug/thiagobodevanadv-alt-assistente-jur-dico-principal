@@ -23,17 +23,17 @@ import {
 const CHART_HEIGHT = 250;
 
 interface ChartData {
-  readonly statusData: ReadonlyArray<{
+  statusData: {
     name: string;
     value: number;
     color: string;
-  }>;
-  readonly varaChartData: ReadonlyArray<{ name: string; value: number }>;
-  readonly trendData: ReadonlyArray<{
+  }[];
+  varaChartData: { name: string; value: number }[];
+  trendData: {
     month: string;
     ativos: number;
     concluidos: number;
-  }>;
+  }[];
 }
 
 interface DashboardChartsProps {
