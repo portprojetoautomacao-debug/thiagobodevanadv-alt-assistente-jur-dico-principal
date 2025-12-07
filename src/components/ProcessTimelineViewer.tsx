@@ -4,16 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Process, ProcessEvent } from "@/types";
-import { Clock, Download, ExternalLink, FileText, Filter, Workflow } from "lucide-react";
+import {
+  ArrowUpRight,
+  Clock,
+  DownloadSimple,
+  FilePdf,
+  FileText,
+  FlowArrow,
+  FunnelSimple,
+} from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 
 /**
  * Props principais do componente ProcessTimelineViewer
  */
 interface ProcessTimelineViewerProps {
-  process: Process;
-  events: ProcessEvent[];
-  initialEventId?: string;
+  readonly process: Process;
+  readonly events: ProcessEvent[];
+  readonly initialEventId?: string;
 }
 
 function formatDate(dateStr: string) {
@@ -148,7 +156,7 @@ export default function ProcessTimelineViewer({
             {process.status === "ativo" ? "Ativo" : process.status}
           </Badge>
           <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-1" />
+            <FunnelSimple className="h-4 w-4 mr-1" />
             Filtros
           </Button>
         </div>
@@ -246,7 +254,7 @@ export default function ProcessTimelineViewer({
                 value="document"
                 className="flex-1 flex flex-col overflow-hidden data-[state=inactive]:hidden"
               >
-                {selectedEvent && selectedEvent.documentoUrl ? (
+                {selectedEvent?.documentoUrl ? (
                   <div className="flex-1 flex flex-col">
                     <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
                       <div className="flex flex-col gap-0.5">
@@ -259,7 +267,11 @@ export default function ProcessTimelineViewer({
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <a href={selectedEvent.documentoUrl} target="_blank" rel="noreferrer">
+<<<<<<< HEAD
                             <ExternalLink className="h-4 w-4 mr-1" />
+=======
+                            <ArrowUpRight className="h-4 w-4 mr-1" />
+>>>>>>> origin/main
                             Abrir em nova aba
                           </a>
                         </Button>
