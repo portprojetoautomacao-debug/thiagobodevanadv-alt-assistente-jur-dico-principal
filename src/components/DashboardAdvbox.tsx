@@ -5,9 +5,9 @@ import { useKV } from "@/hooks/use-kv";
 import type { Prazo, Process, ViewType } from "@/types";
 import {
   ArrowUp,
-  ChevronLeft as CaretLeft,
-  ChevronRight as CaretRight,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   FileText,
   Trophy,

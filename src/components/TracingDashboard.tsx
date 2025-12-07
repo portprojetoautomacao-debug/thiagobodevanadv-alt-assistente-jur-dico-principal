@@ -1,7 +1,7 @@
 import {
   Bot,
   Brain,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   LineChart,
   RefreshCw,

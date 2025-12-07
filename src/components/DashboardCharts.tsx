@@ -45,7 +45,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
     if (!chartData?.statusData || chartData.statusData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <PieChartIcon size={48} className="text-muted-foreground mb-2" />
+          <ChartPie size={48} className="text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">Sem dados para exibir</p>
         </div>
       );
@@ -56,7 +56,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <PieChart>
             <Pie
-              data={chartData.statusData}
+              data={[...chartData.statusData]}
               cx="50%"
               cy="50%"
               outerRadius={80}
@@ -77,7 +77,7 @@ export function StatusChart({ chartData }: Readonly<DashboardChartsProps>) {
     console.error("Error rendering StatusChart:", error);
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <PieChart size={48} className="text-muted-foreground mb-2" />
+        <ChartPie size={48} className="text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">Erro ao carregar gráfico</p>
       </div>
     );
@@ -98,8 +98,8 @@ export function VaraChart({ chartData }: Readonly<DashboardChartsProps>) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData.varaChartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+          <BarChart data={[...chartData.varaChartData]}>
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
               className="text-muted-foreground"
@@ -151,7 +151,7 @@ export function TrendChart({ chartData }: Readonly<DashboardChartsProps>) {
     return (
       <div style={{ width: "100%", minHeight: CHART_HEIGHT }}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <LineChart data={chartData.trendData}>
+          <LineChart data={[...chartData.trendData]}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
             <XAxis
               dataKey="month"

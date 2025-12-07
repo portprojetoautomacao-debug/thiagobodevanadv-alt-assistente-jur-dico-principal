@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKV } from "@/hooks/use-kv";
-import { Download, Eye, FileText, Trash, Upload } from "lucide-react";
+import { Download, Eye, FileText, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

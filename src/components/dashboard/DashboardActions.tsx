@@ -31,7 +31,7 @@ export function DashboardActions({ onNavigate }: Readonly<DashboardActionsProps>
           variant="outline"
           className="w-full justify-start border-neutral-6 hover:bg-neutral-4"
         >
-          <PieChart className="mr-2 h-4 w-4" />
+          <ChartPie className="mr-2 h-4 w-4" />
           Analytics
         </Button>
         <Button
