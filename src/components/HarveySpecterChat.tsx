@@ -209,8 +209,8 @@ const SimpleMarkdown = memo(({ content }: { content: string }) => {
         .replaceAll(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
         .replaceAll(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
         // Line breaks
-        .replaceAll(/\n\n/g, '</p><p class="mt-2">')
-        .replaceAll(/\n/g, "<br/>")
+        .replaceAll("\n\n", '</p><p class="mt-2">')
+        .replaceAll("\n", "<br/>")
     );
   }, [content]);
 

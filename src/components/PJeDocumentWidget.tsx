@@ -138,7 +138,7 @@ function PJeDocumentList() {
                     <p className="font-medium text-green-900">{doc.tipo.toUpperCase()}</p>
                     <p className="text-green-700">{doc.metadados?.numeroProcesso || "N/A"}</p>
                   </div>
-                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
                 </div>
               </div>
             ))}
