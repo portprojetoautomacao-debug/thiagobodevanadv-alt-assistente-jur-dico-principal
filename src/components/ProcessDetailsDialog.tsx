@@ -193,8 +193,8 @@ export default function ProcessDetailsDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={async () => {
-                  await refresh();
+                onClick={() => {
+                  refresh();
                   toast.success("Timeline atualizada!");
                 }}
                 title="Atualizar timeline manualmente"
