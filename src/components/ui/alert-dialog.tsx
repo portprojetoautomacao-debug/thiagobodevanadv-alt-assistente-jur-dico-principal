@@ -10,7 +10,9 @@ function AlertDialog({ ...props }: Readonly<ComponentProps<typeof AlertDialogPri
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
-function AlertDialogTrigger({ ...props }: ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
+function AlertDialogTrigger({
+  ...props
+}: Readonly<ComponentProps<typeof AlertDialogPrimitive.Trigger>>) {
   return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />;
 }
 

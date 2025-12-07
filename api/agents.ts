@@ -963,6 +963,12 @@ function canProcessTask(task: AgentTask, agent: Agent): boolean {
   return agent.enabled && task.status === TaskStatus.QUEUED;
 }
 
+// Função auxiliar para buscar minutas (usada em contextos específicos)
+const _fetchAllMinutas = async () => {
+  // Implementação reservada para uso futuro
+  return [];
+};
+
 /**
  * Processa ações encadeadas de uma tarefa
  */

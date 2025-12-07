@@ -9,19 +9,20 @@ import {
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Type alias for activity result
+// Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
 
 // Type alias for state setter functions
 type StateSetter<T> = (fn: (current: T | null) => T) => void;
 
-type ActivityLogEntry = {
+// Activity log entry interface
+interface ActivityLogEntry {
   id: string;
   agentId: string;
   timestamp: string;
   action: string;
   result: ActivityResult;
-};
+}
 
 // ===========================
 // Types for server data

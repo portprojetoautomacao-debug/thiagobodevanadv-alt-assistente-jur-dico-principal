@@ -66,8 +66,8 @@ function App() {
     // aplica na carga inicial
     applyHashView();
     // escuta alterações de hash
-    globalThis.window.addEventListener("hashchange", applyHashView);
-    return () => globalThis.window.removeEventListener("hashchange", applyHashView);
+    globalThis.addEventListener("hashchange", applyHashView);
+    return () => globalThis.removeEventListener("hashchange", applyHashView);
   }, []);
 
   // Handler legado de Google removido
