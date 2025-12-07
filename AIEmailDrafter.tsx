@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mail, Sparkles, Copy, Send } from "lucide-react";
+import { Mail, Sparkles, Copy, Send, Send as PaperPlaneTilt } from "lucide-react";
 import { toast } from "sonner";
 import { geminiGenerateJSON } from "@/lib/gemini-client";
 
@@ -233,7 +233,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
               onClick={handleDraft}
               disabled={isDrafting || !context.trim()}
               className="w-full button-gradient">
-              <Sparkle size={20} className={isDrafting ? "animate-spin" : ""} />
+              <Sparkles size={20} className={isDrafting ? "animate-spin" : ""} />
               {isDrafting ? "Gerando..." : "Gerar Rascunho"}
             </Button>
           </CardContent>
@@ -317,7 +317,7 @@ Responda EXCLUSIVAMENTE com um JSON VÁLIDO (sem comentários, sem texto antes o
                         Abrir no Email
                       </Button>
                       <Button className="flex-1 button-gradient">
-                        <Sparkle size={20} />
+                        <Sparkles size={20} />
                         Refinar com IA
                       </Button>
                     </div>
