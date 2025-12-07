@@ -85,7 +85,8 @@ export function useTimelineSync(options: TimelineSyncOptions = {}) {
       ? expedientes.filter((exp) => {
           const expNumber = exp.numeroProcesso || exp.processId || "";
           return (
-            expNumber === processId || expNumber.replace(/\D/g, "") === processId.replace(/\D/g, "")
+            expNumber === processId ||
+            expNumber.replaceAll(/\D/g, "") === processId.replaceAll(/\D/g, "")
           );
         })
       : expedientes,

@@ -290,6 +290,9 @@ export interface ProcessEvent {
   orgao?: string;
   numeroDocumento?: string;
   source?: "djen" | "datajud" | "pje" | "manual" | "ia";
+  // Relacionamento com entidades existentes
+  expedienteId?: string;
+  minutaId?: string;
 }
 
 /**
@@ -297,30 +300,4 @@ export interface ProcessEvent {
  * Representa movimentações processuais no estilo PJe
  * Usado no componente ProcessTimelineViewer
  */
-export interface ProcessEvent {
-  id: string;
-  processId: string;
-  dataHora: string; // ISO string
-  titulo: string; // Ex: "EXPEDIÇÃO DE CERTIDÃO", "PETIÇÃO JUNTADA"
-  descricao?: string;
-  tipo?:
-    | "certidao"
-    | "mandado"
-    | "despacho"
-    | "sentenca"
-    | "peticao"
-    | "intimacao"
-    | "juntada"
-    | "conclusos"
-    | "outro";
-  // Documento vinculado (PDF/HTML)
-  documentoUrl?: string;
-  documentoTipo?: "pdf" | "html" | "texto";
-  // Metadados opcionais
-  tribunal?: string;
-  orgao?: string;
-  source?: "djen" | "datajud" | "pje" | "manual";
-  // Relacionamento com entidades existentes
-  expedienteId?: string;
-  minutaId?: string;
-}
+// (Duplicate ProcessEvent removed; consolidated above)

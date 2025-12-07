@@ -15,11 +15,11 @@ function makeReq(body: any, method = "POST", headers: any = {}) {
 }
 
 const mockRedis: any = {
-    set: vi.fn(async () => null),
-    get: vi.fn(async () => null),
-    sismember: vi.fn(async () => 1),
-    lpush: vi.fn(async () => null),
-  };
+  set: vi.fn(async () => null),
+  get: vi.fn(async () => null),
+  sismember: vi.fn(async () => 1),
+  lpush: vi.fn(async () => null),
+};
 
 describe("pje-sync API", () => {
   beforeEach(() => {
