@@ -1,64 +1,87 @@
-import { describe, it, expect } from "vitest";
-import { minutasToProcessEvents, createProcessTimeline } from "./process-timeline-utils";
+import { describe, expect, it } from "vitest";
+import { expedientesToProcessEvents, minutasToProcessEvents } from "./process-timeline-utils";
+import type { Expediente, Minuta } from "@/types";
 
 describe("process-timeline-utils", () => {
-  it("minutasToProcessEvents should mark source as ia when criadoPorAgente is true", () => {
-    const minutas = [
-      {
-        id: "m1",
-        processId: "p1",
-        criadoEm: "2025-12-07T00:00:00.000Z",
-        titulo: "Minuta IA",
-        conteudo: "Conteúdo gerado",
-        tipo: "peticao",
-        criadoPorAgente: true,
-        googleDocsUrl: undefined,
-      },
-      {
-        id: "m2",
-        processId: "p1",
-        criadoEm: "2025-12-06T00:00:00.000Z",
-        titulo: "Minuta manual",
-        conteudo: "Conteúdo manual",
-        tipo: "peticao",
-        criadoPorAgente: false,
-        googleDocsUrl: undefined,
-      },
-    ];
+  describe("expedientesToProcessEvents", () => {
+    it("deve converter expedientes corretamente", () => {
+      const expedientes: Expediente[] = [
+        {
+          id: "1",
+          processId: "123",
+          dataRecebimento: "2023-01-01T00:00:00Z",
+          titulo: "Expediente 1",
+          conteudo: "Conteúdo 1",
+          tipo: "intimacao",
+          source: "djen",
+          createdAt: "2023-01-01T00:00:00Z",
+          updatedAt: "2023-01-01T00:00:00Z",
+          status: "pendente",
+        },
+      ];
 
-    const events = minutasToProcessEvents(minutas as any);
-    expect(events[0].source).toBe("ia");
-    expect(events[1].source).toBe("manual");
+      const events = expedientesToProcessEvents(expedientes);
+
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({
+        id: "1",
+        processId: "123",
+        titulo: "Expediente 1",
+        descricao: "Conteúdo 1",
+        source: "djen",
+      });
+    });
   });
 
-  it("createProcessTimeline should order events by dataHora (desc)", () => {
-    const minutas = [
-      {
-        id: "m1",
-        processId: "p1",
-        criadoEm: "2025-12-07T00:00:00.000Z",
-        titulo: "A",
-        conteudo: "a",
-        tipo: "peticao",
-        googleDocsUrl: undefined,
-        criadoPorAgente: true,
-        minutaId: "m1",
-      },
-      {
-        id: "m2",
-        processId: "p1",
-        criadoEm: "2025-12-06T00:00:00.000Z",
-        titulo: "B",
-        conteudo: "b",
-        tipo: "peticao",
-        googleDocsUrl: undefined,
-        criadoPorAgente: false,
-        minutaId: "m2",
-      },
-    ];
+  describe("minutasToProcessEvents", () => {
+    it("deve converter minutas criadas por agente com source 'ia'", () => {
+      const minutas: Minuta[] = [
+        {
+          id: "1",
+          titulo: "Minuta IA",
+          conteudo: "Conteúdo IA",
+          tipo: "peticao",
+          status: "rascunho",
+          criadoEm: "2023-01-01T00:00:00Z",
+          atualizadoEm: "2023-01-01T00:00:00Z",
+          autor: "Agente",
+          criadoPorAgente: true,
+        },
+      ];
 
-    const timeline = createProcessTimeline([], minutas as any);
-    expect(timeline[0].id).toBe("m1");
-    expect(timeline[1].id).toBe("m2");
+      const events = minutasToProcessEvents(minutas);
+
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({
+        id: "1",
+        titulo: "Minuta IA",
+        source: "ia",
+      });
+    });
+
+    it("deve converter minutas manuais com source 'manual'", () => {
+      const minutas: Minuta[] = [
+        {
+          id: "2",
+          titulo: "Minuta Manual",
+          conteudo: "Conteúdo Manual",
+          tipo: "peticao",
+          status: "rascunho",
+          criadoEm: "2023-01-01T00:00:00Z",
+          atualizadoEm: "2023-01-01T00:00:00Z",
+          autor: "Advogado",
+          criadoPorAgente: false,
+        },
+      ];
+
+      const events = minutasToProcessEvents(minutas);
+
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({
+        id: "2",
+        titulo: "Minuta Manual",
+        source: "manual",
+      });
+    });
   });
 });

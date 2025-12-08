@@ -4,17 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Process, ProcessEvent } from "@/types";
-import {
-  ArrowUpRight,
-  Clock,
-  DownloadSimple,
-  FilePdf,
-  FileText,
-  FlowArrow,
-  FunnelSimple,
-} from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Clock, Download, ExternalLink, FileText, Filter, Workflow } from "lucide-react";
+import { useMemo, useState } from "react";
 
 /**
  * Props principais do componente ProcessTimelineViewer
@@ -162,7 +153,7 @@ export default function ProcessTimelineViewer({
       <CardHeader className="border-b flex flex-row items-start justify-between gap-4">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <FlowArrow className="h-5 w-5 text-primary" />
+            <Workflow className="h-5 w-5 text-primary" />
             Linha do Tempo Processual
           </CardTitle>
           <CardDescription className="space-x-2">
@@ -199,7 +190,7 @@ export default function ProcessTimelineViewer({
             {process.status === "ativo" ? "Ativo" : process.status}
           </Badge>
           <Button variant="outline" size="sm">
-            <FunnelSimple className="h-4 w-4 mr-1" />
+            <Filter className="h-4 w-4 mr-1" />
             Filtros
           </Button>
         </div>
@@ -230,48 +221,41 @@ export default function ProcessTimelineViewer({
                     </div>
 
                     <div className="space-y-2">
-                      <AnimatePresence initial={false}>
-                        {dayEvents.map((ev) => {
-                          const tipo = getTipoBadge(ev.tipo);
-                          const isActive = ev.id === selectedEventId;
-                          const isNew = isEventNew(ev);
-                          return (
-                            <motion.button
-                              key={ev.id}
-                              ref={isActive ? selectedEventRef : undefined}
-                              type="button"
-                              onClick={() => setSelectedEventId(ev.id)}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0, x: 20 }}
-                              transition={{ duration: 0.2 }}
-                              className={[
-                                "w-full text-left rounded-md border px-3 py-2 text-xs transition-all relative",
-                                isActive
-                                  ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                                  : "border-border bg-background hover:bg-muted/70",
-                              ].join(" ")}
-                            >
-                              {/* Badge "NOVO" com animação de pulse */}
-                              {isNew && (
-                                <motion.div
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  className="absolute -top-1.5 -right-1.5"
-                                >
-                                  <Badge className="bg-green-500 text-white border-green-600 text-[9px] px-1.5 py-0 animate-pulse">
-                                    NOVO
-                                  </Badge>
-                                </motion.div>
-                              )}
-
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-semibold uppercase tracking-tight">
-                                  {ev.titulo}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  <Clock className="inline-block h-3 w-3 mr-1" />
-                                  {formatTime(ev.dataHora)}
+                      {dayEvents.map((ev) => {
+                        const tipo = getTipoBadge(ev.tipo);
+                        const isActive = ev.id === selectedEventId;
+                        return (
+                          <button
+                            key={ev.id}
+                            type="button"
+                            onClick={() => setSelectedEventId(ev.id)}
+                            className={[
+                              "w-full text-left rounded-md border px-3 py-2 text-xs transition-colors",
+                              isActive
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                                : "border-border bg-background hover:bg-muted/70",
+                            ].join(" ")}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold uppercase tracking-tight">
+                                {ev.titulo}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                <Clock className="inline-block h-3 w-3 mr-1" />
+                                {formatTime(ev.dataHora)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge
+                                variant="outline"
+                                className={`border ${tipo.className} text-[10px]`}
+                              >
+                                {tipo.label}
+                              </Badge>
+                              {ev.documentoUrl && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-primary">
+                                  <FileText className="h-3 w-3" />
+                                  Ver documento
                                 </span>
                               </div>
                               <div className="flex items-center justify-between gap-2">
@@ -318,38 +302,29 @@ export default function ProcessTimelineViewer({
                 value="document"
                 className="flex-1 flex flex-col overflow-hidden data-[state=inactive]:hidden"
               >
-                <AnimatePresence mode="wait">
-                  {selectedEvent?.documentoUrl ? (
-                    <motion.div
-                      key={selectedEvent.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex-1 flex flex-col"
-                    >
-                      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium">{selectedEvent.titulo}</span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {formatDate(selectedEvent.dataHora)} •{" "}
-                            {formatTime(selectedEvent.dataHora)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={selectedEvent.documentoUrl} target="_blank" rel="noreferrer">
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
-                              Abrir em nova aba
-                            </a>
-                          </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={selectedEvent.documentoUrl} download>
-                              <DownloadSimple className="h-4 w-4 mr-1" />
-                              Baixar
-                            </a>
-                          </Button>
-                        </div>
+                {selectedEvent?.documentoUrl ? (
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-medium">{selectedEvent.titulo}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatDate(selectedEvent.dataHora)} •{" "}
+                          {formatTime(selectedEvent.dataHora)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={selectedEvent.documentoUrl} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            Abrir em nova aba
+                          </a>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={selectedEvent.documentoUrl} download>
+                            <Download className="h-4 w-4 mr-1" />
+                            Baixar
+                          </a>
+                        </Button>
                       </div>
 
                       <div className="flex-1 bg-muted/30">
@@ -444,7 +419,7 @@ export default function ProcessTimelineViewer({
                                 rel="noreferrer"
                                 className="inline-flex items-center text-primary hover:underline"
                               >
-                                <FilePdf className="h-3 w-3 mr-1" />
+                                <FileText className="h-3 w-3 mr-1" />
                                 Abrir
                               </a>
                             </p>
