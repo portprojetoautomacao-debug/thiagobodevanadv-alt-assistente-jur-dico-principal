@@ -6,3 +6,6 @@ export { ProfessionalEditor } from "./ProfessionalEditor";
 
 // Alias para compatibilidade (aponta para TiptapEditorV2)
 export { TiptapEditorV2 as TiptapEditor } from "./TiptapEditorV2";
+
+// Editor profissional com aparência A4 e colaboração IA
+export { ProfessionalEditor } from "./ProfessionalEditor";

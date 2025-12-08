@@ -72,6 +72,11 @@
       "maxDuration": 60,
       "memory": 1024,
       "includeFiles": "api/lib/**"
+    },
+    "api/agents/autogen_orchestrator.ts": {
+      "maxDuration": 45,
+      "memory": 1024,
+      "includeFiles": "api/lib/**"
     }
   },
   "regions": ["gru1"],

@@ -22,9 +22,14 @@ function mockRes() {
   return res;
 }
 
-function makeReq(task: any, agent: any, method = "POST") {
+function makeReq(task: any, agent: any, method = "POST", headers: Record<string, string> = {}) {
+  const baseHeaders: Record<string, string> = {};
+  if (process.env.AUTOGEN_API_KEY) {
+    baseHeaders["authorization"] = `Bearer ${process.env.AUTOGEN_API_KEY}`;
+  }
   return {
     method,
+    headers: { ...baseHeaders, ...headers },
     body: { task, agent },
   } as any;
 }
@@ -64,6 +69,7 @@ describe("process-task API", () => {
       })
     );
     process.env.GEMINI_API_KEY = "test";
+    process.env.AUTOGEN_API_KEY = "test-autogen";
   });
 
   afterEach(() => {

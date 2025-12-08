@@ -8,8 +8,18 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireApiKey } from "../lib/auth.js";
 import { analyzeWithGemini } from "../lib/gemini-analyzer.js";
+import { rateLimitMiddleware } from "../lib/rate-limit.js";
+import { retryWithBackoff } from "../lib/retry.js";
+import { escapeHtml } from "../lib/sanitize.js";
 import { AnalysisResult, applyDeadlineDates, parseAIResponse } from "../lib/task-helpers.js";
+import { withTimeout } from "../lib/timeout.js";
+import {
+  AgentInputSchema,
+  AgentTaskInputSchema,
+  handleValidationError,
+} from "../lib/validation.js";
 
 interface AgentTask {
   id: string;
@@ -138,10 +148,23 @@ export async function dispatchTask(task: AgentTask, _agent: Agent): Promise<Anal
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS - only allow origins configured in ALLOWED_ORIGINS
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
+  if (origin && allowedOrigins.length > 0) {
+    if (!allowedOrigins.includes(origin)) {
+      return res.status(403).json({ error: "Origin not allowed" });
+    }
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (allowedOrigins.length === 0) {
+    // Fallback to wildcard only if ALLOWED_ORIGINS not configured (for local dev)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -151,27 +174,76 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { task, agent } = req.body as { task: AgentTask; agent: Agent };
+  // Auth - require AUTOGEN_API_KEY for agent processing
+  if (!requireApiKey(req, res, "AUTOGEN_API_KEY")) return;
 
-  if (!task || !agent) {
+  // Rate limiting by client IP
+  const clientIP =
+    ((req.headers && (req.headers["x-forwarded-for"] as string | undefined)) as
+      | string
+      | undefined) ||
+    ((req.headers && (req.headers["x-real-ip"] as string | undefined)) as string | undefined) ||
+    "unknown";
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+  }
+
+  const { task, agent } = req.body as { task: unknown; agent: unknown };
+
+  // Validate with Zod
+  const parsedTask = AgentTaskInputSchema.safeParse(task);
+  if (!parsedTask.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid task payload", details: handleValidationError(parsedTask.error) });
+  }
+  const parsedAgent = AgentInputSchema.safeParse(agent);
+  if (!parsedAgent.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid agent payload", details: handleValidationError(parsedAgent.error) });
+  }
+
+  if (!parsedTask || !parsedAgent) {
     return res.status(400).json({
       error: "Missing required fields: task, agent",
     });
   }
 
-  console.log(`[Process Task] Processing task ${task.id} for agent ${agent.name} (${agent.id})`);
+  const safeTask = parsedTask.data;
+  const safeAgent = parsedAgent.data;
+
+  // Sanitize text fields to avoid injection
+  if (safeTask.data && typeof safeTask.data.text === "string") {
+    safeTask.data.text = escapeHtml(safeTask.data.text) as unknown as string;
+  }
+
+  console.log(
+    `[Process Task] Processing task ${safeTask.id} for agent ${safeAgent.name} (${safeAgent.id})`
+  );
 
   try {
-    const result: AnalysisResult = await dispatchTask(task, agent);
+    // Always use timeout + retry for calls to LLM
+    const exec = async () => dispatchTask(safeTask as any, safeAgent as any);
+    const result: AnalysisResult = await retryWithBackoff(() => withTimeout(45000, exec()), 3, 500);
 
     console.log(
-      `[Process Task] Task ${task.id} completed: ${result.success ? "success" : "failed"}`
+      `[Process Task] Task ${safeTask.id} completed: ${result.success ? "success" : "failed"}`
     );
 
     return res.status(200).json({
       success: true,
-      taskId: task.id,
-      agentId: agent.id,
+      taskId: safeTask.id,
+      agentId: safeAgent.id,
       result,
       processedAt: new Date().toISOString(),
     });
@@ -181,8 +253,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Internal server error",
-      taskId: task.id,
-      agentId: agent.id,
+      taskId: safeTask.id,
+      agentId: safeAgent.id,
     });
   }
 }

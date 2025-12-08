@@ -1,0 +1,31 @@
+# Railway Deployment Configuration
+# For DSPy Bridge service
+
+# This file configures Railway deployment for the DSPy Bridge
+# Documentation: https://docs.railway.app/reference/config-as-code
+
+[build]
+builder = "NIXPACKS"
+
+[build.env]
+PYTHON_VERSION = "3.11"
+
+[deploy]
+startCommand = "python3 scripts/dspy_bridge.py"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[deploy.env]
+# Required environment variables (set in Railway dashboard):
+# - DSPY_API_TOKEN (secret)
+# - DSPY_PORT (8765)
+# - ALLOWED_ORIGINS (comma-separated URLs)
+
+# Optional
+DSPY_LM_MODEL = "openai/gpt-3.5-turbo"
+
+[network]
+# Railway will auto-assign a port
+# DSPy bridge will use DSPY_PORT from env
