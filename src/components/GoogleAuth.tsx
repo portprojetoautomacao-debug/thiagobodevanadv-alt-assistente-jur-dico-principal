@@ -1,39 +1,30 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { config } from "@/lib/config";
-import { ArrowSquareOut, Warning } from "@phosphor-icons/react";
+import { AlertTriangle, ExternalLink } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 // Domínio fixo de produção para OAuth (autorizado no Google Cloud Console)
 const PRODUCTION_DOMAIN = "https://assistente-juridico-p.vercel.app";
 
-// URLs de produção autorizadas no Google Cloud Console
-const PRODUCTION_URLS = [
+// URLs de produção autorizadas no Google Cloud Console (Set para performance)
+const PRODUCTION_URLS = new Set([
   "assistente-juridico-p.vercel.app",
   "assistente-juridico-github.vercel.app",
-];
+]);
 
 // Detecta se está em ambiente de desenvolvimento/preview (URL dinâmica)
 const isDevelopmentEnvironment = (): boolean => {
-  const hostname = window.location.hostname;
+  const hostname = globalThis.window.location.hostname;
 
   // Produção autorizada - permite login
-  if (PRODUCTION_URLS.includes(hostname)) {
+  if (PRODUCTION_URLS.has(hostname)) {
     return false;
   }
 
   // GitHub Codespaces / DevContainers
-  if (
-    hostname.includes(".app.github.dev") ||
-    hostname.includes(".github.dev")
-  ) {
+  if (hostname.includes(".app.github.dev") || hostname.includes(".github.dev")) {
     return true;
   }
 
@@ -43,10 +34,7 @@ const isDevelopmentEnvironment = (): boolean => {
   }
 
   // StackBlitz
-  if (
-    hostname.includes(".stackblitz.io") ||
-    hostname.includes(".webcontainer.io")
-  ) {
+  if (hostname.includes(".stackblitz.io") || hostname.includes(".webcontainer.io")) {
     return true;
   }
 
@@ -74,14 +62,11 @@ export interface GoogleUser {
 }
 
 interface GoogleAuthButtonProps {
-  onSuccess?: (user: GoogleUser) => void;
-  onError?: (error: Error) => void;
+  readonly onSuccess?: (user: GoogleUser) => void;
+  readonly onError?: (error: Error) => void;
 }
 
-export function GoogleAuthButton({
-  onSuccess,
-  onError,
-}: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButtonProps>) {
   const [error, setError] = useState<string>("");
   const [isConfigured, setIsConfigured] = useState(false);
 
@@ -90,11 +75,7 @@ export function GoogleAuthButton({
   const handleCredentialResponse = useCallback(
     async (response: unknown) => {
       try {
-        if (
-          !response ||
-          typeof response !== "object" ||
-          !("credential" in response)
-        ) {
+        if (!response || typeof response !== "object" || !("credential" in response)) {
           throw new Error("Invalid credential response from Google");
         }
 
@@ -116,10 +97,7 @@ export function GoogleAuthButton({
 
         onSuccess?.(user);
       } catch (err) {
-        const error =
-          err instanceof Error
-            ? err
-            : new Error("Falha ao processar login do Google");
+        const error = err instanceof Error ? err : new Error("Falha ao processar login do Google");
         setError(error.message);
         onError?.(error);
       }
@@ -149,7 +127,7 @@ export function GoogleAuthButton({
   };
 
   const initializeGoogleSignIn = useCallback(() => {
-    const google = (window as unknown as { google?: GoogleAccount })?.google;
+    const google = (globalThis.window as unknown as { google?: GoogleAccount })?.google;
     if (!google) return;
 
     google.accounts.id.initialize({
@@ -177,9 +155,7 @@ export function GoogleAuthButton({
     setIsConfigured(configured);
 
     if (!configured) {
-      setError(
-        "Google OAuth não está configurado. Veja OAUTH_SETUP.md para instruções."
-      );
+      setError("Google OAuth não está configurado. Veja OAUTH_SETUP.md para instruções.");
       return;
     }
 
@@ -198,32 +174,32 @@ export function GoogleAuthButton({
 
   // Verificação de ambiente de desenvolvimento - deve vir antes das outras verificações
   if (isDevelopmentEnvironment()) {
-    const isCodespace = window.location.hostname.includes(".app.github.dev");
+    const isCodespace = globalThis.window.location.hostname.includes(".app.github.dev");
     const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
+      globalThis.window.location.hostname === "localhost" ||
+      globalThis.window.location.hostname === "127.0.0.1";
+
+    const getEnvironmentTitle = () => {
+      if (isCodespace) return "GitHub Codespace Detectado";
+      if (isLocalhost) return "Ambiente Local Detectado";
+      return "Ambiente de Desenvolvimento Detectado";
+    };
+
+    const getEnvironmentName = () => {
+      if (isCodespace) return "Codespaces";
+      if (isLocalhost) return "localhost";
+      return "ambientes de desenvolvimento";
+    };
 
     return (
       <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-        <Warning className="h-4 w-4 text-amber-600" />
+        <AlertTriangle className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800 dark:text-amber-200">
-          <strong>
-            {isCodespace
-              ? "GitHub Codespace Detectado"
-              : isLocalhost
-              ? "Ambiente Local Detectado"
-              : "Ambiente de Desenvolvimento Detectado"}
-          </strong>
+          <strong>{getEnvironmentTitle()}</strong>
           <p className="mt-2 text-sm">
-            O login com Google não funciona em{" "}
-            {isCodespace
-              ? "Codespaces"
-              : isLocalhost
-              ? "localhost"
-              : "ambientes de desenvolvimento"}{" "}
-            porque a origem{" "}
+            O login com Google não funciona em {getEnvironmentName()} porque a origem{" "}
             <code className="text-xs bg-amber-100 dark:bg-amber-900 px-1 rounded">
-              {window.location.origin}
+              {globalThis.location.origin}
             </code>{" "}
             não está autorizada no Google Cloud Console.
           </p>
@@ -234,9 +210,9 @@ export function GoogleAuthButton({
             variant="outline"
             size="sm"
             className="mt-3 gap-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900"
-            onClick={() => window.open(PRODUCTION_DOMAIN, "_blank")}
+            onClick={() => globalThis.open(PRODUCTION_DOMAIN, "_blank")}
           >
-            <ArrowSquareOut className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
             Abrir em Produção
           </Button>
         </AlertDescription>
@@ -247,7 +223,7 @@ export function GoogleAuthButton({
   if (!isConfigured) {
     return (
       <Alert variant="destructive">
-        <Warning className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           <strong>Configuração OAuth Necessária</strong>
           <p className="mt-2 text-sm">
@@ -272,7 +248,7 @@ export function GoogleAuthButton({
   if (error) {
     return (
       <Alert variant="destructive">
-        <Warning className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -310,11 +286,7 @@ export function GoogleAuthExample() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <img
-              src={user.picture}
-              alt={user.name}
-              className="w-16 h-16 rounded-full"
-            />
+            <img src={user.picture} alt={user.name} className="w-16 h-16 rounded-full" />
             <div>
               <p className="font-medium">{user.name}</p>
               <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -332,9 +304,7 @@ export function GoogleAuthExample() {
     <Card>
       <CardHeader>
         <CardTitle>Login com Google</CardTitle>
-        <CardDescription>
-          Use sua conta Google para fazer login com segurança
-        </CardDescription>
+        <CardDescription>Use sua conta Google para fazer login com segurança</CardDescription>
       </CardHeader>
       <CardContent>
         <GoogleAuthButton onSuccess={handleSuccess} onError={handleError} />

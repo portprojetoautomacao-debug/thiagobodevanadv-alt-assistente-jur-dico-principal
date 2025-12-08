@@ -2,27 +2,27 @@ name: Agents Integration Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'api/agents.ts'
-      - 'api/cron.ts'
-      - 'src/hooks/use-autonomous-agents.ts'
-      - 'tests/integration/**'
-      - 'lib/api/**'
-      - 'src/lib/agents/todoist-agent.ts'
-      - 'src/lib/todoist-integration.ts'
-      - 'api/todoist-webhook.ts'
+      - "api/agents.ts"
+      - "api/cron.ts"
+      - "src/hooks/use-autonomous-agents.ts"
+      - "tests/integration/**"
+      - "lib/api/**"
+      - "src/lib/agents/todoist-agent.ts"
+      - "src/lib/todoist-integration.ts"
+      - "api/todoist-webhook.ts"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'api/agents.ts'
-      - 'api/cron.ts'
-      - 'src/hooks/use-autonomous-agents.ts'
-      - 'tests/integration/**'
-      - 'lib/api/**'
-      - 'src/lib/agents/todoist-agent.ts'
-      - 'src/lib/todoist-integration.ts'
-      - 'api/todoist-webhook.ts'
+      - "api/agents.ts"
+      - "api/cron.ts"
+      - "src/hooks/use-autonomous-agents.ts"
+      - "tests/integration/**"
+      - "lib/api/**"
+      - "src/lib/agents/todoist-agent.ts"
+      - "src/lib/todoist-integration.ts"
+      - "api/todoist-webhook.ts"
   workflow_dispatch:
 
 concurrency:
@@ -37,57 +37,79 @@ jobs:
       contents: read
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Run Agent Integration Tests
-      run: |
-        echo "Running integration tests for Agent Flow..."
+      - name: Install FastAPI & UVicorn (DSPy bridge deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi uvicorn
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
-        # Check if test file exists
-        if [ -f "tests/integration/djen-agent-flow.test.ts" ]; then
-          npx vitest run tests/integration/djen-agent-flow.test.ts --reporter=verbose
-        else
-          echo "⚠️ Test file not found, skipping integration tests"
-          echo "Expected: tests/integration/djen-agent-flow.test.ts"
-          exit 0
-        fi
-      env:
-        CI: true
+      - name: Start DSPy bridge (FastAPI) in background
+        env:
+          DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN }}
+        run: |
+          export DSPY_API_TOKEN=${DSPY_API_TOKEN:-test-token}
+          export DSPY_PORT=8765
+          python3 scripts/dspy_bridge.py &
+          sleep 1
 
-    - name: Run Todoist Agent Tests
-      run: |
-        echo "Running Todoist Agent tests..."
-        # Lista de arquivos de teste existentes
-        TEST_FILES=""
-        
-        # Verificar cada arquivo de teste antes de adicionar
-        if [ -f "src/lib/agents/todoist-agent.test.ts" ]; then
-          TEST_FILES="$TEST_FILES src/lib/agents/todoist-agent.test.ts"
-        fi
-        
-        if [ -f "src/lib/todoist-integration.test.ts" ]; then
-          TEST_FILES="$TEST_FILES src/lib/todoist-integration.test.ts"
-        fi
-        
-        if [ -f "api/todoist-webhook.test.ts" ]; then
-          TEST_FILES="$TEST_FILES api/todoist-webhook.test.ts"
-        fi
-        
-        if [ -n "$TEST_FILES" ]; then
-          echo "Running tests:$TEST_FILES"
-          npx vitest run $TEST_FILES --reporter=verbose
-        else
-          echo "⚠️ No Todoist test files found, skipping"
-        fi
-      env:
-        CI: true
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Agent Integration Tests
+        run: |
+          echo "Running integration tests for Agent Flow..."
+          # Run any integration tests in tests/integration
+          if ls tests/integration/*.test.ts 1> /dev/null 2>&1; then
+            npx vitest run tests/integration/*.test.ts --reporter=verbose
+          else
+            echo "⚠️ No integration tests found in tests/integration, skipping"
+            exit 0
+          fi
+        env:
+          CI: true
+
+      - name: Run Todoist Agent Tests
+        run: |
+          echo "Running Todoist Agent tests..."
+          # Lista de arquivos de teste existentes
+          TEST_FILES=""
+
+          # Verificar cada arquivo de teste antes de adicionar
+          if [ -f "src/lib/agents/todoist-agent.test.ts" ]; then
+            TEST_FILES="$TEST_FILES src/lib/agents/todoist-agent.test.ts"
+          fi
+
+          if [ -f "src/lib/todoist-integration.test.ts" ]; then
+            TEST_FILES="$TEST_FILES src/lib/todoist-integration.test.ts"
+          fi
+
+          if [ -f "api/todoist-webhook.test.ts" ]; then
+            TEST_FILES="$TEST_FILES api/todoist-webhook.test.ts"
+          fi
+
+          if [ -n "$TEST_FILES" ]; then
+            echo "Running tests:$TEST_FILES"
+            npx vitest run $TEST_FILES --reporter=verbose
+          else
+            echo "⚠️ No Todoist test files found, skipping"
+          fi
+        env:
+          CI: true

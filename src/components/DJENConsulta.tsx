@@ -14,17 +14,16 @@ import {
   validarNumeroOAB,
   type DJENConfig,
   type DJENFilteredResult,
-} from "@/lib/djen-api";
+} from "@/lib/djen-api"; // X - disponível para botões de fechar
 import {
+  AlertTriangle,
   CheckCircle,
-  // X - disponível para botões de fechar
   Copy,
   Download,
-  MagnifyingGlass,
+  Loader2,
   Newspaper,
-  Spinner,
-  Warning,
-} from "@phosphor-icons/react";
+  Search,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -40,28 +39,18 @@ interface DJENSearchHistory {
 export default function DJENConsulta() {
   const [nomeAdvogado, setNomeAdvogado] = useState("");
   const [numeroOAB, setNumeroOAB] = useState("");
-  const [dataConsulta, setDataConsulta] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [tribunaisSelecionados, setTribunaisSelecionados] = useState<string[]>(
-    getTribunaisDisponiveis()
-  );
+  const [dataConsulta, setDataConsulta] = useState(new Date().toISOString().split("T")[0]);
+  const [tribunaisSelecionados, setTribunaisSelecionados] =
+    useState<string[]>(getTribunaisDisponiveis());
   const [isLoading, setIsLoading] = useState(false);
   const [resultados, setResultados] = useState<DJENFilteredResult[]>([]);
-  const [erros, setErros] = useState<Array<{ tribunal: string; erro: string }>>(
-    []
-  );
+  const [erros, setErros] = useState<Array<{ tribunal: string; erro: string }>>([]);
   const [totalConsultado, setTotalConsultado] = useState(0);
-  const [_searchHistory, setSearchHistory] = useKV<DJENSearchHistory[]>(
-    "djen-search-history",
-    []
-  );
+  const [_searchHistory, setSearchHistory] = useKV<DJENSearchHistory[]>("djen-search-history", []);
 
   const toggleTribunal = (tribunal: string) => {
     setTribunaisSelecionados((current) =>
-      current.includes(tribunal)
-        ? current.filter((t) => t !== tribunal)
-        : [...current, tribunal]
+      current.includes(tribunal) ? current.filter((t) => t !== tribunal) : [...current, tribunal]
     );
   };
 
@@ -133,27 +122,18 @@ export default function DJENConsulta() {
         totalResultados: resultado.resultados.length,
       };
 
-      setSearchHistory((current) => [
-        newHistoryEntry,
-        ...(current || []).slice(0, 49),
-      ]);
+      setSearchHistory((current) => [newHistoryEntry, ...(current || []).slice(0, 49)]);
 
       if (resultado.resultados.length === 0 && resultado.erros.length === 0) {
         toast.info("Nenhuma publicação encontrada para os termos informados");
       } else if (resultado.resultados.length > 0) {
-        toast.success(
-          `${resultado.resultados.length} publicação(ões) encontrada(s)`
-        );
+        toast.success(`${resultado.resultados.length} publicação(ões) encontrada(s)`);
       } else if (resultado.erros.length > 0) {
-        toast.warning(
-          "Consulta finalizada com alguns erros. Verifique os detalhes."
-        );
+        toast.warning("Consulta finalizada com alguns erros. Verifique os detalhes.");
       }
     } catch (error) {
       console.error("Erro ao consultar DJEN:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Erro ao consultar DJEN"
-      );
+      toast.error(error instanceof Error ? error.message : "Erro ao consultar DJEN");
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +174,7 @@ export default function DJENConsulta() {
   return (
     <div className="h-full p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Newspaper size={32} className="text-primary" weight="duotone" />
+        <Newspaper size={32} className="text-primary" />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Consulta DJEN</h1>
           <p className="text-sm text-muted-foreground">
@@ -229,9 +209,7 @@ export default function DJENConsulta() {
                   onChange={(e) => setNumeroOAB(e.target.value)}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Formato: OAB/UF 12345
-                </p>
+                <p className="text-xs text-muted-foreground">Formato: OAB/UF 12345</p>
               </div>
 
               <div className="space-y-2">
@@ -250,14 +228,8 @@ export default function DJENConsulta() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium">Tribunais</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTodosTribunais}
-                disabled={isLoading}
-              >
-                {tribunaisSelecionados.length ===
-                getTribunaisDisponiveis().length
+              <Button variant="ghost" size="sm" onClick={toggleTodosTribunais} disabled={isLoading}>
+                {tribunaisSelecionados.length === getTribunaisDisponiveis().length
                   ? "Desmarcar todos"
                   : "Selecionar todos"}
               </Button>
@@ -283,20 +255,15 @@ export default function DJENConsulta() {
             </div>
           </div>
 
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={handleConsultar}
-            disabled={isLoading}
-          >
+          <Button className="w-full" size="lg" onClick={handleConsultar} disabled={isLoading}>
             {isLoading ? (
               <>
-                <Spinner className="animate-spin mr-2" />
+                <Loader2 className="animate-spin mr-2" />
                 Consultando...
               </>
             ) : (
               <>
-                <MagnifyingGlass className="mr-2" />
+                <Search className="mr-2" />
                 Consultar DJEN
               </>
             )}
@@ -316,20 +283,14 @@ export default function DJENConsulta() {
 
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
-              <Spinner size={40} className="animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
-                Consultando tribunais selecionados...
-              </p>
+              <Loader2 size={40} className="animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Consultando tribunais selecionados...</p>
             </div>
           )}
 
           {!isLoading && resultados.length === 0 && erros.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-              <Newspaper
-                size={48}
-                className="text-muted-foreground"
-                weight="duotone"
-              />
+              <Newspaper size={48} className="text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 Nenhuma consulta realizada ainda.
                 <br />
@@ -343,24 +304,20 @@ export default function DJENConsulta() {
               {totalConsultado > 0 && (
                 <Alert>
                   <AlertDescription>
-                    {totalConsultado} publicação(ões) consultada(s) |{" "}
-                    {resultados.length} relevante(s) encontrada(s)
+                    {totalConsultado} publicação(ões) consultada(s) | {resultados.length}{" "}
+                    relevante(s) encontrada(s)
                   </AlertDescription>
                 </Alert>
               )}
 
               {erros.length > 0 && (
                 <Alert variant="destructive">
-                  <Warning className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    <div className="font-semibold mb-2">
-                      Erros ao consultar alguns tribunais:
-                    </div>
+                    <div className="font-semibold mb-2">Erros ao consultar alguns tribunais:</div>
                     <ul className="text-xs space-y-1">
                       {erros.map((erro) => (
-                        <li
-                          key={`${erro.tribunal}-${erro.erro.substring(0, 50)}`}
-                        >
+                        <li key={`${erro.tribunal}-${erro.erro.substring(0, 50)}`}>
                           <strong>{erro.tribunal}:</strong> {erro.erro}
                         </li>
                       ))}
@@ -374,16 +331,12 @@ export default function DJENConsulta() {
                   <div className="space-y-4">
                     {resultados.map((resultado) => (
                       <Card
-                        key={`${resultado.tribunal}-${
-                          resultado.numeroProcesso || resultado.data
-                        }`}
+                        key={`${resultado.tribunal}-${resultado.numeroProcesso || resultado.data}`}
                         className="p-4 space-y-3 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline">
-                              {resultado.tribunal}
-                            </Badge>
+                            <Badge variant="outline">{resultado.tribunal}</Badge>
                             <Badge variant="secondary">{resultado.tipo}</Badge>
                             {getMatchTypeBadge(resultado.matchType)}
                           </div>
@@ -407,15 +360,12 @@ export default function DJENConsulta() {
 
                         {resultado.orgao && (
                           <div className="text-sm text-muted-foreground">
-                            <span className="font-medium">Órgão:</span>{" "}
-                            {resultado.orgao}
+                            <span className="font-medium">Órgão:</span> {resultado.orgao}
                           </div>
                         )}
 
                         <div className="bg-muted p-3 rounded text-sm">
-                          <div className="font-medium mb-1">
-                            Teor da Publicação:
-                          </div>
+                          <div className="font-medium mb-1">Teor da Publicação:</div>
                           <div className="text-xs whitespace-pre-wrap max-h-32 overflow-y-auto">
                             {resultado.teor.substring(0, 500)}
                             {resultado.teor.length > 500 && "..."}
@@ -423,8 +373,7 @@ export default function DJENConsulta() {
                         </div>
 
                         <div className="text-xs text-muted-foreground">
-                          Publicado em:{" "}
-                          {new Date(resultado.data).toLocaleDateString("pt-BR")}
+                          Publicado em: {new Date(resultado.data).toLocaleDateString("pt-BR")}
                         </div>
                       </Card>
                     ))}
@@ -434,10 +383,7 @@ export default function DJENConsulta() {
 
               {resultados.length === 0 && erros.length === 0 && !isLoading && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <CheckCircle
-                    size={48}
-                    className="text-muted-foreground mb-3"
-                  />
+                  <CheckCircle size={48} className="text-muted-foreground mb-3" />
                   <p className="text-sm text-muted-foreground">
                     Nenhuma publicação encontrada para os termos informados.
                   </p>

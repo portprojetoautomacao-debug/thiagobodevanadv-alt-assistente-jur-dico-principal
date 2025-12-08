@@ -1,47 +1,47 @@
 /**
  * Hook centralizado para gestão de clientes
- * 
+ *
  * Uso:
  * - createClienteManual() para cadastro via formulário
  * - createOrUpdateFromDjenIntimacao() para importação de intimações DJEN
  * - createOrUpdateFromDocumento() para importação de documentos/PDFs
- * 
+ *
  * @example
  * const { clientes, createOrUpdateFromDjenIntimacao } = useClientesManager()
  * createOrUpdateFromDjenIntimacao({ nomeCliente: 'João Silva', cpfCnpj: '123.456.789-00' })
  */
 
-import { useKV } from '@/hooks/use-kv'
-import type { Cliente } from '@/types'
+import { useKV } from "@/hooks/use-kv";
+import type { Cliente } from "@/types";
 
 // ============================================
 // TIPOS PARA INTEGRAÇÃO
 // ============================================
 
 export interface DjenIntimacaoPayload {
-  nomeCliente: string
-  cpfCnpj?: string
-  email?: string
-  telefone?: string
-  numeroProcesso?: string
-  processo?: string // alias para numeroProcesso
-  cidade?: string
-  estado?: string
-  tipoPessoa?: 'fisica' | 'juridica'
-  observacoes?: string
+  nomeCliente: string;
+  cpfCnpj?: string;
+  email?: string;
+  telefone?: string;
+  numeroProcesso?: string;
+  processo?: string; // alias para numeroProcesso
+  cidade?: string;
+  estado?: string;
+  tipoPessoa?: "fisica" | "juridica";
+  observacoes?: string;
 }
 
 export interface DocumentoClientePayload {
-  nomeCliente: string
-  cpfCnpj: string
-  email?: string
-  telefone?: string
-  endereco?: string
-  cidade?: string
-  estado?: string
-  cep?: string
-  tipoPessoa?: 'fisica' | 'juridica'
-  observacoes?: string
+  nomeCliente: string;
+  cpfCnpj: string;
+  email?: string;
+  telefone?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  tipoPessoa?: "fisica" | "juridica";
+  observacoes?: string;
 }
 
 // ============================================
@@ -49,7 +49,7 @@ export interface DocumentoClientePayload {
 // ============================================
 
 export function useClientesManager() {
-  const [clientes, setClientes] = useKV<Cliente[]>('clientes', [])
+  const [clientes, setClientes] = useKV<Cliente[]>("clientes", []);
 
   /**
    * Função interna de upsert (create or update)
@@ -57,17 +57,17 @@ export function useClientesManager() {
    */
   const upsertCliente = (data: Partial<Cliente> & { nome: string }): Cliente | null => {
     if (!data.nome?.trim()) {
-      console.warn('[useClientesManager] Nome do cliente é obrigatório')
-      return null
+      console.warn("[useClientesManager] Nome do cliente é obrigatório");
+      return null;
     }
 
     const existingByDoc = data.cpfCnpj
-      ? (clientes || []).find(c => c.cpfCnpj === data.cpfCnpj)
-      : null
+      ? (clientes || []).find((c) => c.cpfCnpj === data.cpfCnpj)
+      : null;
     const existingByEmail = data.email
-      ? (clientes || []).find(c => c.email === data.email)
-      : null
-    const existing = existingByDoc || existingByEmail
+      ? (clientes || []).find((c) => c.email === data.email)
+      : null;
+    const existing = existingByDoc || existingByEmail;
 
     if (existing) {
       // UPDATE - atualiza dados existentes
@@ -82,51 +82,49 @@ export function useClientesManager() {
         cep: data.cep || existing.cep,
         tipo: data.tipo || existing.tipo,
         observacoes: data.observacoes
-          ? `${existing.observacoes || ''}\n${data.observacoes}`.trim()
+          ? `${existing.observacoes || ""}\n${data.observacoes}`.trim()
           : existing.observacoes,
-        updatedAt: new Date().toISOString()
-      }
-      setClientes((current = []) =>
-        current.map(c => c.id === existing.id ? updated : c)
-      )
-      return updated
+        updatedAt: new Date().toISOString(),
+      };
+      setClientes((current = []) => current.map((c) => (c.id === existing.id ? updated : c)));
+      return updated;
     } else {
       // CREATE - novo cliente
       const novo: Cliente = {
         id: `cliente-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         nome: data.nome,
-        cpfCnpj: data.cpfCnpj || '',
-        email: data.email || '',
-        telefone: data.telefone || '',
-        endereco: data.endereco || '',
-        cidade: data.cidade || '',
-        estado: data.estado || '',
-        cep: data.cep || '',
-        tipo: data.tipo || 'fisica',
-        status: 'ativo',
-        observacoes: data.observacoes || '',
+        cpfCnpj: data.cpfCnpj || "",
+        email: data.email || "",
+        telefone: data.telefone || "",
+        endereco: data.endereco || "",
+        cidade: data.cidade || "",
+        estado: data.estado || "",
+        cep: data.cep || "",
+        tipo: data.tipo || "fisica",
+        status: "ativo",
+        observacoes: data.observacoes || "",
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      setClientes((current = []) => [...current, novo])
-      return novo
+        updatedAt: new Date().toISOString(),
+      };
+      setClientes((current = []) => [...current, novo]);
+      return novo;
     }
-  }
+  };
 
   /**
    * Cadastro manual via formulário
    */
   const createClienteManual = (formData: {
-    nome: string
-    cpfCnpj: string
-    email: string
-    telefone: string
-    endereco: string
-    cidade: string
-    estado: string
-    cep: string
-    tipo: 'fisica' | 'juridica'
-    observacoes: string
+    nome: string;
+    cpfCnpj: string;
+    email: string;
+    telefone: string;
+    endereco: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+    tipo: "fisica" | "juridica";
+    observacoes: string;
   }) => {
     const cliente = upsertCliente({
       nome: formData.nome,
@@ -138,10 +136,10 @@ export function useClientesManager() {
       estado: formData.estado,
       cep: formData.cep,
       tipo: formData.tipo,
-      observacoes: formData.observacoes
-    })
-    return cliente
-  }
+      observacoes: formData.observacoes,
+    });
+    return cliente;
+  };
 
   /**
    * Importação a partir de intimação DJEN
@@ -149,34 +147,36 @@ export function useClientesManager() {
    */
   const createOrUpdateFromDjenIntimacao = (payload: DjenIntimacaoPayload) => {
     if (!payload.nomeCliente?.trim()) {
-      console.warn('[useClientesManager] Intimação sem nome de cliente válido')
-      return null
+      console.warn("[useClientesManager] Intimação sem nome de cliente válido");
+      return null;
     }
 
     // processo é alias para numeroProcesso
-    const numProcesso = payload.numeroProcesso || payload.processo
+    const numProcesso = payload.numeroProcesso || payload.processo;
 
-    const obs = payload.observacoes || (numProcesso
-      ? `Importado de intimação DJEN - Processo: ${numProcesso}`
-      : 'Importado de intimação DJEN')
+    const obs =
+      payload.observacoes ||
+      (numProcesso
+        ? `Importado de intimação DJEN - Processo: ${numProcesso}`
+        : "Importado de intimação DJEN");
 
     const cliente = upsertCliente({
       nome: payload.nomeCliente,
-      cpfCnpj: payload.cpfCnpj || '',
-      email: payload.email || '',
-      telefone: payload.telefone || '',
-      cidade: payload.cidade || '',
-      estado: payload.estado || '',
-      tipo: payload.tipoPessoa || 'fisica',
-      observacoes: obs
-    })
+      cpfCnpj: payload.cpfCnpj || "",
+      email: payload.email || "",
+      telefone: payload.telefone || "",
+      cidade: payload.cidade || "",
+      estado: payload.estado || "",
+      tipo: payload.tipoPessoa || "fisica",
+      observacoes: obs,
+    });
 
     if (cliente) {
-      console.log('[useClientesManager] Cliente importado de intimação DJEN:', cliente.nome)
+      console.log("[useClientesManager] Cliente importado de intimação DJEN:", cliente.nome);
     }
 
-    return cliente
-  }
+    return cliente;
+  };
 
   /**
    * Importação a partir de documento/PDF analisado
@@ -184,29 +184,29 @@ export function useClientesManager() {
    */
   const createOrUpdateFromDocumento = (payload: DocumentoClientePayload) => {
     if (!payload.nomeCliente?.trim() || !payload.cpfCnpj?.trim()) {
-      console.warn('[useClientesManager] Documento sem nome ou CPF/CNPJ válido')
-      return null
+      console.warn("[useClientesManager] Documento sem nome ou CPF/CNPJ válido");
+      return null;
     }
 
     const cliente = upsertCliente({
       nome: payload.nomeCliente,
       cpfCnpj: payload.cpfCnpj,
-      email: payload.email || '',
-      telefone: payload.telefone || '',
-      endereco: payload.endereco || '',
-      cidade: payload.cidade || '',
-      estado: payload.estado || '',
-      cep: payload.cep || '',
-      tipo: payload.tipoPessoa || 'fisica',
-      observacoes: payload.observacoes || 'Importado de documento'
-    })
+      email: payload.email || "",
+      telefone: payload.telefone || "",
+      endereco: payload.endereco || "",
+      cidade: payload.cidade || "",
+      estado: payload.estado || "",
+      cep: payload.cep || "",
+      tipo: payload.tipoPessoa || "fisica",
+      observacoes: payload.observacoes || "Importado de documento",
+    });
 
     if (cliente) {
-      console.log('[useClientesManager] Cliente importado de documento:', cliente.nome)
+      console.log("[useClientesManager] Cliente importado de documento:", cliente.nome);
     }
 
-    return cliente
-  }
+    return cliente;
+  };
 
   return {
     clientes,
@@ -214,8 +214,8 @@ export function useClientesManager() {
     createClienteManual,
     createOrUpdateFromDjenIntimacao,
     createOrUpdateFromDocumento,
-    upsertCliente
-  }
+    upsertCliente,
+  };
 }
 
-export default useClientesManager
+export default useClientesManager;

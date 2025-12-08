@@ -14,14 +14,22 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [["html", { open: "never" }], ["list"]],
   // Inicia servidor de desenvolvimento automaticamente
-  webServer: USE_PROD ? undefined : {
-    command: `npm run dev -- --port ${PORT} --host 127.0.0.1`,
-    url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: !IS_CI,
-    timeout: 120_000,
-    stdout: "pipe",
-    stderr: "pipe",
-  },
+  webServer: USE_PROD
+    ? undefined
+    : {
+        command: `node ./scripts/start-dev-with-api.cjs -- --port ${PORT} --host 127.0.0.1`,
+        url: `http://127.0.0.1:${PORT}`,
+        reuseExistingServer: !IS_CI,
+        timeout: 120_000,
+        stdout: "pipe",
+        stderr: "pipe",
+        // Configurar proxy do Vite para apontar as /api para a API local de testes
+        env: {
+          ...(process.env || {}),
+          DISABLE_API_PROXY: "false",
+          VITE_API_TARGET: `http://127.0.0.1:${process.env.DEV_API_PORT || 5252}`,
+        },
+      },
   use: {
     // Preferir ambiente local por padrão para maior estabilidade dos seletores.
     // Permite sobrescrever via BASE_URL ou setando USE_PROD_BASE_URL=true
@@ -29,6 +37,8 @@ export default defineConfig({
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
+    // Sempre usar headless: true em dev containers sem servidor X11 (Linux, CI, Codespaces, etc).
+    // Para debug local com interface gráfica, execute: npx playwright test --headed
     headless: true,
     storageState: fs.existsSync("tests/e2e/storageState.json")
       ? "tests/e2e/storageState.json"
@@ -37,9 +47,11 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices[ "Desktop Chrome" ] },
+      // Use Chromium bundled by Playwright to avoid relying on system Google Chrome
+      // Força headless explicitamente para evitar erro de XServer em containers
+      use: { ...devices["Desktop Chromium"], channel: "chromium", headless: true },
     },
-    { name: "firefox", use: { ...devices[ "Desktop Firefox" ] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"], headless: true } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

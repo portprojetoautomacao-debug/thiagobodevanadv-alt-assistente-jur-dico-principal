@@ -5,6 +5,12 @@
  */
 
 import type { Agent, AgentTask, AgentTaskResult } from "./agents";
+import {
+  finishAgentInvokeSpan,
+  finishAIChatSpan,
+  startAgentInvokeSpan,
+  startAIChatSpan,
+} from "./sentry-ai-monitoring";
 
 interface ProcessTaskAPIResponse {
   result: AgentTaskResult;
@@ -143,6 +149,22 @@ export async function processTaskWithStreamingAI(
   agent: Agent,
   callbacks?: StreamingCallbacks
 ): Promise<AgentTaskResult> {
+  // 🔍 Sentry AI Monitoring - Instrumentação
+  const agentSpan = startAgentInvokeSpan(agent, {
+    model: "gemini-2.5-pro",
+    provider: "google.gemini",
+    temperature: 0.7,
+    maxTokens: 4096,
+  });
+
+  const chatSpan = startAIChatSpan({
+    model: "gemini-2.5-pro",
+    provider: "google.gemini",
+    operationName: "chat",
+    temperature: 0.7,
+    maxTokens: 4096,
+  });
+
   try {
     const systemPrompt = buildAgentSystemPrompt(agent);
     const userPrompt = buildTaskPrompt(task);
@@ -169,13 +191,35 @@ export async function processTaskWithStreamingAI(
     if (!reader) throw new Error("No reader available");
 
     const fullContent = await readStreamContent(reader, callbacks);
+
+    // 🔍 Finalizar spans com resultado
+    finishAIChatSpan(chatSpan, {
+      text: fullContent,
+      // Token usage não disponível no streaming, mas pode ser estimado
+    });
+
+    finishAgentInvokeSpan(agentSpan, {
+      output: fullContent,
+    });
+
+    chatSpan?.setStatus({ code: 1 });
+    agentSpan?.setStatus({ code: 1 });
+
     return createStreamingSuccessResult(fullContent);
   } catch (error) {
     console.error("[Streaming Agent] Error:", error);
-    callbacks?.onError?.(
-      error instanceof Error ? error : new Error(String(error))
-    );
+
+    // 🔍 Marcar spans como erro
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    chatSpan?.setStatus({ code: 2, message: errorMessage });
+    agentSpan?.setStatus({ code: 2, message: errorMessage });
+
+    callbacks?.onError?.(error instanceof Error ? error : new Error(String(error)));
     throw error;
+  } finally {
+    // 🔍 Finalizar spans
+    chatSpan?.end();
+    agentSpan?.end();
   }
 }
 
@@ -244,20 +288,28 @@ function buildTaskPrompt(task: AgentTask): string {
   let prompt = `**Tarefa: ${task.type}**\n`;
   prompt += `Prioridade: ${task.priority}\n\n`;
 
+  // Helper para stringify seguro
+  const safeStringify = (val: unknown): string => {
+    if (typeof val === "string") return val;
+    if (typeof val === "object" && val !== null) return JSON.stringify(val);
+    return String(val);
+  };
+
   if (data.description) {
-    prompt += `Descrição: ${data.description}\n\n`;
+    prompt += `Descrição: ${safeStringify(data.description)}\n\n`;
   }
 
   if (data.content || data.teor) {
-    prompt += `Conteúdo:\n${data.content || data.teor}\n\n`;
+    const contentValue = data.content || data.teor;
+    prompt += `Conteúdo:\n${String(contentValue)}\n\n`;
   }
 
   if (data.processNumber) {
-    prompt += `Processo: ${data.processNumber}\n`;
+    prompt += `Processo: ${safeStringify(data.processNumber)}\n`;
   }
 
   if (data.expedienteId) {
-    prompt += `ID do Expediente: ${data.expedienteId}\n`;
+    prompt += `ID do Expediente: ${safeStringify(data.expedienteId)}\n`;
   }
 
   prompt += `\nExecute a tarefa e forneça uma resposta estruturada.`;
@@ -272,6 +324,22 @@ export async function processTaskWithRealAI(
   task: AgentTask,
   agent: Agent
 ): Promise<AgentTaskResult> {
+  // Criar spans Sentry para monitoramento de AI Agents
+  const agentSpan = startAgentInvokeSpan(agent, {
+    model: "gemini-2.5-pro",
+    provider: "google.gemini",
+    temperature: 0.7,
+    maxTokens: 4096,
+  });
+
+  const chatSpan = startAIChatSpan({
+    model: "gemini-2.5-pro",
+    provider: "google.gemini",
+    operationName: "chat",
+    temperature: 0.7,
+    maxTokens: 4096,
+  });
+
   try {
     const response = await fetch("/api/agents/process-task", {
       method: "POST",
@@ -298,19 +366,56 @@ export async function processTaskWithRealAI(
       throw new Error("Invalid API response: missing result");
     }
 
+    // Finalizar spans com dados da resposta
+    const dataDescription = data.result.data?.description;
+    const resultOutput =
+      data.result.message ||
+      (typeof dataDescription === "string" ? dataDescription : undefined) ||
+      "Task completed";
+
+    finishAgentInvokeSpan(agentSpan, {
+      output: resultOutput,
+      tokensUsed: data.result.tokensUsed
+        ? {
+            total: data.result.tokensUsed,
+          }
+        : undefined,
+    });
+
+    finishAIChatSpan(chatSpan, {
+      text: resultOutput,
+      tokensUsed: data.result.tokensUsed
+        ? {
+            total: data.result.tokensUsed,
+          }
+        : undefined,
+    });
     return data.result;
   } catch (error) {
     console.error("[Real Agent Client] Error processing task:", error);
+
+    // Marcar spans como erro
+    agentSpan?.setStatus({
+      code: 2,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    chatSpan?.setStatus({
+      code: 2,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+
     throw error;
+  } finally {
+    // Sempre finalizar os spans
+    agentSpan?.end();
+    chatSpan?.end();
   }
 }
 
 /**
  * Busca tarefas pendentes do backend
  */
-export async function fetchPendingTasks(
-  agentId?: string
-): Promise<AgentTask[]> {
+export async function fetchPendingTasks(agentId?: string): Promise<AgentTask[]> {
   try {
     const url = agentId
       ? `/api/agents/tasks?agentId=${encodeURIComponent(agentId)}&status=queued`
@@ -319,9 +424,7 @@ export async function fetchPendingTasks(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch tasks: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to fetch tasks: ${response.status} ${response.statusText}`);
     }
 
     const data = (await response.json()) as FetchTasksAPIResponse;
@@ -347,9 +450,7 @@ export async function queueTask(task: AgentTask): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to queue task: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to queue task: ${response.status} ${response.statusText}`);
     }
   } catch (error) {
     console.error("[Real Agent Client] Error queueing task:", error);
@@ -371,9 +472,7 @@ export async function monitorDJEN(tribunais: string[]): Promise<unknown> {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `DJEN API error: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`DJEN API error: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();
@@ -405,9 +504,7 @@ export async function calculateRealDeadline(
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Deadline API error: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Deadline API error: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();

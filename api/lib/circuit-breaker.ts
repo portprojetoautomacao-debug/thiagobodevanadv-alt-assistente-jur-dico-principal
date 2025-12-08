@@ -100,10 +100,11 @@ export class CircuitBreaker {
     this.successes = 0;
     this.lastFailureTime = Date.now();
 
-    if (this.state === 'HALF_OPEN') {
-      // Qualquer falha em HALF_OPEN reabre circuito
-      this.transitionTo('OPEN');
-    } else if (this.failures >= this.config.failureThreshold) {
+    // Simplificado: ambas condições levam ao OPEN (SonarCloud S3923)
+    const shouldOpenCircuit =
+      this.state === 'HALF_OPEN' || this.failures >= this.config.failureThreshold;
+
+    if (shouldOpenCircuit) {
       this.transitionTo('OPEN');
     }
   }

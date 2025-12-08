@@ -14,66 +14,65 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Process } from '@/types'
 
 const PROCESS_PHASES = [
-  'Marketing',
-  'Negociação',
-  'Consultoria',
-  'Administrativo',
-  'Judicial',
-  'Recursal',
-  'Execução',
-  'Financeiro',
-  'Arquivamento'
-]
+  "Marketing",
+  "Negociação",
+  "Consultoria",
+  "Administrativo",
+  "Judicial",
+  "Recursal",
+  "Execução",
+  "Financeiro",
+  "Arquivamento",
+];
 
 const KANBAN_COLUMNS = [
-  'Aguardando Decisão do Órgão',
-  'Aguardando Decisão do INSS',
-  'Cobrança',
-  'Aguardando Documentação'
-]
+  "Aguardando Decisão do Órgão",
+  "Aguardando Decisão do INSS",
+  "Cobrança",
+  "Aguardando Documentação",
+];
 
 interface ProcessCardData {
-  id: string
-  autor: string
-  reu: string
-  tipo: string
-  numero: string
-  valor: string
-  resultado: string
-  status: 'green' | 'yellow' | 'red'
-  column: string
-  processo?: Process
+  id: string;
+  autor: string;
+  reu: string;
+  tipo: string;
+  numero: string;
+  valor: string;
+  resultado: string;
+  status: "green" | "yellow" | "red";
+  column: string;
+  processo?: Process;
 }
 
 interface SortableCardProps {
-  card: ProcessCardData
-  onOpenDetails: (card: ProcessCardData) => void
+  card: ProcessCardData;
+  onOpenDetails: (card: ProcessCardData) => void;
 }
 
-function SortableCard({ card, onOpenDetails }: SortableCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: card.id })
+function SortableCard({ card, onOpenDetails }: Readonly<SortableCardProps>) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: card.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'green': return 'bg-green-500'
-      case 'yellow': return 'bg-yellow-500'
-      case 'red': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case "green":
+        return "bg-green-500";
+      case "yellow":
+        return "bg-yellow-500";
+      case "red":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
     }
-  }
+  };
 
   return (
     <Card
@@ -94,15 +93,16 @@ function SortableCard({ card, onOpenDetails }: SortableCardProps) {
                 {card.numero.substring(0, 20)}...
               </span>
             </div>
-            <h4 className="font-bold text-sm mb-1 text-foreground">
-              {card.autor}
-            </h4>
-            <p className="text-xs text-muted-foreground font-medium">
-              vs. {card.reu}
-            </p>
+            <h4 className="font-bold text-sm mb-1 text-foreground">{card.autor}</h4>
+            <p className="text-xs text-muted-foreground font-medium">vs. {card.reu}</p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 rounded-lg" aria-label="Opções do processo">
-            <DotsThree size={18} weight="bold" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 rounded-lg"
+            aria-label="Opções do processo"
+          >
+            <MoreVertical size={18} />
           </Button>
         </div>
       </CardHeader>
@@ -116,19 +116,19 @@ function SortableCard({ card, onOpenDetails }: SortableCardProps) {
           <div className="flex items-center justify-between pt-2 border-t border-border/50">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-green-500/10 rounded-lg">
-                <CurrencyDollar size={16} className="text-green-500" weight="bold" />
+                <DollarSign size={16} className="text-green-500" />
               </div>
               <span className="font-bold text-sm text-foreground">{card.valor}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 rounded-lg">
-              <TrendUp size={14} className="text-green-500" weight="bold" />
+              <TrendingUp size={14} className="text-green-500" />
               <span className="text-xs font-bold text-green-500">{card.resultado}</span>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function ProcessCRMAdvbox() {
@@ -145,15 +145,15 @@ export default function ProcessCRMAdvbox() {
   // Helper function for status color
   const getStatusColor = useCallback((status: string): 'green' | 'yellow' | 'red' => {
     switch (status) {
-      case 'concluido':
-        return 'green'
-      case 'ativo':
-        return 'yellow'
-      case 'suspenso':
-      case 'arquivado':
-        return 'red'
+      case "concluido":
+        return "green";
+      case "ativo":
+        return "yellow";
+      case "suspenso":
+      case "arquivado":
+        return "red";
       default:
-        return 'yellow'
+        return "yellow";
     }
   }, [])
 
@@ -161,9 +161,9 @@ export default function ProcessCRMAdvbox() {
   const computedProcessCards = useMemo(() => {
     return (processes || []).slice(0, 8).map((p, idx) => ({
       id: p.id,
-      autor: p.autor || 'Não informado',
-      reu: p.reu || 'INSS',
-      tipo: p.titulo || 'Auxílio doença Previdenciário',
+      autor: p.autor || "Não informado",
+      reu: p.reu || "INSS",
+      tipo: p.titulo || "Auxílio doença Previdenciário",
       numero: p.numeroCNJ,
       valor: p.valor ? p.valor.toString() : 'A definir',
       resultado: p.fase || 'Em análise',
@@ -179,23 +179,23 @@ export default function ProcessCRMAdvbox() {
   }, [computedProcessCards])
 
   const getCardsByColumn = (column: string) => {
-    return processCards.filter(card => card.column === column)
-  }
+    return processCards.filter((card) => card.column === column);
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
-  }
+    setActiveId(event.active.id as string);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    
+    const { active, over } = event;
+
     if (!over) {
-      setActiveId(null)
-      return
+      setActiveId(null);
+      return;
     }
 
-    const activeCard = processCards.find(c => c.id === active.id)
-    const overColumn = over.id as string
+    const activeCard = processCards.find((c) => c.id === active.id);
+    const overColumn = over.id as string;
 
     if (activeCard && KANBAN_COLUMNS.includes(overColumn)) {
       setCardColumnOverrides(prev => ({
@@ -205,15 +205,15 @@ export default function ProcessCRMAdvbox() {
       toast.success(`Processo movido para ${overColumn}`)
     }
 
-    setActiveId(null)
-  }
+    setActiveId(null);
+  };
 
   const handleOpenDetails = (card: ProcessCardData) => {
-    setSelectedCard(card)
-    setDetailsOpen(true)
-  }
+    setSelectedCard(card);
+    setDetailsOpen(true);
+  };
 
-  const activeCard = processCards.find(c => c.id === activeId)
+  const activeCard = processCards.find((c) => c.id === activeId);
 
   return (
     <DndContext
@@ -235,12 +235,19 @@ export default function ProcessCRMAdvbox() {
                   onChange={(e) => setFilter(e.target.value)}
                   className="w-[400px] pl-10 bg-background/80 backdrop-blur-sm border-border/50 rounded-xl shadow-lg"
                 />
-                <MagnifyingGlass size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Search
+                  size={20}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="border-border/50 hover:bg-primary/10 rounded-xl">
-                <Funnel size={16} className="mr-1" />
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border/50 hover:bg-primary/10 rounded-xl"
+              >
+                <Filter size={16} className="mr-1" />
                 Filtros
               </Button>
               <Button className="bg-linear-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 font-semibold hover:scale-105 transition-all">
@@ -251,15 +258,17 @@ export default function ProcessCRMAdvbox() {
 
           {/* Phase Filter Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
-            {PROCESS_PHASES.map(phase => (
+            {PROCESS_PHASES.map((phase) => (
               <Button
                 key={phase}
-                variant={selectedPhase === phase ? 'default' : 'ghost'}
+                variant={selectedPhase === phase ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setSelectedPhase(phase)}
-                className={selectedPhase === phase 
-                  ? 'bg-linear-to-r from-primary to-accent text-white shadow-lg shadow-primary/20 rounded-lg font-semibold' 
-                  : 'hover:bg-primary/10 rounded-lg'}
+                className={
+                  selectedPhase === phase
+                    ? "bg-linear-to-r from-primary to-accent text-white shadow-lg shadow-primary/20 rounded-lg font-semibold"
+                    : "hover:bg-primary/10 rounded-lg"
+                }
               >
                 {phase}
               </Button>
@@ -274,7 +283,7 @@ export default function ProcessCRMAdvbox() {
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z"/>
+                    <path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z" />
                   </svg>
                 </div>
                 <div>
@@ -285,27 +294,36 @@ export default function ProcessCRMAdvbox() {
               <div className="w-px h-8 bg-border/50" />
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-green-500/10 rounded-lg">
-                  <CurrencyDollar size={20} className="text-green-500" weight="bold" />
+                  <DollarSign size={20} className="text-green-500" />
                 </div>
                 <div>
-                  <span className="text-2xl font-bold text-foreground">R$ {(processCards.length * 5000).toLocaleString('pt-BR')}</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    R$ {(processCards.length * 5000).toLocaleString("pt-BR")}
+                  </span>
                 </div>
               </div>
               <div className="w-px h-8 bg-border/50" />
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-red-500/10 text-red-500 border-red-500/20 font-semibold">
+                <Badge
+                  variant="secondary"
+                  className="bg-red-500/10 text-red-500 border-red-500/20 font-semibold"
+                >
                   0 Estagnados
                 </Badge>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="ml-auto border-border/50 hover:bg-primary/10 rounded-xl font-semibold">
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto border-border/50 hover:bg-primary/10 rounded-xl font-semibold"
+            >
               Mover etapas em massa
             </Button>
           </div>
 
           <div className="flex items-start gap-6 min-w-max">
-            {KANBAN_COLUMNS.map(column => {
-              const cards = getCardsByColumn(column)
+            {KANBAN_COLUMNS.map((column) => {
+              const cards = getCardsByColumn(column);
               return (
                 <div key={column} className="w-[320px] shrink-0">
                   {/* Column Header */}
@@ -323,17 +341,13 @@ export default function ProcessCRMAdvbox() {
 
                   {/* Droppable Area */}
                   <SortableContext
-                    items={cards.map(c => c.id)}
+                    items={cards.map((c) => c.id)}
                     strategy={verticalListSortingStrategy}
                     id={column}
                   >
                     <div className="space-y-4 min-h-[300px] p-4 rounded-2xl bg-linear-to-br from-muted/10 via-muted/5 to-transparent border-2 border-dashed border-border/30 hover:border-primary/40 hover:bg-primary/5 transition-all">
-                      {cards.map(card => (
-                        <SortableCard
-                          key={card.id}
-                          card={card}
-                          onOpenDetails={handleOpenDetails}
-                        />
+                      {cards.map((card) => (
+                        <SortableCard key={card.id} card={card} onOpenDetails={handleOpenDetails} />
                       ))}
                       {cards.length === 0 && (
                         <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
@@ -343,7 +357,7 @@ export default function ProcessCRMAdvbox() {
                     </div>
                   </SortableContext>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -355,11 +369,14 @@ export default function ProcessCRMAdvbox() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <DialogTitle className="text-xl">Detalhes do Processo</DialogTitle>
-                  <DialogDescription>
-                    {selectedCard?.numero}
-                  </DialogDescription>
+                  <DialogDescription>{selectedCard?.numero}</DialogDescription>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(false)} aria-label="Fechar detalhes">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDetailsOpen(false)}
+                  aria-label="Fechar detalhes"
+                >
                   <X size={20} />
                 </Button>
               </div>
@@ -392,17 +409,17 @@ export default function ProcessCRMAdvbox() {
                       <p className="text-base">{selectedCard.valor}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Resultado Provável</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Resultado Provável
+                      </p>
                       <Badge variant="secondary">{selectedCard.resultado}</Badge>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Status</p>
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${
-                          selectedCard.status === 'green' ? 'bg-green-500' :
-                          selectedCard.status === 'yellow' ? 'bg-yellow-500' :
-                          'bg-red-500'
-                        }`}></div>
+                        <div
+                          className={`w-3 h-3 rounded-full ${getStatusColor(selectedCard.status)}`}
+                        ></div>
                         <span className="capitalize">{selectedCard.status}</span>
                       </div>
                     </div>
@@ -411,13 +428,21 @@ export default function ProcessCRMAdvbox() {
                   {selectedCard.processo && (
                     <div className="space-y-2 border-t border-border pt-4">
                       <p className="text-sm font-medium text-muted-foreground">Comarca</p>
-                      <p className="text-base">{selectedCard.processo.comarca || 'Não informado'}</p>
-                      
+                      <p className="text-base">
+                        {selectedCard.processo.comarca || "Não informado"}
+                      </p>
+
                       <p className="text-sm font-medium text-muted-foreground mt-3">Vara</p>
-                      <p className="text-base">{selectedCard.processo.vara || 'Não informado'}</p>
-                      
-                      <p className="text-sm font-medium text-muted-foreground mt-3">Data de Distribuição</p>
-                      <p className="text-base">{new Date(selectedCard.processo.dataDistribuicao).toLocaleDateString('pt-BR')}</p>
+                      <p className="text-base">{selectedCard.processo.vara || "Não informado"}</p>
+
+                      <p className="text-sm font-medium text-muted-foreground mt-3">
+                        Data de Distribuição
+                      </p>
+                      <p className="text-base">
+                        {new Date(selectedCard.processo.dataDistribuicao).toLocaleDateString(
+                          "pt-BR"
+                        )}
+                      </p>
                     </div>
                   )}
                 </TabsContent>
@@ -429,16 +454,22 @@ export default function ProcessCRMAdvbox() {
                       <div className="flex-1">
                         <p className="font-medium text-sm">Processo distribuído</p>
                         <p className="text-xs text-muted-foreground">
-                          {selectedCard.processo && new Date(selectedCard.processo.dataDistribuicao).toLocaleDateString('pt-BR')}
+                          {selectedCard.processo &&
+                            new Date(selectedCard.processo.dataDistribuicao).toLocaleDateString(
+                              "pt-BR"
+                            )}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <File size={20} className="text-primary mt-1" />
+                      <FileText size={20} className="text-primary mt-1" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">Última movimentação</p>
                         <p className="text-xs text-muted-foreground">
-                          {selectedCard.processo && new Date(selectedCard.processo.dataUltimaMovimentacao).toLocaleDateString('pt-BR')}
+                          {selectedCard.processo &&
+                            new Date(
+                              selectedCard.processo.dataUltimaMovimentacao
+                            ).toLocaleDateString("pt-BR")}
                         </p>
                       </div>
                     </div>
@@ -447,7 +478,7 @@ export default function ProcessCRMAdvbox() {
 
                 <TabsContent value="docs" className="mt-4">
                   <div className="text-center py-8 text-muted-foreground">
-                    <File size={48} className="mx-auto mb-2 opacity-50" />
+                    <FileText size={48} className="mx-auto mb-2 opacity-50" />
                     <p>Nenhum documento anexado</p>
                     <Button className="mt-4" variant="outline">
                       Adicionar Documento
@@ -471,5 +502,5 @@ export default function ProcessCRMAdvbox() {
         </DragOverlay>
       </div>
     </DndContext>
-  )
+  );
 }

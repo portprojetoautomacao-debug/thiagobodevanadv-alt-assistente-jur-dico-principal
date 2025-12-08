@@ -1,4 +1,5 @@
 /**
+import { extractAndParseJSON } from "@/lib/json-utils";
  * Serviço de Extração de Partes Processuais
  *
  * Usa IA (Gemini 2.5 Pro por padrão) para extrair autor e réu do teor de publicações jurídicas.
@@ -15,22 +16,16 @@ export interface ExtractedParties {
 
 // Endpoint e modelo configuráveis via .env (com defaults seguros)
 const PARTIES_LLM_ENDPOINT = String(
-  import.meta.env.VITE_LLM_ENDPOINT ||
-    import.meta.env.VITE_GEMINI_LLM_ENDPOINT ||
-    "/api/llm-proxy"
+  import.meta.env.VITE_LLM_ENDPOINT || import.meta.env.VITE_GEMINI_LLM_ENDPOINT || "/api/llm-proxy"
 ); // endpoint principal do Gemini 2.5 Pro
 
 const PARTIES_LLM_MODEL =
-  import.meta.env.VITE_LLM_MODEL ||
-  import.meta.env.VITE_GEMINI_MODEL ||
-  "gemini-2.5-pro";
+  import.meta.env.VITE_LLM_MODEL || import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-pro";
 
 /**
  * Extrai autor e réu do teor de uma publicação jurídica usando IA
  */
-export async function extractPartiesFromTeor(
-  teor: string
-): Promise<ExtractedParties> {
+export async function extractPartiesFromTeor(teor: string): Promise<ExtractedParties> {
   try {
     const response = await fetch(PARTIES_LLM_ENDPOINT, {
       method: "POST",
@@ -74,11 +69,7 @@ Responda APENAS com o JSON, sem texto adicional.`,
     });
 
     if (!response.ok) {
-      console.error(
-        "[ExtractParties] Erro HTTP:",
-        response.status,
-        PARTIES_LLM_ENDPOINT
-      );
+      console.error("[ExtractParties] Erro HTTP:", response.status, PARTIES_LLM_ENDPOINT);
       return { autor: "Não identificado", reu: "Não identificado" };
     }
 
@@ -106,11 +97,13 @@ Responda APENAS com o JSON, sem texto adicional.`,
       content = data;
     }
 
-    // Parse do JSON - tenta encontrar JSON na resposta
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
+    // Parse do JSON - tenta encontrar JSON na resposta sem regex greedy
+    const startIdx = content.indexOf("{");
+    const endIdx = content.lastIndexOf("}");
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
       try {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const jsonStr = content.substring(startIdx, endIdx + 1);
+        const parsed = JSON.parse(jsonStr);
         return {
           autor: parsed.autor || "Não identificado",
           reu: parsed.reu || "Não identificado",
@@ -133,19 +126,22 @@ Responda APENAS com o JSON, sem texto adicional.`,
 
 /**
  * Tenta extrair partes via regex (fallback rápido sem IA)
+ * Regex dividida em partes para reduzir complexidade cognitiva (SonarCloud S3776)
  */
 export function extractPartiesRegex(teor: string): ExtractedParties {
-  // Padrões comuns em publicações
-  const patterns = {
-    // "AUTOR: Nome" ou "Requerente: Nome"
-    autor:
-      /(?:autor|requerente|exequente|embargante|apelante|agravante|impetrante)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-zÁÉÍÓÚÂÊÎÔÛÃÕÇáéíóúâêîôûãõç\s]+?)(?:\s*(?:x|vs?\.?|contra|CPF|CNPJ|RG|\d|,|\.|;|\n|$))/i,
-    // "RÉU: Nome" ou "Requerido: Nome"
-    reu: /(?:r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado)[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-zÁÉÍÓÚÂÊÎÔÛÃÕÇáéíóúâêîôûãõç\s]+?)(?:\s*(?:CPF|CNPJ|RG|\d|,|\.|;|\n|$))/i,
-  };
+  // Termos separados para melhor legibilidade e manutenibilidade
+  const AUTOR_TERMS = String.raw`autor|requerente|exequente|embargante|apelante|agravante|impetrante`;
+  const REU_TERMS = String.raw`r[eé]u|requerido|executado|embargado|apelado|agravado|impetrado`;
+  const NAME_CAPTURE = String.raw`([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][A-Za-záéíóúâêîôûãõç\s]+?)`;
+  const END_AUTOR = String.raw`(?:\s*(?:x|vs?\.?|contra|CPF|CNPJ|RG|\d|[,;.\n]|$))`;
+  const END_REU = String.raw`(?:\s*(?:CPF|CNPJ|RG|\d|[,;.\n]|$))`;
 
-  const matchAutor = teor.match(patterns.autor);
-  const matchReu = teor.match(patterns.reu);
+  // Construir regex dinamicamente para maior clareza
+  const autorRegex = new RegExp(`(?:${AUTOR_TERMS})[:\\s]+${NAME_CAPTURE}${END_AUTOR}`, "i");
+  const reuRegex = new RegExp(`(?:${REU_TERMS})[:\\s]+${NAME_CAPTURE}${END_REU}`, "i");
+
+  const matchAutor = autorRegex.exec(teor);
+  const matchReu = reuRegex.exec(teor);
 
   return {
     autor: matchAutor?.[1]?.trim() || "",
@@ -156,9 +152,7 @@ export function extractPartiesRegex(teor: string): ExtractedParties {
 /**
  * Extrai partes com fallback: primeiro tenta regex, se não encontrar, usa IA
  */
-export async function extractPartiesWithFallback(
-  teor: string
-): Promise<ExtractedParties> {
+export async function extractPartiesWithFallback(teor: string): Promise<ExtractedParties> {
   // Primeiro tenta regex (mais rápido, sem custo de IA)
   const regexResult = extractPartiesRegex(teor);
 
@@ -169,9 +163,6 @@ export async function extractPartiesWithFallback(
   }
 
   // Senão, usa IA (Gemini 2.5 Pro ou o modelo configurado)
-  console.log(
-    "[ExtractParties] Regex incompleto, usando IA em",
-    PARTIES_LLM_ENDPOINT
-  );
+  console.log("[ExtractParties] Regex incompleto, usando IA em", PARTIES_LLM_ENDPOINT);
   return extractPartiesFromTeor(teor);
 }

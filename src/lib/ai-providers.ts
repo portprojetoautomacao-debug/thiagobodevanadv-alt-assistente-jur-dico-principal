@@ -82,8 +82,7 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 
 // Azure AI Configuration (quando assinatura ativa)
 export const AZURE_AI_CONFIG = {
-  endpoint:
-    "https://thiagobodevanveiga-1800-resource.cognitiveservices.azure.com/",
+  endpoint: "https://thiagobodevanveiga-1800-resource.cognitiveservices.azure.com/",
   resourceGroup: "rg-thiagobodevanveiga-1800",
   resourceName: "thiagobodevanveiga-1800-resource",
   deployments: {
@@ -171,31 +170,23 @@ export async function withRetry<T>(
  * Valida se uma string parece ser uma API key válida.
  * Verifica padrões comuns de chaves de API.
  */
-export function isValidApiKey(
-  key: string | null | undefined,
-  provider?: string
-): boolean {
+export function isValidApiKey(key: string | null | undefined, provider?: string): boolean {
   if (!key || key.length < 10) return false;
 
   // Validações específicas por provedor
   switch (provider) {
     case "gemini":
       // Chaves Gemini: AIza... ou GEM-...
-      return /^(AIza[0-9A-Za-z_-]{20,}|GEM-[0-9A-Za-z_-]{16,}|[A-Za-z0-9_-]{32,})$/.test(
-        key
-      );
+      return /^(AIza[\w-]{20,}|GEM-[\w-]{16,}|[\w-]{32,})$/.test(key);
     case "github":
       // Tokens GitHub: ghp_... ou gho_...
-      return (
-        /^(ghp_|gho_|github_pat_)[A-Za-z0-9_]{20,}$/.test(key) ||
-        key.length >= 20
-      );
+      return /^(ghp_|gho_|github_pat_)\w{20,}$/.test(key) || key.length >= 20;
     case "huggingface":
       // Tokens HuggingFace: hf_...
-      return /^hf_[A-Za-z0-9]{20,}$/.test(key) || key.length >= 20;
+      return /^hf_\w{20,}$/.test(key) || key.length >= 20;
     case "azure":
       // Chaves Azure: 32 caracteres hex
-      return /^[a-f0-9]{32}$/i.test(key) || key.length >= 20;
+      return /^[\da-f]{32}$/i.test(key) || key.length >= 20;
     default:
       // Validação genérica: pelo menos 20 caracteres alfanuméricos
       return key.length >= 20;
@@ -214,8 +205,7 @@ export function isValidApiKey(
  */
 export class GeminiClient {
   private readonly apiKey: string | null;
-  private readonly baseUrl =
-    "https://generativelanguage.googleapis.com/v1/models";
+  private readonly baseUrl = "https://generativelanguage.googleapis.com/v1/models";
   private readonly retryConfig: RetryConfig;
 
   /**
@@ -226,16 +216,16 @@ export class GeminiClient {
    */
   constructor(apiKey?: string, retryConfig?: Partial<RetryConfig>) {
     // Tenta pegar API key de forma flexível
-    this.apiKey = apiKey
-      ? String(apiKey)
-      : (typeof import.meta !== "undefined"
-          ? String(
-              import.meta.env.VITE_GOOGLE_API_KEY ||
-                import.meta.env.VITE_GEMINI_API_KEY ||
-                import.meta.env.VITE_GEMINI_API_KEY_BACKEND ||
-                ""
-            )
-          : "") || null;
+    if (apiKey) {
+      this.apiKey = String(apiKey);
+    } else if (import.meta === undefined) {
+      this.apiKey = null;
+    } else {
+      const env = import.meta.env;
+      const envKey =
+        env.VITE_GOOGLE_API_KEY ?? env.VITE_GEMINI_API_KEY ?? env.VITE_GEMINI_API_KEY_BACKEND;
+      this.apiKey = envKey ? String(envKey) : null;
+    }
 
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
 
@@ -288,9 +278,7 @@ export class GeminiClient {
     const modelId = model || "gemini-2.5-pro";
     const prompt = this.buildPromptFromMessages(messages);
 
-    const url = `${
-      this.baseUrl
-    }/${modelId}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+    const url = `${this.baseUrl}/${modelId}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
 
     const doRequest = async () => {
       const response = await fetch(url, {
@@ -314,9 +302,7 @@ export class GeminiClient {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => "");
-        throw new Error(
-          `Gemini API error: ${response.status} ${response.statusText} ${errorText}`
-        );
+        throw new Error(`Gemini API error: ${response.status} ${response.statusText} ${errorText}`);
       }
 
       const data = (await response.json()) as {
@@ -386,12 +372,7 @@ export class HuggingFaceClient {
   private readonly baseUrl = HUGGINGFACE_CONFIG.baseUrl;
 
   constructor(apiKey?: string) {
-    this.apiKey =
-      apiKey ||
-      (typeof import.meta !== "undefined"
-        ? import.meta.env.VITE_HUGGINGFACE_API_KEY || ""
-        : "") ||
-      null;
+    this.apiKey = apiKey || (import.meta?.env?.VITE_HUGGINGFACE_API_KEY ?? "") || null;
   }
 
   async chat(
@@ -400,9 +381,7 @@ export class HuggingFaceClient {
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     const modelId =
-      HUGGINGFACE_CONFIG.models[
-        model as keyof typeof HUGGINGFACE_CONFIG.models
-      ] || model;
+      HUGGINGFACE_CONFIG.models[model as keyof typeof HUGGINGFACE_CONFIG.models] || model;
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -454,17 +433,14 @@ export class HuggingFaceClient {
 
   async isAvailable(): Promise<boolean> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/microsoft/Phi-3-mini-4k-instruct`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            inputs: "Hi",
-            parameters: { max_new_tokens: 1 },
-          }),
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/microsoft/Phi-3-mini-4k-instruct`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputs: "Hi",
+          parameters: { max_new_tokens: 1 },
+        }),
+      });
       // 503 = modelo carregando, mas endpoint existe
       return response.ok || response.status === 503;
     } catch {
@@ -487,11 +463,7 @@ export class GitHubModelsClient {
 
   constructor(apiKey?: string) {
     this.apiKey =
-      apiKey ||
-      (typeof import.meta !== "undefined"
-        ? import.meta.env.VITE_GITHUB_TOKEN || ""
-        : "") ||
-      "";
+      apiKey || (import.meta === undefined ? "" : import.meta.env.VITE_GITHUB_TOKEN || "") || "";
   }
 
   async chat(
@@ -504,9 +476,7 @@ export class GitHubModelsClient {
     }
 
     const modelId =
-      GITHUB_MODELS_CONFIG.models[
-        model as keyof typeof GITHUB_MODELS_CONFIG.models
-      ] || model;
+      GITHUB_MODELS_CONFIG.models[model as keyof typeof GITHUB_MODELS_CONFIG.models] || model;
 
     const doRequest = async () => {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -553,9 +523,7 @@ export class AzureOpenAIClient {
     this.endpoint = endpoint || AZURE_AI_CONFIG.endpoint;
     this.apiKey =
       apiKey ||
-      (typeof import.meta !== "undefined"
-        ? import.meta.env.VITE_AZURE_OPENAI_KEY || ""
-        : "") ||
+      (import.meta === undefined ? "" : import.meta.env.VITE_AZURE_OPENAI_KEY || "") ||
       "";
   }
 
@@ -570,15 +538,12 @@ export class AzureOpenAIClient {
     options: { maxTokens?: number; temperature?: number } = {}
   ): Promise<string> {
     if (!this.apiKey) {
-      throw new Error(
-        "Azure OpenAI API key não configurada (VITE_AZURE_OPENAI_KEY)"
-      );
+      throw new Error("Azure OpenAI API key não configurada (VITE_AZURE_OPENAI_KEY)");
     }
 
     const deployments = AZURE_AI_CONFIG.deployments;
     const deployment =
-      deployments[deploymentOrAlias as keyof typeof deployments] ||
-      deploymentOrAlias;
+      deployments[deploymentOrAlias as keyof typeof deployments] || deploymentOrAlias;
 
     const url = `${this.endpoint}openai/deployments/${deployment}/chat/completions?api-version=${this.apiVersion}`;
 
@@ -612,12 +577,9 @@ export class AzureOpenAIClient {
     if (!this.apiKey) return false;
 
     try {
-      const response = await fetch(
-        `${this.endpoint}openai/models?api-version=${this.apiVersion}`,
-        {
-          headers: { "api-key": this.apiKey },
-        }
-      );
+      const response = await fetch(`${this.endpoint}openai/models?api-version=${this.apiVersion}`, {
+        headers: { "api-key": this.apiKey },
+      });
       return response.ok;
     } catch {
       return false;

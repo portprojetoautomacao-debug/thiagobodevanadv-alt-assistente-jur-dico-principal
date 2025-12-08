@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import * as Sentry from '@sentry/react';
-import { setUserContext, clearUserContext, setErrorTag } from '../services/error-tracking';
+import { useEffect, useState } from "react";
+import * as Sentry from "@sentry/react";
+import { setUserContext, clearUserContext, setErrorTag } from "../services/error-tracking";
 
 /**
  * Hook para rastrear usuário no Sentry
@@ -21,20 +21,20 @@ export function useUserTracking(userId?: string, email?: string, username?: stri
  * Útil para entender fluxo do usuário
  */
 export function usePageTracking() {
-  const [pathname, setPathname] = useState(window.location.pathname);
+  const [pathname, setPathname] = useState(globalThis.window.location.pathname);
 
   useEffect(() => {
     // Atualizar quando a URL mudar
-    const handleLocationChange = () => setPathname(window.location.pathname);
-    window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
+    const handleLocationChange = () => setPathname(globalThis.window.location.pathname);
+    globalThis.window.addEventListener("popstate", handleLocationChange);
+    return () => globalThis.window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
   useEffect(() => {
-    setErrorTag('current_page', pathname);
+    setErrorTag("current_page", pathname);
 
     // Iniciar breadcrumb
-    Sentry.captureMessage(`Navigated to ${pathname}`, 'debug');
+    Sentry.captureMessage(`Navigated to ${pathname}`, "debug");
   }, [pathname]);
 }
 
@@ -43,7 +43,7 @@ export function usePageTracking() {
  */
 export function useErrorHandler(componentName: string) {
   return (error: Error, info: { componentStack: string }) => {
-    setErrorTag('error_boundary', componentName);
+    setErrorTag("error_boundary", componentName);
 
     Sentry.captureException(error, {
       contexts: {
@@ -62,11 +62,11 @@ export function useErrorHandler(componentName: string) {
  * Hook para rastrear performance de funções assíncronas (Sentry v10+)
  */
 export function useAsyncTracking(functionName: string) {
-  return async <T,>(fn: () => Promise<T>): Promise<T> => {
+  return async <T>(fn: () => Promise<T>): Promise<T> => {
     return await Sentry.startSpan(
       {
         name: functionName,
-        op: 'async_operation',
+        op: "async_operation",
       },
       async () => {
         try {

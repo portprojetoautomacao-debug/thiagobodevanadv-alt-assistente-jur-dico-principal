@@ -19,11 +19,7 @@ import { getEnv } from "./env-helper.js";
 
 type CaptureErrorFn = (error: Error, context?: Record<string, unknown>) => void;
 type CaptureMessageFn = (message: string, level?: string) => void;
-type TrackMetricFn = (
-  name: string,
-  value?: number,
-  tags?: Record<string, string>
-) => void;
+type TrackMetricFn = (name: string, value?: number, tags?: Record<string, string>) => void;
 type WithSpanFn = <T>(
   name: string,
   op: string,
@@ -42,7 +38,7 @@ interface SentryFunctions {
 // STUBS PARA AMBIENTE SERVERLESS (Node.js / Vercel Functions)
 // ============================================================================
 
-const isServerSide = typeof window === "undefined";
+const isServerSide = globalThis.window === undefined;
 
 // Funções stub para ambiente serverless
 const stubFunctions: SentryFunctions = {
@@ -52,11 +48,7 @@ const stubFunctions: SentryFunctions = {
   captureMessage: (message: string, level: string = "info") => {
     console.log(`[AgentMonitor] [${level}] ${message}`);
   },
-  trackMetric: (
-    _name: string,
-    _value: number = 1,
-    _tags?: Record<string, string>
-  ) => {
+  trackMetric: (_name: string, _value: number = 1, _tags?: Record<string, string>) => {
     // No-op em serverless - métricas são opcionais
   },
   withSpan: async <T>(
@@ -106,12 +98,10 @@ let _redisClient: Redis | null = null;
 
 function getRedisOrNull(): Redis | null {
   if (!redisUrl || !redisToken) return null;
-  if (!_redisClient) {
-    _redisClient = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
-  }
+  _redisClient ??= new Redis({
+    url: redisUrl,
+    token: redisToken,
+  });
   return _redisClient;
 }
 
@@ -156,10 +146,7 @@ export class AgentMonitor {
     };
 
     // Log no console (dev)
-    console.log(
-      `[AgentMonitor] ${agentId} -> ${action} (${success ? "OK" : "FAIL"})`,
-      log
-    );
+    console.log(`[AgentMonitor] ${agentId} -> ${action} (${success ? "OK" : "FAIL"})`, log);
 
     // Enviar métrica para Sentry (apenas no browser)
     const sentry = await getSentryFunctions();
@@ -177,10 +164,7 @@ export class AgentMonitor {
     }
 
     if (!success) {
-      sentry.captureMessage(
-        `Agent Action Failed: ${agentId} - ${action}`,
-        "warning"
-      );
+      sentry.captureMessage(`Agent Action Failed: ${agentId} - ${action}`, "warning");
     }
 
     // Persistir no Redis (apenas se estiver disponível)
@@ -188,10 +172,8 @@ export class AgentMonitor {
     if (redis) {
       try {
         // Buscar logs existentes
-        const existingLogs = (await redis.get("agent-logs")) as
-          | AgentActionLog[]
-          | null;
-        const logs = existingLogs || [];
+        const existingLogs = await redis.get<AgentActionLog[]>("agent-logs");
+        const logs = existingLogs ?? [];
 
         // Manter apenas os últimos 50 logs para não estourar o limite
         const newLogs = [log, ...logs].slice(0, 50);
@@ -211,8 +193,7 @@ export class AgentMonitor {
     taskType: string,
     executionFn: () => Promise<T>
   ): Promise<T> {
-    const startTime =
-      typeof performance !== "undefined" ? performance.now() : Date.now();
+    const startTime = typeof performance === "undefined" ? Date.now() : performance.now();
     const sentry = await getSentryFunctions();
 
     try {
@@ -225,40 +206,23 @@ export class AgentMonitor {
       );
 
       const duration =
-        (typeof performance !== "undefined" ? performance.now() : Date.now()) -
-        startTime;
-      await this.logAction(
-        agentId,
-        `execute_task_${taskType}`,
-        { taskId },
-        true,
-        duration
-      );
+        (typeof performance === "undefined" ? Date.now() : performance.now()) - startTime;
+      await this.logAction(agentId, `execute_task_${taskType}`, { taskId }, true, duration);
 
       sentry.trackMetric("agent_task_success", 1, { agentId, taskType });
 
       return result;
     } catch (error) {
       const duration =
-        (typeof performance !== "undefined" ? performance.now() : Date.now()) -
-        startTime;
-      await this.logAction(
-        agentId,
-        `execute_task_${taskType}`,
-        { taskId, error },
-        false,
-        duration
-      );
+        (typeof performance === "undefined" ? Date.now() : performance.now()) - startTime;
+      await this.logAction(agentId, `execute_task_${taskType}`, { taskId, error }, false, duration);
 
       sentry.trackMetric("agent_task_failure", 1, { agentId, taskType });
-      sentry.captureError(
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          agentId,
-          taskId,
-          taskType,
-        }
-      );
+      sentry.captureError(error instanceof Error ? error : new Error(String(error)), {
+        agentId,
+        taskId,
+        taskType,
+      });
 
       throw error;
     }
@@ -267,11 +231,7 @@ export class AgentMonitor {
   /**
    * Registra mudança de status do agente
    */
-  public async logStatusChange(
-    agentId: string,
-    oldStatus: AgentStatus,
-    newStatus: AgentStatus
-  ) {
+  public async logStatusChange(agentId: string, oldStatus: AgentStatus, newStatus: AgentStatus) {
     console.log(`[AgentMonitor] ${agentId}: ${oldStatus} -> ${newStatus}`);
     const sentry = await getSentryFunctions();
     sentry.trackMetric("agent_status_change", 1, {

@@ -5,44 +5,46 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User, ViewType } from "@/types";
 import {
-  Books,
+  BookOpen,
+  Bot,
   Briefcase,
   Calculator,
-  CalendarDots,
-  CurrencyCircleDollar,
+  Calendar,
   Database,
+  DollarSign,
   FileText,
-  House,
-  MicrophoneStage,
+  FolderOpen,
+  Home,
+  Inbox,
+  LogOut,
+  Mic,
   Newspaper,
-  PencilLine,
-  Robot,
-  SignOut,
-  Tray,
-} from "@phosphor-icons/react";
+  PenLine,
+} from "lucide-react";
 
 interface SidebarProps {
-  currentView: string;
-  onViewChange: (view: ViewType) => void;
-  user: User | null;
-  onLogout: () => void;
+  readonly currentView: string;
+  readonly onViewChange: (view: ViewType) => void;
+  readonly user: User | null;
+  readonly onLogout: () => void;
 }
 
 const NAVIGATION_ITEMS = [
-  { id: "dashboard", label: "Meu Painel", icon: House },
-  { id: "donna", label: "Harvey Specter", icon: Robot, featured: true },
-  { id: "ai-agents", label: "Agentes de IA", icon: Robot },
+  { id: "dashboard", label: "Meu Painel", icon: Home },
+  { id: "donna", label: "Harvey Specter", icon: Bot, featured: true },
+  { id: "ai-agents", label: "Agentes de IA", icon: Bot },
+  { id: "acervo", label: "Acervo PJe", icon: FolderOpen },
   { id: "processes", label: "Acervo (CRM)", icon: Briefcase },
-  { id: "expedientes", label: "Expedientes", icon: Tray },
-  { id: "minutas", label: "Minutas", icon: PencilLine },
+  { id: "expedientes", label: "Expedientes", icon: Inbox },
+  { id: "minutas", label: "Minutas", icon: PenLine },
   { id: "batch", label: "Análise em Lote", icon: FileText },
-  { id: "audio", label: "Transcrição", icon: MicrophoneStage },
+  { id: "audio", label: "Transcrição", icon: Mic },
   { id: "calculator", label: "Calc. Prazos", icon: Calculator },
   { id: "queries", label: "Consultas", icon: Database },
   { id: "datajud", label: "DataJud Checklist", icon: Newspaper },
-  { id: "calendar", label: "Agenda", icon: CalendarDots },
-  { id: "financial", label: "Financeiro", icon: CurrencyCircleDollar },
-  { id: "knowledge", label: "Base Conhecimento", icon: Books },
+  { id: "calendar", label: "Agenda", icon: Calendar },
+  { id: "financial", label: "Financeiro", icon: DollarSign },
+  { id: "knowledge", label: "Base Conhecimento", icon: BookOpen },
 ];
 
 export default function Sidebar({
@@ -50,17 +52,15 @@ export default function Sidebar({
   onViewChange,
   user,
   onLogout,
-}: SidebarProps) {
+}: Readonly<SidebarProps>) {
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-2 mb-2">
-          <Robot className="w-6 h-6 text-primary" weight="fill" />
+          <Bot className="w-6 h-6 text-primary" />
           <h2 className="text-xl font-bold text-foreground">PJe Assistente</h2>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Agentes IA Autônomos 24/7
-        </p>
+        <p className="text-sm text-muted-foreground">Agentes IA Autônomos 24/7</p>
         <Badge className="mt-2 bg-green-500/10 text-green-700 border-green-500/20">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse" />
           {"Gemini AI Ativo"}
@@ -91,17 +91,16 @@ export default function Sidebar({
                   // Atualiza estado e URL hash para fallback de roteamento
                   const view = item.id as ViewType;
                   try {
-                    window.location.hash = `#${view}`;
+                    if (globalThis.window !== undefined) {
+                      globalThis.window.location.hash = `#${view}`;
+                    }
                   } catch {
                     // ignore ambientes sem window
                   }
                   onViewChange(view);
                 }}
               >
-                <Icon
-                  className="w-5 h-5 mr-3"
-                  weight={isActive ? "fill" : "regular"}
-                />
+                <Icon className="w-5 h-5 mr-3" />
                 {item.label}
                 {isFeatured && (
                   <Badge
@@ -127,12 +126,8 @@ export default function Sidebar({
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {user.name}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {user.role}
-                </p>
+                <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
               </div>
             </div>
             <Separator />
@@ -143,7 +138,7 @@ export default function Sidebar({
           className="w-full justify-start text-muted-foreground hover:text-foreground"
           onClick={onLogout}
         >
-          <SignOut className="w-5 h-5 mr-3" />
+          <LogOut className="w-5 h-5 mr-3" />
           Sair
         </Button>
       </div>

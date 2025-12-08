@@ -1,43 +1,56 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { CurrencyCircleDollar, Plus, TrendUp, TrendDown, DownloadSimple } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import type { FinancialEntry } from '@/types'
-import { exportToCSV, formatCurrency } from '@/lib/utils'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useKV } from "@/hooks/use-kv";
+import { exportToCSV, formatCurrency } from "@/lib/utils";
+import type { FinancialEntry } from "@/types";
+import { DollarSign, Download, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function FinancialManagement() {
-  const [entries, setEntries] = useKV<FinancialEntry[]>('financialEntries', [])
-  const [showDialog, setShowDialog] = useState(false)
+  const [entries, setEntries] = useKV<FinancialEntry[]>("financialEntries", []);
+  const [showDialog, setShowDialog] = useState(false);
   const [newEntry, setNewEntry] = useState({
-    type: 'income' as 'income' | 'expense',
-    amount: '',
-    category: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-  })
+    type: "income" as "income" | "expense",
+    amount: "",
+    category: "",
+    description: "",
+    date: new Date().toISOString().split("T")[0],
+  });
 
   const totalIncome = (entries || [])
-    .filter(e => e.type === 'income')
-    .reduce((sum, e) => sum + e.amount, 0)
+    .filter((e) => e.type === "income")
+    .reduce((sum, e) => sum + e.amount, 0);
 
   const totalExpenses = (entries || [])
-    .filter(e => e.type === 'expense')
-    .reduce((sum, e) => sum + e.amount, 0)
+    .filter((e) => e.type === "expense")
+    .reduce((sum, e) => sum + e.amount, 0);
 
-  const balance = totalIncome - totalExpenses
+  const balance = totalIncome - totalExpenses;
 
   const handleAddEntry = () => {
     if (!newEntry.amount || !newEntry.category || !newEntry.date) {
-      toast.error('Preencha os campos obrigatórios')
-      return
+      toast.error("Preencha os campos obrigatórios");
+      return;
     }
 
     const entry: FinancialEntry = {
@@ -47,44 +60,42 @@ export default function FinancialManagement() {
       category: newEntry.category,
       description: newEntry.description,
       date: newEntry.date,
-    }
+    };
 
-    setEntries((current) => [...(current || []), entry])
-    setShowDialog(false)
+    setEntries((current) => [...(current || []), entry]);
+    setShowDialog(false);
     setNewEntry({
-      type: 'income',
-      amount: '',
-      category: '',
-      description: '',
-      date: new Date().toISOString().split('T')[0],
-    })
-    toast.success('Lançamento adicionado')
-  }
+      type: "income",
+      amount: "",
+      category: "",
+      description: "",
+      date: new Date().toISOString().split("T")[0],
+    });
+    toast.success("Lançamento adicionado");
+  };
 
   const handleExportCSV = () => {
-    const exportData = (entries || []).map(e => ({
-      'Tipo': e.type === 'income' ? 'Receita' : 'Despesa',
-      'Categoria': e.category,
-      'Descrição': e.description,
-      'Valor': e.amount,
-      'Data': e.date
-    }))
-    exportToCSV(exportData, 'financeiro')
-    toast.success('Dados exportados com sucesso!')
-  }
+    const exportData = (entries || []).map((e) => ({
+      Tipo: e.type === "income" ? "Receita" : "Despesa",
+      Categoria: e.category,
+      Descrição: e.description,
+      Valor: e.amount,
+      Data: e.date,
+    }));
+    exportToCSV(exportData, "financeiro");
+    toast.success("Dados exportados com sucesso!");
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestão Financeira</h1>
-          <p className="text-muted-foreground mt-1">
-            Controle de receitas e despesas
-          </p>
+          <p className="text-muted-foreground mt-1">Controle de receitas e despesas</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
-            <DownloadSimple className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 mr-2" />
             Exportar CSV
           </Button>
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -97,14 +108,20 @@ export default function FinancialManagement() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Lançamento</DialogTitle>
-                <DialogDescription>
-                  Registre uma receita ou despesa
-                </DialogDescription>
+                <DialogDescription>Registre uma receita ou despesa</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="type">Tipo *</Label>
-                  <Select value={newEntry.type} onValueChange={(value) => setNewEntry({ ...newEntry, type: value as 'income' | 'expense' })}>
+                  <Select
+                    value={newEntry.type}
+                    onValueChange={(value) =>
+                      setNewEntry({
+                        ...newEntry,
+                        type: value as "income" | "expense",
+                      })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -159,9 +176,7 @@ export default function FinancialManagement() {
                 <Button variant="outline" onClick={() => setShowDialog(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddEntry}>
-                  Adicionar
-                </Button>
+                <Button onClick={handleAddEntry}>Adicionar</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -172,45 +187,37 @@ export default function FinancialManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-            <TrendUp className="w-4 h-4 text-green-600" />
+            <TrendingUp className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalIncome)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Total recebido
-            </p>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total recebido</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-            <TrendDown className="w-4 h-4 text-red-600" />
+            <TrendingDown className="w-4 h-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(totalExpenses)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Total gasto
-            </p>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total gasto</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-            <CurrencyCircleDollar className="w-4 h-4 text-primary" />
+            <DollarSign className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div
+              className={`text-2xl font-bold ${balance >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrency(balance)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Resultado líquido
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Resultado líquido</p>
           </CardContent>
         </Card>
       </div>
@@ -223,7 +230,7 @@ export default function FinancialManagement() {
         <CardContent>
           {(entries || []).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <CurrencyCircleDollar className="w-16 h-16 text-muted-foreground mb-4" />
+              <DollarSign className="w-16 h-16 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground">Nenhum lançamento</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Adicione sua primeira receita ou despesa
@@ -235,12 +242,15 @@ export default function FinancialManagement() {
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((entry) => (
                   <div key={entry.id} className="flex items-start gap-4 p-4 border rounded-lg">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${entry.type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
-                      {entry.type === 'income' ? (
-                        <TrendUp className="w-5 h-5 text-green-600" weight="bold" />
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        entry.type === "income" ? "bg-green-100" : "bg-red-100"
+                      }`}
+                    >
+                      {entry.type === "income" ? (
+                        <TrendingUp className="w-5 h-5 text-green-600" />
                       ) : (
-                        <TrendDown className="w-5 h-5 text-red-600" weight="bold" />
+                        <TrendingDown className="w-5 h-5 text-red-600" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -248,16 +258,21 @@ export default function FinancialManagement() {
                         <div>
                           <p className="font-medium">{entry.category}</p>
                           {entry.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{entry.description}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {entry.description}
+                            </p>
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <p className={`text-lg font-bold ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                            {entry.type === 'income' ? '+' : '-'} {formatCurrency(entry.amount)}
+                          <p
+                            className={`text-lg font-bold ${
+                              entry.type === "income" ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
                           </p>
                           <Badge variant="outline" className="mt-1">
-                            {new Date(entry.date).toLocaleDateString('pt-BR')}
+                            {new Date(entry.date).toLocaleDateString("pt-BR")}
                           </Badge>
                         </div>
                       </div>
@@ -269,5 +284,5 @@ export default function FinancialManagement() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

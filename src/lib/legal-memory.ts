@@ -24,12 +24,10 @@ let _redisClient: Redis | null = null;
 
 function getRedisOrNull(): Redis | null {
   if (!redisUrl || !redisToken) return null;
-  if (!_redisClient) {
-    _redisClient = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
-  }
+  _redisClient ??= new Redis({
+    url: redisUrl,
+    token: redisToken,
+  });
   return _redisClient;
 }
 
@@ -54,8 +52,8 @@ export const LegalContextItemSchema = z.object({
   content: z.string(),
   metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
   relevanceScore: z.number().optional(), // 0 a 1
 });
 
@@ -99,9 +97,7 @@ export class LegalMemory {
         return;
       }
 
-      const items = (await redis.get("legal-memory")) as
-        | LegalContextItem[]
-        | null;
+      const items = await redis.get<LegalContextItem[]>("legal-memory");
       if (items && Array.isArray(items)) {
         this.memoryCache.clear();
         for (const item of items) {
@@ -129,8 +125,8 @@ export class LegalMemory {
       content,
       metadata,
       tags,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       relevanceScore: 1,
     };
 
@@ -145,10 +141,8 @@ export class LegalMemory {
     if (redis) {
       try {
         // Buscar memória existente
-        const existingMemory = (await redis.get("legal-memory")) as
-          | LegalContextItem[]
-          | null;
-        const memory = existingMemory || [];
+        const existingMemory = await redis.get<LegalContextItem[]>("legal-memory");
+        const memory = existingMemory ?? [];
 
         // Adicionar novo item
         const newMemory = [...memory, validatedItem];
@@ -158,9 +152,7 @@ export class LegalMemory {
       }
     }
 
-    console.log(
-      `[LegalMemory] Contexto adicionado: ${validatedItem.id} (${type})`
-    );
+    console.log(`[LegalMemory] Contexto adicionado: ${validatedItem.id} (${type})`);
     return validatedItem;
   }
 
@@ -168,9 +160,7 @@ export class LegalMemory {
    * Busca contexto relevante baseado em uma query
    * (Simulação de busca semântica por enquanto)
    */
-  public async search(
-    options: LegalMemorySearchOptions
-  ): Promise<LegalContextItem[]> {
+  public async search(options: LegalMemorySearchOptions): Promise<LegalContextItem[]> {
     // Se cache estiver vazio, tenta carregar do KV
     if (this.memoryCache.size === 0) {
       await this.loadFromKV();

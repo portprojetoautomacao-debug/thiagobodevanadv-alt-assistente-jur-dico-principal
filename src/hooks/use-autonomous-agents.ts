@@ -2,24 +2,29 @@ import { useKV } from "@/hooks/use-kv";
 import {
   type Agent,
   type AgentTask,
+  type AgentTaskResult,
   canResumeAfterHuman,
   initializeAgents,
   shouldPauseForHuman,
 } from "@/lib/agents";
-import {
-  processTaskWithRealAI,
-  processTaskWithStreamingAI,
-} from "@/lib/real-agent-client";
+import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
+import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Type alias para log de atividade
-type ActivityLogEntry = {
+// Type alias for activity result (success, warning, or error)
+type ActivityResult = "success" | "warning" | "error";
+
+// Type alias for state setter functions
+type StateSetter<T> = (fn: (current: T | null) => T) => void;
+
+// Activity log entry interface
+interface ActivityLogEntry {
   id: string;
   agentId: string;
   timestamp: string;
   action: string;
-  result: "success" | "warning" | "error";
-};
+  result: ActivityResult;
+}
 
 // ===========================
 // Types for server data
@@ -66,15 +71,9 @@ function getAgentActivity(agent: Agent): string {
  */
 function createStreamingCallbacks(
   agentId: string,
-  setStreamingContent: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >,
+  setStreamingContent: React.Dispatch<React.SetStateAction<Record<string, string>>>,
   setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
-  logActivity: (
-    agentId: string,
-    action: string,
-    result: "success" | "warning" | "error"
-  ) => void
+  logActivity: (agentId: string, action: string, result: ActivityResult) => void
 ): StreamingCallbacks {
   return {
     onChunk: (chunk: string) => {
@@ -112,18 +111,16 @@ function createStreamingCallbacks(
 /**
  * Handles task completion - extracted to reduce nesting (S2004)
  */
+type ActivityLogger = (agentId: string, action: string, result: ActivityResult) => void;
+
 function handleTaskCompletion(
   task: AgentTask,
   result: AgentTask["result"],
   agentId: string,
-  setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
-  setCompletedTasks: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
-  setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
-  logActivity: (
-    agentId: string,
-    action: string,
-    result: "success" | "warning" | "error"
-  ) => void
+  setTaskQueue: StateSetter<AgentTask[]>,
+  setCompletedTasks: StateSetter<AgentTask[]>,
+  setAgents: StateSetter<Agent[]>,
+  logActivity: ActivityLogger
 ): void {
   const completed: AgentTask = {
     ...task,
@@ -142,6 +139,8 @@ function handleTaskCompletion(
   logActivity(agentId, `Tarefa concluída: ${task.type}`, "success");
 }
 
+type TaskQueueSetter = (fn: (current: AgentTask[] | null) => AgentTask[]) => void;
+
 /**
  * Handles task failure - extracted to reduce nesting (S2004)
  */
@@ -149,12 +148,8 @@ function handleTaskFailure(
   task: AgentTask,
   error: unknown,
   agentId: string,
-  setTaskQueue: (fn: (current: AgentTask[] | null) => AgentTask[]) => void,
-  logActivity: (
-    agentId: string,
-    action: string,
-    result: "success" | "warning" | "error"
-  ) => void
+  setTaskQueue: TaskQueueSetter,
+  logActivity: ActivityLogger
 ): void {
   setTaskQueue((current) =>
     updateTaskInQueue(current || [], task.id, {
@@ -175,11 +170,7 @@ function sortTasksByPriority(tasks: AgentTask[]): AgentTask[] {
   return tasks.sort((a, b) => order[a.priority] - order[b.priority]);
 }
 
-function updateAgentInList(
-  agents: Agent[],
-  agentId: string,
-  updates: Partial<Agent>
-): Agent[] {
+function updateAgentInList(agents: Agent[], agentId: string, updates: Partial<Agent>): Agent[] {
   return agents.map((a) => (a.id === agentId ? { ...a, ...updates } : a));
 }
 
@@ -191,29 +182,24 @@ function updateTaskInQueue(
   return tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
 }
 
-function getQueuedTasksForAgent(
-  queue: AgentTask[],
-  agentId: string
-): AgentTask[] {
+function getQueuedTasksForAgent(queue: AgentTask[], agentId: string): AgentTask[] {
   return queue.filter(
-    (t) =>
-      t.agentId === agentId && t.status === "queued" && canResumeAfterHuman(t)
+    (t) => t.agentId === agentId && t.status === "queued" && canResumeAfterHuman(t)
   );
 }
 
-function isDataVersionOutdated(
-  storedVersion: number,
-  currentVersion: number
-): boolean {
+function isDataVersionOutdated(storedVersion: number, currentVersion: number): boolean {
   return storedVersion < currentVersion;
 }
 
 function clearOutdatedLocalStorage(): void {
-  console.log("[Agents] Versão desatualizada → limpando dados locais…");
-  window.localStorage.removeItem("autonomous-agents");
-  window.localStorage.removeItem("agent-task-queue");
-  window.localStorage.removeItem("completed-agent-tasks");
-  window.localStorage.removeItem("agent-activity-log");
+  if (import.meta.env.DEV) {
+    console.log("[Agents] Atualizando estrutura de dados local...");
+  }
+  globalThis.window.localStorage.removeItem("autonomous-agents");
+  globalThis.window.localStorage.removeItem("agent-task-queue");
+  globalThis.window.localStorage.removeItem("completed-agent-tasks");
+  globalThis.window.localStorage.removeItem("agent-activity-log");
 }
 
 /**
@@ -224,23 +210,20 @@ const AGENTS_DATA_VERSION = 7;
 
 function getInitialAgents(): Agent[] {
   // Early return for server-side rendering
-  if (typeof window === "undefined") return initializeAgents();
+  if (globalThis.window === undefined) return initializeAgents();
 
   try {
-    const storedVersion = window.localStorage.getItem("agents-data-version");
+    const storedVersion = globalThis.localStorage.getItem("agents-data-version");
     const version = storedVersion ? JSON.parse(storedVersion) : 0;
 
     // Handle outdated data version
     if (isDataVersionOutdated(version, AGENTS_DATA_VERSION)) {
       clearOutdatedLocalStorage();
-      window.localStorage.setItem(
-        "agents-data-version",
-        JSON.stringify(AGENTS_DATA_VERSION)
-      );
+      globalThis.localStorage.setItem("agents-data-version", JSON.stringify(AGENTS_DATA_VERSION));
       return initializeAgents();
     }
 
-    const storedAgents = window.localStorage.getItem("autonomous-agents");
+    const storedAgents = globalThis.localStorage.getItem("autonomous-agents");
 
     // Handle stored agents
     if (storedAgents) {
@@ -249,9 +232,7 @@ function getInitialAgents(): Agent[] {
       // Return valid stored agents
       if (Array.isArray(parsed) && parsed.length === 15) return parsed;
 
-      console.log(
-        "[Agents] Quantidade incorreta de agentes → reinicializando…"
-      );
+      console.log("[Agents] Quantidade incorreta de agentes → reinicializando…");
       return initializeAgents();
     }
   } catch (e) {
@@ -262,20 +243,11 @@ function getInitialAgents(): Agent[] {
 }
 
 export function useAutonomousAgents() {
-  const [_version, _setVersion] = useKV<number>(
-    "agents-data-version",
-    AGENTS_DATA_VERSION
-  );
+  const [_version, _setVersion] = useKV<number>("agents-data-version", AGENTS_DATA_VERSION);
 
-  const [agents, setAgents] = useKV<Agent[]>(
-    "autonomous-agents",
-    getInitialAgents()
-  );
+  const [agents, setAgents] = useKV<Agent[]>("autonomous-agents", getInitialAgents());
   const [taskQueue, setTaskQueue] = useKV<AgentTask[]>("agent-task-queue", []);
-  const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>(
-    "completed-agent-tasks",
-    []
-  );
+  const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>("completed-agent-tasks", []);
   const [activityLog, setActivityLog] = useKV<
     Array<{
       id: string;
@@ -291,9 +263,7 @@ export function useAutonomousAgents() {
   const [legalMemory, setLegalMemory] = useState<MemoryItem[]>([]);
 
   // Estado para streaming em tempo real
-  const [streamingContent, setStreamingContent] = useState<
-    Record<string, string>
-  >({});
+  const [streamingContent, setStreamingContent] = useState<Record<string, string>>({});
   const [useStreaming, setUseStreaming] = useState(true); // Streaming habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set());
@@ -327,9 +297,7 @@ export function useAutonomousAgents() {
           setServerLogs(data.logs);
         }
       } else if (logsRes.status === 401) {
-        console.warn(
-          "[Agents] API requer autenticação - ignorando sync de logs"
-        );
+        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
       }
 
       // Fetch memory com timeout
@@ -348,17 +316,12 @@ export function useAutonomousAgents() {
           setLegalMemory(data.memory);
         }
       } else if (memoryRes.status === 401) {
-        console.warn(
-          "[Agents] API requer autenticação - ignorando sync de memória"
-        );
+        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
       }
     } catch (error) {
       // Silenciar erros de rede em dev (servidor pode não estar rodando)
       if (error instanceof Error && error.name !== "AbortError") {
-        console.debug(
-          "[Agents] Servidor não disponível (normal em dev):",
-          error.message
-        );
+        console.debug("[Agents] Servidor não disponível (normal em dev):", error.message);
       }
     }
   }, []);
@@ -377,9 +340,7 @@ export function useAutonomousAgents() {
         failureCount++;
         // Desabilita polling após 3 falhas consecutivas
         if (failureCount >= 3 && interval) {
-          console.info(
-            "[Agents] Servidor indisponível - desabilitando polling automático"
-          );
+          console.info("[Agents] Servidor indisponível - desabilitando polling automático");
           clearInterval(interval);
           interval = null;
         }
@@ -402,13 +363,10 @@ export function useAutonomousAgents() {
   // =============================
 
   // Helper para adicionar tarefa à fila (reduz S2004 nesting)
-  const addTaskToQueue = useCallback(
-    (current: AgentTask[], task: AgentTask): AgentTask[] => {
-      const updated = [...current, task];
-      return sortTasksByPriority(updated);
-    },
-    []
-  );
+  const addTaskToQueue = useCallback((current: AgentTask[], task: AgentTask): AgentTask[] => {
+    const updated = [...current, task];
+    return sortTasksByPriority(updated);
+  }, []);
 
   const addTask = useCallback(
     (task: AgentTask) => {
@@ -419,11 +377,7 @@ export function useAutonomousAgents() {
 
   // Helper para criar log de atividade (reduz S2004 nesting)
   const createActivityLog = useCallback(
-    (
-      agentId: string,
-      action: string,
-      result: "success" | "warning" | "error" = "success"
-    ) => {
+    (agentId: string, action: string, result: "success" | "warning" | "error" = "success") => {
       return {
         id: crypto.randomUUID(),
         agentId,
@@ -437,21 +391,14 @@ export function useAutonomousAgents() {
 
   // Helper para adicionar log à lista (reduz S2004 nesting)
   const addLogToActivityList = useCallback(
-    (
-      current: ActivityLogEntry[],
-      log: ActivityLogEntry
-    ): ActivityLogEntry[] => {
+    (current: ActivityLogEntry[], log: ActivityLogEntry): ActivityLogEntry[] => {
       return [log, ...(current || [])].slice(0, 100);
     },
     []
   );
 
   const logActivity = useCallback(
-    (
-      agentId: string,
-      action: string,
-      result: "success" | "warning" | "error" = "success"
-    ) => {
+    (agentId: string, action: string, result: "success" | "warning" | "error" = "success") => {
       setActivityLog((current) => {
         const log = createActivityLog(agentId, action, result);
         return addLogToActivityList(current || [], log);
@@ -513,8 +460,38 @@ export function useAutonomousAgents() {
       try {
         let result;
 
-        if (useStreaming) {
-          // Create callbacks using extracted helper (S2004 compliance)
+        // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
+        const hasHybrid = hasHybridVersion(agent.id);
+
+        if (hasHybrid) {
+          // Usar arquitetura híbrida com fallback automático
+          const hybridResult = await executeHybridTask(agent.id, task, {
+            enableLangGraph: true,
+            enableTraditional: true,
+            coordinationMode: "fallback", // LangGraph primeiro, tradicional como fallback
+            timeoutMs: 30000,
+          });
+
+          // Converter resultado híbrido para formato AgentTaskResult
+          result = {
+            success: hybridResult.success,
+            data:
+              hybridResult.langGraphResult?.data ||
+              (hybridResult.traditionalResult?.output as Record<string, unknown>) ||
+              {},
+            message: `Executado via ${hybridResult.mode}`,
+            processingTimeMs: hybridResult.executionTime,
+            confidence: hybridResult.success ? 0.95 : 0.5,
+          } satisfies AgentTaskResult;
+
+          // Log da execução híbrida
+          logActivity(
+            agent.id,
+            `Executado via ${hybridResult.mode} (${hybridResult.executionTime}ms)`,
+            hybridResult.success ? "success" : "error"
+          );
+        } else if (useStreaming) {
+          // Fallback para agentes sem versão híbrida - usar streaming tradicional
           const callbacks = createStreamingCallbacks(
             agent.id,
             setStreamingContent,
@@ -523,7 +500,7 @@ export function useAutonomousAgents() {
           );
           result = await processTaskWithStreamingAI(task, agent, callbacks);
         } else {
-          // Fallback para processamento sem streaming
+          // Fallback para processamento tradicional sem streaming
           result = await processTaskWithRealAI(task, agent);
         }
 
@@ -544,14 +521,7 @@ export function useAutonomousAgents() {
         processingRef.current.delete(agent.id);
       }
     },
-    [
-      taskQueue,
-      setTaskQueue,
-      setAgents,
-      setCompletedTasks,
-      logActivity,
-      useStreaming,
-    ]
+    [taskQueue, setTaskQueue, setAgents, setCompletedTasks, logActivity, useStreaming]
   );
 
   const processNextTaskRef = useRef(processNextTask);
@@ -619,9 +589,12 @@ export function useAutonomousAgents() {
 
   // Helper para configurar intervalo diário (reduz S2004 nesting)
   const setupDailyResetInterval = useCallback(() => {
-    const interval = setInterval(() => {
-      performDailyReset();
-    }, 24 * 60 * 60 * 1000);
+    const interval = setInterval(
+      () => {
+        performDailyReset();
+      },
+      24 * 60 * 60 * 1000
+    );
 
     return () => clearInterval(interval);
   }, [performDailyReset]);
@@ -650,12 +623,9 @@ export function useAutonomousAgents() {
   // =============================
 
   // Helper para encontrar agente por ID (reduz S2004 nesting)
-  const findAgentById = useCallback(
-    (agents: Agent[], agentId: string): Agent | undefined => {
-      return agents.find((a) => a.id === agentId);
-    },
-    []
-  );
+  const findAgentById = useCallback((agents: Agent[], agentId: string): Agent | undefined => {
+    return agents.find((a) => a.id === agentId);
+  }, []);
 
   // Helper para determinar novo status do agente (reduz S2004 nesting)
   const getNewAgentStatus = useCallback((agent: Agent): Partial<Agent> => {
@@ -709,6 +679,14 @@ export function useAutonomousAgents() {
     setUseStreaming((prev) => !prev);
   }, []);
 
+  // Clear old activity logs (older than 24h)
+  const clearOldLogs = useCallback(() => {
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    setActivityLog((current) =>
+      (current || []).filter((log) => new Date(log.timestamp).getTime() > oneDayAgo)
+    );
+  }, [setActivityLog]);
+
   return {
     agents: agents || [],
     taskQueue: taskQueue || [],
@@ -727,5 +705,6 @@ export function useAutonomousAgents() {
     markTaskAsHumanTouched,
     resumeTaskAfterHuman,
     setAgents,
+    clearOldLogs, // Clear logs older than 24h
   };
 }

@@ -38,7 +38,7 @@ vi.mock("process", () => ({
 }));
 
 // Mock do window.matchMedia
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
     matches: false,
@@ -54,9 +54,6 @@ Object.defineProperty(window, "matchMedia", {
 
 // Mock do IntersectionObserver
 globalThis.IntersectionObserver = class IntersectionObserver {
-  constructor() {
-    /* Mock constructor - intentionally empty */
-  }
   disconnect() {
     /* Mock method - intentionally empty */
   }
@@ -73,9 +70,6 @@ globalThis.IntersectionObserver = class IntersectionObserver {
 
 // Mock do ResizeObserver
 globalThis.ResizeObserver = class ResizeObserver {
-  constructor() {
-    /* Mock constructor - intentionally empty */
-  }
   disconnect() {
     /* Mock method - intentionally empty */
   }
@@ -86,3 +80,49 @@ globalThis.ResizeObserver = class ResizeObserver {
     /* Mock method - intentionally empty */
   }
 } as unknown as typeof ResizeObserver;
+
+// ✅ Mock do Google API (gapi) para evitar timeout
+globalThis.gapi = {
+  load: vi.fn((api: string, callback: { callback?: () => void }) => {
+    if (callback?.callback) {
+      setTimeout(callback.callback, 0);
+    }
+  }),
+  client: {
+    init: vi.fn().mockResolvedValue(undefined),
+    docs: {
+      documents: {
+        create: vi.fn().mockResolvedValue({ result: { documentId: "test-doc-id" } }),
+        get: vi.fn().mockResolvedValue({ result: { body: { content: [] } } }),
+        batchUpdate: vi.fn().mockResolvedValue({ result: {} }),
+      },
+    },
+  },
+  auth2: {
+    getAuthInstance: vi.fn(() => ({
+      isSignedIn: {
+        get: vi.fn(() => true),
+      },
+      currentUser: {
+        get: vi.fn(() => ({
+          getAuthResponse: vi.fn(() => ({ access_token: "test-token" })),
+        })),
+      },
+    })),
+  },
+} as any;
+
+// ✅ Mock do Google Identity Services (accounts.google.com)
+globalThis.google = {
+  accounts: {
+    oauth2: {
+      initTokenClient: vi.fn(() => ({
+        requestAccessToken: vi.fn(),
+      })),
+    },
+  },
+} as any;
+
+// ✅ NÃO mockar GoogleDocsService globalmente - deixar o service detectar ambiente de teste
+// O GoogleDocsService agora detecta automaticamente ambiente de teste via import.meta.env.MODE
+// e pula a inicialização real, evitando timeouts

@@ -20,21 +20,22 @@ import { useKV } from "@/hooks/use-kv";
 import { cn } from "@/lib/utils";
 import type { FinancialEntry, Process, ViewType } from "@/types";
 import {
+  AlertTriangle,
   ArrowRight,
+  BarChart2,
   Bell,
+  Bot,
   Briefcase,
-  ChartBar,
   Check,
   Copy,
-  CurrencyCircleDollar,
-  PaperPlaneTilt,
-  Robot,
-  Sparkle,
-  Stop,
-  Trash,
+  DollarSign,
+  Send,
+  Sparkles,
+  Square,
+  Trash2,
   User,
-  Warning,
-} from "@phosphor-icons/react";
+} from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -74,6 +75,67 @@ interface HarveySpecterChatProps {
 }
 
 // ============================================
+// HELPERS
+// ============================================
+
+// Helper para renderizar conteúdo da mensagem (evita ternário aninhado S3358)
+interface MessageContentParams {
+  messageId: string;
+  streamingMessageId: string | null;
+  isStreaming: boolean;
+  streamingContent: string;
+  messageContent: string;
+}
+
+function renderMessageContent(
+  params: MessageContentParams,
+  SimpleMarkdown: ComponentType<{ content: string }>
+): ReactNode {
+  const { messageId, streamingMessageId, isStreaming, streamingContent, messageContent } = params;
+
+  // Caso 1: Mensagem em streaming ativo
+  if (messageId === streamingMessageId && isStreaming) {
+    return (
+      <div className="text-sm">
+        <SimpleMarkdown content={streamingContent || ""} />
+        <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
+      </div>
+    );
+  }
+
+  // Caso 2: Mensagem com conteúdo
+  if (messageContent) {
+    return (
+      <div className="text-sm">
+        <SimpleMarkdown content={messageContent} />
+      </div>
+    );
+  }
+
+  // Caso 3: Mensagem de streaming aguardando (loading)
+  if (messageId === streamingMessageId) {
+    return (
+      <div className="flex gap-1">
+        <div
+          className="w-2 h-2 rounded-full bg-current animate-bounce"
+          style={{ animationDelay: "0ms" }}
+        />
+        <div
+          className="w-2 h-2 rounded-full bg-current animate-bounce"
+          style={{ animationDelay: "150ms" }}
+        />
+        <div
+          className="w-2 h-2 rounded-full bg-current animate-bounce"
+          style={{ animationDelay: "300ms" }}
+        />
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ============================================
 // CONSTANTES
 // ============================================
 
@@ -82,7 +144,7 @@ const DEFAULT_MAX_MESSAGES = 50;
 
 const QUICK_ACTIONS = [
   {
-    icon: ChartBar,
+    icon: BarChart2,
     title: "Processos",
     description: "Status do acervo",
     query: "Qual o status dos meus processos?",
@@ -96,7 +158,7 @@ const QUICK_ACTIONS = [
     color: "text-red-500 bg-red-500/10",
   },
   {
-    icon: CurrencyCircleDollar,
+    icon: DollarSign,
     title: "Financeiro",
     description: "Resumo do mês",
     query: "Como está o financeiro do escritório?",
@@ -130,23 +192,11 @@ const SimpleMarkdown = memo(({ content }: { content: string }) => {
     return (
       content
         // Headers
-        .replaceAll(
-          /^### (.+)$/gm,
-          '<h3 class="text-base font-bold mt-3 mb-1">$1</h3>'
-        )
-        .replaceAll(
-          /^## (.+)$/gm,
-          '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>'
-        )
-        .replaceAll(
-          /^# (.+)$/gm,
-          '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>'
-        )
+        .replaceAll(/^### (.+)$/gm, '<h3 class="text-base font-bold mt-3 mb-1">$1</h3>')
+        .replaceAll(/^## (.+)$/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
+        .replaceAll(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
         // Bold
-        .replaceAll(
-          /\*\*(.+?)\*\*/g,
-          '<strong class="font-semibold">$1</strong>'
-        )
+        .replaceAll(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
         // Italic
         .replaceAll(/\*(.+?)\*/g, "<em>$1</em>")
         // Code inline
@@ -159,8 +209,8 @@ const SimpleMarkdown = memo(({ content }: { content: string }) => {
         .replaceAll(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
         .replaceAll(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
         // Line breaks
-        .replaceAll(/\n\n/g, '</p><p class="mt-2">')
-        .replaceAll(/\n/g, "<br/>")
+        .replaceAll("\n\n", '</p><p class="mt-2">')
+        .replaceAll("\n", "<br/>")
     );
   }, [content]);
 
@@ -195,15 +245,110 @@ const CopyButton = memo(({ text }: { text: string }) => {
       onClick={handleCopy}
       aria-label="Copiar mensagem"
     >
-      {copied ? (
-        <Check className="w-3 h-3 text-green-500" />
-      ) : (
-        <Copy className="w-3 h-3" />
-      )}
+      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
     </Button>
   );
 });
 CopyButton.displayName = "CopyButton";
+
+interface ChatMessageProps {
+  message: Message;
+  streamingMessageId: string | null;
+  isStreaming: boolean;
+  streamingContent: string;
+  onInsightClick: (action?: ViewType) => void;
+}
+
+const ChatMessage = ({
+  message,
+  streamingMessageId,
+  isStreaming,
+  streamingContent,
+  onInsightClick,
+}: ChatMessageProps) => {
+  const isUser = message.role === "user";
+  const isAssistant = message.role === "assistant";
+
+  return (
+    <div className="group">
+      <div className={cn("flex gap-3", isUser ? "flex-row-reverse" : "flex-row")}>
+        {/* Avatar */}
+        <div
+          className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+            isUser
+              ? "bg-primary text-primary-foreground"
+              : "bg-linear-to-br from-primary/20 to-accent/20"
+          )}
+        >
+          {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+        </div>
+
+        {/* Content */}
+        <div className={cn("flex-1 max-w-[80%]", isUser ? "text-right" : "text-left")}>
+          <Card
+            className={cn(
+              "p-3 inline-block text-left",
+              isUser ? "bg-primary text-primary-foreground" : "bg-card"
+            )}
+          >
+            {/* Streaming ou conteúdo final */}
+            {renderMessageContent(
+              {
+                messageId: message.id,
+                streamingMessageId,
+                isStreaming,
+                streamingContent,
+                messageContent: message.content,
+              },
+              SimpleMarkdown
+            )}
+          </Card>
+
+          {/* Copy button para assistente */}
+          {isAssistant && message.content && (
+            <div className="mt-1 flex items-center gap-2">
+              <CopyButton text={message.content} />
+              <span className="text-xs text-muted-foreground">
+                {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          )}
+
+          {/* Insights clicáveis */}
+          {message.insights && message.insights.length > 0 && isAssistant && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {message.insights.map((insight) => (
+                <Card
+                  key={insight.title}
+                  className={cn(
+                    "px-2 py-1.5 inline-flex items-center gap-1.5 text-xs",
+                    insight.action && "cursor-pointer hover:bg-accent/10"
+                  )}
+                  onClick={() => onInsightClick(insight.action)}
+                >
+                  {insight.type === "alert" && <Bell className="w-3 h-3 text-red-500" />}
+                  {insight.type === "statistics" && <BarChart2 className="w-3 h-3 text-blue-500" />}
+                  {insight.type === "trend" && <BarChart2 className="w-3 h-3 text-green-500" />}
+                  {insight.type === "suggestion" && (
+                    <Sparkles className="w-3 h-3 text-purple-500" />
+                  )}
+                  {insight.type === "info" && <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                  <span className="font-medium">{insight.title}</span>
+                  {insight.value && <span className="font-bold">{insight.value}</span>}
+                  {insight.action && <ArrowRight className="w-3 h-3" />}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ============================================
 // COMPONENTE PRINCIPAL
@@ -217,9 +362,9 @@ export default function HarveySpecterChat({
   const [messages, setMessages] = useKV<Message[]>("harvey-messages", []);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
-    null
-  );
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [sessionId] = useState(`harvey-${Date.now()}`); // 🔥 Session ID para tracking
+  const [conversationTurn, setConversationTurn] = useState(0); // 🔥 Contador de turnos
 
   // Refs
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -239,13 +384,14 @@ export default function HarveySpecterChat({
     cancelStream,
     reset: resetStreaming,
   } = useAIStreaming({
+    agentId: "harvey-specter", // 🔥 ID do agente para Sentry
+    sessionId, // 🔥 Session ID único para rastrear conversação
+    conversationTurn, // 🔥 Contador de turnos
     onChunk: () => {
       // Scroll suave durante streaming
       requestAnimationFrame(() => {
         if (scrollAreaRef.current) {
-          const viewport = scrollAreaRef.current.querySelector(
-            "[data-radix-scroll-area-viewport]"
-          );
+          const viewport = scrollAreaRef.current.querySelector("[data-radix-scroll-area-viewport]");
           if (viewport) {
             viewport.scrollTop = viewport.scrollHeight;
           }
@@ -269,8 +415,7 @@ export default function HarveySpecterChat({
 
     const totalProcesses = processes?.length || 0;
     const processesByStatus = {
-      "Em Andamento":
-        processes?.filter((p) => p.status === "ativo").length || 0,
+      "Em Andamento": processes?.filter((p) => p.status === "ativo").length || 0,
       Aguardando: processes?.filter((p) => p.status === "suspenso").length || 0,
       Concluído: processes?.filter((p) => p.status === "concluido").length || 0,
       Arquivado: processes?.filter((p) => p.status === "arquivado").length || 0,
@@ -308,9 +453,7 @@ export default function HarveySpecterChat({
     const monthlyRecords =
       financialRecords?.filter((r) => {
         const date = new Date(r.date);
-        return (
-          date.getMonth() === currentMonth && date.getFullYear() === currentYear
-        );
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
       }) || [];
 
     const receita = monthlyRecords
@@ -319,14 +462,11 @@ export default function HarveySpecterChat({
     const despesas = monthlyRecords
       .filter((r) => r.type === "expense")
       .reduce((sum, r) => sum + r.amount, 0);
-    const margem =
-      receita > 0 ? (((receita - despesas) / receita) * 100).toFixed(1) : "0";
+    const margem = receita > 0 ? (((receita - despesas) / receita) * 100).toFixed(1) : "0";
 
     // Tarefas
-    const pendingTasks =
-      taskQueue?.filter((t) => t.status === "pending").length || 0;
-    const inProgressTasks =
-      taskQueue?.filter((t) => t.status === "in_progress").length || 0;
+    const pendingTasks = taskQueue?.filter((t) => t.status === "pending").length || 0;
+    const inProgressTasks = taskQueue?.filter((t) => t.status === "in_progress").length || 0;
 
     return {
       totalProcesses,
@@ -339,9 +479,7 @@ export default function HarveySpecterChat({
       pendingTasks,
       inProgressTasks,
       hasData:
-        totalProcesses > 0 ||
-        (financialRecords?.length ?? 0) > 0 ||
-        (taskQueue?.length ?? 0) > 0,
+        totalProcesses > 0 || (financialRecords?.length ?? 0) > 0 || (taskQueue?.length ?? 0) > 0,
     };
   }, [processes, financialRecords, taskQueue]);
 
@@ -452,8 +590,7 @@ export default function HarveySpecterChat({
         {
           type: "suggestion",
           title: "Dica",
-          description:
-            "Pergunte sobre processos, prazos, financeiro ou tarefas",
+          description: "Pergunte sobre processos, prazos, financeiro ou tarefas",
         },
       ];
     },
@@ -464,9 +601,7 @@ export default function HarveySpecterChat({
   const buildSystemPrompt = useCallback(() => {
     const contextData = realStats.hasData
       ? `Dados REAIS do escritório:
-- ${realStats.totalProcesses} processos (${
-          realStats.processesByStatus["Em Andamento"]
-        } ativos)
+- ${realStats.totalProcesses} processos (${realStats.processesByStatus["Em Andamento"]} ativos)
 - ${realStats.urgentDeadlines} prazos urgentes (48h)
 - ${realStats.upcomingDeadlines} prazos em 7 dias
 - Receita: R$ ${realStats.receita.toLocaleString("pt-BR")}
@@ -531,6 +666,9 @@ Regras:
             msg.id === assistantId ? { ...msg, content: finalContent } : msg
           )
         );
+
+        // 🔥 Incrementar contador de turnos após sucesso
+        setConversationTurn((prev) => prev + 1);
       } catch (error) {
         console.error("[Harvey] Erro:", error);
         setMessages((current) =>
@@ -617,9 +755,7 @@ Regras:
   // Auto-scroll quando mensagens mudam
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
+      const viewport = scrollAreaRef.current.querySelector("[data-radix-scroll-area-viewport]");
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
       }
@@ -639,13 +775,11 @@ Regras:
       <div className="border-b bg-card/50 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center">
-            <Sparkle className="w-5 h-5 text-white" weight="fill" />
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold">Harvey Specter</h1>
-            <p className="text-xs text-muted-foreground">
-              Assistente Jurídico IA
-            </p>
+            <p className="text-xs text-muted-foreground">Assistente Jurídico IA</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -655,13 +789,8 @@ Regras:
               {realStats.urgentDeadlines > 1 ? "s" : ""}
             </Badge>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClear}
-            aria-label="Limpar conversa"
-          >
-            <Trash className="w-4 h-4" />
+          <Button variant="ghost" size="sm" onClick={handleClear} aria-label="Limpar conversa">
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -674,12 +803,9 @@ Regras:
               // Welcome Screen
               <div className="space-y-6 py-8">
                 <div className="text-center">
-                  <h2 className="text-xl font-semibold mb-2">
-                    Olá! Sou o Harvey Specter
-                  </h2>
+                  <h2 className="text-xl font-semibold mb-2">Olá! Sou o Harvey Specter</h2>
                   <p className="text-muted-foreground text-sm">
-                    Seu assistente jurídico com dados em tempo real do
-                    escritório
+                    Seu assistente jurídico com dados em tempo real do escritório
                   </p>
                 </div>
 
@@ -695,15 +821,11 @@ Regras:
                       >
                         <div className="flex items-center gap-2">
                           <div className={cn("p-2 rounded-lg", action.color)}>
-                            <Icon className="w-4 h-4" weight="fill" />
+                            <Icon className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">
-                              {action.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {action.description}
-                            </p>
+                            <p className="font-medium text-sm">{action.title}</p>
+                            <p className="text-xs text-muted-foreground">{action.description}</p>
                           </div>
                         </div>
                       </Card>
@@ -713,9 +835,7 @@ Regras:
 
                 {/* Suggested Questions */}
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">
-                    Sugestões:
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Sugestões:</p>
                   <div className="flex flex-wrap gap-2">
                     {SUGGESTED_QUESTIONS.map((q) => (
                       <Button
@@ -735,142 +855,14 @@ Regras:
               // Messages
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <div key={message.id} className="group">
-                    <div
-                      className={cn(
-                        "flex gap-3",
-                        message.role === "user"
-                          ? "flex-row-reverse"
-                          : "flex-row"
-                      )}
-                    >
-                      {/* Avatar */}
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-linear-to-br from-primary/20 to-accent/20"
-                        )}
-                      >
-                        {message.role === "user" ? (
-                          <User className="w-4 h-4" weight="fill" />
-                        ) : (
-                          <Robot className="w-4 h-4" weight="fill" />
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div
-                        className={cn(
-                          "flex-1 max-w-[80%]",
-                          message.role === "user" ? "text-right" : "text-left"
-                        )}
-                      >
-                        <Card
-                          className={cn(
-                            "p-3 inline-block text-left",
-                            message.role === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card"
-                          )}
-                        >
-                          {/* Streaming ou conteúdo final */}
-                          {message.id === streamingMessageId && isStreaming ? (
-                            <div className="text-sm">
-                              <SimpleMarkdown
-                                content={streamingContent || ""}
-                              />
-                              <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
-                            </div>
-                          ) : message.content ? (
-                            <div className="text-sm">
-                              <SimpleMarkdown content={message.content} />
-                            </div>
-                          ) : message.id === streamingMessageId ? (
-                            <div className="flex gap-1">
-                              <div
-                                className="w-2 h-2 rounded-full bg-current animate-bounce"
-                                style={{ animationDelay: "0ms" }}
-                              />
-                              <div
-                                className="w-2 h-2 rounded-full bg-current animate-bounce"
-                                style={{ animationDelay: "150ms" }}
-                              />
-                              <div
-                                className="w-2 h-2 rounded-full bg-current animate-bounce"
-                                style={{ animationDelay: "300ms" }}
-                              />
-                            </div>
-                          ) : null}
-                        </Card>
-
-                        {/* Copy button para assistente */}
-                        {message.role === "assistant" && message.content && (
-                          <div className="mt-1 flex items-center gap-2">
-                            <CopyButton text={message.content} />
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(message.timestamp).toLocaleTimeString(
-                                "pt-BR",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Insights clicáveis */}
-                        {message.insights &&
-                          message.insights.length > 0 &&
-                          message.role === "assistant" && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {message.insights.map((insight) => (
-                                <Card
-                                  key={insight.title}
-                                  className={cn(
-                                    "px-2 py-1.5 inline-flex items-center gap-1.5 text-xs",
-                                    insight.action &&
-                                      "cursor-pointer hover:bg-accent/10"
-                                  )}
-                                  onClick={() =>
-                                    handleInsightClick(insight.action)
-                                  }
-                                >
-                                  {insight.type === "alert" && (
-                                    <Bell className="w-3 h-3 text-red-500" />
-                                  )}
-                                  {insight.type === "statistics" && (
-                                    <ChartBar className="w-3 h-3 text-blue-500" />
-                                  )}
-                                  {insight.type === "trend" && (
-                                    <ChartBar className="w-3 h-3 text-green-500" />
-                                  )}
-                                  {insight.type === "suggestion" && (
-                                    <Sparkle className="w-3 h-3 text-purple-500" />
-                                  )}
-                                  {insight.type === "info" && (
-                                    <Warning className="w-3 h-3 text-amber-500" />
-                                  )}
-                                  <span className="font-medium">
-                                    {insight.title}
-                                  </span>
-                                  {insight.value && (
-                                    <span className="font-bold">
-                                      {insight.value}
-                                    </span>
-                                  )}
-                                  {insight.action && (
-                                    <ArrowRight className="w-3 h-3" />
-                                  )}
-                                </Card>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  </div>
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    streamingMessageId={streamingMessageId}
+                    isStreaming={isStreaming}
+                    streamingContent={streamingContent}
+                    onInsightClick={handleInsightClick}
+                  />
                 ))}
               </div>
             )}
@@ -888,9 +880,7 @@ Regras:
               ref={inputRef}
               placeholder="Pergunte sobre processos, prazos, financeiro..."
               value={input}
-              onChange={(e) =>
-                setInput(e.target.value.slice(0, MAX_INPUT_LENGTH + 100))
-              }
+              onChange={(e) => setInput(e.target.value.slice(0, MAX_INPUT_LENGTH + 100))}
               onKeyDown={handleKeyDown}
               disabled={isProcessing || isStreaming}
               className={cn("pr-16", isOverLimit && "border-red-500")}
@@ -906,13 +896,8 @@ Regras:
           </div>
 
           {isStreaming ? (
-            <Button
-              onClick={handleCancel}
-              variant="destructive"
-              size="icon"
-              aria-label="Parar"
-            >
-              <Stop className="w-4 h-4" weight="fill" />
+            <Button onClick={handleCancel} variant="destructive" size="icon" aria-label="Parar">
+              <Square className="w-4 h-4" />
             </Button>
           ) : (
             <Button
@@ -921,7 +906,7 @@ Regras:
               size="icon"
               aria-label="Enviar"
             >
-              <PaperPlaneTilt className="w-4 h-4" weight="fill" />
+              <Send className="w-4 h-4" />
             </Button>
           )}
         </div>

@@ -1,16 +1,16 @@
 /**
  * Custom KV (Key-Value) storage hook - OTIMIZADO V2
- * 
+ *
  * Implementa:
  * - Batching de requisições (agrupa múltiplas chaves em uma chamada)
  * - Cache local com TTL
  * - Debounce para evitar rajadas
  * - Circuit breaker para desabilitar API em caso de muitos erros
- * 
+ *
  * Usa localStorage como fallback e Upstash Redis em produção.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ============================================================================
 // CACHE E BATCHING
@@ -40,9 +40,10 @@ const MAX_CONSECUTIVE_ERRORS = 3;
 const CIRCUIT_BREAKER_COOLDOWN = 60000; // 60 segundos de cooldown
 
 // Flag para verificar se estamos em produção
-const isProd = typeof window !== 'undefined' &&
-  (window.location.hostname.includes('vercel.app') ||
-    window.location.hostname !== 'localhost');
+const isProd =
+  globalThis.window !== undefined &&
+  (globalThis.window.location.hostname.includes("vercel.app") ||
+    globalThis.window.location.hostname !== "localhost");
 
 /**
  * Verifica se o circuit breaker está ativo
@@ -54,7 +55,7 @@ function isCircuitOpen(): boolean {
   if (Date.now() > circuitBreakerResetTime) {
     circuitBreakerTripped = false;
     consecutiveErrors = 0;
-    console.log('[KV] Circuit breaker reset - tentando API novamente');
+    console.log("[KV] Circuit breaker reset - tentando API novamente");
     return false;
   }
 
@@ -69,7 +70,7 @@ function recordApiError(): void {
   if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
     circuitBreakerTripped = true;
     circuitBreakerResetTime = Date.now() + CIRCUIT_BREAKER_COOLDOWN;
-    console.warn('[KV] Circuit breaker ativado - usando localStorage por 60s');
+    console.warn("[KV] Circuit breaker ativado - usando localStorage por 60s");
   }
 }
 
@@ -113,7 +114,7 @@ function loadFromLocalStorage(keys: string[]): Map<string, unknown> {
   const results = new Map<string, unknown>();
   for (const key of keys) {
     try {
-      const item = window.localStorage.getItem(key);
+      const item = globalThis.window.localStorage.getItem(key);
       if (item) {
         const value = JSON.parse(item);
         results.set(key, value);
@@ -129,8 +130,11 @@ function loadFromLocalStorage(keys: string[]): Map<string, unknown> {
 /**
  * Processa resposta bem sucedida da API
  */
-function processApiResponse(data: { values?: Record<string, unknown> }, results: Map<string, unknown>): void {
-  if (data.values && typeof data.values === 'object') {
+function processApiResponse(
+  data: { values?: Record<string, unknown> },
+  results: Map<string, unknown>
+): void {
+  if (data.values && typeof data.values === "object") {
     for (const [k, v] of Object.entries(data.values)) {
       results.set(k, v);
       setInCache(k, v);
@@ -155,10 +159,10 @@ async function batchLoadFromVercelKV(keys: string[]): Promise<Map<string, unknow
     // Usa o endpoint de batch
     const batchKeys = keys.slice(0, MAX_BATCH_SIZE);
 
-    const response = await fetch('/api/kv', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'batch-get', keys: batchKeys }),
+    const response = await fetch("/api/kv", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "batch-get", keys: batchKeys }),
     });
 
     if (response.ok) {
@@ -209,7 +213,7 @@ async function processBatch(): Promise<void> {
 /**
  * Agenda uma chave para carregamento em batch
  */
-function scheduleLoad(key: string): Promise<unknown | null> {
+function scheduleLoad(key: string): Promise<unknown> {
   // Verifica cache primeiro
   const cached = getFromCache(key);
   if (cached !== null) {
@@ -220,16 +224,15 @@ function scheduleLoad(key: string): Promise<unknown | null> {
     pendingKeys.add(key);
 
     // Adiciona resolver para esta chave
-    const resolvers = pendingResolvers.get(key) || [];
-    resolvers.push(resolve);
-    pendingResolvers.set(key, resolvers);
+    if (!pendingResolvers.has(key)) {
+      pendingResolvers.set(key, []);
+    }
+    pendingResolvers.get(key)!.push(resolve);
 
     // Agenda o batch se não estiver agendado
-    if (!batchTimeout) {
-      batchTimeout = setTimeout(() => {
-        processBatch();
-      }, BATCH_DELAY_MS);
-    }
+    batchTimeout ??= setTimeout(() => {
+      processBatch();
+    }, BATCH_DELAY_MS);
   });
 }
 
@@ -249,30 +252,37 @@ async function processWriteBatch(): Promise<void> {
   }
 
   try {
-    const entries = Array.from(writes.entries()).map(([key, { value }]) => ({ key, value }));
+    const entries = Array.from(writes.entries()).map(([key, { value }]) => ({
+      key,
+      value,
+    }));
 
     // AbortController com timeout de 5s
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const response = await fetch('/api/kv', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'batch-set', entries }),
+    const response = await fetch("/api/kv", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "batch-set", entries }),
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
 
     if (response.ok) {
       recordApiSuccess();
-    } else if (response.status === 429) {
+    } else if (response.status === 429 || response.status === 413) {
+      // 429 = Rate limit, 413 = Payload muito grande
+      if (response.status === 413 && import.meta.env.DEV) {
+        console.warn("[KV] Payload excede limite do Upstash - considere reduzir tamanho dos dados");
+      }
       recordApiError();
     }
   } catch (error) {
     // Silenciar erros de rede em dev
-    if (error instanceof Error && error.name !== 'AbortError') {
-      console.debug('[KV] API não disponível (normal em dev):', error.message);
+    if (error instanceof Error && error.name !== "AbortError") {
+      console.debug("[KV] API não disponível (normal em dev):", error.message);
     }
     recordApiError();
   }
@@ -284,7 +294,7 @@ async function processWriteBatch(): Promise<void> {
 function scheduleWrite<T>(key: string, value: T): void {
   // Sempre salva no localStorage imediatamente
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    globalThis.window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // localStorage cheio ou indisponível
   }
@@ -296,11 +306,9 @@ function scheduleWrite<T>(key: string, value: T): void {
   if (isProd) {
     pendingWrites.set(key, { value, timestamp: Date.now() });
 
-    if (!writeTimeout) {
-      writeTimeout = setTimeout(() => {
-        processWriteBatch();
-      }, WRITE_DEBOUNCE_MS);
-    }
+    writeTimeout ??= setTimeout(() => {
+      processWriteBatch();
+    }, WRITE_DEBOUNCE_MS);
   }
 }
 
@@ -310,15 +318,12 @@ function scheduleWrite<T>(key: string, value: T): void {
 
 /**
  * Custom hook for key-value storage - OTIMIZADO
- * 
+ *
  * @param key - Storage key
  * @param initialValue - Initial value if key doesn't exist
  * @returns [value, setValue] - Current value and setter function
  */
-export function useKV<T>(
-  key: string,
-  initialValue: T
-): [T, (value: T | ((prev: T) => T)) => void] {
+export function useKV<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] {
   // Inicializa com valor do cache ou localStorage
   const [storedValue, setStoredValue] = useState<T>(() => {
     // Verifica cache em memória primeiro
@@ -329,7 +334,7 @@ export function useKV<T>(
 
     // Tenta localStorage
     try {
-      const item = window.localStorage.getItem(key);
+      const item = globalThis.window.localStorage.getItem(key);
       if (item) {
         const parsed = JSON.parse(item);
         setInCache(key, parsed);
@@ -355,7 +360,8 @@ export function useKV<T>(
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
       setStoredValue((currentStoredValue) => {
-        const valueToStore = value instanceof Function ? value(currentStoredValue) : value;
+        const valueToStore =
+          typeof value === "function" ? (value as (prev: T) => T)(currentStoredValue) : value;
 
         // Agenda escrita (debounced)
         scheduleWrite(keyRef.current, valueToStore);
@@ -363,7 +369,7 @@ export function useKV<T>(
         return valueToStore;
       });
     },
-    []
+    [] // scheduleWrite é função estável, não precisa estar nas dependências
   );
 
   // Carrega do Vercel KV em produção (batched)
@@ -372,14 +378,16 @@ export function useKV<T>(
 
     isLoadingRef.current = true;
 
-    scheduleLoad(key).then((value) => {
-      if (value !== null && value !== undefined) {
-        setStoredValue(value as T);
-      }
-      isLoadingRef.current = false;
-    }).catch(() => {
-      isLoadingRef.current = false;
-    });
+    scheduleLoad(key)
+      .then((value) => {
+        if (value !== null && value !== undefined) {
+          setStoredValue(value as T);
+        }
+        isLoadingRef.current = false;
+      })
+      .catch(() => {
+        isLoadingRef.current = false;
+      });
   }, [key]);
 
   return [storedValue, setValue];

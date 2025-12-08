@@ -11,8 +11,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Skip all tests in browser environment
-const isBrowser =
-  globalThis.window !== undefined && globalThis.document !== undefined;
+const isBrowser = globalThis.window !== undefined && globalThis.document !== undefined;
 
 describe.skipIf(isBrowser)("TodoistClient", () => {
   // construtor carregado dinamicamente
@@ -194,9 +193,7 @@ describe.skipIf(isBrowser)("TodoistClient", () => {
 
       mocks.addProject.mockResolvedValue(mockProject);
 
-      const project = await client.createProject(
-        "Processo 1234567-89.2024.8.09.0000"
-      );
+      const project = await client.createProject("Processo 1234567-89.2024.8.09.0000");
 
       expect(mocks.addProject).toHaveBeenCalledWith({
         name: "Processo 1234567-89.2024.8.09.0000",
@@ -258,9 +255,7 @@ describe.skipIf(isBrowser)("TodoistClient", () => {
     it("deve propagar erro ao adicionar tarefa", async () => {
       mocks.addTask.mockRejectedValue(new Error("API Error"));
 
-      await expect(client.addTask({ content: "Tarefa" })).rejects.toThrow(
-        "API Error"
-      );
+      await expect(client.addTask({ content: "Tarefa" })).rejects.toThrow("API Error");
     });
   });
 });

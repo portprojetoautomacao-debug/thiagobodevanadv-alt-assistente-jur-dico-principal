@@ -7,23 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DJENPublication } from "@/types/djen-publication";
-import {
-  BellRing,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  Plus,
-} from "lucide-react";
+import { BellRing, CheckCircle, ChevronDown, ChevronUp, Copy, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface PublicationItemProps {
-  pub: DJENPublication;
-  expanded: string | null;
-  onToggleExpand: (id: string | null) => void;
-  onRegister: (pub: DJENPublication) => void;
-  isAlreadyRegistered: boolean;
-  formatRelativeDate: (dateStr: string) => string;
+  readonly pub: DJENPublication;
+  readonly expanded: string | null;
+  readonly onToggleExpand: (id: string | null) => void;
+  readonly onRegister: (pub: DJENPublication) => void;
+  readonly isAlreadyRegistered: boolean;
+  readonly formatRelativeDate: (dateStr: string) => string;
 }
 
 const MATCH_BADGE_VARIANTS = {
@@ -41,7 +34,7 @@ const MATCH_BADGE_VARIANTS = {
   },
 };
 
-function MatchBadge({ type }: { type: "nome" | "oab" | "ambos" }) {
+function MatchBadge({ type }: Readonly<{ type: "nome" | "oab" | "ambos" }>) {
   const variant = MATCH_BADGE_VARIANTS[type];
   return (
     <Badge variant="outline" className={variant.className}>
@@ -90,9 +83,7 @@ export function PublicationItem({
             )}
           </div>
 
-          <p className="text-xs font-medium truncate">
-            {pub.tipo || "Intimação"}
-          </p>
+          <p className="text-xs font-medium truncate">{pub.tipo || "Intimação"}</p>
 
           <p className="text-xs text-muted-foreground truncate">
             {pub.numeroProcesso && `Processo: ${pub.numeroProcesso}`}
@@ -100,9 +91,7 @@ export function PublicationItem({
         </div>
 
         <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className="text-xs text-muted-foreground">
-            {formatRelativeDate(pub.createdAt)}
-          </span>
+          <span className="text-xs text-muted-foreground">{formatRelativeDate(pub.createdAt)}</span>
           {expanded === pub.id ? (
             <ChevronUp size={14} className="text-muted-foreground" />
           ) : (
@@ -148,10 +137,7 @@ export function PublicationItem({
             <Button
               variant={isAlreadyRegistered ? "ghost" : "default"}
               size="sm"
-              className={cn(
-                "h-7 text-xs flex-1",
-                !isAlreadyRegistered && "button-gradient"
-              )}
+              className={cn("h-7 text-xs flex-1", !isAlreadyRegistered && "button-gradient")}
               disabled={isAlreadyRegistered}
               onClick={(e) => {
                 e.stopPropagation();

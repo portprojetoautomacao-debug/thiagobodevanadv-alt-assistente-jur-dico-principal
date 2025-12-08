@@ -1,16 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
 import { useKV } from "@/hooks/use-kv";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
+import * as Sentry from "@sentry/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -52,13 +48,7 @@ function needsAnalysis(exp: Expediente): boolean {
  */
 function checkNeedsResponse(suggestedActions?: string[]): boolean {
   if (!suggestedActions) return false;
-  const responseKeywords = [
-    "resposta",
-    "manifestar",
-    "petição",
-    "contestar",
-    "recurso",
-  ];
+  const responseKeywords = ["resposta", "manifestar", "petição", "contestar", "recurso"];
   return suggestedActions.some((a) =>
     responseKeywords.some((keyword) => a.toLowerCase().includes(keyword))
   );
@@ -83,8 +73,7 @@ function getTaskPriority(
   defaultPriority: "low" | "medium" | "high" = "medium"
 ): "low" | "medium" | "high" {
   const normalizedPriority = priority.toLowerCase();
-  if (normalizedPriority === "alta" || normalizedPriority === "urgente")
-    return "high";
+  if (normalizedPriority === "alta" || normalizedPriority === "urgente") return "high";
   return defaultPriority;
 }
 
@@ -100,8 +89,7 @@ function getAgentTasksFromAnalysis(
 ): Partial<AgentTask>[] {
   const tasks: Partial<AgentTask>[] = [];
   const priority = analysisData.priority?.toLowerCase() || "média";
-  const hasPrazo =
-    analysisData.deadline?.days && analysisData.deadline.days > 0;
+  const hasPrazo = analysisData.deadline?.days && analysisData.deadline.days > 0;
 
   // 1. Gestão de Prazos - sempre que há prazo identificado
   if (hasPrazo) {
@@ -167,10 +155,7 @@ function getAgentTasksFromAnalysis(
   }
 
   // 5. Pesquisa de Jurisprudência - para casos complexos
-  if (
-    checkNeedsResearch(analysisData.suggestedActions) ||
-    getTaskPriority(priority) === "high"
-  ) {
+  if (checkNeedsResearch(analysisData.suggestedActions) || getTaskPriority(priority) === "high") {
     tasks.push({
       agentId: "pesquisa-juris",
       type: "RESEARCH_PRECEDENTS",
@@ -211,6 +196,7 @@ function getAgentTasksFromAnalysis(
 interface AnalysisData {
   summary?: string;
   documentType?: string;
+  processType?: string; // Tipo do processo (Inventário, Ação Cível, etc)
   priority?: string;
   deadline?: {
     days?: number;
@@ -226,16 +212,44 @@ interface AnalysisData {
 /**
  * Faz parse da resposta JSON da análise ou retorna fallback
  */
-function parseAnalysisResponse(
-  responseText: string,
-  exp: Expediente
-): AnalysisData {
+function parseAnalysisResponse(responseText: string, exp: Expediente): AnalysisData {
   try {
     const jsonText = responseText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
+      .replaceAll(/```json\n?/g, "")
+      .replaceAll(/```\n?/g, "")
       .trim();
-    return JSON.parse(jsonText) as AnalysisData;
+    const parsed = JSON.parse(jsonText) as AnalysisData;
+
+    // ✅ VALIDAÇÃO: Detectar divergências entre conteúdo e ação sugerida
+    const content = (exp.content || exp.teor || "").toLowerCase();
+    const isInventario = content.includes("inventário") || content.includes("inventariante");
+    const isPrimeirasDeclaracoes = content.includes("primeiras declarações");
+    const suggestedAction = (parsed.suggestedActions?.[0] || "").toLowerCase();
+
+    // Corrigir ação incorreta para inventário
+    if (isInventario && isPrimeirasDeclaracoes && suggestedAction.includes("rol de testemunhas")) {
+      console.warn(
+        "⚠️ DIVERGÊNCIA DETECTADA: Processo de INVENTÁRIO com ação incorreta. Corrigindo..."
+      );
+      parsed.suggestedActions = ["Apresentar Primeiras Declarações de Inventário"];
+      parsed.summary = `ALERTA: A tarefa sugerida anteriormente estava INCORRETA. Este é um processo de INVENTÁRIO que determina apresentar as Primeiras Declarações. ${
+        parsed.summary || ""
+      }`;
+      parsed.documentType = "Intimação - Inventário";
+    }
+
+    // ✅ VALIDAÇÃO: Corrigir ano da data (deve ser 2025, não anos anteriores)
+    if (parsed.deadline?.endDate) {
+      const dataParts = /(\d{2})\/(\d{2})\/(\d{4})/.exec(parsed.deadline.endDate);
+      if (dataParts && Number.parseInt(dataParts[3], 10) < 2025) {
+        const day = dataParts[1];
+        const month = dataParts[2];
+        parsed.deadline.endDate = `${day}/${month}/2025`;
+        console.warn(`⚠️ ANO INCORRETO DETECTADO: Corrigido para 2025`);
+      }
+    }
+
+    return parsed;
   } catch {
     return {
       summary: responseText || "Análise concluída",
@@ -251,10 +265,7 @@ function parseAnalysisResponse(
 /**
  * Gera o texto do rascunho de petição
  */
-function buildDraftPetition(
-  analysisData: AnalysisData,
-  exp: Expediente
-): string {
+function buildDraftPetition(analysisData: AnalysisData, exp: Expediente): string {
   const actionsText = (analysisData.suggestedActions || [])
     .map((a: string, i: number) => `${i + 1}. ${a}`)
     .join("\n");
@@ -285,14 +296,14 @@ function buildCalendarAnalysisResult(
 ): IntimationAnalysisResult {
   // Converter deadline para o formato esperado por IntimationAnalysisResult
   const deadline =
-    analysisData.deadline?.days !== undefined
-      ? {
+    analysisData.deadline?.days === undefined
+      ? undefined
+      : {
           days: analysisData.deadline.days,
-          type: (analysisData.deadline.type || "úteis") as "úteis" | "corridos",
+          type: analysisData.deadline.type || "úteis",
           endDate: analysisData.deadline.endDate || "",
           description: analysisData.deadline.description,
-        }
-      : undefined;
+        };
 
   const result: IntimationAnalysisResult = {
     summary: analysisData.summary || "Intimação analisada",
@@ -323,26 +334,16 @@ function buildCalendarAnalysisResult(
 
 export default function ExpedientePanel() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>("expedientes", []);
-  const [appointments, setAppointments] = useKV<Appointment[]>(
-    "appointments",
-    []
-  );
+  const [appointments, setAppointments] = useKV<Appointment[]>("appointments", []);
   const [selectedExp, setSelectedExp] = useState<Expediente | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [showMichaelRossDialog, setShowMichaelRossDialog] = useState(false);
-  // Estado temporário para task selecionada (usado no futuro para UI de detalhes)
-  const [_selectedTask, setSelectedTask] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  // Contador de advogados configurados (reservado para estatísticas futuras)
-  const [_lawyersCount, setLawyersCount] = useState(0);
 
   // Estado para análise automática
   const [autoAnalyzing, setAutoAnalyzing] = useState(false);
-  const [analysisProgress, setAnalysisProgress] = useState({
-    current: 0,
-    total: 0,
-  });
+  const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 });
   const [tasksCreated, setTasksCreated] = useState(0);
   const [deadlinesCreated, setDeadlinesCreated] = useState(0);
   const autoAnalysisRanRef = useRef(false);
@@ -360,13 +361,9 @@ export default function ExpedientePanel() {
       if (data.success && data.expedientes?.length > 0) {
         setExpedientes(data.expedientes);
         setLastSync(data.lastCheck);
-        setLawyersCount(data.lawyersConfigured || 0);
         toast.success(`${data.expedientes.length} expediente(s) carregado(s)`);
-      } else {
-        setLawyersCount(data.lawyersConfigured || 0);
-        if (data.lawyersConfigured === 0) {
-          toast.info("Nenhum advogado configurado para monitoramento");
-        }
+      } else if (data.lawyersConfigured === 0) {
+        toast.info("Nenhum advogado configurado para monitoramento");
       }
     } catch (error) {
       console.error("Erro ao buscar expedientes:", error);
@@ -431,134 +428,174 @@ export default function ExpedientePanel() {
 
         setAppointments((current) => [...(current || []), localAppointment]);
         setDeadlinesCreated((prev) => prev + 1);
-        console.log(
-          "[ExpedientePanel] Prazo adicionado ao calendário:",
-          localAppointment.title
-        );
+        console.log("[ExpedientePanel] Prazo adicionado ao calendário:", localAppointment.title);
 
         // Tentar sincronizar com Google Calendar em background
         syncDeadlineToGoogleCalendar(
           analysisResult,
           `${exp.type || "Intimação"} - ${exp.numeroProcesso || "Processo"}`
-        ).catch((err) =>
-          console.warn(
-            "[ExpedientePanel] Sync com Google Calendar falhou:",
-            err
-          )
-        );
+        ).catch((err) => console.warn("[ExpedientePanel] Sync com Google Calendar falhou:", err));
       } catch (calendarError) {
-        console.warn(
-          "[ExpedientePanel] Erro ao criar prazo no calendário:",
-          calendarError
-        );
+        console.warn("[ExpedientePanel] Erro ao criar prazo no calendário:", calendarError);
       }
     },
     [appointments, setAppointments, setDeadlinesCreated]
   );
 
   // Função para analisar um único expediente (retorna o expediente analisado)
+  // 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
   const analyzeExpediente = useCallback(
     async (exp: Expediente): Promise<Expediente> => {
-      try {
-        const response = await fetch("/api/llm-proxy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gemini-2.5-pro",
-            messages: [
-              {
-                role: "system",
-                content: `Você é Mrs. Justin-e, uma especialista em análise de intimações judiciais brasileiras.
-Analise a intimação abaixo e retorne um JSON com a seguinte estrutura:
+      // Session ID único por expediente
+      const sessionId = `expediente-${exp.id}-${Date.now()}`;
+
+      return createInvokeAgentSpan(
+        {
+          agentName: "Mrs. Justin-e",
+          system: "gcp.gemini",
+          model: "gemini-2.5-pro",
+          temperature: 0.3,
+          maxTokens: 2000,
+        },
+        {
+          sessionId,
+          turn: 1,
+          messages: [
+            {
+              role: "user",
+              content: `Analise intimação do processo ${exp.numeroProcesso || "desconhecido"}`,
+            },
+          ],
+        },
+        async (span: Sentry.Span | undefined) => {
+          try {
+            // Atributos específicos da tarefa
+            span?.setAttribute("expediente.id", exp.id);
+            span?.setAttribute("expediente.processo", exp.numeroProcesso || "unknown");
+            span?.setAttribute("expediente.tribunal", exp.tribunal || "unknown");
+            span?.setAttribute("task.type", "ANALYZE_INTIMATION");
+
+            const response = await fetch("/api/llm-proxy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "gemini-2.5-pro",
+                messages: [
+                  {
+                    role: "system",
+                    content: `Você é Mrs. Justin-e, especialista em análise de intimações judiciais brasileiras.
+
+INSTRUÇÕES CRÍTICAS:
+1. Identifique EXATAMENTE o tipo de processo (ex: Inventário, Ação Cível, Execução)
+2. Identifique a AÇÃO ESPECÍFICA solicitada (ex: "Apresentar Primeiras Declarações de Inventário", não "Apresentar rol de testemunhas")
+3. Calcule a data do prazo com base na DATA DE RECEBIMENTO + número de dias (úteis ou corridos)
+4. Use SEMPRE o ano atual (2025) para cálculo de prazos - NUNCA use anos anteriores
+5. Se a intimação pedir "Primeiras Declarações", NÃO sugira "rol de testemunhas"
+
+Retorne APENAS JSON neste formato:
 {
-  "summary": "Resumo claro da intimação em 2-3 frases",
-  "documentType": "Tipo do documento (intimação, citação, despacho, etc)",
+  "summary": "Resumo claro identificando: processo de [TIPO] + ação solicitada + prazo",
+  "documentType": "Tipo exato do documento",
+  "processType": "Tipo do processo (Inventário, Ação Cível, etc)",
   "priority": "alta" | "média" | "baixa",
   "deadline": {
     "days": número de dias do prazo,
     "type": "úteis" | "corridos",
-    "endDate": "data limite no formato DD/MM/YYYY"
+    "endDate": "DD/MM/2025" (calcular a partir da data de recebimento)
   },
-  "suggestedActions": ["lista de ações recomendadas"],
-  "nextSteps": ["próximos passos a seguir"]
-}
-Responda APENAS com o JSON, sem texto adicional.`,
-              },
-              {
-                role: "user",
-                content: `Analise esta intimação:
+  "suggestedActions": ["Ação EXATA solicitada na intimação"],
+  "nextSteps": ["Próximos passos específicos para a ação solicitada"]
+}`,
+                  },
+                  {
+                    role: "user",
+                    content: `Analise esta intimação:
 
 PROCESSO: ${exp.numeroProcesso || "Não informado"}
 TRIBUNAL: ${exp.tribunal || "Não informado"}
-DATA: ${exp.receivedAt || exp.dataRecebimento || "Não informada"}
+DATA DE RECEBIMENTO: ${exp.receivedAt || exp.dataRecebimento || new Date().toISOString()}
 
-CONTEÚDO:
-${exp.content || exp.teor || "Sem conteúdo"}`,
-              },
-            ],
-          }),
-        });
+CONTEÚDO DA INTIMAÇÃO:
+${exp.content || exp.teor || "Sem conteúdo"}
 
-        const data = await response.json();
-        const responseText =
-          data.choices?.[0]?.message?.content || data.message?.content || "";
-        const analysisData = parseAnalysisResponse(responseText, exp);
+IMPORTANTE: 
+- Se a intimação mencionar "inventário" ou "inventariante", é processo de INVENTÁRIO
+- Se mencionar "Primeiras Declarações", a ação é "Apresentar Primeiras Declarações de Inventário"
+- Calcule a data final considerando APENAS dias ÚTEIS (segunda a sexta, excluindo feriados)
+- Use o ANO 2025 para calcular a data limite`,
+                  },
+                ],
+              }),
+            });
 
-        const analyzedExp: Expediente = {
-          ...exp,
-          analyzed: true,
-          summary:
-            analysisData.summary || "Análise concluída pela Mrs. Justin-e",
-          suggestedAction:
-            analysisData.suggestedActions?.[0] || "Verificar prazo",
-          pendingDocs: analysisData.nextSteps || [],
-          deadline: analysisData.deadline,
-          priority: mapPriority(analysisData.priority),
-          draftPetition: buildDraftPetition(analysisData, exp),
-        };
+            const data = await response.json();
+            const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
+            const analysisData = parseAnalysisResponse(responseText, exp);
 
-        // Criar tarefas para outros agentes com base na análise
-        const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData);
-        let createdTasks = 0;
-
-        for (const taskData of agentTasks) {
-          // Só cria tarefa se o agente estiver habilitado
-          const agent = agents.find((a) => a.id === taskData.agentId);
-          if (agent?.enabled) {
-            const task: AgentTask = {
-              id: `task-${Date.now()}-${Math.random()
-                .toString(36)
-                .slice(2, 11)}`,
-              agentId: taskData.agentId!,
-              type: taskData.type!,
-              priority: taskData.priority as
-                | "low"
-                | "medium"
-                | "high"
-                | "critical",
-              status: "queued",
-              createdAt: new Date().toISOString(),
-              data: taskData.data as Record<string, unknown>,
+            const analyzedExp: Expediente = {
+              ...exp,
+              analyzed: true,
+              summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
+              suggestedAction: analysisData.suggestedActions?.[0] || "Verificar prazo",
+              pendingDocs: analysisData.nextSteps || [],
+              deadline: analysisData.deadline,
+              priority: mapPriority(analysisData.priority),
+              draftPetition: buildDraftPetition(analysisData, exp),
             };
-            addTask(task);
-            createdTasks++;
+
+            // Criar tarefas para outros agentes com base na análise
+            const agentTasks = getAgentTasksFromAnalysis(analyzedExp, analysisData);
+            let createdTasks = 0;
+
+            for (const taskData of agentTasks) {
+              // Só cria tarefa se o agente estiver habilitado
+              const agent = agents.find((a) => a.id === taskData.agentId);
+              if (agent?.enabled) {
+                const task: AgentTask = {
+                  id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+                  agentId: taskData.agentId!,
+                  type: taskData.type!,
+                  priority: taskData.priority as "low" | "medium" | "high" | "critical",
+                  status: "queued",
+                  createdAt: new Date().toISOString(),
+                  data: taskData.data as Record<string, unknown>,
+                };
+                addTask(task);
+                createdTasks++;
+              }
+            }
+
+            if (createdTasks > 0) {
+              setTasksCreated((prev) => prev + createdTasks);
+            }
+
+            // Atributos de conclusão para Sentry
+            span?.setAttribute("analysis.completed", true);
+            span?.setAttribute("tasks.created", createdTasks);
+            span?.setAttribute("priority", analyzedExp.priority || "medium");
+
+            // Deadline pode ser string ou objeto
+            const deadlineDays =
+              typeof analyzedExp.deadline === "object" ? analyzedExp.deadline?.days : 0;
+            span?.setAttribute("deadline.days", deadlineDays || 0);
+            span?.setAttribute(
+              "suggested_actions",
+              JSON.stringify(analysisData.suggestedActions || [])
+            );
+
+            // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
+            if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
+              createCalendarDeadline(exp, analysisData);
+            }
+
+            return analyzedExp;
+          } catch (error) {
+            console.error("Erro ao analisar expediente:", error);
+            // Sentry captura erro automaticamente via span
+            throw error;
           }
         }
-
-        if (createdTasks > 0) {
-          setTasksCreated((prev) => prev + createdTasks);
-        }
-
-        // 📅 INTEGRAÇÃO COM CALENDÁRIO: Criar prazo automaticamente
-        if (analysisData.deadline?.endDate || analysisData.deadline?.days) {
-          createCalendarDeadline(exp, analysisData);
-        }
-
-        return analyzedExp;
-      } catch (error) {
-        console.error("Erro ao analisar expediente:", error);
-        throw error;
-      }
+      );
     },
     [addTask, agents, createCalendarDeadline]
   );
@@ -580,9 +617,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
     for (const exp of pending) {
       try {
         const result = await analyzeExpediente(exp);
-        setExpedientes((current) =>
-          (current || []).map((e) => (e.id === exp.id ? result : e))
-        );
+        setExpedientes((current) => (current || []).map((e) => (e.id === exp.id ? result : e)));
         analyzed++;
         setAnalysisProgress({ current: analyzed, total: pending.length });
 
@@ -598,9 +633,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
     setAutoAnalyzing(false);
     if (analyzed > 0) {
       const deadlineMsg =
-        deadlinesCreated > 0
-          ? ` e criou ${deadlinesCreated} prazo(s) na agenda`
-          : "";
+        deadlinesCreated > 0 ? ` e criou ${deadlinesCreated} prazo(s) na agenda` : "";
       toast.success(
         `✅ Mrs. Justin-e analisou ${analyzed} intimação(ões)${deadlineMsg} e distribuiu tarefas para os agentes!`,
         { duration: 5000 }
@@ -674,16 +707,15 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
       const data = await response.json();
 
       // Extrai o conteúdo da resposta
-      const responseText =
-        data.choices?.[0]?.message?.content || data.message?.content || "";
+      const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
 
       // Tenta fazer parse do JSON da resposta
       let analysisData;
       try {
         // Remove possíveis marcadores de código
         const jsonText = responseText
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
+          .replaceAll(/```json\n?/g, "")
+          .replaceAll(/```\n?/g, "")
           .trim();
         analysisData = JSON.parse(jsonText);
       } catch {
@@ -693,10 +725,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
           documentType: exp.type || "Intimação",
           priority: "média",
           deadline: { days: 15, type: "úteis", endDate: "Verificar" },
-          suggestedActions: [
-            "Verificar prazo processual",
-            "Analisar providências",
-          ],
+          suggestedActions: ["Verificar prazo processual", "Analisar providências"],
           nextSteps: ["Revisar intimação", "Preparar resposta se necessário"],
         };
       }
@@ -705,8 +734,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
         ...exp,
         analyzed: true,
         summary: analysisData.summary || "Análise concluída pela Mrs. Justin-e",
-        suggestedAction:
-          analysisData.suggestedActions?.[0] || "Verificar prazo",
+        suggestedAction: analysisData.suggestedActions?.[0] || "Verificar prazo",
         pendingDocs: analysisData.nextSteps || [],
         deadline: analysisData.deadline,
         priority: mapPriority(analysisData.priority),
@@ -727,9 +755,7 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
             .join("\n")}`,
       };
 
-      setExpedientes((current) =>
-        (current || []).map((e) => (e.id === exp.id ? analyzed : e))
-      );
+      setExpedientes((current) => (current || []).map((e) => (e.id === exp.id ? analyzed : e)));
       setSelectedExp(analyzed);
       toast.success("Mrs. Justin-e concluiu a análise!");
     } catch (error) {
@@ -747,7 +773,6 @@ ${exp.content || exp.teor || "Sem conteúdo"}`,
 
   // Análise com Mrs. Justin-e (tarefa específica)
   const handleSelectTask = async (task: string) => {
-    setSelectedTask(task);
     setAnalyzing(true);
 
     try {
@@ -790,14 +815,13 @@ Crie o workflow de controladoria para esta tarefa.`,
         });
 
         const data = await response.json();
-        const responseText =
-          data.choices?.[0]?.message?.content || data.message?.content || "";
+        const responseText = data.choices?.[0]?.message?.content || data.message?.content || "";
 
         let analysisData;
         try {
           const jsonText = responseText
-            .replace(/```json\n?/g, "")
-            .replace(/```\n?/g, "")
+            .replaceAll(/```json\n?/g, "")
+            .replaceAll(/```\n?/g, "")
             .trim();
           analysisData = JSON.parse(jsonText);
         } catch {
@@ -813,31 +837,20 @@ Crie o workflow de controladoria para esta tarefa.`,
         const analyzed: Expediente = {
           ...selectedExp,
           analyzed: true,
-          summary:
-            analysisData.summary ||
-            `Mrs. Justin-e analisou a intimação para: ${task}`,
+          summary: analysisData.summary || `Mrs. Justin-e analisou a intimação para: ${task}`,
           suggestedAction: `Executar: ${task}`,
-          pendingDocs: analysisData.checklist ||
-            analysisData.nextSteps || ["Documento Principal"],
+          pendingDocs: analysisData.checklist || analysisData.nextSteps || ["Documento Principal"],
           deadline: analysisData.deadline,
           priority: "high",
           draftPetition:
             `WORKFLOW DE CONTROLADORIA - Mrs. Justin-e\n\n` +
             `🎯 TAREFA: ${task}\n\n` +
-            `📋 RESUMO:\n${
-              analysisData.summary || "Workflow em processamento"
-            }\n\n` +
+            `📋 RESUMO:\n${analysisData.summary || "Workflow em processamento"}\n\n` +
             `📅 PRAZO: ${analysisData.deadline?.days || 15} dias ${
               analysisData.deadline?.type || "úteis"
             }\n` +
-            `   Data limite: ${
-              analysisData.deadline?.endDate || "Calcular"
-            }\n\n` +
-            `✅ CHECKLIST:\n${(
-              analysisData.checklist ||
-              analysisData.nextSteps ||
-              []
-            )
+            `   Data limite: ${analysisData.deadline?.endDate || "Calcular"}\n\n` +
+            `✅ CHECKLIST:\n${(analysisData.checklist || analysisData.nextSteps || [])
               .map((s: string, i: number) => `☐ ${i + 1}. ${s}`)
               .join("\n")}\n\n` +
             `📝 OBSERVAÇÕES:\n${analysisData.observations || "Nenhuma"}`,
@@ -879,9 +892,7 @@ Crie o workflow de controladoria para esta tarefa.`,
           : exp
       )
     );
-    toast.success(
-      `${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`
-    );
+    toast.success(`${needsReanalysisList.length} expediente(s) liberado(s) para re-análise`);
   };
 
   const suggestedTasks = [
@@ -898,19 +909,15 @@ Crie o workflow de controladoria para esta tarefa.`,
       <div className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Painel de Expedientes
-            </h1>
+            <h1 className="text-3xl font-bold text-foreground">Painel de Expedientes</h1>
             <p className="text-muted-foreground mt-1">
               Caixa de entrada inteligente com análise de IA
             </p>
             <p className="text-xs text-muted-foreground mt-2">
-              <span className="font-medium">Advogado:</span> Thiago Bodevan
-              Veiga - OAB/MG 184.404
+              <span className="font-medium">Advogado:</span> Thiago Bodevan Veiga - OAB/MG 184.404
               {lastSync && (
                 <span className="ml-2">
-                  • Última verificação:{" "}
-                  {new Date(lastSync).toLocaleString("pt-BR")}
+                  • Última verificação: {new Date(lastSync).toLocaleString("pt-BR")}
                 </span>
               )}
             </p>
@@ -947,26 +954,21 @@ Crie o workflow de controladoria para esta tarefa.`,
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-foreground">
-                      🤖 Mrs. Justin-e analisando intimações e distribuindo
-                      tarefas...
+                      🤖 Mrs. Justin-e analisando intimações e distribuindo tarefas...
                     </p>
                     <span className="text-sm text-muted-foreground">
                       {analysisProgress.current}/{analysisProgress.total}
                     </span>
                   </div>
                   <Progress
-                    value={
-                      (analysisProgress.current / analysisProgress.total) * 100
-                    }
+                    value={(analysisProgress.current / analysisProgress.total) * 100}
                     className="h-2"
                   />
                   {tasksCreated > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
                       {tasksCreated} tarefa(s) distribuída(s) para agentes
                       {deadlinesCreated > 0 && (
-                        <span className="ml-2">
-                          {deadlinesCreated} prazo(s) na agenda
-                        </span>
+                        <span className="ml-2">{deadlinesCreated} prazo(s) na agenda</span>
                       )}
                     </p>
                   )}
@@ -985,23 +987,16 @@ Crie o workflow de controladoria para esta tarefa.`,
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <p className="text-sm text-green-700 dark:text-green-400">
-                      ✅ Todas as {safeExpedientes.length} intimações analisadas
-                      pela Mrs. Justin-e
+                      ✅ Todas as {safeExpedientes.length} intimações analisadas pela Mrs. Justin-e
                     </p>
                   </div>
                   {tasksCreated > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-700"
-                    >
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
                       {tasksCreated} tarefas na fila dos agentes
                     </Badge>
                   )}
                   {deadlinesCreated > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-700"
-                    >
+                    <Badge variant="secondary" className="bg-green-100 text-green-700">
                       {deadlinesCreated} prazos na agenda
                     </Badge>
                   )}
@@ -1018,16 +1013,12 @@ Crie o workflow de controladoria para esta tarefa.`,
                   Expedientes Recentes
                   <Badge variant="secondary">{safeExpedientes.length}</Badge>
                 </CardTitle>
-                <CardDescription>
-                  Intimações do DJEN aguardando análise
-                </CardDescription>
+                <CardDescription>Intimações do DJEN aguardando análise</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {safeExpedientes.length === 0 ? (
                   <div className="text-center py-8 space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma publicação encontrada
-                    </p>
+                    <p className="text-sm text-muted-foreground">Nenhuma publicação encontrada</p>
                     <p className="text-xs text-muted-foreground">
                       O monitor DJEN verifica automaticamente às 9h (UTC)
                     </p>
@@ -1055,16 +1046,12 @@ Crie o workflow de controladoria para esta tarefa.`,
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium line-clamp-1">
-                            {exp.type || exp.tipo}
-                          </p>
+                          <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(
-                              exp.receivedAt || exp.dataRecebimento
-                            ).toLocaleDateString("pt-BR")}
-                            {exp.tribunal && (
-                              <span className="ml-1">• {exp.tribunal}</span>
+                            {new Date(exp.receivedAt || exp.dataRecebimento).toLocaleDateString(
+                              "pt-BR"
                             )}
+                            {exp.tribunal && <span className="ml-1">• {exp.tribunal}</span>}
                           </p>
                         </div>
                         {exp.analyzed ? (
@@ -1126,9 +1113,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold mb-2">
-                      Conteúdo Original
-                    </h3>
+                    <h3 className="text-sm font-semibold mb-2">Conteúdo Original</h3>
                     <div className="p-4 bg-muted rounded-lg">
                       <p className="text-sm whitespace-pre-wrap document-content">
                         {selectedExp.content}
@@ -1148,31 +1133,24 @@ Crie o workflow de controladoria para esta tarefa.`,
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold mb-2">
-                          Ação Sugerida
-                        </h3>
+                        <h3 className="text-sm font-semibold mb-2">Ação Sugerida</h3>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-900">
-                            {selectedExp.suggestedAction}
-                          </p>
+                          <p className="text-sm text-blue-900">{selectedExp.suggestedAction}</p>
                         </div>
                       </div>
 
-                      {selectedExp.pendingDocs &&
-                        selectedExp.pendingDocs.length > 0 && (
-                          <div>
-                            <h3 className="text-sm font-semibold mb-2">
-                              Documentos Pendentes
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedExp.pendingDocs.map((doc, _idx) => (
-                                <Badge key={doc} variant="outline">
-                                  {doc}
-                                </Badge>
-                              ))}
-                            </div>
+                      {selectedExp.pendingDocs && selectedExp.pendingDocs.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2">Documentos Pendentes</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedExp.pendingDocs.map((doc, _idx) => (
+                              <Badge key={doc} variant="outline">
+                                {doc}
+                              </Badge>
+                            ))}
                           </div>
-                        )}
+                        </div>
+                      )}
 
                       {selectedExp.draftPetition && (
                         <div>
@@ -1198,9 +1176,7 @@ Crie o workflow de controladoria para esta tarefa.`,
             ) : (
               <Card key="empty-selection">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <p className="text-lg font-medium text-foreground">
-                    Selecione um expediente
-                  </p>
+                  <p className="text-lg font-medium text-foreground">Selecione um expediente</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Escolha um expediente da lista para visualizar e analisar
                   </p>
@@ -1211,19 +1187,14 @@ Crie o workflow de controladoria para esta tarefa.`,
         </div>
       </div>
 
-      <Dialog
-        open={showMichaelRossDialog}
-        onOpenChange={setShowMichaelRossDialog}
-      >
+      <Dialog open={showMichaelRossDialog} onOpenChange={setShowMichaelRossDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               Mrs. Michael Ross - Análise de Intimação
             </DialogTitle>
             <DialogDescription>
-              Resumo:{" "}
-              {selectedExp?.summary ||
-                "Intimação recebida aguardando análise detalhada"}
+              Resumo: {selectedExp?.summary || "Intimação recebida aguardando análise detalhada"}
             </DialogDescription>
           </DialogHeader>
 
@@ -1233,15 +1204,13 @@ Crie o workflow de controladoria para esta tarefa.`,
                 📊 Análise Rápida (95% de precisão em menos de 1 minuto)
               </p>
               <p className="text-xs text-muted-foreground">
-                Identifiquei que esta intimação requer ação. Selecione a tarefa
-                mais pertinente ao caso:
+                Identifiquei que esta intimação requer ação. Selecione a tarefa mais pertinente ao
+                caso:
               </p>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-foreground mb-3">
-                Tarefas Sugeridas:
-              </h4>
+              <h4 className="text-sm font-semibold text-foreground mb-3">Tarefas Sugeridas:</h4>
               <div className="grid grid-cols-1 gap-2">
                 {suggestedTasks.map((task, index) => (
                   <button
@@ -1252,13 +1221,9 @@ Crie o workflow de controladoria para esta tarefa.`,
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-primary">
-                          {index + 1}
-                        </span>
+                        <span className="text-xs font-bold text-primary">{index + 1}</span>
                       </div>
-                      <span className="text-sm font-medium text-foreground">
-                        {task}
-                      </span>
+                      <span className="text-sm font-medium text-foreground">{task}</span>
                     </div>
                   </button>
                 ))}

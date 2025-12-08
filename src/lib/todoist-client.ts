@@ -1,17 +1,17 @@
-import { TodoistApi } from '@doist/todoist-api-typescript'
-import { config } from './config'
+import { TodoistApi } from "@doist/todoist-api-typescript";
+import { config } from "./config";
 
 /**
  * Cliente Todoist para integração com o assistente jurídico
  * Permite gerenciar tarefas jurídicas, prazos e compromissos
  */
 export class TodoistClient {
-  private readonly api: TodoistApi | null = null
+  private readonly api: TodoistApi | null = null;
 
   constructor() {
-    const apiKey = config.todoist?.apiKey
+    const apiKey = config.todoist?.apiKey;
     if (apiKey) {
-      this.api = new TodoistApi(apiKey)
+      this.api = new TodoistApi(apiKey);
     }
   }
 
@@ -19,31 +19,31 @@ export class TodoistClient {
    * Verifica se o cliente está configurado
    */
   isConfigured(): boolean {
-    return this.api !== null
+    return this.api !== null;
   }
 
   /**
    * Obtém a instância bruta da API do Todoist
    */
   getApi(): TodoistApi | null {
-    return this.api
+    return this.api;
   }
 
   /**
    * Adiciona uma tarefa jurídica
    */
   async addTask(params: {
-    content: string
-    description?: string
-    projectId?: string
-    dueString?: string
-    priority?: number
-    labels?: string[]
+    content: string;
+    description?: string;
+    projectId?: string;
+    dueString?: string;
+    priority?: number;
+    labels?: string[];
   }) {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
     return await this.api.addTask({
@@ -53,7 +53,7 @@ export class TodoistClient {
       dueString: params.dueString,
       priority: params.priority,
       labels: params.labels,
-    })
+    });
   }
 
   /**
@@ -61,15 +61,11 @@ export class TodoistClient {
    * - Se `filter` for fornecido, ele é passado diretamente para a API
    * - Caso contrário, filtra por `projectId` e/ou `label`
    */
-  async getTasks(params?: {
-    projectId?: string
-    label?: string
-    filter?: string
-  }) {
+  async getTasks(params?: { projectId?: string; label?: string; filter?: string }) {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
     return await this.api.getTasks({
@@ -77,10 +73,10 @@ export class TodoistClient {
       label: params?.label,
       filter: params?.filter,
     } as {
-      projectId?: string
-      label?: string
-      filter?: string
-    })
+      projectId?: string;
+      label?: string;
+      filter?: string;
+    });
   }
 
   /**
@@ -89,11 +85,11 @@ export class TodoistClient {
   async getProjects() {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
-    return await this.api.getProjects()
+    return await this.api.getProjects();
   }
 
   /**
@@ -102,14 +98,14 @@ export class TodoistClient {
   async createProject(name: string, color?: string) {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
     return await this.api.addProject({
       name,
       color,
-    })
+    });
   }
 
   /**
@@ -118,11 +114,11 @@ export class TodoistClient {
   async completeTask(taskId: string) {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
-    return await this.api.closeTask(taskId)
+    return await this.api.closeTask(taskId);
   }
 
   /**
@@ -131,17 +127,17 @@ export class TodoistClient {
   async updateTask(
     taskId: string,
     params: {
-      content?: string
-      description?: string
-      dueString?: string
-      priority?: number
-      labels?: string[]
+      content?: string;
+      description?: string;
+      dueString?: string;
+      priority?: number;
+      labels?: string[];
     }
   ) {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
     return await this.api.updateTask(taskId, {
@@ -150,7 +146,7 @@ export class TodoistClient {
       dueString: params.dueString,
       priority: params.priority,
       labels: params.labels,
-    })
+    });
   }
 
   /**
@@ -159,13 +155,13 @@ export class TodoistClient {
   async deleteTask(taskId: string) {
     if (!this.api) {
       throw new Error(
-        'Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env'
-      )
+        "Todoist API não está configurada. Configure VITE_TODOIST_API_KEY no arquivo .env"
+      );
     }
 
-    return await this.api.deleteTask(taskId)
+    return await this.api.deleteTask(taskId);
   }
 }
 
 // Instância singleton
-export const todoistClient = new TodoistClient()
+export const todoistClient = new TodoistClient();

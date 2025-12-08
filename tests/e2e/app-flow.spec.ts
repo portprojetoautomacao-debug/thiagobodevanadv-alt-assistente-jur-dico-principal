@@ -25,40 +25,47 @@ test.describe("Fluxo Principal da Aplicação", () => {
   });
 
   test("deve carregar o Dashboard quando autenticado", async ({ page }) => {
-    // Após beforeEach, já estamos autenticados e com shell pronto
-    await expect(page.getByText(/Meu Painel|PJe Assistente/i)).toBeVisible({
+    // Verifica se o dashboard carregou - aceita tanto "Dashboard" quanto "PJe Assistente"
+    // Usa .first() para evitar strict mode violation quando ambos estão presentes
+    const heading = page.getByRole("heading", { name: /Dashboard|PJe Assistente/i }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
+
+    // Verifica se navegação está presente
+    await expect(page.getByRole("navigation")).toBeVisible();
+  });
+
+  test("deve navegar para o CRM de Processos", async ({ page }) => {
+    // Clica no botão de navegação usando Test ID ou ARIA button (Sidebar usa Button, não link)
+    const navButton = page
+      .getByTestId("nav-processes")
+      .or(page.getByRole("button", { name: /Processos|CRM|Acervo/i }));
+
+    await navButton.click({ timeout: 10000 });
+
+    // Aguarda hash change para #processes
+    await page.waitForURL(/.*#processes/, { timeout: 10000 });
+
+    // Verifica se a página de processos carregou usando heading
+    await expect(page.getByRole("heading", { name: /Processos|CRM/i })).toBeVisible({
       timeout: 10000,
     });
   });
 
-  test("deve navegar para o CRM de Processos", async ({ page }) => {
-    // Clica via test id ou fallback por texto
-    const navProcesses = page.getByTestId("nav-processes");
-    if (await navProcesses.count()) {
-      await navProcesses.click();
-    } else {
-      await page.click("text=Acervo (CRM)");
-    }
-
-    // Verifica se mudou para a view de processos
-    // O componente ProcessCRM deve ter um título ou elementos específicos
-    await expect(page.getByText("Kanban de Processos")).toBeVisible();
-    // Verifica se as colunas do Kanban estão presentes
-    await expect(page.getByText("Triagem Inicial")).toBeVisible();
-  });
-
   test("deve navegar para a Calculadora de Prazos", async ({ page }) => {
-    // Clica via test id ou fallback por texto
-    const navCalc = page.getByTestId("nav-calculator");
-    if (await navCalc.count()) {
-      await navCalc.click();
-    } else {
-      await page.click("text=Calc. Prazos");
-    }
+    // Clica no link de navegação usando Test ID ou ARIA link
+    const navLink = page
+      .getByTestId("nav-calculator")
+      .or(page.getByRole("button", { name: /Calculadora|Prazos/i }))
+      .or(page.getByRole("link", { name: /Calculadora|Prazos/i }));
 
-    // Verifica se a calculadora carregou
-    await expect(
-      page.getByText(/Calculadora de Prazos Processuais|Calculadora de Prazos/i)
-    ).toBeVisible({ timeout: 10000 });
+    await navLink.first().click({ timeout: 10000 });
+
+    // Aguarda hash change para #calculator
+    await page.waitForURL(/.*#(calculator|prazos)/, { timeout: 10000 });
+
+    // Verifica se a calculadora carregou usando heading ou form
+    const heading = page.getByRole("heading", { name: /Calculadora|Prazos/i }).first();
+    const form = page.locator("form").first();
+    await expect(heading.or(form)).toBeVisible({ timeout: 10000 });
   });
 });

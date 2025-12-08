@@ -4,70 +4,75 @@
 # ASSISTENTE JURÍDICO P - INICIALIZAÇÃO AUTOMÁTICA
 # ==========================================
 
-echo "🚀 Iniciando Assistente Jurídico P..."
+# Carregar biblioteca comum
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/common.sh
+source "${SCRIPT_DIR}/scripts/lib/common.sh" || {
+    echo "❌ Erro: não foi possível carregar scripts/lib/common.sh"
+    exit 1
+}
+
+print_header "ASSISTENTE JURÍDICO P - INICIALIZAÇÃO"
 
 # Verificar se estamos no diretório correto
-if [ ! -f "package.json" ]; then
-    echo "❌ Erro: package.json não encontrado. Execute no diretório raiz do projeto."
-    exit 1
+if [[ ! -f "package.json" ]]; then
+    log_error "package.json não encontrado. Execute no diretório raiz do projeto."
+    die "Diretório incorreto" 1
 fi
 
-# Verificar Node.js
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js não encontrado. Instale o Node.js primeiro."
-    exit 1
-fi
+# Verificar comandos necessários
+require_commands node npm
 
-# Verificar npm
-if ! command -v npm &> /dev/null; then
-    echo "❌ npm não encontrado. Instale o npm primeiro."
-    exit 1
-fi
+log_info "Verificando Node.js $(node --version)"
+log_info "Verificando npm $(npm --version)"
 
 # Instalar dependências se node_modules não existir
-if [ ! -d "node_modules" ]; then
-    echo "📦 Instalando dependências..."
-    npm install
+if [[ ! -d "node_modules" ]]; then
+    log_warning "node_modules não encontrado"
+    npm_install || die "Falha ao instalar dependências" 1
 fi
 
 # Verificar se as dependências estão instaladas
-if [ ! -d "node_modules" ]; then
-    echo "❌ Falha ao instalar dependências."
-    exit 1
+if [[ ! -d "node_modules" ]]; then
+    die "Falha ao instalar dependências" 1
 fi
 
-echo "✅ Dependências verificadas!"
+log_success "Dependências verificadas!"
 
 # Verificar TypeScript
-if ! npx tsc --version &> /dev/null; then
-    echo "❌ TypeScript não encontrado."
-    exit 1
+if ! command_exists npx; then
+    die "npx não encontrado" 1
 fi
 
-echo "✅ TypeScript verificado!"
+if ! npx tsc --version &> /dev/null; then
+    die "TypeScript não encontrado" 1
+fi
+
+log_success "TypeScript verificado!"
 
 # Executar verificações rápidas
-echo "🔍 Executando verificações rápidas..."
-npm run type-check > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-    echo "✅ TypeScript OK"
+print_separator
+log_info "Executando verificações rápidas..."
+
+if npm_run type-check > /dev/null 2>&1; then
+    log_success "TypeScript OK"
 else
-    echo "⚠️  Avisos no TypeScript (verifique depois)"
+    log_warning "Avisos no TypeScript (verifique depois)"
 fi
 
 # Verificar linting básico
-npm run lint > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-    echo "✅ ESLint OK"
+if npm_run lint > /dev/null 2>&1; then
+    log_success "ESLint OK"
 else
-    echo "⚠️  Avisos no ESLint (serão corrigidos automaticamente)"
+    log_warning "Avisos no ESLint (serão corrigidos automaticamente)"
 fi
 
-echo ""
-echo "🎉 Sistema pronto!"
-echo "💻 Servidor de desenvolvimento iniciando automaticamente..."
-echo "🧪 Testes em watch mode iniciando automaticamente..."
-echo ""
+print_separator
+log_success "Sistema pronto!"
+log_info "💻 Servidor de desenvolvimento iniciando automaticamente..."
+log_info "🧪 Testes em watch mode iniciando automaticamente..."
+
+print_separator "="
 echo "📝 Dicas:"
 echo "  - Arquivos são formatados automaticamente ao salvar"
 echo "  - ESLint corrige problemas automaticamente"
@@ -75,7 +80,7 @@ echo "  - TypeScript verifica tipos em tempo real"
 echo "  - Testes rodam automaticamente"
 echo ""
 echo "🌐 Acesse: http://localhost:5173"
-echo ""
+print_separator "="
 
 # Manter terminal aberto
 exec "$SHELL"

@@ -1,20 +1,9 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  CheckCircle,
-  Clock,
-  Robot,
-  WarningCircle,
-} from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, Bot, CheckCircle, Clock } from "lucide-react";
 
 interface AgentActionLog {
   agentId: string;
@@ -35,9 +24,9 @@ async function fetchServerLogs() {
 }
 
 interface ServerLogsViewerProps {
-  logs?: AgentActionLog[];
-  isLoading?: boolean;
-  onRefresh?: () => void;
+  readonly logs?: AgentActionLog[];
+  readonly isLoading?: boolean;
+  readonly onRefresh?: () => void;
 }
 
 export function ServerLogsViewer({
@@ -72,9 +61,7 @@ export function ServerLogsViewer({
     return (
       <div className="flex items-center justify-center p-8">
         <Clock className="w-6 h-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">
-          Carregando logs do servidor...
-        </span>
+        <span className="ml-2 text-muted-foreground">Carregando logs do servidor...</span>
       </div>
     );
   }
@@ -82,12 +69,12 @@ export function ServerLogsViewer({
   if (error) {
     return (
       <Alert variant="destructive">
-        <WarningCircle className="h-4 w-4" />
+        <AlertCircle className="h-4 w-4" />
         <AlertTitle>Erro</AlertTitle>
         <AlertDescription>
           Não foi possível carregar os logs do servidor.
           <br />
-          {(error as Error).message}
+          {error instanceof Error ? error.message : String(error)}
         </AlertDescription>
       </Alert>
     );
@@ -99,15 +86,10 @@ export function ServerLogsViewer({
         <div>
           <CardTitle>Logs do Servidor (Backend)</CardTitle>
           <CardDescription>
-            Atividades executadas pelos agentes no ambiente serverless
-            (Cron/API)
+            Atividades executadas pelos agentes no ambiente serverless (Cron/API)
           </CardDescription>
         </div>
-        <Badge
-          variant="outline"
-          className="cursor-pointer"
-          onClick={handleRefresh}
-        >
+        <Badge variant="outline" className="cursor-pointer" onClick={handleRefresh}>
           Atualizar
         </Badge>
       </CardHeader>
@@ -126,22 +108,20 @@ export function ServerLogsViewer({
                 >
                   <div
                     className={`mt-0.5 p-1 rounded-full ${
-                      log.success
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
+                      log.success ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
                     }`}
                   >
                     {log.success ? (
-                      <CheckCircle className="w-4 h-4" weight="fill" />
+                      <CheckCircle className="w-4 h-4" />
                     ) : (
-                      <WarningCircle className="w-4 h-4" weight="fill" />
+                      <AlertCircle className="w-4 h-4" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <Robot className="w-4 h-4 text-primary" />
+                        <Bot className="w-4 h-4 text-primary" />
                         {log.agentId}
                       </p>
                       <span className="text-xs text-muted-foreground">
@@ -149,9 +129,7 @@ export function ServerLogsViewer({
                       </span>
                     </div>
 
-                    <p className="text-xs text-foreground mt-1 font-mono">
-                      {log.action}
-                    </p>
+                    <p className="text-xs text-foreground mt-1 font-mono">{log.action}</p>
 
                     {log.durationMs && (
                       <p className="text-[10px] text-muted-foreground mt-1">

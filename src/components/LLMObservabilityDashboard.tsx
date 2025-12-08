@@ -7,31 +7,24 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { LLMMetrics } from "@/lib/llm-service";
-import { llmService, type AuditLogEntry } from "@/lib/llm-service";
+import { llmService, type AuditLogEntry, type LLMMetrics } from "@/lib/llm-service";
 import {
-  ArrowsClockwise,
-  ChartBar,
+  AlertTriangle,
+  BarChart2,
   ChartLine,
   CheckCircle,
   Clock,
   Cpu,
-  CurrencyCircleDollar,
   Database,
-  Lightning,
-  TrendUp,
-  Warning,
-} from "@phosphor-icons/react";
+  DollarSign,
+  RefreshCw,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -103,11 +96,7 @@ export default function LLMObservabilityDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <Lightning
-            size={48}
-            className="text-primary neon-glow mx-auto mb-4"
-            weight="duotone"
-          />
+          <Zap size={48} className="text-primary neon-glow mx-auto mb-4" />
           <p className="text-muted-foreground">Carregando métricas...</p>
         </div>
       </div>
@@ -120,16 +109,10 @@ export default function LLMObservabilityDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold gradient-text flex items-center gap-2">
-            <ChartBar
-              size={32}
-              weight="duotone"
-              className="text-primary neon-glow"
-            />
+            <BarChart2 size={32} className="text-primary neon-glow" />
             Observabilidade LLM
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Monitoramento e análise de operações de IA
-          </p>
+          <p className="text-muted-foreground mt-1">Monitoramento e análise de operações de IA</p>
         </div>
         <div className="flex items-center gap-2">
           <select
@@ -143,7 +126,7 @@ export default function LLMObservabilityDashboard() {
             <option value={30 * 24 * 60 * 60 * 1000}>Últimos 30 dias</option>
           </select>
           <Button onClick={refreshData} variant="outline">
-            <ArrowsClockwise size={20} />
+            <RefreshCw size={20} />
             Atualizar
           </Button>
         </div>
@@ -154,7 +137,7 @@ export default function LLMObservabilityDashboard() {
         <Card className="gradient-border">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Lightning size={16} />
+              <Zap size={16} />
               Total de Requisições
             </CardTitle>
           </CardHeader>
@@ -189,7 +172,7 @@ export default function LLMObservabilityDashboard() {
         <Card className="gradient-border">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CurrencyCircleDollar size={16} />
+              <DollarSign size={16} />
               Custo Total
             </CardTitle>
           </CardHeader>
@@ -238,28 +221,24 @@ export default function LLMObservabilityDashboard() {
                 <Cpu size={20} />
                 Uso por Modelo
               </CardTitle>
-              <CardDescription>
-                Distribuição de requisições por modelo de IA
-              </CardDescription>
+              <CardDescription>Distribuição de requisições por modelo de IA</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {Object.entries(summary.requestsByModel).map(
-                  ([model, count]) => {
-                    const percentage = (count / summary.totalRequests) * 100;
-                    return (
-                      <div key={model}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">{model}</span>
-                          <span className="text-muted-foreground">
-                            {formatNumber(count)} ({percentage.toFixed(1)}%)
-                          </span>
-                        </div>
-                        <Progress value={percentage} />
+                {Object.entries(summary.requestsByModel).map(([model, count]) => {
+                  const percentage = (count / summary.totalRequests) * 100;
+                  return (
+                    <div key={model}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{model}</span>
+                        <span className="text-muted-foreground">
+                          {formatNumber(count)} ({percentage.toFixed(1)}%)
+                        </span>
                       </div>
-                    );
-                  }
-                )}
+                      <Progress value={percentage} />
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -273,9 +252,7 @@ export default function LLMObservabilityDashboard() {
                 <ChartLine size={20} />
                 Uso por Feature
               </CardTitle>
-              <CardDescription>
-                Requisições agrupadas por funcionalidade
-              </CardDescription>
+              <CardDescription>Requisições agrupadas por funcionalidade</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
@@ -293,9 +270,7 @@ export default function LLMObservabilityDashboard() {
                             <span className="font-medium capitalize">
                               {feature.replace("-", " ")}
                             </span>
-                            <Badge variant="secondary">
-                              {formatNumber(count)}
-                            </Badge>
+                            <Badge variant="secondary">{formatNumber(count)}</Badge>
                           </div>
                           <Progress value={percentage} />
                         </div>
@@ -313,36 +288,24 @@ export default function LLMObservabilityDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendUp size={20} />
+                  <TrendingUp size={20} />
                   Performance de Cache
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">
-                    Tamanho do Cache
-                  </span>
-                  <span className="font-bold">
-                    {cacheStats?.size || 0} entradas
-                  </span>
+                  <span className="text-muted-foreground">Tamanho do Cache</span>
+                  <span className="font-bold">{cacheStats?.size || 0} entradas</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total de Hits</span>
-                  <span className="font-bold">
-                    {formatNumber(cacheStats?.totalHits || 0)}
-                  </span>
+                  <span className="font-bold">{formatNumber(cacheStats?.totalHits || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Idade Média</span>
-                  <span className="font-bold">
-                    {formatLatency(cacheStats?.averageAge || 0)}
-                  </span>
+                  <span className="font-bold">{formatLatency(cacheStats?.averageAge || 0)}</span>
                 </div>
-                <Button
-                  onClick={handleClearCache}
-                  variant="outline"
-                  className="w-full mt-4"
-                >
+                <Button onClick={handleClearCache} variant="outline" className="w-full mt-4">
                   <Database size={20} />
                   Limpar Cache
                 </Button>
@@ -367,22 +330,15 @@ export default function LLMObservabilityDashboard() {
                   <div>
                     <div className="text-2xl font-bold text-green-500">
                       {formatNumber(
-                        Math.floor(
-                          summary.totalRequests * (summary.successRate / 100)
-                        )
+                        Math.floor(summary.totalRequests * (summary.successRate / 100))
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Sucessos
-                    </div>
+                    <div className="text-xs text-muted-foreground">Sucessos</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-red-500">
                       {formatNumber(
-                        Math.ceil(
-                          summary.totalRequests *
-                            (1 - summary.successRate / 100)
-                        )
+                        Math.ceil(summary.totalRequests * (1 - summary.successRate / 100))
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">Falhas</div>
@@ -398,9 +354,7 @@ export default function LLMObservabilityDashboard() {
                 <Clock size={20} />
                 Requisições Recentes
               </CardTitle>
-              <CardDescription>
-                Últimas 10 requisições processadas
-              </CardDescription>
+              <CardDescription>Últimas 10 requisições processadas</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px]">
@@ -415,11 +369,7 @@ export default function LLMObservabilityDashboard() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                metric.success ? "default" : "destructive"
-                              }
-                            >
+                            <Badge variant={metric.success ? "default" : "destructive"}>
                               {metric.model}
                             </Badge>
                             {metric.feature && (
@@ -429,9 +379,7 @@ export default function LLMObservabilityDashboard() {
                             )}
                           </div>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(metric.timestamp).toLocaleTimeString(
-                              "pt-BR"
-                            )}
+                            {new Date(metric.timestamp).toLocaleTimeString("pt-BR")}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -444,21 +392,13 @@ export default function LLMObservabilityDashboard() {
                             {formatNumber(metric.totalTokens)} tokens
                           </span>
                           <span className="flex items-center gap-1">
-                            <CurrencyCircleDollar size={12} />
+                            <DollarSign size={12} />
                             {formatCurrency(metric.cost)}
                           </span>
                           {metric.success ? (
-                            <CheckCircle
-                              size={12}
-                              className="text-green-500"
-                              weight="fill"
-                            />
+                            <CheckCircle size={12} className="text-green-500" />
                           ) : (
-                            <Warning
-                              size={12}
-                              className="text-red-500"
-                              weight="fill"
-                            />
+                            <AlertTriangle size={12} className="text-red-500" />
                           )}
                         </div>
                       </div>
@@ -477,9 +417,7 @@ export default function LLMObservabilityDashboard() {
                 <Database size={20} />
                 Log de Auditoria
               </CardTitle>
-              <CardDescription>
-                Registro completo de todas as operações LLM
-              </CardDescription>
+              <CardDescription>Registro completo de todas as operações LLM</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[500px]">
@@ -492,23 +430,13 @@ export default function LLMObservabilityDashboard() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {entry.success ? (
-                            <CheckCircle
-                              size={16}
-                              className="text-green-500"
-                              weight="fill"
-                            />
+                            <CheckCircle size={16} className="text-green-500" />
                           ) : (
-                            <Warning
-                              size={16}
-                              className="text-red-500"
-                              weight="fill"
-                            />
+                            <AlertTriangle size={16} className="text-red-500" />
                           )}
                           <Badge variant="outline">{entry.model}</Badge>
                           {entry.feature && (
-                            <span className="text-xs text-muted-foreground">
-                              {entry.feature}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{entry.feature}</span>
                           )}
                         </div>
                         <span className="text-xs text-muted-foreground">

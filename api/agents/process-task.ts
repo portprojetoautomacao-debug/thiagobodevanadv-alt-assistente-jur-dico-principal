@@ -8,9 +8,21 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireApiKey } from "../lib/auth.js";
+import { analyzeWithGemini } from "../lib/gemini-analyzer.js";
+import { redactPii } from "../lib/pii.js";
+import { rateLimitMiddleware } from "../lib/rate-limit.js";
+import { retryWithBackoff } from "../lib/retry.js";
+import { escapeHtml } from "../lib/sanitize.js";
+import { AnalysisResult, applyDeadlineDates, parseAIResponse } from "../lib/task-helpers.js";
+import { withTimeout } from "../lib/timeout.js";
+import {
+  AgentInputSchema,
+  AgentTaskInputSchema,
+  handleValidationError,
+} from "../lib/validation.js";
 
-interface AgentTask
-{
+interface AgentTask {
   id: string;
   agentId: string;
   type: string;
@@ -25,179 +37,75 @@ interface AgentTask
     type?: string;
     source?: string;
     description?: string;
-    [ key: string ]: unknown;
+    [key: string]: unknown;
   };
 }
 
-interface Agent
-{
+interface Agent {
   id: string;
   type: string;
   name: string;
 }
 
-interface AnalysisResult
-{
-  success: boolean;
-  data?: {
-    summary: string;
-    deadline?: {
-      days: number;
-      type: "úteis" | "corridos";
-      startDate: string;
-      endDate: string;
-    };
-    suggestedActions: string[];
-    priority: "low" | "medium" | "high" | "urgent";
-    documentType: string;
-    parties?: {
-      author?: string;
-      defendant?: string;
-    };
-    nextSteps: string[];
-  };
-  message?: string;
-  error?: string;
+/**
+ * Valida o texto da intimação
+ */
+function validateIntimationText(text: string): boolean {
+  return !!text && text.length >= 50;
 }
 
-// Função para chamar Gemini API
-async function analyzeWithGemini (
-  text: string,
-  context: string
-): Promise<string>
-{
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("Gemini API key not configured");
-  }
-
-  const prompt = `Você é Mrs. Justin-e, uma assistente jurídica especialista em análise de intimações judiciais brasileiras.
-
-CONTEXTO: ${context}
-
-INTIMAÇÃO PARA ANÁLISE:
-${text}
-
-TAREFA: Analise a intimação acima e retorne um JSON estruturado com:
-{
-  "summary": "Resumo executivo da intimação em 2-3 frases",
-  "deadline": {
-    "days": número de dias do prazo,
-    "type": "úteis" ou "corridos",
-    "description": "descrição do prazo"
-  },
-  "suggestedActions": ["lista de ações sugeridas"],
-  "priority": "low|medium|high|urgent",
-  "documentType": "tipo do documento (intimação, citação, despacho, sentença, etc)",
-  "parties": {
-    "author": "nome do autor/exequente se identificado",
-    "defendant": "nome do réu/executado se identificado"
-  },
-  "nextSteps": ["próximos passos recomendados com prazos"]
-}
-
-REGRAS:
-- Identifique prazos mencionados (geralmente 5, 10, 15, 30 dias)
-- Prazos processuais são em dias úteis, salvo indicação contrária
-- Prioridade 'urgent' se prazo < 5 dias
-- Prioridade 'high' se prazo < 10 dias
-- Sempre sugira ações concretas e práticas
-
-Retorne APENAS o JSON, sem markdown ou explicações.`;
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [ { parts: [ { text: prompt } ] } ],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 2048,
-        },
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const generatedText = data.candidates?.[ 0 ]?.content?.parts?.[ 0 ]?.text;
-
-  if (!generatedText) {
-    throw new Error("No response from Gemini");
-  }
-
-  return generatedText;
-}
-
-// Função para processar análise de intimação
-async function processIntimationAnalysis (
-  task: AgentTask
-): Promise<AnalysisResult>
-{
-  const text = task.data.text || "";
+/**
+ * Constrói contexto para análise
+ */
+function buildAnalysisContext(task: AgentTask): string {
   const processNumber = task.data.processNumber || "N/A";
   const tribunal = task.data.tribunal || "N/A";
   const documentType = task.data.type || "Intimação";
+  return `Processo: ${processNumber} | Tribunal: ${tribunal} | Tipo: ${documentType}`;
+}
 
-  if (!text || text.length < 50) {
+/**
+ * Processa rota de análise de intimação
+ */
+async function handleIntimationRoute(task: AgentTask): Promise<AnalysisResult> {
+  const text = task.data.text || "";
+
+  if (!validateIntimationText(text)) {
     return {
       success: false,
       error: "Texto da intimação muito curto ou vazio",
     };
   }
 
-  const context = `Processo: ${processNumber} | Tribunal: ${tribunal} | Tipo: ${documentType}`;
+  const context = buildAnalysisContext(task);
 
   try {
     const aiResponse = await analyzeWithGemini(text, context);
-
-    // Parse and sanitize AI response
-    const analysisData = parseAIResponse(aiResponse, documentType);
-
-    // Populate computed deadline dates (if any)
+    const analysisData = parseAIResponse(aiResponse, task.data.type || "Intimação");
     applyDeadlineDates(analysisData);
 
     return {
       success: true,
       data: analysisData,
-      message: `Análise concluída por Mrs. Justin-e - ${analysisData.suggestedActions?.length || 0
-        } ações sugeridas`,
+      message: `Análise concluída - ${analysisData.suggestedActions?.length || 0} ações sugeridas`,
     };
   } catch (error) {
     console.error("[Process Task] Error analyzing intimation:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Erro desconhecido na análise",
+      error: error instanceof Error ? error.message : "Erro desconhecido na análise",
     };
   }
 }
 
-// Helper to parse AI's response into a structured AnalysisResult.data
-function parseAIResponse (aiResponse: string, documentType: string)
-{
-  try {
-    const cleanJson = aiResponse
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-    return JSON.parse(cleanJson);
-  } catch {
-    return {
-      summary: aiResponse.substring(0, 500),
-      suggestedActions: [ "Revisar intimação manualmente" ],
-      priority: "medium",
-      documentType: documentType,
-      nextSteps: [ "Análise manual requerida" ],
-    } as unknown as AnalysisResult[ "data" ];
-  }
+/**
+ * Processa rotas de monitoramento
+ */
+function handleMonitoringRoute(taskType: string): AnalysisResult {
+  return {
+    success: true,
+    message: `Tarefa ${taskType} processada pelo sistema`,
+  };
 }
 
 // Helper to compute and assign startDate/endDate from a 'deadline' object
@@ -221,49 +129,57 @@ function applyDeadlineDates (analysisData: AnalysisResult["data"] | null | undef
   } else {
     endDate.setDate(endDate.getDate() + analysisData.deadline.days);
   }
+  return {
+    success: true,
+    message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
+  };
+}
 
-  analysisData.deadline.startDate = startDate.toISOString().split("T")[ 0 ];
-  analysisData.deadline.endDate = endDate.toISOString().split("T")[ 0 ];
+/**
+ * Verifica se tarefa é de análise
+ */
+function isAnalysisTask(taskType: string): boolean {
+  return taskType === "analyze_intimation" || taskType === "analyze_document";
+}
+
+/**
+ * Verifica se tarefa é de monitoramento
+ */
+function isMonitoringTask(taskType: string): boolean {
+  return taskType === "monitor-djen" || taskType === "check-deadlines";
 }
 
 // Handler principal
-export async function dispatchTask (
-  task: AgentTask,
-  _agent: Agent
-): Promise<AnalysisResult>
-{
-  // Roteia para o processador correto baseado no tipo de tarefa
-  switch (task.type) {
-    case "analyze_intimation":
-    case "analyze_document":
-      return await processIntimationAnalysis(task);
-
-    case "monitor-djen":
-    case "check-deadlines":
-      // Estes são processados pelo cron, não por IA
-      return {
-        success: true,
-        message: `Tarefa ${task.type} processada pelo sistema`,
-      };
-
-    default:
-      // Análise genérica com IA
-      if (task.data.text) {
-        return await processIntimationAnalysis(task);
-      }
-      return {
-        success: true,
-        message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
-      };
+export async function dispatchTask(task: AgentTask, _agent: Agent): Promise<AnalysisResult> {
+  if (isAnalysisTask(task.type)) {
+    return await handleIntimationRoute(task);
   }
+
+  if (isMonitoringTask(task.type)) {
+    return handleMonitoringRoute(task.type);
+  }
+
+  return await handleDefaultRoute(task);
 }
 
-export default async function handler (req: VercelRequest, res: VercelResponse)
-{
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS - only allow origins configured in ALLOWED_ORIGINS
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
+  if (origin && allowedOrigins.length > 0) {
+    if (!allowedOrigins.includes(origin)) {
+      return res.status(403).json({ error: "Origin not allowed" });
+    }
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (allowedOrigins.length === 0) {
+    // Fallback to wildcard only if ALLOWED_ORIGINS not configured (for local dev)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -273,30 +189,78 @@ export default async function handler (req: VercelRequest, res: VercelResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { task, agent } = req.body as { task: AgentTask; agent: Agent };
+  // Auth - require AUTOGEN_API_KEY for agent processing
+  if (!requireApiKey(req, res, "AUTOGEN_API_KEY")) return;
 
-  if (!task || !agent) {
+  // Rate limiting by client IP
+  const clientIP =
+    ((req.headers && (req.headers["x-forwarded-for"] as string | undefined)) as
+      | string
+      | undefined) ||
+    ((req.headers && (req.headers["x-real-ip"] as string | undefined)) as string | undefined) ||
+    "unknown";
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+  }
+
+  const { task, agent } = req.body as { task: unknown; agent: unknown };
+
+  // Validate with Zod
+  const parsedTask = AgentTaskInputSchema.safeParse(task);
+  if (!parsedTask.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid task payload", details: handleValidationError(parsedTask.error) });
+  }
+  const parsedAgent = AgentInputSchema.safeParse(agent);
+  if (!parsedAgent.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid agent payload", details: handleValidationError(parsedAgent.error) });
+  }
+
+  if (!parsedTask || !parsedAgent) {
     return res.status(400).json({
       error: "Missing required fields: task, agent",
     });
   }
 
+  const safeTask = parsedTask.data;
+  const safeAgent = parsedAgent.data;
+
+  // Sanitize and redact PII from text fields to avoid injection and leak
+  if (safeTask.data && typeof safeTask.data.text === "string") {
+    // Escape HTML first, then redact PII
+    const escaped = escapeHtml(safeTask.data.text) as unknown as string;
+    safeTask.data.text = redactPii(escaped) as unknown as string;
+  }
+
   console.log(
-    `[Process Task] Processing task ${task.id} for agent ${agent.name} (${agent.id})`
+    `[Process Task] Processing task ${safeTask.id} for agent ${safeAgent.name} (${safeAgent.id})`
   );
 
   try {
-    const result: AnalysisResult = await dispatchTask(task, agent);
+    // Always use timeout + retry for calls to LLM
+    const exec = async () => dispatchTask(safeTask as any, safeAgent as any);
+    const result: AnalysisResult = await retryWithBackoff(() => withTimeout(45000, exec()), 3, 500);
 
     console.log(
-      `[Process Task] Task ${task.id} completed: ${result.success ? "success" : "failed"
-      }`
+      `[Process Task] Task ${safeTask.id} completed: ${result.success ? "success" : "failed"}`
     );
 
     return res.status(200).json({
       success: true,
-      taskId: task.id,
-      agentId: agent.id,
+      taskId: safeTask.id,
+      agentId: safeAgent.id,
       result,
       processedAt: new Date().toISOString(),
     });
@@ -306,8 +270,8 @@ export default async function handler (req: VercelRequest, res: VercelResponse)
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Internal server error",
-      taskId: task.id,
-      agentId: agent.id,
+      taskId: safeTask.id,
+      agentId: safeAgent.id,
     });
   }
 }

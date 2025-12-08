@@ -74,11 +74,25 @@ export default defineConfig({
         clientsClaim: true,
         // Limpar caches antigos automaticamente
         cleanupOutdatedCaches: true,
-        // ✅ EXCLUIR chunks do editor do precache para evitar carregamento prematuro
-        // Esses chunks são lazy-loaded e não devem ser pré-cacheados
+        // ✅ INCLUIR todos os chunks no precache (inclusive lazy-loaded)
+        // O cleanupOutdatedCaches vai remover versões antigas automaticamente
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        globIgnores: ["**/TiptapEditor*.js", "**/MinutasManager*.js"],
+        // ❌ REMOVIDO globIgnores - chunks lazy devem ser precacheados
+        // O problema de 404 acontecia porque chunks eram excluídos do cache
+        // mas o SW interceptava a request e não encontrava no cache
         runtimeCaching: [
+          {
+            // ✅ Lazy-loaded chunks: NetworkFirst para sempre buscar versão atualizada
+            // Se rede falhar, usa cache. Isso resolve o 404 de chunks com hash diferente
+            urlPattern:
+              /\/assets\/(MinutasManager|MinutasManagerV2|TiptapEditorV2|ProfessionalEditor|GoogleDocsEmbed|AcervoPJe|ProcessTimelineViewer|DashboardCharts|animation|three|dnd|files)-[a-zA-Z0-9]+\.js$/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "lazy-chunks",
+              expiration: { maxEntries: 30, maxAgeSeconds: 86400 * 7 }, // 7 dias
+              networkTimeoutSeconds: 10, // Timeout rápido para fallback ao cache
+            },
+          },
           {
             urlPattern: /^https:\/\/apis\.google\.com\/.*/i,
             handler: "NetworkFirst",
@@ -100,10 +114,7 @@ export default defineConfig({
     alias: {
       "@": resolve(projectRoot, "src"),
       // Stub local pro Todoist (evita dependência externa em runtime)
-      "@doist/todoist-api-typescript": resolve(
-        projectRoot,
-        "src/lib/todoist-stub.ts"
-      ),
+      "@doist/todoist-api-typescript": resolve(projectRoot, "src/lib/todoist-stub.ts"),
       // REMOVIDO: @github/spark - agora usando Gemini 2.5 Pro diretamente
     },
   },
@@ -117,41 +128,47 @@ export default defineConfig({
       // Permite usar window.open com preview de PDF / impressão sem quebrar tudo
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
-    proxy: {
-      // Proxy para APIs - desenvolvimento aponta para Vercel produção
-      "/api": {
-        target: "https://assistente-juridico-github.vercel.app",
-        changeOrigin: true,
-        secure: true,
-        configure: (proxy, _options) => {
-          proxy.on("error", (err, _req, _res) => {
-            console.log("Proxy error:", err);
-          });
-          proxy.on("proxyReq", (proxyReq, req, _res) => {
-            console.log(
-              "Proxying request:",
-              req.method,
-              req.url,
-              "->",
-              proxyReq.getHeader("host") + proxyReq.path
-            );
-          });
-        },
-      },
-      // Proxy para endpoints legados /_spark/* -> /api/*
-      "/_spark/llm": {
-        target: "https://assistente-juridico-github.vercel.app",
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/_spark\/llm/, "/api/llm-proxy"),
-      },
-      "/_spark/kv": {
-        target: "https://assistente-juridico-github.vercel.app",
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/_spark\/kv/, "/api/kv"),
-      },
-    },
+    // Permite desabilitar o proxy que redireciona chamadas /api para produção
+    // útil para E2E locais para testar APIs localmente
+    proxy:
+      process.env.DISABLE_API_PROXY === "true"
+        ? undefined
+        : {
+            // Proxy para APIs - desenvolvimento aponta para Vercel produção
+            "/api": {
+              target:
+                process.env.VITE_API_TARGET || "https://assistente-juridico-github.vercel.app",
+              changeOrigin: true,
+              secure: true,
+              configure: (proxy, _options) => {
+                proxy.on("error", (err, _req, _res) => {
+                  console.log("Proxy error:", err);
+                });
+                proxy.on("proxyReq", (proxyReq, req, _res) => {
+                  console.log(
+                    "Proxying request:",
+                    req.method,
+                    req.url,
+                    "->",
+                    proxyReq.getHeader("host") + proxyReq.path
+                  );
+                });
+              },
+            },
+            // Proxy para endpoints legados /_spark/* -> /api/*
+            "/_spark/llm": {
+              target: "https://assistente-juridico-github.vercel.app",
+              changeOrigin: true,
+              secure: true,
+              rewrite: (path) => path.replace(/^\/_spark\/llm/, "/api/llm-proxy"),
+            },
+            "/_spark/kv": {
+              target: "https://assistente-juridico-github.vercel.app",
+              changeOrigin: true,
+              secure: true,
+              rewrite: (path) => path.replace(/^\/_spark\/kv/, "/api/kv"),
+            },
+          },
   },
   build: {
     cssMinify: "lightningcss",
@@ -168,19 +185,11 @@ export default defineConfig({
     modulePreload: {
       polyfill: true,
       // Não fazer preload de chunks que contêm ProseMirror/Tiptap
-      resolveDependencies: (
-        _filename,
-        deps,
-        { hostId: _hostId, hostType: _hostType }
-      ) => {
+      resolveDependencies: (_filename, deps, { hostId: _hostId, hostType: _hostType }) => {
         // Filtrar dependências que não devem ser preloaded
         return deps.filter((dep) => {
           // Não preload editor chunks - eles serão carregados sob demanda
-          if (
-            dep.includes("editor") ||
-            dep.includes("tiptap") ||
-            dep.includes("prosemirror")
-          ) {
+          if (dep.includes("editor") || dep.includes("tiptap") || dep.includes("prosemirror")) {
             return false;
           }
           // Não preload Minutas - lazy loaded

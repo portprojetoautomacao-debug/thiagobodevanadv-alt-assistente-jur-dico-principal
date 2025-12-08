@@ -1,7 +1,14 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { FluentMotion, FluentFade, FluentSlide, FluentScale, FluentHover, FluentStaggerItem } from '@/components/FluentMotion'
-import { Sparkle, Wind, Lightning, Atom } from '@phosphor-icons/react'
+import {
+  FluentFade,
+  FluentHover,
+  FluentMotion,
+  FluentScale,
+  FluentSlide,
+  FluentStaggerItem,
+} from "@/components/FluentMotion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Atom, Sparkles, Wind, Zap } from "lucide-react";
 
 export default function FluentAnimationsShowcase() {
   return (
@@ -22,7 +29,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkle size={24} className="text-primary" weight="duotone" />
+                <Sparkles size={24} className="text-primary" />
                 Fade In Up
               </CardTitle>
             </CardHeader>
@@ -41,7 +48,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Wind size={24} className="text-accent-teal" weight="duotone" />
+                <Wind size={24} className="text-accent-teal" />
                 Fade In Scale
               </CardTitle>
             </CardHeader>
@@ -60,7 +67,7 @@ export default function FluentAnimationsShowcase() {
           <Card className="windows-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lightning size={24} className="text-accent-orange" weight="duotone" />
+                <Zap size={24} className="text-accent-orange" />
                 Slide In
               </CardTitle>
             </CardHeader>
@@ -80,7 +87,7 @@ export default function FluentAnimationsShowcase() {
         <Card className="windows-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Atom size={24} className="text-accent-purple" weight="duotone" />
+              <Atom size={24} className="text-accent-purple" />
               Stagger Animation
             </CardTitle>
           </CardHeader>
@@ -155,14 +162,12 @@ export default function FluentAnimationsShowcase() {
             <div className="text-center space-y-4">
               <h3 className="text-xl font-semibold">Sistema Completo Implementado</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Todas as animações seguem as diretrizes de Fluent Motion do Windows 11, 
-                com curvas de easing personalizadas, durações otimizadas e suporte para 
-                redução de movimento (prefers-reduced-motion).
+                Todas as animações seguem as diretrizes de Fluent Motion do Windows 11, com curvas
+                de easing personalizadas, durações otimizadas e suporte para redução de movimento
+                (prefers-reduced-motion).
               </p>
               <div className="flex gap-4 justify-center pt-4">
-                <Button className="windows-button">
-                  Explorar Componentes
-                </Button>
+                <Button className="windows-button">Explorar Componentes</Button>
                 <Button variant="outline" className="reveal-hover">
                   Ver Documentação
                 </Button>
@@ -172,5 +177,5 @@ export default function FluentAnimationsShowcase() {
         </Card>
       </FluentFade>
     </div>
-  )
+  );
 }

@@ -55,10 +55,9 @@ export default function ConfirmDialog({
             console.error("[ConfirmDialog] Erro no onConfirm:", err);
           })
           .finally(() => setConfirming(false));
-      } else {
-        if (autoCloseOnConfirmResult && res === true) {
-          onOpenChange(false);
-        }
+      } else if (autoCloseOnConfirmResult && res === true) {
+        // Resultado síncrono: fechar se autoClose habilitado e resultado true
+        onOpenChange(false);
       }
     } catch (err) {
       console.error("[ConfirmDialog] Erro no onConfirm (sync):", err);
@@ -70,17 +69,13 @@ export default function ConfirmDialog({
       <AlertDialogContent className="glassmorphic">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            {isDestructive && (
-              <AlertTriangle className="text-destructive" size={20} />
-            )}
+            {isDestructive && <AlertTriangle className="text-destructive" size={20} />}
             {title}
           </AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={confirming}>
-            {cancelText}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={confirming}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirmClick}
             disabled={confirmDisabled || confirming}

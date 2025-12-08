@@ -1,116 +1,118 @@
-import { useState, FormEvent } from 'react'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Spinner,
-  Warning,
-  Copy,
-  Gavel,
-  MagnifyingGlass,
-  Sparkle,
-  FileText,
-  CheckCircle,
-  CalendarBlank as CalendarIcon,
-} from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { geminiGenerateText } from '@/lib/gemini-client'
+} from "@/components/ui/select";
 import {
   consultarProcessoDatajud,
-  validarNumeroCNJ,
   getTribunaisDisponiveis,
   isApiKeyConfigured,
+  validarNumeroCNJ,
   type DatajudProcesso,
-} from '@/lib/datajud-api'
+} from "@/lib/datajud-api";
+import { geminiGenerateText } from "@/lib/gemini-client";
+import {
+  Calendar as CalendarIcon,
+  CheckCircle,
+  Copy,
+  FileText,
+  Gavel,
+  Search,
+  Sparkles,
+  Loader,
+  AlertTriangle,
+} from "lucide-react";
+import { FormEvent, useState } from "react";
+import { toast } from "sonner";
 
-const TRIBUNAIS = getTribunaisDisponiveis().filter(t =>
-  ['tjsp', 'tjrj', 'tjmg', 'trf1', 'trf2', 'trf3', 'trf4', 'tst'].includes(t.value)
-)
+const TRIBUNAIS = getTribunaisDisponiveis().filter((t) =>
+  ["tjsp", "tjrj", "tjmg", "trf1", "trf2", "trf3", "trf4", "tst"].includes(t.value)
+);
 
 export default function DatajudChecklist() {
-  const [cnjNumber, setCnjNumber] = useState('')
-  const [tribunal, setTribunal] = useState('tjsp')
-  const [isLoading, setIsLoading] = useState(false)
-  const [processoData, setProcessoData] = useState<DatajudProcesso | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysis, setAnalysis] = useState<string | null>(null)
-  const [analysisError, setAnalysisError] = useState<string | null>(null)
-  const apiKeyConfigured = isApiKeyConfigured()
+  const [cnjNumber, setCnjNumber] = useState("");
+  const [tribunal, setTribunal] = useState("tjsp");
+  const [isLoading, setIsLoading] = useState(false);
+  const [processoData, setProcessoData] = useState<DatajudProcesso | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const apiKeyConfigured = isApiKeyConfigured();
 
   const handleSearch = async (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!cnjNumber.trim()) {
-      setError('Por favor, digite um número de processo CNJ válido.')
-      toast.error('Digite um número de processo CNJ válido')
-      return
+      setError("Por favor, digite um número de processo CNJ válido.");
+      toast.error("Digite um número de processo CNJ válido");
+      return;
     }
 
     if (!validarNumeroCNJ(cnjNumber)) {
-      setError('Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO')
-      toast.error('Formato de número CNJ inválido')
-      return
+      setError("Formato de número CNJ inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO");
+      toast.error("Formato de número CNJ inválido");
+      return;
     }
 
     if (!apiKeyConfigured) {
-      setError('API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env')
-      toast.error('Configure a API Key do DataJud')
-      return
+      setError(
+        "API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env"
+      );
+      toast.error("Configure a API Key do DataJud");
+      return;
     }
 
-    setError(null)
-    setAnalysis(null)
-    setProcessoData(null)
-    setIsLoading(true)
+    setError(null);
+    setAnalysis(null);
+    setProcessoData(null);
+    setIsLoading(true);
 
     try {
       const processo = await consultarProcessoDatajud({
         numeroProcesso: cnjNumber,
-        tribunal: tribunal
-      })
+        tribunal: tribunal,
+      });
 
-      setProcessoData(processo)
-      toast.success('Processo encontrado com sucesso!')
+      setProcessoData(processo);
+      toast.success("Processo encontrado com sucesso!");
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar processo.'
-      setError(message)
-      toast.error(message)
-      console.error('Erro ao consultar DataJud:', err)
+      const message = err instanceof Error ? err.message : "Erro ao buscar processo.";
+      setError(message);
+      toast.error(message);
+      console.error("Erro ao consultar DataJud:", err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleAnalyze = async () => {
-    if (!processoData) return
+    if (!processoData) return;
 
-    setIsAnalyzing(true)
-    setAnalysisError(null)
+    setIsAnalyzing(true);
+    setAnalysisError(null);
 
     try {
       const recentMovements = processoData.movimentos
         .slice(0, 15)
-        .map((m) => `${m.nome} - ${new Date(m.dataHora).toLocaleDateString('pt-BR')}`)
-        .join('\n')
+        .map((m) => `${m.nome} - ${new Date(m.dataHora).toLocaleDateString("pt-BR")}`)
+        .join("\n");
 
       const promptText = `Você é um assistente jurídico especializado em análise de processos. Analise os dados do processo abaixo e forneça:
 
 Número do Processo: ${processoData.numeroProcesso}
 Tribunal: ${processoData.tribunal}
-Classe: ${processoData.classe?.nome || 'Não especificada'}
-Assuntos: ${processoData.assuntos?.map((a) => a.nome).join(', ') || 'Não especificados'}
+Classe: ${processoData.classe?.nome || "Não especificada"}
+Assuntos: ${processoData.assuntos?.map((a) => a.nome).join(", ") || "Não especificados"}
 Últimos andamentos:
 ${recentMovements}
 
@@ -121,24 +123,24 @@ Forneça uma análise concisa contendo:
 4. Prazos relevantes a observar
 5. Recomendações estratégicas
 
-Mantenha a resposta objetiva e profissional.`
+Mantenha a resposta objetiva e profissional.`;
 
-      const analysisText = await geminiGenerateText(promptText)
-      setAnalysis(analysisText)
-      toast.success('Análise concluída!')
+      const analysisText = await geminiGenerateText(promptText);
+      setAnalysis(analysisText);
+      toast.success("Análise concluída!");
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao analisar processo.'
-      setAnalysisError(message)
-      toast.error(message)
+      const message = err instanceof Error ? err.message : "Erro ao analisar processo.";
+      setAnalysisError(message);
+      toast.error(message);
     } finally {
-      setIsAnalyzing(false)
+      setIsAnalyzing(false);
     }
-  }
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success('Copiado para a área de transferência!')
-  }
+    navigator.clipboard.writeText(text);
+    toast.success("Copiado para a área de transferência!");
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -179,21 +181,19 @@ Mantenha a resposta objetiva e profissional.`
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Selecione o tribunal de origem
-                  </p>
+                  <p className="text-xs text-muted-foreground">Selecione o tribunal de origem</p>
                 </div>
               </div>
 
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? (
                   <>
-                    <Spinner className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader className="w-5 h-5 mr-2 animate-spin" />
                     Consultando...
                   </>
                 ) : (
                   <>
-                    <MagnifyingGlass className="w-5 h-5 mr-2" weight="bold" />
+                    <Search className="w-5 h-5 mr-2" />
                     Buscar Processo
                   </>
                 )}
@@ -203,9 +203,10 @@ Mantenha a resposta objetiva e profissional.`
 
           {!apiKeyConfigured && (
             <Alert variant="destructive">
-              <Warning className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env para usar este recurso.
+                API Key do DataJud não configurada. Configure VITE_DATAJUD_API_KEY no arquivo .env
+                para usar este recurso.
                 <br />
                 <a
                   href="https://www.cnj.jus.br/sistemas/datajud/api-publica/"
@@ -221,7 +222,7 @@ Mantenha a resposta objetiva e profissional.`
 
           {error && (
             <Alert variant="destructive">
-              <Warning className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -232,9 +233,9 @@ Mantenha a resposta objetiva e profissional.`
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Gavel className="w-6 h-6 text-primary" weight="fill" />
+                      <Gavel className="w-6 h-6 text-primary" />
                       <h2 className="text-xl font-bold text-foreground">
-                        {processoData.classe?.nome || 'Processo Judicial'}
+                        {processoData.classe?.nome || "Processo Judicial"}
                       </h2>
                     </div>
                     <p className="text-sm font-mono text-muted-foreground mb-3">
@@ -259,7 +260,7 @@ Mantenha a resposta objetiva e profissional.`
                     <div>
                       <p className="text-xs text-muted-foreground">Data de Ajuizamento</p>
                       <p className="text-sm font-medium text-foreground">
-                        {new Date(processoData.dataAjuizamento).toLocaleDateString('pt-BR')}
+                        {new Date(processoData.dataAjuizamento).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                   )}
@@ -286,12 +287,12 @@ Mantenha a resposta objetiva e profissional.`
                 >
                   {isAnalyzing ? (
                     <>
-                      <Spinner className="w-5 h-5 mr-2 animate-spin" />
+                      <Loader className="w-5 h-5 mr-2 animate-spin" />
                       Analisando com IA...
                     </>
                   ) : (
                     <>
-                      <Sparkle className="w-5 h-5 mr-2" weight="fill" />
+                      <Sparkles className="w-5 h-5 mr-2" />
                       Analisar Andamentos com IA
                     </>
                   )}
@@ -300,7 +301,7 @@ Mantenha a resposta objetiva e profissional.`
 
               {analysisError && (
                 <Alert variant="destructive">
-                  <Warning className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>{analysisError}</AlertDescription>
                 </Alert>
               )}
@@ -308,7 +309,7 @@ Mantenha a resposta objetiva e profissional.`
               {analysis && (
                 <Card className="p-6 bg-linear-to-br from-accent/5 to-primary/5">
                   <div className="flex items-center gap-2 mb-4">
-                    <Sparkle className="w-6 h-6 text-accent" weight="fill" />
+                    <Sparkles className="w-6 h-6 text-accent" />
                     <h3 className="text-lg font-bold text-foreground">Análise da IA</h3>
                   </div>
                   <div className="prose prose-sm max-w-none">
@@ -331,22 +332,16 @@ Mantenha a resposta objetiva e profissional.`
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-primary" weight="fill" />
-                    <h3 className="text-lg font-bold text-foreground">
-                      Últimos Andamentos
-                    </h3>
+                    <FileText className="w-6 h-6 text-primary" />
+                    <h3 className="text-lg font-bold text-foreground">Últimos Andamentos</h3>
                   </div>
-                  <Badge variant="outline">
-                    {processoData.movimentos.length} movimento(s)
-                  </Badge>
+                  <Badge variant="outline">{processoData.movimentos.length} movimento(s)</Badge>
                 </div>
 
                 <div className="space-y-3">
                   {processoData.movimentos
-                    .sort(
-                      (a, b) =>
-                        new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime()
-                    )
+                    .slice()
+                    .sort((a, b) => new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime())
                     .slice(0, 10)
                     .map((movimento, index) => (
                       <div
@@ -355,17 +350,15 @@ Mantenha a resposta objetiva e profissional.`
                       >
                         <div className="shrink-0 mt-1">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-primary" weight="fill" />
+                            <CheckCircle className="w-5 h-5 text-primary" />
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground">
-                            {movimento.nome}
-                          </p>
+                          <p className="text-sm font-semibold text-foreground">{movimento.nome}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                             <p className="text-xs text-muted-foreground">
-                              {new Date(movimento.dataHora).toLocaleString('pt-BR')}
+                              {new Date(movimento.dataHora).toLocaleString("pt-BR")}
                             </p>
                           </div>
                         </div>
@@ -375,7 +368,7 @@ Mantenha a resposta objetiva e profissional.`
 
                 {processoData.movimentos.length > 10 && (
                   <p className="text-xs text-muted-foreground text-center mt-4">
-                    Mostrando os 10 andamentos mais recentes de {processoData.movimentos.length}{' '}
+                    Mostrando os 10 andamentos mais recentes de {processoData.movimentos.length}{" "}
                     total
                   </p>
                 )}
@@ -385,5 +378,5 @@ Mantenha a resposta objetiva e profissional.`
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }
