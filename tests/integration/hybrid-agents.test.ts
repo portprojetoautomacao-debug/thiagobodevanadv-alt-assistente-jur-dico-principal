@@ -1,10 +1,46 @@
+import { executeHybridTask } from "@/lib/hybrid-agents-integration";
+import { expect, test } from "vitest";
+
+test("executeHybridTask runs for harvey and returns success", async () => {
+  const task = {
+    id: "test-1",
+    agentId: "harvey",
+    type: "DRAFT_PETITION",
+    priority: "MEDIUM",
+    status: "QUEUED",
+    createdAt: new Date().toISOString(),
+    data: { description: "Test orchestration with harvey" },
+  } as any;
+
+  const result = await executeHybridTask("harvey", task);
+  expect(result).toBeDefined();
+  expect(result.executionTime).toBeGreaterThanOrEqual(0);
+  expect(result.mode).toBeDefined();
+});
+
+test("executeHybridTask runs for justine and returns success", async () => {
+  const task = {
+    id: "test-2",
+    agentId: "justine",
+    type: "RESEARCH_PRECEDENTS",
+    priority: "MEDIUM",
+    status: "QUEUED",
+    createdAt: new Date().toISOString(),
+    data: { description: "Test orchestration with justine" },
+  } as any;
+
+  const result = await executeHybridTask("justine", task);
+  expect(result).toBeDefined();
+  expect(result.executionTime).toBeGreaterThanOrEqual(0);
+  expect(result.mode).toBeDefined();
+});
 /**
  * Hybrid Architecture Integration Tests
  *
  * Tests for LangGraph + DSPy + Qdrant + AutoGen integration
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, it } from "vitest";
 import { monitorDJEN } from "../../src/agents/monitor-djen/monitor_graph";
 import { QdrantService } from "../../src/lib/qdrant-service";
 
