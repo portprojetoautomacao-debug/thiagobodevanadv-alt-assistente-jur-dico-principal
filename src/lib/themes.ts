@@ -57,13 +57,29 @@ export const themeConfig = {
 } as const;
 
 /**
- * Utilitário para obter cor de um tipo de evento
+ * Utilitário para obter cor de um tipo de evento com type guard
  */
 export function getEventColor(tipo?: string): string {
   if (!tipo) return themeConfig.colors.info;
 
-  const tipoKey = tipo as keyof typeof themeConfig.colors;
-  return themeConfig.colors[tipoKey] || themeConfig.colors.info;
+  // Type guard: verifica se o tipo existe nas cores
+  const validEventTypes = [
+    "urgente", "alerta", "sucesso", "info",
+    "certidao", "sentenca", "despacho", "peticao",
+    "intimacao", "mandado", "juntada", "conclusos"
+  ] as const;
+
+  type EventType = typeof validEventTypes[number];
+
+  function isEventType(value: string): value is EventType {
+    return validEventTypes.includes(value as EventType);
+  }
+
+  if (isEventType(tipo)) {
+    return themeConfig.colors[tipo];
+  }
+
+  return themeConfig.colors.info;
 }
 
 /**

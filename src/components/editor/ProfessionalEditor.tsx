@@ -14,8 +14,12 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TiptapEditorV2 from "./TiptapEditorV2";
+
+// Constants
+const TYPING_TIMEOUT_MS = 3000; // 3 seconds of inactivity before considering user stopped typing
+const PAGE_CHARS_ESTIMATE = 1800; // Approximate characters per A4 page
 
 interface ProfessionalEditorProps {
   readonly content: string;
@@ -50,12 +54,16 @@ export function ProfessionalEditor({
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastContentRef = useRef(content);
 
-  // Calcular contagem de palavras
-  useEffect(() => {
+  // Calcular contagem de palavras (com debounce via useMemo)
+  const wordCountData = useMemo(() => {
     const text = content.replace(/<[^>]*>/g, "").trim();
     const words = text.length === 0 ? 0 : text.split(/\s+/).filter((w) => w.length > 0).length;
-    setWordCount(words);
+    return { words, chars: content.replace(/<[^>]*>/g, "").length };
   }, [content]);
+
+  useEffect(() => {
+    setWordCount(wordCountData.words);
+  }, [wordCountData]);
 
   // Detectar quando humano está digitando
   const handleChange = useCallback(
@@ -74,7 +82,7 @@ export function ProfessionalEditor({
         // Após 3s de inatividade, considerar que humano parou de digitar
         typingTimeoutRef.current = setTimeout(() => {
           setIsTyping(false);
-        }, 3000);
+        }, TYPING_TIMEOUT_MS);
       }
 
       lastContentRef.current = newContent;
@@ -211,7 +219,7 @@ export function ProfessionalEditor({
             onAIGenerate={handleAIGenerate}
             onAIStream={handleAIStream}
             variables={variables}
-            readOnly={readOnly || isTyping} // Bloquear IA quando humano está digitando
+            readOnly={readOnly} // User can always type; AI respect isTyping internally
             placeholder="Comece a escrever ou use os comandos de IA..."
             className="min-h-full"
           />
@@ -230,7 +238,7 @@ export function ProfessionalEditor({
         <div className="flex items-center gap-4">
           <span>{wordCount.toLocaleString("pt-BR")} palavras</span>
           <span>
-            {Math.ceil(content.replace(/<[^>]*>/g, "").length / 1800)} páginas (aprox.)
+            {Math.ceil(wordCountData.chars / PAGE_CHARS_ESTIMATE)} páginas (aprox.)
           </span>
         </div>
       </div>

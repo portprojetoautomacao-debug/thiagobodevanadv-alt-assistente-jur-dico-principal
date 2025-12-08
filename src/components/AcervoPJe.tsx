@@ -29,6 +29,9 @@ import { getStatusBadgeClass } from "@/lib/themes";
 
 type FilterType = "all" | "active" | "urgent";
 
+// Constants
+const SIDEBAR_WIDTH = "w-80"; // 320px (20 * 16px = 320px in Tailwind)
+
 export function AcervoPJe() {
   const [processes] = useKV<Process[]>("processes", []);
   const [processEvents] = useKV<ProcessEvent[]>("processEvents", []);
@@ -103,7 +106,7 @@ export function AcervoPJe() {
   return (
     <div className="flex h-full gap-4">
       {/* Sidebar - Lista de Processos */}
-      <div className="w-80 flex flex-col border-r border-border bg-card/50">
+      <div className={cn(SIDEBAR_WIDTH, "flex flex-col border-r border-border bg-card/50")}>
         {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2 mb-2">

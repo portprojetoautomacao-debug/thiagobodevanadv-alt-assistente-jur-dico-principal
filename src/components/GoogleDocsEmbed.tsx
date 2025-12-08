@@ -23,14 +23,32 @@ interface GoogleDocsEmbedProps {
   readonly onClose?: () => void;
 }
 
+/**
+ * Validate Google Docs ID format
+ * Google Docs IDs are typically 44 characters long and contain alphanumeric, hyphens, and underscores
+ */
+function isValidDocId(docId: string): boolean {
+  // Basic validation: alphanumeric, hyphens, underscores, 20-60 chars
+  return /^[a-zA-Z0-9_-]{20,60}$/.test(docId);
+}
+
 export function GoogleDocsEmbed({ docId, docUrl, title, onClose }: GoogleDocsEmbedProps) {
   const [activeTab, setActiveTab] = useState<"view" | "edit">("view");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // Construir URLs do Google Docs
-  const viewUrl = `https://docs.google.com/document/d/${docId}/preview`;
-  const editUrl = `https://docs.google.com/document/d/${docId}/edit`;
+  // Validate docId on mount
+  if (!isValidDocId(docId)) {
+    console.error("Invalid Google Docs ID format:", docId);
+  }
+
+  // Construir URLs do Google Docs (only if valid)
+  const viewUrl = isValidDocId(docId)
+    ? `https://docs.google.com/document/d/${docId}/preview`
+    : "";
+  const editUrl = isValidDocId(docId)
+    ? `https://docs.google.com/document/d/${docId}/edit`
+    : "";
 
   const iframeUrl = activeTab === "edit" ? editUrl : viewUrl;
 
@@ -120,16 +138,20 @@ export function GoogleDocsEmbed({ docId, docUrl, title, onClose }: GoogleDocsEmb
 
         <TabsContent value="view" className="flex-1 m-0 overflow-hidden">
           <CardContent className="p-0 h-full">
-            {hasError ? (
+            {hasError || !isValidDocId(docId) ? (
               <div className="flex items-center justify-center h-full bg-muted/10">
                 <div className="text-center space-y-4 p-8">
                   <div className="text-6xl">📄</div>
                   <div>
                     <h3 className="text-lg font-semibold mb-2">
-                      Não foi possível carregar o documento
+                      {!isValidDocId(docId)
+                        ? "ID de documento inválido"
+                        : "Não foi possível carregar o documento"}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Verifique se você tem permissão para acessar este documento
+                      {!isValidDocId(docId)
+                        ? "O ID fornecido não está no formato correto"
+                        : "Verifique se você tem permissão para acessar este documento"}
                     </p>
                     <Button onClick={handleOpenExternal} variant="outline">
                       <ArrowSquareOut className="h-4 w-4 mr-2" />
@@ -152,16 +174,20 @@ export function GoogleDocsEmbed({ docId, docUrl, title, onClose }: GoogleDocsEmb
 
         <TabsContent value="edit" className="flex-1 m-0 overflow-hidden">
           <CardContent className="p-0 h-full">
-            {hasError ? (
+            {hasError || !isValidDocId(docId) ? (
               <div className="flex items-center justify-center h-full bg-muted/10">
                 <div className="text-center space-y-4 p-8">
                   <div className="text-6xl">📝</div>
                   <div>
                     <h3 className="text-lg font-semibold mb-2">
-                      Não foi possível carregar o editor
+                      {!isValidDocId(docId)
+                        ? "ID de documento inválido"
+                        : "Não foi possível carregar o editor"}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Verifique se você tem permissão de edição para este documento
+                      {!isValidDocId(docId)
+                        ? "O ID fornecido não está no formato correto"
+                        : "Verifique se você tem permissão de edição para este documento"}
                     </p>
                     <Button onClick={handleOpenExternal} variant="outline">
                       <ArrowSquareOut className="h-4 w-4 mr-2" />
