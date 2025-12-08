@@ -46,6 +46,30 @@ jobs:
           node-version: "22.x"
           cache: "npm"
 
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install FastAPI & UVicorn (DSPy bridge deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi uvicorn
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+      - name: Start DSPy bridge (FastAPI) in background
+        env:
+          DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN }}
+        run: |
+          export DSPY_API_TOKEN=${DSPY_API_TOKEN:-test-token}
+          export DSPY_PORT=8765
+          python3 scripts/dspy_bridge.py &
+          sleep 1
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
       - name: Install dependencies
         run: npm ci
 

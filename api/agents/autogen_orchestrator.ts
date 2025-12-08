@@ -13,7 +13,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
+import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
 import { requireApiKey } from "../lib/auth.js";
 import { redactPii } from "../lib/pii.js";
 import { rateLimitMiddleware } from "../lib/rate-limit.js";
@@ -112,20 +114,59 @@ async function orchestrateAgents(
     timestamp: Date.now(),
   });
 
-  // Simulate agent coordination (stub)
-  for (const agent of request.agents) {
+  // Build a shared AgentTask to pass to executeHybridTask
+  const baseTask = {
+    id: uuidv4(),
+    agentId: "",
+    type: "DRAFT_PETITION",
+    priority: "MEDIUM",
+    status: "QUEUED",
+    createdAt: new Date().toISOString(),
+    data: { description: request.task },
+  } as any;
+
+  // Execute agents according to requested coordination
+  for (const agentId of request.agents) {
     if (signal.aborted) {
       throw new Error("Operation aborted");
     }
 
-    messages.push({
-      role: agent,
-      content: `[Stub] Agent ${agent} acknowledges task`,
-      timestamp: Date.now(),
-    });
+    // Short-circuit if agent disabled / not mapped in hybrid
+    const taskForAgent = { ...baseTask, id: `${baseTask.id}-${agentId}`, agentId } as any;
+    try {
+      messages.push({ role: agentId, content: `[Run] Starting ${agentId}`, timestamp: Date.now() });
+      const result = await executeHybridTask(agentId, taskForAgent, {
+        timeoutMs: request.timeout || 30000,
+      });
+      if (result.langGraphResult && result.langGraphResult.messages) {
+        for (const m of result.langGraphResult.messages) {
+          messages.push({
+            role: `${agentId}:${m.role}`,
+            content: String(m.content),
+            timestamp: Date.now(),
+          });
+        }
+      } else {
+        messages.push({
+          role: agentId,
+          content: `[Done] ${agentId} completed (mode=${result.mode})`,
+          timestamp: Date.now(),
+        });
+      }
+    } catch (err) {
+      messages.push({
+        role: agentId,
+        content: `[Error] ${err instanceof Error ? err.message : String(err)}`,
+        timestamp: Date.now(),
+      });
+      // In fallback mode we continue, otherwise bubble error
+      if (request.timeout && request.timeout > 0) {
+        // Continue with next agent
+      }
+    }
 
-    // Simulate processing delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // If sequential policy is required and task for agent caused failure, depending on the policy we might stop
+    // For now we always continue to collect results
   }
 
   const duration = Date.now() - startTime;
