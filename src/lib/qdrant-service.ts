@@ -185,6 +185,11 @@ export class QdrantService {
       throw new Error("Vector must be a non-empty array");
     }
 
+    // Basic dimension sanity check to avoid extremely large vectors
+    if (vector.length < 1 || vector.length > 10000) {
+      throw new Error("Vector length must be between 1 and 10000");
+    }
+
     if (vector.some((v) => typeof v !== "number" || !isFinite(v))) {
       throw new Error("Vector must contain only finite numbers");
     }

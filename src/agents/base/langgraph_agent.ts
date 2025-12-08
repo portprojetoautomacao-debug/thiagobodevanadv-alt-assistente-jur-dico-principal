@@ -12,7 +12,7 @@
  */
 
 import type { AgentState } from "./agent_state";
-import { updateState, addMessage } from "./agent_state";
+import { addMessage, updateState } from "./agent_state";
 
 export interface LangGraphConfig {
   timeoutMs: number;
@@ -41,16 +41,16 @@ export abstract class LangGraphAgent {
     let currentState = state;
 
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
+      let timeoutId: NodeJS.Timeout | null = null;
       try {
         this.abortController = new AbortController();
 
-        const timeoutId = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           this.abortController?.abort();
         }, this.config.timeoutMs);
 
         const result = await this.run(currentState, this.abortController.signal);
 
-        clearTimeout(timeoutId);
         return result;
       } catch (error) {
         const isLastAttempt = attempt === this.config.maxRetries;
@@ -69,6 +69,10 @@ export abstract class LangGraphAgent {
         currentState = updateState(currentState, {
           retryCount: attempt + 1,
         });
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId as NodeJS.Timeout);
+        }
       }
     }
 

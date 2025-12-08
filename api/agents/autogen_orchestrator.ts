@@ -32,7 +32,7 @@ const ALLOWED_AGENTS = [
 ];
 
 const OrchestrationRequestSchema = z.object({
-  task: z.string().min(1),
+  task: z.string().min(1).max(10000),
   agents: z.array(z.string()).min(1),
   maxRounds: z.number().int().min(1).max(MAX_ROUNDS).optional(),
   timeout: z.number().int().min(1000).max(MAX_TIMEOUT_MS).optional(),
@@ -152,8 +152,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       return;
     }
     res.setHeader("Access-Control-Allow-Origin", origin);
-  } else if (allowedOrigins.length === 0) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
   }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
