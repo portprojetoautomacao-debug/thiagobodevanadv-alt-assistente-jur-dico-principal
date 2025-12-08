@@ -10,6 +10,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { requireApiKey } from "../lib/auth.js";
 import { analyzeWithGemini } from "../lib/gemini-analyzer.js";
+import { redactPii } from "../lib/pii.js";
 import { rateLimitMiddleware } from "../lib/rate-limit.js";
 import { retryWithBackoff } from "../lib/retry.js";
 import { escapeHtml } from "../lib/sanitize.js";
@@ -222,9 +223,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const safeTask = parsedTask.data;
   const safeAgent = parsedAgent.data;
 
-  // Sanitize text fields to avoid injection
+  // Sanitize and redact PII from text fields to avoid injection and leak
   if (safeTask.data && typeof safeTask.data.text === "string") {
-    safeTask.data.text = escapeHtml(safeTask.data.text) as unknown as string;
+    // Escape HTML first, then redact PII
+    const escaped = escapeHtml(safeTask.data.text) as unknown as string;
+    safeTask.data.text = redactPii(escaped) as unknown as string;
   }
 
   console.log(

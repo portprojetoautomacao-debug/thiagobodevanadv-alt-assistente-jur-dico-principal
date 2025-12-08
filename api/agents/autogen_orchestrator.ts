@@ -15,8 +15,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import { requireApiKey } from "../lib/auth.js";
+import { redactPii } from "../lib/pii.js";
 import { rateLimitMiddleware } from "../lib/rate-limit.js";
 import { retryWithBackoff } from "../lib/retry.js";
+import { escapeHtml } from "../lib/sanitize.js";
 import { withTimeout } from "../lib/timeout.js";
 
 // Configuration
@@ -184,6 +186,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
   const request = parsed.data as OrchestrationRequest;
+
+  // Sanitize and redact input task text
+  if (typeof request.task === "string") {
+    request.task = redactPii(escapeHtml(request.task));
+  }
   const timeout = request.timeout || MAX_TIMEOUT_MS;
 
   // Create abort controller for timeout
