@@ -3,23 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useKV } from "@/hooks/use-kv";
 import { cn } from "@/lib/utils";
 import type { Expediente, Minuta, Process } from "@/types";
-import {
-  Calendar,
-  FileText,
-  Folder,
-  FolderOpen,
-  Mail,
-  MoreVertical,
-  Search,
-  User,
-} from "lucide-react";
+import { FileText, Folder, FolderOpen, Mail, MoreVertical, Search, User } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
 const STATUS_COLORS: Record<Process["status"], string> = {
   ativo: "bg-blue-100 text-blue-800 border-blue-300",
@@ -46,7 +35,7 @@ function ProcessListItem({ process, isSelected, onClick }: ProcessListItemProps)
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Folder className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="font-medium text-sm truncate">{process.numeroCNJ}</span>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2">{process.titulo}</p>
@@ -201,9 +190,7 @@ function ProcessDetailPanel({ process, expedientes, minutas }: ProcessDetailPane
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm font-medium">
-                      {process.autor || "Não identificado"}
-                    </p>
+                    <p className="text-sm font-medium">{process.autor || "Não identificado"}</p>
                   </CardContent>
                 </Card>
 

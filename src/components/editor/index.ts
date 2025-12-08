@@ -8,4 +8,4 @@ export { ProfessionalEditor } from "./ProfessionalEditor";
 export { TiptapEditorV2 as TiptapEditor } from "./TiptapEditorV2";
 
 // Editor profissional com aparência A4 e colaboração IA
-export { ProfessionalEditor } from "./ProfessionalEditor";
+// Removido duplicata de export para evitar conflito de identificador

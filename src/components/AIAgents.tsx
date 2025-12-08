@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAgentBackup } from "@/hooks/use-agent-backup";
 import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
 import { useKV } from "@/hooks/use-kv";
+import { themeConfig } from "@/lib/themes";
 import {
   AlertTriangle,
   ArrowLeftRight,
@@ -61,9 +62,9 @@ function getTaskStatusVariant(status: string): "default" | "secondary" | "destru
 
 function getStatusColor(enabled: boolean, isStreaming: boolean, status?: string): string {
   if (!enabled) return "text-muted-foreground";
-  if (isStreaming) return "text-purple-500";
+  if (isStreaming) return "text-primary"; // azul info via theme
   if (status === "processing") return "text-accent";
-  return "text-green-600";
+  return "text-success"; // verde sucesso via theme
 }
 
 /**
@@ -77,14 +78,14 @@ function _getBadgeVariant(isStreaming: boolean, enabled: boolean): "default" | "
 
 function getCardClassName(enabled: boolean, isStreaming: boolean): string {
   const base = "transition-all duration-300";
-  if (isStreaming) return `${base} border-purple-500/50 shadow-lg shadow-purple-500/10`;
+  if (isStreaming) return `${base} border-primary/50 shadow-lg shadow-primary/10`; // azul info via theme
   if (enabled) return `${base} border-primary/30`;
   return base;
 }
 
 function getIconContainerClassName(enabled: boolean, isStreaming: boolean): string {
   const base = "p-2 rounded-lg relative";
-  if (isStreaming) return `${base} bg-purple-500/20 animate-pulse`;
+  if (isStreaming) return `${base} bg-primary/20 animate-pulse`; // azul info via theme
   if (enabled) return `${base} bg-primary/10`;
   return `${base} bg-muted`;
 }
@@ -100,29 +101,59 @@ function getProcessingText(count: number): string {
 }
 
 /**
+ * Retorna estilo para streaming usando themeConfig
+ */
+function getStreamingStyle(): React.CSSProperties {
+  const base = themeConfig.colors.info;
+  return {
+    color: base,
+    backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+    borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
+  };
+}
+
+/**
  * Renderiza o preview de streaming de um agente
  */
 function renderStreamingPreview(isStreaming: boolean, streamPreview: string): ReactNode | null {
   if (!isStreaming || !streamPreview) return null;
 
+  const streamingStyle = getStreamingStyle();
+
   return (
-    <div className="mt-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+    <div
+      className="mt-3 p-3 rounded-lg border"
+      style={{
+        backgroundColor: streamingStyle.backgroundColor,
+        borderColor: streamingStyle.borderColor,
+      }}
+    >
       <div className="flex items-center gap-2 mb-2">
         <div className="flex gap-1">
           <span
-            className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-            style={{ animationDelay: "0ms" }}
+            className="w-2 h-2 rounded-full animate-bounce"
+            style={{ backgroundColor: themeConfig.colors.info, animationDelay: "0ms" }}
           />
           <span
-            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
-            style={{ animationDelay: "150ms" }}
+            className="w-2 h-2 rounded-full animate-bounce"
+            style={{
+              backgroundColor: themeConfig.colors.info,
+              opacity: 0.8,
+              animationDelay: "150ms",
+            }}
           />
           <span
-            className="w-2 h-2 bg-purple-300 rounded-full animate-bounce"
-            style={{ animationDelay: "300ms" }}
+            className="w-2 h-2 rounded-full animate-bounce"
+            style={{
+              backgroundColor: themeConfig.colors.info,
+              opacity: 0.6,
+              animationDelay: "300ms",
+            }}
           />
         </div>
-        <span className="text-xs text-purple-400 font-medium">Streaming em tempo real</span>
+        <span className="text-xs font-medium" style={{ color: themeConfig.colors.info }}>
+          Streaming em tempo real
+        </span>
       </div>
       <p className="text-xs text-muted-foreground font-mono line-clamp-2">
         {streamPreview}
@@ -139,7 +170,7 @@ function renderStreamingIndicator(isStreaming: boolean): ReactNode | null {
   if (!isStreaming) return null;
 
   return (
-    <Badge className="bg-purple-500/20 text-purple-500 border-purple-500/30 text-xs animate-pulse">
+    <Badge className="text-xs animate-pulse" style={getStreamingStyle()}>
       <Zap className="w-3 h-3 mr-1" />
       Gerando...
     </Badge>
@@ -153,7 +184,10 @@ function renderStreamingPingIndicator(isStreaming: boolean): ReactNode | null {
   if (!isStreaming) return null;
 
   return (
-    <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-ping" />
+    <span
+      className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-ping"
+      style={{ backgroundColor: themeConfig.colors.info }}
+    />
   );
 }
 
@@ -327,7 +361,7 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-semibold text-green-600">Ativo</div>
+                <div className="text-sm font-semibold text-success">Ativo</div>
                 <p className="text-xs text-muted-foreground mt-1">A cada 5 min</p>
               </div>
               <div className="flex gap-1">
@@ -434,7 +468,7 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-background/50 rounded-lg p-4 border border-border">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success" />
                 <h4 className="font-semibold text-foreground">95% Precisa</h4>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -579,7 +613,8 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
                         <span>Capacidades:</span>
                         <Badge
                           variant={isStreaming || agent.enabled ? "default" : "secondary"}
-                          className={`text-xs ${isStreaming ? "bg-purple-500 text-white" : ""}`}
+                          style={isStreaming ? getStreamingStyle() : undefined}
+                          className="text-xs"
                         >
                           {getAgentStatusLabel(isStreaming, agent.enabled)}
                         </Badge>
@@ -600,7 +635,8 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground text-xs">Última atividade:</span>
                       <span
-                        className={`text-xs ${isStreaming ? "text-purple-400" : "text-foreground"}`}
+                        className="text-xs"
+                        style={isStreaming ? { color: themeConfig.colors.info } : undefined}
                       >
                         {agent.lastActivity}
                       </span>
@@ -611,7 +647,7 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
                       <span>Status:</span>
                       <Badge
                         variant={isStreaming || agent.enabled ? "default" : "secondary"}
-                        className={isStreaming ? "bg-purple-500" : ""}
+                        style={isStreaming ? getStreamingStyle() : undefined}
                       >
                         {getAgentStatusLabelExtended(isStreaming, agent.enabled)}
                       </Badge>
@@ -770,7 +806,10 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
                           key={task.id}
                           className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
                         >
-                          <IconComponent className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                          <IconComponent
+                            className="w-5 h-5 shrink-0 mt-0.5"
+                            style={{ color: themeConfig.colors.sucesso }}
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground">{agent?.name}</p>
                             <p className="text-xs text-muted-foreground mt-1">{task.type}</p>
@@ -781,7 +820,17 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
                                 : "-"}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              <Badge variant="default" className="text-xs bg-green-600">
+                              <Badge
+                                className="text-xs"
+                                style={(() => {
+                                  const base = themeConfig.colors.sucesso;
+                                  return {
+                                    color: "white",
+                                    backgroundColor: base,
+                                    borderColor: base,
+                                  };
+                                })()}
+                              >
                                 Concluído
                               </Badge>
                               <span className="text-xs text-muted-foreground">

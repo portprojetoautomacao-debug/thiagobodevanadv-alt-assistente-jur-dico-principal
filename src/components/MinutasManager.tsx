@@ -33,6 +33,7 @@ import {
 } from "@/lib/document-templates";
 import { callGemini, isGeminiConfigured } from "@/lib/gemini-service";
 import { googleDocsService } from "@/lib/google-docs-service";
+import { themeConfig } from "@/lib/themes";
 import {
   createMinuta,
   updateMinuta,
@@ -81,12 +82,8 @@ type ViewMode = "grid" | "list";
 export default function MinutasManager() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
   const [processes] = useKV<Process[]>("processes", []);
-  const {
-    exportToGoogleDocs,
-    importFromGoogleDocs,
-    openDocument,
-  } = useGoogleDocs();
-  
+  const { exportToGoogleDocs, importFromGoogleDocs, openDocument } = useGoogleDocs();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMinuta, setEditingMinuta] = useState<Minuta | null>(null);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
@@ -480,15 +477,22 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
     [streamChat]
   );
 
-  const getStatusColor = (status: Minuta["status"]) => {
-    const colors = {
-      rascunho: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      "em-revisao": "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      "pendente-revisao": "bg-orange-500/10 text-orange-500 border-orange-500/20",
-      finalizada: "bg-green-500/10 text-green-500 border-green-500/20",
-      arquivada: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+  // Alinhado ao design system semântico em src/lib/themes.ts
+  const getStatusStyle = (status: Minuta["status"]): React.CSSProperties => {
+    const map: Record<Minuta["status"], string> = {
+      rascunho: themeConfig.colors.alerta, // amarelo
+      "em-revisao": themeConfig.colors.info, // azul
+      "pendente-revisao": themeConfig.colors.alerta, // laranja
+      finalizada: themeConfig.colors.sucesso, // verde
+      arquivada: "hsl(0, 0%, 45%)", // cinza neutro
+    } as const;
+
+    const base = map[status] || themeConfig.colors.info;
+    return {
+      color: base,
+      backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+      borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
     };
-    return colors[status] || colors.rascunho;
   };
 
   const getStatusLabel = (status: Minuta["status"]) => {
@@ -512,6 +516,33 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
       outro: "Outro",
     };
     return labels[tipo] || tipo;
+  };
+
+  const getAlertStyle = (): React.CSSProperties => {
+    const base = themeConfig.colors.alerta;
+    return {
+      color: base,
+      backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+      borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
+    };
+  };
+
+  const getSuccessStyle = (): React.CSSProperties => {
+    const base = themeConfig.colors.sucesso;
+    return {
+      color: base,
+      backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+      borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
+    };
+  };
+
+  const getInfoStyle = (): React.CSSProperties => {
+    const base = themeConfig.colors.info;
+    return {
+      color: base,
+      backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+      borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
+    };
   };
 
   // Filtrar minutas
@@ -549,7 +580,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
           {(() => {
             if (!isGoogleConfigured) {
               return (
-                <Badge variant="outline" className="px-4 py-2 border-amber-500/50 text-amber-600">
+                <Badge variant="outline" style={getAlertStyle()} className="px-4 py-2">
                   <AlertTriangle className="mr-2 h-4 w-4" />
                   Google não configurado
                 </Badge>
@@ -564,7 +595,7 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
               );
             }
             return (
-              <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
+              <Badge style={getSuccessStyle()} className="px-4 py-2">
                 <FileText className="mr-2" />
                 Google Conectado
               </Badge>
@@ -730,16 +761,25 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
 
                   {/* Variáveis não preenchidas */}
                   {unfilledVariables.length > 0 && (
-                    <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    <Alert
+                      style={{
+                        borderColor: `${themeConfig.colors.alerta.replace("hsl", "hsla").replace(")", ", 0.50)")}`,
+                        backgroundColor: `${themeConfig.colors.alerta.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+                      }}
+                    >
+                      <AlertTriangle
+                        className="h-4 w-4"
+                        style={{ color: themeConfig.colors.alerta }}
+                      />
+                      <AlertDescription style={{ color: themeConfig.colors.alerta }}>
                         <strong>{unfilledVariables.length} variáveis não preenchidas:</strong>{" "}
                         {unfilledVariables.slice(0, 5).join(", ")}
                         {unfilledVariables.length > 5 && ` e mais ${unfilledVariables.length - 5}`}
                         <Button
                           variant="link"
                           size="sm"
-                          className="ml-2 text-amber-600"
+                          className="ml-2"
+                          style={{ color: themeConfig.colors.alerta }}
                           onClick={() => setActiveTab("variaveis")}
                         >
                           Preencher variáveis →
@@ -945,6 +985,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             variant={viewMode === "grid" ? "secondary" : "ghost"}
             onClick={() => setViewMode("grid")}
             className="px-3"
+            aria-label="Visualização em grade"
+            title="Visualização em grade"
           >
             <Grid3x3 className="h-4 w-4" />
           </Button>
@@ -953,6 +995,8 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
             variant={viewMode === "list" ? "secondary" : "ghost"}
             onClick={() => setViewMode("list")}
             className="px-3"
+            aria-label="Visualização em lista"
+            title="Visualização em lista"
           >
             <List className="h-4 w-4" />
           </Button>
@@ -974,7 +1018,14 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
           </CardContent>
         </Card>
       ) : (
-        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "grid gap-4"}>
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "grid gap-4"
+          }
+          data-testid="minutas-container"
+        >
           {filteredMinutas.map((minuta) => {
             const processo = (processes || []).find((p) => p.id === minuta.processId);
 
@@ -990,20 +1041,24 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                         <FileText className="text-primary h-4 w-4" />
                         {minuta.titulo}
                         {minuta.criadoPorAgente && (
-                          <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+                          <Badge style={getInfoStyle()}>
                             <Bot className="mr-1 h-3 w-3" />
                             IA
                           </Badge>
                         )}
                       </CardTitle>
                       <CardDescription className="mt-2 flex items-center gap-2 flex-wrap">
-                        <Badge className={getStatusColor(minuta.status)}>
+                        <Badge style={getStatusStyle(minuta.status)}>
                           {getStatusLabel(minuta.status)}
                         </Badge>
                         <Badge variant="outline">{getTipoLabel(minuta.tipo)}</Badge>
-                        {processo && <Badge variant="secondary" className="text-xs">{processo.numeroCNJ}</Badge>}
+                        {processo && (
+                          <Badge variant="secondary" className="text-xs">
+                            {processo.numeroCNJ}
+                          </Badge>
+                        )}
                         {minuta.googleDocsId && (
-                          <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                          <Badge style={getInfoStyle()}>
                             <FileText className="mr-1 h-3 w-3" />
                             Google Docs
                           </Badge>
@@ -1053,7 +1108,11 @@ Mantenha formatação HTML adequada para o editor (use <p>, <strong>, <em>, <ul>
                           size="sm"
                           variant="outline"
                           onClick={() => handleApproveMinuta(minuta.id)}
-                          className="text-green-600 border-green-500/50 hover:bg-green-500/10"
+                          style={{
+                            color: themeConfig.colors.sucesso,
+                            borderColor: `${themeConfig.colors.sucesso.replace("hsl", "hsla").replace(")", ", 0.50)")}`,
+                          }}
+                          className="hover:opacity-80"
                         >
                           <CheckCircle className="mr-2 h-4 w-4" />
                           Aprovar

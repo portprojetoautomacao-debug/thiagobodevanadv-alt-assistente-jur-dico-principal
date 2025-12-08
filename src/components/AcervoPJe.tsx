@@ -74,8 +74,7 @@ export function AcervoPJe() {
     // Ordenar por data de última movimentação (mais recente primeiro)
     return filtered.sort(
       (a, b) =>
-        new Date(b.dataUltimaMovimentacao).getTime() -
-        new Date(a.dataUltimaMovimentacao).getTime()
+        new Date(b.dataUltimaMovimentacao).getTime() - new Date(a.dataUltimaMovimentacao).getTime()
     );
   }, [processes, searchQuery, activeFilter]);
 
@@ -91,9 +90,7 @@ export function AcervoPJe() {
       selectedProcessId
         ? processEvents
             .filter((e) => e.processId === selectedProcessId)
-            .sort(
-              (a, b) => new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime()
-            )
+            .sort((a, b) => new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime())
         : [],
     [processEvents, selectedProcessId]
   );
@@ -116,9 +113,7 @@ export function AcervoPJe() {
               {filteredProcesses.length}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Gestão de processos em tempo real
-          </p>
+          <p className="text-xs text-muted-foreground">Gestão de processos em tempo real</p>
         </div>
 
         {/* Busca */}
@@ -171,9 +166,7 @@ export function AcervoPJe() {
               <div className="text-center py-12 px-4">
                 <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  {searchQuery
-                    ? "Nenhum processo encontrado"
-                    : "Nenhum processo no acervo"}
+                  {searchQuery ? "Nenhum processo encontrado" : "Nenhum processo no acervo"}
                 </p>
               </div>
             ) : (
@@ -212,9 +205,7 @@ export function AcervoPJe() {
                             </Badge>
                           )}
                         </div>
-                        <h3 className="font-medium text-sm truncate">
-                          {process.titulo}
-                        </h3>
+                        <h3 className="font-medium text-sm truncate">{process.titulo}</h3>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground font-mono mb-1">
@@ -239,10 +230,7 @@ export function AcervoPJe() {
       {/* Painel Principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {selectedProcess ? (
-          <ProcessTimelineViewer
-            process={selectedProcess}
-            events={selectedProcessEvents}
-          />
+          <ProcessTimelineViewer process={selectedProcess} events={selectedProcessEvents} />
         ) : (
           <Card className="flex-1 flex items-center justify-center bg-muted/5 border-dashed">
             <CardContent className="text-center py-12">
@@ -250,22 +238,16 @@ export function AcervoPJe() {
                 className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4"
                 weight="duotone"
               />
-              <h3 className="text-lg font-semibold mb-2">
-                Selecione um processo
-              </h3>
+              <h3 className="text-lg font-semibold mb-2">Selecione um processo</h3>
               <p className="text-sm text-muted-foreground max-w-md">
-                Escolha um processo na lista ao lado para visualizar sua linha do
-                tempo, eventos e documentos
+                Escolha um processo na lista ao lado para visualizar sua linha do tempo, eventos e
+                documentos
               </p>
               <Separator className="my-6" />
               <div className="grid grid-cols-3 gap-4 text-left max-w-md mx-auto">
                 <div>
-                  <div className="text-2xl font-bold text-primary">
-                    {processes.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Total de processos
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{processes.length}</div>
+                  <div className="text-xs text-muted-foreground">Total de processos</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-green-600">

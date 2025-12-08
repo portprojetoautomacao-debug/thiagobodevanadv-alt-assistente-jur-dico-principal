@@ -64,12 +64,21 @@ export function getEventColor(tipo?: string): string {
 
   // Type guard: verifica se o tipo existe nas cores
   const validEventTypes = [
-    "urgente", "alerta", "sucesso", "info",
-    "certidao", "sentenca", "despacho", "peticao",
-    "intimacao", "mandado", "juntada", "conclusos"
+    "urgente",
+    "alerta",
+    "sucesso",
+    "info",
+    "certidao",
+    "sentenca",
+    "despacho",
+    "peticao",
+    "intimacao",
+    "mandado",
+    "juntada",
+    "conclusos",
   ] as const;
 
-  type EventType = typeof validEventTypes[number];
+  type EventType = (typeof validEventTypes)[number];
 
   function isEventType(value: string): value is EventType {
     return validEventTypes.includes(value as EventType);

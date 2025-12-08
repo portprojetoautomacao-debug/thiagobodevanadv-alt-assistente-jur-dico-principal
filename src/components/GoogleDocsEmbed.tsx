@@ -43,12 +43,8 @@ export function GoogleDocsEmbed({ docId, docUrl, title, onClose }: GoogleDocsEmb
   }
 
   // Construir URLs do Google Docs (only if valid)
-  const viewUrl = isValidDocId(docId)
-    ? `https://docs.google.com/document/d/${docId}/preview`
-    : "";
-  const editUrl = isValidDocId(docId)
-    ? `https://docs.google.com/document/d/${docId}/edit`
-    : "";
+  const viewUrl = isValidDocId(docId) ? `https://docs.google.com/document/d/${docId}/preview` : "";
+  const editUrl = isValidDocId(docId) ? `https://docs.google.com/document/d/${docId}/edit` : "";
 
   const iframeUrl = activeTab === "edit" ? editUrl : viewUrl;
 
@@ -68,16 +64,12 @@ export function GoogleDocsEmbed({ docId, docUrl, title, onClose }: GoogleDocsEmb
     <Card
       className={cn(
         "flex flex-col overflow-hidden transition-all",
-        isFullscreen
-          ? "fixed inset-0 z-50 rounded-none"
-          : "h-full border-border shadow-lg"
+        isFullscreen ? "fixed inset-0 z-50 rounded-none" : "h-full border-border shadow-lg"
       )}
     >
-      <CardHeader className="border-b border-border py-3 px-4 flex-shrink-0">
+      <CardHeader className="border-b border-border py-3 px-4 shrink-0">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold truncate flex-1">
-            {title}
-          </CardTitle>
+          <CardTitle className="text-base font-semibold truncate flex-1">{title}</CardTitle>
           <div className="flex items-center gap-2 ml-4">
             <Button
               variant="ghost"

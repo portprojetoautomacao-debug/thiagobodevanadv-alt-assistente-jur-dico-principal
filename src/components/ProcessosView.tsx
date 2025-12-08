@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useProcesses } from "@/hooks/use-processes";
 import { llm } from "@/lib/llm-client";
+import { themeConfig } from "@/lib/themes";
 import { exportToCSV } from "@/lib/utils";
 import type { Process } from "@/types";
 import {
@@ -18,7 +19,6 @@ import {
   Calendar,
   Clock,
   Download,
-  Filter as Funnel,
   Gavel,
   Grid3x3,
   List,
@@ -31,8 +31,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import ProcessDetailsDialog from "../ProcessDetailsDialog";
-import ProcessDialog from "../ProcessDialog";
+import ProcessDetailsDialog from "./ProcessDetailsDialog";
+import ProcessDialog from "./ProcessDialog";
 
 type ViewMode = "grid" | "list";
 type SortOption = "recent" | "alpha" | "value" | "status";
@@ -178,7 +178,9 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
 
       const analysis = await llm(prompt, "gpt-4o");
 
-      const updatedNotes = `${process.notas || ""}\n\n--- ANÁLISE IA (${new Date().toLocaleString("pt-BR")}) ---\n${analysis}`;
+      const updatedNotes = `${process.notas || ""}\n\n--- ANÁLISE IA (${new Date().toLocaleString(
+        "pt-BR"
+      )}) ---\n${analysis}`;
 
       updateProcess(process.id, { notas: updatedNotes });
 
@@ -191,14 +193,21 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
     }
   };
 
-  const getStatusColor = (status: Process["status"]) => {
-    const colors = {
-      ativo: "bg-green-500/10 text-green-500 border-green-500/20",
-      suspenso: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      arquivado: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-      concluido: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  // Alinhado ao design system semântico em src/lib/themes.ts
+  const getStatusStyle = (status: Process["status"]): React.CSSProperties => {
+    const map: Record<Process["status"], string> = {
+      ativo: themeConfig.colors.sucesso,
+      suspenso: themeConfig.colors.alerta,
+      arquivado: "hsl(0, 0%, 45%)",
+      concluido: themeConfig.colors.info,
+    } as const;
+
+    const base = map[status] || themeConfig.colors.info;
+    return {
+      color: base,
+      backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+      borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
     };
-    return colors[status] || colors.ativo;
   };
 
   const getStatusLabel = (status: Process["status"]) => {
@@ -209,6 +218,16 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
       concluido: "Concluído",
     };
     return labels[status] || status;
+  };
+
+  // Badge "Urgente" alinhado ao themeConfig.colors
+  const getUrgenteStyle = (): React.CSSProperties => {
+    const base = themeConfig.colors.urgente;
+    return {
+      color: base,
+      backgroundColor: `${base.replace("hsl", "hsla").replace(")", ", 0.10)")}`,
+      borderColor: `${base.replace("hsl", "hsla").replace(")", ", 0.20)")}`,
+    };
   };
 
   const formatCurrency = (value: number) => {
@@ -316,7 +335,9 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.urgentDeadlines}</div>
+            <div className="text-2xl font-bold" style={{ color: themeConfig.colors.urgente }}>
+              {stats.urgentDeadlines}
+            </div>
             <p className="text-xs text-muted-foreground">urgentes</p>
           </CardContent>
         </Card>
@@ -433,12 +454,10 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base line-clamp-2 mb-2">
-                      {process.titulo}
-                    </CardTitle>
+                    <CardTitle className="text-base line-clamp-2 mb-2">{process.titulo}</CardTitle>
                     <p className="text-xs text-muted-foreground font-mono">{process.numeroCNJ}</p>
                   </div>
-                  <Badge className={getStatusColor(process.status)}>
+                  <Badge style={getStatusStyle(process.status)}>
                     {getStatusLabel(process.status)}
                   </Badge>
                 </div>
@@ -513,7 +532,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
                         {process.prazos.filter((p) => !p.concluido).length} pendentes
                       </Badge>
                       {process.prazos.some((p) => p.urgente && !p.concluido) && (
-                        <Badge variant="destructive" className="text-xs">
+                        <Badge style={getUrgenteStyle()} className="text-xs">
                           <AlertCircle className="h-3 w-3 mr-1" />
                           Urgente
                         </Badge>
