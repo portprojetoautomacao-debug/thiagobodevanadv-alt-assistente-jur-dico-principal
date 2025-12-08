@@ -14,13 +14,13 @@ import { useHeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-
 // --- UI Primitives ---
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button";
+import { Card, CardBody } from "@/components/tiptap-ui-primitive/card";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/tiptap-ui-primitive/dropdown-menu";
-import { Card, CardBody } from "@/components/tiptap-ui-primitive/card";
 
 export interface HeadingDropdownMenuProps
   extends Omit<ButtonProps, "type">, UseHeadingDropdownMenuConfig {
@@ -80,8 +80,7 @@ export const HeadingDropdownMenu = forwardRef<HTMLButtonElement, HeadingDropdown
             type="button"
             data-style="ghost"
             data-active-state={isActive ? "on" : "off"}
-            role="button"
-            tabIndex={-1}
+            // Removed role and tabIndex for accessibility. Native button is focusable.
             disabled={!canToggle}
             data-disabled={!canToggle}
             aria-label="Format text as heading"

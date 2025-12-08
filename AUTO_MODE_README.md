@@ -9,6 +9,14 @@
 4. **Testes em watch mode** iniciam automaticamente
 5. **TypeScript** verifica tipos em tempo real
 6. **ESLint** monitora código continuamente
+7. **Build otimizado** com lazy loading dos componentes:
+   - MinutasManager (TiptapEditorV2)
+   - MinutasManagerV2 (ProfessionalEditor)
+   - GoogleDocsEmbed
+   - AcervoPJe
+   - ProcessTimelineViewer
+   - DashboardCharts
+   - Animation (framer-motion)
 
 ### 💾 Ao Salvar Arquivos
 1. **Formatação automática** com Prettier
@@ -16,6 +24,7 @@
 3. **Organização automática** de imports
 4. **Verificação de tipos** TypeScript
 5. **Análise SonarLint** em tempo real
+6. **Hot reload** dos novos componentes
 
 ### 🔄 Durante o Desenvolvimento
 - **Hot reload** automático no navegador

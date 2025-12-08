@@ -1,9 +1,9 @@
-import { forwardRef, useMemo, useRef, useState } from "react";
 import { type Editor } from "@tiptap/react";
+import { forwardRef, useMemo, useRef, useState } from "react";
 
 // --- Hooks ---
-import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
+import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
 
 // --- Icons ---
@@ -13,9 +13,9 @@ import { HighlighterIcon } from "@/components/tiptap-icons/highlighter-icon";
 // --- UI Primitives ---
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/tiptap-ui-primitive/popover";
-import { Separator } from "@/components/tiptap-ui-primitive/separator";
 import { Card, CardBody, CardItemGroup } from "@/components/tiptap-ui-primitive/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/tiptap-ui-primitive/popover";
+import { Separator } from "@/components/tiptap-ui-primitive/separator";
 
 // --- Tiptap UI ---
 import type {
@@ -58,8 +58,7 @@ export const ColorHighlightPopoverButton = forwardRef<HTMLButtonElement, ButtonP
       className={className}
       data-style="ghost"
       data-appearance="default"
-      role="button"
-      tabIndex={-1}
+      // role/tabIndex removed — accessible via native button element
       aria-label="Highlight text"
       tooltip="Highlight"
       ref={ref}

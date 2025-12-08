@@ -13,9 +13,9 @@ import type { Mark, UseMarkConfig } from "@/components/tiptap-ui/mark-button";
 import { MARK_SHORTCUT_KEYS, useMark } from "@/components/tiptap-ui/mark-button";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 
 export interface MarkButtonProps extends Omit<ButtonProps, "type">, UseMarkConfig {
   /**
@@ -87,8 +87,7 @@ export const MarkButton = forwardRef<HTMLButtonElement, MarkButtonProps>(
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
         data-disabled={!canToggle}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed for accessibility
         aria-label={label}
         aria-pressed={isActive}
         tooltip={label}

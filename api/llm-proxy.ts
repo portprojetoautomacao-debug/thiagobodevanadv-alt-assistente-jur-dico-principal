@@ -1,19 +1,25 @@
 /**
  * Vercel Serverless Function - LLM Proxy
- * 
+ *
  * Suporta múltiplos provedores de IA:
  * 1. OpenAI GPT (recomendado) - OPENAI_API_KEY
  * 2. Google Gemini - GEMINI_API_KEY
  * 3. GitHub Models (gratuito) - GITHUB_TOKEN
- * 
+ *
  * Prioridade: OpenAI > Gemini > GitHub Models
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { z } from "zod";
+import { requireApiKey } from "./lib/auth.js";
+import { rateLimitMiddleware } from "./lib/rate-limit.js";
+import { retryWithBackoff } from "./lib/retry.js";
+import { escapeHtml } from "./lib/sanitize.js";
+import { withTimeout } from "./lib/timeout.js";
 
 // Tipos para mensagens e dados
 interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -57,37 +63,37 @@ interface ProviderConfig {
 // Mapeamento de modelos entre provedores
 const MODEL_MAPPING: Record<string, Record<string, string>> = {
   openai: {
-    'gpt-4o': 'gpt-4o',
-    'gpt-4o-mini': 'gpt-4o-mini',
-    'gpt-4': 'gpt-4-turbo',
-    'gpt-3.5-turbo': 'gpt-3.5-turbo',
+    "gpt-4o": "gpt-4o",
+    "gpt-4o-mini": "gpt-4o-mini",
+    "gpt-4": "gpt-4-turbo",
+    "gpt-3.5-turbo": "gpt-3.5-turbo",
   },
   gemini: {
-    'gpt-4o': 'gemini-2.5-pro',
-    'gpt-4o-mini': 'gemini-2.5-pro',
-    'gpt-4': 'gemini-2.5-pro',
-    'gpt-3.5-turbo': 'gemini-2.5-pro',
-    'gemini': 'gemini-2.5-pro',
-    'gemini-pro': 'gemini-2.5-pro',
-    'gemini-1.5-pro': 'gemini-2.5-pro',
-    'gemini-1.5-flash': 'gemini-2.5-pro',
-    'gemini-2.0-flash': 'gemini-2.5-pro',
-    'gemini-2.5-pro': 'gemini-2.5-pro',
-  }
+    "gpt-4o": "gemini-2.5-pro",
+    "gpt-4o-mini": "gemini-2.5-pro",
+    "gpt-4": "gemini-2.5-pro",
+    "gpt-3.5-turbo": "gemini-2.5-pro",
+    gemini: "gemini-2.5-pro",
+    "gemini-pro": "gemini-2.5-pro",
+    "gemini-1.5-pro": "gemini-2.5-pro",
+    "gemini-1.5-flash": "gemini-2.5-pro",
+    "gemini-2.0-flash": "gemini-2.5-pro",
+    "gemini-2.5-pro": "gemini-2.5-pro",
+  },
 };
 
 // Transformar request para formato Gemini
 function transformToGemini(body: LLMRequest): unknown {
   const messages = body.messages || [];
   const contents = messages
-    .filter((m: ChatMessage) => m.role !== 'system')
+    .filter((m: ChatMessage) => m.role !== "system")
     .map((m: ChatMessage) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
     }));
 
   // Adicionar system instruction se existir
-  const systemMessage = messages.find((m: ChatMessage) => m.role === 'system');
+  const systemMessage = messages.find((m: ChatMessage) => m.role === "system");
 
   return {
     contents,
@@ -95,7 +101,7 @@ function transformToGemini(body: LLMRequest): unknown {
     generationConfig: {
       temperature: body.temperature || 0.7,
       maxOutputTokens: body.max_tokens || 4096,
-    }
+    },
   };
 }
 
@@ -114,64 +120,99 @@ function transformFromGemini(data: unknown): LLMResponse {
   };
 
   const candidate = geminiData.candidates?.[0];
-  const text = candidate?.content?.parts?.[0]?.text || '';
+  const text = candidate?.content?.parts?.[0]?.text || "";
 
   return {
     id: `gemini-${Date.now()}`,
-    object: 'chat.completion',
+    object: "chat.completion",
     created: Math.floor(Date.now() / 1000),
-    model: 'gemini-2.5-pro',
-    choices: [{
-      index: 0,
-      message: {
-        role: 'assistant',
-        content: text,
+    model: "gemini-2.5-pro",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: text,
+        },
+        finish_reason: candidate?.finishReason?.toLowerCase() || "stop",
       },
-      finish_reason: candidate?.finishReason?.toLowerCase() || 'stop',
-    }],
+    ],
     usage: {
       prompt_tokens: geminiData.usageMetadata?.promptTokenCount || 0,
       completion_tokens: geminiData.usageMetadata?.candidatesTokenCount || 0,
       total_tokens: geminiData.usageMetadata?.totalTokenCount || 0,
-    }
+    },
   };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // CORS - restrict to ALLOWED_ORIGINS list
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
+  if (origin && allowedOrigins.length > 0) {
+    if (!allowedOrigins.includes(origin)) {
+      return res.status(403).json({ error: "Origin not allowed" });
+    }
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (allowedOrigins.length === 0) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed. Only POST is supported.' });
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed. Only POST is supported." });
     return;
+  }
+
+  // Require LLM proxy API key
+  if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
+
+  // rate limit middleware
+  const clientIP =
+    (req.headers["x-forwarded-for"] as string | undefined) ||
+    (req.headers["x-real-ip"] as string | undefined) ||
+    "unknown";
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
   }
 
   // Configurar provedores (ordem de prioridade)
   const providers: ProviderConfig[] = [
     // 1. OpenAI (prioridade máxima)
     {
-      name: 'OpenAI',
-      baseUrl: 'https://api.openai.com/v1/chat/completions',
+      name: "OpenAI",
+      baseUrl: "https://api.openai.com/v1/chat/completions",
       apiKey: process.env.OPENAI_API_KEY,
       headers: (key) => ({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
       }),
     },
     // 2. Google Gemini (aceita GEMINI_API_KEY ou VITE_GOOGLE_API_KEY)
     {
-      name: 'Gemini',
-      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
+      name: "Gemini",
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
       apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY,
       headers: () => ({
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       }),
       transformRequest: transformToGemini,
       transformResponse: transformFromGemini,
@@ -179,17 +220,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   ];
 
   // Encontrar provedor disponível
-  const provider = providers.find(p => p.apiKey);
+  const provider = providers.find((p) => p.apiKey);
 
   if (!provider) {
-    console.error('No LLM provider configured');
+    console.error("No LLM provider configured");
     res.status(500).json({
-      error: 'No LLM provider configured',
-      message: 'Configure uma das seguintes variáveis no Vercel:',
+      error: "No LLM provider configured",
+      message: "Configure uma das seguintes variáveis no Vercel:",
       options: [
-        { name: 'OPENAI_API_KEY', description: 'API key da OpenAI (recomendado)', url: 'https://platform.openai.com/api-keys' },
-        { name: 'GEMINI_API_KEY', description: 'API key do Google Gemini (gratuito)', url: 'https://aistudio.google.com/app/apikey' },
-      ]
+        {
+          name: "OPENAI_API_KEY",
+          description: "API key da OpenAI (recomendado)",
+          url: "https://platform.openai.com/api-keys",
+        },
+        {
+          name: "GEMINI_API_KEY",
+          description: "API key do Google Gemini (gratuito)",
+          url: "https://aistudio.google.com/app/apikey",
+        },
+      ],
     });
     return;
   }
@@ -197,58 +246,87 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log(`Using LLM provider: ${provider.name}`);
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+
+    // Simple validation using Zod
+    const ChatMessageSchema = z.object({
+      role: z.enum(["system", "user", "assistant"]),
+      content: z.string().min(1).max(20000),
+    });
+    const LLMRequestSchema = z.object({
+      model: z.string().optional(),
+      messages: z.array(ChatMessageSchema).optional(),
+      temperature: z.number().optional(),
+      max_tokens: z.number().optional(),
+    });
+    const parsed = LLMRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ error: "Invalid request body", details: parsed.error.format() });
+    }
+
+    // sanitize message contents
+    if (parsed.data.messages) {
+      parsed.data.messages.forEach((m) => {
+        m.content = escapeHtml(m.content);
+      });
+    }
+
     // Modelo padrão baseado no provedor
-    const defaultModel = provider.name === 'OpenAI' ? 'gpt-4o-mini' : 'gemini-2.5-pro';
+    const defaultModel = provider.name === "OpenAI" ? "gpt-4o-mini" : "gemini-2.5-pro";
     const requestedModel = body.model || defaultModel;
 
     // Construir URL e body baseado no provedor
     let targetUrl = provider.baseUrl;
     let requestBody = body;
 
-    if (provider.name === 'Gemini') {
+    if (provider.name === "Gemini") {
       // Mapear modelo e construir URL específica do Gemini
-      const geminiModel = MODEL_MAPPING.gemini[requestedModel] || 'gemini-2.5-pro';
+      const geminiModel = MODEL_MAPPING.gemini[requestedModel] || "gemini-2.5-pro";
       console.log(`[Gemini] Modelo solicitado: ${requestedModel} → ${geminiModel}`);
       targetUrl = `${provider.baseUrl}/${geminiModel}:generateContent?key=${provider.apiKey}`;
       requestBody = provider.transformRequest!(body);
-    } else if (provider.name === 'OpenAI') {
+    } else if (provider.name === "OpenAI") {
       // Mapear modelo OpenAI
       body.model = MODEL_MAPPING.openai[requestedModel] || requestedModel;
       requestBody = body;
     }
 
     // Fazer requisição
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: provider.headers(provider.apiKey!),
-      body: JSON.stringify(requestBody),
-    });
+    // Make request with timeout + retry
+    const fetchFn = async () => {
+      const response = await fetch(targetUrl, {
+        method: "POST",
+        headers: provider.headers(provider.apiKey!),
+        body: JSON.stringify(requestBody),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`${provider.name} API error: ${response.status} - ${errorText}`);
+      }
+      return response.json();
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`${provider.name} API error:`, errorText);
-      throw new Error(`${provider.name} API error: ${response.status} - ${errorText}`);
-    }
+    const data = await retryWithBackoff(() => withTimeout(45000, fetchFn()), 3, 500);
 
-    let data = await response.json();
+    // Response status has already been checked inside fetchFn
+
+    // data already set from retryWithBackoff
 
     // Transformar resposta se necessário
-    if (provider.transformResponse) {
-      data = provider.transformResponse(data);
-    }
+    let transformed = data;
+    if (provider.transformResponse) transformed = provider.transformResponse(data);
 
     // Adicionar metadata sobre o provedor usado
-    data._provider = provider.name;
+    transformed._provider = provider.name;
 
-    res.status(200).json(data);
-
+    res.status(200).json(transformed);
   } catch (error) {
-    console.error('LLM proxy error:', error);
+    console.error("LLM proxy error:", error);
     res.status(500).json({
-      error: 'Failed to process LLM request',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      error: "Failed to process LLM request",
+      message: error instanceof Error ? error.message : "Unknown error",
       provider: provider.name,
     });
   }

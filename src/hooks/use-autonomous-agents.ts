@@ -2,10 +2,12 @@ import { useKV } from "@/hooks/use-kv";
 import {
   type Agent,
   type AgentTask,
+  type AgentTaskResult,
   canResumeAfterHuman,
   initializeAgents,
   shouldPauseForHuman,
 } from "@/lib/agents";
+import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -458,8 +460,38 @@ export function useAutonomousAgents() {
       try {
         let result;
 
-        if (useStreaming) {
-          // Create callbacks using extracted helper (S2004 compliance)
+        // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
+        const hasHybrid = hasHybridVersion(agent.id);
+
+        if (hasHybrid) {
+          // Usar arquitetura híbrida com fallback automático
+          const hybridResult = await executeHybridTask(agent.id, task, {
+            enableLangGraph: true,
+            enableTraditional: true,
+            coordinationMode: "fallback", // LangGraph primeiro, tradicional como fallback
+            timeoutMs: 30000,
+          });
+
+          // Converter resultado híbrido para formato AgentTaskResult
+          result = {
+            success: hybridResult.success,
+            data:
+              hybridResult.langGraphResult?.data ||
+              (hybridResult.traditionalResult?.output as Record<string, unknown>) ||
+              {},
+            message: `Executado via ${hybridResult.mode}`,
+            processingTimeMs: hybridResult.executionTime,
+            confidence: hybridResult.success ? 0.95 : 0.5,
+          } satisfies AgentTaskResult;
+
+          // Log da execução híbrida
+          logActivity(
+            agent.id,
+            `Executado via ${hybridResult.mode} (${hybridResult.executionTime}ms)`,
+            hybridResult.success ? "success" : "error"
+          );
+        } else if (useStreaming) {
+          // Fallback para agentes sem versão híbrida - usar streaming tradicional
           const callbacks = createStreamingCallbacks(
             agent.id,
             setStreamingContent,
@@ -468,7 +500,7 @@ export function useAutonomousAgents() {
           );
           result = await processTaskWithStreamingAI(task, agent, callbacks);
         } else {
-          // Fallback para processamento sem streaming
+          // Fallback para processamento tradicional sem streaming
           result = await processTaskWithRealAI(task, agent);
         }
 

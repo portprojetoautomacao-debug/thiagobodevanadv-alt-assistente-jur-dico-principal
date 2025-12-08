@@ -1,9 +1,69 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "crypto";
+
+/**
+ * Middleware para checar Authorization: Bearer <TOKEN>
+ * Faz comparação em tempo-constante (timingSafeEqual) para prevenir timing attacks
+ */
+export function requireApiKey(
+  req: VercelRequest,
+  res: VercelResponse,
+  envVarName = "EMAIL_API_KEY"
+) {
+  const header = req.headers?.authorization || req.headers?.Authorization;
+  const expected = process.env[envVarName] ?? "";
+  // If API key is not configured, allow requests in development/test to simplify local testing
+  if (!expected && (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development")) {
+    console.debug(
+      `[Auth] ${envVarName} not set - allowing request in ${process.env.NODE_ENV} mode`
+    );
+    return true;
+  }
+  if (!header || typeof header !== "string" || !header.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Unauthorized" });
+    return false;
+  }
+
+  const token = header.slice("Bearer ".length).trim();
+
+  try {
+    const a = Buffer.from(token);
+    const b = Buffer.from(expected);
+
+    // Prevent short-circuit if different length
+    if (a.length !== b.length) {
+      // Use constant-time compare with zero-padded buffers
+      const padded = Buffer.alloc(Math.max(a.length, b.length));
+      a.copy(padded);
+      const cmp = crypto.timingSafeEqual(padded, padded);
+      // deliberately fail
+      if (!cmp) {
+        // fallthrough
+      }
+      res.status(401).json({ error: "Unauthorized" });
+      return false;
+    }
+
+    const ok = crypto.timingSafeEqual(a, b);
+    if (!ok) {
+      res.status(401).json({ error: "Unauthorized" });
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    // Any error should deny access
+    res.status(401).json({ error: "Unauthorized" });
+    return false;
+  }
+}
+
+export default requireApiKey;
 /**
  * Middleware de autenticação para endpoints sensíveis
  * Valida tokens de acesso e autoriza operações
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { SafeLogger } from "./safe-logger.js";
 
 const logger = new SafeLogger("Auth");
@@ -20,7 +80,7 @@ export interface AuthResult {
  */
 function extractToken(req: VercelRequest): string | null {
   // Header Authorization
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers?.authorization;
   if (authHeader?.startsWith("Bearer ")) {
     return authHeader.substring(7);
   }

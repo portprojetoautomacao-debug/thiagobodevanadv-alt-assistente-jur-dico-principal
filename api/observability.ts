@@ -6,73 +6,79 @@
  * - GET /api/observability?action=health - Health check detalhado
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireApiKey } from "./lib/auth.js";
+import { rateLimitMiddleware } from "./lib/rate-limit.js";
 
 interface CircuitBreakerStatus {
-  name: string
-  state: 'closed' | 'open' | 'half-open'
-  failures: number
-  lastFailure: string | null
-  successRate: number
+  name: string;
+  state: "closed" | "open" | "half-open";
+  failures: number;
+  lastFailure: string | null;
+  successRate: number;
 }
 
 interface SystemMetrics {
-  uptime: number
-  requestsTotal: number
-  errorsTotal: number
-  avgResponseTime: number
+  uptime: number;
+  requestsTotal: number;
+  errorsTotal: number;
+  avgResponseTime: number;
 }
 
 /**
  * Verifica autorização da requisição
  */
 function isAuthorized(req: VercelRequest): boolean {
-  const authHeader = req.headers.authorization
-  const isVercelCron = authHeader?.startsWith('Bearer ')
-  
-  const host = req.headers.host || ''
-  const origin = req.headers.origin || ''
-  const referer = req.headers.referer || ''
-  
-  const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1') || process.env.NODE_ENV === 'development'
-  const isVercelApp = host.includes('vercel.app') || origin.includes('vercel.app') || referer.includes('vercel.app')
-  const hasApiKey = !!req.headers['x-api-key']
+  const authHeader = req.headers.authorization;
+  const isVercelCron = authHeader?.startsWith("Bearer ");
 
-  return !!(isVercelCron || isLocalDev || isVercelApp || hasApiKey)
+  const host = req.headers.host || "";
+  const origin = req.headers.origin || "";
+  const referer = req.headers.referer || "";
+
+  const isLocalDev =
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    process.env.NODE_ENV === "development";
+  const isVercelApp =
+    host.includes("vercel.app") || origin.includes("vercel.app") || referer.includes("vercel.app");
+  const hasApiKey = !!req.headers["x-api-key"];
+
+  return !!(isVercelCron || isLocalDev || isVercelApp || hasApiKey);
 }
 
 // Simulação de circuit breakers (em produção viria de um serviço real)
 function getCircuitBreakers(): CircuitBreakerStatus[] {
   return [
     {
-      name: 'gemini-api',
-      state: 'closed',
+      name: "gemini-api",
+      state: "closed",
       failures: 0,
       lastFailure: null,
-      successRate: 100
+      successRate: 100,
     },
     {
-      name: 'datajud-api',
-      state: 'closed',
+      name: "datajud-api",
+      state: "closed",
       failures: 0,
       lastFailure: null,
-      successRate: 100
+      successRate: 100,
     },
     {
-      name: 'djen-api',
-      state: 'closed',
+      name: "djen-api",
+      state: "closed",
       failures: 0,
       lastFailure: null,
-      successRate: 100
+      successRate: 100,
     },
     {
-      name: 'upstash-redis',
-      state: 'closed',
+      name: "upstash-redis",
+      state: "closed",
       failures: 0,
       lastFailure: null,
-      successRate: 100
-    }
-  ]
+      successRate: 100,
+    },
+  ];
 }
 
 // Métricas simuladas (em produção viria de monitoring real)
@@ -81,78 +87,112 @@ function getMetrics(): SystemMetrics {
     uptime: Math.floor(process.uptime()),
     requestsTotal: 0,
     errorsTotal: 0,
-    avgResponseTime: 0
-  }
+    avgResponseTime: 0,
+  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
+  // CORS headers - restrict to ALLOWED_ORIGINS
+  const allowed = (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
+  if (origin && allowed.length > 0) {
+    if (!allowed.includes(origin)) {
+      return res.status(403).json({ error: "Origin not allowed" });
+    }
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (allowed.length === 0) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!isAuthorized(req)) {
-    return res.status(401).json({ error: 'Unauthorized' })
+  // Rate limit
+  const clientIP =
+    (req.headers["x-forwarded-for"] as string | undefined) ||
+    (req.headers["x-real-ip"] as string | undefined) ||
+    "unknown";
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+  }
+
+  // Authorization check
+  if (!isAuthorized(req) && !requireApiKey(req, res, "OBSERVABILITY_API_KEY")) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    const actionParam = req.query.action
-    const action = Array.isArray(actionParam) ? actionParam[0] : actionParam
+    const actionParam = req.query.action;
+    const action = Array.isArray(actionParam) ? actionParam[0] : actionParam;
 
     switch (action) {
-      case 'circuit-breakers':
+      case "circuit-breakers":
         return res.status(200).json({
           ok: true,
           summary: {
             total: 4,
             healthy: 4,
             degraded: 0,
-            failed: 0
+            failed: 0,
           },
           breakers: getCircuitBreakers(),
-          timestamp: new Date().toISOString()
-        })
+          timestamp: new Date().toISOString(),
+        });
 
-      case 'metrics':
+      case "metrics":
         return res.status(200).json({
           ok: true,
           metrics: getMetrics(),
-          timestamp: new Date().toISOString()
-        })
+          timestamp: new Date().toISOString(),
+        });
 
-      case 'health':
+      case "health":
         return res.status(200).json({
           ok: true,
-          status: 'healthy',
+          status: "healthy",
           services: {
-            api: 'up',
-            redis: process.env.UPSTASH_REDIS_REST_URL ? 'configured' : 'not-configured',
-            gemini: process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY ? 'configured' : 'not-configured'
+            api: "up",
+            redis: process.env.UPSTASH_REDIS_REST_URL ? "configured" : "not-configured",
+            gemini:
+              process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY
+                ? "configured"
+                : "not-configured",
           },
-          timestamp: new Date().toISOString()
-        })
+          timestamp: new Date().toISOString(),
+        });
 
       default:
         return res.status(200).json({
           ok: true,
-          availableActions: ['circuit-breakers', 'metrics', 'health'],
-          timestamp: new Date().toISOString()
-        })
+          availableActions: ["circuit-breakers", "metrics", "health"],
+          timestamp: new Date().toISOString(),
+        });
     }
   } catch (error) {
-    console.error('Observability API error:', error)
+    console.error("Observability API error:", error);
     return res.status(500).json({
       ok: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    })
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
   }
 }

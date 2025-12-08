@@ -408,6 +408,7 @@ export function TiptapEditorV2({
   onAIStream,
   variables = {},
 }: TiptapEditorV2Props) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">("main");
@@ -423,6 +424,22 @@ export function TiptapEditorV2({
 
   const editor = useEditor({
     immediatelyRender: false,
+    onCreate: ({ editor }) => {
+      // Ensure editor DOM has no blur/opacity by default.
+      try {
+        const dom = editor.view.dom as HTMLElement;
+        if (dom) {
+          dom.style.opacity = "1";
+          dom.style.filter = "none";
+          dom.style.backdropFilter = "none";
+          dom.style.transform = "none";
+          dom.style.willChange = "auto";
+        }
+      } catch (e) {
+        // Swallow, not critical; keep console for debugging
+        console.warn("Failed to set editor initial styles", e);
+      }
+    },
     editorProps: {
       attributes: {
         autocomplete: "off",
@@ -486,6 +503,17 @@ export function TiptapEditorV2({
       editor.commands.setContent(content, { emitUpdate: false });
     }
   }, [content, editor]);
+
+  // Ensure wrapper and content elements are forcefully visible without filters
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    el.style.opacity = "1";
+    el.style.filter = "none";
+    el.style.backdropFilter = "none";
+    el.style.transform = "none";
+    el.style.willChange = "auto";
+  }, []);
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main") {
@@ -639,7 +667,7 @@ export function TiptapEditorV2({
   if (!editor) return null;
 
   return (
-    <div className={cn("simple-editor-wrapper", className)}>
+    <div ref={wrapperRef} className={cn("simple-editor-wrapper", className)}>
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}

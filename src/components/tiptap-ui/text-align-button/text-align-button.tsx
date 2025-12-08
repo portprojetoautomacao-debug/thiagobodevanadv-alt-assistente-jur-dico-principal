@@ -13,9 +13,9 @@ import type { TextAlign, UseTextAlignConfig } from "@/components/tiptap-ui/text-
 import { TEXT_ALIGN_SHORTCUT_KEYS, useTextAlign } from "@/components/tiptap-ui/text-align-button";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 
 type IconProps = React.SVGProps<SVGSVGElement>;
 type IconComponent = ({ className, ...props }: IconProps) => React.ReactElement;
@@ -98,8 +98,7 @@ export const TextAlignButton = forwardRef<HTMLButtonElement, TextAlignButtonProp
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
         data-disabled={!canAlign}
-        role="button"
-        tabIndex={-1}
+        // role and tabIndex removed to preserve native focus behavior
         aria-label={label}
         aria-pressed={isActive}
         tooltip={label}

@@ -1,4 +1,29 @@
 {
+  "name": "Assistente Jurídico PJe - Devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {},
+  "forwardPorts": [5173],
+  "postCreateCommand": "npm ci --no-audit --prefer-offline",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker",
+        "GitHub.copilot",
+        "swellaby.vscode-rust-test-adapter"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        }
+      }
+    }
+  }
+}
+{
   "name": "Assistente Jurídico PJe",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
   "features": {
@@ -17,6 +42,7 @@
         "bradlc.vscode-tailwindcss",
         "GitHub.copilot",
         "GitHub.copilot-chat",
+        "GitHub.vscode-pull-request-github",
         "ms-playwright.playwright",
         "SonarSource.sonarlint-vscode",
         "vscjava.vscode-java-pack",
@@ -24,26 +50,100 @@
         "google.geminicodeassist"
       ],
       "settings": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "typescript.preferences.importModuleSpecifier": "relative",
-        "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": "explicit"
+        // ========================================
+        // 🤖 GITHUB COPILOT - AUTOMAÇÃO MÁXIMA
+        // ========================================
+        "github.copilot.enable": {
+          "*": true,
+          "yaml": true,
+          "plaintext": true,
+          "markdown": true,
+          "typescript": true,
+          "typescriptreact": true,
+          "javascript": true,
+          "json": true
         },
-        // Auto-provisioning (terminal & Copilot) - enable defaults in container
-        "task.allowAutomaticTasks": true,
-        "extensions.autoCheckUpdates": true,
-        "extensions.autoUpdate": true,
-        "github.copilot.enable": true,
-        "github.copilot.inlineSuggest.enable": true,
         "github.copilot.chat.enable": true,
-        // WARNING: Trust workspace disabled inside container for seamless automation. This lowers security in shared environments.
+        "github.copilot.chat.useInstructionFiles": true,
+        "github.copilot.inlineSuggest.enable": true,
+        "github.copilot.editor.enableAutoCompletions": true,
+        
+        // 🚀 FERRAMENTAS DE EDIÇÃO - Sem confirmação
+        "chat.editing.enabled": true,
+        "chat.editing.confirmEditRequestRemoval": false,
+        "chat.extensionTools.enabled": true,
+        "chat.tools.terminal.autoApprove": true,
+        "chat.tools.terminal.autoReplyToPrompts": true,
+        "github.copilot.chat.defaultToolset": "fullEditingTools",
+        
+        // 🤖 AGENTE DE CODIFICAÇÃO - Automação total
+        "githubPullRequests.codingAgent.enabled": true,
+        "githubPullRequests.codingAgent.autoDelegate": true,
+        "githubPullRequests.codingAgent.uiIntegration": true,
+        "githubPullRequests.pullRequestCardEnabled": true,
+        "chat.agentSessionsViewLocation": "view",
+        
+        // ========================================
+        // 🔒 SEGURANÇA E WORKSPACE TRUST
+        // ========================================
+        // WARNING: Trust workspace enabled for seamless automation
         "security.workspace.trust.enabled": true,
         "security.workspace.trust.untrustedFiles": "open",
+        "security.workspace.trust.emptyWindow": true,
+        
+        // ========================================
+        // 📦 GIT AUTOMÁTICO
+        // ========================================
+        "git.enableSmartCommit": true,
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        "git.fetchOnPull": true,
+        "git.pruneOnFetch": true,
+        
+        // ========================================
+        // 🛠️ TASKS E AUTOMAÇÃO
+        // ========================================
+        "task.allowAutomaticTasks": "on",
+        "task.autoDetect": "on",
+        "task.problemMatchers.neverPrompt": true,
+        "task.saveBeforeRun": "always",
+        
+        // ========================================
+        // ✏️ EDITOR - FORMATAÇÃO AUTOMÁTICA
+        // ========================================
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        
+        // ========================================
+        // 🔧 TYPESCRIPT E TERMINAL
+        // ========================================
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "typescript.suggest.autoImports": true,
         "terminal.integrated.shellIntegration.enabled": true,
+        "terminal.integrated.shellIntegration.decorationsEnabled": "both",
+        
+        // ========================================
+        // 🧪 EXTENSÕES E ATUALIZAÇÕES
+        // ========================================
+        "extensions.autoCheckUpdates": true,
+        "extensions.autoUpdate": true,
         "chat.useNestedAgentsMdFiles": true,
-        "chat.tools.terminal.autoReplyToPrompts": true,
-        "chat.tools.terminal.autoApprove": true
+        
+        // ========================================
+        // 📊 TELEMETRIA
+        // ========================================
+        "telemetry.telemetryLevel": "off",
+        "redhat.telemetry.enabled": false
       }
     }
   },

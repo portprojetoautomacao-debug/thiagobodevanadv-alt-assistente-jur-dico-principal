@@ -76,6 +76,9 @@ function getTipoBadge(tipo?: ProcessEvent["tipo"]) {
  * Replica o padrão visual do PJe com:
  * - Sidebar fixa (Árvore de Movimentações)
  * - Painel de documento com rolagem independente
+ * - Animações suaves com framer-motion
+ * - Navegação por teclado (↑↓)
+ * - Badge "NOVO" para eventos recentes (últimos 5 minutos)
  */
 export default function ProcessTimelineViewer({
   process,
@@ -105,6 +108,45 @@ export default function ProcessTimelineViewer({
   );
 
   const selectedEvent = orderedEvents.find((ev) => ev.id === selectedEventId);
+  const selectedEventRef = useRef<HTMLButtonElement>(null);
+
+  // Verifica se evento é novo (últimos 5 minutos)
+  const isEventNew = (event: ProcessEvent) => {
+    const eventTime = new Date(event.dataHora).getTime();
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    return eventTime > fiveMinutesAgo;
+  };
+
+  // Navegação por teclado (↑↓)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+
+      e.preventDefault();
+
+      const currentIndex = orderedEvents.findIndex((ev) => ev.id === selectedEventId);
+      if (currentIndex === -1) return;
+
+      let newIndex: number;
+      if (e.key === "ArrowUp") {
+        newIndex = currentIndex > 0 ? currentIndex - 1 : orderedEvents.length - 1;
+      } else {
+        newIndex = currentIndex < orderedEvents.length - 1 ? currentIndex + 1 : 0;
+      }
+
+      setSelectedEventId(orderedEvents[newIndex]?.id);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [orderedEvents, selectedEventId]);
+
+  // Auto-scroll para evento selecionado
+  useEffect(() => {
+    if (selectedEventRef.current) {
+      selectedEventRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedEventId]);
 
   return (
     <Card className="h-[calc(100vh-140px)] w-full overflow-hidden">
@@ -215,16 +257,30 @@ export default function ProcessTimelineViewer({
                                   <FileText className="h-3 w-3" />
                                   Ver documento
                                 </span>
+                              </div>
+                              <div className="flex items-center justify-between gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={`border ${tipo.className} text-[10px]`}
+                                >
+                                  {tipo.label}
+                                </Badge>
+                                {ev.documentoUrl && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] text-primary">
+                                    <FilePdf className="h-3 w-3" />
+                                    Ver documento
+                                  </span>
+                                )}
+                              </div>
+                              {ev.descricao && (
+                                <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
+                                  {ev.descricao}
+                                </p>
                               )}
-                            </div>
-                            {ev.descricao && (
-                              <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
-                                {ev.descricao}
-                              </p>
-                            )}
-                          </button>
-                        );
-                      })}
+                            </motion.button>
+                          );
+                        })}
+                      </AnimatePresence>
                     </div>
                   </div>
                 ))}
@@ -270,31 +326,37 @@ export default function ProcessTimelineViewer({
                           </a>
                         </Button>
                       </div>
-                    </div>
 
-                    <div className="flex-1 bg-muted/30">
-                      {/* Visualização via iframe para PDFs/Google Docs */}
-                      <iframe
-                        src={selectedEvent.documentoUrl}
-                        className="w-full h-full border-0"
-                        title={selectedEvent.titulo}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-3">
-                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
-                      <FileText className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Nenhum documento selecionado</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Escolha uma movimentação na linha do tempo ao lado para visualizar o
-                        documento correspondente.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                      <div className="flex-1 bg-muted/30">
+                        {/* Visualização via iframe para PDFs/Google Docs */}
+                        <iframe
+                          src={selectedEvent.documentoUrl}
+                          className="w-full h-full border-0"
+                          title={selectedEvent.titulo}
+                        />
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-3"
+                    >
+                      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
+                        <FileText className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Nenhum documento selecionado</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Escolha uma movimentação na linha do tempo ao lado para visualizar o
+                          documento correspondente.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </TabsContent>
 
               <TabsContent
@@ -302,9 +364,16 @@ export default function ProcessTimelineViewer({
                 className="flex-1 flex flex-col overflow-hidden data-[state=inactive]:hidden"
               >
                 <ScrollArea className="flex-1">
-                  <div className="p-4 space-y-3">
+                  <AnimatePresence mode="wait">
                     {selectedEvent ? (
-                      <>
+                      <motion.div
+                        key={selectedEvent.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                        className="p-4 space-y-3"
+                      >
                         <h3 className="text-sm font-semibold">
                           Detalhes da movimentação selecionada
                         </h3>
@@ -356,13 +425,21 @@ export default function ProcessTimelineViewer({
                             </p>
                           )}
                         </div>
-                      </>
+                      </motion.div>
                     ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Selecione uma movimentação na linha do tempo para ver os detalhes.
-                      </p>
+                      <motion.div
+                        key="empty-meta"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-4"
+                      >
+                        <p className="text-xs text-muted-foreground">
+                          Selecione uma movimentação na linha do tempo para ver os detalhes.
+                        </p>
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </ScrollArea>
               </TabsContent>
             </Tabs>

@@ -14,9 +14,9 @@ import {
 } from "@/components/tiptap-ui/color-highlight-button";
 
 // --- UI Primitives ---
+import { Badge } from "@/components/tiptap-ui-primitive/badge";
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Badge } from "@/components/tiptap-ui-primitive/badge";
 
 // --- Styles ---
 import "@/components/tiptap-ui/color-highlight-button/color-highlight-button.scss";
@@ -125,8 +125,7 @@ export const ColorHighlightButton = forwardRef<HTMLButtonElement, ColorHighlight
         type="button"
         data-style="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
-        tabIndex={-1}
+        // Removed role and tabIndex; button keeps native semantics
         disabled={!canColorHighlight}
         data-disabled={!canColorHighlight}
         aria-label={label}

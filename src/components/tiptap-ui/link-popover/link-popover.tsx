@@ -1,7 +1,7 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useState } from "react";
 import type { Editor } from "@tiptap/react";
+import { forwardRef, useCallback, useEffect, useState } from "react";
 
 // --- Hooks ---
 import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
@@ -20,10 +20,10 @@ import { useLinkPopover } from "@/components/tiptap-ui/link-popover";
 // --- UI Primitives ---
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
 import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/tiptap-ui-primitive/popover";
-import { Separator } from "@/components/tiptap-ui-primitive/separator";
 import { Card, CardBody, CardItemGroup } from "@/components/tiptap-ui-primitive/card";
 import { Input, InputGroup } from "@/components/tiptap-ui-primitive/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/tiptap-ui-primitive/popover";
+import { Separator } from "@/components/tiptap-ui-primitive/separator";
 
 export interface LinkMainProps {
   /**
@@ -74,8 +74,7 @@ export const LinkButton = forwardRef<HTMLButtonElement, ButtonProps>(
         type="button"
         className={className}
         data-style="ghost"
-        role="button"
-        tabIndex={-1}
+        // Removed explicit role and tabIndex; button is natively accessible
         aria-label="Link"
         tooltip="Link"
         ref={ref}

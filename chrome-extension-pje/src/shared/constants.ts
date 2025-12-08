@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   PROCESSOS_TIMESTAMP: "processos_timestamp",
   EXPEDIENTES_TODAY: "expedientes_today",
   LAST_SYNC: "lastSync",
+  ERRORS: "errors",
   ENABLED: "enabled",
 } as const;
 

@@ -90,6 +90,21 @@ function App() {
     switch (currentView) {
       case "dashboard":
         return <Dashboard onNavigate={setCurrentView} />;
+      case "acervo":
+      case "acervo-pje": {
+        const AcervoPJe = lazy(() => import("@/components/AcervoPJe"));
+        return (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+              </div>
+            }
+          >
+            <AcervoPJe />
+          </Suspense>
+        );
+      }
       case "crm":
       case "processos":
       case "processes":
