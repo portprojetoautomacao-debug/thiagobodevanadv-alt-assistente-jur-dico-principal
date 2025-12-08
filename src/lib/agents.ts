@@ -863,3 +863,23 @@ export function createTaskGenerator(
     },
   };
 }
+
+// ============================================================================
+// HYBRID AGENTS INTEGRATION
+// ============================================================================
+
+/**
+ * Re-export hybrid agents integration for unified access
+ * Allows seamless coordination between traditional and LangGraph agents
+ */
+export {
+  executeHybridTask,
+  getHybridStats,
+  hasHybridVersion,
+  listHybridAgents,
+  recordExecution,
+  resetHybridStats,
+  type HybridExecutionConfig,
+  type HybridExecutionResult,
+  type HybridStats,
+} from "./hybrid-agents-integration";
