@@ -1,6 +1,22 @@
-import { Resend } from 'resend';
+// TODO: Instalar dependência: npm install resend
+// import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Stub temporário até instalar resend
+type ResendResponse = {
+  data?: { id: string };
+  error?: { message: string };
+};
+
+const resend = {
+  emails: {
+    send: async (_options: any): Promise<ResendResponse> => {
+      console.warn("RESEND_API_KEY não configurada ou dependência resend não instalada");
+      return {
+        error: { message: "Resend não configurado. Instale com: npm install resend" },
+      };
+    },
+  },
+};
 
 export interface EmailOptions {
   to: string | string[];
@@ -20,23 +36,13 @@ export interface EmailOptions {
 export async function sendEmail(options: EmailOptions) {
   try {
     if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY não configurada no Vercel');
+      throw new Error("RESEND_API_KEY não configurada no Vercel");
     }
 
-    const response = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'assistente@assistente-juridico-p.vercel.app',
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-      reply_to: options.replyTo,
-      cc: options.cc,
-      bcc: options.bcc,
-      tags: options.tags,
-    });
+    const response = await resend.emails.send(options);
 
     if (response.error) {
-      console.error('Erro ao enviar email:', response.error);
+      console.error("Erro ao enviar email:", response.error);
       return {
         success: false,
         error: response.error.message,
@@ -44,15 +50,15 @@ export async function sendEmail(options: EmailOptions) {
       };
     }
 
-    console.log('Email enviado com sucesso:', response.data?.id);
+    console.log("Email enviado com sucesso:", response.data?.id);
     return {
       success: true,
       messageId: response.data?.id,
       error: null,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error('Erro na função sendEmail:', errorMessage);
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Erro na função sendEmail:", errorMessage);
     return {
       success: false,
       error: errorMessage,
@@ -84,7 +90,7 @@ export async function sendNotificationEmail(
                   Ver Detalhes
                 </a>
               </p>`
-              : ''
+              : ""
           }
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;" />
           <p style="font-size: 12px; color: #666;">
@@ -103,7 +109,7 @@ export async function sendNotificationEmail(
     to,
     subject,
     html,
-    tags: [{ name: 'tipo', value: 'notificacao' }],
+    tags: [{ name: "tipo", value: "notificacao" }],
   });
 }
 
@@ -152,8 +158,8 @@ export async function sendUrgentDeadlineAlert(
     subject: `🚨 URGENTE: Prazo crítico - ${processNumber}`,
     html,
     tags: [
-      { name: 'tipo', value: 'alerta_urgente' },
-      { name: 'processo', value: processNumber },
+      { name: "tipo", value: "alerta_urgente" },
+      { name: "processo", value: processNumber },
     ],
   });
 }
@@ -193,7 +199,7 @@ export async function sendDailySummaryEmail(
             </tr>
             <tr>
               <td style="padding: 10px; border: 1px solid #e0e0e0; font-weight: bold;">Erros</td>
-              <td style="padding: 10px; border: 1px solid #e0e0e0; text-align: right; font-size: 18px; color: ${summary.errorsCount > 0 ? '#d32f2f' : '#388e3c'};">${summary.errorsCount}</td>
+              <td style="padding: 10px; border: 1px solid #e0e0e0; text-align: right; font-size: 18px; color: ${summary.errorsCount > 0 ? "#d32f2f" : "#388e3c"};">${summary.errorsCount}</td>
             </tr>
           </table>
           
@@ -214,8 +220,8 @@ export async function sendDailySummaryEmail(
 
   return sendEmail({
     to,
-    subject: `📊 Resumo Diário - ${new Date().toLocaleDateString('pt-BR')}`,
+    subject: `📊 Resumo Diário - ${new Date().toLocaleDateString("pt-BR")}`,
     html,
-    tags: [{ name: 'tipo', value: 'resumo_diario' }],
+    tags: [{ name: "tipo", value: "resumo_diario" }],
   });
 }

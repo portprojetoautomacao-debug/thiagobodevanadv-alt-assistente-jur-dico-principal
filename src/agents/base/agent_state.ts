@@ -1,9 +1,9 @@
 /**
  * Agent State Management
- * 
+ *
  * This module defines the base state interface for LangGraph agents.
  * It provides type-safe state management for autonomous agents.
- * 
+ *
  * Security Notes:
  * - No eval() or unsafe code execution
  * - Immutable state updates via spread operators
@@ -11,7 +11,7 @@
  */
 
 export interface AgentMessage {
-  role: 'system' | 'user' | 'assistant' | 'tool';
+  role: "system" | "user" | "assistant" | "tool";
   content: string;
   timestamp: number;
   metadata?: Record<string, unknown>;
@@ -31,7 +31,7 @@ export interface AgentState {
 
 export const createInitialState = (data: Record<string, unknown> = {}): AgentState => ({
   messages: [],
-  currentStep: 'init',
+  currentStep: "init",
   data,
   completed: false,
   retryCount: 0,
@@ -40,10 +40,7 @@ export const createInitialState = (data: Record<string, unknown> = {}): AgentSta
   lastUpdatedAt: Date.now(),
 });
 
-export const updateState = (
-  state: AgentState,
-  updates: Partial<AgentState>
-): AgentState => ({
+export const updateState = (state: AgentState, updates: Partial<AgentState>): AgentState => ({
   ...state,
   ...updates,
   lastUpdatedAt: Date.now(),
@@ -51,7 +48,7 @@ export const updateState = (
 
 export const addMessage = (
   state: AgentState,
-  message: Omit<AgentMessage, 'timestamp'>
+  message: Omit<AgentMessage, "timestamp">
 ): AgentState => ({
   ...state,
   messages: [

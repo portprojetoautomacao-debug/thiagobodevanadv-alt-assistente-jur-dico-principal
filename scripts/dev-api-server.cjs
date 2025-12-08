@@ -115,6 +115,26 @@ const server = http.createServer((req, res) => {
       return sendJson(400, { success: false, error: "Invalid type" });
     }
 
+    if (method === "POST" && pathname === "/api/extension-errors") {
+      const apiKey = req.headers["x-api-key"];
+      // If API key is configured in store, validate
+      const validKeys =
+        store.get("api-keys:valid") ||
+        new Set([process.env.TEST_PJE_API_KEY || "valid-test-api-key"]);
+      if (validKeys.size && !validKeys.has(apiKey)) {
+        return sendJson(401, { ok: false, error: "Unauthorized" });
+      }
+      const errors = store.get("extension-errors") || [];
+      errors.unshift(body);
+      store.set("extension-errors", errors);
+      return sendJson(200, { ok: true });
+    }
+
+    if (method === "GET" && pathname === "/api/extension-errors") {
+      const errors = store.get("extension-errors") || [];
+      return sendJson(200, { ok: true, errors });
+    }
+
     sendJson(404, { success: false, error: "Not found" });
   });
 });

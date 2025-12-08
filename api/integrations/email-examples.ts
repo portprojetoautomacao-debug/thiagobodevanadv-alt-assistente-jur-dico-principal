@@ -1,26 +1,21 @@
 /**
  * Exemplo de Integração: Usando o Novo Endpoint de Emails com Cron Jobs
- * 
+ *
  * Este arquivo demonstra como integrar o novo sistema de emails
  * (api/emails.ts e api/lib/email-service.ts) com os cron jobs existentes.
- * 
+ *
  * IMPORTANTE: Esta é uma REFERÊNCIA. Para uso em produção:
  * 1. Copie as funções que precisar
  * 2. Adapte para seus casos de uso
  * 3. Teste completamente antes de fazer deploy
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-
 /**
  * Exemplo 1: Chamar o endpoint de emails dentro de um cron job
  * Envie notificações após detectar novas intimações
  */
 export async function exampleCronWithEmailNotification() {
-  const recipients = [
-    "usuario1@example.com",
-    "usuario2@example.com",
-  ];
+  const recipients = ["usuario1@example.com", "usuario2@example.com"];
 
   for (const email of recipients) {
     try {
@@ -122,13 +117,18 @@ export async function exampleSendDailySummary(
  * Exemplo 4: Usar a biblioteca email-service diretamente (dentro do Vercel)
  * Mais eficiente que fazer requisições HTTP ao próprio endpoint
  */
+/**
+ * Exemplo 4: Usar a biblioteca email-service diretamente (dentro do Vercel)
+ * Mais eficiente que fazer requisições HTTP ao próprio endpoint
+ *
+ * NOTA: Requer instalação da dependência resend: npm install resend
+ */
 export async function exampleDirectEmailServiceUsage() {
   // Importar diretamente (funciona apenas em api/*)
-  const {
-    sendNotificationEmail,
-    sendUrgentDeadlineAlert,
-    sendDailySummaryEmail,
-  } = await import("./lib/email-service");
+  // Descomente após instalar: npm install resend
+  /*
+  const { sendNotificationEmail, sendUrgentDeadlineAlert, sendDailySummaryEmail } =
+    await import("../lib/email-service");
 
   // Enviar notificação
   await sendNotificationEmail(
@@ -138,11 +138,7 @@ export async function exampleDirectEmailServiceUsage() {
   );
 
   // Enviar alerta urgente
-  await sendUrgentDeadlineAlert(
-    "usuario@example.com",
-    "1234567-89.2024.5.02.0999",
-    "2024-12-25"
-  );
+  await sendUrgentDeadlineAlert("usuario@example.com", "1234567-89.2024.5.02.0999", "2024-12-25");
 
   // Enviar resumo
   await sendDailySummaryEmail("usuario@example.com", {
@@ -152,6 +148,9 @@ export async function exampleDirectEmailServiceUsage() {
     completedTasks: 15,
     pendingReview: 2,
   });
+  */
+
+  console.log("Email service não configurado. Instale resend: npm install resend");
 }
 
 /**
@@ -162,14 +161,14 @@ export async function exampleCompleteCronIntegration() {
   console.log("[Email Cron] Iniciando monitoramento DJEN com notificações...");
 
   // Buscar intimações monitoradas
-  const monitoredLawyers = [
+  const monitoredLawyers: Array<{ id: string; email: string; registry: string }> = [
     // { id: "1", email: "usuario@example.com", registry: "123456" }
   ];
 
   for (const lawyer of monitoredLawyers) {
     try {
       // Simular busca de novas intimações
-      const newIntimations = [
+      const newIntimations: Array<{ processNumber: string; deadline: string }> = [
         // { processNumber: "1234567-89.2024.5.02.0999", deadline: "2024-12-25" }
       ];
 
@@ -242,31 +241,21 @@ export async function sendEmailWithRetry(
         console.log(`✅ Email enviado com sucesso (tentativa ${attempt})`);
         return true;
       } else {
-        lastError = new Error(
-          `HTTP ${response.status}: ${response.statusText}`
-        );
+        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      lastError =
-        error instanceof Error
-          ? error
-          : new Error("Erro desconhecido ao enviar email");
+      lastError = error instanceof Error ? error : new Error("Erro desconhecido ao enviar email");
     }
 
     // Aguardar antes de retry (exponential backoff)
     if (attempt < maxRetries) {
       const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
-      console.log(
-        `⏳ Aguardando ${delay}ms antes de retry ${attempt + 1}/${maxRetries}...`
-      );
+      console.log(`⏳ Aguardando ${delay}ms antes de retry ${attempt + 1}/${maxRetries}...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
-  console.error(
-    `❌ Falha ao enviar email após ${maxRetries} tentativas:`,
-    lastError
-  );
+  console.error(`❌ Falha ao enviar email após ${maxRetries} tentativas:`, lastError);
   return false;
 }
 

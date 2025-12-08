@@ -203,7 +203,15 @@ async function handleInitConfig(_req: VercelRequest, res: VercelResponse): Promi
  * Configura headers CORS
  */
 function setupCorsHeaders(res: VercelResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const allowed = (process.env.ALLOWED_ORIGINS ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  if (allowed.length > 0) {
+    // Use first origin as allowed if single origin, or set to the origin list
+    // The header doesn't accept multiple origins; for multiple we use requested origin verification in handler
+    res.setHeader("Access-Control-Allow-Origin", allowed[0]);
+    res.setHeader("Vary", "Origin");
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }

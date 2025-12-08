@@ -1,4 +1,29 @@
 /**
+ * Simple retry with exponential backoff
+ */
+export async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  initialMs = 200
+): Promise<T> {
+  let attempt = 0;
+  let lastErr: unknown = undefined;
+  while (attempt <= retries) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      attempt++;
+      if (attempt > retries) break;
+      const backoff = Math.floor(initialMs * Math.pow(2, attempt));
+      await new Promise((r) => setTimeout(r, backoff));
+    }
+  }
+  throw lastErr;
+}
+
+export default retryWithBackoff;
+/**
  * Retry logic com backoff exponencial
  * Para operações que podem falhar temporariamente
  */

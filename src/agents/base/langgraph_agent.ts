@@ -1,9 +1,9 @@
 /**
  * LangGraph Agent Base Class
- * 
+ *
  * This module provides the base implementation for LangGraph-based agents.
  * It includes retry logic, timeout handling, and safe state management.
- * 
+ *
  * Security Notes:
  * - Implements timeout protection to prevent hanging operations
  * - Automatic retry with exponential backoff
@@ -11,8 +11,8 @@
  * - All state mutations are immutable and type-safe
  */
 
-import type { AgentState } from './agent_state';
-import { updateState, addMessage } from './agent_state';
+import type { AgentState } from "./agent_state";
+import { updateState, addMessage } from "./agent_state";
 
 export interface LangGraphConfig {
   timeoutMs: number;
@@ -39,33 +39,33 @@ export abstract class LangGraphAgent {
    */
   async execute(state: AgentState): Promise<AgentState> {
     let currentState = state;
-    
+
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       try {
         this.abortController = new AbortController();
-        
+
         const timeoutId = setTimeout(() => {
           this.abortController?.abort();
         }, this.config.timeoutMs);
 
         const result = await this.run(currentState, this.abortController.signal);
-        
+
         clearTimeout(timeoutId);
         return result;
       } catch (error) {
         const isLastAttempt = attempt === this.config.maxRetries;
-        
+
         if (isLastAttempt) {
           return updateState(currentState, {
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
             completed: true,
           });
         }
 
         // Exponential backoff
         const delay = this.config.retryDelayMs * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
         currentState = updateState(currentState, {
           retryCount: attempt + 1,
         });
@@ -93,7 +93,7 @@ export abstract class LangGraphAgent {
   protected addAgentMessage(
     state: AgentState,
     content: string,
-    role: 'assistant' | 'tool' = 'assistant'
+    role: "assistant" | "tool" = "assistant"
   ): AgentState {
     return addMessage(state, { role, content });
   }
