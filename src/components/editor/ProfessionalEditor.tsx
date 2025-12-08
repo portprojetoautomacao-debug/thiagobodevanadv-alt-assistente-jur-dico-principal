@@ -56,9 +56,27 @@ export function ProfessionalEditor({
 
   // Calcular contagem de palavras (com debounce via useMemo)
   const wordCountData = useMemo(() => {
-    const text = content.replace(/<[^>]*>/g, "").trim();
-    const words = text.length === 0 ? 0 : text.split(/\s+/).filter((w) => w.length > 0).length;
-    return { words, chars: content.replace(/<[^>]*>/g, "").length };
+    // Safely extract text from HTML using DOM parser (browser-safe approach)
+    // This avoids regex-based HTML parsing which can miss edge cases
+    try {
+      // Create a temporary div to parse HTML safely
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = content;
+
+      // Extract text content (automatically handles all HTML tags safely)
+      const sanitizedText = tempDiv.textContent || tempDiv.innerText || "";
+      const trimmedText = sanitizedText.trim();
+
+      const words =
+        trimmedText.length === 0
+          ? 0
+          : trimmedText.split(/\s+/).filter((w) => w.length > 0).length;
+
+      return { words, chars: trimmedText.length };
+    } catch {
+      // Fallback: if DOM parsing fails, return 0
+      return { words: 0, chars: 0 };
+    }
   }, [content]);
 
   useEffect(() => {
