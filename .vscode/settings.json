@@ -993,7 +993,7 @@
   "typescript.disableAutomaticTypeAcquisition": false,
   "redhat.telemetry.enabled": false,
   "workbench.experimental.cloudChanges.autoStore": "onShutdown",
-  "playwright.showTrace": false,
+  "playwright.showTrace": true,
   "playwright.runGlobalSetupOnEachRun": false,
   "geminicodeassist.agentYoloMode": true,
   "geminicodeassist.agentDebugMode": true,

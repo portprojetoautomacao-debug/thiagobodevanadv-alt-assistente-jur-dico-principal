@@ -1,39 +1,45 @@
-import { describe, it, expect, vi } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { useTimelineSync } from "./use-timeline-sync";
 
-// Mock useKV hook to provide expedientes
-const mockSetData = vi.fn();
+// Mock useKV
 vi.mock("./use-kv", () => ({
   useKV: () => [
     [
       {
-        id: "e1",
-        processId: "",
-        numeroProcesso: "123.456.789-00",
-        dataRecebimento: "2025-12-07T00:00:00.000Z",
-        titulo: "EXPEDIENTE 1",
-        conteudo: "Conteúdo",
-        tipo: "documento",
-        tribunal: "TJ",
-        orgao: "Vara",
-        source: "pje",
+        id: "1",
+        processId: "123.456",
+        numeroProcesso: "123.456",
+        source: "djen",
+      },
+      {
+        id: "2",
+        processId: "999.999",
+        numeroProcesso: "999.999",
+        source: "djen",
       },
     ],
-    mockSetData,
+    vi.fn(),
   ],
 }));
 
-import { useTimelineSync } from "./use-timeline-sync";
+// Mock createProcessTimeline
+vi.mock("@/lib/process-timeline-utils", () => ({
+  createProcessTimeline: (expedientes: any[]) => expedientes.map((e) => ({ id: e.id, ...e })),
+}));
 
 describe("useTimelineSync", () => {
-  it("should filter expedientes by processId using replaceAll", async () => {
-    const { result } = renderHook(() => useTimelineSync({ processId: "12345678900" }));
+  it("deve filtrar expedientes ignorando formatação (replaceAll)", () => {
+    // Simula um processId com formatação diferente mas mesmos dígitos
+    const { result } = renderHook(() => useTimelineSync({ processId: "123456" }));
 
-    await waitFor(() => {
-      expect(result.current.events.length).toBeGreaterThanOrEqual(0);
-    });
+    // Deve encontrar o expediente "123.456" porque "123456" == "123456" (após replaceAll(/\D/g, ""))
+    expect(result.current.events).toHaveLength(1);
+    expect(result.current.events[0].id).toBe("1");
+  });
 
-    // The expedition will match after removing punctuation
-    expect(result.current.expedientes.length).toBe(1);
+  it("deve retornar vazio se não houver match", () => {
+    const { result } = renderHook(() => useTimelineSync({ processId: "000000" }));
+    expect(result.current.events).toHaveLength(0);
   });
 });

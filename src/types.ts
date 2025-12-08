@@ -267,12 +267,13 @@ export interface DocumentoPJe {
 /**
  * Evento da Linha do Tempo Processual (Timeline PJe)
  * Representa movimentações processuais exibidas na sidebar
+ * Usado no componente ProcessTimelineViewer
  */
 export interface ProcessEvent {
   id: string;
   processId: string;
   dataHora: string; // ISO string
-  titulo: string; // Ex: "EXPEDIÇÃO DE CERTIDÃO"
+  titulo: string; // Ex: "EXPEDIÇÃO DE CERTIDÃO", "PETIÇÃO JUNTADA"
   descricao?: string;
   tipo?:
     | "certidao"
@@ -284,7 +285,7 @@ export interface ProcessEvent {
     | "juntada"
     | "conclusos"
     | "outro";
-  // URL do documento PDF/HTML visualizado à direita
+  // Documento vinculado (PDF/HTML)
   documentoUrl?: string;
   documentoTipo?: "pdf" | "html" | "texto";
   // Metadados opcionais
@@ -296,10 +297,3 @@ export interface ProcessEvent {
   expedienteId?: string;
   minutaId?: string;
 }
-
-/**
- * Evento da Linha do Tempo Processual (Timeline)
- * Representa movimentações processuais no estilo PJe
- * Usado no componente ProcessTimelineViewer
- */
-// (Duplicate ProcessEvent removed; consolidated above)
