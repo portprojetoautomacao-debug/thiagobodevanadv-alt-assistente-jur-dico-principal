@@ -1,4 +1,5 @@
 import DJENPublicationsWidget from "@/components/DJENPublicationsWidget";
+import { HybridAgentsStatsPanel } from "@/components/HybridAgentsStatsPanel";
 import { PJeDocumentWidget, PJeStatusBadge } from "@/components/PJeDocumentWidget";
 import { PjeImageImporter } from "@/components/PjeImageImporter";
 import { Badge } from "@/components/ui/badge";
@@ -274,6 +275,9 @@ export default function Dashboard({ onNavigate }: Readonly<DashboardProps>) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Painel de Estatísticas de Agentes Híbridos */}
+      <HybridAgentsStatsPanel />
 
       {/* DJEN Publications Widget + Upload PDF */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
