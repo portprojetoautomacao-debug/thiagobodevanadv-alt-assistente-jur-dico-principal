@@ -243,7 +243,9 @@ export type ViewType =
   | "calendar"
   | "calendario"
   | "donna"
-  | "ai-agents";
+  | "ai-agents"
+  | "acervo"
+  | "acervo-pje";
 
 export interface DocumentoPJe {
   id: string;
