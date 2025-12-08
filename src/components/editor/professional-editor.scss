@@ -227,8 +227,9 @@
 
     // Marks
     mark {
-      background-color: yellow;
+      background-color: #fef08a; // Accessible yellow (WCAG AA compliant)
       padding: 0.1em 0;
+      border-radius: 2px;
     }
 
     s {

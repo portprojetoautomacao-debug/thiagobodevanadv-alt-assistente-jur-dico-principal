@@ -86,7 +86,7 @@ function ProcessDetailPanel({ process, expedientes, minutas }: ProcessDetailPane
     (e) =>
       e.processId === process.id ||
       e.numeroProcesso === process.numeroCNJ ||
-      e.numeroProcesso?.replaceAll(/\D/g, "") === process.numeroCNJ.replaceAll(/\D/g, "")
+      e.numeroProcesso?.replace(/\D/g, "") === process.numeroCNJ.replace(/\D/g, "")
   );
 
   const processMinutas = minutas.filter((m) => m.processId === process.id);

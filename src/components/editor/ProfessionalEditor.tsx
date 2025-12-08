@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // --- Tiptap Core Extensions ---
 import { Highlight } from "@tiptap/extension-highlight";
 import { Image } from "@tiptap/extension-image";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { TaskList } from "@tiptap/extension-task-list";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
@@ -120,14 +121,14 @@ const AI_QUICK_COMMANDS = [
 
 const FONT_SIZES = ["10px", "12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
 const COLORS = [
-  "#000000",
-  "#FF0000",
-  "#00FF00",
-  "#0000FF",
-  "#FFFF00",
-  "#FF00FF",
-  "#00FFFF",
-  "#808080",
+  "#000000", // Black
+  "#DC2626", // Red (accessible)
+  "#16A34A", // Green (accessible)
+  "#2563EB", // Blue (accessible)
+  "#CA8A04", // Yellow/Gold (accessible)
+  "#9333EA", // Purple (accessible)
+  "#0891B2", // Cyan (accessible)
+  "#64748B", // Gray (accessible)
 ];
 
 // ===========================
