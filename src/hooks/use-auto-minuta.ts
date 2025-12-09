@@ -138,9 +138,9 @@ export function useAutoMinuta() {
         localStorage.setItem(
           "processed-petition-tasks",
           JSON.stringify([...processedTasksRef.current])
-        )
+        );
         // Update count state
-        setProcessedTasksCount(processedTasksRef.current.size)
+        setProcessedTasksCount(processedTasksRef.current.size);
       } catch (e) {
         console.error("[AutoMinuta] Erro ao salvar tarefas processadas:", e);
       }
@@ -180,8 +180,6 @@ export function useAutoMinuta() {
     [minutas, processedTasksCount]
   );
 
-  // Compute stats using useMemo to avoid recalculating on each render
-
   // Retornar estatísticas úteis
-  return stats
+  return stats;
 }

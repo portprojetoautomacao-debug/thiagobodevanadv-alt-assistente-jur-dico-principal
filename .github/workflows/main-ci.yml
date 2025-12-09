@@ -1,0 +1,106 @@
+name: Main CI Pipeline
+
+on:
+  push:
+    branches: [main, develop, copilot/**]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - '.github/workflows/main-ci.yml'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+concurrency:
+  group: main-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Phase 1: Quality checks (fast fail)
+  quality:
+    name: Quality Checks
+    uses: ./.github/workflows/quality.yml
+    with:
+      node-version: '22.x'
+
+  # Phase 2: Tests (parallel with security after quality passes)
+  test:
+    name: Test Suite
+    needs: quality
+    uses: ./.github/workflows/test.yml
+    with:
+      node-version: '22.x'
+
+  # Phase 3: Security (parallel with tests)
+  security:
+    name: Security Checks
+    needs: quality
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/security.yml
+
+  # Phase 4: Agents (only for agent-related changes)
+  agents:
+    name: AI Agents
+    needs: quality
+    if: |
+      contains(github.event.head_commit.message, 'agent') ||
+      contains(github.event.pull_request.title, 'agent') ||
+      github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/agents.yml
+
+  # Summary job
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [quality, test, security]
+    if: always()
+    
+    steps:
+      - name: Generate CI summary
+        run: |
+          echo "## 🚀 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quality:** ${{ needs.quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests:** ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security:** ${{ needs.security.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Determine overall status
+          if [[ "${{ needs.quality.result }}" == "success" ]] && \
+             [[ "${{ needs.test.result }}" == "success" ]] && \
+             ([[ "${{ needs.security.result }}" == "success" ]] || [[ "${{ needs.security.result }}" == "skipped" ]]); then
+            echo "### ✅ Overall Status: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All checks completed successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Overall Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some checks failed. Please review the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check if all required jobs passed
+        if: |
+          needs.quality.result != 'success' ||
+          needs.test.result != 'success' ||
+          (needs.security.result != 'success' && needs.security.result != 'skipped')
+        run: |
+          echo "❌ One or more required checks failed"
+          exit 1

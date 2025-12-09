@@ -1,10 +1,10 @@
 /**
- * @fileoverview Documentação da API Interna - Guia de Referência
- * 
+ * @fileoverview Documentaï¿½ï¿½o da API Interna - Guia de Referï¿½ncia
+ *
  * Este arquivo documenta as APIs internas mais usadas do sistema,
- * facilitando o desenvolvimento e manutenção.
- * 
- * @author Assistente Jurídico PJe Team
+ * facilitando o desenvolvimento e manutenï¿½ï¿½o.
+ *
+ * @author Assistente Jurï¿½dico PJe Team
  * @version 1.0.0
  */
 
@@ -15,37 +15,39 @@
  */
 
 /**
- * Hook para gestão de processos com validação Zod
- * 
+ * Hook para gestï¿½o de processos com validaï¿½ï¿½o Zod
+ *
  * @example
  * ```typescript
  * const { processes, addProcess, updateProcess, deleteProcess } = useProcessesValidated();
- * 
+ *
  * // Adicionar processo (valida automaticamente)
  * const newProcess = addProcess({
  *   numeroCNJ: '1234567-89.2024.5.02.0999',
- *   titulo: 'Ação Trabalhista',
- *   autor: 'João Silva',
+ *   titulo: 'Aï¿½ï¿½o Trabalhista',
+ *   autor: 'Joï¿½o Silva',
  *   reu: 'Empresa XYZ',
  *   status: 'ativo',
  * });
- * 
+ *
  * // Atualizar processo
  * updateProcess(newProcess.id, { status: 'concluido' });
  * ```
- * 
- * @returns {Object} Funções e estado de processos
+ *
+ * @returns {Object} Funï¿½ï¿½es e estado de processos
  * @see src/hooks/use-processes-validated.ts
  */
-export type UseProcessesValidated = ReturnType<typeof import("./hooks/use-processes-validated").useProcessesValidated>;
+export type UseProcessesValidated = ReturnType<
+  typeof import("./hooks/use-processes-validated").useProcessesValidated
+>;
 
 /**
- * Hook para gestão de agentes IA autônomos
- * 
+ * Hook para gestï¿½o de agentes IA autï¿½nomos
+ *
  * @example
  * ```typescript
  * const { agents, tasks, addTask, toggleAgent } = useAutonomousAgents();
- * 
+ *
  * // Criar tarefa para agente
  * addTask({
  *   id: crypto.randomUUID(),
@@ -55,86 +57,88 @@ export type UseProcessesValidated = ReturnType<typeof import("./hooks/use-proces
  *   data: { processId: '123' }
  * });
  * ```
- * 
+ *
  * @see src/hooks/use-autonomous-agents.ts
  */
-export type UseAutonomousAgents = ReturnType<typeof import("./hooks/use-autonomous-agents").useAutonomousAgents>;
+export type UseAutonomousAgents = ReturnType<
+  typeof import("./hooks/use-autonomous-agents").useAutonomousAgents
+>;
 
 /**
  * ======================
- * SERVIÇOS DE IA
+ * SERVIï¿½OS DE IA
  * ======================
  */
 
 /**
- * Serviço de streaming de IA (Gemini 2.5 Pro)
- * 
+ * Serviï¿½o de streaming de IA (Gemini 2.5 Pro)
+ *
  * @example
  * ```typescript
  * const { streamChat, isStreaming, streamingContent } = useAIStreaming({
  *   agentId: 'harvey-specter',
  *   sessionId: 'session-123',
  * });
- * 
+ *
  * const response = await streamChat([
- *   { role: 'system', content: 'Você é um assistente jurídico' },
+ *   { role: 'system', content: 'Vocï¿½ ï¿½ um assistente jurï¿½dico' },
  *   { role: 'user', content: 'Analise este processo' }
  * ]);
  * ```
- * 
+ *
  * @see src/hooks/use-ai-streaming.ts
  */
 export type UseAIStreaming = ReturnType<typeof import("./hooks/use-ai-streaming").useAIStreaming>;
 
 /**
  * ======================
- * INTEGRAÇÕES EXTERNAS
+ * INTEGRAï¿½ï¿½ES EXTERNAS
  * ======================
  */
 
 /**
- * API do DJEN (Diário de Justiça Eletrônico Nacional)
- * 
+ * API do DJEN (Diï¿½rio de Justiï¿½a Eletrï¿½nico Nacional)
+ *
  * @example
  * ```typescript
  * import { consultarDJENForLawyer } from '@/lib/api/djen-client';
- * 
+ *
  * const { resultados, erros } = await consultarDJENForLawyer(
  *   ['TJMG', 'TRT3'],
  *   'Thiago Bodevan Veiga',
  *   '184404',
  *   undefined,
  *   undefined,
- *   'D' // Diário Digital
+ *   'D' // Diï¿½rio Digital
  * );
  * ```
- * 
+ *
  * @see src/lib/api/djen-client.ts
  * @apiEndpoint https://comunicaapi.pje.jus.br/api/v1/comunicacao
  */
 
 /**
  * ======================
- * SCHEMAS DE VALIDAÇÃO
+ * SCHEMAS DE VALIDAï¿½ï¿½O
  * ======================
  */
 
 /**
- * Schema Zod para validação de processos
- * 
+ * Schema Zod para validaï¿½ï¿½o de processos
+ *
  * @example
  * ```typescript
  * import { processSchema, validateProcess } from '@/schemas/process.schema';
- * 
+ *
  * const validation = validateProcess(processData);
  * if (!validation.isValid) {
  *   console.error('Erros:', validation.errors);
  * } else {
- *   // validation.data é do tipo ProcessValidated
+ *   // validation.data ï¿½ do tipo ProcessValidated
  *   saveProcess(validation.data);
  * }
  * ```
- * 
+ *
  * @see src/schemas/process.schema.ts
  */
 
@@ -146,15 +150,15 @@ export type UseAIStreaming = ReturnType<typeof import("./hooks/use-ai-streaming"
 
 /**
  * Skeleton Loaders - Componentes de loading profissionais
- * 
+ *
  * @example
  * ```typescript
  * import { ProcessCardSkeleton, DashboardSkeleton } from '@/components/ui/skeletons';
- * 
+ *
  * // Em loading states
  * {isLoading ? <ProcessCardSkeleton /> : <ProcessCard process={data} />}
  * ```
- * 
+ *
  * @see src/components/ui/skeletons.tsx
  */
 
@@ -166,14 +170,14 @@ export type UseAIStreaming = ReturnType<typeof import("./hooks/use-ai-streaming"
 
 /**
  * Sentry - Error Tracking e Performance Monitoring
- * 
+ *
  * @example
  * ```typescript
  * import { captureException, setUserContext } from '@/lib/monitoring';
- * 
- * // Após login
+ *
+ * // Apï¿½s login
  * setUserContext({ id: user.id, email: user.email, role: 'advogado' });
- * 
+ *
  * // Capturar erro customizado
  * try {
  *   await riskyOperation();
@@ -181,9 +185,9 @@ export type UseAIStreaming = ReturnType<typeof import("./hooks/use-ai-streaming"
  *   captureException(error, { processId: '123', action: 'create_petition' });
  * }
  * ```
- * 
+ *
  * @see src/lib/monitoring.ts
- * @compliance LGPD - Dados sensíveis são filtrados automaticamente
+ * @compliance LGPD - Dados sensï¿½veis sï¿½o filtrados automaticamente
  */
 
 /**

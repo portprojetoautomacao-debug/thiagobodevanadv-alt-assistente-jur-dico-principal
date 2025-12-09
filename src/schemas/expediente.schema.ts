@@ -1,9 +1,9 @@
 /**
- * Schemas Zod para validação de Expedientes
- * 
- * Expedientes são documentos/intimações recebidos de fontes externas
+ * Schemas Zod para validaï¿½ï¿½o de Expedientes
+ *
+ * Expedientes sï¿½o documentos/intimaï¿½ï¿½es recebidos de fontes externas
  * (DJEN, DataJud, PJe, manual) que geram tarefas para os agentes.
- * 
+ *
  * @module expediente.schema
  */
 
@@ -44,33 +44,27 @@ export const ExpedienteStatusEnum = z.enum([
   "erro",
 ]);
 
-export const ExpedientePrioridadeEnum = z.enum([
-  "baixa",
-  "media",
-  "alta",
-  "urgente",
-  "critica",
-]);
+export const ExpedientePrioridadeEnum = z.enum(["baixa", "media", "alta", "urgente", "critica"]);
 
 // ============================================================================
 // EXPEDIENTE SCHEMA
 // ============================================================================
 
 /**
- * Schema para validação de Expediente
+ * Schema para validaï¿½ï¿½o de Expediente
  */
 export const expedienteSchema = z.object({
-  // Campos obrigatórios
-  id: z.string().uuid("ID do expediente deve ser UUID válido"),
-  processId: z.string().min(1, "ID do processo é obrigatório"),
+  // Campos obrigatï¿½rios
+  id: z.string().uuid("ID do expediente deve ser UUID vï¿½lido"),
+  processId: z.string().min(1, "ID do processo ï¿½ obrigatï¿½rio"),
   tipo: ExpedienteTipoEnum,
-  descricao: z.string().min(1, "Descrição é obrigatória"),
-  dataPublicacao: z.string().datetime("Data de publicação inválida"),
+  descricao: z.string().min(1, "Descriï¿½ï¿½o ï¿½ obrigatï¿½ria"),
+  dataPublicacao: z.string().datetime("Data de publicaï¿½ï¿½o invï¿½lida"),
   source: ExpedienteSourceEnum,
   status: ExpedienteStatusEnum.default("pendente"),
   prioridade: ExpedientePrioridadeEnum.default("media"),
 
-  // Campos opcionais - Conteúdo
+  // Campos opcionais - Conteï¿½do
   conteudo: z.string().optional(),
   conteudoOriginal: z.string().optional(),
   resumo: z.string().optional(),
@@ -121,7 +115,7 @@ export const expedienteSchema = z.object({
     )
     .optional(),
 
-  // Campos opcionais - Análise de IA
+  // Campos opcionais - Anï¿½lise de IA
   analiseIA: z
     .object({
       realizada: z.boolean().default(false),
@@ -136,8 +130,14 @@ export const expedienteSchema = z.object({
   // Campos opcionais - Timestamps
   processadoEm: z.string().datetime().optional(),
   arquivadoEm: z.string().datetime().optional(),
-  criadoEm: z.string().datetime().default(() => new Date().toISOString()),
-  atualizadoEm: z.string().datetime().default(() => new Date().toISOString()),
+  criadoEm: z
+    .string()
+    .datetime()
+    .default(() => new Date().toISOString()),
+  atualizadoEm: z
+    .string()
+    .datetime()
+    .default(() => new Date().toISOString()),
 
   // Campos opcionais - Autor
   criadoPor: z
@@ -202,7 +202,7 @@ export function validateExpedientes(data: unknown): {
 // ============================================================================
 
 /**
- * Verifica se expediente está com prazo vencendo (próximos 3 dias)
+ * Verifica se expediente estï¿½ com prazo vencendo (prï¿½ximos 3 dias)
  */
 export function isPrazoVencendo(expediente: z.infer<typeof expedienteSchema>): boolean {
   if (!expediente.prazo) return false;
@@ -215,7 +215,7 @@ export function isPrazoVencendo(expediente: z.infer<typeof expedienteSchema>): b
 }
 
 /**
- * Verifica se expediente está com prazo vencido
+ * Verifica se expediente estï¿½ com prazo vencido
  */
 export function isPrazoVencido(expediente: z.infer<typeof expedienteSchema>): boolean {
   if (!expediente.prazo) return false;
@@ -227,24 +227,24 @@ export function isPrazoVencido(expediente: z.infer<typeof expedienteSchema>): bo
 }
 
 /**
- * Determina prioridade automática baseada em prazo e tipo
+ * Determina prioridade automï¿½tica baseada em prazo e tipo
  */
 export function determinarPrioridade(
   expediente: Partial<z.infer<typeof expedienteSchema>>
 ): z.infer<typeof ExpedientePrioridadeEnum> {
-  // Tipos críticos
+  // Tipos crï¿½ticos
   if (["citacao", "intimacao", "mandado"].includes(expediente.tipo || "")) {
     if (expediente.prazo?.urgente) return "critica";
     if (expediente.prazo && isPrazoVencendo(expediente as any)) return "urgente";
     return "alta";
   }
 
-  // Sentenças e acórdãos
+  // Sentenï¿½as e acï¿½rdï¿½os
   if (["sentenca", "acordao"].includes(expediente.tipo || "")) {
     return "alta";
   }
 
-  // Despachos e decisões
+  // Despachos e decisï¿½es
   if (["despacho", "decisao"].includes(expediente.tipo || "")) {
     return "media";
   }
@@ -254,10 +254,10 @@ export function determinarPrioridade(
 }
 
 /**
- * Extrai número do processo de descrição ou conteúdo
+ * Extrai nï¿½mero do processo de descriï¿½ï¿½o ou conteï¿½do
  */
 export function extrairNumeroProcesso(texto: string): string | null {
-  // Regex para número CNJ: NNNNNNN-DD.AAAA.J.TT.OOOO
+  // Regex para nï¿½mero CNJ: NNNNNNN-DD.AAAA.J.TT.OOOO
   const regexCNJ = /(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/g;
   const match = texto.match(regexCNJ);
 

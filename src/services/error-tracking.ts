@@ -26,14 +26,13 @@ import {
 } from "@/services/pii-filtering";
 
 // Configuração Sentry DSN com validação de ambiente
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || '';
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || "";
 const IS_PRODUCTION = import.meta.env.PROD;
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 const APP_ENVIRONMENT = import.meta.env.MODE || "development";
 
 // ✅ LGPD: PII Filtering habilitado por padrão em produção
-const ENABLE_PII_FILTERING = 
-  import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
+const ENABLE_PII_FILTERING = import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
 
 // Configuração de PII Filtering
 const PII_CONFIG: PIIFilterConfig = {
@@ -214,7 +213,7 @@ export function initErrorTracking(): void {
       beforeSend(event, hint) {
         // 1. Aplica PII filtering
         event = piiFilteredBeforeSend(event);
-        
+
         // 2. Filtra erros de extensões do navegador
         if (
           event.exception?.values?.[0]?.stacktrace?.frames?.some((frame) =>

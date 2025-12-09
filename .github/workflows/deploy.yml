@@ -9,6 +9,15 @@ on:
   # Pull requests - deploy de preview
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'public/**'
+      - 'package*.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'vercel.json'
+      - '.github/workflows/deploy.yml'
   # Deploy manual
   workflow_dispatch:
     inputs:
@@ -24,7 +33,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: false # Don't cancel deployments in progress
+  cancel-in-progress: true # Cancel old deployments to prevent queue buildup
 
 jobs:
   deploy-vercel:
