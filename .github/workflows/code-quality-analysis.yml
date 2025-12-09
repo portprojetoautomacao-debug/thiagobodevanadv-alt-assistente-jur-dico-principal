@@ -109,7 +109,7 @@ jobs:
           fi
 
       - name: 📤 Upload Resultados ESLint
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: eslint-results
           path: eslint-results.sarif
@@ -205,7 +205,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Complexidade
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: complexity-reports
           path: |
@@ -294,7 +294,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Cobertura
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: coverage-reports
           path: |
@@ -412,7 +412,7 @@ jobs:
           echo "🔍 Verificação de segredos concluída"
 
       - name: 📤 Upload Relatórios de Segurança
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: security-reports
           path: |
@@ -499,7 +499,7 @@ jobs:
           echo "*Relatório gerado automaticamente*" >> quality-report.md
 
       - name: 📤 Upload Dashboard de Qualidade
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: quality-dashboard
           path: quality-report.md
@@ -588,7 +588,7 @@ jobs:
           # Implementar webhook do Teams
 
       - name: 📤 Upload Notificações
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: quality-notifications
           path: quality-notification.json

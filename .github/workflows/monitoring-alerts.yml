@@ -160,7 +160,7 @@ jobs:
           } > health-metrics.json
 
       - name: 📤 Upload Métricas de Saúde
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: health-metrics-${{ matrix.environment }}
           path: health-metrics.json
@@ -250,7 +250,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Performance
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: performance-reports
           path: |
@@ -348,7 +348,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Segurança
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: security-reports
           path: |
@@ -406,7 +406,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Dependências
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: dependency-reports
           path: |
@@ -467,7 +467,7 @@ jobs:
           echo "*Relatório gerado em: $(date -Iseconds)*" >> monitoring-report.md
 
       - name: 📤 Upload Relatório Consolidado
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: monitoring-dashboard
           path: monitoring-report.md
@@ -501,7 +501,7 @@ jobs:
           find monitoring-history -name "*.json" -mtime +30 -delete
 
       - name: 📤 Upload Histórico
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: monitoring-history
           path: monitoring-history/
@@ -574,7 +574,7 @@ jobs:
           echo "Alerta crítico enviado para PagerDuty"
 
       - name: 📤 Upload Mensagem de Alerta
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: monitoring-alerts
           path: alert-message.md

@@ -197,7 +197,7 @@ jobs:
           echo "✅ Backup concluído e limpo"
 
       - name: 📤 Upload Metadados para Auditoria
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: backup-metadata-${{ matrix.environment }}
           path: backups/$BACKUP_ID/metadata.json
@@ -410,7 +410,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatório
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: backup-report
           path: backup-report.md
@@ -489,7 +489,7 @@ jobs:
           # Implementar webhook do Teams
 
       - name: 📤 Upload Notificação
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: backup-notifications
           path: backup-notification.md
