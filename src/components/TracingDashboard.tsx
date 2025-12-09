@@ -122,7 +122,7 @@ export default function TracingDashboard({
       default:
         return "text-yellow-600 bg-yellow-100";
     }
-  }, []);
+  };
 
   useEffect(() => {
     loadData();

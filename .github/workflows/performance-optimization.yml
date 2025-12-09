@@ -161,7 +161,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: bundle-reports
           path: |
@@ -292,7 +292,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Performance
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: performance-reports
           path: |
@@ -402,7 +402,7 @@ jobs:
           } > optimization-report.md
 
       - name: 📤 Upload Relatórios de Otimização
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: optimization-reports
           path: |
@@ -522,7 +522,7 @@ jobs:
           echo "$COMMENT" | gh pr comment $PR_NUMBER --body-file -
 
       - name: 📤 Upload Dashboard de Performance
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: performance-dashboard
           path: performance-dashboard.md
@@ -579,7 +579,7 @@ jobs:
           # Implementar webhook do Teams
 
       - name: 📤 Upload Notificações
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: performance-notifications
           path: performance-notification.json

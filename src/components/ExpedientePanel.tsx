@@ -1062,7 +1062,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                       </div>
                     </button>
                   ))
-                }
+                )}
               </CardContent>
             </Card>
           </div>
