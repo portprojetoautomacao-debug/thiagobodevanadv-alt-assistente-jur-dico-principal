@@ -6,10 +6,12 @@
  * - Performance monitoring
  * - Session replay
  * - User identification
+ * - **PII Filtering para conformidade LGPD** ✅
  *
  * Configuração:
  * - VITE_SENTRY_DSN: DSN do projeto Sentry.io (obrigatório para funcionar)
  * - VITE_APP_VERSION: Versão da aplicação para releases
+ * - VITE_ENABLE_PII_FILTERING: Habilita filtragem de dados sensíveis (default: true em prod)
  *
  * @see https://docs.sentry.io/platforms/javascript/guides/react/
  */
@@ -17,11 +19,26 @@
 /// <reference types="vite/client" />
 
 import * as Sentry from "@sentry/react";
+import {
+  createPIIFilteredBeforeSend,
+  DEFAULT_PII_CONFIG,
+  type PIIFilterConfig,
+} from "@/services/pii-filtering";
 
-// Configuração
+// Configuração Sentry DSN com validação de ambiente
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || "";
+const IS_PRODUCTION = import.meta.env.PROD;
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 const APP_ENVIRONMENT = import.meta.env.MODE || "development";
+
+// ✅ LGPD: PII Filtering habilitado por padrão em produção
+const ENABLE_PII_FILTERING = import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
+
+// Configuração de PII Filtering
+const PII_CONFIG: PIIFilterConfig = {
+  ...DEFAULT_PII_CONFIG,
+  enabled: ENABLE_PII_FILTERING,
+};
 
 // Estado
 let isInitialized = false;
@@ -84,6 +101,7 @@ function isValidSentryDSN(dsn: string): boolean {
  * - User identification
  * - Source maps support
  * - Breadcrumbs
+ * - **PII Filtering (LGPD compliance)** ✅
  */
 export function initErrorTracking(): void {
   // Evita inicialização duplicada
@@ -121,6 +139,9 @@ export function initErrorTracking(): void {
   }
 
   try {
+    // ✅ LGPD: Criar beforeSend com PII filtering
+    const piiFilteredBeforeSend = createPIIFilteredBeforeSend(PII_CONFIG);
+
     Sentry.init({
       // DSN do projeto Sentry.io
       dsn: SENTRY_DSN,
@@ -185,12 +206,15 @@ export function initErrorTracking(): void {
       // Normaliza profundidade de objetos
       normalizeDepth: 5,
 
-      // Envia default PII (Personally Identifiable Information)
+      // ✅ LGPD: Desabilita envio automático de PII
       sendDefaultPii: false,
 
-      // Before send hook - filtra eventos antes de enviar
+      // ✅ LGPD: Before send hook com PII filtering
       beforeSend(event, hint) {
-        // Filtra erros de extensões do navegador
+        // 1. Aplica PII filtering
+        event = piiFilteredBeforeSend(event);
+
+        // 2. Filtra erros de extensões do navegador
         if (
           event.exception?.values?.[0]?.stacktrace?.frames?.some((frame) =>
             frame.filename?.includes("extension")
@@ -199,7 +223,7 @@ export function initErrorTracking(): void {
           return null;
         }
 
-        // Filtra erros de rede genéricos (já esperados)
+        // 3. Filtra erros de rede genéricos (já esperados)
         const errorMessage =
           hint.originalException instanceof Error
             ? hint.originalException.message
@@ -210,7 +234,7 @@ export function initErrorTracking(): void {
           return null;
         }
 
-        // Filtra erros do ResizeObserver (comum e inofensivo)
+        // 4. Filtra erros do ResizeObserver (comum e inofensivo)
         if (errorMessage?.includes("ResizeObserver")) {
           return null;
         }
@@ -229,7 +253,7 @@ export function initErrorTracking(): void {
           return null;
         }
 
-        // Remove URLs sensíveis
+        // ✅ LGPD: Remove URLs sensíveis
         if (breadcrumb.data?.url?.includes("token") || breadcrumb.data?.url?.includes("password")) {
           breadcrumb.data.url = "[REDACTED]";
         }
@@ -294,6 +318,7 @@ export function initErrorTracking(): void {
     console.log("✅ Sentry Error Tracking inicializado");
     console.log(`   Environment: ${APP_ENVIRONMENT}`);
     console.log(`   Release: assistente-juridico@${APP_VERSION}`);
+    console.log(`   PII Filtering: ${ENABLE_PII_FILTERING ? "ATIVO ✅" : "DESATIVADO ⚠️"}`);
 
     // 🔍 Inicializar integração Gemini para AI Monitoring (lazy loading)
     // Dynamic import para evitar erro de módulo não encontrado durante type-check

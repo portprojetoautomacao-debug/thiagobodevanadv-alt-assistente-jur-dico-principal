@@ -13,6 +13,7 @@
 import type { AgentState } from "../base/agent_state";
 import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 
 export interface DJENPublication {
   id: string;
@@ -27,30 +28,89 @@ export class DJENMonitorAgent extends LangGraphAgent {
    * Main workflow execution
    */
   protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
-    // Step 1: Fetch publications
-    let currentState = updateState(state, { currentStep: "fetching_publications" });
-
-    const publications = await this.fetchPublications(signal);
-
-    // Step 2: Process publications
-    currentState = updateState(currentState, {
-      currentStep: "processing_publications",
-      data: {
-        ...currentState.data,
-        publications,
-        fetchedAt: Date.now(),
+    // 🔍 Instrumentar invocação do agente Monitor DJEN
+    return createInvokeAgentSpan(
+      {
+        agentName: "Monitor DJEN",
+        system: "custom-llm",
+        model: "djen-api",
       },
-    });
+      {
+        sessionId: state.data?.sessionId || `djen_session_${Date.now()}`,
+        turn: state.retryCount + 1,
+        messages: state.messages.map((m) => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        })),
+      },
+      async (span) => {
+        // Step 1: Fetch publications
+        let currentState = updateState(state, { currentStep: "fetching_publications" });
 
-    // Step 3: Complete
-    currentState = updateState(currentState, {
-      currentStep: "completed",
-      completed: true,
-    });
+        const startFetch = Date.now();
+        const publications = await this.fetchPublications(signal);
+        const fetchDuration = Date.now() - startFetch;
 
-    return this.addAgentMessage(
-      currentState,
-      `Successfully monitored DJEN. Found ${publications.length} publications.`
+        // Adicionar métricas ao span
+        span?.setAttribute("djen.publications_found", publications.length);
+        span?.setAttribute("djen.fetch_duration_ms", fetchDuration);
+        span?.setAttribute("djen.scan_timestamp", new Date().toISOString());
+
+        // Analisar publicações críticas (com número de processo)
+        const criticalPublications = publications.filter((p) => p.processNumber);
+        const courtDistribution = publications.reduce(
+          (acc, p) => {
+            acc[p.court] = (acc[p.court] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+
+        span?.setAttribute("djen.critical_count", criticalPublications.length);
+        span?.setAttribute("djen.courts_found", Object.keys(courtDistribution).join(", "));
+        span?.setAttribute("djen.court_distribution", JSON.stringify(courtDistribution));
+
+        // Step 2: Process publications
+        currentState = updateState(currentState, {
+          currentStep: "processing_publications",
+          data: {
+            ...currentState.data,
+            publications,
+            criticalPublications,
+            courtDistribution,
+            fetchedAt: Date.now(),
+            fetchDuration,
+          },
+        });
+
+        // Step 3: Determinar ação baseada em publicações críticas
+        if (criticalPublications.length > 0) {
+          span?.setAttribute("djen.action", "escalate_to_justine");
+          currentState = updateState(currentState, {
+            currentStep: "escalate",
+            data: {
+              ...currentState.data,
+              action: "escalate",
+              targetAgent: "justine",
+            },
+          });
+        } else {
+          span?.setAttribute("djen.action", "no_action_needed");
+        }
+
+        // Step 4: Complete
+        currentState = updateState(currentState, {
+          currentStep: "completed",
+          completed: true,
+        });
+
+        span?.setStatus({ code: 1, message: "ok" });
+
+        return this.addAgentMessage(
+          currentState,
+          `Monitor DJEN concluído: ${publications.length} publicações (${criticalPublications.length} críticas) em ${fetchDuration}ms`
+        );
+      }
     );
   }
 

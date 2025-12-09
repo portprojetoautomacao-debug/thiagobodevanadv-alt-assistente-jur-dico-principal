@@ -282,77 +282,11 @@ Data: [DATA ATUAL]
 
 ### 🎯 Prioridades do Sistema Automático
 
-1. **Manter automação ativa** - Nunca desabilitar recursos automáticos
+1. **Manter automação ativa** - Nunca desabilitar recursos automáticos sem justificativa técnica
 2. **Verificar diariamente** - Checklist obrigatório antes de qualquer ação
 3. **Corrigir automaticamente** - Aplicar correções sem perguntar
 4. **Reportar status** - Informar usuário sobre estado do sistema
 5. **Documentar mudanças** - Atualizar documentação quando modificar automação
-
----
-
-## Making Changes
-
-### ⚡ Sistema Automático - Regras Específicas para Copilot
-
-**ANTES DE QUALQUER AÇÃO**, o Copilot deve:
-
-1. **Executar verificação diária** dos recursos automáticos
-2. **Gerar relatório interno** do status do sistema
-3. **Corrigir automaticamente** qualquer problema detectado
-4. **Informar ao usuário** sobre o status dos recursos automáticos
-
-#### 🔧 Regras para Modificações no Sistema Automático
-
-- **Nunca desabilitar** recursos automáticos sem justificativa técnica
-- **Sempre testar** mudanças nos arquivos de configuração automática
-- **Atualizar documentação** quando modificar automação
-- **Manter compatibilidade** com tasks existentes
-- **Priorizar estabilidade** sobre novas features
-
-### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
-
-- **Qdrant**: Não modifique collections/indices diretamente sem aprovação da equipe; prefira aplicar alterações via migrations e documente o impacto de scaling/retention.
-- **DSPy Bridge**: Qualquer atualização de imagem ou dependências deve ser testada com `dspy-bridge` em ambiente de staging; atualizações em produção requerem rollback plan e teste de latência.
-- **Email API / Email service**: Não altere os provedores de e-mail (resend) sem atualização dos testes e documentação; valide `RESEND_API_KEY` e monitore filas.
-
-#### 📊 Relatórios de Status Automáticos
-
-Quando solicitado ou detectando problemas, o Copilot deve fornecer relatórios como:
-
-```
-🚀 STATUS DO SISTEMA AUTOMÁTICO
-
-✅ OPERACIONAL
-- Tasks automáticas: 25/25 funcionando
-- Auto-save: Ativado (1s delay)
-- Format on save: Ativado
-- ESLint auto-fix: Ativado
-- TypeScript check: OK
-- Testes automáticos: OK
-
-⚠️ ATENÇÃO NECESSÁRIA
-- [Item específico que precisa atenção]
-
-🔧 CORREÇÕES APLICADAS
-- [Correções realizadas automaticamente]
-```
-
-### 📝 Padrões de Desenvolvimento Automático
-
-- 🤖 **15 Agentes de IA Autônomos** trabalhando 24/7
-- 💬 **Assistente Jurídico IA** (Harvey Specter chatbot com Donna)
-- 📊 **Dashboard Inteligente** com métricas em tempo real
-- 📁 **CRM de Processos** com Kanban drag-and-drop (@dnd-kit)
-- ⏰ **Calculadora de Prazos** com feriados nacionais/estaduais/municipais
-- 📅 **Google Calendar** integração bidirecional
-- 📰 **DJEN/DataJud** monitoramento automático de publicações
-- 💰 **Gestão Financeira** com relatórios e analytics
-- 📝 **Minutas e Documentos** com templates e Google Docs
-- 🔔 **Sistema de Notificações** para prazos urgentes
-- 🎨 **PWA** com suporte offline e instalação
-- 📱 **Design Responsivo** mobile-first
-- ✏️ **Edição Colaborativa** humano + agentes IA
-- 🔐 **Controle de Autonomia** configurável por funcionalidade
 
 ---
 
@@ -1177,709 +1111,113 @@ status=TO_REVIEW"
 
 **Documentação completa:** https://sonarcloud.io/web_api
 
-#### ⚠️ Boas Práticas
+#### ⚙️ Comandos Úteis para o Copilot
 
-1. **Não verificar fixes imediatamente** - O servidor demora para refletir mudanças
-2. **Buscar project key primeiro** - Use `search_my_sonarqube_projects` antes de consultas
-3. **Especificar linguagem** - Ao analisar snippets, informar a linguagem
-4. **Branch context** - Incluir parâmetro de branch quando relevante
-
-## 📁 Project Structure
+##### Análise de Migração
 
 ```
-assistente-juridico-p/
-├── .github/
-│   ├── copilot-instructions.md  # Este arquivo
-│   └── workflows/               # 23 GitHub Actions
-│       ├── ci.yml               # CI principal
-│       ├── deploy.yml           # Deploy Vercel
-│       ├── e2e.yml              # Testes E2E
-│       ├── security-scan.yml    # Scans de segurança
-│       └── ...
-├── api/                         # Vercel Serverless Functions
-│   ├── agents.ts                # Gerenciamento de agentes (45s timeout)
-│   ├── cron.ts                  # Jobs agendados (10 actions)
-│   ├── djen-sync.ts             # Sync DJEN (60s timeout)
-│   ├── expedientes.ts           # Gestão de expedientes/intimações
-│   ├── kv.ts                    # KV storage proxy
-│   ├── legal-services.ts        # Serviços jurídicos (prazos, etc)
-│   ├── llm-proxy.ts             # Proxy para LLM (40s timeout)
-│   ├── llm-stream.ts            # Streaming de LLM
-│   ├── observability.ts         # Métricas e monitoramento
-│   ├── status.ts                # Health check
-│   └── lib/                     # Libs compartilhadas
-├── src/
-│   ├── components/              # 90+ componentes React
-│   │   ├── ui/                  # shadcn/ui (NÃO MODIFICAR)
-│   │   ├── Dashboard.tsx        # Dashboard principal
-│   │   ├── ProcessCRM.tsx       # CRM com Kanban
-│   │   ├── AIAgents.tsx         # Painel de agentes IA
-│   │   ├── CalculadoraPrazos.tsx # Calculadora de prazos
-│   │   ├── Calendar.tsx         # Agenda com Google Calendar
-│   │   ├── FinancialManagement.tsx # Gestão financeira
-│   │   ├── DJENPublicationsWidget.tsx # Widget publicações
-│   │   ├── ExpedientePanel.tsx  # Painel de expedientes
-│   │   ├── Donna.tsx            # Chatbot IA
-│   │   ├── MinutasManager.tsx   # Gestão de minutas
-│   │   └── ...
-│   ├── hooks/                   # Custom hooks
-│   │   ├── use-autonomous-agents.ts  # Lógica dos agentes IA
-│   │   ├── use-kv.ts            # KV storage
-│   │   ├── use-processes.ts     # Gerenciamento de processos
-│   │   ├── use-notifications.ts # Notificações
-│   │   ├── use-analytics.ts     # Analytics
-│   │   └── ...
-│   ├── lib/                     # Utilitários e serviços
-│   │   ├── agents.ts            # Core dos agentes (15 agentes)
-│   │   ├── config.ts            # Configurações centralizadas
-│   │   ├── datajud-api.ts       # API DataJud
-│   │   ├── djen-api.ts          # API DJEN
-│   │   ├── google-calendar-service.ts # Serviço Google Calendar
-│   │   ├── premonicao-service.ts # Premonição jurídica (IA)
-│   │   ├── prazos.ts            # Cálculo de prazos
-│   │   ├── llm-client.ts        # Cliente LLM
-│   │   └── utils.ts             # Utilitários gerais
-│   ├── services/
-│   │   └── error-tracking.ts    # Sentry
-│   ├── types.ts                 # Tipos TypeScript
-│   ├── App.tsx                  # App principal (lazy loading)
-│   ├── main.tsx                 # Entry point
-│   └── index.css                # Estilos globais + Tailwind
-├── public/                      # Assets estáticos
-├── tests/                       # Testes E2E (Playwright)
-├── vercel.json                  # Config Vercel completa
-├── vite.config.ts               # Config Vite otimizada
-├── package.json
-├── tsconfig.json
-└── tailwind.config.js
+@workspace Quais hooks ainda não foram migrados para o padrão validated?
 ```
 
-## 💻 Development Commands
-
-```bash
-# Instalação
-npm install
-
-# Desenvolvimento
-npm run dev              # http://localhost:5173
-
-# Build
-npm run build            # TypeScript + Vite build
-npm run preview          # Preview do build
-
-# Testes
-npm run test             # Vitest watch mode
-npm run test:run         # Rodar testes uma vez
-npm run test:ui          # Interface visual de testes
-npm run test:coverage    # Relatório de cobertura
-npm run test:api         # Testes de API
-npm run test:all         # Todos os testes
-npm run test:e2e         # Playwright E2E
-
-# Qualidade de código
-npm run lint             # ESLint (max 150 warnings)
-npm run format           # Prettier
-
-# Utilitários
-npm run optimize         # Otimizar dependências
-npm run kill             # Kill porta 5000
-```
-
-## Code Style and Conventions
-
-### TypeScript
-
-- **Strict null checks enabled** - Always handle null/undefined cases
-- Use type inference where possible, explicit types for function parameters and return values
-- Prefer interfaces over types for object shapes
-- Use const assertions for literal types
-
-### React
-
-- **Functional components only** - No class components
-- Use React hooks (useState, useEffect, useCallback, useMemo, etc.)
-- Custom hooks should start with `use` prefix
-- Component file names in PascalCase matching component name
-- Props interfaces named with `Props` suffix (e.g., `DashboardProps`)
-
-### Naming Conventions
-
-- **Components**: PascalCase (e.g., `ProcessCRM.tsx`, `AIAgents.tsx`)
-- **Hooks**: camelCase with `use` prefix (e.g., `use-autonomous-agents.ts`)
-- **Utilities**: camelCase (e.g., `utils.ts`)
-- **Types/Interfaces**: PascalCase (e.g., `ProcessData`, `UserProfile`)
-- **Constants**: UPPER_SNAKE_CASE
-
-### Component Structure
-
-```tsx
-// Imports
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-
-// Types/Interfaces
-interface MyComponentProps {
-  title: string;
-  onAction?: () => void;
-}
-
-// Component
-export function MyComponent({ title, onAction }: MyComponentProps) {
-  // Hooks
-  const [state, setState] = useState();
-
-  // Handlers
-  const handleClick = () => {
-    // logic
-  };
-
-  // Render
-  return <div>{/* JSX */}</div>;
-}
-```
-
-### Path Aliases
-
-- Use `@/` for imports from `src/` directory
-- Example: `import { Button } from '@/components/ui/button'`
-
-## Security Requirements
-
-⚠️ **CRITICAL SECURITY RULES** - Never violate these:
-
-1. **Never commit credentials or secrets**
-
-   - OAuth credentials go in `.env` (already in `.gitignore`)
-   - Never hardcode API keys, client IDs, or secrets
-   - Use environment variables via `src/lib/config.ts`
-
-2. **Environment Variables**
-
-   - Prefix with `VITE_` for client-side access
-   - Reference example: `.env.example`
-   - Required variables:
-     ```
-     VITE_GOOGLE_CLIENT_ID=
-     VITE_GOOGLE_API_KEY=
-     VITE_REDIRECT_URI=
-     VITE_APP_ENV=
-     ```
-
-3. **OAuth Security**
-
-   - Different credentials for dev/production
-   - Never share credentials in comments, documentation, or code
-   - See `OAUTH_SETUP.md` for setup instructions
-
-4. **Dependency Security**
-   - Run `npm audit` before adding dependencies
-   - Keep dependencies updated
-   - Review package permissions
-
-## Testing
-
-### Test Structure
-
-- Test files use `.test.ts` or `.test.tsx` extension
-- Place tests adjacent to the code they test
-- Example: `src/lib/djen-api.test.ts`
-
-### Running Tests
-
-- **Unit Tests**: Vitest with coverage reporting
-- **API Tests**: Separate config for backend functions
-- **E2E Tests**: Playwright for browser automation
-- **UI Tests**: Vitest UI for interactive testing
-
-### Test Commands
-
-```bash
-npm run test:all         # Run complete test suite
-npm run test:coverage    # Generate coverage reports
-npm run test:e2e         # End-to-end browser tests
-```
-
-## Building and Linting
-
-### Build Process
-
-1. TypeScript compilation: `tsc -b --noCheck`
-2. Vite build: `vite build`
-3. Output: `dist/` directory (ignored by git)
-
-### Linting
-
-- ESLint 9 with flat config
-- React hooks rules enforced
-- React refresh rules enforced
-- Run before committing: `npm run lint`
-
-### Type Checking
-
-- TypeScript strict null checks enabled
-- Module resolution: bundler mode
-- No emit (Vite handles compilation)
-
-## State Management
-
-### Upstash Redis KV Storage
-
-- Use `useKV` hook from `@/hooks/use-kv` para estado persistente
-- Backend serverless via `/api/kv` com Upstash Redis
-- Client faz chamadas HTTP para a API
-
-### Example Usage
-
-```tsx
-import { useKV } from "@/hooks/use-kv";
-
-const { data: processes, setData: setProcesses } = useKV<Process[]>(
-  "processes",
-  []
-);
-```
-
-## UI Components
-
-### shadcn/ui Components
-
-- Located in `src/components/ui/`
-- **DO NOT modify** these files directly
-- Regenerate using shadcn CLI if needed
-- Customize via Tailwind classes in parent components
-
-### Tailwind CSS
-
-- Version 4 with `@tailwindcss/vite` plugin
-- Custom theme in `tailwind.config.js`
-- Use utility classes, avoid custom CSS when possible
-- Responsive design: mobile-first approach
-
-## Common Patterns
-
-### Form Validation
-
-```tsx
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-const schema = z.object({
-  field: z.string().min(1, "Required"),
-});
-
-const form = useForm({
-  resolver: zodResolver(schema),
-});
-```
-
-### API Calls
-
-- Use `fetch` API or libraries compatible with Vite
-- Handle loading, error, and success states
-- Use React Query for complex data fetching
-
-### Error Handling
-
-- Use Error Boundaries for component errors
-- See `ErrorFallback.tsx` for reference
-- Provide user-friendly error messages
-- Log errors for debugging
-
-## Integration Points
-
-### Google OAuth
-
-- Authentication via `GoogleAuth.tsx`
-- Config in `src/lib/config.ts`
-- Documentation: `OAUTH_SETUP.md`
-
-### Google Calendar
-
-- Bidirectional sync
-- Documentation: `GOOGLE_CALENDAR_INTEGRATION.md`
-
-### DJEN/DataJud
-
-- Legal publication monitoring
-- Documentation: `DJEN_DOCUMENTATION.md`
-
-### AI Features
-
-- **Gemini 2.5 Pro** - Motor principal de IA (substituiu Spark)
-- Sistema de 15 agentes autônomos
-- Ver `AIAgents.tsx`, `use-autonomous-agents.ts` e `src/lib/gemini-service.ts`
-
-## Deployment & Integrations
-
-### Vercel Deployment
-
-- **Region**: São Paulo (gru1) for Brazil compliance
-- **Functions**: Serverless API routes with custom timeouts
-- **Cron Jobs**: Automated DJEN monitoring (daily at 11:00 BRT)
-- **Security Headers**: HSTS, CSP, CORS configured
-- **Environment**: Production builds optimized
-
-### Cron Jobs Configurados (Automação 100%)
-
-| Job                       | Schedule (UTC)  | Horário BRT  | Função                                  |
-| ------------------------- | --------------- | ------------ | --------------------------------------- |
-| DJEN Monitor (manhã)      | `0 12 * * *`    | 09:00        | Verifica publicações diárias do DJEN    |
-| DJEN Monitor (tarde)      | `0 20 * * *`    | 17:00        | Segunda verificação diária do DJEN      |
-| Daily Reset               | `0 0 * * *`     | 21:00        | Reset de contadores dos agentes         |
-| **Process Agent Queue**   | `*/15 * * * *`  | A cada 15min | Processa fila de tarefas dos agentes IA |
-| **Process Notifications** | `*/5 * * * *`   | A cada 5min  | Envia emails e webhooks pendentes       |
-| **Calendar Sync**         | `0 */2 * * *`   | A cada 2h    | Sincroniza prazos com Google Calendar   |
-| **Backup**                | `0 3 * * *`     | 00:00        | Backup automático dos dados do KV       |
-| **DataJud Monitor**       | `0 16 * * *`    | 13:00        | Verifica movimentações no DataJud       |
-| **Deadline Alerts**       | `0 55 11 * * *` | 08:55        | Envia alertas de prazos urgentes        |
-| **Watchdog**              | `*/30 * * * *`  | A cada 30min | Monitoramento de saúde do sistema       |
-
-### API Endpoints (Vercel Functions)
-
-| Endpoint              | Método          | Timeout | Função                      |
-| --------------------- | --------------- | ------- | --------------------------- |
-| `/api/status`         | GET             | 30s     | Health check                |
-| `/api/kv`             | GET/POST/DELETE | 30s     | KV storage CRUD             |
-| `/api/expedientes`    | GET             | 30s     | Lista expedientes           |
-| `/api/djen-sync`      | POST            | 60s     | Força sync DJEN             |
-| `/api/cron`           | GET             | 30s     | Jobs agendados (10 actions) |
-| `/api/agents`         | GET/POST        | 45s     | Gerenciar agentes           |
-| `/api/legal-services` | GET/POST        | 30s     | Serviços jurídicos          |
-| `/api/llm-proxy`      | POST            | 40s     | Proxy para LLM              |
-| `/api/llm-stream`     | POST            | 40s     | Streaming de LLM            |
-| `/api/observability`  | GET             | 30s     | Métricas e observabilidade  |
-
-### Rewrites (Proxy)
+##### Análise de Monitoramento
 
 ```
-/_spark/llm         → /api/llm-proxy
-/_spark/kv/:key*    → /api/kv
-/api/health         → /api/status?type=health
-/api/deadline/calculate → /api/legal-services?service=deadline
+@workspace Mostre todo código que envia spans para o Sentry
 ```
 
-### GitLab CI/CD
+##### Análise de Schemas
 
-- **Agents**: 7 autonomous agents for development workflow
-- **Kubernetes**: Minikube cluster with RBAC
-- **Auto DevOps**: Automated pipelines and deployments
-- **Security Scanning**: Integrated vulnerability checks
-
-### External APIs
-
-- **DJEN/DataJud**: CNJ public API for legal publications
-- **Google Calendar**: Bidirectional synchronization
-- **Upstash Redis**: Serverless KV storage
-- **Sentry**: Error tracking and monitoring
-
-### Environment Variables
-
-Required for full functionality:
-
-```env
-# Core
-VITE_GOOGLE_CLIENT_ID=
-VITE_GOOGLE_API_KEY=
-VITE_REDIRECT_URI=
-
-# Storage
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-
-# AI - Gemini (principal motor de IA)
-GEMINI_API_KEY=
-
-# Monitoring
-SENTRY_DSN=
-
-# Email (optional)
-RESEND_API_KEY=
+```
+@workspace Liste todos os schemas Zod e seus campos obrigatórios
 ```
 
-## Performance & Lighthouse Optimizations
+##### Análise de Agentes IA
 
-### Scores Atuais (Lighthouse CI)
-
-| Categoria      | Score | Meta |
-| -------------- | ----- | ---- |
-| Performance    | 85+   | 90+  |
-| Accessibility  | 94+   | 100  |
-| Best Practices | 79+   | 85+  |
-| SEO            | 92+   | 95+  |
-| PWA            | ✅    | ✅   |
-
-### Otimizações Implementadas
-
-#### Critical CSS Inline
-
-- CSS crítico inline no `index.html` para First Contentful Paint (FCP)
-- Loader animado visível imediatamente
-- Reduz render-blocking resources
-
-#### Code Splitting Otimizado
-
-```typescript
-// vite.config.ts - Chunks nomeados
-manualChunks: {
-  'react-vendor': ['react', 'react-dom', '@phosphor-icons/react'],
-  'ui-vendor': ['@radix-ui/...'],
-  'animation': ['framer-motion'],
-  'dnd': ['@dnd-kit/...'],
-  'date-utils': ['date-fns'],
-  'css-utils': ['clsx', 'class-variance-authority', 'tailwind-merge'],
-  'sentry': ['@sentry/react'],
-  'toasts': ['sonner'],
-  'editor': ['@tiptap/...'],
-  'three': ['three']
-}
+```
+@workspace Quais agentes ainda não estão instrumentados com Sentry AI Monitoring?
 ```
 
-#### Lazy Loading
+##### Análise de Performance
 
-- **Sentry**: Carregado dinamicamente, não bloqueia o bundle principal
-- **Componentes pesados**: React.lazy() para AIAgents, CalculadoraPrazos, etc.
-- **Imagens**: Loading="lazy" em todas as imagens
-
-#### Preconnect & DNS Prefetch
-
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="dns-prefetch" href="https://api.datajud.cnj.jus.br" />
+```
+@workspace Encontre componentes sem lazy loading que deveriam ter
 ```
 
-#### CSP Seguro (sem unsafe-eval)
+### ⚙️ Regras para o Copilot
 
-```json
-"Content-Security-Policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; ..."
-```
+1. **Sempre prefira Serena** para buscas semânticas (não faça busca manual de texto)
+2. **Use `@workspace`** antes de comandos de busca
+3. **Valide resultados** do Serena antes de sugerir mudanças
+4. **Não modifique arquivos** sem confirmar com o usuário
+5. **Reporte erros** se o Serena não responder
 
-- Removido `unsafe-eval` para melhorar Best Practices score
-- Adicionado `base-uri 'self'` e `form-action 'self'`
-- `upgrade-insecure-requests` habilitado
+### 🔐 Segurança
 
-#### Acessibilidade
+- Serena **não tem acesso de escrita** ao repositório
+- Apenas **lê código** do workspace
+- **Não envia dados** para servidores externos (roda localmente)
+- Respeita `.gitignore` automaticamente
 
-- Todos os botões de ícone têm `aria-label` + `title` fallback
-- Estrutura semântica HTML5
-- Suporte a navegação por teclado
-- Contraste de cores adequado (WCAG AA)
-
-### Ferramentas de Monitoramento
-
-- **Vercel Speed Insights**: Métricas de Core Web Vitals
-- **Sentry**: Error tracking e performance monitoring
-- **Lighthouse CI**: Testes automatizados no CI/CD
-
-## Documentation Files
-
-- `PRD.md` - Product requirements
-- `README.md` - Setup and overview
-- `SECURITY.md` - Security policies
-- `OAUTH_SETUP.md` - OAuth configuration guide
-- `GOOGLE_CALENDAR_INTEGRATION.md` - Calendar integration
-- `DJEN_DOCUMENTATION.md` - DJEN API integration
-- `GUIA_CONFIGURACAO_VERCEL.md` - Vercel deployment guide
-- `GITLAB_DUO_SETUP_COMPLETE.md` - GitLab Duo configuration
-- `QUICKSTART.md` - Quick start guide
-- `VERCEL_DEPLOYMENT_GUIDE.md` - Vercel deployment details
-- `TODOS_OS_15_AGENTES.md` - Complete agents documentation (15 agentes)
-- `AGENTS_SYSTEM.md` - Technical agents documentation
-- `AGENTS_IMPROVEMENTS_SUMMARY.md` - Agents improvements summary
-- `docs/FLUXO_MINUTAS_AUTOMATICAS.md` - **Fluxo completo de minutas automáticas** (Editor Tiptap, Templates, IA)
+---
 
 ## Making Changes
 
-### Before Starting
+### ⚡ Sistema Automático - Regras Específicas para Copilot
 
-1. Read relevant documentation files
-2. Understand the feature area
-3. Check existing patterns in similar components
-4. Review security requirements
+**ANTES DE QUALQUER AÇÃO**, o Copilot deve:
 
-### When Adding Features
+1. **Executar verificação diária** dos recursos automáticos
+2. **Gerar relatório interno** do status do sistema
+3. **Corrigir automaticamente** qualquer problema detectado
+4. **Informar ao usuário** sobre o status dos recursos automáticos
 
-1. Follow existing component structure
-2. Use TypeScript strictly
-3. Add proper error handling
-4. Update types in `types.ts` if needed
-5. Test in development mode
-6. Ensure responsive design
-7. Document complex logic
+#### 🔧 Regras para Modificações no Sistema Automático
 
-### When Fixing Bugs
+- **Nunca desabilitar** recursos automáticos sem justificativa técnica
+- **Sempre testar** mudanças nos arquivos de configuração automática
+- **Atualizar documentação** quando modificar automação
+- **Manter compatibilidade** com tasks existentes
+- **Priorizar estabilidade** sobre novas features
 
-1. Identify root cause
-2. Add tests if missing
-3. Fix with minimal changes
-4. Verify fix doesn't break other features
-5. Test edge cases
+### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
 
-### When Refactoring
+- **Qdrant**: Não modifique collections/indices diretamente sem aprovação da equipe; prefira aplicar alterações via migrations e documente o impacto de scaling/retention.
+- **DSPy Bridge**: Qualquer atualização de imagem ou dependências deve ser testada com `dspy-bridge` em ambiente de staging; atualizações em produção requerem rollback plan e teste de latência.
+- **Email API / Email service**: Não altere os provedores de e-mail (resend) sem atualização dos testes e documentação; valide `RESEND_API_KEY` e monitore filas.
 
-1. Maintain existing functionality
-2. Keep changes focused and small
-3. Update related documentation
-4. Ensure types remain accurate
-5. Test thoroughly
+#### 📊 Relatórios de Status Automáticos
+
+Quando solicitado ou detectando problemas, o Copilot deve fornecer relatórios como:
+
+```
+🚀 STATUS DO SISTEMA AUTOMÁTICO
+
+✅ OPERACIONAL
+- Tasks automáticas: 25/25 funcionando
+- Auto-save: Ativado (1s delay)
+- Format on save: Ativado
+- ESLint auto-fix: Ativado
+- TypeScript check: OK
+- Testes automáticos: OK
+
+⚠️ ATENÇÃO NECESSÁRIA
+- [Item específico que precisa atenção]
+
+🔧 CORREÇÕES APLICADAS
+- [Correções realizadas automaticamente]
+```
+
+### 🔄 Sugerindo Mudanças de Código
+
+Ao sugerir mudanças no código, o Copilot deve:
+
+1. **Buscar primeiro as funções similares** já existentes usando o Serena MCP Server
+2. **Analisar o contexto** da função: parâmetros, tipos, lógica
+3. **Manter estilo e convenções** do código existente
+4. **Adicionar testes** para nova lógica ou alterações relevantes
+5. **Documentar alterações** significativas
 
 ---
-
-## 🤖 Comportamento do Copilot - Sistema Automático
-
-### 📋 Verificação Diária Obrigatória
-
-**IMPORTANTE**: Todo dia útil, ao iniciar qualquer interação com o projeto, o Copilot DEVE executar uma verificação completa dos recursos automáticos:
-
-#### 📋 Checklist Diário de Verificação
-
-**1. Status dos Arquivos de Configuração:**
-
-```bash
-# Verificar se arquivos existem e estão atualizados
-- .vscode/tasks.json (25+ tasks automáticas)
-- .vscode/settings.json (configurações automáticas)
-- auto-init.sh (script de inicialização)
-- AUTO_MODE_README.md (documentação)
-```
-
-**2. Funcionamento das Tasks Automáticas:**
-
-```bash
-# Testar tasks críticas
-- npm run type-check (verificação TypeScript)
-- npm run lint (ESLint)
-- npm run test:run (testes unitários)
-- npm run build (build completo)
-```
-
-**3. Configurações do VS Code:**
-
-```json
-// Verificar no settings.json
-"task.allowAutomaticTasks": "on"
-"files.autoSave": "afterDelay"
-"editor.formatOnSave": true
-"editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" }
-```
-
-**4. Status dos Scripts do package.json:**
-
-```json
-// Verificar disponibilidade
-"dev": "vite" ✅
-"build": "tsc && vite build" ✅
-"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150" ✅
-"test": "vitest" ✅
-"format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"" ✅
-```
-
-#### 🚨 Relatório Diário Obrigatório
-
-**ANTES de qualquer resposta ou ação**, o Copilot deve gerar um relatório interno:
-
-```
-📊 RELATÓRIO DIÁRIO - SISTEMA AUTOMÁTICO
-Data: [DATA ATUAL]
-
-✅ ARQUIVOS DE CONFIGURAÇÃO:
-- tasks.json: [STATUS] (25+ tasks)
-- settings.json: [STATUS] (automação ativada)
-- auto-init.sh: [STATUS] (executável)
-- AUTO_MODE_README.md: [STATUS] (documentação)
-
-✅ FUNCIONAMENTO DAS TASKS:
-- type-check: [STATUS]
-- lint: [STATUS]
-- test: [STATUS]
-- build: [STATUS]
-
-✅ CONFIGURAÇÕES VS CODE:
-- Auto-save: [STATUS]
-- Format on save: [STATUS]
-- ESLint auto-fix: [STATUS]
-- Tasks automáticas: [STATUS]
-
-🔧 STATUS GERAL: [OPERACIONAL/NECESSITA ATENÇÃO/CRÍTICO]
-```
-
-#### ⚠️ Ações Corretivas Automáticas
-
-**Se algum item falhar na verificação:**
-
-1. **Tasks não funcionam**: Recriar `tasks.json` com configurações padrão
-2. **Scripts faltam**: Verificar `package.json` e restaurar scripts
-3. **Configurações VS Code**: Aplicar configurações automáticas
-4. **Arquivos corrompidos**: Restaurar do backup/git
-
-**IMPORTANTE**: O Copilot deve informar ao usuário sobre qualquer problema detectado e propor correções automáticas.
-
-### 🎯 Prioridades do Sistema Automático
-
-1. **Manter automação ativa** - Nunca desabilitar recursos automáticos sem justificativa técnica
-2. **Verificar diariamente** - Checklist obrigatório antes de qualquer ação
-3. **Corrigir automaticamente** - Aplicar correções sem perguntar
-4. **Reportar status** - Informar usuário sobre estado do sistema
-5. **Documentar mudanças** - Atualizar documentação quando modificar automação
-
----
-
-## Git Workflow
-
-### Commits
-
-- Clear, descriptive commit messages
-- Reference issue numbers when applicable
-- Keep commits focused and atomic
-
-### Files to Ignore
-
-Already in `.gitignore`:
-
-- `node_modules/`
-- `dist/`
-- `.env`
-- `*.local`
-- Editor configs
-- `packages/` (for workspaces)
-
-### Files NOT to Commit
-
-- Environment files (`.env`)
-- Build artifacts (`dist/`, `dist-ssr/`)
-- Dependency directories (`node_modules/`)
-- Editor-specific files
-- Credentials or secrets
-
-## Performance Considerations
-
-- Lazy load heavy components
-- Use React.memo for expensive renders
-- Optimize images and assets
-- Keep bundle size minimal
-- Use code splitting where appropriate
-
-## Accessibility
-
-- Use semantic HTML
-- Include ARIA labels where needed
-- Ensure keyboard navigation works
-- Test with screen readers
-- Maintain sufficient color contrast
-
-## Browser Support
-
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- ES2020 target
-- No IE11 support required
-
-## Questions or Issues?
-
-- Check relevant documentation files first
-- Review existing similar code
-- Ensure security guidelines are followed
-- Test changes thoroughly before committing
 
 ## Comunicação e Idioma (Português)
 

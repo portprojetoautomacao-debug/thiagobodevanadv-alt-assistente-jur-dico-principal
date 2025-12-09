@@ -16,6 +16,7 @@
 import { withRetry, type RetryConfig } from "@/lib/ai-providers";
 import { getGeminiApiKey, isGeminiConfigured, validateGeminiApiKey } from "@/lib/gemini-config";
 import { instrumentGeminiCall } from "@/lib/sentry-gemini-integration";
+import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 
 /**
  * Extract error message from unknown error type
@@ -450,7 +451,31 @@ Elabore uma minuta de ${tipo} seguindo as melhores práticas, incluindo:
 
 A peça deve estar em conformidade com o CPC/2015 e a legislação vigente.`;
 
-  return callGemini(prompt, { temperature: 0.5, maxOutputTokens: 4096 });
+  // 🔍 Instrumentar com Sentry AI (v2.0.0 - OpenTelemetry)
+  return createChatSpan(
+    {
+      agentName: "Redação de Petições",
+      system: "gemini",
+      model: "gemini-2.5-pro",
+      temperature: 0.5,
+      maxTokens: 4096,
+    },
+    [{ role: "user", content: prompt }],
+    async (span) => {
+      const response = await callGemini(prompt, { temperature: 0.5, maxOutputTokens: 4096 });
+
+      // Adicionar metadata ao span
+      if (span && response.metadata) {
+        span.setAttribute("gen_ai.response.text", JSON.stringify([response.text]));
+        span.setAttribute("gen_ai.usage.input_tokens", response.metadata.promptTokens || 0);
+        span.setAttribute("gen_ai.usage.output_tokens", response.metadata.responseTokens || 0);
+        span.setAttribute("gen_ai.usage.total_tokens", response.metadata.totalTokens || 0);
+        span.setAttribute("gen_ai.petition.type", tipo);
+      }
+
+      return response;
+    }
+  );
 }
 
 /**
