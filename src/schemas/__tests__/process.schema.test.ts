@@ -6,15 +6,15 @@ describe("processSchema", () => {
     const validProcess: Process = {
       id: "proc_123",
       numero: "1234567-89.2024.5.02.0999",
-      titulo: "Ação Trabalhista",
+      titulo: "Aï¿½ï¿½o Trabalhista",
       partes: {
-        autor: "João Silva",
+        autor: "Joï¿½o Silva",
         reu: "Empresa XYZ Ltda",
       },
       status: "em-andamento",
-      vara: "1ª Vara do Trabalho de São Paulo",
-      comarca: "São Paulo",
-      tags: ["trabalhista", "rescisão"],
+      vara: "1ï¿½ Vara do Trabalho de Sï¿½o Paulo",
+      comarca: "Sï¿½o Paulo",
+      tags: ["trabalhista", "rescisï¿½o"],
       criadoEm: "2024-12-08",
       atualizadoEm: "2024-12-08",
     };
@@ -51,12 +51,7 @@ describe("processSchema", () => {
   });
 
   it("should throw on invalid numero CNJ format", () => {
-    const invalidNumeros = [
-      "123456",
-      "1234567-89.2024",
-      "invalid-format",
-      "1234567-89.2024.5.02",
-    ];
+    const invalidNumeros = ["123456", "1234567-89.2024", "invalid-format", "1234567-89.2024.5.02"];
 
     invalidNumeros.forEach((numero) => {
       const process = {
@@ -70,7 +65,7 @@ describe("processSchema", () => {
   });
 
   it("should validate all status values", () => {
-    const statuses = ["ativo", "em-andamento", "suspenso", "arquivado", "concluído"];
+    const statuses = ["ativo", "em-andamento", "suspenso", "arquivado", "concluï¿½do"];
 
     statuses.forEach((status) => {
       const process = {
@@ -105,8 +100,8 @@ describe("processSchema", () => {
         terceiros: ["Terceiro 1", "Terceiro 2"],
       },
       status: "em-andamento",
-      vara: "1ª Vara Cível",
-      comarca: "São Paulo",
+      vara: "1ï¿½ Vara Cï¿½vel",
+      comarca: "Sï¿½o Paulo",
       tags: ["tag1", "tag2"],
       valor: "R$ 50.000,00",
       dataDistribuicao: "2024-01-15",
