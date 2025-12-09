@@ -11,6 +11,7 @@ import {
   Pulse,
   LightningSlash,
 } from '@phosphor-icons/react'
+import { TrendingUp, Zap, ZapOff } from 'lucide-react'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Agent, AgentTask } from '@/lib/agents'
 

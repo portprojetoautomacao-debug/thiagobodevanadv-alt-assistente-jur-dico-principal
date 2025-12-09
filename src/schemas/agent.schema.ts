@@ -1,11 +1,11 @@
 /**
- * Schemas Zod para validação de Agentes IA e suas Tarefas
- * 
- * Este arquivo centraliza a validação de:
- * - Agentes autônomos (15 agentes do sistema)
+ * Schemas Zod para validaï¿½ï¿½o de Agentes IA e suas Tarefas
+ *
+ * Este arquivo centraliza a validaï¿½ï¿½o de:
+ * - Agentes autï¿½nomos (15 agentes do sistema)
  * - Tarefas de agentes (AgentTask)
  * - Resultados de tarefas
- * 
+ *
  * @module agent.schema
  */
 
@@ -75,14 +75,14 @@ export const AgentStatusEnum = z.enum([
 // ============================================================================
 
 /**
- * Schema para validação de Agente IA
+ * Schema para validaï¿½ï¿½o de Agente IA
  */
 export const agentSchema = z.object({
-  // Campos obrigatórios
-  id: z.string().min(1, "ID do agente é obrigatório"),
-  name: z.string().min(1, "Nome do agente é obrigatório"),
+  // Campos obrigatï¿½rios
+  id: z.string().min(1, "ID do agente ï¿½ obrigatï¿½rio"),
+  name: z.string().min(1, "Nome do agente ï¿½ obrigatï¿½rio"),
   type: AgentTypeEnum,
-  description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
+  description: z.string().min(10, "Descriï¿½ï¿½o deve ter pelo menos 10 caracteres"),
   capabilities: z.array(z.string()).min(1, "Agente deve ter pelo menos 1 capacidade"),
   active: z.boolean(),
   status: AgentStatusEnum.default("idle"),
@@ -95,33 +95,35 @@ export const agentSchema = z.object({
   tasksQueued: z.number().int().nonnegative().default(0),
   successRate: z.number().min(0).max(100).optional(),
   avgProcessingTime: z.number().nonnegative().optional(),
-  
-  // Configurações
-  config: z.object({
-    maxConcurrentTasks: z.number().int().positive().default(3),
-    timeout: z.number().int().positive().default(30000),
-    retryAttempts: z.number().int().nonnegative().default(3),
-    priority: TaskPriorityEnum.default("medium"),
-  }).optional(),
+
+  // Configuraï¿½ï¿½es
+  config: z
+    .object({
+      maxConcurrentTasks: z.number().int().positive().default(3),
+      timeout: z.number().int().positive().default(30000),
+      retryAttempts: z.number().int().nonnegative().default(3),
+      priority: TaskPriorityEnum.default("medium"),
+    })
+    .optional(),
 
   // Metadados
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
- * Schema para validação de Tarefa de Agente
+ * Schema para validaï¿½ï¿½o de Tarefa de Agente
  */
 export const agentTaskSchema = z.object({
-  // Campos obrigatórios
-  id: z.string().uuid("ID da tarefa deve ser UUID válido"),
-  agentId: z.string().min(1, "ID do agente é obrigatório"),
+  // Campos obrigatï¿½rios
+  id: z.string().uuid("ID da tarefa deve ser UUID vï¿½lido"),
+  agentId: z.string().min(1, "ID do agente ï¿½ obrigatï¿½rio"),
   type: AgentTaskTypeEnum,
   priority: TaskPriorityEnum,
   status: TaskStatusEnum,
-  createdAt: z.string().datetime("Data de criação inválida"),
+  createdAt: z.string().datetime("Data de criaï¿½ï¿½o invï¿½lida"),
   data: z.record(z.string(), z.unknown()).default({}),
 
-  // Campos opcionais de execução
+  // Campos opcionais de execuï¿½ï¿½o
   startedAt: z.string().datetime().optional(),
   completedAt: z.string().datetime().optional(),
   processingTimeMs: z.number().int().nonnegative().optional(),
@@ -141,14 +143,16 @@ export const agentTaskSchema = z.object({
   processId: z.string().uuid().optional(),
   expedienteId: z.string().uuid().optional(),
   parentTaskId: z.string().uuid().optional(),
-  
+
   // Metadados
-  metadata: z.object({
-    source: z.enum(["user", "agent", "cron", "webhook"]).optional(),
-    triggeredBy: z.string().optional(),
-    confidence: z.number().min(0).max(1).optional(),
-    needsReview: z.boolean().optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      source: z.enum(["user", "agent", "cron", "webhook"]).optional(),
+      triggeredBy: z.string().optional(),
+      confidence: z.number().min(0).max(1).optional(),
+      needsReview: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -251,7 +255,7 @@ export function canProcessTask(task: AgentTask, agent: Agent): boolean {
 }
 
 /**
- * Verifica se uma tarefa está expirada (timeout)
+ * Verifica se uma tarefa estï¿½ expirada (timeout)
  */
 export function isTaskExpired(task: AgentTask): boolean {
   if (!task.startedAt || task.status !== "processing") return false;
@@ -264,7 +268,7 @@ export function isTaskExpired(task: AgentTask): boolean {
 }
 
 /**
- * Calcula próximo retry delay (exponential backoff)
+ * Calcula prï¿½ximo retry delay (exponential backoff)
  */
 export function getRetryDelay(retryCount: number): number {
   const baseDelay = 1000; // 1 segundo

@@ -1,18 +1,18 @@
 /**
- * Hook otimizado para gestão de clientes com validação Zod
+ * Hook otimizado para gestï¿½o de clientes com validaï¿½ï¿½o Zod
  */
 
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useKV } from "./use-kv";
-import { 
-  validateCliente, 
-  isValidCPF, 
+import {
+  validateCliente,
+  isValidCPF,
   isValidCNPJ,
-  type ClienteValidated 
+  type ClienteValidated,
 } from "@/schemas/process.schema";
 
-// Tipo Cliente (compatível com o sistema)
+// Tipo Cliente (compatï¿½vel com o sistema)
 export interface Cliente {
   id: string;
   nome: string;
@@ -28,7 +28,7 @@ export interface Cliente {
 export function useClientesValidated() {
   const [clientes, setClientes] = useKV<Cliente[]>("clientes", []);
 
-  // Adicionar cliente com validação completa
+  // Adicionar cliente com validaï¿½ï¿½o completa
   const addCliente = useCallback(
     (clienteData: Omit<Cliente, "id" | "criadoEm" | "atualizadoEm">) => {
       const now = new Date().toISOString();
@@ -39,26 +39,26 @@ export function useClientesValidated() {
         atualizadoEm: now,
       };
 
-      // Validação de schema
+      // Validaï¿½ï¿½o de schema
       const validation = validateCliente(newCliente);
       if (!validation.isValid) {
-        console.error("Validação de schema falhou:", validation.errors);
-        toast.error("Dados do cliente inválidos. Verifique os campos obrigatórios.");
+        console.error("Validaï¿½ï¿½o de schema falhou:", validation.errors);
+        toast.error("Dados do cliente invï¿½lidos. Verifique os campos obrigatï¿½rios.");
         return null;
       }
 
-      // Validação específica de CPF/CNPJ
+      // Validaï¿½ï¿½o especï¿½fica de CPF/CNPJ
       const cleanDoc = newCliente.cpfCnpj.replace(/\D/g, "");
       const isCPF = cleanDoc.length === 11;
       const isCNPJ = cleanDoc.length === 14;
 
       if (isCPF && !isValidCPF(newCliente.cpfCnpj)) {
-        toast.error("CPF inválido. Verifique os dígitos verificadores.");
+        toast.error("CPF invï¿½lido. Verifique os dï¿½gitos verificadores.");
         return null;
       }
 
       if (isCNPJ && !isValidCNPJ(newCliente.cpfCnpj)) {
-        toast.error("CNPJ inválido. Verifique os dígitos verificadores.");
+        toast.error("CNPJ invï¿½lido. Verifique os dï¿½gitos verificadores.");
         return null;
       }
 
@@ -69,7 +69,7 @@ export function useClientesValidated() {
     [setClientes]
   );
 
-  // Atualizar cliente com validação
+  // Atualizar cliente com validaï¿½ï¿½o
   const updateCliente = useCallback(
     (id: string, updates: Partial<Cliente>) => {
       let updated: Cliente | null = null;
@@ -85,8 +85,8 @@ export function useClientesValidated() {
 
             const validation = validateCliente(updatedCliente);
             if (!validation.isValid) {
-              console.error("Validação falhou:", validation.errors);
-              toast.error("Dados inválidos. Atualização cancelada.");
+              console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+              toast.error("Dados invï¿½lidos. Atualizaï¿½ï¿½o cancelada.");
               return c;
             }
 
@@ -97,12 +97,12 @@ export function useClientesValidated() {
               const isCNPJ = cleanDoc.length === 14;
 
               if (isCPF && !isValidCPF(updatedCliente.cpfCnpj)) {
-                toast.error("CPF inválido. Atualização cancelada.");
+                toast.error("CPF invï¿½lido. Atualizaï¿½ï¿½o cancelada.");
                 return c;
               }
 
               if (isCNPJ && !isValidCNPJ(updatedCliente.cpfCnpj)) {
-                toast.error("CNPJ inválido. Atualização cancelada.");
+                toast.error("CNPJ invï¿½lido. Atualizaï¿½ï¿½o cancelada.");
                 return c;
               }
             }

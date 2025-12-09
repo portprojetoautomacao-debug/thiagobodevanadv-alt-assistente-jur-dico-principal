@@ -40,9 +40,8 @@ export class FinanceiroAgent extends LangGraphAgent {
         const totalDespesas = despesas.reduce((acc, val) => acc + val, 0);
         const lucroLiquido = totalReceitas - totalDespesas;
         const margemLucro = totalReceitas > 0 ? (lucroLiquido / totalReceitas) * 100 : 0;
-        const ticketMedio = honorariosRecebidos.length > 0 
-          ? totalReceitas / honorariosRecebidos.length 
-          : 0;
+        const ticketMedio =
+          honorariosRecebidos.length > 0 ? totalReceitas / honorariosRecebidos.length : 0;
 
         // Usar LLM para análise financeira e recomendações
         const analiseFinanceira = await createChatSpan(
@@ -55,7 +54,8 @@ export class FinanceiroAgent extends LangGraphAgent {
           [
             {
               role: "system",
-              content: "Você é um analista financeiro especializado em escritórios jurídicos. Forneça análises objetivas e recomendações práticas.",
+              content:
+                "Você é um analista financeiro especializado em escritórios jurídicos. Forneça análises objetivas e recomendações práticas.",
             },
             {
               role: "user",
@@ -105,9 +105,10 @@ Forneça:
             }
 
             // Análise de inadimplência
-            const taxaInadimplencia = honorariosRecebidos.length > 0 
-              ? (inadimplentes / honorariosRecebidos.length) * 100 
-              : 0;
+            const taxaInadimplencia =
+              honorariosRecebidos.length > 0
+                ? (inadimplentes / honorariosRecebidos.length) * 100
+                : 0;
 
             if (taxaInadimplencia > 10) {
               if (saudeFinanceira === "excelente") saudeFinanceira = "boa";
@@ -135,9 +136,13 @@ Forneça:
             const resultado = {
               saudeFinanceira,
               indicadoresAlerta,
-              recomendacoes: recomendacoes.length > 0 
-                ? recomendacoes 
-                : ["Manter controle rigoroso do fluxo de caixa", "Revisar tabela de honorários semestralmente"],
+              recomendacoes:
+                recomendacoes.length > 0
+                  ? recomendacoes
+                  : [
+                      "Manter controle rigoroso do fluxo de caixa",
+                      "Revisar tabela de honorários semestralmente",
+                    ],
               metas: [
                 `Atingir margem de lucro de ${metaMargemLucro.toFixed(0)}%`,
                 `Faturamento mensal de R$ ${metaFaturamento.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
@@ -163,8 +168,14 @@ Forneça:
         span?.setAttribute("financeiro.saude_financeira", analiseFinanceira.saudeFinanceira);
         span?.setAttribute("financeiro.margem_lucro", margemLucro);
         span?.setAttribute("financeiro.lucro_liquido", lucroLiquido);
-        span?.setAttribute("financeiro.indicadores_alerta_count", analiseFinanceira.indicadoresAlerta.length);
-        span?.setAttribute("financeiro.recomendacoes_count", analiseFinanceira.recomendacoes.length);
+        span?.setAttribute(
+          "financeiro.indicadores_alerta_count",
+          analiseFinanceira.indicadoresAlerta.length
+        );
+        span?.setAttribute(
+          "financeiro.recomendacoes_count",
+          analiseFinanceira.recomendacoes.length
+        );
 
         current = updateState(current, {
           currentStep: "financeiro:analysis",
