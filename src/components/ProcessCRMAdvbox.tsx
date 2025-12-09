@@ -102,7 +102,7 @@ function SortableCard({ card, onOpenDetails }: Readonly<SortableCardProps>) {
             className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 rounded-lg"
             aria-label="Opções do processo"
           >
-            <MoreVertical size={18} />
+            <DotsThree size={18} />
           </Button>
         </div>
       </CardHeader>
@@ -116,12 +116,12 @@ function SortableCard({ card, onOpenDetails }: Readonly<SortableCardProps>) {
           <div className="flex items-center justify-between pt-2 border-t border-border/50">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-green-500/10 rounded-lg">
-                <DollarSign size={16} className="text-green-500" />
+                <CurrencyDollar size={16} className="text-green-500" />
               </div>
               <span className="font-bold text-sm text-foreground">{card.valor}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 rounded-lg">
-              <TrendingUp size={14} className="text-green-500" />
+              <TrendUp size={14} className="text-green-500" />
               <span className="text-xs font-bold text-green-500">{card.resultado}</span>
             </div>
           </div>
@@ -140,6 +140,15 @@ export default function ProcessCRMAdvbox() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({})
   const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
+
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
 
   // Helper function for status color
@@ -235,7 +244,7 @@ export default function ProcessCRMAdvbox() {
                   onChange={(e) => setFilter(e.target.value)}
                   className="w-[400px] pl-10 bg-background/80 backdrop-blur-sm border-border/50 rounded-xl shadow-lg"
                 />
-                <Search
+                <MagnifyingGlass
                   size={20}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
@@ -247,7 +256,7 @@ export default function ProcessCRMAdvbox() {
                 size="sm"
                 className="border-border/50 hover:bg-primary/10 rounded-xl"
               >
-                <Filter size={16} className="mr-1" />
+                <Funnel size={16} className="mr-1" />
                 Filtros
               </Button>
               <Button className="bg-linear-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 rounded-xl px-6 font-semibold hover:scale-105 transition-all">
@@ -294,7 +303,7 @@ export default function ProcessCRMAdvbox() {
               <div className="w-px h-8 bg-border/50" />
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-green-500/10 rounded-lg">
-                  <DollarSign size={20} className="text-green-500" />
+                  <CurrencyDollar size={20} className="text-green-500" />
                 </div>
                 <div>
                   <span className="text-2xl font-bold text-foreground">
@@ -462,7 +471,7 @@ export default function ProcessCRMAdvbox() {
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <FileText size={20} className="text-primary mt-1" />
+                      <File size={20} className="text-primary mt-1" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">Última movimentação</p>
                         <p className="text-xs text-muted-foreground">
@@ -478,7 +487,7 @@ export default function ProcessCRMAdvbox() {
 
                 <TabsContent value="docs" className="mt-4">
                   <div className="text-center py-8 text-muted-foreground">
-                    <FileText size={48} className="mx-auto mb-2 opacity-50" />
+                    <File size={48} className="mx-auto mb-2 opacity-50" />
                     <p>Nenhum documento anexado</p>
                     <Button className="mt-4" variant="outline">
                       Adicionar Documento
