@@ -1,23 +1,71 @@
 import type { AgentState } from "../base/agent_state";
 import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 
 export class GestaoPrazosAgent extends LangGraphAgent {
   protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
-    let current = updateState(state, { currentStep: "gestao-prazos:start" });
+    // 🔍 Instrumentar invocação do agente Gestão de Prazos
+    return createInvokeAgentSpan(
+      {
+        agentName: "Gestão de Prazos",
+        system: "custom-llm",
+        model: "prazo-calculator",
+      },
+      {
+        sessionId: state.data?.sessionId || `prazos_session_${Date.now()}`,
+        turn: state.retryCount + 1,
+        messages: state.messages.map((m) => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        })),
+      },
+      async (span) => {
+        let current = updateState(state, { currentStep: "gestao-prazos:start" });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+        // Extrair dados de entrada
+        const tipoProcesso = (state.data?.tipoProcesso as string) || "cível";
+        const dataPublicacao = (state.data?.dataPublicacao as string) || new Date().toISOString();
+        const prazoEmDias = (state.data?.prazoEmDias as number) || 15;
 
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 10);
+        span?.setAttribute("prazos.tipo_processo", tipoProcesso);
+        span?.setAttribute("prazos.data_publicacao", dataPublicacao);
+        span?.setAttribute("prazos.prazo_dias", prazoEmDias);
 
-    current = updateState(current, {
-      currentStep: "gestao-prazos:calculated",
-      data: { ...current.data, deadline: deadline.toISOString() },
-      completed: true,
-    });
+        // Simular cálculo de prazo (incluindo dias úteis, feriados)
+        await new Promise((resolve) => setTimeout(resolve, 30));
 
-    return this.addAgentMessage(current, "Gestão de prazos: prazo calculado");
+        const deadline = new Date(dataPublicacao);
+        deadline.setDate(deadline.getDate() + prazoEmDias);
+
+        // Verificar se é urgente (menos de 5 dias)
+        const hoje = new Date();
+        const diffDias = Math.ceil((deadline.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+        const isUrgente = diffDias <= 5 && diffDias >= 0;
+
+        span?.setAttribute("prazos.deadline", deadline.toISOString());
+        span?.setAttribute("prazos.dias_restantes", diffDias);
+        span?.setAttribute("prazos.urgente", isUrgente);
+
+        current = updateState(current, {
+          currentStep: "gestao-prazos:calculated",
+          data: {
+            ...current.data,
+            deadline: deadline.toISOString(),
+            diasRestantes: diffDias,
+            urgente: isUrgente,
+          },
+          completed: true,
+        });
+
+        span?.setStatus({ code: 1, message: "ok" });
+
+        return this.addAgentMessage(
+          current,
+          `Gestão de prazos: prazo calculado - ${deadline.toLocaleDateString()} (${diffDias} dias restantes)${isUrgente ? " ⚠️ URGENTE" : ""}`
+        );
+      }
+    );
   }
 }
 

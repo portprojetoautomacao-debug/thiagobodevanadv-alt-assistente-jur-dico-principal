@@ -1,5 +1,4 @@
 import GlobalSearch from "@/components/GlobalSearch";
-// Removido Google OAuth (uso exclusivo, login simples)
 import NotificationCenter from "@/components/NotificationCenter";
 import Sidebar from "@/components/Sidebar";
 import { SimpleAuth } from "@/components/SimpleAuth";
@@ -22,28 +21,34 @@ const queryClient = new QueryClient({
   },
 });
 
-// ⚡ COMPONENTES PRINCIPAIS - Carregados diretamente (sem lazy loading)
-// Sistema 100% automático requer componentes prontos imediatamente
-import AIAgents from "@/components/AIAgents";
-import AnalyticsDashboard from "@/components/AnalyticsDashboard";
-import AudioTranscription from "@/components/AudioTranscription";
-import BatchAnalysis from "@/components/BatchAnalysis";
-import CalculadoraPrazos from "@/components/CalculadoraPrazos";
-import Calendar from "@/components/Calendar";
+// ⚡ COMPONENTES CRÍTICOS - Carregados diretamente (sempre visíveis)
 import Dashboard from "@/components/Dashboard";
-import DatabaseQueries from "@/components/DatabaseQueries";
-import DatajudChecklist from "@/components/DatajudChecklist";
-import ExpedientePanel from "@/components/ExpedientePanel";
-import FinancialManagement from "@/components/FinancialManagement";
-import HarveySpecterChat from "@/components/HarveySpecterChat";
-import KnowledgeBase from "@/components/KnowledgeBase";
-import PDFUploader from "@/components/PDFUploader";
-import ProcessCRM from "@/components/ProcessCRM";
 
-// ⚡ LAZY LOADING: MinutasManager contém TiptapEditor (ProseMirror) que é pesado
-// Isso evita o erro "Cannot set properties of undefined (setting 'Activity')"
-// causado por race condition na inicialização do ProseMirror
+// ⚡ LAZY LOADING - Componentes pesados (carregam sob demanda)
+// Isso melhora performance inicial e reduz bundle size
+const HarveySpecterChat = lazy(() => import("@/components/HarveySpecterChat"));
 const MinutasManager = lazy(() => import("@/components/MinutasManager"));
+const ProcessCRM = lazy(() => import("@/components/ProcessCRM"));
+const Calendar = lazy(() => import("@/components/Calendar"));
+const FinancialManagement = lazy(() => import("@/components/FinancialManagement"));
+const CalculadoraPrazos = lazy(() => import("@/components/CalculadoraPrazos"));
+const PDFUploader = lazy(() => import("@/components/PDFUploader"));
+const AIAgents = lazy(() => import("@/components/AIAgents"));
+const AnalyticsDashboard = lazy(() => import("@/components/AnalyticsDashboard"));
+const ExpedientePanel = lazy(() => import("@/components/ExpedientePanel"));
+const BatchAnalysis = lazy(() => import("@/components/BatchAnalysis"));
+const AudioTranscription = lazy(() => import("@/components/AudioTranscription"));
+const DatabaseQueries = lazy(() => import("@/components/DatabaseQueries"));
+const DatajudChecklist = lazy(() => import("@/components/DatajudChecklist"));
+const KnowledgeBase = lazy(() => import("@/components/KnowledgeBase"));
+const AcervoPJe = lazy(() => import("@/components/AcervoPJe"));
+
+// Skeleton loader reutilizável
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+  </div>
+);
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -51,8 +56,6 @@ function App() {
 
   // ✨ Auto-criação de minutas quando agentes completam tarefas de redação
   useAutoMinuta();
-
-  // Autenticação é derivada diretamente da presença do usuário no KV/localStorage
 
   // Fallback de roteamento: sincroniza currentView com o hash da URL
   useEffect(() => {
@@ -63,14 +66,10 @@ function App() {
         setCurrentView(hash as ViewType);
       }
     };
-    // aplica na carga inicial
     applyHashView();
-    // escuta alterações de hash
     globalThis.addEventListener("hashchange", applyHashView);
     return () => globalThis.removeEventListener("hashchange", applyHashView);
   }, []);
-
-  // Handler legado de Google removido
 
   const handleSimpleAuthSuccess = (user: User) => {
     setUser(user);
@@ -81,7 +80,6 @@ function App() {
     setCurrentView("dashboard");
   };
 
-  // Handler de navegação para componentes que passam string como view
   const handleNavigate = (view: string, _data?: unknown) => {
     setCurrentView(view as ViewType);
   };
@@ -90,68 +88,127 @@ function App() {
     switch (currentView) {
       case "dashboard":
         return <Dashboard onNavigate={setCurrentView} />;
+      
       case "acervo":
-      case "acervo-pje": {
-        const AcervoPJe = lazy(() => import("@/components/AcervoPJe"));
+      case "acervo-pje":
         return (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-              </div>
-            }
-          >
+          <Suspense fallback={<LoadingFallback />}>
             <AcervoPJe />
           </Suspense>
         );
-      }
+      
       case "crm":
       case "processos":
       case "processes":
-        return <ProcessCRM />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ProcessCRM />
+          </Suspense>
+        );
+      
       case "calendar":
       case "calendario":
-        return <Calendar />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Calendar />
+          </Suspense>
+        );
+      
       case "financeiro":
       case "financial":
-        return <FinancialManagement />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <FinancialManagement />
+          </Suspense>
+        );
+      
       case "prazos":
       case "calculadora":
       case "calculator":
-        return <CalculadoraPrazos />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <CalculadoraPrazos />
+          </Suspense>
+        );
+      
       case "upload-pdf":
-        return <PDFUploader />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <PDFUploader />
+          </Suspense>
+        );
+      
       case "minutas":
         return (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-              </div>
-            }
-          >
+          <Suspense fallback={<LoadingFallback />}>
             <MinutasManager />
           </Suspense>
         );
+      
       case "donna":
       case "assistente":
-        return <HarveySpecterChat />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <HarveySpecterChat />
+          </Suspense>
+        );
+      
       case "ai-agents":
-        return <AIAgents onNavigate={setCurrentView} />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AIAgents onNavigate={setCurrentView} />
+          </Suspense>
+        );
+      
       case "analytics":
-        return <AnalyticsDashboard />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AnalyticsDashboard />
+          </Suspense>
+        );
+      
       case "expedientes":
-        return <ExpedientePanel />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ExpedientePanel />
+          </Suspense>
+        );
+      
       case "batch":
-        return <BatchAnalysis />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <BatchAnalysis />
+          </Suspense>
+        );
+      
       case "audio":
-        return <AudioTranscription />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AudioTranscription />
+          </Suspense>
+        );
+      
       case "queries":
-        return <DatabaseQueries />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <DatabaseQueries />
+          </Suspense>
+        );
+      
       case "datajud":
-        return <DatajudChecklist />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <DatajudChecklist />
+          </Suspense>
+        );
+      
       case "knowledge":
-        return <KnowledgeBase />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <KnowledgeBase />
+          </Suspense>
+        );
+      
       default:
         return <Dashboard onNavigate={setCurrentView} />;
     }

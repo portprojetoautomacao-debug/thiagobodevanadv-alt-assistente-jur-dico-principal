@@ -1,22 +1,72 @@
 import type { AgentState } from "../base/agent_state";
 import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
+import { createInvokeAgentSpan, createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+import { generatePeticao } from "@/lib/gemini-service";
 
 export class RedacaoPeticoesAgent extends LangGraphAgent {
   protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
-    let current = updateState(state, { currentStep: "redacao:start" });
+    // 🔍 Instrumentar invocação do agente completo
+    return createInvokeAgentSpan(
+      {
+        agentName: "Redação de Petições",
+        system: "gemini",
+        model: "gemini-2.5-pro",
+        temperature: 0.5,
+      },
+      {
+        sessionId: state.data?.sessionId || `session_${Date.now()}`,
+        turn: state.retryCount + 1,
+        messages: state.messages.map((m) => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        })),
+      },
+      async (span) => {
+        let current = updateState(state, { currentStep: "redacao:start" });
 
-    await new Promise((resolve) => setTimeout(resolve, 60));
+        // Extrair dados para redação
+        const tipo = (state.data?.tipo as string) || "petição inicial";
+        const detalhes = (state.data?.detalhes as string) || "Detalhes não fornecidos";
 
-    const draft = "Rascunho inicial: Petição contra ato X com fundamentos legais Y";
+        span?.setAttribute("gen_ai.petition.type", tipo);
+        span?.setAttribute("gen_ai.petition.details_length", detalhes.length);
 
-    current = updateState(current, {
-      currentStep: "redacao:done",
-      data: { ...current.data, draft },
-      completed: true,
-    });
+        // Chamar Gemini para gerar petição
+        const geminiResponse = await generatePeticao(tipo, detalhes);
 
-    return this.addAgentMessage(current, "Redação: rascunho gerado com sucesso");
+        if (geminiResponse.error) {
+          span?.setAttribute("gen_ai.error", geminiResponse.error);
+          span?.setStatus({ code: 2, message: geminiResponse.error });
+
+          current = updateState(current, {
+            currentStep: "redacao:error",
+            error: geminiResponse.error,
+            completed: true,
+          });
+
+          return current;
+        }
+
+        const draft = geminiResponse.text;
+
+        span?.setAttribute("gen_ai.response.length", draft.length);
+        span?.setAttribute("gen_ai.response.model", geminiResponse.metadata?.model || "unknown");
+        span?.setAttribute("gen_ai.usage.total_tokens", geminiResponse.metadata?.totalTokens || 0);
+
+        current = updateState(current, {
+          currentStep: "redacao:done",
+          data: {
+            ...current.data,
+            draft,
+            metadata: geminiResponse.metadata,
+          },
+          completed: true,
+        });
+
+        return this.addAgentMessage(current, `Redação: rascunho gerado com sucesso (${draft.length} caracteres)`);
+      }
+    );
   }
 }
 

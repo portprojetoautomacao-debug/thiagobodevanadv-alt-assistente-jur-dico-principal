@@ -1,25 +1,30 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ErrorBoundary } from "react-error-boundary";
 import App from "./App";
-import { ErrorFallback } from "./ErrorFallback.tsx";
-
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 
-// ⚠️ TRUSTED TYPES: DESABILITADO TEMPORARIAMENTE
-// O vite-plugin-pwa gera registerSW.js que não é compatível com Trusted Types
-// causando erro: "This document requires 'TrustedScriptURL' assignment"
-// NOTA: Reabilitar quando o plugin PWA suportar Trusted Types nativamente
-//
-// import('./lib/trusted-types').then(({ initTrustedTypes }) => {
-//   initTrustedTypes()
-// }).catch(err => console.warn('Trusted Types não disponível:', err))
+// ✅ MONITORING: Inicialização do Sentry (lazy loaded)
+let monitoringInitialized = false;
+
+const initMonitoring = () => {
+  if (monitoringInitialized) return;
+  monitoringInitialized = true;
+
+  import("./lib/monitoring")
+    .then(({ initMonitoring }) => {
+      initMonitoring();
+      console.log("[Monitoring] Sentry inicializado");
+    })
+    .catch((error) => {
+      console.warn("[Monitoring] Não foi possível inicializar:", error);
+    });
+};
 
 // ✅ ANALYTICS: GTM + GA4 inicialização (após consentimento se LGPD requerido)
-// IDs configuráveis via VITE_GTM_ID e VITE_GA4_ID
 let analyticsInitialized = false;
 
 const initAnalyticsServices = () => {
@@ -28,45 +33,27 @@ const initAnalyticsServices = () => {
 
   import("./lib/analytics")
     .then(({ initAnalytics }) => {
-      // initAnalytics é síncrono - não precisa de await
       initAnalytics();
+      console.log("[Analytics] GTM/GA4 inicializados");
     })
     .catch((error) => {
-      console.warn("Analytics não inicializado:", error);
+      console.warn("[Analytics] Não inicializado:", error);
     });
 };
 
-// Inicializa analytics após 2s para não impactar FCP/LCP
-setTimeout(initAnalyticsServices, 2000);
+// ✅ ESTRATÉGIA DE CARREGAMENTO OTIMIZADA
+// 1. Monitoring: Carrega após primeira interação ou após 3s (o que ocorrer primeiro)
+// 2. Analytics: Carrega após 2s para não impactar FCP/LCP
 
-// ✅ OTIMIZAÇÃO: Sentry lazy loading avançado
-// Carrega apenas após interação do usuário OU após 5s de idle
-// Economia: ~238KB de código não utilizado imediatamente
-let sentryInitialized = false;
-
-const initSentry = () => {
-  if (sentryInitialized) return;
-  sentryInitialized = true;
-
-  import("./services/error-tracking")
-    .then(({ initErrorTracking }) => {
-      initErrorTracking();
-    })
-    .catch((error) => {
-      console.error("❌ Failed to initialize Sentry:", error);
-    });
-};
-
-// Estratégia 1: Carregar Sentry após primeira interação do usuário
+// Monitoring - Carregar após interação do usuário
 const initOnInteraction = () => {
   const events = ["click", "keydown", "scroll", "touchstart"];
   const handler = () => {
     events.forEach((e) => globalThis.window.removeEventListener(e, handler, { capture: true }));
-    // Usar requestIdleCallback para não bloquear a interação
     if ("requestIdleCallback" in globalThis) {
-      requestIdleCallback(() => initSentry(), { timeout: 2000 });
+      requestIdleCallback(() => initMonitoring(), { timeout: 2000 });
     } else {
-      setTimeout(initSentry, 100);
+      setTimeout(initMonitoring, 100);
     }
   };
   events.forEach((e) =>
@@ -74,25 +61,24 @@ const initOnInteraction = () => {
   );
 };
 
-// Estratégia 2: Fallback - carregar após 5s se usuário não interagir
+// Monitoring - Fallback após 3s se não houver interação
 const initOnIdle = () => {
   if ("requestIdleCallback" in globalThis) {
-    requestIdleCallback(
-      () => {
-        setTimeout(initSentry, 5000); // 5s delay após idle
-      },
-      { timeout: 10000 }
-    );
+    requestIdleCallback(() => setTimeout(initMonitoring, 3000), { timeout: 5000 });
   } else {
-    setTimeout(initSentry, 8000); // 8s para browsers sem requestIdleCallback
+    setTimeout(initMonitoring, 5000);
   }
 };
 
+// Analytics - Inicializa após 2s
+setTimeout(initAnalyticsServices, 2000);
+
+// Monitoring - Estratégias paralelas
 initOnInteraction();
 initOnIdle();
 
 createRoot(rootElement).render(
-  <ErrorBoundary FallbackComponent={ErrorFallback}>
+  <ErrorBoundary>
     <StrictMode>
       <App />
     </StrictMode>

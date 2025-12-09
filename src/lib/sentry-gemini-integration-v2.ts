@@ -4,6 +4,8 @@
  * Integração OFICIAL do Sentry para monitorar Google Gemini SDK.
  * Usa googleGenAIIntegration() disponível em @sentry/react v10.14.0+
  *
+ * **✅ LGPD COMPLIANCE:** Sanitiza inputs/outputs de LLM antes de enviar para Sentry
+ *
  * Baseado em:
  * - https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/integrations/google-genai/
  * - https://docs.sentry.io/platforms/javascript/guides/react/tracing/span-metrics/examples/#manual-llm-instrumentation-custom-ai-agent--tool-calls
@@ -21,10 +23,11 @@
  * - Atributos: gen_ai.system, gen_ai.request.model, gen_ai.usage.*, etc.
  *
  * @module sentry-gemini-integration-v2
- * @version 2.0.0 - Migrado para SDK oficial
+ * @version 2.1.0 - Adicionado PII filtering para LGPD compliance
  */
 
 import * as Sentry from "@sentry/react";
+import { sanitizePII, DEFAULT_PII_CONFIG, type PIIFilterConfig } from "@/services/pii-filtering";
 
 /**
  * Opções de configuração da integração Gemini (padrão oficial SDK)
@@ -36,6 +39,8 @@ export interface GeminiIntegrationOptions {
    * O Sentry considera inputs/outputs de LLM como PII (Personally Identifiable Information).
    * Por padrão, usa o valor de `send_default_pii` na inicialização do Sentry.
    *
+   * ✅ LGPD: Mesmo quando true, dados sensíveis são sanitizados automaticamente
+   *
    * @default true se send_default_pii=true, false caso contrário
    */
   recordInputs?: boolean;
@@ -46,9 +51,18 @@ export interface GeminiIntegrationOptions {
    * O Sentry considera inputs/outputs de LLM como PII (Personally Identifiable Information).
    * Por padrão, usa o valor de `send_default_pii` na inicialização do Sentry.
    *
+   * ✅ LGPD: Mesmo quando true, dados sensíveis são sanitizados automaticamente
+   *
    * @default true se send_default_pii=true, false caso contrário
    */
   recordOutputs?: boolean;
+
+  /**
+   * ✅ LGPD: Configuração de PII filtering
+   *
+   * Se não especificado, usa DEFAULT_PII_CONFIG (habilitado em produção)
+   */
+  piiFilterConfig?: PIIFilterConfig;
 }
 
 /**
@@ -116,7 +130,123 @@ export interface AIConversationMetadata {
 }
 
 /**
+ * Configuração global da integração (pode ser alterada em runtime)
+ */
+let globalGeminiConfig: GeminiIntegrationOptions = {
+  recordInputs: true,
+  recordOutputs: true,
+  piiFilterConfig: DEFAULT_PII_CONFIG,
+};
+
+/**
+ * ✅ LGPD: Sanitiza atributos de um span AI
+ *
+ * Remove ou mascara dados sensíveis (CPF, email, telefone, etc.) de:
+ * - gen_ai.request.messages
+ * - gen_ai.response.text
+ * - gen_ai.tool.input
+ * - gen_ai.tool.output
+ * - conversation.session_id (se contém dados sensíveis)
+ *
+ * @internal
+ */
+function sanitizeSpanAttributes(
+  attributes: Record<string, unknown>,
+  config: PIIFilterConfig
+): Record<string, unknown> {
+  if (!config.enabled) {
+    return attributes;
+  }
+
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(attributes)) {
+    // Sanitiza strings
+    if (typeof value === "string") {
+      sanitized[key] = sanitizePII(value, config);
+    }
+    // Sanitiza objetos JSON (messages, tool input/output)
+    else if (value && typeof value === "object") {
+      try {
+        const jsonStr = JSON.stringify(value);
+        const sanitizedStr = sanitizePII(jsonStr, config);
+        sanitized[key] = JSON.parse(sanitizedStr);
+      } catch {
+        // Se falhar parsing, mantém original
+        sanitized[key] = value;
+      }
+    }
+    // Outros tipos passam direto
+    else {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized;
+}
+
+/**
+ * ✅ LGPD: Cria beforeSendTransaction para sanitizar AI spans
+ *
+ * Aplicar no Sentry.init():
+ * ```ts
+ * Sentry.init({
+ *   beforeSendTransaction: createAISanitizingBeforeSendTransaction()
+ * });
+ * ```
+ */
+export function createAISanitizingBeforeSendTransaction(
+  config: PIIFilterConfig = DEFAULT_PII_CONFIG
+) {
+  return (transaction: any) => {
+    if (!config.enabled) {
+      return transaction;
+    }
+
+    // Sanitiza spans de AI (gen_ai.*)
+    if (transaction.spans) {
+      for (const span of transaction.spans) {
+        // Verifica se é span de AI
+        if (
+          span.op?.startsWith("gen_ai.") ||
+          span.op?.startsWith("gen_ai_") ||
+          span.description?.includes("gen_ai") ||
+          span.description?.includes("invoke_agent") ||
+          span.description?.includes("execute_tool")
+        ) {
+          // Sanitiza atributos do span
+          if (span.data) {
+            span.data = sanitizeSpanAttributes(span.data, config);
+          }
+
+          // Sanitiza description (pode conter nome do agente com dados sensíveis)
+          if (span.description && typeof span.description === "string") {
+            span.description = sanitizePII(span.description, config);
+          }
+        }
+      }
+    }
+
+    // Sanitiza contexts (extra, tags, etc.)
+    if (transaction.contexts) {
+      for (const [contextName, contextData] of Object.entries(transaction.contexts)) {
+        if (contextData && typeof contextData === "object") {
+          transaction.contexts[contextName] = sanitizeSpanAttributes(
+            contextData as Record<string, unknown>,
+            config
+          );
+        }
+      }
+    }
+
+    return transaction;
+  };
+}
+
+/**
  * Cria um span manual de invocação de agente AI
+ *
+ * ✅ LGPD: Dados sensíveis são sanitizados antes de enviar para Sentry
  *
  * Segue convenções OpenTelemetry do Sentry:
  * - op: "gen_ai.invoke_agent"
@@ -146,26 +276,45 @@ export async function createInvokeAgentSpan<T>(
   conversation: AIConversationMetadata,
   callback: (span: Sentry.Span | undefined) => Promise<T>
 ): Promise<T> {
-  return Sentry.startSpan(
-    {
-      name: `invoke_agent ${config.agentName}`,
-      op: "gen_ai.invoke_agent",
-      attributes: {
+  // ✅ LGPD: Sanitiza atributos antes de criar span
+  const piiConfig = globalGeminiConfig.piiFilterConfig || DEFAULT_PII_CONFIG;
+  const shouldRecord = globalGeminiConfig.recordInputs !== false;
+
+  const sanitizedAttributes = shouldRecord
+    ? sanitizeSpanAttributes(
+        {
+          "gen_ai.operation.name": "invoke_agent",
+          "gen_ai.agent.name": config.agentName,
+          "gen_ai.system": config.system,
+          "gen_ai.request.model": config.model,
+          "gen_ai.response.model": config.model,
+          "conversation.session_id": conversation.sessionId,
+          "conversation.turn": conversation.turn,
+          ...(config.temperature !== undefined && {
+            "gen_ai.request.temperature": config.temperature,
+          }),
+          ...(config.maxTokens !== undefined && {
+            "gen_ai.request.max_tokens": config.maxTokens,
+          }),
+          ...(conversation.messages && {
+            "gen_ai.request.messages": JSON.stringify(conversation.messages),
+          }),
+        },
+        piiConfig
+      )
+    : {
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.agent.name": config.agentName,
         "gen_ai.system": config.system,
         "gen_ai.request.model": config.model,
-        "gen_ai.response.model": config.model,
-        "conversation.session_id": conversation.sessionId,
         "conversation.turn": conversation.turn,
-        ...(config.temperature !== undefined && {
-          "gen_ai.request.temperature": config.temperature,
-        }),
-        ...(config.maxTokens !== undefined && { "gen_ai.request.max_tokens": config.maxTokens }),
-        ...(conversation.messages && {
-          "gen_ai.request.messages": JSON.stringify(conversation.messages),
-        }),
-      },
+      };
+
+  return Sentry.startSpan(
+    {
+      name: `invoke_agent ${config.agentName}`,
+      op: "gen_ai.invoke_agent",
+      attributes: sanitizedAttributes,
     },
     async (span) => {
       try {
@@ -431,14 +580,6 @@ export function useAIInstrumentation() {
     handoff,
   };
 }
-
-/**
- * Configuração global da integração (pode ser alterada em runtime)
- */
-let globalGeminiConfig: GeminiIntegrationOptions = {
-  recordInputs: true,
-  recordOutputs: true,
-};
 
 /**
  * Atualizar configuração global da integração Gemini
