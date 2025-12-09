@@ -776,7 +776,7 @@ VITE_ENABLE_PII_FILTERING=true  # OBRIGATÓRIO em produção
 </tr>
 </table>
 
-**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md)
+**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md) • [GitHub MCP Server (local)](docs/MCP_SETUP.md) • **[Configurar Instruções Fixas](docs/COPILOT_INSTRUCTIONS_SETUP.md)** ⭐
 
 ---
 
@@ -1689,65 +1689,6 @@ Configurado no `vercel.json` (2 verificações diárias):
 - `0 12 * * *` = 12:00 UTC = **09:00 BRT** (manhã)
 - `0 20 * * *` = 20:00 UTC = **17:00 BRT** (tarde)
 
-### 🧪 Testando a Integração
-
-**1. Verificar status:**
-
-```bash
-curl https://seu-app.vercel.app/api/status
-```
-
-**2. Sincronizar manualmente:**
-
-```bash
-curl -X POST https://seu-app.vercel.app/api/djen-sync
-```
-
-**3. Listar publicações:**
-
-```bash
-curl https://seu-app.vercel.app/api/expedientes
-```
-
-### ⚠️ Detalhes Técnicos Importantes
-
-1. **Parâmetro `meio=D` é OBRIGATÓRIO**
-   - Sem ele, a API retorna erro ou resultados vazios
-   - `D` = Diário Digital (padrão dos tribunais)
-
-2. **Região do Vercel deve ser `gru1` (São Paulo)**
-   - A API DJEN bloqueia requests de fora do Brasil
-   - Configure em `vercel.json`:
-
-   ```json
-   {
-     "regions": ["gru1"]
-   }
-   ```
-
-3. **Rate Limit**
-   - A API do CNJ pode ter limitações
-   - O sistema implementa cache de 5 minutos entre chamadas
-
-4. **Formato do número OAB**
-   - Apenas números, sem pontos ou traços
-   - Exemplo: `184404` (não `184.404`)
-
-### 🏆 Caso de Sucesso
-
-**Advogado monitorado:** Thiago Bodevan Veiga - OAB/MG 184.404
-
-**Tribunais configurados:** TJMG, TRT3, TST, STJ, TRF1, TRF6, TJSP
-
-**Resultado em 27/11/2025:**
-
-- ✅ 3 intimações capturadas automaticamente
-- ✅ Widget exibindo corretamente no dashboard
-- ✅ Processos identificados:
-  - `5005240-57.2020.8.13.0223` - Execução de Título Extrajudicial
-  - `5005573-67.2024.8.13.0223` - Intimação
-  - `0012850-68.2024.8.13.0338` - Intimação
-
 ---
 
 ## 🏗️ Arquitetura Técnica
@@ -2272,7 +2213,41 @@ include:
       monitoring_type: "advanced"
 ```
 
-##
+## 🚀 NOVO: Estrutura de Instruções Fixas para Agentes IA
+
+A partir da versão 1.4.0, o sistema suporta **Instruções Fixas**, permitindo que informações críticas sejam sempre mescladas nas requisições para os Agentes IA, como Harvey Specter.
+
+### Funcionalidade
+
+- 📌 Defina instruções fixas que serão automaticamente incluídas nas chamadas para os agentes IA.
+- 🔄 Instruções podem ser atualizadas sem a necessidade de alterar o código-fonte.
+- ⚙️ Totalmente configurável via interface de administração do Assistente Jurídico.
+
+### Como Funciona
+
+1. **Definição de Instruções Fixas:** Administradores definem instruções que sempre devem ser seguidas pelos agentes IA.
+2. **Mesclagem Automática:** O sistema mescla essas instruções em todas as interações com os agentes, garantindo consistência.
+3. **Exemplo de Uso:**
+    - Instrução Fixa: "Sempre verifique se o cliente possui mais de um processo ativo."
+    - Agente IA recebe a instrução automaticamente em cada interação.
+
+### Vantagens
+
+- ✅ **Consistência:** Assegura que informações críticas sejam sempre consideradas.
+- ✅ **Facilidade de Atualização:** Instruções podem ser atualizadas em tempo real.
+- ✅ **Maior Controle:** Administradores têm controle total sobre o comportamento dos agentes IA.
+
+### Configuração
+
+Para habilitar e configurar Instruções Fixas:
+
+1. Acesse a aba "Configurações" do Assistente Jurídico.
+2. Vá até a seção "Instruções Fixas para Agentes IA".
+3. Ative a funcionalidade e defina suas instruções.
+
+> ⚠️ **Atenção:** Instruções fixas devem ser usadas com cautela. Instruções conflitantes podem causar comportamento inesperado nos agentes IA.
+
+---
 
 # GLab
 
