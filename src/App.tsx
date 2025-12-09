@@ -88,7 +88,7 @@ function App() {
     switch (currentView) {
       case "dashboard":
         return <Dashboard onNavigate={setCurrentView} />;
-      
+
       case "acervo":
       case "acervo-pje":
         return (
@@ -96,7 +96,7 @@ function App() {
             <AcervoPJe />
           </Suspense>
         );
-      
+
       case "crm":
       case "processos":
       case "processes":
@@ -105,7 +105,7 @@ function App() {
             <ProcessCRM />
           </Suspense>
         );
-      
+
       case "calendar":
       case "calendario":
         return (
@@ -113,7 +113,7 @@ function App() {
             <Calendar />
           </Suspense>
         );
-      
+
       case "financeiro":
       case "financial":
         return (
@@ -121,7 +121,7 @@ function App() {
             <FinancialManagement />
           </Suspense>
         );
-      
+
       case "prazos":
       case "calculadora":
       case "calculator":
@@ -130,21 +130,21 @@ function App() {
             <CalculadoraPrazos />
           </Suspense>
         );
-      
+
       case "upload-pdf":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <PDFUploader />
           </Suspense>
         );
-      
+
       case "minutas":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <MinutasManager />
           </Suspense>
         );
-      
+
       case "donna":
       case "assistente":
         return (
@@ -152,63 +152,63 @@ function App() {
             <HarveySpecterChat />
           </Suspense>
         );
-      
+
       case "ai-agents":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <AIAgents onNavigate={setCurrentView} />
           </Suspense>
         );
-      
+
       case "analytics":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <AnalyticsDashboard />
           </Suspense>
         );
-      
+
       case "expedientes":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <ExpedientePanel />
           </Suspense>
         );
-      
+
       case "batch":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <BatchAnalysis />
           </Suspense>
         );
-      
+
       case "audio":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <AudioTranscription />
           </Suspense>
         );
-      
+
       case "queries":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <DatabaseQueries />
           </Suspense>
         );
-      
+
       case "datajud":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <DatajudChecklist />
           </Suspense>
         );
-      
+
       case "knowledge":
         return (
           <Suspense fallback={<LoadingFallback />}>
             <KnowledgeBase />
           </Suspense>
         );
-      
+
       default:
         return <Dashboard onNavigate={setCurrentView} />;
     }
