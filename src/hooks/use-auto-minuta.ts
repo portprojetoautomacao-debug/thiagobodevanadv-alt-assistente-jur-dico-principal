@@ -180,8 +180,6 @@ export function useAutoMinuta() {
     [minutas, processedTasksCount]
   );
 
-  // Compute stats using useMemo to avoid recalculating on each render
-
   // Retornar estatísticas úteis
   return stats;
 }

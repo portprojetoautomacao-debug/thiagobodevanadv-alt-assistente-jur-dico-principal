@@ -14,14 +14,14 @@ export function useIsMobile() {
   useEffect(() => {
     const mql = globalThis.window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
     const onChange = () => {
-      setIsMobile(globalThis.window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    
-    return () => {
-      mql.removeEventListener("change", onChange)
-    }
-  }, []) // Empty dependency array - only runs once on mount
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    mql.addEventListener("change", onChange);
 
-  return isMobile ?? false
+    return () => {
+      mql.removeEventListener("change", onChange);
+    };
+  }, []); // Empty dependency array - only runs once on mount
+
+  return isMobile ?? false;
 }

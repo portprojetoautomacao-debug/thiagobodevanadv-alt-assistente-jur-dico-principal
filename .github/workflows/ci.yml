@@ -3,8 +3,34 @@ name: CI
 on:
   push:
     branches: [main, develop, copilot/**]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
+      - '.github/workflows/ci.yml'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
   pull_request:
     branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - 'vitest.config.ts'
+      - '.github/workflows/ci.yml'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

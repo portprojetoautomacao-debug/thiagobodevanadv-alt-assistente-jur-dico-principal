@@ -112,7 +112,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     }, [isOpen])
 
     // Função de busca
-    const search = useCallback((searchQuery: string, searchCategory: SearchCategory) => {
+  const performSearch = useCallback((searchQuery: string, searchCategory: SearchCategory) => {
         if (!searchQuery.trim()) {
             setResults([])
             return
@@ -205,37 +205,37 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         setSelectedIndex(0)
     }, [processes, clientes, minutas, expedientes])
 
-    // Efeito para busca com debounce
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            search(query, category)
-        }, 150)
+  // Efeito para busca com debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performSearch(query, category);
+    }, 150);
 
-        return () => clearTimeout(timer)
-    }, [query, category, search])
+    return () => clearTimeout(timer);
+  }, [query, category, performSearch]);
 
     // Navegação por teclado
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault()
-                setSelectedIndex(prev => Math.min(prev + 1, results.length - 1))
-                break
-            case 'ArrowUp':
-                e.preventDefault()
-                setSelectedIndex(prev => Math.max(prev - 1, 0))
-                break
-            case 'Enter':
-                e.preventDefault()
-                if (results[selectedIndex]) {
-                    handleSelect(results[selectedIndex])
-                }
-                break
-            case 'Escape':
-                closeSearch()
-                break
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (results[selectedIndex]) {
+          handleSelect(results[selectedIndex]);
         }
+        break;
+      case "Escape":
+        closeSearch();
+        break;
     }
+  };
 
   // Função de busca
   const performSearch = useCallback(
