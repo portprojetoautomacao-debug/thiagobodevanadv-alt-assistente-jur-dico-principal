@@ -594,15 +594,15 @@ O projeto representa um **benchmark de qualidade** para sistemas jurídicos mode
 
 <a id="ref-2"></a>[2] GitHub. (2025). *GitHub Copilot Evolves Into Autonomous Coding Agent*. https://thelettertwo.com/2025/05/19/the-new-github-copilot-agent-doesnt-just-help-you-code-it-codes-for-you/
 
-<a id="ref-3"></a>[3] Clio. (2025). *Google Gemini for Lawyers: What You Need to Know*. https://www.clio.com/blog/google-gemini-lawyers/
+<a id="ref-3"></a>[3] Clio. (2023). *Google Gemini for Lawyers: What You Need to Know*. https://www.clio.com/blog/google-gemini-lawyers/
 
-<a id="ref-4"></a>[4] Qdrant. (2025). *Building a Semantic Search Engine for legal documents*. https://medium.com/@vlds_19099/building-a-semantic-search-engine-for-legal-documents-with-qdrant-langextract-658d22f1b743
+<a id="ref-4"></a>[4] Qdrant. (2023). *Building a Semantic Search Engine for legal documents*. https://medium.com/@vlds_19099/building-a-semantic-search-engine-for-legal-documents-with-qdrant-langextract-658d22f1b743
 
-<a id="ref-5"></a>[5] DSPy Documentation. (2025). *Optimizers - DSPy Framework*. https://dspy.ai/learn/optimization/optimizers/
+<a id="ref-5"></a>[5] DSPy Documentation. (2024). *Optimizers - DSPy Framework*. https://dspy.ai/learn/optimization/optimizers/
 
-<a id="ref-6"></a>[6] Usercentrics. (2025). *LGPD Checklist: Brazilian Data Privacy Compliance Made Simple*. https://usercentrics.com/resources/lgpd-checklist/
+<a id="ref-6"></a>[6] Usercentrics. (2023). *LGPD Checklist: Brazilian Data Privacy Compliance Made Simple*. https://usercentrics.com/resources/lgpd-checklist/
 
-<a id="ref-7"></a>[7] Vercel. (2025). *Configuring Memory and CPU for Vercel Functions*. https://vercel.com/docs/functions/configuring-functions/memory
+<a id="ref-7"></a>[7] Vercel. (2023). *Configuring Memory and CPU for Vercel Functions*. https://vercel.com/docs/functions/configuring-functions/memory
 
 ---
 
