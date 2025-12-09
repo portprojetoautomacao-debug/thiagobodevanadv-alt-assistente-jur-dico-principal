@@ -1,41 +1,17 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useKV } from "@/hooks/use-kv";
-import type { Process } from "@/types";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  closestCorners,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  Calendar,
-  DollarSign,
-  FileText,
-  Filter,
-  MoreVertical,
-  Search,
-  TrendingUp,
-  X,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useKV } from '@/hooks/use-kv'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { X, Calendar } from '@phosphor-icons/react'
+import { toast } from 'sonner'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import type { Process } from '@/types'
 
 const PROCESS_PHASES = [
   "Marketing",
@@ -156,26 +132,18 @@ function SortableCard({ card, onOpenDetails }: Readonly<SortableCardProps>) {
 }
 
 export default function ProcessCRMAdvbox() {
-  const [processes] = useKV<Process[]>("processes", []);
-  const [filter, setFilter] = useState("");
-  const [selectedPhase, setSelectedPhase] = useState<string>("Administrativo");
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [selectedCard, setSelectedCard] = useState<ProcessCardData | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({});
-  const [processCards, setProcessCards] = useState<ProcessCardData[]>([]);
+  const [processes] = useKV<Process[]>('processes', [])
+  const [filter, setFilter] = useState('')
+  const [selectedPhase, setSelectedPhase] = useState<string>('Administrativo')
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedCard, setSelectedCard] = useState<ProcessCardData | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({})
+  const [processCards, setProcessCards] = useState<ProcessCardData[]>([])
 
-  // Configuração dos sensores para drag and drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   // Helper function for status color
-  const getStatusColor = useCallback((status: string): "green" | "yellow" | "red" => {
+  const getStatusColor = useCallback((status: string): 'green' | 'yellow' | 'red' => {
     switch (status) {
       case "concluido":
         return "green";
@@ -187,7 +155,7 @@ export default function ProcessCRMAdvbox() {
       default:
         return "yellow";
     }
-  }, []);
+  }, [])
 
   // Compute process cards using useMemo instead of useEffect + setState
   const computedProcessCards = useMemo(() => {
@@ -197,18 +165,18 @@ export default function ProcessCRMAdvbox() {
       reu: p.reu || "INSS",
       tipo: p.titulo || "Auxílio doença Previdenciário",
       numero: p.numeroCNJ,
-      valor: p.valor ? p.valor.toString() : "A definir",
-      resultado: p.fase || "Em análise",
-      status: getStatusColor(p.status || "ativo"),
+      valor: p.valor ? p.valor.toString() : 'A definir',
+      resultado: p.fase || 'Em análise',
+      status: getStatusColor(p.status || 'ativo'),
       column: cardColumnOverrides[p.id] || KANBAN_COLUMNS[idx % KANBAN_COLUMNS.length],
-      processo: p,
-    }));
-  }, [processes, getStatusColor, cardColumnOverrides]);
+      processo: p
+    }))
+  }, [processes, getStatusColor, cardColumnOverrides])
 
   // Initialize process cards from computed values
   useEffect(() => {
-    setProcessCards(computedProcessCards);
-  }, [computedProcessCards]);
+    setProcessCards(computedProcessCards)
+  }, [computedProcessCards])
 
   const getCardsByColumn = (column: string) => {
     return processCards.filter((card) => card.column === column);
@@ -230,11 +198,11 @@ export default function ProcessCRMAdvbox() {
     const overColumn = over.id as string;
 
     if (activeCard && KANBAN_COLUMNS.includes(overColumn)) {
-      setCardColumnOverrides((prev) => ({
+      setCardColumnOverrides(prev => ({
         ...prev,
-        [active.id as string]: overColumn,
-      }));
-      toast.success(`Processo movido para ${overColumn}`);
+        [active.id as string]: overColumn
+      }))
+      toast.success(`Processo movido para ${overColumn}`)
     }
 
     setActiveId(null);

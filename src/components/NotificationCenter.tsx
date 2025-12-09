@@ -137,18 +137,18 @@ export function NotificationCenter({ onNavigate }: Readonly<NotificationCenterPr
   // Detectar novas notificações
   useEffect(() => {
     const currentCount = notifications?.length || 0;
-
+    
     if (currentCount > prevCountRef.current && prevCountRef.current > 0) {
       // Schedule state update to avoid synchronous setState in effect
       const timeoutId = setTimeout(() => {
         setHasNewNotifications(true);
       }, 0);
-      // Atualiza ref e retorna cleanup
+      // Atualiza ref dentro do if e retorna cleanup
       prevCountRef.current = currentCount;
       return () => clearTimeout(timeoutId);
     }
-
-    // Atualiza ref quando não houve notificação nova
+    
+    // Atualiza ref apenas quando não houve notificação nova
     prevCountRef.current = currentCount;
   }, [notifications]);
 

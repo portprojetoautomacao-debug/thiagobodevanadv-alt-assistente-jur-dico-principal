@@ -90,8 +90,7 @@ Forneça:
             const analise = {
               riskScore,
               probabilidadeSucesso,
-              classificacao:
-                riskScore < 0.3 ? "baixo" : riskScore < 0.6 ? "médio" : "alto",
+              classificacao: riskScore < 0.3 ? "baixo" : riskScore < 0.6 ? "médio" : "alto",
               fatoresRisco: [
                 complexidade === "alta" && "Complexidade elevada do caso",
                 precedentes.length === 0 && "Falta de precedentes favoráveis",

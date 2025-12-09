@@ -1,7 +1,7 @@
 /**
- * Hook otimizado para gestão de expedientes com validação Zod
- * 
- * Migrado de use-expedientes.ts para adicionar validação completa
+ * Hook otimizado para gestï¿½o de expedientes com validaï¿½ï¿½o Zod
+ *
+ * Migrado de use-expedientes.ts para adicionar validaï¿½ï¿½o completa
  * e garantir integridade dos dados.
  */
 
@@ -21,10 +21,10 @@ export function useExpedientesValidated() {
    */
   const autoLinkToProcess = useCallback(
     (expediente: Expediente): Expediente => {
-      // Se já tem processId, retorna sem alteração
+      // Se jï¿½ tem processId, retorna sem alteraï¿½ï¿½o
       if (expediente.processId) return expediente;
 
-      // Buscar processo pelo número CNJ
+      // Buscar processo pelo nï¿½mero CNJ
       if (expediente.numeroProcesso) {
         const normalizedNum = normalizeProcessNumber(expediente.numeroProcesso);
         const processo = (processes || []).find(
@@ -41,14 +41,14 @@ export function useExpedientesValidated() {
   );
 
   /**
-   * Dispara evento para sincronização dos contadores do processo
+   * Dispara evento para sincronizaï¿½ï¿½o dos contadores do processo
    */
   const triggerProcessSync = useCallback(() => {
     globalThis.dispatchEvent(new CustomEvent("expediente-added"));
   }, []);
 
   /**
-   * Adicionar expediente com validação
+   * Adicionar expediente com validaï¿½ï¿½o
    */
   const addExpediente = useCallback(
     (expedienteData: Omit<Expediente, "id" | "createdAt">) => {
@@ -62,8 +62,8 @@ export function useExpedientesValidated() {
       const validation = validateExpediente(newExpediente);
 
       if (!validation.isValid) {
-        console.error("Validação falhou:", validation.errors);
-        toast.error("Dados do expediente inválidos. Verifique os campos obrigatórios.");
+        console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+        toast.error("Dados do expediente invï¿½lidos. Verifique os campos obrigatï¿½rios.");
         return null;
       }
 
@@ -73,7 +73,7 @@ export function useExpedientesValidated() {
       setExpedientes((prev) => [...prev, linkedExpediente]);
       toast.success("Expediente criado com sucesso!");
 
-      // Disparar sincronização dos contadores
+      // Disparar sincronizaï¿½ï¿½o dos contadores
       triggerProcessSync();
 
       return linkedExpediente;
@@ -82,7 +82,7 @@ export function useExpedientesValidated() {
   );
 
   /**
-   * Adicionar múltiplos expedientes com validação
+   * Adicionar mï¿½ltiplos expedientes com validaï¿½ï¿½o
    */
   const addExpedientes = useCallback(
     (novosExpedientes: Omit<Expediente, "id" | "createdAt">[]) => {
@@ -103,7 +103,7 @@ export function useExpedientesValidated() {
           const linked = autoLinkToProcess(validation.data as Expediente);
           validados.push(linked);
         } else {
-          erros.push(`Expediente inválido: ${JSON.stringify(validation.errors)}`);
+          erros.push(`Expediente invï¿½lido: ${JSON.stringify(validation.errors)}`);
         }
       }
 
@@ -115,7 +115,7 @@ export function useExpedientesValidated() {
 
       if (erros.length > 0) {
         console.error("Erros ao adicionar expedientes:", erros);
-        toast.error(`${erros.length} expediente(s) com erro de validação.`);
+        toast.error(`${erros.length} expediente(s) com erro de validaï¿½ï¿½o.`);
       }
 
       return { validados, erros };
@@ -124,7 +124,7 @@ export function useExpedientesValidated() {
   );
 
   /**
-   * Atualizar expediente com validação
+   * Atualizar expediente com validaï¿½ï¿½o
    */
   const updateExpediente = useCallback(
     (id: string, updates: Partial<Expediente>) => {
@@ -141,8 +141,8 @@ export function useExpedientesValidated() {
             const validation = validateExpediente(updatedExpediente);
 
             if (!validation.isValid) {
-              console.error("Validação falhou:", validation.errors);
-              toast.error("Dados inválidos. Atualização cancelada.");
+              console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+              toast.error("Dados invï¿½lidos. Atualizaï¿½ï¿½o cancelada.");
               return exp;
             }
 
@@ -184,7 +184,7 @@ export function useExpedientesValidated() {
   );
 
   /**
-   * Obtém expedientes vinculados a um processo específico
+   * Obtï¿½m expedientes vinculados a um processo especï¿½fico
    */
   const getExpedientesByProcessId = useCallback(
     (processId: string) => {
@@ -194,15 +194,14 @@ export function useExpedientesValidated() {
       return expedientes.filter(
         (exp) =>
           exp.processId === processId ||
-          normalizeProcessNumber(exp.numeroProcesso) ===
-            normalizeProcessNumber(processo.numeroCNJ)
+          normalizeProcessNumber(exp.numeroProcesso) === normalizeProcessNumber(processo.numeroCNJ)
       );
     },
     [expedientes, processes]
   );
 
   /**
-   * Buscar expedientes não lidos
+   * Buscar expedientes nï¿½o lidos
    */
   const expedientesNaoLidos = useCallback(() => {
     return expedientes.filter((exp) => !exp.lido);
@@ -229,7 +228,7 @@ export function useExpedientesValidated() {
   );
 
   /**
-   * Buscar expedientes urgentes (prazos próximos)
+   * Buscar expedientes urgentes (prazos prï¿½ximos)
    */
   const getExpedientesUrgentes = useCallback(() => {
     return expedientes.filter((exp) => {

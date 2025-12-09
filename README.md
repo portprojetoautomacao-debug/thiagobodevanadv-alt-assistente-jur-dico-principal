@@ -86,7 +86,7 @@ VITE_ENABLE_PII_FILTERING=true  # OBRIGATÓRIO em produção
 </tr>
 </table>
 
-**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md) • [GitHub MCP Server (local)](docs/MCP_SETUP.md)
+**📖 Guias:** [Setup](.github/COPILOT_AGENT_SETUP.md) • [Automação](.github/COPILOT_AUTONOMOUS.md) • [Comandos](.github/COPILOT_QUICK_REFERENCE.md)
 
 ---
 
@@ -94,116 +94,11 @@ VITE_ENABLE_PII_FILTERING=true  # OBRIGATÓRIO em produção
 
 Este repositório está **100% configurado para trabalho autônomo do GitHub Copilot**!
 
-### 🔍 Serena MCP - Busca Semântica de Código (NOVO!)
-
-**Integração completa** do Serena MCP Server para recuperação semântica de código e edição inteligente via GitHub Copilot.
-
-**O que o Serena faz:**
-
-- 🔍 **Busca semântica** - Encontra código por significado, não apenas por texto literal
-- ✏️ **Edição contextual** - Modifica múltiplos arquivos entendendo o contexto
-- 🤖 **Assistente de refatoração** - Sugestões inteligentes de melhorias
-- 📊 **Análise de dependências** - Mapeia relações entre componentes
-
-**Status**: ✅ Configurado em `.vscode/mcp.json`
-
-**Como usar:**
-
-1. Instalar Python 3.9+ e `uv`:
-   ```bash
-   # Windows
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-   # Verificar instalação
-   npm run setup:mcp
-   ```
-
-2. Reiniciar MCP servers no VS Code:
-   - `Ctrl+Shift+P` → `GitHub Copilot: Restart MCP Servers`
-
-3. Testar no Copilot Chat:
-   ```
-   @workspace Encontre todos os hooks que usam validação com Zod
-   ```
-
-**Exemplos de comandos:**
-```
-Mostre código que lida com erros do Sentry
-Quais componentes usam o hook use-processes-validated?
-Encontre agentes que interagem com o serviço Gemini
-```
-
-**📖 Documentação completa**: [`docs/SERENA_MCP_SETUP.md`](docs/SERENA_MCP_SETUP.md)
-
-**📦 MCP Servers configurados**:
-- ✅ **Serena** - Busca semântica de código
-- ✅ **Sentry** - Monitoramento de erros
-- ✅ **GitHub** - Gestão de repos/issues/PRs
-- ✅ **Playwright** - Testes E2E automatizados
-- ✅ **ChromeDevTools** - Debug e performance
-
----
-
-### 🚀 GitHub Codespaces - Copilot com Máxima Autonomia
-
-**Ambiente pronto em 2 cliques!** Configure o Codespaces para que o Copilot trabalhe sem depender de você:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/codespaces/new)
-
-**O que está pré-configurado:**
-
-- ✅ **Edição automática**: Copilot pode editar arquivos sem confirmação
-- ✅ **Terminal automático**: Executa comandos sem perguntar
-- ✅ **Coding Agent ativo**: Cria branches e PRs automaticamente
-- ✅ **Auto-save + Auto-format**: Código salvo e formatado instantaneamente
-- ✅ **25+ tasks automáticas**: Dev server, testes, linting rodando 24/7
-- ✅ **Git smart commit**: Push/pull sem confirmações
-
-**📖 Guia completo de configuração:** [.github/CODESPACES_SETUP.md](.github/CODESPACES_SETUP.md)
-
-**🧪 Testar configuração:**
-
-```bash
-./test-codespaces-config.sh
-```
-
----
-
-### 🆕 Sistema de Issues Automático
-
-**72 triggers** detectam comentários no código e criam issues automaticamente:
-
-```typescript
-// TODO: Implementar feature X
-// FIXME: Corrigir bug Y
-// JURIDICO: Validar conformidade LGPD
-// PERFORMANCE: Otimizar query lenta
-```
-
-**3 camadas de automação:**
-
-- ✅ **VS Code**: Clique direito → "Criar issue do comentário"
-- ✅ **GitHub Actions**: Issues criadas/fechadas automaticamente em cada commit
-- ✅ **Script Bash**: `./auto-create-issues.sh` para criação em massa
-
-**Resultado:**
-
-- 🎯 Issues criadas em ~30s após commit
-- 🏷️ Labels automáticas (urgente, bug, juridico, security, etc.)
-- 👤 Auto-atribuição ao autor
-- ♻️ Prevenção de duplicatas
-- 🔄 Fechamento automático quando TODO removido
-
-**📖 Documentação completa:** [AUTO_ISSUES_README.md](.vscode/AUTO_ISSUES_README.md) • [Quick Reference](.vscode/AUTO_ISSUES_QUICK_REF.md) • [Checklist](.vscode/AUTO_ISSUES_CHECKLIST.md)
-
----
-
 ### ✨ Trabalho Automático 24/7
 
 O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
 
 #### 🕐 **Diariamente às 9h BRT** (sem você fazer nada):
-
 - ✅ Detecta erros TypeScript e ESLint automaticamente
 - ✅ Aplica correções (auto-fix)
 - ✅ Organiza imports e formata código
@@ -213,19 +108,16 @@ O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
 - ✅ **Abre issue** se encontrar erros críticos que precisam de atenção
 
 #### 💾 **Ao salvar qualquer arquivo** (instantâneo):
-
 - ✅ Auto-save após 1 segundo
 - ✅ Prettier formata código automaticamente
 - ✅ ESLint corrige erros na hora
 - ✅ Remove imports não utilizados
 
 #### 🔄 **A cada push** que você faz:
-
 - ✅ Workflow roda automaticamente
 - ✅ Mesmas verificações e correções aplicadas
 
 #### 🔍 **Em background contínuo**:
-
 - ✅ Servidor dev sempre rodando
 - ✅ Testes em watch mode
 - ✅ Type checking a cada 30 segundos
@@ -233,29 +125,24 @@ O Copilot trabalha **sozinho** corrigindo bugs e mantendo o código limpo:
 ### 👤 Sua Intervenção (apenas 10 minutos/dia)
 
 **Diariamente:**
-
 - ⏰ Revisar commits automáticos do bot
 - ⏰ Verificar issues abertas (se houver)
 - ⏰ Aprovar PRs criadas (se houver)
 
 **Quando necessário:**
-
 - 🆘 Resolver erros críticos que o bot não conseguiu corrigir
 
 **Resto do tempo:**
-
 - ☕ **Tomar café enquanto o bot trabalha!**
 
 ### 🔐 Segurança e Limites
 
 **Arquivos protegidos** (nunca modificados automaticamente):
-
 - ❌ `.env`, `package.json`, `vercel.json`
 - ❌ `.github/workflows/*`
 - ⚠️ `api/**/*.ts` (APIs críticas - requer revisão humana)
 
 **Modo MANUTENÇÃO respeitado:**
-
 - ✅ Bot **SÓ** corrige bugs
 - ❌ Bot **NUNCA** adiciona novas funcionalidades
 - ❌ Bot **NUNCA** altera arquitetura ou fluxos de produção
@@ -278,12 +165,12 @@ gh workflow run copilot-auto-fix.yml
 
 ### 📚 Documentação Completa
 
-| Guia                                                         | Descrição                                         |
-| ------------------------------------------------------------ | ------------------------------------------------- |
-| **[Setup do Agente](.github/COPILOT_AGENT_SETUP.md)**        | Como usar comandos `@workspace`, `/fix`, `/tests` |
-| **[Automação Total](.github/COPILOT_AUTONOMOUS.md)**         | 3 níveis de automação, configuração completa      |
-| **[Referência Rápida](.github/COPILOT_QUICK_REFERENCE.md)**  | Comandos úteis, troubleshooting, checklist        |
-| **[Instruções do Projeto](.github/copilot-instructions.md)** | Contexto completo do repositório para o Copilot   |
+| Guia | Descrição |
+|------|-----------|
+| **[Setup do Agente](.github/COPILOT_AGENT_SETUP.md)** | Como usar comandos `@workspace`, `/fix`, `/tests` |
+| **[Automação Total](.github/COPILOT_AUTONOMOUS.md)** | 3 níveis de automação, configuração completa |
+| **[Referência Rápida](.github/COPILOT_QUICK_REFERENCE.md)** | Comandos úteis, troubleshooting, checklist |
+| **[Instruções do Projeto](.github/copilot-instructions.md)** | Contexto completo do repositório para o Copilot |
 
 ### 🎯 Recursos do Copilot Neste Projeto
 

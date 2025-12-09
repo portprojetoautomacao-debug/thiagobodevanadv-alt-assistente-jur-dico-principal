@@ -105,10 +105,7 @@ Forneça:
                 "Arrolar testemunhas",
                 "Protocolar resposta no prazo",
               ];
-              estrategiasAlternativas = [
-                "Propor acordo",
-                "Apresentar reconvenção",
-              ];
+              estrategiasAlternativas = ["Propor acordo", "Apresentar reconvenção"];
             } else if (fasseProcessual === "recursal") {
               if (riskScore > 0.6) {
                 estrategiaPrincipal = "Avaliar acordo antes de recorrer";
@@ -124,10 +121,7 @@ Forneça:
                   "Protocolar recurso no prazo",
                 ];
               }
-              estrategiasAlternativas = [
-                "Embargos de Declaração",
-                "Acordo em segunda instância",
-              ];
+              estrategiasAlternativas = ["Embargos de Declaração", "Acordo em segunda instância"];
             } else if (fasseProcessual === "execucao") {
               estrategiaPrincipal = "Execução forçada com penhora de bens";
               acoesImediatas = [
@@ -169,7 +163,10 @@ Forneça:
         );
 
         span?.setAttribute("estrategia.principal", estrategia.estrategiaPrincipal);
-        span?.setAttribute("estrategia.alternativas_count", estrategia.estrategiasAlternativas.length);
+        span?.setAttribute(
+          "estrategia.alternativas_count",
+          estrategia.estrategiasAlternativas.length
+        );
         span?.setAttribute("estrategia.acoes_count", estrategia.acoesImediatas.length);
         span?.setAttribute("estrategia.confianca", estrategia.confianca);
         span?.setAttribute("estrategia.previsao_tempo", estrategia.previsaoTempo);

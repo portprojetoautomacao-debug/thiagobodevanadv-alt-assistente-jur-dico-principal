@@ -1,25 +1,13 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { formatarNumeroCNJ, validarNumeroCNJ } from "@/lib/prazos";
-import type { Process } from "@/types";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react'
+import type { Process } from '@/types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { validarNumeroCNJ, formatarNumeroCNJ } from '@/lib/prazos'
+import { toast } from 'sonner'
 
 interface ProcessDialogProps {
   readonly open: boolean;
@@ -58,25 +46,20 @@ function createInitialFormData(process?: Process) {
   };
 }
 
-export default function ProcessDialog({
-  open,
-  onOpenChange,
-  process,
-  onSave,
-}: Readonly<ProcessDialogProps>) {
+export default function ProcessDialog({ open, onOpenChange, process, onSave }: ProcessDialogProps) {
   // Initialize form data with lazy initialization
-  const [formData, setFormData] = useState(() => createInitialFormData(process));
+  const [formData, setFormData] = useState(() => createInitialFormData(process))
 
   // Sync form data when process changes and dialog is opened
   useEffect(() => {
     if (!open) return; // Não atualiza quando o diálogo está fechado
-
+    
     // Schedule to avoid synchronous setState in effect
     const timeoutId = setTimeout(() => {
-      setFormData(createInitialFormData(process));
-    }, 0);
-    return () => clearTimeout(timeoutId);
-  }, [process, open]);
+      setFormData(createInitialFormData(process))
+    }, 0)
+    return () => clearTimeout(timeoutId)
+  }, [process, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

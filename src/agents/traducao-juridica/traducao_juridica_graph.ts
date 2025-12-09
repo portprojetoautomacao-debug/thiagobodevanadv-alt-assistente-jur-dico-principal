@@ -44,12 +44,14 @@ export class TraducaoJuridicaAgent extends LangGraphAgent {
           [
             {
               role: "system",
-              content: "Você é um tradutor jurídico especializado. Mantenha precisão técnica ao simplificar e vice-versa.",
+              content:
+                "Você é um tradutor jurídico especializado. Mantenha precisão técnica ao simplificar e vice-versa.",
             },
             {
               role: "user",
-              content: direcao === "tecnico-para-simples"
-                ? `Traduza o seguinte texto jurídico técnico para linguagem simples e acessível, mantendo o significado legal exato:
+              content:
+                direcao === "tecnico-para-simples"
+                  ? `Traduza o seguinte texto jurídico técnico para linguagem simples e acessível, mantendo o significado legal exato:
 
 Contexto: ${contexto || "N/A"}
 
@@ -61,7 +63,7 @@ REGRAS:
 2. Explique termos técnicos inevitáveis
 3. Mantenha a precisão jurídica
 4. Use linguagem respeitosa e clara`
-                : `Converta o seguinte texto em linguagem leiga para termos jurídicos técnicos precisos:
+                  : `Converta o seguinte texto em linguagem leiga para termos jurídicos técnicos precisos:
 
 Contexto: ${contexto || "N/A"}
 
@@ -80,7 +82,8 @@ REGRAS:
             await new Promise((resolve) => setTimeout(resolve, 25));
 
             let textoTraduzido = "";
-            const termosChave: Array<{ original: string; traducao: string; explicacao: string }> = [];
+            const termosChave: Array<{ original: string; traducao: string; explicacao: string }> =
+              [];
 
             if (direcao === "tecnico-para-simples") {
               // Técnico → Simples
@@ -100,7 +103,8 @@ REGRAS:
                 {
                   original: "Sucumbência",
                   traducao: "Quem perde paga",
-                  explicacao: "A parte que perde o processo arca com as custas e honorários do advogado vencedor",
+                  explicacao:
+                    "A parte que perde o processo arca com as custas e honorários do advogado vencedor",
                 }
               );
             } else {
