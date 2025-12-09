@@ -64,7 +64,10 @@ export class RedacaoPeticoesAgent extends LangGraphAgent {
           completed: true,
         });
 
-        return this.addAgentMessage(current, `Redação: rascunho gerado com sucesso (${draft.length} caracteres)`);
+        return this.addAgentMessage(
+          current,
+          `Redação: rascunho gerado com sucesso (${draft.length} caracteres)`
+        );
       }
     );
   }
