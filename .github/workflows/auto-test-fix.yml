@@ -32,11 +32,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+      - name: 🜢 Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-auto-test-fix-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-auto-test-fix-${{ matrix.browser }}-
+            ${{ runner.os }}-auto-test-fix-
+            ${{ runner.os }}-
 
       - name: 📦 Instalar dependências
         run: |

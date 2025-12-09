@@ -39,6 +39,7 @@ jobs:
   static-analysis:
     name: "🔍 Análise Estática e Linting"
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'lint-only'
 
     steps:
@@ -48,6 +49,17 @@ jobs:
       - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
+          node-version: "22.x"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-quality-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-quality-
           node-version: "22.x"
           cache: "npm"
 
