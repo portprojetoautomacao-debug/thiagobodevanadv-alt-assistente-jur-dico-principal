@@ -157,7 +157,7 @@ export default function HumanAgentCollaboration({
   useEffect(() => {
     return () => {
       if (humanActivityTimeoutRef.current != null) {
-        clearTimeout(humanActivityTimeoutRef.current)
+        clearTimeout(humanActivityTimeoutRef.current);
       }
     };
   }, []);
@@ -171,12 +171,12 @@ export default function HumanAgentCollaboration({
 
     // Simula uma janela de "atividade" humana por alguns segundos
     if (humanActivityTimeoutRef.current != null) {
-      clearTimeout(humanActivityTimeoutRef.current)
+      clearTimeout(humanActivityTimeoutRef.current);
     }
     humanActivityTimeoutRef.current = setTimeout(() => {
-      setIsHumanActive(false)
-    }, 3000)
-  }
+      setIsHumanActive(false);
+    }, 3000);
+  };
 
   const handleHumanFinish = () => {
     setIsHumanActive(false);
@@ -184,8 +184,8 @@ export default function HumanAgentCollaboration({
     setPhase("agent_resuming");
 
     const resumeId = setTimeout(() => {
-      setPhase('agent_working')
-    }, RESUME_DELAY_MS)
+      setPhase("agent_working");
+    }, RESUME_DELAY_MS);
 
     // Apenas por segurança – se o componente desmontar MUITO rápido
     humanActivityTimeoutRef.current = resumeId;
