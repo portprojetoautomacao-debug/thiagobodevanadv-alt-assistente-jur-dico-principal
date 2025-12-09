@@ -5,7 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Process, ProcessEvent } from "@/types";
 import { Clock, Download, ExternalLink, FileText, Filter, Workflow } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Props principais do componente ProcessTimelineViewer
@@ -257,30 +258,16 @@ export default function ProcessTimelineViewer({
                                   <FileText className="h-3 w-3" />
                                   Ver documento
                                 </span>
-                              </div>
-                              <div className="flex items-center justify-between gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className={`border ${tipo.className} text-[10px]`}
-                                >
-                                  {tipo.label}
-                                </Badge>
-                                {ev.documentoUrl && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-primary">
-                                    <FilePdf className="h-3 w-3" />
-                                    Ver documento
-                                  </span>
-                                )}
-                              </div>
-                              {ev.descricao && (
-                                <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
-                                  {ev.descricao}
-                                </p>
                               )}
-                            </motion.button>
-                          );
-                        })}
-                      </AnimatePresence>
+                            </div>
+                            {ev.descricao && (
+                              <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
+                                {ev.descricao}
+                              </p>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -302,29 +289,37 @@ export default function ProcessTimelineViewer({
                 value="document"
                 className="flex-1 flex flex-col overflow-hidden data-[state=inactive]:hidden"
               >
-                {selectedEvent?.documentoUrl ? (
-                  <div className="flex-1 flex flex-col">
-                    <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium">{selectedEvent.titulo}</span>
-                        <span className="text-[11px] text-muted-foreground">
-                          {formatDate(selectedEvent.dataHora)} •{" "}
-                          {formatTime(selectedEvent.dataHora)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={selectedEvent.documentoUrl} target="_blank" rel="noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-1" />
-                            Abrir em nova aba
-                          </a>
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={selectedEvent.documentoUrl} download>
-                            <Download className="h-4 w-4 mr-1" />
-                            Baixar
-                          </a>
-                        </Button>
+                <AnimatePresence mode="wait">
+                  {selectedEvent?.documentoUrl ? (
+                    <motion.div
+                      key={selectedEvent.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex-1 flex flex-col"
+                    >
+                      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-medium">{selectedEvent.titulo}</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {formatDate(selectedEvent.dataHora)} •{" "}
+                            {formatTime(selectedEvent.dataHora)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={selectedEvent.documentoUrl} target="_blank" rel="noreferrer">
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Abrir em nova aba
+                            </a>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={selectedEvent.documentoUrl} download>
+                              <Download className="h-4 w-4 mr-1" />
+                              Baixar
+                            </a>
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="flex-1 bg-muted/30">
@@ -432,11 +427,17 @@ export default function ProcessTimelineViewer({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="p-4"
+                        className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-3"
                       >
-                        <p className="text-xs text-muted-foreground">
-                          Selecione uma movimentação na linha do tempo para ver os detalhes.
-                        </p>
+                        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Nenhuma movimentação selecionada</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Selecione uma movimentação na linha do tempo para ver os detalhes.
+                          </p>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>

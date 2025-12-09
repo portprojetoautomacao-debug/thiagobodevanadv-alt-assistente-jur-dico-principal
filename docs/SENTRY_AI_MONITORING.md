@@ -449,26 +449,178 @@ const result = await createInvokeAgentSpan(
 );
 ```
 
-## ✅ Checklist de Implementação
+## ✅ Checklist de Implementação (ATUALIZADO - Fase 3 Completa)
 
+### Fase 1: Infraestrutura (100% Completo) ✅
 - [x] ✅ Criar `sentry-gemini-integration-v2.ts`
 - [x] ✅ Adicionar exemplos em `SENTRY_AI_AGENTS_EXAMPLES.tsx`
 - [x] ✅ Documentar em `SENTRY_AI_MONITORING.md`
-- [ ] 🔄 Migrar agente `Harvey Specter` para v2
-- [ ] 🔄 Migrar agente `Mrs. Justin-e` para v2
-- [ ] 🔄 Adicionar tool calling nos agentes relevantes
-- [ ] 🔄 Implementar handoffs entre agentes
-- [ ] 🔄 Configurar PII filtering para produção
+- [x] ✅ Criar schemas Zod (agent, expediente, process)
+- [x] ✅ Criar hooks validated (processes, expedientes, clientes, minutas)
+- [x] ✅ Implementar lazy loading em 14 componentes pesados
+- [x] ✅ Criar testes unitários para schemas Zod (18 testes)
+
+### Fase 2: Instrumentação Inicial (100% Completo) ✅
+- [x] ✅ Migrar agente `Harvey Specter` para v2
+- [x] ✅ Migrar agente `Mrs. Justin-e` para v2
+- [x] ✅ Instrumentar agente `Redação de Petições` com createChatSpan
+- [x] ✅ Instrumentar agente `Monitor DJEN` com createInvokeAgentSpan (corrigido)
+
+### Fase 3: Instrumentação Avançada (100% Completo) ✅
+- [x] ✅ Instrumentar agente `Gestão de Prazos`
+- [x] ✅ Instrumentar agente `Análise Documental` (com tool calling)
+- [x] ✅ Instrumentar agente `Pesquisa Jurisprudencial` (Chat + Tool)
+- [x] ✅ Instrumentar agente `Análise de Risco` (Chat com heurísticas)
+- [x] ✅ Instrumentar agente `Estratégia Processual` (Handoff + Chat)
+
+### Fase 4: Instrumentação Final (Pendente)
+- [ ] 🔄 Instrumentar agentes restantes (6/15 pendentes)
+  - [ ] Comunicação com Clientes
+  - [ ] Revisão Contratual
+  - [ ] Compliance
+  - [ ] Organização de Arquivos
+  - [ ] Análise Financeira
+  - [ ] Tradução Jurídica
+- [ ] 🔄 Configurar PII filtering para produção (LGPD)
 - [ ] 🔄 Testar no dashboard AI Agents do Sentry.io
 - [ ] 🔄 Criar alertas customizados
+- [ ] 🔄 Documentar runbooks de troubleshooting
 
-## 📚 Referências Oficiais
+## 🎯 Agentes Instrumentados (9/15 = 60%)
 
-- [Sentry AI Agents Module (Python)](https://docs.sentry.io/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/)
-- [Manual LLM Instrumentation (JavaScript/React)](https://docs.sentry.io/platforms/javascript/guides/react/tracing/span-metrics/examples/#manual-llm-instrumentation-custom-ai-agent--tool-calls)
-- [Google Gen AI Integration](https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/integrations/google-genai/)
-- [Sentry Metrics Getting Started](https://docs.sentry.io/product/explore/metrics/getting-started/)
-- [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
+| Agente | Status | Arquivo | Padrão | Tool | Handoff |
+|--------|--------|---------|--------|------|---------|
+| Harvey Specter | ✅ Completo | `HarveySpecterChat.tsx` | Agent + Chat | ❌ | ❌ |
+| Mrs. Justin-e | ✅ Completo | `use-autonomous-agents.ts` | Agent | ❌ | ❌ |
+| Redação Petições | ✅ Completo | `redacao_graph.ts`, `gemini-service.ts` | Agent + Chat | ❌ | ❌ |
+| Monitor DJEN | ✅ Completo | `monitor_graph.ts` | Agent | ❌ | ❌ |
+| Gestão Prazos | ✅ Completo | `gestao_prazos_graph.ts` | Agent | ❌ | ❌ |
+| Análise Documental | ✅ Completo | `analise_documental_graph.ts` | Agent | ✅ entity_extraction | ❌ |
+| Pesquisa Juris | ✅ Completo | `pesquisa_graph.ts` | Agent + Chat | ✅ search_db | ❌ |
+| Análise de Risco | ✅ Completo | `analise_risco_graph.ts` | Agent + Chat | ❌ | ❌ |
+| **Estratégia Processual** | ✅ Completo | `estrategia_processual_graph.ts` | Agent + Chat | ❌ | ✅ → Risco |
+| Comunicação Clientes | ⏸️ Pendente | - | - | - | - |
+| Revisão Contratual | ⏸️ Pendente | - | - | - | - |
+| Compliance | ⏸️ Pendente | - | - | - | - |
+| Organização Arquivos | ⏸️ Pendente | - | - | - | - |
+| Análise Financeira | ⏸️ Pendente | - | - | - | - |
+| Tradução Jurídica | ⏸️ Pendente | - | - | - | - |
+
+## 🎊 Novidades da Fase 3
+
+### ⭐ Handoff Entre Agentes (Primeira Implementação!)
+
+**Exemplo: Estratégia Processual → Análise de Risco**
+
+```typescript
+// Detectar necessidade de análise de risco
+if (riskScore === undefined || riskScore === 0.5) {
+  await createHandoffSpan("Estratégia Processual", "Análise de Risco");
+  
+  span?.setAttribute("estrategia.handoff_triggered", true);
+  span?.setAttribute("estrategia.handoff_reason", "Necessário análise de risco primeiro");
+  
+  // Aguardar análise...
+}
+```
+
+**No Sentry.io:**
+- ✅ Span com `op: gen_ai.handoff`
+- ✅ Atributos: `gen_ai.from_agent`, `gen_ai.to_agent`
+- ✅ Trace completo mostrando fluxo entre agentes
+
+### 🔧 Tool Calling em Produção
+
+**Agente: Análise Documental**
+
+```typescript
+const entities = await createExecuteToolSpan(
+  { agentName: "Análise Documental", ... },
+  {
+    toolName: "entity_extraction",
+    toolType: "function",
+    toolInput: JSON.stringify({ texto, tipo })
+  },
+  async (toolSpan) => {
+    const result = await extractEntities(texto);
+    toolSpan?.setAttribute("gen_ai.tool.output", JSON.stringify(result));
+    return result;
+  }
+);
+```
+
+**Saída:**
+```json
+{
+  "partes": ["Autor: João Silva", "Réu: Empresa XYZ"],
+  "datas": ["2024-12-08", "2024-11-15"],
+  "valores": ["R$ 10.000,00"],
+  "processos": ["1234567-89.2024.5.02.0999"]
+}
+```
+
+**Agente: Pesquisa Jurisprudencial**
+
+```typescript
+// 1. Chat LLM para gerar query
+const query = await createChatSpan(...);
+
+// 2. Tool para buscar em datastore
+const resultados = await createExecuteToolSpan(
+  {...},
+  {
+    toolName: "search_jurisprudence_database",
+    toolType: "datastore",
+    toolInput: JSON.stringify({ query, limit: 10 })
+  },
+  async (toolSpan) => {
+    const precedentes = await searchDatabase(query);
+    toolSpan?.setAttribute("search.results_count", precedentes.length);
+    return precedentes;
+  }
+);
+```
+
+### 📊 Análise de Risco com Heurísticas
+
+**Fórmula de Cálculo:**
+
+```typescript
+let riskScore = 0.5; // Baseline
+
+// Ajustar por complexidade
+if (complexidade === "baixa") riskScore -= 0.15;
+else if (complexidade === "alta") riskScore += 0.2;
+
+// Ajustar por precedentes
+if (precedentes.length > 3) riskScore -= 0.1;
+else if (precedentes.length === 0) riskScore += 0.15;
+
+// Ajustar por valor da causa
+if (valorCausa > 100000) riskScore += 0.1;
+
+// Limitar entre 0 e 1
+riskScore = Math.max(0, Math.min(1, riskScore));
+```
+
+**Classificação:**
+- `score < 0.3` → **Risco Baixo**
+- `0.3 ≤ score < 0.6` → **Risco Médio**
+- `score ≥ 0.6` → **Risco Alto**
+
+**Probabilidade de Sucesso:**
+```typescript
+probabilidadeSucesso = (1 - riskScore) * 100
+```
+
+### 🎯 Estratégias Contextuais
+
+| Fase | Risco | Estratégia Principal | Ações Imediatas |
+|------|-------|---------------------|-----------------|
+| Inicial | Baixo | Contestação completa | Juntar docs, Arrolar testemunhas |
+| Inicial | Alto | Acordo pré-processual | Negociação, Análise de valores |
+| Recursal | Baixo | Recurso de apelação | Analisar sentença, Preparar minuta |
+| Recursal | Alto | Acordo judicial | Proposta redução, Análise custo-benefício |
 
 ---
 

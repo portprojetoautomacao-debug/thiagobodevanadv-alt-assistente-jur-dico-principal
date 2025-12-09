@@ -5,7 +5,57 @@
 
 > ⚠️ **MODO MANUTENÇÃO**: O desenvolvimento de novas funcionalidades está encerrado. O sistema está em produção estável e o foco atual é exclusivamente manter todas as funcionalidades operando corretamente.
 
-Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.
+**Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.**
+
+**✨ NOVO - Versão 1.4.0 (08/12/2025):** Conformidade total com LGPD + PII Filtering automático
+
+---
+
+## 🎯 Versão Atual: 1.4.0 - LGPD Compliance
+
+### 🔐 Novidades da v1.4.0
+
+**Conformidade total com a LGPD (Lei 13.709/2018)** através de PII Filtering automático:
+
+- ✅ **Sanitização automática** de CPF, email, telefone e outros dados sensíveis
+- ✅ **PII Filtering** em error tracking (Sentry)
+- ✅ **PII Filtering** em AI monitoring (Gemini spans)
+- ✅ **10+ tipos de dados** protegidos (CPF, email, telefone, endereço, conta bancária, cartão, RG, CNH, OAB, etc.)
+- ✅ **Validação de CPF** para reduzir falsos positivos
+- ✅ **Auditoria automática** de dados processados
+- ✅ **Documentação completa** de conformidade legal
+
+### 📊 Dados Protegidos
+
+| Tipo | Sanitização | Base Legal LGPD |
+|------|-------------|-----------------|
+| CPF | [CPF_REDACTED] | Art. 5º, I |
+| Email | [EMAIL_REDACTED] | Art. 5º, I |
+| Telefone | [PHONE_REDACTED] | Art. 5º, I |
+| Conta Bancária | [ACCOUNT_REDACTED] | Art. 5º, I |
+| Cartão de Crédito | [CARD_REDACTED] | Art. 5º, I |
+| RG, CNH, OAB | Mascarado | Art. 5º, I |
+
+### 📚 Documentação v1.4.0
+
+- 📖 [Documentação LGPD](docs/LGPD_COMPLIANCE.md) - Conformidade técnica legal
+- 📖 [Changelog v1.4.0](docs/CHANGELOG_v1.4.0.md) - Release notes completas
+- 📖 [Deploy Checklist](docs/DEPLOY_CHECKLIST_v1.4.0.md) - Checklist pré-deploy
+- 📖 [Guia de Instrumentação](docs/INSTRUMENTACAO_PATTERNS.md) - Padrões de implementação
+
+### 🔧 Como Ativar
+
+```bash
+# .env.production
+VITE_ENABLE_PII_FILTERING=true  # OBRIGATÓRIO em produção
+```
+
+**Verificar logs:**
+```
+✅ Sentry Error Tracking inicializado
+   Environment: production
+   PII Filtering: ATIVO ✅
+```
 
 ---
 
@@ -1326,7 +1376,7 @@ Esta seção documenta a análise técnica comparando o estado atual do sistema 
 | Prioridade (low/medium/high/critical)       | ✅     | `api/agents.ts` - Enum `TaskPriority` |
 | Campos createdAt, startedAt, completedAt    | ✅     | Interface `AgentTask`                 |
 | Fila persistente KV                         | ✅     | `agent-task-queue` no Upstash         |
-| Chain automático de tarefas                 | ✅     | 14 tipos de encadeamento              |
+| Chain automático                            | ✅     | 14 tipos de encadeamento              |
 | 10 Cron Jobs ativos                         | ✅     | `vercel.json`                         |
 
 #### ⚠️ Gaps Identificados
@@ -1437,7 +1487,7 @@ interface TemplatePerformance {
 | Item                    | Descrição                      | Prioridade  |
 | ----------------------- | ------------------------------ | ----------- |
 | Watchdog de fila        | Alertar se queue > X tarefas   | 🟡 Média    |
-| Taxa de erro por agente | Alerta se erro > Y%            | 🟡 Média    |
+| Taxa de erro por agente | Alerta se erro > 5%            | 🟡 Média    |
 | Fallback de modelo      | Se Gemini falha, usar GPT      | 🟡 Média    |
 | Trilha de auditoria     | `inputPrompt`, `revisaoHumana` | 🔴 **Alta** |
 
@@ -1532,9 +1582,7 @@ include:
       monitoring_type: "advanced"
 ```
 
-📖 **Documentação completa**: [`.gitlab/templates/README.md`](.gitlab/templates/README.md)
-
----
+##
 
 # GLab
 
@@ -2044,12 +2092,6 @@ No GitLab CI/CD Settings → Variables:
 - `./scripts/test-gitlab-agents.sh`: Testa conectividade
 - `./scripts/apply-k8s-manifests.sh`: Aplica manifests K8s
 - `./scripts/verify-gitlab-agents-k8s.sh`: Verifica infraestrutura
-
-## 📚 Documentação
-
-- [GitLab Agents Documentation](docs/KUBERNETES_MANIFESTOS.md)
-- [Configuração GitLab Duo](GITLAB_DUO_SETUP_COMPLETE.md)
-- [Guia de Infraestrutura](docs/CLOUD_CODE_DEPLOY.md)
 
 <!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE #2 -->
 <!-- Este é o segundo teste para verificar se o webhook será acionado após deploy bem-sucedido -->
