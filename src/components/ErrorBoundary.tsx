@@ -1,13 +1,20 @@
 /**
- * Error Boundary Global com Integração Sentry
- * Captura erros de renderização e exibe UI amigável
+ * Error Boundary Global com Integraï¿½ï¿½o Sentry
+ * Captura erros de renderizaï¿½ï¿½o e exibe UI amigï¿½vel
  */
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { captureException } from "@/lib/monitoring";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface Props {
   children: ReactNode;
@@ -41,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary] Erro capturado:", error, errorInfo);
 
-    // Enviar para Sentry (produção)
+    // Enviar para Sentry (produï¿½ï¿½o)
     captureException(error, {
       componentStack: errorInfo.componentStack,
       errorBoundary: true,
@@ -72,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // UI padrão de erro
+      // UI padrï¿½o de erro
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
           <Card className="max-w-2xl w-full">
@@ -84,7 +91,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 <div>
                   <CardTitle>Algo deu errado</CardTitle>
                   <CardDescription>
-                    Ocorreu um erro inesperado. Já fomos notificados e vamos corrigir o mais rápido possível.
+                    Ocorreu um erro inesperado. Jï¿½ fomos notificados e vamos corrigir o mais rï¿½pido
+                    possï¿½vel.
                   </CardDescription>
                 </div>
               </div>
@@ -94,11 +102,11 @@ export class ErrorBoundary extends Component<Props, State> {
               {/* Detalhes do erro (apenas em dev) */}
               {import.meta.env.DEV && this.state.error && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Detalhes do erro (visível apenas em desenvolvimento):</p>
+                  <p className="text-sm font-medium">
+                    Detalhes do erro (visï¿½vel apenas em desenvolvimento):
+                  </p>
                   <div className="p-3 bg-muted rounded-md">
-                    <pre className="text-xs overflow-auto">
-                      {this.state.error.toString()}
-                    </pre>
+                    <pre className="text-xs overflow-auto">{this.state.error.toString()}</pre>
                   </div>
                   {this.state.errorInfo?.componentStack && (
                     <details className="text-xs">
@@ -113,15 +121,15 @@ export class ErrorBoundary extends Component<Props, State> {
                 </div>
               )}
 
-              {/* Mensagem amigável */}
+              {/* Mensagem amigï¿½vel */}
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-md">
                 <p className="text-sm">
-                  ?? <strong>O que você pode fazer:</strong>
+                  ?? <strong>O que vocï¿½ pode fazer:</strong>
                 </p>
                 <ul className="mt-2 text-sm space-y-1 list-disc list-inside">
                   <li>Tentar novamente (clique em "Tentar novamente")</li>
-                  <li>Voltar para a página inicial</li>
-                  <li>Recarregar a página (F5)</li>
+                  <li>Voltar para a pï¿½gina inicial</li>
+                  <li>Recarregar a pï¿½gina (F5)</li>
                   <li>Se o problema persistir, entre em contato com o suporte</li>
                 </ul>
               </div>
@@ -134,7 +142,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
               <Button onClick={this.handleGoHome} variant="outline" className="flex-1">
                 <Home className="mr-2 w-4 h-4" />
-                Voltar ao início
+                Voltar ao inï¿½cio
               </Button>
             </CardFooter>
           </Card>
@@ -149,11 +157,11 @@ export class ErrorBoundary extends Component<Props, State> {
 /**
  * Hook-based Error Boundary (para usar com React Query, etc)
  */
-export function ErrorFallback({ 
-  error, 
-  resetErrorBoundary 
-}: { 
-  error: Error; 
+export function ErrorFallback({
+  error,
+  resetErrorBoundary,
+}: {
+  error: Error;
   resetErrorBoundary: () => void;
 }) {
   return (
@@ -164,9 +172,7 @@ export function ErrorFallback({
             <AlertTriangle className="w-5 h-5 text-destructive" />
             Erro
           </CardTitle>
-          <CardDescription>
-            {error.message || "Ocorreu um erro inesperado"}
-          </CardDescription>
+          <CardDescription>{error.message || "Ocorreu um erro inesperado"}</CardDescription>
         </CardHeader>
         <CardFooter>
           <Button onClick={resetErrorBoundary} className="w-full">
