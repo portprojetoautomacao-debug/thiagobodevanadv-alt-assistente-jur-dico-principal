@@ -236,8 +236,6 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                 break
         }
     }
-    // Reset é feito pelo closeSearch diretamente, não precisa de efeito separado
-  }, [isOpen]);
 
   // Função de busca
   const performSearch = useCallback(
