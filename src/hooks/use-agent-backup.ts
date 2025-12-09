@@ -227,6 +227,7 @@ export function useAgentBackup(options: BackupOptions) {
         console.warn("⚠️ Servidor indisponível, backup local será tentado...");
         setStorageType("local");
 
+        let localStorageSuccess = false;
         try {
           // Salvar dados mínimos no localStorage
           const minimalData = {
@@ -238,11 +239,18 @@ export function useAgentBackup(options: BackupOptions) {
             },
           };
           localStorage.setItem(`${BACKUP_KEY_PREFIX}:fallback`, JSON.stringify(minimalData));
+          localStorageSuccess = true;
         } catch (localError) {
           if (localError instanceof DOMException && localError.name === "QuotaExceededError") {
             cleanLocalStorage();
             console.warn("⚠️ localStorage cheio, limpeza realizada");
           }
+          console.warn("⚠️ Falha ao salvar no localStorage", localError);
+        }
+
+        // Se localStorage também falhou, retornar erro
+        if (!localStorageSuccess) {
+          return { success: false, error: new Error("Falha ao salvar backup: servidor indisponível e localStorage falhou") };
         }
       }
 
