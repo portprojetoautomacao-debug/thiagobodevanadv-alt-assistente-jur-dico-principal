@@ -129,15 +129,6 @@ export function useAgentBackup(options: BackupOptions) {
     }
   }, [userId]);
 
-      setLastBackup(backupData.timestamp);
-
-      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cacheData));
-    } catch {
-      // Ignorar erros de localStorage - não é crítico
-      console.log("ℹ️ Cache local não disponível");
-    }
-  }, []);
-
   /**
    * Limpa dados antigos do localStorage para evitar QuotaExceededError
    */
