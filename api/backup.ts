@@ -56,18 +56,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // Em dev local ou chamadas internas, permitir acesso
-  const host = req.headers.host || "";
-  const referer = req.headers.referer || req.headers.referrer || "";
-  const isLocalDev = host.includes("localhost") || host.includes("127.0.0.1");
-  const isInternalCall = referer.includes(host) || referer.includes("vercel.app");
+  // Em dev local, permitir acesso sem auth para facilitar desenvolvimento
+  const host = req.headers.host || ''
+  const isLocalDev = host.includes('localhost') || host.includes('127.0.0.1')
 
-  if (!isLocalDev && !isInternalCall && !isAuthorized(req)) {
-    return res.status(401).json({
-      error: "Unauthorized",
-      message:
-        "Authentication required for backup operations. Provide Bearer token, x-api-key header, or access from localhost.",
-    });
+  if (!isLocalDev && !isAuthorized(req)) {
+    return res.status(401).json({ 
+      error: 'Unauthorized',
+      message: 'Authentication required for backup operations. Provide Bearer token, x-api-key header, or access from localhost.'
+    })
   }
 
   try {

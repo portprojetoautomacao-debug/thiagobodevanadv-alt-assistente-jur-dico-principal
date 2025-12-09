@@ -108,12 +108,26 @@ function handleMonitoringRoute(taskType: string): AnalysisResult {
   };
 }
 
-/**
- * Processa rota padrão
- */
-async function handleDefaultRoute(task: AgentTask): Promise<AnalysisResult> {
-  if (task.data.text) {
-    return await handleIntimationRoute(task);
+// Helper to compute and assign startDate/endDate from a 'deadline' object
+function applyDeadlineDates (analysisData: AnalysisResult["data"] | null | undefined)
+{
+  if (!analysisData?.deadline?.days) return;
+
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+
+  if (analysisData.deadline.type === "úteis") {
+    // Add business days (simple approach - doesn't consider holidays)
+    let daysAdded = 0;
+    while (daysAdded < analysisData.deadline.days) {
+      endDate.setDate(endDate.getDate() + 1);
+      const dayOfWeek = endDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        daysAdded++;
+      }
+    }
+  } else {
+    endDate.setDate(endDate.getDate() + analysisData.deadline.days);
   }
   return {
     success: true,

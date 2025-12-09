@@ -7,39 +7,76 @@
  * ✨ REFATORADO: Usa minuta-service.ts centralizado
  */
 
-import { useKV } from "@/hooks/use-kv";
-import type { AgentTask } from "@/lib/agents";
-import { createMinutaFromAgentTask } from "@/services/minuta-service";
-import type { Minuta } from "@/types";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef, useState, useMemo } from 'react'
+import { useKV } from '@/hooks/use-kv'
+import { toast } from 'sonner'
+import type { Minuta } from '@/types'
+import type { AgentTask } from '@/lib/agents'
+
+// Tipos de documento para mapeamento
+const DOCUMENT_TYPE_MAP: Record<string, Minuta['tipo']> = {
+  'petição': 'peticao',
+  'peticao': 'peticao',
+  'petição inicial': 'peticao',
+  'contestação': 'peticao',
+  'contestacao': 'peticao',
+  'manifestação': 'peticao',
+  'manifestacao': 'peticao',
+  'defesa': 'peticao',
+  'recurso': 'recurso',
+  'apelação': 'recurso',
+  'apelacao': 'recurso',
+  'agravo': 'recurso',
+  'embargos': 'recurso',
+  'contrato': 'contrato',
+  'acordo': 'contrato',
+  'parecer': 'parecer',
+  'procuração': 'procuracao',
+  'procuracao': 'procuracao',
+}
+
+function determineMinutaTipo(documentType?: string): Minuta['tipo'] {
+  if (!documentType) return 'peticao'
+
+  const type = documentType.toLowerCase().trim()
+
+  // Busca correspondência exata primeiro
+  if (DOCUMENT_TYPE_MAP[type]) return DOCUMENT_TYPE_MAP[type]
+
+  // Busca parcial
+  for (const [key, value] of Object.entries(DOCUMENT_TYPE_MAP)) {
+    if (type.includes(key)) return value
+  }
+
+  return 'outro'
+}
 
 export function useAutoMinuta() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
   const [completedTasks] = useKV<AgentTask[]>("completed-agent-tasks", []);
 
   // Rastrear tarefas já processadas para evitar duplicatas
-  const processedTasksRef = useRef<Set<string>>(new Set());
+  const processedTasksRef = useRef<Set<string>>(new Set())
   // Track count in state to safely return from hook
-  const [processedTasksCount, setProcessedTasksCount] = useState(0);
+  const [processedTasksCount, setProcessedTasksCount] = useState(0)
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
-    if (globalThis.window !== undefined) {
+    if (typeof window !== 'undefined') {
       // Schedule to avoid synchronous setState in effect
       const timeoutId = setTimeout(() => {
         try {
-          const stored = localStorage.getItem("processed-petition-tasks");
+          const stored = localStorage.getItem('processed-petition-tasks')
           if (stored) {
-            const parsed = JSON.parse(stored) as string[];
-            processedTasksRef.current = new Set(parsed);
-            setProcessedTasksCount(parsed.length);
+            const parsed = JSON.parse(stored) as string[]
+            processedTasksRef.current = new Set(parsed)
+            setProcessedTasksCount(parsed.length)
           }
         } catch (e) {
-          console.error("[AutoMinuta] Erro ao carregar tarefas processadas:", e);
+          console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
         }
-      }, 0);
-      return () => clearTimeout(timeoutId);
+      }, 0)
+      return () => clearTimeout(timeoutId)
     }
   }, []);
 
@@ -143,6 +180,8 @@ export function useAutoMinuta() {
     [minutas, processedTasksCount]
   );
 
+  // Compute stats using useMemo to avoid recalculating on each render
+
   // Retornar estatísticas úteis
-  return stats;
+  return stats
 }
