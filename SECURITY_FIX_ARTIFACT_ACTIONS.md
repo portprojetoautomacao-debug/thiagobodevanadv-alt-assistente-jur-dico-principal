@@ -46,9 +46,9 @@ Total de 12 workflows atualizados:
 
 ### 🔍 Validação
 
-✅ Todos os 30 workflows validados após atualização  
-✅ Sintaxe YAML 100% conforme  
-✅ Sem erros de compatibilidade  
+⚠️ Atenção: Foram identificados erros de sintaxe YAML em alguns workflows após a atualização.
+❌ Sintaxe YAML apresenta problemas críticos em `.github/workflows/security-scan.yml`, `.github/workflows/advanced-tools.yml` e `.github/workflows/dependency-health.yml`.
+⚠️ Validação pendente: Correção dos erros necessária antes do merge para evitar quebra do pipeline CI/CD.
 
 ### 📚 Referências
 
