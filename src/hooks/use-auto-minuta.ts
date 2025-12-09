@@ -138,7 +138,7 @@ export function useAutoMinuta() {
         localStorage.setItem(
           "processed-petition-tasks",
           JSON.stringify([...processedTasksRef.current])
-        )
+        );
         // Update count state
         setProcessedTasksCount(processedTasksRef.current.size)
       } catch (e) {
