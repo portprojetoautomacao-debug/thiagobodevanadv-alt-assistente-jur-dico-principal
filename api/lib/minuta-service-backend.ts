@@ -45,15 +45,15 @@ export const MinutaSchema = z.object({
   tipo: z.enum(["peticao", "contrato", "parecer", "recurso", "procuracao", "outro"]),
   conteudo: z.string().min(1, "Conteúdo é obrigatório"),
   status: z.enum(["rascunho", "em-revisao", "pendente-revisao", "finalizada", "arquivada"]),
-  criadoEm: z.iso.datetime(),
-  atualizadoEm: z.iso.datetime(),
+  criadoEm: z.string().datetime(),
+  atualizadoEm: z.string().datetime(),
   autor: z.string().min(1),
   googleDocsId: z.string().optional(),
   googleDocsUrl: z.url().optional(),
   criadoPorAgente: z.boolean().optional(),
   agenteId: z.string().optional(),
   templateId: z.string().optional(),
-  expedienteId: z.string().optional(),
+  ExpedienteId: z.string().optional(),
   variaveis: z.record(z.string(), z.string()).optional(),
 });
 

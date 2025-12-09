@@ -106,7 +106,7 @@ export const AgentSchema = z.object({
   type: z.string().min(1),
   capabilities: z.array(z.string()).optional().default([]),
   status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]).optional(),
-  lastActive: z.iso.datetime().optional(),
+  lastActive: z.string().datetime().optional(),
 });
 
 export const AgentInputSchema = z.object({

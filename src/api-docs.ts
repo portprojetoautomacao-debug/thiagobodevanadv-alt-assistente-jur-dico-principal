@@ -193,5 +193,5 @@ export type UseAIStreaming = ReturnType<typeof import("./hooks/use-ai-streaming"
  */
 
 export type { Process, Prazo, Cliente, Minuta, FinancialEntry } from "./types";
-export type { AgentTask, AgentCapability } from "./lib/agents";
+export type { AgentTask } from "./lib/agents";
 export type { ProcessValidated, PrazoValidated } from "./schemas/process.schema";

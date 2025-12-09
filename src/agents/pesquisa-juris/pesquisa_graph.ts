@@ -18,7 +18,7 @@ export class PesquisaJurisAgent extends LangGraphAgent {
         temperature: 0.4,
       },
       {
-        sessionId: state.data?.sessionId || `pesquisa_session_${Date.now()}`,
+        sessionId: state.data?.sessionId as string || `pesquisa_session_${Date.now()}`,
         turn: state.retryCount + 1,
         messages: state.messages.map((m) => ({
           role: m.role as "user" | "assistant" | "system",

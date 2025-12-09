@@ -18,12 +18,15 @@ export const numeroCNJSchema = z.string().regex(
 // Schema para prazo processual
 export const prazoSchema = z.object({
   id: z.string().uuid(),
+  processId: z.string().uuid(),
   descricao: z.string().min(3, "Descrição deve ter no mínimo 3 caracteres"),
   dataInicio: z.string().datetime(),
+  diasCorridos: z.number().int().min(0),
+  tipoPrazo: z.enum(["cpc", "clt"]),
   dataFinal: z.string().datetime(),
-  tipo: z.enum(["CPC", "CLT"]),
-  urgente: z.boolean().default(false),
   concluido: z.boolean().default(false),
+  urgente: z.boolean().default(false),
+  createdAt: z.string().datetime(),
 });
 
 // Schema para processo completo
@@ -39,8 +42,21 @@ export const processSchema = z.object({
   vara: z.string().min(3, "Vara inválida").optional(),
   prazos: z.array(prazoSchema).default([]),
   observacoes: z.string().max(5000, "Observações muito longas").optional(),
-  criadoEm: z.string().datetime(),
-  atualizadoEm: z.string().datetime(),
+  // Campos obrigatórios do tipo Process
+  dataDistribuicao: z.string().datetime(),
+  dataUltimaMovimentacao: z.string().datetime(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  // Campos opcionais adicionais
+  fase: z.string().optional(),
+  valor: z.number().min(0).optional(),
+  notas: z.string().optional(),
+  expedientesCount: z.number().int().min(0).optional(),
+  intimacoesCount: z.number().int().min(0).optional(),
+  minutasCount: z.number().int().min(0).optional(),
+  documentosCount: z.number().int().min(0).optional(),
+  lastExpedienteAt: z.string().datetime().optional(),
+  lastMinutaAt: z.string().datetime().optional(),
 });
 
 // ============================================

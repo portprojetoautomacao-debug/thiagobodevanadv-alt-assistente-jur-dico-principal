@@ -107,7 +107,7 @@ export interface Expediente {
   conteudo?: string;
   content?: string;
   descricao?: string;
-  dataRecebimento: string;
+  dataRecebimento?: string;
   receivedAt?: string;
   prazoFatal?: string;
   deadline?:
@@ -140,6 +140,16 @@ export interface Expediente {
   source?: string;
   createdAt?: string;
   data?: string;
+  // Campos adicionais para validação
+  status?: "pendente" | "em-analise" | "processado" | "arquivado" | "erro";
+  prioridade?: "baixa" | "media" | "alta" | "urgente" | "critica";
+  prazo?: {
+    dataFinal: string;
+    diasUteis?: number;
+    diasCorridos?: number;
+    tipo?: "uteis" | "corridos";
+    urgente?: boolean;
+  };
 }
 
 export interface Appointment {

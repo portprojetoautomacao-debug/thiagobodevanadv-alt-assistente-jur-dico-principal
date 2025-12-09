@@ -14,7 +14,7 @@ export class FinanceiroAgent extends LangGraphAgent {
         temperature: 0.2,
       },
       {
-        sessionId: state.data?.sessionId || `financeiro_session_${Date.now()}`,
+        sessionId: state.data?.sessionId as string || `financeiro_session_${Date.now()}`,
         turn: state.retryCount + 1,
         messages: state.messages.map((m) => ({
           role: m.role as "user" | "assistant" | "system",

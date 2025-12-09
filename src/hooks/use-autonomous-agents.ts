@@ -381,7 +381,7 @@ export function useAutonomousAgents() {
       return current;
     }
 
-    const updated = [...current, validation.data as AgentTask];
+    const updated = [...current, validation.data || task];
     return sortTasksByPriority(updated);
   }, []);
 
@@ -671,7 +671,7 @@ export function useAutonomousAgents() {
           return current || [];
         }
 
-        return updateAgentInList(current || [], agentId, validation.data as Agent);
+        return updateAgentInList(current || [], agentId, validation.data || agent);
       });
     },
     [setAgents, findAgentById]
@@ -696,7 +696,7 @@ export function useAutonomousAgents() {
           return current || [];
         }
 
-        return updateAgentInList(current || [], agentId, validation.data as Agent);
+        return updateAgentInList(current || [], agentId, validation.data);
       });
     },
     [setAgents, findAgentById, getNewAgentStatus]

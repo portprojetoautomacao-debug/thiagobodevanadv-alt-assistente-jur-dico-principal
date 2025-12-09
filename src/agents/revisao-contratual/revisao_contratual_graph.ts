@@ -18,7 +18,7 @@ export class RevisaoContratualAgent extends LangGraphAgent {
         temperature: 0.2,
       },
       {
-        sessionId: state.data?.sessionId || `revisao_session_${Date.now()}`,
+        sessionId: state.data?.sessionId as string || `revisao_session_${Date.now()}`,
         turn: state.retryCount + 1,
         messages: state.messages.map((m) => ({
           role: m.role as "user" | "assistant" | "system",

@@ -8,9 +8,9 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useKV } from "./use-kv";
-import { validateExpediente, type Expediente } from "@/schemas/expediente.schema";
+import { validateExpediente } from "@/schemas/expediente.schema";
 import { normalizeProcessNumber } from "@/lib/process-number-utils";
-import type { Process } from "@/types";
+import type { Process, Expediente } from "@/types";
 
 export function useExpedientesValidated() {
   const [expedientes, setExpedientes] = useKV<Expediente[]>("expedientes", []);
@@ -51,13 +51,12 @@ export function useExpedientesValidated() {
    * Adicionar expediente com validação
    */
   const addExpediente = useCallback(
-    (expedienteData: Omit<Expediente, "id" | "criadoEm" | "atualizadoEm">) => {
+    (expedienteData: Omit<Expediente, "id" | "createdAt">) => {
       const now = new Date().toISOString();
       const newExpediente = {
         ...expedienteData,
         id: crypto.randomUUID(),
-        criadoEm: now,
-        atualizadoEm: now,
+        createdAt: now,
       };
 
       const validation = validateExpediente(newExpediente);
@@ -86,7 +85,7 @@ export function useExpedientesValidated() {
    * Adicionar múltiplos expedientes com validação
    */
   const addExpedientes = useCallback(
-    (novosExpedientes: Omit<Expediente, "id" | "criadoEm" | "atualizadoEm">[]) => {
+    (novosExpedientes: Omit<Expediente, "id" | "createdAt">[]) => {
       const now = new Date().toISOString();
       const validados: Expediente[] = [];
       const erros: string[] = [];
@@ -95,8 +94,7 @@ export function useExpedientesValidated() {
         const newExpediente = {
           ...exp,
           id: crypto.randomUUID(),
-          criadoEm: now,
-          atualizadoEm: now,
+          createdAt: now,
         };
 
         const validation = validateExpediente(newExpediente);
@@ -138,7 +136,6 @@ export function useExpedientesValidated() {
             const updatedExpediente = {
               ...exp,
               ...updates,
-              atualizadoEm: new Date().toISOString(),
             };
 
             const validation = validateExpediente(updatedExpediente);

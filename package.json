@@ -39,7 +39,10 @@
     "sonar:local:old": "node sonar-scanner.mjs",
     "sonar:local:esm": "node --experimental-loader node:module ./sonar-scanner.mjs",
     "setup:mcp": "pwsh -ExecutionPolicy Bypass -File scripts/verify-serena-setup.ps1",
-    "setup:mcp:bash": "bash scripts/verify-serena-setup.sh"
+    "setup:mcp:bash": "bash scripts/verify-serena-setup.sh",
+    "qdrant:init": "tsx scripts/init-qdrant-collection.ts",
+    "qdrant:test": "tsx scripts/test-qdrant-connection.ts",
+    "qdrant:populate-datajud": "tsx scripts/populate-qdrant-datajud.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -121,6 +124,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "framer-motion": "^12.6.2",
     "fuse.js": "^7.0.0",
     "lucide-react": "^0.468.0",
@@ -163,6 +167,7 @@
     "jsdom": "^26.0.0",
     "lodash.throttle": "^4.1.1",
     "prettier": "^3.4.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vite-plugin-pwa": "^0.21.1",
     "vitest": "^2.1.8"

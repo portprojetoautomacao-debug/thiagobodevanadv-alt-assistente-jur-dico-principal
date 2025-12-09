@@ -1160,7 +1160,7 @@ curl https://seu-app.vercel.app/api/expedientes
 
 **Advogado monitorado:** Thiago Bodevan Veiga - OAB/MG 184.404
 
-**Tribunais configurados:** TJMG, TRT3, TST, STJ, TRF1, TRF6
+**Tribunais configurados:** TJMG, TRT3, TST, STJ, TRF1, TRF6, TJSP
 
 **Resultado em 27/11/2025:**
 
@@ -1419,7 +1419,7 @@ npm run dev
 ### 📚 Documentação de Referência
 
 | Documento                    | Link                                                                                                                                           |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Guia Completo v2.0.0**     | [`docs/SENTRY_AI_MONITORING.md`](docs/SENTRY_AI_MONITORING.md)                                                                                 |
 | **Exemplos Práticos**        | [`docs/SENTRY_AI_AGENTS_EXAMPLES.tsx`](docs/SENTRY_AI_AGENTS_EXAMPLES.tsx)                                                                     |
 | **Guia de Testes**           | [`docs/SENTRY_AI_TESTING_GUIDE.md`](docs/SENTRY_AI_TESTING_GUIDE.md)                                                                           |

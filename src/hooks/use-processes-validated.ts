@@ -14,13 +14,15 @@ export function useProcessesValidated() {
 
   // Adicionar processo com validação
   const addProcess = useCallback(
-    (processData: Omit<Process, "id" | "criadoEm" | "atualizadoEm">) => {
+    (processData: Omit<Process, "id" | "createdAt" | "updatedAt" | "dataDistribuicao" | "dataUltimaMovimentacao">) => {
       const now = new Date().toISOString();
       const newProcess = {
         ...processData,
         id: crypto.randomUUID(),
-        criadoEm: now,
-        atualizadoEm: now,
+        dataDistribuicao: now,
+        dataUltimaMovimentacao: now,
+        createdAt: now,
+        updatedAt: now,
       };
 
       const validation = validateProcess(newProcess);
@@ -48,7 +50,7 @@ export function useProcessesValidated() {
             const updatedProcess = {
               ...p,
               ...updates,
-              atualizadoEm: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
             };
 
             const validation = validateProcess(updatedProcess);

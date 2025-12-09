@@ -14,7 +14,7 @@ export class AnaliseDocumentalAgent extends LangGraphAgent {
         temperature: 0.3,
       },
       {
-        sessionId: state.data?.sessionId || `analise_doc_session_${Date.now()}`,
+        sessionId: state.data?.sessionId as string || `analise_doc_session_${Date.now()}`,
         turn: state.retryCount + 1,
         messages: state.messages.map((m) => ({
           role: m.role as "user" | "assistant" | "system",

@@ -314,7 +314,7 @@ export async function createInvokeAgentSpan<T>(
     {
       name: `invoke_agent ${config.agentName}`,
       op: "gen_ai.invoke_agent",
-      attributes: sanitizedAttributes,
+      attributes: sanitizedAttributes as Record<string, any>,
     },
     async (span) => {
       try {
