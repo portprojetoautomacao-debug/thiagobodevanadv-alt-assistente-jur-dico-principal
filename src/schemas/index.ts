@@ -1,12 +1,12 @@
 /**
  * Index central para todos os schemas Zod do sistema
- * 
+ *
  * Centraliza exports de:
  * - Schemas de processo, cliente, minuta, financeiro
  * - Schemas de agentes IA e tarefas
  * - Schemas de expedientes
  * - Validadores e helpers
- * 
+ *
  * @module schemas
  */
 
@@ -26,14 +26,14 @@ export {
   cnpjSchema,
   telefoneSchema,
   emailSchema,
-  
+
   // Types
   type ProcessValidated,
   type PrazoValidated,
   type ClienteValidated,
   type MinutaValidated,
   type FinancialEntryValidated,
-  
+
   // Validadores
   validateProcess,
   validateCliente,
@@ -52,14 +52,14 @@ export {
   agentSchema,
   agentTaskSchema,
   agentTaskResultSchema,
-  
+
   // Enums
   AgentTypeEnum,
   AgentTaskTypeEnum,
   TaskPriorityEnum,
   TaskStatusEnum,
   AgentStatusEnum,
-  
+
   // Types
   type Agent,
   type AgentTask,
@@ -69,12 +69,12 @@ export {
   type TaskPriority,
   type TaskStatus,
   type AgentStatus,
-  
+
   // Validadores
   validateAgent,
   validateAgentTask,
   validateAgentTaskResult,
-  
+
   // Helpers
   canProcessTask,
   isTaskExpired,
@@ -88,24 +88,24 @@ export {
 export {
   // Schemas
   expedienteSchema,
-  
+
   // Enums
   ExpedienteTipoEnum,
   ExpedienteSourceEnum,
   ExpedienteStatusEnum,
   ExpedientePrioridadeEnum,
-  
+
   // Types
   type Expediente,
   type ExpedienteTipo,
   type ExpedienteSource,
   type ExpedienteStatus,
   type ExpedientePrioridade,
-  
+
   // Validadores
   validateExpediente,
   validateExpedientes,
-  
+
   // Helpers
   isPrazoVencendo,
   isPrazoVencido,
@@ -119,7 +119,7 @@ export {
 
 /**
  * Objeto consolidado com todos os schemas
- * Útil para importação única
+ * ï¿½til para importaï¿½ï¿½o ï¿½nica
  */
 export const schemas = {
   // Process
@@ -128,19 +128,19 @@ export const schemas = {
   cliente: clienteSchema,
   minuta: minutaSchema,
   financialEntry: financialEntrySchema,
-  
+
   // Agent
   agent: agentSchema,
   agentTask: agentTaskSchema,
   agentTaskResult: agentTaskResultSchema,
-  
+
   // Expediente
   expediente: expedienteSchema,
 };
 
 /**
  * Objeto consolidado com todos os validadores
- * Útil para importação única
+ * ï¿½til para importaï¿½ï¿½o ï¿½nica
  */
 export const validators = {
   // Process
@@ -148,12 +148,12 @@ export const validators = {
   cliente: validateCliente,
   minuta: validateMinuta,
   financialEntry: validateFinancialEntry,
-  
+
   // Agent
   agent: validateAgent,
   agentTask: validateAgentTask,
   agentTaskResult: validateAgentTaskResult,
-  
+
   // Expediente
   expediente: validateExpediente,
   expedientes: validateExpedientes,

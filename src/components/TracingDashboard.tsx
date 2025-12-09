@@ -67,60 +67,83 @@ export default function TracingDashboard({
   agentIds: _agentIds = [],
   autoRefresh = true,
   refreshInterval = 5000,
-}: TracingDashboardProps) {
-  const [traces, setTraces] = useState<Span[]>([]);
-  const [stats, setStats] = useState(tracingService.getStats());
-  const [selectedTrace, setSelectedTrace] = useState<string | null>(null);
-  const [agentMetrics, setAgentMetrics] = useState<
-    Record<string, ReturnType<typeof getAgentMetrics>>
-  >({});
-  const [llmMetrics, setLLMMetrics] = useState<ReturnType<
-    typeof getLLMMetrics
-  > | null>(null);
+}: Readonly<TracingDashboardProps>) {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [spans, setSpans] = useState<Span[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const refreshData = useCallback(() => {
-    setTraces(tracingService.getTraces());
-    setStats(tracingService.getStats());
-    setLLMMetrics(getLLMMetrics());
+  const loadData = useCallback(() => {
+    setIsRefreshing(true);
+    try {
+      const allSpans = tracingService.getSpans();
+      // Ordenar por data decrescente
+      const sortedSpans = [...allSpans].sort((a, b) => b.startTime - a.startTime);
+      setSpans(sortedSpans);
 
-    const metrics: Record<string, ReturnType<typeof getAgentMetrics>> = {};
-    agentIds.forEach((id) => {
-      metrics[id] = getAgentMetrics(id);
-    });
-    setAgentMetrics(metrics);
-  }, [agentIds]);
-
-  // Carregamento inicial e auto-refresh
-  useEffect(() => {
-    // Schedule initial refresh to avoid synchronous setState in effect
-    const initialRefreshTimeout = globalThis.setTimeout(refreshData, 0);
-
-    if (autoRefresh) {
-      const interval = setInterval(refreshData, refreshInterval);
-      return () => {
-        globalThis.clearTimeout(initialRefreshTimeout);
-        clearInterval(interval);
+      // Calculate metrics locally
+      const agentMetrics: Record<string, AgentMetric> = {};
+      const llmMetrics: LLMMetric = {
+        totalTokens: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        estimatedCost: 0,
       };
-    }
-    
-    return () => {
-      globalThis.clearTimeout(initialRefreshTimeout);
-    };
-  }, [autoRefresh, refreshInterval, refreshData]);
 
-  const handleClearTraces = () => {
-    tracingService.clearTraces();
-    refreshData();
-  };
+      let errorCount = 0;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ok":
-        return "text-green-600 bg-green-100";
-      case "error":
-        return "text-red-600 bg-red-100";
-      default:
-        return "text-yellow-600 bg-yellow-100";
+      allSpans.forEach((span) => {
+        const duration = span.endTime ? span.endTime - span.startTime : 0;
+
+        if (span.status === "error") {
+          errorCount++;
+        }
+
+        // Agent Metrics
+        const agentId = span.attributes["agent.id"] as string;
+        if (agentId) {
+          if (!agentMetrics[agentId]) {
+            agentMetrics[agentId] = {
+              count: 0,
+              avgDuration: 0,
+              errors: 0,
+              lastActive: 0,
+            };
+          }
+
+          const metric = agentMetrics[agentId];
+          const newCount = metric.count + 1;
+          metric.avgDuration = (metric.avgDuration * metric.count + duration) / newCount;
+          metric.count = newCount;
+          if (span.status === "error") metric.errors++;
+          if (span.startTime > metric.lastActive) metric.lastActive = span.startTime;
+        }
+
+        // LLM Metrics
+        if (span.attributes["ai.model"]) {
+          const promptTokens = (span.attributes["ai.prompt_tokens"] as number) || 0;
+          const completionTokens = (span.attributes["ai.completion_tokens"] as number) || 0;
+          const totalTokens = promptTokens + completionTokens;
+
+          llmMetrics.promptTokens += promptTokens;
+          llmMetrics.completionTokens += completionTokens;
+          llmMetrics.totalTokens += totalTokens;
+
+          // Estimativa simples de custo (ex: /usr/bin/bash.15 / 1M input, /usr/bin/bash.60 / 1M output para gpt-4o-mini)
+          // Ajustar conforme necessário
+          llmMetrics.estimatedCost += (promptTokens * 0.15 + completionTokens * 0.6) / 1_000_000;
+        }
+      });
+
+      setMetrics({
+        agents: agentMetrics,
+        llm: llmMetrics,
+        totalSpans: allSpans.length,
+        errorRate: allSpans.length > 0 ? (errorCount / allSpans.length) * 100 : 0,
+      });
+    } catch (error) {
+      console.error("Error loading tracing data:", error);
+    } finally {
+      setIsRefreshing(false);
     }
   }, []);
 

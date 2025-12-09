@@ -1,5 +1,5 @@
 /**
- * Hook otimizado para gestão financeira com validação Zod
+ * Hook otimizado para gestï¿½o financeira com validaï¿½ï¿½o Zod
  */
 
 import { useCallback } from "react";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useKV } from "./use-kv";
 import { validateFinancialEntry, type FinancialEntryValidated } from "@/schemas/process.schema";
 
-// Tipo FinancialEntry (compatível com o sistema existente)
+// Tipo FinancialEntry (compatï¿½vel com o sistema existente)
 export interface FinancialEntry {
   id: string;
   type: "income" | "expense";
@@ -23,7 +23,7 @@ export interface FinancialEntry {
 export function useFinancialValidated() {
   const [entries, setEntries] = useKV<FinancialEntry[]>("financial-entries", []);
 
-  // Adicionar lançamento financeiro com validação
+  // Adicionar lanï¿½amento financeiro com validaï¿½ï¿½o
   const addEntry = useCallback(
     (entryData: Omit<FinancialEntry, "id" | "criadoEm" | "atualizadoEm">) => {
       const now = new Date().toISOString();
@@ -36,19 +36,19 @@ export function useFinancialValidated() {
 
       const validation = validateFinancialEntry(newEntry);
       if (!validation.isValid) {
-        console.error("Validação falhou:", validation.errors);
-        toast.error("Dados do lançamento inválidos. Verifique os campos obrigatórios.");
+        console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+        toast.error("Dados do lanï¿½amento invï¿½lidos. Verifique os campos obrigatï¿½rios.");
         return null;
       }
 
       setEntries((prev) => [...prev, validation.data as FinancialEntry]);
-      toast.success("Lançamento adicionado com sucesso!");
+      toast.success("Lanï¿½amento adicionado com sucesso!");
       return validation.data as FinancialEntry;
     },
     [setEntries]
   );
 
-  // Atualizar lançamento com validação
+  // Atualizar lanï¿½amento com validaï¿½ï¿½o
   const updateEntry = useCallback(
     (id: string, updates: Partial<FinancialEntry>) => {
       let updated: FinancialEntry | null = null;
@@ -64,13 +64,13 @@ export function useFinancialValidated() {
 
             const validation = validateFinancialEntry(updatedEntry);
             if (!validation.isValid) {
-              console.error("Validação falhou:", validation.errors);
-              toast.error("Dados inválidos. Atualização cancelada.");
+              console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+              toast.error("Dados invï¿½lidos. Atualizaï¿½ï¿½o cancelada.");
               return e;
             }
 
             updated = validation.data as FinancialEntry;
-            toast.success("Lançamento atualizado!");
+            toast.success("Lanï¿½amento atualizado!");
             return updated;
           }
           return e;
@@ -82,16 +82,16 @@ export function useFinancialValidated() {
     [setEntries]
   );
 
-  // Remover lançamento
+  // Remover lanï¿½amento
   const deleteEntry = useCallback(
     (id: string) => {
       setEntries((prev) => prev.filter((e) => e.id !== id));
-      toast.success("Lançamento removido!");
+      toast.success("Lanï¿½amento removido!");
     },
     [setEntries]
   );
 
-  // Buscar lançamento por ID
+  // Buscar lanï¿½amento por ID
   const getEntryById = useCallback(
     (id: string) => {
       return entries.find((e) => e.id === id);
@@ -99,7 +99,7 @@ export function useFinancialValidated() {
     [entries]
   );
 
-  // Buscar lançamentos por tipo
+  // Buscar lanï¿½amentos por tipo
   const getEntriesByType = useCallback(
     (type: "income" | "expense") => {
       return entries.filter((e) => e.type === type);
@@ -107,7 +107,7 @@ export function useFinancialValidated() {
     [entries]
   );
 
-  // Buscar lançamentos por processo
+  // Buscar lanï¿½amentos por processo
   const getEntriesByProcessId = useCallback(
     (processId: string) => {
       return entries.filter((e) => e.processId === processId);
@@ -115,7 +115,7 @@ export function useFinancialValidated() {
     [entries]
   );
 
-  // Buscar lançamentos por categoria
+  // Buscar lanï¿½amentos por categoria
   const getEntriesByCategory = useCallback(
     (category: string) => {
       return entries.filter((e) => e.category === category);
@@ -123,7 +123,7 @@ export function useFinancialValidated() {
     [entries]
   );
 
-  // Buscar lançamentos por período
+  // Buscar lanï¿½amentos por perï¿½odo
   const getEntriesByPeriod = useCallback(
     (startDate: string, endDate: string) => {
       const start = new Date(startDate);
@@ -140,7 +140,7 @@ export function useFinancialValidated() {
   const getTotalIncome = useCallback(
     (startDate?: string, endDate?: string) => {
       let filtered = entries.filter((e) => e.type === "income");
-      
+
       if (startDate && endDate) {
         filtered = filtered.filter((e) => {
           const entryDate = new Date(e.date);
@@ -157,7 +157,7 @@ export function useFinancialValidated() {
   const getTotalExpense = useCallback(
     (startDate?: string, endDate?: string) => {
       let filtered = entries.filter((e) => e.type === "expense");
-      
+
       if (startDate && endDate) {
         filtered = filtered.filter((e) => {
           const entryDate = new Date(e.date);
@@ -180,7 +180,7 @@ export function useFinancialValidated() {
     [getTotalIncome, getTotalExpense]
   );
 
-  // Obter categorias únicas
+  // Obter categorias ï¿½nicas
   const getUniqueCategories = useCallback(() => {
     const categories = entries.map((e) => e.category);
     return Array.from(new Set(categories)).sort();

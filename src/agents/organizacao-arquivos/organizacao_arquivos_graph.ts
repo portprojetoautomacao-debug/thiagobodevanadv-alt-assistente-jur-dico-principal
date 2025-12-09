@@ -5,10 +5,10 @@ import { createInvokeAgentSpan, createChatSpan } from "@/lib/sentry-gemini-integ
 
 export class OrganizacaoArquivosAgent extends LangGraphAgent {
   protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
-    // ?? Instrumentar invocação do agente Organização de Arquivos
+    // ?? Instrumentar invocaï¿½ï¿½o do agente Organizaï¿½ï¿½o de Arquivos
     return createInvokeAgentSpan(
       {
-        agentName: "Organização de Arquivos",
+        agentName: "Organizaï¿½ï¿½o de Arquivos",
         system: "gemini",
         model: "gemini-2.5-pro",
         temperature: 0.3,
@@ -34,7 +34,7 @@ export class OrganizacaoArquivosAgent extends LangGraphAgent {
         // Usar LLM para categorizar arquivos
         const categorizacao = await createChatSpan(
           {
-            agentName: "Organização de Arquivos",
+            agentName: "Organizaï¿½ï¿½o de Arquivos",
             system: "gemini",
             model: "gemini-2.5-pro",
             temperature: 0.3,
@@ -43,7 +43,7 @@ export class OrganizacaoArquivosAgent extends LangGraphAgent {
             {
               role: "system",
               content:
-                "Você é um organizador de arquivos jurídicos. Categorize documentos por tipo, prioridade e processo.",
+                "Vocï¿½ ï¿½ um organizador de arquivos jurï¿½dicos. Categorize documentos por tipo, prioridade e processo.",
             },
             {
               role: "user",
@@ -51,21 +51,21 @@ export class OrganizacaoArquivosAgent extends LangGraphAgent {
 
 ${arquivos.map((a) => `- ${a.nome} (${a.tipo})`).join("\n")}
 
-Crie uma estrutura de pastas lógica:
-1. Por tipo de documento (petições, contratos, decisões, etc.)
-2. Por ordem cronológica
-3. Sugestões de nomenclatura padronizada`,
+Crie uma estrutura de pastas lï¿½gica:
+1. Por tipo de documento (petiï¿½ï¿½es, contratos, decisï¿½es, etc.)
+2. Por ordem cronolï¿½gica
+3. Sugestï¿½es de nomenclatura padronizada`,
             },
           ],
           async (chatSpan) => {
-            // Simular categorização
+            // Simular categorizaï¿½ï¿½o
             await new Promise((resolve) => setTimeout(resolve, 30));
 
             const estrutura = {
               pastas: [
                 {
                   nome: "01_Peticoes",
-                  arquivos: arquivos.filter((a) => a.tipo === "petição").length,
+                  arquivos: arquivos.filter((a) => a.tipo === "petiï¿½ï¿½o").length,
                 },
                 {
                   nome: "02_Contratos",
@@ -73,11 +73,13 @@ Crie uma estrutura de pastas lógica:
                 },
                 {
                   nome: "03_Decisoes",
-                  arquivos: arquivos.filter((a) => a.tipo === "decisão").length,
+                  arquivos: arquivos.filter((a) => a.tipo === "decisï¿½o").length,
                 },
                 {
                   nome: "04_Outros",
-                  arquivos: arquivos.filter((a) => !["petição", "contrato", "decisão"].includes(a.tipo)).length,
+                  arquivos: arquivos.filter(
+                    (a) => !["petiï¿½ï¿½o", "contrato", "decisï¿½o"].includes(a.tipo)
+                  ).length,
                 },
               ],
               nomenclatura: [
@@ -111,7 +113,7 @@ Crie uma estrutura de pastas lógica:
 
         return this.addAgentMessage(
           current,
-          `Organização concluída: ${categorizacao.totalOrganizado} arquivo(s) em ${categorizacao.pastas.length} pasta(s)`
+          `Organizaï¿½ï¿½o concluï¿½da: ${categorizacao.totalOrganizado} arquivo(s) em ${categorizacao.pastas.length} pasta(s)`
         );
       }
     );
