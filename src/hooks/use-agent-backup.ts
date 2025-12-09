@@ -1,5 +1,5 @@
-import { useEffect, useCallback, useState } from 'react';
-import { useKV } from './use-kv';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useKV } from "./use-kv";
 
 /**
  * Hook para backup dos dados dos agentes IA
@@ -129,7 +129,17 @@ export function useAgentBackup(options: BackupOptions) {
     }
   }, [userId]);
 
-      setLastBackup(backupData.timestamp);
+  /**
+   * Salva cache local simplificado (apenas metadados)
+   */
+  const saveToLocalCache = useCallback((backupData: BackupData) => {
+    try {
+      const cacheData = {
+        timestamp: backupData.timestamp,
+        userId: backupData.userId,
+        agentsCount: backupData.data.agents.length,
+        tasksCount: backupData.data.taskQueue.length,
+      };
 
       localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cacheData));
     } catch {
@@ -330,11 +340,11 @@ export function useAgentBackup(options: BackupOptions) {
 
     // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
-    if (agents.length > 0 && (now - lastBackup) > intervalMs) {
+    if (agents.length > 0 && now - lastBackup > intervalMs) {
       // Schedule to avoid synchronous setState in effect
       timeoutId = globalThis.setTimeout(createBackup, 0);
     }
-    
+
     // Configurar backup periódico
     const timer = setInterval(() => {
       if (agents.length > 0) {

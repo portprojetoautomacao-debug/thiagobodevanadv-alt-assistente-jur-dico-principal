@@ -1048,9 +1048,9 @@ Crie o workflow de controladoria para esta tarefa.`,
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(exp.receivedAt || exp.dataRecebimento || new Date().toISOString()).toLocaleDateString(
-                              "pt-BR"
-                            )}
+                            {new Date(
+                              exp.receivedAt || exp.dataRecebimento || new Date().toISOString()
+                            ).toLocaleDateString("pt-BR")}
                             {exp.tribunal && <span className="ml-1">• {exp.tribunal}</span>}
                           </p>
                         </div>
@@ -1062,7 +1062,7 @@ Crie o workflow de controladoria para esta tarefa.`,
                       </div>
                     </button>
                   ))
-                }
+                )}
               </CardContent>
             </Card>
           </div>

@@ -122,7 +122,7 @@ export const expedienteSchema = z.object({
       agenteId: z.string().optional(),
       confidence: z.number().min(0).max(1).optional(),
       proximasAcoes: z.array(z.string()).optional(),
-      tarefasGeradas: z.array(z.string().uuid()).optional(),
+      tarefasGeradas: z.array(z.string()).optional(),
       observacoes: z.string().optional(),
     })
     .optional(),
