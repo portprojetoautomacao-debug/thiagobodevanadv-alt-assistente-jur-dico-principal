@@ -451,7 +451,7 @@ const EmailUnion = z.union([
 - 🤖 **Prompt Optimization**: DSPy para melhores resultados
 - 🤖 **Vector Search**: Busca semântica avançada
 
-**Novação Tecnológica (adicionado)**
+**Inovação Tecnológica (adicionado)**
 - 🔬 **Gemini 3.0 (early access)** — preparação de integração e testes de compatibilidade para migração futura quando estiver disponível.
 - 🔬 **Agentes multimodais (voz, imagem)** — suporte a input/output multimodal para enriquecer análises e extração de evidências.
 - 🔬 **Blockchain para auditoria** — uso de Ledger distribuído para registrar eventos críticos de auditoria imutáveis.
