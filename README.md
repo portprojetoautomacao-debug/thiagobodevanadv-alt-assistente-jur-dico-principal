@@ -11,6 +11,101 @@
 
 ---
 
+## 🚨 EMERGÊNCIAS E MANUTENÇÃO
+
+### 📋 Runbook de Emergência
+
+Para interrupções de serviço, erros críticos ou comportamento anômalo, consulte:
+
+**📖 [RUNBOOK COMPLETO](docs/RUNBOOK.md)**
+
+**Links Rápidos:**
+- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#-interrupção-total-do-serviço)
+- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#-erro-crítico-em-produção)
+- 🟡 [Degradação de Performance](docs/RUNBOOK.md#-degradação-de-performance)
+- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#-agentes-ia-com-comportamento-anômalo)
+
+### ✅ Checklist Diário Obrigatório
+
+**Executar todo dia às 09:00 BRT (~16 minutos):**
+
+```bash
+# 1. Health Check (2 min)
+curl https://assistente-juridico-p.vercel.app/api/health
+# Esperado: {"status":"ok","timestamp":"..."}
+
+# 2. Verificar Erros Sentry (3 min)
+# https://sentry.io → Filtrar: is:unresolved, last 24h
+# Meta: 0 erros críticos, < 5 erros médios
+
+# 3. Type Check (1 min)
+npm run type-check
+# Esperado: ✓ No TypeScript errors
+
+# 4. Lint (1 min)
+npm run lint
+# Esperado: ✓ 0 errors, ≤150 warnings
+
+# 5. Testes Unitários (2 min)
+npm run test:run
+# Esperado: Test Files X passed (X)
+
+# 6. Build (3 min)
+npm run build
+# Esperado: ✓ built in Xs
+
+# 7. Métricas Vercel (2 min)
+# https://vercel.com/.../analytics
+# LCP < 2.5s, Error Rate < 1%
+
+# 8. Recursos (2 min)
+# Upstash: < 90% memória
+# Qdrant: < 900MB storage
+# Gemini: < 80% quota
+```
+
+**Se algum check falhar:**
+1. Criar issue no GitHub com label `daily-check-failure`
+2. Notificar tech lead se crítico
+3. Consultar [RUNBOOK.md](docs/RUNBOOK.md) para procedimentos
+
+### 🔧 Comandos de Desenvolvimento
+
+```bash
+# Instalação
+npm install
+
+# Desenvolvimento local
+npm run dev
+# Acesse: http://localhost:5173
+
+# Verificações de qualidade
+npm run type-check    # TypeScript (0 erros esperados)
+npm run lint          # ESLint (≤150 warnings)
+npm run test          # Testes em watch mode
+npm run test:run      # Testes single run
+npm run build         # Build de produção
+
+# Verificações completas (antes de PR)
+npm run type-check && npm run lint && npm run test:run && npm run build
+```
+
+### 🏥 Endpoints de Health Check
+
+| Endpoint | Descrição | Timeout |
+|----------|-----------|---------|
+| `/api/health` | Status básico do sistema | 1s |
+| `/api/status` | Status detalhado (DB, AI, etc) | 3s |
+| `/api/agents?action=status` | Status dos 15 agentes IA | 2s |
+
+### 📊 Badges de Status
+
+[![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
+[![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-p.vercel.app/api/health)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+---
+
 ## 🎯 Versão Atual: 1.4.0 - LGPD Compliance
 
 ### 🔐 Novidades da v1.4.0
@@ -1406,7 +1501,7 @@ Esta seção documenta a análise técnica comparando o estado atual do sistema 
 #### ⚠️ Gaps Identificados
 
 | Item                        | Descrição                          | Prioridade |
-| --------------------------- | ---------------------------------- | ---------- |
+| -------------------------   | ---------------------------------- | ---------- |
 | Schemas Zod                 | Validação runtime de entrada/saída | 🟡 Média   |
 | Persona regional            | Especialização por comarca/estado  | 🟢 Baixa   |
 | `allowedActions` por agente | Restrição granular de ações        | 🟢 Baixa   |
@@ -2092,8 +2187,3 @@ No GitLab CI/CD Settings → Variables:
 - `./scripts/test-gitlab-agents.sh`: Testa conectividade
 - `./scripts/apply-k8s-manifests.sh`: Aplica manifests K8s
 - `./scripts/verify-gitlab-agents-k8s.sh`: Verifica infraestrutura
-
-<!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE #2 -->
-<!-- Este é o segundo teste para verificar se o webhook será acionado após deploy bem-sucedido -->
-<!-- 🧪 TESTE DA INTEGRAÇÃO VERCEL WEBHOOK - COMMIT DE TESTE -->
-<!-- Este comentário foi adicionado para forçar um novo deploy e testar a integração completa -->
