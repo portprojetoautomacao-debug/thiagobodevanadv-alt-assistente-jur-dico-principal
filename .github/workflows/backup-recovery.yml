@@ -167,40 +167,40 @@ jobs:
           echo "compressed_size: $BACKUP_SIZE" >> backups/$BACKUP_ID/metadata.json
           echo "hash: $BACKUP_HASH" >> backups/$BACKUP_ID/metadata.json
 
-    - name: ☁️  Upload para Armazenamento Seguro
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "☁️  Fazendo upload para armazenamento seguro..."
+      - name: ☁️  Upload para Armazenamento Seguro
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "☁️  Fazendo upload para armazenamento seguro..."
 
-        # Aqui você pode implementar upload para:
-        # - AWS S3
-        # - Azure Blob Storage
-        # - Google Cloud Storage
-        # - GitHub Releases (para backups pequenos)
+          # Aqui você pode implementar upload para:
+          # - AWS S3
+          # - Azure Blob Storage
+          # - Google Cloud Storage
+          # - GitHub Releases (para backups pequenos)
 
-        # Exemplo com GitHub Releases
-        gh release create "backup-$BACKUP_ID" \
-          backups/$BACKUP_ID.tar.gz \
-          --title "Backup $BACKUP_ID" \
-          --notes "Backup automático - ${{ matrix.environment }} - $BACKUP_DATE" \
-          --latest=false
+          # Exemplo com GitHub Releases
+          gh release create "backup-$BACKUP_ID" \
+            backups/$BACKUP_ID.tar.gz \
+            --title "Backup $BACKUP_ID" \
+            --notes "Backup automático - ${{ matrix.environment }} - $BACKUP_DATE" \
+            --latest=false
 
-    - name: 🧹 Limpeza Local
-      run: |
-        echo "🧹 Fazendo limpeza local..."
+      - name: 🧹 Limpeza Local
+        run: |
+          echo "🧹 Fazendo limpeza local..."
 
-        # Remover arquivos locais após upload
-        rm -rf backups/$BACKUP_ID
-        rm -f backups/$BACKUP_ID.tar.gz
+          # Remover arquivos locais após upload
+          rm -rf backups/$BACKUP_ID
+          rm -f backups/$BACKUP_ID.tar.gz
 
-        echo "✅ Backup concluído e limpo"
+          echo "✅ Backup concluído e limpo"
 
-    - name: 📤 Upload Metadados para Auditoria
-      uses: actions/upload-artifact@v4
-      with:
-        name: backup-metadata-${{ matrix.environment }}
-        path: backups/$BACKUP_ID/metadata.json
+      - name: 📤 Upload Metadados para Auditoria
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-metadata-${{ matrix.environment }}
+          path: backups/$BACKUP_ID/metadata.json
 
   # ==========================================
   # 🔄 BACKUP INCREMENTAL
