@@ -288,6 +288,26 @@ export default defineConfig({
             return "sample-data";
           }
 
+          // ✅ NOVO: Split DashboardCharts em sub-chunks (REDUZ 396KB → ~150KB inicial)
+          if (id.includes("recharts")) {
+            // Separar Recharts do bundle de DashboardCharts
+            return "charts-vendor";
+          }
+          if (id.includes("DashboardCharts")) {
+            return "dashboard-charts";
+          }
+
+          // ✅ NOVO: Split Tiptap Editor por extensões
+          if (id.includes("@tiptap") && id.includes("extension-table")) {
+            return "editor-table"; // Lazy load tabelas
+          }
+          if (id.includes("@tiptap") && id.includes("extension-image")) {
+            return "editor-media"; // Lazy load imagens
+          }
+          if (id.includes("@tiptap/starter-kit")) {
+            return "editor-core"; // Core sempre carregado
+          }
+
           // default: deixa o Vite/rollup decidir
           return undefined;
         },

@@ -466,6 +466,103 @@
       },
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
+    },
+    {
+      "label": "test:auto-fix",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/scripts/auto-fix-tests.sh"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "test:auto-fix:watch",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "while true; do npm run test:run || ./scripts/auto-fix-tests.sh; sleep 60; done"
+      ],
+      "isBackground": true,
+      "runOptions": { "runOn": "folderOpen" },
+      "group": "test",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated"
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "test:update-snapshots",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:run", "--", "-u"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "test:clear-cache",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:run", "--", "--clearCache"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "test:watch:api",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:api", "--", "--watch"],
+      "isBackground": true,
+      "group": "test",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated"
+      },
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "test:watch:chrome",
+      "type": "shell",
+      "command": "cd chrome-extension-pje && npm run test:watch",
+      "isBackground": true,
+      "group": "test",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated"
+      },
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "test:full-pipeline",
+      "dependsOn": [
+        "test:clear-cache",
+        "test:update-snapshots",
+        "test:run",
+        "test:api",
+        "test:coverage"
+      ],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "options": { "cwd": "${workspaceFolder}" }
     }
   ],
   "inputs": [

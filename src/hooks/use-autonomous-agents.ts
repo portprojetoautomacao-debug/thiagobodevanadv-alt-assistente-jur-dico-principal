@@ -7,9 +7,17 @@ import {
   initializeAgents,
   shouldPauseForHuman,
 } from "@/lib/agents";
+// ✨ NOVO: Importar validadores Zod
+import {
+  validateAgent,
+  validateAgentTask,
+  type Agent as AgentValidated,
+  type AgentTask as AgentTaskValidated,
+} from "@/schemas/agent.schema";
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
@@ -364,10 +372,20 @@ export function useAutonomousAgents() {
 
   // Helper para adicionar tarefa à fila (reduz S2004 nesting)
   const addTaskToQueue = useCallback((current: AgentTask[], task: AgentTask): AgentTask[] => {
-    const updated = [...current, task];
+    // Validar tarefa com Zod
+    const validation = validateAgentTask(task);
+
+    if (!validation.isValid) {
+      console.error("Validação de tarefa falhou:", validation.errors);
+      toast.error("Tarefa inválida. Verifique os campos obrigatórios.");
+      return current;
+    }
+
+    const updated = [...current, validation.data as AgentTask];
     return sortTasksByPriority(updated);
   }, []);
 
+  // ✨ MODIFICADO: addTask agora usa validação
   const addTask = useCallback(
     (task: AgentTask) => {
       setTaskQueue((current) => addTaskToQueue(current || [], task));
@@ -637,6 +655,29 @@ export function useAutonomousAgents() {
     };
   }, []);
 
+  // ✨ NOVO: Validar agentes ao atualizar
+  const updateAgentWithValidation = useCallback(
+    (agentId: string, updates: Partial<Agent>) => {
+      setAgents((current) => {
+        const agent = findAgentById(current || [], agentId);
+        if (!agent) return current || [];
+
+        const updatedAgent = { ...agent, ...updates };
+        const validation = validateAgent(updatedAgent);
+
+        if (!validation.isValid) {
+          console.error("Validação de agente falhou:", validation.errors);
+          toast.error("Dados do agente inválidos.");
+          return current || [];
+        }
+
+        return updateAgentInList(current || [], agentId, validation.data as Agent);
+      });
+    },
+    [setAgents, findAgentById]
+  );
+
+  // ✨ MODIFICADO: toggleAgent agora usa validação
   const toggleAgent = useCallback(
     (agentId: string) => {
       setAgents((current) => {
@@ -644,7 +685,18 @@ export function useAutonomousAgents() {
         if (!agent) return current || [];
 
         const newStatus = getNewAgentStatus(agent);
-        return updateAgentInList(current || [], agentId, newStatus);
+        const updatedAgent = { ...agent, ...newStatus };
+
+        // Validar antes de atualizar
+        const validation = validateAgent(updatedAgent);
+
+        if (!validation.isValid) {
+          console.error("Validação de agente falhou:", validation.errors);
+          toast.error("Erro ao alterar status do agente.");
+          return current || [];
+        }
+
+        return updateAgentInList(current || [], agentId, validation.data as Agent);
       });
     },
     [setAgents, findAgentById, getNewAgentStatus]
@@ -706,5 +758,7 @@ export function useAutonomousAgents() {
     resumeTaskAfterHuman,
     setAgents,
     clearOldLogs, // Clear logs older than 24h
+    // ✨ NOVO: Expor função de atualização validada
+    updateAgentWithValidation,
   };
 }
