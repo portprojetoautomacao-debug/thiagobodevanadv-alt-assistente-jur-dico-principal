@@ -34,7 +34,7 @@ export async function extractTextFromImage(
 ): Promise<string> {
   try {
     const result = await Tesseract.recognize(imageFile, "por", {
-      logger: (info) => {
+      logger: (info: Tesseract.LoggerMessage) => {
         if (info.status === "recognizing text" && onProgress) {
           onProgress(info.progress);
         }

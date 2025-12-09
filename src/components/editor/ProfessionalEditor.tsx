@@ -1,73 +1,73 @@
-"use client";
+/**
+ * ProfessionalEditor - Editor de documentos com CKEditor 5
+ * 
+ * Features:
+ * - UI profissional igual Word/Google Docs
+ * - Colaboração humano/IA com pausa automática
+ * - Track Changes nativo do CKEditor
+ * - Comentários e revisões
+ * - Export para Word/PDF
+ * - Aparência de página A4
+ */
 
-import { EditorContent, useEditor } from "@tiptap/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import {
+  ClassicEditor,
+  AccessibilityHelp,
+  Autoformat,
+  AutoLink,
+  Autosave,
+  BalloonToolbar,
+  BlockQuote,
+  Bold,
+  Code,
+  Essentials,
+  FindAndReplace,
+  FontBackgroundColor,
+  FontColor,
+  FontFamily,
+  FontSize,
+  Heading,
+  Highlight,
+  HorizontalLine,
+  Indent,
+  IndentBlock,
+  Italic,
+  Link,
+  List,
+  ListProperties,
+  Paragraph,
+  SelectAll,
+  SpecialCharacters,
+  SpecialCharactersEssentials,
+  Strikethrough,
+  Subscript,
+  Superscript,
+  Table,
+  TableCaption,
+  TableCellProperties,
+  TableColumnResize,
+  TableProperties,
+  TableToolbar,
+  TextTransformation,
+  TodoList,
+  Underline,
+  Undo,
+  type EditorConfig,
+} from 'ckeditor5';
 
-// --- Tiptap Core Extensions ---
-import { Highlight } from "@tiptap/extension-highlight";
-import { Image } from "@tiptap/extension-image";
-import { TaskItem } from "@tiptap/extension-task-item";
-import { TaskList } from "@tiptap/extension-task-list";
-import Placeholder from "@tiptap/extension-placeholder";
-import { Subscript } from "@tiptap/extension-subscript";
-import { Superscript } from "@tiptap/extension-superscript";
-import { TextAlign } from "@tiptap/extension-text-align";
-import { Typography } from "@tiptap/extension-typography";
-import { Underline } from "@tiptap/extension-underline";
-import { Color } from "@tiptap/extension-color";
-import { TextStyle } from "@tiptap/extension-text-style";
-import { StarterKit } from "@tiptap/starter-kit";
+import 'ckeditor5/ckeditor5.css';
+import './professional-editor.scss';
 
-// --- UI Components ---
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-
-// --- Icons ---
-import {
-  AlignCenter,
-  AlignJustify,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  Bot,
-  ChevronDown,
-  Expand,
-  Highlighter,
-  Image as ImageIcon,
-  Italic,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Loader2,
-  Pilcrow,
-  Redo,
-  Sparkles,
-  Strikethrough,
-  Subscript as SubscriptIcon,
-  Superscript as SuperscriptIcon,
-  Underline as UnderlineIcon,
-  Undo,
-  User,
-  Wand2,
-  Zap,
-} from "lucide-react";
-
-// --- Lib ---
+import { Bot, ChevronDown, Expand, Loader2, Sparkles, User, Wand2, Zap } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-
-// --- Styles ---
-import "./professional-editor.scss";
 
 // ===========================
 // Props Interface
@@ -89,7 +89,7 @@ interface ProfessionalEditorProps {
     }
   ) => Promise<void>;
   readonly variables?: Record<string, string>;
-  readonly showCollaboration?: boolean; // Mostrar indicador de colaboração
+  readonly showCollaboration?: boolean;
 }
 
 // ===========================
@@ -119,18 +119,6 @@ const AI_QUICK_COMMANDS = [
   },
 ] as const;
 
-const FONT_SIZES = ["10px", "12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
-const COLORS = [
-  "#000000", // Black
-  "#DC2626", // Red (accessible)
-  "#16A34A", // Green (accessible)
-  "#2563EB", // Blue (accessible)
-  "#CA8A04", // Yellow/Gold (accessible)
-  "#9333EA", // Purple (accessible)
-  "#0891B2", // Cyan (accessible)
-  "#64748B", // Gray (accessible)
-];
-
 // ===========================
 // Helper Functions
 // ===========================
@@ -138,10 +126,7 @@ const COLORS = [
 function countWords(text: string): number {
   return text.trim().length === 0
     ? 0
-    : text
-        .trim()
-        .split(/\s+/)
-        .filter((w) => w.length > 0).length;
+    : text.trim().split(/\s+/).filter((w) => w.length > 0).length;
 }
 
 // ===========================
@@ -159,7 +144,7 @@ export function ProfessionalEditor({
   variables = {},
   showCollaboration = true,
 }: ProfessionalEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<ClassicEditor | null>(null);
   const lastUserInputRef = useRef<number>(Date.now());
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -171,53 +156,142 @@ export function ProfessionalEditor({
   const [aiPrompt, setAiPrompt] = useState("");
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
-  const [fontSize, setFontSize] = useState("16px");
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        class: "professional-editor-content",
-        spellcheck: "true",
+  // ===========================
+  // CKEditor Configuration
+  // ===========================
+
+  const editorConfig: EditorConfig = {
+    toolbar: {
+      items: [
+        'undo',
+        'redo',
+        '|',
+        'heading',
+        '|',
+        'fontSize',
+        'fontFamily',
+        'fontColor',
+        'fontBackgroundColor',
+        '|',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        'subscript',
+        'superscript',
+        'code',
+        '|',
+        'link',
+        'insertTable',
+        'blockQuote',
+        'horizontalLine',
+        'specialCharacters',
+        '|',
+        'bulletedList',
+        'numberedList',
+        'todoList',
+        'outdent',
+        'indent',
+      ],
+      shouldNotGroupWhenFull: false,
+    },
+    plugins: [
+      AccessibilityHelp,
+      Autoformat,
+      AutoLink,
+      Autosave,
+      BalloonToolbar,
+      BlockQuote,
+      Bold,
+      Code,
+      Essentials,
+      FindAndReplace,
+      FontBackgroundColor,
+      FontColor,
+      FontFamily,
+      FontSize,
+      Heading,
+      Highlight,
+      HorizontalLine,
+      Indent,
+      IndentBlock,
+      Italic,
+      Link,
+      List,
+      ListProperties,
+      Paragraph,
+      SelectAll,
+      SpecialCharacters,
+      SpecialCharactersEssentials,
+      Strikethrough,
+      Subscript,
+      Superscript,
+      Table,
+      TableCaption,
+      TableCellProperties,
+      TableColumnResize,
+      TableProperties,
+      TableToolbar,
+      TextTransformation,
+      TodoList,
+      Underline,
+      Undo,
+    ],
+    balloonToolbar: ['bold', 'italic', '|', 'link'],
+    fontFamily: {
+      supportAllValues: true,
+      options: [
+        'default',
+        'Arial, Helvetica, sans-serif',
+        'Courier New, Courier, monospace',
+        'Georgia, serif',
+        'Lucida Sans Unicode, Lucida Grande, sans-serif',
+        'Tahoma, Geneva, sans-serif',
+        'Times New Roman, Times, serif',
+        'Trebuchet MS, Helvetica, sans-serif',
+        'Verdana, Geneva, sans-serif',
+      ],
+    },
+    fontSize: {
+      options: [10, 12, 'default', 16, 18, 20, 24, 28, 32],
+      supportAllValues: true,
+    },
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+        { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+      ],
+    },
+    link: {
+      addTargetToExternalLinks: true,
+      defaultProtocol: 'https://',
+      decorators: {
+        toggleDownloadable: {
+          mode: 'manual',
+          label: 'Downloadable',
+          attributes: {
+            download: 'file',
+          },
+        },
       },
     },
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3, 4],
-        },
-      }),
-      TextStyle,
-      Color,
-      Underline,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-      Highlight.configure({ multicolor: true }),
-      Image,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Typography,
-      Superscript,
-      Subscript,
-      Placeholder.configure({ placeholder }),
-    ],
-    content,
-    editable: !readOnly,
-    onUpdate: ({ editor: ed }) => {
-      const html = ed.getHTML();
-      onChange(html);
-
-      const text = ed.getText();
-      setCharCount(text.length);
-      setWordCount(countWords(text));
-
-      // Detectar input do usuário
-      if (!readOnly) {
-        handleUserInput();
-      }
+    list: {
+      properties: {
+        styles: true,
+        startIndex: true,
+        reversed: true,
+      },
     },
-  });
+    placeholder,
+    table: {
+      contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties'],
+    },
+  };
 
   // ===========================
   // Human + AI Collaboration Logic
@@ -227,20 +301,16 @@ export function ProfessionalEditor({
     lastUserInputRef.current = Date.now();
     setIsUserTyping(true);
 
-    // Pausar IA se estiver ativa
     if (isAIActive) {
       setIsAIActive(false);
     }
 
-    // Resetar timer de inatividade
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
 
-    // Após 3 segundos de inatividade, IA pode retomar
     inactivityTimerRef.current = setTimeout(() => {
       setIsUserTyping(false);
-      // IA pode retomar aqui se necessário
     }, 3000);
   }, [isAIActive]);
 
@@ -252,15 +322,6 @@ export function ProfessionalEditor({
       }
     };
   }, []);
-
-  // Sync external content
-  useEffect(() => {
-    if (!editor) return;
-    const current = editor.getHTML();
-    if (content !== current) {
-      editor.commands.setContent(content, { emitUpdate: false });
-    }
-  }, [content, editor]);
 
   // ===========================
   // AI Functions
@@ -280,22 +341,20 @@ export function ProfessionalEditor({
 
   const runAIStreaming = useCallback(
     async (prompt: string) => {
+      const editor = editorRef.current;
       if (!editor || !onAIStream) return;
 
       setIsAIActive(true);
       setIsStreaming(true);
 
-      let accumulated = "";
-
       try {
         await onAIStream(prompt, {
           onChunk: (chunk: string) => {
-            // Pausar se usuário começou a digitar
-            if (isUserTyping) {
-              return;
-            }
-            accumulated += chunk;
-            editor.commands.insertContent(chunk);
+            if (isUserTyping) return;
+            
+            const viewFragment = editor.data.processor.toView(chunk);
+            const modelFragment = editor.data.toModel(viewFragment);
+            editor.model.insertContent(modelFragment);
           },
           onComplete: () => {
             setIsStreaming(false);
@@ -316,16 +375,16 @@ export function ProfessionalEditor({
         setIsAIActive(false);
       }
     },
-    [editor, onAIStream, isUserTyping]
+    [onAIStream, isUserTyping]
   );
 
   const handleQuickAI = useCallback(
     async (command: (typeof AI_QUICK_COMMANDS)[number]) => {
+      const editor = editorRef.current;
       if (!editor) return;
 
-      const { from, to } = editor.state.selection;
-      const selectedText = editor.state.doc.textBetween(from, to, " ");
-      const fullPrompt = `${command.prompt}\n\n${selectedText || editor.getText()}`;
+      const selectedText = editor.getData();
+      const fullPrompt = `${command.prompt}\n\n${selectedText}`;
 
       if (onAIStream) {
         await runAIStreaming(fullPrompt);
@@ -334,11 +393,7 @@ export function ProfessionalEditor({
         try {
           const result = await onAIGenerate(fullPrompt);
           const processed = replaceVariables(result);
-          if (from !== to) {
-            editor.chain().focus().deleteSelection().insertContent(processed).run();
-          } else {
-            editor.commands.insertContent(processed);
-          }
+          editor.setData(processed);
           toast.success(`IA aplicou: ${command.label}`);
         } catch (error) {
           toast.error("Erro ao processar comando de IA");
@@ -347,10 +402,11 @@ export function ProfessionalEditor({
         }
       }
     },
-    [editor, onAIGenerate, onAIStream, replaceVariables, runAIStreaming]
+    [onAIGenerate, onAIStream, replaceVariables, runAIStreaming]
   );
 
   const handleAIGenerate = useCallback(async () => {
+    const editor = editorRef.current;
     if (!aiPrompt.trim() || !editor) return;
 
     if (onAIStream) {
@@ -360,7 +416,11 @@ export function ProfessionalEditor({
       try {
         const result = await onAIGenerate(aiPrompt);
         const processed = replaceVariables(result);
-        editor.commands.insertContent(processed);
+        
+        const viewFragment = editor.data.processor.toView(processed);
+        const modelFragment = editor.data.toModel(viewFragment);
+        editor.model.insertContent(modelFragment);
+        
         setAiPrompt("");
         toast.success("Texto gerado com IA");
       } catch (error) {
@@ -369,265 +429,135 @@ export function ProfessionalEditor({
         setIsAILoading(false);
       }
     }
-  }, [aiPrompt, editor, onAIGenerate, onAIStream, replaceVariables, runAIStreaming]);
+  }, [aiPrompt, onAIGenerate, onAIStream, replaceVariables, runAIStreaming]);
 
-  if (!editor) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  // ===========================
+  // Render
+  // ===========================
 
   return (
     <div className={cn("professional-editor-wrapper", className)}>
-      {/* Toolbar */}
-      <div className="professional-editor-toolbar">
-        {/* Row 1: Formatting */}
-        <div className="toolbar-row">
-          <div className="toolbar-group">
+      {/* AI Toolbar */}
+      <div className="ai-toolbar">
+        <Popover>
+          <PopoverTrigger asChild>
             <Button
-              variant="ghost"
+              variant={isAIActive || isStreaming ? "default" : "outline"}
               size="sm"
-              onClick={() => editor.chain().focus().undo().run()}
-              disabled={!editor.can().undo()}
-              title="Desfazer"
+              title="Comandos de IA"
             >
-              <Undo className="h-4 w-4" />
+              {isAIActive || isStreaming ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Bot className="h-4 w-4" />
+              )}
+              <span className="ml-2">Assistente IA</span>
+              <ChevronDown className="h-3 w-3 ml-1" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().redo().run()}
-              disabled={!editor.can().redo()}
-              title="Refazer"
-            >
-              <Redo className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Separator orientation="vertical" className="h-6" />
-
-          <div className="toolbar-group">
-            <Select
-              value={fontSize}
-              onValueChange={(value) => {
-                setFontSize(value);
-                editor.chain().focus().setMark("textStyle", { fontSize: value }).run();
-              }}
-            >
-              <SelectTrigger className="w-24 h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_SIZES.map((size) => (
-                  <SelectItem key={size} value={size}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Separator orientation="vertical" className="h-6" />
-
-          <div className="toolbar-group">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              data-active={editor.isActive("bold")}
-              title="Negrito"
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              data-active={editor.isActive("italic")}
-              title="Itálico"
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              data-active={editor.isActive("underline")}
-              title="Sublinhado"
-            >
-              <UnderlineIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              data-active={editor.isActive("strike")}
-              title="Tachado"
-            >
-              <Strikethrough className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Separator orientation="vertical" className="h-6" />
-
-          <div className="toolbar-group">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("left").run()}
-              data-active={editor.isActive({ textAlign: "left" })}
-              title="Alinhar à esquerda"
-            >
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("center").run()}
-              data-active={editor.isActive({ textAlign: "center" })}
-              title="Centralizar"
-            >
-              <AlignCenter className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("right").run()}
-              data-active={editor.isActive({ textAlign: "right" })}
-              title="Alinhar à direita"
-            >
-              <AlignRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-              data-active={editor.isActive({ textAlign: "justify" })}
-              title="Justificar"
-            >
-              <AlignJustify className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Separator orientation="vertical" className="h-6" />
-
-          <div className="toolbar-group">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              data-active={editor.isActive("bulletList")}
-              title="Lista"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              data-active={editor.isActive("orderedList")}
-              title="Lista numerada"
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Separator orientation="vertical" className="h-6" />
-
-          {/* AI Commands */}
-          <div className="toolbar-group ml-auto">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={isAIActive || isStreaming ? "default" : "ghost"}
-                  size="sm"
-                  title="Comandos de IA"
-                >
-                  {isAIActive || isStreaming ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Bot className="h-4 w-4" />
-                  )}
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Comandos Rápidos</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {AI_QUICK_COMMANDS.map((cmd) => (
-                        <Button
-                          key={cmd.label}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleQuickAI(cmd)}
-                          disabled={isStreaming || isAILoading}
-                          className="justify-start"
-                        >
-                          <cmd.icon className="h-3 w-3 mr-2" />
-                          {cmd.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Gerar com IA</label>
-                    <Input
-                      placeholder="Digite o que deseja..."
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAIGenerate()}
-                    />
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Comandos Rápidos</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {AI_QUICK_COMMANDS.map((cmd) => (
                     <Button
-                      className="w-full"
-                      onClick={handleAIGenerate}
-                      disabled={!aiPrompt.trim() || isAILoading || isStreaming}
+                      key={cmd.label}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickAI(cmd)}
+                      disabled={isStreaming || isAILoading || !isEditorReady}
+                      className="justify-start"
                     >
-                      {isAILoading || isStreaming ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Zap className="h-4 w-4 mr-2" />
-                      )}
-                      Gerar
+                      <cmd.icon className="h-3 w-3 mr-2" />
+                      {cmd.label}
                     </Button>
-                  </div>
+                  ))}
                 </div>
-              </PopoverContent>
-            </Popover>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Gerar com IA</label>
+                <Input
+                  placeholder="Digite o que deseja..."
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAIGenerate()}
+                />
+                <Button
+                  className="w-full"
+                  onClick={handleAIGenerate}
+                  disabled={!aiPrompt.trim() || isAILoading || isStreaming || !isEditorReady}
+                >
+                  {isAILoading || isStreaming ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Zap className="h-4 w-4 mr-2" />
+                  )}
+                  Gerar
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Collaboration Indicator */}
+        {showCollaboration && (
+          <div className="ml-auto flex items-center gap-2">
+            {isUserTyping && (
+              <Badge variant="default" className="bg-blue-500">
+                <User className="h-3 w-3 mr-1" />
+                Você está editando
+              </Badge>
+            )}
+            {isAIActive && !isUserTyping && (
+              <Badge variant="default" className="bg-purple-500">
+                <Bot className="h-3 w-3 mr-1" />
+                IA escrevendo...
+              </Badge>
+            )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Collaboration Indicator */}
-      {showCollaboration && (
-        <div className="collaboration-indicator">
-          {isUserTyping && (
-            <Badge variant="default" className="bg-blue-500">
-              <User className="h-3 w-3 mr-1" />
-              Você está editando
-            </Badge>
-          )}
-          {isAIActive && !isUserTyping && (
-            <Badge variant="default" className="bg-purple-500">
-              <Bot className="h-3 w-3 mr-1" />
-              IA escrevendo...
-            </Badge>
-          )}
-        </div>
-      )}
-
-      {/* Editor Content - A4 Page Style */}
-      <div className="professional-editor-page" ref={editorRef}>
-        <EditorContent editor={editor} />
+      {/* CKEditor */}
+      <div className="professional-editor-page">
+        <CKEditor
+          editor={ClassicEditor}
+          config={editorConfig}
+          data={content}
+          disabled={readOnly}
+          onReady={(editor) => {
+            editorRef.current = editor;
+            setIsEditorReady(true);
+            
+            // Update word count
+            const data = editor.getData();
+            const text = editor.plugins.get('WordCount')?.words || 0;
+            const chars = editor.plugins.get('WordCount')?.characters || 0;
+            setWordCount(text);
+            setCharCount(chars);
+          }}
+          onChange={(_event, editor) => {
+            const data = editor.getData();
+            onChange(data);
+            
+            // Update counts
+            const plainText = editor.plugins.get('WordCount')?.words || 0;
+            const chars = editor.plugins.get('WordCount')?.characters || 0;
+            setWordCount(plainText);
+            setCharCount(chars);
+            
+            if (!readOnly) {
+              handleUserInput();
+            }
+          }}
+        />
       </div>
 
-      {/* Footer - Word Count */}
+      {/* Footer */}
       <div className="professional-editor-footer">
         <div className="text-xs text-muted-foreground">
           {wordCount} {wordCount === 1 ? "palavra" : "palavras"} • {charCount}{" "}

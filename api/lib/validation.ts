@@ -80,10 +80,10 @@ export const AgentTaskSchema = z.object({
   type: AgentTaskTypeSchema,
   priority: TaskPrioritySchema,
   status: TaskStatusSchema,
-  createdAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
   data: z.record(z.string(), z.unknown()),
   error: z.string().optional(),
-  completedAt: z.iso.datetime().optional(),
+  completedAt: z.string().datetime().optional(),
   processingTimeMs: z.number().optional(),
 });
 

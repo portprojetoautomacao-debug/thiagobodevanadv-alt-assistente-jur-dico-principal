@@ -6,7 +6,6 @@
 /// <reference types="vite/client" />
 
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || "";
 const IS_PRODUCTION = import.meta.env.PROD;
@@ -23,51 +22,52 @@ export function initMonitoring() {
     dsn: SENTRY_DSN,
     environment: IS_PRODUCTION ? "production" : "development",
     release: `assistente-juridico@${APP_VERSION}`,
-    
+
     // Performance Monitoring
+    tracesSampleRate: 0.1,
+
+    // Session Replay (opcional)
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+
     integrations: [
-      new BrowserTracing({
-        tracePropagationTargets: [
-          "localhost",
-          /^https:\/\/assistente-juridico.*\.vercel\.app/,
-          /^https:\/\/.*\.pje\.jus\.br/, // APIs externas
-        ],
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
       }),
     ],
-    
-    // Sample rate (10% de eventos de performance)
-    tracesSampleRate: 0.1,
-    
-    // Filtrar dados sensíveis (LGPD compliance)
+
+    // LGPD Compliance
+    sendDefaultPii: false,
+
     beforeSend(event, hint) {
-      // Remover dados potencialmente sensíveis
-      if (event.request?.url) {
-        // Remove query params com dados sensíveis
-        event.request.url = event.request.url.split("?")[0];
+      // Filtrar dados sensíveis
+      if (event.request?.headers) {
+        delete event.request.headers.Authorization;
+        delete event.request.headers.Cookie;
       }
-      
-      // Remove informações de processos dos breadcrumbs
-      if (event.breadcrumbs) {
-        event.breadcrumbs = event.breadcrumbs.map((breadcrumb) => {
-          if (breadcrumb.message?.includes("CNJ") || breadcrumb.message?.includes("CPF")) {
-            return { ...breadcrumb, message: "[REDACTED - LGPD]" };
-          }
-          return breadcrumb;
-        });
-      }
-      
       return event;
     },
-    
-    // Ignorar erros conhecidos e não críticos
-    ignoreErrors: [
-      "ResizeObserver loop", // Erro comum de layout
-      "Non-Error promise rejection", // Promisses não tratadas (não críticas)
-      /^Loading chunk \d+ failed/, // Falhas de carregamento de chunks (timeout/network)
-    ],
   });
 
-  console.log("[Monitoring] Sentry inicializado");
+  console.log("[Monitoring] Sentry inicializado", IS_PRODUCTION ? "em produção" : "em desenvolvimento");
+}
+
+// Adicionar contexto do usuário (após login)
+export function setUserContext(user: { id: string; email?: string; role?: string }) {
+  Sentry.setUser({
+    id: user.id,
+    email: user.email,
+    // Não enviar dados sensíveis como nome completo
+  });
+  
+  Sentry.setTag("user_role", user.role || "unknown");
+}
+
+// Limpar contexto (logout)
+export function clearUserContext() {
+  Sentry.setUser(null);
 }
 
 // Helper para capturar exceções customizadas
@@ -94,20 +94,4 @@ export function captureMessage(message: string, level: Sentry.SeverityLevel = "i
     level,
     extra: context,
   });
-}
-
-// Adicionar contexto do usuário (após login)
-export function setUserContext(user: { id: string; email?: string; role?: string }) {
-  Sentry.setUser({
-    id: user.id,
-    email: user.email,
-    // Não enviar dados sensíveis como nome completo
-  });
-  
-  Sentry.setTag("user_role", user.role || "unknown");
-}
-
-// Limpar contexto (logout)
-export function clearUserContext() {
-  Sentry.setUser(null);
 }

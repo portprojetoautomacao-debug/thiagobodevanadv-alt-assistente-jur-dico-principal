@@ -274,7 +274,7 @@ export function isValidCNPJ(cnpj: string): boolean {
   sum = 0;
   weight = 6;
   for (let i = 0; i < 13; i++) {
-    sum += parseInt(cleanCNPJ.char.at(i)) * weight;
+    sum += parseInt(cleanCNPJ.charAt(i)) * weight;
     weight = weight === 2 ? 9 : weight - 1;
   }
   digit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
