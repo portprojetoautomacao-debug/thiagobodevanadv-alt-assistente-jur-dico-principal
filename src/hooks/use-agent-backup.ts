@@ -129,6 +129,20 @@ export function useAgentBackup(options: BackupOptions) {
     }
   }, [userId]);
 
+  /**
+   * Salva cache local (apenas resumo, para performance)
+   */
+  const saveToLocalCache = useCallback((backupData: BackupData) => {
+    try {
+      // Salvar apenas metadados no localStorage (sem dados completos)
+      const cacheData = {
+        timestamp: backupData.timestamp,
+        userId: backupData.userId,
+        agentCount: backupData.data.agents?.length || 0,
+        taskCount: backupData.data.taskQueue?.length || 0,
+        hasServerBackup: true,
+      };
+
       setLastBackup(backupData.timestamp);
 
       localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cacheData));

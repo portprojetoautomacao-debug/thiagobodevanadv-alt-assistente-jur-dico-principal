@@ -117,8 +117,8 @@ export default function HumanAgentCollaboration({
   const [isHumanActive, setIsHumanActive] = useState(false);
 
   // Refs para controlar timers e evitar vazamentos de memória
-  const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const previousPhaseRef = useRef(phase)
+  const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousPhaseRef = useRef<Phase>(phase);
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
@@ -127,46 +127,31 @@ export default function HumanAgentCollaboration({
     return createProgressInterval(setProgress, onComplete);
   }, [phase, onComplete]);
 
-  // Track previous phase for transition detection
-  const previousPhaseRef = useRef(phase)
-  
-  // Mover reset de inatividade para useEffect para evitar setState durante render
+  // Timer de inatividade durante edição humana + reset ao trocar de fase
   useEffect(() => {
-    if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
-    }
-    previousPhaseRef.current = phase
-  }, [phase])
+    const prevPhase = previousPhaseRef.current;
+    previousPhaseRef.current = phase;
 
-  // Timer de inatividade durante edição humana
-  useEffect(() => {
-    const prevPhase = previousPhaseRef.current
-    previousPhaseRef.current = phase
-    
     // Reset timer when transitioning out of human_editing phase
-    if (prevPhase === 'human_editing' && phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
+    if (prevPhase === "human_editing" && phase !== "human_editing") {
+      setTimeWithoutActivity(0);
     }
-    
-    if (phase !== 'human_editing') {
-      return // No cleanup needed when not in human_editing phase
+
+    if (phase !== "human_editing") {
+      return; // No cleanup needed when not in human_editing phase
     }
 
     // Reset timer when entering human_editing phase
-    if (prevPhase !== 'human_editing') {
-      setTimeWithoutActivity(0)
+    if (prevPhase !== "human_editing") {
+      setTimeWithoutActivity(0);
     }
-    
-    // Schedule reset on next tick to avoid synchronous setState in effect
-    const timeoutId = setTimeout(resetTimer, 0)
 
-    const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
-    
+    const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive);
+
     return () => {
-      clearTimeout(timeoutId)
-      cleanup()
-    }
-  }, [phase, isHumanActive])
+      cleanup();
+    };
+  }, [phase, isHumanActive]);
 
   // Limpa timeout de atividade humana ao desmontar
   useEffect(() => {
