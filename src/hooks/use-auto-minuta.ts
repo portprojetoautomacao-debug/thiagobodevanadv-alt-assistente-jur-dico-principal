@@ -181,12 +181,6 @@ export function useAutoMinuta() {
   );
 
   // Compute stats using useMemo to avoid recalculating on each render
-  const stats = useMemo(() => ({
-    minutasTotal: minutas?.length || 0,
-    minutasPendentesRevisao: minutas?.filter(m => m.status === 'pendente-revisao').length || 0,
-    minutasCriadasPorAgente: minutas?.filter(m => m.criadoPorAgente).length || 0,
-    processedTasksCount,
-  }), [minutas, processedTasksCount])
 
   // Retornar estatísticas úteis
   return stats
