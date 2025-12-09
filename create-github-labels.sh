@@ -45,6 +45,15 @@ declare -a labels=(
   "compliance|0e8a16|Conformidade regulatória"
   "debt|fbca04|Débito técnico"
   "cleanup|fbca04|Limpeza de código ou refatoração menor"
+  "automated|0e8a16|PRs e issues automatizados"
+  "dependencies|0366d6|Atualizações de dependências"
+  "docker|0db7ed|Relacionado a Docker e containers"
+  "npm|cb3837|Dependências npm"
+  "devcontainer|2088ff|Configuração de Dev Container"
+  "github-actions|2088ff|GitHub Actions workflows"
+  "ci/cd|2088ff|Integração e deployment contínuo"
+  "python|3776ab|Código Python"
+  "backend|fbca04|Backend e APIs"
 )
 
 CREATED=0
