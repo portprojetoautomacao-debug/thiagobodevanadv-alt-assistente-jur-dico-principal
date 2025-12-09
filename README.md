@@ -57,7 +57,7 @@ keywords: "análise técnica, arquitetura software, IA jurídica, automação, L
 O **Assistente Jurídico PJe** representa uma implementação sofisticada de sistema jurídico inteligente, combinando tecnologias modernas de frontend (React/TypeScript/Vite), integração avançada com IA (Gemini 2.5 Pro), e automação completa via GitHub Copilot. A versão 1.4.0 demonstra maturidade técnica com conformidade total à LGPD através de PII Filtering automático e arquitetura serverless otimizada.
 
 **Destaques Técnicos:**
-- ✅ **Stack Moderna**: React 18 + TypeScript + Vite com performance otimizada
+- ✅ **Stack Moderna**: React 19 + TypeScript + Vite com performance otimizada
 - ✅ **IA Integrada**: 15 agentes autônomos com Gemini 2.5 Pro
 - ✅ **Automação 24/7**: GitHub Copilot com workflows autônomos
 - ✅ **Conformidade LGPD**: PII Filtering automático em produção
@@ -73,7 +73,7 @@ O **Assistente Jurídico PJe** representa uma implementação sofisticada de sis
 **Stack Principal:**
 ```typescript
 // Configuração Vite otimizada
-React 18.2+ + TypeScript 5.0+ + Vite 5.0+
+React 19+ + TypeScript 5.0+ + Vite 6+
 ESLint + Prettier + Husky (pre-commit hooks)
 TailwindCSS + Headless UI (design system)
 ```
