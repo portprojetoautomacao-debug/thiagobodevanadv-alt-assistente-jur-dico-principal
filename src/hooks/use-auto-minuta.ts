@@ -140,7 +140,7 @@ export function useAutoMinuta() {
           JSON.stringify([...processedTasksRef.current])
         );
         // Update count state
-        setProcessedTasksCount(processedTasksRef.current.size)
+        setProcessedTasksCount(processedTasksRef.current.size);
       } catch (e) {
         console.error("[AutoMinuta] Erro ao salvar tarefas processadas:", e);
       }
