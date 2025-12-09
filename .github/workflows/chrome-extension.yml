@@ -21,6 +21,7 @@ jobs:
   test-and-build:
     name: Test and Build Chrome Extension
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
 
@@ -38,6 +39,22 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
           cache-dependency-path: chrome-extension-pje/package-lock.json
+
+      - name: Cache extension dependencies
+        uses: actions/cache@v4
+        with:
+          path: chrome-extension-pje/node_modules
+          key: ${{ runner.os }}-chrome-ext-${{ hashFiles('chrome-extension-pje/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-chrome-ext-
+
+      - name: Cache extension build
+        uses: actions/cache@v4
+        with:
+          path: chrome-extension-pje/dist
+          key: ${{ runner.os }}-chrome-ext-build-${{ hashFiles('chrome-extension-pje/src/**/*', 'chrome-extension-pje/webpack.config.js') }}
+          restore-keys: |
+            ${{ runner.os }}-chrome-ext-build-
 
       - name: Install dependencies
         run: |

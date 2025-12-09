@@ -38,6 +38,7 @@ jobs:
   bundle-analysis:
     name: "📦 Análise de Bundle"
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'bundle-only'
 
     steps:
@@ -48,6 +49,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-perf-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-perf-
           cache: "npm"
 
       - name: 📦 Instalar dependências

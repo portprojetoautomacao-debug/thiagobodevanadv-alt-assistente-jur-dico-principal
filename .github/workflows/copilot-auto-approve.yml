@@ -16,6 +16,7 @@ jobs:
   check-tests:
     name: Check Tests Status
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.actor == 'github-actions[bot]' || github.event.pull_request.user.login == 'github-actions'
     outputs:
       tests-passed: ${{ steps.check-status.outputs.tests-passed }}
@@ -31,6 +32,16 @@ jobs:
         with:
           node-version: "22.x"
           cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-copilot-approve-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-copilot-approve-
+            ${{ runner.os }}-
 
       - name: Install dependencies
         run: npm ci

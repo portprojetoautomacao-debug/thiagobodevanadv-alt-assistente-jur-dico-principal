@@ -24,6 +24,7 @@ jobs:
   scheduled-scan:
     name: 🔍 Verificação Periódica de TODOs
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout completo

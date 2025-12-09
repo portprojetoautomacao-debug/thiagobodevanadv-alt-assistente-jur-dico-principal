@@ -33,6 +33,7 @@ jobs:
   integration-tests:
     name: Agent Flow Integration
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     permissions:
       contents: read
 
@@ -45,6 +46,16 @@ jobs:
         with:
           node-version: "22.x"
           cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-agents-integration-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-agents-integration-
+            ${{ runner.os }}-
 
       - name: Setup Python
         uses: actions/setup-python@v4

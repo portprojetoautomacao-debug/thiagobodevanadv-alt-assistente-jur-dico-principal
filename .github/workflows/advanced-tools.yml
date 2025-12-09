@@ -3,13 +3,13 @@ name: Ferramentas Especializadas
 on:
   schedule:
     # Executa toda segunda-feira às 2:00 AM UTC
-    - cron: '0 2 * * 1'
+    - cron: "0 2 * * 1"
   workflow_dispatch:
     inputs:
       tool:
-        description: 'Ferramenta específica para executar'
+        description: "Ferramenta específica para executar"
         required: false
-        default: 'all'
+        default: "all"
         type: choice
         options:
           - all
@@ -26,8 +26,9 @@ jobs:
   # ==========================================
 
   bundle-analysis:
-    name: '📦 Bundle Analysis Avançado'
+    name: "📦 Bundle Analysis Avançado"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'bundle-analyzer'
 
     steps:
@@ -84,49 +85,39 @@ jobs:
   # ==========================================
 
   lighthouse-advanced:
-    name: '🏃 Lighthouse Performance Avançado'
+    name: "🏃 Lighthouse Performance Avançado"
     runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'lighthouse'
 
     steps:
-    - name: 📥 Checkout código
-      uses: actions/checkout@v4
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
 
-    - name: 🔧 Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
 
-    - name: 🏃 Instalar Lighthouse e ferramentas
-      run: |
-        echo "🏃 Instalando Lighthouse e ferramentas avançadas..."
-        npm install -g lighthouse
-        npm install -g lighthouse-ci
-        npm install -g puppeteer
-        echo "✅ Lighthouse instalado"
+      - name: 🏃 Instalar Lighthouse e ferramentas
+        run: |
+          echo "🏃 Instalando Lighthouse e ferramentas avançadas..."
+          npm install -g lighthouse
+          npm install -g lighthouse-ci
+          npm install -g puppeteer
+          echo "✅ Lighthouse instalado"
 
-    - name: 🏗️  Build otimizado para testes
-      run: |
-        echo "🏗️  Build otimizado para performance..."
-        npm run build
-        npm run preview &
-        sleep 10
-        echo "✅ Aplicação rodando em background"
+      - name: 🏗️  Build otimizado para testes
+        run: |
+          echo "🏗️  Build otimizado para performance..."
+          npm run build
+          npm run preview &
+          sleep 10
+          echo "✅ Aplicação rodando em background"
 
-    - name: 🏃 Executar Lighthouse completo
-      run: |
-        echo "🏃 Executando Lighthouse completo..."
-        lighthouse http://localhost:4173 \
-          --output=json \
-          --output=html \
-          --output-path=./lighthouse-report.json \
-          --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage" \
-          --only-categories=performance,accessibility,best-practices,seo,pwa
-
-        # Executar múltiplas vezes para consistência
-        for i in {1..3}; do
-          echo "🏃 Execução $i de 3..."
+      - name: 🏃 Executar Lighthouse completo
+        run: |
+          echo "🏃 Executando Lighthouse completo..."
           lighthouse http://localhost:4173 \
             --output=json \
             --output-path=./lighthouse-run-$i.json \
@@ -162,7 +153,7 @@ jobs:
   # ==========================================
 
   security-advanced:
-    name: '🔒 Auditoria de Segurança Avançada'
+    name: "🔒 Auditoria de Segurança Avançada"
     runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'security-audit'
 
@@ -231,7 +222,7 @@ jobs:
   # ==========================================
 
   performance-monitor:
-    name: '⚡ Monitoramento de Performance'
+    name: "⚡ Monitoramento de Performance"
     runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'performance-monitor'
 
@@ -302,7 +293,7 @@ jobs:
   # ==========================================
 
   accessibility-audit:
-    name: '♿ Auditoria de Acessibilidade'
+    name: "♿ Auditoria de Acessibilidade"
     runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'accessibility'
 
@@ -365,7 +356,7 @@ jobs:
   # ==========================================
 
   seo-analysis:
-    name: '🔍 Análise SEO Avançada'
+    name: "🔍 Análise SEO Avançada"
     runs-on: ubuntu-latest
     if: github.event.inputs.tool == 'all' || github.event.inputs.tool == 'seo-analysis'
 
@@ -432,9 +423,17 @@ jobs:
   # ==========================================
 
   generate-reports-dashboard:
-    name: '📊 Dashboard de Relatórios'
+    name: "📊 Dashboard de Relatórios"
     runs-on: ubuntu-latest
-    needs: [bundle-analysis, lighthouse-advanced, security-advanced, performance-monitor, accessibility-audit, seo-analysis]
+    needs:
+      [
+        bundle-analysis,
+        lighthouse-advanced,
+        security-advanced,
+        performance-monitor,
+        accessibility-audit,
+        seo-analysis,
+      ]
     if: always()
 
     steps:
@@ -461,28 +460,48 @@ jobs:
           cat reports/bundle-analysis-reports/bundle-sizes.txt | head -5 >> dashboard.md
           echo "\`\`\`" >> dashboard.md
           echo "" >> dashboard.md
-        fi
-
-        # Lighthouse
-        if [ -f "reports/lighthouse-advanced-reports/lighthouse-report.json" ]; then
-          echo "### 🏃 Lighthouse Scores" >> dashboard.md
-          node -e "
-          try {
-            const fs = require('fs');
-            const results = JSON.parse(fs.readFileSync('reports/lighthouse-advanced-reports/lighthouse-report.json', 'utf8'));
-            console.log('- Performance: ' + (results.categories.performance.score * 100).toFixed(1) + '/100');
-            console.log('- Accessibility: ' + (results.categories.accessibility.score * 100).toFixed(1) + '/100');
-            console.log('- Best Practices: ' + (results.categories['best-practices'].score * 100).toFixed(1) + '/100');
-            console.log('- SEO: ' + (results.categories.seo.score * 100).toFixed(1) + '/100');
-          } catch(e) { console.log('Erro ao processar Lighthouse results'); }
-          " >> dashboard.md
+          echo "## 📈 Resumo Executivo" >> dashboard.md
           echo "" >> dashboard.md
-        fi
 
-        # Security
-        if [ -f "reports/security-advanced-reports/audit-results.json" ]; then
-          echo "### 🔒 Segurança" >> dashboard.md
-          echo "- Status: Audit executado" >> dashboard.md
+          # Bundle Analysis
+          if [ -f "reports/bundle-analysis-reports/bundle-sizes.txt" ]; then
+            echo "### 📦 Bundle Analysis" >> dashboard.md
+            echo "\`\`\`" >> dashboard.md
+            cat reports/bundle-analysis-reports/bundle-sizes.txt | head -5 >> dashboard.md
+            echo "\`\`\`" >> dashboard.md
+            echo "" >> dashboard.md
+          fi
+
+          # Lighthouse
+          if [ -f "reports/lighthouse-advanced-reports/lighthouse-report.json" ]; then
+            echo "### 🏃 Lighthouse Scores" >> dashboard.md
+            node -e "
+            try {
+              const fs = require('fs');
+              const results = JSON.parse(fs.readFileSync('reports/lighthouse-advanced-reports/lighthouse-report.json', 'utf8'));
+              console.log('- Performance: ' + (results.categories.performance.score * 100).toFixed(1) + '/100');
+              console.log('- Accessibility: ' + (results.categories.accessibility.score * 100).toFixed(1) + '/100');
+              console.log('- Best Practices: ' + (results.categories['best-practices'].score * 100).toFixed(1) + '/100');
+              console.log('- SEO: ' + (results.categories.seo.score * 100).toFixed(1) + '/100');
+            } catch(e) { console.log('Erro ao processar Lighthouse results'); }
+            " >> dashboard.md
+            echo "" >> dashboard.md
+          fi
+
+          # Security
+          if [ -f "reports/security-advanced-reports/audit-results.json" ]; then
+            echo "### 🔒 Segurança" >> dashboard.md
+            echo "- Status: Audit executado" >> dashboard.md
+            echo "" >> dashboard.md
+          fi
+
+          echo "## 📋 Status dos Jobs" >> dashboard.md
+          echo "- Bundle Analysis: ${{ needs.bundle-analysis.result }}" >> dashboard.md
+          echo "- Lighthouse: ${{ needs.lighthouse-advanced.result }}" >> dashboard.md
+          echo "- Security: ${{ needs.security-advanced.result }}" >> dashboard.md
+          echo "- Performance: ${{ needs.performance-monitor.result }}" >> dashboard.md
+          echo "- Accessibility: ${{ needs.accessibility-audit.result }}" >> dashboard.md
+          echo "- SEO: ${{ needs.seo-analysis.result }}" >> dashboard.md
           echo "" >> dashboard.md
         fi
 

@@ -3,74 +3,85 @@ name: Security Scan
 on:
   schedule:
     # Executar diariamente às 3 AM UTC
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'package.json'
-      - 'package-lock.json'
+      - "package.json"
+      - "package-lock.json"
 
 concurrency:
   group: security-scan-${{ github.ref }}
-  cancel-in-progress: false  # Don't cancel security scans
+  cancel-in-progress: false # Don't cancel security scans
 
 jobs:
   npm-audit:
     name: NPM Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
       issues: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-security-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-security-
 
-    - name: Run npm audit
-      id: audit
-      run: |
-        echo "## 🔒 NPM Security Audit" > audit-report.md
-        echo "" >> audit-report.md
-        echo "**Date:** $(date -u)" >> audit-report.md
-        echo "" >> audit-report.md
-        
-        # Executar audit e capturar resultado
-        if npm audit --audit-level=moderate --json > audit.json; then
-          echo "✅ No vulnerabilities found" >> audit-report.md
-          echo "status=success" >> $GITHUB_OUTPUT
-        else
-          echo "⚠️ Vulnerabilities detected" >> audit-report.md
-          echo "status=failed" >> $GITHUB_OUTPUT
-          
-          # Extrair informações importantes
-          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit.json)
-          HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit.json)
-          MODERATE=$(jq '.metadata.vulnerabilities.moderate // 0' audit.json)
-          LOW=$(jq '.metadata.vulnerabilities.low // 0' audit.json)
-          
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: audit
+        run: |
+          echo "## 🔒 NPM Security Audit" > audit-report.md
           echo "" >> audit-report.md
-          echo "### 📊 Vulnerability Summary" >> audit-report.md
-          echo "| Severity | Count |" >> audit-report.md
-          echo "|----------|-------|" >> audit-report.md
-          echo "| 🔴 Critical | $CRITICAL |" >> audit-report.md
-          echo "| 🟠 High | $HIGH |" >> audit-report.md
-          echo "| 🟡 Moderate | $MODERATE |" >> audit-report.md
-          echo "| 🔵 Low | $LOW |" >> audit-report.md
+          echo "**Date:** $(date -u)" >> audit-report.md
           echo "" >> audit-report.md
-          
-          if [ $CRITICAL -gt 0 ] || [ $HIGH -gt 0 ]; then
-            echo "action_required=true" >> $GITHUB_OUTPUT
+
+          # Executar audit e capturar resultado
+          if npm audit --audit-level=moderate --json > audit.json; then
+            echo "✅ No vulnerabilities found" >> audit-report.md
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Vulnerabilities detected" >> audit-report.md
+            echo "status=failed" >> $GITHUB_OUTPUT
+            
+            # Extrair informações importantes
+            CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit.json)
+            HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit.json)
+            MODERATE=$(jq '.metadata.vulnerabilities.moderate // 0' audit.json)
+            LOW=$(jq '.metadata.vulnerabilities.low // 0' audit.json)
+            
+            echo "" >> audit-report.md
+            echo "### 📊 Vulnerability Summary" >> audit-report.md
+            echo "| Severity | Count |" >> audit-report.md
+            echo "|----------|-------|" >> audit-report.md
+            echo "| 🔴 Critical | $CRITICAL |" >> audit-report.md
+            echo "| 🟠 High | $HIGH |" >> audit-report.md
+            echo "| 🟡 Moderate | $MODERATE |" >> audit-report.md
+            echo "| 🔵 Low | $LOW |" >> audit-report.md
+            echo "" >> audit-report.md
+            
+            if [ $CRITICAL -gt 0 ] || [ $HIGH -gt 0 ]; then
+              echo "action_required=true" >> $GITHUB_OUTPUT
+            fi
           fi
         fi
         
@@ -102,70 +113,70 @@ jobs:
       contents: read
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Full history for comprehensive scan
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for comprehensive scan
 
-    - name: Scan for secrets
-      run: |
-        echo "## 🔍 Secret Scanning Report" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        # Procurar padrões suspeitos
-        echo "### Checking for exposed secrets..." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        FOUND_CRITICAL=0
-        FOUND_WARNINGS=0
-        
-        # Verificar arquivos .env que não deveriam estar versionados (CRÍTICO)
-        if git ls-files | grep -E "^\.env\.(vercel|production|local|staging)$" | grep -q .; then
-          echo "❌ **CRITICAL:** Found .env files tracked in git that should not be committed!" >> $GITHUB_STEP_SUMMARY
-          git ls-files | grep -E "^\.env\.(vercel|production|local|staging)$" >> $GITHUB_STEP_SUMMARY || true
-          FOUND_CRITICAL=1
-        fi
-        
-        # Verificar por secrets reais (private keys, tokens com formato específico)
-        # Procurar por chaves privadas RSA/EC (ignorar docs, arquivos de exemplo e workflows)
-        if git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -v "docs/" | grep -v ".yml" | grep -v ".md" | grep -q .; then
+      - name: Scan for secrets
+        run: |
+          echo "## 🔍 Secret Scanning Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "❌ **CRITICAL:** Private keys found in repository!" >> $GITHUB_STEP_SUMMARY
-          git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -v "docs/" | grep -v ".yml" | grep -v ".md" >> $GITHUB_STEP_SUMMARY || true
-          FOUND_CRITICAL=1
-        fi
-        
-        # Procurar por tokens do GitHub reais (ghp_, gho_, ghs_, etc.) - ignorar exemplos com xxx
-        if git grep -E "gh[pso]_[a-zA-Z0-9]{36}" 2>/dev/null | grep -v ".example" | grep -v "xxx" | grep -v "YOUR_" | grep -q .; then
+
+          # Procurar padrões suspeitos
+          echo "### Checking for exposed secrets..." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "❌ **CRITICAL:** GitHub tokens found in code!" >> $GITHUB_STEP_SUMMARY
-          FOUND_CRITICAL=1
-        fi
-        
-        # Verificar .gitignore (apenas warning)
-        if [ -f ".gitignore" ]; then
-          if ! grep -q ".env.vercel" .gitignore 2>/dev/null; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ **WARNING:** .env.vercel not in .gitignore" >> $GITHUB_STEP_SUMMARY
-            FOUND_WARNINGS=1
+
+          FOUND_CRITICAL=0
+          FOUND_WARNINGS=0
+
+          # Verificar arquivos .env que não deveriam estar versionados (CRÍTICO)
+          if git ls-files | grep -E "^\.env\.(vercel|production|local|staging)$" | grep -q .; then
+            echo "❌ **CRITICAL:** Found .env files tracked in git that should not be committed!" >> $GITHUB_STEP_SUMMARY
+            git ls-files | grep -E "^\.env\.(vercel|production|local|staging)$" >> $GITHUB_STEP_SUMMARY || true
+            FOUND_CRITICAL=1
           fi
-        fi
-        
-        # Nota: client_id é público por design em OAuth 2.0, não é um segredo
-        
-        if [ $FOUND_CRITICAL -eq 0 ] && [ $FOUND_WARNINGS -eq 0 ]; then
-          echo "✅ No secrets or sensitive files detected" >> $GITHUB_STEP_SUMMARY
-        elif [ $FOUND_CRITICAL -eq 0 ]; then
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ Some warnings were found, but no critical issues." >> $GITHUB_STEP_SUMMARY
-          # Não falha o build por warnings
-        else
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "**Action Required:** Review and remove sensitive information from repository" >> $GITHUB_STEP_SUMMARY
-          exit 1
-        fi
-      continue-on-error: false
+
+          # Verificar por secrets reais (private keys, tokens com formato específico)
+          # Procurar por chaves privadas RSA/EC (ignorar docs, arquivos de exemplo e workflows)
+          if git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -v "docs/" | grep -v ".yml" | grep -v ".md" | grep -q .; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **CRITICAL:** Private keys found in repository!" >> $GITHUB_STEP_SUMMARY
+            git grep -l "PRIVATE KEY" 2>/dev/null | grep -v ".example" | grep -v "node_modules" | grep -v "docs/" | grep -v ".yml" | grep -v ".md" >> $GITHUB_STEP_SUMMARY || true
+            FOUND_CRITICAL=1
+          fi
+
+          # Procurar por tokens do GitHub reais (ghp_, gho_, ghs_, etc.) - ignorar exemplos com xxx
+          if git grep -E "gh[pso]_[a-zA-Z0-9]{36}" 2>/dev/null | grep -v ".example" | grep -v "xxx" | grep -v "YOUR_" | grep -q .; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **CRITICAL:** GitHub tokens found in code!" >> $GITHUB_STEP_SUMMARY
+            FOUND_CRITICAL=1
+          fi
+
+          # Verificar .gitignore (apenas warning)
+          if [ -f ".gitignore" ]; then
+            if ! grep -q ".env.vercel" .gitignore 2>/dev/null; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ **WARNING:** .env.vercel not in .gitignore" >> $GITHUB_STEP_SUMMARY
+              FOUND_WARNINGS=1
+            fi
+          fi
+
+          # Nota: client_id é público por design em OAuth 2.0, não é um segredo
+
+          if [ $FOUND_CRITICAL -eq 0 ] && [ $FOUND_WARNINGS -eq 0 ]; then
+            echo "✅ No secrets or sensitive files detected" >> $GITHUB_STEP_SUMMARY
+          elif [ $FOUND_CRITICAL -eq 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Some warnings were found, but no critical issues." >> $GITHUB_STEP_SUMMARY
+            # Não falha o build por warnings
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "---" >> $GITHUB_STEP_SUMMARY
+            echo "**Action Required:** Review and remove sensitive information from repository" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+        continue-on-error: false
 
   license-compliance:
     name: License Compliance Check
@@ -228,30 +239,30 @@ jobs:
       contents: read
 
     steps:
-    - name: Generate security summary
-      run: |
-        echo "# 🛡️ Security Scan Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        echo "## 📊 Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "| Scan Type | Status |" >> $GITHUB_STEP_SUMMARY
-        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| NPM Audit | ${{ needs.npm-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Secret Scanning | ${{ needs.secret-scanning.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| License Compliance | ${{ needs.license-compliance.result == 'success' && '✅ Passed' || '⚠️ Review Required' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        if [[ "${{ needs.npm-audit.result }}" == "success" ]] && \
-           [[ "${{ needs.secret-scanning.result }}" == "success" ]]; then
-          echo "## ✅ Overall Status: SECURE" >> $GITHUB_STEP_SUMMARY
+      - name: Generate security summary
+        run: |
+          echo "# 🛡️ Security Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All security scans passed successfully." >> $GITHUB_STEP_SUMMARY
-        else
-          echo "## ⚠️ Overall Status: ACTION REQUIRED" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Some security issues were detected. Please review the scan results above." >> $GITHUB_STEP_SUMMARY
-          exit 1
-        fi
+
+          echo "## 📊 Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| NPM Audit | ${{ needs.npm-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | ${{ needs.secret-scanning.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Compliance | ${{ needs.license-compliance.result == 'success' && '✅ Passed' || '⚠️ Review Required' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.npm-audit.result }}" == "success" ]] && \
+             [[ "${{ needs.secret-scanning.result }}" == "success" ]]; then
+            echo "## ✅ Overall Status: SECURE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All security scans passed successfully." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⚠️ Overall Status: ACTION REQUIRED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some security issues were detected. Please review the scan results above." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

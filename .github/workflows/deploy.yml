@@ -23,13 +23,14 @@ on:
           - preview
 
 concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false # Don't cancel deployments in progress
+  group: deploy-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # Cancela PRs antigos, mas não produção
 
 jobs:
   deploy-vercel:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
+    timeout-minutes: 20  # Timeout global do job
     permissions:
       contents: read
       deployments: write
@@ -40,11 +41,13 @@ jobs:
       name: ${{ github.event_name == 'pull_request' && 'preview' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment) || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
     # Deploy somente se:
-    # 1. CI passou com sucesso (workflow_run)
-    # 2. É um PR não-draft
+    # 1. CI passou com sucesso E é push para main (workflow_run)
+    # 2. É um PR não-draft (preview deploy)
     # 3. É um dispatch manual
     if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_run' && 
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main') ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
@@ -152,30 +155,57 @@ jobs:
 
       - name: Validate Vercel secrets
         run: |
-          echo "Validating Vercel configuration..."
+          echo "🔐 Validating Vercel configuration..."
+          HAS_ERRORS=0
 
-          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "❌ Error: VERCEL_TOKEN secret is not configured"
-            echo "Please add your Vercel token to GitHub Secrets"
-            echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            exit 1
+          # Verificação de VERCEL_TOKEN (obrigatório para produção)
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+              echo "❌ Error: VERCEL_TOKEN secret is not configured"
+              echo "⚠️  PRODUCTION DEPLOYMENT REQUIRES VERCEL_TOKEN"
+              echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+              HAS_ERRORS=1
+            else
+              echo "✅ VERCEL_TOKEN configured"
+            fi
           fi
 
           if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
             echo "❌ Error: VERCEL_ORG_ID is not configured"
-            echo "Please add your Organization ID to GitHub Secrets"
-            echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            exit 1
+            echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+            HAS_ERRORS=1
+          else
+            echo "✅ VERCEL_ORG_ID configured"
           fi
 
           if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
             echo "❌ Error: VERCEL_PROJECT_ID is not configured"
-            echo "Please add your Project ID to GitHub Secrets"
-            echo "See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+            echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+            HAS_ERRORS=1
+          else
+            echo "✅ VERCEL_PROJECT_ID configured"
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔐 Secrets Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| VERCEL_TOKEN | $([ -n "${{ secrets.VERCEL_TOKEN }}" ] && echo '✅ Set' || echo '❌ Missing') |" >> $GITHUB_STEP_SUMMARY
+          echo "| VERCEL_ORG_ID | $([ -n "${{ secrets.VERCEL_ORG_ID }}" ] && echo '✅ Set' || echo '❌ Missing') |" >> $GITHUB_STEP_SUMMARY
+          echo "| VERCEL_PROJECT_ID | $([ -n "${{ secrets.VERCEL_PROJECT_ID }}" ] && echo '✅ Set' || echo '❌ Missing') |" >> $GITHUB_STEP_SUMMARY
+          echo "| UPSTASH_REDIS_REST_URL | $([ -n "${{ secrets.UPSTASH_REDIS_REST_URL }}" ] && echo '✅ Set' || echo '⚠️ Missing') |" >> $GITHUB_STEP_SUMMARY
+          echo "| UPSTASH_REDIS_REST_TOKEN | $([ -n "${{ secrets.UPSTASH_REDIS_REST_TOKEN }}" ] && echo '✅ Set' || echo '⚠️ Missing') |" >> $GITHUB_STEP_SUMMARY
+          echo "| QDRANT_URL | $([ -n "${{ secrets.QDRANT_URL }}" ] && echo '✅ Set' || echo '⚠️ Missing') |" >> $GITHUB_STEP_SUMMARY
+          echo "| QDRANT_API_KEY | $([ -n "${{ secrets.QDRANT_API_KEY }}" ] && echo '✅ Set' || echo '⚠️ Missing') |" >> $GITHUB_STEP_SUMMARY
+
+          if [ $HAS_ERRORS -eq 1 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **CRITICAL:** Required secrets are missing!" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
-          echo "✅ Vercel token validation passed"
+          echo "✅ All required Vercel secrets validated"
 
       - name: Deploy to Vercel
         id: deploy

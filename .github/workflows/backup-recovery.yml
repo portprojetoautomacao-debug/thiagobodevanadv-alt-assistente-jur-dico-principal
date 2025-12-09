@@ -43,6 +43,7 @@ jobs:
   full-backup:
     name: "💾 Backup Completo"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.backup_type == 'full' || github.event_name == 'schedule'
 
     strategy:
