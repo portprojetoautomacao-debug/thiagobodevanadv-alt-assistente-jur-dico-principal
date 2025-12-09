@@ -3,7 +3,7 @@ name: 🚀 Codespaces Auto-Setup
 on:
   # Trigger ao criar um novo Codespace
   codespace:
-  
+
   # Também pode ser executado manualmente
   workflow_dispatch:
 
@@ -11,16 +11,17 @@ jobs:
   setup-codespace:
     name: Configurar Codespaces para Copilot
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'codespace'
-    
+
     steps:
       - name: 📥 Checkout código
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Verificar arquivos de configuração
         run: |
           echo "✅ Verificando arquivos de configuração..."
-          
+
           # Verificar se arquivos essenciais existem
           files=(
             ".devcontainer/devcontainer.json"
@@ -31,7 +32,7 @@ jobs:
             ".vscode/tasks.json"
             "test-codespaces-config.sh"
           )
-          
+
           missing=()
           for file in "${files[@]}"; do
             if [ ! -f "$file" ]; then
@@ -41,33 +42,33 @@ jobs:
               echo "✅ $file"
             fi
           done
-          
+
           if [ ${#missing[@]} -ne 0 ]; then
             echo ""
             echo "⚠️  Arquivos faltando:"
             printf '%s\n' "${missing[@]}"
             exit 1
           fi
-          
+
           echo ""
           echo "🎉 Todos os arquivos de configuração estão presentes!"
-      
+
       - name: 🧪 Executar teste de configuração
         run: |
           chmod +x test-codespaces-config.sh
           ./test-codespaces-config.sh
-      
+
       - name: 📊 Resumo da configuração
         if: success()
         run: |
           cat << 'EOF'
-          
+
           ========================================
           🎉 CODESPACE CONFIGURADO COM SUCESSO!
           ========================================
-          
+
           ✅ GitHub Copilot pronto com MÁXIMA AUTONOMIA
-          
+
           O que está ativo:
           - 🤖 Edição automática de arquivos
           - 💻 Terminal com auto-approve
@@ -75,34 +76,34 @@ jobs:
           - 💾 Auto-save e auto-format
           - 📝 Git smart commit
           - 🧪 25+ tasks automáticas
-          
+
           📚 Para mais informações:
              .github/CODESPACES_SETUP.md
-          
+
           EOF
-      
+
       - name: ⚠️ Avisos importantes
         if: success()
         run: |
           cat << 'EOF'
-          
+
           ========================================
           ⚠️  LEMBRE-SE
           ========================================
-          
+
           1. Configure GITHUB_TOKEN nos Codespaces Secrets:
              https://github.com/settings/codespaces
-          
+
           2. Copilot precisa de permissões:
              - repo (full control)
              - workflow
              - write:packages
              - read:org
              - gist
-          
+
           3. Teste a configuração:
              ./test-codespaces-config.sh
-          
+
           EOF
 
   notify-failure:
@@ -110,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup-codespace
     if: failure()
-    
+
     steps:
       - name: ⚠️ Configuração falhou
         run: |

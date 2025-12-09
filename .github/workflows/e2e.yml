@@ -11,6 +11,11 @@ concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Variáveis globais para todos os jobs
+  NODE_VERSION: "22.x"
+  PLAYWRIGHT_BROWSERS_PATH: 0
+
 jobs:
   test:
     timeout-minutes: 30
