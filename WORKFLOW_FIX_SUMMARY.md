@@ -115,7 +115,7 @@ Estes podem ser corrigidos posteriormente como melhorias de código, mas não s�
 
 ## ✅ Status Final
 
-**TODOS OS 30 WORKFLOWS ESTÃO AGORA FUNCIONAIS E SEM ERROS DE SINTAXE** ✅
+**ATENÇÃO:** Ainda existem erros de sintaxe críticos em alguns workflows. Consulte a lista de problemas acima para detalhes. A validação completa será possível após a correção destes erros.
 
 ---
 *Correção realizada em: $(date)*
