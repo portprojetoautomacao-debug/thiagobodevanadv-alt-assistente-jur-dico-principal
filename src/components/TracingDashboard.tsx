@@ -128,7 +128,7 @@ export default function TracingDashboard({
           llmMetrics.completionTokens += completionTokens;
           llmMetrics.totalTokens += totalTokens;
 
-          // Estimativa simples de custo (ex: $0.15 / 1M input, $0.60 / 1M output para gpt-4o-mini)
+          // Estimativa simples de custo (ex: /usr/bin/bash.15 / 1M input, /usr/bin/bash.60 / 1M output para gpt-4o-mini)
           // Ajustar conforme necessário
           llmMetrics.estimatedCost += (promptTokens * 0.15 + completionTokens * 0.6) / 1_000_000;
         }
