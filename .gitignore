@@ -113,3 +113,4 @@ coverage-api/
 # SonarQube Auto Analysis Results
 .sonar-results/
 jdk-25_linux-x64_bin.deb
+.vs/
