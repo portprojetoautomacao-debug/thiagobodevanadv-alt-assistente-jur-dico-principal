@@ -148,8 +148,6 @@ export function useAgentBackup(options: BackupOptions) {
     }
   }, []);
 
-
-
   /**
    * Limpa dados antigos do localStorage para evitar QuotaExceededError
    */
