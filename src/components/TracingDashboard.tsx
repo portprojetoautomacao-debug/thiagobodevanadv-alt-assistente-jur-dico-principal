@@ -63,55 +63,60 @@ interface DashboardMetrics {
   errorRate: number;
 }
 
+// Helper functions (assumindo que existem em outro lugar ou precisam ser implementadas)
+function getAgentMetrics(_agentId: string): AgentMetric {
+  return {
+    count: 0,
+    avgDuration: 0,
+    errors: 0,
+    lastActive: Date.now(),
+  };
+}
+
+function getLLMMetrics(): LLMMetric {
+  return {
+    totalTokens: 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    estimatedCost: 0,
+  };
+}
+
 export default function TracingDashboard({
-  agentIds: _agentIds = [],
+  agentIds = [],
   autoRefresh = true,
   refreshInterval = 5000,
 }: TracingDashboardProps) {
-  const [traces, setTraces] = useState<Span[]>([]);
-  const [stats, setStats] = useState(tracingService.getStats());
-  const [selectedTrace, setSelectedTrace] = useState<string | null>(null);
-  const [agentMetrics, setAgentMetrics] = useState<
-    Record<string, ReturnType<typeof getAgentMetrics>>
-  >({});
-  const [llmMetrics, setLLMMetrics] = useState<ReturnType<
-    typeof getLLMMetrics
-  > | null>(null);
+  const [spans, setSpans] = useState<Span[]>([]);
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const refreshData = useCallback(() => {
-    setTraces(tracingService.getTraces());
-    setStats(tracingService.getStats());
-    setLLMMetrics(getLLMMetrics());
-
-    const metrics: Record<string, ReturnType<typeof getAgentMetrics>> = {};
-    agentIds.forEach((id) => {
-      metrics[id] = getAgentMetrics(id);
-    });
-    setAgentMetrics(metrics);
-  }, [agentIds]);
-
-  // Carregamento inicial e auto-refresh
-  useEffect(() => {
-    // Schedule initial refresh to avoid synchronous setState in effect
-    const initialRefreshTimeout = globalThis.setTimeout(refreshData, 0);
-
-    if (autoRefresh) {
-      const interval = setInterval(refreshData, refreshInterval);
-      return () => {
-        globalThis.clearTimeout(initialRefreshTimeout);
-        clearInterval(interval);
-      };
-    }
+  const loadData = useCallback(() => {
+    setIsRefreshing(true);
     
-    return () => {
-      globalThis.clearTimeout(initialRefreshTimeout);
-    };
-  }, [autoRefresh, refreshInterval, refreshData]);
+    const traces = tracingService.getTraces();
+    const stats = tracingService.getStats();
+    const llmMetrics = getLLMMetrics();
 
-  const handleClearTraces = () => {
-    tracingService.clearTraces();
-    refreshData();
-  };
+    const agentMetricsData: Record<string, AgentMetric> = {};
+    agentIds.forEach((id) => {
+      agentMetricsData[id] = getAgentMetrics(id);
+    });
+
+    // Calcular error rate manualmente se não existir
+    const errorCount = traces.filter(t => t.status === 'error').length;
+    const errorRate = traces.length > 0 ? (errorCount / traces.length) * 100 : 0;
+
+    setSpans(traces);
+    setMetrics({
+      agents: agentMetricsData,
+      llm: llmMetrics,
+      totalSpans: stats.totalSpans || 0,
+      errorRate,
+    });
+    
+    setIsRefreshing(false);
+  }, [agentIds]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -122,15 +127,24 @@ export default function TracingDashboard({
       default:
         return "text-yellow-600 bg-yellow-100";
     }
-  }, []);
+  };
 
+  // Carregamento inicial e auto-refresh
   useEffect(() => {
-    loadData();
+    // Schedule initial refresh to avoid synchronous setState in effect
+    const initialRefreshTimeout = globalThis.setTimeout(loadData, 0);
 
     if (autoRefresh) {
       const interval = setInterval(loadData, refreshInterval);
-      return () => clearInterval(interval);
+      return () => {
+        globalThis.clearTimeout(initialRefreshTimeout);
+        clearInterval(interval);
+      };
     }
+    
+    return () => {
+      globalThis.clearTimeout(initialRefreshTimeout);
+    };
   }, [autoRefresh, refreshInterval, loadData]);
 
   if (!metrics) {

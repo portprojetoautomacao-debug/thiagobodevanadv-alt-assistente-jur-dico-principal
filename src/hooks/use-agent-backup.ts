@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useKV } from './use-kv';
 
 /**
@@ -128,6 +128,18 @@ export function useAgentBackup(options: BackupOptions) {
       return null;
     }
   }, [userId]);
+
+  /**
+   * Salva cache local simplificado (apenas metadados)
+   */
+  const saveToLocalCache = useCallback((backupData: BackupData) => {
+    try {
+      const cacheData = {
+        timestamp: backupData.timestamp,
+        userId: backupData.userId,
+        agentCount: backupData.data.agents.length,
+        taskCount: backupData.data.taskQueue.length,
+      };
 
       setLastBackup(backupData.timestamp);
 
