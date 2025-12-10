@@ -14,6 +14,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
 
@@ -33,13 +34,26 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            chrome-extension-pje/node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-deps-${{ hashFiles('package-lock.json', 'chrome-extension-pje/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-deps-
+            ${{ runner.os }}-node-
+
       - name: Cache build artifacts
         uses: actions/cache@v4
         with:
           path: |
             dist
             .vite
-          key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*', 'vite.config.ts', 'package-lock.json') }}
+            chrome-extension-pje/dist
+          key: ${{ runner.os }}-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*', 'vite.config.ts', 'package-lock.json', 'chrome-extension-pje/src/**/*', 'chrome-extension-pje/webpack.config.js') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ matrix.node-version }}-
             ${{ runner.os }}-build-
@@ -157,7 +171,7 @@ jobs:
           echo "- **Cache Hit:** Check cache step logs above" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         if: success()
         with:
           name: build-${{ matrix.node-version }}

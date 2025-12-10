@@ -12,6 +12,7 @@ permissions:
 jobs:
   auto-assign:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Auto-assign to Copilot
         if: |

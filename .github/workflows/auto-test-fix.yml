@@ -37,6 +37,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-auto-test-fix-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-auto-test-fix-${{ matrix.browser }}-
+            ${{ runner.os }}-auto-test-fix-
+            ${{ runner.os }}-
 
       - name: 📦 Instalar dependências
         run: |
@@ -121,7 +132,7 @@ jobs:
           exit 1
 
       - name: 📊 Upload Playwright Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         if: always()
         with:
           name: playwright-report-${{ matrix.browser }}
@@ -129,7 +140,7 @@ jobs:
           retention-days: 7
 
       - name: 📸 Upload screenshots de falhas
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         if: failure()
         with:
           name: test-failures-${{ matrix.browser }}
