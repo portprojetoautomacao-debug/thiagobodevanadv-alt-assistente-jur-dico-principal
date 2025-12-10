@@ -1,15 +1,15 @@
 /**
- * Hook de População Automática do Qdrant
+ * Hook de PopulaÃ§Ã£o AutomÃ¡tica do Qdrant
  *
- * Este hook integra a população automática do Qdrant com o fluxo
- * de análise de intimações. Pode ser usado por:
- * - Mrs. Justin-e Agent (análise de intimações)
- * - Monitor DJEN (novas publicações)
+ * Este hook integra a populaÃ§Ã£o automÃ¡tica do Qdrant com o fluxo
+ * de anÃ¡lise de intimaÃ§Ãµes. Pode ser usado por:
+ * - Mrs. Justin-e Agent (anÃ¡lise de intimaÃ§Ãµes)
+ * - Monitor DJEN (novas publicaÃ§Ãµes)
  * - PJe Sync (chrome extension)
  *
- * Características:
- * - Execução assíncrona (não bloqueia fluxo principal)
- * - Retry automático com backoff
+ * CaracterÃ­sticas:
+ * - ExecuÃ§Ã£o assÃ­ncrona (nÃ£o bloqueia fluxo principal)
+ * - Retry automÃ¡tico com backoff
  * - Telemetria completa (Sentry)
  * - Cache de resultados
  *
@@ -26,7 +26,7 @@ import type { Expediente } from "@/types";
 import type { PopulationResult } from "./qdrant-auto-populator";
 
 /**
- * Status da população
+ * Status da populaÃ§Ã£o
  */
 export type PopulationStatus = "idle" | "processing" | "success" | "error";
 
@@ -41,11 +41,11 @@ export interface UseQdrantAutoPopulateState {
 }
 
 /**
- * Opções do hook
+ * OpÃ§Ãµes do hook
  */
 export interface UseQdrantAutoPopulateOptions {
   /**
-   * Se deve popular automaticamente ao receber nova intimação
+   * Se deve popular automaticamente ao receber nova intimaÃ§Ã£o
    * @default true
    */
   autoPopulate?: boolean;
@@ -57,13 +57,13 @@ export interface UseQdrantAutoPopulateOptions {
   enablePrecedents?: boolean;
 
   /**
-   * Confiança mínima para popular (0.0 - 1.0)
+   * ConfianÃ§a mÃ­nima para popular (0.0 - 1.0)
    * @default 0.7
    */
   minConfidence?: number;
 
   /**
-   * Callback chamado quando população é concluída com sucesso
+   * Callback chamado quando populaÃ§Ã£o Ã© concluÃ­da com sucesso
    */
   onSuccess?: (result: PopulationResult) => void;
 
@@ -74,7 +74,7 @@ export interface UseQdrantAutoPopulateOptions {
 }
 
 /**
- * Hook React para população automática do Qdrant
+ * Hook React para populaÃ§Ã£o automÃ¡tica do Qdrant
  *
  * @example
  * ```tsx
@@ -116,7 +116,7 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
     isProcessing: false,
   });
 
-  // Instância do auto-populator (singleton)
+  // InstÃ¢ncia do auto-populator (singleton)
   const [populator] = useState(() => {
     const qdrantConfig = {
       url: import.meta.env.QDRANT_URL || "",
@@ -126,7 +126,7 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
 
     const qdrant = createQdrantService(qdrantConfig);
     if (!qdrant) {
-      console.warn("[useQdrantAutoPopulate] Qdrant não configurado");
+      console.warn("[useQdrantAutoPopulate] Qdrant nÃ£o configurado");
       return null;
     }
 
@@ -137,12 +137,12 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
   });
 
   /**
-   * Função principal de população
+   * FunÃ§Ã£o principal de populaÃ§Ã£o
    */
   const populate = useCallback(
     async (intimacao: Expediente): Promise<PopulationResult | null> => {
       if (!populator) {
-        const error = "Qdrant não configurado";
+        const error = "Qdrant nÃ£o configurado";
         setState({
           status: "error",
           result: null,
@@ -153,9 +153,9 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
         return null;
       }
 
-      // Validação básica
+      // ValidaÃ§Ã£o bÃ¡sica
       if (!intimacao.numeroProcesso) {
-        const error = "Número do processo não informado";
+        const error = "NÃºmero do processo nÃ£o informado";
         setState({
           status: "error",
           result: null,
@@ -217,7 +217,7 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
 
         onError?.(error instanceof Error ? error : new Error(errorMessage));
 
-        console.error("[useQdrantAutoPopulate] ? Exceção:", error);
+        console.error("[useQdrantAutoPopulate] ? ExceÃ§Ã£o:", error);
 
         return null;
       }
@@ -246,7 +246,7 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
 }
 
 /**
- * Hook simplificado para uso com array de intimações
+ * Hook simplificado para uso com array de intimaÃ§Ãµes
  *
  * @example
  * ```tsx
@@ -260,7 +260,7 @@ export function useQdrantAutoPopulate(options: UseQdrantAutoPopulateOptions = {}
  *   return (
  *     <div>
  *       <button onClick={handlePopulateAll} disabled={isProcessing}>
- *         Popular {intimacoes.length} intimações
+ *         Popular {intimacoes.length} intimaÃ§Ãµes
  *       </button>
  *       {results.map(r => <ResultCard key={r.qdrantId} result={r} />)}
  *     </div>
@@ -276,7 +276,7 @@ export function useQdrantBatchPopulate(options: UseQdrantAutoPopulateOptions = {
   const { populate } = useQdrantAutoPopulate(options);
 
   /**
-   * Popula múltiplas intimações em batch
+   * Popula mÃºltiplas intimaÃ§Ãµes em batch
    */
   const populateAll = useCallback(
     async (intimacoes: Expediente[]): Promise<PopulationResult[]> => {
@@ -286,7 +286,7 @@ export function useQdrantBatchPopulate(options: UseQdrantAutoPopulateOptions = {
 
       const batchResults: PopulationResult[] = [];
 
-      // Processa em lotes de 5 para não sobrecarregar
+      // Processa em lotes de 5 para nÃ£o sobrecarregar
       const batchSize = 5;
       for (let i = 0; i < intimacoes.length; i += batchSize) {
         const batch = intimacoes.slice(i, i + batchSize);

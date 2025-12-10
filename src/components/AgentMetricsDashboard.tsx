@@ -1,12 +1,12 @@
 /**
- * Dashboard de Métricas dos Agentes IA
- * 
+ * Dashboard de Mï¿½tricas dos Agentes IA
+ *
  * Visualiza em tempo real:
- * - Latência média e P95/P99
+ * - Latï¿½ncia mï¿½dia e P95/P99
  * - Taxa de sucesso/erro
  * - Uso de tokens
- * - Throughput (execuções/minuto)
- * - Detecção de agentes degradados
+ * - Throughput (execuï¿½ï¿½es/minuto)
+ * - Detecï¿½ï¿½o de agentes degradados
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,33 +17,36 @@ import { Activity, AlertTriangle, CheckCircle, TrendingUp, Zap } from "lucide-re
 
 export function AgentMetricsDashboard() {
   const allStatsRaw = useAgentMetrics(); // Sem agentId = todos os agentes
-  
+
   // Garantir que sempre temos um array
-  const allStats: AgentStats[] = Array.isArray(allStatsRaw) ? allStatsRaw : allStatsRaw ? [allStatsRaw] : [];
+  const allStats: AgentStats[] = Array.isArray(allStatsRaw)
+    ? allStatsRaw
+    : allStatsRaw
+      ? [allStatsRaw]
+      : [];
 
   if (allStats.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>?? Métricas dos Agentes</CardTitle>
-          <CardDescription>Nenhum dado disponível ainda</CardDescription>
+          <CardTitle>?? Mï¿½tricas dos Agentes</CardTitle>
+          <CardDescription>Nenhum dado disponï¿½vel ainda</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Os agentes ainda não processaram nenhuma tarefa. As métricas aparecerão aqui assim que houver atividade.
+            Os agentes ainda nï¿½o processaram nenhuma tarefa. As mï¿½tricas aparecerï¿½o aqui assim que
+            houver atividade.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  // Classificar por total de execuções (mais ativo primeiro)
+  // Classificar por total de execuï¿½ï¿½es (mais ativo primeiro)
   const sortedStats = [...allStats].sort((a, b) => b.totalExecutions - a.totalExecutions);
 
   // Detectar agentes com problemas
-  const unhealthyAgents = sortedStats.filter(
-    (s) => s.errorRate > 10 || s.p95Latency > 5000
-  );
+  const unhealthyAgents = sortedStats.filter((s) => s.errorRate > 10 || s.p95Latency > 5000);
 
   return (
     <div className="space-y-6">
@@ -51,16 +54,14 @@ export function AgentMetricsDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Execuções</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Execuï¿½ï¿½es</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {sortedStats.reduce((sum, s) => sum + s.totalExecutions, 0).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Última hora
-            </p>
+            <p className="text-xs text-muted-foreground">ï¿½ltima hora</p>
           </CardContent>
         </Card>
 
@@ -78,15 +79,13 @@ export function AgentMetricsDashboard() {
               ).toFixed(1)}
               %
             </div>
-            <p className="text-xs text-muted-foreground">
-              Média geral
-            </p>
+            <p className="text-xs text-muted-foreground">Mï¿½dia geral</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Latência Média</CardTitle>
+            <CardTitle className="text-sm font-medium">Latï¿½ncia Mï¿½dia</CardTitle>
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -96,9 +95,7 @@ export function AgentMetricsDashboard() {
               ).toFixed(0)}
               ms
             </div>
-            <p className="text-xs text-muted-foreground">
-              Todos os agentes
-            </p>
+            <p className="text-xs text-muted-foreground">Todos os agentes</p>
           </CardContent>
         </Card>
 
@@ -111,9 +108,7 @@ export function AgentMetricsDashboard() {
             <div className="text-2xl font-bold">
               {(sortedStats.reduce((sum, s) => sum + s.totalTokens, 0) / 1000).toFixed(1)}k
             </div>
-            <p className="text-xs text-muted-foreground">
-              Última hora
-            </p>
+            <p className="text-xs text-muted-foreground">ï¿½ltima hora</p>
           </CardContent>
         </Card>
       </div>
@@ -127,7 +122,7 @@ export function AgentMetricsDashboard() {
               Agentes com Problemas Detectados
             </CardTitle>
             <CardDescription className="text-red-600 dark:text-red-400">
-              {unhealthyAgents.length} agente(s) com alta latência ou taxa de erro elevada
+              {unhealthyAgents.length} agente(s) com alta latï¿½ncia ou taxa de erro elevada
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -168,7 +163,7 @@ export function AgentMetricsDashboard() {
                   )}
                 </div>
                 <CardDescription>
-                  {stats.totalExecutions} execuções • {stats.throughput.toFixed(2)}/min
+                  {stats.totalExecutions} execuï¿½ï¿½es ï¿½ {stats.throughput.toFixed(2)}/min
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -181,10 +176,10 @@ export function AgentMetricsDashboard() {
                   <Progress value={successRate} className="h-2" />
                 </div>
 
-                {/* Latência */}
+                {/* Latï¿½ncia */}
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
-                    <div className="text-muted-foreground text-xs">Média</div>
+                    <div className="text-muted-foreground text-xs">Mï¿½dia</div>
                     <div className="font-medium">{stats.averageLatency.toFixed(0)}ms</div>
                   </div>
                   <div>
@@ -197,7 +192,7 @@ export function AgentMetricsDashboard() {
                   </div>
                 </div>
 
-                {/* Estatísticas extras */}
+                {/* Estatï¿½sticas extras */}
                 <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t">
                   <div>
                     <div className="text-muted-foreground text-xs">Tokens</div>

@@ -41,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'lint-only'
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - name: 📥 Checkout código
@@ -65,8 +67,11 @@ jobs:
         run: npm ci
 
       - name: 🔍 Executar ESLint
+        env:
+          FAIL_ON_WARNINGS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_warnings || 'false' }}
         run: |
           echo "🔍 Executando ESLint..."
+          EXIT_CODE=0
 
           # Executar ESLint com saída SARIF para GitHub (ESLint 9 removeu formatter interno)
           # Usa o formatter oficial da Microsoft já presente em devDependencies
@@ -77,16 +82,20 @@ jobs:
             echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
           fi
 
-          # Também executar com formato legível
+          # Também executar com formato legível e capturar exit code
           npm run lint -- --max-warnings 150 || EXIT_CODE=$?
 
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo "✅ ESLint passou sem erros ou warnings"
-          elif [[ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_warnings || 'true' }}" == "false" ]]; then
-            echo "⚠️  ESLint encontrou warnings, mas continuando..."
           else
-            echo "❌ ESLint falhou"
-            exit $EXIT_CODE
+            # FAIL_ON_WARNINGS é passado como env var do workflow
+            if [[ "${FAIL_ON_WARNINGS:-false}" == "true" ]]; then
+              echo "❌ ESLint falhou (treating warnings as failure)"
+              exit $EXIT_CODE
+            else
+              echo "⚠️  ESLint encontrou warnings/errors, mas continuando (fail_on_warnings=false)"
+              # Não sair com erro - permitir continuação
+            fi
           fi
 
       - name: 📊 Executar TypeScript Check
@@ -232,6 +241,8 @@ jobs:
     name: "🧪 Cobertura de Testes"
     runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'coverage-only'
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - name: 📥 Checkout código

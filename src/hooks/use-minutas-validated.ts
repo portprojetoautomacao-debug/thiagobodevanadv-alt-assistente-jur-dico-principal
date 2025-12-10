@@ -1,5 +1,5 @@
 /**
- * Hook otimizado para gest„o de minutas com validaÁ„o Zod
+ * Hook otimizado para gest√£o de minutas com valida√ß√£o Zod
  */
 
 import { useCallback } from "react";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useKV } from "./use-kv";
 import { validateMinuta, type MinutaValidated } from "@/schemas/process.schema";
 
-// Tipo Minuta (compatÌvel com o sistema existente)
+// Tipo Minuta (compat√≠vel com o sistema existente)
 export interface Minuta {
   id: string;
   titulo: string;
@@ -30,7 +30,7 @@ export interface Minuta {
 export function useMinutasValidated() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
 
-  // Adicionar minuta com validaÁ„o
+  // Adicionar minuta com valida√ß√£o
   const addMinuta = useCallback(
     (minutaData: Omit<Minuta, "id" | "criadoEm" | "atualizadoEm">) => {
       const now = new Date().toISOString();
@@ -43,8 +43,8 @@ export function useMinutasValidated() {
 
       const validation = validateMinuta(newMinuta);
       if (!validation.isValid) {
-        console.error("ValidaÁ„o falhou:", validation.errors);
-        toast.error("Dados da minuta inv·lidos. Verifique os campos obrigatÛrios.");
+        console.error("Valida√ß√£o falhou:", validation.errors);
+        toast.error("Dados da minuta inv√°lidos. Verifique os campos obrigat√≥rios.");
         return null;
       }
 
@@ -55,7 +55,7 @@ export function useMinutasValidated() {
     [setMinutas]
   );
 
-  // Atualizar minuta com validaÁ„o
+  // Atualizar minuta com valida√ß√£o
   const updateMinuta = useCallback(
     (id: string, updates: Partial<Minuta>) => {
       let updated: Minuta | null = null;
@@ -71,8 +71,8 @@ export function useMinutasValidated() {
 
             const validation = validateMinuta(updatedMinuta);
             if (!validation.isValid) {
-              console.error("ValidaÁ„o falhou:", validation.errors);
-              toast.error("Dados inv·lidos. AtualizaÁ„o cancelada.");
+              console.error("Valida√ß√£o falhou:", validation.errors);
+              toast.error("Dados inv√°lidos. Atualiza√ß√£o cancelada.");
               return m;
             }
 
@@ -122,7 +122,7 @@ export function useMinutasValidated() {
     [minutas]
   );
 
-  // Minutas pendentes de revis„o
+  // Minutas pendentes de revis√£o
   const getMinutasPendentesRevisao = useCallback(() => {
     return minutas.filter((m) => m.status === "pendente-revisao");
   }, [minutas]);

@@ -68,19 +68,15 @@ export abstract class LangGraphAgent {
     const messages = this.prepareMessages(state);
 
     try {
-      const result = await createChatSpan(
-        this.buildSpanConfig(),
-        messages,
-        async (span) => {
-          this.addConversationTracking(span);
-          const executedState = await this.executeInternal(state);
-          this.addResponseTracking(span, executedState);
-          this.addTokenTracking(span, executedState);
+      const result = await createChatSpan(this.buildSpanConfig(), messages, async (span) => {
+        this.addConversationTracking(span);
+        const executedState = await this.executeInternal(state);
+        this.addResponseTracking(span, executedState);
+        this.addTokenTracking(span, executedState);
 
-          this.turnCounter++;
-          return executedState;
-        }
-      );
+        this.turnCounter++;
+        return executedState;
+      });
 
       return result;
     } catch (error) {
@@ -249,11 +245,7 @@ export abstract class LangGraphAgent {
   /**
    * Handle error during execution attempt
    */
-  private handleAttemptError(
-    state: AgentState,
-    error: unknown,
-    attempt: number
-  ): AgentState {
+  private handleAttemptError(state: AgentState, error: unknown, attempt: number): AgentState {
     if (this.isLastAttempt(attempt)) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       return updateState(state, {

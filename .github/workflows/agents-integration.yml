@@ -87,9 +87,19 @@ jobs:
       - name: Run Agent Integration Tests
         run: |
           echo "Running integration tests for Agent Flow..."
-          # Run any integration tests in tests/integration
-          if ls tests/integration/*.test.ts 1> /dev/null 2>&1; then
-            npx vitest run tests/integration/*.test.ts --reporter=verbose
+
+          # Helpful diagnostics
+          echo "CI runner: $(uname -a)"
+          echo "Workspace files in tests/integration:"
+          ls -la tests/integration || true
+          git ls-files tests/integration || true
+
+          # Robust glob handling with nullglob
+          shopt -s nullglob
+          files=(tests/integration/*.test.ts)
+          if [ ${#files[@]} -gt 0 ]; then
+            echo "Found integration tests: ${files[*]}"
+            npx vitest run "${files[@]}" --reporter=verbose
           else
             echo "⚠️ No integration tests found in tests/integration, skipping"
             exit 0
