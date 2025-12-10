@@ -1,15 +1,15 @@
 /**
  * Agent Metrics Collector
  *
- * Sistema de coleta e análise de métricas de performance dos agentes IA.
- * Compatível com Sentry AI Monitoring e dashboards customizados.
+ * Sistema de coleta e anï¿½lise de mï¿½tricas de performance dos agentes IA.
+ * Compatï¿½vel com Sentry AI Monitoring e dashboards customizados.
  *
- * Métricas coletadas:
- * - Latência média por agente
+ * Mï¿½tricas coletadas:
+ * - Latï¿½ncia mï¿½dia por agente
  * - Taxa de sucesso/erro
  * - Uso de tokens
  * - Throughput (chamadas/minuto)
- * - Tempo de execução por tipo de tarefa
+ * - Tempo de execuï¿½ï¿½o por tipo de tarefa
  */
 
 export interface AgentMetric {
@@ -42,19 +42,19 @@ class AgentMetricsCollector {
   private readonly metricsWindowMs = 60 * 60 * 1000; // 1 hour
 
   /**
-   * Registra uma nova métrica de execução de agente
+   * Registra uma nova mï¿½trica de execuï¿½ï¿½o de agente
    */
   recordMetric(metric: AgentMetric): void {
     const agentMetrics = this.metrics.get(metric.agentId) || [];
 
-    // Adiciona nova métrica
+    // Adiciona nova mï¿½trica
     agentMetrics.push(metric);
 
-    // Remove métricas antigas (fora da janela de tempo)
+    // Remove mï¿½tricas antigas (fora da janela de tempo)
     const cutoffTime = Date.now() - this.metricsWindowMs;
     const filteredMetrics = agentMetrics.filter((m) => m.timestamp > cutoffTime);
 
-    // Limita ao máximo de métricas por agente
+    // Limita ao mï¿½ximo de mï¿½tricas por agente
     if (filteredMetrics.length > this.maxMetricsPerAgent) {
       filteredMetrics.shift();
     }
@@ -63,7 +63,7 @@ class AgentMetricsCollector {
   }
 
   /**
-   * Obtém estatísticas agregadas de um agente
+   * Obtï¿½m estatï¿½sticas agregadas de um agente
    */
   getAgentStats(agentId: string): AgentStats | null {
     const agentMetrics = this.metrics.get(agentId);
@@ -76,11 +76,11 @@ class AgentMetricsCollector {
     const successfulExecutions = agentMetrics.filter((m) => m.success).length;
     const failedExecutions = totalExecutions - successfulExecutions;
 
-    // Calcula latência média
+    // Calcula latï¿½ncia mï¿½dia
     const totalDuration = agentMetrics.reduce((sum, m) => sum + m.duration, 0);
     const averageLatency = totalDuration / totalExecutions;
 
-    // Calcula percentis de latência
+    // Calcula percentis de latï¿½ncia
     const sortedDurations = agentMetrics.map((m) => m.duration).sort((a, b) => a - b);
     const p95Index = Math.floor(sortedDurations.length * 0.95);
     const p99Index = Math.floor(sortedDurations.length * 0.99);
@@ -90,7 +90,7 @@ class AgentMetricsCollector {
     // Calcula total de tokens
     const totalTokens = agentMetrics.reduce((sum, m) => sum + (m.tokensUsed || 0), 0);
 
-    // Calcula throughput (execuções por minuto)
+    // Calcula throughput (execuï¿½ï¿½es por minuto)
     const oldestTimestamp = Math.min(...agentMetrics.map((m) => m.timestamp));
     const timeWindowMs = Date.now() - oldestTimestamp;
     const throughput = (totalExecutions / timeWindowMs) * 60 * 1000;
@@ -114,7 +114,7 @@ class AgentMetricsCollector {
   }
 
   /**
-   * Obtém estatísticas de todos os agentes
+   * Obtï¿½m estatï¿½sticas de todos os agentes
    */
   getAllStats(): AgentStats[] {
     const stats: AgentStats[] = [];
@@ -126,26 +126,28 @@ class AgentMetricsCollector {
       }
     }
 
-    // Ordena por total de execuções (mais ativo primeiro)
+    // Ordena por total de execuï¿½ï¿½es (mais ativo primeiro)
     return stats.sort((a, b) => b.totalExecutions - a.totalExecutions);
   }
 
   /**
    * Detecta agentes com problemas de performance
    */
-  getUnhealthyAgents(thresholds: {
-    maxLatencyMs?: number;
-    maxErrorRate?: number;
-  } = {}): AgentStats[] {
+  getUnhealthyAgents(
+    thresholds: {
+      maxLatencyMs?: number;
+      maxErrorRate?: number;
+    } = {}
+  ): AgentStats[] {
     const { maxLatencyMs = 5000, maxErrorRate = 10 } = thresholds;
 
     const allStats = this.getAllStats();
 
     return allStats.filter((stats) => {
-      // Precisa ter execuções suficientes para avaliar
+      // Precisa ter execuï¿½ï¿½es suficientes para avaliar
       if (stats.totalExecutions < 5) return false;
 
-      // Verifica latência P95
+      // Verifica latï¿½ncia P95
       if (stats.p95Latency > maxLatencyMs) return true;
 
       // Verifica taxa de erro
@@ -156,7 +158,7 @@ class AgentMetricsCollector {
   }
 
   /**
-   * Limpa métricas antigas (para economizar memória)
+   * Limpa mï¿½tricas antigas (para economizar memï¿½ria)
    */
   cleanup(): void {
     const cutoffTime = Date.now() - this.metricsWindowMs;
@@ -173,7 +175,7 @@ class AgentMetricsCollector {
   }
 
   /**
-   * Exporta métricas para formato compatível com Sentry
+   * Exporta mï¿½tricas para formato compatï¿½vel com Sentry
    */
   exportForSentry(agentId: string): Record<string, number> {
     const stats = this.getAgentStats(agentId);
@@ -184,7 +186,7 @@ class AgentMetricsCollector {
 
     return {
       "agent.total_executions": stats.totalExecutions,
-      "agent.success_rate": ((stats.successfulExecutions / stats.totalExecutions) * 100) || 0,
+      "agent.success_rate": (stats.successfulExecutions / stats.totalExecutions) * 100 || 0,
       "agent.error_rate": stats.errorRate,
       "agent.avg_latency_ms": stats.averageLatency,
       "agent.p95_latency_ms": stats.p95Latency,
@@ -195,7 +197,7 @@ class AgentMetricsCollector {
   }
 
   /**
-   * Reseta todas as métricas
+   * Reseta todas as mï¿½tricas
    */
   reset(): void {
     this.metrics.clear();
@@ -205,15 +207,18 @@ class AgentMetricsCollector {
 // Singleton instance
 export const metricsCollector = new AgentMetricsCollector();
 
-// Cleanup automático a cada 5 minutos
+// Cleanup automï¿½tico a cada 5 minutos
 if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    metricsCollector.cleanup();
-  }, 5 * 60 * 1000);
+  setInterval(
+    () => {
+      metricsCollector.cleanup();
+    },
+    5 * 60 * 1000
+  );
 }
 
 /**
- * Hook React para acessar métricas em tempo real
+ * Hook React para acessar mï¿½tricas em tempo real
  */
 export function useAgentMetrics(agentId?: string) {
   if (agentId) {
@@ -224,12 +229,9 @@ export function useAgentMetrics(agentId?: string) {
 }
 
 /**
- * Middleware para tracking automático de métricas
+ * Middleware para tracking automï¿½tico de mï¿½tricas
  */
-export function withMetrics<T extends (...args: any[]) => Promise<any>>(
-  agentId: string,
-  fn: T
-): T {
+export function withMetrics<T extends (...args: any[]) => Promise<any>>(agentId: string, fn: T): T {
   return (async (...args: Parameters<T>) => {
     const startTime = Date.now();
     let success = true;
@@ -239,7 +241,7 @@ export function withMetrics<T extends (...args: any[]) => Promise<any>>(
     try {
       const result = await fn(...args);
 
-      // Extrai tokens se disponível no resultado
+      // Extrai tokens se disponï¿½vel no resultado
       if (result && typeof result === "object" && "tokensUsed" in result) {
         tokensUsed = result.tokensUsed;
       }
@@ -272,19 +274,19 @@ export function getUnhealthyAgents(thresholds: {
   maxErrorRate?: number;
 }): AgentStats[] {
   const { maxLatencyMs = 5000, maxErrorRate = 10 } = thresholds;
-  
+
   const allStats = metricsCollector.getAllStats();
-  
+
   return allStats.filter((stats) => {
-    // Precisa ter execuções suficientes para avaliar
+    // Precisa ter execuï¿½ï¿½es suficientes para avaliar
     if (stats.totalExecutions < 5) return false;
-    
-    // Verifica latência P95
+
+    // Verifica latï¿½ncia P95
     if (stats.p95Latency > maxLatencyMs) return true;
-    
+
     // Verifica taxa de erro
     if (stats.errorRate > maxErrorRate) return true;
-    
+
     return false;
   });
 }

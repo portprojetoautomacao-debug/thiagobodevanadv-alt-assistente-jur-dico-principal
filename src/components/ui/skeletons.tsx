@@ -1,6 +1,6 @@
 /**
  * Skeleton Loaders - Componentes de Loading Profissionais
- * Melhora percepção de performance durante carregamentos
+ * Melhora percepÃ§Ã£o de performance durante carregamentos
  */
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,8 +11,8 @@ export function ProcessCardSkeleton() {
   return (
     <Card>
       <CardHeader className="space-y-2">
-        <Skeleton className="h-5 w-3/4" /> {/* Título */}
-        <Skeleton className="h-4 w-1/2" /> {/* Número CNJ */}
+        <Skeleton className="h-5 w-3/4" /> {/* TÃ­tulo */}
+        <Skeleton className="h-4 w-1/2" /> {/* NÃºmero CNJ */}
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-2">
@@ -22,8 +22,8 @@ export function ProcessCardSkeleton() {
         <Skeleton className="h-4 w-full" /> {/* Info linha 1 */}
         <Skeleton className="h-4 w-5/6" /> {/* Info linha 2 */}
         <div className="flex justify-between pt-2">
-          <Skeleton className="h-8 w-16" /> {/* Botão */}
-          <Skeleton className="h-8 w-16" /> {/* Botão */}
+          <Skeleton className="h-8 w-16" /> {/* BotÃ£o */}
+          <Skeleton className="h-8 w-16" /> {/* BotÃ£o */}
         </div>
       </CardContent>
     </Card>
@@ -86,7 +86,7 @@ export function ProcessListSkeleton() {
   );
 }
 
-// Skeleton genérico para tabelas
+// Skeleton genÃ©rico para tabelas
 export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
     <div className="space-y-2">

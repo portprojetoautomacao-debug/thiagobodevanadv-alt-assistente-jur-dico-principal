@@ -1,5 +1,5 @@
 /**
- * Testes unitários para schemas de validação Zod
+ * Testes unitÃ¡rios para schemas de validaÃ§Ã£o Zod
  */
 
 import { describe, it, expect } from "vitest";
@@ -13,18 +13,18 @@ import {
   numeroCNJSchema,
 } from "./process.schema";
 
-describe("Validação de Processo", () => {
-  it("deve validar processo completo válido", () => {
+describe("ValidaÃ§Ã£o de Processo", () => {
+  it("deve validar processo completo vÃ¡lido", () => {
     const validProcess = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       numeroCNJ: "1234567-89.2024.5.02.0999",
-      titulo: "Ação Trabalhista - João Silva",
-      autor: "João Silva",
+      titulo: "AÃ§Ã£o Trabalhista - JoÃ£o Silva",
+      autor: "JoÃ£o Silva",
       reu: "Empresa XYZ Ltda",
       status: "ativo" as const,
       valorCausa: 50000,
       comarca: "Belo Horizonte",
-      vara: "1ª Vara do Trabalho",
+      vara: "1Âª Vara do Trabalho",
       prazos: [],
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
@@ -37,12 +37,12 @@ describe("Validação de Processo", () => {
     }
   });
 
-  it("deve rejeitar número CNJ inválido", () => {
+  it("deve rejeitar nÃºmero CNJ invÃ¡lido", () => {
     const invalidProcess = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       numeroCNJ: "123-45.6789", // Formato errado
       titulo: "Teste",
-      autor: "João",
+      autor: "JoÃ£o",
       reu: "Empresa",
       status: "ativo" as const,
       criadoEm: new Date().toISOString(),
@@ -53,18 +53,18 @@ describe("Validação de Processo", () => {
     expect(result.isValid).toBe(false);
   });
 
-  it("deve validar formato de número CNJ", () => {
+  it("deve validar formato de nÃºmero CNJ", () => {
     expect(numeroCNJSchema.safeParse("1234567-89.2024.5.02.0999").success).toBe(true);
     expect(numeroCNJSchema.safeParse("0000000-00.0000.0.00.0000").success).toBe(true);
     expect(numeroCNJSchema.safeParse("123-45").success).toBe(false);
   });
 });
 
-describe("Validação de Cliente", () => {
-  it("deve validar cliente com CPF válido", () => {
+describe("ValidaÃ§Ã£o de Cliente", () => {
+  it("deve validar cliente com CPF vÃ¡lido", () => {
     const validCliente = {
       id: "550e8400-e29b-41d4-a716-446655440000",
-      nome: "João Silva Santos",
+      nome: "JoÃ£o Silva Santos",
       cpfCnpj: "123.456.789-00",
       email: "joao@email.com",
       telefone: "(11) 91234-5678",
@@ -76,7 +76,7 @@ describe("Validação de Cliente", () => {
     expect(result.isValid).toBe(true);
   });
 
-  it("deve validar cliente com CNPJ válido", () => {
+  it("deve validar cliente com CNPJ vÃ¡lido", () => {
     const validCliente = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       nome: "Empresa XYZ Ltda",
@@ -89,10 +89,10 @@ describe("Validação de Cliente", () => {
     expect(result.isValid).toBe(true);
   });
 
-  it("deve rejeitar email inválido", () => {
+  it("deve rejeitar email invÃ¡lido", () => {
     const invalidCliente = {
       id: "550e8400-e29b-41d4-a716-446655440000",
-      nome: "João Silva",
+      nome: "JoÃ£o Silva",
       cpfCnpj: "123.456.789-00",
       email: "email-invalido", // Sem @
       criadoEm: new Date().toISOString(),
@@ -104,52 +104,52 @@ describe("Validação de Cliente", () => {
   });
 });
 
-describe("Validação de CPF", () => {
-  it("deve validar CPF com dígitos verificadores corretos", () => {
-    expect(isValidCPF("111.444.777-35")).toBe(true); // CPF válido de exemplo
+describe("ValidaÃ§Ã£o de CPF", () => {
+  it("deve validar CPF com dÃ­gitos verificadores corretos", () => {
+    expect(isValidCPF("111.444.777-35")).toBe(true); // CPF vÃ¡lido de exemplo
   });
 
-  it("deve rejeitar CPF com dígitos verificadores incorretos", () => {
-    expect(isValidCPF("123.456.789-00")).toBe(false); // Dígitos errados
+  it("deve rejeitar CPF com dÃ­gitos verificadores incorretos", () => {
+    expect(isValidCPF("123.456.789-00")).toBe(false); // DÃ­gitos errados
   });
 
-  it("deve rejeitar CPF com todos os dígitos iguais", () => {
+  it("deve rejeitar CPF com todos os dÃ­gitos iguais", () => {
     expect(isValidCPF("111.111.111-11")).toBe(false);
     expect(isValidCPF("000.000.000-00")).toBe(false);
   });
 
-  it("deve aceitar CPF sem formatação", () => {
+  it("deve aceitar CPF sem formataÃ§Ã£o", () => {
     expect(isValidCPF("11144477735")).toBe(true);
   });
 });
 
-describe("Validação de CNPJ", () => {
-  it("deve validar CNPJ com dígitos verificadores corretos", () => {
-    expect(isValidCNPJ("11.222.333/0001-81")).toBe(true); // CNPJ válido de exemplo
+describe("ValidaÃ§Ã£o de CNPJ", () => {
+  it("deve validar CNPJ com dÃ­gitos verificadores corretos", () => {
+    expect(isValidCNPJ("11.222.333/0001-81")).toBe(true); // CNPJ vÃ¡lido de exemplo
   });
 
-  it("deve rejeitar CNPJ com dígitos verificadores incorretos", () => {
+  it("deve rejeitar CNPJ com dÃ­gitos verificadores incorretos", () => {
     expect(isValidCNPJ("12.345.678/0001-90")).toBe(false);
   });
 
-  it("deve rejeitar CNPJ com todos os dígitos iguais", () => {
+  it("deve rejeitar CNPJ com todos os dÃ­gitos iguais", () => {
     expect(isValidCNPJ("11.111.111/1111-11")).toBe(false);
   });
 
-  it("deve aceitar CNPJ sem formatação", () => {
+  it("deve aceitar CNPJ sem formataÃ§Ã£o", () => {
     expect(isValidCNPJ("11222333000181")).toBe(true);
   });
 });
 
-describe("Validação de Minuta", () => {
+describe("ValidaÃ§Ã£o de Minuta", () => {
   it("deve validar minuta completa", () => {
     const validMinuta = {
       id: "550e8400-e29b-41d4-a716-446655440000",
-      titulo: "Petição Inicial - Ação Trabalhista",
+      titulo: "PetiÃ§Ã£o Inicial - AÃ§Ã£o Trabalhista",
       tipo: "peticao" as const,
-      conteudo: "<p>Conteúdo da petição...</p>",
+      conteudo: "<p>ConteÃºdo da petiÃ§Ã£o...</p>",
       status: "rascunho" as const,
-      autor: "Dr. João Silva",
+      autor: "Dr. JoÃ£o Silva",
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
     };
@@ -158,7 +158,7 @@ describe("Validação de Minuta", () => {
     expect(result.isValid).toBe(true);
   });
 
-  it("deve rejeitar minuta com conteúdo muito curto", () => {
+  it("deve rejeitar minuta com conteÃºdo muito curto", () => {
     const invalidMinuta = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       titulo: "Teste",
@@ -177,11 +177,11 @@ describe("Validação de Minuta", () => {
   it("deve validar URL do Google Docs", () => {
     const minutaComDocs = {
       id: "550e8400-e29b-41d4-a716-446655440000",
-      titulo: "Petição com Google Docs",
+      titulo: "PetiÃ§Ã£o com Google Docs",
       tipo: "peticao" as const,
-      conteudo: "Conteúdo da petição",
+      conteudo: "ConteÃºdo da petiÃ§Ã£o",
       status: "finalizada" as const,
-      autor: "Dr. João",
+      autor: "Dr. JoÃ£o",
       googleDocsUrl: "https://docs.google.com/document/d/abc123/edit",
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
@@ -192,13 +192,13 @@ describe("Validação de Minuta", () => {
   });
 });
 
-describe("Validação de FinancialEntry", () => {
+describe("ValidaÃ§Ã£o de FinancialEntry", () => {
   it("deve validar entrada de receita", () => {
     const validIncome = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       type: "income" as const,
       amount: 5000,
-      category: "Honorários",
+      category: "HonorÃ¡rios",
       description: "Pagamento processo 123",
       date: new Date().toISOString(),
       criadoEm: new Date().toISOString(),

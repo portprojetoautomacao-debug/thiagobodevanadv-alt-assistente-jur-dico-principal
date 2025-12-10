@@ -2,18 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Agent, AgentTask } from "@/lib/agents";
-import {
-  Activity,
-  CheckCircle,
-  Clock,
-  LineChart,
-  Timer,
-  Pulse,
-  LightningSlash,
-} from '@phosphor-icons/react'
-import { TrendingUp, Zap, ZapOff } from 'lucide-react'
-import { useState, useEffect, useMemo, useRef } from 'react'
-import type { Agent, AgentTask } from '@/lib/agents'
+import { CheckCircle, Clock, ChartLine, Timer, Pulse } from "@phosphor-icons/react";
+import { TrendingUp, Zap, ZapOff } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 interface AgentMetricsProps {
   readonly agents: Agent[];
@@ -90,18 +81,14 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1);
 
   const tasksLast24Hours = useMemo(() => {
-    const now = typeof window !== 'undefined' ? Date.now() : 0
-    const last24h = new Date(now - 24 * 60 * 60 * 1000)
-    return completedTasks.filter(
-      (task) =>
-        task.completedAt && new Date(task.completedAt) > last24h,
-    ).length
-  }, [completedTasks])
+    const now = typeof window !== "undefined" ? Date.now() : 0;
+    const last24h = new Date(now - 24 * 60 * 60 * 1000);
+    return completedTasks.filter((task) => task.completedAt && new Date(task.completedAt) > last24h)
+      .length;
+  }, [completedTasks]);
 
   const averageProcessingTime = useMemo(() => {
-    const tasksWithTime = completedTasks.filter(
-      (task) => task.startedAt && task.completedAt,
-    )
+    const tasksWithTime = completedTasks.filter((task) => task.startedAt && task.completedAt);
 
     if (tasksWithTime.length === 0) return 0;
 
@@ -112,8 +99,8 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
     }, 0);
 
     // segundos médios por tarefa
-    return Math.round(totalTime / tasksWithTime.length / 1000)
-  }, [completedTasks])
+    return Math.round(totalTime / tasksWithTime.length / 1000);
+  }, [completedTasks]);
 
   return (
     <div className="space-y-6">
@@ -144,7 +131,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
                 <div className="text-xs text-muted-foreground">Saudáveis</div>
               </div>
               <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                <Activity className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
+                <Pulse className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
                 <div className="text-2xl font-bold text-yellow-600">
                   {circuitBreakers.summary.degraded}
                 </div>
@@ -203,12 +190,8 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">
-              {averageProcessingTime}s
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Tempo médio de processamento por tarefa
-            </p>
+            <div className="text-3xl font-bold text-foreground mb-2">{averageProcessingTime}s</div>
+            <p className="text-xs text-muted-foreground">Tempo médio de processamento por tarefa</p>
           </CardContent>
         </Card>
 
@@ -258,7 +241,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <LineChart className="w-5 h-5 text-primary" />
+            <ChartLine className="w-5 h-5 text-primary" />
             Desempenho por Agente
           </CardTitle>
           <CardDescription>Estatísticas individuais de cada agente</CardDescription>

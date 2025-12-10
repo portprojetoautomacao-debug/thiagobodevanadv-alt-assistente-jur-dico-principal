@@ -1,17 +1,17 @@
 /**
  * Tema Extractor Service
  *
- * ServiÁo especializado em extrair temas jurÌdicos de intimaÁıes usando:
- * - Gemini 2.5 Pro para classificaÁ„o inteligente
- * - NER (Named Entity Recognition) para entidades jurÌdicas
+ * Servi√ßo especializado em extrair temas jur√≠dicos de intima√ß√µes usando:
+ * - Gemini 2.5 Pro para classifica√ß√£o inteligente
+ * - NER (Named Entity Recognition) para entidades jur√≠dicas
  * - TF-IDF para palavras-chave
- * - Taxonomia jurÌdica estruturada
+ * - Taxonomia jur√≠dica estruturada
  *
  * @module tema-extractor
  */
 
-import { GeminiClient } from "./ai-providers";
 import type { Expediente } from "@/types";
+import { GeminiClient } from "./ai-providers";
 
 export interface TemaExtracao {
   temaPrimario: string;
@@ -32,41 +32,41 @@ export interface TemaExtracao {
 }
 
 /**
- * Taxonomia JurÌdica Brasileira
+ * Taxonomia Jur√≠dica Brasileira
  * Baseada na estrutura do CNJ e STJ
  */
 const TAXONOMIA_JURIDICA = {
   "Direito do Trabalho": {
-    Rescis„o: ["Indireta", "Direta", "Culpa RecÌproca", "Sem Justa Causa"],
-    FÈrias: ["Proporcionais", "Vencidas", "1/3 Constitucional", "Convers„o em Pec˙nia"],
+    Rescis√£o: ["Indireta", "Direta", "Culpa Rec√≠proca", "Sem Justa Causa"],
+    F√©rias: ["Proporcionais", "Vencidas", "1/3 Constitucional", "Convers√£o em Pec√∫nia"],
     Jornada: ["Horas Extras", "Adicional Noturno", "Intervalo Intrajornada", "Banco de Horas"],
-    Sal·rio: ["13∫ Sal·rio", "EquiparaÁ„o Salarial", "Desvio de FunÁ„o", "GratificaÁıes"],
-    FGTS: ["DepÛsitos", "Multa 40%", "Saque"],
+    Sal√°rio: ["13¬∫ Sal√°rio", "Equipara√ß√£o Salarial", "Desvio de Fun√ß√£o", "Gratifica√ß√µes"],
+    FGTS: ["Dep√≥sitos", "Multa 40%", "Saque"],
   },
   "Direito Civil": {
-    Contratos: ["Rescis„o", "Revis„o", "InexecuÁ„o", "VÌcio de Consentimento"],
+    Contratos: ["Rescis√£o", "Revis√£o", "Inexecu√ß√£o", "V√≠cio de Consentimento"],
     "Responsabilidade Civil": ["Danos Morais", "Danos Materiais", "Lucros Cessantes"],
-    "Direito de FamÌlia": ["DivÛrcio", "Alimentos", "Guarda", "Partilha de Bens"],
-    "Direitos Reais": ["Propriedade", "Posse", "Usucapi„o", "Servidıes"],
+    "Direito de Fam√≠lia": ["Div√≥rcio", "Alimentos", "Guarda", "Partilha de Bens"],
+    "Direitos Reais": ["Propriedade", "Posse", "Usucapi√£o", "Servid√µes"],
   },
-  "Direito Tribut·rio": {
-    ICMS: ["SubstituiÁ„o Tribut·ria", "Diferencial de AlÌquota", "CrÈdito Presumido"],
-    IRPJ: ["Lucro Real", "Lucro Presumido", "DistribuiÁ„o de Lucros"],
-    PIS: ["Cumulativo", "N„o Cumulativo", "CrÈditos"],
-    COFINS: ["Cumulativo", "N„o Cumulativo", "Exclus„o de ICMS"],
+  "Direito Tribut√°rio": {
+    ICMS: ["Substitui√ß√£o Tribut√°ria", "Diferencial de Al√≠quota", "Cr√©dito Presumido"],
+    IRPJ: ["Lucro Real", "Lucro Presumido", "Distribui√ß√£o de Lucros"],
+    PIS: ["Cumulativo", "N√£o Cumulativo", "Cr√©ditos"],
+    COFINS: ["Cumulativo", "N√£o Cumulativo", "Exclus√£o de ICMS"],
   },
-  "Direito Previdenci·rio": {
-    Aposentadoria: ["Tempo de ContribuiÁ„o", "Idade", "Invalidez", "Especial"],
-    Pens„o: ["Morte", "Invalidez"],
-    "AuxÌlios": ["DoenÁa", "Acidente", "Reclus„o"],
+  "Direito Previdenci√°rio": {
+    Aposentadoria: ["Tempo de Contribui√ß√£o", "Idade", "Invalidez", "Especial"],
+    Pens√£o: ["Morte", "Invalidez"],
+    Aux√≠lios: ["Doen√ßa", "Acidente", "Reclus√£o"],
   },
   "Direito Penal": {
-    "Crimes Contra PatrimÙnio": ["Furto", "Roubo", "Estelionato", "ApropriaÁ„o IndÈbita"],
-    "Crimes Contra Pessoa": ["HomicÌdio", "Les„o Corporal", "AmeaÁa"],
+    "Crimes Contra Patrim√¥nio": ["Furto", "Roubo", "Estelionato", "Apropria√ß√£o Ind√©bita"],
+    "Crimes Contra Pessoa": ["Homic√≠dio", "Les√£o Corporal", "Amea√ßa"],
   },
   "Direito Administrativo": {
-    "Servidores P˙blicos": ["ReintegraÁ„o", "RemoÁ„o", "GratificaÁıes", "LicenÁas"],
-    "LicitaÁıes": ["Preg„o", "Tomada de PreÁos", "ConcorrÍncia"],
+    "Servidores P√∫blicos": ["Reintegra√ß√£o", "Remo√ß√£o", "Gratifica√ß√µes", "Licen√ßas"],
+    Licita√ß√µes: ["Preg√£o", "Tomada de Pre√ßos", "Concorr√™ncia"],
   },
 } as const;
 
@@ -79,7 +79,7 @@ export class TemaExtractorService {
   }
 
   /**
-   * Extrai temas de uma intimaÁ„o
+   * Extrai temas de uma intima√ß√£o
    */
   async extractTemas(intimacao: {
     texto: string;
@@ -87,7 +87,7 @@ export class TemaExtractorService {
     tribunal?: string;
     tipo?: string;
   }): Promise<TemaExtracao> {
-    // 1. ClassificaÁ„o via Gemini
+    // 1. Classifica√ß√£o via Gemini
     const prompt = this.buildExtractionPrompt(intimacao);
 
     const response = await this.geminiClient.chat("gemini-2.5-pro", [
@@ -102,26 +102,26 @@ export class TemaExtractorService {
       throw new Error(`Falha ao parsear resposta do Gemini: ${error}`);
     }
 
-    // 3. ValidaÁ„o de confianÁa
+    // 3. Valida√ß√£o de confian√ßa
     if (!temas.confidence || temas.confidence < this.MIN_CONFIDENCE) {
-      throw new Error(
-        `ConfianÁa muito baixa na extraÁ„o de temas: ${temas.confidence || 0}`
-      );
+      throw new Error(`Confian√ßa muito baixa na extra√ß√£o de temas: ${temas.confidence || 0}`);
     }
 
-    // 4. ClassificaÁ„o na taxonomia
+    // 4. Classifica√ß√£o na taxonomia
     const taxonomia = this.classificarTema(temas.temaPrimario || "Outros");
 
-    // 5. ValidaÁ„o e sanitizaÁ„o de entidades
-    const entidades = this.sanitizeEntidades(temas.entidades || {
-      pessoas: [],
-      empresas: [],
-      leis: [],
-      tribunais: [],
-    });
+    // 5. Valida√ß√£o e sanitiza√ß√£o de entidades
+    const entidades = this.sanitizeEntidades(
+      temas.entidades || {
+        pessoas: [],
+        empresas: [],
+        leis: [],
+        tribunais: [],
+      }
+    );
 
     return {
-      temaPrimario: temas.temaPrimario || "N„o Classificado",
+      temaPrimario: temas.temaPrimario || "N√£o Classificado",
       temasSecundarios: temas.temasSecundarios || [],
       palavrasChave: temas.palavrasChave || [],
       confidence: temas.confidence || 0,
@@ -143,7 +143,7 @@ export class TemaExtractorService {
   }
 
   /**
-   * ConstrÛi prompt otimizado para extraÁ„o de temas
+   * Constr√≥i prompt otimizado para extra√ß√£o de temas
    */
   private buildExtractionPrompt(intimacao: {
     texto: string;
@@ -152,16 +152,16 @@ export class TemaExtractorService {
     tipo?: string;
   }): string {
     return `
-VocÍ È um especialista em classificaÁ„o jurÌdica. Analise esta intimaÁ„o e extraia:
+Voc√™ √© um especialista em classifica√ß√£o jur√≠dica. Analise esta intima√ß√£o e extraia:
 
-1. **Tema jurÌdico principal**: A ·rea do direito e o assunto especÌfico (ex: "Direito do Trabalho - Rescis„o Indireta")
-2. **Temas secund·rios**: AtÈ 3 temas relacionados
-3. **Palavras-chave**: AtÈ 10 termos jurÌdicos relevantes
-4. **ConfianÁa**: Sua certeza na classificaÁ„o (0.0 a 1.0)
+1. **Tema jur√≠dico principal**: A √°rea do direito e o assunto espec√≠fico (ex: "Direito do Trabalho - Rescis√£o Indireta")
+2. **Temas secund√°rios**: At√© 3 temas relacionados
+3. **Palavras-chave**: At√© 10 termos jur√≠dicos relevantes
+4. **Confian√ßa**: Sua certeza na classifica√ß√£o (0.0 a 1.0)
 5. **Entidades**:
    - Pessoas (nomes completos)
-   - Empresas (raz„o social)
-   - Leis citadas (ex: "CLT Art. 477", "CF Art. 7∫")
+   - Empresas (raz√£o social)
+   - Leis citadas (ex: "CLT Art. 477", "CF Art. 7¬∫")
    - Tribunais mencionados
 
 **CONTEXTO:**
@@ -169,25 +169,25 @@ ${intimacao.numeroProcesso ? `Processo: ${intimacao.numeroProcesso}` : ""}
 ${intimacao.tribunal ? `Tribunal: ${intimacao.tribunal}` : ""}
 ${intimacao.tipo ? `Tipo: ${intimacao.tipo}` : ""}
 
-**INTIMA«√O:**
+**INTIMA√á√ÉO:**
 ${intimacao.texto.substring(0, 3000)}
 
-**INSTRU«’ES:**
-- Seja especÌfico no tema principal (ex: "Direito do Trabalho - Rescis„o Indireta" ao invÈs de apenas "Direito do Trabalho")
+**INSTRU√á√ïES:**
+- Seja espec√≠fico no tema principal (ex: "Direito do Trabalho - Rescis√£o Indireta" ao inv√©s de apenas "Direito do Trabalho")
 - Use nomenclatura oficial brasileira (CNJ/STJ)
-- Confidence > 0.7 obrigatÛrio
-- Formate leis como: "CLT Art. 477 ß 1∫"
+- Confidence > 0.7 obrigat√≥rio
+- Formate leis como: "CLT Art. 477 ¬ß 1¬∫"
 
-**RESPONDA APENAS EM JSON (sem markdown, sem explicaÁıes):**
+**RESPONDA APENAS EM JSON (sem markdown, sem explica√ß√µes):**
 {
-  "temaPrimario": "Direito do Trabalho - Rescis„o Indireta",
-  "temasSecundarios": ["FÈrias Vencidas", "13∫ Sal·rio Proporcional", "Aviso PrÈvio"],
-  "palavrasChave": ["rescis„o", "indireta", "justa causa", "empregador", "CLT", "direitos trabalhistas", "verbas rescisÛrias", "FGTS", "multa 40%", "aviso prÈvio"],
+  "temaPrimario": "Direito do Trabalho - Rescis√£o Indireta",
+  "temasSecundarios": ["F√©rias Vencidas", "13¬∫ Sal√°rio Proporcional", "Aviso Pr√©vio"],
+  "palavrasChave": ["rescis√£o", "indireta", "justa causa", "empregador", "CLT", "direitos trabalhistas", "verbas rescis√≥rias", "FGTS", "multa 40%", "aviso pr√©vio"],
   "confidence": 0.95,
   "entidades": {
-    "pessoas": ["Jo„o Silva Santos", "Maria Oliveira Costa"],
-    "empresas": ["ABC Ind˙stria e ComÈrcio Ltda", "XYZ LogÌstica S.A."],
-    "leis": ["CLT Art. 477", "CLT Art. 483", "CF Art. 7∫"],
+    "pessoas": ["Jo√£o Silva Santos", "Maria Oliveira Costa"],
+    "empresas": ["ABC Ind√∫stria e Com√©rcio Ltda", "XYZ Log√≠stica S.A."],
+    "leis": ["CLT Art. 477", "CLT Art. 483", "CF Art. 7¬∫"],
     "tribunais": ["TST", "TRT-3"]
   }
 }
@@ -195,7 +195,7 @@ ${intimacao.texto.substring(0, 3000)}
   }
 
   /**
-   * Classifica tema na taxonomia jurÌdica estruturada
+   * Classifica tema na taxonomia jur√≠dica estruturada
    */
   private classificarTema(tema: string): {
     area: string;
@@ -209,16 +209,16 @@ ${intimacao.texto.substring(0, 3000)}
     for (const [area, subareas] of Object.entries(TAXONOMIA_JURIDICA)) {
       const areaNorm = area.toLowerCase();
 
-      // Match na ·rea
+      // Match na √°rea
       if (temaNorm.includes(areaNorm)) {
-        // Busca sub·rea
+        // Busca sub√°rea
         for (const [subarea, especialidades] of Object.entries(subareas)) {
           const subareaNorm = subarea.toLowerCase();
 
           if (temaNorm.includes(subareaNorm)) {
             // Busca especialidade
             const especialidade =
-              especialidades.find((e) => temaNorm.includes(e.toLowerCase())) ||
+              especialidades.find((e: string) => temaNorm.includes(e.toLowerCase())) ||
               especialidades[0] ||
               "Geral";
 
@@ -226,7 +226,7 @@ ${intimacao.texto.substring(0, 3000)}
           }
         }
 
-        // Match apenas na ·rea (sem sub·rea especÌfica)
+        // Match apenas na √°rea (sem sub√°rea espec√≠fica)
         const primeiraSubarea = Object.keys(subareas)[0] || "Geral";
         return {
           area,
@@ -236,16 +236,16 @@ ${intimacao.texto.substring(0, 3000)}
       }
     }
 
-    // Fallback: n„o classificado
+    // Fallback: n√£o classificado
     return {
-      area: "N„o Classificado",
+      area: "N√£o Classificado",
       subarea: "Geral",
       especialidade: "N/A",
     };
   }
 
   /**
-   * Sanitiza entidades extraÌdas (LGPD compliance)
+   * Sanitiza entidades extra√≠das (LGPD compliance)
    */
   private sanitizeEntidades(entidades: TemaExtracao["entidades"]): TemaExtracao["entidades"] {
     return {
@@ -263,39 +263,39 @@ ${intimacao.texto.substring(0, 3000)}
   }
 
   /**
-   * Redact nomes se necess·rio (LGPD)
+   * Redact nomes se necess√°rio (LGPD)
    */
   private redactIfNeeded(nome: string): string {
-    // TODO: Implementar lÛgica de redaction se configurado
-    // Por padr„o, mantÈm o nome completo para uso interno
+    // TODO: Implementar l√≥gica de redaction se configurado
+    // Por padr√£o, mant√©m o nome completo para uso interno
     return nome;
   }
 
   /**
-   * Normaliza referÍncias legais
+   * Normaliza refer√™ncias legais
    */
   private normalizeLei(lei: string): string {
-    // Padroniza formato: "CLT Art. 477" ou "CF/88 Art. 7∫"
+    // Padroniza formato: "CLT Art. 477" ou "CF/88 Art. 7¬∫"
     return lei
       .replace(/artigo/gi, "Art.")
-      .replace(/paragrafo/gi, "ß")
+      .replace(/paragrafo/gi, "¬ß")
       .replace(/inciso/gi, "Inc.")
       .trim();
   }
 
   /**
    * Extrai palavras-chave usando TF-IDF simplificado
-   * (Fallback se Gemini n„o retornar)
+   * (Fallback se Gemini n√£o retornar)
    */
   private extractKeywordsTFIDF(texto: string, topN: number = 10): string[] {
-    // TokenizaÁ„o simples
+    // Tokeniza√ß√£o simples
     const tokens = texto
       .toLowerCase()
-      .replace(/[^\w\s·‡‚„ÈËÍÌÔÛÙıˆ˙ÁÒ]/g, " ")
+      .replace(/[^\w\s√°√†√¢√£√©√®√™√≠√Ø√≥√¥√µ√∂√∫√ß√±]/g, " ")
       .split(/\s+/)
       .filter((token) => token.length > 3);
 
-    // Stop words jurÌdicas
+    // Stop words jur√≠dicas
     const stopWords = new Set([
       "processo",
       "autor",
@@ -316,7 +316,7 @@ ${intimacao.texto.substring(0, 3000)}
       "nas",
     ]);
 
-    // FrequÍncia de termos
+    // Frequ√™ncia de termos
     const termFreq = new Map<string, number>();
     tokens.forEach((token) => {
       if (!stopWords.has(token)) {
@@ -324,7 +324,7 @@ ${intimacao.texto.substring(0, 3000)}
       }
     });
 
-    // Ordena por frequÍncia
+    // Ordena por frequ√™ncia
     const sortedTerms = Array.from(termFreq.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, topN)

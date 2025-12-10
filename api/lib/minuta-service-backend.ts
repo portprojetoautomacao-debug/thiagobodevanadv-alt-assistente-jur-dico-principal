@@ -39,7 +39,7 @@ export interface Minuta {
 // ============================================================================
 
 export const MinutaSchema = z.object({
-  id: z.uuid(),
+  id: z.string().uuid(),
   titulo: z.string().min(1, "Título é obrigatório"),
   processId: z.string().optional(),
   tipo: z.enum(["peticao", "contrato", "parecer", "recurso", "procuracao", "outro"]),
@@ -49,11 +49,11 @@ export const MinutaSchema = z.object({
   atualizadoEm: z.string().datetime(),
   autor: z.string().min(1),
   googleDocsId: z.string().optional(),
-  googleDocsUrl: z.url().optional(),
+  googleDocsUrl: z.string().url().optional(),
   criadoPorAgente: z.boolean().optional(),
   agenteId: z.string().optional(),
   templateId: z.string().optional(),
-  ExpedienteId: z.string().optional(),
+  expedienteId: z.string().optional(),
   variaveis: z.record(z.string(), z.string()).optional(),
 });
 
@@ -140,7 +140,7 @@ export function createMinuta(input: MinutaInput): Minuta {
     throw new Error(`Minuta inválida: ${errors}`);
   }
 
-  return result.data;
+  return result.data as Minuta;
 }
 
 /**
@@ -198,7 +198,7 @@ export function updateMinuta(
     throw new Error(`Minuta inválida: ${errors}`);
   }
 
-  return result.data;
+  return result.data as Minuta;
 }
 
 /**

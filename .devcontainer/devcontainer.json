@@ -1,34 +1,4 @@
 {
-  "name": "Assistente Jurídico PJe - Devcontainer",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
-  "features": {},
-  "forwardPorts": [5173],
-  "postCreateCommand": "npm ci --no-audit --prefer-offline",
-  "remoteUser": "vscode",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "ms-azuretools.vscode-docker",
-        "GitHub.copilot",
-        "swellaby.vscode-rust-test-adapter",
-        "p42ai.refactor",
-        "SonarSource.sonarlint-vscode",
-        "njqdev.vscode-python-typehint",
-        "ms-python.mypy-type-checker",
-        "MylesMurphy.prettify-ts"
-      ],
-      "settings": {
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": true
-        }
-      }
-    }
-  }
-}
-{
   "name": "Assistente Jurídico PJe",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
   "features": {

@@ -1,15 +1,15 @@
 /**
- * Index de Hooks - Exportação centralizada
- * Facilita imports e mantém API consistente
+ * Index de Hooks - ExportaÃ§Ã£o centralizada
+ * Facilita imports e mantÃ©m API consistente
  */
 
-// Hooks de validação e gestão de dados
+// Hooks de validaÃ§Ã£o e gestÃ£o de dados
 export { useProcessesValidated } from "./use-processes-validated";
 export { useClientesValidated } from "./use-clientes-validated";
 export { useMinutasValidated } from "./use-minutas-validated";
 export { useFinancialValidated } from "./use-financial-validated";
 
-// Hooks existentes (re-export para conveniência)
+// Hooks existentes (re-export para conveniÃªncia)
 export { useKV } from "./use-kv";
 export { useAutonomousAgents } from "./use-autonomous-agents";
 export { useAIStreaming } from "./use-ai-streaming";

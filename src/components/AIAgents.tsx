@@ -664,7 +664,7 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
         <TabsContent value="metrics" className="space-y-4">
           {/* Dashboard de métricas em tempo real */}
           <AgentMetricsDashboard />
-          
+
           {/* Métricas legadas */}
           <AgentMetrics agents={agents} completedTasks={completedTasks} activityLog={activityLog} />
         </TabsContent>

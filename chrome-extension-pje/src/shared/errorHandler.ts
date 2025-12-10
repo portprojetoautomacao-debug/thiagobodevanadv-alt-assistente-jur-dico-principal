@@ -63,7 +63,6 @@ export async function saveErrorLocal(errorEvent: ExtensionErrorEvent): Promise<v
     await chrome.storage.local.set({ [STORAGE_KEYS.ERRORS]: slice });
   } catch (e) {
     // Não quebrar a aplicação se storage falhar
-    // eslint-disable-next-line no-console
     console.warn("[PJe Sync] Falha ao salvar erro localmente", e);
   }
 }
@@ -75,7 +74,6 @@ export async function sendErrorToBackground(errorEvent: ExtensionErrorEvent): Pr
     }
   } catch (e) {
     // Não quebre
-    // eslint-disable-next-line no-console
     console.warn("[PJe Sync] Falha ao enviar erro para background", e);
   }
 }
@@ -84,14 +82,12 @@ export async function reportError(err: any, context?: Record<string, any>): Prom
   try {
     const event = createErrorEvent(err, context);
     // Log local e console
-    // eslint-disable-next-line no-console
     console.error("[PJe Sync] Capturado Error:", event);
     // store locally
     await saveErrorLocal(event);
     // send to background for potential forwarding
     await sendErrorToBackground(event);
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error("[PJe Sync] Falha interna ao reportar erro", e);
   }
 }

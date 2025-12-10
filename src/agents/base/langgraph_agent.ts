@@ -16,9 +16,9 @@
  * - Conversation tracking (sessionId, turn)
  */
 
+import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { AgentState } from "./agent_state";
 import { addMessage, updateState } from "./agent_state";
-import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 
 export interface LangGraphConfig {
   timeoutMs: number;
@@ -68,7 +68,7 @@ export abstract class LangGraphAgent {
     const messages = this.prepareMessages(state);
 
     try {
-      const result = await createChatSpan(
+      const result = await createChatSpan<AgentState>(
         this.buildSpanConfig(),
         messages,
         async (span) => {
@@ -104,7 +104,7 @@ export abstract class LangGraphAgent {
   private buildSpanConfig() {
     return {
       agentName: this.config.agentName || "unknown-agent",
-      system: "gemini",
+      system: "gemini" as const,
       model: "gemini-2.5-pro",
       temperature: 0.7,
       maxTokens: 2000,
@@ -249,11 +249,7 @@ export abstract class LangGraphAgent {
   /**
    * Handle error during execution attempt
    */
-  private handleAttemptError(
-    state: AgentState,
-    error: unknown,
-    attempt: number
-  ): AgentState {
+  private handleAttemptError(state: AgentState, error: unknown, attempt: number): AgentState {
     if (this.isLastAttempt(attempt)) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       return updateState(state, {

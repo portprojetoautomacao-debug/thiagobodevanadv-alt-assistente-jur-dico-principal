@@ -1,13 +1,15 @@
-import { describe, it, expect } from "vitest";
-import { agentSchema, type Agent } from "../agent.schema";
+import { describe, expect, it } from "vitest";
+import { agentSchema } from "../agent.schema";
 
 describe("agentSchema", () => {
   it("should validate a correct agent object", () => {
-    const validAgent: Agent = {
+    const validAgent = {
       id: "harvey",
       name: "Harvey Specter",
-      active: true,
+      type: "strategic" as const,
+      description: "Estrategista-chefe do escritório",
       capabilities: ["strategic-analysis", "performance-monitoring"],
+      active: true,
     };
 
     expect(() => agentSchema.parse(validAgent)).not.toThrow();
@@ -27,6 +29,8 @@ describe("agentSchema", () => {
     const invalidAgent = {
       id: "harvey",
       name: "Harvey Specter",
+      type: "strategic" as const,
+      description: "Estrategista-chefe",
       active: true,
       capabilities: ["invalid-capability"],
     };
@@ -38,8 +42,10 @@ describe("agentSchema", () => {
     const validAgent = {
       id: "test",
       name: "Test Agent",
+      type: "analyzer" as const,
+      description: "Agent for testing purposes only",
       active: false,
-      capabilities: [],
+      capabilities: ["document-analysis"],
     };
 
     expect(() => agentSchema.parse(validAgent)).not.toThrow();
@@ -64,6 +70,8 @@ describe("agentSchema", () => {
     const validAgent = {
       id: "all-caps",
       name: "All Capabilities Agent",
+      type: "analyzer" as const,
+      description: "Agent with all capabilities for testing",
       active: true,
       capabilities: allCapabilities,
     };

@@ -38,7 +38,8 @@ export default defineConfig({
     : {
         command: `node ./scripts/start-dev-with-api.cjs -- --port ${PORT} --host 127.0.0.1`,
         url: `http://127.0.0.1:${PORT}`,
-        reuseExistingServer: !IS_CI,
+        // SEMPRE reutilizar servidor existente para evitar conflitos de porta
+        reuseExistingServer: true,
         timeout: 120_000,
         stdout: "pipe",
         stderr: "pipe",

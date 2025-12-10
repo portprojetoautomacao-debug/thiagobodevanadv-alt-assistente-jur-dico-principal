@@ -14,9 +14,7 @@ describe("local real integration tests (dev API)", () => {
           { cwd: process.cwd(), env: { ...process.env } },
           (err, stdout, stderr) => {
             // For debugging, we attach logs
-            // eslint-disable-next-line no-console
             console.log("=== stdout ===\n" + stdout);
-            // eslint-disable-next-line no-console
             console.error("=== stderr ===\n" + stderr);
             if (err) return reject(err);
             resolve();

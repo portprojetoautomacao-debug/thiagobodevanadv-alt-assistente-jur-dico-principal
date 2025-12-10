@@ -63,6 +63,12 @@ jobs:
           cd chrome-extension-pje
           npm run build
 
+      - name: Cleanup test ports (prevent EADDRINUSE)
+        run: |
+          fuser -k 5173/tcp 2>/dev/null || true
+          fuser -k 5252/tcp 2>/dev/null || true
+          sleep 2
+
       - name: Run Playwright tests
         run: npx playwright test
         env:
