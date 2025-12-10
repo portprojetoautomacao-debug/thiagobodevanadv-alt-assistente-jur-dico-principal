@@ -32,7 +32,6 @@ import { chromium } from "playwright";
     const error = err instanceof Error ? err : new Error(String(err));
     console.error("Navigation error:", error.message || error);
   } finally {
-  } finally {
     await browser.close();
     // Summary
     console.log("Collected messages:", JSON.stringify(messages, null, 2));

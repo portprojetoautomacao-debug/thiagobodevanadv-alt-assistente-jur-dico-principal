@@ -48,7 +48,8 @@ test.describe("Chrome Extension E2E - PJe Sync", () => {
     if (!fs.existsSync(EXTENSION_DIR)) {
       // Try to build extension
       console.warn("Extension dist not found, building extension...");
-      const child = require("child_process").execSync("npm run build", {
+      const { execSync } = await import("child_process");
+      execSync("npm run build", {
         cwd: path.resolve(__dirname, "../../chrome-extension-pje"),
         stdio: "inherit",
       });
@@ -98,7 +99,7 @@ test.describe("Chrome Extension E2E - PJe Sync", () => {
       if (sws.length > 0) {
         const sw = sws[0];
         await sw.evaluate(async () => {
-          // @ts-ignore - chrome.* is available inside extension service worker
+          // @ts-expect-error - chrome.* is available inside extension service worker
           await chrome.storage.sync.set({ apiKey: "playwright-test-key" });
         });
       }
