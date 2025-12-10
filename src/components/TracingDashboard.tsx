@@ -69,8 +69,7 @@ export default function TracingDashboard({
   refreshInterval = 5000,
 }: TracingDashboardProps) {
   const [traces, setTraces] = useState<Span[]>([]);
-  const [stats, setStats] = useState(tracingService.getStats());
-  const [selectedTrace, setSelectedTrace] = useState<string | null>(null);
+  const [_stats, setStats] = useState(tracingService.getStats());
 
   const refreshData = useCallback(() => {
     setTraces(tracingService.getTraces());
@@ -111,27 +110,67 @@ export default function TracingDashboard({
     }
   };
 
-  useEffect(() => {
-    loadData();
+  // Calculate metrics from traces and stats
+  const metrics: DashboardMetrics = {
+    agents: {},
+    llm: {
+      totalTokens: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      estimatedCost: 0,
+    },
+    totalSpans: traces.length,
+    errorRate: 0,
+  };
 
-    if (autoRefresh) {
-      const interval = setInterval(loadData, refreshInterval);
-      return () => clearInterval(interval);
+  // Aggregate agent metrics
+  traces.forEach((span) => {
+    const agentId = (span.attributes["agent.id"] as string) || "system";
+    
+    if (!metrics.agents[agentId]) {
+      metrics.agents[agentId] = {
+        count: 0,
+        avgDuration: 0,
+        errors: 0,
+        lastActive: 0,
+      };
     }
-  }, [autoRefresh, refreshInterval, loadData]);
 
-  if (!metrics) {
-    return (
-      <Card>
-        <CardContent className="p-6 flex justify-center items-center min-h-[200px]">
-          <div className="flex flex-col items-center gap-2">
-            <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="text-muted-foreground">Carregando métricas...</p>
-          </div>
-        </CardContent>
-      </Card>
+    const duration = span.endTime ? span.endTime - span.startTime : 0;
+    metrics.agents[agentId].count++;
+    metrics.agents[agentId].avgDuration += duration;
+    if (span.status === "error") {
+      metrics.agents[agentId].errors++;
+      metrics.errorRate++;
+    }
+    metrics.agents[agentId].lastActive = Math.max(
+      metrics.agents[agentId].lastActive,
+      span.startTime
     );
-  }
+  });
+
+  // Calculate average durations and error rate
+  Object.values(metrics.agents).forEach((agent) => {
+    agent.avgDuration = agent.avgDuration / agent.count;
+  });
+  metrics.errorRate = traces.length > 0 ? (metrics.errorRate / traces.length) * 100 : 0;
+
+  // Aggregate LLM metrics
+  traces.forEach((span) => {
+    const promptTokens = (span.attributes["ai.prompt_tokens"] as number) || 0;
+    const completionTokens = (span.attributes["ai.completion_tokens"] as number) || 0;
+    
+    metrics.llm.promptTokens += promptTokens;
+    metrics.llm.completionTokens += completionTokens;
+    metrics.llm.totalTokens += promptTokens + completionTokens;
+  });
+
+  // Calculate estimated cost (GPT-4o-mini pricing: $0.15/1M input, $0.60/1M output)
+  metrics.llm.estimatedCost =
+    (metrics.llm.promptTokens / 1_000_000) * 0.15 +
+    (metrics.llm.completionTokens / 1_000_000) * 0.6;
+
+  const spans = traces;
 
   return (
     <div className="space-y-6">
@@ -143,17 +182,14 @@ export default function TracingDashboard({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadData} disabled={isRefreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <Button variant="outline" size="sm" onClick={refreshData}>
+            <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
           </Button>
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => {
-              tracingService.clear();
-              loadData();
-            }}
+            onClick={handleClearTraces}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Limpar Dados

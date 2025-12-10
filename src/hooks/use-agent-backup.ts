@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useKV } from "./use-kv";
 
 /**
@@ -130,10 +130,29 @@ export function useAgentBackup(options: BackupOptions) {
   }, [userId]);
 
   /**
+   * Salva metadados de backup no cache local (localStorage)
+   */
+  const saveToLocalCache = useCallback((backupData: BackupData) => {
+    try {
+      const cacheData = {
+        timestamp: backupData.timestamp,
+        userId: backupData.userId,
+        agentsCount: backupData.data.agents.length,
+        tasksCount: backupData.data.taskQueue.length,
+      };
+
+      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cacheData));
+    } catch {
+      // Ignorar erros de localStorage - não é crítico
+      console.log("ℹ️ Cache local não disponível");
+    }
+  }, []);
+
+  /**
    * Verifica integridade do backup local
    * Garante que o backup local está sincronizado com o servidor e não está corrompido.
    */
-  const verifyLocalBackupIntegrity = useCallback(() => {
+  const _verifyLocalBackupIntegrity = useCallback(() => {
     try {
       const cache = localStorage.getItem(LOCAL_CACHE_KEY);
       if (!cache) return false;
