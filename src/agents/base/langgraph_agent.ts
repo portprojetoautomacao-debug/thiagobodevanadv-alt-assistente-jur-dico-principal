@@ -16,9 +16,9 @@
  * - Conversation tracking (sessionId, turn)
  */
 
+import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { AgentState } from "./agent_state";
 import { addMessage, updateState } from "./agent_state";
-import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 
 export interface LangGraphConfig {
   timeoutMs: number;
@@ -68,15 +68,19 @@ export abstract class LangGraphAgent {
     const messages = this.prepareMessages(state);
 
     try {
-      const result = await createChatSpan(this.buildSpanConfig(), messages, async (span) => {
-        this.addConversationTracking(span);
-        const executedState = await this.executeInternal(state);
-        this.addResponseTracking(span, executedState);
-        this.addTokenTracking(span, executedState);
+      const result = await createChatSpan<AgentState>(
+        this.buildSpanConfig(),
+        messages,
+        async (span) => {
+          this.addConversationTracking(span);
+          const executedState = await this.executeInternal(state);
+          this.addResponseTracking(span, executedState);
+          this.addTokenTracking(span, executedState);
 
-        this.turnCounter++;
-        return executedState;
-      });
+          this.turnCounter++;
+          return executedState;
+        }
+      );
 
       return result;
     } catch (error) {
@@ -100,7 +104,7 @@ export abstract class LangGraphAgent {
   private buildSpanConfig() {
     return {
       agentName: this.config.agentName || "unknown-agent",
-      system: "gemini",
+      system: "gemini" as const,
       model: "gemini-2.5-pro",
       temperature: 0.7,
       maxTokens: 2000,

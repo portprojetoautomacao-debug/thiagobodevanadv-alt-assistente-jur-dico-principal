@@ -1,7 +1,7 @@
 # 🔧 Correção - SonarQube Repository URLs (sonar-project.properties)
 
-**Data**: 10/12/2024  
-**Branch**: feat/optimize-workflows-enterprise-grade  
+**Data**: 10/12/2024
+**Branch**: feat/optimize-workflows-enterprise-grade
 **PR**: #44
 
 ---
@@ -17,7 +17,7 @@ sonar.links.scm=https://github.com/thiagobodevan-a11y/assistente-juridico-p
 sonar.links.issue=https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
 ```
 
-**Repositório antigo**: `thiagobodevan-a11y/assistente-juridico-p`  
+**Repositório antigo**: `thiagobodevan-a11y/assistente-juridico-p`
 **Repositório atual**: `thiagobodevanadv-alt/assistente-jur-dico-principal`
 
 ### Impacto
@@ -192,6 +192,6 @@ Refs: #44"
 
 ---
 
-**Data da correção**: 10/12/2024  
-**Autor**: GitHub Copilot + thiagobodevanadv-alt  
+**Data da correção**: 10/12/2024
+**Autor**: GitHub Copilot + thiagobodevanadv-alt
 **Validação**: ✅ PASSOU

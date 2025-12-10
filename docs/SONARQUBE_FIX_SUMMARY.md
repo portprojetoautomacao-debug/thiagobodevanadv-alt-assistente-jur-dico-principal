@@ -1,8 +1,8 @@
 # 📊 Resumo Executivo: Correção SonarQube URLs (Parte 6)
 
-**Data**: 10/12/2024 21:30 UTC  
-**Branch**: feat/optimize-workflows-enterprise-grade  
-**PR**: #44  
+**Data**: 10/12/2024 21:30 UTC
+**Branch**: feat/optimize-workflows-enterprise-grade
+**PR**: #44
 **Commit**: `5fc8d27a`
 
 ---
@@ -33,7 +33,7 @@
 ```
 
 - ✅ `sonar.links.homepage` → Repo correto
-- ✅ `sonar.links.ci` → Actions correto  
+- ✅ `sonar.links.ci` → Actions correto
 - ✅ `sonar.links.scm` → SCM integration correto
 - ✅ `sonar.links.issue` → Issues tracker correto
 
@@ -168,5 +168,5 @@ gh workflow run sonarcloud.yml --ref feat/optimize-workflows-enterprise-grade
 
 ---
 
-**Data**: 10/12/2024 21:30 UTC  
+**Data**: 10/12/2024 21:30 UTC
 **Status**: ✅ CONCLUÍDO
