@@ -80,7 +80,7 @@ export default function Calendar() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const GOOGLE_CLIENT_ID = getEnv("VITE_GOOGLE_CLIENT_ID", "");
-  const GOOGLE_API_KEY = getEnv("VITE_GOOGLE_API_KEY", "");
+  const GOOGLE_API_KEY = getEnv("VITE_GEMINI_API_KEY", "") || getEnv("VITE_GOOGLE_API_KEY", "");
   const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY;
 
   const sortedUpcomingAppointments = useMemo(
@@ -161,7 +161,7 @@ export default function Calendar() {
   // Stubs seguros para integração Google (sem JSX corrompido)
   const handleConnectGoogle = async () => {
     if (!isGoogleConfigured) {
-      toast.error("Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY");
+      toast.error("Configure VITE_GOOGLE_CLIENT_ID e VITE_GEMINI_API_KEY");
       return;
     }
     setIsInitializing(true);

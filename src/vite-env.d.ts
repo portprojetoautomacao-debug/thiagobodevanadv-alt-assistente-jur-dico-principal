@@ -49,7 +49,9 @@ declare const SpeechRecognition: {
 
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_ID?: string;
+  /** @deprecated Use VITE_GEMINI_API_KEY instead */
   readonly VITE_GOOGLE_API_KEY?: string;
+  readonly VITE_GEMINI_API_KEY?: string;
   readonly VITE_REDIRECT_URI?: string;
   readonly VITE_APP_ENV?: string;
   readonly VITE_API_BASE_URL?: string;
