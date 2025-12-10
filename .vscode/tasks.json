@@ -13,12 +13,7 @@
         "focus": false,
         "panel": "shared"
       }
-    }
-  ]
-}
-{
-  "version": "2.0.0",
-  "tasks": [
+    },
     {
       "label": "auto-init",
       "type": "shell",
