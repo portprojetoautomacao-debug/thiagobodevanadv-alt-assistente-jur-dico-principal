@@ -93,6 +93,15 @@ jobs:
           VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI || 'http://localhost:5173' }}
           VITE_APP_ENV: "ci"
 
+      - name: Free up ports for tests
+        run: |
+          echo "Liberando portas 5173 e 5252..."
+          # Kill processes using ports 5173 (Vite) and 5252 (API)
+          sudo lsof -ti:5173 | xargs kill -9 || true
+          sudo lsof -ti:5252 | xargs kill -9 || true
+          echo "✅ Portas liberadas"
+        if: success()
+
       - name: Run tests
         run: |
           echo "Running all tests..."

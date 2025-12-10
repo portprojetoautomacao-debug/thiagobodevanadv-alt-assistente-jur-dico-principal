@@ -1,18 +1,17 @@
-import { describe, it, expect } from "vitest";
-import { expedienteSchema, type Expediente } from "../expediente.schema";
+import { describe, expect, it } from "vitest";
+import { expedienteSchema } from "../expediente.schema";
 
 describe("expedienteSchema", () => {
   it("should validate a correct expediente object", () => {
-    const validExpediente: Expediente = {
-      id: "exp_123",
+    const validExpediente = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
       processId: "proc_456",
-      tipo: "intimação",
-      conteudo: "Conteúdo da intimação judicial",
-      dataPublicacao: "2024-12-08",
-      dataLeitura: "2024-12-08",
-      status: "pendente",
-      prioridade: "alta",
-      prazo: "2024-12-20",
+      tipo: "intimacao" as const,
+      descricao: "ConteÃºdo da intimaÃ§Ã£o judicial",
+      dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+      source: "DJEN" as const,
+      status: "pendente" as const,
+      prioridade: "alta" as const,
     };
 
     expect(() => expedienteSchema.parse(validExpediente)).not.toThrow();
@@ -20,11 +19,12 @@ describe("expedienteSchema", () => {
 
   it("should throw on invalid tipo", () => {
     const invalidExpediente = {
-      id: "exp_123",
+      id: "550e8400-e29b-41d4-a716-446655440000",
       processId: "proc_456",
       tipo: "invalid-type",
-      conteudo: "Content",
-      dataPublicacao: "2024-12-08",
+      descricao: "Content",
+      dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+      source: "DJEN",
     };
 
     expect(() => expedienteSchema.parse(invalidExpediente)).toThrow();
@@ -32,11 +32,12 @@ describe("expedienteSchema", () => {
 
   it("should throw on invalid status", () => {
     const invalidExpediente = {
-      id: "exp_123",
+      id: "550e8400-e29b-41d4-a716-446655440000",
       processId: "proc_456",
-      tipo: "intimação",
-      conteudo: "Content",
-      dataPublicacao: "2024-12-08",
+      tipo: "intimacao",
+      descricao: "Content",
+      dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+      source: "DJEN",
       status: "invalid-status",
     };
 
@@ -45,26 +46,28 @@ describe("expedienteSchema", () => {
 
   it("should accept expediente without optional fields", () => {
     const minimalExpediente = {
-      id: "exp_123",
+      id: "550e8400-e29b-41d4-a716-446655440000",
       processId: "proc_456",
-      tipo: "despacho",
-      conteudo: "Conteúdo do despacho",
-      dataPublicacao: "2024-12-08",
+      tipo: "despacho" as const,
+      descricao: "ConteÃºdo do despacho",
+      dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+      source: "DJEN" as const,
     };
 
     expect(() => expedienteSchema.parse(minimalExpediente)).not.toThrow();
   });
 
   it("should validate all tipo values", () => {
-    const tipos = ["intimação", "despacho", "decisão", "sentença", "acórdão", "outro"];
+    const tipos = ["intimacao", "despacho", "decisao", "sentenca", "acordao", "outro"];
 
     tipos.forEach((tipo) => {
       const expediente = {
-        id: `exp_${tipo}`,
+        id: "550e8400-e29b-41d4-a716-446655440000",
         processId: "proc_123",
         tipo,
-        conteudo: `Conteúdo ${tipo}`,
-        dataPublicacao: "2024-12-08",
+        descricao: `ConteÃºdo ${tipo}`,
+        dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+        source: "DJEN" as const,
       };
 
       expect(() => expedienteSchema.parse(expediente)).not.toThrow();
@@ -72,15 +75,16 @@ describe("expedienteSchema", () => {
   });
 
   it("should validate all status values", () => {
-    const statuses = ["pendente", "lido", "analisado", "processado", "arquivado"];
+    const statuses = ["pendente", "em-analise", "processado", "arquivado", "erro"];
 
     statuses.forEach((status) => {
       const expediente = {
-        id: `exp_${status}`,
+        id: "550e8400-e29b-41d4-a716-446655440000",
         processId: "proc_123",
-        tipo: "intimação",
-        conteudo: "Content",
-        dataPublicacao: "2024-12-08",
+        tipo: "intimacao" as const,
+        descricao: "Content",
+        dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+        source: "DJEN" as const,
         status,
       };
 
@@ -89,15 +93,16 @@ describe("expedienteSchema", () => {
   });
 
   it("should validate all prioridade values", () => {
-    const prioridades = ["baixa", "média", "alta", "urgente"];
+    const prioridades = ["baixa", "media", "alta", "urgente", "critica"];
 
     prioridades.forEach((prioridade) => {
       const expediente = {
-        id: `exp_${prioridade}`,
+        id: "550e8400-e29b-41d4-a716-446655440000",
         processId: "proc_123",
-        tipo: "intimação",
-        conteudo: "Content",
-        dataPublicacao: "2024-12-08",
+        tipo: "intimacao" as const,
+        descricao: "Content",
+        dataPublicacao: new Date("2024-12-08T10:00:00Z").toISOString(),
+        source: "DJEN" as const,
         prioridade,
       };
 

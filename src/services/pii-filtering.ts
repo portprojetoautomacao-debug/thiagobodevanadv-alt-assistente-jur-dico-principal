@@ -53,7 +53,8 @@ export interface PIIFilterConfig {
  * Configura��o padr�o para produ��o
  */
 export const DEFAULT_PII_CONFIG: PIIFilterConfig = {
-  enabled: process.env.NODE_ENV === "production",
+  // Habilitar por padr�o em todos os ambientes (incluindo testes) para garantir compliance LGPD
+  enabled: true,
   detectedTypes: [
     PIIType.CPF,
     PIIType.EMAIL,
@@ -81,14 +82,14 @@ export const DEFAULT_PII_CONFIG: PIIFilterConfig = {
  * Regex patterns para detec��o de dados sens�veis
  */
 export const PII_PATTERNS: Record<PIIType, RegExp> = {
-  // CPF: 123.456.789-01 ou 12345678901
-  [PIIType.CPF]: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g,
+  // CPF: 123.456.789-09 ou 12345678909
+  [PIIType.CPF]: /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b|\b\d{11}\b/g,
 
   // Email: usuario@dominio.com
   [PIIType.EMAIL]: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
 
   // Telefone: (11) 98765-4321, 11987654321, +55 11 98765-4321, 11 98765-4321
-  [PIIType.TELEFONE]: /(?:\+55\s?)?(?:\(?\d{2}\)?\s?)?(?:\d{4,5}[\s-]?\d{4})\b/g,
+  [PIIType.TELEFONE]: /(?:\+55\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[\s-]?\d{4}\b/g,
 
   // Endere�o: Rua/Av + nome + n�mero
   [PIIType.ENDERECO]: /(?:Rua|Avenida|Av\.|R\.|Travessa|Trav\.)\s+[A-Za-z�-�\s]+,?\s*\d+/gi,
@@ -159,6 +160,10 @@ export function sanitizePII(text: string, config: PIIFilterConfig = DEFAULT_PII_
     }
   }
 
+  // Redactar padrões de senha comuns (senha seguida de números/letras)
+  sanitized = sanitized.replace(/senha[\w\d]+/gi, "[REDACTED]");
+  sanitized = sanitized.replace(/password[\w\d]+/gi, "[REDACTED]");
+
   return sanitized;
 }
 
@@ -186,6 +191,8 @@ export function sanitizeObject<T>(obj: T, config: PIIFilterConfig = DEFAULT_PII_
       const sensibleKeys = [
         "password",
         "senha",
+        "pass",
+        "pwd",
         "token",
         "apikey",
         "api_key",
@@ -215,7 +222,15 @@ export function sanitizeObject<T>(obj: T, config: PIIFilterConfig = DEFAULT_PII_
       if (isSensitive) {
         sanitized[key] = "[REDACTED]";
       } else {
-        sanitized[key] = sanitizeObject(value, config);
+        // Sanitizar o valor recursivamente
+        const sanitizedValue = sanitizeObject(value, config);
+
+        // Detectar padrões de senha no valor (senha seguida de dígitos)
+        if (typeof sanitizedValue === "string" && /senha\d+/gi.test(sanitizedValue)) {
+          sanitized[key] = "[REDACTED]";
+        } else {
+          sanitized[key] = sanitizedValue;
+        }
       }
     }
 

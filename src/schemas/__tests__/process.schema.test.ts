@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { processSchema } from "../process.schema";
 
 describe("processSchema", () => {
@@ -81,13 +81,13 @@ describe("processSchema", () => {
   });
 
   it("should validate all status values", () => {
-    const statuses = ["ativo", "suspenso", "arquivado", "concluído"] as const;
+    const statuses = ["ativo", "suspenso", "arquivado", "concluido"] as const;
 
     statuses.forEach((status) => {
       const process = {
         id: `proc_${status}`,
         numeroCNJ: "1234567-89.2024.5.02.0999",
-        titulo: "Test",
+        titulo: "Test Process for Status",
         autor: "Test Author",
         reu: "Test Reu",
         status,
