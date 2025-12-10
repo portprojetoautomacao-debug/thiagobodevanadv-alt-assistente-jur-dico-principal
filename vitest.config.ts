@@ -13,7 +13,8 @@ export default defineConfig({
     hookTimeout: 30000,
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
-      'api/**/*.{test,spec}.{ts,tsx}'
+      'api/**/*.{test,spec}.{ts,tsx}',
+      'tests/integration/**/*.{test,spec}.{ts,tsx}'
     ],
     exclude: [
       '**/node_modules/**',

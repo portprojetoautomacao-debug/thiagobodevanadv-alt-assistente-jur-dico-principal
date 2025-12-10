@@ -1,4 +1,4 @@
-import handler from "@/api/agents-v2";
+import handler from "../../api/agents-v2";
 import { beforeAll, expect, test } from "vitest";
 
 beforeAll(() => {
