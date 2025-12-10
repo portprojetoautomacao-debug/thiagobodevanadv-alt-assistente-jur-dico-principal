@@ -1,5 +1,5 @@
-import { useEffect, useCallback, useState, useRef } from 'react';
-import { useKV } from './use-kv';
+import { useEffect, useCallback, useState, useRef } from "react";
+import { useKV } from "./use-kv";
 
 /**
  * Hook para backup dos dados dos agentes IA
@@ -130,22 +130,14 @@ export function useAgentBackup(options: BackupOptions) {
   }, [userId]);
 
   /**
-<<<<<<< HEAD
-   * Salva cache local simplificado (apenas metadados)
-=======
    * Salva metadados do backup no cache local (localStorage)
    * Apenas para referência rápida - não salva dados completos
->>>>>>> ad6b5bd691c16193b5c29f761ed64eb8d4d72355
    */
   const saveToLocalCache = useCallback((backupData: BackupData) => {
     try {
       const cacheData = {
         timestamp: backupData.timestamp,
         userId: backupData.userId,
-<<<<<<< HEAD
-        agentCount: backupData.data.agents.length,
-        taskCount: backupData.data.taskQueue.length,
-=======
         summary: {
           agentsCount: Array.isArray(backupData.data.agents) ? backupData.data.agents.length : 0,
           taskQueueCount: Array.isArray(backupData.data.taskQueue)
@@ -153,7 +145,6 @@ export function useAgentBackup(options: BackupOptions) {
             : 0,
           lastDjenCheck: backupData.data.lastDjenCheck,
         },
->>>>>>> ad6b5bd691c16193b5c29f761ed64eb8d4d72355
       };
 
       setLastBackup(backupData.timestamp);
@@ -259,7 +250,10 @@ export function useAgentBackup(options: BackupOptions) {
 
         // Se localStorage também falhou, retornar erro
         if (!localStorageSuccess) {
-          return { success: false, error: new Error("Falha ao salvar backup: servidor indisponível e localStorage falhou") };
+          return {
+            success: false,
+            error: new Error("Falha ao salvar backup: servidor indisponível e localStorage falhou"),
+          };
         }
       }
 
@@ -267,7 +261,11 @@ export function useAgentBackup(options: BackupOptions) {
       console.log("✅ Backup criado:", new Date(backupData.timestamp).toLocaleString());
 
       // Return the actual storage used, not the state variable (which might be stale)
-      return { success: true, timestamp: backupData.timestamp, storage: serverSuccess ? 'server' : 'local' };
+      return {
+        success: true,
+        timestamp: backupData.timestamp,
+        storage: serverSuccess ? "server" : "local",
+      };
     } catch (error) {
       console.error("❌ Erro ao criar backup:", error);
       return { success: false, error };
@@ -366,11 +364,11 @@ export function useAgentBackup(options: BackupOptions) {
 
     // Backup imediato se houver dados e não houver backup recente (via timeout)
     const now = Date.now();
-    if (agents.length > 0 && (now - lastBackup) > intervalMs) {
+    if (agents.length > 0 && now - lastBackup > intervalMs) {
       // Schedule to avoid synchronous setState in effect
       timeoutId = globalThis.setTimeout(createBackup, 0);
     }
-    
+
     // Configurar backup periódico
     const timer = setInterval(() => {
       if (agents.length > 0) {
