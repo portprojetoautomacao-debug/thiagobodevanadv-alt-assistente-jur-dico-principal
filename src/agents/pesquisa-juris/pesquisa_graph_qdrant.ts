@@ -63,7 +63,7 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
         const precedentes = await createExecuteToolSpan(
           {
             agentName: "Pesquisa Jurisprudencial",
-            system: "custom-llm",
+            system: "gemini",
             model: "vector-search",
           },
           {
