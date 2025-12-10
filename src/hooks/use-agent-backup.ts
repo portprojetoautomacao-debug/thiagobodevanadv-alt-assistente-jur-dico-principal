@@ -140,8 +140,8 @@ export function useAgentBackup(options: BackupOptions) {
         const cacheData = {
           timestamp: backupData.timestamp,
           userId: backupData.userId,
-          agentCount: backupData.data.agents.length,
-          taskCount: backupData.data.taskQueue.length,
+          agentCount: backupData.data?.agents?.length ?? 0,
+          taskCount: backupData.data?.taskQueue?.length ?? 0,
         };
         localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cacheData));
       } catch (error) {
