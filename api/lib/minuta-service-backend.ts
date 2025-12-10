@@ -140,7 +140,7 @@ export function createMinuta(input: MinutaInput): Minuta {
     throw new Error(`Minuta inválida: ${errors}`);
   }
 
-  return result.data;
+  return result.data as Minuta;
 }
 
 /**
@@ -198,7 +198,7 @@ export function updateMinuta(
     throw new Error(`Minuta inválida: ${errors}`);
   }
 
-  return result.data;
+  return result.data as Minuta;
 }
 
 /**

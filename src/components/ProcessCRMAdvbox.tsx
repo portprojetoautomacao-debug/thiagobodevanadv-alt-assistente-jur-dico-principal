@@ -17,11 +17,11 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
   closestCorners,
   useSensor,
   useSensors,
-  PointerSensor,
-  KeyboardSensor,
 } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";

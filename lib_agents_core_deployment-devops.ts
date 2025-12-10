@@ -40,10 +40,10 @@ export class BlueGreenDeployment {
   }
   
   private async progressiveRollout(): Promise<void> {
-    const stages = [0. 1, 0.25, 0.5, 0.75, 1.0];
+    const stages = [0.1, 0.25, 0.5, 0.75, 1.0];
     
     for (const percentage of stages) {
-      await this.loadBalancer. setWeights({
+      await this.loadBalancer.setWeights({
         blue: 1 - percentage,
         green: percentage
       });
