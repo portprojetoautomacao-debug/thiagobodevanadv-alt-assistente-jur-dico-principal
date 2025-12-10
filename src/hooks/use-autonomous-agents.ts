@@ -1,3 +1,4 @@
+import { metricsCollector } from "@/lib/agent-metrics";
 import { useKV } from "@/hooks/use-kv";
 import {
   type Agent,
@@ -462,6 +463,9 @@ export function useAutonomousAgents() {
 
       processingRef.current.add(agent.id);
 
+      // ✅ Registrar início da métrica
+      const startTime = Date.now();
+
       // Status: Processing
       setTaskQueue((current) =>
         updateTaskInQueue(current || [], task.id, {
@@ -524,6 +528,17 @@ export function useAutonomousAgents() {
           result = await processTaskWithRealAI(task, agent);
         }
 
+        // ✅ Registrar métrica de sucesso
+        const duration = Date.now() - startTime;
+        metricsCollector.recordMetric({
+          agentId: agent.id,
+          timestamp: Date.now(),
+          duration,
+          success: true,
+          tokensUsed: result.tokensUsed,
+          taskType: task.type,
+        });
+
         // Use extracted helper for completion (S2004 compliance)
         handleTaskCompletion(
           task,
@@ -535,6 +550,17 @@ export function useAutonomousAgents() {
           logActivity
         );
       } catch (err) {
+        // ✅ Registrar métrica de erro
+        const duration = Date.now() - startTime;
+        metricsCollector.recordMetric({
+          agentId: agent.id,
+          timestamp: Date.now(),
+          duration,
+          success: false,
+          taskType: task.type,
+          error: err instanceof Error ? err.message : String(err),
+        });
+
         // Use extracted helper for failure (S2004 compliance)
         handleTaskFailure(task, err, agent.id, setTaskQueue, logActivity);
       } finally {

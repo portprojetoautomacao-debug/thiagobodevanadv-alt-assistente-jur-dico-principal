@@ -56,7 +56,10 @@ export default EmailUnion;
 // --- Tipos de Agente ---
 
 export const AgentTaskTypeSchema = z.enum([
+  "ANALYZE_DOCUMENT",
+  "ANALYZE_INTIMATION",
   "CALCULATE_DEADLINE",
+  "MONITOR_DJEN",
   "DRAFT_PETITION",
   "RESEARCH_PRECEDENTS",
   "CLIENT_COMMUNICATION",

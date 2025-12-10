@@ -156,6 +156,7 @@ function convertBRDateToISO(dateStr: string): string | null {
 /**
  * Valida e converte string de data para ISO format
  * Retorna null se inválida
+ * ✅ CORREÇÃO: Aceita formato brasileiro DD/MM/YYYY
  */
 function parseAndValidateDeadlineDate(endDateStr: string): string | null {
   if (!endDateStr) {
@@ -163,7 +164,7 @@ function parseAndValidateDeadlineDate(endDateStr: string): string | null {
     return null;
   }
 
-  // Tentar converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
+  // ✅ Tentar converter data BR (DD/MM/YYYY) para ISO (YYYY-MM-DD) PRIMEIRO
   const convertedDate = convertBRDateToISO(endDateStr);
   if (convertedDate) {
     return convertedDate;

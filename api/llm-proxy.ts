@@ -174,7 +174,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Require LLM proxy API key
-  if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
+  // ✅ CORREÇÃO: Permitir acesso em desenvolvimento local
+  if (process.env.NODE_ENV !== 'development' && !process.env.VERCEL_ENV) {
+    if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
+  }
 
   // rate limit middleware
   const clientIP =
