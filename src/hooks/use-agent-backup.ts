@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useKV } from "./use-kv";
 
 /**
@@ -128,29 +128,6 @@ export function useAgentBackup(options: BackupOptions) {
       return null;
     }
   }, [userId]);
-
-  /**
-   * Verifica integridade do backup local
-   * Garante que o backup local está sincronizado com o servidor e não está corrompido.
-   */
-  const verifyLocalBackupIntegrity = useCallback(() => {
-    try {
-      const cache = localStorage.getItem(LOCAL_CACHE_KEY);
-      if (!cache) return false;
-      const parsed = JSON.parse(cache);
-      // Verifica se o backup tem userId e timestamp válidos
-      if (
-        typeof parsed?.userId === "string" &&
-        typeof parsed?.timestamp === "number" &&
-        parsed?.data
-      ) {
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }, []);
 
   /**
    * Limpa dados antigos do localStorage para evitar QuotaExceededError
