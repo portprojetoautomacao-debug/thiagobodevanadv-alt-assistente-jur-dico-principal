@@ -172,6 +172,12 @@ jobs:
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:5000 > /dev/null 2>&1; do sleep 1; done'
 
+      - name: Cleanup test ports (prevent EADDRINUSE)
+        run: |
+          fuser -k 5173/tcp 2>/dev/null || true
+          fuser -k 5252/tcp 2>/dev/null || true
+          sleep 2
+
       - name: Run E2E tests
         run: npm run test:e2e || echo "⚠️ Some E2E tests failed - this is expected in CI environment"
         continue-on-error: true

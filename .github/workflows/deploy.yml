@@ -24,13 +24,13 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}-${{ github.event_name }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # Cancela PRs antigos, mas não produção
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }} # Cancela PRs antigos, mas não produção
 
 jobs:
   deploy-vercel:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    timeout-minutes: 20  # Timeout global do job
+    timeout-minutes: 20 # Timeout global do job
     permissions:
       contents: read
       deployments: write
@@ -45,7 +45,7 @@ jobs:
     # 2. É um PR não-draft (preview deploy)
     # 3. É um dispatch manual
     if: |
-      (github.event_name == 'workflow_run' && 
+      (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main') ||
       github.event_name == 'workflow_dispatch' ||
@@ -140,7 +140,7 @@ jobs:
               echo "❌ VITE_GOOGLE_CLIENT_ID is required for production"
               HAS_ERRORS=1
             fi
-            
+
             if [ -z "${{ secrets.VITE_GOOGLE_API_KEY }}" ]; then
               echo "❌ VITE_GOOGLE_API_KEY is required for production"
               HAS_ERRORS=1
@@ -302,8 +302,8 @@ jobs:
               issue_number: prNumber
             });
 
-            const botComment = comments.data.find(comment => 
-              comment.user.type === 'Bot' && 
+            const botComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('Deploy Preview Ready')
             );
 
@@ -392,6 +392,12 @@ jobs:
             exit 0
           fi
           echo "✅ Playwright configuration found"
+
+      - name: Cleanup test ports (prevent EADDRINUSE)
+        run: |
+          fuser -k 5173/tcp 2>/dev/null || true
+          fuser -k 5252/tcp 2>/dev/null || true
+          sleep 2
 
       - name: Run Playwright tests
         run: npx playwright test

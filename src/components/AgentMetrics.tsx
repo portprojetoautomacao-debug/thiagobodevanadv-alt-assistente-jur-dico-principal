@@ -2,13 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Agent, AgentTask } from "@/lib/agents";
-import {
-  CheckCircle,
-  Clock,
-  ChartLine,
-  Timer,
-  Pulse,
-} from "@phosphor-icons/react";
+import { CheckCircle, Clock, ChartLine, Timer, Pulse } from "@phosphor-icons/react";
 import { TrendingUp, Zap, ZapOff } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 

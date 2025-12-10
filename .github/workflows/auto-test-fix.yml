@@ -23,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Testar em múltiplos browsers
-        browser: [chromium, firefox, webkit]
+        # Testar apenas browsers habilitados no playwright.config.ts
+        browser: [chromium, firefox]
 
     steps:
       - name: 📥 Checkout código

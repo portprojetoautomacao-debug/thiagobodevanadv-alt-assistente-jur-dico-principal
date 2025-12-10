@@ -176,8 +176,7 @@ describe("agentMonitor.logAction", () => {
       "agent-2",
       "failed-action",
       { error: "details" },
-      false,
-      undefined
+      false
     );
   });
 });
