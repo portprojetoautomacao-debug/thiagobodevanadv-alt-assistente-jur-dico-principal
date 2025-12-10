@@ -1,3 +1,4 @@
+import { AgentMetricsDashboard } from "@/components/AgentMetricsDashboard";
 import AgentMetrics from "@/components/AgentMetrics";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -661,6 +662,10 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
 
         {/* Métricas */}
         <TabsContent value="metrics" className="space-y-4">
+          {/* Dashboard de métricas em tempo real */}
+          <AgentMetricsDashboard />
+          
+          {/* Métricas legadas */}
           <AgentMetrics agents={agents} completedTasks={completedTasks} activityLog={activityLog} />
         </TabsContent>
 

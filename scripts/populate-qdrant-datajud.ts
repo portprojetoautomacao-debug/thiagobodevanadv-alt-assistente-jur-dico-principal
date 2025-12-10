@@ -6,9 +6,15 @@
  * 2. Busca processos/precedentes jurídicos
  * 3. Gera embeddings com Gemini
  * 4. Envia para Qdrant Cloud
+ * 5. Valida embeddings e qualidade dos dados
  * 
  * Uso:
  *   npm run qdrant:populate-datajud
+ * 
+ * Opções:
+ *   --dry-run: Simula população sem inserir no Qdrant
+ *   --validate: Valida embeddings antes de inserir
+ *   --max-docs=N: Limita a N documentos (padrão: ilimitado)
  */
 
 import { config } from "dotenv";
@@ -28,7 +34,112 @@ const QDRANT_CONFIG = {
   collectionName: process.env.QDRANT_COLLECTION_NAME || "legal_docs",
 };
 
-const TRIBUNAIS_PRIORITARIOS = ["TST", "TRT3", "TJMG", "TRF1", "TRF6", "STJ"];
+const TRIBUNAIS_PRIORITARIOS = ["TST", "TRT3", "TJMG", "TRF1", "TRF6", "STJ", "STF"];
+
+// Parse CLI args
+const args = process.argv.slice(2);
+const isDryRun = args.includes("--dry-run");
+const shouldValidate = args.includes("--validate");
+const maxDocsArg = args.find((arg) => arg.startsWith("--max-docs="));
+const maxDocs = maxDocsArg ? parseInt(maxDocsArg.split("=")[1]) : Infinity;
+
+// ============================================================================
+// VALIDAÇÃO DE EMBEDDINGS
+// ============================================================================
+
+function validateEmbedding(
+  embedding: number[],
+  expectedDims: number
+): { valid: boolean; issues: string[] } {
+  const issues: string[] = [];
+
+  // 1. Validar dimensões
+  if (embedding.length !== expectedDims) {
+    issues.push(`Dimensões incorretas: ${embedding.length} != ${expectedDims}`);
+  }
+
+  // 2. Validar valores NaN/Infinity
+  const hasInvalidValues = embedding.some((v) => !isFinite(v));
+  if (hasInvalidValues) {
+    issues.push("Contém valores NaN ou Infinity");
+  }
+
+  // 3. Validar magnitude (embeddings devem estar normalizados)
+  const magnitude = Math.sqrt(embedding.reduce((sum, v) => sum + v * v, 0));
+  if (Math.abs(magnitude - 1.0) > 0.01) {
+    issues.push(`Magnitude anormal: ${magnitude.toFixed(4)} (esperado ~1.0)`);
+  }
+
+  // 4. Validar que não é zero vector
+  const isZeroVector = embedding.every((v) => v === 0);
+  if (isZeroVector) {
+    issues.push("Zero vector detectado");
+  }
+
+  return { valid: issues.length === 0, issues };
+}
+
+// ============================================================================
+// ESTATÍSTICAS
+// ============================================================================
+
+interface PopulationStats {
+  totalProcessed: number;
+  totalInserted: number;
+  totalErrors: number;
+  totalSkipped: number;
+  totalValidationFailures: number;
+  startTime: number;
+  errorsByType: Map<string, number>;
+}
+
+function createStats(): PopulationStats {
+  return {
+    totalProcessed: 0,
+    totalInserted: 0,
+    totalErrors: 0,
+    totalSkipped: 0,
+    totalValidationFailures: 0,
+    startTime: Date.now(),
+    errorsByType: new Map(),
+  };
+}
+
+function recordError(stats: PopulationStats, errorType: string): void {
+  stats.totalErrors++;
+  stats.errorsByType.set(errorType, (stats.errorsByType.get(errorType) || 0) + 1);
+}
+
+function printStats(stats: PopulationStats): void {
+  const durationMs = Date.now() - stats.startTime;
+  const durationSec = (durationMs / 1000).toFixed(1);
+
+  console.log("\n\n?? RESUMO DA POPULAÇÃO\n");
+  console.log(`   Total Processado:      ${stats.totalProcessed}`);
+  console.log(`   Total Inserido:        ${stats.totalInserted} ?`);
+  console.log(`   Total Pulado:          ${stats.totalSkipped}`);
+  console.log(`   Total Erros:           ${stats.totalErrors} ${stats.totalErrors > 0 ? "??" : ""}`);
+  console.log(`   Falhas de Validação:   ${stats.totalValidationFailures}`);
+  console.log(`   Duração:               ${durationSec}s`);
+  console.log(
+    `   Taxa de Sucesso:       ${
+      stats.totalProcessed > 0
+        ? ((stats.totalInserted / stats.totalProcessed) * 100).toFixed(1)
+        : 0
+    }%`
+  );
+
+  if (stats.errorsByType.size > 0) {
+    console.log("\n   ?? Erros por Tipo:");
+    for (const [type, count] of stats.errorsByType.entries()) {
+      console.log(`      - ${type}: ${count}`);
+    }
+  }
+
+  if (isDryRun) {
+    console.log("\n   ?? MODO DRY-RUN: Nenhum dado foi inserido no Qdrant");
+  }
+}
 
 // ============================================================================
 // MAIN FUNCTION
@@ -36,6 +147,18 @@ const TRIBUNAIS_PRIORITARIOS = ["TST", "TRT3", "TJMG", "TRF1", "TRF6", "STJ"];
 
 async function main() {
   console.log("?? Iniciando população automatizada do Qdrant com DataJud\n");
+
+  if (isDryRun) {
+    console.log("?? MODO DRY-RUN ATIVADO (sem inserções reais)\n");
+  }
+
+  if (shouldValidate) {
+    console.log("? VALIDAÇÃO DE EMBEDDINGS ATIVADA\n");
+  }
+
+  if (maxDocs < Infinity) {
+    console.log(`?? LIMITE: ${maxDocs} documentos\n`);
+  }
 
   // 1. Validar configuração
   if (!QDRANT_CONFIG.url || !QDRANT_CONFIG.apiKey) {
@@ -64,20 +187,20 @@ async function main() {
   const embeddingDimensions = geminiEmbeddingService.getDimensions();
   console.log(`?? Modelo Gemini: text-embedding-004 (${embeddingDimensions} dimensões)`);
 
-  try {
-    await qdrant.createCollection(embeddingDimensions, "Cosine");
-    console.log("? Collection verificada/criada\n");
-  } catch (error) {
-    console.error("? Erro ao criar collection:", error);
-    process.exit(1);
+  if (!isDryRun) {
+    try {
+      await qdrant.createCollection(embeddingDimensions, "Cosine");
+      console.log("? Collection verificada/criada\n");
+    } catch (error) {
+      console.error("? Erro ao criar collection:", error);
+      process.exit(1);
+    }
   }
 
   // 4. Buscar dados do DataJud
   console.log("?? Buscando dados do DataJud (CNJ)...\n");
 
-  let totalProcessed = 0;
-  let totalInserted = 0;
-  let totalErrors = 0;
+  const stats = createStats();
 
   try {
     // Estratégia 1: Buscar temas curados (mais relevantes)
@@ -85,23 +208,33 @@ async function main() {
     const temasCurados = await dataJudService.searchTemasCurados();
 
     for (const { tema, tribunal, processos } of temasCurados) {
-      console.log(`\n?? Processando: ${tema} (${tribunal})`);
+      if (stats.totalInserted >= maxDocs) break;
+
+      console.log(`\n??  Processando: ${tema} (${tribunal})`);
       console.log(`   ${processos.length} processos encontrados`);
 
       if (processos.length === 0) {
-        console.log("   ?? Pulando (sem dados)");
+        console.log("   ??  Pulando (sem dados)");
         continue;
       }
 
       // Processar em lotes de 5 para não sobrecarregar
       const batchSize = 5;
       for (let i = 0; i < processos.length; i += batchSize) {
+        if (stats.totalInserted >= maxDocs) break;
+
         const batch = processos.slice(i, i + batchSize);
-        
-        console.log(`   ?? Lote ${Math.floor(i / batchSize) + 1}/${Math.ceil(processos.length / batchSize)} (${batch.length} itens)`);
+
+        console.log(
+          `   ?? Lote ${Math.floor(i / batchSize) + 1}/${Math.ceil(
+            processos.length / batchSize
+          )} (${batch.length} itens)`
+        );
 
         for (const processo of batch) {
-          totalProcessed++;
+          if (stats.totalInserted >= maxDocs) break;
+
+          stats.totalProcessed++;
 
           try {
             // Gerar embedding
@@ -110,32 +243,54 @@ async function main() {
               tribunal: processo.tribunal,
               classe: processo.classe,
               assunto: processo.assunto,
-              movimentacoes: processo.movimentacoes?.map(m => m.descricao).join("; "),
+              movimentacoes: processo.movimentacoes?.map((m) => m.descricao).join("; "),
             });
 
-            // Inserir no Qdrant
-            await qdrant.upsert([{
-              id: processo.id,
-              vector: embeddingResult.embedding,
-              payload: {
-                numero: processo.numero,
-                tribunal: processo.tribunal,
-                classe: processo.classe,
-                assunto: processo.assunto,
-                tema,
-                dataAjuizamento: processo.dataAjuizamento,
-                orgaoJulgador: processo.orgaoJulgador,
-                totalMovimentacoes: processo.movimentacoes?.length || 0,
-                partes: processo.partes?.map(p => p.nome).join("; ") || "",
-                embedModel: embeddingResult.model,
-                createdAt: new Date().toISOString(),
-              },
-            }]);
+            // Validar embedding se solicitado
+            if (shouldValidate) {
+              const validation = validateEmbedding(
+                embeddingResult.embedding,
+                embeddingDimensions
+              );
 
-            totalInserted++;
+              if (!validation.valid) {
+                stats.totalValidationFailures++;
+                console.error(
+                  `\n   ??  Validação falhou para ${processo.numero}:`,
+                  validation.issues
+                );
+                recordError(stats, "validation_failure");
+                continue;
+              }
+            }
+
+            // Inserir no Qdrant (ou simular em dry-run)
+            if (!isDryRun) {
+              await qdrant.upsert([
+                {
+                  id: processo.id,
+                  vector: embeddingResult.embedding,
+                  payload: {
+                    numero: processo.numero,
+                    tribunal: processo.tribunal,
+                    classe: processo.classe,
+                    assunto: processo.assunto,
+                    tema,
+                    dataAjuizamento: processo.dataAjuizamento,
+                    orgaoJulgador: processo.orgaoJulgador,
+                    totalMovimentacoes: processo.movimentacoes?.length || 0,
+                    partes: processo.partes?.map((p) => p.nome).join("; ") || "",
+                    embedModel: embeddingResult.model,
+                    createdAt: new Date().toISOString(),
+                  },
+                },
+              ]);
+            }
+
+            stats.totalInserted++;
             process.stdout.write(".");
           } catch (error) {
-            totalErrors++;
+            recordError(stats, error instanceof Error ? error.message : "unknown_error");
             console.error(`\n   ? Erro ao processar ${processo.numero}:`, error);
           }
         }
@@ -148,75 +303,100 @@ async function main() {
     }
 
     // Estratégia 2: Buscar por tribunais prioritários (complementar)
-    console.log("\n\n?? Estratégia: Tribunais Prioritários\n");
-    
-    for (const tribunal of TRIBUNAIS_PRIORITARIOS) {
-      console.log(`\n??? Tribunal: ${tribunal}`);
+    if (stats.totalInserted < maxDocs) {
+      console.log("\n\n??  Estratégia: Tribunais Prioritários\n");
 
-      try {
-        const processos = await dataJudService.searchProcessos({
-          tribunal,
-          limit: 20,
-          dataInicio: "2023-01-01",
-        });
+      for (const tribunal of TRIBUNAIS_PRIORITARIOS) {
+        if (stats.totalInserted >= maxDocs) break;
 
-        console.log(`   ${processos.length} processos encontrados`);
+        console.log(`\n?? Tribunal: ${tribunal}`);
 
-        for (const processo of processos) {
-          totalProcessed++;
+        try {
+          const processos = await dataJudService.searchProcessos({
+            tribunal,
+            limit: Math.min(20, maxDocs - stats.totalInserted),
+            dataInicio: "2023-01-01",
+          });
 
-          try {
-            const embeddingResult = await geminiEmbeddingService.generateDocumentEmbedding({
-              numero: processo.numero,
-              tribunal: processo.tribunal,
-              classe: processo.classe,
-              assunto: processo.assunto,
-            });
+          console.log(`   ${processos.length} processos encontrados`);
 
-            await qdrant.upsert([{
-              id: `${tribunal}-${processo.id}`,
-              vector: embeddingResult.embedding,
-              payload: {
+          for (const processo of processos) {
+            if (stats.totalInserted >= maxDocs) break;
+
+            stats.totalProcessed++;
+
+            try {
+              const embeddingResult = await geminiEmbeddingService.generateDocumentEmbedding({
                 numero: processo.numero,
                 tribunal: processo.tribunal,
                 classe: processo.classe,
                 assunto: processo.assunto,
-                dataAjuizamento: processo.dataAjuizamento,
-                embedModel: embeddingResult.model,
-                createdAt: new Date().toISOString(),
-              },
-            }]);
+              });
 
-            totalInserted++;
-            process.stdout.write(".");
-          } catch (error) {
-            totalErrors++;
-            console.error(`\n   ? Erro ao processar ${processo.numero}:`, error);
+              // Validar embedding
+              if (shouldValidate) {
+                const validation = validateEmbedding(
+                  embeddingResult.embedding,
+                  embeddingDimensions
+                );
+
+                if (!validation.valid) {
+                  stats.totalValidationFailures++;
+                  recordError(stats, "validation_failure");
+                  continue;
+                }
+              }
+
+              // Inserir no Qdrant
+              if (!isDryRun) {
+                await qdrant.upsert([
+                  {
+                    id: `${tribunal}-${processo.id}`,
+                    vector: embeddingResult.embedding,
+                    payload: {
+                      numero: processo.numero,
+                      tribunal: processo.tribunal,
+                      classe: processo.classe,
+                      assunto: processo.assunto,
+                      dataAjuizamento: processo.dataAjuizamento,
+                      embedModel: embeddingResult.model,
+                      createdAt: new Date().toISOString(),
+                    },
+                  },
+                ]);
+              }
+
+              stats.totalInserted++;
+              process.stdout.write(".");
+            } catch (error) {
+              recordError(stats, error instanceof Error ? error.message : "unknown_error");
+              console.error(`\n   ? Erro ao processar ${processo.numero}:`, error);
+            }
           }
-        }
 
-        console.log(`\n   ? ${tribunal} concluído`);
-        
-        // Delay entre tribunais
-        await delay(3000);
-      } catch (error) {
-        console.error(`   ? Erro ao buscar ${tribunal}:`, error);
+          console.log(`\n   ? ${tribunal} concluído`);
+
+          // Delay entre tribunais
+          await delay(3000);
+        } catch (error) {
+          console.error(`   ? Erro ao buscar ${tribunal}:`, error);
+          recordError(stats, `tribunal_fetch_${tribunal}`);
+        }
       }
     }
-
   } catch (error) {
-    console.error("\n? Erro fatal durante processamento:", error);
+    console.error("\n?? Erro fatal durante processamento:", error);
+    recordError(stats, "fatal_error");
   }
 
   // 5. Resumo final
-  console.log("\n\n?? RESUMO DA POPULAÇÃO\n");
-  console.log(`   Total Processado: ${totalProcessed}`);
-  console.log(`   Total Inserido:   ${totalInserted} ?`);
-  console.log(`   Total Erros:      ${totalErrors} ${totalErrors > 0 ? "??" : ""}`);
-  console.log(`   Taxa de Sucesso:  ${totalProcessed > 0 ? ((totalInserted / totalProcessed) * 100).toFixed(1) : 0}%`);
+  printStats(stats);
 
   console.log("\n? População concluída!");
-  console.log(`\n?? Acesse o dashboard: https://cloud.qdrant.io/clusters`);
+
+  if (!isDryRun) {
+    console.log(`\n?? Acesse o dashboard: https://cloud.qdrant.io/clusters`);
+  }
 }
 
 // ============================================================================
@@ -224,14 +404,14 @@ async function main() {
 // ============================================================================
 
 function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ============================================================================
 // EXECUTE
 // ============================================================================
 
-main().catch(error => {
+main().catch((error) => {
   console.error("\n?? Erro fatal:", error);
   process.exit(1);
 });
