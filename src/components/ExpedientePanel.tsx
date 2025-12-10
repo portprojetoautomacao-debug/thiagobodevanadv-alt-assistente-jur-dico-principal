@@ -1049,7 +1049,9 @@ Crie o workflow de controladoria para esta tarefa.`,
                           <p className="text-sm font-medium line-clamp-1">{exp.type || exp.tipo}</p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(
-                              exp.receivedAt || exp.dataRecebimento || new Date().toISOString()
+                              (exp.receivedAt ||
+                                exp.dataRecebimento ||
+                                new Date().toISOString()) as string
                             ).toLocaleDateString("pt-BR")}
                             {exp.tribunal && <span className="ml-1">• {exp.tribunal}</span>}
                           </p>
@@ -1077,9 +1079,9 @@ Crie o workflow de controladoria para esta tarefa.`,
                       <CardDescription className="mt-1">
                         Recebido em{" "}
                         {new Date(
-                          selectedExp.receivedAt ||
+                          (selectedExp.receivedAt ||
                             selectedExp.dataRecebimento ||
-                            new Date().toISOString()
+                            new Date().toISOString()) as string
                         ).toLocaleDateString("pt-BR")}
                       </CardDescription>
                     </div>
