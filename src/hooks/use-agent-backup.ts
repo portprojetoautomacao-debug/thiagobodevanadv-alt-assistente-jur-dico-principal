@@ -130,22 +130,14 @@ export function useAgentBackup(options: BackupOptions) {
   }, [userId]);
 
   /**
-<<<<<<< HEAD
-   * Salva cache local simplificado (apenas metadados)
-=======
    * Salva metadados do backup no cache local (localStorage)
    * Apenas para referência rápida - não salva dados completos
->>>>>>> ad6b5bd691c16193b5c29f761ed64eb8d4d72355
    */
   const saveToLocalCache = useCallback((backupData: BackupData) => {
     try {
       const cacheData = {
         timestamp: backupData.timestamp,
         userId: backupData.userId,
-<<<<<<< HEAD
-        agentCount: backupData.data.agents.length,
-        taskCount: backupData.data.taskQueue.length,
-=======
         summary: {
           agentsCount: Array.isArray(backupData.data.agents) ? backupData.data.agents.length : 0,
           taskQueueCount: Array.isArray(backupData.data.taskQueue)
@@ -153,7 +145,6 @@ export function useAgentBackup(options: BackupOptions) {
             : 0,
           lastDjenCheck: backupData.data.lastDjenCheck,
         },
->>>>>>> ad6b5bd691c16193b5c29f761ed64eb8d4d72355
       };
 
       setLastBackup(backupData.timestamp);
