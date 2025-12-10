@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
 
     strategy:
       matrix:
@@ -262,18 +264,14 @@ jobs:
         run: npm outdated || true
         continue-on-error: true
 
-      - name: Run ESLint with SARIF output
+      - name: Run ESLint with warnings
         run: |
-          echo "Running ESLint with SARIF formatter..."
-          npm run lint:sarif || {
+          echo "Running ESLint..."
+          npm run lint -- --max-warnings 350 || {
             echo "⚠️ ESLint completed with warnings/errors"
-            # Ensure SARIF file exists even on failure
-            if [ ! -f "eslint-results.sarif" ]; then
-              echo "Creating empty SARIF file..."
-              echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-            fi
+            echo "Review and fix linting issues when possible"
           }
-          echo "✅ SARIF report generated"
+          echo "✅ Linting completed"
         continue-on-error: true
 
       - name: Upload SARIF file

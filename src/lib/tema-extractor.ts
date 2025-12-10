@@ -10,8 +10,8 @@
  * @module tema-extractor
  */
 
-import { GeminiClient } from "./ai-providers";
 import type { Expediente } from "@/types";
+import { GeminiClient } from "./ai-providers";
 
 export interface TemaExtracao {
   temaPrimario: string;
@@ -218,7 +218,7 @@ ${intimacao.texto.substring(0, 3000)}
           if (temaNorm.includes(subareaNorm)) {
             // Busca especialidade
             const especialidade =
-              especialidades.find((e) => temaNorm.includes(e.toLowerCase())) ||
+              especialidades.find((e: string) => temaNorm.includes(e.toLowerCase())) ||
               especialidades[0] ||
               "Geral";
 

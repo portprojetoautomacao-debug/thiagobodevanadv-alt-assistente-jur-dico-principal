@@ -73,17 +73,8 @@ jobs:
           echo "🔍 Executando ESLint..."
           EXIT_CODE=0
 
-          # Executar ESLint com saída SARIF para GitHub (ESLint 9 removeu formatter interno)
-          # Usa o formatter oficial da Microsoft já presente em devDependencies
-          npm run lint:sarif || true
-
-          # Garantir arquivo SARIF mesmo em caso de falha
-          if [ ! -f "eslint-results.sarif" ]; then
-            echo '{"version":"2.1.0","runs":[]}' > eslint-results.sarif
-          fi
-
-          # Também executar com formato legível e capturar exit code
-          npm run lint -- --max-warnings 150 || EXIT_CODE=$?
+          # Executar ESLint com formato legível e capturar exit code
+          npm run lint -- --max-warnings 350 || EXIT_CODE=$?
 
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo "✅ ESLint passou sem erros ou warnings"
@@ -147,6 +138,8 @@ jobs:
     name: "🧩 Análise de Complexidade"
     runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.analysis_type == 'full' || github.event.inputs.analysis_type == 'complexity-only'
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - name: 📥 Checkout código

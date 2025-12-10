@@ -21,12 +21,12 @@
  * @module qdrant-auto-populator
  */
 
-import type { QdrantService } from "./qdrant-service";
+import { kv } from "@/api/kv";
+import type { Expediente } from "@/types";
 import type { DataJudService } from "./datajud-service";
 import type { GeminiEmbeddingService } from "./gemini-embedding-service";
-import type { TemaExtractorService, TemaExtracao } from "./tema-extractor";
-import type { Expediente } from "@/types";
-import { kv } from "./kv";
+import type { QdrantService } from "./qdrant-service";
+import type { TemaExtracao, TemaExtractorService } from "./tema-extractor";
 
 /**
  * Payload completo do documento jur�dico no Qdrant
