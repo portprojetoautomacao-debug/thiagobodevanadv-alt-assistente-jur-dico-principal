@@ -36,7 +36,7 @@ const DOCUMENT_TYPE_MAP: Record<string, Minuta["tipo"]> = {
   procuracao: "procuracao",
 };
 
-function determineMinutaTipo(documentType?: string): Minuta["tipo"] {
+function _determineMinutaTipo(documentType?: string): Minuta["tipo"] {
   if (!documentType) return "peticao";
 
   const type = documentType.toLowerCase().trim();

@@ -282,7 +282,6 @@ export function useAgentBackup(options: BackupOptions) {
     saveToServer,
     saveToLocalCache,
     cleanLocalStorage,
-    storageType,
   ]);
 
   /**

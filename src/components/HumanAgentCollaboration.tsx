@@ -155,13 +155,9 @@ export default function HumanAgentCollaboration({
       setTimeWithoutActivity(0);
     }
 
-    // Schedule reset on next tick to avoid synchronous setState in effect
-    const timeoutId = setTimeout(resetTimer, 0);
-
     const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive);
 
     return () => {
-      clearTimeout(timeoutId);
       cleanup();
     };
   }, [phase, isHumanActive]);

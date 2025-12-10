@@ -2,18 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Agent, AgentTask } from "@/lib/agents";
-import {
-  Activity,
-  CheckCircle,
-  Clock,
-  LineChart,
-  Timer,
-  Pulse,
-  LightningSlash,
-} from "@phosphor-icons/react";
+import { ChartLine, CheckCircle, Clock, Pulse, Timer } from "@phosphor-icons/react";
 import { TrendingUp, Zap, ZapOff } from "lucide-react";
-import { useState, useEffect, useMemo, useRef } from "react";
-import type { Agent, AgentTask } from "@/lib/agents";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface AgentMetricsProps {
   readonly agents: Agent[];
@@ -140,7 +131,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
                 <div className="text-xs text-muted-foreground">Saudáveis</div>
               </div>
               <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                <Activity className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
+                <Pulse className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
                 <div className="text-2xl font-bold text-yellow-600">
                   {circuitBreakers.summary.degraded}
                 </div>
@@ -250,7 +241,7 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <LineChart className="w-5 h-5 text-primary" />
+            <ChartLine className="w-5 h-5 text-primary" />
             Desempenho por Agente
           </CardTitle>
           <CardDescription>Estatísticas individuais de cada agente</CardDescription>
