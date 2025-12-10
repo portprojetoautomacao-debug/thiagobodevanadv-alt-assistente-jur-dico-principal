@@ -8,6 +8,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // Aumentar timeout para testes de performance
+    testTimeout: 30000, // 30 segundos
+    hookTimeout: 30000,
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
       'api/**/*.{test,spec}.{ts,tsx}'
@@ -30,6 +33,11 @@ export default defineConfig({
         '**/mockData',
         'dist/'
       ]
+    },
+    // Configurar para usar .env.test
+    env: {
+      NODE_ENV: 'test',
+      VITEST: 'true'
     }
   },
   resolve: {

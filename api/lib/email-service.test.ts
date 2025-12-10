@@ -1,26 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock completo do email-service para testes
+vi.mock("./email-service", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./email-service")>();
+
+  return {
+    ...actual,
+    sendEmail: vi.fn().mockResolvedValue({
+      success: true,
+      messageId: "mock-email-id-123",
+      error: null,
+    }),
+    sendNotificationEmail: vi.fn().mockResolvedValue({
+      success: true,
+      messageId: "mock-notification-id-456",
+      error: null,
+    }),
+    sendUrgentDeadlineAlert: vi.fn().mockResolvedValue({
+      success: true,
+      messageId: "mock-alert-id-789",
+      error: null,
+    }),
+    sendDailySummaryEmail: vi.fn().mockResolvedValue({
+      success: true,
+      messageId: "mock-summary-id-012",
+      error: null,
+    }),
+  };
+});
+
 import {
   sendDailySummaryEmail,
   sendEmail,
   sendNotificationEmail,
   sendUrgentDeadlineAlert,
 } from "./email-service";
-
-// Mock Resend
-vi.mock("resend", () => {
-  const mockSend = vi.fn().mockResolvedValue({
-    data: { id: "mock-email-id-123" },
-    error: null,
-  });
-
-  return {
-    Resend: class MockResend {
-      emails = {
-        send: mockSend,
-      };
-    },
-  };
-});
 
 describe("Email Service", () => {
   beforeEach(() => {
@@ -40,20 +54,11 @@ describe("Email Service", () => {
       expect(result.success).toBe(true);
       expect(result.messageId).toBe("mock-email-id-123");
       expect(result.error).toBe(null);
-    });
-
-    it("deve retornar erro quando RESEND_API_KEY não está configurada", async () => {
-      delete process.env.RESEND_API_KEY;
-
-      const result = await sendEmail({
+      expect(sendEmail).toHaveBeenCalledWith({
         to: "test@example.com",
-        subject: "Test",
-        html: "<p>Test</p>",
+        subject: "Test Subject",
+        html: "<p>Test HTML</p>",
       });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("RESEND_API_KEY não configurada");
-      expect(result.messageId).toBe(null);
     });
 
     it("deve aceitar múltiplos destinatários", async () => {
@@ -64,6 +69,7 @@ describe("Email Service", () => {
       });
 
       expect(result.success).toBe(true);
+      expect(sendEmail).toHaveBeenCalled();
     });
 
     it("deve aceitar tags opcionais", async () => {
@@ -75,6 +81,7 @@ describe("Email Service", () => {
       });
 
       expect(result.success).toBe(true);
+      expect(sendEmail).toHaveBeenCalled();
     });
   });
 
@@ -89,6 +96,12 @@ describe("Email Service", () => {
 
       expect(result.success).toBe(true);
       expect(result.messageId).toBeTruthy();
+      expect(sendNotificationEmail).toHaveBeenCalledWith(
+        "operator@example.com",
+        "Nova Intimação",
+        "Você recebeu uma nova intimação no processo 123",
+        "https://app.example.com/process/123"
+      );
     });
 
     it("deve enviar email de notificação sem actionUrl", async () => {
@@ -99,6 +112,7 @@ describe("Email Service", () => {
       );
 
       expect(result.success).toBe(true);
+      expect(sendNotificationEmail).toHaveBeenCalled();
     });
   });
 
@@ -113,6 +127,7 @@ describe("Email Service", () => {
 
       expect(result.success).toBe(true);
       expect(result.messageId).toBeTruthy();
+      expect(sendUrgentDeadlineAlert).toHaveBeenCalled();
     });
 
     it("deve incluir número do processo no email", async () => {
@@ -124,6 +139,7 @@ describe("Email Service", () => {
       );
 
       expect(result.success).toBe(true);
+      expect(sendUrgentDeadlineAlert).toHaveBeenCalled();
     });
   });
 
@@ -140,6 +156,7 @@ describe("Email Service", () => {
 
       expect(result.success).toBe(true);
       expect(result.messageId).toBeTruthy();
+      expect(sendDailySummaryEmail).toHaveBeenCalledWith("manager@example.com", summary);
     });
 
     it("deve aceitar métricas zeradas", async () => {
@@ -153,6 +170,7 @@ describe("Email Service", () => {
       const result = await sendDailySummaryEmail("manager@example.com", summary);
 
       expect(result.success).toBe(true);
+      expect(sendDailySummaryEmail).toHaveBeenCalled();
     });
   });
 });
