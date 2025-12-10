@@ -1,6 +1,6 @@
 # 🎯 Quick Start - Integração Railway + Vercel
 
-**Tempo estimado**: 10 minutos  
+**Tempo estimado**: 10 minutos
 **Projeto Railway**: gentle-vision (a364e7f2-c234-477b-8dac-918f00f64737)
 
 ---
@@ -75,7 +75,7 @@ railway domain
 
 ### 6. Configurar Vercel
 
-**Via Dashboard:**  
+**Via Dashboard:**
 https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
 
 Adicione:
@@ -193,5 +193,5 @@ railway login
 
 ---
 
-**Tempo restante no Railway Free Tier**: 30 dias ou $5.00  
+**Tempo restante no Railway Free Tier**: 30 dias ou $5.00
 **Status**: 🟡 Aguardando autenticação Railway

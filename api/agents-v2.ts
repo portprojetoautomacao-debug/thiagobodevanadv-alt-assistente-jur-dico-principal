@@ -91,12 +91,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Validate task shape as a final guard
   const validation = AgentTaskInputSchema.safeParse(task);
   if (!validation.success) {
-    return res
-      .status(500)
-      .json({
-        error: "Unable to create execution task",
-        details: handleValidationError(validation.error),
-      });
+    return res.status(500).json({
+      error: "Unable to create execution task",
+      details: handleValidationError(validation.error),
+    });
   }
 
   try {
@@ -111,15 +109,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Construct a minimal traces output when available
     const tracesOut = result.langGraphResult ? result.langGraphResult.messages : [];
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        agentId,
-        mode: result.mode,
-        data: result,
-        traces: traces ? tracesOut : undefined,
-      });
+    return res.status(200).json({
+      success: true,
+      agentId,
+      mode: result.mode,
+      data: result,
+      traces: traces ? tracesOut : undefined,
+    });
   } catch (err) {
     console.error("agent-v2 handler error:", err);
     return res
@@ -129,6 +125,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 export const config = {
-  runtime: "nodejs22.x",
-  maxDuration: 45,
+  runtime: "nodejs",
+  maxDuration: 300,
 };

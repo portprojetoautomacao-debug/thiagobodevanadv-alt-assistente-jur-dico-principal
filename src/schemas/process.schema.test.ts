@@ -2,15 +2,15 @@
  * Testes unitários para schemas de validação Zod
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  validateProcess,
-  validateCliente,
-  validateMinuta,
-  validateFinancialEntry,
-  isValidCPF,
   isValidCNPJ,
+  isValidCPF,
   numeroCNJSchema,
+  validateCliente,
+  validateFinancialEntry,
+  validateMinuta,
+  validateProcess,
 } from "./process.schema";
 
 describe("Validação de Processo", () => {
@@ -26,8 +26,10 @@ describe("Validação de Processo", () => {
       comarca: "Belo Horizonte",
       vara: "1ª Vara do Trabalho",
       prazos: [],
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
+      dataDistribuicao: new Date().toISOString(),
+      dataUltimaMovimentacao: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     const result = validateProcess(validProcess);
@@ -45,8 +47,10 @@ describe("Validação de Processo", () => {
       autor: "João",
       reu: "Empresa",
       status: "ativo" as const,
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
+      dataDistribuicao: new Date().toISOString(),
+      dataUltimaMovimentacao: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     const result = validateProcess(invalidProcess);

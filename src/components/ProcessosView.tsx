@@ -408,6 +408,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
             variant={viewMode === "grid" ? "secondary" : "ghost"}
             onClick={() => setViewMode("grid")}
             className="px-3"
+            aria-label="Visualização em grade"
           >
             <Grid3x3 className="h-4 w-4" />
           </Button>
@@ -416,6 +417,7 @@ Seja objetivo e prático, focando em insights acionáveis para o advogado.`;
             variant={viewMode === "list" ? "secondary" : "ghost"}
             onClick={() => setViewMode("list")}
             className="px-3"
+            aria-label="Visualização em lista"
           >
             <List className="h-4 w-4" />
           </Button>
