@@ -1,6 +1,6 @@
 /**
- * Pesquisa Jurisprudencial com Qdrant - Integração Real
- * 
+ * Pesquisa Jurisprudencial com Qdrant - Integraï¿½ï¿½o Real
+ *
  * Este agente conecta ao cluster Qdrant para buscar precedentes similares
  */
 
@@ -8,25 +8,29 @@ import type { AgentState } from "../base/agent_state";
 import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
 import { createQdrantService } from "@/lib/qdrant-service";
-import { createInvokeAgentSpan, createExecuteToolSpan, createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+import {
+  createInvokeAgentSpan,
+  createExecuteToolSpan,
+  createChatSpan,
+} from "@/lib/sentry-gemini-integration-v2";
 
 export class PesquisaJurisAgentQdrant extends LangGraphAgent {
   private qdrantService;
 
   constructor() {
     super();
-    
-    // Inicializar serviço Qdrant
+
+    // Inicializar serviï¿½o Qdrant
     const qdrantConfig = {
       url: import.meta.env.VITE_QDRANT_URL || "",
       apiKey: import.meta.env.VITE_QDRANT_API_KEY || "",
       collectionName: import.meta.env.VITE_QDRANT_COLLECTION_NAME || "legal_docs",
     };
-    
+
     this.qdrantService = createQdrantService(qdrantConfig);
-    
+
     if (!this.qdrantService) {
-      console.warn("[PesquisaJuris] Qdrant não configurado - usando fallback");
+      console.warn("[PesquisaJuris] Qdrant nï¿½o configurado - usando fallback");
     }
   }
 
@@ -39,9 +43,9 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
         temperature: 0.4,
       },
       {
-        sessionId: state.data?.sessionId as string || `pesquisa_session_${Date.now()}`,
+        sessionId: (state.data?.sessionId as string) || `pesquisa_session_${Date.now()}`,
         turn: state.retryCount + 1,
-        messages: state.messages.map(m => ({
+        messages: state.messages.map((m) => ({
           role: m.role as "user" | "assistant" | "system",
           content: m.content,
         })),
@@ -58,7 +62,7 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
 
         // 1. Gerar embedding da query com Gemini
         const queryEmbedding = await this.generateEmbedding(tema);
-        
+
         // 2. Buscar vetores similares no Qdrant
         const precedentes = await createExecuteToolSpan(
           {
@@ -92,11 +96,11 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
               toolSpan?.setAttribute("search.results_count", results.length);
               toolSpan?.setAttribute("search.qdrant_url", import.meta.env.VITE_QDRANT_URL);
 
-              return results.map(r => ({
-                titulo: (r.payload.titulo as string) || "Sem título",
+              return results.map((r) => ({
+                titulo: (r.payload.titulo as string) || "Sem tï¿½tulo",
                 ementa: (r.payload.ementa as string) || "",
                 relevancia: r.score,
-                tribunal: (r.payload.tribunal as string) || "Não especificado",
+                tribunal: (r.payload.tribunal as string) || "Nï¿½o especificado",
                 data: (r.payload.data as string) || "",
                 numero: (r.payload.numero as string) || "",
               }));
@@ -137,18 +141,18 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
    */
   private async generateEmbedding(text: string): Promise<number[]> {
     // Placeholder - integrar com Gemini Embedding API
-    // Por enquanto, retorna vetor aleatório de 1536 dimensões
+    // Por enquanto, retorna vetor aleatï¿½rio de 1536 dimensï¿½es
     return Array.from({ length: 1536 }, () => Math.random());
   }
 
   /**
-   * Fallback: retornar dados mockados se Qdrant não disponível
+   * Fallback: retornar dados mockados se Qdrant nï¿½o disponï¿½vel
    */
   private getMockPrecedentes(tema: string) {
     return [
       {
         titulo: `[MOCK] STF - ${tema}`,
-        ementa: `Este é um precedente mockado sobre ${tema}`,
+        ementa: `Este ï¿½ um precedente mockado sobre ${tema}`,
         relevancia: 0.85,
         tribunal: "STF",
         data: "2024-01-01",
@@ -158,7 +162,9 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
   }
 }
 
-export async function runPesquisaJurisQdrant(data: Record<string, unknown> = {}): Promise<AgentState> {
+export async function runPesquisaJurisQdrant(
+  data: Record<string, unknown> = {}
+): Promise<AgentState> {
   const agent = new PesquisaJurisAgentQdrant();
   const initialState: AgentState = {
     messages: [],
