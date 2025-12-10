@@ -1,4 +1,5 @@
-import { metricsCollector } from "@/lib/agent-metrics";
+import { metricsCollector, getUnhealthyAgents } from "@/lib/agent-metrics";
+import { toast } from "sonner";
 import { useKV } from "@/hooks/use-kv";
 import {
   type Agent,
@@ -18,7 +19,6 @@ import {
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 
 // Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
@@ -766,6 +766,72 @@ export function useAutonomousAgents() {
       (current || []).filter((log) => new Date(log.timestamp).getTime() > oneDayAgo)
     );
   }, [setActivityLog]);
+
+  // 🚨 Sistema de Alertas Automáticos - Detecta agentes degradados
+  useEffect(() => {
+    const checkAgentHealth = async () => {
+      const unhealthy = getUnhealthyAgents({
+        maxLatencyMs: 5000,  // 5 segundos
+        maxErrorRate: 10     // 10% de erro
+      });
+
+      if (unhealthy.length > 0) {
+        console.warn('[AgentHealth] Agentes degradados detectados:', unhealthy.map((a: { agentId: string }) => a.agentId));
+        
+        // Notificação visual local
+        toast.error(
+          `⚠️ ${unhealthy.length} agente(s) degradado(s)`,
+          {
+            description: `Agentes com problemas: ${unhealthy.map((a: { agentId: string }) => a.agentId).join(', ')}`,
+            duration: 10000,
+          }
+        );
+
+        // Enviar notificação via API (email/webhook)
+        try {
+          await fetch('/api/notifications/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'system_alert',
+              title: '🚨 Agentes Degradados Detectados',
+              message: `${unhealthy.length} agente(s) apresentando problemas de performance: ${unhealthy.map((a: { agentId: string }) => a.agentId).join(', ')}`,
+              priority: 'high',
+              metadata: {
+                agentes: unhealthy.map((a: { agentId: string }) => a.agentId).join(', '),
+                latenciaMedia: Math.round(unhealthy.reduce((sum: number, a: { p95Latency: number }) => sum + a.p95Latency, 0) / unhealthy.length),
+                taxaErroMedia: (unhealthy.reduce((sum: number, a: { errorRate: number }) => sum + a.errorRate, 0) / unhealthy.length).toFixed(1) + '%',
+                timestamp: new Date().toISOString(),
+              }
+            })
+          });
+        } catch (error) {
+          console.error('[AgentHealth] Falha ao enviar notificação:', error);
+        }
+
+        // Pausar agentes degradados automaticamente
+        unhealthy.forEach((agent: { agentId: string; p95Latency: number; errorRate: number }) => {
+          setAgents((current) =>
+            updateAgentInList(current || [], agent.agentId, {
+              status: 'paused',
+              lastActivity: `Pausado: alta latência (${agent.p95Latency}ms) ou erro (${agent.errorRate}%)`,
+            })
+          );
+        });
+      }
+    };
+
+    // Verificar a cada 5 minutos
+    const interval = setInterval(checkAgentHealth, 5 * 60 * 1000);
+
+    // Verificação inicial após 30 segundos
+    const timeout = setTimeout(checkAgentHealth, 30000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [setAgents]);
 
   return {
     agents: agents || [],

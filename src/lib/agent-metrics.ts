@@ -131,7 +131,7 @@ class AgentMetricsCollector {
   }
 
   /**
-   * Identifica agentes com performance degradada
+   * Detecta agentes com problemas de performance
    */
   getUnhealthyAgents(thresholds: {
     maxLatencyMs?: number;
@@ -139,8 +139,19 @@ class AgentMetricsCollector {
   } = {}): AgentStats[] {
     const { maxLatencyMs = 5000, maxErrorRate = 10 } = thresholds;
 
-    return this.getAllStats().filter((stats) => {
-      return stats.p95Latency > maxLatencyMs || stats.errorRate > maxErrorRate;
+    const allStats = this.getAllStats();
+
+    return allStats.filter((stats) => {
+      // Precisa ter execuções suficientes para avaliar
+      if (stats.totalExecutions < 5) return false;
+
+      // Verifica latência P95
+      if (stats.p95Latency > maxLatencyMs) return true;
+
+      // Verifica taxa de erro
+      if (stats.errorRate > maxErrorRate) return true;
+
+      return false;
     });
   }
 
@@ -251,4 +262,29 @@ export function withMetrics<T extends (...args: any[]) => Promise<any>>(
       });
     }
   }) as T;
+}
+
+/**
+ * Detecta agentes com problemas de performance
+ */
+export function getUnhealthyAgents(thresholds: {
+  maxLatencyMs?: number;
+  maxErrorRate?: number;
+}): AgentStats[] {
+  const { maxLatencyMs = 5000, maxErrorRate = 10 } = thresholds;
+  
+  const allStats = metricsCollector.getAllStats();
+  
+  return allStats.filter((stats) => {
+    // Precisa ter execuções suficientes para avaliar
+    if (stats.totalExecutions < 5) return false;
+    
+    // Verifica latência P95
+    if (stats.p95Latency > maxLatencyMs) return true;
+    
+    // Verifica taxa de erro
+    if (stats.errorRate > maxErrorRate) return true;
+    
+    return false;
+  });
 }
