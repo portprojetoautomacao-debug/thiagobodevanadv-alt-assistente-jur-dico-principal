@@ -137,14 +137,14 @@ describe("MinutasManager - ViewMode Toggle", () => {
     renderWithProviders(<MinutasManager />);
 
     // Verificar se o botão grid está ativo
-    const gridButton = screen.getByRole("button", { name: /grid/i });
+    const gridButton = screen.getByLabelText("Visualização em grade");
     expect(gridButton).toHaveClass("bg-secondary");
   });
 
   it("deve alternar para modo list ao clicar no botão", async () => {
     renderWithProviders(<MinutasManager />);
 
-    const listButton = screen.getByRole("button", { name: /list/i });
+    const listButton = screen.getByLabelText("Visualização em lista");
     fireEvent.click(listButton);
 
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe("MinutasManager - ViewMode Toggle", () => {
   it("deve renderizar lista em coluna única no modo list", async () => {
     renderWithProviders(<MinutasManager />);
 
-    const listButton = screen.getByRole("button", { name: /list/i });
+    const listButton = screen.getByLabelText("Visualização em lista");
     fireEvent.click(listButton);
 
     await waitFor(() => {

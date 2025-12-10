@@ -27,6 +27,7 @@
       "dependsOn": [
         "auto-dev",
         "auto-watch",
+        "auto-test-unit",
         "auto-fix",
         "auto-scan-issues",
         "auto-debug-fix",
@@ -66,14 +67,42 @@
     {
       "label": "auto-watch",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "test", "--", "--watch"],
+      "command": "bash",
+      "args": ["scripts/auto-test-watcher.sh", "--mode", "smart"],
       "isBackground": true,
       "group": "test",
       "runOptions": { "runOn": "folderOpen" },
       "presentation": {
-        "reveal": "silent",
-        "panel": "dedicated"
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": {
+        "owner": "vitest",
+        "pattern": {
+          "regexp": "^(?:FAIL|✖)\\s+(.*)$",
+          "file": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Executando testes.*",
+          "endsPattern": "^.*(✅|❌).*"
+        }
+      }
+    },
+    {
+      "label": "auto-test-unit",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:watch:auto"],
+      "isBackground": true,
+      "group": "test",
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
       },
       "options": { "cwd": "${workspaceFolder}" }
     },

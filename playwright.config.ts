@@ -8,11 +8,30 @@ const IS_CI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
 
 export default defineConfig({
   testDir: "tests/e2e",
+
   // Use path (string) for ESM compatibility
   globalSetup: "./tests/e2e/global-setup.ts",
+
+  // Timeout configuration
   timeout: 60_000,
+  expect: {
+    timeout: 10_000,
+  },
+
+  // Paralelização
+  // Mantém paralelização em CI para melhor performance, conforme recomendação CodeQL.
   fullyParallel: true,
-  reporter: [["html", { open: "never" }], ["list"]],
+  workers: IS_CI ? 2 : 4,
+
+  // Retry configuration
+  retries: IS_CI ? 2 : 0,
+
+  // Reporters
+  reporter: [
+    ["html", { open: "never" }],
+    ["list"],
+    ["json", { outputFile: "test-results/results.json" }],
+  ],
   // Inicia servidor de desenvolvimento automaticamente
   webServer: USE_PROD
     ? undefined

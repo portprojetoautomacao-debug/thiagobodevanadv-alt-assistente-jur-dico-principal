@@ -53,6 +53,75 @@ const server = http.createServer((req, res) => {
       return sendJson(200, { success: true });
     }
 
+    // Observability Mock
+    if (method === "GET" && pathname === "/api/observability") {
+      const { action } = parsed.query;
+
+      if (action === "health") {
+        return sendJson(200, {
+          status: "healthy",
+          timestamp: new Date().toISOString(),
+          services: {
+            database: "connected",
+            api: "operational",
+            workers: "operational",
+          },
+          version: "1.0.0",
+        });
+      }
+
+      if (action === "agents") {
+        return sendJson(200, [
+          {
+            id: "harvey",
+            name: "Harvey Specter",
+            status: "active",
+            lastActive: new Date().toISOString(),
+            tasksCompleted: 120,
+          },
+          {
+            id: "justine",
+            name: "Mrs. Justin-e",
+            status: "active",
+            lastActive: new Date().toISOString(),
+            tasksCompleted: 450,
+          },
+          {
+            id: "monitor-djen",
+            name: "Monitor DJEN",
+            status: "idle",
+            lastActive: new Date().toISOString(),
+            tasksCompleted: 890,
+          },
+        ]);
+      }
+
+      if (action === "circuit-breakers") {
+        return sendJson(200, [
+          { name: "DJEN API", state: "closed", failures: 0, successRate: 100 },
+          { name: "DataJud API", state: "closed", failures: 0, successRate: 99.9 },
+          { name: "OpenAI API", state: "closed", failures: 0, successRate: 99.5 },
+          { name: "Qdrant", state: "closed", failures: 0, successRate: 100 },
+        ]);
+      }
+
+      if (action === "metrics") {
+        return sendJson(200, {
+          uptime: process.uptime(),
+          memoryUsage: process.memoryUsage(),
+          tasks: {
+            pending: 15,
+            in_progress: 3,
+            completed: 1250,
+            failed: 12,
+          },
+          systemLoad: process.cpuUsage(),
+        });
+      }
+
+      return sendJson(400, { error: "Invalid action" });
+    }
+
     if (method === "GET" && pathname === "/api/expedientes") {
       const exps = store.get("expedientes") || [];
       return sendJson(200, { expedientes: exps });

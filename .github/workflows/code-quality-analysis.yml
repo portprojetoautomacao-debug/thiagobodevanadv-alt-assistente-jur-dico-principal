@@ -60,8 +60,6 @@ jobs:
           key: ${{ runner.os }}-quality-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-quality-
-          node-version: "22.x"
-          cache: "npm"
 
       - name: 📦 Instalar dependências
         run: npm ci

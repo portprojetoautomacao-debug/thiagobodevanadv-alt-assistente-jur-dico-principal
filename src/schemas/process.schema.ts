@@ -1,6 +1,6 @@
 /**
- * Schemas Zod para validação de Processos
- * Garante integridade dos dados críticos do sistema
+ * Schemas Zod para validaï¿½ï¿½o de Processos
+ * Garante integridade dos dados crï¿½ticos do sistema
  */
 
 import { z } from "zod";
@@ -9,17 +9,19 @@ import { z } from "zod";
 // SCHEMAS DE PROCESSO
 // ============================================
 
-// Schema para número CNJ (formato oficial)
-export const numeroCNJSchema = z.string().regex(
-  /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/,
-  "Número CNJ inválido. Formato esperado: 0000000-00.0000.0.00.0000"
-);
+// Schema para nï¿½mero CNJ (formato oficial)
+export const numeroCNJSchema = z
+  .string()
+  .regex(
+    /^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$/,
+    "Nï¿½mero CNJ invï¿½lido. Formato esperado: 0000000-00.0000.0.00.0000"
+  );
 
 // Schema para prazo processual
 export const prazoSchema = z.object({
   id: z.string().uuid(),
   processId: z.string().uuid(),
-  descricao: z.string().min(3, "Descrição deve ter no mínimo 3 caracteres"),
+  descricao: z.string().min(3, "Descriï¿½ï¿½o deve ter no mï¿½nimo 3 caracteres"),
   dataInicio: z.string().datetime(),
   diasCorridos: z.number().int().min(0),
   tipoPrazo: z.enum(["cpc", "clt"]),
@@ -31,18 +33,21 @@ export const prazoSchema = z.object({
 
 // Schema para processo completo
 export const processSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   numeroCNJ: numeroCNJSchema,
-  titulo: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(200, "Título muito longo"),
-  autor: z.string().min(3, "Nome do autor inválido"),
-  reu: z.string().min(3, "Nome do réu inválido"),
+  titulo: z
+    .string()
+    .min(5, "Tï¿½tulo deve ter no mï¿½nimo 5 caracteres")
+    .max(200, "Tï¿½tulo muito longo"),
+  autor: z.string().min(3, "Nome do autor invï¿½lido"),
+  reu: z.string().min(3, "Nome do rï¿½u invï¿½lido"),
   status: z.enum(["ativo", "suspenso", "concluido", "arquivado"]),
   valorCausa: z.number().min(0, "Valor da causa deve ser positivo").optional(),
-  comarca: z.string().min(3, "Comarca inválida").optional(),
-  vara: z.string().min(3, "Vara inválida").optional(),
+  comarca: z.string().min(3, "Comarca invï¿½lida").optional(),
+  vara: z.string().min(3, "Vara invï¿½lida").optional(),
   prazos: z.array(prazoSchema).default([]),
-  observacoes: z.string().max(5000, "Observações muito longas").optional(),
-  // Campos obrigatórios do tipo Process
+  observacoes: z.string().max(5000, "Observaï¿½ï¿½es muito longas").optional(),
+  // Campos obrigatï¿½rios do tipo Process
   dataDistribuicao: z.string().datetime(),
   dataUltimaMovimentacao: z.string().datetime(),
   createdAt: z.string().datetime(),
@@ -63,36 +68,39 @@ export const processSchema = z.object({
 // SCHEMAS DE CLIENTE
 // ============================================
 
-// Schema para CPF (validação básica de formato)
-export const cpfSchema = z.string().regex(
-  /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
-  "CPF inválido. Formato esperado: 000.000.000-00"
-);
+// Schema para CPF (validaï¿½ï¿½o bï¿½sica de formato)
+export const cpfSchema = z
+  .string()
+  .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF invï¿½lido. Formato esperado: 000.000.000-00");
 
-// Schema para CNPJ (validação básica de formato)
-export const cnpjSchema = z.string().regex(
-  /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/,
-  "CNPJ inválido. Formato esperado: 00.000.000/0000-00"
-);
+// Schema para CNPJ (validaï¿½ï¿½o bï¿½sica de formato)
+export const cnpjSchema = z
+  .string()
+  .regex(
+    /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/,
+    "CNPJ invï¿½lido. Formato esperado: 00.000.000/0000-00"
+  );
 
-// Schema para telefone (aceita vários formatos)
-export const telefoneSchema = z.string().regex(
-  /^\(?[1-9]{2}\)?\s?9?\d{4}-?\d{4}$/,
-  "Telefone inválido. Formato esperado: (11) 91234-5678 ou 11912345678"
-);
+// Schema para telefone (aceita vï¿½rios formatos)
+export const telefoneSchema = z
+  .string()
+  .regex(
+    /^\(?[1-9]{2}\)?\s?9?\d{4}-?\d{4}$/,
+    "Telefone invï¿½lido. Formato esperado: (11) 91234-5678 ou 11912345678"
+  );
 
 // Schema para email
-export const emailSchema = z.string().email("Email inválido");
+export const emailSchema = z.string().email("Email invï¿½lido");
 
 // Schema para cliente
 export const clienteSchema = z.object({
   id: z.string().uuid(),
-  nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres").max(200, "Nome muito longo"),
+  nome: z.string().min(3, "Nome deve ter no mï¿½nimo 3 caracteres").max(200, "Nome muito longo"),
   cpfCnpj: z.union([cpfSchema, cnpjSchema]),
   email: emailSchema.optional(),
   telefone: telefoneSchema.optional(),
-  endereco: z.string().max(500, "Endereço muito longo").optional(),
-  observacoes: z.string().max(2000, "Observações muito longas").optional(),
+  endereco: z.string().max(500, "Endereï¿½o muito longo").optional(),
+  observacoes: z.string().max(2000, "Observaï¿½ï¿½es muito longas").optional(),
   criadoEm: z.string().datetime(),
   atualizadoEm: z.string().datetime(),
 });
@@ -103,20 +111,23 @@ export const clienteSchema = z.object({
 
 export const minutaSchema = z.object({
   id: z.string().uuid(),
-  titulo: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(200, "Título muito longo"),
+  titulo: z
+    .string()
+    .min(5, "Tï¿½tulo deve ter no mï¿½nimo 5 caracteres")
+    .max(200, "Tï¿½tulo muito longo"),
   processId: z.string().uuid().optional(),
   tipo: z.enum(["peticao", "contrato", "parecer", "recurso", "procuracao", "outro"]),
-  conteudo: z.string().min(10, "Conteúdo muito curto"),
+  conteudo: z.string().min(10, "Conteï¿½do muito curto"),
   status: z.enum(["rascunho", "em-revisao", "pendente-revisao", "finalizada", "arquivada"]),
   criadoEm: z.string().datetime(),
   atualizadoEm: z.string().datetime(),
-  autor: z.string().min(3, "Nome do autor inválido"),
+  autor: z.string().min(3, "Nome do autor invï¿½lido"),
   googleDocsId: z.string().optional(),
-  googleDocsUrl: z.string().url("URL do Google Docs inválida").optional(),
+  googleDocsUrl: z.string().url("URL do Google Docs invï¿½lida").optional(),
   criadoPorAgente: z.boolean().default(false),
   agenteId: z.string().optional(),
   templateId: z.string().optional(),
-  expedienteId: z.string().uuid().optional(),
+  expedienteId: z.string().optional(),
   variaveis: z.record(z.string()).optional(),
 });
 
@@ -128,8 +139,8 @@ export const financialEntrySchema = z.object({
   id: z.string().uuid(),
   type: z.enum(["income", "expense"]),
   amount: z.number().positive("Valor deve ser positivo"),
-  category: z.string().min(3, "Categoria inválida"),
-  description: z.string().max(500, "Descrição muito longa").optional(),
+  category: z.string().min(3, "Categoria invï¿½lida"),
+  description: z.string().max(500, "Descriï¿½ï¿½o muito longa").optional(),
   date: z.string().datetime(),
   processId: z.string().uuid().optional(),
   criadoEm: z.string().datetime(),
@@ -142,11 +153,11 @@ export const financialEntrySchema = z.object({
 
 export const agentTaskSchema = z.object({
   id: z.string().uuid(),
-  agentId: z.string().min(3, "ID do agente inválido"),
-  type: z.string().min(3, "Tipo de tarefa inválido"),
+  agentId: z.string().min(3, "ID do agente invï¿½lido"),
+  type: z.string().min(3, "Tipo de tarefa invï¿½lido"),
   priority: z.enum(["low", "medium", "high", "critical"]),
   status: z.enum(["pending", "in_progress", "completed", "failed"]),
-  description: z.string().min(5, "Descrição muito curta").max(1000, "Descrição muito longa"),
+  description: z.string().min(5, "Descriï¿½ï¿½o muito curta").max(1000, "Descriï¿½ï¿½o muito longa"),
   data: z.record(z.any()).optional(),
   result: z.record(z.any()).optional(),
   error: z.string().optional(),
@@ -156,7 +167,7 @@ export const agentTaskSchema = z.object({
 });
 
 // ============================================
-// TIPOS EXPORTADOS (inferência do Zod)
+// TIPOS EXPORTADOS (inferï¿½ncia do Zod)
 // ============================================
 
 export type ProcessValidated = z.infer<typeof processSchema>;
@@ -167,7 +178,7 @@ export type FinancialEntryValidated = z.infer<typeof financialEntrySchema>;
 export type AgentTaskValidated = z.infer<typeof agentTaskSchema>;
 
 // ============================================
-// HELPERS DE VALIDAÇÃO
+// HELPERS DE VALIDAï¿½ï¿½O
 // ============================================
 
 // Helper para validar processo e retornar erros formatados
@@ -246,10 +257,10 @@ export function validateAgentTask(data: unknown) {
 }
 
 // ============================================
-// VALIDADORES ESPECÍFICOS
+// VALIDADORES ESPECï¿½FICOS
 // ============================================
 
-// Validar se CPF tem dígitos verificadores corretos (algoritmo oficial)
+// Validar se CPF tem dï¿½gitos verificadores corretos (algoritmo oficial)
 export function isValidCPF(cpf: string): boolean {
   const cleanCPF = cpf.replace(/\D/g, "");
   if (cleanCPF.length !== 11 || /^(\d)\1+$/.test(cleanCPF)) return false;
@@ -273,7 +284,7 @@ export function isValidCPF(cpf: string): boolean {
   return true;
 }
 
-// Validar se CNPJ tem dígitos verificadores corretos (algoritmo oficial)
+// Validar se CNPJ tem dï¿½gitos verificadores corretos (algoritmo oficial)
 export function isValidCNPJ(cnpj: string): boolean {
   const cleanCNPJ = cnpj.replace(/\D/g, "");
   if (cleanCNPJ.length !== 14 || /^(\d)\1+$/.test(cleanCNPJ)) return false;

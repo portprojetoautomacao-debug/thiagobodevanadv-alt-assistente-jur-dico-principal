@@ -1,22 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { processSchema, type Process } from "../process.schema";
+import { processSchema } from "../process.schema";
 
 describe("processSchema", () => {
   it("should validate a correct process object", () => {
-    const validProcess: Process = {
+    const validProcess = {
       id: "proc_123",
-      numero: "1234567-89.2024.5.02.0999",
-      titulo: "A��o Trabalhista",
-      partes: {
-        autor: "Jo�o Silva",
-        reu: "Empresa XYZ Ltda",
-      },
-      status: "em-andamento",
-      vara: "1� Vara do Trabalho de S�o Paulo",
-      comarca: "S�o Paulo",
-      tags: ["trabalhista", "rescis�o"],
-      criadoEm: "2024-12-08",
-      atualizadoEm: "2024-12-08",
+      numeroCNJ: "1234567-89.2024.5.02.0999",
+      titulo: "Ação Trabalhista",
+      autor: "João Silva",
+      reu: "Empresa XYZ Ltda",
+      status: "ativo",
+      comarca: "São Paulo",
+      vara: "1ª Vara do Trabalho de São Paulo",
+      dataDistribuicao: new Date().toISOString(),
+      dataUltimaMovimentacao: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      prazos: [],
     };
 
     expect(() => processSchema.parse(validProcess)).not.toThrow();
@@ -25,7 +25,7 @@ describe("processSchema", () => {
   it("should throw on missing required fields", () => {
     const invalidProcess = {
       id: "proc_123",
-      // numero missing
+      // numeroCNJ missing
       titulo: "Test",
     };
 
@@ -39,11 +39,19 @@ describe("processSchema", () => {
       "9999999-99.2099.1.99.9999",
     ];
 
-    validNumeros.forEach((numero) => {
+    validNumeros.forEach((numeroCNJ) => {
       const process = {
         id: "proc_test",
-        numero,
+        numeroCNJ,
         titulo: "Test Process",
+        autor: "Test Author",
+        reu: "Test Reu",
+        status: "ativo" as const,
+        dataDistribuicao: new Date().toISOString(),
+        dataUltimaMovimentacao: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        prazos: [],
       };
 
       expect(() => processSchema.parse(process)).not.toThrow();
@@ -53,11 +61,19 @@ describe("processSchema", () => {
   it("should throw on invalid numero CNJ format", () => {
     const invalidNumeros = ["123456", "1234567-89.2024", "invalid-format", "1234567-89.2024.5.02"];
 
-    invalidNumeros.forEach((numero) => {
+    invalidNumeros.forEach((numeroCNJ) => {
       const process = {
         id: "proc_test",
-        numero,
+        numeroCNJ,
         titulo: "Test Process",
+        autor: "Test Author",
+        reu: "Test Reu",
+        status: "ativo" as const,
+        dataDistribuicao: new Date().toISOString(),
+        dataUltimaMovimentacao: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        prazos: [],
       };
 
       expect(() => processSchema.parse(process)).toThrow();
@@ -65,14 +81,21 @@ describe("processSchema", () => {
   });
 
   it("should validate all status values", () => {
-    const statuses = ["ativo", "em-andamento", "suspenso", "arquivado", "conclu�do"];
+    const statuses = ["ativo", "suspenso", "arquivado", "concluído"] as const;
 
     statuses.forEach((status) => {
       const process = {
         id: `proc_${status}`,
-        numero: "1234567-89.2024.5.02.0999",
+        numeroCNJ: "1234567-89.2024.5.02.0999",
         titulo: "Test",
+        autor: "Test Author",
+        reu: "Test Reu",
         status,
+        dataDistribuicao: new Date().toISOString(),
+        dataUltimaMovimentacao: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        prazos: [],
       };
 
       expect(() => processSchema.parse(process)).not.toThrow();
@@ -82,8 +105,16 @@ describe("processSchema", () => {
   it("should accept process without optional fields", () => {
     const minimalProcess = {
       id: "proc_min",
-      numero: "1234567-89.2024.5.02.0999",
+      numeroCNJ: "1234567-89.2024.5.02.0999",
       titulo: "Minimal Process",
+      autor: "Minimal Author",
+      reu: "Minimal Reu",
+      status: "ativo" as const,
+      dataDistribuicao: new Date().toISOString(),
+      dataUltimaMovimentacao: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      prazos: [],
     };
 
     expect(() => processSchema.parse(minimalProcess)).not.toThrow();
@@ -92,22 +123,29 @@ describe("processSchema", () => {
   it("should validate with all optional fields", () => {
     const fullProcess = {
       id: "proc_full",
-      numero: "1234567-89.2024.5.02.0999",
+      numeroCNJ: "1234567-89.2024.5.02.0999",
       titulo: "Full Process",
-      partes: {
-        autor: "Autor Name",
-        reu: "Reu Name",
-        terceiros: ["Terceiro 1", "Terceiro 2"],
-      },
-      status: "em-andamento",
-      vara: "1� Vara C�vel",
-      comarca: "S�o Paulo",
-      tags: ["tag1", "tag2"],
-      valor: "R$ 50.000,00",
-      dataDistribuicao: "2024-01-15",
-      ultimaMovimentacao: "2024-12-08",
-      criadoEm: "2024-01-15",
-      atualizadoEm: "2024-12-08",
+      autor: "Author Name",
+      reu: "Reu Name",
+      status: "ativo" as const,
+      valorCausa: 50000,
+      comarca: "São Paulo",
+      vara: "1ª Vara Cível",
+      fase: "Instrução",
+      valor: 50000,
+      notas: "Notas do processo",
+      expedientesCount: 5,
+      intimacoesCount: 3,
+      minutasCount: 2,
+      documentosCount: 10,
+      observacoes: "Observações gerais",
+      dataDistribuicao: new Date().toISOString(),
+      dataUltimaMovimentacao: new Date().toISOString(),
+      lastExpedienteAt: new Date().toISOString(),
+      lastMinutaAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      prazos: [],
     };
 
     expect(() => processSchema.parse(fullProcess)).not.toThrow();

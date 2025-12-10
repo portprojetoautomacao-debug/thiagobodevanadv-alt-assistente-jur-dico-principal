@@ -140,9 +140,9 @@ export const agentTaskSchema = z.object({
   timeout: z.number().int().positive().default(30000),
 
   // Relacionamentos
-  processId: z.string().uuid().optional(),
-  expedienteId: z.string().uuid().optional(),
-  parentTaskId: z.string().uuid().optional(),
+  processId: z.string().optional(),
+  expedienteId: z.string().optional(),
+  parentTaskId: z.string().optional(),
 
   // Metadados
   metadata: z
