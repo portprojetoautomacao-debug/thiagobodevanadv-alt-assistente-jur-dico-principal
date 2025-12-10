@@ -30,7 +30,7 @@ vi.mock("../../src/lib/agent-monitoring", () => ({
     }),
   },
   AgentMonitor: vi.fn().mockImplementation(() => ({
-    trackTaskExecution: vi.fn(async (_taskId, _agentId, _taskType, fn) => {
+    trackTaskExecution: vi.fn(async (taskId, agentId, taskType, fn) => {
       return await fn();
     }),
     getMetrics: vi.fn(() => ({

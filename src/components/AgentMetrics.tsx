@@ -2,9 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Agent, AgentTask } from "@/lib/agents";
-import { ChartLine, CheckCircle, Clock, Pulse, Timer } from "@phosphor-icons/react";
+import {
+  CheckCircle,
+  Clock,
+  ChartLine,
+  Timer,
+  Pulse,
+} from "@phosphor-icons/react";
 import { TrendingUp, Zap, ZapOff } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 interface AgentMetricsProps {
   readonly agents: Agent[];
