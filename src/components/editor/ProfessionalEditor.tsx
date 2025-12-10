@@ -1,6 +1,6 @@
 /**
  * ProfessionalEditor - Editor de documentos com CKEditor 5
- * 
+ *
  * Features:
  * - UI profissional igual Word/Google Docs
  * - Colaboração humano/IA com pausa automática
@@ -10,9 +10,8 @@
  * - Aparência de página A4
  */
 
-import { CKEditor } from '@ckeditor/ckeditor5-react';
+import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
-  ClassicEditor,
   AccessibilityHelp,
   Autoformat,
   AutoLink,
@@ -20,6 +19,7 @@ import {
   BalloonToolbar,
   BlockQuote,
   Bold,
+  ClassicEditor,
   Code,
   Essentials,
   FindAndReplace,
@@ -53,21 +53,22 @@ import {
   TodoList,
   Underline,
   Undo,
+  WordCount,
   type EditorConfig,
-} from 'ckeditor5';
+} from "ckeditor5";
 
-import 'ckeditor5/ckeditor5.css';
-import './professional-editor.scss';
+import "ckeditor5/ckeditor5.css";
+import "./professional-editor.scss";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Bot, ChevronDown, Expand, Loader2, Sparkles, User, Wand2, Zap } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // ===========================
 // Props Interface
@@ -126,7 +127,10 @@ const AI_QUICK_COMMANDS = [
 function countWords(text: string): number {
   return text.trim().length === 0
     ? 0
-    : text.trim().split(/\s+/).filter((w) => w.length > 0).length;
+    : text
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w.length > 0).length;
 }
 
 // ===========================
@@ -165,35 +169,35 @@ export function ProfessionalEditor({
   const editorConfig: EditorConfig = {
     toolbar: {
       items: [
-        'undo',
-        'redo',
-        '|',
-        'heading',
-        '|',
-        'fontSize',
-        'fontFamily',
-        'fontColor',
-        'fontBackgroundColor',
-        '|',
-        'bold',
-        'italic',
-        'underline',
-        'strikethrough',
-        'subscript',
-        'superscript',
-        'code',
-        '|',
-        'link',
-        'insertTable',
-        'blockQuote',
-        'horizontalLine',
-        'specialCharacters',
-        '|',
-        'bulletedList',
-        'numberedList',
-        'todoList',
-        'outdent',
-        'indent',
+        "undo",
+        "redo",
+        "|",
+        "heading",
+        "|",
+        "fontSize",
+        "fontFamily",
+        "fontColor",
+        "fontBackgroundColor",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "subscript",
+        "superscript",
+        "code",
+        "|",
+        "link",
+        "insertTable",
+        "blockQuote",
+        "horizontalLine",
+        "specialCharacters",
+        "|",
+        "bulletedList",
+        "numberedList",
+        "todoList",
+        "outdent",
+        "indent",
       ],
       shouldNotGroupWhenFull: false,
     },
@@ -238,44 +242,45 @@ export function ProfessionalEditor({
       TodoList,
       Underline,
       Undo,
+      WordCount,
     ],
-    balloonToolbar: ['bold', 'italic', '|', 'link'],
+    balloonToolbar: ["bold", "italic", "|", "link"],
     fontFamily: {
       supportAllValues: true,
       options: [
-        'default',
-        'Arial, Helvetica, sans-serif',
-        'Courier New, Courier, monospace',
-        'Georgia, serif',
-        'Lucida Sans Unicode, Lucida Grande, sans-serif',
-        'Tahoma, Geneva, sans-serif',
-        'Times New Roman, Times, serif',
-        'Trebuchet MS, Helvetica, sans-serif',
-        'Verdana, Geneva, sans-serif',
+        "default",
+        "Arial, Helvetica, sans-serif",
+        "Courier New, Courier, monospace",
+        "Georgia, serif",
+        "Lucida Sans Unicode, Lucida Grande, sans-serif",
+        "Tahoma, Geneva, sans-serif",
+        "Times New Roman, Times, serif",
+        "Trebuchet MS, Helvetica, sans-serif",
+        "Verdana, Geneva, sans-serif",
       ],
     },
     fontSize: {
-      options: [10, 12, 'default', 16, 18, 20, 24, 28, 32],
+      options: [10, 12, "default", 16, 18, 20, 24, 28, 32],
       supportAllValues: true,
     },
     heading: {
       options: [
-        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-        { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+        { model: "paragraph", title: "Paragraph", class: "ck-heading_paragraph" },
+        { model: "heading1", view: "h1", title: "Heading 1", class: "ck-heading_heading1" },
+        { model: "heading2", view: "h2", title: "Heading 2", class: "ck-heading_heading2" },
+        { model: "heading3", view: "h3", title: "Heading 3", class: "ck-heading_heading3" },
+        { model: "heading4", view: "h4", title: "Heading 4", class: "ck-heading_heading4" },
       ],
     },
     link: {
       addTargetToExternalLinks: true,
-      defaultProtocol: 'https://',
+      defaultProtocol: "https://",
       decorators: {
         toggleDownloadable: {
-          mode: 'manual',
-          label: 'Downloadable',
+          mode: "manual",
+          label: "Downloadable",
           attributes: {
-            download: 'file',
+            download: "file",
           },
         },
       },
@@ -289,7 +294,13 @@ export function ProfessionalEditor({
     },
     placeholder,
     table: {
-      contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties'],
+      contentToolbar: [
+        "tableColumn",
+        "tableRow",
+        "mergeTableCells",
+        "tableProperties",
+        "tableCellProperties",
+      ],
     },
   };
 
@@ -351,7 +362,7 @@ export function ProfessionalEditor({
         await onAIStream(prompt, {
           onChunk: (chunk: string) => {
             if (isUserTyping) return;
-            
+
             const viewFragment = editor.data.processor.toView(chunk);
             const modelFragment = editor.data.toModel(viewFragment);
             editor.model.insertContent(modelFragment);
@@ -395,7 +406,7 @@ export function ProfessionalEditor({
           const processed = replaceVariables(result);
           editor.setData(processed);
           toast.success(`IA aplicou: ${command.label}`);
-        } catch (error) {
+        } catch {
           toast.error("Erro ao processar comando de IA");
         } finally {
           setIsAILoading(false);
@@ -416,14 +427,14 @@ export function ProfessionalEditor({
       try {
         const result = await onAIGenerate(aiPrompt);
         const processed = replaceVariables(result);
-        
+
         const viewFragment = editor.data.processor.toView(processed);
         const modelFragment = editor.data.toModel(viewFragment);
         editor.model.insertContent(modelFragment);
-        
+
         setAiPrompt("");
         toast.success("Texto gerado com IA");
-      } catch (error) {
+      } catch {
         toast.error("Erro ao gerar texto");
       } finally {
         setIsAILoading(false);
@@ -532,24 +543,26 @@ export function ProfessionalEditor({
           onReady={(editor) => {
             editorRef.current = editor;
             setIsEditorReady(true);
-            
-            // Update word count
-            const data = editor.getData();
-            const text = editor.plugins.get('WordCount')?.words || 0;
-            const chars = editor.plugins.get('WordCount')?.characters || 0;
-            setWordCount(text);
-            setCharCount(chars);
+
+            // Update word count - extract plain text from HTML
+            const htmlData = editor.getData();
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = htmlData;
+            const plainText = tempDiv.textContent || tempDiv.innerText || "";
+            setWordCount(countWords(plainText));
+            setCharCount(plainText.length);
           }}
           onChange={(_event, editor) => {
-            const data = editor.getData();
-            onChange(data);
-            
-            // Update counts
-            const plainText = editor.plugins.get('WordCount')?.words || 0;
-            const chars = editor.plugins.get('WordCount')?.characters || 0;
-            setWordCount(plainText);
-            setCharCount(chars);
-            
+            const htmlData = editor.getData();
+            onChange(htmlData);
+
+            // Update counts - extract plain text from HTML
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = htmlData;
+            const plainText = tempDiv.textContent || tempDiv.innerText || "";
+            setWordCount(countWords(plainText));
+            setCharCount(plainText.length);
+
             if (!readOnly) {
               handleUserInput();
             }

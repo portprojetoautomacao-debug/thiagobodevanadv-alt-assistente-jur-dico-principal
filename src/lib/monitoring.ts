@@ -1,6 +1,6 @@
 /**
- * Configuração de Monitoring e Alertas
- * Integração com Sentry para rastreamento de erros em produção
+ * Configuraï¿½ï¿½o de Monitoring e Alertas
+ * Integraï¿½ï¿½o com Sentry para rastreamento de erros em produï¿½ï¿½o
  */
 
 /// <reference types="vite/client" />
@@ -11,7 +11,7 @@ const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || "";
 const IS_PRODUCTION = import.meta.env.PROD;
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 
-// Configuração customizada para ambiente jurídico
+// Configuraï¿½ï¿½o customizada para ambiente jurï¿½dico
 export function initMonitoring() {
   if (!IS_PRODUCTION || !SENTRY_DSN) {
     console.log("[Monitoring] Sentry desabilitado em desenvolvimento");
@@ -42,7 +42,7 @@ export function initMonitoring() {
     sendDefaultPii: false,
 
     beforeSend(event, hint) {
-      // Filtrar dados sensíveis
+      // Filtrar dados sensï¿½veis
       if (event.request?.headers) {
         delete event.request.headers.Authorization;
         delete event.request.headers.Cookie;
@@ -51,17 +51,20 @@ export function initMonitoring() {
     },
   });
 
-  console.log("[Monitoring] Sentry inicializado", IS_PRODUCTION ? "em produção" : "em desenvolvimento");
+  console.log(
+    "[Monitoring] Sentry inicializado",
+    IS_PRODUCTION ? "em produï¿½ï¿½o" : "em desenvolvimento"
+  );
 }
 
-// Adicionar contexto do usuário (após login)
+// Adicionar contexto do usuï¿½rio (apï¿½s login)
 export function setUserContext(user: { id: string; email?: string; role?: string }) {
   Sentry.setUser({
     id: user.id,
     email: user.email,
-    // Não enviar dados sensíveis como nome completo
+    // Nï¿½o enviar dados sensï¿½veis como nome completo
   });
-  
+
   Sentry.setTag("user_role", user.role || "unknown");
 }
 
@@ -70,7 +73,7 @@ export function clearUserContext() {
   Sentry.setUser(null);
 }
 
-// Helper para capturar exceções customizadas
+// Helper para capturar exceï¿½ï¿½es customizadas
 export function captureException(error: Error, context?: Record<string, any>) {
   if (!IS_PRODUCTION) {
     console.error("[Dev Error]", error, context);
@@ -83,8 +86,12 @@ export function captureException(error: Error, context?: Record<string, any>) {
   });
 }
 
-// Helper para capturar mensagens (não-erros)
-export function captureMessage(message: string, level: Sentry.SeverityLevel = "info", context?: Record<string, any>) {
+// Helper para capturar mensagens (nï¿½o-erros)
+export function captureMessage(
+  message: string,
+  level: Sentry.SeverityLevel = "info",
+  context?: Record<string, any>
+) {
   if (!IS_PRODUCTION) {
     console.log(`[Dev ${level}]`, message, context);
     return;

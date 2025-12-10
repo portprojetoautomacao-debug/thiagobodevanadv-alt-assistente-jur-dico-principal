@@ -89,11 +89,11 @@ function createInactivityInterval(
 
       // Check if agent should resume
       if (next >= INACTIVITY_LIMIT_SECONDS) {
-        setPhase('agent_resuming')
+        setPhase("agent_resuming");
         setTimeout(() => {
-          setPhase('agent_working')
-        }, RESUME_DELAY_MS)
-        return 0
+          setPhase("agent_working");
+        }, RESUME_DELAY_MS);
+        return 0;
       }
 
       return next;
@@ -117,8 +117,8 @@ export default function HumanAgentCollaboration({
   const [isHumanActive, setIsHumanActive] = useState(false);
 
   // Refs para controlar timers e evitar vazamentos de memória
-  const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const previousPhaseRef = useRef(phase)
+  const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousPhaseRef = useRef(phase);
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
@@ -128,51 +128,49 @@ export default function HumanAgentCollaboration({
   }, [phase, onComplete]);
 
   // Track previous phase for transition detection
-  const previousPhaseRef = useRef(phase)
-  
-  // Mover reset de inatividade para useEffect para evitar setState durante render
+
   useEffect(() => {
-    if (previousPhaseRef.current === 'human_editing' && phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
+    if (previousPhaseRef.current === "human_editing" && phase !== "human_editing") {
+      setTimeWithoutActivity(0);
     }
-    previousPhaseRef.current = phase
-  }, [phase])
+    previousPhaseRef.current = phase;
+  }, [phase]);
 
   // Timer de inatividade durante edição humana
   useEffect(() => {
-    const prevPhase = previousPhaseRef.current
-    previousPhaseRef.current = phase
-    
+    const prevPhase = previousPhaseRef.current;
+    previousPhaseRef.current = phase;
+
     // Reset timer when transitioning out of human_editing phase
-    if (prevPhase === 'human_editing' && phase !== 'human_editing') {
-      setTimeWithoutActivity(0)
+    if (prevPhase === "human_editing" && phase !== "human_editing") {
+      setTimeWithoutActivity(0);
     }
-    
-    if (phase !== 'human_editing') {
-      return // No cleanup needed when not in human_editing phase
+
+    if (phase !== "human_editing") {
+      return; // No cleanup needed when not in human_editing phase
     }
 
     // Reset timer when entering human_editing phase
-    if (prevPhase !== 'human_editing') {
-      setTimeWithoutActivity(0)
+    if (prevPhase !== "human_editing") {
+      setTimeWithoutActivity(0);
     }
-    
-    // Schedule reset on next tick to avoid synchronous setState in effect
-    const timeoutId = setTimeout(resetTimer, 0)
 
-    const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive)
-    
+    // Schedule reset on next tick to avoid synchronous setState in effect
+    const timeoutId = setTimeout(resetTimer, 0);
+
+    const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive);
+
     return () => {
-      clearTimeout(timeoutId)
-      cleanup()
-    }
-  }, [phase, isHumanActive])
+      clearTimeout(timeoutId);
+      cleanup();
+    };
+  }, [phase, isHumanActive]);
 
   // Limpa timeout de atividade humana ao desmontar
   useEffect(() => {
     return () => {
       if (humanActivityTimeoutRef.current != null) {
-        clearTimeout(humanActivityTimeoutRef.current)
+        clearTimeout(humanActivityTimeoutRef.current);
       }
     };
   }, []);
@@ -186,12 +184,12 @@ export default function HumanAgentCollaboration({
 
     // Simula uma janela de "atividade" humana por alguns segundos
     if (humanActivityTimeoutRef.current != null) {
-      clearTimeout(humanActivityTimeoutRef.current)
+      clearTimeout(humanActivityTimeoutRef.current);
     }
     humanActivityTimeoutRef.current = setTimeout(() => {
-      setIsHumanActive(false)
-    }, 3000)
-  }
+      setIsHumanActive(false);
+    }, 3000);
+  };
 
   const handleHumanFinish = () => {
     setIsHumanActive(false);
@@ -199,8 +197,8 @@ export default function HumanAgentCollaboration({
     setPhase("agent_resuming");
 
     const resumeId = setTimeout(() => {
-      setPhase('agent_working')
-    }, RESUME_DELAY_MS)
+      setPhase("agent_working");
+    }, RESUME_DELAY_MS);
 
     // Apenas por segurança – se o componente desmontar MUITO rápido
     humanActivityTimeoutRef.current = resumeId;

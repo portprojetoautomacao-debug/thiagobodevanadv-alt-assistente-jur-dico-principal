@@ -10,10 +10,10 @@ import {
   Timer,
   Pulse,
   LightningSlash,
-} from '@phosphor-icons/react'
-import { TrendingUp, Zap, ZapOff } from 'lucide-react'
-import { useState, useEffect, useMemo, useRef } from 'react'
-import type { Agent, AgentTask } from '@/lib/agents'
+} from "@phosphor-icons/react";
+import { TrendingUp, Zap, ZapOff } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import type { Agent, AgentTask } from "@/lib/agents";
 
 interface AgentMetricsProps {
   readonly agents: Agent[];
@@ -90,18 +90,14 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
   const totalHoursSaved = (totalTasks * hoursPerTask).toFixed(1);
 
   const tasksLast24Hours = useMemo(() => {
-    const now = typeof window !== 'undefined' ? Date.now() : 0
-    const last24h = new Date(now - 24 * 60 * 60 * 1000)
-    return completedTasks.filter(
-      (task) =>
-        task.completedAt && new Date(task.completedAt) > last24h,
-    ).length
-  }, [completedTasks])
+    const now = typeof window !== "undefined" ? Date.now() : 0;
+    const last24h = new Date(now - 24 * 60 * 60 * 1000);
+    return completedTasks.filter((task) => task.completedAt && new Date(task.completedAt) > last24h)
+      .length;
+  }, [completedTasks]);
 
   const averageProcessingTime = useMemo(() => {
-    const tasksWithTime = completedTasks.filter(
-      (task) => task.startedAt && task.completedAt,
-    )
+    const tasksWithTime = completedTasks.filter((task) => task.startedAt && task.completedAt);
 
     if (tasksWithTime.length === 0) return 0;
 
@@ -112,8 +108,8 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
     }, 0);
 
     // segundos médios por tarefa
-    return Math.round(totalTime / tasksWithTime.length / 1000)
-  }, [completedTasks])
+    return Math.round(totalTime / tasksWithTime.length / 1000);
+  }, [completedTasks]);
 
   return (
     <div className="space-y-6">
@@ -203,12 +199,8 @@ export default function AgentMetrics({ agents, completedTasks, activityLog }: Ag
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground mb-2">
-              {averageProcessingTime}s
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Tempo médio de processamento por tarefa
-            </p>
+            <div className="text-3xl font-bold text-foreground mb-2">{averageProcessingTime}s</div>
+            <p className="text-xs text-muted-foreground">Tempo médio de processamento por tarefa</p>
           </CardContent>
         </Card>
 

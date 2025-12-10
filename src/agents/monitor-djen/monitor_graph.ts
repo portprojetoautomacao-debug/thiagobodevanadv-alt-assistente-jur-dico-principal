@@ -36,7 +36,10 @@ export class DJENMonitorAgent extends LangGraphAgent {
         model: "djen-api",
       },
       {
-        sessionId: typeof state.data?.sessionId === 'string' ? state.data.sessionId : `djen_session_${Date.now()}`,
+        sessionId:
+          typeof state.data?.sessionId === "string"
+            ? state.data.sessionId
+            : `djen_session_${Date.now()}`,
         turn: state.retryCount + 1,
         messages: state.messages.map((m) => ({
           role: m.role as "user" | "assistant" | "system",

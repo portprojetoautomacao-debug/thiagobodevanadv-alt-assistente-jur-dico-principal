@@ -93,7 +93,7 @@ export default function TracingDashboard({
 
   const loadData = useCallback(() => {
     setIsRefreshing(true);
-    
+
     const traces = tracingService.getTraces();
     const stats = tracingService.getStats();
     const llmMetrics = getLLMMetrics();
@@ -104,7 +104,7 @@ export default function TracingDashboard({
     });
 
     // Calcular error rate manualmente se não existir
-    const errorCount = traces.filter(t => t.status === 'error').length;
+    const errorCount = traces.filter((t) => t.status === "error").length;
     const errorRate = traces.length > 0 ? (errorCount / traces.length) * 100 : 0;
 
     setSpans(traces);
@@ -114,7 +114,7 @@ export default function TracingDashboard({
       totalSpans: stats.totalSpans || 0,
       errorRate,
     });
-    
+
     setIsRefreshing(false);
   }, [agentIds]);
 
@@ -141,7 +141,7 @@ export default function TracingDashboard({
         clearInterval(interval);
       };
     }
-    
+
     return () => {
       globalThis.clearTimeout(initialRefreshTimeout);
     };

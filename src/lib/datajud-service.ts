@@ -1,10 +1,10 @@
 /**
- * DataJud API Service - Integração com API Pública do CNJ
- * 
- * Documentação: https://www.cnj.jus.br/datajud
+ * DataJud API Service - Integraï¿½ï¿½o com API Pï¿½blica do CNJ
+ *
+ * Documentaï¿½ï¿½o: https://www.cnj.jus.br/datajud
  * API Endpoint: https://api-publica.datajud.cnj.jus.br/api_publica
- * 
- * Permite buscar metadados processuais e movimentações de tribunais brasileiros
+ *
+ * Permite buscar metadados processuais e movimentaï¿½ï¿½es de tribunais brasileiros
  * sem necessidade de download manual.
  */
 
@@ -53,15 +53,7 @@ export class DataJudService {
    * Buscar processos por filtros
    */
   async searchProcessos(options: DataJudSearchOptions = {}): Promise<DataJudProcesso[]> {
-    const {
-      tribunal,
-      classe,
-      assunto,
-      dataInicio,
-      dataFim,
-      limit = 100,
-      offset = 0,
-    } = options;
+    const { tribunal, classe, assunto, dataInicio, dataFim, limit = 100, offset = 0 } = options;
 
     const params = new URLSearchParams();
     if (tribunal) params.append("siglaTribunal", tribunal);
@@ -83,7 +75,7 @@ export class DataJudService {
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "User-Agent": "AssistenteJuridico/1.0",
         },
         signal: controller.signal,
@@ -105,9 +97,9 @@ export class DataJudService {
       return processos;
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`DataJud API timeout após ${this.timeout}ms`);
+        throw new Error(`DataJud API timeout apï¿½s ${this.timeout}ms`);
       }
 
       throw error;
@@ -115,19 +107,19 @@ export class DataJudService {
   }
 
   /**
-   * Buscar precedentes jurisprudenciais (decisões de 2º grau)
+   * Buscar precedentes jurisprudenciais (decisï¿½es de 2ï¿½ grau)
    */
   async searchPrecedentes(tribunal: string, tema: string, limit = 50): Promise<DataJudProcesso[]> {
     return this.searchProcessos({
       tribunal,
       assunto: tema,
-      classe: "Apelação Cível", // Focar em decisões de 2º grau
+      classe: "Apelaï¿½ï¿½o Cï¿½vel", // Focar em decisï¿½es de 2ï¿½ grau
       limit,
     });
   }
 
   /**
-   * Buscar por múltiplos tribunais
+   * Buscar por mï¿½ltiplos tribunais
    */
   async searchMultipleTribunals(
     tribunais: string[],
@@ -137,7 +129,7 @@ export class DataJudService {
 
     for (const tribunal of tribunais) {
       console.log(`[DataJud] Buscando em ${tribunal}...`);
-      
+
       try {
         const processos = await this.searchProcessos({
           ...options,
@@ -146,7 +138,7 @@ export class DataJudService {
 
         results.set(tribunal, processos);
 
-        // Delay entre requests para não sobrecarregar API
+        // Delay entre requests para nï¿½o sobrecarregar API
         await this.delay(1000);
       } catch (error) {
         console.error(`[DataJud] Erro ao buscar ${tribunal}:`, error);
@@ -158,12 +150,14 @@ export class DataJudService {
   }
 
   /**
-   * Buscar temas jurídicos relevantes (dataset curado)
+   * Buscar temas jurï¿½dicos relevantes (dataset curado)
    */
-  async searchTemasCurados(): Promise<Array<{ tema: string; tribunal: string; processos: DataJudProcesso[] }>> {
+  async searchTemasCurados(): Promise<
+    Array<{ tema: string; tribunal: string; processos: DataJudProcesso[] }>
+  > {
     const temas = [
       { tema: "Direitos Trabalhistas", tribunal: "TST" },
-      { tema: "Direito Previdenciário", tribunal: "TRF1" },
+      { tema: "Direito Previdenciï¿½rio", tribunal: "TRF1" },
       { tema: "Direito do Consumidor", tribunal: "TJMG" },
       { tema: "Direito Civil - Contratos", tribunal: "TJSP" },
       { tema: "Direito Administrativo", tribunal: "TRF6" },
@@ -193,14 +187,14 @@ export class DataJudService {
   private parseResponse(data: unknown): DataJudProcesso[] {
     // A API do CNJ retorna em formato Elasticsearch
     // { hits: { total: X, hits: [ { _source: {...} } ] } }
-    
+
     if (!data || typeof data !== "object") {
       return [];
     }
 
     const response = data as Record<string, unknown>;
     const hits = response.hits as Record<string, unknown> | undefined;
-    
+
     if (!hits || !Array.isArray(hits.hits)) {
       return [];
     }
@@ -210,7 +204,7 @@ export class DataJudService {
 
       return {
         id: String(hit._id || crypto.randomUUID()),
-        numero: String(source.numeroProcesso || "Não informado"),
+        numero: String(source.numeroProcesso || "Nï¿½o informado"),
         tribunal: String(source.siglaTribunal || "N/A"),
         classe: String(source.classe || "N/A"),
         assunto: String(source.assunto || "N/A"),
@@ -222,7 +216,9 @@ export class DataJudService {
     });
   }
 
-  private parseMovimentacoes(mov: unknown): Array<{ data: string; tipo: string; descricao: string }> {
+  private parseMovimentacoes(
+    mov: unknown
+  ): Array<{ data: string; tipo: string; descricao: string }> {
     if (!Array.isArray(mov)) return [];
 
     return mov.map((m: Record<string, unknown>) => ({
@@ -242,7 +238,7 @@ export class DataJudService {
   }
 
   private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
