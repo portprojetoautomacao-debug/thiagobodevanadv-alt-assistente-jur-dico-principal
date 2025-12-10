@@ -1,6 +1,6 @@
 /**
- * Hook otimizado para gestão de processos com validação Zod
- * Substitui lógica duplicada e adiciona validação consistente
+ * Hook otimizado para gestï¿½o de processos com validaï¿½ï¿½o Zod
+ * Substitui lï¿½gica duplicada e adiciona validaï¿½ï¿½o consistente
  */
 
 import { useCallback } from "react";
@@ -12,9 +12,14 @@ import type { Process } from "@/types";
 export function useProcessesValidated() {
   const [processes, setProcesses] = useKV<Process[]>("processes", []);
 
-  // Adicionar processo com validação
+  // Adicionar processo com validaï¿½ï¿½o
   const addProcess = useCallback(
-    (processData: Omit<Process, "id" | "createdAt" | "updatedAt" | "dataDistribuicao" | "dataUltimaMovimentacao">) => {
+    (
+      processData: Omit<
+        Process,
+        "id" | "createdAt" | "updatedAt" | "dataDistribuicao" | "dataUltimaMovimentacao"
+      >
+    ) => {
       const now = new Date().toISOString();
       const newProcess = {
         ...processData,
@@ -27,8 +32,8 @@ export function useProcessesValidated() {
 
       const validation = validateProcess(newProcess);
       if (!validation.isValid) {
-        console.error("Validação falhou:", validation.errors);
-        toast.error("Dados do processo inválidos. Verifique os campos obrigatórios.");
+        console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+        toast.error("Dados do processo invï¿½lidos. Verifique os campos obrigatï¿½rios.");
         return null;
       }
 
@@ -39,7 +44,7 @@ export function useProcessesValidated() {
     [setProcesses]
   );
 
-  // Atualizar processo com validação
+  // Atualizar processo com validaï¿½ï¿½o
   const updateProcess = useCallback(
     (id: string, updates: Partial<Process>) => {
       let updated: Process | null = null;
@@ -55,8 +60,8 @@ export function useProcessesValidated() {
 
             const validation = validateProcess(updatedProcess);
             if (!validation.isValid) {
-              console.error("Validação falhou:", validation.errors);
-              toast.error("Dados inválidos. Atualização cancelada.");
+              console.error("Validaï¿½ï¿½o falhou:", validation.errors);
+              toast.error("Dados invï¿½lidos. Atualizaï¿½ï¿½o cancelada.");
               return p; // Retorna processo original sem modificar
             }
 
@@ -98,7 +103,7 @@ export function useProcessesValidated() {
     [processes]
   );
 
-  // Processos urgentes (com prazos próximos)
+  // Processos urgentes (com prazos prï¿½ximos)
   const getUrgentProcesses = useCallback(() => {
     const now = new Date();
     const in5Days = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);

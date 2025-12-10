@@ -1,12 +1,12 @@
 /**
  * Index central para todos os schemas Zod do sistema
- * 
+ *
  * Centraliza exports de:
  * - Schemas de processo, cliente, minuta, financeiro
  * - Schemas de agentes IA e tarefas
  * - Schemas de expedientes
  * - Validadores e helpers
- * 
+ *
  * @module schemas
  */
 
@@ -26,14 +26,14 @@ export {
   cnpjSchema,
   telefoneSchema,
   emailSchema,
-  
+
   // Types
   type ProcessValidated,
   type PrazoValidated,
   type ClienteValidated,
   type MinutaValidated,
   type FinancialEntryValidated,
-  
+
   // Validadores
   validateProcess,
   validateCliente,
@@ -52,14 +52,14 @@ export {
   agentSchema,
   agentTaskSchema,
   agentTaskResultSchema,
-  
+
   // Enums
   AgentTypeEnum,
   AgentTaskTypeEnum,
   TaskPriorityEnum,
   TaskStatusEnum,
   AgentStatusEnum,
-  
+
   // Types
   type Agent,
   type AgentTask,
@@ -69,12 +69,12 @@ export {
   type TaskPriority,
   type TaskStatus,
   type AgentStatus,
-  
+
   // Validadores
   validateAgent,
   validateAgentTask,
   validateAgentTaskResult,
-  
+
   // Helpers
   canProcessTask,
   isTaskExpired,
@@ -88,24 +88,24 @@ export {
 export {
   // Schemas
   expedienteSchema,
-  
+
   // Enums
   ExpedienteTipoEnum,
   ExpedienteSourceEnum,
   ExpedienteStatusEnum,
   ExpedientePrioridadeEnum,
-  
+
   // Types
   type Expediente,
   type ExpedienteTipo,
   type ExpedienteSource,
   type ExpedienteStatus,
   type ExpedientePrioridade,
-  
+
   // Validadores
   validateExpediente,
   validateExpedientes,
-  
+
   // Helpers
   isPrazoVencendo,
   isPrazoVencido,

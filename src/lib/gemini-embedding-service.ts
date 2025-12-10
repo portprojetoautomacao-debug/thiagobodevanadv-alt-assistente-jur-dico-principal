@@ -1,8 +1,8 @@
 /**
- * Gemini Embedding Service - Geração de Embeddings para Vetores (Frontend Stub)
- * 
- * Este é um stub que chama a API backend.
- * A implementação real está em /api/lib/gemini-embedding-service.ts
+ * Gemini Embedding Service - Geraï¿½ï¿½o de Embeddings para Vetores (Frontend Stub)
+ *
+ * Este ï¿½ um stub que chama a API backend.
+ * A implementaï¿½ï¿½o real estï¿½ em /api/lib/gemini-embedding-service.ts
  */
 
 // ============================================================================
@@ -28,13 +28,13 @@ export class GeminiEmbeddingService {
    */
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
     if (!text || text.trim().length === 0) {
-      throw new Error("Texto vazio não pode ser convertido em embedding");
+      throw new Error("Texto vazio nï¿½o pode ser convertido em embedding");
     }
 
     try {
-      const response = await fetch('/api/embeddings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/embeddings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
 
@@ -51,13 +51,13 @@ export class GeminiEmbeddingService {
   }
 
   /**
-   * Gera embeddings para múltiplos textos (batch)
+   * Gera embeddings para mï¿½ltiplos textos (batch)
    */
   async generateEmbeddingsBatch(texts: string[]): Promise<EmbeddingResult[]> {
     try {
-      const response = await fetch('/api/embeddings/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/embeddings/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texts }),
       });
 
@@ -74,8 +74,8 @@ export class GeminiEmbeddingService {
   }
 
   /**
-   * Gera embedding para documento jurídico completo
-   * (combina classe + assunto + movimentações)
+   * Gera embedding para documento jurï¿½dico completo
+   * (combina classe + assunto + movimentaï¿½ï¿½es)
    */
   async generateDocumentEmbedding(doc: {
     numero: string;
@@ -85,14 +85,10 @@ export class GeminiEmbeddingService {
     movimentacoes?: string;
   }): Promise<EmbeddingResult> {
     // Construir texto representativo do documento
-    const parts = [
-      `Tribunal: ${doc.tribunal}`,
-      `Classe: ${doc.classe}`,
-      `Assunto: ${doc.assunto}`,
-    ];
+    const parts = [`Tribunal: ${doc.tribunal}`, `Classe: ${doc.classe}`, `Assunto: ${doc.assunto}`];
 
     if (doc.movimentacoes) {
-      parts.push(`Movimentações: ${doc.movimentacoes}`);
+      parts.push(`Movimentaï¿½ï¿½es: ${doc.movimentacoes}`);
     }
 
     const fullText = parts.join(". ");
@@ -101,7 +97,7 @@ export class GeminiEmbeddingService {
   }
 
   /**
-   * Retorna dimensões do modelo usado
+   * Retorna dimensï¿½es do modelo usado
    */
   getDimensions(): number {
     return this.dimensions;
