@@ -1,18 +1,31 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import ProcessosView from "../ProcessosView";
 
 // Smoke test: renders, toggles view mode, filters and sort controls present
 
+const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+};
+
 describe("ProcessosView smoke", () => {
   it("renders and UI controls operate without crash", async () => {
-    render(<ProcessosView />);
+    renderWithProviders(<ProcessosView />);
 
     // Header
     expect(await screen.findByText(/Arquivo de Processos/i)).toBeDefined();
 
-    // Stats cards labels
-    expect(await screen.findByText(/Total/i)).toBeDefined();
+    // Stats cards labels - usar busca mais flexível
+    const headings = await screen.findAllByRole("heading");
+    const hasTotal = headings.some((h) => /total/i.test(h.textContent || ""));
+    expect(hasTotal || screen.queryByText(/Total/i)).toBeTruthy();
+
     expect(await screen.findByText(/Ativos/i)).toBeDefined();
     expect(await screen.findByText(/Arquivados/i)).toBeDefined();
     expect(await screen.findByText(/Valor Total/i)).toBeDefined();

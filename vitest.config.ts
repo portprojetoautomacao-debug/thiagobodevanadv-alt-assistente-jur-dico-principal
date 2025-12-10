@@ -76,6 +76,8 @@ export default defineConfig({
         singleThread: false,
         minThreads: 1,
         maxThreads: 4,
+        // Aumentar limite de memória para evitar crashes
+        memoryLimit: "2048",
       },
     },
 

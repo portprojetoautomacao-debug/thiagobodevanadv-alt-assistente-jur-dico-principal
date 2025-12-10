@@ -12,7 +12,9 @@
         "dbaeumer.vscode-eslint",
         "ms-azuretools.vscode-docker",
         "GitHub.copilot",
-        "swellaby.vscode-rust-test-adapter"
+        "swellaby.vscode-rust-test-adapter",
+        "p42ai.refactor",
+        "SonarSource.sonarlint-vscode"
       ],
       "settings": {
         "editor.formatOnSave": true,
