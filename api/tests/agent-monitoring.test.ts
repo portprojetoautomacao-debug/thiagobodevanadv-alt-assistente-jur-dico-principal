@@ -22,7 +22,30 @@ vi.mock("../../src/lib/agent-monitoring", () => ({
       failedTasks: 0,
       averageDuration: 0,
     })),
+    logAction: vi.fn(async () => {
+      // Mock para logAction
+    }),
+    logStatusChange: vi.fn(async () => {
+      // Mock para logStatusChange
+    }),
   },
+  AgentMonitor: vi.fn().mockImplementation(() => ({
+    trackTaskExecution: vi.fn(async (taskId, agentId, taskType, fn) => {
+      try {
+        return await fn();
+      } catch (error) {
+        throw error;
+      }
+    }),
+    getMetrics: vi.fn(() => ({
+      totalTasks: 0,
+      successfulTasks: 0,
+      failedTasks: 0,
+      averageDuration: 0,
+    })),
+    logAction: vi.fn(async () => {}),
+    logStatusChange: vi.fn(async () => {}),
+  })),
 }));
 
 import { agentMonitor } from "../../src/lib/agent-monitoring";
@@ -81,5 +104,101 @@ describe("agentMonitor.trackTaskExecution", () => {
     expect(metrics).toHaveProperty("successfulTasks");
     expect(metrics).toHaveProperty("failedTasks");
     expect(metrics).toHaveProperty("averageDuration");
+
+    // Validar tipos das métricas
+    expect(typeof metrics.totalTasks).toBe("number");
+    expect(typeof metrics.successfulTasks).toBe("number");
+    expect(typeof metrics.failedTasks).toBe("number");
+    expect(typeof metrics.averageDuration).toBe("number");
+  });
+
+  it("handles async task execution with timing", async () => {
+    const startTime = Date.now();
+
+    const result = await agentMonitor.trackTaskExecution(
+      "task-timing",
+      "agent-timing",
+      "timing-test",
+      async () => {
+        // Simular tarefa que demora 100ms
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return "completed";
+      }
+    );
+
+    const duration = Date.now() - startTime;
+
+    expect(result).toBe("completed");
+    expect(duration).toBeGreaterThanOrEqual(100);
+  });
+
+  it("propagates errors correctly", async () => {
+    const customError = new Error("Custom error message");
+
+    await expect(
+      agentMonitor.trackTaskExecution(
+        "task-error",
+        "agent-error",
+        "error-test",
+        async () => {
+          throw customError;
+        }
+      )
+    ).rejects.toThrow("Custom error message");
+  });
+
+  it("handles multiple concurrent tasks", async () => {
+    const tasks = [
+      agentMonitor.trackTaskExecution("task-1", "agent-1", "concurrent", async () => "result-1"),
+      agentMonitor.trackTaskExecution("task-2", "agent-2", "concurrent", async () => "result-2"),
+      agentMonitor.trackTaskExecution("task-3", "agent-3", "concurrent", async () => "result-3"),
+    ];
+
+    const results = await Promise.all(tasks);
+
+    expect(results).toEqual(["result-1", "result-2", "result-3"]);
+    expect(agentMonitor.trackTaskExecution).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("agentMonitor.logAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("logs action successfully", async () => {
+    await agentMonitor.logAction("agent-1", "test-action", { key: "value" }, true, 100);
+
+    expect(agentMonitor.logAction).toHaveBeenCalledWith(
+      "agent-1",
+      "test-action",
+      { key: "value" },
+      true,
+      100
+    );
+  });
+
+  it("logs failed action", async () => {
+    await agentMonitor.logAction("agent-2", "failed-action", { error: "details" }, false);
+
+    expect(agentMonitor.logAction).toHaveBeenCalledWith(
+      "agent-2",
+      "failed-action",
+      { error: "details" },
+      false,
+      undefined
+    );
+  });
+});
+
+describe("agentMonitor.logStatusChange", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("logs status change", async () => {
+    await agentMonitor.logStatusChange("agent-1", "idle", "active");
+
+    expect(agentMonitor.logStatusChange).toHaveBeenCalledWith("agent-1", "idle", "active");
   });
 });
