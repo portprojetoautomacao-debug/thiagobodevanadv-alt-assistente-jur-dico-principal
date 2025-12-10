@@ -71,24 +71,11 @@ export default function TracingDashboard({
   const [traces, setTraces] = useState<Span[]>([]);
   const [stats, setStats] = useState(tracingService.getStats());
   const [selectedTrace, setSelectedTrace] = useState<string | null>(null);
-  const [agentMetrics, setAgentMetrics] = useState<
-    Record<string, ReturnType<typeof getAgentMetrics>>
-  >({});
-  const [llmMetrics, setLLMMetrics] = useState<ReturnType<
-    typeof getLLMMetrics
-  > | null>(null);
 
   const refreshData = useCallback(() => {
     setTraces(tracingService.getTraces());
     setStats(tracingService.getStats());
-    setLLMMetrics(getLLMMetrics());
-
-    const metrics: Record<string, ReturnType<typeof getAgentMetrics>> = {};
-    agentIds.forEach((id) => {
-      metrics[id] = getAgentMetrics(id);
-    });
-    setAgentMetrics(metrics);
-  }, [agentIds]);
+  }, []);
 
   // Carregamento inicial e auto-refresh
   useEffect(() => {
@@ -102,7 +89,7 @@ export default function TracingDashboard({
         clearInterval(interval);
       };
     }
-    
+
     return () => {
       globalThis.clearTimeout(initialRefreshTimeout);
     };

@@ -22,6 +22,19 @@ import {
   handleValidationError,
 } from "../lib/validation.js";
 
+/**
+ * Tipos válidos de deadline para cálculo de prazos processuais
+ */
+const DEADLINE_TYPES = ["corridos", "úteis"] as const;
+type DeadlineType = (typeof DEADLINE_TYPES)[number];
+
+/**
+ * Verifica se um tipo de deadline é válido
+ */
+function isValidDeadlineType(type: unknown): type is DeadlineType {
+  return typeof type === "string" && DEADLINE_TYPES.includes(type as DeadlineType);
+}
+
 interface AgentTask {
   id: string;
   agentId: string;
@@ -108,27 +121,46 @@ function handleMonitoringRoute(taskType: string): AnalysisResult {
   };
 }
 
-// Helper to compute and assign startDate/endDate from a 'deadline' object
-function applyDeadlineDates (analysisData: AnalysisResult["data"] | null | undefined)
-{
-  if (!analysisData?.deadline?.days) return;
+/**
+ * Processa tarefas genéricas/desconhecidas
+ */
+function handleDefaultRoute(task: AgentTask): AnalysisResult {
+  // Se existir deadline em task.data, cria estrutura mínima de análise
+  if (
+    task.data &&
+    task.data.deadline &&
+    typeof task.data.deadline === "object" &&
+    "days" in task.data.deadline &&
+    "type" in task.data.deadline
+  ) {
+    const days = Number(task.data.deadline.days);
+    const type = task.data.deadline.type;
 
-  const startDate = new Date();
-  const endDate = new Date(startDate);
+    // Validação: days deve ser > 0 e type deve ser válido
+    if (days > 0 && isValidDeadlineType(type)) {
+      const analysisData: AnalysisResult["data"] = {
+        summary: `Tarefa ${task.type} sem análise detalhada`,
+        deadline: {
+          days,
+          type,
+          startDate: "",
+          endDate: "",
+        },
+        suggestedActions: [],
+        priority: "medium",
+        documentType: task.data.type || "Desconhecido",
+        nextSteps: [],
+      };
+      applyDeadlineDates(analysisData);
 
-  if (analysisData.deadline.type === "úteis") {
-    // Add business days (simple approach - doesn't consider holidays)
-    let daysAdded = 0;
-    while (daysAdded < analysisData.deadline.days) {
-      endDate.setDate(endDate.getDate() + 1);
-      const dayOfWeek = endDate.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        daysAdded++;
-      }
+      return {
+        success: true,
+        message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
+        data: analysisData,
+      };
     }
-  } else {
-    endDate.setDate(endDate.getDate() + analysisData.deadline.days);
   }
+
   return {
     success: true,
     message: `Tarefa ${task.type} concluída (sem conteúdo para análise)`,
@@ -159,7 +191,7 @@ export async function dispatchTask(task: AgentTask, _agent: Agent): Promise<Anal
     return handleMonitoringRoute(task.type);
   }
 
-  return await handleDefaultRoute(task);
+  return handleDefaultRoute(task);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

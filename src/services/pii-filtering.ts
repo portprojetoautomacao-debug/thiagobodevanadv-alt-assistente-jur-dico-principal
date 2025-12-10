@@ -87,8 +87,8 @@ export const PII_PATTERNS: Record<PIIType, RegExp> = {
   // Email: usuario@dominio.com
   [PIIType.EMAIL]: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
 
-  // Telefone: (11) 98765-4321, 11987654321, +55 11 98765-4321
-  [PIIType.TELEFONE]: /(?:\+55\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}-?\d{4}\b/g,
+  // Telefone: (11) 98765-4321, 11987654321, +55 11 98765-4321, 11 98765-4321
+  [PIIType.TELEFONE]: /(?:\+55\s?)?(?:\(?\d{2}\)?\s?)?(?:\d{4,5}[\s-]?\d{4})\b/g,
 
   // Endere�o: Rua/Av + nome + n�mero
   [PIIType.ENDERECO]: /(?:Rua|Avenida|Av\.|R\.|Travessa|Trav\.)\s+[A-Za-z�-�\s]+,?\s*\d+/gi,
@@ -147,11 +147,14 @@ export function sanitizePII(text: string, config: PIIFilterConfig = DEFAULT_PII_
     const pattern = PII_PATTERNS[type];
     const customReplacement = config.customReplacements?.[type];
 
+    // Reset lastIndex para garantir que regex global funcione corretamente
+    pattern.lastIndex = 0;
+
     if (customReplacement) {
-      // Substitui��o customizada
+      // Substituição customizada
       sanitized = sanitized.replace(pattern, customReplacement);
     } else {
-      // Mascaramento padr�o
+      // Mascaramento padrão
       sanitized = sanitized.replace(pattern, (match) => maskValue(match, config));
     }
   }
@@ -179,12 +182,12 @@ export function sanitizeObject<T>(obj: T, config: PIIFilterConfig = DEFAULT_PII_
     const sanitized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      // Chaves sens�veis s�o sempre redactadas
+      // Chaves sensíveis são sempre redactadas (case-insensitive)
       const sensibleKeys = [
         "password",
         "senha",
         "token",
-        "apiKey",
+        "apikey",
         "api_key",
         "secret",
         "authorization",
@@ -193,7 +196,23 @@ export function sanitizeObject<T>(obj: T, config: PIIFilterConfig = DEFAULT_PII_
         "session",
       ];
 
-      if (sensibleKeys.some((k) => key.toLowerCase().includes(k))) {
+      // Case-insensitive matching com word boundaries para evitar falsos positivos
+      const keyLower = key.toLowerCase();
+      const isSensitive = sensibleKeys.some((k) => {
+        // Match exato
+        if (keyLower === k) return true;
+
+        // Verifica se key contém o termo sensível como palavra completa (com separadores _ ou -)
+        const separators = ["_", "-"];
+        return separators.some(
+          (sep) =>
+            keyLower.startsWith(k + sep) ||
+            keyLower.endsWith(sep + k) ||
+            keyLower.includes(sep + k + sep)
+        );
+      });
+
+      if (isSensitive) {
         sanitized[key] = "[REDACTED]";
       } else {
         sanitized[key] = sanitizeObject(value, config);
@@ -241,11 +260,16 @@ export function detectPII(text: string): PIIType[] {
   const detected: PIIType[] = [];
 
   for (const [type, pattern] of Object.entries(PII_PATTERNS)) {
-    if (pattern.test(text)) {
-      // Valida��o especial para CPF (reduzir falsos positivos)
+    // Reset lastIndex para evitar problemas com regex global
+    pattern.lastIndex = 0;
+
+    // Usa match() diretamente ao invés de test() + match() para CPF
+    const matches = text.match(pattern);
+
+    if (matches && matches.length > 0) {
+      // Validação especial para CPF (reduzir falsos positivos)
       if (type === PIIType.CPF) {
-        const matches = text.match(pattern);
-        if (matches && matches.some(isValidCPF)) {
+        if (matches.some(isValidCPF)) {
           detected.push(type as PIIType);
         }
       } else {
