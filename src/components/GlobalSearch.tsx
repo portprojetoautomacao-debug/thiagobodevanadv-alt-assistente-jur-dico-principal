@@ -57,185 +57,58 @@ interface GlobalSearchProps {
 }
 
 export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
-    const [isOpen, setIsOpen] = useState(false)
-    const [query, setQuery] = useState('')
-    const [category, setCategory] = useState<SearchCategory>('all')
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const [results, setResults] = useState<SearchResult[]>([])
-    const inputRef = useRef<HTMLInputElement>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<SearchCategory>("all");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-    // Dados do KV
-    const [processes] = useKV<Process[]>('processes', [])
-    const [clientes] = useKV<Cliente[]>('clientes', [])
-    const [minutas] = useKV<Minuta[]>('minutas', [])
-    const [expedientes] = useKV<Expediente[]>('expedientes', [])
+  // Dados do KV
+  const [processes] = useKV<Process[]>("processes", []);
+  const [clientes] = useKV<Cliente[]>("clientes", []);
+  const [minutas] = useKV<Minuta[]>("minutas", []);
+  const [expedientes] = useKV<Expediente[]>("expedientes", []);
 
-    // Atalho "/" para abrir busca
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignorar se estiver em um input/textarea
-            const target = e.target as HTMLElement
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-                return
-            }
+  // Atalho "/" para abrir busca
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignorar se estiver em um input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
 
-            if (e.key === '/') {
-                e.preventDefault()
-                setIsOpen(true)
-            }
-        }
+      if (e.key === "/") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+    };
 
-        document.addEventListener('keydown', handleKeyDown)
-        return () => document.removeEventListener('keydown', handleKeyDown)
-    }, [])
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
-    // Função para resetar o estado da busca
-    const resetSearch = useCallback(() => {
-        setQuery('')
-        setCategory('all')
-        setSelectedIndex(0)
-        setResults([])
-    }, [])
+  // Função para resetar o estado da busca
+  const resetSearch = useCallback(() => {
+    setQuery("");
+    setCategory("all");
+    setSelectedIndex(0);
+    setResults([]);
+  }, []);
 
-    // Função para fechar o modal com reset
-    const closeSearch = useCallback(() => {
-        setIsOpen(false)
-        resetSearch()
-    }, [resetSearch])
+  // Função para fechar o modal com reset
+  const closeSearch = useCallback(() => {
+    setIsOpen(false);
+    resetSearch();
+  }, [resetSearch]);
 
-    // Focar input quando abrir
-    useEffect(() => {
-        if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100)
-        }
-        // Reset é feito pelo closeSearch diretamente, não precisa de efeito separado
-    }, [isOpen])
-
-    // Função de busca
-    const search = useCallback((searchQuery: string, searchCategory: SearchCategory) => {
-        if (!searchQuery.trim()) {
-            setResults([])
-            return
-        }
-
-        const q = searchQuery.toLowerCase().trim()
-        const newResults: SearchResult[] = []
-
-        // Buscar em processos
-        if (searchCategory === 'all' || searchCategory === 'processos') {
-            const matchedProcesses = (processes || [])
-                .filter(p =>
-                    p.numeroCNJ?.toLowerCase().includes(q) ||
-                    p.titulo?.toLowerCase().includes(q) ||
-                    p.autor?.toLowerCase().includes(q) ||
-                    p.reu?.toLowerCase().includes(q)
-                )
-                .slice(0, 5)
-                .map(p => ({
-                    id: p.id,
-                    type: 'processo' as const,
-                    title: p.titulo || p.numeroCNJ || 'Processo sem título',
-                    subtitle: `${p.numeroCNJ || 'Sem número'} • ${p.status || 'Ativo'}`,
-                    icon: <Folder className="w-4 h-4 text-blue-500" weight="fill" />,
-                    data: p,
-                }))
-            newResults.push(...matchedProcesses)
-        }
-
-        // Buscar em clientes
-        if (searchCategory === 'all' || searchCategory === 'clientes') {
-            const matchedClientes = (clientes || [])
-                .filter(c =>
-                    c.nome?.toLowerCase().includes(q) ||
-                    c.email?.toLowerCase().includes(q) ||
-                    c.cpfCnpj?.includes(q)
-                )
-                .slice(0, 5)
-                .map(c => ({
-                    id: c.id,
-                    type: 'cliente' as const,
-                    title: c.nome || 'Cliente sem nome',
-                    subtitle: c.email || c.telefone || 'Sem contato',
-                    icon: <User className="w-4 h-4 text-green-500" weight="fill" />,
-                    data: c,
-                }))
-            newResults.push(...matchedClientes)
-        }
-
-        // Buscar em minutas
-        if (searchCategory === 'all' || searchCategory === 'minutas') {
-            const matchedMinutas = (minutas || [])
-                .filter(m =>
-                    m.titulo?.toLowerCase().includes(q) ||
-                    m.conteudo?.toLowerCase().includes(q)
-                )
-                .slice(0, 5)
-                .map(m => ({
-                    id: m.id,
-                    type: 'minuta' as const,
-                    title: m.titulo || 'Minuta sem título',
-                    subtitle: `${m.tipo} • ${m.status}`,
-                    icon: <FileText className="w-4 h-4 text-purple-500" weight="fill" />,
-                    data: m,
-                }))
-            newResults.push(...matchedMinutas)
-        }
-
-        // Buscar em expedientes
-        if (searchCategory === 'all' || searchCategory === 'expedientes') {
-            const matchedExpedientes = (expedientes || [])
-                .filter(e =>
-                    e.numeroProcesso?.toLowerCase().includes(q) ||
-                    e.summary?.toLowerCase().includes(q) ||
-                    e.tribunal?.toLowerCase().includes(q)
-                )
-                .slice(0, 5)
-                .map(e => ({
-                    id: e.id,
-                    type: 'expediente' as const,
-                    title: e.numeroProcesso || 'Expediente',
-                    subtitle: e.summary?.slice(0, 60) + '...' || e.tribunal || 'Sem resumo',
-                    icon: <Tray className="w-4 h-4 text-orange-500" weight="fill" />,
-                    data: e,
-                }))
-            newResults.push(...matchedExpedientes)
-        }
-
-        setResults(newResults)
-        setSelectedIndex(0)
-    }, [processes, clientes, minutas, expedientes])
-
-    // Efeito para busca com debounce
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            search(query, category)
-        }, 150)
-
-        return () => clearTimeout(timer)
-    }, [query, category, search])
-
-    // Navegação por teclado
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault()
-                setSelectedIndex(prev => Math.min(prev + 1, results.length - 1))
-                break
-            case 'ArrowUp':
-                e.preventDefault()
-                setSelectedIndex(prev => Math.max(prev - 1, 0))
-                break
-            case 'Enter':
-                e.preventDefault()
-                if (results[selectedIndex]) {
-                    handleSelect(results[selectedIndex])
-                }
-                break
-            case 'Escape':
-                closeSearch()
-                break
-        }
+  // Focar input quando abrir
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
+  }, [isOpen]);
 
   // Função de busca
   const performSearch = useCallback(
