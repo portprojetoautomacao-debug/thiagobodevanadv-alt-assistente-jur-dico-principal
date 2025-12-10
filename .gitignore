@@ -48,6 +48,10 @@ dist-ssr
 # Test output and coverage
 playwright-report/
 playwright-report/**
+.test-results/
+.copilot-notifications/
+test-results/
+coverage-api/
 test-results/
 test-results/**
 coverage/

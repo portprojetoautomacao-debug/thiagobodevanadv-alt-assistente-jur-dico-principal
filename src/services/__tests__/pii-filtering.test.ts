@@ -1,25 +1,25 @@
 /**
- * Testes Unitários - PII Filtering Service (LGPD Compliance)
+ * Testes Unitï¿½rios - PII Filtering Service (LGPD Compliance)
  *
- * Testa sanitização de dados pessoais conforme Lei 13.709/2018
+ * Testa sanitizaï¿½ï¿½o de dados pessoais conforme Lei 13.709/2018
  *
  * @see src/services/pii-filtering.ts
  * @see docs/LGPD_COMPLIANCE.md
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
 import {
-  sanitizePII,
-  sanitizeObject,
-  detectPII,
-  isValidCPF,
-  getPIIStats,
-  resetPIIStats,
-  recordPIISanitization,
-  PIIType,
-  type PIIFilterConfig,
   DEFAULT_PII_CONFIG,
+  detectPII,
+  getPIIStats,
+  isValidCPF,
+  PIIType,
+  recordPIISanitization,
+  resetPIIStats,
+  sanitizeObject,
+  sanitizePII,
+  type PIIFilterConfig,
 } from "@/services/pii-filtering";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("PII Filtering Service - LGPD Compliance", () => {
   beforeEach(() => {
@@ -27,12 +27,12 @@ describe("PII Filtering Service - LGPD Compliance", () => {
   });
 
   // ============================================
-  // TESTES DE DETECÇÃO (detectPII)
+  // TESTES DE DETECï¿½ï¿½O (detectPII)
   // ============================================
 
-  describe("detectPII - Detecção de Dados Sensíveis", () => {
-    it("deve detectar CPF válido", () => {
-      const texto = "Cliente João Silva, CPF 123.456.789-09";
+  describe("detectPII - Detecï¿½ï¿½o de Dados Sensï¿½veis", () => {
+    it("deve detectar CPF vï¿½lido", () => {
+      const texto = "Cliente Joï¿½o Silva, CPF 123.456.789-09";
       const detected = detectPII(texto);
 
       expect(detected).toContain(PIIType.CPF);
@@ -45,7 +45,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(detected).toContain(PIIType.EMAIL);
     });
 
-    it("deve detectar telefone (vários formatos)", () => {
+    it("deve detectar telefone (vï¿½rios formatos)", () => {
       const casos = [
         "(11) 98765-4321",
         "11 98765-4321",
@@ -60,16 +60,16 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       });
     });
 
-    it("deve detectar endereço", () => {
+    it("deve detectar endereï¿½o", () => {
       const texto = "Rua das Flores, 123";
       const detected = detectPII(texto);
 
       expect(detected).toContain(PIIType.ENDERECO);
     });
 
-    it("deve detectar múltiplos tipos de PII", () => {
+    it("deve detectar mï¿½ltiplos tipos de PII", () => {
       const texto = `
-        Cliente: João Silva
+        Cliente: Joï¿½o Silva
         CPF: 123.456.789-09
         Email: joao@example.com
         Tel: (11) 98765-4321
@@ -83,7 +83,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(detected.length).toBeGreaterThan(2);
     });
 
-    it("não deve detectar PII em texto sem dados sensíveis", () => {
+    it("nï¿½o deve detectar PII em texto sem dados sensï¿½veis", () => {
       const texto = "Processo 1234567-89.2024.5.02.0999 em andamento";
       const detected = detectPII(texto);
 
@@ -92,75 +92,75 @@ describe("PII Filtering Service - LGPD Compliance", () => {
   });
 
   // ============================================
-  // TESTES DE VALIDAÇÃO DE CPF
+  // TESTES DE VALIDAï¿½ï¿½O DE CPF
   // ============================================
 
-  describe("isValidCPF - Validação de CPF", () => {
-    it("deve validar CPF correto (com pontuação)", () => {
+  describe("isValidCPF - Validaï¿½ï¿½o de CPF", () => {
+    it("deve validar CPF correto (com pontuaï¿½ï¿½o)", () => {
       expect(isValidCPF("123.456.789-09")).toBe(true);
     });
 
-    it("deve validar CPF correto (sem pontuação)", () => {
+    it("deve validar CPF correto (sem pontuaï¿½ï¿½o)", () => {
       expect(isValidCPF("12345678909")).toBe(true);
     });
 
-    it("deve rejeitar CPF inválido (dígito verificador errado)", () => {
+    it("deve rejeitar CPF invï¿½lido (dï¿½gito verificador errado)", () => {
       expect(isValidCPF("123.456.789-00")).toBe(false);
     });
 
-    it("deve rejeitar CPF com todos dígitos iguais", () => {
+    it("deve rejeitar CPF com todos dï¿½gitos iguais", () => {
       expect(isValidCPF("111.111.111-11")).toBe(false);
       expect(isValidCPF("000.000.000-00")).toBe(false);
       expect(isValidCPF("999.999.999-99")).toBe(false);
     });
 
-    it("deve rejeitar CPF com menos de 11 dígitos", () => {
+    it("deve rejeitar CPF com menos de 11 dï¿½gitos", () => {
       expect(isValidCPF("123.456.789")).toBe(false);
     });
 
-    it("deve rejeitar CPF com mais de 11 dígitos", () => {
+    it("deve rejeitar CPF com mais de 11 dï¿½gitos", () => {
       expect(isValidCPF("123.456.789-091")).toBe(false);
     });
   });
 
   // ============================================
-  // TESTES DE SANITIZAÇÃO (sanitizePII)
+  // TESTES DE SANITIZAï¿½ï¿½O (sanitizePII)
   // ============================================
 
-  describe("sanitizePII - Sanitização de Texto", () => {
-    it("deve sanitizar CPF com redação padrão", () => {
-      const texto = "Cliente João Silva, CPF 123.456.789-09";
-      const sanitizado = sanitizePII(texto);
+  describe("sanitizePII - Sanitizaï¿½ï¿½o de Texto", () => {
+    it("deve sanitizar CPF com redaï¿½ï¿½o padrï¿½o", () => {
+      const texto = "Cliente Joï¿½o Silva, CPF 123.456.789-09";
+      const sanitizado = sanitizePII(texto, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado).toContain("[CPF_REDACTED]");
       expect(sanitizado).not.toContain("123.456.789-09");
     });
 
-    it("deve sanitizar email com redação padrão", () => {
+    it("deve sanitizar email com redaï¿½ï¿½o padrï¿½o", () => {
       const texto = "Contato: joao.silva@example.com";
-      const sanitizado = sanitizePII(texto);
+      const sanitizado = sanitizePII(texto, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado).toContain("[EMAIL_REDACTED]");
       expect(sanitizado).not.toContain("joao.silva@example.com");
     });
 
-    it("deve sanitizar telefone com redação padrão", () => {
+    it("deve sanitizar telefone com redaï¿½ï¿½o padrï¿½o", () => {
       const texto = "Tel: (11) 98765-4321";
-      const sanitizado = sanitizePII(texto);
+      const sanitizado = sanitizePII(texto, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado).toContain("[PHONE_REDACTED]");
       expect(sanitizado).not.toContain("(11) 98765-4321");
     });
 
-    it("deve sanitizar múltiplos tipos de PII", () => {
+    it("deve sanitizar mÃºltiplos tipos de PII", () => {
       const texto = `
-        Cliente: João Silva
+        Cliente: Joï¿½o Silva
         CPF: 123.456.789-09
         Email: joao@example.com
         Tel: (11) 98765-4321
       `;
 
-      const sanitizado = sanitizePII(texto);
+      const sanitizado = sanitizePII(texto, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado).toContain("[CPF_REDACTED]");
       expect(sanitizado).toContain("[EMAIL_REDACTED]");
@@ -174,9 +174,10 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(sanitizado).toBe(texto);
     });
 
-    it("deve respeitar configuração customizada de mascaramento", () => {
+    it("deve respeitar configuraï¿½ï¿½o customizada de mascaramento", () => {
       const config: PIIFilterConfig = {
         ...DEFAULT_PII_CONFIG,
+        enabled: true,
         maskChar: "#",
         keepFirst: 3,
         keepLast: 3,
@@ -189,7 +190,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(sanitizado).toMatch(/123.*###.*-09/);
     });
 
-    it("não deve sanitizar quando disabled", () => {
+    it("nï¿½o deve sanitizar quando disabled", () => {
       const config: PIIFilterConfig = {
         ...DEFAULT_PII_CONFIG,
         enabled: false,
@@ -203,22 +204,22 @@ describe("PII Filtering Service - LGPD Compliance", () => {
   });
 
   // ============================================
-  // TESTES DE SANITIZAÇÃO DE OBJETOS
+  // TESTES DE SANITIZAï¿½ï¿½O DE OBJETOS
   // ============================================
 
-  describe("sanitizeObject - Sanitização de JSON", () => {
+  describe("sanitizeObject - Sanitizaï¿½ï¿½o de JSON", () => {
     it("deve sanitizar strings em objeto", () => {
       const obj = {
-        nome: "João Silva",
+        nome: "Joï¿½o Silva",
         cpf: "123.456.789-09",
         email: "joao@example.com",
       };
 
-      const sanitizado = sanitizeObject(obj);
+      const sanitizado = sanitizeObject(obj, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado.cpf).toBe("[CPF_REDACTED]");
       expect(sanitizado.email).toBe("[EMAIL_REDACTED]");
-      expect(sanitizado.nome).toBe("João Silva"); // Nome não é sanitizado (heurística não ativada)
+      expect(sanitizado.nome).toBe("Joï¿½o Silva"); // Nome nï¿½o ï¿½ sanitizado (heurï¿½stica nï¿½o ativada)
     });
 
     it("deve sanitizar arrays em objeto", () => {
@@ -226,7 +227,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
         contatos: ["joao@example.com", "maria@example.com"],
       };
 
-      const sanitizado = sanitizeObject(obj);
+      const sanitizado = sanitizeObject(obj, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado.contatos).toEqual(["[EMAIL_REDACTED]", "[EMAIL_REDACTED]"]);
     });
@@ -234,7 +235,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
     it("deve sanitizar objetos aninhados", () => {
       const obj = {
         cliente: {
-          nome: "João Silva",
+          nome: "Joï¿½o Silva",
           dados: {
             cpf: "123.456.789-09",
             telefone: "(11) 98765-4321",
@@ -242,13 +243,13 @@ describe("PII Filtering Service - LGPD Compliance", () => {
         },
       };
 
-      const sanitizado = sanitizeObject(obj);
+      const sanitizado = sanitizeObject(obj, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado.cliente.dados.cpf).toBe("[CPF_REDACTED]");
       expect(sanitizado.cliente.dados.telefone).toBe("[PHONE_REDACTED]");
     });
 
-    it("deve redactar chaves sensíveis", () => {
+    it("deve redactar chaves sensÃ­veis", () => {
       const obj = {
         username: "joao",
         password: "senha123",
@@ -257,13 +258,13 @@ describe("PII Filtering Service - LGPD Compliance", () => {
         secret: "s3cr3t",
       };
 
-      const sanitizado = sanitizeObject(obj);
+      const sanitizado = sanitizeObject(obj, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado.password).toBe("[REDACTED]");
       expect(sanitizado.apiKey).toBe("[REDACTED]");
       expect(sanitizado.token).toBe("[REDACTED]");
       expect(sanitizado.secret).toBe("[REDACTED]");
-      expect(sanitizado.username).toBe("joao"); // Username não é sensível
+      expect(sanitizado.username).toBe("joao"); // Username nï¿½o ï¿½ sensï¿½vel
     });
 
     it("deve preservar tipos primitivos", () => {
@@ -284,11 +285,11 @@ describe("PII Filtering Service - LGPD Compliance", () => {
   });
 
   // ============================================
-  // TESTES DE ESTATÍSTICAS (Auditoria LGPD)
+  // TESTES DE ESTATï¿½STICAS (Auditoria LGPD)
   // ============================================
 
-  describe("Estatísticas de Sanitização - Auditoria LGPD", () => {
-    it("deve registrar estatísticas de sanitização", () => {
+  describe("Estatï¿½sticas de Sanitizaï¿½ï¿½o - Auditoria LGPD", () => {
+    it("deve registrar estatï¿½sticas de sanitizaï¿½ï¿½o", () => {
       resetPIIStats();
 
       const detected1 = [PIIType.CPF, PIIType.EMAIL];
@@ -306,7 +307,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(stats.byType[PIIType.TELEFONE]).toBe(1);
     });
 
-    it("deve registrar timestamp da última sanitização", () => {
+    it("deve registrar timestamp da ï¿½ltima sanitizaï¿½ï¿½o", () => {
       resetPIIStats();
 
       const beforeTimestamp = new Date().toISOString();
@@ -321,7 +322,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(stats.lastSanitized <= afterTimestamp).toBe(true);
     });
 
-    it("não deve incrementar totalSanitized se nenhum PII detectado", () => {
+    it("nï¿½o deve incrementar totalSanitized se nenhum PII detectado", () => {
       resetPIIStats();
 
       recordPIISanitization([]);
@@ -332,7 +333,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       expect(stats.totalSanitized).toBe(0);
     });
 
-    it("deve resetar estatísticas corretamente", () => {
+    it("deve resetar estatï¿½sticas corretamente", () => {
       recordPIISanitization([PIIType.CPF]);
       recordPIISanitization([PIIType.EMAIL]);
 
@@ -348,27 +349,27 @@ describe("PII Filtering Service - LGPD Compliance", () => {
   });
 
   // ============================================
-  // TESTES DE CASOS REAIS (Integração)
+  // TESTES DE CASOS REAIS (Integraï¿½ï¿½o)
   // ============================================
 
   describe("Casos Reais de Uso - LGPD", () => {
     it("deve sanitizar mensagem de erro com CPF", () => {
       const errorMsg = "Erro ao processar CPF 123.456.789-09 do cliente";
-      const sanitizado = sanitizePII(errorMsg);
+      const sanitizado = sanitizePII(errorMsg, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado).toBe("Erro ao processar CPF [CPF_REDACTED] do cliente");
     });
 
-    it("deve sanitizar log de aplicação com múltiplos dados", () => {
+    it("deve sanitizar log de aplicaÃ§Ã£o com mÃºltiplos dados", () => {
       const logMsg = `
-        [2024-12-08] Usuário: joao@example.com
-        Ação: Atualizar cadastro
+        [2024-12-08] Usuï¿½rio: joao@example.com
+        Aï¿½ï¿½o: Atualizar cadastro
         CPF: 123.456.789-09
         Telefone: (11) 98765-4321
         Status: Sucesso
       `;
 
-      const sanitizado = sanitizePII(logMsg);
+      const sanitizado = sanitizePII(logMsg, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado).toContain("[EMAIL_REDACTED]");
       expect(sanitizado).toContain("[CPF_REDACTED]");
@@ -380,7 +381,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
       const apiResponse = {
         cliente: {
           id: 123,
-          nome: "João Silva",
+          nome: "Joï¿½o Silva",
           cpf: "123.456.789-09",
           email: "joao@example.com",
           telefone: "(11) 98765-4321",
@@ -391,12 +392,12 @@ describe("PII Filtering Service - LGPD Compliance", () => {
         },
       };
 
-      const sanitizado = sanitizeObject(apiResponse);
+      const sanitizado = sanitizeObject(apiResponse, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado.cliente.cpf).toBe("[CPF_REDACTED]");
       expect(sanitizado.cliente.email).toBe("[EMAIL_REDACTED]");
       expect(sanitizado.cliente.telefone).toBe("[PHONE_REDACTED]");
-      expect(sanitizado.processo.numero).toBe("1234567-89.2024.5.02.0999"); // Número de processo é público
+      expect(sanitizado.processo.numero).toBe("1234567-89.2024.5.02.0999"); // Nï¿½mero de processo ï¿½ pï¿½blico
     });
 
     it("deve sanitizar Sentry breadcrumb", () => {
@@ -409,7 +410,7 @@ describe("PII Filtering Service - LGPD Compliance", () => {
         },
       };
 
-      const sanitizado = sanitizeObject(breadcrumb);
+      const sanitizado = sanitizeObject(breadcrumb, { ...DEFAULT_PII_CONFIG, enabled: true });
 
       expect(sanitizado.message).toContain("[EMAIL_REDACTED]");
       expect(sanitizado.data.url).toContain("[EMAIL_REDACTED]");
@@ -422,15 +423,15 @@ describe("PII Filtering Service - LGPD Compliance", () => {
   // ============================================
 
   describe("Performance e Edge Cases", () => {
-    it("deve processar texto grande em tempo razoável", () => {
+    it("deve processar texto grande em tempo razoï¿½vel", () => {
       const textoGrande = `
-        Cliente: João Silva
+        Cliente: Joï¿½o Silva
         CPF: 123.456.789-09
         Email: joao@example.com
       `.repeat(1000); // 3000 linhas
 
       const startTime = performance.now();
-      const sanitizado = sanitizePII(textoGrande);
+      const sanitizado = sanitizePII(textoGrande, { ...DEFAULT_PII_CONFIG, enabled: true });
       const endTime = performance.now();
 
       const duration = endTime - startTime;

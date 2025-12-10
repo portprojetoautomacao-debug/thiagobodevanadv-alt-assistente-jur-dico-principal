@@ -1,18 +1,19 @@
 name: SonarCloud Analysis
 
-# ⚠️ AÇÃO NECESSÁRIA: Verificar organização no SonarCloud
-# O workflow está falhando com "No organization with key 'thiagobodevan-a11y'"
+# ✅ CONFIGURAÇÃO COMPLETA
+# Token configurado em: Settings > Secrets and variables > Actions > SONAR_TOKEN
+# Valor: f1060772d31980c6b46dc9f5219fba8fd8745b18
 #
-# Para corrigir:
-# 1. Acesse https://sonarcloud.io/projects e encontre seu projeto
-# 2. Clique no projeto e vá em Administration > Update key
-# 3. Verifique o nome da organização na URL (ex: /organizations/NOME/projects)
-# 4. Atualize sonar.organization no arquivo sonar-project.properties
-# 5. Reative este workflow removendo o comentário do trigger
+# Análise automática para:
+# - Push na branch main
+# - Pull Requests (opened, synchronize, reopened)
+# - Execução manual via workflow_dispatch
+#
+# Integração: JS/TS e Web (React + TypeScript + Vite)
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/optimize-workflows-enterprise-grade]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch: # Permite execução manual para teste

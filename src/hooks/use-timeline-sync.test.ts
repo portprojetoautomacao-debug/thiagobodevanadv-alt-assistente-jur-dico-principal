@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useTimelineSync } from "./use-timeline-sync";
 
@@ -29,17 +29,32 @@ vi.mock("@/lib/process-timeline-utils", () => ({
 }));
 
 describe("useTimelineSync", () => {
-  it("deve filtrar expedientes ignorando formatação (replaceAll)", () => {
+  it("deve filtrar expedientes ignorando formatação (replaceAll)", async () => {
     // Simula um processId com formatação diferente mas mesmos dígitos
-    const { result } = renderHook(() => useTimelineSync({ processId: "123456" }));
+    const { result } = renderHook(() =>
+      useTimelineSync({ processId: "123456", autoRefresh: false })
+    );
+
+    // Aguardar processamento
+    await waitFor(() => {
+      expect(result.current.events.length).toBeGreaterThan(0);
+    });
 
     // Deve encontrar o expediente "123.456" porque "123456" == "123456" (após replaceAll(/\D/g, ""))
     expect(result.current.events).toHaveLength(1);
     expect(result.current.events[0].id).toBe("1");
   });
 
-  it("deve retornar vazio se não houver match", () => {
-    const { result } = renderHook(() => useTimelineSync({ processId: "000000" }));
+  it("deve retornar vazio se não houver match", async () => {
+    const { result } = renderHook(() =>
+      useTimelineSync({ processId: "000000", autoRefresh: false })
+    );
+
+    // Aguardar processamento
+    await waitFor(() => {
+      expect(result.current.events).toBeDefined();
+    });
+
     expect(result.current.events).toHaveLength(0);
   });
 });

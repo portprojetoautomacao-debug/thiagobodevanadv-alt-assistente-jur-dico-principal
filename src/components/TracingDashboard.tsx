@@ -232,18 +232,14 @@ export default function TracingDashboard({
                       <Bot className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">Total de Spans</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {stats.totalSpans}
-                    </div>
+                    <div className="text-sm text-muted-foreground">{stats.totalSpans}</div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Bot className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">Spans Ativos</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {stats.activeSpans}
-                    </div>
+                    <div className="text-sm text-muted-foreground">{stats.activeSpans}</div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -251,7 +247,7 @@ export default function TracingDashboard({
                       <span className="text-sm font-medium">Tracing Habilitado</span>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {stats.enabled ? 'Sim' : 'Não'}
+                      {stats.enabled ? "Sim" : "Não"}
                     </div>
                   </div>
                 </div>
@@ -269,7 +265,8 @@ export default function TracingDashboard({
             <CardContent>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Total de {traces.length} trace{traces.length !== 1 ? 's' : ''} capturado{traces.length !== 1 ? 's' : ''}
+                  Total de {traces.length} trace{traces.length !== 1 ? "s" : ""} capturado
+                  {traces.length !== 1 ? "s" : ""}
                 </p>
                 {traces.length === 0 && (
                   <p className="text-center text-muted-foreground py-8">

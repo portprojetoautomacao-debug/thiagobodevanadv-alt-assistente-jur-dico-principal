@@ -92,7 +92,7 @@ describe("usePJeDocumentSync", () => {
     expect(result.current.documentosPendentes).toEqual([]);
   });
 
-  it("deve processar mensagem SYNC_PROCESSOS", async () => {
+  it("deve processar mensagem SYNC_DOCUMENTO", async () => {
     renderHook(() => usePJeDocumentSync());
 
     // Aguardar inicialização
@@ -102,32 +102,27 @@ describe("usePJeDocumentSync", () => {
 
     // Simular recebimento de mensagem
     const messageHandler = chromeMock.runtime.onMessage.addListener.mock.calls[0][0];
-    const processos = [
-      {
-        numero: "1234567-89.2023.8.26.0100",
+    const documento = {
+      id: "doc-123",
+      tipo: "peticao",
+      conteudo: "Conteúdo da petição",
+      metadados: {
+        numeroProcesso: "1234567-89.2023.8.26.0100",
         classe: "Procedimento Comum",
         assunto: "Danos Morais",
-        parteAutor: "João Silva",
-        parteReu: "Empresa X",
-        comarca: "São Paulo",
-        vara: "1ª Vara Cível",
-        situacao: "ativo",
-        distribuicao: "2023-01-01",
-        ultimoMovimento: { data: "2023-10-01" },
       },
-    ];
+    };
 
     act(() => {
       messageHandler({
-        type: "SYNC_PROCESSOS",
-        data: processos,
+        type: "SYNC_DOCUMENTO",
+        data: documento,
       });
     });
 
     // Verificar se toast foi chamado
-    expect(toast.success).toHaveBeenCalledWith(expect.stringContaining("processos sincronizados"));
-
-    // Verificar se mockSetData foi chamado (indicando salvamento no KV)
-    expect(mockSetData).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining("PETICAO capturado"));
+    });
   });
 });
