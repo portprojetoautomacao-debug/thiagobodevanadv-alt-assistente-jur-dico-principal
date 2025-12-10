@@ -518,7 +518,7 @@ DATA DE RECEBIMENTO: ${exp.receivedAt || exp.dataRecebimento || new Date().toISO
 CONTEÚDO DA INTIMAÇÃO:
 ${exp.content || exp.teor || "Sem conteúdo"}
 
-IMPORTANTE: 
+IMPORTANTE:
 - Se a intimação mencionar "inventário" ou "inventariante", é processo de INVENTÁRIO
 - Se mencionar "Primeiras Declarações", a ação é "Apresentar Primeiras Declarações de Inventário"
 - Calcule a data final considerando APENAS dias ÚTEIS (segunda a sexta, excluindo feriados)
@@ -1077,7 +1077,9 @@ Crie o workflow de controladoria para esta tarefa.`,
                       <CardDescription className="mt-1">
                         Recebido em{" "}
                         {new Date(
-                          selectedExp.receivedAt || selectedExp.dataRecebimento
+                          selectedExp.receivedAt ||
+                            selectedExp.dataRecebimento ||
+                            new Date().toISOString()
                         ).toLocaleDateString("pt-BR")}
                       </CardDescription>
                     </div>

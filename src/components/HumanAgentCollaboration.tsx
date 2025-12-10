@@ -4,12 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeftRight,
+  Bot,
   Brain,
   CheckCircle,
   Clock,
   Pencil,
   Play,
-  Bot,
   Sparkles,
   User,
 } from "lucide-react";
@@ -126,15 +126,6 @@ export default function HumanAgentCollaboration({
 
     return createProgressInterval(setProgress, onComplete);
   }, [phase, onComplete]);
-
-  // Track previous phase for transition detection
-
-  useEffect(() => {
-    if (previousPhaseRef.current === "human_editing" && phase !== "human_editing") {
-      setTimeWithoutActivity(0);
-    }
-    previousPhaseRef.current = phase;
-  }, [phase]);
 
   // Timer de inatividade durante edição humana
   useEffect(() => {

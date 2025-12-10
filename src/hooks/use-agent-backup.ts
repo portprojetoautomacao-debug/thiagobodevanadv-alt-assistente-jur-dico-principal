@@ -383,7 +383,7 @@ export function useAgentBackup(options: BackupOptions) {
     };
   }, [enableAutoBackup, autoBackupInterval, userId, agents, createBackup, lastBackup]);
 
-  // Não tenta restaurar automaticamente - dados já estão no Spark KV
+  // Não tenta restaurar automaticamente - dados já estão no Upstash KV
   // Restauração manual disponível via botão
 
   return {

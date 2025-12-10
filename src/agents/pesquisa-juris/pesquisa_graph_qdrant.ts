@@ -4,15 +4,11 @@
  * Este agente conecta ao cluster Qdrant para buscar precedentes similares
  */
 
+import { createQdrantService } from "@/lib/qdrant-service";
+import { createExecuteToolSpan, createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { AgentState } from "../base/agent_state";
 import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
-import { createQdrantService } from "@/lib/qdrant-service";
-import {
-  createInvokeAgentSpan,
-  createExecuteToolSpan,
-  createChatSpan,
-} from "@/lib/sentry-gemini-integration-v2";
 
 export class PesquisaJurisAgentQdrant extends LangGraphAgent {
   private qdrantService;
@@ -67,7 +63,7 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
         const precedentes = await createExecuteToolSpan(
           {
             agentName: "Pesquisa Jurisprudencial",
-            system: "qdrant",
+            system: "custom-llm",
             model: "vector-search",
           },
           {
@@ -96,14 +92,17 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
               toolSpan?.setAttribute("search.results_count", results.length);
               toolSpan?.setAttribute("search.qdrant_url", import.meta.env.VITE_QDRANT_URL);
 
-              return results.map((r) => ({
-                titulo: (r.payload.titulo as string) || "Sem t�tulo",
-                ementa: (r.payload.ementa as string) || "",
-                relevancia: r.score,
-                tribunal: (r.payload.tribunal as string) || "N�o especificado",
-                data: (r.payload.data as string) || "",
-                numero: (r.payload.numero as string) || "",
-              }));
+              return results.map((r) => {
+                const payload = r.payload as Record<string, unknown>;
+                return {
+                  titulo: (payload.titulo as string) || "Sem t\u00edtulo",
+                  ementa: (payload.ementa as string) || "",
+                  relevancia: r.score,
+                  tribunal: (payload.tribunal as string) || "N\u00e3o especificado",
+                  data: (payload.data as string) || "",
+                  numero: (payload.numero as string) || "",
+                };
+              });
             } catch (error) {
               console.error("[PesquisaJuris] Erro ao buscar no Qdrant:", error);
               toolSpan?.setAttribute("search.error", String(error));
@@ -113,14 +112,25 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
           }
         );
 
-        span?.setAttribute("pesquisa.resultados_encontrados", precedentes.length);
+        type Precedente = {
+          titulo: string;
+          ementa: string;
+          relevancia: number;
+          tribunal: string;
+          data: string;
+          numero: string;
+        };
+
+        const precedentesTyped = precedentes as Precedente[];
+
+        span?.setAttribute("pesquisa.resultados_encontrados", precedentesTyped.length);
 
         current = updateState(current, {
           currentStep: "pesquisa-juris:qdrant:complete",
           data: {
             ...current.data,
-            precedentes,
-            totalResultados: precedentes.length,
+            precedentes: precedentesTyped,
+            totalResultados: precedentesTyped.length,
             usedQdrant: !!this.qdrantService,
           },
           completed: true,
@@ -130,7 +140,7 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
 
         return this.addAgentMessage(
           current,
-          `Pesquisa jurisprudencial via ${this.qdrantService ? "Qdrant" : "Mock"}: ${precedentes.length} precedentes encontrados`
+          `Pesquisa jurisprudencial via ${this.qdrantService ? "Qdrant" : "Mock"}: ${precedentesTyped.length} precedentes encontrados`
         );
       }
     );

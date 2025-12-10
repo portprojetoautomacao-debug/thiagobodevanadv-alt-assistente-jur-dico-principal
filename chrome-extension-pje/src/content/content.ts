@@ -29,7 +29,6 @@ class PJeContentScript {
       initGlobalHandlers();
     } catch (e) {
       // Ignore failures initializing global handlers
-      // eslint-disable-next-line no-console
       console.warn("[PJe Sync] Falha ao inicializar global handlers", e);
     }
   }
