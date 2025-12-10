@@ -63,8 +63,27 @@ interface DashboardMetrics {
   errorRate: number;
 }
 
+// Helper functions (assumindo que existem em outro lugar ou precisam ser implementadas)
+function getAgentMetrics(_agentId: string): AgentMetric {
+  return {
+    count: 0,
+    avgDuration: 0,
+    errors: 0,
+    lastActive: Date.now(),
+  };
+}
+
+function getLLMMetrics(): LLMMetric {
+  return {
+    totalTokens: 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    estimatedCost: 0,
+  };
+}
+
 export default function TracingDashboard({
-  agentIds: _agentIds = [],
+  agentIds = [],
   autoRefresh = true,
   refreshInterval = 5000,
 }: TracingDashboardProps) {

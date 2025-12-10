@@ -12,6 +12,7 @@ import { useKV } from '@/hooks/use-kv'
 import { toast } from 'sonner'
 import type { Minuta } from '@/types'
 import type { AgentTask } from '@/lib/agents'
+import { createMinutaFromAgentTask } from '@/services/minuta-service'
 
 // Tipos de documento para mapeamento
 const DOCUMENT_TYPE_MAP: Record<string, Minuta['tipo']> = {
@@ -62,22 +63,25 @@ export function useAutoMinuta() {
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Schedule to avoid synchronous setState in effect
-      const timeoutId = setTimeout(() => {
-        try {
-          const stored = localStorage.getItem('processed-petition-tasks')
-          if (stored) {
-            const parsed = JSON.parse(stored) as string[]
-            processedTasksRef.current = new Set(parsed)
-            setProcessedTasksCount(parsed.length)
-          }
-        } catch (e) {
-          console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
-        }
-      }, 0)
-      return () => clearTimeout(timeoutId)
+    if (typeof window === 'undefined') {
+      return; // Server-side rendering - não fazer nada
     }
+
+    // Schedule to avoid synchronous setState in effect
+    const timeoutId = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('processed-petition-tasks')
+        if (stored) {
+          const parsed = JSON.parse(stored) as string[]
+          processedTasksRef.current = new Set(parsed)
+          setProcessedTasksCount(parsed.length)
+        }
+      } catch (e) {
+        console.error('[AutoMinuta] Erro ao carregar tarefas processadas:', e)
+      }
+    }, 0)
+    
+    return () => clearTimeout(timeoutId)
   }, []);
 
   // Monitorar tarefas completadas do agente de redação
