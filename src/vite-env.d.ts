@@ -63,7 +63,6 @@ interface ImportMetaEnv {
   readonly VITE_GITHUB_TOKEN?: string;
   readonly VITE_AZURE_OPENAI_KEY?: string;
   readonly VITE_DATAJUD_API_KEY?: string;
-  readonly VITE_GEMINI_API_KEY?: string;
   readonly VITE_SENTRY_DSN?: string;
   readonly VITE_APP_VERSION?: string;
   readonly MODE?: string;

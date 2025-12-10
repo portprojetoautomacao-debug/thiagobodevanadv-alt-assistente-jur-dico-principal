@@ -19,7 +19,7 @@
 | 5 | `VERCEL_AUTOMATION_BYPASS_SECRET` | Vercel | ✅ |
 | 6 | `VERCEL_TOKEN` | Vercel | ✅ |
 | 7 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth | ✅ |
-| 8 | `VITE_GOOGLE_API_KEY` | Google API | ✅ |
+| 8 | `VITE_GOOGLE_API_KEY` | Google API | ✅ (Deprecated) |
 | 9 | `VITE_GITHUB_OAUTH_CLIENT_ID` | GitHub OAuth | ✅ |
 | 10 | `GITHUB_OAUTH_CLIENT_SECRET` | GitHub OAuth | ✅ |
 | 11 | `GITHUB_PAT` | GitHub | ✅ |

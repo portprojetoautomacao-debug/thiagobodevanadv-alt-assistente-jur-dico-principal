@@ -15,7 +15,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
+import { executeHybridTask } from "../../src/lib/hybrid-agents-integration.js";
 import { requireApiKey } from "../lib/auth.js";
 import { redactPii } from "../lib/pii.js";
 import { rateLimitMiddleware } from "../lib/rate-limit.js";

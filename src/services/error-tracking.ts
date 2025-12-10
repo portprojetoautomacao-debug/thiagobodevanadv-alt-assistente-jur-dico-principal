@@ -18,12 +18,12 @@
 
 /// <reference types="vite/client" />
 
-import * as Sentry from "@sentry/react";
 import {
   createPIIFilteredBeforeSend,
   DEFAULT_PII_CONFIG,
   type PIIFilterConfig,
-} from "@/services/pii-filtering";
+} from "@/services/pii-filtering.js";
+import * as Sentry from "@sentry/react";
 
 // Configuração Sentry DSN com validação de ambiente
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || "";

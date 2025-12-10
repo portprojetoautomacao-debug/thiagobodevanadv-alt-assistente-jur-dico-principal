@@ -53,11 +53,12 @@ add_secret "VERCEL_TOKEN" "xO6xkg0R5QJLEMlLooaYGVPV"
 echo ""
 
 # ============================================
-# GOOGLE OAUTH
+# GOOGLE OAUTH & AI
 # ============================================
-echo "🔐 2/10 - Google OAuth..."
+echo "🔐 2/10 - Google OAuth & AI..."
 add_secret "VITE_GOOGLE_CLIENT_ID" "572929400457-lufh2hv2dt7129mikbr1e9k5h1copv4s.apps.googleusercontent.com"
 add_secret "VITE_GOOGLE_API_KEY" "AIzaSyB0dbI9WQqYmGuVLn4nYrOtuMKGLuydBZ0"
+add_secret "VITE_GEMINI_API_KEY" "AIzaSyB0dbI9WQqYmGuVLn4nYrOtuMKGLuydBZ0"
 echo ""
 
 # ============================================

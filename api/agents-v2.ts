@@ -5,7 +5,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { executeHybridTask, hasHybridVersion } from "../src/lib/hybrid-agents-integration";
+import { executeHybridTask, hasHybridVersion } from "../src/lib/hybrid-agents-integration.js";
 import { requireApiKey } from "./lib/auth.js";
 import { redactPii } from "./lib/pii.js";
 import { rateLimitMiddleware } from "./lib/rate-limit.js";
@@ -104,7 +104,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         coordinationMode: config?.coordinationMode,
       });
     // Wrap in timeout and retries to avoid blocking the serverless function
-    const result = await retryWithBackoff(() => withTimeout(30000, exec()), 2, 500);
+    const rawResult = await retryWithBackoff(() => withTimeout(30000, exec()), 2, 500);
+    const result = rawResult as unknown as {
+      mode?: string;
+      langGraphResult?: { messages: unknown[] };
+      [key: string]: unknown;
+    };
 
     // Construct a minimal traces output when available
     const tracesOut = result.langGraphResult ? result.langGraphResult.messages : [];
