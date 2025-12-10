@@ -14,7 +14,10 @@
         "GitHub.copilot",
         "swellaby.vscode-rust-test-adapter",
         "p42ai.refactor",
-        "SonarSource.sonarlint-vscode"
+        "SonarSource.sonarlint-vscode",
+        "njqdev.vscode-python-typehint",
+        "ms-python.mypy-type-checker",
+        "MylesMurphy.prettify-ts"
       ],
       "settings": {
         "editor.formatOnSave": true,
