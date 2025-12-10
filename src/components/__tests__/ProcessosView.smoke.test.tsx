@@ -24,7 +24,10 @@ describe("ProcessosView smoke", () => {
     // Stats cards labels - usar busca mais flexível
     const headings = await screen.findAllByRole("heading");
     const hasTotal = headings.some((h) => /total/i.test(h.textContent || ""));
-    expect(hasTotal || screen.queryByText(/Total/i)).toBeTruthy();
+    if (!hasTotal) {
+      // Fallback: buscar como texto se não estiver em heading
+      expect(screen.queryByText(/Total/i)).toBeTruthy();
+    }
 
     expect(await screen.findByText(/Ativos/i)).toBeDefined();
     expect(await screen.findByText(/Arquivados/i)).toBeDefined();
