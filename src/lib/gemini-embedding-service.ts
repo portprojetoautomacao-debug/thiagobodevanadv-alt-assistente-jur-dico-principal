@@ -1,14 +1,9 @@
 /**
- * Gemini Embedding Service - Geração de Embeddings para Vetores
+ * Gemini Embedding Service - Geração de Embeddings para Vetores (Frontend Stub)
  * 
- * Usa a API do Google Gemini para converter texto jurídico em vetores
- * de 768 dimensões (text-embedding-004) compatíveis com Qdrant.
+ * Este é um stub que chama a API backend.
+ * A implementação real está em /api/lib/gemini-embedding-service.ts
  */
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { config } from "dotenv";
-
-config();
 
 // ============================================================================
 // TYPES
@@ -22,26 +17,14 @@ export interface EmbeddingResult {
 }
 
 // ============================================================================
-// SERVICE CLASS
+// SERVICE CLASS (Frontend Stub)
 // ============================================================================
 
 export class GeminiEmbeddingService {
-  private genAI: GoogleGenerativeAI;
-  private readonly model = "text-embedding-004";
   private readonly dimensions = 768; // Gemini text-embedding-004
 
-  constructor(apiKey?: string) {
-    const key = apiKey || process.env.VITE_GEMINI_API_KEY || "";
-    
-    if (!key) {
-      throw new Error("VITE_GEMINI_API_KEY não configurado");
-    }
-
-    this.genAI = new GoogleGenerativeAI(key);
-  }
-
   /**
-   * Gera embedding para um texto
+   * Gera embedding para um texto (via API backend)
    */
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
     if (!text || text.trim().length === 0) {
@@ -49,29 +32,18 @@ export class GeminiEmbeddingService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: this.model });
-      
-      const result = await model.embedContent(text);
+      const response = await fetch('/api/embeddings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
 
-      if (!result.embedding || !result.embedding.values) {
-        throw new Error("Resposta da API Gemini inválida");
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
 
-      const embedding = result.embedding.values;
-
-      // Validar dimensões
-      if (embedding.length !== this.dimensions) {
-        console.warn(
-          `[GeminiEmbedding] Dimensões inesperadas: ${embedding.length} (esperado: ${this.dimensions})`
-        );
-      }
-
-      return {
-        embedding,
-        text: text.slice(0, 100), // Primeiros 100 chars para referência
-        model: this.model,
-        dimensions: embedding.length,
-      };
+      const result = await response.json();
+      return result as EmbeddingResult;
     } catch (error) {
       console.error("[GeminiEmbedding] Erro ao gerar embedding:", error);
       throw new Error(`Falha ao gerar embedding: ${String(error)}`);
@@ -82,22 +54,23 @@ export class GeminiEmbeddingService {
    * Gera embeddings para múltiplos textos (batch)
    */
   async generateEmbeddingsBatch(texts: string[]): Promise<EmbeddingResult[]> {
-    const results: EmbeddingResult[] = [];
+    try {
+      const response = await fetch('/api/embeddings/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texts }),
+      });
 
-    for (const text of texts) {
-      try {
-        const result = await this.generateEmbedding(text);
-        results.push(result);
-
-        // Delay para respeitar rate limits (1 req/s aproximadamente)
-        await this.delay(100);
-      } catch (error) {
-        console.error(`[GeminiEmbedding] Erro ao processar texto: ${text.slice(0, 50)}...`, error);
-        // Continua processando os próximos
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
-    }
 
-    return results;
+      const results = await response.json();
+      return results as EmbeddingResult[];
+    } catch (error) {
+      console.error("[GeminiEmbedding] Erro ao gerar embeddings batch:", error);
+      throw new Error(`Falha ao gerar embeddings: ${String(error)}`);
+    }
   }
 
   /**
@@ -125,10 +98,6 @@ export class GeminiEmbeddingService {
     const fullText = parts.join(". ");
 
     return this.generateEmbedding(fullText);
-  }
-
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

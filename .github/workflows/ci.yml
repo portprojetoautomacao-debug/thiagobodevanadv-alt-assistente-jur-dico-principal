@@ -171,7 +171,7 @@ jobs:
           echo "- **Cache Hit:** Check cache step logs above" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         if: success()
         with:
           name: build-${{ matrix.node-version }}
