@@ -1,9 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useKV } from "@/hooks/use-kv";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -11,19 +8,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Calendar } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { useKV } from "@/hooks/use-kv";
+import type { Process } from "@/types";
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
   closestCorners,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
 } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Process } from "@/types";
+import { Calendar, X } from "@phosphor-icons/react";
+import { DollarSign, FileText, Filter, MoreVertical, Search, TrendingUp } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const PROCESS_PHASES = [
   "Marketing",
@@ -148,6 +153,8 @@ export default function ProcessCRMAdvbox() {
   const [filter, setFilter] = useState("");
   const [selectedPhase, setSelectedPhase] = useState<string>("Administrativo");
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
   const [selectedCard, setSelectedCard] = useState<ProcessCardData | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [cardColumnOverrides, setCardColumnOverrides] = useState<Record<string, string>>({});

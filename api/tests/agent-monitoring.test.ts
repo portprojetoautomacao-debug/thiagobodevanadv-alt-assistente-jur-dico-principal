@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock do agent-monitoring para evitar dependências externas
 vi.mock("../../src/lib/agent-monitoring", () => ({
@@ -132,14 +132,9 @@ describe("agentMonitor.trackTaskExecution", () => {
     const customError = new Error("Custom error message");
 
     await expect(
-      agentMonitor.trackTaskExecution(
-        "task-error",
-        "agent-error",
-        "error-test",
-        async () => {
-          throw customError;
-        }
-      )
+      agentMonitor.trackTaskExecution("task-error", "agent-error", "error-test", async () => {
+        throw customError;
+      })
     ).rejects.toThrow("Custom error message");
   });
 
