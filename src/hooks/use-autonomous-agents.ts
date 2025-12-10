@@ -375,13 +375,15 @@ export function useAutonomousAgents() {
     // Validar tarefa com Zod
     const validation = validateAgentTask(task);
 
-    if (!validation.isValid) {
+    if (!validation.isValid || !validation.data) {
       console.error("Validação de tarefa falhou:", validation.errors);
       toast.error("Tarefa inválida. Verifique os campos obrigatórios.");
       return current;
     }
 
-    const updated = [...current, validation.data || task];
+    // Type assertion segura através de unknown - validated data tem a estrutura correta
+    const validatedTask = validation.data as unknown as AgentTask;
+    const updated = [...current, validatedTask];
     return sortTasksByPriority(updated);
   }, []);
 
@@ -690,7 +692,7 @@ export function useAutonomousAgents() {
         // Validar antes de atualizar
         const validation = validateAgent(updatedAgent);
 
-        if (!validation.isValid) {
+        if (!validation.isValid || !validation.data) {
           console.error("Validação de agente falhou:", validation.errors);
           toast.error("Erro ao alterar status do agente.");
           return current || [];

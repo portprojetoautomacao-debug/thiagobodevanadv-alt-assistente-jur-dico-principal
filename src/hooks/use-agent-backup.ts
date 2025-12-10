@@ -200,6 +200,7 @@ export function useAgentBackup(options: BackupOptions) {
         console.warn("⚠️ Servidor indisponível, backup local será tentado...");
         setStorageType("local");
 
+        let localStorageSuccess = false;
         try {
           // Salvar dados mínimos no localStorage
           const minimalData = {
@@ -211,18 +212,33 @@ export function useAgentBackup(options: BackupOptions) {
             },
           };
           localStorage.setItem(`${BACKUP_KEY_PREFIX}:fallback`, JSON.stringify(minimalData));
+          localStorageSuccess = true;
         } catch (localError) {
           if (localError instanceof DOMException && localError.name === "QuotaExceededError") {
             cleanLocalStorage();
             console.warn("⚠️ localStorage cheio, limpeza realizada");
           }
+          console.warn("⚠️ Falha ao salvar no localStorage", localError);
+        }
+
+        // Se localStorage também falhou, retornar erro
+        if (!localStorageSuccess) {
+          return {
+            success: false,
+            error: new Error("Falha ao salvar backup: servidor indisponível e localStorage falhou"),
+          };
         }
       }
 
       setLastBackup(backupData.timestamp);
       console.log("✅ Backup criado:", new Date(backupData.timestamp).toLocaleString());
 
-      return { success: true, timestamp: backupData.timestamp, storage: storageType };
+      // Return the actual storage used, not the state variable (which might be stale)
+      return {
+        success: true,
+        timestamp: backupData.timestamp,
+        storage: serverSuccess ? "server" : "local",
+      };
     } catch (error) {
       console.error("❌ Erro ao criar backup:", error);
       return { success: false, error };
