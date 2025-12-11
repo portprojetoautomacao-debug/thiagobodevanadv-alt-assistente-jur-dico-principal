@@ -1,7 +1,7 @@
 ﻿# ✅ Configuração Qdrant - Concluída com Sucesso!
 
-**Data**: 09/12/2024  
-**Cluster**: cluster01  
+**Data**: 09/12/2024
+**Cluster**: cluster01
 **Status**: ✅ **OPERACIONAL**
 
 ---
@@ -246,6 +246,6 @@ cat .env | grep QDRANT
 
 ---
 
-**Configurado por**: Assistente IA  
-**Data**: 09/12/2024  
+**Configurado por**: Assistente IA
+**Data**: 09/12/2024
 **Versão**: 1.0.0

@@ -23,6 +23,7 @@ import { JustineAgent } from "@/agents/justine/justine_graph";
 import { DJENMonitorAgent } from "@/agents/monitor-djen/monitor_graph";
 import { OrganizacaoArquivosAgent } from "@/agents/organizacao-arquivos/organizacao_arquivos_graph";
 import { PesquisaJurisAgent } from "@/agents/pesquisa-juris/pesquisa_graph";
+import { PesquisaJurisAgentQdrant } from "@/agents/pesquisa-juris/pesquisa_graph_qdrant";
 import { RedacaoPeticoesAgent } from "@/agents/redacao-peticoes/redacao_graph";
 import { RevisaoContratualAgent } from "@/agents/revisao-contratual/revisao_contratual_graph";
 import { TraducaoJuridicaAgent } from "@/agents/traducao-juridica/traducao_juridica_graph";
@@ -69,6 +70,7 @@ const AGENT_MAPPING: Record<string, HybridAgentType | null> = {
   "gestao-prazos": "langgraph-custom",
   "organizacao-arquivos": "langgraph-custom",
   "pesquisa-juris": "langgraph-custom",
+  "pesquisa-juris-qdrant": "langgraph-custom",
   "analise-risco": "langgraph-custom",
   "revisao-contratual": "langgraph-custom",
   "comunicacao-clientes": "langgraph-custom",
@@ -121,6 +123,9 @@ function getLangGraphAgent(type: HybridAgentType, agentId?: string): LangGraphAg
       break;
     case "pesquisa-juris":
       agent = new PesquisaJurisAgent();
+      break;
+    case "pesquisa-juris-qdrant":
+      agent = new PesquisaJurisAgentQdrant();
       break;
     case "analise-risco":
       agent = new AnaliseRiscoAgent();

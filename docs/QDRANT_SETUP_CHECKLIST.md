@@ -187,7 +187,7 @@ Recomendado a cada 90 dias:
 curl -X PUT 'https://sua-url.qdrant.cloud:6333/collections/legal_docs' \
   -H 'api-key: sua-api-key' \
   -H 'Content-Type: application/json' \
-  -d '{"vectors": {"size": 1536, "distance": "Cosine"}}'
+  -d '{"vectors": {"size": 768, "distance": "Cosine"}}'
     -d '{"vectors": {"size": 768, "distance": "Cosine"}}'
     -d '{"vectors": {"size": 768, "distance": "Cosine"}}'
 ```

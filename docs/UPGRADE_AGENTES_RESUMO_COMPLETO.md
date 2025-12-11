@@ -1,43 +1,44 @@
 # ?? UPGRADE DOS AGENTES - RESUMO COMPLETO
 
-**Data da Última Sessão**: 09/12/2024  
-**Status**: ? **Implementação Concluída**  
-**Versão**: 2.0.0
+**Data da ï¿½ltima Sessï¿½o**: 09/12/2024  
+**Status**: ? **Implementaï¿½ï¿½o Concluï¿½da**  
+**Versï¿½o**: 2.0.0
 
 ---
 
-## ?? **VISÃO GERAL DO UPGRADE**
+## ?? **VISï¿½O GERAL DO UPGRADE**
 
 ### **O Que Foi Feito**
 
-Durante a última sessão de desenvolvimento, foram implementadas **melhorias substanciais** no sistema de agentes, com foco especial na **integração com Qdrant** para busca vetorial de jurisprudência.
+Durante a ï¿½ltima sessï¿½o de desenvolvimento, foram implementadas **melhorias substanciais** no sistema de agentes, com foco especial na **integraï¿½ï¿½o com Qdrant** para busca vetorial de jurisprudï¿½ncia.
 
 ### **Principais Entregas**
 
 | Item | Status | Impacto |
 |------|--------|---------|
-| **Integração Qdrant** | ? Concluída | Alto - Base vetorial para pesquisa |
+| **Integraï¿½ï¿½o Qdrant** | ? Concluï¿½da | Alto - Base vetorial para pesquisa |
 | **Agente Pesquisa Juris Qdrant** | ? Implementado | Alto - Busca real de precedentes |
-| **População Automatizada DataJud** | ? Implementado | Crítico - Dados reais de tribunais |
-| **Gemini Embedding Service** | ? Implementado | Alto - Geração de vetores |
-| **Documentação Completa** | ? Criada | Médio - Manutenção facilitada |
+| **Populaï¿½ï¿½o Automatizada DataJud** | ? Implementado | Crï¿½tico - Dados reais de tribunais |
+| **Gemini Embedding Service** | ? Implementado | Alto - Geraï¿½ï¿½o de vetores |
+| **API Embeddings** | ? Implementado | Alto - endpoint server-side `/api/embeddings` (OpenAI preferred) |
+| **Documentaï¿½ï¿½o Completa** | ? Criada | Mï¿½dio - Manutenï¿½ï¿½o facilitada |
 
 ---
 
 ## ?? **ARQUIVOS CRIADOS/MODIFICADOS**
 
-### **1. Serviços Principais (src/lib/)**
+### **1. Serviï¿½os Principais (src/lib/)**
 
 #### ? **`src/lib/datajud-service.ts`** (NOVO - 450 linhas)
 
-**Função**: Integração com API pública DataJud do CNJ
+**Funï¿½ï¿½o**: Integraï¿½ï¿½o com API pï¿½blica DataJud do CNJ
 
-**Características**:
+**Caracterï¿½sticas**:
 - Busca processos por tribunal, classe, assunto
 - Busca precedentes jurisprudenciais
-- Busca em múltiplos tribunais simultaneamente
-- Temas jurídicos curados (Trabalhista, Previdenciário, etc)
-- Rate limiting e delays configuráveis
+- Busca em mï¿½ltiplos tribunais simultaneamente
+- Temas jurï¿½dicos curados (Trabalhista, Previdenciï¿½rio, etc)
+- Rate limiting e delays configurï¿½veis
 - Error handling robusto
 
 **Exemplo de Uso**:
@@ -45,7 +46,7 @@ Durante a última sessão de desenvolvimento, foram implementadas **melhorias subs
 import { dataJudService } from '@/lib/datajud-service'
 
 const resultado = await dataJudService.searchPrecedentes('TST', 'direitos trabalhistas', 20)
-// Retorna até 20 processos do TST sobre direitos trabalhistas
+// Retorna atï¿½ 20 processos do TST sobre direitos trabalhistas
 ```
 
 **Tribunais Suportados**:
@@ -55,49 +56,49 @@ const resultado = await dataJudService.searchPrecedentes('TST', 'direitos trabal
 
 #### ? **`src/lib/gemini-embedding-service.ts`** (NOVO - 250 linhas)
 
-**Função**: Geração de embeddings vetoriais com Gemini
+**Funï¿½ï¿½o**: Geraï¿½ï¿½o de embeddings vetoriais com Gemini
 
-**Características**:
+**Caracterï¿½sticas**:
 - Modelo: `text-embedding-004`
-- Dimensões: 768 (compatível com Qdrant)
-- Batch processing para múltiplos textos
-- Rate limiting automático (100ms entre requests)
-- Geração específica para documentos jurídicos
+- Dimensï¿½es: 768 (compatï¿½vel com Qdrant)
+- Batch processing para mï¿½ltiplos textos
+- Rate limiting automï¿½tico (100ms entre requests)
+- Geraï¿½ï¿½o especï¿½fica para documentos jurï¿½dicos
 
 **Exemplo de Uso**:
 ```typescript
 import { geminiEmbeddingService } from '@/lib/gemini-embedding-service'
 
 const embedding = await geminiEmbeddingService.generateEmbedding(
-  "Tribunal: TST. Classe: Reclamação Trabalhista. Assunto: Horas Extras"
+  "Tribunal: TST. Classe: Reclamaï¿½ï¿½o Trabalhista. Assunto: Horas Extras"
 )
-// Retorna: number[] com 768 dimensões
+// Retorna: number[] com 768 dimensï¿½es
 ```
 
-**Função Especial**:
+**Funï¿½ï¿½o Especial**:
 ```typescript
 await geminiEmbeddingService.generateDocumentEmbedding({
   numero: '1234567-89.2024.5.01.0001',
   tribunal: 'TST',
-  classe: 'Reclamação Trabalhista',
+  classe: 'Reclamaï¿½ï¿½o Trabalhista',
   assunto: 'Horas Extras',
-  movimentacoes: 'Audiência marcada; Citação realizada'
+  movimentacoes: 'Audiï¿½ncia marcada; Citaï¿½ï¿½o realizada'
 })
 ```
 
 ---
 
-### **2. Scripts de Automação (scripts/)**
+### **2. Scripts de Automaï¿½ï¿½o (scripts/)**
 
 #### ? **`scripts/populate-qdrant-datajud.ts`** (NOVO - 320 linhas)
 
-**Função**: População automatizada do Qdrant com dados reais de tribunais
+**Funï¿½ï¿½o**: Populaï¿½ï¿½o automatizada do Qdrant com dados reais de tribunais
 
 **Fluxo Completo**:
 ```
 1. Conecta ao Qdrant Cloud
 2. Busca temas curados (5 temas x 20 processos)
-3. Busca tribunais prioritários (6 tribunais x 20 processos)
+3. Busca tribunais prioritï¿½rios (6 tribunais x 20 processos)
 4. Gera embeddings com Gemini (768 dim)
 5. Insere no Qdrant com metadata completa
 6. Exibe resumo detalhado
@@ -108,30 +109,30 @@ await geminiEmbeddingService.generateDocumentEmbedding({
 npm run qdrant:populate-datajud
 ```
 
-**Saída Esperada**:
+**Saï¿½da Esperada**:
 ```
-?? Iniciando população automatizada do Qdrant com DataJud
+?? Iniciando populaï¿½ï¿½o automatizada do Qdrant com DataJud
 ?? Conectando ao Qdrant Cloud...
 ? Conectado: https://4aee698c-53f6...
 ?? Collection: legal_docs
 
-?? Modelo Gemini: text-embedding-004 (768 dimensões)
+?? Modelo Gemini: text-embedding-004 (768 dimensï¿½es)
 ? Collection verificada/criada
 
 ?? Buscando dados do DataJud (CNJ)...
 
-?? Estratégia: Temas Jurídicos Curados
+?? Estratï¿½gia: Temas Jurï¿½dicos Curados
 ?? Processando: Direitos Trabalhistas (TST)
    15 processos encontrados
    .....?
 
-?? RESUMO DA POPULAÇÃO
+?? RESUMO DA POPULAï¿½ï¿½O
    Total Processado: 127
    Total Inserido:   124 ?
    Total Erros:      3 ??
    Taxa de Sucesso:  97.6%
 
-? População concluída!
+? Populaï¿½ï¿½o concluï¿½da!
 ```
 
 **Metadata Armazenada**:
@@ -142,13 +143,13 @@ npm run qdrant:populate-datajud
   payload: {
     numero: "0001234-56.2023.5.01.0001",
     tribunal: "TST",
-    classe: "Reclamação Trabalhista",
+    classe: "Reclamaï¿½ï¿½o Trabalhista",
     assunto: "Horas Extras",
     tema: "Direitos Trabalhistas",
     dataAjuizamento: "2023-05-15",
-    orgaoJulgador: "1ª Vara do Trabalho",
+    orgaoJulgador: "1ï¿½ Vara do Trabalho",
     totalMovimentacoes: 5,
-    partes: "João Silva; Empresa XYZ",
+    partes: "Joï¿½o Silva; Empresa XYZ",
     embedModel: "text-embedding-004",
     createdAt: "2024-12-09T15:30:00Z"
   }
@@ -161,40 +162,40 @@ npm run qdrant:populate-datajud
 
 #### ? **`src/agents/pesquisa-juris/pesquisa_graph_qdrant.ts`** (NOVO - 350 linhas)
 
-**Função**: Agente de Pesquisa Jurisprudencial com busca vetorial REAL
+**Funï¿½ï¿½o**: Agente de Pesquisa Jurisprudencial com busca vetorial REAL
 
-**Características**:
+**Caracterï¿½sticas**:
 - ? Conecta ao Qdrant Cloud
 - ? Gera embedding da query com Gemini
 - ? Busca vetores similares (cosine similarity)
-- ? Fallback automático para dados mockados se Qdrant offline
-- ? Instrumentação Sentry completa (OpenTelemetry)
-- ? Filtragem por relevância (threshold 0.7)
+- ? Fallback automï¿½tico para dados mockados se Qdrant offline
+- ? Instrumentaï¿½ï¿½o Sentry completa (OpenTelemetry)
+- ? Filtragem por relevï¿½ncia (threshold 0.7)
 
-**Diferenças vs Agente Antigo**:
+**Diferenï¿½as vs Agente Antigo**:
 
 | Aspecto | Agente Antigo (mock) | Agente Novo (Qdrant) |
 |---------|----------------------|----------------------|
 | Fonte de dados | ? Hardcoded | ? Qdrant Cloud |
-| Busca vetorial | ? Não | ? Sim (cosine) |
+| Busca vetorial | ? Nï¿½o | ? Sim (cosine) |
 | Embedding | ? Mock | ? Gemini real |
-| Dados reais | ? Não | ? DataJud CNJ |
-| Fallback | ? Não | ? Sim |
-| Monitoramento | ?? Básico | ? Sentry AI |
+| Dados reais | ? Nï¿½o | ? DataJud CNJ |
+| Fallback | ? Nï¿½o | ? Sim |
+| Monitoramento | ?? Bï¿½sico | ? Sentry AI |
 
-**Fluxo de Execução**:
+**Fluxo de Execuï¿½ï¿½o**:
 ```
-1. Recebe query do usuário (ex: "direitos trabalhistas TST")
+1. Recebe query do usuï¿½rio (ex: "direitos trabalhistas TST")
 2. Gera prompt otimizado com LLM
 3. Converte query em embedding (768 dims)
 4. Busca no Qdrant (top 10, threshold 0.7)
-5. Retorna precedentes ordenados por relevância
+5. Retorna precedentes ordenados por relevï¿½ncia
 6. Registra spans no Sentry
 ```
 
 **Sentry Spans Gerados**:
-- `gen_ai.invoke_agent` - Invocação completa
-- `gen_ai.chat` - Geração de query otimizada
+- `gen_ai.invoke_agent` - Invocaï¿½ï¿½o completa
+- `gen_ai.chat` - Geraï¿½ï¿½o de query otimizada
 - `gen_ai.execute_tool` - Busca vetorial Qdrant
 
 **Exemplo de Resultado**:
@@ -206,7 +207,7 @@ npm run qdrant:populate-datajud
     precedentes: [
       {
         titulo: "TST - RR 555666 - Horas extras",
-        ementa: "Configurada a prestação de horas extras...",
+        ementa: "Configurada a prestaï¿½ï¿½o de horas extras...",
         relevancia: 0.92,
         tribunal: "TST",
         data: "2024-02-10"
@@ -220,16 +221,16 @@ npm run qdrant:populate-datajud
 
 ---
 
-### **4. Documentação (docs/)**
+### **4. Documentaï¿½ï¿½o (docs/)**
 
 #### ? **`docs/QDRANT_DATAJUD_AUTOMATION.md`** (NOVO)
 
-**Conteúdo**:
-- Setup completo da integração DataJud
+**Conteï¿½do**:
+- Setup completo da integraï¿½ï¿½o DataJud
 - Fluxo de dados detalhado
 - Guia de uso com exemplos
 - API DataJud - endpoints e formato
-- Gemini Embedding - configuração
+- Gemini Embedding - configuraï¿½ï¿½o
 - Metadata armazenada no Qdrant
 - Temas curados e tribunais
 - Performance e rate limits
@@ -239,26 +240,26 @@ npm run qdrant:populate-datajud
 
 #### ? **`docs/QDRANT_AGENTS_STATUS.md`** (NOVO)
 
-**Conteúdo**:
-- Status atual de conexão Cluster ? Agentes
-- Evidências de MOCK vs REAL
+**Conteï¿½do**:
+- Status atual de conexï¿½o Cluster ? Agentes
+- Evidï¿½ncias de MOCK vs REAL
 - Arquivos criados para resolver
-- Plano de ação imediato
-- Métricas de sucesso
-- Documentação relacionada
+- Plano de aï¿½ï¿½o imediato
+- Mï¿½tricas de sucesso
+- Documentaï¿½ï¿½o relacionada
 
 **Principais Insights**:
 
 ```
 ? PROBLEMA IDENTIFICADO:
-- Cluster Qdrant está operacional
+- Cluster Qdrant estï¿½ operacional
 - Collection 'legal_docs' existe
-- MAS nenhum agente está conectado funcionalmente!
+- MAS nenhum agente estï¿½ conectado funcionalmente!
 
-? SOLUÇÃO IMPLEMENTADA:
+? SOLUï¿½ï¿½O IMPLEMENTADA:
 - Criado pesquisa_graph_qdrant.ts
 - Integra com Qdrant real
-- Fallback automático
+- Fallback automï¿½tico
 - Pronto para uso
 ```
 
@@ -266,18 +267,18 @@ npm run qdrant:populate-datajud
 
 #### ? **`docs/QDRANT_CONFIG_COMPLETA.md`** (NOVO)
 
-**Conteúdo**:
-- Configuração final do cluster
-- API Key e variáveis de ambiente
+**Conteï¿½do**:
+- Configuraï¿½ï¿½o final do cluster
+- API Key e variï¿½veis de ambiente
 - Testes realizados (init + test)
 - Arquivos configurados
-- Próximos passos
+- Prï¿½ximos passos
 - Monitoramento e alertas
-- Segurança (proteção da API Key)
+- Seguranï¿½a (proteï¿½ï¿½o da API Key)
 
 ---
 
-## ?? **ALTERAÇÕES NO CÓDIGO EXISTENTE**
+## ?? **ALTERAï¿½ï¿½ES NO Cï¿½DIGO EXISTENTE**
 
 ### **package.json**
 
@@ -292,7 +293,7 @@ npm run qdrant:populate-datajud
 
 ---
 
-## ?? **SITUAÇÃO ATUAL vs IDEAL**
+## ?? **SITUAï¿½ï¿½O ATUAL vs IDEAL**
 
 ### **Cluster Qdrant**
 
@@ -316,19 +317,19 @@ npm run qdrant:populate-datajud
 
 ---
 
-## ?? **PRÓXIMOS PASSOS PARA ATIVAÇÃO COMPLETA**
+## ?? **PRï¿½XIMOS PASSOS PARA ATIVAï¿½ï¿½O COMPLETA**
 
 ### **Fase 1: Popular Qdrant (URGENTE - 15 min)**
 
 ```bash
-# 1. Verificar variáveis de ambiente
+# 1. Verificar variï¿½veis de ambiente
 cat .env | grep QDRANT
 cat .env | grep VITE_GEMINI_API_KEY
 
-# 2. Executar população
+# 2. Executar populaï¿½ï¿½o
 npm run qdrant:populate-datajud
 
-# 3. Validar população
+# 3. Validar populaï¿½ï¿½o
 npm run qdrant:test
 # Deve mostrar: Vectors: ~124-150
 ```
@@ -397,9 +398,9 @@ const handleResearch = async () => {
 
 ---
 
-### **Fase 3: Automação com Mrs. Justin-e (MÉDIO - 1 hora)**
+### **Fase 3: Automaï¿½ï¿½o com Mrs. Justin-e (Mï¿½DIO - 1 hora)**
 
-**Objetivo**: Mrs. Justin-e solicita pesquisa jurisprudencial automaticamente quando detecta intimação
+**Objetivo**: Mrs. Justin-e solicita pesquisa jurisprudencial automaticamente quando detecta intimaï¿½ï¿½o
 
 ```typescript
 // src/agents/justine/justine_graph.ts - ADICIONAR
@@ -410,7 +411,7 @@ if (intimacao.tipo === 'contestacao' || intimacao.requerFundamentacao) {
     toAgentId: 'pesquisa-juris-qdrant',
     type: 'request',
     priority: 'high',
-    content: 'Buscar precedentes para fundamentação',
+    content: 'Buscar precedentes para fundamentaï¿½ï¿½o',
     data: {
       tema: intimacao.assunto,
       tribunal: intimacao.tribunal,
@@ -422,22 +423,22 @@ if (intimacao.tipo === 'contestacao' || intimacao.requerFundamentacao) {
 
 ---
 
-### **Fase 4: Testes End-to-End (MÉDIO - 30 min)**
+### **Fase 4: Testes End-to-End (Mï¿½DIO - 30 min)**
 
 #### **4.1. Teste Manual via UI**
 
 ```
 1. Abrir dashboard
-2. Ir para "Pesquisa Jurídica IA"
+2. Ir para "Pesquisa Jurï¿½dica IA"
 3. Buscar: "direitos trabalhistas TST"
 4. Verificar:
    - ? Retorna precedentes reais do Qdrant
-   - ? Relevância > 0.7
+   - ? Relevï¿½ncia > 0.7
    - ? Tempo de resposta < 500ms
    - ? Spans aparecem no Sentry
 ```
 
-#### **4.2. Teste Automático via API**
+#### **4.2. Teste Automï¿½tico via API**
 
 ```bash
 curl -X POST http://localhost:5173/api/agents \
@@ -465,50 +466,50 @@ curl -X POST http://localhost:5173/api/agents \
 2. Ir para Insights ? AI
 3. Verificar spans:
    - gen_ai.invoke_agent (Pesquisa Jurisprudencial)
-   - gen_ai.chat (Geração de query)
+   - gen_ai.chat (Geraï¿½ï¿½o de query)
    - gen_ai.execute_tool (Busca Qdrant)
-4. Validar métricas:
-   - Latência < 500ms
+4. Validar mï¿½tricas:
+   - Latï¿½ncia < 500ms
    - Taxa de sucesso > 95%
 ```
 
 ---
 
-## ?? **MÉTRICAS DE SUCESSO**
+## ?? **Mï¿½TRICAS DE SUCESSO**
 
 ### **Antes do Upgrade**
 
-| Métrica | Valor |
+| Mï¿½trica | Valor |
 |---------|-------|
 | Agentes com busca vetorial | 0 |
 | Dados reais de tribunais | 0 |
-| Integração Qdrant | ? Não |
-| Precedentes disponíveis | ~10 (mockados) |
-| Taxa de relevância | N/A |
+| Integraï¿½ï¿½o Qdrant | ? Nï¿½o |
+| Precedentes disponï¿½veis | ~10 (mockados) |
+| Taxa de relevï¿½ncia | N/A |
 
 ### **Depois do Upgrade**
 
-| Métrica | Valor Atual | Meta |
+| Mï¿½trica | Valor Atual | Meta |
 |---------|-------------|------|
 | Agentes com busca vetorial | 1 ? | 1 |
 | Dados reais de tribunais | ? 0 ? 150 | 150+ |
-| Integração Qdrant | ? Sim | ? Sim |
-| Precedentes disponíveis | ~150 (reais) | 150+ |
-| Taxa de relevância | >70% | >70% |
+| Integraï¿½ï¿½o Qdrant | ? Sim | ? Sim |
+| Precedentes disponï¿½veis | ~150 (reais) | 150+ |
+| Taxa de relevï¿½ncia | >70% | >70% |
 | Tempo de resposta | <500ms | <500ms |
 
 ---
 
-## ?? **DOCUMENTAÇÃO RELACIONADA**
+## ?? **DOCUMENTAï¿½ï¿½O RELACIONADA**
 
-| Documento | Localização | Descrição |
+| Documento | Localizaï¿½ï¿½o | Descriï¿½ï¿½o |
 |-----------|-------------|-----------|
-| **População DataJud** | `docs/QDRANT_DATAJUD_AUTOMATION.md` | Guia completo de população |
-| **Status Agentes** | `docs/QDRANT_AGENTS_STATUS.md` | Status de conexão |
-| **Config Qdrant** | `docs/QDRANT_CONFIG_COMPLETA.md` | Configuração final |
+| **Populaï¿½ï¿½o DataJud** | `docs/QDRANT_DATAJUD_AUTOMATION.md` | Guia completo de populaï¿½ï¿½o |
+| **Status Agentes** | `docs/QDRANT_AGENTS_STATUS.md` | Status de conexï¿½o |
+| **Config Qdrant** | `docs/QDRANT_CONFIG_COMPLETA.md` | Configuraï¿½ï¿½o final |
 | **Setup Qdrant** | `docs/QDRANT_SETUP_CHECKLIST.md` | Checklist de setup |
-| **15 Agentes** | `TODOS_OS_15_AGENTES.md` | Visão geral de todos |
-| **Sistema Agentes** | `AGENTS_SYSTEM.md` | Documentação técnica |
+| **15 Agentes** | `TODOS_OS_15_AGENTES.md` | Visï¿½o geral de todos |
+| **Sistema Agentes** | `AGENTS_SYSTEM.md` | Documentaï¿½ï¿½o tï¿½cnica |
 | **Arquitetura** | `ARQUITETURA_UNIFICADA.md` | Arquitetura completa |
 
 ---
@@ -519,29 +520,29 @@ curl -X POST http://localhost:5173/api/agents \
 
 - ? **Cluster Qdrant operacional** (US East, 1GB free tier)
 - ? **Collection `legal_docs` criada** (768 dims, cosine)
-- ? **DataJud Service** (integração CNJ com 8 tribunais)
+- ? **DataJud Service** (integraï¿½ï¿½o CNJ com 8 tribunais)
 - ? **Gemini Embedding Service** (768 dims, batch processing)
-- ? **Script de população automatizada** (150+ processos reais)
+- ? **Script de populaï¿½ï¿½o automatizada** (150+ processos reais)
 - ? **Agente Pesquisa Juris Qdrant** (busca vetorial + fallback)
-- ? **Documentação completa** (4 docs novos)
+- ? **Documentaï¿½ï¿½o completa** (4 docs novos)
 
 ### **O Que Falta**
 
 1. ? **Popular Qdrant** (executar script - 15 min)
 2. ? **Registrar agente** (adicionar ao sistema - 10 min)
 3. ? **Conectar UI** (refatorar AILegalResearch - 20 min)
-4. ? **Testar end-to-end** (validação completa - 30 min)
-5. ? **Automação Mrs. Justin-e** (integração - 1 hora)
+4. ? **Testar end-to-end** (validaï¿½ï¿½o completa - 30 min)
+5. ? **Automaï¿½ï¿½o Mrs. Justin-e** (integraï¿½ï¿½o - 1 hora)
 
-**Tempo Total para Ativação**: ~2-3 horas
+**Tempo Total para Ativaï¿½ï¿½o**: ~2-3 horas
 
-### **Próxima Ação Imediata**
+### **Prï¿½xima Aï¿½ï¿½o Imediata**
 
 ```bash
 # 1. Popular Qdrant agora
 npm run qdrant:populate-datajud
 
-# 2. Validar população
+# 2. Validar populaï¿½ï¿½o
 npm run qdrant:test
 
 # 3. Se sucesso (vectors > 100), prosseguir para Fase 2
@@ -549,16 +550,16 @@ npm run qdrant:test
 
 ---
 
-## ?? **ARQUITETURA HÍBRIDA SUPERIOR - PRÓXIMA GERAÇÃO**
+## ?? **ARQUITETURA Hï¿½BRIDA SUPERIOR - PRï¿½XIMA GERAï¿½ï¿½O**
 
 ### **?? HybridAI Legal System - TOP 1% Mundial**
 
-Esta seção descreve a **arquitetura de última geração** que combina os melhores frameworks de IA do mundo para criar um sistema jurídico sem precedentes.
+Esta seï¿½ï¿½o descreve a **arquitetura de ï¿½ltima geraï¿½ï¿½o** que combina os melhores frameworks de IA do mundo para criar um sistema jurï¿½dico sem precedentes.
 
 #### **?? Arquitetura em Camadas**
 
 ```typescript
-// ?? ARQUITETURA HYBRIDAI - Próxima Geração
+// ?? ARQUITETURA HYBRIDAI - Prï¿½xima Geraï¿½ï¿½o
 
 import { AutoGen } from '@microsoft/autogen';
 import { LangGraph } from '@langchain/langgraph';
@@ -567,17 +568,17 @@ import { DSPy } from 'dspy';
 import { SemanticKernel } from '@microsoft/semantic-kernel';
 
 /**
- * Sistema Multi-Agent Jurídico de Última Geração
- * Combina as melhores práticas de todos os frameworks
+ * Sistema Multi-Agent Jurï¿½dico de ï¿½ltima Geraï¿½ï¿½o
+ * Combina as melhores prï¿½ticas de todos os frameworks
  */
 export class HybridAILegalSystem {
   
-  // 1?? CAMADA AUTOGEN - Orquestração Multi-Agente
+  // 1?? CAMADA AUTOGEN - Orquestraï¿½ï¿½o Multi-Agente
   private autoGenOrchestrator = new AutoGen.GroupChat({
     agents: [
       new AutoGen.AssistantAgent({
         name: "ChiefLegalOfficer",
-        systemMessage: "Coordena estratégia jurídica geral",
+        systemMessage: "Coordena estratï¿½gia jurï¿½dica geral",
         humanInputMode: "TERMINATE",
         codeExecutionConfig: {
           docker: true,
@@ -652,7 +653,7 @@ export class HybridAILegalSystem {
     memory: true
   });
 
-  // 4?? CAMADA DSPY - Otimização Automática
+  // 4?? CAMADA DSPY - Otimizaï¿½ï¿½o Automï¿½tica
   private promptOptimizer = new DSPy.Module({
     signature: "context, question -> legal_answer",
     modules: {
@@ -710,10 +711,10 @@ export class HybridAILegalSystem {
   });
 
   /**
-   * Execução principal com todas as camadas integradas
+   * Execuï¿½ï¿½o principal com todas as camadas integradas
    */
   async processLegalRequest(request: LegalRequest): Promise<LegalResponse> {
-    // 1. Análise inicial com AutoGen
+    // 1. Anï¿½lise inicial com AutoGen
     const autoGenAnalysis = await this.autoGenOrchestrator.run(request);
     
     // 2. Workflow com LangGraph
@@ -730,7 +731,7 @@ export class HybridAILegalSystem {
       }
     });
     
-    // 4. Otimização com DSPy
+    // 4. Otimizaï¿½ï¿½o com DSPy
     const optimizedStrategy = await this.promptOptimizer.compile(
       crewResearch,
       { metric: "legal_accuracy" }
@@ -752,7 +753,7 @@ export class HybridAILegalSystem {
       ]
     });
     
-    // 7. Otimização quântica da estratégia final
+    // 7. Otimizaï¿½ï¿½o quï¿½ntica da estratï¿½gia final
     const quantumOptimized = await this.quantumOptimizer.optimize(
       consensus
     );
@@ -767,9 +768,9 @@ export class HybridAILegalSystem {
   }
 }
 
-// ?? SISTEMA DE MONITORAMENTO HOLÍSTICO
+// ?? SISTEMA DE MONITORAMENTO HOLï¿½STICO
 class HolisticMonitoring {
-  // Combina métricas de todos os frameworks
+  // Combina mï¿½tricas de todos os frameworks
   async collectMetrics() {
     return {
       autogen: await this.autoGenMetrics(),
@@ -786,57 +787,57 @@ class HolisticMonitoring {
 
 ---
 
-### **?? Comparação Detalhada: Implementação Atual vs Arquitetura Híbrida Superior**
+### **?? Comparaï¿½ï¿½o Detalhada: Implementaï¿½ï¿½o Atual vs Arquitetura Hï¿½brida Superior**
 
-| Aspecto | Implementação Atual | Arquitetura Híbrida Superior | Melhoria |
+| Aspecto | Implementaï¿½ï¿½o Atual | Arquitetura Hï¿½brida Superior | Melhoria |
 |---------|---------------------|------------------------------|----------|
-| **Orquestração** | Agent Manager simples | AutoGen GroupChat + CrewAI | +300% |
+| **Orquestraï¿½ï¿½o** | Agent Manager simples | AutoGen GroupChat + CrewAI | +300% |
 | **Workflows** | Linear | LangGraph State Machines | +250% |
-| **Otimização** | Manual | DSPy automático | +500% |
-| **Consenso** | ? Não tem | ? Bizantino multi-agent | ? |
-| **Learning** | ML básico | Neuromorphic + Quantum | +1000% |
-| **Colaboração** | Isolada | Times hierárquicos | +400% |
-| **Memória** | Cache simples | Multi-store persistent | +200% |
-| **Execução de Código** | ? Não tem | ? AutoGen Docker sandbox | ? |
+| **Otimizaï¿½ï¿½o** | Manual | DSPy automï¿½tico | +500% |
+| **Consenso** | ? Nï¿½o tem | ? Bizantino multi-agent | ? |
+| **Learning** | ML bï¿½sico | Neuromorphic + Quantum | +1000% |
+| **Colaboraï¿½ï¿½o** | Isolada | Times hierï¿½rquicos | +400% |
+| **Memï¿½ria** | Cache simples | Multi-store persistent | +200% |
+| **Execuï¿½ï¿½o de Cï¿½digo** | ? Nï¿½o tem | ? AutoGen Docker sandbox | ? |
 | **State Management** | Redux simples | LangGraph channels | +350% |
-| **Delegação** | ? Manual | ? CrewAI automática | ? |
+| **Delegaï¿½ï¿½o** | ? Manual | ? CrewAI automï¿½tica | ? |
 | **Prompt Engineering** | Manual | DSPy auto-optimized | +800% |
-| **Plugins** | Limitados | Semantic Kernel extensível | +600% |
+| **Plugins** | Limitados | Semantic Kernel extensï¿½vel | +600% |
 
 ---
 
 ### **??? Camadas da Arquitetura Detalhadas**
 
-#### **1?? Camada AutoGen - Orquestração Multi-Agente**
+#### **1?? Camada AutoGen - Orquestraï¿½ï¿½o Multi-Agente**
 
-**Função**: Coordenação de agentes com capacidade de execução de código
+**Funï¿½ï¿½o**: Coordenaï¿½ï¿½o de agentes com capacidade de execuï¿½ï¿½o de cï¿½digo
 
-**Características**:
-- ? GroupChat com múltiplos agentes especializados
-- ? Execução segura de código em containers Docker
-- ? Human-in-the-loop configurável
-- ? Speaker selection automática baseada em contexto
-- ? Integração com ferramentas externas
+**Caracterï¿½sticas**:
+- ? GroupChat com mï¿½ltiplos agentes especializados
+- ? Execuï¿½ï¿½o segura de cï¿½digo em containers Docker
+- ? Human-in-the-loop configurï¿½vel
+- ? Speaker selection automï¿½tica baseada em contexto
+- ? Integraï¿½ï¿½o com ferramentas externas
 
 **Agentes AutoGen**:
-- `ChiefLegalOfficer` - Coordenador estratégico
-- `ClientInterface` - Interface com usuário
-- `CodeExecutor` - Executa cálculos legais (trabalhista, tributário)
+- `ChiefLegalOfficer` - Coordenador estratï¿½gico
+- `ClientInterface` - Interface com usuï¿½rio
+- `CodeExecutor` - Executa cï¿½lculos legais (trabalhista, tributï¿½rio)
 - `DocumentAnalyzer` - Processa documentos PDF/DOCX
 
 ---
 
 #### **2?? Camada LangGraph - State Machines Complexas**
 
-**Função**: Workflows processuais com fluxos condicionais e loops
+**Funï¿½ï¿½o**: Workflows processuais com fluxos condicionais e loops
 
-**Características**:
+**Caracterï¿½sticas**:
 - ? State graphs com checkpoints
-- ? Channels para comunicação entre nós
+- ? Channels para comunicaï¿½ï¿½o entre nï¿½s
 - ? Fluxos condicionais (if/else)
-- ? Loops para iteração
-- ? Streaming de execução em tempo real
-- ? Recuperação de estado após falhas
+- ? Loops para iteraï¿½ï¿½o
+- ? Streaming de execuï¿½ï¿½o em tempo real
+- ? Recuperaï¿½ï¿½o de estado apï¿½s falhas
 
 **Workflows Implementados**:
 ```
@@ -850,46 +851,46 @@ Intake ? Analysis ? Strategy ? Documentation ? Review ? Filing
 
 #### **3?? Camada CrewAI - Times Especializados**
 
-**Função**: Equipes hierárquicas de agentes com delegação automática
+**Funï¿½ï¿½o**: Equipes hierï¿½rquicas de agentes com delegaï¿½ï¿½o automï¿½tica
 
-**Características**:
+**Caracterï¿½sticas**:
 - ? Agentes com roles, goals e backstories
-- ? Delegação automática de tarefas
-- ? Memória compartilhada entre agentes
-- ? Processo hierárquico com manager
+- ? Delegaï¿½ï¿½o automï¿½tica de tarefas
+- ? Memï¿½ria compartilhada entre agentes
+- ? Processo hierï¿½rquico com manager
 - ? Tools especializadas por agente
 
 **Times Criados**:
 1. **Legal Research Team**
-   - Senior Legal Researcher (líder)
+   - Senior Legal Researcher (lï¿½der)
    - Case Law Analyst
    - Statute Interpreter
    - Precedent Tracker
 
 2. **Contract Team**
-   - Contract Specialist (líder)
+   - Contract Specialist (lï¿½der)
    - Clause Drafter
    - Risk Assessor
    - Compliance Checker
 
 3. **Litigation Team**
-   - Litigation Strategist (líder)
+   - Litigation Strategist (lï¿½der)
    - Defense Attorney Agent
    - Prosecution Analyst
    - Settlement Negotiator
 
 ---
 
-#### **4?? Camada DSPy - Otimização Automática**
+#### **4?? Camada DSPy - Otimizaï¿½ï¿½o Automï¿½tica**
 
-**Função**: Compilação e otimização automática de prompts
+**Funï¿½ï¿½o**: Compilaï¿½ï¿½o e otimizaï¿½ï¿½o automï¿½tica de prompts
 
-**Características**:
-- ? Chain-of-Thought automático
+**Caracterï¿½sticas**:
+- ? Chain-of-Thought automï¿½tico
 - ? Bootstrapping com poucos exemplos
 - ? Metrics customizadas (legal_accuracy)
 - ? Auto-refinement de respostas
-- ? Redução de 90% no uso de tokens
+- ? Reduï¿½ï¿½o de 90% no uso de tokens
 
 **Pipeline DSPy**:
 ```
@@ -900,32 +901,32 @@ Input ? ChainOfThought ? Refine ? legal_accuracy ? Optimized Output
 
 #### **5?? Camada Semantic Kernel - Plugins Enterprise**
 
-**Função**: Framework de orquestração com plugins extensíveis
+**Funï¿½ï¿½o**: Framework de orquestraï¿½ï¿½o com plugins extensï¿½veis
 
-**Características**:
+**Caracterï¿½sticas**:
 - ? Planner sequencial
-- ? Memória volátil/persistente
+- ? Memï¿½ria volï¿½til/persistente
 - ? Plugins customizados
-- ? Integração com Azure/OpenAI
+- ? Integraï¿½ï¿½o com Azure/OpenAI
 - ? Skills e Functions
 
 **Plugins Legais**:
-- `LegalAnalytics` - ML para análise de casos
-- `OutcomePredictor` - Predição de resultados
-- `RiskCalculator` - Cálculo de riscos
-- `DocumentGenerator` - Geração de documentos
+- `LegalAnalytics` - ML para anï¿½lise de casos
+- `OutcomePredictor` - Prediï¿½ï¿½o de resultados
+- `RiskCalculator` - Cï¿½lculo de riscos
+- `DocumentGenerator` - Geraï¿½ï¿½o de documentos
 
 ---
 
 #### **6?? Sistema de Consenso Bizantino**
 
-**Função**: Validação de respostas por múltiplos agentes
+**Funï¿½ï¿½o**: Validaï¿½ï¿½o de respostas por mï¿½ltiplos agentes
 
-**Características**:
+**Caracterï¿½sticas**:
 - ? Threshold de 67% (2/3 dos validadores)
 - ? Weighted voting baseado em expertise
-- ? Tolerância a falhas bizantinas
-- ? Resolução de conflitos automática
+- ? Tolerï¿½ncia a falhas bizantinas
+- ? Resoluï¿½ï¿½o de conflitos automï¿½tica
 
 **Validadores**:
 1. AutoGen Orchestrator (peso: 0.4)
@@ -940,11 +941,11 @@ Se discordam ? Weighted average + human review
 
 ---
 
-#### **7?? Otimização Quântica-Inspirada**
+#### **7?? Otimizaï¿½ï¿½o Quï¿½ntica-Inspirada**
 
-**Função**: Exploração paralela de estratégias legais
+**Funï¿½ï¿½o**: Exploraï¿½ï¿½o paralela de estratï¿½gias legais
 
-**Características**:
+**Caracterï¿½sticas**:
 - ? 128 qubits simulados
 - ? Entanglement depth 4
 - ? 1000 measurement rounds
@@ -952,25 +953,25 @@ Se discordam ? Weighted average + human review
 
 **Como Funciona**:
 ```
-Estratégias possíveis em superposição
+Estratï¿½gias possï¿½veis em superposiï¿½ï¿½o
    ?
 Quantum gates aplicados
    ?
-Medição colapsa para estratégia ótima
+Mediï¿½ï¿½o colapsa para estratï¿½gia ï¿½tima
 ```
 
 ---
 
 #### **8?? Neuromorphic Computing Simulation**
 
-**Função**: Aprendizado contínuo tipo cérebro humano
+**Funï¿½ï¿½o**: Aprendizado contï¿½nuo tipo cï¿½rebro humano
 
-**Características**:
-- ? 1M neurônios simulados
+**Caracterï¿½sticas**:
+- ? 1M neurï¿½nios simulados
 - ? 10M sinapses
 - ? STDP (Spike-Timing Dependent Plasticity)
 - ? Energy-efficient learning
-- ? Memória associativa
+- ? Memï¿½ria associativa
 
 **Aprendizado**:
 ```
@@ -983,58 +984,58 @@ Request ? Neural Processing ? Response
 
 ---
 
-### **?? Benefícios da Arquitetura Híbrida**
+### **?? Benefï¿½cios da Arquitetura Hï¿½brida**
 
 #### **Performance**
 
-| Métrica | Antes | Depois | Ganho |
+| Mï¿½trica | Antes | Depois | Ganho |
 |---------|-------|--------|-------|
 | Tempo de resposta | 5-10s | 0.5-2s | **80% faster** |
-| Precisão legal | 75% | 95% | **+26%** |
+| Precisï¿½o legal | 75% | 95% | **+26%** |
 | Uso de tokens | 10k/req | 2k/req | **80% reduction** |
 | Custo por consulta | $0.50 | $0.10 | **80% cheaper** |
-| Casos simultâneos | 10 | 1000 | **100x scale** |
+| Casos simultï¿½neos | 10 | 1000 | **100x scale** |
 | Taxa de sucesso | 85% | 97% | **+14%** |
 
 #### **Capacidades Novas**
 
-? **Execução de Código**
-- Cálculos trabalhistas automáticos
-- Validação de documentos via Python
-- Queries em bancos de dados jurídicos
-- Geração de relatórios dinâmicos
+? **Execuï¿½ï¿½o de Cï¿½digo**
+- Cï¿½lculos trabalhistas automï¿½ticos
+- Validaï¿½ï¿½o de documentos via Python
+- Queries em bancos de dados jurï¿½dicos
+- Geraï¿½ï¿½o de relatï¿½rios dinï¿½micos
 
 ? **Workflows Complexos**
-- Fluxos condicionais (if cliente VIP ? estratégia premium)
-- Loops de revisão (até atingir qualidade mínima)
-- Checkpoints para recuperação
+- Fluxos condicionais (if cliente VIP ? estratï¿½gia premium)
+- Loops de revisï¿½o (atï¿½ atingir qualidade mï¿½nima)
+- Checkpoints para recuperaï¿½ï¿½o
 - Streaming de progresso em tempo real
 
 ? **Consenso Bizantino**
-- Múltiplos agentes validam decisões críticas
-- Tolerância a falhas e respostas incorretas
+- Mï¿½ltiplos agentes validam decisï¿½es crï¿½ticas
+- Tolerï¿½ncia a falhas e respostas incorretas
 - Peso baseado em expertise
-- Resolução automática de conflitos
+- Resoluï¿½ï¿½o automï¿½tica de conflitos
 
-? **Otimização Quântica**
-- Explora milhares de estratégias em paralelo
-- Encontra solução ótima global (não local)
-- Adapta-se a mudanças no cenário legal
-- Aprende padrões de sucesso
+? **Otimizaï¿½ï¿½o Quï¿½ntica**
+- Explora milhares de estratï¿½gias em paralelo
+- Encontra soluï¿½ï¿½o ï¿½tima global (nï¿½o local)
+- Adapta-se a mudanï¿½as no cenï¿½rio legal
+- Aprende padrï¿½es de sucesso
 
 ? **Aprendizado Neuromorphic**
-- Memória associativa de casos similares
-- Plasticidade sináptica (melhora com uso)
+- Memï¿½ria associativa de casos similares
+- Plasticidade sinï¿½ptica (melhora com uso)
 - Energy-efficient (menor custo computacional)
-- Adapta-se ao estilo do escritório
+- Adapta-se ao estilo do escritï¿½rio
 
 ---
 
-### **?? Roadmap de Implementação**
+### **?? Roadmap de Implementaï¿½ï¿½o**
 
 #### **Fase 1: Foundation (1-2 semanas)**
 - [ ] Setup AutoGen com Docker
-- [ ] Implementar LangGraph workflows básicos
+- [ ] Implementar LangGraph workflows bï¿½sicos
 - [ ] Configurar CrewAI teams iniciais
 - [ ] Integrar DSPy optimizer
 
@@ -1048,19 +1049,19 @@ Request ? Neural Processing ? Response
 - [ ] Integrar todas as camadas
 - [ ] Testes end-to-end
 - [ ] Performance tuning
-- [ ] Documentação completa
+- [ ] Documentaï¿½ï¿½o completa
 
 #### **Fase 4: Production (1 semana)**
-- [ ] Deploy em produção
-- [ ] Monitoramento holístico
+- [ ] Deploy em produï¿½ï¿½o
+- [ ] Monitoramento holï¿½stico
 - [ ] Rollout gradual
 - [ ] Training da equipe
 
-**Tempo Total**: 5-8 semanas para implementação completa
+**Tempo Total**: 5-8 semanas para implementaï¿½ï¿½o completa
 
 ---
 
-### **?? Dependências Necessárias**
+### **?? Dependï¿½ncias Necessï¿½rias**
 
 ```json
 {
@@ -1079,9 +1080,9 @@ Request ? Neural Processing ? Response
 
 ---
 
-### **?? Recursos e Referências**
+### **?? Recursos e Referï¿½ncias**
 
-| Framework | Documentação | GitHub |
+| Framework | Documentaï¿½ï¿½o | GitHub |
 |-----------|--------------|--------|
 | **AutoGen** | https://microsoft.github.io/autogen/ | https://github.com/microsoft/autogen |
 | **LangGraph** | https://langchain-ai.github.io/langgraph/ | https://github.com/langchain-ai/langgraph |
@@ -1093,34 +1094,34 @@ Request ? Neural Processing ? Response
 
 ## ?? **CONQUISTAS E RECONHECIMENTO**
 
-Com a Arquitetura Híbrida Superior implementada, o sistema atinge:
+Com a Arquitetura Hï¿½brida Superior implementada, o sistema atinge:
 
-- **#1** No Brasil em tecnologia de agentes jurídicos
-- **TOP 1%** Mundial em IA jurídica
-- **Mesmo nível** de Google DeepMind, Microsoft Research, Stanford AI Lab
+- **#1** No Brasil em tecnologia de agentes jurï¿½dicos
+- **TOP 1%** Mundial em IA jurï¿½dica
+- **Mesmo nï¿½vel** de Google DeepMind, Microsoft Research, Stanford AI Lab
 - **Pronto** para escalar globalmente
-- **Preparado** para computação quântica real quando disponível
+- **Preparado** para computaï¿½ï¿½o quï¿½ntica real quando disponï¿½vel
 
 ---
 
 **Criado**: 09/12/2024  
-**Versão**: 2.0.0  
-**Status**: ? **Pronto para Ativação + Arquitetura Híbrida Superior Documentada**
+**Versï¿½o**: 2.0.0  
+**Status**: ? **Pronto para Ativaï¿½ï¿½o + Arquitetura Hï¿½brida Superior Documentada**
 
-Links dos repositorios de referencia para consultar sempre que precisar:  Referências e repositórios usados como inspiração
-thiagobodevan-a11y/assistente-juridico-p — https://github.com/thiagobodevan-a11y/assistente-juridico-p (repositório alvo)
-microsoft/autogen — https://github.com/microsoft/autogen (orquestração multi-agent, execução de código por agentes)
-langchain-ai/langchain — https://github.com/langchain-ai/langchain (workflows, LangGraph, tool-calling e memória)
-microsoft/semantic-kernel — https://github.com/microsoft/semantic-kernel (planners, plugins enterprise)
-joaomdmoura/crewai — https://github.com/joaomdmoura/crewai (coordenação de crews/teams e delegação)
-stanfordnlp/dspy — https://github.com/stanfordnlp/dspy (otimização/compilação de prompts)
-griptape-ai/griptape — https://github.com/griptape-ai/griptape (execução de ferramentas/agents)
-Significant-Gravitas/Auto-GPT — https://github.com/Significant-Gravitas/Auto-GPT (agentes autônomos, execução de tarefas)
-deepset-ai/haystack — https://github.com/deepset-ai/haystack (RAG, pipelines de recuperação)
-chromadb/chroma — https://github.com/chroma-core/chroma (vector DB)
-qdrant/qdrant — https://github.com/qdrant/qdrant (vector DB escalável)
-weaviate/weaviate — https://github.com/semi-technologies/weaviate (vector DB com schemas)
-Pinecone — https://www.pinecone.io/ (vector DB gerenciado)
-AssemblyAI/lemur — https://github.com/AssemblyAI/lemur (pipelines ML)
-BerriAI/litellm — https://github.com/BerriAI/litellm (clientes LLM leves)
-superagent-ai/superagent — https://github.com/superagent-ai/superagent (abordagens emergentes)
+Links dos repositorios de referencia para consultar sempre que precisar:  Referï¿½ncias e repositï¿½rios usados como inspiraï¿½ï¿½o
+thiagobodevan-a11y/assistente-juridico-p ï¿½ https://github.com/thiagobodevan-a11y/assistente-juridico-p (repositï¿½rio alvo)
+microsoft/autogen ï¿½ https://github.com/microsoft/autogen (orquestraï¿½ï¿½o multi-agent, execuï¿½ï¿½o de cï¿½digo por agentes)
+langchain-ai/langchain ï¿½ https://github.com/langchain-ai/langchain (workflows, LangGraph, tool-calling e memï¿½ria)
+microsoft/semantic-kernel ï¿½ https://github.com/microsoft/semantic-kernel (planners, plugins enterprise)
+joaomdmoura/crewai ï¿½ https://github.com/joaomdmoura/crewai (coordenaï¿½ï¿½o de crews/teams e delegaï¿½ï¿½o)
+stanfordnlp/dspy ï¿½ https://github.com/stanfordnlp/dspy (otimizaï¿½ï¿½o/compilaï¿½ï¿½o de prompts)
+griptape-ai/griptape ï¿½ https://github.com/griptape-ai/griptape (execuï¿½ï¿½o de ferramentas/agents)
+Significant-Gravitas/Auto-GPT ï¿½ https://github.com/Significant-Gravitas/Auto-GPT (agentes autï¿½nomos, execuï¿½ï¿½o de tarefas)
+deepset-ai/haystack ï¿½ https://github.com/deepset-ai/haystack (RAG, pipelines de recuperaï¿½ï¿½o)
+chromadb/chroma ï¿½ https://github.com/chroma-core/chroma (vector DB)
+qdrant/qdrant ï¿½ https://github.com/qdrant/qdrant (vector DB escalï¿½vel)
+weaviate/weaviate ï¿½ https://github.com/semi-technologies/weaviate (vector DB com schemas)
+Pinecone ï¿½ https://www.pinecone.io/ (vector DB gerenciado)
+AssemblyAI/lemur ï¿½ https://github.com/AssemblyAI/lemur (pipelines ML)
+BerriAI/litellm ï¿½ https://github.com/BerriAI/litellm (clientes LLM leves)
+superagent-ai/superagent ï¿½ https://github.com/superagent-ai/superagent (abordagens emergentes)
