@@ -18,12 +18,11 @@
 
 /// <reference types="vite/client" />
 
-// DESABILITADO (modo manutenção): pii-filtering não disponível no build
-// import {
-//   createPIIFilteredBeforeSend,
-//   DEFAULT_PII_CONFIG,
-//   type PIIFilterConfig,
-// } from "@/services/pii-filtering.js";
+import {
+  createPIIFilteredBeforeSend,
+  DEFAULT_PII_CONFIG,
+  type PIIFilterConfig,
+} from "@/services/pii-filtering.js";
 import * as Sentry from "@sentry/react";
 
 // Configuração Sentry DSN com validação de ambiente
@@ -32,12 +31,14 @@ const IS_PRODUCTION = import.meta.env.PROD;
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 const APP_ENVIRONMENT = import.meta.env.MODE || "development";
 
-// DESABILITADO (modo manutenção): PII Filtering não disponível
-// const ENABLE_PII_FILTERING = import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
-// const PII_CONFIG: PIIFilterConfig = {
-//   ...DEFAULT_PII_CONFIG,
-//   enabled: ENABLE_PII_FILTERING,
-// };
+// ✅ LGPD: PII Filtering habilitado por padrão em produção
+const ENABLE_PII_FILTERING = import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
+
+// Configuração de PII Filtering
+const PII_CONFIG: PIIFilterConfig = {
+  ...DEFAULT_PII_CONFIG,
+  enabled: ENABLE_PII_FILTERING,
+};
 
 // Estado
 let isInitialized = false;
@@ -138,8 +139,8 @@ export function initErrorTracking(): void {
   }
 
   try {
-    // DESABILITADO (modo manutenção): PII filtering não disponível
-    // const piiFilteredBeforeSend = createPIIFilteredBeforeSend(PII_CONFIG);
+    // ✅ LGPD: Criar beforeSend com PII filtering
+    const piiFilteredBeforeSend = createPIIFilteredBeforeSend(PII_CONFIG);
 
     Sentry.init({
       // DSN do projeto Sentry.io
@@ -208,10 +209,10 @@ export function initErrorTracking(): void {
       // ✅ LGPD: Desabilita envio automático de PII
       sendDefaultPii: false,
 
-      // DESABILITADO (modo manutenção): PII filtering não disponível
+      // ✅ LGPD: Before send hook com PII filtering
       beforeSend(event, hint) {
-        // 1. DESABILITADO: PII filtering
-        // event = piiFilteredBeforeSend(event) as any;
+        // 1. Aplica PII filtering
+        event = piiFilteredBeforeSend(event) as any;
 
         // 2. Filtra erros de extensões do navegador
         if (
