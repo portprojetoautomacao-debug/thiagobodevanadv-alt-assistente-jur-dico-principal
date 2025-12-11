@@ -76,6 +76,21 @@ export const config = {
     isProduction: getEnvVar("VITE_APP_ENV", "development") === "production",
     authMode: getEnvVar("VITE_AUTH_MODE", "google"), // 'simple' | 'google'
   },
+
+  // ============================================================================
+  // LGPD COMPLIANCE - Redaction Configuration
+  // ============================================================================
+  redaction: {
+    enabled: getEnvVar("VITE_REDACTION_ENABLED", "false") === "true",
+    mode: (getEnvVar("VITE_REDACTION_MODE", "none") as "none" | "partial" | "complete"),
+    // Redação específica por tipo de dado (sobrescreve mode se definido)
+    names: (getEnvVar("VITE_REDACTION_NAMES", "") as "none" | "partial" | "complete" | ""),
+    cpf: (getEnvVar("VITE_REDACTION_CPF", "") as "none" | "partial" | "complete" | ""),
+    cnpj: (getEnvVar("VITE_REDACTION_CNPJ", "") as "none" | "partial" | "complete" | ""),
+    telefone: (getEnvVar("VITE_REDACTION_TELEFONE", "") as "none" | "partial" | "complete" | ""),
+    endereco: (getEnvVar("VITE_REDACTION_ENDERECO", "") as "none" | "partial" | "complete" | ""),
+    email: (getEnvVar("VITE_REDACTION_EMAIL", "") as "none" | "partial" | "complete" | ""),
+  },
 } as const;
 
 // ============================================================================

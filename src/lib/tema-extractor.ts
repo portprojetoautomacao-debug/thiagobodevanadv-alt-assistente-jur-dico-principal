@@ -12,6 +12,8 @@
 
 import type { Expediente } from "@/types";
 import { GeminiClient } from "./ai-providers";
+import { redactionService } from "@/services/redaction-service";
+import { config } from "./config";
 
 export interface TemaExtracao {
   temaPrimario: string;
@@ -76,6 +78,20 @@ export class TemaExtractorService {
 
   constructor(apiKey?: string) {
     this.geminiClient = new GeminiClient(apiKey);
+    
+    // Configurar redactionService com configuração do ambiente
+    if (config.redaction.enabled) {
+      redactionService.setConfig({
+        enabled: config.redaction.enabled,
+        mode: config.redaction.mode,
+        names: config.redaction.names || undefined,
+        cpf: config.redaction.cpf || undefined,
+        cnpj: config.redaction.cnpj || undefined,
+        telefone: config.redaction.telefone || undefined,
+        endereco: config.redaction.endereco || undefined,
+        email: config.redaction.email || undefined,
+      });
+    }
   }
 
   /**
@@ -264,11 +280,20 @@ ${intimacao.texto.substring(0, 3000)}
 
   /**
    * Redact nomes se necessário (LGPD)
+   * 
+   * Aplica redação de acordo com a configuração:
+   * - Se VITE_REDACTION_ENABLED=false (padrão): mantém nome completo
+   * - Se VITE_REDACTION_ENABLED=true: aplica redação conforme VITE_REDACTION_MODE
+   * 
+   * Modos disponíveis:
+   * - none: "João da Silva Santos" → "João da Silva Santos"
+   * - partial: "João da Silva Santos" → "João S."
+   * - complete: "João da Silva Santos" → "[NOME_REDACTED]"
+   * 
+   * Compliance: LGPD Art. 5º, I (dados pessoais)
    */
   private redactIfNeeded(nome: string): string {
-    // TODO: Implementar lógica de redaction se configurado
-    // Por padrão, mantém o nome completo para uso interno
-    return nome;
+    return redactionService.redactName(nome);
   }
 
   /**
