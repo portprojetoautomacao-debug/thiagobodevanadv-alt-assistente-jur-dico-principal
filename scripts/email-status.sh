@@ -87,7 +87,7 @@ cat << 'EOF'
   PASSO 4️⃣  - Testar em Produção (5 min)
   ┌─────────────────────────────────────────────────────────────────────┐
   │ $ curl -X POST \\                                                   │
-  │   https://assistente-juridico-p.vercel.app/api/emails \\           │
+  │   https://assistente-juridico-github.vercel.app/api/emails \\           │
   │   -H "Content-Type: application/json" \\                            │
   │   -d '{                                                              │
   │     "type": "test",                                                  │
@@ -139,8 +139,8 @@ cat << 'EOF'
      • GitHub: https://github.com/.../actions
 
   🚀 Production
-     • API Endpoint: https://assistente-juridico-p.vercel.app/api/emails
-     • Health Check: https://assistente-juridico-p.vercel.app/api/status
+     • API Endpoint: https://assistente-juridico-github.vercel.app/api/emails
+     • Health Check: https://assistente-juridico-github.vercel.app/api/status
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

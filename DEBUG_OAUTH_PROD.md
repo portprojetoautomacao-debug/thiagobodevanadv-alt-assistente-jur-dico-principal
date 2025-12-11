@@ -5,7 +5,7 @@
 - ✅ Código corrigido e deployado (commit `bdc6aa7`)
 - ✅ `VITE_GOOGLE_CLIENT_ID` configurado no Vercel
 - ✅ URLs de produção habilitadas no código:
-  - `assistente-juridico-p.vercel.app`
+  - `assistente-juridico-github.vercel.app`
   - `assistente-juridico-github.vercel.app`
 
 ---
@@ -14,7 +14,7 @@
 
 ### 1. Abra o Console do Browser (F12)
 
-1. Acesse: https://assistente-juridico-p.vercel.app
+1. Acesse: https://assistente-juridico-github.vercel.app
 2. Pressione **F12** para abrir DevTools
 3. Vá na aba **Console**
 4. Vá na aba **Network**
@@ -46,7 +46,7 @@ Na aba **Network**, procure por:
 ✅ accounts.google.com/gsi/client  → Status 200
    Se falhar: Problema de firewall/CSP
 
-✅ Requests para https://assistente-juridico-p.vercel.app/api/*
+✅ Requests para https://assistente-juridico-github.vercel.app/api/*
    Se 401/403: Problema de autenticação backend
 ```
 
@@ -69,7 +69,7 @@ console.log("Hostname:", window.location.hostname);
 ```
 Client ID: 123456789012-abc... (primeiros 20 chars)
 Env: production
-Hostname: assistente-juridico-p.vercel.app
+Hostname: assistente-juridico-github.vercel.app
 ```
 
 **Se mostrar `undefined`:**
@@ -101,12 +101,12 @@ Hostname: assistente-juridico-p.vercel.app
 2. Clique no seu OAuth 2.0 Client ID
 3. Em **Authorized JavaScript origins**, certifique-se que tem:
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 4. Em **Authorized redirect URIs**, adicione também:
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 5. Clique em **SAVE**

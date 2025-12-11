@@ -197,7 +197,7 @@ Execute os seguintes testes para validar a correção:
 
 ```bash
 # 1. Acesse a aplicação em produção
-open https://assistente-juridico-p.vercel.app/
+open https://assistente-juridico-github.vercel.app/
 
 # 2. Navegue até Minutas > Criar Minuta
 # 3. Clique em "Autenticar com Google"

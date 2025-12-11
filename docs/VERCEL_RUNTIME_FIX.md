@@ -211,7 +211,7 @@ npx tsc --noEmit
    - URL de monitoramento: https://vercel.com/thiagobodevanadv-alt/assistente-juridico-p/deployments
 
 3. ✅ **Validar Deploy em Produção**
-   - Acessar: https://assistente-juridico-p.vercel.app/api/health
+   - Acessar: https://assistente-juridico-github.vercel.app/api/health
    - Verificar: Build status em https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
 
 ### Monitoramento Contínuo

@@ -77,9 +77,12 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 
 ### 🌐 URLs de Produção
 
-- **App Principal**: https://assistente-juridico-p.vercel.app/
-- **App Alternativo**: https://assistente-juridico-github.vercel.app/
-- **API Health**: https://assistente-juridico-p.vercel.app/api/health
+- **App Principal (URL OFICIAL)**: https://assistente-juridico-github.vercel.app/
+- **App Alternativo (URL ANTIGA - DEPRECADA)**: https://assistente-juridico-github.vercel.app/
+- **API Health**: https://assistente-juridico-github.vercel.app/api/health
+
+> ⚠️ **IMPORTANTE**: A URL oficial de produção é **`assistente-juridico-github.vercel.app`**.  
+> A URL antiga `assistente-juridico-github.vercel.app` está deprecada e deve ser substituída em todo o código.
 
 ### 🎯 Objetivo Principal: Automação 100% com Supervisão Humana
 

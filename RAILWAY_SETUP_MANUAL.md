@@ -29,7 +29,7 @@ Acesse: **Settings → Variables** e adicione (se ainda não existirem):
 
 ```bash
 DSPY_PORT=8765
-ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 NODE_ENV=production
 DSPY_LM_MODEL=openai/gpt-3.5-turbo
 PYTHON_VERSION=3.11
@@ -39,6 +39,15 @@ PYTHON_VERSION=3.11
 ```
 IFoHADHNOrs/liJgUFDYKgnWVTAvMhfnotUxywmelho=
 ```
+
+**⚠️ IMPORTANTE - NÃO adicione estas variáveis no Railway:**
+```bash
+❌ VITE_REDIRECT_URI  (pertence ao Vercel, não Railway)
+❌ VITE_APP_ENV       (pertence ao Vercel, não Railway)
+❌ DJEN_TRIBUNAIS     (pertence ao Vercel, não Railway)
+```
+
+Railway hospeda apenas o **DSPy Bridge** (Python backend). Variáveis `VITE_*` são do **frontend Vercel**.
 
 ### 3. Verificar Configuração de Build
 
@@ -173,7 +182,7 @@ curl http://localhost:8765/health
 ### CORS errors no frontend
 ```bash
 # Verificar ALLOWED_ORIGINS no Railway
-# Deve incluir: https://assistente-juridico-p.vercel.app
+# Deve incluir: https://assistente-juridico-github.vercel.app
 ```
 
 ---

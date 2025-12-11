@@ -4,7 +4,7 @@
 import type { ChatMessage, LlmClient } from "./core-agent";
 
 export interface HttpLlmClientOptions {
-  /** Ex: "https://assistente-juridico-p.vercel.app/api/llm-proxy" */
+  /** Ex: "https://assistente-juridico-github.vercel.app/api/llm-proxy" */
   baseUrl: string;
   apiKey?: string; // se o proxy exigir auth
   timeout?: number; // timeout em ms (padrão: 30s)

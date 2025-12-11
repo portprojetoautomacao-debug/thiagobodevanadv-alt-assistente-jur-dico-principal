@@ -11,7 +11,7 @@ Uso: $0 [--project PROJECT_ID] [--vercel-url VERCEL_URL] [--non-interactive]
 
 Exemplo:
   ./scripts/railway-cli-configure.sh --project a364e7f2-c234-477b-8dac-918f00f64737 \
-    --vercel-url https://assistente-juridico-p.vercel.app
+    --vercel-url https://assistente-juridico-github.vercel.app
 
 O script:
   - Verifica e instala Railway CLI (via npm) se necessário
@@ -107,7 +107,7 @@ if [[ -z "${ALLOWED_ORIGINS:-}" ]]; then
   if [[ -n "$VERCEL_URL" ]]; then
     ALLOWED_ORIGINS="$VERCEL_URL"
   else
-    ALLOWED_ORIGINS=$(ask_or_default "ALLOWED_ORIGINS" "https://assistente-juridico-p.vercel.app")
+    ALLOWED_ORIGINS=$(ask_or_default "ALLOWED_ORIGINS" "https://assistente-juridico-github.vercel.app")
   fi
 fi
 

@@ -81,7 +81,7 @@ send_email_test \
     \"to\": \"$TEST_EMAIL\",
     \"subject\": \"Nova Petição Disponível\",
     \"message\": \"Uma nova petição foi redacionada pelo agente IA e aguarda sua revisão.\",
-    \"actionUrl\": \"https://assistente-juridico-p.vercel.app/minutas\"
+    \"actionUrl\": \"https://assistente-juridico-github.vercel.app/minutas\"
   }"
 
 # Teste 3: Alerta Urgente
@@ -132,7 +132,7 @@ echo ""
 echo -e "${YELLOW}💡 Próximas etapas:${NC}"
 echo "   1. Adicione as secrets no GitHub: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets"
 echo "   2. Faça deploy no Vercel: git push origin main"
-echo "   3. Teste no Vercel: POST https://assistente-juridico-p.vercel.app/api/emails"
+echo "   3. Teste no Vercel: POST https://assistente-juridico-github.vercel.app/api/emails"
 echo ""
 echo -e "${YELLOW}📊 Para monitorar emails no Resend:${NC}"
 echo "   Visite: https://resend.com/emails"

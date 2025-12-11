@@ -45,7 +45,7 @@ git push origin main
 ### Use o Endpoint
 
 ```bash
-curl -X POST https://assistente-juridico-p.vercel.app/api/emails \
+curl -X POST https://assistente-juridico-github.vercel.app/api/emails \
   -H "Content-Type: application/json" \
   -d '{
     "type": "test",

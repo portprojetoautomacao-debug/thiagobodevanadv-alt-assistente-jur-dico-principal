@@ -10,7 +10,7 @@ O workflow de **Monitoramento Contínuo e Alertas** estava falhando com erro HTT
 ```
 Lighthouse não conseguiu carregar a página solicitada de forma confiável.
 Código de status: 404
-URL: https://assistente-juridico-p.vercel.app/
+URL: https://assistente-juridico-github.vercel.app/
 Erro Vercel: DEPLOYMENT_NOT_FOUND
 ```
 
@@ -18,7 +18,7 @@ Erro Vercel: DEPLOYMENT_NOT_FOUND
 
 ```bash
 # URL antiga (retorna 404)
-curl -I https://assistente-juridico-p.vercel.app/
+curl -I https://assistente-juridico-github.vercel.app/
 # HTTP/2 404 
 # x-vercel-error: DEPLOYMENT_NOT_FOUND
 
@@ -34,7 +34,7 @@ curl -I https://assistente-juridico-github.vercel.app/
 
 | Contexto | URL Antiga | URL Nova |
 |----------|-----------|----------|
-| **Produção** | `assistente-juridico-p.vercel.app` | `assistente-juridico-github.vercel.app` |
+| **Produção** | `assistente-juridico-github.vercel.app` | `assistente-juridico-github.vercel.app` |
 | **Staging** | `assistente-juridico-p-staging.vercel.app` | `assistente-juridico-github-staging.vercel.app` |
 
 ### Arquivos Corrigidos

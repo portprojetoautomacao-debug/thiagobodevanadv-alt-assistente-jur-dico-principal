@@ -11,13 +11,13 @@ O job `performance-monitoring` estava falhando com:
 ```
 Runtime error: Lighthouse was unable to reliably load the page you requested.
 Status code: 404
-URL: https://assistente-juridico-p.vercel.app
+URL: https://assistente-juridico-github.vercel.app
 Error: ERRORED_DOCUMENT_REQUEST
 ```
 
 ### Causa Raiz
 
-1. **URL incorreta**: `assistente-juridico-p.vercel.app` retornava 404 (DEPLOYMENT_NOT_FOUND)
+1. **URL incorreta**: `assistente-juridico-github.vercel.app` retornava 404 (DEPLOYMENT_NOT_FOUND)
 2. **Mascaramento de erros**: Health check forçava `HTTP_STATUS=200` para URLs `vercel.app`
 3. **Lighthouse rodava cegamente**: Executava mesmo com site inacessível (404)
 4. **Falta de retry logic**: Uma falha intermitente causava falha total

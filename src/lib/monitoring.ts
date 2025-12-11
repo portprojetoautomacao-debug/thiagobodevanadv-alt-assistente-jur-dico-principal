@@ -41,8 +41,8 @@ export function initMonitoring() {
     // LGPD Compliance
     sendDefaultPii: false,
 
-    beforeSend(event, hint) {
-      // Filtrar dados sens�veis
+    beforeSend(event, _hint) {
+      // Filtrar dados sensíveis
       if (event.request?.headers) {
         delete event.request.headers.Authorization;
         delete event.request.headers.Cookie;

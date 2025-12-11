@@ -97,7 +97,7 @@ Teste o endpoint de saúde:
 
 ```bash
 # Produção
-curl -X POST https://assistente-juridico-p.vercel.app/api/emails \
+curl -X POST https://assistente-juridico-github.vercel.app/api/emails \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer SEU_EMAIL_API_KEY" \
   -d '{

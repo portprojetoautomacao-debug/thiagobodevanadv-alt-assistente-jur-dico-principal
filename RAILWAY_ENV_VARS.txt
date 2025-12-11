@@ -7,7 +7,7 @@
 DSPY_API_TOKEN=22feee31e4741103021df038a222b448fed19c1aff01bfc88968677b2c46b196
 
 # Origens CORS permitidas (suas URLs Vercel)
-ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app,https://assistente-juridico-github.vercel.app
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 
 # Porta (Railway define automaticamente, mas fixamos em 8765)
 PORT=8765

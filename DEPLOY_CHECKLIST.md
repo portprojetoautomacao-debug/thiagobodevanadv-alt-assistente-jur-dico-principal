@@ -76,7 +76,7 @@ VITE_DSPY_API_TOKEN=
 
 # Email (se for usar notificações)
 RESEND_API_KEY=
-RESEND_FROM_EMAIL=assistente@assistente-juridico-p.vercel.app
+RESEND_FROM_EMAIL=assistente@assistente-juridico-github.vercel.app
 ```
 
 > **NOTA**: Qdrant, DSPy e Resend são **opcionais**. Deixe em branco se não for usar.
@@ -108,7 +108,7 @@ vercel --prod
 ### 1. Health Check
 
 ```bash
-curl https://assistente-juridico-p.vercel.app/api/status?type=health
+curl https://assistente-juridico-github.vercel.app/api/status?type=health
 ```
 
 Deve retornar `{"status": "ok", ...}`
@@ -116,7 +116,7 @@ Deve retornar `{"status": "ok", ...}`
 ### 2. Testar AutoGen Orchestrator
 
 ```bash
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents/autogen_orchestrator \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents/autogen_orchestrator \
   -H "Authorization: Bearer <SEU_AUTOGEN_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -198,7 +198,7 @@ Ou acesse: https://vercel.com/assistente-juridico-p/logs
 
 | Recurso | Link |
 |---------|------|
-| **App Produção** | https://assistente-juridico-p.vercel.app/ |
+| **App Produção** | https://assistente-juridico-github.vercel.app/ |
 | **Vercel Dashboard** | https://vercel.com/assistente-juridico-p |
 | **Guia de Setup** | `/docs/HYBRID_PRODUCTION_SETUP.md` |
 | **Arquitetura** | `/docs/HYBRID_ARCHITECTURE.md` |

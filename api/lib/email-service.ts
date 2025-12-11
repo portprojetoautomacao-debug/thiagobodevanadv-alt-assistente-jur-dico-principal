@@ -96,7 +96,7 @@ export async function sendNotificationEmail(
           <p style="font-size: 12px; color: #666;">
             Você recebeu este email do Assistente Jurídico PJe.
             <br />
-            <a href="https://assistente-juridico-p.vercel.app/preferences" style="color: #1e88e5; text-decoration: none;">
+            <a href="https://assistente-juridico-github.vercel.app/preferences" style="color: #1e88e5; text-decoration: none;">
               Gerenciar preferências de notificação
             </a>
           </p>
@@ -140,7 +140,7 @@ export async function sendUrgentDeadlineAlert(
             ⏰ AÇÃO REQUERIDA IMEDIATAMENTE
           </p>
           <p style="margin-top: 20px;">
-            <a href="https://assistente-juridico-p.vercel.app/processes/${processNumber}" style="background-color: #d32f2f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+            <a href="https://assistente-juridico-github.vercel.app/processes/${processNumber}" style="background-color: #d32f2f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
               Abrir Processo
             </a>
           </p>
@@ -204,7 +204,7 @@ export async function sendDailySummaryEmail(
           </table>
           
           <p style="margin-top: 20px;">
-            <a href="https://assistente-juridico-p.vercel.app/dashboard" style="background-color: #1e88e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            <a href="https://assistente-juridico-github.vercel.app/dashboard" style="background-color: #1e88e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
               Ver Dashboard Completo
             </a>
           </p>

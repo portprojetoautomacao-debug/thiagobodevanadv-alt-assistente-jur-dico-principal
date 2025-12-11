@@ -792,7 +792,7 @@ Para interrupções de serviço, erros críticos ou comportamento anômalo, cons
 
 ```bash
 # 1. Health Check (2 min)
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 # Esperado: {"status":"ok","timestamp":"..."}
 
 # 2. Verificar Erros Sentry (3 min)
@@ -863,7 +863,7 @@ npm run type-check && npm run lint && npm run test:run && npm run build
 ### 📊 Badges de Status
 
 [![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
-[![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-p.vercel.app/api/health)
+[![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-github.vercel.app/api/health)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
@@ -1358,7 +1358,8 @@ O sistema implementa uma arquitetura híbrida combinando:
 
 **Environments:**
 
-- **Production**: `assistente-juridico-p.vercel.app`
+- **Production**: `assistente-juridico-github.vercel.app`
+- **Alternative (DEPRECATED)**: `assistente-juridico-github.vercel.app`
 - **Preview**: Deploy automático de cada PR
 - **Local**: `npm run dev` (Vite HMR)
 

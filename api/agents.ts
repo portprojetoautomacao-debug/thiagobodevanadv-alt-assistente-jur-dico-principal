@@ -1291,7 +1291,7 @@ function isAuthorized(req: VercelRequest): boolean {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers - permitir apenas origens confiáveis
   const allowedOrigins = [
-    "https://assistente-juridico-p.vercel.app",
+    "https://assistente-juridico-github.vercel.app",
     "https://assistente-juridico-github.vercel.app",
   ];
   const origin = req.headers.origin || "";

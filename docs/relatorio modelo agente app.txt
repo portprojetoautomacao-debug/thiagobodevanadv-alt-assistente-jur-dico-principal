@@ -252,7 +252,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
 import type { ChatMessage, LlmClient } from "./core-agent";
 
 export interface HttpLlmClientOptions {
-  /** Ex: "https://assistente-juridico-p.vercel.app/api/llm-proxy" */
+  /** Ex: "https://assistente-juridico-github.vercel.app/api/llm-proxy" */
   baseUrl: string;
   apiKey?: string; // se o proxy exigir auth
 }
@@ -288,7 +288,7 @@ export class HttpLlmClient implements LlmClient {
 No `.env.vercel` (ou nas envs da Vercel):
 
 ```bash
-LLM_PROXY_URL=https://assistente-juridico-p.vercel.app/api/llm-proxy
+LLM_PROXY_URL=https://assistente-juridico-github.vercel.app/api/llm-proxy
 ```
 
 ---
@@ -312,7 +312,7 @@ Aqui vou definir **nomes de ferramentas estáveis** que encaixam bem com o que v
 import type { Tool, ToolContext } from "./core-agent";
 
 export interface GlobalToolContext extends ToolContext {
-  baseUrl: string;          // URL base do seu app (ex: https://assistente-juridico-p.vercel.app)
+  baseUrl: string;          // URL base do seu app (ex: https://assistente-juridico-github.vercel.app)
   evolutionApiUrl: string;  // URL da Evolution API
   evolutionApiKey: string;
 }
@@ -791,7 +791,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const ctx: GlobalToolContext = {
       baseUrl:
-        process.env.APP_BASE_URL || "https://assistente-juridico-p.vercel.app",
+        process.env.APP_BASE_URL || "https://assistente-juridico-github.vercel.app",
       evolutionApiUrl:
         process.env.EVOLUTION_API_URL || "https://sua-evolution-api",
       evolutionApiKey: process.env.EVOLUTION_API_KEY || "",

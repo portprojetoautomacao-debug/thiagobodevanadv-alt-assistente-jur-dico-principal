@@ -5,7 +5,7 @@
 
 set -e
 
-WEBHOOK_URL="https://assistente-juridico-p.vercel.app/api/webhook"
+WEBHOOK_URL="https://assistente-juridico-github.vercel.app/api/webhook"
 
 echo "🔍 Testando Webhook do GitHub..."
 echo ""

@@ -137,7 +137,7 @@ chmod +x scripts/validate-vercel-runtime.sh
 ```
 ✅ Build successful in 45s
 ✅ Deploying to production...
-✅ Deployed to assistente-juridico-p.vercel.app
+✅ Deployed to assistente-juridico-github.vercel.app
 ```
 
 ### Endpoints da API
@@ -304,7 +304,7 @@ Adicionar validação ao GitHub Actions:
 
 ### Após Deploy
 
-- [ ] Testar endpoint: `https://assistente-juridico-p.vercel.app/api/health`
+- [ ] Testar endpoint: `https://assistente-juridico-github.vercel.app/api/health`
 - [ ] Verificar logs Vercel: Sem erros de runtime
 - [ ] Confirmar agentes AutoGen funcionando
 - [ ] Validar sincronização Chrome Extension

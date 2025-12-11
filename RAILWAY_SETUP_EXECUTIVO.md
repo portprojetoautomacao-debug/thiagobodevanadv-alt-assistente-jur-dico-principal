@@ -27,7 +27,7 @@ Em **Settings → Variables**, adicione:
 
 ```
 DSPY_PORT=8765
-ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 NODE_ENV=production
 DSPY_LM_MODEL=openai/gpt-3.5-turbo
 PYTHON_VERSION=3.11
@@ -74,7 +74,8 @@ vercel env add DSPY_BRIDGE_URL production
 vercel env add DSPY_API_TOKEN production
 # Valor: IFoHADHNOrs/liJgUFDYKgnWVTAvMhfnotUxywmelho=
 
-vercel env add VITE_DSPY_URL production
+vercel env add VITE_REDIRECT_URI production
+# Valor: https://assistente-juridico-github.vercel.appvercel env add VITE_DSPY_URL production
 # Valor: https://assistente-juridico-pje-production-2d98.up.railway.app
 
 vercel env add VITE_DSPY_API_TOKEN production
