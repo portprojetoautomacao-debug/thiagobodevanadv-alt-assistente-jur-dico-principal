@@ -30,9 +30,9 @@ export const RETRY_ATTEMPTS = 3;
 export const RETRY_DELAY = 2000; // 2 segundos
 
 export const PJE_SELECTORS = {
-  // Seletores reais do PJe TJMG (RichFaces)
+  // Seletores reais do PJe TJMG (RichFaces) + seletores de teste
   PROCESSO_ROW:
-    "tr.rich-table-row, tr.rich-table-firstrow, .linha-processo, [id*='processoForm'] tr",
+    ".processo-row, tr.rich-table-row, tr.rich-table-firstrow, .linha-processo, [id*='processoForm'] tr",
   NUMERO_PROCESSO: "a[id*='numero'], .numero-processo, td:first-child a, span[id*='numero']",
   CLASSE: ".classe-judicial, td.classe, span[id*='classe']",
   ASSUNTO: ".assunto, td.assunto, span[id*='assunto']",

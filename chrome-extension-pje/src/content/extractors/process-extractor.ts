@@ -358,9 +358,27 @@ export class ProcessExtractor {
   }
 
   private extractProcessoFromRow(row: HTMLElement): ProcessoPJe | null {
-    // Número do processo
-    const numeroEl = row.querySelector(PJE_SELECTORS.NUMERO_PROCESSO);
-    const numeroTexto = numeroEl?.textContent?.trim() || "";
+    // Helper para tentar múltiplos seletores
+    const getText = (primarySelector: string, fallbackSelectors: string[] = []): string => {
+      const selectors = [primarySelector, ...fallbackSelectors];
+      for (const sel of selectors) {
+        try {
+          const el = row.querySelector(sel);
+          if (el?.textContent?.trim()) {
+            return el.textContent.trim();
+          }
+        } catch {
+          // Selector inválido, continua
+        }
+      }
+      return "";
+    };
+
+    // Número do processo - aceita múltiplos formatos
+    const numeroTexto = getText(PJE_SELECTORS.NUMERO_PROCESSO, [
+      ".numero-processo",
+      "span.numero-processo",
+    ]);
 
     if (!numeroTexto) {
       return null;
@@ -369,48 +387,67 @@ export class ProcessExtractor {
     const numero = cleanProcessNumber(numeroTexto);
     const numeroFormatado = formatCNJ(numeroTexto);
 
+    // Validar formato CNJ (20 dígitos)
+    if (!/^\d{20}$/.test(numero)) {
+      return null;
+    }
+
     // Classe e assunto
-    const classeEl = row.querySelector(PJE_SELECTORS.CLASSE);
-    const classe = classeEl?.textContent?.trim() || "";
+    const classe = getText(PJE_SELECTORS.CLASSE, [".classe-processo", "span.classe-processo"]);
 
-    const assuntoEl = row.querySelector(PJE_SELECTORS.ASSUNTO);
-    const assunto = assuntoEl?.textContent?.trim() || "";
+    const assunto = getText(PJE_SELECTORS.ASSUNTO, [".assunto", "span.assunto"]);
 
-    // Partes
-    const parteAutorEl = row.querySelector(PJE_SELECTORS.PARTE_AUTOR);
-    const parteReuEl = row.querySelector(PJE_SELECTORS.PARTE_REU);
+    // Partes - tentar múltiplas estratégias
+    let parteAutor = getText(PJE_SELECTORS.PARTE_AUTOR, [".parte-autor", "span.parte-autor"]);
+    let parteReu = getText(PJE_SELECTORS.PARTE_REU, [".parte-reu", "span.parte-reu"]);
 
-    let parteAutor = parteAutorEl?.textContent?.trim() || "";
-    let parteReu = parteReuEl?.textContent?.trim() || "";
-
-    // Se não encontrou partes separadas, tenta extrair do formato "AUTOR X RÉU"
+    // Se não encontrou partes separadas, tenta formato "AUTOR X RÉU"
     if (!parteAutor && !parteReu) {
-      const partesText = row.textContent || "";
-      const match = partesText.match(/([A-Z\s]+)\s+X\s+([A-Z\s]+)/);
-      if (match) {
-        parteAutor = match[1].trim();
-        parteReu = match[2].trim();
+      const partesText = getText("", [".partes", "div.partes"]);
+      if (partesText) {
+        const parts = partesText.split(/\s+[Xx]\s+/);
+        parteAutor = parts[0]?.trim() ?? "";
+        parteReu = parts.slice(1).join(" X ").trim() || "";
+      } else {
+        // Fallback: tentar extrair do texto da linha
+        const rowText = row.textContent || "";
+        const match = rowText.match(/([A-Z\s]+)\s+X\s+([A-Z\s]+)/);
+        if (match) {
+          parteAutor = match[1].trim();
+          parteReu = match[2].trim();
+        }
       }
     }
 
     // Vara e comarca
-    const varaEl = row.querySelector(PJE_SELECTORS.VARA);
-    const vara = varaEl?.textContent?.trim() || "";
+    const vara = getText(PJE_SELECTORS.VARA, [".vara", "span.vara"]);
 
-    const comarcaMatch = vara.match(/Comarca de (.+?)(?:\s|$)/i);
-    const comarca = comarcaMatch ? comarcaMatch[1].trim() : "";
+    // Extrair comarca - aceita "Comarca de X" ou "de X" no final
+    let comarca = "";
+    const comarcaMatch = vara.match(/Comarca de\s*([\wÀ-ÿ\s-]+)/i);
+    if (comarcaMatch) {
+      comarca = comarcaMatch[1].trim();
+    } else {
+      const comarcaMatchSimple = vara.match(/de\s*([\wÀ-ÿ\s-]+)$/i);
+      if (comarcaMatchSimple) {
+        comarca = comarcaMatchSimple[1].trim();
+      }
+    }
 
     // Último movimento
-    const movimentoEl = row.querySelector(PJE_SELECTORS.MOVIMENTO);
-    const movimentoDescricao = movimentoEl?.textContent?.trim() || "";
+    const movimentoDescricao = getText(PJE_SELECTORS.MOVIMENTO, [
+      ".ultimo-movimento",
+      "span.ultimo-movimento",
+    ]);
 
-    const dataEl = row.querySelector(PJE_SELECTORS.DATA);
-    const dataTexto = dataEl?.textContent?.trim() || "";
+    const dataTexto = getText(PJE_SELECTORS.DATA, [".data-movimento", "span.data-movimento"]);
     const dataMovimento = parseDate(dataTexto);
 
-    // Situação
-    const situacaoEl = row.querySelector(PJE_SELECTORS.SITUACAO);
-    const situacaoTexto = situacaoEl?.textContent?.trim().toLowerCase() || "";
+    // Situação - normalizar para lowercase
+    const situacaoTexto = getText(PJE_SELECTORS.SITUACAO, [
+      ".situacao",
+      "span.situacao",
+    ]).toLowerCase();
 
     const situacao = situacaoTexto.includes("baixado")
       ? ("baixado" as const)
