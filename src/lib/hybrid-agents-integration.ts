@@ -84,70 +84,14 @@ const agentCache = new Map<string, LangGraphAgent>();
 
 /**
  * Obtém instância de agente LangGraph (com cache)
+ *
+ * @throws Error - LangGraph agents ainda não implementados (em construção)
  */
 function getLangGraphAgent(type: HybridAgentType, agentId?: string): LangGraphAgent {
   const cacheKey = agentId ? `${type}:${agentId}` : type;
   if (!agentCache.has(cacheKey)) {
-    // TODO: Descomentar quando agentes estiverem prontos
+    // Agentes LangGraph em desenvolvimento - implementação planejada para próxima versão
     throw new Error(`LangGraph agents em construção - agentId: ${agentId || type}`);
-    /* switch (type) {
-      case "langgraph-djen":
-        agentCache.set(cacheKey, new DJENMonitorAgent());
-        break;
-      default:
-        // langgraph-custom: instantiate the correct class by agentId
-        if (type === "langgraph-custom") {
-          if (!agentId) throw new Error("agentId is required for langgraph-custom");
-          switch (agentId) {
-            case "harvey":
-              agentCache.set(cacheKey, new HarveyAgent());
-              break;
-            case "justine":
-              agentCache.set(cacheKey, new JustineAgent());
-              break;
-            case "redacao-peticoes":
-              agentCache.set(cacheKey, new RedacaoPeticoesAgent());
-              break;
-            case "analise-documental":
-              agentCache.set(cacheKey, new AnaliseDocumentalAgent());
-              break;
-            case "gestao-prazos":
-              agentCache.set(cacheKey, new GestaoPrazosAgent());
-              break;
-            case "organizacao-arquivos":
-              agentCache.set(cacheKey, new OrganizacaoArquivosAgent());
-              break;
-            case "pesquisa-juris":
-              agentCache.set(cacheKey, new PesquisaJurisAgent());
-              break;
-            case "analise-risco":
-              agentCache.set(cacheKey, new AnaliseRiscoAgent());
-              break;
-            case "revisao-contratual":
-              agentCache.set(cacheKey, new RevisaoContratualAgent());
-              break;
-            case "comunicacao-clientes":
-              agentCache.set(cacheKey, new ComunicacaoClientesAgent());
-              break;
-            case "financeiro":
-              agentCache.set(cacheKey, new FinanceiroAgent());
-              break;
-            case "estrategia-processual":
-              agentCache.set(cacheKey, new EstrategiaProcessualAgent());
-              break;
-            case "traducao-juridica":
-              agentCache.set(cacheKey, new TraducaoJuridicaAgent());
-              break;
-            case "compliance":
-              agentCache.set(cacheKey, new ComplianceAgent());
-              break;
-            default:
-              throw new Error(`Unknown LangGraph custom agentId: ${agentId}`);
-          }
-        } else {
-          throw new Error(`Unknown LangGraph agent type: ${type}`);
-        }
-    } */
   }
   return agentCache.get(cacheKey)!;
 }

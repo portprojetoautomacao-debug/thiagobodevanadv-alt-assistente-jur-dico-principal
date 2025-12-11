@@ -83,8 +83,48 @@ export class ProcessExtractor {
   private extractFromDetalhesPage(): ProcessoPJe | null {
     console.log("[ProcessExtractor] Extraindo da página de detalhes...");
 
-    // Seletores específicos do PJe TJMG para página de detalhes
-    const selectors = {
+    const selectors = this.getDetalhesPageSelectors();
+    const { numero, numeroFormatado } = this.extractNumeroProcesso(selectors.numero);
+
+    if (!numero || !isValidCNJ(numero)) {
+      console.log("[ProcessExtractor] Número CNJ não encontrado na página de detalhes");
+      return null;
+    }
+
+    // Extrai outros campos
+    const classe = this.extractTextFromSelectors(selectors.classe);
+    const assunto = this.extractTextFromSelectors(selectors.assunto);
+    const orgao = this.extractTextFromSelectors(selectors.orgao);
+    const { parteAutor, parteReu } = this.extractPartes();
+    const movimentoText = this.extractTextFromSelectors(selectors.movimento);
+
+    console.log(`[ProcessExtractor] Detalhes extraídos: classe=${classe}, orgao=${orgao}`);
+
+    return {
+      numero,
+      numeroFormatado,
+      classe,
+      assunto,
+      parteAutor,
+      parteReu,
+      vara: orgao,
+      comarca: this.extractComarca(orgao),
+      ultimoMovimento: {
+        descricao: movimentoText || "Visualizado na página de detalhes",
+        data: new Date().toLocaleDateString("pt-BR"),
+        timestamp: Date.now(),
+      },
+      situacao: "ativo",
+      valor: undefined,
+      distribuicao: "",
+    };
+  }
+
+  /**
+   * Retorna seletores para página de detalhes
+   */
+  private getDetalhesPageSelectors() {
+    return {
       numero: [
         "#processoTrfViewView\\:processoTrfViewForm\\:processoTrfViewPainelArvore_body .cabecalhoProcesso",
         ".cabecalho-processo .numero",
@@ -93,7 +133,6 @@ export class ProcessExtractor {
         "#numeroProcesso",
         "span[id*='numeroProcesso']",
         ".processo-numero",
-        // Fallback: qualquer elemento que contenha CNJ na página
       ],
       classe: [
         "[id*='classeJudicial']",
@@ -119,101 +158,100 @@ export class ProcessExtractor {
         ".movimentos-list tr:first-child",
       ],
     };
+  }
 
-    // Tenta extrair número do processo
-    let numero = "";
-    let numeroFormatado = "";
+  /**
+   * Extrai número do processo usando múltiplas estratégias
+   */
+  private extractNumeroProcesso(selectors: string[]): { numero: string; numeroFormatado: string } {
+    // Estratégia 1: Seletores específicos
+    let result = this.tryExtractFromSelectors(selectors);
+    if (result.numero) return result;
 
-    // Primeiro tenta via seletores específicos
-    for (const selector of selectors.numero) {
+    // Estratégia 2: Título da página ou cabeçalho
+    result = this.tryExtractFromHeader();
+    if (result.numero) return result;
+
+    // Estratégia 3: URL + body text
+    return this.tryExtractFromBodyText();
+  }
+
+  /**
+   * Tenta extrair número via seletores
+   */
+  private tryExtractFromSelectors(selectors: string[]): {
+    numero: string;
+    numeroFormatado: string;
+  } {
+    for (const selector of selectors) {
       try {
         const el = document.querySelector(selector);
         if (el) {
           const text = el.textContent?.trim() || "";
           const match = text.match(CNJ_REGEX);
           if (match) {
-            numero = cleanProcessNumber(match[0]);
-            numeroFormatado = formatCNJ(match[0]);
-            console.log(`[ProcessExtractor] Número encontrado via selector: ${numero}`);
-            break;
+            console.log(`[ProcessExtractor] Número encontrado via selector: ${match[0]}`);
+            return {
+              numero: cleanProcessNumber(match[0]),
+              numeroFormatado: formatCNJ(match[0]),
+            };
           }
         }
       } catch {
-        // Selector pode ser inválido
+        // Selector inválido
       }
     }
+    return { numero: "", numeroFormatado: "" };
+  }
 
-    // Fallback: busca CNJ no título da página ou cabeçalho
-    if (!numero) {
-      const pageText =
-        document.title +
-        " " +
-        (document.querySelector("h1, h2, .header, .cabecalho")?.textContent || "");
-      const match = pageText.match(CNJ_REGEX);
+  /**
+   * Tenta extrair número do título/header
+   */
+  private tryExtractFromHeader(): { numero: string; numeroFormatado: string } {
+    const pageText =
+      document.title +
+      " " +
+      (document.querySelector("h1, h2, .header, .cabecalho")?.textContent || "");
+    const match = pageText.match(CNJ_REGEX);
+    if (match) {
+      console.log(`[ProcessExtractor] Número encontrado via título/header: ${match[0]}`);
+      return {
+        numero: cleanProcessNumber(match[0]),
+        numeroFormatado: formatCNJ(match[0]),
+      };
+    }
+    return { numero: "", numeroFormatado: "" };
+  }
+
+  /**
+   * Tenta extrair número do body text
+   */
+  private tryExtractFromBodyText(): { numero: string; numeroFormatado: string } {
+    const urlMatch = globalThis.location.href.match(/id=(\d+)/);
+    if (urlMatch) {
+      const bodyText = document.body.innerText;
+      const match = bodyText.match(CNJ_REGEX);
       if (match) {
-        numero = cleanProcessNumber(match[0]);
-        numeroFormatado = formatCNJ(match[0]);
-        console.log(`[ProcessExtractor] Número encontrado via título/header: ${numero}`);
+        console.log(`[ProcessExtractor] Número encontrado via body text: ${match[0]}`);
+        return {
+          numero: cleanProcessNumber(match[0]),
+          numeroFormatado: formatCNJ(match[0]),
+        };
       }
     }
+    return { numero: "", numeroFormatado: "" };
+  }
 
-    // Último fallback: busca na URL
-    if (!numero) {
-      const urlMatch = window.location.href.match(/id=(\d+)/);
-      // Se tem ID na URL, tenta extrair CNJ do body
-      if (urlMatch) {
-        const bodyText = document.body.innerText;
-        const match = bodyText.match(CNJ_REGEX);
-        if (match) {
-          numero = cleanProcessNumber(match[0]);
-          numeroFormatado = formatCNJ(match[0]);
-          console.log(`[ProcessExtractor] Número encontrado via body text: ${numero}`);
-        }
-      }
-    }
-
-    if (!numero || !isValidCNJ(numero)) {
-      console.log("[ProcessExtractor] Número CNJ não encontrado na página de detalhes");
-      return null;
-    }
-
-    // Extrai outros campos
-    const classe = this.extractTextFromSelectors(selectors.classe);
-    const assunto = this.extractTextFromSelectors(selectors.assunto);
-    const orgao = this.extractTextFromSelectors(selectors.orgao);
-
-    // Extrai partes
-    let parteAutor = "";
-    let parteReu = "";
-
+  /**
+   * Extrai partes do processo (autor e réu)
+   */
+  private extractPartes(): { parteAutor: string; parteReu: string } {
     const poloAtivoEl = document.querySelector("[id*='poloAtivo'], .polo-ativo");
     const poloPassivoEl = document.querySelector("[id*='poloPassivo'], .polo-passivo");
 
-    if (poloAtivoEl) parteAutor = poloAtivoEl.textContent?.trim() || "";
-    if (poloPassivoEl) parteReu = poloPassivoEl.textContent?.trim() || "";
-
-    // Extrai movimento
-    const movimentoText = this.extractTextFromSelectors(selectors.movimento);
-
-    console.log(`[ProcessExtractor] Detalhes extraídos: classe=${classe}, orgao=${orgao}`);
-
     return {
-      numero,
-      numeroFormatado,
-      classe,
-      assunto,
-      parteAutor,
-      parteReu,
-      vara: orgao,
-      comarca: this.extractComarca(orgao),
-      ultimoMovimento: {
-        descricao: movimentoText || "Visualizado na página de detalhes",
-        data: new Date().toLocaleDateString("pt-BR"),
-        timestamp: Date.now(),
-      },
-      situacao: "ativo",
-      valor: undefined,
-      distribuicao: "",
+      parteAutor: poloAtivoEl?.textContent?.trim() || "",
+      parteReu: poloPassivoEl?.textContent?.trim() || "",
     };
   }
 
@@ -248,7 +286,7 @@ export class ProcessExtractor {
 
       if (match) {
         const numero = cleanProcessNumber(text);
-        if (isValidCNJ(numero) && !processos.find((p) => p.numero === numero)) {
+        if (isValidCNJ(numero) && !processos.some((p) => p.numero === numero)) {
           const processo = this.createProcessoFromLink(link, numero, text);
           processos.push(processo);
         }
@@ -271,7 +309,7 @@ export class ProcessExtractor {
       const numeroTexto = match[0];
       const numero = cleanProcessNumber(numeroTexto);
 
-      if (isValidCNJ(numero) && !processos.find((p) => p.numero === numero)) {
+      if (isValidCNJ(numero) && !processos.some((p) => p.numero === numero)) {
         processos.push({
           numero,
           numeroFormatado: formatCNJ(numeroTexto),

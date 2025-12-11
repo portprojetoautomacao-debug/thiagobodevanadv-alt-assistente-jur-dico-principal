@@ -2,10 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRedis: any = {
-  set: vi.fn(async () => null),
+  set: vi.fn(async () => "OK"),
   get: vi.fn(async () => null),
   sismember: vi.fn(async () => 1),
-  lpush: vi.fn(async () => null),
+  lpush: vi.fn(async () => 1),
 };
 
 // ✅ Mock deve estar no topo do arquivo, antes de qualquer import
@@ -84,6 +84,10 @@ describe("pje-sync API", () => {
 
     // sismember will return 1 to allow API key
     mockRedis.sismember.mockResolvedValue(1);
+    // get will return null to simulate new process (triggers hasChanges = true)
+    mockRedis.get.mockResolvedValue(null);
+    // set must resolve successfully
+    mockRedis.set.mockResolvedValue("OK");
 
     const handler = (await import("../pje-sync")).default;
     const resp = await handler(req as any);
@@ -118,6 +122,8 @@ describe("pje-sync API", () => {
     // NOTE: This handler returns a Fetch Response object, not a Vercel res.
 
     mockRedis.sismember.mockResolvedValue(1);
+    // lpush must resolve successfully with the count of items
+    mockRedis.lpush.mockResolvedValue(1);
 
     const handler = (await import("../pje-sync")).default;
     const resp = await handler(req as any);

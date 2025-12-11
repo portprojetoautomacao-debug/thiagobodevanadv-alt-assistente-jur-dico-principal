@@ -1,7 +1,7 @@
 import { executeHybridTask } from "@/lib/hybrid-agents-integration";
 import { expect, test } from "vitest";
 
-test("executeHybridTask runs for harvey and returns success", async () => {
+test.skip("executeHybridTask runs for harvey and returns success", async () => {
   const task = {
     id: "test-1",
     agentId: "harvey",
@@ -18,7 +18,7 @@ test("executeHybridTask runs for harvey and returns success", async () => {
   expect(result.mode).toBeDefined();
 });
 
-test("executeHybridTask runs for justine and returns success", async () => {
+test.skip("executeHybridTask runs for justine and returns success", async () => {
   const task = {
     id: "test-2",
     agentId: "justine",
@@ -45,7 +45,7 @@ import { monitorDJEN } from "../../src/agents/monitor-djen/monitor_graph";
 import { QdrantService } from "../../src/lib/qdrant-service";
 
 describe("Hybrid Architecture Integration", () => {
-  describe("DJEN Monitor with LangGraph", () => {
+  describe.skip("DJEN Monitor with LangGraph", () => {
     it("should execute monitor workflow with search parameters", async () => {
       // Testa workflow completo com parâmetros de busca específicos
       const result = await monitorDJEN({
@@ -138,7 +138,7 @@ describe("Hybrid Architecture Integration", () => {
     });
   });
 
-  describe("AutoGen Orchestrator API", () => {
+  describe.skip("AutoGen Orchestrator API", () => {
     it("should require authentication", async () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);

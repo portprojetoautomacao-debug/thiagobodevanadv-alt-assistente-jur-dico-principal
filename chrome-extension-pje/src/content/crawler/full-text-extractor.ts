@@ -210,20 +210,20 @@ export class FullTextExtractor {
     return (
       text
         // Remove múltiplos espaços
-        .replace(/\s+/g, " ")
+        .replaceAll(/\s+/g, " ")
         // Remove múltiplas quebras de linha
-        .replace(/\n{3,}/g, "\n\n")
+        .replaceAll(/\n{3,}/g, "\n\n")
         // Remove caracteres de controle
-        .replace(controlCharsRegex, "")
+        .replaceAll(controlCharsRegex, "")
         // Remove espaços em branco no início/fim de linhas
-        .replace(/^[ \t]+|[ \t]+$/gm, "")
+        .replaceAll(/^[ \t]+|[ \t]+$/gm, "")
         // Remove linhas vazias duplicadas
-        .replace(/(\n\s*){3,}/g, "\n\n")
+        .replaceAll(/(\n\s*){3,}/g, "\n\n")
         // Normaliza aspas
-        .replace(/[""]/g, '"')
-        .replace(/['']/g, "'")
+        .replaceAll(/[“”]/g, '"')
+        .replaceAll(/[‘’]/g, "'")
         // Remove Zero Width characters
-        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .replaceAll(/[\u200B-\u200D\uFEFF]/g, "")
         .trim()
     );
   }
@@ -237,7 +237,7 @@ export class FullTextExtractor {
     // Extrai headings
     const headings = element.querySelectorAll("h1, h2, h3, h4, h5, h6");
     headings.forEach((h) => {
-      const level = parseInt(h.tagName[1]);
+      const level = Number.parseInt(h.tagName[1], 10);
       const content = h.textContent?.trim();
       if (content) {
         sections.push({
