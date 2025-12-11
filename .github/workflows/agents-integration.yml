@@ -94,10 +94,11 @@ jobs:
           ls -la tests/integration || true
           git ls-files tests/integration || true
 
-          # Robust glob handling with nullglob and globstar (supports nested directories)
+          # Robust git-backed discovery (handles nested dirs, avoids shell glob issues in CI)
           shopt -s nullglob globstar
-          files=(tests/integration/**/*.test.ts)
-          if [ ${#files[@]} -gt 0 ]; then
+          mapfile -t files < <(git ls-files tests/integration | grep '\.test\.ts$' | grep -v '\.backup$' || true)
+
+          if [ "${#files[@]}" -gt 0 ]; then
             echo "Found integration tests: ${files[*]}"
             npx vitest run "${files[@]}" --reporter=verbose
           else

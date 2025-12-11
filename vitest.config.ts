@@ -25,7 +25,11 @@ export default defineConfig({
     maxConcurrency: 1,
     // ✅ Não isolar testes (economizar memória)
     isolate: false,
-    include: ["src/**/*.{test,spec}.{ts,tsx}", "api/**/*.{test,spec}.{ts,tsx}"],
+    include: [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "api/**/*.{test,spec}.{ts,tsx}",
+      "tests/integration/**/*.test.ts",
+    ],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
