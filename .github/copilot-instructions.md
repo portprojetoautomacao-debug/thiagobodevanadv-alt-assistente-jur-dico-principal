@@ -31,6 +31,8 @@ applyTo: "**"
 - **NÃO adicionar novos agentes** ou modificar comportamento dos existentes
 - **NÃO alterar fluxos de automação** que estão operando corretamente
 - **NÃO introduzir novas dependências** sem necessidade crítica
+- **NÃO desabilitar funcionalidades** existentes sem autorização explícita do operador
+- **NÃO remover features** que estão em produção funcionando corretamente
 
 ### 🔧 Critérios para Alterações:
 
@@ -38,6 +40,8 @@ applyTo: "**"
 2. **Risco mínimo**: A alteração é cirúrgica e não afeta outras partes do sistema?
 3. **Testes passando**: Todos os testes continuam funcionando após a mudança?
 4. **Rollback fácil**: Se der problema, podemos reverter rapidamente?
+5. **Manter funcionalidades**: NUNCA desabilite ou remova funcionalidades existentes sem autorização explícita
+6. **Compatibilidade Vercel**: Garantir que imports e caminhos funcionem no ambiente serverless do Vercel
 
 ### 📊 Prioridade de Correções:
 

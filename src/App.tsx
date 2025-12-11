@@ -27,7 +27,7 @@ import Dashboard from "@/components/Dashboard";
 // ⚡ LAZY LOADING - Componentes pesados (carregam sob demanda)
 // Isso melhora performance inicial e reduz bundle size
 const HarveySpecterChat = lazy(() => import("@/components/HarveySpecterChat"));
-const MinutasManager = lazy(() => import("@/components/MinutasManager"));
+const MinutasManager = lazy(() => import("@/components/MinutasManagerV2"));
 const ProcessCRM = lazy(() => import("@/components/ProcessCRM"));
 const Calendar = lazy(() => import("@/components/Calendar"));
 const FinancialManagement = lazy(() => import("@/components/FinancialManagement"));
