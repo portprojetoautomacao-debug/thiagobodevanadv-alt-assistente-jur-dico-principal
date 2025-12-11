@@ -50,8 +50,8 @@ describe("DSPy Bridge (FastAPI) integration", () => {
 
   test("/health returns healthy", async () => {
     if (!bridgeAvailable) {
-      console.warn("DSPy bridge not running, skipping test");
-      return;
+      console.warn("DSPy bridge not running, test skipped");
+      return; // Skip silently when service not available
     }
     const res = await fetch(`http://127.0.0.1:${port}/health`);
     expect(res.status).toBe(200);
@@ -61,12 +61,17 @@ describe("DSPy Bridge (FastAPI) integration", () => {
 
   test("/optimize returns an optimized_prompt with auth", async () => {
     if (!bridgeAvailable) {
-      console.warn("DSPy bridge not running, skipping test");
-      return;
+      console.warn("DSPy bridge not running, test skipped");
+      return; // Skip silently when service not available
     }
+    // Use token from environment or default test token
+    const authToken = process.env.DSPY_API_TOKEN || token;
     const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ prompt: "Olá, optimize me" }),
     });
     expect(res.status).toBe(200);

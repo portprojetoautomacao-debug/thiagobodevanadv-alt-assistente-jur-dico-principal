@@ -22,7 +22,9 @@
         "SonarSource.sonarlint-vscode",
         "vscjava.vscode-java-pack",
         "GitHub.codespaces",
-        "google.geminicodeassist"
+        "google.geminicodeassist",
+        "MS-SarifVSCode.sarif-viewer",
+        "trailofbits.sarif-explorer"
       ],
       "settings": {
         // ========================================
@@ -42,7 +44,7 @@
         "github.copilot.chat.useInstructionFiles": true,
         "github.copilot.inlineSuggest.enable": true,
         "github.copilot.editor.enableAutoCompletions": true,
-        
+
         // 🚀 FERRAMENTAS DE EDIÇÃO - Sem confirmação
         "chat.editing.enabled": true,
         "chat.editing.confirmEditRequestRemoval": false,
@@ -50,14 +52,14 @@
         "chat.tools.terminal.autoApprove": true,
         "chat.tools.terminal.autoReplyToPrompts": true,
         "github.copilot.chat.defaultToolset": "fullEditingTools",
-        
+
         // 🤖 AGENTE DE CODIFICAÇÃO - Automação total
         "githubPullRequests.codingAgent.enabled": true,
         "githubPullRequests.codingAgent.autoDelegate": true,
         "githubPullRequests.codingAgent.uiIntegration": true,
         "githubPullRequests.pullRequestCardEnabled": true,
         "chat.agentSessionsViewLocation": "view",
-        
+
         // ========================================
         // 🔒 SEGURANÇA E WORKSPACE TRUST
         // ========================================
@@ -65,7 +67,7 @@
         "security.workspace.trust.enabled": true,
         "security.workspace.trust.untrustedFiles": "open",
         "security.workspace.trust.emptyWindow": true,
-        
+
         // ========================================
         // 📦 GIT AUTOMÁTICO
         // ========================================
@@ -74,7 +76,7 @@
         "git.confirmSync": false,
         "git.fetchOnPull": true,
         "git.pruneOnFetch": true,
-        
+
         // ========================================
         // 🛠️ TASKS E AUTOMAÇÃO
         // ========================================
@@ -82,7 +84,7 @@
         "task.autoDetect": "on",
         "task.problemMatchers.neverPrompt": true,
         "task.saveBeforeRun": "always",
-        
+
         // ========================================
         // ✏️ EDITOR - FORMATAÇÃO AUTOMÁTICA
         // ========================================
@@ -97,7 +99,7 @@
         "files.autoSaveDelay": 1000,
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true,
-        
+
         // ========================================
         // 🔧 TYPESCRIPT E TERMINAL
         // ========================================
@@ -106,14 +108,14 @@
         "typescript.suggest.autoImports": true,
         "terminal.integrated.shellIntegration.enabled": true,
         "terminal.integrated.shellIntegration.decorationsEnabled": "both",
-        
+
         // ========================================
         // 🧪 EXTENSÕES E ATUALIZAÇÕES
         // ========================================
         "extensions.autoCheckUpdates": true,
         "extensions.autoUpdate": true,
         "chat.useNestedAgentsMdFiles": true,
-        
+
         // ========================================
         // 📊 TELEMETRIA
         // ========================================

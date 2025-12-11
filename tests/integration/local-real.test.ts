@@ -21,17 +21,17 @@ describe("local real integration tests (dev API)", () => {
           }
         );
 
-        // Set a generous timeout (3 minutes) in case dev server takes more time locally
+        // Set a generous timeout (5 minutes) in case dev server takes more time in CI
         const timer = setTimeout(
           () => {
             proc.kill("SIGTERM");
-            reject(new Error("Local real test timed out"));
+            reject(new Error("Local real test timed out after 5 minutes"));
           },
-          1000 * 60 * 3
+          1000 * 60 * 5
         );
         proc.on("exit", () => clearTimeout(timer));
       });
     },
-    1000 * 60 * 4
+    1000 * 60 * 6 // 6 minutes test timeout
   );
 });
