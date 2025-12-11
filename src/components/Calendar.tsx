@@ -85,7 +85,10 @@ export default function Calendar() {
 
   // Debug: log para verificar se as variáveis estão chegando
   if (typeof window !== "undefined" && !isGoogleConfigured) {
-    console.log("[Calendar] Debug - GOOGLE_CLIENT_ID:", GOOGLE_CLIENT_ID ? "✓ Configurado" : "✗ Vazio");
+    console.log(
+      "[Calendar] Debug - GOOGLE_CLIENT_ID:",
+      GOOGLE_CLIENT_ID ? "✓ Configurado" : "✗ Vazio"
+    );
     console.log("[Calendar] Debug - GOOGLE_API_KEY:", GOOGLE_API_KEY ? "✓ Configurado" : "✗ Vazio");
   }
 
@@ -308,6 +311,14 @@ export default function Calendar() {
                   variant="outline"
                 >
                   <CalendarDays className="w-4 h-4 mr-2" /> Abrir Google Calendar
+                </Button>
+                <Button
+                  onClick={() =>
+                    globalThis.open("https://vercel.com/thiagobodevanadv-alts-projects/assistente-juridico-p/settings/environment-variables", "_blank")
+                  }
+                  variant="default"
+                >
+                  <Info className="w-4 h-4 mr-2" /> Configurar no Vercel
                 </Button>
               </div>
             </div>
