@@ -44,7 +44,7 @@ isolate: process.env.CI ? true : false,  // Isolar apenas no CI
 - name: Run unit tests with OOM monitoring
   run: |
     npm run test:run 2>&1 | tee test-output.log || true
-    
+
     # Check for Worker OOM errors
     if grep -q "Worker exited unexpectedly" test-output.log; then
       echo "⚠️ Worker OOM detected! Retrying with more memory..."
@@ -76,7 +76,7 @@ test-sharding:
   strategy:
     matrix:
       shard: [1, 2, 3, 4]  # 4 shards paralelos
-  
+
   steps:
     - name: Run tests shard ${{ matrix.shard }}/4
       run: npm run test:run -- --shard=${{ matrix.shard }}/4

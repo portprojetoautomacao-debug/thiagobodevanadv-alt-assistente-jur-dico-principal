@@ -1070,6 +1070,7 @@ PJe Web → Content Script → Service Worker → /api/pje-sync → KV Storage
 ### 3.3 Instalação e Uso
 
 **Build da extensão:**
+
 ```bash
 cd chrome-extension-pje
 npm install
@@ -1077,6 +1078,7 @@ npm run build
 ```
 
 **Carregar no Chrome:**
+
 1. Abra `chrome://extensions/`
 2. Ative "Modo desenvolvedor"
 3. Clique em "Carregar sem compactação"
@@ -1084,6 +1086,7 @@ npm run build
 5. Configure sua API Key no popup da extensão
 
 **Testar sincronização:**
+
 1. Abra uma aba do PJe (https://pje*.tjmg.jus.br/*)
 2. Clique no ícone da extensão
 3. Clique em "Sync Now"
@@ -1092,12 +1095,14 @@ npm run build
 ### 3.4 Validação Técnica
 
 **Testes:**
+
 - ✅ 31 testes unitários passando
 - ✅ Build webpack otimizado (~100 KB)
 - ✅ TypeScript strict mode
 - ✅ ES2021 target para features modernas
 
 **Performance:**
+
 - ⚡ Bundle otimizado com tree-shaking
 - ⚡ Lazy loading de módulos
 - ⚡ Caching inteligente no Chrome Storage
