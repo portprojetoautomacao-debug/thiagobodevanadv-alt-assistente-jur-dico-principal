@@ -327,47 +327,70 @@ jobs:
       - name: 📦 Instalar dependências
         run: npm ci
 
+      - name: 🏗️ Build (needed for analysis)
+        run: |
+          echo "🏗️ Executando build de produção (para análise de build / chunks)..."
+          NODE_ENV=production npm run build
+
       - name: 🔍 Analisar Lazy Loading
         run: |
           echo "🔍 Analisando implementação de lazy loading..."
-
-          # Verificar se componentes usam React.lazy
-          LAZY_COMPONENTS=$(grep -r "React.lazy\|lazy(" src/components/ | wc -l)
-          TOTAL_COMPONENTS=$(find src/components/ -name "*.tsx" -o -name "*.ts" | wc -l)
-
+          LAZY_COMPONENTS=$(grep -r "React.lazy\|lazy(" src/components/ || true | wc -l)
+          TOTAL_COMPONENTS=$(find src/components/ -name "*.tsx" -o -name "*.ts" 2>/dev/null | wc -l)
           echo "📦 Componentes com lazy loading: $LAZY_COMPONENTS / $TOTAL_COMPONENTS"
-
-          if [[ $LAZY_COMPONENTS -lt $(($TOTAL_COMPONENTS / 2)) ]]; then
+          if [[ $TOTAL_COMPONENTS -eq 0 ]]; then
+            echo "⚠️  Aviso: nenhum componente encontrado em src/components/ — verifique a estrutura do projeto"
+          elif [[ $LAZY_COMPONENTS -lt $(($TOTAL_COMPONENTS / 2)) ]]; then
             echo "⚠️  ALERTA: Poucos componentes usam lazy loading"
           fi
 
       - name: 📊 Analisar Code Splitting
         run: |
           echo "📊 Analisando code splitting..."
-
-          # Verificar se há múltiplos chunks no build
-          CHUNK_COUNT=$(ls dist/static/js/ | wc -l)
+          # Prefer legacy create-react-app path, fall back to Vite output
+          if [[ -d "dist/static/js" ]]; then
+            CHUNK_DIR="dist/static/js"
+          elif [[ -d "dist/assets" ]]; then
+            CHUNK_DIR="dist/assets"
+          else
+            CHUNK_DIR=""
+          fi
+          if [[ -n "$CHUNK_DIR" ]]; then
+            CHUNK_COUNT=$(ls -1 "$CHUNK_DIR" 2>/dev/null | wc -l)
+          else
+            CHUNK_COUNT=0
+          fi
           echo "🧩 Número de chunks JavaScript: $CHUNK_COUNT"
-
           if [[ $CHUNK_COUNT -lt 3 ]]; then
             echo "⚠️  ALERTA: Poucos chunks - considere implementar mais code splitting"
           fi
 
-          # Analisar tamanho dos chunks
+          # Analisar tamanho dos chunks (if available)
           echo "📏 Tamanhos dos chunks:" > chunk-analysis.md
-          ls -lh dist/static/js/ >> chunk-analysis.md
+          if [[ -n "$CHUNK_DIR" ]]; then
+            ls -lh "$CHUNK_DIR" >> chunk-analysis.md 2>/dev/null || true
+          else
+            echo "Nenhum diretório de chunks encontrado (expected dist/static/js or dist/assets)" >> chunk-analysis.md
+          fi
 
       - name: 🗜️  Verificar Compressão
         run: |
           echo "🗜️  Verificando compressão de assets..."
-
-          # Verificar se arquivos estão comprimidos
-          GZIP_FILES=$(find dist/ -name "*.js" -o -name "*.css" | head -5 | xargs file | grep -c "gzip")
-          TOTAL_ASSETS=$(find dist/ -name "*.js" -o -name "*.css" | wc -l)
-
+          # find may return nothing; guard so xargs doesn't fail
+          ASSET_FILES=$(find dist/ -type f \( -name "*.js" -o -name "*.css" \) 2>/dev/null || true)
+          if [[ -z "$ASSET_FILES" ]]; then
+            echo "Nenhum asset .js/.css encontrado em dist/ para verificar compressão"
+            GZIP_FILES=0
+            TOTAL_ASSETS=0
+          else
+            # Limit to first 100 to avoid long output
+            TOTAL_ASSETS=$(echo "$ASSET_FILES" | wc -l)
+            GZIP_FILES=$(echo "$ASSET_FILES" | head -100 | xargs file 2>/dev/null | grep -c "gzip" || true)
+          fi
           echo "🗜️  Arquivos comprimidos: $GZIP_FILES / $TOTAL_ASSETS"
-
-          if [[ $GZIP_FILES -eq 0 ]]; then
+          if [[ $TOTAL_ASSETS -eq 0 ]]; then
+            echo "⚠️  Aviso: nenhum asset encontrado para checar compressão"
+          elif [[ $GZIP_FILES -eq 0 ]]; then
             echo "⚠️  ALERTA: Assets não estão comprimidos"
           fi
 
