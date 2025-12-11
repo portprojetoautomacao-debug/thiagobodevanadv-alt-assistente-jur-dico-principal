@@ -15,7 +15,7 @@ O sistema agora possui **visibilidade completa** do "pensamento" e atividades de
 
 ### No Painel Web
 
-1. Acesse: `https://assistente-juridico-p.vercel.app/`
+1. Acesse: `https://assistente-juridico-github.vercel.app/`
 2. Vá para **"Agentes IA"** no menu lateral
 3. Clique na aba **"Atividade em Tempo Real"**
 4. Você verá dois painéis:
@@ -28,10 +28,10 @@ O sistema agora possui **visibilidade completa** do "pensamento" e atividades de
 
 ```bash
 # Ver todas as tarefas ativas
-GET https://assistente-juridico-p.vercel.app/api/agent-thinking
+GET https://assistente-juridico-github.vercel.app/api/agent-thinking
 
 # Ver pensamento de uma tarefa específica
-GET https://assistente-juridico-p.vercel.app/api/agent-thinking?taskId=abc123
+GET https://assistente-juridico-github.vercel.app/api/agent-thinking?taskId=abc123
 ```
 
 **Resposta:**
@@ -76,7 +76,7 @@ GET https://assistente-juridico-p.vercel.app/api/agent-thinking?taskId=abc123
 #### 2. Diagnóstico da Fila de Agentes
 
 ```bash
-GET https://assistente-juridico-p.vercel.app/api/debug-agent-queue
+GET https://assistente-juridico-github.vercel.app/api/debug-agent-queue
 ```
 
 **Resposta:**
@@ -337,4 +337,4 @@ Para dúvidas ou problemas:
 
 ---
 
-**Deploy em produção**: ✅ Disponível em https://assistente-juridico-p.vercel.app/
+**Deploy em produção**: ✅ Disponível em https://assistente-juridico-github.vercel.app/

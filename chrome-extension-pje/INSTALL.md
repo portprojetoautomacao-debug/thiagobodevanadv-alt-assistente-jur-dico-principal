@@ -52,7 +52,7 @@ npm run test:coverage
 
 #### 1. Configuração da API Key
 
-1. Abra https://assistente-juridico-p.vercel.app
+1. Abra https://assistente-juridico-github.vercel.app
 2. Faça login com Google
 3. Vá em **Configurações** → **API Keys**
 4. Gere uma nova chave

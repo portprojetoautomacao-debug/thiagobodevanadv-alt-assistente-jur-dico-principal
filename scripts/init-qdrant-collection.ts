@@ -1,13 +1,13 @@
 /**
- * Script de Inicialização do Qdrant
- * 
- * Cria a collection 'legal_docs' com configurações otimizadas
- * para armazenamento de documentos jurídicos
+ * Script de Inicializaï¿½ï¿½o do Qdrant
+ *
+ * Cria a collection 'legal_docs' com configuraï¿½ï¿½es otimizadas
+ * para armazenamento de documentos jurï¿½dicos
  */
 
 import { config } from "dotenv";
 
-// Carregar variáveis de ambiente
+// Carregar variï¿½veis de ambiente
 config();
 
 const QDRANT_URL = process.env.QDRANT_URL;
@@ -26,28 +26,28 @@ interface QdrantCollectionConfig {
 
 async function createCollection() {
   if (!QDRANT_URL || !QDRANT_API_KEY) {
-    console.error("? ERRO: Variáveis QDRANT_URL e QDRANT_API_KEY não configuradas no .env");
+    console.error("? ERRO: Variï¿½veis QDRANT_URL e QDRANT_API_KEY nï¿½o configuradas no .env");
     process.exit(1);
   }
 
-  console.log("?? Iniciando criação da collection Qdrant...");
+  console.log("?? Iniciando criaï¿½ï¿½o da collection Qdrant...");
   console.log(`?? URL: ${QDRANT_URL}`);
   console.log(`?? Collection: ${COLLECTION_NAME}`);
 
   const collectionConfig: QdrantCollectionConfig = {
     vectors: {
-      size: 1536, // OpenAI text-embedding-ada-002 / Gemini embedding size
+      size: 768, // text-embedding-004 / text-embedding-3-large dims
       distance: "Cosine",
     },
     optimizers_config: {
-      indexing_threshold: 20000, // Otimizado para produção
+      indexing_threshold: 20000, // Otimizado para produï¿½ï¿½o
     },
   };
 
   try {
-    // 1. Verificar se collection já existe
-    console.log("\n?? Verificando se collection já existe...");
-    
+    // 1. Verificar se collection jï¿½ existe
+    console.log("\n?? Verificando se collection jï¿½ existe...");
+
     const checkResponse = await fetch(`${QDRANT_URL}/collections/${COLLECTION_NAME}`, {
       method: "GET",
       headers: {
@@ -56,7 +56,7 @@ async function createCollection() {
     });
 
     if (checkResponse.ok) {
-      console.log("? Collection já existe!");
+      console.log("? Collection jï¿½ existe!");
       const data = await checkResponse.json();
       console.log("\n?? Status da Collection:");
       console.log(`   - Vectors: ${data.result?.vectors_count || 0}`);
@@ -86,9 +86,9 @@ async function createCollection() {
     console.log("? Collection criada com sucesso!");
     console.log(JSON.stringify(result, null, 2));
 
-    // 3. Verificar criação
-    console.log("\n?? Verificando criação...");
-    
+    // 3. Verificar criaï¿½ï¿½o
+    console.log("\n?? Verificando criaï¿½ï¿½o...");
+
     const verifyResponse = await fetch(`${QDRANT_URL}/collections/${COLLECTION_NAME}`, {
       method: "GET",
       headers: {
@@ -99,37 +99,36 @@ async function createCollection() {
     if (verifyResponse.ok) {
       const data = await verifyResponse.json();
       console.log("? Collection verificada!");
-      console.log("\n?? Configuração Final:");
+      console.log("\n?? Configuraï¿½ï¿½o Final:");
       console.log(`   - Vector Size: ${data.result?.config?.params?.vectors?.size || 1536}`);
       console.log(`   - Distance: ${data.result?.config?.params?.vectors?.distance || "Cosine"}`);
       console.log(`   - Status: ${data.result?.status || "green"}`);
     }
 
-    console.log("\n?? Inicialização concluída com sucesso!");
-    console.log("\n?? Próximos passos:");
-    console.log("   1. Popule a collection com documentos jurídicos");
+    console.log("\n?? Inicializaï¿½ï¿½o concluï¿½da com sucesso!");
+    console.log("\n?? Prï¿½ximos passos:");
+    console.log("   1. Popule a collection com documentos jurï¿½dicos");
     console.log("   2. Configure o agente de Pesquisa Jurisprudencial");
-    console.log("   3. Teste a busca semântica");
-    
+    console.log("   3. Teste a busca semï¿½ntica");
   } catch (error) {
     console.error("\n? ERRO ao criar collection:");
-    
+
     if (error instanceof Error) {
       console.error(`   Mensagem: ${error.message}`);
-      
+
       if (error.message.includes("401") || error.message.includes("Unauthorized")) {
-        console.error("\n?? Dica: Verifique se a QDRANT_API_KEY está correta no .env");
+        console.error("\n?? Dica: Verifique se a QDRANT_API_KEY estï¿½ correta no .env");
       }
-      
+
       if (error.message.includes("404")) {
-        console.error("\n?? Dica: Verifique se a QDRANT_URL está correta no .env");
+        console.error("\n?? Dica: Verifique se a QDRANT_URL estï¿½ correta no .env");
       }
-      
+
       if (error.message.includes("timeout") || error.message.includes("ECONNREFUSED")) {
-        console.error("\n?? Dica: Verifique sua conexão com a internet e se o cluster está online");
+        console.error("\n?? Dica: Verifique sua conexï¿½o com a internet e se o cluster estï¿½ online");
       }
     }
-    
+
     process.exit(1);
   }
 }

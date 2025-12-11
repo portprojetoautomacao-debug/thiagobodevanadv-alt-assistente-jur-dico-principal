@@ -187,10 +187,10 @@ Cada um com:
 
 ```bash
 # LLM
-LLM_PROXY_URL=https://assistente-juridico-p.vercel.app/api/llm-proxy
+LLM_PROXY_URL=https://assistente-juridico-github.vercel.app/api/llm-proxy
 
 # Base da aplicação
-APP_BASE_URL=https://assistente-juridico-p.vercel.app
+APP_BASE_URL=https://assistente-juridico-github.vercel.app
 
 # Evolution API (WhatsApp)
 EVOLUTION_API_URL=https://sua-evolution-api.com

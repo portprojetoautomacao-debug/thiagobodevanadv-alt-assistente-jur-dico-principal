@@ -345,7 +345,7 @@ GET /api/observability?action=health
 import { intimacaoWorkflow } from './lib/ai/orchestrator-examples';
 
 const result = await intimacaoWorkflow({
-  baseUrl: 'https://assistente-juridico-p.vercel.app',
+  baseUrl: 'https://assistente-juridico-github.vercel.app',
   evolutionApiUrl: process.env.EVOLUTION_API_URL,
   evolutionApiKey: process.env.EVOLUTION_API_KEY,
 });

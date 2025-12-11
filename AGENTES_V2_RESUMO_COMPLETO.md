@@ -168,8 +168,8 @@ Cada agente com:
 
 ```bash
 # Vercel Dashboard → Settings → Environment Variables
-LLM_PROXY_URL=https://assistente-juridico-p.vercel.app/api/llm-proxy
-APP_BASE_URL=https://assistente-juridico-p.vercel.app
+LLM_PROXY_URL=https://assistente-juridico-github.vercel.app/api/llm-proxy
+APP_BASE_URL=https://assistente-juridico-github.vercel.app
 EVOLUTION_API_URL=https://sua-evolution-api.com
 EVOLUTION_API_KEY=sua-chave
 TODOIST_API_TOKEN=seu-token
@@ -179,7 +179,7 @@ DJEN_API_KEY=sua-chave
 ### 2. Testar Novo Endpoint
 
 ```bash
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents-v2 \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents-v2 \
   -H "Content-Type: application/json" \
   -d '{
     "agentId": "justine",

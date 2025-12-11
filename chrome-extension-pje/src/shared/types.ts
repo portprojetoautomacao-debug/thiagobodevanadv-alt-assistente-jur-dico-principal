@@ -37,7 +37,13 @@ export interface Expediente {
 }
 
 export interface SyncMessage {
-  type: "SYNC_PROCESSOS" | "SYNC_EXPEDIENTES" | "SYNC_DOCUMENTO" | "EXTRACT_DOCUMENT" | "FORCE_SYNC" | "PING";
+  type:
+    | "SYNC_PROCESSOS"
+    | "SYNC_EXPEDIENTES"
+    | "SYNC_DOCUMENTO"
+    | "EXTRACT_DOCUMENT"
+    | "FORCE_SYNC"
+    | "PING";
   data?: ProcessoPJe[] | Expediente[] | DocumentoPJe;
   timestamp: number;
 }
@@ -54,7 +60,15 @@ export interface SyncResponse {
  */
 export interface DocumentoPJe {
   id: string;
-  tipo: "certidao" | "mandado" | "despacho" | "sentenca" | "outro";
+  tipo:
+    | "certidao"
+    | "mandado"
+    | "despacho"
+    | "sentenca"
+    | "decisao"
+    | "peticao"
+    | "contestacao"
+    | "outro";
   conteudo: string;
   dataExtracao: string; // ISO 8601
   metadados: {
@@ -66,6 +80,8 @@ export interface DocumentoPJe {
     vara?: string;
     cpfs?: string[];
     datas?: string[];
+    dataJuntada?: string;
+    descricao?: string;
   };
 }
 
@@ -77,4 +93,86 @@ export interface StorageData {
   documentos?: DocumentoPJe[];
   lastSync?: number;
   enabled?: boolean;
+  crawlerQueue?: CrawlJob[];
+  crawlerResults?: Record<string, CrawlResult>;
+}
+
+/**
+ * Job de crawling
+ */
+export interface CrawlJob {
+  id: string;
+  processNumber: string;
+  processNumberFormatted: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  retries: number;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  tabId?: number;
+  error?: string;
+  pages: string[];
+  metadata: {
+    classe?: string;
+    vara?: string;
+    comarca?: string;
+    parteAutor?: string;
+    parteReu?: string;
+  };
+}
+
+/**
+ * Resultado do crawling de um processo
+ */
+export interface CrawlResult {
+  processNumber: string;
+  processNumberFormatted: string;
+  crawledAt: string;
+  dados: Record<string, string>;
+  partes: PartePJe[];
+  movimentos: Movimento[];
+  documentos: DocumentoPJe[];
+  expedientes: Expediente[];
+  textoCompleto: string;
+}
+
+/**
+ * Status do crawler
+ */
+export interface CrawlStatus {
+  isRunning: boolean;
+  isPaused: boolean;
+  queueSize: number;
+  activeJobs: number;
+  completedJobs: number;
+  pendingJobs: number;
+  failedJobs: number;
+}
+
+/**
+ * Parte do processo
+ */
+export interface PartePJe {
+  nome: string;
+  tipo: "autor" | "reu" | "terceiro" | "outro";
+  documento?: string;
+  advogados?: string[];
+}
+
+/**
+ * Movimento processual
+ */
+export interface Movimento {
+  data: string;
+  descricao: string;
+  tipo:
+    | "sentenca"
+    | "decisao"
+    | "despacho"
+    | "intimacao"
+    | "citacao"
+    | "juntada"
+    | "publicacao"
+    | "outros";
+  timestamp: number;
 }

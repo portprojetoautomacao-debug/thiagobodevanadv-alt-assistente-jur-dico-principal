@@ -235,7 +235,8 @@ export function determinarPrioridade(
   // Tipos cr�ticos
   if (["citacao", "intimacao", "mandado"].includes(expediente.tipo || "")) {
     if (expediente.prazo?.urgente) return "critica";
-    if (expediente.prazo && isPrazoVencendo(expediente as any)) return "urgente";
+    if (expediente.prazo && isPrazoVencendo(expediente as z.infer<typeof expedienteSchema>))
+      return "urgente";
     return "alta";
   }
 

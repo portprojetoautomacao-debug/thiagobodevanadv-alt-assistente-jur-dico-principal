@@ -90,7 +90,7 @@
           "value": "http"
         }
       ],
-      "destination": "https://assistente-juridico-p.vercel.app/:path*",
+      "destination": "https://assistente-juridico-github.vercel.app/:path*",
       "permanent": true
     }
   ],

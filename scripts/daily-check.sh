@@ -55,7 +55,7 @@ echo ""
 
 # 1. Health Check
 info "Verificando /api/health..."
-HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" https://assistente-juridico-p.vercel.app/api/health || echo "000")
+HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" https://assistente-juridico-github.vercel.app/api/health || echo "000")
 HTTP_CODE=$(echo "$HEALTH_RESPONSE" | tail -n1)
 BODY=$(echo "$HEALTH_RESPONSE" | sed '$d')
 

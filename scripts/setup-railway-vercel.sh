@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # Variáveis
 PROJECT_ID="a364e7f2-c234-477b-8dac-918f00f64737"
-VERCEL_URL="https://assistente-juridico-p.vercel.app"
+VERCEL_URL="https://assistente-juridico-github.vercel.app"
 
 # ======================================
 # ETAPA 1: Verificar CLI Railway

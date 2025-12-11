@@ -60,7 +60,7 @@ create_variable "NODE_ENV" "production" false false
 create_variable "VERCEL_ENV" "production" false false
 
 # Kubernetes
-create_variable "KUBE_INGRESS_BASE_DOMAIN" "assistente-juridico-p.vercel.app" false false
+create_variable "KUBE_INGRESS_BASE_DOMAIN" "assistente-juridico-github.vercel.app" false false
 create_variable "AUTO_DEVOPS_PLATFORM_TARGET" "kubernetes" false false
 create_variable "AUTO_DEVOPS_DEPLOY_STRATEGY" "continuous" false false
 
@@ -113,7 +113,7 @@ echo ""
 # Google OAuth (placeholders - configure manualmente)
 create_variable "VITE_GOOGLE_CLIENT_ID" "" false false
 create_variable "VITE_GOOGLE_API_KEY" "" false false
-create_variable "VITE_REDIRECT_URI" "https://assistente-juridico-p.vercel.app" false false
+create_variable "VITE_REDIRECT_URI" "https://assistente-juridico-github.vercel.app" false false
 create_variable "VITE_APP_ENV" "production" false false
 
 # GitHub OAuth (opcional)

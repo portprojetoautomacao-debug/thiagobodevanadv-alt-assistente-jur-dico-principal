@@ -541,6 +541,23 @@ export const DEFAULT_AGENTS: Agent[] = [
     ],
   },
   {
+    id: "pesquisa-juris-qdrant",
+    name: "Pesquisador de Jurisprudência (Qdrant)",
+    description:
+      "Versão especializada com busca vetorial integrada ao Qdrant para pesquisa de precedentes e jurisprudência",
+    type: "researcher",
+    status: "idle",
+    enabled: false,
+    lastActivity: "Aguardando ativação",
+    continuousMode: false,
+    capabilities: [
+      "jurisprudence-search",
+      "precedent-analysis",
+      "vector-search",
+      "case-law-research",
+    ],
+  },
+  {
     id: "analise-risco",
     name: "Análise de Risco",
     description:

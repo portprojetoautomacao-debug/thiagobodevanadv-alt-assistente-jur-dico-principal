@@ -207,11 +207,17 @@ export abstract class LangGraphAgent {
     let timeoutId: NodeJS.Timeout | null = null;
 
     try {
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(`[${this.config.agentName}] Attempt ${attempt} starting`);
+      }
       this.abortController = new AbortController();
       timeoutId = this.setupTimeout();
 
       const resultState = await this.run(state, this.abortController.signal);
 
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(`[${this.config.agentName}] Attempt ${attempt} succeeded`);
+      }
       return { success: true, state: resultState };
     } catch (error) {
       const errorState = this.handleAttemptError(state, error, attempt);
@@ -250,6 +256,9 @@ export abstract class LangGraphAgent {
    * Handle error during execution attempt
    */
   private handleAttemptError(state: AgentState, error: unknown, attempt: number): AgentState {
+    if (process.env.DEBUG_TESTS === "true") {
+      console.debug(`[${this.config.agentName}] Attempt ${attempt} failed:`, error);
+    }
     if (this.isLastAttempt(attempt)) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       return updateState(state, {

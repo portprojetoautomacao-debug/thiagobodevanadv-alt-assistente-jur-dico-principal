@@ -26,7 +26,8 @@ export default defineConfig({
       // ✅ FIX: Usar 'inline' ao invés do padrão para evitar problemas com CSP
       // O script de registro será injetado diretamente no HTML ao invés de arquivo separado
       injectRegister: "inline",
-      includeAssets: ["robots.txt", "sitemap.xml", "*.svg", "*.png"],
+      // ✅ Remover robots.txt/sitemap.xml do precache - não são necessários offline
+      includeAssets: ["*.svg", "*.png", "*.ico"],
       manifest: {
         id: "/",
         name: "Assistente Jurídico PJe",
@@ -74,6 +75,8 @@ export default defineConfig({
         clientsClaim: true,
         // Limpar caches antigos automaticamente
         cleanupOutdatedCaches: true,
+        // ✅ Reduzir verbosidade de logs em produção
+        mode: process.env.NODE_ENV === "production" ? "production" : "development",
         // ✅ INCLUIR todos os chunks no precache (inclusive lazy-loaded)
         // O cleanupOutdatedCaches vai remover versões antigas automaticamente
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],

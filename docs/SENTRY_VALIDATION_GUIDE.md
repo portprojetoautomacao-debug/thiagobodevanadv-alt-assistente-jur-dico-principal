@@ -229,14 +229,14 @@ cat .env.production
 git push origin main
 # ✅ Vercel detecta push
 # ✅ Build em São Paulo (gru1)
-# ✅ Deploy em https://assistente-juridico-p.vercel.app
+# ✅ Deploy em https://assistente-juridico-github.vercel.app
 ```
 
 ### Monitoramento Pós-Deploy
 
 **URLs para monitorar**:
-- **App**: https://assistente-juridico-p.vercel.app
-- **Health**: https://assistente-juridico-p.vercel.app/api/health
+- **App**: https://assistente-juridico-github.vercel.app
+- **Health**: https://assistente-juridico-github.vercel.app/api/health
 - **Sentry Dashboard**: https://sentry.io/insights/ai/
 
 **Verificações**:

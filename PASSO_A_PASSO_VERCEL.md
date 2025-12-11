@@ -37,7 +37,7 @@ Se você adicionou a variável DEPOIS do último deploy, o build não tem ela ai
 
 Após o redeploy, teste:
 
-1. Acesse: https://assistente-juridico-p.vercel.app
+1. Acesse: https://assistente-juridico-github.vercel.app
 
 2. Pressione **F12** (abre DevTools)
 
@@ -74,13 +74,13 @@ Mesmo com a variável correta, o Google precisa autorizar as URLs.
 
 4. **Verifique** se estas URLs estão em **"Authorized JavaScript origins"**:
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 
 5. **Verifique** se estas URLs estão em **"Authorized redirect URIs"**:
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 
@@ -94,7 +94,7 @@ Mesmo com a variável correta, o Google precisa autorizar as URLs.
 
 ## 🧪 PASSO 4: Teste o Login
 
-1. Acesse: https://assistente-juridico-p.vercel.app
+1. Acesse: https://assistente-juridico-github.vercel.app
 
 2. **Hard refresh** (Ctrl+Shift+R ou Cmd+Shift+R)
 
@@ -162,11 +162,11 @@ Mesmo com a variável correta, o Google precisa autorizar as URLs.
 ### Google Cloud Console:
 ```
 ✅ Authorized JavaScript origins:
-   - https://assistente-juridico-p.vercel.app
+   - https://assistente-juridico-github.vercel.app
    - https://assistente-juridico-github.vercel.app
 
 ✅ Authorized redirect URIs:
-   - https://assistente-juridico-p.vercel.app
+   - https://assistente-juridico-github.vercel.app
    - https://assistente-juridico-github.vercel.app
 ```
 

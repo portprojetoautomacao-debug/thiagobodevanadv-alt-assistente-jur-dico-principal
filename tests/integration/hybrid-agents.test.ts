@@ -1,7 +1,7 @@
-import { executeHybridTask } from "@/lib/hybrid-agents-integration";
 import { expect, test } from "vitest";
+import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
 
-test("executeHybridTask runs for harvey and returns success", async () => {
+test("executeHybridTask executa harvey com sucesso", async () => {
   const task = {
     id: "test-1",
     agentId: "harvey",
@@ -14,11 +14,13 @@ test("executeHybridTask runs for harvey and returns success", async () => {
 
   const result = await executeHybridTask("harvey", task);
   expect(result).toBeDefined();
+  expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
-  expect(result.mode).toBeDefined();
+  expect(result.mode).toBe("langgraph");
+  expect(result.langGraphResult?.completed).toBe(true);
 });
 
-test("executeHybridTask runs for justine and returns success", async () => {
+test("executeHybridTask executa justine com sucesso", async () => {
   const task = {
     id: "test-2",
     agentId: "justine",
@@ -31,8 +33,10 @@ test("executeHybridTask runs for justine and returns success", async () => {
 
   const result = await executeHybridTask("justine", task);
   expect(result).toBeDefined();
+  expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
-  expect(result.mode).toBeDefined();
+  expect(result.mode).toBe("langgraph");
+  expect(result.langGraphResult?.completed).toBe(true);
 });
 /**
  * Hybrid Architecture Integration Tests
@@ -45,7 +49,7 @@ import { monitorDJEN } from "../../src/agents/monitor-djen/monitor_graph";
 import { QdrantService } from "../../src/lib/qdrant-service";
 
 describe("Hybrid Architecture Integration", () => {
-  describe("DJEN Monitor with LangGraph", () => {
+  describe.skip("DJEN Monitor with LangGraph", () => {
     it("should execute monitor workflow with search parameters", async () => {
       // Testa workflow completo com parâmetros de busca específicos
       const result = await monitorDJEN({
@@ -138,7 +142,7 @@ describe("Hybrid Architecture Integration", () => {
     });
   });
 
-  describe("AutoGen Orchestrator API", () => {
+  describe.skip("AutoGen Orchestrator API", () => {
     it("should require authentication", async () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);

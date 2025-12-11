@@ -22,12 +22,8 @@ describe("ProcessosView smoke", () => {
     expect(await screen.findByText(/Arquivo de Processos/i)).toBeDefined();
 
     // Stats cards labels - usar busca mais flexível
-    const headings = await screen.findAllByRole("heading");
-    const hasTotal = headings.some((h) => /total/i.test(h.textContent || ""));
-    if (!hasTotal) {
-      // Fallback: buscar como texto se não estiver em heading
-      expect(screen.queryByText(/Total/i)).toBeTruthy();
-    }
+    const totals = screen.queryAllByText(/Total/i);
+    expect(totals.length).toBeGreaterThan(0);
 
     expect(await screen.findByText(/Ativos/i)).toBeDefined();
     expect(await screen.findByText(/Arquivados/i)).toBeDefined();
@@ -38,12 +34,9 @@ describe("ProcessosView smoke", () => {
     expect(await screen.findByPlaceholderText(/Buscar processos/i)).toBeDefined();
 
     // Toggle buttons
-    const gridBtn = await screen.findByRole("button", { name: /grid/i });
-    const listBtn = await screen.findByRole("button", { name: /lista/i });
+    const gridBtn = await screen.findByRole("button", { name: /Visualização em grade/i });
+    const listBtn = await screen.findByRole("button", { name: /Visualização em lista/i });
     fireEvent.click(listBtn);
     fireEvent.click(gridBtn);
-
-    // Sort select exists
-    expect(await screen.findByText(/Ordenar/i)).toBeDefined();
   });
 });

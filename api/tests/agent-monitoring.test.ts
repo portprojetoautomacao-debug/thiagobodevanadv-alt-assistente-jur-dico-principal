@@ -125,7 +125,8 @@ describe("agentMonitor.trackTaskExecution", () => {
     const duration = Date.now() - startTime;
 
     expect(result).toBe("completed");
-    expect(duration).toBeGreaterThanOrEqual(100);
+    // Usar margem de 5ms para compensar jitter do timer em diferentes ambientes
+    expect(duration).toBeGreaterThanOrEqual(95);
   });
 
   it("propagates errors correctly", async () => {

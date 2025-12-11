@@ -47,7 +47,7 @@ echo ""
 # Nunca hardcode tokens no código!
 create_variable "GITHUB_TOKEN" "\${GITHUB_TOKEN:-configure_me}" true false
 create_variable "GITLAB_TOKEN" "$GITLAB_TOKEN" true true
-create_variable "KUBE_INGRESS_BASE_DOMAIN" "assistente-juridico-p.vercel.app" false false
+create_variable "KUBE_INGRESS_BASE_DOMAIN" "assistente-juridico-github.vercel.app" false false
 create_variable "AUTO_DEVOPS_PLATFORM_TARGET" "kubernetes" false false
 create_variable "AUTO_DEVOPS_DEPLOY_STRATEGY" "continuous" false false
 

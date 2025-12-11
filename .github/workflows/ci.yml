@@ -60,6 +60,9 @@ jobs:
             ${{ runner.os }}-build-${{ matrix.node-version }}-
             ${{ runner.os }}-build-
 
+      - name: Check for official SARIF tools (dry-run)
+        run: npm run ensure:sarif-deps || true
+
       - name: Install dependencies
         run: npm ci --include=dev
 
@@ -235,6 +238,9 @@ jobs:
           node-version: "22.x"
           cache: "npm"
 
+      - name: Check for official SARIF tools (dry-run)
+        run: npm run ensure:sarif-deps || true
+
       - name: Install dependencies
         run: npm ci
 
@@ -274,6 +280,17 @@ jobs:
           echo "✅ Linting completed"
         continue-on-error: true
 
+      - name: Generate ESLint SARIF report
+        run: |
+          echo "Generating SARIF report for GitHub Code Scanning..."
+          npm run lint:sarif || true
+          if [ -f "eslint-results.sarif" ]; then
+            echo "✅ SARIF report generated successfully"
+          else
+            echo "⚠️ SARIF report not generated"
+          fi
+        continue-on-error: true
+
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('eslint-results.sarif') != ''
@@ -303,6 +320,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Check for official SARIF tools (dry-run)
+        run: npm run ensure:sarif-deps || true
+
       - name: Install dependencies
         run: npm ci
 
@@ -326,14 +346,14 @@ jobs:
           echo "Starting Qdrant container..."
           docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
           # Wait for Qdrant to be ready
-          timeout 30 bash -c 'until curl -f http://localhost:6333/healthz > /dev/null 2>&1; do sleep 1; done'
+          timeout 30 bash -c 'until curl -f http://localhost:6333/health > /dev/null 2>&1; do sleep 1; done'
           echo "✅ Qdrant is ready"
         if: success()
 
       - name: Test Qdrant connectivity
         run: |
           echo "Testing Qdrant health endpoint..."
-          curl -f http://localhost:6333/healthz || exit 1
+          curl -f http://localhost:6333/health || exit 1
           echo "✅ Qdrant health check passed"
         if: success()
 
@@ -372,7 +392,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: [build-and-test, lint-security, test-hybrid-stubs]
+    needs: [build-and-test, lint-security, test-hybrid-stubs, node-api-tests]
     if: always()
 
     steps:
@@ -387,12 +407,91 @@ jobs:
           if [[ "${{ needs.build-and-test.result }}" == "success" && "${{ needs.lint-security.result }}" == "success" && "${{ needs.test-hybrid-stubs.result }}" == "success" ]]; then
             echo "✅ All jobs succeeded"
             exit 0
-          else
-            echo "❌ One or more jobs failed — see logs above"
-            echo ""
-            echo "Failed jobs:"
-            [[ "${{ needs.build-and-test.result }}" != "success" ]] && echo "  - build-and-test: ${{ needs.build-and-test.result }}"
-            [[ "${{ needs.lint-security.result }}" != "success" ]] && echo "  - lint-security: ${{ needs.lint-security.result }}"
-            [[ "${{ needs.test-hybrid-stubs.result }}" != "success" ]] && echo "  - test-hybrid-stubs: ${{ needs.test-hybrid-stubs.result }}"
-            exit 1
-          fi
+
+    node-api-tests:
+      name: Node API Tests (Backend)
+      runs-on: ubuntu-latest
+      timeout-minutes: 30
+      permissions:
+        contents: read
+      strategy:
+        matrix:
+          node-version: ["22.x"]
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v4
+          with:
+            node-version: ${{ matrix.node-version }}
+            cache: "npm"
+
+        - name: Install dependencies
+          run: npm ci --include=dev
+
+        - name: Start Qdrant container for backend tests
+          run: |
+            echo "Starting Qdrant container for backend tests..."
+            docker run -d --name qdrant-ci -p 6333:6333 qdrant/qdrant:latest || true
+            # Wait for Qdrant to be healthy
+            timeout 30 bash -c 'until curl -f http://localhost:6333/health > /dev/null 2>&1; do sleep 1; done'
+
+        - name: Run Node API tests
+          run: |
+            echo "Running Node API tests (test:api)..."
+            npm run test:api
+
+        - name: Stop Qdrant container
+          if: always()
+          run: |
+            docker stop qdrant-ci || true
+            docker rm qdrant-ci || true
+
+    single-thread-investigation:
+      name: Single Thread Investigation (Runs on failure)
+      runs-on: ubuntu-latest
+      needs: [build-and-test]
+      if: needs.build-and-test.result == 'failure'
+      permissions:
+        contents: read
+      env:
+        NODE_OPTIONS: --max-old-space-size=4096
+        DEBUG_TESTS: "true"
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: "22.x"
+            cache: "npm"
+
+        - name: Install dependencies
+          run: npm ci
+
+        - name: Start Qdrant (if needed by backend tests)
+          run: |
+            docker run -d --name qdrant-single -p 6333:6333 qdrant/qdrant:latest || true
+            timeout 30 bash -c 'until curl -f http://localhost:6333/health > /dev/null 2>&1; do sleep 1; done' || true
+          continue-on-error: true
+
+        - name: Run tests single-threaded (diagnostic)
+          run: |
+            echo "Running diagnostic single-threaded test run to capture worker crash info..."
+            npx vitest run --config vitest.config.singlethread.ts --run > single-thread-test.log 2>&1 || true
+
+        - name: Upload diagnostic logs
+          uses: actions/upload-artifact@v4.4.3
+          with:
+            name: single-thread-test-log
+            path: single-thread-test.log
+            retention-days: 7
+
+        - name: Stop Qdrant
+          if: always()
+          run: |
+            docker stop qdrant-single || true
+            docker rm qdrant-single || true
+    # build-matrix-status steps end here

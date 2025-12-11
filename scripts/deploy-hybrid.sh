@@ -95,7 +95,7 @@ if [ "$DSPY_BRIDGE_URL" == "http://localhost:8765" ]; then
     echo "   4. Configure variáveis:"
     echo "      - DSPY_API_TOKEN=$DSPY_API_TOKEN"
     echo "      - DSPY_PORT=8765"
-    echo "      - ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app"
+    echo "      - ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app"
     echo "   5. Start command: python3 scripts/dspy_bridge.py"
     echo "   6. Copie a URL gerada para DSPY_BRIDGE_URL no .env"
     echo ""

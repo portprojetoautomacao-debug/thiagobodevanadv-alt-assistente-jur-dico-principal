@@ -2,15 +2,15 @@
  * Tests for AI Agents system
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   type Agent,
   type AgentTask,
-  processTaskWithAI,
-  shouldPauseForHuman,
   canResumeAfterHuman,
   createTaskGenerator,
   initializeAgents,
+  processTaskWithAI,
+  shouldPauseForHuman,
 } from "./agents.js";
 
 describe("AI Agents System", () => {
@@ -279,10 +279,10 @@ describe("AI Agents System", () => {
   });
 
   describe("initializeAgents", () => {
-    it("should return all 15 default agents when no existing agents", () => {
+    it("should return all default agents when no existing agents", () => {
       const agents = initializeAgents();
 
-      expect(agents.length).toBe(15);
+      expect(agents.length).toBeGreaterThanOrEqual(15);
       expect(agents[0]).toHaveProperty("id");
       expect(agents[0]).toHaveProperty("name");
       expect(agents[0]).toHaveProperty("capabilities");
@@ -303,6 +303,8 @@ describe("AI Agents System", () => {
       expect(agentIds).toContain("estrategia-processual");
       expect(agentIds).toContain("traducao-juridica");
       expect(agentIds).toContain("compliance");
+      // New agent: pesquisa-juris-qdrant should be registered but disabled by default
+      expect(agentIds).toContain("pesquisa-juris-qdrant");
     });
 
     it("should merge existing agents with defaults", () => {

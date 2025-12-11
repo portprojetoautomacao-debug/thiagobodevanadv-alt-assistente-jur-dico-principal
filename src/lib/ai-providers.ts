@@ -222,8 +222,7 @@ export class GeminiClient {
       this.apiKey = null;
     } else {
       const env = import.meta.env;
-      const envKey =
-        env.VITE_GOOGLE_API_KEY ?? env.VITE_GEMINI_API_KEY ?? env.VITE_GEMINI_API_KEY_BACKEND;
+      const envKey = env.VITE_GEMINI_API_KEY ?? env.VITE_GEMINI_API_KEY_BACKEND;
       this.apiKey = envKey ? String(envKey) : null;
     }
 
@@ -271,7 +270,7 @@ export class GeminiClient {
     if (!this.apiKey) {
       throw new Error(
         "Gemini API key não configurada. " +
-          "Configure uma das variáveis: VITE_GOOGLE_API_KEY, VITE_GEMINI_API_KEY ou VITE_GEMINI_API_KEY_BACKEND"
+          "Configure uma das variáveis: VITE_GEMINI_API_KEY, VITE_GEMINI_API_KEY_BACKEND ou VITE_GOOGLE_API_KEY (deprecated)"
       );
     }
 

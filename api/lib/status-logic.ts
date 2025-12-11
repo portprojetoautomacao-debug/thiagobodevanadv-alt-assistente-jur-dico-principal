@@ -29,7 +29,8 @@ function getAIProvider(openaiKey?: string, geminiKey?: string): string {
 function getGeminiVarSource(geminiKey: string | undefined): string {
   if (!geminiKey) return "none";
   if (process.env.GEMINI_API_KEY) return "GEMINI_API_KEY";
-  return "VITE_GOOGLE_API_KEY";
+  if (process.env.VITE_GEMINI_API_KEY) return "VITE_GEMINI_API_KEY";
+  return "unknown";
 }
 
 /**
@@ -118,7 +119,7 @@ export async function handleCronHealthRequest(req: VercelRequest, res: VercelRes
 function buildHealthChecks(): Record<string, boolean> {
   return {
     openai_api_key: !!process.env.OPENAI_API_KEY,
-    gemini_api_key: !!process.env.GEMINI_API_KEY,
+    gemini_api_key: !!(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY),
     google_client_id: !!process.env.VITE_GOOGLE_CLIENT_ID,
     app_env: !!process.env.VITE_APP_ENV,
     upstash_redis: !!process.env.UPSTASH_REDIS_REST_URL,
@@ -157,7 +158,7 @@ function getHealthStatus(checks: Record<string, boolean>): { status: string; cod
  * Gera resposta de health check
  */
 export function generateHealthCheck(res: VercelResponse): void {
-  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   const checks = buildHealthChecks();
   const info = buildHealthInfo(geminiKey);
   const { status, code } = getHealthStatus(checks);

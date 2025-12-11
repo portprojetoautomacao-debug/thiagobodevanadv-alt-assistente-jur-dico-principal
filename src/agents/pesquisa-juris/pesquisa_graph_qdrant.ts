@@ -4,6 +4,7 @@
  * Este agente conecta ao cluster Qdrant para buscar precedentes similares
  */
 
+import { geminiEmbeddingService } from "@/lib/gemini-embedding-service";
 import { createQdrantService } from "@/lib/qdrant-service";
 import { createExecuteToolSpan, createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { AgentState } from "../base/agent_state";
@@ -150,9 +151,27 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
    * Gerar embedding usando Gemini
    */
   private async generateEmbedding(text: string): Promise<number[]> {
-    // Placeholder - integrar com Gemini Embedding API
-    // Por enquanto, retorna vetor aleat�rio de 1536 dimens�es
-    return Array.from({ length: 1536 }, () => Math.random());
+    // Use the centralized embedding service to keep dimensions consistent
+    try {
+      const result = await geminiEmbeddingService.generateEmbedding(text);
+      if (!result || !Array.isArray(result.embedding)) {
+        throw new Error("Embedding response invalid");
+      }
+
+      // Basic validation: expect 768 dims for text-embedding-004
+      const dims = result.embedding.length;
+      if (dims !== geminiEmbeddingService.getDimensions()) {
+        console.warn(
+          `[PesquisaJuris] Embedding dims mismatch: ${dims} != ${geminiEmbeddingService.getDimensions()}`
+        );
+      }
+
+      return result.embedding;
+    } catch (err) {
+      console.error("[PesquisaJuris] Falha ao gerar embedding via service:", err);
+      // Fallback: generate a reproducible random-ish vector (not ideal, but safe)
+      return Array.from({ length: geminiEmbeddingService.getDimensions() }, () => Math.random());
+    }
   }
 
   /**

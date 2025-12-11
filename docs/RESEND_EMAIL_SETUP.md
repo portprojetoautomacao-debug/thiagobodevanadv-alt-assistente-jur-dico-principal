@@ -154,7 +154,7 @@ curl -X POST 'http://localhost:5173/api/emails' \
 
 ```bash
 # Substituir pela sua URL de produção
-curl -X POST 'https://assistente-juridico-p.vercel.app/api/emails' \
+curl -X POST 'https://assistente-juridico-github.vercel.app/api/emails' \
   -H 'Authorization: Bearer SEU_EMAIL_API_KEY_REAL' \
   -H 'Content-Type: application/json' \
   -d '{

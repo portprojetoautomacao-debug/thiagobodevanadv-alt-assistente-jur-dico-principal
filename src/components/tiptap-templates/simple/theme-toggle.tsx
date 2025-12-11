@@ -30,7 +30,7 @@ export function ThemeToggle() {
         setIsDarkMode(false);
         return;
       }
-    } catch (err) {
+    } catch (_err) {
       // ignore localStorage errors (e.g., blocked cookies)
     }
 
@@ -44,7 +44,7 @@ export function ThemeToggle() {
     document.documentElement.classList.toggle("dark", isDarkMode);
     try {
       window.localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-    } catch (err) {
+    } catch (_err) {
       // ignore
     }
   }, [isDarkMode]);

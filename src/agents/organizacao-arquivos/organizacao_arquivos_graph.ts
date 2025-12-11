@@ -4,7 +4,7 @@ import { LangGraphAgent } from "../base/langgraph_agent";
 import { createInvokeAgentSpan, createChatSpan } from "@/lib/sentry-gemini-integration-v2";
 
 export class OrganizacaoArquivosAgent extends LangGraphAgent {
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     // ?? Instrumentar invoca��o do agente Organiza��o de Arquivos
     return createInvokeAgentSpan(
       {

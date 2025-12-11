@@ -12,7 +12,7 @@ import type {
 } from "./google-types";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
+const GOOGLE_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const CALENDAR_SCOPES =
   "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar";
 
@@ -110,7 +110,7 @@ class GoogleCalendarService {
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
       this.lastError =
-        "Credenciais do Google não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.";
+        "Credenciais do Google não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY (ou VITE_GEMINI_API_KEY).";
       debugError(this.lastError);
       return false;
     }

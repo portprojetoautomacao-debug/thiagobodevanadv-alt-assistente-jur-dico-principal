@@ -82,24 +82,60 @@ globalThis.ResizeObserver = class ResizeObserver {
 } as unknown as typeof ResizeObserver;
 
 // ✅ Mock do Google API (gapi) para evitar timeout
+// Criamos uma tipagem mínima para evitar usos de `any` e warnings do linter
+declare global {
+  // Tipagem mínima e direcionada apenas para os mocks presentes nos testes
+  interface Gapi {
+    load: (api: string, callback: { callback?: () => void }) => void;
+    client: {
+      init: () => Promise<void>;
+      docs: {
+        documents: {
+          create: (...args: unknown[]) => Promise<unknown>;
+          get: (...args: unknown[]) => Promise<unknown>;
+          batchUpdate: (...args: unknown[]) => Promise<unknown>;
+        };
+      };
+    };
+    auth2: {
+      getAuthInstance: () => {
+        isSignedIn: { get: () => boolean };
+        currentUser: { get: () => { getAuthResponse: () => { access_token: string } } };
+      };
+    };
+  }
+}
+
 globalThis.gapi = {
-  load: vi.fn((api: string, callback: { callback?: () => void }) => {
-    if (callback?.callback) {
-      setTimeout(callback.callback, 0);
+  load: vi.fn<void, [string, { callback?: () => void }]>(
+    (api: string, callback: { callback?: () => void }) => {
+      if (callback?.callback) {
+        setTimeout(callback.callback, 0);
+      }
     }
-  }),
+  ),
   client: {
-    init: vi.fn().mockResolvedValue(undefined),
+    init: vi.fn<Promise<void>, []>().mockResolvedValue(undefined),
     docs: {
       documents: {
-        create: vi.fn().mockResolvedValue({ result: { documentId: "test-doc-id" } }),
-        get: vi.fn().mockResolvedValue({ result: { body: { content: [] } } }),
-        batchUpdate: vi.fn().mockResolvedValue({ result: {} }),
+        create: vi
+          .fn<Promise<unknown>, [unknown]>()
+          .mockResolvedValue({ result: { documentId: "test-doc-id" } }),
+        get: vi
+          .fn<Promise<unknown>, [unknown]>()
+          .mockResolvedValue({ result: { body: { content: [] } } }),
+        batchUpdate: vi.fn<Promise<unknown>, [unknown]>().mockResolvedValue({ result: {} }),
       },
     },
   },
   auth2: {
-    getAuthInstance: vi.fn(() => ({
+    getAuthInstance: vi.fn<
+      {
+        isSignedIn: { get: () => boolean };
+        currentUser: { get: () => { getAuthResponse: () => { access_token: string } } };
+      },
+      []
+    >(() => ({
       isSignedIn: {
         get: vi.fn(() => true),
       },
@@ -110,18 +146,28 @@ globalThis.gapi = {
       },
     })),
   },
-} as any;
+} as unknown as Gapi;
 
 // ✅ Mock do Google Identity Services (accounts.google.com)
+declare global {
+  interface GoogleAccounts {
+    accounts: {
+      oauth2: {
+        initTokenClient: (...args: unknown[]) => { requestAccessToken: () => void };
+      };
+    };
+  }
+}
+
 globalThis.google = {
   accounts: {
     oauth2: {
-      initTokenClient: vi.fn(() => ({
+      initTokenClient: vi.fn<{ requestAccessToken: () => void }, []>(() => ({
         requestAccessToken: vi.fn(),
       })),
     },
   },
-} as any;
+} as unknown as GoogleAccounts;
 
 // ✅ NÃO mockar GoogleDocsService globalmente - deixar o service detectar ambiente de teste
 // O GoogleDocsService agora detecta automaticamente ambiente de teste via import.meta.env.MODE

@@ -21,24 +21,25 @@ import { legalMemory, type LegalContextType } from "../src/lib/legal-memory.js";
 import { createMinutaFromAgentTask } from "./lib/minuta-service-backend.js";
 
 // ===== Middleware de Autenticação =====
-function requireAuth(req: VercelRequest): boolean {
-  const authHeader = req.headers.authorization
-  
+function _requireAuth(req: VercelRequest): boolean {
+  const authHeader = req.headers.authorization;
+
   // Permitir acesso em desenvolvimento/localhost
   if (!authHeader) {
-    const isDev = process.env.NODE_ENV === 'development' || 
-                  req.headers.host?.includes('localhost') === true ||
-                  req.headers.host?.includes('vercel.app') === true
-    return Boolean(isDev)
+    const isDev =
+      process.env.NODE_ENV === "development" ||
+      req.headers.host?.includes("localhost") === true ||
+      req.headers.host?.includes("vercel.app") === true;
+    return Boolean(isDev);
   }
-  
-  if (!authHeader.startsWith('Bearer ')) {
-    return false
+
+  if (!authHeader.startsWith("Bearer ")) {
+    return false;
   }
-  
-  const token = authHeader.substring(7)
+
+  const token = authHeader.substring(7);
   // TODO: Implementar validação real de token (JWT, etc.)
-  return token.length > 0
+  return token.length > 0;
 }
 
 // ===== Redis singleton (Upstash) =====
@@ -188,11 +189,7 @@ const logger = {
       console.log(`[Agents] ${message}`);
     }
   },
-  error: (
-    message: string,
-    error?: unknown,
-    context?: Record<string, unknown>
-  ) => {
+  error: (message: string, error?: unknown, context?: Record<string, unknown>) => {
     console.error(`[Agents] ERROR: ${message}`, {
       error: error instanceof Error ? error.message : String(error),
       ...context,
@@ -1294,30 +1291,34 @@ function isAuthorized(req: VercelRequest): boolean {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers - permitir apenas origens confiáveis
   const allowedOrigins = [
-    'https://assistente-juridico-p.vercel.app',
-    'https://assistente-juridico-github.vercel.app'
+    "https://assistente-juridico-github.vercel.app",
+    "https://assistente-juridico-github.vercel.app",
   ];
-  const origin = req.headers.origin || '';
+  const origin = req.headers.origin || "";
   // Permitir localhost em desenvolvimento
-  const isDev = process.env.NODE_ENV === 'development' || origin.includes('localhost') || origin.includes('127.0.0.1');
+  const isDev =
+    process.env.NODE_ENV === "development" ||
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1");
   if (allowedOrigins.includes(origin) || isDev) {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
-  
-  if (req.method === 'OPTIONS') {
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
+
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  const actionParam = req.query.action
-  const action = Array.isArray(actionParam) ? actionParam[0] : actionParam
+  const actionParam = req.query.action;
+  const action = Array.isArray(actionParam) ? actionParam[0] : actionParam;
 
   if (!isAuthorized(req)) {
-    return res.status(401).json({ 
-      error: 'Unauthorized',
-      message: 'Authentication required. Provide Bearer token, x-api-key header, or access from localhost.'
-    })
+    return res.status(401).json({
+      error: "Unauthorized",
+      message:
+        "Authentication required. Provide Bearer token, x-api-key header, or access from localhost.",
+    });
   }
 
   try {
@@ -1338,9 +1339,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(400).json({
-      error: 'Invalid action. Use: process-queue, process-task, logs, or memory',
-      timestamp: new Date().toISOString()
-    })
+      error: "Invalid action. Use: process-queue, process-task, logs, or memory",
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
     logger.error("Handler error", error);
 

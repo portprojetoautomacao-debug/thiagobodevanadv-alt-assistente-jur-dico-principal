@@ -53,7 +53,7 @@ export default defineConfig({
   use: {
     // Preferir ambiente local por padrão para maior estabilidade dos seletores.
     // Permite sobrescrever via BASE_URL ou setando USE_PROD_BASE_URL=true
-    baseURL: USE_PROD ? "https://assistente-juridico-p.vercel.app" : BASE_URL,
+    baseURL: USE_PROD ? "https://assistente-juridico-github.vercel.app" : BASE_URL,
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",

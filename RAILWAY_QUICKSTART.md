@@ -1,6 +1,6 @@
 # 🎯 Quick Start - Integração Railway + Vercel
 
-**Tempo estimado**: 10 minutos  
+**Tempo estimado**: 10 minutos
 **Projeto Railway**: gentle-vision (a364e7f2-c234-477b-8dac-918f00f64737)
 
 ---
@@ -50,7 +50,7 @@ DSPY_TOKEN=$(openssl rand -base64 32)
 # Configurar Railway
 railway variables set DSPY_API_TOKEN="$DSPY_TOKEN"
 railway variables set DSPY_PORT=8765
-railway variables set ALLOWED_ORIGINS="https://assistente-juridico-p.vercel.app"
+railway variables set ALLOWED_ORIGINS="https://assistente-juridico-github.vercel.app"
 railway variables set GEMINI_API_KEY="<sua-key-aqui>"
 railway variables set DSPY_LM_MODEL="openai/gpt-3.5-turbo"
 railway variables set NODE_ENV="production"
@@ -75,7 +75,7 @@ railway domain
 
 ### 6. Configurar Vercel
 
-**Via Dashboard:**  
+**Via Dashboard:**
 https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
 
 Adicione:
@@ -105,10 +105,10 @@ vercel --prod
 curl https://gentle-vision.up.railway.app/health
 
 # Vercel health
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # Integração completa (após configurar Vercel)
-curl -X POST https://assistente-juridico-p.vercel.app/api/llm-proxy \
+curl -X POST https://assistente-juridico-github.vercel.app/api/llm-proxy \
   -H "Content-Type: application/json" \
   -d '{"prompt":"teste","mode":"optimize"}'
 ```
@@ -140,7 +140,7 @@ railway up
 ```bash
 # 1. Verificar CORS no Railway
 railway variables get ALLOWED_ORIGINS
-# Deve conter: https://assistente-juridico-p.vercel.app
+# Deve conter: https://assistente-juridico-github.vercel.app
 
 # 2. Verificar token
 railway variables get DSPY_API_TOKEN
@@ -193,5 +193,5 @@ railway login
 
 ---
 
-**Tempo restante no Railway Free Tier**: 30 dias ou $5.00  
+**Tempo restante no Railway Free Tier**: 30 dias ou $5.00
 **Status**: 🟡 Aguardando autenticação Railway

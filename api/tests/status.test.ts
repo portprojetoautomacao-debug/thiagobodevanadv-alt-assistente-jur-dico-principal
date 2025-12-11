@@ -38,7 +38,7 @@ describe("status API", () => {
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
     delete process.env.GEMINI_API_KEY;
-    delete process.env.VITE_GOOGLE_API_KEY;
+    delete process.env.VITE_GEMINI_API_KEY;
   });
 
   it("should respond to OPTIONS with 200 and set headers", async () => {
@@ -95,6 +95,16 @@ describe("status API", () => {
 
   it("should return 'healthy' when Gemini key is configured", async () => {
     process.env.GEMINI_API_KEY = "testkey";
+    const req = makeReq(undefined, "GET");
+    const res = mockRes();
+    await handler(req, res);
+    expect(res.body).toHaveProperty("status");
+    expect(res.body.status).toBe("healthy");
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("should return 'healthy' when VITE_GEMINI_API_KEY is configured", async () => {
+    process.env.VITE_GEMINI_API_KEY = "testkey_vite";
     const req = makeReq(undefined, "GET");
     const res = mockRes();
     await handler(req, res);

@@ -27,7 +27,7 @@ Clique neste link:
 1. Clique em **"Add New"** novamente
 2. Preencha:
    - **Name**: `VITE_REDIRECT_URI`
-   - **Value**: `https://assistente-juridico-p.vercel.app`
+   - **Value**: `https://assistente-juridico-github.vercel.app`
    - **Environments**: Apenas **Production**
 3. Clique em **Save**
 
@@ -55,12 +55,12 @@ Clique neste link:
 5. Nome: `Assistente Jurídico PJe - Produção`
 6. Em **Authorized JavaScript origins**, adicione:
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 7. Em **Authorized redirect URIs**, adicione:
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 8. Clique em **CREATE**
@@ -72,7 +72,7 @@ Clique neste link:
 
 Após configurar e aguardar o deploy:
 
-1. Acesse: **https://assistente-juridico-p.vercel.app**
+1. Acesse: **https://assistente-juridico-github.vercel.app**
 2. A página deve carregar (não ficar travada)
 3. Deve aparecer o botão **"Sign in with Google"**
 4. Ao clicar, o popup do Google deve abrir

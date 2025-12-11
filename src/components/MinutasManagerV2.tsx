@@ -61,7 +61,7 @@ type FilterTipo = "all" | "peticao" | "contrato" | "parecer" | "recurso" | "proc
 
 export default function MinutasManagerV2() {
   const [minutas, setMinutas] = useKV<Minuta[]>("minutas", []);
-  const [processes] = useKV<Process[]>("processes", []);
+  const [_processes] = useKV<Process[]>("processes", []);
   const pjeSync = usePJERealTimeSync();
 
   const [selectedMinutaId, setSelectedMinutaId] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export default function MinutasManagerV2() {
   const [editMode, setEditMode] = useState<"editor" | "google-docs">("editor");
 
   // Hook de IA streaming
-  const { streamChat, isStreaming } = useAIStreaming();
+  const { streamChat, isStreaming: _isStreaming } = useAIStreaming();
 
   // Minuta selecionada
   const selectedMinuta = minutas?.find((m) => m.id === selectedMinutaId);

@@ -48,11 +48,11 @@ SECRETS A ADICIONAR:
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 5️⃣  VITE_GOOGLE_API_KEY                                                     │
+│ 5️⃣  VITE_GEMINI_API_KEY (Antigo: VITE_GOOGLE_API_KEY)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Nome: VITE_GOOGLE_API_KEY                                                  │
+│ Nome: VITE_GEMINI_API_KEY                                                  │
 │ Valor: AIzaSyBBrDVtdTWN_RoQb6KKz6JMiZB5LRoehgs                             │
-│ Descrição: Google API Key para Calendar e Docs                            │
+│ Descrição: Google API Key para Gemini, Calendar e Docs                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐

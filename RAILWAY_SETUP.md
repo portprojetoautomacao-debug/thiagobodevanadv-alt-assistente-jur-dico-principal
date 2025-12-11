@@ -25,7 +25,7 @@ No Railway Dashboard, vá em **Variables** e adicione:
 DSPY_API_TOKEN=<gere-um-token-seguro>
 
 # Origens CORS permitidas
-ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app,https://assistente-juridico-github.vercel.app
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app,https://assistente-juridico-github.vercel.app
 
 # Porta (Railway define automaticamente, mas podemos fixar)
 PORT=8765
@@ -145,7 +145,7 @@ Aumente timeout em `railway.json`:
 
 Verifique `ALLOWED_ORIGINS` no Railway:
 ```bash
-ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 ```
 
 ---

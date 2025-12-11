@@ -433,7 +433,7 @@ describe("AdvancedNLPDashboard", () => {
       await user.click(processAllButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Erro ao processar operação");
+        expect(toast.error).toHaveBeenCalledWith("Erro ao processar análise completa");
       });
 
       consoleErrorSpy.mockRestore();

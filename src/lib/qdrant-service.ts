@@ -33,6 +33,7 @@ export interface SearchResult {
 export class QdrantService {
   private config: Required<QdrantConfig>;
   private baseHeaders: HeadersInit;
+  private collectionVectorSize?: number;
 
   constructor(config: QdrantConfig) {
     this.config = {
@@ -56,7 +57,7 @@ export class QdrantService {
     limit: number = 10,
     filter?: Record<string, unknown>
   ): Promise<SearchResult[]> {
-    this.validateVector(vector);
+    this.validateVector(vector, this.collectionVectorSize);
 
     if (limit < 1 || limit > 100) {
       throw new Error("Limit must be between 1 and 100");
@@ -66,6 +67,11 @@ export class QdrantService {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(
+          `QdrantService: searching collection=${this.config.collectionName} limit=${limit}`
+        );
+      }
       const response = await fetch(
         `${this.config.url}/collections/${this.config.collectionName}/points/search`,
         {
@@ -107,7 +113,7 @@ export class QdrantService {
       if (!point.id) {
         throw new Error(`Point at index ${idx} missing id`);
       }
-      this.validateVector(point.vector);
+      this.validateVector(point.vector, this.collectionVectorSize);
       if (typeof point.payload !== "object" || point.payload === null) {
         throw new Error(`Point at index ${idx} has invalid payload`);
       }
@@ -132,6 +138,11 @@ export class QdrantService {
       if (!response.ok) {
         throw new Error(`Qdrant API error: ${response.status} ${response.statusText}`);
       }
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(
+          `QdrantService: upserted ${points.length} points into ${this.config.collectionName}`
+        );
+      }
     } finally {
       clearTimeout(timeoutId);
     }
@@ -154,6 +165,11 @@ export class QdrantService {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(
+          `QdrantService: creating collection=${this.config.collectionName} size=${vectorSize}`
+        );
+      }
       const response = await fetch(`${this.config.url}/collections/${this.config.collectionName}`, {
         method: "PUT",
         headers: this.baseHeaders,
@@ -170,6 +186,8 @@ export class QdrantService {
         // 409 = already exists
         throw new Error(`Qdrant API error: ${response.status} ${response.statusText}`);
       }
+      // If creation or already exists (409), set collection vector size
+      this.collectionVectorSize = vectorSize;
     } finally {
       clearTimeout(timeoutId);
     }
@@ -179,8 +197,11 @@ export class QdrantService {
    * Validate vector dimensions and values
    *
    * Security: Prevents injection of malicious data
+   * @param vector The vector to validate. Must be a non-empty array of finite numbers.
+   * @param [expectedSize] Optional. If provided, enforces that the vector has exactly this number of dimensions.
+   *        Use when the expected vector size is known (e.g., matches the collection's vector size).
    */
-  private validateVector(vector: number[]): void {
+  private validateVector(vector: number[], expectedSize?: number): void {
     if (!Array.isArray(vector) || vector.length === 0) {
       throw new Error("Vector must be a non-empty array");
     }
@@ -192,6 +213,12 @@ export class QdrantService {
 
     if (vector.some((v) => typeof v !== "number" || !isFinite(v))) {
       throw new Error("Vector must contain only finite numbers");
+    }
+    // If collection vector size is known, enforce it
+    if (typeof expectedSize === "number" && expectedSize > 0) {
+      if (vector.length !== expectedSize) {
+        throw new Error(`Vector must have exactly ${expectedSize} dimensions`);
+      }
     }
   }
 

@@ -1,1 +1,1 @@
-curl https://assistente-juridico-p.vercel.app/api/status?type=health
+curl https://assistente-juridico-github.vercel.app/api/status?type=health
