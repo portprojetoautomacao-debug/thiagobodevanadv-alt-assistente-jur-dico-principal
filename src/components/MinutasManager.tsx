@@ -196,17 +196,18 @@ export default function MinutasManager() {
       } catch (initError) {
         const errorMsg =
           initError instanceof Error ? initError.message : "Erro ao inicializar Google Docs";
-        
+
         // Mensagens mais específicas baseadas no erro
         let userMessage = errorMsg;
         if (errorMsg.includes("Timeout")) {
           userMessage = "Timeout ao carregar Google Docs. Verifique sua conexão e tente novamente.";
         } else if (errorMsg.includes("Failed to load")) {
-          userMessage = "Não foi possível carregar scripts do Google. Verifique se você está conectado à internet.";
+          userMessage =
+            "Não foi possível carregar scripts do Google. Verifique se você está conectado à internet.";
         } else if (errorMsg.includes("API key")) {
           userMessage = "Credenciais do Google inválidas. Contate o suporte.";
         }
-        
+
         toast.error(`Falha na inicialização: ${userMessage}`, { id: toastId });
         console.error("[MinutasManager] Google Docs init error:", initError);
         return;

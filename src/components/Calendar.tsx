@@ -83,6 +83,12 @@ export default function Calendar() {
   const GOOGLE_API_KEY = getEnv("VITE_GEMINI_API_KEY", "") || getEnv("VITE_GOOGLE_API_KEY", "");
   const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY;
 
+  // Debug: log para verificar se as variáveis estão chegando
+  if (typeof window !== "undefined" && !isGoogleConfigured) {
+    console.log("[Calendar] Debug - GOOGLE_CLIENT_ID:", GOOGLE_CLIENT_ID ? "✓ Configurado" : "✗ Vazio");
+    console.log("[Calendar] Debug - GOOGLE_API_KEY:", GOOGLE_API_KEY ? "✓ Configurado" : "✗ Vazio");
+  }
+
   const sortedUpcomingAppointments = useMemo(
     () =>
       (appointments || [])
