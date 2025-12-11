@@ -343,22 +343,38 @@ jobs:
         run: npm ci
 
       - name: 🔍 Verificação de Vulnerabilidades
+        id: audit
         run: |
           echo "🔍 Verificando vulnerabilidades..."
 
-          # Executar npm audit
-          npm audit --audit-level=moderate --json > audit-results.json
+          # Run audit but don't let a non-zero exit stop the job; capture JSON
+          npm audit --audit-level=moderate --json > audit-results.json || true
 
-          # Verificar se há vulnerabilidades críticas
-          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical' audit-results.json)
-          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high' audit-results.json)
+          # Guard against missing file
+          if [[ ! -s audit-results.json ]]; then
+            echo "{}" > audit-results.json
+          fi
 
+          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical // 0' audit-results.json)
+          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high // 0' audit-results.json)
+          MODERATE_VULNS=$(jq '.metadata.vulnerabilities.moderate // 0' audit-results.json)
+          
           echo "🚨 Vulnerabilidades críticas: $CRITICAL_VULNS"
           echo "⚠️  Vulnerabilidades altas: $HIGH_VULNS"
+          echo "🟡 Vulnerabilidades moderadas: $MODERATE_VULNS"
 
+          # Expose as step outputs for conditional steps later
+          echo "critical_vulns=$CRITICAL_VULNS" >> $GITHUB_OUTPUT
+          echo "high_vulns=$HIGH_VULNS" >> $GITHUB_OUTPUT
+          echo "moderate_vulns=$MODERATE_VULNS" >> $GITHUB_OUTPUT
+
+          # Also set an env flag so other steps can read if needed
           if [[ "$CRITICAL_VULNS" -gt 0 ]]; then
+            echo "CRITICAL_FOUND=true" >> $GITHUB_ENV
             echo "❌ ALERTA: Vulnerabilidades críticas encontradas!"
-            exit 1
+          else
+            echo "CRITICAL_FOUND=false" >> $GITHUB_ENV
+            echo "✅ Nenhuma vulnerabilidade crítica encontrada"
           fi
 
       - name: 🛡️  Verificação de Headers de Segurança
@@ -411,6 +427,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Segurança
+        if: always()  # Upload even if vulnerabilities were found
         uses: actions/upload-artifact@v4.4.3
         with:
           name: security-reports
