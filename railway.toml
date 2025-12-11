@@ -1,8 +1,6 @@
 # Railway Deployment Configuration
-# For DSPy Bridge service
-
-# This file configures Railway deployment for the DSPy Bridge
-# Documentation: https://docs.railway.app/reference/config-as-code
+# APENAS para DSPy Bridge (Python FastAPI service)
+# NÃO deploiar frontend React (isso é responsabilidade do Vercel)
 
 [build]
 builder = "NIXPACKS"
@@ -17,15 +15,19 @@ healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
+# Variáveis de ambiente específicas do DSPy Bridge
+# Railway DEVE usar APENAS estas variáveis (não as do frontend)
 [deploy.env]
-# Required environment variables (set in Railway dashboard):
-# - DSPY_API_TOKEN (secret)
-# - DSPY_PORT (8765)
-# - ALLOWED_ORIGINS (comma-separated URLs)
-
-# Optional
+DSPY_PORT = "8765"
+NODE_ENV = "production"
 DSPY_LM_MODEL = "openai/gpt-3.5-turbo"
 
+# Variáveis sensíveis (configurar no Railway Dashboard):
+# - DSPY_API_TOKEN (obrigatório - token de autenticação)
+# - ALLOWED_ORIGINS (obrigatório - https://assistente-juridico-github.vercel.app)
+# - GEMINI_API_KEY (opcional - se usar Gemini)
+# - OPENAI_API_KEY (opcional - se usar OpenAI)
+
 [network]
-# Railway will auto-assign a port
-# DSPy bridge will use DSPY_PORT from env
+# Railway auto-assign port
+# DSPy bridge usa DSPY_PORT internamente

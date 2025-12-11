@@ -1,0 +1,83 @@
+# ⚠️ ATENÇÃO: Configuração de Variáveis Railway
+# 
+# Railway está conectado ao GitHub e RECEBE TODAS as variáveis do repositório
+# Isso inclui variáveis do FRONTEND (Vercel) que NÃO devem ser usadas
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# VARIÁVEIS QUE RAILWAY DEVE USAR (Backend Python DSPy Bridge)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Configurar manualmente no Railway Dashboard:
+# https://railway.app/project/609047f7-6398-45cc-8f64-35083f920139
+# Settings → Variables
+
+DSPY_API_TOKEN=IFoHADHNOrs/liJgUFDYKgnWVTAvMhfnotUxywmelho=
+DSPY_PORT=8765
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
+NODE_ENV=production
+PYTHON_VERSION=3.11
+DSPY_LM_MODEL=openai/gpt-3.5-turbo
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# VARIÁVEIS QUE RAILWAY NÃO DEVE USAR (Frontend Vercel)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ❌ REMOVER do Railway Dashboard se existirem:
+
+# VITE_REDIRECT_URI (pertence ao Vercel)
+# VITE_APP_ENV (pertence ao Vercel)
+# VITE_API_URL (pertence ao Vercel)
+# VITE_* (qualquer variável VITE_* é do frontend)
+# DJEN_TRIBUNAIS (pertence ao Vercel)
+# GITHUB_API_URL (pertence ao Vercel)
+# NODE_VERSION (NIXPACKS detecta automaticamente)
+# RESEND_API_KEY (pertence ao Vercel)
+# GEMINI_API_KEY (pertence ao Vercel, a menos que DSPy use)
+# OPENAI_API_KEY (pertence ao Vercel, a menos que DSPy use)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# COMO CORRIGIR
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 1. Acessar Railway Dashboard:
+#    https://railway.app/project/609047f7-6398-45cc-8f64-35083f920139
+
+# 2. Settings → Variables
+
+# 3. DELETE todas variáveis com prefixo VITE_*
+
+# 4. DELETE estas variáveis específicas:
+#    - DJEN_TRIBUNAIS
+#    - GITHUB_API_URL
+#    - NODE_VERSION
+
+# 5. MANTER/ADICIONAR apenas estas 6 variáveis:
+#    - DSPY_API_TOKEN
+#    - DSPY_PORT
+#    - ALLOWED_ORIGINS
+#    - NODE_ENV
+#    - PYTHON_VERSION
+#    - DSPY_LM_MODEL
+
+# 6. Settings → Deploy → Builder
+#    - Alterar de "Dockerfile" para "NIXPACKS"
+
+# 7. Settings → Build
+#    - Build command: (deixar vazio)
+
+# 8. Fazer novo deploy (botão "Deploy")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# VALIDAÇÃO
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Após deploy, testar:
+
+# curl https://assistente-juridico-pje-production-2d98.up.railway.app/health
+
+# Deve retornar:
+# {
+#   "status": "healthy",
+#   "service": "dspy-bridge",
+#   "version": "1.0.0"
+# }

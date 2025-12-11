@@ -1,21 +1,21 @@
 # Python Dependencies for DSPy Bridge Service
-# Usage: pip install -r requirements.txt
+# Deploy: Railway (NIXPACKS auto-install)
+# Python: 3.11
 
-# Core dependencies (required)
-# Note: DSPy bridge is optional and not deployed to Vercel
-# This file is provided for reference if you want to run DSPy locally
+# FastAPI framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
 
-# Python 3.8+ standard library only - no external dependencies required
-# The dspy_bridge.py uses only:
-# - http.server (built-in)
-# - json (built-in)
-# - os (built-in)
-# - sys (built-in)
-# - urllib.parse (built-in)
-# - hashlib (built-in)
-# - hmac (built-in)
-# - time (built-in)
+# CORS
+python-multipart==0.0.6
 
-# Optional: If implementing full DSPy integration in the future
-# dspy-ai>=2.0.0  # Uncomment when implementing DSPy optimization
-# requests>=2.31.0  # Uncomment if adding HTTP client features
+# Utilities
+python-dotenv==1.0.0
+
+# DSPy (quando implementado)
+# dspy-ai==2.4.0
+
+# NOTA: Railway instala estas dependências automaticamente via NIXPACKS
+# NÃO instalar node_modules - Railway usa apenas Python para DSPy Bridge
