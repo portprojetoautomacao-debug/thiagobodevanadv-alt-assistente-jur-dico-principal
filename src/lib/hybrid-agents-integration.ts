@@ -5,7 +5,7 @@
  * Permite execução paralela e coordenação entre agentes tradicionais e híbridos
  */
 
-// @ts-expect-error - Agents em construção, imports comentados temporariamente
+// Agents em construção, imports comentados temporariamente
 // import { AnaliseDocumentalAgent } from "@/agents/analise-documental/analise_documental_graph";
 // import { AnaliseRiscoAgent } from "@/agents/analise-risco/analise_risco_graph";
 import type { AgentState } from "@/agents/base/agent_state";
