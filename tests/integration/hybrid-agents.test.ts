@@ -1,4 +1,4 @@
-import { executeHybridTask } from "@/lib/hybrid-agents-integration";
+import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
 import { expect, test } from "vitest";
 
 test.skip("executeHybridTask runs for harvey and returns success", async () => {
