@@ -25,12 +25,13 @@ describe("QdrantService vector validation and createCollection", () => {
     // Stub fetch for search endpoint to avoid network
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => {
-        return {
-          ok: true,
-          json: async () => ({ result: [] }),
-        } as unknown as Response;
-      })
+      vi.fn(
+        async () =>
+          ({
+            ok: true,
+            json: async () => ({ result: [] }),
+          }) as unknown as Response
+      )
     );
 
     await expect(q.search(validVector, 5)).resolves.toEqual([]);

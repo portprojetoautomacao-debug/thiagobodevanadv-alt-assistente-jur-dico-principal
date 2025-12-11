@@ -182,6 +182,9 @@ export class QdrantService {
    * Validate vector dimensions and values
    *
    * Security: Prevents injection of malicious data
+   * @param vector The vector to validate. Must be a non-empty array of finite numbers.
+   * @param [expectedSize] Optional. If provided, enforces that the vector has exactly this number of dimensions.
+   *        Use when the expected vector size is known (e.g., matches the collection's vector size).
    */
   private validateVector(vector: number[], expectedSize?: number): void {
     if (!Array.isArray(vector) || vector.length === 0) {
