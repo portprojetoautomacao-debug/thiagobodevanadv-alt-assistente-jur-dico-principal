@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
 
-test.skip("executeHybridTask runs for harvey and returns success", async () => {
+test("executeHybridTask runs for harvey and returns success", async () => {
   const task = {
     id: "test-1",
     agentId: "harvey",

@@ -16,15 +16,18 @@ export default defineConfig({
     pool: "forks",
     poolOptions: {
       forks: {
-        maxForks: 1, // ✅ Apenas 1 worker por vez (mais lento mas estável)
+        // ✅ Ajustar dinamicamente baseado em CI ou local
+        maxForks: process.env.CI ? 2 : 1,
         minForks: 1,
-        singleFork: true,
+        singleFork: !process.env.CI, // Single fork apenas localmente
       },
     },
-    // ✅ Forçar execução sequencial (evitar concorrência)
-    maxConcurrency: 1,
-    // ✅ Não isolar testes (economizar memória)
-    isolate: false,
+    // ✅ Ajustar concorrência baseado em ambiente
+    maxConcurrency: process.env.CI ? 5 : 1,
+    // ✅ Isolar testes no CI para melhor confiabilidade
+    isolate: process.env.CI ? true : false,
+    // ✅ Suporte a sharding para execução paralela
+    // Use --shard=1/4 --shard=2/4 etc nos comandos
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "api/**/*.{test,spec}.{ts,tsx}",
