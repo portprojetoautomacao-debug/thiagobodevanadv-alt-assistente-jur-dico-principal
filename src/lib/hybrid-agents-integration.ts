@@ -19,14 +19,14 @@
 // CÓDIGO DESABILITADO - Mantido para referência futura
 export const HYBRID_AGENTS_DISABLED = true;
 
-console.warn('⚠️  Hybrid Agents Integration está desabilitado (modo manutenção)');
+console.warn("⚠️  Hybrid Agents Integration está desabilitado (modo manutenção)");
 
 // Stub functions para manter compatibilidade
 export type HybridAgentType = "langgraph-djen" | "langgraph-custom";
 
 export class HybridAgentOrchestrator {
   async executeTask(): Promise<void> {
-    throw new Error('Hybrid agents desabilitados - modo manutenção');
+    throw new Error("Hybrid agents desabilitados - modo manutenção");
   }
 }
 
