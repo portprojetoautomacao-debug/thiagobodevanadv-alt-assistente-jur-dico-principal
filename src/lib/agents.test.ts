@@ -2,15 +2,15 @@
  * Tests for AI Agents system
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   type Agent,
   type AgentTask,
-  processTaskWithAI,
-  shouldPauseForHuman,
   canResumeAfterHuman,
   createTaskGenerator,
   initializeAgents,
+  processTaskWithAI,
+  shouldPauseForHuman,
 } from "./agents.js";
 
 describe("AI Agents System", () => {

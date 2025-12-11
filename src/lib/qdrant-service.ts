@@ -33,6 +33,7 @@ export interface SearchResult {
 export class QdrantService {
   private config: Required<QdrantConfig>;
   private baseHeaders: HeadersInit;
+  private collectionVectorSize?: number;
 
   constructor(config: QdrantConfig) {
     this.config = {
@@ -56,7 +57,7 @@ export class QdrantService {
     limit: number = 10,
     filter?: Record<string, unknown>
   ): Promise<SearchResult[]> {
-    this.validateVector(vector);
+    this.validateVector(vector, this.collectionVectorSize);
 
     if (limit < 1 || limit > 100) {
       throw new Error("Limit must be between 1 and 100");
@@ -107,7 +108,7 @@ export class QdrantService {
       if (!point.id) {
         throw new Error(`Point at index ${idx} missing id`);
       }
-      this.validateVector(point.vector);
+      this.validateVector(point.vector, this.collectionVectorSize);
       if (typeof point.payload !== "object" || point.payload === null) {
         throw new Error(`Point at index ${idx} has invalid payload`);
       }
@@ -170,6 +171,8 @@ export class QdrantService {
         // 409 = already exists
         throw new Error(`Qdrant API error: ${response.status} ${response.statusText}`);
       }
+      // If creation or already exists, set collection vector size
+      this.collectionVectorSize = vectorSize;
     } finally {
       clearTimeout(timeoutId);
     }
@@ -180,7 +183,7 @@ export class QdrantService {
    *
    * Security: Prevents injection of malicious data
    */
-  private validateVector(vector: number[]): void {
+  private validateVector(vector: number[], expectedSize?: number): void {
     if (!Array.isArray(vector) || vector.length === 0) {
       throw new Error("Vector must be a non-empty array");
     }
@@ -192,6 +195,12 @@ export class QdrantService {
 
     if (vector.some((v) => typeof v !== "number" || !isFinite(v))) {
       throw new Error("Vector must contain only finite numbers");
+    }
+    // If collection vector size is known, enforce it
+    if (typeof expectedSize === "number" && expectedSize > 0) {
+      if (vector.length !== expectedSize) {
+        throw new Error(`Vector must have exactly ${expectedSize} dimensions`);
+      }
     }
   }
 

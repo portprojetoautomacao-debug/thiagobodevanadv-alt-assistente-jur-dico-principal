@@ -287,5 +287,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
  */
 export const config = {
   maxDuration: 45, // Maximum for Vercel Hobby plan
-  runtime: "nodejs",
+  runtime: "nodejs22.x",
 };

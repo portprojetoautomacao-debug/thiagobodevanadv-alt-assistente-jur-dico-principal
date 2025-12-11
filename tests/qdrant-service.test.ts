@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QdrantService, type QdrantConfig, type SearchResult } from "../src/lib/qdrant-service";
 
 const BASE_URL = "https://qdrant.example.com:6333";

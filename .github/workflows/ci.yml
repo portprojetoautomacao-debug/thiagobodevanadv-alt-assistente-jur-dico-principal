@@ -337,14 +337,14 @@ jobs:
           echo "Starting Qdrant container..."
           docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
           # Wait for Qdrant to be ready
-          timeout 30 bash -c 'until curl -f http://localhost:6333/healthz > /dev/null 2>&1; do sleep 1; done'
+          timeout 30 bash -c 'until curl -f http://localhost:6333/health > /dev/null 2>&1; do sleep 1; done'
           echo "✅ Qdrant is ready"
         if: success()
 
       - name: Test Qdrant connectivity
         run: |
           echo "Testing Qdrant health endpoint..."
-          curl -f http://localhost:6333/healthz || exit 1
+          curl -f http://localhost:6333/health || exit 1
           echo "✅ Qdrant health check passed"
         if: success()
 

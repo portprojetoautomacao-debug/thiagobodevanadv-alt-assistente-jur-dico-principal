@@ -24,6 +24,26 @@ async function callOpenAIEmbedding(apiKey: string, text: string) {
   return data.data?.[0]?.embedding;
 }
 
+async function callGeminiEmbedding(apiKey: string, text: string) {
+  const model = process.env.GEMINI_EMBEDDING_MODEL || "text-embedding-3-large";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedText?key=${apiKey}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!response.ok) {
+    const txt = await response.text();
+    throw new Error(`Gemini embedding error: ${response.status} - ${txt}`);
+  }
+
+  const json = await response.json();
+  // Try common fields
+  const embedding = json?.embeddings?.[0]?.value || json?.data?.[0]?.embedding || null;
+  return embedding;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed. Use POST." });
@@ -50,15 +70,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .json({ embedding: emb, model: "text-embedding-3-large", dimensions: emb?.length });
     }
 
-    // Fallback: GeminI - not implemented thoroughly here; require proper key
+    // Fallback: Gemini
     if (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY) {
-      // Minimal fallback for Gemini: document that this should be implemented
-      return res
-        .status(500)
-        .json({
-          error:
-            "Gemini embedding not configured. Use OPENAI_API_KEY for embeddings or implement Gemini endpoint.",
-        });
+      try {
+        const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
+        const emb = await withTimeout(30000, callGeminiEmbedding(apiKey, text));
+        return res
+          .status(200)
+          .json({
+            embedding: emb,
+            model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding",
+            dimensions: emb?.length,
+          });
+      } catch (err) {
+        console.error("Gemini embedding failed:", err);
+        return res
+          .status(500)
+          .json({
+            error: "Gemini embedding failed",
+            details: err instanceof Error ? err.message : String(err),
+          });
+      }
     }
 
     return res
