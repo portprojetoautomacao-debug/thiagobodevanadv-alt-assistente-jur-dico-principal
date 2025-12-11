@@ -69,13 +69,15 @@ RESPONSE=$(curl -s -X POST "${BASE_URL}/api/extension-errors" \
 echo "Response: ${RESPONSE}"
 
 echo "Fetching errors to validate storage..."
-LIST=$(curl -s -X GET "${BASE_URL}/api/extension-errors")
-echo "List: ${LIST}"
 
-if echo "${LIST}" | grep -q "local-test-1"; then
+# Não armazene/print o payload inteiro (pode crescer e estourar memória no Vitest via execFile)
+if curl -s -X GET "${BASE_URL}/api/extension-errors" | grep -q "local-test-1"; then
   echo "✅ Local real test succeeded: extension error stored and retrieved"
   exit 0
 else
   echo "❌ Local real test failed: event not found in results"
+  echo "List (truncated):"
+  curl -s -X GET "${BASE_URL}/api/extension-errors" | head -c 2000 || true
+  echo
   exit 1
 fi

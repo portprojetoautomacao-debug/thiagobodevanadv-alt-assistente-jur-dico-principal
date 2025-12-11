@@ -77,7 +77,7 @@ export function useHybridAgents(options: UseHybridAgentsOptions = {}) {
           enableLangGraph: autoEnableLangGraph,
           enableTraditional: true,
           coordinationMode: defaultCoordinationMode,
-          timeoutMs: defaultTimeout,
+          timeout: defaultTimeout,
           ...config,
         };
 

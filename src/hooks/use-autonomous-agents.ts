@@ -1,23 +1,18 @@
-import { metricsCollector, getUnhealthyAgents } from "@/lib/agent-metrics";
-import { toast } from "sonner";
 import { useKV } from "@/hooks/use-kv";
+import { getUnhealthyAgents, metricsCollector } from "@/lib/agent-metrics";
 import {
-  type Agent,
-  type AgentTask,
-  type AgentTaskResult,
   canResumeAfterHuman,
   initializeAgents,
   shouldPauseForHuman,
+  type Agent,
+  type AgentTask,
+  type AgentTaskResult,
 } from "@/lib/agents";
+import { toast } from "sonner";
 // ✨ NOVO: Importar validadores Zod
-import {
-  validateAgent,
-  validateAgentTask,
-  type Agent as _AgentValidated,
-  type AgentTask as _AgentTaskValidated,
-} from "@/schemas/agent.schema";
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
+import { validateAgent, validateAgentTask } from "@/schemas/agent.schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Type alias for activity result (success, warning, or error)
@@ -482,7 +477,7 @@ export function useAutonomousAgents() {
       );
 
       try {
-        let result;
+        let result: AgentTaskResult;
 
         // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
         const hasHybrid = hasHybridVersion(agent.id);
@@ -500,13 +495,13 @@ export function useAutonomousAgents() {
           result = {
             success: hybridResult.success,
             data:
-              hybridResult.langGraphResult?.data ||
-              (hybridResult.traditionalResult?.output as Record<string, unknown>) ||
-              {},
+              (hybridResult.langGraphResult?.data as Record<string, unknown> | undefined) ??
+              (hybridResult.traditionalResult?.output as Record<string, unknown> | undefined) ??
+              ({} as Record<string, unknown>),
             message: `Executado via ${hybridResult.mode}`,
             processingTimeMs: hybridResult.executionTime,
             confidence: hybridResult.success ? 0.95 : 0.5,
-          } satisfies AgentTaskResult;
+          };
 
           // Log da execução híbrida
           logActivity(

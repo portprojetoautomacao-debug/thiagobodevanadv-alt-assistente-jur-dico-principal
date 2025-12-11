@@ -7,6 +7,9 @@ const url = require("url");
 const { StringDecoder } = require("string_decoder");
 const PORT = process.env.DEV_API_PORT || 5252;
 
+// Limites defensivos para não estourar memória em sessões longas (ex.: testes repetidos)
+const MAX_EXTENSION_ERRORS = Number(process.env.DEV_API_EXTENSION_ERRORS_MAX || 200);
+
 // In-memory store
 const store = new Map();
 store.set("api-keys:valid", new Set([process.env.TEST_PJE_API_KEY || "valid-test-api-key"]));
@@ -195,6 +198,10 @@ const server = http.createServer((req, res) => {
       }
       const errors = store.get("extension-errors") || [];
       errors.unshift(body);
+      if (Number.isFinite(MAX_EXTENSION_ERRORS) && MAX_EXTENSION_ERRORS > 0) {
+        // mantém apenas os mais recentes
+        errors.length = Math.min(errors.length, MAX_EXTENSION_ERRORS);
+      }
       store.set("extension-errors", errors);
       return sendJson(200, { ok: true });
     }

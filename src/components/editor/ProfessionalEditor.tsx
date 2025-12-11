@@ -4,10 +4,11 @@
  * Features:
  * - UI profissional igual Word/Google Docs
  * - Colaboração humano/IA com pausa automática
- * - Track Changes nativo do CKEditor
- * - Comentários e revisões
- * - Export para Word/PDF
+ * - Streaming de IA (SSE) para UX fluída
  * - Aparência de página A4
+ *
+ * Observação: Track Changes/Comments/Export exigem plugins/pacotes premium do CKEditor 5
+ * e não estão incluídos automaticamente no pacote `ckeditor5`.
  */
 
 import { CKEditor } from "@ckeditor/ckeditor5-react";
@@ -66,6 +67,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { streamAIFromBackend } from "@/services/ai-stream";
 import { Bot, ChevronDown, Expand, Loader2, Sparkles, User, Wand2, Zap } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -133,6 +135,32 @@ function countWords(text: string): number {
         .filter((w) => w.length > 0).length;
 }
 
+function getSelectedPlainText(editor: ClassicEditor): string {
+  try {
+    const selection = editor.model.document.selection;
+    if (selection.isCollapsed) return "";
+
+    let text = "";
+    for (const range of selection.getRanges()) {
+      for (const item of range.getItems()) {
+        const maybeText = item as unknown as { is?: (name: string) => boolean; data?: string };
+        if (
+          typeof maybeText.is === "function" &&
+          (maybeText.is("$text") || maybeText.is("$textProxy"))
+        ) {
+          text += maybeText.data || "";
+        } else {
+          text += "\n";
+        }
+      }
+    }
+
+    return text.trim();
+  } catch {
+    return "";
+  }
+}
+
 // ===========================
 // Main Component
 // ===========================
@@ -143,7 +171,7 @@ export function ProfessionalEditor({
   placeholder = "Digite seu texto aqui...",
   className,
   readOnly = false,
-  onAIGenerate,
+  onAIGenerate: _onAIGenerate,
   onAIStream,
   variables = {},
   showCollaboration = true,
@@ -155,7 +183,7 @@ export function ProfessionalEditor({
   // State
   const [isAIActive, setIsAIActive] = useState(false);
   const [isUserTyping, setIsUserTyping] = useState(false);
-  const [isAILoading, setIsAILoading] = useState(false);
+  const [isAILoading, _setIsAILoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [wordCount, setWordCount] = useState(0);
@@ -338,7 +366,7 @@ export function ProfessionalEditor({
   // AI Functions
   // ===========================
 
-  const replaceVariables = useCallback(
+  const _replaceVariables = useCallback(
     (text: string) => {
       let result = text;
       Object.entries(variables).forEach(([key, value]) => {
@@ -353,33 +381,75 @@ export function ProfessionalEditor({
   const runAIStreaming = useCallback(
     async (prompt: string) => {
       const editor = editorRef.current;
-      if (!editor || !onAIStream) return;
+      if (!editor) return;
 
       setIsAIActive(true);
       setIsStreaming(true);
 
       try {
-        await onAIStream(prompt, {
-          onChunk: (chunk: string) => {
-            if (isUserTyping) return;
+        // Use streaming customizado se fornecido, caso contrário usa o backend padrão
+        if (onAIStream) {
+          await onAIStream(prompt, {
+            onChunk: (chunk: string) => {
+              if (isUserTyping) return;
 
-            const viewFragment = editor.data.processor.toView(chunk);
-            const modelFragment = editor.data.toModel(viewFragment);
-            editor.model.insertContent(modelFragment);
-          },
-          onComplete: () => {
-            setIsStreaming(false);
-            setIsAIActive(false);
-            setAiPrompt("");
-            toast.success("IA finalizou a redação");
-          },
-          onError: (error: Error) => {
-            console.error("Erro no streaming:", error);
-            toast.error("Erro no streaming de IA");
-            setIsStreaming(false);
-            setIsAIActive(false);
-          },
-        });
+              const currentEditor = editorRef.current;
+              if (!currentEditor) return;
+
+              currentEditor.model.change(() => {
+                const viewFragment = currentEditor.data.processor.toView(chunk);
+                const modelFragment = currentEditor.data.toModel(viewFragment);
+                currentEditor.model.insertContent(
+                  modelFragment,
+                  currentEditor.model.document.selection
+                );
+              });
+            },
+            onComplete: () => {
+              setIsStreaming(false);
+              setIsAIActive(false);
+              setAiPrompt("");
+              toast.success("IA finalizou a redação");
+            },
+            onError: (error: Error) => {
+              console.error("Erro no streaming:", error);
+              toast.error("Erro no streaming de IA");
+              setIsStreaming(false);
+              setIsAIActive(false);
+            },
+          });
+        } else {
+          // Fallback para streaming padrão do backend
+          await streamAIFromBackend(prompt, {
+            onChunk: (chunk: string) => {
+              if (isUserTyping) return;
+
+              const currentEditor = editorRef.current;
+              if (!currentEditor) return;
+
+              currentEditor.model.change(() => {
+                const viewFragment = currentEditor.data.processor.toView(chunk);
+                const modelFragment = currentEditor.data.toModel(viewFragment);
+                currentEditor.model.insertContent(
+                  modelFragment,
+                  currentEditor.model.document.selection
+                );
+              });
+            },
+            onComplete: () => {
+              setIsStreaming(false);
+              setIsAIActive(false);
+              setAiPrompt("");
+              toast.success("IA finalizou a redação");
+            },
+            onError: (error: Error) => {
+              console.error("Erro no streaming:", error);
+              toast.error("Erro no streaming de IA");
+              setIsStreaming(false);
+              setIsAIActive(false);
+            },
+          });
+        }
       } catch (error) {
         console.error("Erro ao iniciar streaming:", error);
         setIsStreaming(false);
@@ -394,53 +464,23 @@ export function ProfessionalEditor({
       const editor = editorRef.current;
       if (!editor) return;
 
-      const selectedText = editor.getData();
-      const fullPrompt = `${command.prompt}\n\n${selectedText}`;
+      const selectedText = getSelectedPlainText(editor);
+      const base = selectedText.trim().length > 0 ? selectedText : editor.getData();
+      const fullPrompt = `${command.prompt}\n\n${base}`;
 
-      if (onAIStream) {
-        await runAIStreaming(fullPrompt);
-      } else if (onAIGenerate) {
-        setIsAILoading(true);
-        try {
-          const result = await onAIGenerate(fullPrompt);
-          const processed = replaceVariables(result);
-          editor.setData(processed);
-          toast.success(`IA aplicou: ${command.label}`);
-        } catch {
-          toast.error("Erro ao processar comando de IA");
-        } finally {
-          setIsAILoading(false);
-        }
-      }
+      // Streaming é o caminho principal (fallback interno em runAIStreaming)
+      await runAIStreaming(fullPrompt);
     },
-    [onAIGenerate, onAIStream, replaceVariables, runAIStreaming]
+    [runAIStreaming]
   );
 
   const handleAIGenerate = useCallback(async () => {
     const editor = editorRef.current;
     if (!aiPrompt.trim() || !editor) return;
 
-    if (onAIStream) {
-      await runAIStreaming(aiPrompt);
-    } else if (onAIGenerate) {
-      setIsAILoading(true);
-      try {
-        const result = await onAIGenerate(aiPrompt);
-        const processed = replaceVariables(result);
-
-        const viewFragment = editor.data.processor.toView(processed);
-        const modelFragment = editor.data.toModel(viewFragment);
-        editor.model.insertContent(modelFragment);
-
-        setAiPrompt("");
-        toast.success("Texto gerado com IA");
-      } catch {
-        toast.error("Erro ao gerar texto");
-      } finally {
-        setIsAILoading(false);
-      }
-    }
-  }, [aiPrompt, onAIGenerate, onAIStream, replaceVariables, runAIStreaming]);
+    // Streaming é o caminho principal (fallback interno em runAIStreaming)
+    await runAIStreaming(aiPrompt);
+  }, [aiPrompt, runAIStreaming]);
 
   // ===========================
   // Render

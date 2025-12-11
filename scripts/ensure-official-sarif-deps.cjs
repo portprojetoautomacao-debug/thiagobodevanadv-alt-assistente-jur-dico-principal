@@ -5,6 +5,8 @@
  * Usage:
  *   node ./scripts/ensure-official-sarif-deps.cjs          # dry-run report
  *   node ./scripts/ensure-official-sarif-deps.cjs --apply  # apply changes and run npm install
+ *   node ./scripts/ensure-official-sarif-deps.cjs --apply --remove-local  # remove fallbacks (optional)
+ *   node ./scripts/ensure-official-sarif-deps.cjs --apply --commit        # commit changes (optional)
  *
  */
 const { spawnSync } = require("child_process");
@@ -34,9 +36,10 @@ function addDevDeps(mods) {
   let changed = false;
   for (const { name, version } of mods) {
     if (!pkgData.devDependencies[name]) {
-      pkgData.devDependencies[name] = `^${version}`;
+      // Em modo manutenção, fixamos a versão exata e deixamos o lockfile garantir reprodutibilidade.
+      pkgData.devDependencies[name] = `${version}`;
       changed = true;
-      console.log(`Will add devDependency ${name}@^${version}`);
+      console.log(`Will add devDependency ${name}@${version}`);
     } else {
       console.log(`devDependency ${name} already present as ${pkgData.devDependencies[name]}`);
     }
@@ -69,21 +72,23 @@ function updatePackageScriptsUseOfficial() {
   const packageJsonPath = path.resolve(process.cwd(), "package.json");
   const pkgData = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   let changed = false;
+  // Scripts devem ser offline-safe: só usar ferramenta oficial se estiver instalada.
   if (pkgData.scripts["tsc:sarif"]) {
-    const newVal = "@microsoft/tsc-sarif --out tsc-results.sarif";
-    if (!pkgData.scripts["tsc:sarif"].includes("@microsoft/tsc-sarif")) {
-      pkgData.scripts["tsc:sarif"] = `npx ${newVal}`;
+    const desired =
+      'bash -lc "npx --no-install @microsoft/tsc-sarif --out tsc-results.sarif 2>/dev/null || node ./scripts/tsc-to-sarif.cjs || true"';
+    if (pkgData.scripts["tsc:sarif"] !== desired) {
+      pkgData.scripts["tsc:sarif"] = desired;
       changed = true;
-      console.log("Update tsc:sarif script to use official @microsoft/tsc-sarif");
+      console.log("Updated tsc:sarif to be offline-safe and prefer official tool when installed");
     }
   }
   if (pkgData.scripts["test:sarif"]) {
-    const newVal = "vitest-sarif-reporter --out vitest-results.sarif";
-    if (!pkgData.scripts["test:sarif"].includes("vitest-sarif-reporter")) {
-      pkgData.scripts["test:sarif"] =
-        `bash -lc \"npx ${newVal} || (vitest run --reporter json > vitest-results.json && node ./scripts/vitest-to-sarif.cjs)\"`;
+    const desired =
+      'bash -lc "(npx --no-install vitest-sarif-reporter --out vitest-results.sarif 2>/dev/null) || (vitest run --reporter json > vitest-results.json || true && node ./scripts/vitest-to-sarif.cjs || true)"';
+    if (pkgData.scripts["test:sarif"] !== desired) {
+      pkgData.scripts["test:sarif"] = desired;
       changed = true;
-      console.log("Updated test:sarif to prefer vitest-sarif-reporter");
+      console.log("Updated test:sarif to be offline-safe and prefer official tool when installed");
     }
   }
   if (changed) {
@@ -112,6 +117,8 @@ function commitChanges() {
 
 function main() {
   const apply = process.argv.includes("--apply");
+  const removeLocal = process.argv.includes("--remove-local");
+  const commit = process.argv.includes("--commit");
   console.log("Ensuring official SARIF devDependencies. apply:", apply);
   const found = [];
   for (const p of OFFICIAL_PKGS) {
@@ -129,8 +136,9 @@ function main() {
   }
   if (!apply) {
     console.log("Dry-run: the script will add the following to devDependencies if applied:");
-    found.forEach((f) => console.log(` - ${f.name}@^${f.version}`));
+    found.forEach((f) => console.log(` - ${f.name}@${f.version}`));
     console.log("To apply changes run: node scripts/ensure-official-sarif-deps.cjs --apply");
+    console.log("Optional flags: --remove-local (delete local converters), --commit (git commit)");
     process.exit(0);
   }
   try {
@@ -138,11 +146,19 @@ function main() {
     if (installed) {
       runNpmInstall();
       updatePackageScriptsUseOfficial();
-      // Remove local converter files
-      removeLocalConverters();
-      // Commit changes
-      commitChanges();
-      console.log("Changes applied and committed.");
+
+      if (removeLocal) {
+        removeLocalConverters();
+      } else {
+        console.log("Keeping local converters (use --remove-local to delete them).");
+      }
+
+      if (commit) {
+        commitChanges();
+        console.log("Changes applied and committed.");
+      } else {
+        console.log("Changes applied (no git commit; use --commit to commit automatically).");
+      }
     } else {
       console.log("No changes needed to devDependencies");
     }

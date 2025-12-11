@@ -1,5 +1,6 @@
 import { beforeAll, expect, test } from "vitest";
 import handler from "../../api/agents-v2";
+import { HYBRID_AGENTS_DISABLED } from "../../src/lib/hybrid-agents-integration";
 
 beforeAll(() => {
   process.env.AUTOGEN_API_KEY = "test-autogen-key";
@@ -26,6 +27,12 @@ async function callHandler(agentId: string) {
 
 test("agents-v2 multi run - harvey executa com sucesso", async () => {
   const res = await callHandler("harvey");
+  if (HYBRID_AGENTS_DISABLED) {
+    expect(res.statusCode).toBe(400);
+    expect(res.payload?.error).toContain("has no v2/hybrid implementation");
+    return;
+  }
+
   expect(res.statusCode).toBe(200);
   expect(res.payload.success).toBe(true);
   expect(res.payload.data).toBeDefined();
@@ -34,6 +41,12 @@ test("agents-v2 multi run - harvey executa com sucesso", async () => {
 
 test("agents-v2 multi run - justine executa com sucesso", async () => {
   const res = await callHandler("justine");
+  if (HYBRID_AGENTS_DISABLED) {
+    expect(res.statusCode).toBe(400);
+    expect(res.payload?.error).toContain("has no v2/hybrid implementation");
+    return;
+  }
+
   expect(res.statusCode).toBe(200);
   expect(res.payload.success).toBe(true);
   expect(res.payload.data).toBeDefined();
@@ -42,6 +55,12 @@ test("agents-v2 multi run - justine executa com sucesso", async () => {
 
 test("agents-v2 multi run - gestao-prazos executa com sucesso", async () => {
   const res = await callHandler("gestao-prazos");
+  if (HYBRID_AGENTS_DISABLED) {
+    expect(res.statusCode).toBe(400);
+    expect(res.payload?.error).toContain("has no v2/hybrid implementation");
+    return;
+  }
+
   expect(res.statusCode).toBe(200);
   expect(res.payload.success).toBe(true);
   expect(res.payload.data).toBeDefined();

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
+import { executeHybridTask, HYBRID_AGENTS_DISABLED } from "../../src/lib/hybrid-agents-integration";
 
 test("executeHybridTask executa harvey com sucesso", async () => {
   const task = {
@@ -14,6 +14,13 @@ test("executeHybridTask executa harvey com sucesso", async () => {
 
   const result = await executeHybridTask("harvey", task);
   expect(result).toBeDefined();
+
+  if (HYBRID_AGENTS_DISABLED) {
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("desabil");
+    return;
+  }
+
   expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
   expect(result.mode).toBe("langgraph");
@@ -33,6 +40,13 @@ test("executeHybridTask executa justine com sucesso", async () => {
 
   const result = await executeHybridTask("justine", task);
   expect(result).toBeDefined();
+
+  if (HYBRID_AGENTS_DISABLED) {
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("desabil");
+    return;
+  }
+
   expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
   expect(result.mode).toBe("langgraph");

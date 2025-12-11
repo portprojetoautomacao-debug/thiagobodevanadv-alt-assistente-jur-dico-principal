@@ -1,45 +1,57 @@
 # .railwayignore
+
 # Arquivos e diretórios que Railway NÃO deve deployar
+
 # Railway deve buildar APENAS DSPy Bridge (Python), NÃO o frontend React
 
 # ==========================================
+
 # FRONTEND (VERCEL) - NÃO DEPLOYAR NO RAILWAY
+
 # ==========================================
 
 # Build artifacts frontend
+
 dist/
 build/
 .next/
 out/
 
 # Frontend source
+
 src/
 public/
 index.html
 
 # Vite/React configs
+
 vite.config.ts
 vite.config.js
 tsconfig.json
 tsconfig.node.json
 
 # Nginx config (para frontend)
+
 nginx.conf
 Dockerfile
 
 # Node modules (Railway instala apenas requirements.txt)
+
 node_modules/
 
 # ==========================================
+
 # TESTES E DESENVOLVIMENTO
+
 # ==========================================
 
 # Test files
+
 *.test.ts
 *.test.tsx
 *.spec.ts
 *.spec.tsx
-__tests__/
+**/tests/
 tests/
 test/
 .vitest/
@@ -47,13 +59,16 @@ vitest.config.ts
 vitest.config.*.ts
 
 # E2E tests
+
 e2e/
 playwright.config.ts
 playwright-report/
 test-results/
 
 # ==========================================
+
 # DOCUMENTAÇÃO
+
 # ==========================================
 
 docs/
@@ -63,7 +78,9 @@ CHANGELOG.md
 LICENSE
 
 # ==========================================
+
 # CI/CD
+
 # ==========================================
 
 .github/
@@ -74,7 +91,9 @@ LICENSE
 azure-pipelines.yml
 
 # ==========================================
+
 # IDE E EDITORES
+
 # ==========================================
 
 .vscode/
@@ -85,7 +104,9 @@ azure-pipelines.yml
 .DS_Store
 
 # ==========================================
+
 # GIT
+
 # ==========================================
 
 .git/
@@ -93,17 +114,22 @@ azure-pipelines.yml
 .gitattributes
 
 # ==========================================
+
 # OUTROS SERVIÇOS
+
 # ==========================================
 
 # Vercel
+
 .vercel/
 vercel.json
 
 # Render
+
 render.yaml
 
 # Outros
+
 .env.local
 .env.*.local
 .env.example

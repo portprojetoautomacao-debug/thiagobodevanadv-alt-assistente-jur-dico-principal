@@ -26,7 +26,7 @@ describe("DSPy Bridge (FastAPI) integration", () => {
   let proc: ReturnType<typeof spawn> | null = null;
   const port = 8765;
   // Prefer repository secret (CI) if provided, fall back to a stable test token
-  const token = process.env.DSPY_API_TOKEN || "test-token-123";
+  const token = process.env.DSPY_API_TOKEN || "test-token";
   let bridgeAvailable = false;
 
   beforeAll(async () => {
@@ -83,6 +83,11 @@ describe("DSPy Bridge (FastAPI) integration", () => {
     // Verificar se o servidor está acessível (aumentando tentativas em CI)
     bridgeAvailable = await isDspyBridgeAvailable(port, 8);
     if (!bridgeAvailable) {
+      if (process.env.CI) {
+        throw new Error(
+          "DSPy bridge não está acessível em CI (esperado estar rodando no workflow). Verifique logs do step de startup."
+        );
+      }
       console.warn("DSPy bridge not running, skipping test");
     }
   });

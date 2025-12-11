@@ -50,7 +50,7 @@
         "chat.editing.enabled": true,
         "chat.editing.confirmEditRequestRemoval": false,
         "chat.extensionTools.enabled": true,
-        "chat.tools.terminal.autoApprove": true,
+        "chat.tools.terminal.autoApprove": { "enabled": true },
         "chat.tools.terminal.autoReplyToPrompts": true,
         "github.copilot.chat.defaultToolset": "fullEditingTools",
 

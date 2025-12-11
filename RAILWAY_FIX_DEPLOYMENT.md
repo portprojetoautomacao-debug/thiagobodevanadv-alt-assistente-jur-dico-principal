@@ -11,7 +11,7 @@ O Railway está conectado ao **GitHub** e recebe **TODAS as variáveis do reposi
 🔴 Erro: "The executable `python3` could not be found"
 ```
 
-**Causa Raiz**: 
+**Causa Raiz**:
 1. Railway sincroniza variáveis do GitHub Secrets automaticamente
 2. Variáveis do **Vercel** (frontend) estão sendo injetadas no **Railway** (backend)
 3. Builder configurado para `Dockerfile` (frontend) mas comando executa Python

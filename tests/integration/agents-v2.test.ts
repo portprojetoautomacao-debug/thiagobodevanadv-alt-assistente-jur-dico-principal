@@ -1,5 +1,6 @@
 import { beforeAll, expect, test } from "vitest";
 import handler from "../../api/agents-v2";
+import { HYBRID_AGENTS_DISABLED } from "../../src/lib/hybrid-agents-integration";
 
 function makeReq(body: any, apiKey = "test-autogen-key") {
   return {
@@ -38,6 +39,13 @@ test("POST /api/agents-v2 executa agente LangGraph com sucesso", async () => {
   const req = makeReq({ agentId: "harvey", message: "Analisar caso com prazo curto" });
   const res = makeRes();
   await handler(req, res);
+
+  if (HYBRID_AGENTS_DISABLED) {
+    expect(res.statusCode).toBe(400);
+    expect(res.payload?.error).toContain("has no v2/hybrid implementation");
+    return;
+  }
+
   expect(res.statusCode).toBe(200);
   expect(res.payload).toBeDefined();
   expect(res.payload.success).toBe(true);

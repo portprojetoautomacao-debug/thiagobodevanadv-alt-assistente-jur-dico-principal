@@ -1,5 +1,5 @@
 # ⚠️ ATENÇÃO: Configuração de Variáveis Railway
-# 
+#
 # Railway está conectado ao GitHub e RECEBE TODAS as variáveis do repositório
 # Isso inclui variáveis do FRONTEND (Vercel) que NÃO devem ser usadas
 #

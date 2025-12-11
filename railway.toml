@@ -19,8 +19,9 @@ restartPolicyMaxRetries = 10
 # Railway DEVE usar APENAS estas variáveis (não as do frontend)
 [deploy.env]
 DSPY_PORT = "8765"
-NODE_ENV = "production"
-DSPY_LM_MODEL = "openai/gpt-3.5-turbo"
+
+# Nota: scripts/dspy_bridge.py utiliza DSPY_PORT, DSPY_API_TOKEN e ALLOWED_ORIGINS.
+# Evite declarar variáveis do frontend aqui para não contaminar o service no Railway.
 
 # Variáveis sensíveis (configurar no Railway Dashboard):
 # - DSPY_API_TOKEN (obrigatório - token de autenticação)

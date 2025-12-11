@@ -1,9 +1,9 @@
 /**
- * MinutasManagerV2 - Nova versão do gerenciador de minutas
+ * MinutasManagerV2 - Gerenciador de minutas com CKEditor 5
  *
  * Features:
  * - Layout master-detail (lista de minutas + editor)
- * - ProfessionalEditor (não TiptapEditorV2)
+ * - ProfessionalEditor com CKEditor 5
  * - Integração com Google Docs embed
  * - Colaboração humano/IA melhorada
  * - Sync automático com extensão Chrome
