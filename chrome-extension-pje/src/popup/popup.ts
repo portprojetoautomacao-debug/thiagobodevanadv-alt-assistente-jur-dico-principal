@@ -261,6 +261,8 @@ class PopupController {
       const date = new Date(storage.processos_timestamp);
       const formatted = this.formatRelativeTime(date);
       document.getElementById("lastSync")!.textContent = `Última sincronização: ${formatted}`;
+    } else {
+      document.getElementById("lastSync")!.textContent = "Última sincronização: Nunca";
     }
   }
 
@@ -291,6 +293,11 @@ class PopupController {
           });
         }
       }
+
+      // Atualiza o timestamp da última sincronização
+      await chrome.storage.local.set({
+        processos_timestamp: Date.now(),
+      });
 
       this.showToast("Sincronização iniciada!", "success");
       await this.updateStats();
