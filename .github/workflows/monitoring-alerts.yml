@@ -377,6 +377,83 @@ jobs:
             echo "✅ Nenhuma vulnerabilidade crítica encontrada"
           fi
 
+      - name: 🚨 Criar Issue para Vulnerabilidades Críticas
+        if: steps.audit.outputs.critical_vulns != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const auditData = JSON.parse(fs.readFileSync('audit-results.json', 'utf8'));
+            const critical = parseInt('${{ steps.audit.outputs.critical_vulns }}');
+            const high = parseInt('${{ steps.audit.outputs.high_vulns }}');
+            const moderate = parseInt('${{ steps.audit.outputs.moderate_vulns }}');
+            
+            // Check if there's already an open issue about vulnerabilities
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,automated'
+            });
+            
+            const hasOpenSecurityIssue = existingIssues.data.some(issue => 
+              issue.title.includes('critical npm vulnerability')
+            );
+            
+            if (hasOpenSecurityIssue) {
+              console.log('⚠️  Já existe uma issue aberta sobre vulnerabilidades de segurança');
+              return;
+            }
+            
+            const body = `## 🚨 Vulnerabilidades de Segurança Detectadas
+
+O monitoramento automático de segurança detectou vulnerabilidades críticas nas dependências do projeto.
+
+### 📊 Resumo
+
+- **Críticas**: ${critical}
+- **Altas**: ${high}
+- **Moderadas**: ${moderate}
+
+### 🔧 Ações Recomendadas
+
+1. **Executar localmente**:
+   \`\`\`bash
+   npm audit --json > audit-results.json
+   jq '.' audit-results.json
+   \`\`\`
+
+2. **Tentar correção automática**:
+   \`\`\`bash
+   npm audit fix
+   # Se necessário (cuidado com breaking changes):
+   npm audit fix --force
+   \`\`\`
+
+3. **Revisar e atualizar manualmente**:
+   - Verificar \`package.json\` para dependências desatualizadas
+   - Atualizar versões problemáticas
+   - Considerar substituição de bibliotecas abandonadas
+
+### 📄 Relatório Completo
+
+O relatório JSON completo do \`npm audit\` está disponível nos artefatos do workflow.
+
+**Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+---
+*Issue criada automaticamente pelo workflow de monitoramento em ${new Date().toISOString()}*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Security: ${critical} critical npm vulnerability(ies) detected`,
+              body: body,
+              labels: ['security', 'automated', 'dependencies']
+            });
+            
+            console.log('✅ Issue de segurança criada com sucesso');
+
       - name: 🛡️  Verificação de Headers de Segurança
         run: |
           echo "🛡️  Verificando headers de segurança..."
