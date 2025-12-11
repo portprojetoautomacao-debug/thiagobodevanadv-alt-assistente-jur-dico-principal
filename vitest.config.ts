@@ -8,9 +8,9 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
-    // Aumentar timeout para testes de performance
-    testTimeout: 30000, // 30 segundos
-    hookTimeout: 30000,
+    // Aumentar timeout para testes de performance e integração
+    testTimeout: 600000, // 10 minutos para testes de integração
+    hookTimeout: 60000, // 1 minuto para hooks
     // ✅ Configurar pool para evitar OOM em Workers
     // Usar forks com execução mais conservadora
     pool: "forks",

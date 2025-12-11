@@ -80,11 +80,11 @@ export default function Calendar() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const GOOGLE_CLIENT_ID = getEnv("VITE_GOOGLE_CLIENT_ID", "");
-  const GOOGLE_API_KEY = getEnv("VITE_GEMINI_API_KEY", "") || getEnv("VITE_GOOGLE_API_KEY", "");
+  const GOOGLE_API_KEY = getEnv("VITE_GEMINI_API_KEY", "");
   const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY;
 
   // Debug: log para verificar se as variáveis estão chegando
-  if (typeof window !== "undefined" && !isGoogleConfigured) {
+  if (typeof globalThis.window !== "undefined" && !isGoogleConfigured) {
     console.log(
       "[Calendar] Debug - GOOGLE_CLIENT_ID:",
       GOOGLE_CLIENT_ID ? "✓ Configurado" : "✗ Vazio"

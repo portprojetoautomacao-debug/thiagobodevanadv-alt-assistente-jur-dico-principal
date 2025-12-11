@@ -18,7 +18,7 @@ function cleanup() {
   kill -SIGTERM ${DEV_PID} 2>/dev/null || true
   sleep 2
   kill -SIGKILL ${DEV_PID} 2>/dev/null || true
-  
+
   # Exibir logs do servidor em caso de falha
   if [ -f /tmp/dev-server.log ]; then
     echo "=== Dev Server Logs ==="
@@ -34,21 +34,21 @@ for i in $(seq 1 ${MAX_WAIT}); do
     echo "✅ Local API is ready (took ${i}s)"
     break
   fi
-  
+
   # Verificar se o processo ainda está rodando
   if ! kill -0 ${DEV_PID} 2>/dev/null; then
     echo "❌ Dev server process died unexpectedly!"
     cat /tmp/dev-server.log 2>/dev/null || true
     exit 1
   fi
-  
+
   # Progress indicator a cada 10 segundos
   if [ $((i % 10)) -eq 0 ]; then
     echo "Still waiting... (${i}s elapsed)"
   fi
-  
+
   sleep 1
-  
+
   # Falhar se timeout
   if [ $i -eq ${MAX_WAIT} ]; then
     echo "❌ Timeout waiting for dev server to be ready after ${MAX_WAIT}s"

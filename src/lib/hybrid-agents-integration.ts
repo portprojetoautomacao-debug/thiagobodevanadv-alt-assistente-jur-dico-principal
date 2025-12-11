@@ -3,27 +3,13 @@
  *
  * Integra os agentes LangGraph com o sistema existente de 15 agentes
  * Permite execução paralela e coordenação entre agentes tradicionais e híbridos
+ *
+ * NOTA: Agentes LangGraph em desenvolvimento - implementação planejada para próxima versão
  */
 
-// Agents em construção, imports comentados temporariamente
-// import { AnaliseDocumentalAgent } from "@/agents/analise-documental/analise_documental_graph";
-// import { AnaliseRiscoAgent } from "@/agents/analise-risco/analise_risco_graph";
 import type { AgentState } from "@/agents/base/agent_state";
 import { updateState } from "@/agents/base/agent_state";
 import { LangGraphAgent } from "@/agents/base/langgraph_agent";
-// import { ComplianceAgent } from "@/agents/compliance/compliance_graph";
-// import { ComunicacaoClientesAgent } from "@/agents/comunicacao-clientes/comunicacao_clientes_graph";
-// import { EstrategiaProcessualAgent } from "@/agents/estrategia-processual/estrategia_processual_graph";
-// import { FinanceiroAgent } from "@/agents/financeiro/financeiro_graph";
-// import { GestaoPrazosAgent } from "@/agents/gestao-prazos/gestao_prazos_graph";
-// import { HarveyAgent } from "@/agents/harvey/harvey_graph";
-// import { JustineAgent } from "@/agents/justine/justine_graph";
-// import { DJENMonitorAgent } from "@/agents/monitor-djen/monitor_graph";
-// import { OrganizacaoArquivosAgent } from "@/agents/organizacao-arquivos/organizacao_arquivos_graph";
-// import { PesquisaJurisAgent } from "@/agents/pesquisa-juris/pesquisa_graph";
-// import { RedacaoPeticoesAgent } from "@/agents/redacao-peticoes/redacao_graph";
-// import { RevisaoContratualAgent } from "@/agents/revisao-contratual/revisao_contratual_graph";
-// import { TraducaoJuridicaAgent } from "@/agents/traducao-juridica/traducao_juridica_graph";
 import type { AgentTask } from "./agents.js";
 
 /**
@@ -89,11 +75,14 @@ const agentCache = new Map<string, LangGraphAgent>();
  */
 function getLangGraphAgent(type: HybridAgentType, agentId?: string): LangGraphAgent {
   const cacheKey = agentId ? `${type}:${agentId}` : type;
-  if (!agentCache.has(cacheKey)) {
-    // Agentes LangGraph em desenvolvimento - implementação planejada para próxima versão
-    throw new Error(`LangGraph agents em construção - agentId: ${agentId || type}`);
+
+  const cachedAgent = agentCache.get(cacheKey);
+  if (cachedAgent) {
+    return cachedAgent;
   }
-  return agentCache.get(cacheKey)!;
+
+  // Agentes LangGraph em desenvolvimento - implementação planejada para próxima versão
+  throw new Error(`LangGraph agents em construção - agentId: ${agentId || type}`);
 }
 
 /**

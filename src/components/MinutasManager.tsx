@@ -74,8 +74,7 @@ const TiptapEditorV2 = lazy(() =>
 
 // Verificar se as credenciais do Google estão configuradas
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-const GOOGLE_API_KEY =
-  import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GOOGLE_API_KEY || "";
+const GOOGLE_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY;
 
 type ViewMode = "grid" | "list";

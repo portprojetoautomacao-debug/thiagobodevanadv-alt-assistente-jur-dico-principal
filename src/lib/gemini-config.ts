@@ -6,10 +6,7 @@
 export const getGeminiApiKey = (): string => {
   // Tenta múltiplas variáveis (flexível para diferentes ambientes)
   const apiKey = String(
-    import.meta.env.VITE_GEMINI_API_KEY ||
-      import.meta.env.VITE_GOOGLE_API_KEY ||
-      import.meta.env.VITE_GOOGLE_GEMINI_KEY ||
-      ""
+    import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GOOGLE_GEMINI_KEY || ""
   );
 
   if (!apiKey) {

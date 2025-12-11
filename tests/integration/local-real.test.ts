@@ -7,7 +7,7 @@ describe("local real integration tests (dev API)", () => {
     "should run the local dev server and validate extension-errors endpoints",
     async () => {
       const scriptPath = path.join(process.cwd(), "scripts", "run-local-real-tests.sh");
-      
+
       // Garantir que variáveis de ambiente necessárias estejam definidas
       const testEnv = {
         ...process.env,
@@ -15,13 +15,13 @@ describe("local real integration tests (dev API)", () => {
         DEV_API_PORT: process.env.DEV_API_PORT || "5252",
         VITE_PORT: process.env.VITE_PORT || "5173",
       };
-      
+
       await new Promise<void>((resolve, reject) => {
         const proc = execFile(
           "bash",
           [scriptPath],
-          { 
-            cwd: process.cwd(), 
+          {
+            cwd: process.cwd(),
             env: testEnv,
             maxBuffer: 1024 * 1024 * 10, // 10MB buffer para logs
           },
@@ -30,7 +30,7 @@ describe("local real integration tests (dev API)", () => {
             console.log("=== stdout ===\n" + stdout);
             console.error("=== stderr ===\n" + stderr);
             if (err) {
-              console.error(`Process exited with code ${err.code || 'unknown'}`);
+              console.error(`Process exited with code ${err.code || "unknown"}`);
               return reject(err);
             }
             resolve();
@@ -46,7 +46,7 @@ describe("local real integration tests (dev API)", () => {
           },
           1000 * 60 * 8
         );
-        
+
         proc.on("exit", (code) => {
           clearTimeout(timer);
           if (code && code !== 0) {

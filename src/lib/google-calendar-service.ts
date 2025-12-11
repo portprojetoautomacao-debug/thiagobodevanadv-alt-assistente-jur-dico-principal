@@ -12,8 +12,7 @@ import type {
 } from "./google-types";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-const GOOGLE_API_KEY =
-  import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GOOGLE_API_KEY || "";
+const GOOGLE_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const CALENDAR_SCOPES =
   "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar";
 

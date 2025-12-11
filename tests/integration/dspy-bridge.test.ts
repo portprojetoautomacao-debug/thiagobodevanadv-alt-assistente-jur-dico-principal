@@ -77,13 +77,13 @@ describe("DSPy Bridge (FastAPI) integration", () => {
       },
       body: JSON.stringify({ prompt: "Olá, optimize me" }),
     });
-    
+
     // Debug: Log response details if not 200
     if (res.status !== 200) {
       const body = await res.text();
       console.error(`DSPy /optimize failed with ${res.status}: ${body}`);
     }
-    
+
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.optimized_prompt).toBeDefined();
