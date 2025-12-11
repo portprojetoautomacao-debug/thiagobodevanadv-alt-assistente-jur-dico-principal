@@ -11,19 +11,17 @@ export default defineConfig({
     // Aumentar timeout para testes de performance e integração
     testTimeout: 600000, // 10 minutos para testes de integração
     hookTimeout: 60000, // 1 minuto para hooks
-    // ✅ Configurar pool para evitar OOM em Workers
-    // Usar forks com execução mais conservadora
-    pool: "forks",
+    // Configuração de pool para estabilidade (usar threads em vez de forks)
+    pool: "threads",
     poolOptions: {
-      forks: {
-        // ✅ Ajustar dinamicamente baseado em CI ou local
-        maxForks: process.env.CI ? 2 : 1,
-        minForks: 1,
-        singleFork: !process.env.CI, // Single fork apenas localmente
+      threads: {
+        // Ajuste conservador: poucas threads para evitar OOM/worker errors
+        minThreads: 1,
+        maxThreads: process.env.CI ? 2 : 1,
       },
     },
-    // ✅ Ajustar concorrência baseado em ambiente
-    maxConcurrency: process.env.CI ? 5 : 1,
+    // Ajustar concorrência baseado em ambiente para estabilidade
+    maxConcurrency: process.env.CI ? 3 : 1,
     // ✅ Isolar testes no CI para melhor confiabilidade
     isolate: process.env.CI ? true : false,
     // ✅ Suporte a sharding para execução paralela

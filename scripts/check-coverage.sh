@@ -39,11 +39,19 @@ export NODE_OPTIONS="--max-old-space-size=8192 --expose-gc"
 npm run test:coverage 2>&1 | tee coverage-output.log
 
 # 2. Verificar se cobertura foi gerada
-if [[ ! -f "coverage/coverage-summary.json" ]]; then
-    echo "❌ Arquivo de cobertura não encontrado!"
-    exit 1
+if [[ -f "coverage/coverage-summary.json" ]]; then
+  COVERAGE_SUMMARY="coverage/coverage-summary.json"
+elif [[ -f "coverage/coverage-final.json" ]]; then
+  COVERAGE_SUMMARY="coverage/coverage-final.json"
+elif [[ -f "coverage-api/coverage-summary.json" ]]; then
+  COVERAGE_SUMMARY="coverage-api/coverage-summary.json"
+elif [[ -f "coverage-api/coverage-final.json" ]]; then
+  COVERAGE_SUMMARY="coverage-api/coverage-final.json"
+else
+  echo "❌ Arquivo de cobertura não encontrado! (procurei coverage/coverage-summary.json, coverage/coverage-final.json and coverage-api/coverage-summary.json, coverage-api/coverage-final.json)"
+  exit 1
 fi
-
+echo "✅ Usando ${COVERAGE_SUMMARY} para análise"
 # 3. Extrair métricas de cobertura
 echo ""
 echo "📈 Analisando métricas de cobertura..."
@@ -53,7 +61,12 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 cat > parse-coverage.mjs << 'EOF'
 import fs from 'fs';
 
-const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+const SUMMARY_PATH = process.env.SUMMARY_PATH || 'coverage/coverage-summary.json';
+if (!fs.existsSync(SUMMARY_PATH)) {
+  console.error(`Arquivo de resumo não encontrado: ${SUMMARY_PATH}`);
+  process.exit(1);
+}
+const summary = JSON.parse(fs.readFileSync(SUMMARY_PATH, 'utf8'));
 const total = summary.total;
 
 console.log('\n📊 COBERTURA GERAL:');
@@ -135,7 +148,9 @@ if (untested.length === 0) {
 process.exit(failed ? 1 : 0);
 EOF
 
-node parse-coverage.mjs
+COVERAGE_STATUS=0
+SUMMARY_PATH=${COVERAGE_SUMMARY} node parse-coverage.mjs
+COVERAGE_STATUS=$?
 COVERAGE_STATUS=$?
 
 # 4. Gerar relatório detalhado se solicitado

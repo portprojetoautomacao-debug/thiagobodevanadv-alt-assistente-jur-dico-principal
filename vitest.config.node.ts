@@ -25,6 +25,10 @@ export default defineConfig({
       "api/**/*.test.ts",
       "tests/integration/**/*.test.ts",
       "tests/minimal-integration.test.ts",
+      // Include backend-specific library tests (Qdrant, LangGraph unit tests)
+      "src/lib/**/__tests__/**/*.test.ts",
+      "src/lib/**/*.spec.ts",
+      "src/lib/**/*.test.ts",
     ],
 
     // Excluir testes de frontend e E2E
