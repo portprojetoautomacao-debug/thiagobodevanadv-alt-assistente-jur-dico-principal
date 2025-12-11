@@ -1,6 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const mockRedis: any = {
+  set: vi.fn(async () => null),
+  get: vi.fn(async () => null),
+  sismember: vi.fn(async () => 1),
+  lpush: vi.fn(async () => null),
+};
+
+// ✅ Mock deve estar no topo do arquivo, antes de qualquer import
+vi.mock("@upstash/redis", () => {
+  function RedisMock() {
+    return mockRedis;
+  }
+  return { Redis: RedisMock } as any;
+});
+
 // mockRes removed - handler uses Fetch API Response
 
 function makeReq(body: any, method = "POST", headers: any = {}) {
@@ -14,24 +29,9 @@ function makeReq(body: any, method = "POST", headers: any = {}) {
   } as any;
 }
 
-const mockRedis: any = {
-  set: vi.fn(async () => null),
-  get: vi.fn(async () => null),
-  sismember: vi.fn(async () => 1),
-  lpush: vi.fn(async () => null),
-};
-
 describe("pje-sync API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Mock Upstash Redis export
-    vi.mock("@upstash/redis", () => {
-      function RedisMock() {
-        return mockRedis;
-      }
-      return { Redis: RedisMock } as any;
-    });
 
     // Ensure fetch is defined for triggerJustineAgent
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true })) as any);
