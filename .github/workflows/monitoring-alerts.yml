@@ -71,7 +71,7 @@ jobs:
 
           # Determinar URL baseada no ambiente
           if [[ "${{ matrix.environment }}" == "production" ]]; then
-            APP_URL="https://assistente-juridico-p.vercel.app"
+            APP_URL="https://assistente-juridico-github.vercel.app"
           else
             APP_URL="https://assistente-juridico-p-staging.vercel.app"
           fi
@@ -110,7 +110,7 @@ jobs:
           echo "🔍 Verificando APIs críticas..."
 
           # URL base do app
-          BASE_URL="https://assistente-juridico-p.vercel.app"
+          BASE_URL="https://assistente-juridico-github.vercel.app"
 
           # Lista de endpoints críticos para verificar
           ENDPOINTS=(
@@ -194,7 +194,7 @@ jobs:
           echo "🏃 Executando Lighthouse performance audit..."
 
           # URL alvo de produção
-          TARGET_URL="https://assistente-juridico-p.vercel.app"
+          TARGET_URL="https://assistente-juridico-github.vercel.app"
 
           # Executar Lighthouse para produção
           npx lighthouse $TARGET_URL \
@@ -304,7 +304,7 @@ jobs:
           echo "🛡️  Verificando headers de segurança..."
 
           # URL alvo
-          TARGET_URL="https://assistente-juridico-p.vercel.app"
+          TARGET_URL="https://assistente-juridico-github.vercel.app"
 
           # Verificar headers importantes
           HEADERS=$(curl -s -I $TARGET_URL)
@@ -335,7 +335,7 @@ jobs:
           echo "🔐 Verificando certificado SSL..."
 
           # URL alvo
-          TARGET_URL="https://assistente-juridico-p.vercel.app"
+          TARGET_URL="https://assistente-juridico-github.vercel.app"
           DOMAIN=$(echo $TARGET_URL | sed 's|https://||')
 
           # Verificar validade do certificado
