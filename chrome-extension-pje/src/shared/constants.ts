@@ -2,7 +2,7 @@
  * Constantes compartilhadas
  */
 
-export const BACKEND_URL = "https://assistente-juridico-p.vercel.app";
+export const BACKEND_URL = "https://assistente-juridico-github.vercel.app";
 
 export const API_ENDPOINTS = {
   PJE_SYNC: "/api/pje-sync",
@@ -18,6 +18,10 @@ export const STORAGE_KEYS = {
   LAST_SYNC: "lastSync",
   ERRORS: "errors",
   ENABLED: "enabled",
+  // Crawler keys
+  CRAWLER_QUEUE: "crawler_queue",
+  CRAWLER_RESULTS: "crawler_results",
+  CRAWLER_STATUS: "crawler_status",
 } as const;
 
 export const SYNC_INTERVAL = 60000; // 1 minuto
@@ -26,16 +30,22 @@ export const RETRY_ATTEMPTS = 3;
 export const RETRY_DELAY = 2000; // 2 segundos
 
 export const PJE_SELECTORS = {
-  PROCESSO_ROW: ".processo-row, [data-processo]",
-  NUMERO_PROCESSO: ".numero-processo, [data-numero-processo]",
-  CLASSE: ".classe-processo, [data-classe]",
-  ASSUNTO: ".assunto, [data-assunto]",
-  PARTE_AUTOR: ".parte-autor, [data-autor]",
-  PARTE_REU: ".parte-reu, [data-reu]",
-  VARA: ".vara, [data-vara]",
-  MOVIMENTO: ".ultimo-movimento, [data-movimento]",
-  DATA: ".data-movimento, [data-data]",
-  SITUACAO: ".situacao, [data-situacao]",
+  // Seletores reais do PJe TJMG (RichFaces)
+  PROCESSO_ROW:
+    "tr.rich-table-row, tr.rich-table-firstrow, .linha-processo, [id*='processoForm'] tr",
+  NUMERO_PROCESSO: "a[id*='numero'], .numero-processo, td:first-child a, span[id*='numero']",
+  CLASSE: ".classe-judicial, td.classe, span[id*='classe']",
+  ASSUNTO: ".assunto, td.assunto, span[id*='assunto']",
+  PARTE_AUTOR: ".polo-ativo, .autor, span[id*='autor'], span[id*='poloAtivo']",
+  PARTE_REU: ".polo-passivo, .reu, span[id*='reu'], span[id*='poloPassivo']",
+  VARA: ".orgao-julgador, .vara, span[id*='orgao'], span[id*='vara']",
+  MOVIMENTO: ".ultimo-movimento, .movimento, span[id*='movimento'], span[id*='ultimoMovimento']",
+  DATA: ".data, span[id*='data'], td.data",
+  SITUACAO: ".situacao, span[id*='situacao'], span[id*='status']",
+  // Seletores de abas do PJe
+  TAB_EXPEDIENTES: "#tabExpedientes_shifted, [id*='tabExpedientes']",
+  TAB_ACERVO: "#tabAcervo_shifted, [id*='tabAcervo']",
+  TAB_CONSULTA: "#tabConsultaProcesso_shifted, [id*='tabConsulta']",
 } as const;
 
 export const CNJ_REGEX = /(\d{7})-?(\d{2})\.?(\d{4})\.?(\d{1})\.?(\d{2})\.?(\d{4})/;

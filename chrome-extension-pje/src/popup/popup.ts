@@ -2,8 +2,11 @@
  * Popup Controller
  */
 
+import { CrawlStatus } from "../shared/types";
+
 class PopupController {
   private apiKey: string | null = null;
+  private crawlerStatus: CrawlStatus | null = null;
 
   constructor() {
     this.init();
@@ -14,6 +17,7 @@ class PopupController {
     this.setupEventListeners();
     await this.updateStatus();
     await this.updateStats();
+    await this.updateCrawlerStatus();
     this.startAutoRefresh();
   }
 
@@ -79,7 +83,7 @@ class PopupController {
     const dashboardBtn = document.getElementById("openDashboard");
     dashboardBtn?.addEventListener("click", () => {
       chrome.tabs.create({
-        url: "https://assistente-juridico-p.vercel.app",
+        url: "https://assistente-juridico-github.vercel.app",
       });
     });
 
@@ -87,9 +91,117 @@ class PopupController {
     const settingsBtn = document.getElementById("openSettings");
     settingsBtn?.addEventListener("click", () => {
       chrome.tabs.create({
-        url: "https://assistente-juridico-p.vercel.app/settings/api-keys",
+        url: "https://assistente-juridico-github.vercel.app/settings/api-keys",
       });
     });
+
+    // Crawler controls
+    this.setupCrawlerListeners();
+  }
+
+  private setupCrawlerListeners(): void {
+    // Start crawler
+    const startBtn = document.getElementById("crawlerStart");
+    startBtn?.addEventListener("click", async () => {
+      await this.crawlerAction("CRAWLER_START");
+      this.showToast("Crawler iniciado!", "success");
+    });
+
+    // Pause crawler
+    const pauseBtn = document.getElementById("crawlerPause");
+    pauseBtn?.addEventListener("click", async () => {
+      if (this.crawlerStatus?.isPaused) {
+        await this.crawlerAction("CRAWLER_RESUME");
+        this.showToast("Crawler resumido!", "success");
+      } else {
+        await this.crawlerAction("CRAWLER_PAUSE");
+        this.showToast("Crawler pausado!", "success");
+      }
+    });
+
+    // Stop crawler
+    const stopBtn = document.getElementById("crawlerStop");
+    stopBtn?.addEventListener("click", async () => {
+      await this.crawlerAction("CRAWLER_STOP");
+      this.showToast("Crawler parado!", "success");
+    });
+  }
+
+  private async crawlerAction(type: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else if (response?.success) {
+          this.updateCrawlerStatus();
+          resolve();
+        } else {
+          reject(new Error(response?.error || "Erro desconhecido"));
+        }
+      });
+    });
+  }
+
+  private async updateCrawlerStatus(): Promise<void> {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: "CRAWLER_STATUS" }, (response) => {
+        if (response?.success && response.status) {
+          this.crawlerStatus = response.status;
+          this.renderCrawlerStatus(response.status);
+        }
+        resolve();
+      });
+    });
+  }
+
+  private renderCrawlerStatus(status: CrawlStatus): void {
+    const dot = document.getElementById("crawlerDot");
+    const statusText = document.getElementById("crawlerStatusText");
+    const queueText = document.getElementById("crawlerQueue");
+    const completedText = document.getElementById("crawlerCompleted");
+    const progressContainer = document.getElementById("crawlerProgress");
+    const progressFill = document.getElementById("crawlerProgressFill");
+    const progressText = document.getElementById("crawlerProgressText");
+
+    const startBtn = document.getElementById("crawlerStart") as HTMLButtonElement;
+    const pauseBtn = document.getElementById("crawlerPause") as HTMLButtonElement;
+    const stopBtn = document.getElementById("crawlerStop") as HTMLButtonElement;
+
+    // Update status indicator
+    dot?.classList.remove("running", "paused");
+    if (status.isRunning) {
+      if (status.isPaused) {
+        dot?.classList.add("paused");
+        statusText!.textContent = "Pausado";
+        pauseBtn.textContent = "▶️ Resumir";
+      } else {
+        dot?.classList.add("running");
+        statusText!.textContent = "Em execução";
+        pauseBtn.textContent = "⏸️ Pausar";
+      }
+    } else {
+      statusText!.textContent = "Parado";
+    }
+
+    // Update stats
+    queueText!.textContent = `Fila: ${status.queueSize}`;
+    completedText!.textContent = `Completos: ${status.completedJobs}`;
+
+    // Update progress
+    const total = status.queueSize + status.completedJobs;
+    if (total > 0 && status.isRunning) {
+      progressContainer!.style.display = "block";
+      const percent = Math.round((status.completedJobs / total) * 100);
+      progressFill!.style.width = `${percent}%`;
+      progressText!.textContent = `${percent}% (${status.completedJobs}/${total})`;
+    } else {
+      progressContainer!.style.display = "none";
+    }
+
+    // Update button states
+    startBtn.disabled = status.isRunning && !status.isPaused;
+    pauseBtn.disabled = !status.isRunning;
+    stopBtn.disabled = !status.isRunning;
   }
 
   private async updateStatus(): Promise<void> {
@@ -108,7 +220,7 @@ class PopupController {
     statusText!.textContent = "Verificando...";
 
     try {
-      const response = await fetch("https://assistente-juridico-p.vercel.app/api/status", {
+      const response = await fetch("https://assistente-juridico-github.vercel.app/api/status", {
         headers: { "X-API-Key": this.apiKey },
       });
 
@@ -195,7 +307,15 @@ class PopupController {
     setInterval(() => {
       this.updateStatus();
       this.updateStats();
+      this.updateCrawlerStatus();
     }, 30000); // 30 segundos
+
+    // Refresh mais frequente para crawler quando ativo
+    setInterval(() => {
+      if (this.crawlerStatus?.isRunning) {
+        this.updateCrawlerStatus();
+      }
+    }, 5000); // 5 segundos quando crawler ativo
   }
 
   private formatRelativeTime(date: Date): string {
