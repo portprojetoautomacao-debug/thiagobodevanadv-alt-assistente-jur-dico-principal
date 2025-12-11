@@ -164,22 +164,37 @@ jobs:
             else
               echo "✅ VERCEL_TOKEN configured"
             fi
-          fi
 
-          if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
-            echo "❌ Error: VERCEL_ORG_ID is not configured"
-            echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            HAS_ERRORS=1
-          else
-            echo "✅ VERCEL_ORG_ID configured"
-          fi
+            # Verificação de VERCEL_ORG_ID (obrigatório para produção/staging)
+            if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+              echo "❌ Error: VERCEL_ORG_ID is not configured"
+              echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+              HAS_ERRORS=1
+            else
+              echo "✅ VERCEL_ORG_ID configured"
+            fi
 
-          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "❌ Error: VERCEL_PROJECT_ID is not configured"
-            echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
-            HAS_ERRORS=1
+            # Verificação de VERCEL_PROJECT_ID (obrigatório para produção/staging)
+            if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+              echo "❌ Error: VERCEL_PROJECT_ID is not configured"
+              echo "📖 See CONFIGURACAO_VERCEL_TOKEN.md for instructions"
+              HAS_ERRORS=1
+            else
+              echo "✅ VERCEL_PROJECT_ID configured"
+            fi
           else
-            echo "✅ VERCEL_PROJECT_ID configured"
+            # Para PRs de preview: avisar mas não falhar se ORG/PROJECT estiverem ausentes
+            if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+              echo "⚠️  Warning: VERCEL_ORG_ID is not configured (optional for PR preview)"
+            else
+              echo "✅ VERCEL_ORG_ID configured"
+            fi
+
+            if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+              echo "⚠️  Warning: VERCEL_PROJECT_ID is not configured (optional for PR preview)"
+            else
+              echo "✅ VERCEL_PROJECT_ID configured"
+            fi
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
