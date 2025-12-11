@@ -40,6 +40,7 @@ export default defineConfig({
       "**/.{git,cache,output,temp}/**",
       "tests/e2e/**",
     ],
+    // reporters will be handled via a separate converter script (vitest json -> SARIF)
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

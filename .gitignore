@@ -102,6 +102,8 @@ Thumbs.db
 mcp-server-config.json*
 .env*.local
 eslint-results.sarif
+tsc-results.sarif
+vitest-results.sarif
 *.zip
 
 # SonarCloud

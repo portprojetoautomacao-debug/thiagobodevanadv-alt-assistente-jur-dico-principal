@@ -86,6 +86,30 @@ jobs:
         env:
           CI: true
 
+      - name: Generate TypeScript SARIF report
+        run: npm run tsc:sarif || true
+        continue-on-error: true
+
+      - name: Upload TypeScript SARIF to GitHub Security
+        if: always() && hashFiles('tsc-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: tsc-results.sarif
+          category: sonarcloud-typescript
+        continue-on-error: true
+
+      - name: Run Vitest with SARIF reporter
+        run: npm run test:sarif || true
+        continue-on-error: true
+
+      - name: Upload Vitest SARIF to GitHub Security
+        if: always() && hashFiles('vitest-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: vitest-results.sarif
+          category: sonarcloud-vitest
+        continue-on-error: true
+
       - name: Install Chrome Extension dependencies
         run: cd chrome-extension-pje && npm ci
         continue-on-error: true

@@ -130,6 +130,18 @@ jobs:
           sarif_file: eslint-results.sarif
           category: eslint
 
+      - name: Generate TypeScript SARIF report
+        run: npm run tsc:sarif || true
+        continue-on-error: true
+
+      - name: Upload TypeScript SARIF to GitHub
+        if: always() && hashFiles('tsc-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: tsc-results.sarif
+          category: typescript
+        continue-on-error: true
+
   # ==========================================
   # 🧩 ANÁLISE DE COMPLEXIDADE
   # ==========================================

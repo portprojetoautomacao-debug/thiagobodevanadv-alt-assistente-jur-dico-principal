@@ -44,7 +44,7 @@ jobs:
       - name: Run unit tests with OOM monitoring
         run: |
           echo "🔍 Monitoring Worker OOM during test execution..."
-          npm run test:run 2>&1 | tee test-output.log || true
+          npm run test:run -- --reporter json 2>&1 | tee test-output.log || true
 
           # Check for Worker OOM errors
           if grep -q "Worker exited unexpectedly" test-output.log; then
@@ -60,6 +60,17 @@ jobs:
           fi
 
           echo "✅ Tests completed successfully"
+      - name: Generate Vitest SARIF (JSON -> SARIF)
+        run: npm run test:sarif || true
+        continue-on-error: true
+
+      - name: Upload Vitest SARIF to GitHub Security
+        if: always() && hashFiles('vitest-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: vitest-results.sarif
+          category: vitest
+        continue-on-error: true
 
   api-tests:
     name: API Tests
@@ -205,3 +216,10 @@ jobs:
           flags: unittests
           name: coverage-report
           fail_ci_if_error: false
+      - name: Upload Vitest SARIF to GitHub Security
+        if: always() && hashFiles('vitest-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: vitest-results.sarif
+          category: vitest-coverage
+        continue-on-error: true
