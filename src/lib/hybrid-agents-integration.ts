@@ -3,14 +3,29 @@
  *
  * Integra os agentes LangGraph com o sistema existente de 15 agentes
  * Permite execução paralela e coordenação entre agentes tradicionais e híbridos
- *
- * NOTA: Agentes LangGraph em desenvolvimento - implementação planejada para próxima versão
  */
 
 import type { AgentState } from "@/agents/base/agent_state";
 import { updateState } from "@/agents/base/agent_state";
 import { LangGraphAgent } from "@/agents/base/langgraph_agent";
 import type { AgentTask } from "./agents.js";
+
+// Importar todos os 15 agentes LangGraph
+import { AnaliseDocumentalAgent } from "@/agents/analise-documental/analise_documental_graph";
+import { AnaliseRiscoAgent } from "@/agents/analise-risco/analise_risco_graph";
+import { ComplianceAgent } from "@/agents/compliance/compliance_graph";
+import { ComunicacaoClientesAgent } from "@/agents/comunicacao-clientes/comunicacao_clientes_graph";
+import { EstrategiaProcessualAgent } from "@/agents/estrategia-processual/estrategia_processual_graph";
+import { FinanceiroAgent } from "@/agents/financeiro/financeiro_graph";
+import { GestaoPrazosAgent } from "@/agents/gestao-prazos/gestao_prazos_graph";
+import { HarveyAgent } from "@/agents/harvey/harvey_graph";
+import { JustineAgent } from "@/agents/justine/justine_graph";
+import { DJENMonitorAgent } from "@/agents/monitor-djen/monitor_graph";
+import { OrganizacaoArquivosAgent } from "@/agents/organizacao-arquivos/organizacao_arquivos_graph";
+import { PesquisaJurisAgent } from "@/agents/pesquisa-juris/pesquisa_graph";
+import { RedacaoPeticoesAgent } from "@/agents/redacao-peticoes/redacao_graph";
+import { RevisaoContratualAgent } from "@/agents/revisao-contratual/revisao_contratual_graph";
+import { TraducaoJuridicaAgent } from "@/agents/traducao-juridica/traducao_juridica_graph";
 
 /**
  * Tipos de agentes híbridos disponíveis
@@ -70,8 +85,6 @@ const agentCache = new Map<string, LangGraphAgent>();
 
 /**
  * Obtém instância de agente LangGraph (com cache)
- *
- * @throws Error - LangGraph agents ainda não implementados (em construção)
  */
 function getLangGraphAgent(type: HybridAgentType, agentId?: string): LangGraphAgent {
   const cacheKey = agentId ? `${type}:${agentId}` : type;
@@ -81,8 +94,62 @@ function getLangGraphAgent(type: HybridAgentType, agentId?: string): LangGraphAg
     return cachedAgent;
   }
 
-  // Agentes LangGraph em desenvolvimento - implementação planejada para próxima versão
-  throw new Error(`LangGraph agents em construção - agentId: ${agentId || type}`);
+  // Instanciar agente baseado no agentId
+  let agent: LangGraphAgent;
+
+  switch (agentId) {
+    case "harvey":
+      agent = new HarveyAgent();
+      break;
+    case "justine":
+      agent = new JustineAgent();
+      break;
+    case "monitor-djen":
+      agent = new DJENMonitorAgent();
+      break;
+    case "analise-documental":
+      agent = new AnaliseDocumentalAgent();
+      break;
+    case "redacao-peticoes":
+      agent = new RedacaoPeticoesAgent();
+      break;
+    case "gestao-prazos":
+      agent = new GestaoPrazosAgent();
+      break;
+    case "organizacao-arquivos":
+      agent = new OrganizacaoArquivosAgent();
+      break;
+    case "pesquisa-juris":
+      agent = new PesquisaJurisAgent();
+      break;
+    case "analise-risco":
+      agent = new AnaliseRiscoAgent();
+      break;
+    case "revisao-contratual":
+      agent = new RevisaoContratualAgent();
+      break;
+    case "comunicacao-clientes":
+      agent = new ComunicacaoClientesAgent();
+      break;
+    case "financeiro":
+      agent = new FinanceiroAgent();
+      break;
+    case "estrategia-processual":
+      agent = new EstrategiaProcessualAgent();
+      break;
+    case "traducao-juridica":
+      agent = new TraducaoJuridicaAgent();
+      break;
+    case "compliance":
+      agent = new ComplianceAgent();
+      break;
+    default:
+      throw new Error(`Unknown agent: ${agentId || type}`);
+  }
+
+  // Cache da instância
+  agentCache.set(cacheKey, agent);
+  return agent;
 }
 
 /**

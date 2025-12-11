@@ -351,7 +351,7 @@ export class QdrantService {
     try {
       await this.client.recreateCollection(collectionName, {
         vectors: {
-          size: 1536, // OpenAI embedding size
+          size: 768, // OpenAI/Gemini embedding size
           distance: "Cosine",
         },
         sparse_vectors: {

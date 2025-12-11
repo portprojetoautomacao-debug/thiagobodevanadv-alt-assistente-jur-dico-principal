@@ -16,7 +16,7 @@
 | **Região** | `us-east4-0` (Google Cloud Platform) |
 | **Tier** | Free (1GB storage, 100k vectors) |
 | **Collection** | `legal_docs` |
-| **Vector Size** | 1536 (compatível com OpenAI/Gemini embeddings) |
+| **Vector Size** | 768 (compatível com OpenAI/Gemini embeddings) |
 | **Distance** | Cosine |
 | **Status** | 🟢 Green (operacional) |
 
@@ -43,7 +43,7 @@ npm run qdrant:init
 ```
 ✅ Collection criada com sucesso!
 📊 Configuração Final:
-   - Vector Size: 1536
+  - Vector Size: 768
    - Distance: Cosine
    - Status: green
 ```
@@ -100,7 +100,7 @@ const service = createQdrantService({
 await service.upsert([
   {
     id: "stf-precedente-001",
-    vector: embedding, // Array de 1536 números
+    vector: embedding, // Array de 768 números
     payload: {
       tribunal: "STF",
       tipo: "precedente",

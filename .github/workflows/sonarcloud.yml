@@ -64,6 +64,13 @@ jobs:
       - name: Export ESLint report (SARIF)
         run: npm run lint:sarif || true
 
+      - name: Upload ESLint SARIF to GitHub Security
+        if: always() && hashFiles('eslint-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: eslint-results.sarif
+          category: sonarcloud-eslint
+
       - name: Build application
         run: npm run build
         continue-on-error: true

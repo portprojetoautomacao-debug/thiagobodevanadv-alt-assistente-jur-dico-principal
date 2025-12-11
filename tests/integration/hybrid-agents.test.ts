@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
 
-test.skip("executeHybridTask runs for harvey (LangGraph not implemented yet)", async () => {
+test("executeHybridTask executa harvey com sucesso", async () => {
   const task = {
     id: "test-1",
     agentId: "harvey",
@@ -14,11 +14,13 @@ test.skip("executeHybridTask runs for harvey (LangGraph not implemented yet)", a
 
   const result = await executeHybridTask("harvey", task);
   expect(result).toBeDefined();
+  expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
-  expect(result.mode).toBeDefined();
+  expect(result.mode).toBe("langgraph");
+  expect(result.langGraphResult?.completed).toBe(true);
 });
 
-test.skip("executeHybridTask runs for justine and returns success", async () => {
+test("executeHybridTask executa justine com sucesso", async () => {
   const task = {
     id: "test-2",
     agentId: "justine",
@@ -31,8 +33,10 @@ test.skip("executeHybridTask runs for justine and returns success", async () => 
 
   const result = await executeHybridTask("justine", task);
   expect(result).toBeDefined();
+  expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
-  expect(result.mode).toBeDefined();
+  expect(result.mode).toBe("langgraph");
+  expect(result.langGraphResult?.completed).toBe(true);
 });
 /**
  * Hybrid Architecture Integration Tests
