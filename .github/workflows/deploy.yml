@@ -35,6 +35,7 @@ jobs:
       contents: read
       deployments: write
       pull-requests: write
+      issues: write
     outputs:
       url: ${{ steps.deploy.outputs.url }}
     environment:
@@ -277,7 +278,9 @@ jobs:
       - name: Comment deployment URL on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
+          github-token: ${{ secrets.BOT_GH_TOKEN != '' && secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const deploymentUrl = '${{ steps.deploy.outputs.url }}';
             const prNumber = context.issue.number;
@@ -318,22 +321,20 @@ jobs:
               comment.body.includes('Deploy Preview Ready')
             );
 
-            if (botComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body
-              });
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body
-              });
+            try {
+              const pr = context.payload.pull_request || {};
+              const repoFull = `${context.repo.owner}/${context.repo.repo}`;
+              const isFork = pr.head && pr.head.repo && pr.head.repo.full_name && pr.head.repo.full_name !== repoFull;
+              if (botComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: botComment.id, body });
+              } else if (isFork && !process.env.BOT_GH_TOKEN) {
+                core.info('PR is a fork and BOT_GH_TOKEN not provided — skipping deploy comment');
+              } else {
+                await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body });
+              }
+            } catch (err) {
+              core.error('Failed to post deployment comment: ' + String(err));
             }
 
       - name: Add deployment summary

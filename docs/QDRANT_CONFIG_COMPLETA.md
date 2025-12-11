@@ -62,6 +62,7 @@ npm run qdrant:test
    - legal_docs
 
 📊 Estatísticas:
+> ⚠️ Recomendação: Antes de rodar a população real, execute `npm run qdrant:populate:dry-run` (use `--max-docs` para limitar) e verifique os resultados. Só execute `npm run qdrant:populate-datajud` após validação humana.
    - Vectors: 0
    - Points: 0
    - Status: green

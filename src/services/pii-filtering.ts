@@ -351,22 +351,31 @@ export function resetPIIStats(): void {
 /**
  * Exemplo de uso com Sentry beforeSend
  */
+export type MinimalSentryEvent = {
+  message?: string;
+  exception?: { values?: { value?: string }[] };
+  breadcrumbs?: { message?: string; data?: unknown }[];
+  contexts?: unknown;
+  extra?: unknown;
+};
+
 export function createPIIFilteredBeforeSend(config: PIIFilterConfig = DEFAULT_PII_CONFIG) {
-  return (event: any) => {
+  return (event: unknown): MinimalSentryEvent => {
+    const _event = event as MinimalSentryEvent;
     if (!config.enabled) {
-      return event;
+      return event as MinimalSentryEvent;
     }
 
     // Sanitiza mensagem de erro
-    if (event.message) {
-      const detected = detectPII(event.message);
-      event.message = sanitizePII(event.message, config);
+    if (_event.message) {
+      const detected = detectPII(_event.message);
+      _event.message = sanitizePII(_event.message, config);
       recordPIISanitization(detected);
     }
 
     // Sanitiza exception
-    if (event.exception?.values) {
-      for (const exception of event.exception.values) {
+    if (_event.exception?.values) {
+      for (const exception of _event.exception.values) {
         if (exception.value) {
           const detected = detectPII(exception.value);
           exception.value = sanitizePII(exception.value, config);
@@ -376,8 +385,8 @@ export function createPIIFilteredBeforeSend(config: PIIFilterConfig = DEFAULT_PI
     }
 
     // Sanitiza breadcrumbs
-    if (event.breadcrumbs) {
-      for (const breadcrumb of event.breadcrumbs) {
+    if (_event.breadcrumbs) {
+      for (const breadcrumb of _event.breadcrumbs) {
         if (breadcrumb.message) {
           breadcrumb.message = sanitizePII(breadcrumb.message, config);
         }
@@ -388,15 +397,14 @@ export function createPIIFilteredBeforeSend(config: PIIFilterConfig = DEFAULT_PI
     }
 
     // Sanitiza contexts
-    if (event.contexts) {
-      event.contexts = sanitizeObject(event.contexts, config);
+    if (_event.contexts) {
+      _event.contexts = sanitizeObject(_event.contexts, config);
     }
 
     // Sanitiza extra
-    if (event.extra) {
-      event.extra = sanitizeObject(event.extra, config);
+    if (_event.extra) {
+      _event.extra = sanitizeObject(_event.extra, config);
     }
-
-    return event;
+    return _event as MinimalSentryEvent;
   };
 }

@@ -96,6 +96,37 @@ describe("LangGraphAgent base class", () => {
     expect(String(result.error).toLowerCase()).toMatch(/abort/);
   });
 
+  it("aborts during backoff delay and returns an error state", async () => {
+    class FailingAgent extends LangGraphAgent {
+      protected async run(_state: AgentState, _signal: AbortSignal): Promise<AgentState> {
+        throw new Error("transient error");
+      }
+    }
+    const agent = new FailingAgent({ timeoutMs: 5000, maxRetries: 3, retryDelayMs: 1000 });
+    const state: AgentState = {
+      messages: [],
+      currentStep: "init",
+      data: {},
+      completed: false,
+      retryCount: 0,
+      maxRetries: 3,
+      startedAt: Date.now(),
+      lastUpdatedAt: Date.now(),
+    };
+
+    // Start execution and wait until first attempt fails and backoff begins
+    const execPromise = agent.execute(state);
+
+    // Wait a bit to allow the first attempt and backoff to start
+    await new Promise((r) => setTimeout(r, 200));
+    // Abort while backoff is happening
+    agent.abort();
+
+    const result = await execPromise;
+    expect(result.completed).toBe(true);
+    expect(result.error).toBeDefined();
+  });
+
   it("marks state as completed and sets error when max retries exceeded", async () => {
     // failsBeforeSuccess is larger than maxRetries so it will always fail
     const agent = new SucceedAfterAttemptsAgent(5, {

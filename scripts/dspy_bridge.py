@@ -97,5 +97,8 @@ if __name__ == "__main__":
     if not API_TOKEN:
         print("ERROR: DSPY_API_TOKEN not set", flush=True)
         raise SystemExit(1)
+    else:
+        # Non-sensitive startup log for CI visibility (do not print the token)
+        print("DSPy Bridge starting (token set)", flush=True)
     uvicorn.run(app, host="0.0.0.0", port=PORT)
 # Keep only FastAPI implementation above - the classic HTTPServer stub has been removed

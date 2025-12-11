@@ -16,6 +16,8 @@ RUN npm run build
 
 # Stage de produção
 FROM nginx:alpine
+# Instala Python 3 no estágio final para suportar comandos que exigem python3 (ex.: bridges/scripts em ambientes que o requerem)
+RUN apk update && apk add --no-cache python3 py3-pip && ln -sf /usr/bin/python3 /usr/bin/python
 
 # Copiar build para nginx
 COPY --from=builder /app/dist /usr/share/nginx/html

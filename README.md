@@ -503,6 +503,8 @@ QDRANT_URL=https://your-cluster.qdrant.cloud
 QDRANT_API_KEY=your-api-key
 ```
 
+> ⚠️ Nota: Ao criar a `collection`, ajuste `vectors.size` para **768** (compatível com os embeddings text-embedding-004 / Gemini/OpenAI). Verifique com `npm run qdrant:test`.
+
 ### 6.2 DSPy Bridge - Otimização de Prompts
 
 **Arquitetura do Serviço:**
@@ -2213,6 +2215,8 @@ VITE_GEMINI_API_KEY=your-key
 ```bash
 npm run qdrant:test
 ```
+
+> ⚠️ DICA DE SEGURANÇA: Sempre rode `npm run qdrant:populate:dry-run` antes de qualquer população em produção. Use `--max-docs` para limitar a execução em testes. Execute `npm run qdrant:populate-datajud` apenas após validação humana.
 
 **3. Escolher modo de população:**
 

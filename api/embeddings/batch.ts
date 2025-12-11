@@ -61,7 +61,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const texts = parsed.data.texts;
     if (process.env.OPENAI_API_KEY) {
-      const embeddings = await withTimeout(45000, callOpenAIEmbedding(process.env.OPENAI_API_KEY, texts));
+      const embeddings = await withTimeout(
+        45000,
+        callOpenAIEmbedding(process.env.OPENAI_API_KEY, texts)
+      );
       const result = embeddings.map((e: any) => ({ embedding: e, dimensions: e?.length || 0 }));
       return res.status(200).json(result);
     }

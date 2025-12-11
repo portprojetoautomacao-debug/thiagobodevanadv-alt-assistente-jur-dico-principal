@@ -66,8 +66,61 @@ if (!fs.existsSync(SUMMARY_PATH)) {
   console.error(`Arquivo de resumo não encontrado: ${SUMMARY_PATH}`);
   process.exit(1);
 }
-const summary = JSON.parse(fs.readFileSync(SUMMARY_PATH, 'utf8'));
-const total = summary.total;
+const raw = JSON.parse(fs.readFileSync(SUMMARY_PATH, 'utf8'));
+let total = null;
+let summary = raw;
+// If this is a coverage-final.json from v8, we need to compute totals
+if (!raw.total) {
+  // raw is a map of filePath -> coverage info
+  let statementsTotal = 0;
+  let statementsCovered = 0;
+  let functionsTotal = 0;
+  let functionsCovered = 0;
+  let branchesTotal = 0;
+  let branchesCovered = 0;
+  for (const filePath of Object.keys(raw)) {
+    const info = raw[filePath];
+    const s = info.s || {};
+    const f = info.f || {};
+    const b = info.b || {};
+    // statements
+    statementsTotal += Object.keys(s).length;
+    statementsCovered += Object.values(s).filter(v => v > 0).length;
+    // functions
+    functionsTotal += Object.keys(f).length;
+    functionsCovered += Object.values(f).filter(v => v > 0).length;
+    // branches (b is an object where each key maps to an array of counts)
+    for (const key of Object.keys(b)) {
+      const arr = b[key];
+      branchesTotal += arr.length;
+      branchesCovered += arr.filter(v => v > 0).length;
+    }
+  }
+  total = {
+    lines: {
+      total: statementsTotal,
+      covered: statementsCovered,
+      pct: statementsTotal === 0 ? 100 : (statementsCovered / statementsTotal) * 100
+    },
+    statements: {
+      total: statementsTotal,
+      covered: statementsCovered,
+      pct: statementsTotal === 0 ? 100 : (statementsCovered / statementsTotal) * 100
+    },
+    functions: {
+      total: functionsTotal,
+      covered: functionsCovered,
+      pct: functionsTotal === 0 ? 100 : (functionsCovered / functionsTotal) * 100
+    },
+    branches: {
+      total: branchesTotal,
+      covered: branchesCovered,
+      pct: branchesTotal === 0 ? 100 : (branchesCovered / branchesTotal) * 100
+    }
+  };
+  // Create a summary object for compatibility
+  summary = { total };
+}
 
 console.log('\n📊 COBERTURA GERAL:');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

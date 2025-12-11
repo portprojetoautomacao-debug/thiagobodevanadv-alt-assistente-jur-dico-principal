@@ -67,6 +67,11 @@ export class QdrantService {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(
+          `QdrantService: searching collection=${this.config.collectionName} limit=${limit}`
+        );
+      }
       const response = await fetch(
         `${this.config.url}/collections/${this.config.collectionName}/points/search`,
         {
@@ -133,6 +138,11 @@ export class QdrantService {
       if (!response.ok) {
         throw new Error(`Qdrant API error: ${response.status} ${response.statusText}`);
       }
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(
+          `QdrantService: upserted ${points.length} points into ${this.config.collectionName}`
+        );
+      }
     } finally {
       clearTimeout(timeoutId);
     }
@@ -155,6 +165,11 @@ export class QdrantService {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
+      if (process.env.DEBUG_TESTS === "true") {
+        console.debug(
+          `QdrantService: creating collection=${this.config.collectionName} size=${vectorSize}`
+        );
+      }
       const response = await fetch(`${this.config.url}/collections/${this.config.collectionName}`, {
         method: "PUT",
         headers: this.baseHeaders,
@@ -171,7 +186,7 @@ export class QdrantService {
         // 409 = already exists
         throw new Error(`Qdrant API error: ${response.status} ${response.statusText}`);
       }
-      // If creation or already exists, set collection vector size
+      // If creation or already exists (409), set collection vector size
       this.collectionVectorSize = vectorSize;
     } finally {
       clearTimeout(timeoutId);

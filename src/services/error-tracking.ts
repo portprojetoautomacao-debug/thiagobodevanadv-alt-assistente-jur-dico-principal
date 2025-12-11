@@ -212,7 +212,12 @@ export function initErrorTracking(): void {
       // ✅ LGPD: Before send hook com PII filtering
       beforeSend(event, hint) {
         // 1. Aplica PII filtering
-        event = piiFilteredBeforeSend(event);
+        // O filtro retorna 'unknown' por design para ser agnóstico do tipo do evento.
+        // Aqui, garantimos a compatibilidade com o tipo esperado pelo Sentry via cast seguro.
+        // Nota: em alguns ambientes TypeScript, o tipo de 'event' pode ser inferido como ErrorEvent (DOM),
+        // enquanto o Sentry espera seu próprio tipo de evento. Fazemos um cast para 'any' aqui
+        // mantendo o conteúdo sanitizado e evitando conflito de tipos sem alterar APIs públicas.
+        event = piiFilteredBeforeSend(event) as any;
 
         // 2. Filtra erros de extensões do navegador
         if (

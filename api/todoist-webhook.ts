@@ -1,6 +1,6 @@
 /**
  * Todoist Webhook Handler
- * 
+ *
  * Endpoint para receber webhooks do Todoist e processar eventos
  * Documentação: https://developer.todoist.com/sync/v9/#webhooks
  */
@@ -53,9 +53,9 @@ function validateWebhook(req: VercelRequest): boolean {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Apenas aceita POST
   if (req.method !== "POST") {
-    return res.status(405).json({ 
-      success: false, 
-      error: "Method not allowed - use POST" 
+    return res.status(405).json({
+      success: false,
+      error: "Method not allowed - use POST",
     });
   }
 
@@ -63,9 +63,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Validar webhook
     if (!validateWebhook(req)) {
       console.warn("⚠️ Webhook Todoist inválido recebido");
-      return res.status(401).json({ 
-        success: false, 
-        error: "Unauthorized webhook" 
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized webhook",
       });
     }
 
@@ -91,18 +91,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!supportedEvents.includes(payload.event_name)) {
       console.log(`ℹ️ Evento ${payload.event_name} não suportado, ignorando`);
-      return res.status(200).json({ 
-        success: true, 
-        message: "Event ignored (not supported)" 
+      return res.status(200).json({
+        success: true,
+        message: "Event ignored (not supported)",
       });
+    }
+
+    // Validar event_data
+    if (!payload.event_data || typeof payload.event_data.id !== "string") {
+      console.warn("⚠️ Webhook Todoist com event_data inválido:", payload.event_data);
+      return res.status(400).json({ success: false, error: "Missing event_data.id" });
     }
 
     // Processar evento com o agente
     const agent = new TodoistAgent();
-    await agent.processWebhookEvent({
-      event_name: payload.event_name,
-      event_data: payload.event_data,
-    });
+    // Garantir que event_data.content esteja sempre definido (Tipo TodoistEventData exige content: string)
+    const eventData = {
+      ...payload.event_data,
+      content: payload.event_data.content ?? "",
+    } as const;
+
+    await agent.processWebhookEvent({ event_name: payload.event_name, event_data: eventData });
 
     // Log de auditoria
     console.log(`✅ Webhook Todoist processado: ${payload.event_name}`);
@@ -113,7 +122,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       event: payload.event_name,
       processedAt: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error("❌ Erro ao processar webhook Todoist:", error);
 

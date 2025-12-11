@@ -68,6 +68,7 @@ export default defineConfig({
         maxThreads: 1,
       },
     },
+    maxConcurrency: 1,
 
     // Reporters
     reporters: ["default", "verbose"],

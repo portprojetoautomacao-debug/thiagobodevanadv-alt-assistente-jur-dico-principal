@@ -4,13 +4,18 @@ import fetch from "node-fetch";
 /**
  * Verifica se o servidor DSPy Bridge está acessível
  */
-async function isDspyBridgeAvailable(port: number, maxAttempts = 3): Promise<boolean> {
+async function isDspyBridgeAvailable(port: number, maxAttempts = 8): Promise<boolean> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const res = await fetch(`http://127.0.0.1:${port}/health`, { timeout: 1000 });
+      // Aumentamos o timeout para 2000ms e o número de tentativas para reduzir flakiness em CI
+      const res = await fetch(`http://127.0.0.1:${port}/health`, { timeout: 2000 as any });
       if (res.ok) return true;
-    } catch {
-      // Servidor não respondeu
+    } catch (err) {
+      // Servidor não respondeu ainda - aguardar e tentar novamente
+      // Perca a tolerância: loga se estiver no último round para melhorar visibilidade
+      if (i === maxAttempts - 1) {
+        console.warn(`DSPy health check failed after ${maxAttempts} attempts: ${String(err)}`);
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
@@ -20,7 +25,8 @@ async function isDspyBridgeAvailable(port: number, maxAttempts = 3): Promise<boo
 describe("DSPy Bridge (FastAPI) integration", () => {
   let proc: ReturnType<typeof spawn> | null = null;
   const port = 8765;
-  const token = "test-token-123";
+  // Prefer repository secret (CI) if provided, fall back to a stable test token
+  const token = process.env.DSPY_API_TOKEN || "test-token-123";
   let bridgeAvailable = false;
 
   beforeAll(async () => {
@@ -30,16 +36,52 @@ describe("DSPy Bridge (FastAPI) integration", () => {
     }
     process.env.DSPY_PORT = String(port);
 
+    // Se já houver um servidor DSPy rodando (por ex., pelo workflow CI), não iniciar outro
+    try {
+      const existing = await isDspyBridgeAvailable(port, 3);
+      if (existing) {
+        console.info("DSPy bridge already running on port, reusing existing server for tests");
+        bridgeAvailable = true;
+        return;
+      }
+    } catch (e) {
+      // ignore and proceed to spawn if check fails
+    }
+
     // Tentar iniciar o servidor Python
     try {
-      proc = spawn("python3", ["scripts/dspy_bridge.py"], { stdio: "ignore" });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      proc = spawn("python3", ["scripts/dspy_bridge.py"], {
+        stdio: "pipe",
+        env: { ...process.env, DSPY_API_TOKEN: token, DSPY_PORT: String(port) },
+      });
+
+      // Attaching logs for debugging on CI
+      if (proc.stdout) {
+        proc.stdout.on("data", (chunk) => {
+          console.log(`[dspy stdout] ${chunk.toString()}`);
+        });
+      }
+      if (proc.stderr) {
+        proc.stderr.on("data", (chunk) => {
+          console.error(`[dspy stderr] ${chunk.toString()}`);
+        });
+      }
+      // Log when the process exits so CI can help debugging
+      proc.on("close", (code, signal) => {
+        console.warn(`[dspy] process exited with code=${code} signal=${signal}`);
+      });
+      proc.on("error", (err) => {
+        console.error(`[dspy] process error: ${String(err)}`);
+      });
+
+      // Allow a slightly longer startup time in CI
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (err) {
       console.warn("DSPy bridge not running, skipping test");
     }
 
-    // Verificar se o servidor está acessível
-    bridgeAvailable = await isDspyBridgeAvailable(port);
+    // Verificar se o servidor está acessível (aumentando tentativas em CI)
+    bridgeAvailable = await isDspyBridgeAvailable(port, 8);
     if (!bridgeAvailable) {
       console.warn("DSPy bridge not running, skipping test");
     }

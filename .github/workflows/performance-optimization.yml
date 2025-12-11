@@ -522,6 +522,9 @@ jobs:
           echo "" >> performance-dashboard.md
           echo "*Dashboard gerado automaticamente*" >> performance-dashboard.md
 
+      - name: 📥 Checkout código (para permitir gh operar no contexto do repo)
+        uses: actions/checkout@v4
+
       - name: 💬 Comentar Performance no PR
         if: github.event_name == 'pull_request'
         run: |
@@ -548,9 +551,18 @@ jobs:
 
           Verifique os relatórios completos nos artefatos do workflow."
 
-          # Comentar no PR
-          PR_NUMBER=${{ github.event.number }}
-          echo "$COMMENT" | gh pr comment $PR_NUMBER --body-file -
+          # Comentar no PR (checkout para garantir .git e contexto disponível)
+          echo "📥 Fazendo checkout do código para permitir 'gh' operar no contexto" >&2
+          git --version || true
+          # Usamos actions/checkout local step para obter .git — se o job não tiver efetuado checkout, usamos gh --repo fallback
+          if [ -d .git ]; then
+            PR_NUMBER=${{ github.event.number }}
+            echo "$COMMENT" | gh pr comment $PR_NUMBER --body-file -
+          else
+            # Fallback: passar --repo para gh para não depender de .git
+            PR_NUMBER=${{ github.event.number }}
+            echo "$COMMENT" | gh pr comment $PR_NUMBER --repo "$GITHUB_REPOSITORY" --body-file -
+          fi
 
       - name: 📤 Upload Dashboard de Performance
         uses: actions/upload-artifact@v4.4.3
