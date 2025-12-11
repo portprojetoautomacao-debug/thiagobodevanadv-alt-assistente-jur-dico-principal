@@ -274,6 +274,17 @@ jobs:
           echo "✅ Linting completed"
         continue-on-error: true
 
+      - name: Generate ESLint SARIF report
+        run: |
+          echo "Generating SARIF report for GitHub Code Scanning..."
+          npm run lint:sarif || true
+          if [ -f "eslint-results.sarif" ]; then
+            echo "✅ SARIF report generated successfully"
+          else
+            echo "⚠️ SARIF report not generated"
+          fi
+        continue-on-error: true
+
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('eslint-results.sarif') != ''
