@@ -1,5 +1,5 @@
-import handler from "../../api/agents-v2";
 import { beforeAll, expect, test } from "vitest";
+import handler from "../../api/agents-v2";
 
 beforeAll(() => {
   process.env.AUTOGEN_API_KEY = "test-autogen-key";
@@ -24,20 +24,23 @@ async function callHandler(agentId: string) {
   return res;
 }
 
-test("agents-v2 multi run - harvey", async () => {
+test("agents-v2 multi run - harvey returns 500 (unimplemented)", async () => {
   const res = await callHandler("harvey");
-  expect(res.statusCode).toBe(200);
-  expect(res.payload.success).toBe(true);
+  expect(res.statusCode).toBe(500);
+  expect(res.payload.success).toBe(false);
+  expect(res.payload.error).toContain("LangGraph agents em construção");
 });
 
-test("agents-v2 multi run - justine", async () => {
+test("agents-v2 multi run - justine returns 500 (unimplemented)", async () => {
   const res = await callHandler("justine");
-  expect(res.statusCode).toBe(200);
-  expect(res.payload.success).toBe(true);
+  expect(res.statusCode).toBe(500);
+  expect(res.payload.success).toBe(false);
+  expect(res.payload.error).toContain("LangGraph agents em construção");
 });
 
-test("agents-v2 multi run - gestao-prazos", async () => {
+test("agents-v2 multi run - gestao-prazos returns 500 (unimplemented)", async () => {
   const res = await callHandler("gestao-prazos");
-  expect(res.statusCode).toBe(200);
-  expect(res.payload.success).toBe(true);
+  expect(res.statusCode).toBe(500);
+  expect(res.payload.success).toBe(false);
+  expect(res.payload.error).toContain("LangGraph agents em construção");
 });

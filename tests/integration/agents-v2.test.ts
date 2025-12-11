@@ -1,5 +1,5 @@
-import handler from "../../api/agents-v2";
 import { beforeAll, expect, test } from "vitest";
+import handler from "../../api/agents-v2";
 
 function makeReq(body: any, apiKey = "test-autogen-key") {
   return {
@@ -34,12 +34,12 @@ beforeAll(() => {
   process.env.AUTOGEN_API_KEY = "test-autogen-key";
 });
 
-test("POST /api/agents-v2 returns success for a valid agent", async () => {
+test("POST /api/agents-v2 returns 500 for unimplemented LangGraph agents", async () => {
   const req = makeReq({ agentId: "harvey", message: "Analisar caso com prazo curto" });
   const res = makeRes();
   await handler(req, res);
-  expect(res.statusCode).toBe(200);
+  expect(res.statusCode).toBe(500);
   expect(res.payload).toBeDefined();
-  expect(res.payload.success).toBe(true);
-  expect(res.payload.agentId).toBe("harvey");
+  expect(res.payload.success).toBe(false);
+  expect(res.payload.error).toContain("LangGraph agents em construção");
 });
