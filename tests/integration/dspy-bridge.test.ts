@@ -24,7 +24,10 @@ describe("DSPy Bridge (FastAPI) integration", () => {
   let bridgeAvailable = false;
 
   beforeAll(async () => {
-    process.env.DSPY_API_TOKEN = token;
+    // Garantir que o token esteja definido antes de iniciar o servidor
+    if (!process.env.DSPY_API_TOKEN) {
+      process.env.DSPY_API_TOKEN = token;
+    }
     process.env.DSPY_PORT = String(port);
 
     // Tentar iniciar o servidor Python
@@ -64,8 +67,8 @@ describe("DSPy Bridge (FastAPI) integration", () => {
       console.warn("DSPy bridge not running, test skipped");
       return; // Skip silently when service not available
     }
-    // Use token from environment or default test token
-    const authToken = process.env.DSPY_API_TOKEN || token;
+    // Use token from environment (garantido pelo beforeAll)
+    const authToken = process.env.DSPY_API_TOKEN!;
     const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
       method: "POST",
       headers: {
@@ -74,6 +77,13 @@ describe("DSPy Bridge (FastAPI) integration", () => {
       },
       body: JSON.stringify({ prompt: "Olá, optimize me" }),
     });
+    
+    // Debug: Log response details if not 200
+    if (res.status !== 200) {
+      const body = await res.text();
+      console.error(`DSPy /optimize failed with ${res.status}: ${body}`);
+    }
+    
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.optimized_prompt).toBeDefined();
