@@ -264,7 +264,51 @@ export default function Calendar() {
           </div>
         </CardHeader>
         <CardContent>
-          {isGoogleConfigured ? (
+          {/* Mensagem quando não configurado */}
+          {!isGoogleConfigured && (
+            <div className="space-y-4">
+              <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                <Info className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm">
+                  <strong>Configuração necessária:</strong> Para habilitar a integração, adicione as
+                  seguintes variáveis de ambiente:
+                  <ul className="list-disc ml-4 mt-2">
+                    <li>
+                      <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">
+                        VITE_GOOGLE_CLIENT_ID
+                      </code>{" "}
+                      - ID do cliente OAuth do Google Cloud Console
+                    </li>
+                    <li>
+                      <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">
+                        VITE_GEMINI_API_KEY
+                      </code>{" "}
+                      - Chave da API do Google (já configurada para IA)
+                    </li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() =>
+                    globalThis.open("https://console.cloud.google.com/apis/credentials", "_blank")
+                  }
+                  variant="outline"
+                >
+                  <LinkIcon className="w-4 h-4 mr-2" /> Abrir Google Cloud Console
+                </Button>
+                <Button
+                  onClick={() => globalThis.open("https://calendar.google.com", "_blank")}
+                  variant="outline"
+                >
+                  <CalendarDays className="w-4 h-4 mr-2" /> Abrir Google Calendar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo quando configurado */}
+          {isGoogleConfigured && (
             <>
               {!isGoogleConnected && !connectionError && (
                 <Alert className="border-blue-300 bg-blue-50 dark:bg-blue-950/20">
@@ -321,7 +365,7 @@ export default function Calendar() {
                 )}
               </div>
             </>
-          ) : null}
+          )}
         </CardContent>
       </Card>
 
