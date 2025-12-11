@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { QdrantService, createQdrantService } from "@/lib/qdrant-service";
+import { QdrantService, createQdrantService as _createQdrantService } from "@/lib/qdrant-service";
 import type { QdrantPoint } from "@/lib/qdrant-service";
 
 // Mock global fetch

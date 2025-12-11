@@ -13,8 +13,8 @@ import {
 import {
   validateAgent,
   validateAgentTask,
-  type Agent as AgentValidated,
-  type AgentTask as AgentTaskValidated,
+  type Agent as _AgentValidated,
+  type AgentTask as _AgentTaskValidated,
 } from "@/schemas/agent.schema";
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";

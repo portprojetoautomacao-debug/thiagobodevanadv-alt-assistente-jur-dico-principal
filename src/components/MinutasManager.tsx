@@ -362,11 +362,11 @@ export default function MinutasManager() {
     toast.success("Minuta duplicada com sucesso!");
   };
 
-  const handleExportPDF = (minuta: Minuta) => {
+  const handleExportPDF = (_minuta: Minuta) => {
     toast.info("Exportação para PDF em desenvolvimento");
   };
 
-  const handleExportDOCX = (minuta: Minuta) => {
+  const handleExportDOCX = (_minuta: Minuta) => {
     toast.info("Exportação para DOCX em desenvolvimento");
   };
 
@@ -399,7 +399,7 @@ export default function MinutasManager() {
           toast.success("Documento criado e aberto no Google Docs!");
         }
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Erro ao abrir no Google Docs");
     }
   };
@@ -413,7 +413,7 @@ export default function MinutasManager() {
       if (success) {
         toast.success("Alterações importadas do Google Docs!");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Erro ao importar do Google Docs");
     } finally {
       setIsSyncing(null);

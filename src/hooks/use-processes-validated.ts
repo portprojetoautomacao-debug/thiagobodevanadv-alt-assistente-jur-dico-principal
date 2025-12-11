@@ -6,7 +6,11 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useKV } from "./use-kv";
-import { processSchema, validateProcess, type ProcessValidated } from "@/schemas/process.schema";
+import {
+  processSchema as _processSchema,
+  validateProcess,
+  type ProcessValidated as _ProcessValidated,
+} from "@/schemas/process.schema";
 import type { Process } from "@/types";
 
 export function useProcessesValidated() {

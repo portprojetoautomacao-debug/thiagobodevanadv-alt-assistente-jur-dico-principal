@@ -27,7 +27,7 @@ export class DJENMonitorAgent extends LangGraphAgent {
   /**
    * Main workflow execution
    */
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     // 🔍 Instrumentar invocação do agente Monitor DJEN
     return createInvokeAgentSpan(
       {
@@ -123,7 +123,7 @@ export class DJENMonitorAgent extends LangGraphAgent {
    * Security: Uses AbortSignal for timeout protection
    * Integration: Real DJEN API via existing djen-api.ts service
    */
-  private async fetchPublications(signal: AbortSignal): Promise<DJENPublication[]> {
+  private async fetchPublications(_signal: AbortSignal): Promise<DJENPublication[]> {
     // Import DJEN API service
     const { consultarDJEN } = await import("@/lib/djen-api");
 

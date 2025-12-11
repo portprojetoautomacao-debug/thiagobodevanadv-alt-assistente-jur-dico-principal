@@ -3,7 +3,7 @@ import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
 
 export class HarveyAgent extends LangGraphAgent {
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     let current = updateState(state, { currentStep: "harvey:start" });
 
     // Simple stable stub - in real impl, call Gemini and analyze

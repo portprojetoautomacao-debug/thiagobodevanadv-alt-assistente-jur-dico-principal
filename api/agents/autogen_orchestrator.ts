@@ -26,7 +26,7 @@ import { withTimeout } from "../lib/timeout.js";
 // Configuration
 const MAX_TIMEOUT_MS = 40000; // 40s (stay under Vercel 45s limit)
 const MAX_ROUNDS = 10;
-const ALLOWED_AGENTS = [
+const _ALLOWED_AGENTS = [
   "harvey",
   "justine",
   "analise-documental",
@@ -93,7 +93,7 @@ function validateAuth(req: VercelRequest): boolean {
  * Validate request payload
  */
 // Optionally keep a small guard, but prefer Zod schema validation
-function validateRequest(body: unknown): body is OrchestrationRequest {
+function _validateRequest(body: unknown): body is OrchestrationRequest {
   return OrchestrationRequestSchema.safeParse(body).success;
 }
 

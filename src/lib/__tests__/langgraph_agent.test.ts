@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi as _vi } from "vitest";
 import { LangGraphAgent, DEFAULT_CONFIG } from "@/agents/base/langgraph_agent";
 import type { AgentState } from "@/agents/base/agent_state";
 
@@ -9,7 +9,7 @@ class SucceedAfterAttemptsAgent extends LangGraphAgent {
     super({ timeoutMs: 200, maxRetries: 3, retryDelayMs: 10, ...config });
     this.failsBeforeSuccess = failsBeforeSuccess;
   }
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     this.attempts++;
     if (this.attempts <= this.failsBeforeSuccess) {
       throw new Error("transient error");
