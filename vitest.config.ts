@@ -12,16 +12,19 @@ export default defineConfig({
     testTimeout: 30000, // 30 segundos
     hookTimeout: 30000,
     // ✅ Configurar pool para evitar OOM em Workers
-    pool: 'forks',
+    // Usar forks com execução mais conservadora
+    pool: "forks",
     poolOptions: {
       forks: {
-        maxForks: 2, // Reduzir para 2 workers (menos memória)
+        maxForks: 1, // ✅ Apenas 1 worker por vez (mais lento mas estável)
         minForks: 1,
-        singleFork: true // Forçar um fork por vez para testes pesados
-      }
+        singleFork: true,
+      },
     },
-    // ✅ Controlar execução sequencial de testes pesados
-    maxConcurrency: 3, // Reduzir para 3 testes simultâneos
+    // ✅ Forçar execução sequencial (evitar concorrência)
+    maxConcurrency: 1,
+    // ✅ Não isolar testes (economizar memória)
+    isolate: false,
     include: ["src/**/*.{test,spec}.{ts,tsx}", "api/**/*.{test,spec}.{ts,tsx}"],
     exclude: [
       "**/node_modules/**",

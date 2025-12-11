@@ -31,20 +31,23 @@ export class CrawlerHandler {
               await this.handleFullCrawl(message.data, sendResponse);
               break;
 
-            case "EXTRACT_PAGE_TEXT":
+            case "EXTRACT_PAGE_TEXT": {
               const text = await this.handleExtractText();
               sendResponse({ success: true, text });
               break;
+            }
 
-            case "EXTRACT_VISIBLE_TEXT":
+            case "EXTRACT_VISIBLE_TEXT": {
               const visibleText = this.fullTextExtractor.extractVisibleText();
               sendResponse({ success: true, text: visibleText });
               break;
+            }
 
-            case "SCROLL_AND_EXTRACT":
+            case "SCROLL_AND_EXTRACT": {
               const scrollText = await this.fullTextExtractor.scrollAndExtract();
               sendResponse({ success: true, text: scrollText });
               break;
+            }
 
             case "CRAWLER_PING":
               sendResponse({ success: true, ready: true, processing: this.isProcessing });

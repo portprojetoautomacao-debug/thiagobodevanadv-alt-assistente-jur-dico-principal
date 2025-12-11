@@ -308,9 +308,9 @@ export class ProcessExtractor {
     // Tenta extrair informações do contexto (linha da tabela, elemento pai, etc.)
     const row = link.closest("tr");
     let classe = "";
-    let assunto = "";
-    let parteAutor = "";
-    let parteReu = "";
+    const assunto = "";
+    const parteAutor = "";
+    const parteReu = "";
     let vara = "";
 
     if (row) {
