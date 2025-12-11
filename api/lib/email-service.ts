@@ -183,7 +183,7 @@ export async function sendDailySummaryEmail(
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
           <h2 style="color: #1e88e5;">📊 Resumo Diário - Assistente Jurídico</h2>
           <p>Bom dia! Aqui está o resumo da atividade de hoje:</p>
-          
+
           <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
             <tr style="background-color: #f5f5f5;">
               <td style="padding: 10px; border: 1px solid #e0e0e0; font-weight: bold;">Processos Monitorados</td>
@@ -202,13 +202,13 @@ export async function sendDailySummaryEmail(
               <td style="padding: 10px; border: 1px solid #e0e0e0; text-align: right; font-size: 18px; color: ${summary.errorsCount > 0 ? "#d32f2f" : "#388e3c"};">${summary.errorsCount}</td>
             </tr>
           </table>
-          
+
           <p style="margin-top: 20px;">
             <a href="https://assistente-juridico-github.vercel.app/dashboard" style="background-color: #1e88e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
               Ver Dashboard Completo
             </a>
           </p>
-          
+
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;" />
           <p style="font-size: 12px; color: #666;">
             Relatório gerado automaticamente pelo Assistente Jurídico PJe

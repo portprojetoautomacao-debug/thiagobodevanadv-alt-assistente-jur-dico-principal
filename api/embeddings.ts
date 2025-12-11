@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
-import { requireApiKey } from "./lib/auth";
-import { withTimeout } from "./lib/timeout";
+import { requireApiKey } from "./lib/auth.js";
+import { withTimeout } from "./lib/timeout.js";
 
 const BodySchema = z.object({ text: z.string().min(1) });
 
@@ -75,21 +75,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
         const emb = await withTimeout(30000, callGeminiEmbedding(apiKey, text));
-        return res
-          .status(200)
-          .json({
-            embedding: emb,
-            model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding",
-            dimensions: emb?.length,
-          });
+        return res.status(200).json({
+          embedding: emb,
+          model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding",
+          dimensions: emb?.length,
+        });
       } catch (err) {
         console.error("Gemini embedding failed:", err);
-        return res
-          .status(500)
-          .json({
-            error: "Gemini embedding failed",
-            details: err instanceof Error ? err.message : String(err),
-          });
+        return res.status(500).json({
+          error: "Gemini embedding failed",
+          details: err instanceof Error ? err.message : String(err),
+        });
       }
     }
 

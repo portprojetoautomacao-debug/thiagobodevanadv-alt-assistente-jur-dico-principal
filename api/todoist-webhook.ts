@@ -6,7 +6,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { TodoistAgent } from "@/lib/agents/todoist-agent";
+// DESABILITADO (modo manutenção): import { TodoistAgent } from "@/lib/agents/todoist-agent";
 
 /**
  * Interface para eventos do Todoist Webhook
@@ -104,23 +104,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Processar evento com o agente
-    const agent = new TodoistAgent();
+    // DESABILITADO (modo manutenção): agent não disponível no build
+    // const agent = new TodoistAgent();
     // Garantir que event_data.content esteja sempre definido (Tipo TodoistEventData exige content: string)
-    const eventData = {
-      ...payload.event_data,
-      content: payload.event_data.content ?? "",
-    } as const;
+    // const eventData = {
+    //   ...payload.event_data,
+    //   content: payload.event_data.content ?? "",
+    // } as const;
+    // await agent.processWebhookEvent({ event_name: payload.event_name, event_data: eventData });
 
-    await agent.processWebhookEvent({ event_name: payload.event_name, event_data: eventData });
+    // TODO: Reativar processamento quando agente estiver disponível
+    console.log(`ℹ️  Webhook recebido mas não processado (modo manutenção): ${payload.event_name}`);
 
     // Log de auditoria
-    console.log(`✅ Webhook Todoist processado: ${payload.event_name}`);
+    console.log(`✅ Webhook Todoist registrado: ${payload.event_name}`);
 
     // Responder com sucesso
     return res.status(200).json({
       success: true,
       event: payload.event_name,
       processedAt: new Date().toISOString(),
+      note: "Webhook registered but not processed (maintenance mode)",
     });
   } catch (error) {
     console.error("❌ Erro ao processar webhook Todoist:", error);
