@@ -44,13 +44,13 @@ jobs:
       - name: Run unit tests with OOM monitoring
         run: |
           echo "🔍 Monitoring Worker OOM during test execution..."
-          npm run test:run -- --reporter json 2>&1 | tee test-output.log || true
+          npm run test:run -- --reporter json --pool forks 2>&1 | tee test-output.log || true
 
           # Check for Worker OOM errors
           if grep -q "Worker exited unexpectedly" test-output.log; then
-            echo "⚠️ Worker OOM detected! Retrying with more conservative settings..."
+            echo "⚠️ Worker OOM detected! Retrying with forks pool and more conservative settings..."
             export NODE_OPTIONS="--max-old-space-size=16384 --expose-gc"
-            npm run test:run
+            npm run test:run -- --pool forks
           fi
 
           # Verify tests passed
