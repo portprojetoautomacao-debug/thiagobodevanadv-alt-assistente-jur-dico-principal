@@ -99,7 +99,9 @@ export function useAgentBackup(options: BackupOptions) {
           }),
         });
 
-        console.log("✅ Backup salvo no servidor (Upstash KV)");
+        if (import.meta.env.DEV) {
+          console.log("✅ Backup salvo no servidor (Upstash KV)");
+        }
         return true;
       } catch (error) {
         console.warn("⚠️ Falha ao salvar no servidor:", error);
@@ -177,9 +179,7 @@ export function useAgentBackup(options: BackupOptions) {
         }
       });
 
-      if (keysToRemove.length > 0 && import.meta.env.DEV) {
-        console.log(`🧹 Limpeza: ${keysToRemove.length} chaves antigas removidas`);
-      }
+      // Log de limpeza removido - poluía o console
     } catch {
       // Ignorar erros
     }
@@ -191,7 +191,9 @@ export function useAgentBackup(options: BackupOptions) {
   const createBackup = useCallback(async () => {
     // Evitar backups simultâneos
     if (backupInProgress.current) {
-      console.log("ℹ️ Backup já em andamento, ignorando...");
+      if (import.meta.env.DEV) {
+        console.log("ℹ️ Backup já em andamento, ignorando...");
+      }
       return { success: false, reason: "backup_in_progress" };
     }
 
@@ -258,7 +260,9 @@ export function useAgentBackup(options: BackupOptions) {
       }
 
       setLastBackup(backupData.timestamp);
-      console.log("✅ Backup criado:", new Date(backupData.timestamp).toLocaleString());
+      if (import.meta.env.DEV) {
+        console.log("✅ Backup criado:", new Date(backupData.timestamp).toLocaleString());
+      }
 
       // Return the actual storage used, not the state variable (which might be stale)
       return {

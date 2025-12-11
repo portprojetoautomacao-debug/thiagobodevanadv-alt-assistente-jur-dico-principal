@@ -312,14 +312,6 @@ export default function Calendar() {
                 >
                   <CalendarDays className="w-4 h-4 mr-2" /> Abrir Google Calendar
                 </Button>
-                <Button
-                  onClick={() =>
-                    globalThis.open("https://vercel.com/thiagobodevanadv-alts-projects/assistente-juridico-p/settings/environment-variables", "_blank")
-                  }
-                  variant="default"
-                >
-                  <Info className="w-4 h-4 mr-2" /> Configurar no Vercel
-                </Button>
               </div>
             </div>
           )}
