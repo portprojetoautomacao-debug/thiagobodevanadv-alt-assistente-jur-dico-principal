@@ -335,7 +335,7 @@ jobs:
       - name: 🔍 Analisar Lazy Loading
         run: |
           echo "🔍 Analisando implementação de lazy loading..."
-          LAZY_COMPONENTS=$(grep -r "React.lazy\|lazy(" src/components/ || true | wc -l)
+          LAZY_COMPONENTS=$(grep -r "React.lazy\|lazy(" src/components/ 2>/dev/null || true | wc -l)
           TOTAL_COMPONENTS=$(find src/components/ -name "*.tsx" -o -name "*.ts" 2>/dev/null | wc -l)
           echo "📦 Componentes com lazy loading: $LAZY_COMPONENTS / $TOTAL_COMPONENTS"
           if [[ $TOTAL_COMPONENTS -eq 0 ]]; then
