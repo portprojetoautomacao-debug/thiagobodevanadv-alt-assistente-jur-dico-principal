@@ -10,13 +10,11 @@ updates:
     open-pull-requests-limit: 5
     assignees:
       - "thiagobodevan-a11y"
-    reviewers:
-      - "thiagobodevanadv-alt"
     labels:
       - "dependencies"
       - "npm"
       - "automated"
-      - "automerge"  # Para indicar que pode ser merged automaticamente
+      - "automerge" # Para indicar que pode ser merged automaticamente
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
@@ -143,4 +141,3 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-

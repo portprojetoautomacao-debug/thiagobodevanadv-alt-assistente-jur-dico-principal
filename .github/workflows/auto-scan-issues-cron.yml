@@ -36,36 +36,16 @@ jobs:
         id: scan
         uses: alstr/todo-to-issue-action@v4
         with:
-          # Triggers: 72 palavras-chave configuradas
-          TODO_PATTERN: "(TODO|FIXME|ISSUE|HACK|PENDENTE|REVISAR|CORRIGIR|VERIFICAR|ATENÇÃO|URGENTE|BUG|JURIDICO|PRAZO|INTIMACAO|VALIDAR|COMPLIANCE|LGPD|SEGURANCA|REFACTOR|OPTIMIZE|DEPRECATED|BREAKING|PERFORMANCE|ACCESSIBILITY|A11Y|SECURITY|TEST|DOC|DOCS|CRITICAL|WARNING|NOTE|IDEA|ENHANCEMENT|FEATURE|QUESTION|REVIEW|DEBT|CLEANUP|ATENCAO)"
-
-          # Template em português para issues criadas
-          ISSUE_TEMPLATE: |
-            **🤖 Detectado automaticamente no código (Scan Periódico)**
-
-            **📁 Arquivo:** `{{ FILE_PATH }}`
-            **📍 Linha:** {{ LINE_NUMBER }}
-            **🏷️ Tipo:** `{{ TODO_TYPE }}`
-            **📝 Descrição:** {{ COMMENT }}
-
-            **🔗 Links úteis:**
-            - [📄 Ver arquivo]({{ PERMALINK }})
-            - [🔍 Ver mudanças]({{ DIFF_URL }})
-
-            **⏰ Detectado em:** {{ DATE }}
-
-            ---
-            _Issue criada automaticamente pelo sistema de scan periódico (a cada 6 horas)_
+          # Token do GitHub (obrigatório)
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # Configurações de comportamento
-          AUTO_ASSIGN: true # Atribuir ao autor do TODO
-          CLOSE_ISSUES: true # Fechar quando TODO for removido
-          UPDATE_EXISTING: true # Atualizar issues existentes ao invés de duplicar
-          LABEL: "auto-created,needs-triage,scheduled-scan"
-          MILESTONE: "Backlog"
+          AUTO_ASSIGN: true
+          CLOSE_ISSUES: true
+          AUTO_P: true
 
-          # Token do GitHub
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Label para issues criadas
+          LABEL: "auto-created,needs-triage,scheduled-scan"
 
       - name: 📊 Relatório de execução
         if: always()
