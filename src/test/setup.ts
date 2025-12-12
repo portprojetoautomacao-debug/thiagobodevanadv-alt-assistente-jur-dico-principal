@@ -28,14 +28,11 @@ Object.defineProperty(globalThis, "sessionStorage", {
   writable: true,
 });
 
-// Mock de variáveis de ambiente
-vi.mock("process", () => ({
-  env: {
-    VITE_TODOIST_API_TOKEN: "test-token",
-    VITE_GOOGLE_CLIENT_ID: "test-client-id",
-    VITE_GOOGLE_CLIENT_SECRET: "test-client-secret",
-  },
-}));
+// Variáveis de ambiente para testes
+// NÃO mockar o módulo "process": isso pode interferir no runtime do Vitest/Node.
+process.env.VITE_TODOIST_API_TOKEN ||= "test-token";
+process.env.VITE_GOOGLE_CLIENT_ID ||= "test-client-id";
+process.env.VITE_GOOGLE_CLIENT_SECRET ||= "test-client-secret";
 
 // Mock do window.matchMedia
 Object.defineProperty(globalThis, "matchMedia", {

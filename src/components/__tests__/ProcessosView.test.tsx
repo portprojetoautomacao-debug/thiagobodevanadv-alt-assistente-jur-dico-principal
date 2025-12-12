@@ -5,24 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import type { Process } from "../../types";
 import ProcessosView from "../ProcessosView";
 
-// Mock do hook useProcesses
-vi.mock("@/hooks/use-processes", () => ({
-  useProcesses: () => ({
-    processes: mockProcesses,
-    addProcess: vi.fn(),
-    updateProcess: vi.fn(),
-    deleteProcess: vi.fn(),
-  }),
-}));
+// ⚠️ IMPORTANTE: `vi.mock` é hoisted no Vitest; dados usados dentro do factory
+// precisam ser definidos via `vi.hoisted` para garantir que existam no momento
+// da avaliação do mock.
 
-// Mock do llm-client
-vi.mock("@/lib/llm-client", () => ({
-  llm: {
-    generateText: vi.fn().mockResolvedValue({ text: "Análise de IA" }),
-  },
-}));
-
-const mockProcesses: Process[] = [
+const mockProcesses = vi.hoisted((): Process[] => [
   {
     id: "1",
     numeroCNJ: "1234567-89.2024.5.02.0999",
@@ -87,7 +74,24 @@ const mockProcesses: Process[] = [
     createdAt: "2024-09-20T00:00:00Z",
     updatedAt: "2024-10-01T00:00:00Z",
   },
-];
+]);
+
+// Mock do hook useProcesses
+vi.mock("@/hooks/use-processes", () => ({
+  useProcesses: () => ({
+    processes: mockProcesses,
+    addProcess: vi.fn(),
+    updateProcess: vi.fn(),
+    deleteProcess: vi.fn(),
+  }),
+}));
+
+// Mock do llm-client
+vi.mock("@/lib/llm-client", () => ({
+  llm: {
+    generateText: vi.fn().mockResolvedValue({ text: "Análise de IA" }),
+  },
+}));
 
 const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = new QueryClient({

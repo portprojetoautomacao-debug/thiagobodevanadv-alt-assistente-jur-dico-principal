@@ -11,19 +11,21 @@ export default defineConfig({
     // Aumentar timeout para testes de performance e integração
     testTimeout: 600000, // 10 minutos para testes de integração
     hookTimeout: 60000, // 1 minuto para hooks
-    // Configuração de pool para estabilidade (usar threads em vez de forks)
-    pool: "threads",
+    // Configuração de pool para estabilidade
+    // Em alguns ambientes (Node 22 + worker_threads), vimos ERR_WORKER_OUT_OF_MEMORY.
+    // Usar "forks" reduz o risco de estouro de heap em Workers.
+    pool: "forks",
     poolOptions: {
-      threads: {
-        // Ajuste conservador: poucas threads para evitar OOM/worker errors
-        minThreads: 1,
-        maxThreads: process.env.CI ? 2 : 1,
+      forks: {
+        minForks: 1,
+        maxForks: process.env.CI ? 2 : 1,
       },
     },
     // Ajustar concorrência baseado em ambiente para estabilidade
     maxConcurrency: process.env.CI ? 3 : 1,
-    // ✅ Isolar testes no CI para melhor confiabilidade
-    isolate: process.env.CI ? true : false,
+    // ✅ Isolar arquivos de teste para melhor confiabilidade
+    // Em execuções locais e CI, isso reduz vazamento de estado entre arquivos.
+    isolate: true,
     // ✅ Suporte a sharding para execução paralela
     // Use --shard=1/4 --shard=2/4 etc nos comandos
     include: [

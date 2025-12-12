@@ -94,7 +94,7 @@ async function streamWithGemini(
         };
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) {
-          send({ type: "content", text, provider: "gemini" });
+          send({ text });
         }
       } catch {
         // Ignorar linhas que não são JSON válido
@@ -176,7 +176,7 @@ async function streamWithOpenAI(
 async function streamWithAnthropic(
   request: StreamRequest,
   send: (data: unknown) => void,
-  signal?: AbortSignal
+  _signal?: AbortSignal
 ) {
   const { prompt, temperature = 0.7, model = "claude-3-5-sonnet-20241022", systemPrompt } = request;
 
@@ -188,7 +188,6 @@ async function streamWithAnthropic(
       "x-api-key": ANTHROPIC_API_KEY!,
       "anthropic-version": "2023-06-01",
     },
-    signal,
     body: JSON.stringify({
       model,
       max_tokens: request.maxTokens || 4096,
@@ -329,9 +328,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (provider === "gemini") {
         await streamWithGemini(requestData, send, abortController.signal);
       } else if (provider === "openai") {
-        await streamWithOpenAI(requestData, send, abortController.signal);
+        await streamWithOpenAI(requestData, send);
       } else {
-        await streamWithAnthropic(requestData, send, abortController.signal);
+        await streamWithAnthropic(requestData, send);
       }
 
       res.write("data: [DONE]\n\n");

@@ -23,7 +23,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --no-coverage --pool forks",
+    "test:run": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --no-coverage",
     "test:coverage": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --config vitest.config.node.ts --coverage",
     "test:shard": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --no-coverage --reporter=verbose",
     "test:watch:auto": "vitest --watch --reporter=verbose --no-coverage",

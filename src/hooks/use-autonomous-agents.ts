@@ -8,12 +8,11 @@ import {
   type AgentTask,
   type AgentTaskResult,
 } from "@/lib/agents";
-import { toast } from "sonner";
-// ✨ NOVO: Importar validadores Zod
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { validateAgent, validateAgentTask } from "@/schemas/agent.schema";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
@@ -488,16 +487,18 @@ export function useAutonomousAgents() {
             enableLangGraph: true,
             enableTraditional: true,
             coordinationMode: "fallback", // LangGraph primeiro, tradicional como fallback
-            timeoutMs: 30000,
+            timeout: 30000,
           });
 
           // Converter resultado híbrido para formato AgentTaskResult
+          const hybridData =
+            (hybridResult.langGraphResult?.data as Record<string, unknown> | undefined) ??
+            (hybridResult.traditionalResult?.output as Record<string, unknown> | undefined) ??
+            ({} as Record<string, unknown>);
+
           result = {
             success: hybridResult.success,
-            data:
-              (hybridResult.langGraphResult?.data as Record<string, unknown> | undefined) ??
-              (hybridResult.traditionalResult?.output as Record<string, unknown> | undefined) ??
-              ({} as Record<string, unknown>),
+            data: hybridData,
             message: `Executado via ${hybridResult.mode}`,
             processingTimeMs: hybridResult.executionTime,
             confidence: hybridResult.success ? 0.95 : 0.5,

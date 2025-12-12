@@ -7,12 +7,9 @@
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import { callGemini } from "../../src/lib/gemini-service.js";
-import { googleCalendarService } from "../../src/lib/google-calendar-service.js";
-import { llmService } from "../../src/lib/llm-service.js";
-import type { TodoistClient } from "../../src/lib/todoist-client.js";
-import { todoistClient } from "../../src/lib/todoist-client.js";
-import { addLegalTasks, updateLegalTask } from "../../src/lib/todoist-integration.js";
+import { callGemini } from "./gemini.js";
+import { llmService } from "./llm.js";
+import { addLegalTasks, updateLegalTask } from "./todoist-integration.js";
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {
@@ -57,10 +54,8 @@ interface InterpretedCommand {
  * Agente Todoist
  */
 export class TodoistAgent {
-  private readonly client: TodoistClient;
-
   constructor() {
-    this.client = todoistClient;
+    // TodoistClient é obtido via addLegalTasks/updateLegalTask
   }
 
   /**
@@ -237,23 +232,16 @@ export class TodoistAgent {
 
       case "create_event":
         if (command.parameters.date && command.parameters.description) {
-          // Criar evento no Google Calendar
-          const startTime = command.parameters.startTime || "09:00";
-
-          try {
-            await googleCalendarService.createEvent({
-              id: crypto.randomUUID(),
-              title: command.parameters.description,
-              description: `Criado via Todoist Agent. Comando original: ${command.originalText}`,
-              date: command.parameters.date,
-              time: startTime,
-              duration: 60, // Default 1h
-              type: "outro",
-            });
-            console.log("📅 Evento criado no Google Calendar");
-          } catch (e) {
-            console.error("Erro ao criar evento no Calendar:", e);
-          }
+          // TODO: Google Calendar integration not available in API routes
+          // Calendar events must be created via frontend
+          console.log(
+            "⚠️ Calendar events must be created via frontend - API routes cannot access browser-only Google Calendar service"
+          );
+          console.log("📅 Event request:", {
+            date: command.parameters.date,
+            description: command.parameters.description,
+            time: command.parameters.startTime || "09:00",
+          });
         }
         break;
     }

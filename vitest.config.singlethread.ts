@@ -10,14 +10,15 @@ export default defineConfig({
     setupFiles: "./src/test/setup.ts",
     testTimeout: 600000,
     hookTimeout: 60000,
-    pool: "threads",
+    pool: "forks",
     poolOptions: {
-      threads: {
-        minThreads: 1,
-        maxThreads: 1,
+      forks: {
+        minForks: 1,
+        maxForks: 1,
       },
     },
     maxConcurrency: 1,
+    isolate: true,
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "api/**/*.{test,spec}.{ts,tsx}",
