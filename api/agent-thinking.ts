@@ -4,8 +4,8 @@
  * GET /api/agent-thinking - Todos os pensamentos recentes
  */
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const getKv = (): Redis => {
   const url = process.env.UPSTASH_REDIS_REST_URL;

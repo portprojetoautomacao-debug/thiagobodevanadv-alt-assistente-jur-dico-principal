@@ -32,7 +32,7 @@ function makeRes() {
 }
 
 // Mock hybrid-agents-integration para evitar erro "LangGraph agents em construção"
-vi.mock("../src/lib/hybrid-agents-integration.js", () => ({
+vi.mock("../src/lib/hybrid-agents-integration", () => ({
   hasHybridVersion: () => true,
   executeHybridTask: vi.fn().mockResolvedValue({
     success: true,

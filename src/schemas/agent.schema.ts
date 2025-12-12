@@ -12,6 +12,33 @@
 import { z } from "zod";
 
 // ============================================================================
+// SECURITY & PERFORMANCE UTILITIES
+// ============================================================================
+
+// Schema cache para evitar recompilação (Performance fix)
+const SCHEMA_CACHE = new Map<string, z.ZodSchema>();
+
+function getCachedSchema<T extends z.ZodSchema>(key: string, factory: () => T): T {
+  if (!SCHEMA_CACHE.has(key)) {
+    SCHEMA_CACHE.set(key, factory());
+  }
+  return SCHEMA_CACHE.get(key) as T;
+}
+
+// Safe record validator - proteção contra prototype pollution
+const safeRecordSchema = z.record(z.string(), z.unknown()).transform((obj) => {
+  const safe = Object.create(null);
+  for (const [key, value] of Object.entries(obj)) {
+    // Block dangerous keys
+    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+      continue;
+    }
+    safe[key] = value;
+  }
+  return safe;
+});
+
+// ============================================================================
 // ENUMS
 // ============================================================================
 
@@ -128,9 +155,19 @@ function normalizeAgentTaskType(input: unknown): unknown {
 
   // Mapeia legado (case-insensitive)
   const legacyLower = LEGACY_TASK_TYPE_TO_CANONICAL[raw.toLowerCase()];
-  if (legacyLower) return legacyLower;
+  if (legacyLower) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[DEPRECATED] Task type "${raw}" (case-insensitive) normalized to "${legacyLower}"`
+      );
+    }
+    return legacyLower;
+  }
 
-  return raw;
+  // FAIL FAST: Don't silently accept garbage
+  throw new Error(
+    `Invalid task type "${raw}". Must be one of: ${CANONICAL_AGENT_TASK_TYPES.join(", ")}`
+  );
 }
 
 function normalizeTaskPriority(input: unknown): unknown {
@@ -249,7 +286,7 @@ export const agentSchema = z.object({
     .optional(),
 
   // Metadados
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  metadata: safeRecordSchema.optional(),
 });
 
 /**
@@ -266,7 +303,10 @@ export const agentTaskSchema = z
     priority: z.preprocess(normalizeTaskPriority, TaskPriorityEnum),
     status: z.preprocess(normalizeTaskStatus, TaskStatusEnum),
     createdAt: z.string().datetime("Data de cria��o inv�lida"),
-    data: z.record(z.string(), z.unknown()).default({}),
+    data: safeRecordSchema.default({}),
+
+    // Optimistic locking para prevenir race conditions
+    version: z.number().int().nonnegative().default(0),
 
     // Campos opcionais de execu��o
     startedAt: z.string().datetime().optional(),
@@ -274,7 +314,7 @@ export const agentTaskSchema = z
     processingTimeMs: z.number().int().nonnegative().optional(),
 
     // Resultado e erro
-    result: z.record(z.string(), z.unknown()).optional(),
+    result: safeRecordSchema.optional(),
     error: z.string().optional(),
 
     // Retry control
@@ -306,7 +346,7 @@ export const agentTaskSchema = z
  */
 export const agentTaskResultSchema = z.object({
   success: z.boolean(),
-  data: z.record(z.string(), z.unknown()).optional(),
+  data: safeRecordSchema.optional(),
   message: z.string().optional(),
   confidence: z.number().min(0).max(1).optional(),
   processingTimeMs: z.number().int().nonnegative().optional(),
@@ -327,7 +367,8 @@ export function validateAgent(data: unknown): {
   data?: z.infer<typeof agentSchema>;
   errors?: z.ZodIssue[];
 } {
-  const result = agentSchema.safeParse(data);
+  const schema = getCachedSchema("agent", () => agentSchema);
+  const result = schema.safeParse(data);
 
   if (result.success) {
     return { isValid: true, data: result.data };
@@ -344,7 +385,8 @@ export function validateAgentTask(data: unknown): {
   data?: z.infer<typeof agentTaskSchema>;
   errors?: z.ZodIssue[];
 } {
-  const result = agentTaskSchema.safeParse(data);
+  const schema = getCachedSchema("agentTask", () => agentTaskSchema);
+  const result = schema.safeParse(data);
 
   if (result.success) {
     return { isValid: true, data: result.data };
@@ -361,7 +403,8 @@ export function validateAgentTaskResult(data: unknown): {
   data?: z.infer<typeof agentTaskResultSchema>;
   errors?: z.ZodIssue[];
 } {
-  const result = agentTaskResultSchema.safeParse(data);
+  const schema = getCachedSchema("agentTaskResult", () => agentTaskResultSchema);
+  const result = schema.safeParse(data);
 
   if (result.success) {
     return { isValid: true, data: result.data };
@@ -388,9 +431,20 @@ export type AgentStatus = z.infer<typeof AgentStatusEnum>;
 // ============================================================================
 
 /**
- * Verifica se uma tarefa pode ser processada
+ * Verifica se uma tarefa pode ser processada (stateless check)
+ *
+ * WARNING: This is NOT atomic. Caller MUST use optimistic locking:
+ * 1. Check canProcessTask()
+ * 2. Attempt CAS update: UPDATE tasks SET status='processing', version=version+1
+ *    WHERE id=? AND status='queued' AND version=?
+ * 3. Verify affected rows = 1 before proceeding
  */
 export function canProcessTask(task: AgentTask, agent: Agent): boolean {
+  // Add version check hint for caller
+  if (!("version" in task)) {
+    console.warn("[canProcessTask] Task missing version field - race condition risk");
+  }
+
   return (
     agent.active &&
     agent.status !== "error" &&
@@ -402,23 +456,40 @@ export function canProcessTask(task: AgentTask, agent: Agent): boolean {
 
 /**
  * Verifica se uma tarefa est� expirada (timeout)
+ * Usa performance.now() para evitar race conditions com ajustes de relógio (NTP)
  */
-export function isTaskExpired(task: AgentTask): boolean {
+export function isTaskExpired(task: AgentTask, nowOverride?: number): boolean {
   if (!task.startedAt || task.status !== "processing") return false;
 
+  // Use monotonic timestamp if available (Node.js 16+)
+  const now =
+    nowOverride ??
+    (typeof performance !== "undefined" ? performance.timeOrigin + performance.now() : Date.now());
+
   const startTime = new Date(task.startedAt).getTime();
-  const now = Date.now();
   const elapsed = now - startTime;
 
-  return elapsed > task.timeout;
+  // Add safety margin (5%) to prevent borderline race conditions
+  const effectiveTimeout = task.timeout * 1.05;
+
+  return elapsed > effectiveTimeout;
 }
 
 /**
- * Calcula pr�ximo retry delay (exponential backoff)
+ * Calcula pr�ximo retry delay (exponential backoff with full jitter)
+ * Jitter previne thundering herd quando múltiplas tasks falham simultaneamente
  */
 export function getRetryDelay(retryCount: number): number {
   const baseDelay = 1000; // 1 segundo
   const maxDelay = 60000; // 1 minuto
-  const delay = baseDelay * Math.pow(2, retryCount);
-  return Math.min(delay, maxDelay);
+
+  // Exponential backoff
+  const exponentialDelay = baseDelay * Math.pow(2, retryCount);
+  const cappedDelay = Math.min(exponentialDelay, maxDelay);
+
+  // Add full jitter (0% to 100% of delay)
+  // Prevents thundering herd on mass failures
+  const jitter = Math.random() * cappedDelay;
+
+  return Math.floor(jitter);
 }

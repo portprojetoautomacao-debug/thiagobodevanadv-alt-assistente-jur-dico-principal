@@ -3,7 +3,7 @@
 # ========================================
 # 🤖 Auto-Create Issues from Code Comments
 # ========================================
-# 
+#
 # Cria issues automaticamente no GitHub a partir de
 # comentários TODO, FIXME, PENDENTE, etc no código
 #
@@ -36,6 +36,14 @@ if ! gh auth status &> /dev/null; then
     exit 1
 fi
 
+# Obter repositório atual
+GITHUB_REPOSITORY=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "")
+if [[ -z "$GITHUB_REPOSITORY" ]]; then
+    log_error "Não foi possível identificar o repositório GitHub"
+    exit 1
+fi
+log_info "📦 Repositório: $GITHUB_REPOSITORY"
+
 # Padrão de busca (todos os triggers)
 PATTERN='TODO|FIXME|ISSUE|HACK|PENDENTE|REVISAR|CORRIGIR|VERIFICAR|ATENÇÃO|URGENTE|BUG|JURIDICO|PRAZO|INTIMACAO|VALIDAR|COMPLIANCE|LGPD|SEGURANCA|REFACTOR|OPTIMIZE|DEPRECATED|BREAKING|PERFORMANCE|ACCESSIBILITY|A11Y|SECURITY|TEST|DOC|DOCS'
 
@@ -60,26 +68,26 @@ grep -rn -E "//\s*($PATTERN)" \
   --exclude-dir=coverage \
   --exclude-dir=.git \
   . 2>/dev/null | while IFS=: read -r file line content; do
-  
+
   # Ignorar comentários de teste/exemplo
   if echo "$content" | grep -qiE "(TESTE [0-9]+:|exemplo|sample|demo|FEITO EM|OBSOLETO)"; then
     continue
   fi
-  
+
   # Extrair tipo de trigger
   TRIGGER=$(echo "$content" | grep -oE "($PATTERN)" | head -1)
-  
+
   # Limpar comentário
   COMMENT=$(echo "$content" | sed 's|^\s*//\s*||' | sed "s|^\s*$TRIGGER:\s*||")
-  
+
   # Gerar título
   TITLE="[$TRIGGER] $COMMENT"
-  
+
   # Limitar tamanho do título
   if [[ ${#TITLE} -gt 100 ]]; then
     TITLE="${TITLE:0:97}..."
   fi
-  
+
   # Gerar corpo do issue
   BODY="**Detectado automaticamente no código**
 
@@ -108,7 +116,7 @@ $content
 
   # Determinar labels baseado no trigger
   LABELS="auto-created,needs-triage"
-  
+
   case $TRIGGER in
     URGENTE|CRITICAL)
       LABELS="$LABELS,priority:high,urgente"
@@ -141,13 +149,13 @@ $content
       LABELS="$LABELS,breaking-change"
       ;;
   esac
-  
+
   # Criar issue (verificar se já existe antes)
   EXISTING=$(gh issue list --search "$TITLE" --json number --jq '.[0].number' 2>/dev/null || echo "")
-  
+
   if [[ -z "$EXISTING" ]]; then
     log_success "Criando issue: $TITLE"
-    
+
     gh issue create \
       --title "$TITLE" \
       --body "$BODY" \
@@ -156,9 +164,9 @@ $content
         log_error "Erro ao criar issue: $TITLE"
         continue
       }
-    
+
     ((ISSUES_CREATED++))
-    
+
     # Pequeno delay para não sobrecarregar a API
     sleep 0.5
   else

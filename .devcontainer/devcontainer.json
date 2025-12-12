@@ -66,9 +66,10 @@
         // 🔒 SEGURANÇA E WORKSPACE TRUST
         // ========================================
         // WARNING: Trust workspace enabled for seamless automation
-        "security.workspace.trust.enabled": true,
+        "security.workspace.trust.enabled": false,
         "security.workspace.trust.untrustedFiles": "open",
-        "security.workspace.trust.emptyWindow": true,
+        "security.workspace.trust.emptyWindow": false,
+        "security.workspace.trust.startupPrompt": "never",
 
         // ========================================
         // 📦 GIT AUTOMÁTICO
@@ -126,9 +127,9 @@
       }
     }
   },
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "npm install && bash .vscode/trust-workspace.sh",
   // Rodar auto-init ao iniciar o container (de maneira não bloqueante)
-  "postStartCommand": "bash auto-init.sh > /tmp/auto-init.log 2>&1 &",
+  "postStartCommand": "bash .vscode/trust-workspace.sh && bash auto-init.sh > /tmp/auto-init.log 2>&1 &",
   "forwardPorts": [5173, 5000],
   "portsAttributes": {
     "5173": {

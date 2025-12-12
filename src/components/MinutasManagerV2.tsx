@@ -74,16 +74,30 @@ export default function MinutasManagerV2() {
   // Hook de IA streaming
   const { streamChat, isStreaming: _isStreaming } = useAIStreaming();
 
-  // Minuta selecionada
-  const selectedMinuta = minutas?.find((m) => m.id === selectedMinutaId);
+  // Minuta selecionada (memoizada para evitar stale data)
+  const selectedMinuta = useMemo(
+    () => minutas?.find((m) => m.id === selectedMinutaId),
+    [minutas, selectedMinutaId]
+  );
 
-  // Filtrar minutas
+  // Filtrar minutas (com early return para performance)
   const filteredMinutas = useMemo(() => {
-    let filtered = minutas || [];
+    const allMinutas = minutas || [];
 
-    // Busca
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Early return se não houver filtros
+    const hasFilters = searchQuery.trim() || filterStatus !== "all" || filterTipo !== "all";
+    if (!hasFilters) {
+      return allMinutas.sort(
+        (a, b) => new Date(b.atualizadoEm).getTime() - new Date(a.atualizadoEm).getTime()
+      );
+    }
+
+    let filtered = allMinutas;
+
+    // Busca (debounced: só processa se > 2 caracteres)
+    const effectiveQuery = searchQuery.trim();
+    if (effectiveQuery && effectiveQuery.length > 2) {
+      const query = effectiveQuery.toLowerCase();
       filtered = filtered.filter(
         (m) =>
           m.titulo.toLowerCase().includes(query) ||
@@ -128,68 +142,74 @@ export default function MinutasManagerV2() {
     toast.success("Nova minuta criada!");
   }, [minutas, setMinutas]);
 
-  // Atualizar conteúdo da minuta
+  // Atualizar conteúdo da minuta (functional setState para evitar race condition)
   const handleContentChange = useCallback(
     (content: string) => {
       if (!selectedMinuta) return;
 
-      const updated: Minuta = {
-        ...selectedMinuta,
-        conteudo: content,
-        atualizadoEm: new Date().toISOString(),
-      };
-
-      setMinutas(minutas?.map((m) => (m.id === selectedMinuta.id ? updated : m)) || []);
+      setMinutas((prevMinutas) => {
+        return (
+          prevMinutas?.map((m) =>
+            m.id === selectedMinuta.id
+              ? { ...m, conteudo: content, atualizadoEm: new Date().toISOString() }
+              : m
+          ) || []
+        );
+      });
     },
-    [selectedMinuta, minutas, setMinutas]
+    [selectedMinuta, setMinutas]
   );
 
-  // Atualizar título da minuta
+  // Atualizar título da minuta (functional setState para evitar race condition)
   const handleTitleChange = useCallback(
     (titulo: string) => {
       if (!selectedMinuta) return;
 
-      const updated: Minuta = {
-        ...selectedMinuta,
-        titulo,
-        atualizadoEm: new Date().toISOString(),
-      };
-
-      setMinutas(minutas?.map((m) => (m.id === selectedMinuta.id ? updated : m)) || []);
+      setMinutas((prevMinutas) => {
+        return (
+          prevMinutas?.map((m) =>
+            m.id === selectedMinuta.id
+              ? { ...m, titulo, atualizadoEm: new Date().toISOString() }
+              : m
+          ) || []
+        );
+      });
     },
-    [selectedMinuta, minutas, setMinutas]
+    [selectedMinuta, setMinutas]
   );
 
-  // Atualizar status da minuta
+  // Atualizar status da minuta (functional setState para evitar race condition)
   const handleStatusChange = useCallback(
     (status: Minuta["status"]) => {
       if (!selectedMinuta) return;
 
-      const updated: Minuta = {
-        ...selectedMinuta,
-        status,
-        atualizadoEm: new Date().toISOString(),
-      };
-
-      setMinutas(minutas?.map((m) => (m.id === selectedMinuta.id ? updated : m)) || []);
+      setMinutas((prevMinutas) => {
+        return (
+          prevMinutas?.map((m) =>
+            m.id === selectedMinuta.id
+              ? { ...m, status, atualizadoEm: new Date().toISOString() }
+              : m
+          ) || []
+        );
+      });
       toast.success(`Status alterado para: ${status}`);
     },
-    [selectedMinuta, minutas, setMinutas]
+    [selectedMinuta, setMinutas]
   );
 
-  // Deletar minuta
+  // Deletar minuta (functional setState para evitar race condition)
   const handleDeleteMinuta = useCallback(
     (id: string) => {
-      setMinutas(minutas?.filter((m) => m.id !== id) || []);
+      setMinutas((prevMinutas) => prevMinutas?.filter((m) => m.id !== id) || []);
       if (selectedMinutaId === id) {
         setSelectedMinutaId(null);
       }
       toast.success("Minuta excluída!");
     },
-    [minutas, setMinutas, selectedMinutaId]
+    [setMinutas, selectedMinutaId]
   );
 
-  // Geração com IA (streaming)
+  // Geração com IA (streaming com AbortController para cleanup)
   const handleAIStream = useCallback(
     async (
       prompt: string,
@@ -197,9 +217,15 @@ export default function MinutasManagerV2() {
         onChunk: (chunk: string) => void;
         onComplete: () => void;
         onError: (error: Error) => void;
-      }
+      },
+      abortSignal?: AbortSignal
     ) => {
       try {
+        // Verifica se já foi abortado antes de iniciar
+        if (abortSignal?.aborted) {
+          throw new Error("Stream abortado antes de iniciar");
+        }
+
         await streamChat([
           {
             role: "system",
@@ -208,8 +234,17 @@ export default function MinutasManagerV2() {
           },
           { role: "user", content: prompt },
         ]);
-        callbacks.onComplete();
+
+        // Verifica novamente após stream completar
+        if (!abortSignal?.aborted) {
+          callbacks.onComplete();
+        }
       } catch (error) {
+        // Não trata como erro se foi abortado intencionalmente
+        if (error instanceof Error && error.name === "AbortError") {
+          console.log("Stream de IA abortado pelo usuário");
+          return;
+        }
         callbacks.onError(error instanceof Error ? error : new Error("Erro desconhecido"));
       }
     },

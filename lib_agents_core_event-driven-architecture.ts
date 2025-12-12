@@ -1,5 +1,4 @@
-import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 // Domain Events
 export interface DomainEvent {
@@ -38,9 +37,8 @@ export class EventStore {
   }
 
   async getEvents(aggregateId: string, fromVersion?: number): Promise<DomainEvent[]> {
-    return this.events.filter(e => 
-      e.aggregateId === aggregateId && 
-      (!fromVersion || e.timestamp.getTime() > fromVersion)
+    return this.events.filter(
+      (e) => e.aggregateId === aggregateId && (!fromVersion || e.timestamp.getTime() > fromVersion)
     );
   }
 
@@ -62,23 +60,22 @@ export class SagaOrchestrator {
   async startSaga(sagaType: string, initialData: any): Promise<string> {
     const sagaId = uuidv4();
     const saga = this.createSaga(sagaType, sagaId, initialData);
-    
+
     this.sagas.set(sagaId, saga);
     await saga.start();
-    
+
     return sagaId;
   }
 
   async handleEvent(event: DomainEvent): Promise<void> {
     const affectedSagas = this.findAffectedSagas(event);
-    
+
     for (const saga of affectedSagas) {
       await saga.handle(event);
     }
   }
 
   private findAffectedSagas(event: DomainEvent): Saga[] {
-    return Array.from(this.sagas.values())
-      .filter(saga => saga.isInterestedIn(event));
+    return Array.from(this.sagas.values()).filter((saga) => saga.isInterestedIn(event));
   }
 }

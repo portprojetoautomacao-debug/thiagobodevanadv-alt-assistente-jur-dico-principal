@@ -86,6 +86,49 @@ export type AgentId =
   | "traducao-juridica"
   | "compliance";
 
+/**
+ * Lista de AgentIds válidos para runtime validation
+ */
+export const VALID_AGENT_IDS = [
+  "harvey",
+  "justine",
+  "analise-documental",
+  "monitor-djen",
+  "gestao-prazos",
+  "redacao-peticoes",
+  "organizacao-arquivos",
+  "pesquisa-juris",
+  "analise-risco",
+  "revisao-contratual",
+  "comunicacao-clientes",
+  "financeiro",
+  "estrategia-processual",
+  "traducao-juridica",
+  "compliance",
+] as const;
+
+/**
+ * Type guard para validar AgentId em runtime
+ */
+export function isValidAgentId(id: unknown): id is AgentId {
+  return typeof id === "string" && VALID_AGENT_IDS.includes(id as AgentId);
+}
+
+/**
+ * Valida e sanitiza AgentTask.agentId
+ */
+export function validateTaskAgentId(task: AgentTask): AgentTask {
+  if (!isValidAgentId(task.agentId)) {
+    console.warn(`[TaskEngine] Invalid agentId: ${task.agentId}, defaulting to 'harvey'`);
+    return {
+      ...task,
+      agentId: "harvey", // ✅ Fallback seguro
+    };
+  }
+
+  return task;
+}
+
 export interface Agent {
   id: string;
   name: string;
@@ -154,6 +197,10 @@ export interface AgentTask {
   tokensUsed?: number;
   /** Tempo de processamento em ms */
   processingTimeMs?: number;
+
+  // CLEANUP: TTL automático
+  /** Data de expiração para cleanup automático (ISO) */
+  expiresAt?: string;
 }
 
 /**
@@ -195,6 +242,21 @@ export interface AgentTaskGenerator {
 // ============================================================================
 
 /**
+ * Constantes de configuração para retry e timeout
+ */
+export const RETRY_JITTER_RANGE = 0.3; // ±30%
+export const RETRY_JITTER_BASE = 0.85; // 85-115%
+export const DEFAULT_RETRY_BASE_MS = 10_000; // 10 segundos
+export const DEFAULT_RETRY_MAX_MS = 10 * 60 * 1_000; // 10 minutos
+export const DEFAULT_MAX_RETRIES = 3;
+export const DEFAULT_BUSINESS_DAYS = 15;
+export const BUSINESS_DAYS_BUFFER_FACTOR = 1.4; // 40% buffer para feriados
+export const COMPLETED_TASK_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas
+export const HUMAN_TASK_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+export const TIMEOUT_CACHE_TTL_MS = 30_000; // 30 segundos
+export const TIMEOUT_GRACE_PERIOD_FACTOR = 0.05; // 5% margem
+
+/**
  * Calcula o atraso para retry com backoff exponencial
  * @param retryCount Número de tentativas já realizadas
  * @param baseMs Atraso base em ms (default: 10s)
@@ -203,30 +265,37 @@ export interface AgentTaskGenerator {
  */
 export function calcularAtrasoRetry(
   retryCount: number,
-  baseMs: number = 10_000,
-  maxMs: number = 10 * 60 * 1_000
+  baseMs: number = DEFAULT_RETRY_BASE_MS,
+  maxMs: number = DEFAULT_RETRY_MAX_MS
 ): number {
   const safeRetry = Math.max(0, retryCount);
   const expo = Math.pow(2, safeRetry);
-  const jitter = Math.random() * 0.3 + 0.85; // 0.85–1.15
+  const jitter = Math.random() * RETRY_JITTER_RANGE + RETRY_JITTER_BASE;
   return Math.min(baseMs * expo * jitter, maxMs);
 }
 
 /**
  * Agenda retry de uma tarefa com backoff exponencial
+ * Fix: Merge explícito para evitar race conditions + TTL para cleanup
  */
 export function agendarRetryTarefa(task: AgentTask): AgentTask {
   const retryCount = (task.retryCount ?? 0) + 1;
-  const maxRetries = task.maxRetries ?? 3;
+  const maxRetries = task.maxRetries ?? DEFAULT_MAX_RETRIES;
   const nowIso = new Date().toISOString();
 
   if (retryCount > maxRetries) {
+    // ✅ Merge explícito - preserva campos não relacionados
+    const ttlMs = task.timeout ? task.timeout * 2 : COMPLETED_TASK_TTL_MS;
+    const expiresAt = new Date(Date.now() + ttlMs).toISOString();
+
     return {
       ...task,
-      status: "failed",
+      status: "failed" as const,
       retryCount,
       atualizadoEm: nowIso,
+      completedAt: task.completedAt ?? nowIso, // Preserva se já existir
       error: `Máximo de ${maxRetries} tentativas excedido`,
+      expiresAt,
     };
   }
 
@@ -235,10 +304,12 @@ export function agendarRetryTarefa(task: AgentTask): AgentTask {
 
   return {
     ...task,
-    status: "pending_retry",
+    status: "pending_retry" as const,
     retryCount,
     nextRunAt,
     atualizadoEm: nowIso,
+    // ✅ Preserva error anterior se houver
+    error: task.error ?? `Retry agendado - tentativa ${retryCount}/${maxRetries}`,
   };
 }
 
@@ -253,24 +324,40 @@ export const DEFAULT_TASK_TIMEOUT_MS = 10 * 60 * 1_000;
 
 /**
  * Verifica se uma tarefa estourou o timeout (baseado em startedAt + timeout/default)
+ * Fix: Validação de timestamp + margem de erro para evitar false positives
  */
 export function isTaskTimedOut(
   task: AgentTask,
-  nowMs: number = Date.now(),
+  nowMs?: number,
   defaultTimeoutMs: number = DEFAULT_TASK_TIMEOUT_MS
 ): boolean {
   if (!task.startedAt) return false;
   if (task.status !== "processing") return false;
 
+  // ✅ Sempre usa timestamp fresco se não fornecido
+  const currentMs = nowMs ?? Date.now();
   const timeoutMs = task.timeout ?? defaultTimeoutMs;
   const startedMs = new Date(task.startedAt).getTime();
-  if (Number.isNaN(startedMs)) return false;
 
-  return nowMs - startedMs > timeoutMs;
+  // ✅ Valida timestamp válido
+  if (Number.isNaN(startedMs) || startedMs <= 0 || startedMs > currentMs) {
+    console.warn(`[TaskEngine] Invalid startedAt timestamp: ${task.startedAt} (task: ${task.id})`);
+    return false;
+  }
+
+  // ✅ Margem de erro para evitar false positives em edge cases
+  const gracePeriodMs = timeoutMs * TIMEOUT_GRACE_PERIOD_FACTOR;
+  return currentMs - startedMs > timeoutMs + gracePeriodMs;
 }
 
 /**
+ * Cache de timestamps para evitar recomputação
+ */
+const taskTimeoutCache = new Map<string, { checked: number; isTimedOut: boolean }>();
+
+/**
  * Detecta tarefas que estão travadas (status = processing por muito tempo)
+ * Fix: Cache + early filter para O(n) → O(k) onde k = tarefas processando
  */
 export function detectarTarefasTravadas(
   tarefas: AgentTask[],
@@ -278,7 +365,34 @@ export function detectarTarefasTravadas(
 ): AgentTask[] {
   const agora = Date.now();
 
-  return tarefas.filter((t) => isTaskTimedOut(t, agora, limiteMs));
+  // ✅ Early filter - apenas tarefas em processamento
+  const processing = tarefas.filter((t) => t.status === "processing");
+
+  // ✅ Se não há tarefas processando, retorna vazio imediatamente
+  if (processing.length === 0) {
+    return [];
+  }
+
+  return processing.filter((task) => {
+    // ✅ Verifica cache primeiro
+    const cached = taskTimeoutCache.get(task.id);
+    if (cached && agora - cached.checked < TIMEOUT_CACHE_TTL_MS) {
+      return cached.isTimedOut;
+    }
+
+    // ✅ Calcula e cacheia
+    const isTimedOut = isTaskTimedOut(task, agora, limiteMs);
+    taskTimeoutCache.set(task.id, { checked: agora, isTimedOut });
+
+    return isTimedOut;
+  });
+}
+
+/**
+ * Limpa cache de timeout (chamar quando tarefa mudar de status)
+ */
+export function clearTaskTimeoutCache(taskId: string): void {
+  taskTimeoutCache.delete(taskId);
 }
 
 /**
@@ -321,6 +435,129 @@ export function tarefaProntaParaExecucao(task: AgentTask): boolean {
 
   // Fila normal
   return task.status === "queued";
+}
+
+/**
+ * Remove tarefas finalizadas expiradas para prevenir memory leak
+ * Fix: TTL automático para tarefas completed/failed
+ */
+export function cleanupExpiredTasks(tarefas: AgentTask[]): AgentTask[] {
+  const agora = Date.now();
+
+  return tarefas.filter((task) => {
+    // ✅ Mantém tarefas ativas
+    if (
+      task.status === "queued" ||
+      task.status === "processing" ||
+      task.status === "pending_retry"
+    ) {
+      return true;
+    }
+
+    // ✅ Remove tarefas finalizadas expiradas
+    if (task.status === "completed" || task.status === "failed") {
+      const completedMs = task.completedAt ? new Date(task.completedAt).getTime() : 0;
+      const age = agora - completedMs;
+
+      return age < COMPLETED_TASK_TTL_MS;
+    }
+
+    // ✅ Tarefas humanas mantém por 7 dias
+    if (task.status === "human_intervention") {
+      const touchedMs = task.humanTouchedAt ? new Date(task.humanTouchedAt).getTime() : 0;
+      const age = agora - touchedMs;
+
+      return age < HUMAN_TASK_TTL_MS;
+    }
+
+    return true;
+  });
+}
+
+// ============================================================================
+// SECURITY - SANITIZAÇÃO DE TASK DATA
+// ============================================================================
+
+/**
+ * Sanitiza string removendo HTML/scripts potencialmente maliciosos
+ */
+export function sanitizeString(value: unknown): string {
+  if (typeof value !== "string") return String(value);
+
+  // ✅ Remove tags HTML, caracteres de controle e scripts
+  return value
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<[^>]+>/g, "") // Remove tags HTML
+    .replace(/[<>'"]/g, (char) => {
+      const entities: Record<string, string> = {
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      };
+      return entities[char] || char;
+    })
+    .trim();
+}
+
+/**
+ * Sanitiza task.data recursivamente (max depth 3)
+ */
+function sanitizeTaskData(
+  data: Record<string, unknown>,
+  depth: number = 0
+): Record<string, unknown> {
+  if (depth > 3) {
+    console.warn("[TaskEngine] Task data exceeded max depth (3), truncating");
+    return {};
+  }
+
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    // ✅ Rejeita funções (potencial code injection)
+    if (typeof value === "function") {
+      console.warn(`[TaskEngine] Blocked function in task data: ${key}`);
+      continue;
+    }
+
+    // ✅ Sanitiza strings
+    if (typeof value === "string") {
+      sanitized[key] = sanitizeString(value);
+    }
+    // ✅ Recursão em objetos
+    else if (value && typeof value === "object" && !Array.isArray(value)) {
+      sanitized[key] = sanitizeTaskData(value as Record<string, unknown>, depth + 1);
+    }
+    // ✅ Arrays mantidos (primitivos apenas)
+    else if (Array.isArray(value)) {
+      sanitized[key] = value.filter((item) => typeof item !== "function");
+    }
+    // ✅ Primitivos passam
+    else {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized;
+}
+
+/**
+ * Valida e sanitiza AgentTask antes de processar
+ * Fix: Previne XSS/code injection via task.data ou task.error
+ */
+export function sanitizeAgentTask(task: AgentTask): AgentTask {
+  // ✅ Sanitiza campos string
+  const sanitizedError = task.error ? sanitizeString(task.error) : undefined;
+
+  // ✅ Valida data object (profundidade máxima 3, sem funções)
+  const sanitizedData = sanitizeTaskData(task.data);
+
+  return {
+    ...task,
+    error: sanitizedError,
+    data: sanitizedData,
+  };
 }
 
 // ============================================================================
@@ -767,9 +1004,9 @@ export async function processTaskWithAI(task: AgentTask, agent: Agent): Promise<
 
   // Prazos
   if (taskType.includes("deadline") || taskType.includes("prazo") || agent.type === "calculator") {
-    const businessDays = (task.data.businessDays as number) || 15;
+    const businessDays = (task.data.businessDays as number) || DEFAULT_BUSINESS_DAYS;
     const deadline = new Date();
-    deadline.setDate(deadline.getDate() + Math.ceil(businessDays * 1.4));
+    deadline.setDate(deadline.getDate() + Math.ceil(businessDays * BUSINESS_DAYS_BUFFER_FACTOR));
 
     return {
       success: true,

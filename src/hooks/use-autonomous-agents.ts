@@ -2,8 +2,12 @@ import { useKV } from "@/hooks/use-kv";
 import { getUnhealthyAgents, metricsCollector } from "@/lib/agent-metrics";
 import {
   canResumeAfterHuman,
+  cleanupExpiredTasks,
+  clearTaskTimeoutCache,
   initializeAgents,
+  sanitizeAgentTask,
   shouldPauseForHuman,
+  validateTaskAgentId,
   type Agent,
   type AgentTask,
   type AgentTaskResult,
@@ -444,8 +448,12 @@ export function useAutonomousAgents() {
 
       const task = queue[0];
 
+      // ✅ SECURITY: Sanitizar e validar task antes de processar
+      const sanitizedTask = sanitizeAgentTask(task);
+      const validatedTask = validateTaskAgentId(sanitizedTask);
+
       // Filtro de segurança → não regras de autonomia
-      if (shouldPauseForHuman(agent, task)) {
+      if (shouldPauseForHuman(agent, validatedTask)) {
         setAgents((current) =>
           updateAgentInList(current || [], agent.id, {
             status: "waiting_human",
@@ -471,7 +479,7 @@ export function useAutonomousAgents() {
       setAgents((current) =>
         updateAgentInList(current || [], agent.id, {
           status: "processing",
-          currentTask: task,
+          currentTask: validatedTask,
         })
       );
 
@@ -483,7 +491,7 @@ export function useAutonomousAgents() {
 
         if (hasHybrid) {
           // Usar arquitetura híbrida com fallback automático
-          const hybridResult = await executeHybridTask(agent.id, task, {
+          const hybridResult = await executeHybridTask(agent.id, validatedTask, {
             enableLangGraph: true,
             enableTraditional: true,
             coordinationMode: "fallback", // LangGraph primeiro, tradicional como fallback
@@ -518,10 +526,10 @@ export function useAutonomousAgents() {
             setAgents,
             logActivity
           );
-          result = await processTaskWithStreamingAI(task, agent, callbacks);
+          result = await processTaskWithStreamingAI(validatedTask, agent, callbacks);
         } else {
           // Fallback para processamento tradicional sem streaming
-          result = await processTaskWithRealAI(task, agent);
+          result = await processTaskWithRealAI(validatedTask, agent);
         }
 
         // ✅ Registrar métrica de sucesso
@@ -532,12 +540,15 @@ export function useAutonomousAgents() {
           duration,
           success: true,
           tokensUsed: result.tokensUsed,
-          taskType: task.type,
+          taskType: validatedTask.type,
         });
+
+        // ✅ PERFORMANCE: Invalidar cache de timeout após conclusão
+        clearTaskTimeoutCache(validatedTask.id);
 
         // Use extracted helper for completion (S2004 compliance)
         handleTaskCompletion(
-          task,
+          validatedTask,
           result,
           agent.id,
           setTaskQueue,
@@ -553,12 +564,15 @@ export function useAutonomousAgents() {
           timestamp: Date.now(),
           duration,
           success: false,
-          taskType: task.type,
+          taskType: validatedTask.type,
           error: err instanceof Error ? err.message : String(err),
         });
 
+        // ✅ PERFORMANCE: Invalidar cache de timeout após falha
+        clearTaskTimeoutCache(validatedTask.id);
+
         // Use extracted helper for failure (S2004 compliance)
-        handleTaskFailure(task, err, agent.id, setTaskQueue, logActivity);
+        handleTaskFailure(validatedTask, err, agent.id, setTaskQueue, logActivity);
       } finally {
         processingRef.current.delete(agent.id);
       }
@@ -615,6 +629,62 @@ export function useAutonomousAgents() {
 
     return () => clearInterval(interval);
   }, [processActiveAgents, updateAgentsActivityStatus]);
+
+  // =============================
+  // CLEANUP AUTOMÁTICO DE TAREFAS EXPIRADAS
+  // =============================
+
+  useEffect(() => {
+    // Cleanup inicial após 10 segundos
+    const initialCleanup = setTimeout(() => {
+      setTaskQueue((current) => {
+        const cleaned = cleanupExpiredTasks(current || []);
+        const removed = (current || []).length - cleaned.length;
+
+        if (removed > 0) {
+          console.log(`[TaskCleanup] Removidas ${removed} tarefa(s) expirada(s)`);
+        }
+
+        return cleaned;
+      });
+
+      setCompletedTasks((current) => {
+        const cleaned = cleanupExpiredTasks(current || []);
+        const removed = (current || []).length - cleaned.length;
+
+        if (removed > 0) {
+          console.log(`[TaskCleanup] Removidas ${removed} tarefa(s) completa(s) expirada(s)`);
+        }
+
+        return cleaned;
+      });
+    }, 10000);
+
+    // Cleanup diário (24 horas)
+    const dailyCleanup = setInterval(
+      () => {
+        setTaskQueue((current) => {
+          const cleaned = cleanupExpiredTasks(current || []);
+          const removed = (current || []).length - cleaned.length;
+
+          if (removed > 0) {
+            console.log(`[TaskCleanup] Cleanup diário: ${removed} tarefa(s) removida(s)`);
+            toast.info(`🧹 ${removed} tarefa(s) expirada(s) removida(s)`);
+          }
+
+          return cleaned;
+        });
+
+        setCompletedTasks((current) => cleanupExpiredTasks(current || []));
+      },
+      24 * 60 * 60 * 1000
+    );
+
+    return () => {
+      clearTimeout(initialCleanup);
+      clearInterval(dailyCleanup);
+    };
+  }, [setTaskQueue, setCompletedTasks]);
 
   // =============================
   // RESET DIÁRIO (local)

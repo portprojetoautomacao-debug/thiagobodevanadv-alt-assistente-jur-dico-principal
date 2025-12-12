@@ -134,4 +134,38 @@ export function resetHybridStats(): void {
   // Stub - não faz nada
 }
 
-export default HybridAgentOrchestrator;
+// Enhance default export compatibility: attach helpers as properties on the default export
+// so both ESM named imports and CommonJS require() interop consumers can access them reliably.
+const DefaultHybridExport = Object.assign(HybridAgentOrchestrator, {
+  executeHybridTask,
+  hasHybridVersion,
+  getHybridStats,
+  listHybridAgents,
+  recordExecution,
+  resetHybridStats,
+  HYBRID_AGENTS_DISABLED,
+});
+
+export default DefaultHybridExport;
+
+// CommonJS compatibility: ensure module.exports contains named functions when building to CommonJS
+// This avoids "is not a function" errors in CI environments that import compiled files via require().
+// Not needed in ESM, but harmless with the guard.
+declare const module: any;
+try {
+  if (typeof module !== "undefined" && module?.exports) {
+    module.exports = {
+      ...(module.exports || {}),
+      executeHybridTask,
+      hasHybridVersion,
+      getHybridStats,
+      listHybridAgents,
+      recordExecution,
+      resetHybridStats,
+      HybridAgentOrchestrator: DefaultHybridExport,
+      HYBRID_AGENTS_DISABLED,
+    };
+  }
+} catch (e) {
+  // Ignore errors in ESM environments
+}
