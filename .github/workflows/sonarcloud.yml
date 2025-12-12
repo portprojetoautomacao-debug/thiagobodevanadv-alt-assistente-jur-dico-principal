@@ -19,7 +19,7 @@ on:
   workflow_dispatch: # Permite execução manual para teste
     inputs:
       test_comment:
-        description: 'Simulate comment permission test (create and delete a test comment)'
+        description: "Simulate comment permission test (create and delete a test comment)"
         required: false
         default: false
         type: boolean
@@ -238,3 +238,4 @@ jobs:
             } catch (err) {
               core.error('Comment permission test failed: ' + String(err));
             }
+
