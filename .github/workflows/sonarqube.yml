@@ -22,10 +22,26 @@ jobs:
           node-version: "22"
           cache: "npm"
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python deps for DSPy Bridge (FastAPI)
+        run: |
+          python -m pip install --upgrade pip
+          pip install "fastapi>=0.110" "uvicorn[standard]>=0.27"
+        # Necessário para que tests/integration/dspy-bridge.test.ts consiga iniciar scripts/dspy_bridge.py
+        # (o teste em CI exige que o bridge esteja acessível)
+
       - name: Install dependencies
         run: npm ci
 
       - name: Run tests with coverage (API)
+        env:
+          # Token estável para CI. NÃO é segredo; serve apenas para passar autenticação do bridge no teste.
+          DSPY_API_TOKEN: "ci-test-token"
         run: |
           echo "🧪 Running API tests with coverage (coverage-api)..."
           npm ci
