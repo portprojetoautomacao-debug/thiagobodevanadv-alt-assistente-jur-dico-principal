@@ -10,8 +10,8 @@
  */
 
 import { Redis } from "@upstash/redis";
-import { AgentStatus } from "./agents.js";
-import { getEnv } from "./env-helper.js";
+import { AgentStatus } from "./agents";
+import { getEnv } from "./env-helper";
 
 // ============================================================================
 // TIPOS PARA FUNÇÕES DE MONITORAMENTO

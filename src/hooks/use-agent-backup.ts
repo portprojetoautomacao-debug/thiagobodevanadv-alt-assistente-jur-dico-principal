@@ -24,6 +24,10 @@ const MAX_HISTORY_SIZE = 10; // Máximo de backups no histórico
 const MAX_TASKS_IN_BACKUP = 100; // Limitar tarefas para economizar espaço
 const LOCAL_CACHE_KEY = "agent-backup-cache"; // Cache local simplificado
 
+// Em Vercel/Serverless, payloads grandes podem falhar com 413 antes mesmo do handler.
+// Mantemos uma margem abaixo do limite do endpoint /api/kv.
+const BACKUP_RETRY_TASK_LIMITS = [MAX_TASKS_IN_BACKUP, 50, 20, 5] as const;
+
 interface BackupData {
   timestamp: number;
   userId: string;
@@ -34,6 +38,64 @@ interface BackupData {
     completedTasks: unknown[];
     lastDjenCheck: unknown;
   };
+}
+
+interface BackupHistoryEntry {
+  timestamp: number;
+  userId: string;
+  summary: {
+    agentsCount: number;
+    taskQueueCount: number;
+    completedTasksCount: number;
+    lastDjenCheck: unknown;
+  };
+}
+
+function limitArray<T>(value: unknown, limit: number, fromEnd: boolean = false): T[] {
+  if (!Array.isArray(value)) return [];
+  const arr = value as T[];
+  return fromEnd ? arr.slice(-limit) : arr.slice(0, limit);
+}
+
+function buildHistoryEntry(backupData: BackupData): BackupHistoryEntry {
+  return {
+    timestamp: backupData.timestamp,
+    userId: backupData.userId,
+    summary: {
+      agentsCount: Array.isArray(backupData.data.agents) ? backupData.data.agents.length : 0,
+      taskQueueCount: Array.isArray(backupData.data.taskQueue)
+        ? backupData.data.taskQueue.length
+        : 0,
+      completedTasksCount: Array.isArray(backupData.data.completedTasks)
+        ? backupData.data.completedTasks.length
+        : 0,
+      lastDjenCheck: backupData.data.lastDjenCheck,
+    },
+  };
+}
+
+function shrinkAgentsForBackup(value: unknown): unknown[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.slice(0, 15).map((a) => {
+    if (!a || typeof a !== "object") return a;
+
+    const obj = a as Record<string, unknown>;
+    // Evita campos potencialmente enormes (ex.: workQueue/currentTask/serverLogs)
+    return {
+      id: obj.id,
+      name: obj.name,
+      type: obj.type,
+      status: obj.status,
+      enabled: obj.enabled,
+      lastActivity: obj.lastActivity,
+      continuousMode: obj.continuousMode,
+      humanInteractionMode: obj.humanInteractionMode,
+      recentFailures: obj.recentFailures,
+      lastFailureAt: obj.lastFailureAt,
+      nextScheduledRun: obj.nextScheduledRun,
+    };
+  });
 }
 
 export function useAgentBackup(options: BackupOptions) {
@@ -58,37 +120,72 @@ export function useAgentBackup(options: BackupOptions) {
       try {
         const serverKey = `${BACKUP_KEY_PREFIX}:${userId}:latest`;
 
-        const response = await fetch("/api/kv", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            key: serverKey,
-            value: backupData,
-            // TTL de 30 dias para backups
-            ex: 60 * 60 * 24 * 30,
-          }),
-        });
+        // 1) Salvar o backup completo (latest) com retries reduzindo o tamanho se necessário.
+        let latestSaved = false;
+        for (const taskLimit of BACKUP_RETRY_TASK_LIMITS) {
+          const shrunk: BackupData = {
+            ...backupData,
+            data: {
+              ...backupData.data,
+              agents: shrinkAgentsForBackup(backupData.data.agents),
+              monitoredLawyers: limitArray(backupData.data.monitoredLawyers, 50, false),
+              taskQueue: limitArray(backupData.data.taskQueue, taskLimit, false),
+              completedTasks: limitArray(backupData.data.completedTasks, taskLimit, true),
+            },
+          };
 
-        if (!response.ok) {
+          const response = await fetch("/api/kv", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              key: serverKey,
+              value: shrunk,
+              // TTL de 30 dias para backups
+              ex: 60 * 60 * 24 * 30,
+            }),
+          });
+
+          if (response.ok) {
+            latestSaved = true;
+            break;
+          }
+
+          // Se o problema for tamanho, tentamos novamente com payload menor.
+          if (response.status === 413 || response.status === 400) {
+            continue;
+          }
+
           throw new Error(`Server responded with ${response.status}`);
+        }
+
+        if (!latestSaved) {
+          throw new Error("Server rejected backup payload (too large)");
         }
 
         // Salvar no histórico do servidor
         const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
+
+        // IMPORTANTE: histórico não salva backups completos (muito grande).
+        // Guardamos apenas metadados compactos para evitar 413.
         const historyResponse = await fetch(`/api/kv?key=${encodeURIComponent(historyKey)}`);
-        let history: BackupData[] = [];
+        let history: BackupHistoryEntry[] = [];
 
         if (historyResponse.ok) {
           const historyData = await historyResponse.json();
-          history = historyData.value || [];
+          history = Array.isArray(historyData.value)
+            ? (historyData.value as BackupHistoryEntry[])
+            : [];
         }
 
+        const entry = buildHistoryEntry(backupData);
+
         // Adicionar ao início e limitar tamanho
-        history.unshift(backupData);
+        history.unshift(entry);
         if (history.length > MAX_HISTORY_SIZE) {
           history = history.slice(0, MAX_HISTORY_SIZE);
         }
 
+        // Se falhar, não derruba o backup principal (latest) — histórico é best-effort.
         await fetch("/api/kv", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -97,6 +194,8 @@ export function useAgentBackup(options: BackupOptions) {
             value: history,
             ex: 60 * 60 * 24 * 30,
           }),
+        }).catch(() => {
+          // silencioso
         });
 
         if (import.meta.env.DEV) {
@@ -331,10 +430,10 @@ export function useAgentBackup(options: BackupOptions) {
       const historyKey = `${BACKUP_KEY_PREFIX}:${userId}:history`;
       const response = await fetch(`/api/kv?key=${encodeURIComponent(historyKey)}`);
 
-      let history: BackupData[] = [];
+      let history: BackupHistoryEntry[] = [];
       if (response.ok) {
         const data = await response.json();
-        history = data.value || [];
+        history = Array.isArray(data.value) ? (data.value as BackupHistoryEntry[]) : [];
       }
 
       return {

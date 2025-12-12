@@ -19,7 +19,19 @@
 // CÓDIGO DESABILITADO - Mantido para referência futura
 export const HYBRID_AGENTS_DISABLED = true;
 
-console.warn("⚠️  Hybrid Agents Integration está desabilitado (modo manutenção)");
+let hasWarnedDisabled = false;
+
+function warnDisabledOnce(): void {
+  // Evita poluir logs de testes/CI e também não spam o console.
+  const isBrowser = typeof globalThis.window !== "undefined";
+  const isDev = Boolean(import.meta.env?.DEV);
+
+  if (!isBrowser || !isDev) return;
+  if (hasWarnedDisabled) return;
+
+  hasWarnedDisabled = true;
+  console.warn("⚠️  Hybrid Agents Integration está desabilitado (modo manutenção)");
+}
 
 // Stub functions para manter compatibilidade
 export type HybridAgentType = "langgraph-djen" | "langgraph-custom";
@@ -70,10 +82,11 @@ export class HybridAgentOrchestrator {
 
 // Stub functions para compatibilidade
 export function executeHybridTask(
-  configOrAgentId: HybridExecutionConfig | string,
+  _configOrAgentId: HybridExecutionConfig | string,
   _taskOrEnableLangGraph?: unknown,
   _configOrCoordinationMode?: unknown
 ): Promise<HybridExecutionResult> {
+  warnDisabledOnce();
   // Aceita ambas assinaturas: nova (config) e antiga (agentId, task, config)
   return Promise.resolve({
     success: false,
@@ -86,10 +99,12 @@ export function executeHybridTask(
 }
 
 export function hasHybridVersion(_agentId: string): boolean {
+  warnDisabledOnce();
   return false;
 }
 
 export function getHybridStats(): HybridStats {
+  warnDisabledOnce();
   return {
     totalExecutions: 0,
     successCount: 0,

@@ -22,7 +22,7 @@ import {
   createPIIFilteredBeforeSend,
   DEFAULT_PII_CONFIG,
   type PIIFilterConfig,
-} from "@/services/pii-filtering.js";
+} from "@/services/pii-filtering";
 import * as Sentry from "@sentry/react";
 
 // Configuração Sentry DSN com validação de ambiente
@@ -32,7 +32,8 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 const APP_ENVIRONMENT = import.meta.env.MODE || "development";
 
 // ✅ LGPD: PII Filtering habilitado por padrão em produção
-const ENABLE_PII_FILTERING = import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
+export const ENABLE_PII_FILTERING =
+  import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
 
 // Configuração de PII Filtering
 const PII_CONFIG: PIIFilterConfig = {

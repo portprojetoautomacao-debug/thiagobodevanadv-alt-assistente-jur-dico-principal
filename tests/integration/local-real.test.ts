@@ -2,7 +2,13 @@ import { execFile } from "child_process";
 import path from "path";
 import { describe, it } from "vitest";
 
-describe("local real integration tests (dev API)", () => {
+// Este teste sobe um servidor dev real (Vite + API local) e faz chamadas HTTP reais.
+// Para manter estabilidade da suíte padrão (modo manutenção), ele é OPT-IN.
+// Rode manualmente com: RUN_LOCAL_REAL_TESTS=1 npm run test:run -- tests/integration/local-real.test.ts
+const RUN_LOCAL_REAL_TESTS = process.env.RUN_LOCAL_REAL_TESTS === "1";
+const describeIf = RUN_LOCAL_REAL_TESTS ? describe : describe.skip;
+
+describeIf("local real integration tests (dev API)", () => {
   it(
     "should run the local dev server and validate extension-errors endpoints",
     async () => {

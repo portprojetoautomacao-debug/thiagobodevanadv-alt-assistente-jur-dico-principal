@@ -30,27 +30,42 @@ export const AgentTypeEnum = z.enum([
   "financial",
   "contract-reviewer",
   "risk-analyst",
+  // tipos usados no catálogo atual (src/lib/agents.ts)
+  "risk-analyzer",
+  "financial-analyzer",
+  "strategy-advisor",
+  "compliance-checker",
 ]);
 
-export const AgentTaskTypeEnum = z.enum([
-  "analyze_document",
-  "analyze_intimation",
-  "monitor_djen",
-  "calculate_deadline",
-  "draft_petition",
-  "check_datajud",
-  "organize_files",
-  "research_precedents",
-  "risk_analysis",
-  "contract_review",
-  "client_communication",
-  "billing_analysis",
-  "case_strategy",
-  "legal_translation",
-  "compliance_check",
-]);
+const CANONICAL_AGENT_TASK_TYPES = [
+  // Tipos usados pelo sistema (src/lib/agents.ts)
+  "IMPORTAR_INTIMACOES",
+  "CRIAR_MINUTA",
+  "ANALISAR_PRAZO",
+  "ATUALIZAR_STATUS_PROCESSO",
+  "ENVIAR_RESUMO_DIARIO",
+  "CALCULATE_DEADLINE",
+  "RESEARCH_PRECEDENTS",
+  "CLIENT_COMMUNICATION",
+  "CHECK_DATAJUD",
+  "RISK_ANALYSIS",
+  "BILLING_ANALYSIS",
+  "ORGANIZE_FILES",
+  "COMPLIANCE_CHECK",
+  "LEGAL_TRANSLATION",
+  "CONTRACT_REVIEW",
+  "CASE_STRATEGY",
+  "DRAFT_PETITION",
+  "ANALYZE_DOCUMENT",
+  "ANALYZE_INTIMATION",
+  "MONITOR_DJEN",
+  "SYNC_CALENDAR",
+  "SEND_NOTIFICATION",
+] as const;
 
-export const TaskPriorityEnum = z.enum(["low", "medium", "high", "urgent", "critical"]);
+export const AgentTaskTypeEnum = z.enum(CANONICAL_AGENT_TASK_TYPES);
+
+export const TaskPriorityEnum = z.enum(["low", "medium", "high", "critical"]);
 
 export const TaskStatusEnum = z.enum([
   "queued",
@@ -58,6 +73,7 @@ export const TaskStatusEnum = z.enum([
   "completed",
   "failed",
   "human_intervention",
+  "pending_retry",
   "cancelled",
 ]);
 
@@ -68,7 +84,69 @@ export const AgentStatusEnum = z.enum([
   "paused",
   "error",
   "waiting_human",
+  "degraded",
 ]);
+
+// ============================================================================
+// NORMALIZAÇÃO / COMPATIBILIDADE
+// ============================================================================
+
+const LEGACY_TASK_TYPE_TO_CANONICAL: Record<string, (typeof CANONICAL_AGENT_TASK_TYPES)[number]> = {
+  // legado (snake_case)
+  analyze_document: "ANALYZE_DOCUMENT",
+  analyze_intimation: "ANALYZE_INTIMATION",
+  monitor_djen: "MONITOR_DJEN",
+  calculate_deadline: "CALCULATE_DEADLINE",
+  draft_petition: "DRAFT_PETITION",
+  check_datajud: "CHECK_DATAJUD",
+  organize_files: "ORGANIZE_FILES",
+  research_precedents: "RESEARCH_PRECEDENTS",
+  risk_analysis: "RISK_ANALYSIS",
+  contract_review: "CONTRACT_REVIEW",
+  client_communication: "CLIENT_COMMUNICATION",
+  billing_analysis: "BILLING_ANALYSIS",
+  case_strategy: "CASE_STRATEGY",
+  legal_translation: "LEGAL_TRANSLATION",
+  compliance_check: "COMPLIANCE_CHECK",
+};
+
+function normalizeAgentTaskType(input: unknown): unknown {
+  if (typeof input !== "string") return input;
+
+  const raw = input.trim();
+  if (!raw) return raw;
+
+  // Mapeia legado (exato)
+  const legacyExact = LEGACY_TASK_TYPE_TO_CANONICAL[raw];
+  if (legacyExact) return legacyExact;
+
+  // Normaliza para UPPERCASE quando bater com o enum canônico
+  const upper = raw.toUpperCase();
+  if ((CANONICAL_AGENT_TASK_TYPES as readonly string[]).includes(upper)) {
+    return upper;
+  }
+
+  // Mapeia legado (case-insensitive)
+  const legacyLower = LEGACY_TASK_TYPE_TO_CANONICAL[raw.toLowerCase()];
+  if (legacyLower) return legacyLower;
+
+  return raw;
+}
+
+function normalizeTaskPriority(input: unknown): unknown {
+  if (typeof input !== "string") return input;
+  const raw = input.trim().toLowerCase();
+
+  // Compat: versões antigas usavam "urgent"
+  if (raw === "urgent") return "high";
+
+  return raw;
+}
+
+function normalizeTaskStatus(input: unknown): unknown {
+  if (typeof input !== "string") return input;
+  return input.trim().toLowerCase();
+}
 
 /**
  * Enum para capacidades válidas de agentes
@@ -177,47 +255,51 @@ export const agentSchema = z.object({
 /**
  * Schema para valida��o de Tarefa de Agente
  */
-export const agentTaskSchema = z.object({
-  // Campos obrigat�rios
-  id: z.string().uuid("ID da tarefa deve ser UUID v�lido"),
-  agentId: z.string().min(1, "ID do agente � obrigat�rio"),
-  type: AgentTaskTypeEnum,
-  priority: TaskPriorityEnum,
-  status: TaskStatusEnum,
-  createdAt: z.string().datetime("Data de cria��o inv�lida"),
-  data: z.record(z.string(), z.unknown()).default({}),
+export const agentTaskSchema = z
+  .object({
+    // Campos obrigat�rios
+    // O sistema usa IDs customizados em diversos fluxos (ex.: task-${Date.now()}-...)
+    // portanto não exigimos UUID aqui.
+    id: z.string().min(1, "ID da tarefa é obrigatório"),
+    agentId: z.string().min(1, "ID do agente � obrigat�rio"),
+    type: z.preprocess(normalizeAgentTaskType, AgentTaskTypeEnum),
+    priority: z.preprocess(normalizeTaskPriority, TaskPriorityEnum),
+    status: z.preprocess(normalizeTaskStatus, TaskStatusEnum),
+    createdAt: z.string().datetime("Data de cria��o inv�lida"),
+    data: z.record(z.string(), z.unknown()).default({}),
 
-  // Campos opcionais de execu��o
-  startedAt: z.string().datetime().optional(),
-  completedAt: z.string().datetime().optional(),
-  processingTimeMs: z.number().int().nonnegative().optional(),
+    // Campos opcionais de execu��o
+    startedAt: z.string().datetime().optional(),
+    completedAt: z.string().datetime().optional(),
+    processingTimeMs: z.number().int().nonnegative().optional(),
 
-  // Resultado e erro
-  result: z.record(z.string(), z.unknown()).optional(),
-  error: z.string().optional(),
+    // Resultado e erro
+    result: z.record(z.string(), z.unknown()).optional(),
+    error: z.string().optional(),
 
-  // Retry control
-  retryCount: z.number().int().nonnegative().default(0),
-  maxRetries: z.number().int().nonnegative().default(3),
+    // Retry control
+    retryCount: z.number().int().nonnegative().default(0),
+    maxRetries: z.number().int().nonnegative().default(3),
 
-  // Timeout
-  timeout: z.number().int().positive().default(30000),
+    // Timeout
+    timeout: z.number().int().positive().default(30000),
 
-  // Relacionamentos
-  processId: z.string().optional(),
-  expedienteId: z.string().optional(),
-  parentTaskId: z.string().optional(),
+    // Relacionamentos
+    processId: z.string().optional(),
+    expedienteId: z.string().optional(),
+    parentTaskId: z.string().optional(),
 
-  // Metadados
-  metadata: z
-    .object({
-      source: z.enum(["user", "agent", "cron", "webhook"]).optional(),
-      triggeredBy: z.string().optional(),
-      confidence: z.number().min(0).max(1).optional(),
-      needsReview: z.boolean().optional(),
-    })
-    .optional(),
-});
+    // Metadados
+    metadata: z
+      .object({
+        source: z.enum(["user", "agent", "cron", "webhook"]).optional(),
+        triggeredBy: z.string().optional(),
+        confidence: z.number().min(0).max(1).optional(),
+        needsReview: z.boolean().optional(),
+      })
+      .optional(),
+  })
+  .passthrough();
 
 /**
  * Schema para resultado de tarefa de agente

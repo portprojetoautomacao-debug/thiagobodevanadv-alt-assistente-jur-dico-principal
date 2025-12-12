@@ -6,7 +6,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { TodoistAgent } from "./lib/todoist-agent.js";
+import { TodoistAgent } from "./lib/todoist-agent";
 
 /**
  * Interface para eventos do Todoist Webhook

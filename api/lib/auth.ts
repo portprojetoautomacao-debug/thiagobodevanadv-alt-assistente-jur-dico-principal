@@ -64,7 +64,7 @@ export default requireApiKey;
  * Valida tokens de acesso e autoriza operações
  */
 
-import { SafeLogger } from "./safe-logger.js";
+import { SafeLogger } from "./safe-logger";
 
 const logger = new SafeLogger("Auth");
 

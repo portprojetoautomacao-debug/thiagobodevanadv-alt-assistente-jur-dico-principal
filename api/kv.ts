@@ -11,9 +11,9 @@
 
 import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleError, withErrorHandler } from "./lib/error-handler.js";
-import { rateLimitMiddleware } from "./lib/rate-limit.js";
-import { SafeLogger } from "./lib/safe-logger.js";
+import { handleError, withErrorHandler } from "./lib/error-handler";
+import { rateLimitMiddleware } from "./lib/rate-limit";
+import { SafeLogger } from "./lib/safe-logger";
 
 const logger = new SafeLogger("KV");
 

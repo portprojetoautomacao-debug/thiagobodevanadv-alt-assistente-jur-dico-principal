@@ -28,7 +28,7 @@ export default retryWithBackoff;
  * Para operações que podem falhar temporariamente
  */
 
-import { SafeLogger } from "./safe-logger.js";
+import { SafeLogger } from "./safe-logger";
 
 const logger = new SafeLogger("Retry");
 

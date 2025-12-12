@@ -11,7 +11,7 @@
 
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
-import { getEnv } from "./env-helper.js";
+import { getEnv } from "./env-helper";
 
 // ============================================================================
 // REDIS HELPER

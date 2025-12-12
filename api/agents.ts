@@ -12,13 +12,13 @@
 import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
-import { agentMonitor } from "../src/lib/agent-monitoring.js";
+import { agentMonitor } from "../src/lib/agent-monitoring";
 import {
   AnalyzeIntimationInputSchema,
   DraftPetitionInputSchema,
-} from "../src/lib/agent-schemas.js";
-import { legalMemory, type LegalContextType } from "../src/lib/legal-memory.js";
-import { createMinutaFromAgentTask } from "./lib/minuta-service-backend.js";
+} from "../src/lib/agent-schemas";
+import { legalMemory, type LegalContextType } from "../src/lib/legal-memory";
+import { createMinutaFromAgentTask } from "./lib/minuta-service-backend";
 
 // ===== Middleware de Autenticação =====
 function _requireAuth(req: VercelRequest): boolean {

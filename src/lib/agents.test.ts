@@ -11,7 +11,7 @@ import {
   initializeAgents,
   processTaskWithAI,
   shouldPauseForHuman,
-} from "./agents.js";
+} from "./agents";
 
 describe("AI Agents System", () => {
   describe("processTaskWithAI", () => {

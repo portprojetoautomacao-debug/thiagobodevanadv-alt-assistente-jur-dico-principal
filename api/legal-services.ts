@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAuth, sendAuthError } from "./lib/auth.js";
-import { consultarDJENForLawyer } from "./lib/djen-client.js";
-import { withErrorHandler } from "./lib/error-handler.js";
-import { rateLimitMiddleware } from "./lib/rate-limit.js";
-import { SafeLogger } from "./lib/safe-logger.js";
+import { requireAuth, sendAuthError } from "./lib/auth";
+import { consultarDJENForLawyer } from "./lib/djen-client";
+import { withErrorHandler } from "./lib/error-handler";
+import { rateLimitMiddleware } from "./lib/rate-limit";
+import { SafeLogger } from "./lib/safe-logger";
 
 const logger = new SafeLogger("LegalServices");
 

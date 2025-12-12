@@ -153,6 +153,8 @@ function convertBRDateToISO(dateStr: string): string | null {
   return null;
 }
 
+const loggedInvalidDeadlineFormats = new Set<string>();
+
 /**
  * Valida e converte string de data para ISO format
  * Retorna null se inválida
@@ -177,7 +179,10 @@ function parseAndValidateDeadlineDate(endDateStr: string): string | null {
 
   // Formato inválido - rejeitar silenciosamente strings como "Verificar"
   if (import.meta.env.DEV) {
-    console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
+    if (!loggedInvalidDeadlineFormats.has(endDateStr)) {
+      loggedInvalidDeadlineFormats.add(endDateStr);
+      console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
+    }
   }
   return null;
 }

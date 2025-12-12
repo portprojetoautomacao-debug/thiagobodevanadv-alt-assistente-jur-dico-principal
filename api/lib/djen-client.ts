@@ -3,7 +3,7 @@
  * Centraliza toda a lógica de integração com a API do DJEN
  */
 
-import { SafeLogger } from "./safe-logger.js";
+import { SafeLogger } from "./safe-logger";
 
 const logger = new SafeLogger("DJEN");
 

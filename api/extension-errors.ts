@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { withErrorHandler } from "./lib/error-handler.js";
-import { SafeLogger } from "./lib/safe-logger.js";
+import { withErrorHandler } from "./lib/error-handler";
+import { SafeLogger } from "./lib/safe-logger";
 
 const logger = new SafeLogger("ExtensionErrors");
 

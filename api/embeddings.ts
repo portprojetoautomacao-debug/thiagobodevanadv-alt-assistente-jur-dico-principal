@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
-import { requireApiKey } from "./lib/auth.js";
-import { withTimeout } from "./lib/timeout.js";
+import { requireApiKey } from "./lib/auth";
+import { withTimeout } from "./lib/timeout";
 
 const BodySchema = z.object({ text: z.string().min(1) });
 

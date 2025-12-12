@@ -8,19 +8,19 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireApiKey } from "../lib/auth.js";
-import { analyzeWithGemini } from "../lib/gemini-analyzer.js";
-import { redactPii } from "../lib/pii.js";
-import { rateLimitMiddleware } from "../lib/rate-limit.js";
-import { retryWithBackoff } from "../lib/retry.js";
-import { escapeHtml } from "../lib/sanitize.js";
-import { AnalysisResult, applyDeadlineDates, parseAIResponse } from "../lib/task-helpers.js";
-import { withTimeout } from "../lib/timeout.js";
+import { requireApiKey } from "../lib/auth";
+import { analyzeWithGemini } from "../lib/gemini-analyzer";
+import { redactPii } from "../lib/pii";
+import { rateLimitMiddleware } from "../lib/rate-limit";
+import { retryWithBackoff } from "../lib/retry";
+import { escapeHtml } from "../lib/sanitize";
+import { AnalysisResult, applyDeadlineDates, parseAIResponse } from "../lib/task-helpers";
+import { withTimeout } from "../lib/timeout";
 import {
   AgentInputSchema,
   AgentTaskInputSchema,
   handleValidationError,
-} from "../lib/validation.js";
+} from "../lib/validation";
 
 /**
  * Tipos válidos de deadline para cálculo de prazos processuais

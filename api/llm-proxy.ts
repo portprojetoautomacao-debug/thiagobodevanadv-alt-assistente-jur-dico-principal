@@ -11,11 +11,11 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
-import { requireApiKey } from "./lib/auth.js";
-import { rateLimitMiddleware } from "./lib/rate-limit.js";
-import { retryWithBackoff } from "./lib/retry.js";
-import { escapeHtml } from "./lib/sanitize.js";
-import { withTimeout } from "./lib/timeout.js";
+import { requireApiKey } from "./lib/auth";
+import { rateLimitMiddleware } from "./lib/rate-limit";
+import { retryWithBackoff } from "./lib/retry";
+import { escapeHtml } from "./lib/sanitize";
+import { withTimeout } from "./lib/timeout";
 
 // Tipos para mensagens e dados
 interface ChatMessage {
@@ -213,7 +213,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     {
       name: "Gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
-      apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY,
+      apiKey:
+        process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.VITE_GEMINI_API_KEY,
       headers: () => ({
         "Content-Type": "application/json",
       }),
@@ -226,10 +227,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const provider = providers.find((p) => p.apiKey);
 
   if (!provider) {
+    const isVercel = Boolean(process.env.VERCEL_ENV);
+    const isDev = process.env.NODE_ENV === "development";
+
     console.error("No LLM provider configured");
-    res.status(500).json({
+
+    // Em desenvolvimento, retornamos um fallback no formato OpenAI para evitar
+    // que o frontend quebre (e para orientar a configuração da chave).
+    if (!isVercel && isDev) {
+      const fallbackPayload = {
+        summary:
+          "⚠️ IA não configurada: defina OPENAI_API_KEY ou GEMINI_API_KEY para habilitar a análise automática.",
+        documentType: "Intimação",
+        priority: "média",
+        deadline: { days: 15, type: "úteis", endDate: "Verificar" },
+        suggestedActions: ["Configurar OPENAI_API_KEY ou GEMINI_API_KEY", "Reexecutar a análise"],
+        nextSteps: ["Abrir configurações", "Adicionar chave de API", "Tentar novamente"],
+      };
+
+      const content = `\n\n\`\`\`json\n${JSON.stringify(fallbackPayload, null, 2)}\n\`\`\``;
+
+      return res.status(200).json({
+        id: `unconfigured-${Date.now()}`,
+        object: "chat.completion",
+        created: Math.floor(Date.now() / 1000),
+        model: "unconfigured",
+        choices: [
+          {
+            index: 0,
+            message: { role: "assistant", content },
+            finish_reason: "stop",
+          },
+        ],
+        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+        _provider: "none",
+        _warning: "No LLM provider configured",
+      } satisfies LLMResponse);
+    }
+
+    // Em produção (Vercel), falhar explicitamente para evitar comportamento silencioso.
+    return res.status(503).json({
       error: "No LLM provider configured",
-      message: "Configure uma das seguintes variáveis no Vercel:",
+      message: "Configure uma das seguintes variáveis no ambiente:",
       options: [
         {
           name: "OPENAI_API_KEY",
@@ -238,12 +277,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         {
           name: "GEMINI_API_KEY",
-          description: "API key do Google Gemini (gratuito)",
+          description: "API key do Google Gemini",
           url: "https://aistudio.google.com/app/apikey",
         },
       ],
     });
-    return;
   }
 
   console.log(`Using LLM provider: ${provider.name}`);

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePageTracking, useUserTracking } from "../hooks/useErrorTracking";
-import { getEnv } from "../lib/env-helper.js";
+import { getEnv } from "../lib/env-helper";
 import { captureMessage, setErrorTag } from "../services/error-tracking";
 
 export function AppWithErrorTracking({ user }: Readonly<{ user?: { id: string; email: string } }>) {

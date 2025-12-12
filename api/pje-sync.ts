@@ -4,9 +4,9 @@
  */
 
 import { Redis } from "@upstash/redis";
-import { apiRetryConfig, httpWithRetry } from "./lib/retry.js";
-import { SafeLogger } from "./lib/safe-logger.js";
-import { validateExpedientes, validateProcessos } from "./lib/validation.js";
+import { apiRetryConfig, httpWithRetry } from "./lib/retry";
+import { SafeLogger } from "./lib/safe-logger";
+import { validateExpedientes, validateProcessos } from "./lib/validation";
 
 // ===== Redis singleton (Upstash) =====
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();

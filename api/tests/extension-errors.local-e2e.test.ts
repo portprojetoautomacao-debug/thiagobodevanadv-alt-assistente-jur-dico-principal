@@ -2,7 +2,13 @@ import { execFile } from "child_process";
 import path from "path";
 import { describe, it } from "vitest";
 
-describe("extension-errors local E2E", () => {
+// Este teste sobe um servidor dev real e faz chamadas HTTP reais.
+// Para manter estabilidade da suíte padrão (modo manutenção), ele é OPT-IN.
+// Rode manualmente com: npm run test:integration:local-real
+const RUN_LOCAL_REAL_TESTS = process.env.RUN_LOCAL_REAL_TESTS === "1";
+const describeIf = RUN_LOCAL_REAL_TESTS ? describe : describe.skip;
+
+describeIf("extension-errors local E2E", () => {
   it(
     "runs the local script and validates the flow",
     async () => {

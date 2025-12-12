@@ -34,7 +34,7 @@
  */
 
 import type { AgentId, AgentTask, TarefaSistemaTipo, TaskPriority } from "@/lib/agents";
-import { getEnv } from "@/lib/env-helper.js";
+import { getEnv } from "@/lib/env-helper";
 
 // ============================================================================
 // TYPES - DJEN API (Conforme documentação CNJ v1.0.3)

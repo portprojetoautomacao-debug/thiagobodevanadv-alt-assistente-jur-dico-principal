@@ -54,62 +54,62 @@ print_header() {
 
 check_dependencies() {
     log "Verificando dependências..."
-    
+
     if ! command -v npm &> /dev/null; then
         error "npm não encontrado"
         exit 1
     fi
-    
+
     if ! command -v node &> /dev/null; then
         error "Node.js não encontrado"
         exit 1
     fi
-    
+
     success "Dependências OK"
 }
 
 run_tests_smart() {
     log "Executando testes inteligentes..."
-    
+
     # Detectar quais arquivos mudaram (funciona mesmo em repositório novo/sem commits)
     CHANGED_FILES=$(git status --porcelain | awk '{print $2}')
-    
+
     if echo "$CHANGED_FILES" | grep -q "^api/"; then
         log "Mudanças em API detectadas - executando testes de API"
-        npm run test:api 2>&1 | tee "$RESULTS_DIR/latest-api-run.log"
+        npm run test:api:safe 2>&1 | tee "$RESULTS_DIR/latest-api-run.log"
     elif echo "$CHANGED_FILES" | grep -q "^src/"; then
         log "Mudanças em frontend detectadas - executando testes unitários"
-        npm run test:run 2>&1 | tee "$RESULTS_DIR/latest-unit-run.log"
+        npm run test:run:safe 2>&1 | tee "$RESULTS_DIR/latest-unit-run.log"
     elif echo "$CHANGED_FILES" | grep -q "^chrome-extension-pje/"; then
         log "Mudanças em extensão Chrome detectadas - executando testes da extensão"
         npm run test:chrome 2>&1 | tee "$RESULTS_DIR/latest-chrome-run.log"
     else
         log "Executando todos os testes..."
-        npm run test:run 2>&1 | tee "$RESULTS_DIR/latest-all-run.log"
+        npm run test:run:safe 2>&1 | tee "$RESULTS_DIR/latest-all-run.log"
     fi
 }
 
 run_tests_unit() {
     log "Executando testes unitários..."
-    npm run test:run 2>&1 | tee "$RESULTS_DIR/latest-unit-run.log"
+    npm run test:run:safe 2>&1 | tee "$RESULTS_DIR/latest-unit-run.log"
 }
 
 run_tests_api() {
     log "Executando testes de API..."
-    npm run test:api 2>&1 | tee "$RESULTS_DIR/latest-api-run.log"
+    npm run test:api:safe 2>&1 | tee "$RESULTS_DIR/latest-api-run.log"
 }
 
 run_tests_all() {
     log "Executando todos os testes..."
-    npm run test:all 2>&1 | tee "$RESULTS_DIR/latest-all-run.log"
+    npm run test:all:safe 2>&1 | tee "$RESULTS_DIR/latest-all-run.log"
 }
 
 send_to_copilot() {
     local status=$1
     local message=$2
-    
+
     log "Enviando resultados para Copilot..."
-    
+
     cat > "$COPILOT_DIR/test-notification.json" <<EOF
 {
   "type": "test-watcher",
@@ -124,7 +124,7 @@ send_to_copilot() {
   "action_required": $([ "$status" = "failed" ] && echo "true" || echo "false")
 }
 EOF
-    
+
     if [ "$status" = "failed" ]; then
         error "$message"
         echo -e "\n💬 ${YELLOW}Peça ajuda ao Copilot:${NC}"
@@ -136,18 +136,18 @@ EOF
 
 watch_and_run() {
     print_header
-    
+
     log "Modo: $WATCH_MODE"
     log "Debounce: ${DEBOUNCE_TIME}s"
     log "Auto-report: $AUTO_REPORT"
     echo ""
-    
+
     check_dependencies
-    
+
     log "Iniciando monitoramento de testes..."
     log "Pressione Ctrl+C para parar"
     echo ""
-    
+
     # Executar testes inicialmente
     case "$WATCH_MODE" in
         smart)
@@ -167,14 +167,14 @@ watch_and_run() {
             exit 1
             ;;
     esac
-    
+
     # Verificar resultado inicial
     if [ $? -eq 0 ]; then
         send_to_copilot "passed" "✅ Testes iniciais passaram"
     else
         send_to_copilot "failed" "❌ Testes iniciais falharam"
     fi
-    
+
     # Watch mode contínuo
     if [ "$WATCH_MODE" = "unit" ]; then
         log "Iniciando watch mode contínuo..."
@@ -191,21 +191,21 @@ watch_and_run() {
         # Watch manual com inotify (se disponível) ou polling
         if command -v inotifywait &> /dev/null; then
             log "Usando inotifywait para monitoramento em tempo real"
-            
+
             inotifywait -m -r -e modify,create,delete \
                 --exclude '(node_modules|\.git|dist|coverage|\.next)' \
                 "$PROJECT_ROOT" | while read -r directory event filename; do
-                
+
                 if [[ "$filename" =~ \.(ts|tsx|js|jsx)$ ]]; then
                     log "Mudança detectada: $directory$filename"
                     sleep "$DEBOUNCE_TIME"
-                    
+
                     case "$WATCH_MODE" in
                         smart) run_tests_smart ;;
                         api) run_tests_api ;;
                         all) run_tests_all ;;
                     esac
-                    
+
                     if [ $? -eq 0 ]; then
                         send_to_copilot "passed" "✅ Testes passaram após mudança"
                     else
@@ -215,17 +215,17 @@ watch_and_run() {
             done
         else
             warning "inotifywait não disponível - usando polling a cada 30s"
-            
+
             while true; do
                 sleep 30
-                
+
                 case "$WATCH_MODE" in
                     smart) run_tests_smart ;;
                     unit) run_tests_unit ;;
                     api) run_tests_api ;;
                     all) run_tests_all ;;
                 esac
-                
+
                 if [ $? -eq 0 ]; then
                     send_to_copilot "passed" "✅ Testes passaram (polling)"
                 else

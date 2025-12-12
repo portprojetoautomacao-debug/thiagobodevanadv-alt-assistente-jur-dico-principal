@@ -4,7 +4,7 @@ import {
   handleCronHealthRequest,
   handleSparkLoaded,
   handleWatchdogRequest,
-} from "./lib/status-logic.js";
+} from "./lib/status-logic";
 
 /**
  * Configura headers CORS

@@ -2,7 +2,17 @@ import { beforeAll, expect, test } from "vitest";
 import handler from "../../api/agents-v2";
 import { HYBRID_AGENTS_DISABLED } from "../../src/lib/hybrid-agents-integration";
 
-function makeReq(body: any, apiKey = "test-autogen-key") {
+interface MockResponse {
+  statusCode?: number;
+  payload?: Record<string, unknown>;
+  headers: Record<string, string>;
+  setHeader: (k: string, v: string) => MockResponse;
+  status: (code: number) => MockResponse;
+  json: (payload: Record<string, unknown>) => MockResponse;
+  end: () => MockResponse;
+}
+
+function makeReq(body: Record<string, unknown>, apiKey = "test-autogen-key") {
   return {
     method: "POST",
     headers: {
@@ -10,20 +20,22 @@ function makeReq(body: any, apiKey = "test-autogen-key") {
       "content-type": "application/json",
     },
     body,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
 
-function makeRes() {
-  const result: any = {};
+function makeRes(): MockResponse {
+  const result = {} as MockResponse;
   result.headers = {};
   result.setHeader = (k: string, v: string) => {
     result.headers[k] = v;
+    return result;
   };
   result.status = (code: number) => {
     result.statusCode = code;
     return result;
   };
-  result.json = (payload: any) => {
+  result.json = (payload: Record<string, unknown>) => {
     result.payload = payload;
     return result;
   };
@@ -38,7 +50,8 @@ beforeAll(() => {
 test("POST /api/agents-v2 executa agente LangGraph com sucesso", async () => {
   const req = makeReq({ agentId: "harvey", message: "Analisar caso com prazo curto" });
   const res = makeRes();
-  await handler(req, res);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await handler(req as any, res as any);
 
   if (HYBRID_AGENTS_DISABLED) {
     expect(res.statusCode).toBe(400);
@@ -48,8 +61,9 @@ test("POST /api/agents-v2 executa agente LangGraph com sucesso", async () => {
 
   expect(res.statusCode).toBe(200);
   expect(res.payload).toBeDefined();
-  expect(res.payload.success).toBe(true);
-  expect(res.payload.data).toBeDefined();
-  expect(res.payload.mode).toBe("langgraph");
-  expect(res.payload.data.langGraphResult?.completed).toBe(true);
+  expect(res.payload?.success).toBe(true);
+  expect(res.payload?.data).toBeDefined();
+  expect(res.payload?.mode).toBe("langgraph");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((res.payload?.data as any)?.langGraphResult?.completed).toBe(true);
 });
