@@ -57,7 +57,30 @@ export function useHybridAgents(options: UseHybridAgentsOptions = {}) {
    * Atualiza estatísticas
    */
   const refreshStats = useCallback(() => {
-    setStats(getHybridStats());
+    const newStats = getHybridStats();
+    // Avoid updating state if nothing changed to prevent unnecessary re-renders
+    setStats((prev) => {
+      try {
+        const prevKeys = Object.keys(prev || {});
+        const newKeys = Object.keys(newStats || {});
+        if (prevKeys.length === newKeys.length) {
+          // shallow compare values for performance
+          let same = true;
+          for (const k of newKeys) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if ((prev as any)[k] !== (newStats as any)[k]) {
+              same = false;
+              break;
+            }
+          }
+          if (same) return prev;
+        }
+      } catch (e) {
+        // on any error, update to be safe
+      }
+      return newStats;
+    });
   }, []);
 
   /**

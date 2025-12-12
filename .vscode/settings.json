@@ -219,5 +219,6 @@
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
   "chat.tools.terminal.autoReplyToPrompts": true,
-  "github-actions.workflows.pinned.workflows": [".github/workflows/ci.yml"]
+  "github-actions.workflows.pinned.workflows": [".github/workflows/ci.yml"],
+  "editor.codeActions.triggerOnFocusChange": true
 }

@@ -34,7 +34,7 @@ jobs:
     name: Agent Flow Integration
     runs-on: ubuntu-latest
     env:
-      DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN }}
+      DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN || 'test-token' }}
       DSPY_PORT: 8765
     timeout-minutes: 25
     permissions:
@@ -74,7 +74,7 @@ jobs:
 
       - name: Start DSPy bridge (FastAPI) in background
         env:
-          DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN }}
+          DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN || 'test-token' }}
         run: |
           export DSPY_API_TOKEN=${DSPY_API_TOKEN:-test-token}
           export DSPY_PORT=8765

@@ -134,7 +134,7 @@ describe("AgentCommunicationHub - Stress Tests", () => {
 
     expect(results).toHaveLength(1000);
     expect(results.every((msg) => msg.id && msg.timestamp)).toBe(true);
-    
+
     const messages = (communicationHub as unknown as { messages: unknown[] }).messages;
     expect(messages.length).toBeGreaterThanOrEqual(1000);
   });
@@ -154,7 +154,7 @@ describe("AgentCommunicationHub - Stress Tests", () => {
     const size = (
       communicationHub as unknown as { contexts: { size: () => number } }
     ).contexts.size();
-    
+
     // Deve respeitar MAX_CONTEXTS=500
     expect(size).toBeLessThanOrEqual(500);
   });
@@ -194,9 +194,7 @@ describe("AgentCommunicationHub - Stress Tests", () => {
     await Promise.all(operations);
 
     const messages = (communicationHub as unknown as { messages: unknown[] }).messages;
-    const contexts = (
-      communicationHub as unknown as { contexts: { size: () => number } }
-    ).contexts;
+    const contexts = (communicationHub as unknown as { contexts: { size: () => number } }).contexts;
 
     expect(messages.length).toBeGreaterThanOrEqual(200);
     expect(contexts.size()).toBeGreaterThanOrEqual(100); // At least 100 contexts

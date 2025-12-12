@@ -201,6 +201,8 @@ export interface AgentTask {
   // CLEANUP: TTL automático
   /** Data de expiração para cleanup automático (ISO) */
   expiresAt?: string;
+  /** Version number for optimistic concurrency control */
+  version?: number;
 }
 
 /**
@@ -296,6 +298,8 @@ export function agendarRetryTarefa(task: AgentTask): AgentTask {
       completedAt: task.completedAt ?? nowIso, // Preserva se já existir
       error: `Máximo de ${maxRetries} tentativas excedido`,
       expiresAt,
+      // optimistic concurrency: bump version so external store can detect updates
+      version: (task.version ?? 0) + 1,
     };
   }
 
@@ -310,6 +314,7 @@ export function agendarRetryTarefa(task: AgentTask): AgentTask {
     atualizadoEm: nowIso,
     // ✅ Preserva error anterior se houver
     error: task.error ?? `Retry agendado - tentativa ${retryCount}/${maxRetries}`,
+    version: (task.version ?? 0) + 1,
   };
 }
 

@@ -177,63 +177,75 @@ class AgentCommunicationHub {
 
   // Lock para race conditions
   private messageLock = false;
-  private lockQueue: Array<() => void> = [];
+  private lockQueue: Array<{
+    resolve: () => void;
+    reject: (err: Error) => void;
+    timer: NodeJS.Timeout;
+  }> = [];
   // Context lock
   private contextLock = false;
-  private contextLockQueue: Array<() => void> = [];
+  private contextLockQueue: Array<{
+    resolve: () => void;
+    reject: (err: Error) => void;
+    timer: NodeJS.Timeout;
+  }> = [];
 
   private async acquireLock(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        const index = this.lockQueue.indexOf(resolve);
-        if (index > -1) this.lockQueue.splice(index, 1);
+    if (!this.messageLock) {
+      this.messageLock = true;
+      return;
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const idx = this.lockQueue.findIndex((it) => it.resolve === resolve);
+        if (idx > -1) this.lockQueue.splice(idx, 1);
         reject(new Error("Lock acquisition timeout"));
       }, LOCK_TIMEOUT_MS);
 
-      const tryAcquire = () => {
-        if (!this.messageLock) {
-          clearTimeout(timeout);
-          this.messageLock = true;
-          resolve();
-        } else {
-          this.lockQueue.push(tryAcquire);
-        }
-      };
-      tryAcquire();
+      this.lockQueue.push({ resolve, reject, timer });
     });
   }
 
   private releaseLock(): void {
-    this.messageLock = false;
     const next = this.lockQueue.shift();
-    if (next) next();
+    if (next) {
+      clearTimeout(next.timer);
+      // Grant lock to next waiter before resolving
+      this.messageLock = true;
+      next.resolve();
+    } else {
+      this.messageLock = false;
+    }
   }
 
   private async acquireContextLock(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        const index = this.contextLockQueue.indexOf(resolve);
-        if (index > -1) this.contextLockQueue.splice(index, 1);
+    if (!this.contextLock) {
+      this.contextLock = true;
+      return;
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const idx = this.contextLockQueue.findIndex((it) => it.resolve === resolve);
+        if (idx > -1) this.contextLockQueue.splice(idx, 1);
         reject(new Error("Context lock acquisition timeout"));
       }, LOCK_TIMEOUT_MS);
 
-      const tryAcquire = () => {
-        if (!this.contextLock) {
-          clearTimeout(timeout);
-          this.contextLock = true;
-          resolve();
-        } else {
-          this.contextLockQueue.push(tryAcquire);
-        }
-      };
-      tryAcquire();
+      this.contextLockQueue.push({ resolve, reject, timer });
     });
   }
 
   private releaseContextLock(): void {
-    this.contextLock = false;
     const next = this.contextLockQueue.shift();
-    if (next) next();
+    if (next) {
+      clearTimeout(next.timer);
+      // Grant lock to next waiter before resolving
+      this.contextLock = true;
+      next.resolve();
+    } else {
+      this.contextLock = false;
+    }
   }
 
   private sanitizeMessageContent(content: string): string {

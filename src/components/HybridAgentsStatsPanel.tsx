@@ -10,13 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useHybridAgents } from "@/hooks/use-hybrid-agents";
 import { Activity, BarChart3, Clock, Cpu, RefreshCw, TrendingUp, Zap } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export function HybridAgentsStatsPanel() {
   const { stats, refreshStats, getHybridAgents } = useHybridAgents();
 
-  // Obter lista de agentes
-  const agents = getHybridAgents();
+  // Obter lista de agentes (memoized para evitar referências novas em cada render)
+  const agents = useMemo(() => getHybridAgents(), [getHybridAgents]);
 
   // Atualizar estatísticas a cada 5 segundos
   useEffect(() => {
@@ -33,11 +33,12 @@ export function HybridAgentsStatsPanel() {
   const hybridPercentage =
     stats.totalExecutions > 0 ? (stats.hybridExecutions / stats.totalExecutions) * 100 : 0;
 
-  const successPercentage = stats.successRate * 100;
+  const successPercentage = (stats.successRate || 0) * 100;
 
-  const hybridAgentsCount = agents.filter(
-    (a: { hasHybridVersion: boolean }) => a.hasHybridVersion
-  ).length;
+  const hybridAgentsCount = useMemo(
+    () => agents.filter((a: { hasHybridVersion: boolean }) => a.hasHybridVersion).length,
+    [agents]
+  );
   const totalAgentsCount = agents.length;
 
   return (
