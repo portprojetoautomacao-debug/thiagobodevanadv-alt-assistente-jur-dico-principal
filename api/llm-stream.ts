@@ -8,6 +8,7 @@
  * Retorna Server-Sent Events (SSE) para streaming em tempo real
  *
  * 🔥 SENTRY AI MONITORING V2: Backend instrumentado com spans server-side
+ * ✅ CAPTURA usageMetadata do Gemini para monitoramento de custos
  */
 
 import * as Sentry from "@sentry/node";
@@ -33,6 +34,30 @@ interface SSEEvent {
   content?: string;
   provider?: string;
   message?: string;
+  // 🔥 NOVO: Métricas de tokens
+  tokens?: {
+    prompt?: number;
+    completion?: number;
+    total?: number;
+  };
+}
+
+// 🔥 NOVO: Estrutura de chunk do Gemini
+interface GeminiStreamChunk {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{ text?: string }>;
+      role?: string;
+    };
+    index?: number;
+  }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
+  modelVersion?: string;
+  responseId?: string;
 }
 
 // Configuração de runtime para Edge (suporta streaming melhor)
@@ -149,19 +174,39 @@ function processOpenAILine(line: string): string | null {
 }
 
 /**
- * Processa linha de streaming do Gemini
+ * 🔥 MELHORADO: Processa linha de streaming do Gemini + captura tokens
  */
-function processGeminiLine(line: string): string | null {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
+interface GeminiLineResult {
+  text: string | null;
+  tokens?: {
+    prompt?: number;
+    completion?: number;
+    total?: number;
+  };
+}
 
-  if (!trimmed.startsWith("data: ")) return null;
+function processGeminiLine(line: string): GeminiLineResult {
+  const trimmed = line.trim();
+  if (!trimmed || !trimmed.startsWith("data: ")) {
+    return { text: null };
+  }
 
   try {
-    const json = JSON.parse(trimmed.slice(6));
-    return json.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    const json: GeminiStreamChunk = JSON.parse(trimmed.slice(6));
+
+    // Extrair texto
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text || null;
+
+    // 🔥 NOVO: Extrair métricas de tokens
+    const tokens = json.usageMetadata ? {
+      prompt: json.usageMetadata.promptTokenCount,
+      completion: json.usageMetadata.candidatesTokenCount,
+      total: json.usageMetadata.totalTokenCount,
+    } : undefined;
+
+    return { text, tokens };
   } catch {
-    return null;
+    return { text: null };
   }
 }
 
@@ -190,6 +235,65 @@ async function processStream(
         sendEvent({ type: "content", content });
       }
     }
+  }
+}
+
+/**
+ * 🔥 NOVO: Processa stream do Gemini com captura de tokens
+ */
+async function processGeminiStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  sendEvent: (data: SSEEvent) => void,
+  span?: Sentry.Span
+): Promise<void> {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let lastTokens: { prompt?: number; completion?: number; total?: number } | undefined;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const result = processGeminiLine(line);
+      
+      if (result.text) {
+        sendEvent({ 
+          type: "content", 
+          content: result.text,
+          tokens: result.tokens, // 🔥 Enviar tokens ao cliente
+        });
+      }
+
+      // 🔥 Armazenar último valor de tokens (será o final)
+      if (result.tokens) {
+        lastTokens = result.tokens;
+      }
+    }
+  }
+
+  // 🔥 Adicionar métricas finais ao Sentry span
+  if (span && lastTokens) {
+    span.setAttribute("gen_ai.usage.input_tokens", lastTokens.prompt || 0);
+    span.setAttribute("gen_ai.usage.output_tokens", lastTokens.completion || 0);
+    span.setAttribute("gen_ai.usage.total_tokens", lastTokens.total || 0);
+
+    // 🔥 Calcular custo (Gemini 2.5 Pro pricing)
+    // Input: $0.001875 per 1K tokens
+    // Output: $0.00375 per 1K tokens
+    const inputCost = ((lastTokens.prompt || 0) / 1000) * 0.001875;
+    const outputCost = ((lastTokens.completion || 0) / 1000) * 0.00375;
+    const totalCost = inputCost + outputCost;
+    
+    span.setAttribute("gen_ai.cost.input", inputCost);
+    span.setAttribute("gen_ai.cost.output", outputCost);
+    span.setAttribute("gen_ai.cost.total", totalCost);
+
+    console.log(`[Gemini] Tokens: ${lastTokens.total} | Custo: $${totalCost.toFixed(4)}`);
   }
 }
 
@@ -241,7 +345,7 @@ async function streamOpenAI(
 }
 
 /**
- * Executa streaming com Gemini
+ * 🔥 MELHORADO: Executa streaming com Gemini + captura tokens
  * 🔥 INSTRUMENTADO COM SENTRY AI MONITORING V2
  */
 async function streamGemini(
@@ -279,7 +383,8 @@ async function streamGemini(
     const reader = response.body?.getReader();
     if (!reader) throw new Error("No reader available");
 
-    await processStream(reader, processGeminiLine, sendEvent);
+    // 🔥 NOVO: Usar processador com captura de tokens
+    await processGeminiStream(reader, sendEvent, span);
 
     // Adicionar atributos de conclusão
     span?.setAttribute("stream.completed", true);

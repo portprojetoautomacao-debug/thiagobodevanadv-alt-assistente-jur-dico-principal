@@ -380,6 +380,7 @@ export default function HarveySpecterChat({
   const {
     streamingContent,
     isStreaming,
+    tokens, // 🔥 NOVO: Métricas de tokens
     streamChat,
     cancelStream,
     reset: resetStreaming,
@@ -401,6 +402,10 @@ export default function HarveySpecterChat({
     onError: (error) => {
       console.error("[Harvey] Erro:", error);
       toast.error("Erro ao processar resposta");
+    },
+    onTokens: (metrics) => {
+      // 🔥 NOVO: Log de métricas de tokens
+      console.log(`[Harvey] Tokens: ${metrics.total} | Custo: $${metrics.cost.toFixed(4)}`);
     },
   });
 
@@ -911,11 +916,31 @@ Regras:
           )}
         </div>
 
-        {isStreaming && (
-          <p className="text-xs text-center text-muted-foreground mt-2 animate-pulse">
-            ✨ Harvey está pensando...
-          </p>
-        )}
+        {/* 🔥 NOVO: Exibir status de streaming + métricas de tokens */}
+        <div className="mt-2 flex items-center justify-between text-xs">
+          {isStreaming ? (
+            <p className="text-muted-foreground animate-pulse">✨ Harvey está pensando...</p>
+          ) : (
+            <div className="text-muted-foreground">
+              {tokens && (
+                <span>
+                  📊 Tokens: {tokens.total.toLocaleString()} • Custo: ${tokens.cost.toFixed(4)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {tokens && !isStreaming && (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span title="Tokens de entrada (prompt)">
+                ↗ {tokens.prompt.toLocaleString()}
+              </span>
+              <span title="Tokens de saída (resposta)">
+                ↙ {tokens.completion.toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

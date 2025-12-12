@@ -235,4 +235,3 @@ export function validateExpedientes(data: unknown) {
     if (err instanceof z.ZodError) return { success: false, error: handleValidationError(err) };
     return { success: false, error: { ok: false, error: "Unknown validation error" } };
   }
-}

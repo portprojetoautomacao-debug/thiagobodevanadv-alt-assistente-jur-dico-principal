@@ -3,8 +3,10 @@
  *
  * Permite receber respostas de IA em tempo real via Server-Sent Events (SSE)
  *
+ * 🔥 NOVO: Captura métricas de tokens do Gemini para monitoramento de custos
+ *
  * @example
- * const { streamingContent, isStreaming, error, streamChat } = useAIStreaming()
+ * const { streamingContent, isStreaming, error, tokens, streamChat } = useAIStreaming()
  *
  * // Iniciar streaming
  * await streamChat([
@@ -13,6 +15,7 @@
  * ])
  *
  * // streamingContent será atualizado em tempo real
+ * // tokens conterá: { prompt: 150, completion: 300, total: 450 }
  */
 
 import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
@@ -28,16 +31,31 @@ interface StreamEvent {
   content?: string;
   provider?: string;
   message?: string;
+  // 🔥 NOVO: Métricas de tokens
+  tokens?: {
+    prompt?: number;
+    completion?: number;
+    total?: number;
+  };
+}
+
+// 🔥 NOVO: Interface para métricas de tokens
+export interface TokenMetrics {
+  prompt: number;
+  completion: number;
+  total: number;
+  cost: number; // Custo estimado em USD
 }
 
 interface UseAIStreamingOptions {
   onChunk?: (chunk: string) => void;
   onComplete?: (fullContent: string, provider: string) => void;
   onError?: (error: string) => void;
+  onTokens?: (tokens: TokenMetrics) => void; // 🔥 NOVO: Callback para métricas
   model?: string;
   temperature?: number;
   maxTokens?: number;
-  // Novos parâmetros para Sentry AI Monitoring
+  // Parâmetros para Sentry AI Monitoring
   agentId?: string;
   sessionId?: string;
   conversationTurn?: number;
@@ -48,9 +66,37 @@ interface UseAIStreamingReturn {
   isStreaming: boolean;
   error: string | null;
   provider: string | null;
+  tokens: TokenMetrics | null; // 🔥 NOVO: Métricas de tokens
   streamChat: (messages: Message[]) => Promise<string>;
   cancelStream: () => void;
   reset: () => void;
+}
+
+/**
+ * 🔥 NOVO: Calcula custo baseado em tokens e modelo
+ */
+function calculateCost(tokens: { prompt?: number; completion?: number }, model: string): number {
+  const promptTokens = tokens.prompt || 0;
+  const completionTokens = tokens.completion || 0;
+
+  // Pricing Gemini 2.5 Pro (por 1K tokens)
+  const GEMINI_PRICING = {
+    input: 0.001875,  // $0.001875 per 1K input tokens
+    output: 0.00375,  // $0.00375 per 1K output tokens
+  };
+
+  // Pricing GPT-4o-mini (por 1K tokens)
+  const GPT_PRICING = {
+    input: 0.00015,   // $0.00015 per 1K input tokens
+    output: 0.0006,   // $0.0006 per 1K output tokens
+  };
+
+  const pricing = model.includes("gpt") ? GPT_PRICING : GEMINI_PRICING;
+
+  const inputCost = (promptTokens / 1000) * pricing.input;
+  const outputCost = (completionTokens / 1000) * pricing.output;
+
+  return inputCost + outputCost;
 }
 
 /**
@@ -73,15 +119,33 @@ function parseEventLine(line: string): StreamEvent | null {
 function processStreamEvent(
   event: StreamEvent,
   contentRef: { current: string },
+  tokensRef: { current: TokenMetrics | null }, // 🔥 NOVO
   setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
   setProvider: React.Dispatch<React.SetStateAction<string | null>>,
+  setTokens: React.Dispatch<React.SetStateAction<TokenMetrics | null>>, // 🔥 NOVO
+  model: string, // 🔥 NOVO
   onChunk?: (chunk: string) => void,
-  onComplete?: (fullContent: string, provider: string) => void
+  onComplete?: (fullContent: string, provider: string) => void,
+  onTokens?: (tokens: TokenMetrics) => void // 🔥 NOVO
 ): void {
   if (event.type === "content" && event.content) {
     contentRef.current += event.content;
     setStreamingContent(contentRef.current);
     onChunk?.(event.content);
+
+    // 🔥 NOVO: Atualizar métricas de tokens
+    if (event.tokens?.total) {
+      const metrics: TokenMetrics = {
+        prompt: event.tokens.prompt || 0,
+        completion: event.tokens.completion || 0,
+        total: event.tokens.total,
+        cost: calculateCost(event.tokens, model),
+      };
+      
+      tokensRef.current = metrics;
+      setTokens(metrics);
+      onTokens?.(metrics);
+    }
   } else if (event.type === "done") {
     setProvider(event.provider || null);
     onComplete?.(contentRef.current, event.provider || "unknown");
@@ -96,10 +160,14 @@ function processStreamEvent(
 async function processStreamResponse(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   contentRef: { current: string },
+  tokensRef: { current: TokenMetrics | null }, // 🔥 NOVO
   setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
   setProvider: React.Dispatch<React.SetStateAction<string | null>>,
+  setTokens: React.Dispatch<React.SetStateAction<TokenMetrics | null>>, // 🔥 NOVO
+  model: string, // 🔥 NOVO
   onChunk?: (chunk: string) => void,
-  onComplete?: (fullContent: string, provider: string) => void
+  onComplete?: (fullContent: string, provider: string) => void,
+  onTokens?: (tokens: TokenMetrics) => void // 🔥 NOVO
 ): Promise<void> {
   const decoder = new TextDecoder();
   let buffer = "";
@@ -115,7 +183,18 @@ async function processStreamResponse(
     for (const line of lines) {
       const event = parseEventLine(line);
       if (!event) continue;
-      processStreamEvent(event, contentRef, setStreamingContent, setProvider, onChunk, onComplete);
+      processStreamEvent(
+        event,
+        contentRef,
+        tokensRef,
+        setStreamingContent,
+        setProvider,
+        setTokens,
+        model,
+        onChunk,
+        onComplete,
+        onTokens
+      );
     }
   }
 }
@@ -125,14 +204,17 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<TokenMetrics | null>(null); // 🔥 NOVO
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const contentRef = useRef("");
+  const tokensRef = useRef<TokenMetrics | null>(null); // 🔥 NOVO
 
   const {
     onChunk,
     onComplete,
     onError,
+    onTokens, // 🔥 NOVO
     model = "gpt-4o-mini",
     temperature = 0.7,
     maxTokens = 2000,
@@ -145,7 +227,9 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
     setStreamingContent("");
     setError(null);
     setProvider(null);
+    setTokens(null); // 🔥 NOVO
     contentRef.current = "";
+    tokensRef.current = null; // 🔥 NOVO
   }, []);
 
   const cancelStream = useCallback(() => {
@@ -164,6 +248,7 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
 
       setIsStreaming(true);
       contentRef.current = "";
+      tokensRef.current = null; // 🔥 NOVO
 
       abortControllerRef.current = new AbortController();
 
@@ -214,15 +299,26 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
             await processStreamResponse(
               reader,
               contentRef,
+              tokensRef,
               setStreamingContent,
               setProvider,
+              setTokens,
+              model,
               onChunk,
-              onComplete
+              onComplete,
+              onTokens
             );
 
-            // Adicionar atributos de resultado ao span
+            // 🔥 Adicionar métricas de tokens ao span (se disponível)
+            if (tokensRef.current) {
+              span?.setAttribute("gen_ai.usage.input_tokens", tokensRef.current.prompt);
+              span?.setAttribute("gen_ai.usage.output_tokens", tokensRef.current.completion);
+              span?.setAttribute("gen_ai.usage.total_tokens", tokensRef.current.total);
+              span?.setAttribute("gen_ai.cost.total", tokensRef.current.cost);
+            }
+
+            // Adicionar resposta ao span
             span?.setAttribute("gen_ai.response.text", JSON.stringify([contentRef.current]));
-            // Nota: tokens serão adicionados pelo backend quando disponível
 
             return contentRef.current;
           }
@@ -251,6 +347,7 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
       onChunk,
       onComplete,
       onError,
+      onTokens,
       cancelStream,
       reset,
       sessionId,
@@ -264,6 +361,7 @@ export function useAIStreaming(options: UseAIStreamingOptions = {}): UseAIStream
     isStreaming,
     error,
     provider,
+    tokens, // 🔥 NOVO: Exportar métricas de tokens
     streamChat,
     cancelStream,
     reset,
