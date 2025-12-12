@@ -135,7 +135,14 @@ class PJeContentScript {
         const documento = this.documentExtractor.extractDocumento();
         if (documento) {
           console.log("[PJe Sync] Documento detectado:", documento.tipo);
-          await this.sendToBackground("SYNC_DOCUMENTO", documento);
+
+          // Sanitiza documento antes de enviar: truncar conteúdo e remover PII sensível
+          /* eslint-disable @typescript-eslint/no-explicit-any */
+          import { sanitizeDocumentoForSync } from "./utils/document-sanitizer";
+
+          const sanitized = sanitizeDocumentoForSync(documento);
+
+          await this.sendToBackground("SYNC_DOCUMENTO", sanitized);
         }
       }
 

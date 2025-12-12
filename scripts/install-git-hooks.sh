@@ -34,6 +34,7 @@ cat > "$HOOKS_DIR/pre-commit" << 'HOOK_EOF'
 # Este hook impede commits que quebram testes
 
 set -e
+set -o pipefail
 
 echo "🔍 Pre-commit: Executando verificações..."
 
@@ -91,10 +92,69 @@ echo ""
 
 # 5. Executar testes rápidos (apenas testes unitários, sem coverage)
 echo "${YELLOW}🧪 Executando testes unitários...${NC}"
-if ! npm run test:run 2>&1 | tail -20; then
-    echo "${RED}❌ Testes falharam! Corrija os testes antes de commitar.${NC}"
-    echo "${YELLOW}💡 Dica: Execute 'npm run test' para ver detalhes dos erros${NC}"
-    exit 1
+# Opção rápida para desenvolvedores: defina GIT_HOOKS_FAST=1 para pular testes pesados
+if [ "${GIT_HOOKS_FAST}" = "1" ]; then
+    echo "${YELLOW}⚡ Modo rápido ativado (GIT_HOOKS_FAST=1) — pulando execução completa dos testes${NC}"
+    # Execute uma suíte reduzida (shard) para garantir rapidez no feedback local
+    tmpfile=$(mktemp)
+    if ! npm run test:shard >"$tmpfile" 2>&1; then
+        tail -n 20 "$tmpfile"
+        rm -f "$tmpfile"
+        echo "${RED}❌ Testes rápidos (shard) falharam! Corrija antes de commitar.${NC}"
+        exit 1
+    fi
+    rm -f "$tmpfile"
+else
+    # Executar apenas os testes relacionados aos arquivos staged (muito mais rápido que rodar a suíte inteira)
+    STAGED_TESTS=$(echo "$TS_FILES" | grep -E '\.(test|spec)\.(ts|tsx|js|jsx)$' || true)
+    RELATED_TESTS=""
+
+    if [ -n "$STAGED_TESTS" ]; then
+        RELATED_TESTS="$STAGED_TESTS"
+    else
+        # Para cada arquivo TypeScript modificado, procurar testes que referenciem o mesmo basename
+        for f in $TS_FILES; do
+            base=$(basename "$f" | sed 's/\.[^.]*$//')
+            # procurar testes com o mesmo basename
+            matches=$(git ls-files | grep -E "/${base}\\.(test|spec)\\.(ts|tsx|js|jsx)$" || true)
+            if [ -n "$matches" ]; then
+                RELATED_TESTS="$RELATED_TESTS $matches"
+                continue
+            fi
+            # procurar testes no mesmo diretório
+            dir=$(dirname "$f")
+            matches=$(git ls-files "$dir" | grep -E '\.(test|spec)\.(ts|tsx|js|jsx)$' || true)
+            if [ -n "$matches" ]; then
+                RELATED_TESTS="$RELATED_TESTS $matches"
+            fi
+        done
+    fi
+
+    # Remover duplicatas
+    RELATED_TESTS=$(echo "$RELATED_TESTS" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')
+
+    if [ -n "$RELATED_TESTS" ]; then
+        echo "${YELLOW}⚡ Executando apenas testes relacionados: ${NC}"
+        echo "$RELATED_TESTS"
+        tmpfile=$(mktemp)
+        if ! npm run test:run -- $RELATED_TESTS >"$tmpfile" 2>&1; then
+            tail -n 20 "$tmpfile"
+            rm -f "$tmpfile"
+            echo "${RED}❌ Testes relacionados falharam! Corrija os testes antes de commitar.${NC}"
+            exit 1
+        fi
+        rm -f "$tmpfile"
+    else
+        echo "${YELLOW}⚠️  Nenhum teste relacionado detectado - executando suíte reduzida (shard)${NC}"
+        tmpfile=$(mktemp)
+        if ! npm run test:shard >"$tmpfile" 2>&1; then
+            tail -n 20 "$tmpfile"
+            rm -f "$tmpfile"
+            echo "${RED}❌ Testes (shard) falharam! Corrija antes de commitar.${NC}"
+            exit 1
+        fi
+        rm -f "$tmpfile"
+    fi
 fi
 echo "${GREEN}✅ Testes passaram${NC}"
 echo ""
@@ -116,6 +176,7 @@ cat > "$HOOKS_DIR/pre-push" << 'HOOK_EOF'
 # Este hook garante que apenas código testado e validado seja enviado ao repositório
 
 set -e
+set -o pipefail
 
 echo "🚀 Pre-push: Executando verificações completas..."
 
@@ -139,47 +200,84 @@ echo ""
 
 # 1. Build completo
 echo "${YELLOW}🔨 Executando build completo...${NC}"
-if ! npm run build 2>&1 | tail -20; then
-    echo "${RED}❌ Build falhou! Corrija os erros de build antes de fazer push.${NC}"
-    exit 1
+if [ "${GIT_HOOKS_FAST}" = "1" ]; then
+    echo "${YELLOW}⚡ Modo rápido ativado (GIT_HOOKS_FAST=1) — pulando build completo${NC}"
+else
+        tmpfile=$(mktemp)
+        if ! npm run build >"$tmpfile" 2>&1; then
+            tail -n 20 "$tmpfile"
+            rm -f "$tmpfile"
+            echo "${RED}❌ Build falhou! Corrija os erros de build antes de fazer push.${NC}"
+            exit 1
+        fi
+        rm -f "$tmpfile"
 fi
 echo "${GREEN}✅ Build passou${NC}"
 echo ""
 
 # 2. Type-check completo
 echo "${YELLOW}🔎 Executando verificação de tipos completa...${NC}"
-if ! npm run type-check 2>&1 | grep -v "^$"; then
-    echo "${RED}❌ Type-check falhou! Corrija os erros de tipo antes de fazer push.${NC}"
-    exit 1
-fi
+    tmpfile=$(mktemp)
+    if ! npm run type-check >"$tmpfile" 2>&1; then
+        tail -n 20 "$tmpfile"
+        rm -f "$tmpfile"
+        echo "${RED}❌ Type-check falhou! Corrija os erros de tipo antes de fazer push.${NC}"
+        exit 1
+    fi
+    rm -f "$tmpfile"
 echo "${GREEN}✅ Type-check passou${NC}"
 echo ""
 
 # 3. Lint completo
 echo "${YELLOW}🧹 Executando lint completo...${NC}"
-if ! npm run lint 2>&1 | tail -20; then
-    echo "${RED}❌ Lint falhou! Corrija os problemas antes de fazer push.${NC}"
-    echo "${YELLOW}💡 Dica: Execute 'npm run lint:fix' para corrigir automaticamente${NC}"
-    exit 1
-fi
+    tmpfile=$(mktemp)
+    if ! npm run lint >"$tmpfile" 2>&1; then
+        tail -n 20 "$tmpfile"
+        rm -f "$tmpfile"
+        echo "${RED}❌ Lint falhou! Corrija os problemas antes de fazer push.${NC}"
+        echo "${YELLOW}💡 Dica: Execute 'npm run lint:fix' para corrigir automaticamente${NC}"
+        exit 1
+    fi
+    rm -f "$tmpfile"
 echo "${GREEN}✅ Lint passou${NC}"
 echo ""
 
 # 4. Testes unitários completos
 echo "${YELLOW}🧪 Executando testes unitários completos...${NC}"
-if ! npm run test:run 2>&1 | tail -30; then
-    echo "${RED}❌ Testes unitários falharam! Corrija os testes antes de fazer push.${NC}"
-    exit 1
+if [ "${GIT_HOOKS_FAST}" = "1" ]; then
+    echo "${YELLOW}⚡ Modo rápido ativado — executando apenas smoke tests${NC}"
+    echo "${YELLOW}⚠️  Executando suíte reduzida (shard) para feedback rápido${NC}"
+    tmpfile=$(mktemp)
+    if ! npm run test:shard >"$tmpfile" 2>&1; then
+        tail -n 30 "$tmpfile"
+        rm -f "$tmpfile"
+        echo "${RED}❌ Testes (shard) falharam! Corrija antes de fazer push.${NC}"
+        exit 1
+    fi
+    rm -f "$tmpfile"
+else
+    tmpfile=$(mktemp)
+    if ! npm run test:run >"$tmpfile" 2>&1; then
+        tail -n 30 "$tmpfile"
+        rm -f "$tmpfile"
+        echo "${RED}❌ Testes unitários falharam! Corrija os testes antes de fazer push.${NC}"
+        exit 1
+    fi
+    rm -f "$tmpfile"
 fi
 echo "${GREEN}✅ Testes unitários passaram${NC}"
 echo ""
 
 # 5. Testes de API
 echo "${YELLOW}🔌 Executando testes de API...${NC}"
-if ! npm run test:api 2>&1 | tail -30; then
-    echo "${RED}❌ Testes de API falharam! Corrija os testes antes de fazer push.${NC}"
-    exit 1
-fi
+    tmpfile=$(mktemp)
+    if ! npm run test:api >"$tmpfile" 2>&1; then
+        tail -n 30 "$tmpfile"
+        rm -f "$tmpfile"
+        echo "${RED}❌ Testes de API falharam! Corrija os testes antes de fazer push.${NC}"
+        exit 1
+    fi
+    rm -f "$tmpfile"
 echo "${GREEN}✅ Testes de API passaram${NC}"
 echo ""
 

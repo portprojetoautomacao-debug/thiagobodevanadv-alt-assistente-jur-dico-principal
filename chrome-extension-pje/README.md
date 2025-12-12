@@ -99,17 +99,20 @@ Um badge aparece no canto superior direito do PJe:
 
 A extensão coleta apenas:
 
-- ✅ Dados públicos visíveis no painel do PJe
-- ✅ Informações processuais (número, partes, movimentos)
+- ✅ Dados públicos visíveis no painel do PJe (metadados de processo: número CNJ, classe, assunto, partes, vara, comarca, último movimento)
+- ✅ Expedientes/intimações (tipo, descrição, timestamp)
 - ✅ Estatísticas de uso (para melhorias)
+- ✅ Documentos: apenas metadados e um snippet TRUNCADO (máx. 500 caracteres) com PII removida/redigida (CPFs, emails, etc.). NÃO enviar o conteúdo completo.
 
 ### Dados NÃO Coletados
 
 - ❌ Senha do PJe
 - ❌ Certificado digital
-- ❌ Documentos anexados
+- ❌ PDFs/Documentos anexados completos
 - ❌ Petições completas
 - ❌ Dados de pagamento
+
+> Observação: todo snippet enviado passa por redaction automática (CPFs, emails são substituídos por [REDACTED_*]) e o backend só recebe esse snippet truncado — nunca o documento integral.
 
 ### Segurança
 

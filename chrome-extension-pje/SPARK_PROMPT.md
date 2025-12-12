@@ -12,7 +12,7 @@ Tecnologias e requisitos
 - Permissões: storage, alarms, notifications.
 - Host permissions: https://*.tjmg.jus.br/* e https://assistente-juridico-github.vercel.app/*
 - API: comunicação HTTPS com o backend. Usar header "X-API-Key" (API Key salva em chrome.storage.sync).
-- Sem coleta de dados sensíveis (senha, certificado, anexos). Documentar privacidade.
+- Sem coleta de dados sensíveis (senha, certificado, anexos, PDFs completos ou petições inteiras). A extensão NUNCA deve enviar o conteúdo completo de documentos ou anexos ao backend. Enviar apenas metadados e um snippet truncado (máx. 500 caracteres) com PII removida/redigida (ex.: CPFs e emails substituídos por [REDACTED_*]). Documentar exatamente quais campos são coletados e mostrar isso no popup/README.
 
 Funcionalidades esperadas
 1. Content Script (injetado em páginas PJe)

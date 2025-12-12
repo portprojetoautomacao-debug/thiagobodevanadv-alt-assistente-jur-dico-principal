@@ -172,6 +172,23 @@ Edite `.git/hooks/pre-push` para:
 
 ## 📊 Estatísticas
 
+## ⚡ Modo Rápido para Desenvolvedores
+
+Se os hooks estiverem demorando demais em máquinas locais (por exemplo, em commits pequenos), você pode ativar o modo rápido para reduzir o tempo de execução dos hooks:
+
+```bash
+# Pular execução completa de testes/build nas hooks (use com cautela)
+export GIT_HOOKS_FAST=1
+# então commit/push normalmente
+git commit -m "mensagem"
+```
+
+Com `GIT_HOOKS_FAST=1`:
+- O `pre-commit` executa apenas um smoke-test (se existir) ou os testes relacionados aos arquivos staged.
+- O `pre-push` pula o build completo e executa apenas testes rápidos (smoke/shard).
+
+Use o modo rápido durante desenvolvimento iterativo para ganhar produtividade, mas lembre-se de rodar a suíte completa antes de abrir PRs ou ao preparar releases.
+
 ### Economia de Tempo
 
 **Sem hooks**:
