@@ -179,6 +179,7 @@ jobs:
   performance-monitoring:
     name: "📈 Monitoramento de Performance"
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'performance' || github.event_name == 'schedule'
     needs: health-check
 
@@ -195,7 +196,10 @@ jobs:
       - name: 📦 Instalar dependências
         run: npm ci
 
-      - name: 🏃 Lighthouse Performance Audit
+      - name: � Instalar Chromium para Lighthouse
+        run: npx playwright install chromium --with-deps
+
+      - name: �🏃 Lighthouse Performance Audit
         run: |
           echo "🏃 Executando Lighthouse performance audit..."
 
