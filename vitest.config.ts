@@ -19,6 +19,9 @@ export default defineConfig({
       forks: {
         minForks: 1,
         maxForks: process.env.CI ? 2 : 1,
+        // Garantir que os processos filhos usem o mesmo limite/flags do V8.
+        // Isso reduz a chance de o worker terminar inesperadamente por heap padrão.
+        execArgv: ["--max-old-space-size=8192", "--expose-gc"],
       },
     },
     // Ajustar concorrência baseado em ambiente para estabilidade

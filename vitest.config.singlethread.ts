@@ -15,6 +15,7 @@ export default defineConfig({
       forks: {
         minForks: 1,
         maxForks: 1,
+        execArgv: ["--max-old-space-size=8192", "--expose-gc"],
       },
     },
     maxConcurrency: 1,
