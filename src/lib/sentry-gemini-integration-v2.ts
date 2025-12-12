@@ -26,8 +26,8 @@
  * @version 2.1.0 - Adicionado PII filtering para LGPD compliance
  */
 
+import { DEFAULT_PII_CONFIG, sanitizePII, type PIIFilterConfig } from "@/services/pii-filtering";
 import * as Sentry from "@sentry/react";
-import { sanitizePII, DEFAULT_PII_CONFIG, type PIIFilterConfig } from "@/services/pii-filtering";
 
 /**
  * Opções de configuração da integração Gemini (padrão oficial SDK)
@@ -198,6 +198,7 @@ function sanitizeSpanAttributes(
 export function createAISanitizingBeforeSendTransaction(
   config: PIIFilterConfig = DEFAULT_PII_CONFIG
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (transaction: any) => {
     if (!config.enabled) {
       return transaction;
@@ -314,7 +315,7 @@ export async function createInvokeAgentSpan<T>(
     {
       name: `invoke_agent ${config.agentName}`,
       op: "gen_ai.invoke_agent",
-      attributes: sanitizedAttributes as Record<string, any>,
+      attributes: sanitizedAttributes as any,
     },
     async (span) => {
       try {

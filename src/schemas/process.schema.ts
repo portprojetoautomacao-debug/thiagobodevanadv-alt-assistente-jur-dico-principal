@@ -32,37 +32,48 @@ export const prazoSchema = z.object({
 });
 
 // Schema para processo completo
-export const processSchema = z.object({
-  id: z.string(),
-  numeroCNJ: numeroCNJSchema,
-  titulo: z
-    .string()
-    .min(5, "T�tulo deve ter no m�nimo 5 caracteres")
-    .max(200, "T�tulo muito longo"),
-  autor: z.string().min(3, "Nome do autor inv�lido"),
-  reu: z.string().min(3, "Nome do r�u inv�lido"),
-  status: z.enum(["ativo", "suspenso", "concluido", "arquivado"]),
-  valorCausa: z.number().min(0, "Valor da causa deve ser positivo").optional(),
-  comarca: z.string().min(3, "Comarca inv�lida").optional(),
-  vara: z.string().min(3, "Vara inv�lida").optional(),
-  prazos: z.array(prazoSchema).default([]),
-  observacoes: z.string().max(5000, "Observa��es muito longas").optional(),
-  // Campos obrigat�rios do tipo Process
-  dataDistribuicao: z.string().datetime(),
-  dataUltimaMovimentacao: z.string().datetime(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  // Campos opcionais adicionais
-  fase: z.string().optional(),
-  valor: z.number().min(0).optional(),
-  notas: z.string().optional(),
-  expedientesCount: z.number().int().min(0).optional(),
-  intimacoesCount: z.number().int().min(0).optional(),
-  minutasCount: z.number().int().min(0).optional(),
-  documentosCount: z.number().int().min(0).optional(),
-  lastExpedienteAt: z.string().datetime().optional(),
-  lastMinutaAt: z.string().datetime().optional(),
-});
+export const processSchema = z
+  .object({
+    id: z.string(),
+    numeroCNJ: numeroCNJSchema,
+    titulo: z
+      .string()
+      .min(5, "T�tulo deve ter no m�nimo 5 caracteres")
+      .max(200, "T�tulo muito longo"),
+    autor: z.string().min(3, "Nome do autor inv�lido"),
+    reu: z.string().min(3, "Nome do r�u inv�lido"),
+    status: z.enum(["ativo", "suspenso", "concluido", "arquivado"]),
+    valorCausa: z.number().min(0, "Valor da causa deve ser positivo").optional(),
+    comarca: z.string().min(3, "Comarca inv�lida").optional(),
+    vara: z.string().min(3, "Vara inv�lida").optional(),
+    prazos: z.array(prazoSchema).default([]),
+    observacoes: z.string().max(5000, "Observa��es muito longas").optional(),
+    // Campos obrigat�rios do tipo Process
+    dataDistribuicao: z.string().datetime(),
+    dataUltimaMovimentacao: z.string().datetime(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+    // Campos opcionais adicionais
+    fase: z.string().optional(),
+    valor: z.number().min(0).optional(),
+    notas: z.string().optional(),
+    expedientesCount: z.number().int().min(0).optional(),
+    intimacoesCount: z.number().int().min(0).optional(),
+    minutasCount: z.number().int().min(0).optional(),
+    documentosCount: z.number().int().min(0).optional(),
+    lastExpedienteAt: z.string().datetime().optional(),
+    lastMinutaAt: z.string().datetime().optional(),
+  })
+  .transform((data) => {
+    // Sincronização automática entre valor e valorCausa
+    // Garante que ambos os campos estejam sempre sincronizados
+    if (data.valor !== undefined && data.valorCausa === undefined) {
+      data.valorCausa = data.valor;
+    } else if (data.valorCausa !== undefined && data.valor === undefined) {
+      data.valor = data.valorCausa;
+    }
+    return data;
+  });
 
 // ============================================
 // SCHEMAS DE CLIENTE

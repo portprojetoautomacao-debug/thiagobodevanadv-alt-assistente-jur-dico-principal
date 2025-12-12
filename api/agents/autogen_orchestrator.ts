@@ -123,7 +123,7 @@ async function orchestrateAgents(
     status: "QUEUED",
     createdAt: new Date().toISOString(),
     data: { description: request.task },
-  } as any;
+  };
 
   // Execute agents according to requested coordination
   for (const agentId of request.agents) {
@@ -132,7 +132,7 @@ async function orchestrateAgents(
     }
 
     // Short-circuit if agent disabled / not mapped in hybrid
-    const taskForAgent = { ...baseTask, id: `${baseTask.id}-${agentId}`, agentId } as any;
+    const taskForAgent = { ...baseTask, id: `${baseTask.id}-${agentId}`, agentId };
     try {
       messages.push({ role: agentId, content: `[Run] Starting ${agentId}`, timestamp: Date.now() });
       const result = await executeHybridTask(agentId, taskForAgent, {

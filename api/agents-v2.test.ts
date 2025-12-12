@@ -1,7 +1,8 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { beforeAll, expect, test, vi } from "vitest";
 import handler from "./agents-v2";
 
-function makeReq(body: any, apiKey = "test-autogen-key") {
+function makeReq(body: Record<string, unknown>, apiKey = "test-autogen-key") {
   return {
     method: "POST",
     headers: {
@@ -9,11 +10,11 @@ function makeReq(body: any, apiKey = "test-autogen-key") {
       "content-type": "application/json",
     },
     body,
-  } as any;
+  } as Partial<VercelRequest>;
 }
 
 function makeRes() {
-  const result: any = {};
+  const result: Partial<VercelResponse> & Record<string, unknown> = {};
   result.headers = {};
   result.setHeader = (k: string, v: string) => {
     result.headers[k] = v;
@@ -22,7 +23,7 @@ function makeRes() {
     result.statusCode = code;
     return result;
   };
-  result.json = (payload: any) => {
+  result.json = (payload: Record<string, unknown>) => {
     result.payload = payload;
     return result;
   };
@@ -47,7 +48,7 @@ beforeAll(() => {
 test("POST /api/agents-v2 returns success for a valid agent", async () => {
   const req = makeReq({ agentId: "harvey", message: "Analisar caso com prazo curto" });
   const res = makeRes();
-  await handler(req as any, res as any);
+  await handler(req as VercelRequest, res as VercelResponse);
   expect(res.statusCode).toBe(200);
   expect(res.payload).toBeDefined();
   expect(res.payload.success).toBe(true);

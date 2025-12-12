@@ -99,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const exec = () =>
-      executeHybridTask(agentId, task as any, {
+      executeHybridTask(agentId, task, {
         timeoutMs: config?.timeoutMs ?? 30000,
         coordinationMode: config?.coordinationMode,
       });

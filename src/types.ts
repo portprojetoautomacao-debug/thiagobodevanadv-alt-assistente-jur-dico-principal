@@ -9,6 +9,7 @@ export interface Process {
   status: "ativo" | "suspenso" | "arquivado" | "concluido";
   fase?: string;
   valor?: number;
+  valorCausa?: number; // Sincronizado automaticamente com valor via schema transform
   dataDistribuicao: string;
   dataUltimaMovimentacao: string;
   notas?: string;

@@ -1184,9 +1184,15 @@ npm run build
 - Código open-source auditável
 - Compliance com termos de uso do PJe
 
-## 4. Editor Tiptap com IA
+## 4. Editor CKEditor 5 com IA
 
 ### 4.1 Recursos do Editor
+
+**Editor profissional CKEditor 5 (v47.3.0):**
+
+- Editor WYSIWYG completo com 40+ plugins ativos
+- Bundle otimizado de ~1.1MB (inclui todos os plugins necessários)
+- Lazy loading implementado ao nível de componente para performance
 
 **Formatação rica:**
 
@@ -1196,13 +1202,12 @@ npm run build
 - Links, imagens, tabelas
 - Contador de palavras/caracteres em tempo real
 
-**Comandos de IA integrados:**
+**Integração com IA (streaming em tempo real):**
 
-- `/expandir` - Desenvolve texto de forma detalhada
-- `/resumir` - Condensa texto de forma concisa
-- `/formalizar` - Reescreve em linguagem jurídica formal
-- `/corrigir` - Corrige gramática e ortografia
-- `/gerar` - Cria conteúdo a partir de prompt livre
+- Colaboração inteligente: IA pausa quando humano digita
+- Streaming de conteúdo diretamente no editor
+- Comandos customizados para expansão, resumo e formalização de texto
+- Integração com Gemini 2.5 Pro para geração de conteúdo jurídico
 
 ### 4.2 Sistema de Templates
 
@@ -1306,10 +1311,18 @@ Conformidade com:
 manualChunks: {
   'react-vendor': ['react', 'react-dom', 'react-router-dom'],
   'ui-vendor': ['@headlessui/react', '@heroicons/react'],
-  'editor': ['@tiptap/react', '@tiptap/starter-kit'],
   'ai-vendor': ['@google/generative-ai'],
+  // Nota: CKEditor 5 é bundled naturalmente com MinutasManagerV2 (~1.1MB)
+  // para evitar dependências circulares. Chunk separado causava problemas.
 }
 ```
+
+**Decisões de arquitetura:**
+
+- CKEditor 5 bundled com MinutasManager para estabilidade
+- Lazy loading no nível de componente (`App.tsx`)
+- Bundle de ~1.1MB considerado aceitável para editor profissional com 40+ plugins
+- TipTap removido completamente do projeto (migração concluída)
 
 ## 8. Inovação Tecnológica
 
@@ -1635,7 +1648,7 @@ gh workflow run copilot-auto-fix.yml
 - 🌐 **Extensão Chrome PJe Sync**: Acesso em tempo real ao PJe (NEW!)
 - 💰 **Gestão Financeira**: Controle de custos e honorários
 - ⚡ **15 Agentes Autônomos**: Trabalhando 24/7
-- ✏️ **Editor Tiptap com IA**: Redação automática de minutas
+- ✏️ **Editor CKEditor 5 com IA**: Redação automática de minutas (40+ plugins, streaming em tempo real)
 - 📝 **8 Templates Jurídicos**: Petições, contratos, recursos
 - 🧭 **Qdrant Service (Busca Semântica)**: Busca vetorial para encontrar precedentes e documentos similares rapidamente (opcional - Requer signup no Qdrant Cloud)
 - 🔧 **DSPy Bridge (Otimização de Prompts)**: Serviço Python para otimização automática de prompts antes de enviar ao Gemini/GPT (opcional - Requer deploy no Railway/serviço python)
@@ -1921,11 +1934,26 @@ VITE_GEMINI_API_KEY=sua_chave_aqui
 
 ---
 
-## ✏️ Editor Tiptap com IA - Redação Automática de Minutas
+## ✏️ Editor CKEditor 5 com IA - Redação Automática de Minutas
 
-> **Status**: ✅ **OPERACIONAL** - Implementado em 28/11/2025
+> **Status**: ✅ **OPERACIONAL** - Migrado para CKEditor 5 em produção
 
-O sistema inclui um **editor de texto rico profissional (Tiptap)** com integração de IA, permitindo que os agentes autônomos **redijam minutas automaticamente** e que operadores humanos possam revisar e editar antes do protocolo.
+O sistema inclui um **editor de texto rico profissional (CKEditor 5 v47.3.0)** com integração de IA, permitindo que os agentes autônomos **redijam minutas automaticamente** e que operadores humanos possam revisar e editar antes do protocolo.
+
+### 📊 Especificações Técnicas (Auditoria 2025)
+
+**Editor Atual:**
+
+- **CKEditor 5 v47.3.0** + @ckeditor/ckeditor5-react v11.0.0
+- **40+ plugins ativos**: Essentials, Bold, Italic, Underline, Heading, Link, List, Alignment, FontFamily, FontSize, FontColor, FontBackgroundColor, ImageUpload, Table, MediaEmbed, CodeBlock, HorizontalLine, PageBreak, e mais
+- **Bundle size**: ~1.1MB (otimizado com todos os plugins necessários)
+- **Lazy loading**: Implementado em `App.tsx` linha 30
+- **TipTap**: Completamente removido do projeto (0 dependências)
+
+**Alternativas de Edição:**
+
+- **Google Docs Embed**: Integração via iframe para colaboração externa
+- Sistema de tabs permite alternar entre editor local e Google Docs
 
 ### 🎯 Filosofia: 100% Automático com Supervisão Humana
 
@@ -1984,25 +2012,27 @@ O editor foi projetado para operar em dois modos:
 
 ### 📦 Componentes Implementados
 
-| Arquivo                                  | Descrição                                       |
-| ---------------------------------------- | ----------------------------------------------- |
-| `src/components/editor/TiptapEditor.tsx` | Editor WYSIWYG completo com toolbar e IA        |
-| `src/lib/document-templates.ts`          | 8 templates jurídicos pré-definidos             |
-| `src/hooks/use-auto-minuta.ts`           | Hook para criação automática de minutas         |
-| `src/components/MinutasManager.tsx`      | Painel de gestão de minutas com Tiptap          |
-| `api/agents.ts`                          | Backend que salva minutas quando agente termina |
+| Arquivo                                        | Descrição                                        | Linhas |
+| ---------------------------------------------- | ------------------------------------------------ | ------ |
+| `src/components/editor/ProfessionalEditor.tsx` | Editor CKEditor 5 com IA streaming e 40+ plugins | 623    |
+| `src/components/MinutasManagerV2.tsx`          | Painel de gestão de minutas (master-detail)      | 467    |
+| `src/components/GoogleDocsEmbed.tsx`           | Alternativa de edição via Google Docs iframe     | 207    |
+| `src/lib/document-templates.ts`                | 8 templates jurídicos pré-definidos              | -      |
+| `src/hooks/use-auto-minuta.ts`                 | Hook para criação automática de minutas          | 190    |
+| `src/services/minuta-service.ts`               | Serviço centralizado de CRUD de minutas          | -      |
+| `api/agents.ts`                                | Backend que salva minutas quando agente termina  | -      |
 
-### ✨ Funcionalidades do Editor Tiptap
+### ✨ Funcionalidades do Editor CKEditor 5
 
 #### Formatação de Texto
 
-| Recurso        | Atalho | Descrição               |
-| -------------- | ------ | ----------------------- |
-| **Negrito**    | Ctrl+B | Texto em negrito        |
-| **Itálico**    | Ctrl+I | Texto em itálico        |
-| **Sublinhado** | Ctrl+U | Texto sublinhado        |
-| **Tachado**    | -      | Texto riscado           |
-| **Destaque**   | -      | Marca-texto (highlight) |
+| Recurso        | Atalho | Descrição           |
+| -------------- | ------ | ------------------- |
+| **Negrito**    | Ctrl+B | Texto em negrito    |
+| **Itálico**    | Ctrl+I | Texto em itálico    |
+| **Sublinhado** | Ctrl+U | Texto sublinhado    |
+| **Tachado**    | -      | Texto riscado       |
+| **Destaque**   | -      | Marca-texto (cores) |
 
 #### Estrutura
 

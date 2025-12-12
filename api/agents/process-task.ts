@@ -16,11 +16,7 @@ import { retryWithBackoff } from "../lib/retry";
 import { escapeHtml } from "../lib/sanitize";
 import { AnalysisResult, applyDeadlineDates, parseAIResponse } from "../lib/task-helpers";
 import { withTimeout } from "../lib/timeout";
-import {
-  AgentInputSchema,
-  AgentTaskInputSchema,
-  handleValidationError,
-} from "../lib/validation";
+import { AgentInputSchema, AgentTaskInputSchema, handleValidationError } from "../lib/validation";
 
 /**
  * Tipos válidos de deadline para cálculo de prazos processuais
@@ -282,7 +278,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Always use timeout + retry for calls to LLM
-    const exec = async () => dispatchTask(safeTask as any, safeAgent as any);
+    const exec = async () => dispatchTask(safeTask, safeAgent as Agent);
     const result: AnalysisResult = await retryWithBackoff(() => withTimeout(45000, exec()), 3, 500);
 
     console.log(
