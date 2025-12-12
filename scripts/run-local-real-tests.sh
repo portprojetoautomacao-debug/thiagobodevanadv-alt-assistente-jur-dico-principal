@@ -6,17 +6,11 @@ set -euo pipefail
 
 DEV_API_PORT=${DEV_API_PORT:-5252}
 VITE_PORT=${VITE_PORT:-5173}
-PORT=${PORT:-${VITE_PORT}}
 API_KEY=${TEST_PJE_API_KEY:-valid-test-api-key}
 BASE_URL="http://127.0.0.1:${DEV_API_PORT}"
 
-export DEV_API_PORT
-export PORT
-
 echo "Starting local dev server with API..."
-# Rodar o orquestrador diretamente garante que SIGTERM chegue ao processo
-# que sabe encerrar Vite + API (e seus sub-processos) corretamente.
-node ./scripts/start-dev-with-api.cjs > /tmp/dev-server.log 2>&1 &
+npm run dev:with-api > /tmp/dev-server.log 2>&1 &
 DEV_PID=$!
 
 function cleanup() {

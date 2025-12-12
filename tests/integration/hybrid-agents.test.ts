@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
+import { executeHybridTask, HYBRID_AGENTS_DISABLED } from "../../src/lib/hybrid-agents-integration";
 
 test("executeHybridTask executa harvey com sucesso", async () => {
   const task = {
@@ -10,24 +10,21 @@ test("executeHybridTask executa harvey com sucesso", async () => {
     status: "QUEUED",
     createdAt: new Date().toISOString(),
     data: { description: "Test orchestration with harvey" },
-  };
+  } as any;
 
   const result = await executeHybridTask("harvey", task);
   expect(result).toBeDefined();
 
-  // Modo manutenção: integração híbrida pode estar desabilitada.
-  // Não dependemos da constante exportada (pode ser impactada por mocks em outros testes).
-  if (!result.success) {
+  if (HYBRID_AGENTS_DISABLED) {
     expect(result.success).toBe(false);
-    expect(result.error ?? "").toContain("desabil");
+    expect(result.error).toContain("desabil");
     return;
   }
 
   expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
-  // Em builds com híbrido ativo, esperamos algum resultado estruturado.
-  expect(result.mode).toBeDefined();
-  expect(result.langGraphResult).toBeDefined();
+  expect(result.mode).toBe("langgraph");
+  expect(result.langGraphResult?.completed).toBe(true);
 });
 
 test("executeHybridTask executa justine com sucesso", async () => {
@@ -39,21 +36,21 @@ test("executeHybridTask executa justine com sucesso", async () => {
     status: "QUEUED",
     createdAt: new Date().toISOString(),
     data: { description: "Test orchestration with justine" },
-  };
+  } as any;
 
   const result = await executeHybridTask("justine", task);
   expect(result).toBeDefined();
 
-  if (!result.success) {
+  if (HYBRID_AGENTS_DISABLED) {
     expect(result.success).toBe(false);
-    expect(result.error ?? "").toContain("desabil");
+    expect(result.error).toContain("desabil");
     return;
   }
 
   expect(result.success).toBe(true);
   expect(result.executionTime).toBeGreaterThanOrEqual(0);
-  expect(result.mode).toBeDefined();
-  expect(result.langGraphResult).toBeDefined();
+  expect(result.mode).toBe("langgraph");
+  expect(result.langGraphResult?.completed).toBe(true);
 });
 /**
  * Hybrid Architecture Integration Tests
