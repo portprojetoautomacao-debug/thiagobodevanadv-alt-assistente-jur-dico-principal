@@ -407,8 +407,8 @@ jobs:
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: 'Security: ' + critical + ' critical npm vulnerabilities detected',
-              body: 'Vulnerabilidades de segurança detectadas. Verificar audit-results.json no workflow.',
+              title: `Security: ${critical} critical npm vulnerabilities detected`,
+              body: `Vulnerabilidades de segurança detectadas. Verificar audit-results.json no workflow.`,
               labels: ['security', 'automated', 'dependencies']
             });
 
