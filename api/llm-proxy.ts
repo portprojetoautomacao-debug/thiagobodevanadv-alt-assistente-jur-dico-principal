@@ -173,9 +173,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  // Require LLM proxy API key
-  // ✅ CORREÇÃO: Permitir acesso em desenvolvimento local
-  if (process.env.NODE_ENV !== "development" && !process.env.VERCEL_ENV) {
+  // Require LLM proxy API key in non-development environments unless explicitly allowed
+  // Security: Avoid open LLM proxy in production
+  const isDev = process.env.NODE_ENV === "development";
+  const allowPublic = process.env.LLM_PROXY_ALLOW_PUBLIC === "true";
+  if (!isDev && !allowPublic) {
+    // Always require API key in production by default
     if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
   }
 
@@ -226,6 +229,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Encontrar provedor disponível
   const provider = providers.find((p) => p.apiKey);
+
+  // Simple in-memory cache to reduce duplicate LLM calls during hot reload / repeated requests
+  // Important: This cache is ephemeral (serverless) and intended for short TTL caching only
+  const CACHE_TTL_MS = 5 * 1000; // 5s short-term cache
+  const cacheKeyBase = JSON.stringify({ body: req.body, origin, clientIP });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - simple global cache variable for serverless lifecycle reuse
+  (globalThis as Record<string, unknown>).__LLM_PROXY_CACHE =
+    (globalThis as Record<string, unknown>).__LLM_PROXY_CACHE ||
+    new Map<string, { expiresAt: number; data: unknown }>();
+  const globalCache: Map<string, { expiresAt: number; data: unknown }> = (
+    globalThis as Record<string, unknown>
+  ).__LLM_PROXY_CACHE as Map<string, { expiresAt: number; data: unknown }>;
+
+  const cacheKey = `${provider?.name ?? "unknown"}:${cacheKeyBase}`;
+  const cached = globalCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return res.status(200).json(cached.data as LLMResponse);
+  }
+
+  // Circuit breaker (in-memory) to avoid repeated failed calls to the same provider
+  // Note: Serverless memory is ephemeral; consider Redis/KV for cluster-wide circuit breaker
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  (globalThis as Record<string, unknown>).__LLM_PROXY_CIRCUIT =
+    (globalThis as Record<string, unknown>).__LLM_PROXY_CIRCUIT ||
+    new Map<string, { failures: number; openedUntil?: number }>();
+  const circuit = (globalThis as Record<string, unknown>).__LLM_PROXY_CIRCUIT as Map<
+    string,
+    { failures: number; openedUntil?: number }
+  >;
+  const providerCircuit = circuit.get(provider?.name ?? "unknown") || { failures: 0 };
+  if (providerCircuit.openedUntil && providerCircuit.openedUntil > Date.now()) {
+    // Circuit open
+    return res
+      .status(503)
+      .json({ error: "LLM provider temporarily unavailable (circuit open). Try later." });
+  }
 
   if (!provider) {
     const isVercel = Boolean(process.env.VERCEL_ENV);
@@ -363,9 +404,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Adicionar metadata sobre o provedor usado
     transformed._provider = provider.name;
 
+    // Update circuit status: success => reset
+    if (providerCircuit.failures && providerCircuit.failures > 0) {
+      circuit.set(provider.name, { failures: 0 });
+    }
+
+    // Store in short-term cache
+    globalCache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, data: transformed });
+
     res.status(200).json(transformed);
   } catch (error) {
     console.error("LLM proxy error:", error);
+    // Update circuit failure count
+    const name = provider?.name || "unknown";
+    const st = circuit.get(name) || { failures: 0 };
+    st.failures = (st.failures || 0) + 1;
+    // Open circuit if failures exceed threshold
+    const FAILURE_THRESHOLD = 5;
+    const OPEN_TIME_MS = 60_000; // 60s
+    if (st.failures >= FAILURE_THRESHOLD) {
+      st.openedUntil = Date.now() + OPEN_TIME_MS;
+    }
+    circuit.set(name, st);
     res.status(500).json({
       error: "Failed to process LLM request",
       message: error instanceof Error ? error.message : "Unknown error",

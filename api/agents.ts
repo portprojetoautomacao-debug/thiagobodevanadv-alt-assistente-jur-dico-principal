@@ -13,12 +13,10 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 import { agentMonitor } from "../src/lib/agent-monitoring";
-import {
-  AnalyzeIntimationInputSchema,
-  DraftPetitionInputSchema,
-} from "../src/lib/agent-schemas";
+import { AnalyzeIntimationInputSchema, DraftPetitionInputSchema } from "../src/lib/agent-schemas";
 import { legalMemory, type LegalContextType } from "../src/lib/legal-memory";
-import { createMinutaFromAgentTask } from "./lib/minuta-service-backend";
+import { addTaskToQueue, updateTaskInQueue } from "./lib/kv-utils.js";
+import { createMinutaFromAgentTask } from "./lib/minuta-service-backend.js";
 
 // ===== Middleware de Autenticação =====
 function _requireAuth(req: VercelRequest): boolean {
@@ -130,6 +128,7 @@ interface AgentTask {
   retryCount?: number;
   maxRetries?: number;
   timeout?: number;
+  version?: number;
 }
 
 interface TaskResult extends Record<string, unknown> {
@@ -989,7 +988,11 @@ function canProcessTask(task: AgentTask, agent: Agent): boolean {
 /**
  * Processa ações encadeadas de uma tarefa
  */
-function processChainedActions(task: AgentTask, result: TaskResult, taskQueue: AgentTask[]): void {
+async function processChainedActions(
+  task: AgentTask,
+  result: TaskResult,
+  taskQueue: AgentTask[]
+): Promise<void> {
   if (
     task.type !== AgentTaskType.ANALYZE_DOCUMENT ||
     !result.suggestedActions ||
@@ -1003,7 +1006,8 @@ function processChainedActions(task: AgentTask, result: TaskResult, taskQueue: A
     if (mapping) {
       const nextTask = createChainedTask(String(actionText), task, mapping);
       logger.info(`Chaining task: ${nextTask.type} for ${nextTask.agentId}`);
-      taskQueue.push(nextTask);
+      // ✨ ATOMIC: Salvar nova tarefa diretamente no KV
+      await addTaskToQueue(nextTask as any);
     }
   }
 }
@@ -1103,7 +1107,7 @@ async function processQueueTask(
 
     // Passo 3: Processar ações encadeadas (menos crítico)
     try {
-      processChainedActions(task, aiResult, taskQueue);
+      await processChainedActions(task, aiResult, taskQueue);
       chainedActionsProcessed = true;
     } catch (chainError) {
       logger.warn(`Non-critical: Failed chained actions for task ${task.id}`, chainError);
@@ -1163,11 +1167,17 @@ async function handleProcessQueue(res: VercelResponse): Promise<VercelResponse> 
   const results: ProcessQueueTaskResult[] = [];
 
   for (const task of tasksToProcess) {
+    const originalVersion = task.version;
     const result = await processQueueTask(task, agents, taskQueue);
     results.push(result);
+
+    // ✨ ATOMIC UPDATE: Salvar cada tarefa individualmente com verificação de versão
+    // Isso previne que uma tarefa sobrescreva a fila inteira (race condition)
+    await updateTaskInQueue(task.id, task as any, originalVersion);
   }
 
-  await saveTaskQueue(taskQueue);
+  // ⚠️ REMOVIDO: saveTaskQueue(taskQueue) causava race conditions graves
+  // await saveTaskQueue(taskQueue);
 
   const processedCount = results.filter((r) => r.status === "completed").length;
   const failedCount = results.filter((r) => r.status === "failed").length;
