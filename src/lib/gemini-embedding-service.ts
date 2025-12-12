@@ -74,6 +74,14 @@ export class GeminiEmbeddingService {
   }
 
   /**
+   * Gera embedding para uma query (alias de generateEmbedding)
+   * Mantém consistência com scripts que chamam generateQueryEmbedding
+   */
+  async generateQueryEmbedding(text: string): Promise<EmbeddingResult> {
+    return this.generateEmbedding(text);
+  }
+
+  /**
    * Gera embedding para documento jur�dico completo
    * (combina classe + assunto + movimenta��es)
    */

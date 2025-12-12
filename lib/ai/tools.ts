@@ -7,7 +7,7 @@ import type { Tool, ToolContext } from "./core-agent";
 import { CircuitBreakerRegistry } from "./circuit-breaker";
 
 export interface GlobalToolContext extends ToolContext {
-  baseUrl: string;          // URL base do app (ex: https://assistente-juridico-p.vercel.app)
+  baseUrl: string;          // URL base do app (ex: https://assistente-juridico-github.vercel.app)
   evolutionApiUrl: string;  // URL da Evolution API
   evolutionApiKey: string;
 }

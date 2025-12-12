@@ -15,7 +15,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { executeHybridTask } from "../../src/lib/hybrid-agents-integration";
+import { executeHybridTask } from "../../src/lib/hybrid-agents-integration.js";
 import { requireApiKey } from "../lib/auth.js";
 import { redactPii } from "../lib/pii.js";
 import { rateLimitMiddleware } from "../lib/rate-limit.js";
@@ -26,7 +26,7 @@ import { withTimeout } from "../lib/timeout.js";
 // Configuration
 const MAX_TIMEOUT_MS = 40000; // 40s (stay under Vercel 45s limit)
 const MAX_ROUNDS = 10;
-const ALLOWED_AGENTS = [
+const _ALLOWED_AGENTS = [
   "harvey",
   "justine",
   "analise-documental",
@@ -93,7 +93,7 @@ function validateAuth(req: VercelRequest): boolean {
  * Validate request payload
  */
 // Optionally keep a small guard, but prefer Zod schema validation
-function validateRequest(body: unknown): body is OrchestrationRequest {
+function _validateRequest(body: unknown): body is OrchestrationRequest {
   return OrchestrationRequestSchema.safeParse(body).success;
 }
 
@@ -287,5 +287,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
  */
 export const config = {
   maxDuration: 45, // Maximum for Vercel Hobby plan
-  runtime: "nodejs22.x",
+  runtime: "nodejs",
 };

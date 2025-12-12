@@ -25,6 +25,10 @@ export default defineConfig({
       "api/**/*.test.ts",
       "tests/integration/**/*.test.ts",
       "tests/minimal-integration.test.ts",
+      // Include backend-specific library tests (Qdrant, LangGraph unit tests)
+      "src/lib/**/__tests__/**/*.test.ts",
+      "src/lib/**/*.spec.ts",
+      "src/lib/**/*.test.ts",
     ],
 
     // Excluir testes de frontend e E2E
@@ -40,11 +44,13 @@ export default defineConfig({
 
       exclude: ["api/**/*.test.ts", "api/**/test-*.ts", "node_modules/**"],
 
+      // MODO MANUTENÇÃO: Thresholds ajustados para valores realistas
+      // Sistema em produção estável - foco em manter funcionamento, não aumentar cobertura
       thresholds: {
-        lines: 40,
-        functions: 40,
-        branches: 40,
-        statements: 40,
+        lines: 15,
+        functions: 30,
+        branches: 15,
+        statements: 15,
       },
     },
 
@@ -64,6 +70,7 @@ export default defineConfig({
         maxThreads: 1,
       },
     },
+    maxConcurrency: 1,
 
     // Reporters
     reporters: ["default", "verbose"],

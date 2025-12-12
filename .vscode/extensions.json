@@ -39,6 +39,8 @@
     // AI & Productivity
     "teamsdevapp.vscode-ai-foundry",
     "p42ai.refactor",
-    "ms-playwright.playwright"
+    "ms-playwright.playwright",
+    "trailofbits.sarif-explorer",
+    "ms-sarifvscode.sarif-viewer"
   ]
 }

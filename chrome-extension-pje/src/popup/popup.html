@@ -42,7 +42,7 @@
         </div>
 
         <p class="help-text">
-          <a href="https://assistente-juridico-p.vercel.app/settings/api-keys" target="_blank">
+          <a href="https://assistente-juridico-github.vercel.app/settings/api-keys" target="_blank">
             📖 Onde encontrar minha API Key?
           </a>
         </p>
@@ -61,6 +61,40 @@
             <span class="stat-label">Hoje</span>
           </div>
         </div>
+      </section>
+
+      <!-- Crawler Section -->
+      <section class="crawler" id="crawlerSection">
+        <h2>🕷️ Crawler de Documentos</h2>
+
+        <div class="crawler-status">
+          <div class="crawler-indicator">
+            <span class="crawler-dot" id="crawlerDot"></span>
+            <span id="crawlerStatusText">Parado</span>
+          </div>
+          <div class="crawler-stats">
+            <span id="crawlerQueue">Fila: 0</span>
+            <span id="crawlerCompleted">Completos: 0</span>
+          </div>
+        </div>
+
+        <div class="crawler-progress" id="crawlerProgress" style="display: none">
+          <div class="progress-bar">
+            <div class="progress-fill" id="crawlerProgressFill"></div>
+          </div>
+          <span class="progress-text" id="crawlerProgressText">0%</span>
+        </div>
+
+        <div class="crawler-actions">
+          <button id="crawlerStart" class="btn-crawler btn-start">▶️ Iniciar</button>
+          <button id="crawlerPause" class="btn-crawler btn-pause" disabled>⏸️ Pausar</button>
+          <button id="crawlerStop" class="btn-crawler btn-stop" disabled>⏹️ Parar</button>
+        </div>
+
+        <p class="help-text crawler-help">
+          O crawler extrai automaticamente o texto completo de todos os documentos dos processos
+          sincronizados.
+        </p>
       </section>
 
       <!-- Ações -->

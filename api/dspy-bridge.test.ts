@@ -8,7 +8,7 @@ global.fetch = mockFetch as any;
 let fastapiAvailable = true;
 try {
   execSync('python3 -c "import fastapi"', { stdio: "ignore" });
-} catch (err) {
+} catch (_err) {
   fastapiAvailable = false;
 }
 
@@ -30,7 +30,7 @@ const mockOptimizeResponse = {
 
 beforeAll(() => {
   // Setup mocks
-  mockFetch.mockImplementation((url: string, options?: any) => {
+  mockFetch.mockImplementation((url: string, _options?: any) => {
     if (url.includes("/health")) {
       return Promise.resolve({
         status: 200,

@@ -17,6 +17,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch: # Permite execução manual para teste
+    inputs:
+      test_comment:
+        description: 'Simulate comment permission test (create and delete a test comment)'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: sonarcloud-${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +37,7 @@ jobs:
       contents: read
       pull-requests: write
       checks: write
+      issues: write
 
     steps:
       - name: Checkout code
@@ -54,6 +61,9 @@ jobs:
             ${{ runner.os }}-sonarcloud-
             ${{ runner.os }}-
 
+      - name: Check for official SARIF tools (dry-run)
+        run: npm run ensure:sarif-deps || true
+
       - name: Install dependencies
         run: npm ci
 
@@ -63,6 +73,13 @@ jobs:
 
       - name: Export ESLint report (SARIF)
         run: npm run lint:sarif || true
+
+      - name: Upload ESLint SARIF to GitHub Security
+        if: always() && hashFiles('eslint-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: eslint-results.sarif
+          category: sonarcloud-eslint
 
       - name: Build application
         run: npm run build
@@ -78,6 +95,30 @@ jobs:
         continue-on-error: true
         env:
           CI: true
+
+      - name: Generate TypeScript SARIF report
+        run: npm run tsc:sarif || true
+        continue-on-error: true
+
+      - name: Upload TypeScript SARIF to GitHub Security
+        if: always() && hashFiles('tsc-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: tsc-results.sarif
+          category: sonarcloud-typescript
+        continue-on-error: true
+
+      - name: Run Vitest with SARIF reporter
+        run: npm run test:sarif || true
+        continue-on-error: true
+
+      - name: Upload Vitest SARIF to GitHub Security
+        if: always() && hashFiles('vitest-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: vitest-results.sarif
+          category: sonarcloud-vitest
+        continue-on-error: true
 
       - name: Install Chrome Extension dependencies
         run: cd chrome-extension-pje && npm ci
@@ -136,15 +177,64 @@ jobs:
       - name: Comment Quality Gate Status
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           script: |
-            const status = '${{ job.status }}';
-            const conclusion = status === 'success' ? '✅ Passou' : '⚠️ Precisa atenção';
-            const message = `## SonarCloud Analysis ${conclusion}\n\nVerifique os detalhes em: https://sonarcloud.io/dashboard?id=thiagobodevan-a11y_assistente-juridico-p`;
+            try {
+              if (context.eventName !== 'pull_request') {
+                core.info('Not a pull_request event - skipping comment');
+              } else {
+                const pr = context.payload.pull_request;
+                if (!pr) {
+                  core.info('No pull_request payload present - skipping comment');
+                } else {
+                  const repoFull = `${context.repo.owner}/${context.repo.repo}`;
+                  const isFork = pr.head && pr.head.repo && pr.head.repo.full_name && pr.head.repo.full_name !== repoFull;
+                  const issue_number = context.issue && context.issue.number;
+                  if (!issue_number) {
+                    core.info('No issue/PR number in context - skipping comment');
+                  } else if (isFork) {
+                    core.info('PR is from a fork; skipping comment because GITHUB_TOKEN may be restricted');
+                  } else {
+                    const status = '${{ job.status }}';
+                    const conclusion = status === 'success' ? '✅ Passou' : '⚠️ Precisa atenção';
+                    const message = `## SonarCloud Analysis ${conclusion}\n\nVerifique os detalhes em: https://sonarcloud.io/dashboard?id=thiagobodevan-a11y_assistente-juridico-p`;
+                    await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number, body: message });
+                    core.info('SonarCloud comment posted successfully');
+                  }
+                }
+              }
+            } catch (err) {
+              core.error('Failed to post SonarCloud comment: ' + String(err));
+            }
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            });
+        - name: Test Comment Permission (simulate)
+          if: github.event_name == 'workflow_dispatch' && (github.event.inputs.test_comment == 'true' || github.event.inputs.test_comment == true)
+          uses: actions/github-script@v7
+          continue-on-error: true
+          with:
+            github-token: ${{ secrets.BOT_GH_TOKEN != '' && secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
+            script: |
+              try {
+                if (context.eventName !== 'pull_request' && context.payload.pull_request == null) {
+                  core.info('No PR context available; skipping test comment (requires a PR context)');
+                } else {
+                  const pr = context.payload.pull_request || {};
+                  const repoFull = `${context.repo.owner}/${context.repo.repo}`;
+                  const isFork = pr.head && pr.head.repo && pr.head.repo.full_name && pr.head.repo.full_name !== repoFull;
+                  const issue_number = context.issue && context.issue.number;
+                  if (!issue_number) {
+                    core.info('No PR number in context - skipping test');
+                  } else if (isFork && !process.env.BOT_GH_TOKEN) {
+                    core.info('PR from fork and BOT_GH_TOKEN not set - simulation skipped');
+                  } else {
+                    // Post a temporary comment and delete it
+                    const temp = await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number, body: '🔧 Test permission: temporary comment (will be deleted)' });
+                    core.info('Test comment created: ' + temp.data.id);
+                    await github.rest.issues.deleteComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: temp.data.id });
+                    core.info('Test comment deleted');
+                  }
+                }
+              } catch (err) {
+                core.error('Comment permission test failed: ' + String(err));
+              }

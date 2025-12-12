@@ -1,11 +1,11 @@
 import type { AgentState } from "../base/agent_state";
 import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
-import { createInvokeAgentSpan, createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 import { generatePeticao } from "@/lib/gemini-service";
 
 export class RedacaoPeticoesAgent extends LangGraphAgent {
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     // 🔍 Instrumentar invocação do agente completo
     return createInvokeAgentSpan(
       {

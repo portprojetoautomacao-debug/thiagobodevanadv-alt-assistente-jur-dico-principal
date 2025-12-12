@@ -106,7 +106,7 @@ test.describe("Chrome Extension E2E - PJe Sync", () => {
 
       // Intercept network requests to backend sync endpoint
       let capturedRequestBody: any = null;
-      await context.route("https://assistente-juridico-p.vercel.app/api/pje-sync", (route) => {
+      await context.route("https://assistente-juridico-github.vercel.app/api/pje-sync", (route) => {
         const request = route.request();
         (async () => {
           try {

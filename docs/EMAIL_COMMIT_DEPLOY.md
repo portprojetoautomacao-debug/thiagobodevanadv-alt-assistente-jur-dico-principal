@@ -75,7 +75,7 @@ git push origin main
 vercel logs assistente-juridico-p --follow
 
 # Testar endpoint em produção
-curl -X POST https://assistente-juridico-p.vercel.app/api/emails \
+curl -X POST https://assistente-juridico-github.vercel.app/api/emails \
   -H "Content-Type: application/json" \
   -d '{
     "type": "test",

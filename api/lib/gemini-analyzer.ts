@@ -1,6 +1,6 @@
 // Função para chamar Gemini API
 export async function analyzeWithGemini(text: string, context: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error("Gemini API key not configured");

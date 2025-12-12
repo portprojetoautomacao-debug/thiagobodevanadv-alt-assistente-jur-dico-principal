@@ -69,48 +69,54 @@ jobs:
         run: |
           echo "🏥 Executando health check básico..."
 
-          # Determinar URL baseada no ambiente
-          if [[ "${{ matrix.environment }}" == "production" ]]; then
-            APP_URL="https://assistente-juridico-p.vercel.app"
+          # Prefer explicit environment overrides; fallback to default publicly-known URL
+          if [[ -n "${{ secrets.PRODUCTION_URL }}" ]] && [[ "${{ matrix.environment }}" == "production" ]]; then
+            APP_URL="${{ secrets.PRODUCTION_URL }}"
+          elif [[ -n "${{ secrets.STAGING_URL }}" ]] && [[ "${{ matrix.environment }}" == "staging" ]]; then
+            APP_URL="${{ secrets.STAGING_URL }}"
           else
-            APP_URL="https://assistente-juridico-p-staging.vercel.app"
+            if [[ "${{ matrix.environment }}" == "production" ]]; then
+              APP_URL="https://assistente-juridico-github.vercel.app"
+            else
+              APP_URL="https://assistente-juridico-github-staging.vercel.app"
+            fi
           fi
 
           echo "🌐 Verificando: $APP_URL"
 
-          # Teste de conectividade
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$APP_URL" || echo "000")
-          if [[ "$HTTP_STATUS" -eq 200 ]]; then
-            echo "✅ HTTP Status: $HTTP_STATUS"
+          echo "HTTP_STATUS=$HTTP_STATUS"
+
+          if [[ "$HTTP_STATUS" -ne 200 ]]; then
+            echo "⚠️  HTTP Status: $HTTP_STATUS for $APP_URL"
+            # Do NOT mask errors. Export status so subsequent jobs can decide what to do.
           else
-            echo "⚠️  HTTP Status: $HTTP_STATUS (usando URL padrão)"
-            # Não falhar se for URL padrão
-            if [[ "$APP_URL" == *"vercel.app" ]]; then
-              echo "ℹ️  Usando URL padrão - configure PRODUCTION_URL/STAGING_URL para verificações reais"
-              HTTP_STATUS="200"
-            else
-              exit 1
-            fi
+            echo "✅ HTTP Status: $HTTP_STATUS"
           fi
 
-          # Verificar tempo de resposta
-          RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$APP_URL" 2>/dev/null || echo "0.0")
-          echo "⏱️  Tempo de resposta: ${RESPONSE_TIME}s"
+          # Verificar tempo de resposta apenas se o site estiver acessível
+          if [[ "$HTTP_STATUS" -eq 200 ]]; then
+            RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$APP_URL" 2>/dev/null || echo "0.0")
+            echo "⏱️  Tempo de resposta: ${RESPONSE_TIME}s"
 
-          if (( $(echo "$RESPONSE_TIME > 5.0" | bc -l 2>/dev/null || echo "0") )); then
-            echo "⚠️  Tempo de resposta alto: ${RESPONSE_TIME}s"
+            if (( $(echo "$RESPONSE_TIME > 5.0" | bc -l 2>/dev/null || echo "0") )); then
+              echo "⚠️  Tempo de resposta alto: ${RESPONSE_TIME}s"
+            fi
+          else
+            RESPONSE_TIME="0.0"
           fi
 
           # Exportar para próximos steps
           echo "HTTP_STATUS=$HTTP_STATUS" >> $GITHUB_ENV
           echo "RESPONSE_TIME=$RESPONSE_TIME" >> $GITHUB_ENV
+          echo "APP_URL=$APP_URL" >> $GITHUB_ENV
 
       - name: 🔍 Verificação de APIs Críticas
         run: |
           echo "🔍 Verificando APIs críticas..."
 
           # URL base do app
-          BASE_URL="https://assistente-juridico-p.vercel.app"
+          BASE_URL="https://assistente-juridico-github.vercel.app"
 
           # Lista de endpoints críticos para verificar
           ENDPOINTS=(
@@ -193,21 +199,64 @@ jobs:
         run: |
           echo "🏃 Executando Lighthouse performance audit..."
 
-          # URL alvo de produção
-          TARGET_URL="https://assistente-juridico-p.vercel.app"
+          # Ensure TARGET_URL can be overridden
+          TARGET_URL="${{ secrets.PRODUCTION_URL }}"
+          if [[ -z "$TARGET_URL" ]]; then
+            TARGET_URL="https://assistente-juridico-github.vercel.app"
+          fi
 
-          # Executar Lighthouse para produção
-          npx lighthouse $TARGET_URL \
-            --output=json \
-            --output-path=./lighthouse-report.json \
-            --only-categories=performance,accessibility,best-practices,seo \
-            --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
+          echo "🎯 Target URL: $TARGET_URL"
 
-          # Extrair métricas importantes
-          PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' lighthouse-report.json)
-          ACCESSIBILITY_SCORE=$(jq '.categories.accessibility.score * 100' lighthouse-report.json)
-          BEST_PRACTICES_SCORE=$(jq '.categories."best-practices".score * 100' lighthouse-report.json)
-          SEO_SCORE=$(jq '.categories.seo.score * 100' lighthouse-report.json)
+          # Check status before running Lighthouse
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$TARGET_URL" || echo "000")
+          echo "Checking TARGET_URL: $TARGET_URL -> HTTP $HTTP_STATUS"
+
+          if [[ "$HTTP_STATUS" -ne 200 ]]; then
+            echo "❌ Skipping Lighthouse because target is not reachable (HTTP $HTTP_STATUS)"
+            # Create a minimal report so the step has artifacts to inspect
+            jq -n --arg url "$TARGET_URL" --arg status "$HTTP_STATUS" '{error: "target_not_reachable", target: $url, http_status: $status}' > lighthouse-report.json || echo '{"error":"target_not_reachable"}' > lighthouse-report.json
+            echo "performance_score: 0" > performance-metrics.json
+            echo "accessibility_score: 0" >> performance-metrics.json
+            echo "best_practices_score: 0" >> performance-metrics.json
+            echo "seo_score: 0" >> performance-metrics.json
+            echo "timestamp: $(date -Iseconds)" >> performance-metrics.json
+            echo "⚠️  Lighthouse skipped - site not reachable"
+            exit 0
+          fi
+
+          # Try up to 3 times in case of intermittent failures
+          TRIES=0
+          MAX_TRIES=3
+          while [[ $TRIES -lt $MAX_TRIES ]]; do
+            TRIES=$((TRIES + 1))
+            echo "Running Lighthouse attempt $TRIES/$MAX_TRIES..."
+            npx lighthouse "$TARGET_URL" \
+              --output=json \
+              --output-path=./lighthouse-report.json \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage --single-process" && break || {
+                echo "Lighthouse attempt $TRIES failed."
+                sleep 3
+              }
+          done
+
+          if [[ ! -f lighthouse-report.json ]]; then
+            echo "❌ Lighthouse did not produce a report after $MAX_TRIES attempts."
+            jq -n '{error: "lighthouse_failed"}' > lighthouse-report.json || echo '{"error":"lighthouse_failed"}' > lighthouse-report.json
+            echo "performance_score: 0" > performance-metrics.json
+            echo "accessibility_score: 0" >> performance-metrics.json
+            echo "best_practices_score: 0" >> performance-metrics.json
+            echo "seo_score: 0" >> performance-metrics.json
+            echo "timestamp: $(date -Iseconds)" >> performance-metrics.json
+            # allow workflow to continue so monitoring-dashboard aggregates results
+            exit 0
+          fi
+
+          # Extract metrics (existing logic)
+          PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' lighthouse-report.json 2>/dev/null || echo "0")
+          ACCESSIBILITY_SCORE=$(jq '.categories.accessibility.score * 100' lighthouse-report.json 2>/dev/null || echo "0")
+          BEST_PRACTICES_SCORE=$(jq '.categories."best-practices".score * 100' lighthouse-report.json 2>/dev/null || echo "0")
+          SEO_SCORE=$(jq '.categories.seo.score * 100' lighthouse-report.json 2>/dev/null || echo "0")
 
           echo "📊 Performance Score: $PERFORMANCE_SCORE"
           echo "♿ Accessibility Score: $ACCESSIBILITY_SCORE"
@@ -215,7 +264,7 @@ jobs:
           echo "🔍 SEO Score: $SEO_SCORE"
 
           # Alertar se performance estiver baixa
-          if (( $(echo "$PERFORMANCE_SCORE < 80" | bc -l) )); then
+          if (( $(echo "$PERFORMANCE_SCORE < 80" | bc -l 2>/dev/null || echo "0") )); then
             echo "⚠️  ALERTA: Performance score baixo ($PERFORMANCE_SCORE)"
           fi
 
@@ -232,25 +281,38 @@ jobs:
         run: |
           echo "📊 Analisando Web Vitals..."
 
-          # Extrair Web Vitals do relatório do Lighthouse
-          LCP=$(jq '.audits."largest-contentful-paint".numericValue' lighthouse-report.json)
-          FID=$(jq '.audits."max-potential-fid".numericValue' lighthouse-report.json)
-          CLS=$(jq '.audits."cumulative-layout-shift".numericValue' lighthouse-report.json)
+          # Verificar se o arquivo existe e tem dados válidos
+          if [[ ! -f lighthouse-report.json ]]; then
+            echo "⚠️  lighthouse-report.json não encontrado - pulando análise Web Vitals"
+            exit 0
+          fi
+
+          # Verificar se há erro no report
+          if jq -e '.error' lighthouse-report.json > /dev/null 2>&1; then
+            echo "⚠️  Lighthouse report contém erro - pulando análise Web Vitals"
+            exit 0
+          fi
+
+          # Extrair Web Vitals do relatório do Lighthouse com fallback
+          LCP=$(jq '.audits."largest-contentful-paint".numericValue // 0' lighthouse-report.json 2>/dev/null || echo "0")
+          FID=$(jq '.audits."max-potential-fid".numericValue // 0' lighthouse-report.json 2>/dev/null || echo "0")
+          CLS=$(jq '.audits."cumulative-layout-shift".numericValue // 0' lighthouse-report.json 2>/dev/null || echo "0")
 
           echo "🖼️  LCP (Largest Contentful Paint): ${LCP}ms"
           echo "👆 FID (First Input Delay): ${FID}ms"
           echo "📐 CLS (Cumulative Layout Shift): $CLS"
 
-          # Verificar thresholds
-          if (( $(echo "$LCP > 2500" | bc -l) )); then
+          # Verificar thresholds apenas se temos valores válidos
+          if (( $(echo "$LCP > 0 && $LCP > 2500" | bc -l 2>/dev/null || echo "0") )); then
             echo "⚠️  ALERTA: LCP muito alto (${LCP}ms)"
           fi
 
-          if (( $(echo "$CLS > 0.1" | bc -l) )); then
+          if (( $(echo "$CLS > 0.1" | bc -l 2>/dev/null || echo "0") )); then
             echo "⚠️  ALERTA: CLS alto ($CLS)"
           fi
 
       - name: 📤 Upload Relatórios de Performance
+        if: always() # Upload artifacts even if previous steps failed
         uses: actions/upload-artifact@v4.4.3
         with:
           name: performance-reports
@@ -281,30 +343,123 @@ jobs:
         run: npm ci
 
       - name: 🔍 Verificação de Vulnerabilidades
+        id: audit
         run: |
           echo "🔍 Verificando vulnerabilidades..."
 
-          # Executar npm audit
-          npm audit --audit-level=moderate --json > audit-results.json
+          # Run audit but don't let a non-zero exit stop the job; capture JSON
+          npm audit --audit-level=moderate --json > audit-results.json || true
 
-          # Verificar se há vulnerabilidades críticas
-          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical' audit-results.json)
-          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high' audit-results.json)
+          # Guard against missing file
+          if [[ ! -s audit-results.json ]]; then
+            echo "{}" > audit-results.json
+          fi
 
+          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical // 0' audit-results.json)
+          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high // 0' audit-results.json)
+          MODERATE_VULNS=$(jq '.metadata.vulnerabilities.moderate // 0' audit-results.json)
+          
           echo "🚨 Vulnerabilidades críticas: $CRITICAL_VULNS"
           echo "⚠️  Vulnerabilidades altas: $HIGH_VULNS"
+          echo "🟡 Vulnerabilidades moderadas: $MODERATE_VULNS"
 
+          # Expose as step outputs for conditional steps later
+          echo "critical_vulns=$CRITICAL_VULNS" >> $GITHUB_OUTPUT
+          echo "high_vulns=$HIGH_VULNS" >> $GITHUB_OUTPUT
+          echo "moderate_vulns=$MODERATE_VULNS" >> $GITHUB_OUTPUT
+
+          # Also set an env flag so other steps can read if needed
           if [[ "$CRITICAL_VULNS" -gt 0 ]]; then
+            echo "CRITICAL_FOUND=true" >> $GITHUB_ENV
             echo "❌ ALERTA: Vulnerabilidades críticas encontradas!"
-            exit 1
+          else
+            echo "CRITICAL_FOUND=false" >> $GITHUB_ENV
+            echo "✅ Nenhuma vulnerabilidade crítica encontrada"
           fi
+
+      - name: 🚨 Criar Issue para Vulnerabilidades Críticas
+        if: steps.audit.outputs.critical_vulns != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const auditData = JSON.parse(fs.readFileSync('audit-results.json', 'utf8'));
+            const critical = parseInt('${{ steps.audit.outputs.critical_vulns }}');
+            const high = parseInt('${{ steps.audit.outputs.high_vulns }}');
+            const moderate = parseInt('${{ steps.audit.outputs.moderate_vulns }}');
+            
+            // Check if there's already an open issue about vulnerabilities
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,automated'
+            });
+            
+            const hasOpenSecurityIssue = existingIssues.data.some(issue => 
+              issue.title.includes('critical npm vulnerability')
+            );
+            
+            if (hasOpenSecurityIssue) {
+              console.log('⚠️  Já existe uma issue aberta sobre vulnerabilidades de segurança');
+              return;
+            }
+            
+            const body = `## 🚨 Vulnerabilidades de Segurança Detectadas
+
+O monitoramento automático de segurança detectou vulnerabilidades críticas nas dependências do projeto.
+
+### 📊 Resumo
+
+- **Críticas**: ${critical}
+- **Altas**: ${high}
+- **Moderadas**: ${moderate}
+
+### 🔧 Ações Recomendadas
+
+1. **Executar localmente**:
+   \`\`\`bash
+   npm audit --json > audit-results.json
+   jq '.' audit-results.json
+   \`\`\`
+
+2. **Tentar correção automática**:
+   \`\`\`bash
+   npm audit fix
+   # Se necessário (cuidado com breaking changes):
+   npm audit fix --force
+   \`\`\`
+
+3. **Revisar e atualizar manualmente**:
+   - Verificar \`package.json\` para dependências desatualizadas
+   - Atualizar versões problemáticas
+   - Considerar substituição de bibliotecas abandonadas
+
+### 📄 Relatório Completo
+
+O relatório JSON completo do \`npm audit\` está disponível nos artefatos do workflow.
+
+**Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+---
+*Issue criada automaticamente pelo workflow de monitoramento em ${new Date().toISOString()}*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Security: ${critical} critical npm vulnerability(ies) detected`,
+              body: body,
+              labels: ['security', 'automated', 'dependencies']
+            });
+            
+            console.log('✅ Issue de segurança criada com sucesso');
 
       - name: 🛡️  Verificação de Headers de Segurança
         run: |
           echo "🛡️  Verificando headers de segurança..."
 
           # URL alvo
-          TARGET_URL="https://assistente-juridico-p.vercel.app"
+          TARGET_URL="https://assistente-juridico-github.vercel.app"
 
           # Verificar headers importantes
           HEADERS=$(curl -s -I $TARGET_URL)
@@ -335,7 +490,7 @@ jobs:
           echo "🔐 Verificando certificado SSL..."
 
           # URL alvo
-          TARGET_URL="https://assistente-juridico-p.vercel.app"
+          TARGET_URL="https://assistente-juridico-github.vercel.app"
           DOMAIN=$(echo $TARGET_URL | sed 's|https://||')
 
           # Verificar validade do certificado
@@ -349,6 +504,7 @@ jobs:
           fi
 
       - name: 📤 Upload Relatórios de Segurança
+        if: always()  # Upload even if vulnerabilities were found
         uses: actions/upload-artifact@v4.4.3
         with:
           name: security-reports

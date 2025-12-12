@@ -150,11 +150,11 @@ export class TodoistAgent {
     const prompt = `
       Você é um assistente jurídico inteligente (Harvey) integrado ao Todoist.
       Analise o seguinte comando do usuário e extraia a intenção e parâmetros.
-      
+
       Comando: "${text}"
       ID da Tarefa: "${taskId}"
       Data Atual: "${new Date().toISOString().split("T")[0]}"
-      
+
       Responda APENAS com um JSON no seguinte formato:
       {
         "action": "reschedule" | "delegate" | "complete" | "create_event" | "update_status" | "unknown",
@@ -319,8 +319,9 @@ Com base no histórico de tarefas concluídas, sugira as próximas 3 ações mai
         maxOutputTokens: 2048,
       });
 
-      if (response.error) {
-        console.error("❌ Erro ao chamar Gemini:", response.error);
+      // ✅ Validar response antes de acessar propriedades
+      if (!response || response.error) {
+        console.error("❌ Erro ao chamar Gemini:", response?.error || "Response undefined");
         // Fallback para sugestão padrão
         return this.createDefaultSuggestion(processNumber);
       }
@@ -408,9 +409,11 @@ Com base no histórico de tarefas concluídas, sugira as próximas 3 ações mai
 
     try {
       const createdTasks = await addLegalTasks(defaultTasks);
+      // ✅ Validar se createdTasks existe antes de acessar length
+      const tasksCount = Array.isArray(createdTasks) ? createdTasks.length : 0;
       return {
-        success: true,
-        tasksCreated: createdTasks.length,
+        success: tasksCount > 0,
+        tasksCreated: tasksCount,
         reasoning: "Sugestão padrão criada devido a erro no Gemini",
       };
     } catch (error) {

@@ -1,28 +1,28 @@
-# ?? Checklist de Configuração do Qdrant
+# ?? Checklist de Configuraï¿½ï¿½o do Qdrant
 
-## Pré-requisitos
+## Prï¿½-requisitos
 
 - [x] Conta no Qdrant Cloud: https://cloud.qdrant.io/
-- [ ] Cluster criado (Free tier: 1GB suficiente para começar)
+- [ ] Cluster criado (Free tier: 1GB suficiente para comeï¿½ar)
 - [ ] API Key copiada
 
 ---
 
-## ?? Passos de Configuração
+## ?? Passos de Configuraï¿½ï¿½o
 
 ### 1. Criar Cluster no Qdrant Cloud
 
 1. Acesse: https://cloud.qdrant.io/
 2. Clique em **"Create Cluster"**
 3. Escolha:
-   - **Region**: `us-east4-0` (GCP) - mais próximo do Brasil
+   - **Region**: `us-east4-0` (GCP) - mais prï¿½ximo do Brasil
    - **Tier**: `Free` (1GB)
    - **Name**: `assistente-juridico-cluster`
-4. Aguarde criação (~2 minutos)
+4. Aguarde criaï¿½ï¿½o (~2 minutos)
 
 ### 2. Copiar Credenciais
 
-Após criação, copie:
+Apï¿½s criaï¿½ï¿½o, copie:
 
 - **Cluster URL**: `https://xxx.qdrant.cloud:6333`
 - **API Key**: Clique em "API Keys" ? "Create API Key"
@@ -40,7 +40,7 @@ QDRANT_TIMEOUT=30000
 
 ### 4. Criar Collection
 
-Execute o script de inicialização:
+Execute o script de inicializaï¿½ï¿½o:
 
 ```bash
 # Via Node.js
@@ -52,13 +52,13 @@ curl -X PUT 'https://sua-url.qdrant.cloud:6333/collections/legal_docs' \
   -H 'Content-Type: application/json' \
   -d '{
     "vectors": {
-      "size": 1536,
+      "size": 768,
       "distance": "Cosine"
     }
   }'
 ```
 
-### 5. Testar Conexão
+### 5. Testar Conexï¿½o
 
 ```bash
 # Verificar se collection foi criada
@@ -77,11 +77,11 @@ curl 'https://sua-url.qdrant.cloud:6333/collections/legal_docs' \
 
 ---
 
-## ?? Configuração Avançada
+## ?? Configuraï¿½ï¿½o Avanï¿½ada
 
-### Múltiplas Collections
+### Mï¿½ltiplas Collections
 
-Se você quiser separar por tipo de documento:
+Se vocï¿½ quiser separar por tipo de documento:
 
 ```env
 QDRANT_COLLECTION_PRECEDENTES=precedentes_stf_stj
@@ -91,7 +91,7 @@ QDRANT_COLLECTION_DOCUMENTOS=documentos_processuais
 
 ### Timeout Personalizado
 
-Para documentos muito grandes (>1000 páginas):
+Para documentos muito grandes (>1000 pï¿½ginas):
 
 ```env
 QDRANT_TIMEOUT=60000  # 60 segundos
@@ -99,7 +99,7 @@ QDRANT_TIMEOUT=60000  # 60 segundos
 
 ---
 
-## ? Validação da Configuração
+## ? Validaï¿½ï¿½o da Configuraï¿½ï¿½o
 
 Rode o seguinte script para validar:
 
@@ -118,7 +118,7 @@ const service = createQdrantService(config);
 if (service) {
   console.log("? Qdrant configurado corretamente!");
 } else {
-  console.error("? Configuração incompleta. Verifique .env");
+  console.error("? Configuraï¿½ï¿½o incompleta. Verifique .env");
 }
 ```
 
@@ -130,51 +130,51 @@ if (service) {
 
 Acesse: https://cloud.qdrant.io/clusters
 
-Você verá:
+Vocï¿½ verï¿½:
 
-- **Vectors Count**: Quantos vetores estão armazenados
-- **Storage Used**: Espaço usado (máx 1GB no free tier)
-- **API Requests**: Número de requisições
+- **Vectors Count**: Quantos vetores estï¿½o armazenados
+- **Storage Used**: Espaï¿½o usado (mï¿½x 1GB no free tier)
+- **API Requests**: Nï¿½mero de requisiï¿½ï¿½es
 
 ### Alertas Importantes
 
 - ?? Se ultrapassar 900MB ? Limpar vetores antigos
 - ?? Se taxa de erro > 5% ? Verificar API Key
-- ?? Se latência > 500ms ? Considerar upgrade de tier
+- ?? Se latï¿½ncia > 500ms ? Considerar upgrade de tier
 
 ---
 
-## ?? Segurança
+## ?? Seguranï¿½a
 
-### Proteção da API Key
+### Proteï¿½ï¿½o da API Key
 
-**NÃO COMMITE** a API Key no Git:
+**Nï¿½O COMMITE** a API Key no Git:
 
 ```bash
-# Verifique se .env está no .gitignore
+# Verifique se .env estï¿½ no .gitignore
 cat .gitignore | grep .env
 
-# Se não estiver, adicione:
+# Se nï¿½o estiver, adicione:
 echo ".env" >> .gitignore
 ```
 
-### Rotação de API Keys
+### Rotaï¿½ï¿½o de API Keys
 
 Recomendado a cada 90 dias:
 
 1. Crie nova API Key no dashboard
 2. Atualize `.env` com nova key
-3. Teste aplicação
+3. Teste aplicaï¿½ï¿½o
 4. Revogue key antiga no dashboard
 
 ---
 
-## ?? Documentação de Referência
+## ?? Documentaï¿½ï¿½o de Referï¿½ncia
 
 - **Qdrant Cloud**: https://qdrant.tech/documentation/cloud/
 - **API REST**: https://qdrant.tech/documentation/interfaces/rest/
 - **Pricing**: https://qdrant.tech/pricing/
-- **Limits Free Tier**: 1GB storage, 100k vectors, 1M API calls/mês
+- **Limits Free Tier**: 1GB storage, 100k vectors, 1M API calls/mï¿½s
 
 ---
 
@@ -187,32 +187,32 @@ Recomendado a cada 90 dias:
 curl -X PUT 'https://sua-url.qdrant.cloud:6333/collections/legal_docs' \
   -H 'api-key: sua-api-key' \
   -H 'Content-Type: application/json' \
-  -d '{"vectors": {"size": 1536, "distance": "Cosine"}}'
+  -d '{"vectors": {"size": 768, "distance": "Cosine"}}'
 ```
 
 ### Erro: "Unauthorized"
 
-- Verifique se API Key está correta no `.env`
+- Verifique se API Key estï¿½ correta no `.env`
 - Teste a key no dashboard do Qdrant Cloud
 
 ### Erro: "Timeout"
 
 - Aumente `QDRANT_TIMEOUT` no `.env`
-- Verifique conexão de internet
-- Verifique se cluster está online no dashboard
+- Verifique conexï¿½o de internet
+- Verifique se cluster estï¿½ online no dashboard
 
 ---
 
-## ?? Próximos Passos
+## ?? Prï¿½ximos Passos
 
-Após configuração bem-sucedida:
+Apï¿½s configuraï¿½ï¿½o bem-sucedida:
 
 1. [ ] Popular collection com dados iniciais (ver `ROADMAP_IMPLEMENTACAO_HIBRIDA.md`)
 2. [ ] Integrar com agente de Pesquisa Jurisprudencial
-3. [ ] Configurar busca híbrida (dense + sparse)
+3. [ ] Configurar busca hï¿½brida (dense + sparse)
 4. [ ] Monitorar uso e performance
 
-**Documentação relacionada**:
-- `ROADMAP_IMPLEMENTACAO_HIBRIDA.md` - Fase 2 (Integração de Retrieval)
-- `MATRIZ_DECISAO_FRAMEWORKS.md` - Decisão Qdrant vs ChromaDB
-- `src/lib/qdrant-service.ts` - Código do serviço
+**Documentaï¿½ï¿½o relacionada**:
+- `ROADMAP_IMPLEMENTACAO_HIBRIDA.md` - Fase 2 (Integraï¿½ï¿½o de Retrieval)
+- `MATRIZ_DECISAO_FRAMEWORKS.md` - Decisï¿½o Qdrant vs ChromaDB
+- `src/lib/qdrant-service.ts` - Cï¿½digo do serviï¿½o

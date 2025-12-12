@@ -1,8 +1,8 @@
 # Roadmap de Implementação - Arquitetura Híbrida
 ## Assistente Jurídico PJe com CrewAI + LangGraph + DSPy + AutoGen
 
-**Data**: 2024-12-07  
-**Projeto**: assistente-juridico-p  
+**Data**: 2024-12-07
+**Projeto**: assistente-juridico-p
 **Objetivo**: Transformar sistema jurídico em Multi-Agent AI com otimização contínua
 
 ---
@@ -119,29 +119,29 @@ export const AgentState = Annotation.Root({
   processId: Annotation<string | null>({
     reducer: (current, update) => update || current,
   }),
-  
+
   // Mensagens
   messages: Annotation<BaseMessage[]>({
     reducer: (current, update) => [...(current || []), ...update],
   }),
-  
+
   // Análise
   analysis: Annotation<Record<string, any>>({
     reducer: (current, update) => ({ ...current, ...update }),
     default: () => ({}),
   }),
-  
+
   // Dados de Entrada
   input: Annotation<Record<string, any>>({
     reducer: (current, update) => update || current,
     default: () => ({}),
   }),
-  
+
   // Resultado Final
   result: Annotation<Record<string, any>>({
     reducer: (current, update) => update || current,
   }),
-  
+
   // Metadata
   metadata: Annotation<{
     startedAt: string;
@@ -196,7 +196,7 @@ export abstract class LangGraphAgent {
   buildGraph() {
     const graph = new StateGraph(AgentState);
     const nodes = this.defineNodes();
-    
+
     // Adicionar nós
     for (const [nodeId, nodeFunc] of nodes) {
       graph.addNode(nodeId, nodeFunc);
@@ -248,7 +248,7 @@ export class MonitorDJENAgent extends LangGraphAgent {
       ["detect", async (state: AgentStateType) => {
         // 1. Chamar API DJEN para buscar publicações novas
         const publications = await this.detectNewPublications();
-        
+
         return {
           analysis: {
             publicationsFound: publications.length,
@@ -266,7 +266,7 @@ export class MonitorDJENAgent extends LangGraphAgent {
       ["analyze", async (state: AgentStateType) => {
         // 2. Analisar quais são intimações críticas
         const intimations = state.analysis.publicationsFound;
-        
+
         return {
           analysis: {
             ...state.analysis,
@@ -280,7 +280,7 @@ export class MonitorDJENAgent extends LangGraphAgent {
       ["escalate", async (state: AgentStateType) => {
         // 3. Se houver intimações, escalar para Mrs. Justin-e
         const critical = state.analysis.criticalDeadlines || 0;
-        
+
         if (critical > 0) {
           return {
             result: {
@@ -351,7 +351,7 @@ export class QdrantService {
     try {
       await this.client.recreateCollection(collectionName, {
         vectors: {
-          size: 1536, // OpenAI embedding size
+          size: 768, // OpenAI/Gemini embedding size
           distance: "Cosine",
         },
         sparse_vectors: {
@@ -419,9 +419,9 @@ export async function buildRagPipeline() {
   // 3. Pipeline
   const pipeline = new Pipeline();
   pipeline.addComponent("retriever", retriever);
-  
+
   // Adicionar gerador, prompt builder, etc.
-  
+
   return pipeline;
 }
 ```
@@ -541,29 +541,29 @@ async def optimize_prompt(
     """
     Otimizar prompt usando DSPy MIPRO
     """
-    
+
     # Configurar DSPy
     turbo = dspy.OpenAI(model="gpt-4")
     dspy.settings.configure(lm=turbo)
-    
+
     # Definir classe custom
     class JuridicalTask(dspy.Module):
         def __init__(self, current_prompt):
             super().__init__()
             self.signature = dspy.Signature(current_prompt)
-        
+
         def forward(self, **kwargs):
             return dspy.ChainOfThought(self.signature)(**kwargs)
-    
+
     # Executar optimizer
     optimizer = MIPRO(
         metric=eval(metric_func),
         num_threads=4,
     )
-    
+
     task = JuridicalTask(current_prompt)
     optimized = optimizer.compile(task, trainset=examples)
-    
+
     return {
         "optimized_prompt": str(optimized.signature),
         "improvement": "X%",
@@ -591,7 +591,7 @@ async function learnFromCorrection(
   });
 
   const optimized = await response.json();
-  
+
   // Salvar novo prompt
   await updateAgentPrompt("redacao-peticoes", optimized.optimized_prompt);
 }

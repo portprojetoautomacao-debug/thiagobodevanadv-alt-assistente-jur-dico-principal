@@ -135,40 +135,32 @@ export class DJENMonitorAgent extends LangGraphAgent {
     const dataFim = today.toISOString().split("T")[0];
     const dataInicio = lastWeek.toISOString().split("T")[0];
 
-    try {
-      // Fetch from DJEN API with timeout
-      const results = await consultarDJEN({
-        tribunais: ["TST", "TRT3", "TJMG"],
-        searchTerms: {},
-        dataInicio,
-        dataFim,
-        timeout: 30000, // 30s timeout
-      });
+    // Fetch from DJEN API with timeout
+    const results = await consultarDJEN({
+      tribunais: ["TST", "TRT3", "TJMG"],
+      searchTerms: {},
+      dataInicio,
+      dataFim,
+      timeout: 30000, // 30s timeout
+    });
 
-      // Check if aborted
-      if (signal.aborted) {
-        throw new Error("Operation aborted");
-      }
-
-      // Transform DJEN results to our format
-      const publications: DJENPublication[] = results.resultados.map(
-        (result: any, index: number) => ({
-          id: `${result.tribunal}-${result.data}-${index}`,
-          court: result.tribunal,
-          date: result.data,
-          content: result.teor || "",
-          processNumber: result.numeroProcesso,
-        })
-      );
-
-      return publications;
-    } catch (error) {
-      // Re-throw with context
-      if (signal.aborted) {
-        throw new Error("Operation aborted");
-      }
-      throw error;
+    // Check if aborted
+    if (signal.aborted) {
+      throw new Error("Operation aborted");
     }
+
+    // Transform DJEN results to our format and filter invalid ones
+    const publications: DJENPublication[] = (results.resultados || [])
+      .map((result: any, index: number) => ({
+        id: `${result.tribunal}-${result.data}-${index}`,
+        court: result.tribunal,
+        date: result.data,
+        content: result.teor || "",
+        processNumber: result.numeroProcesso,
+      }))
+      .filter((p) => this.validatePublication(p));
+
+    return publications;
   }
 
   /**

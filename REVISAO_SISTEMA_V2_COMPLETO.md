@@ -401,7 +401,7 @@ O sistema V2 de agentes está **100% conforme especificação** e pronto para de
 vercel --prod
 
 # 3. Teste agentes em produção
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents-v2 \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents-v2 \
   -H "Content-Type: application/json" \
   -d '{"agentId": "justine", "message": "Executar rotina de verificação"}'
 ```

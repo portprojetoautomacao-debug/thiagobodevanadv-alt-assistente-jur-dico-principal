@@ -180,7 +180,9 @@ class GoogleDocsService {
       const apiKey = GOOGLE_DOCS_API_KEY;
       if (!apiKey || apiKey === "your-google-api-key" || apiKey.length < 30) {
         console.warn("[GoogleDocs] ⚠️ API key inválida em modo dev - pulando inicialização");
-        console.warn("[GoogleDocs] Configure VITE_GOOGLE_API_KEY no arquivo .env.local");
+        console.warn(
+          "[GoogleDocs] Configure VITE_GOOGLE_API_KEY ou VITE_GEMINI_API_KEY no arquivo .env.local"
+        );
         console.warn("[GoogleDocs] Obtenha em: https://console.cloud.google.com/apis/credentials");
         this.lastError = "API key não configurada (modo dev - não crítico)";
         return; // Sai silenciosamente em dev
@@ -189,7 +191,7 @@ class GoogleDocsService {
 
     if (!GOOGLE_DOCS_CLIENT_ID || !GOOGLE_DOCS_API_KEY) {
       this.lastError =
-        "Credenciais do Google Docs não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY.";
+        "Credenciais do Google Docs não configuradas. Configure VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY (ou VITE_GEMINI_API_KEY).";
       debugError(this.lastError);
       throw new Error(this.lastError);
     }
@@ -259,23 +261,41 @@ class GoogleDocsService {
       const gapiWindow = globalThis.window as unknown as { gapi?: GapiGlobal };
       const googleWindow = globalThis.window as unknown as { google?: GoogleGisGlobal };
 
-      // Se já tem gapi e google carregados, só segue
-      if (gapiWindow.gapi && googleWindow.google) {
-        debug("Scripts already loaded");
+      // ✅ CORREÇÃO: Verificar se scripts estão REALMENTE prontos para uso
+      // Não basta ter os scripts no DOM, precisamos garantir que gapi e google.accounts estão disponíveis
+      const scriptsReady = gapiWindow.gapi && googleWindow.google?.accounts?.oauth2;
+
+      if (scriptsReady) {
+        debug("Scripts already loaded and ready");
         resolve();
         return;
       }
 
-      // Timeout de 15s
+      // Timeout de 20s (aumentado para conexões lentas)
       const timeout = setTimeout(() => {
-        reject(new Error("Timeout loading Google scripts (15s)"));
-      }, 15000);
+        reject(new Error("Timeout loading Google scripts (20s)"));
+      }, 20000);
 
-      const loadGis = () => {
-        if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
-          debug("GIS script already exists");
+      const checkAndResolve = () => {
+        const gapiReady = gapiWindow.gapi !== undefined;
+        const gisReady = googleWindow.google?.accounts?.oauth2 !== undefined;
+
+        if (gapiReady && gisReady) {
+          debug("Both GAPI and GIS are ready");
           clearTimeout(timeout);
           resolve();
+        } else {
+          debug(`Waiting for scripts... GAPI: ${gapiReady}, GIS: ${gisReady}`);
+          // Retentar em 100ms
+          setTimeout(checkAndResolve, 100);
+        }
+      };
+
+      const loadGis = () => {
+        // Se já existe o script GIS no DOM, aguardar ele ficar disponível
+        if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+          debug("GIS script already exists in DOM, waiting for it to load...");
+          checkAndResolve();
           return;
         }
 
@@ -285,8 +305,7 @@ class GoogleDocsService {
         gisScript.defer = true;
         gisScript.onload = () => {
           debug("GIS script loaded");
-          clearTimeout(timeout);
-          resolve();
+          checkAndResolve();
         };
         gisScript.onerror = () => {
           clearTimeout(timeout);
@@ -295,9 +314,19 @@ class GoogleDocsService {
         document.head.appendChild(gisScript);
       };
 
+      // Se já existe o script GAPI no DOM, aguardar ele ficar disponível
       if (document.querySelector('script[src*="apis.google.com"]')) {
-        debug("GAPI script already exists");
-        loadGis();
+        debug("GAPI script already exists in DOM, waiting for it to load...");
+        // Aguardar gapi ficar disponível antes de carregar GIS
+        const waitForGapi = () => {
+          if (gapiWindow.gapi) {
+            debug("GAPI is now available");
+            loadGis();
+          } else {
+            setTimeout(waitForGapi, 100);
+          }
+        };
+        waitForGapi();
         return;
       }
 
@@ -330,23 +359,32 @@ class GoogleDocsService {
         return;
       }
 
+      // ✅ CORREÇÃO: Adicionar timeout para gapi.load
+      const timeout = setTimeout(() => {
+        const error = "Timeout ao carregar GAPI client (15s)";
+        this.lastError = error;
+        debugError(error);
+        reject(new Error(error));
+      }, 15000);
+
       gapiWindow.gapi.load("client", async () => {
-        debug("GAPI client module loaded (Docs)");
-
-        const clientInit = (
-          gapiWindow.gapi?.client as {
-            init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>;
-          }
-        )?.init;
-
-        if (typeof clientInit !== "function") {
-          this.lastError = "Google API client init not available (Docs)";
-          debugError(this.lastError);
-          reject(new Error(this.lastError));
-          return;
-        }
-
         try {
+          clearTimeout(timeout);
+          debug("GAPI client module loaded (Docs)");
+
+          const clientInit = (
+            gapiWindow.gapi?.client as {
+              init?: (opts: { apiKey: string; discoveryDocs: string[] }) => Promise<void>;
+            }
+          )?.init;
+
+          if (typeof clientInit !== "function") {
+            this.lastError = "Google API client init not available (Docs)";
+            debugError(this.lastError);
+            reject(new Error(this.lastError));
+            return;
+          }
+
           await clientInit({
             apiKey: GOOGLE_DOCS_API_KEY,
             discoveryDocs: [
@@ -358,6 +396,7 @@ class GoogleDocsService {
           debug("GAPI client initialized successfully for Docs");
           resolve();
         } catch (err) {
+          clearTimeout(timeout);
           this.lastError = `Erro ao inicializar Google Docs API: ${
             err instanceof Error ? err.message : String(err)
           }`;

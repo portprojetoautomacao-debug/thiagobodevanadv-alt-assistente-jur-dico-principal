@@ -44,7 +44,7 @@ npm run package
 
 ### 1. Obter API Key
 
-1. Acesse https://assistente-juridico-p.vercel.app
+1. Acesse https://assistente-juridico-github.vercel.app
 2. Faça login com sua conta Google
 3. Vá em **Configurações** → **API Keys**
 4. Clique em "Gerar Nova Chave"
@@ -216,7 +216,7 @@ npm run test:ci
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────┐
-│ 5. Dashboard (assistente-juridico-p.vercel.app)         │
+│ 5. Dashboard (assistente-juridico-github.vercel.app)         │
 │    → Exibe processos e expedientes em tempo real        │
 └─────────────────────────────────────────────────────────┘
 ```

@@ -4,7 +4,7 @@ import { LangGraphAgent } from "../base/langgraph_agent";
 import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 
 export class GestaoPrazosAgent extends LangGraphAgent {
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     // 🔍 Instrumentar invocação do agente Gestão de Prazos
     return createInvokeAgentSpan(
       {

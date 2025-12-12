@@ -41,7 +41,7 @@ const getEnvVar = (key: string, defaultValue?: string, logError: boolean = true)
 export const config = {
   google: {
     clientId: getEnvVar("VITE_GOOGLE_CLIENT_ID", ""),
-    apiKey: getEnvVar("VITE_GOOGLE_API_KEY", ""),
+    apiKey: getEnvVar("VITE_GEMINI_API_KEY", "") || getEnvVar("VITE_GOOGLE_API_KEY", ""),
     redirectUri: getEnvVar("VITE_REDIRECT_URI", getOrigin()),
   },
 

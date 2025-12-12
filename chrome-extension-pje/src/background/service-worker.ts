@@ -4,12 +4,17 @@
 
 import { BACKEND_URL, STORAGE_KEYS } from "../shared/constants";
 import { ExtensionErrorEvent } from "../shared/errorHandler";
+import { CrawlerManager } from "./crawler/crawler-manager";
 import { SyncManager } from "./sync-manager";
 
 console.log("[PJe Sync] Background Service Worker iniciado");
 
 // Inicializa gerenciador de sincronização
 new SyncManager();
+
+// Inicializa gerenciador de crawler
+new CrawlerManager();
+console.log("[PJe Sync] Crawler Manager inicializado");
 
 // Evento de instalação
 chrome.runtime.onInstalled.addListener((details) => {
@@ -18,7 +23,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     // Primeira instalação - mostra página de boas-vindas
     chrome.tabs.create({
-      url: "https://assistente-juridico-p.vercel.app/extensao-instalada",
+      url: "https://assistente-juridico-github.vercel.app/extensao-instalada",
     });
   } else if (details.reason === "update") {
     // Atualização

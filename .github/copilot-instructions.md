@@ -77,9 +77,12 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 
 ### 🌐 URLs de Produção
 
-- **App Principal**: https://assistente-juridico-p.vercel.app/
-- **App Alternativo**: https://assistente-juridico-github.vercel.app/
-- **API Health**: https://assistente-juridico-p.vercel.app/api/health
+- **App Principal (URL OFICIAL)**: https://assistente-juridico-github.vercel.app/
+- **App Alternativo (URL ANTIGA - DEPRECADA)**: https://assistente-juridico-github.vercel.app/
+- **API Health**: https://assistente-juridico-github.vercel.app/api/health
+
+> ⚠️ **IMPORTANTE**: A URL oficial de produção é **`assistente-juridico-github.vercel.app`**.
+> A URL antiga `assistente-juridico-github.vercel.app` está deprecada e deve ser substituída em todo o código.
 
 ### 🎯 Objetivo Principal: Automação 100% com Supervisão Humana
 
@@ -212,6 +215,7 @@ O projeto **Assistente Jurídico PJe** possui um sistema de automação total co
 - npm run test:run (testes unitários)
  - Verificar `DSPY_BRIDGE` (se em uso): `curl -sS "$DSPY_BRIDGE_URL/health"` - deve retornar 200
  - Verificar `QDRANT` (se em uso): `curl -sS "$QDRANT_URL/collections" -H "api-key: $QDRANT_API_KEY"` - deve retornar 200
+ - Verificar **Vector Size**: confirme que a collection está usando **768 dimensões** (compatível com text-embedding-004/Gemini/OpenAI)
  - Verificar `Email API` e filas: `curl -sS "$VERCEL_URL/api/emails/health"` ou teste de envio de `type=test`
 - npm run build (build completo)
 ```
@@ -276,6 +280,11 @@ Data: [DATA ATUAL]
 4. **Arquivos corrompidos**: Restaurar do backup/git
 5. **DSPy Bridge não responde**: Reiniciar serviço Railway ou alertar operador; se deploy local, usar `systemctl restart dspy-bridge.service` (prod) ou `python3 scripts/dspy_bridge.py` para testes locais
 6. **Qdrant indisponível**: Verificar logs da instância Qdrant Cloud, chaves e quota; em caso de erro, notificar operador e escalar a instância
+   - **ATENÇÃO SOBRE POPULAÇÃO**: NÃO execute automaticamente a população em massa (`npm run qdrant:populate-datajud`) sem autorização humana. Sempre:
+     1. Validar a coleção e testar com `npm run qdrant:test`.
+     2. Rodar `npm run qdrant:populate:dry-run` primeiro para verificar efeitos (limitar `--max-docs` se preciso).
+     3. Somente após validação explícita por um operador, executar `npm run qdrant:populate-datajud` para inserir dados efetivos.
+     4. Mantenha `QDRANT_URL` e `QDRANT_API_KEY` em secrets e não commitados.
 7. **Email SEND falha**: Verificar `RESEND_API_KEY` e logs do provedor; reprocessar fila se houver backlog; se o provider estiver fora, use stub temporário e avise o operador
 
 **IMPORTANTE**: O Copilot deve informar ao usuário sobre qualquer problema detectado e propor correções automáticas.
@@ -720,30 +729,30 @@ export class HybridAILegalSystem {
   async processLegalRequest(request: LegalRequest) {
     // 1. AutoGen analysis
     const autoGenResult = await this.autoGenOrchestrator.run(request);
-    
+
     // 2. LangGraph workflow
     const workflowResult = await this.legalWorkflow.invoke(autoGenResult);
-    
+
     // 3. CrewAI deep research
     const crewResearch = await this.legalCrew.kickoff(workflowResult);
-    
+
     // 4. DSPy optimization
     const optimized = await this.promptOptimizer.compile(crewResearch);
-    
+
     // 5. Semantic Kernel enrichment
     const enriched = await this.semanticKernel.run(optimized);
-    
+
     // 6. Byzantine consensus
     const consensus = await this.byzantineConsensus.achieve([
       autoGenResult, workflowResult, crewResearch, optimized, enriched
     ]);
-    
+
     // 7. Quantum optimization
     const quantumOptimized = await this.quantumOptimizer.optimize(consensus);
-    
+
     // 8. Neuromorphic learning
     await this.neuromorphicProcessor.learn(request, quantumOptimized);
-    
+
     return quantumOptimized;
   }
 }

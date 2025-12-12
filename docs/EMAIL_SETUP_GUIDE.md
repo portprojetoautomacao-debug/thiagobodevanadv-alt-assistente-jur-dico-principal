@@ -43,7 +43,7 @@ git push origin main
 O Vercel pegará a secret automaticamente e você pode testar em produção:
 
 ```bash
-curl -X POST https://assistente-juridico-p.vercel.app/api/emails \
+curl -X POST https://assistente-juridico-github.vercel.app/api/emails \
   -H "Content-Type: application/json" \
   -d '{
     "type": "test",
@@ -83,7 +83,7 @@ curl -X POST http://localhost:3000/api/emails \
     "to": "usuario@example.com",
     "subject": "Nova Petição Disponível",
     "message": "Uma nova petição foi redacionada pelo agente IA",
-    "actionUrl": "https://assistente-juridico-p.vercel.app/minutas"
+    "actionUrl": "https://assistente-juridico-github.vercel.app/minutas"
   }'
 ```
 

@@ -112,7 +112,7 @@ export default function ProcessTimelineViewer({
   const selectedEventRef = useRef<HTMLButtonElement>(null);
 
   // Verifica se evento é novo (últimos 5 minutos)
-  const isEventNew = (event: ProcessEvent) => {
+  const _isEventNew = (event: ProcessEvent) => {
     const eventTime = new Date(event.dataHora).getTime();
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
     return eventTime > fiveMinutesAgo;

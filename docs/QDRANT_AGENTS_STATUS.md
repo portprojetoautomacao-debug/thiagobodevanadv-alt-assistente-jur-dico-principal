@@ -1,12 +1,12 @@
-# ?? Status de Conexão: Cluster Qdrant x Agentes
+# ?? Status de Conexï¿½o: Cluster Qdrant x Agentes
 
-**Data**: 09/12/2024  
-**Cluster**: `https://4aee698c-53f6-4571-8f41-eb80f56ff1f2.us-east4-0.gcp.cloud.qdrant.io:6333`  
+**Data**: 09/12/2024
+**Cluster**: `https://4aee698c-53f6-4571-8f41-eb80f56ff1f2.us-east4-0.gcp.cloud.qdrant.io:6333`
 **Collection**: `legal_docs`
 
 ---
 
-## ?? **Situação Atual**
+## ?? **Situaï¿½ï¿½o Atual**
 
 ### ? **Cluster Qdrant: Operacional**
 
@@ -15,27 +15,27 @@
 | Cluster criado | ? Sim |
 | Collection `legal_docs` | ? Criada |
 | API Key configurada | ? Sim |
-| Conexão testada | ? Funcionando |
+| Conexï¿½o testada | ? Funcionando |
 | Vetores armazenados | ? 0 (vazio) |
 
-### ? **Agentes: NÃO Conectados**
+### ? **Agentes: Nï¿½O Conectados**
 
-**Nenhum agente está conectado ao Qdrant atualmente!**
+**Nenhum agente estï¿½ conectado ao Qdrant atualmente!**
 
-| Agente | Status Qdrant | Observação |
+| Agente | Status Qdrant | Observaï¿½ï¿½o |
 |--------|---------------|------------|
 | **Pesquisa Juris** | ?? **MOCK** | Deveria usar, mas usa dados mockados |
-| Harvey Specter | ? Não | Chatbot conversacional (não precisa) |
-| Mrs. Justin-e | ? Não | Análise de intimações (não precisa) |
-| Monitor DJEN | ? Não | Monitoramento DJEN (não precisa) |
-| Redação Petições | ? Não | Usa templates locais |
-| Análise Documental | ? Não | Poderia usar, mas não implementado |
-| Revisão Contratual | ? Não | Não implementado |
-| Outros 8 agentes | ? Não | Não implementados |
+| Harvey Specter | ? Nï¿½o | Chatbot conversacional (nï¿½o precisa) |
+| Mrs. Justin-e | ? Nï¿½o | Anï¿½lise de intimaï¿½ï¿½es (nï¿½o precisa) |
+| Monitor DJEN | ? Nï¿½o | Monitoramento DJEN (nï¿½o precisa) |
+| Redaï¿½ï¿½o Petiï¿½ï¿½es | ? Nï¿½o | Usa templates locais |
+| Anï¿½lise Documental | ? Nï¿½o | Poderia usar, mas nï¿½o implementado |
+| Revisï¿½o Contratual | ? Nï¿½o | Nï¿½o implementado |
+| Outros 8 agentes | ? Nï¿½o | Nï¿½o implementados |
 
 ---
 
-## ?? **Evidências de MOCK vs REAL**
+## ?? **Evidï¿½ncias de MOCK vs REAL**
 
 ### **Agente Atual (Mock)**
 
@@ -46,7 +46,7 @@ const precedentes = [
 ];
 ```
 
-### **Serviço Qdrant (Existe mas Não É Usado)**
+### **Serviï¿½o Qdrant (Existe mas Nï¿½o ï¿½ Usado)**
 
 ```typescript
 // src/lib/qdrant-service.ts
@@ -61,21 +61,21 @@ export class QdrantService {
 
 ## ?? **Arquivos Criados para Resolver**
 
-### **1. Agente com Integração Real**
+### **1. Agente com Integraï¿½ï¿½o Real**
 
 ? **`src/agents/pesquisa-juris/pesquisa_graph_qdrant.ts`**
 
 - Importa `createQdrantService`
 - Gera embedding da query
 - Busca vetores similares no cluster
-- Fallback para mock se Qdrant indisponível
-- Instrumentação Sentry completa
+- Fallback para mock se Qdrant indisponï¿½vel
+- Instrumentaï¿½ï¿½o Sentry completa
 
-**Características:**
+**Caracterï¿½sticas:**
 
 - ? Usa `VITE_QDRANT_URL`, `VITE_QDRANT_API_KEY`, `VITE_QDRANT_COLLECTION_NAME`
 - ? Busca real via `qdrantService.search()`
-- ? Fallback automático se cluster offline
+- ? Fallback automï¿½tico se cluster offline
 - ? Sentry spans para monitoramento
 
 ---
@@ -84,23 +84,23 @@ export class QdrantService {
 
 ### **Fase 1: Popular a Collection (URGENTE)**
 
-? **Collection está vazia** - precisa ser populada com dados jurídicos
+? **Collection estï¿½ vazia** - precisa ser populada com dados jurï¿½dicos
 
-**Opções:**
+**Opï¿½ï¿½es:**
 
 1. **Scraping STF/STJ** (manual ou script)
-2. **Upload de PDFs jurídicos** (converter para embeddings)
+2. **Upload de PDFs jurï¿½dicos** (converter para embeddings)
 3. **Importar base de precedentes** (JSON/CSV)
 
 ### **Fase 2: Implementar Embedding Generation**
 
-? **Placeholder de embedding** - precisa integração real com Gemini
+? **Placeholder de embedding** - precisa integraï¿½ï¿½o real com Gemini
 
 ```typescript
 // src/lib/gemini-embedding-service.ts
 export async function generateEmbedding(text: string): Promise<number[]> {
-  // Chamar Gemini Embedding API
-  // Retornar vetor de 1536 dimensões
+  // Chamar Gemini/OpenAI Embedding API
+  // Retornar vetor de 768 dimensï¿½es (text-embedding-004 / text-embedding-3-large)
 }
 ```
 
@@ -121,18 +121,18 @@ export const AGENTS: Agent[] = [
 ];
 ```
 
-### **Fase 4: Testar Integração End-to-End**
+### **Fase 4: Testar Integraï¿½ï¿½o End-to-End**
 
 ? **Validar fluxo completo**:
 
 1. Query ? Embedding ? Qdrant Search ? Resultados
 2. Fallback funciona se Qdrant offline
 3. Sentry spans aparecem no dashboard
-4. Performance aceitável (<500ms)
+4. Performance aceitï¿½vel (<500ms)
 
 ---
 
-## ?? **Plano de Ação Imediato**
+## ?? **Plano de Aï¿½ï¿½o Imediato**
 
 ### **Passo 1: Popular Collection com Dados de Teste**
 
@@ -149,11 +149,11 @@ const service = createQdrantService({
 const testData = [
   {
     id: "stf-001",
-    vector: Array.from({ length: 1536 }, () => Math.random()),
+    vector: Array.from({ length: 768 }, () => Math.random()),
     payload: {
       tribunal: "STF",
-      titulo: "Tema 1234 - Direito à greve",
-      ementa: "É constitucional o exercício do direito de greve...",
+      titulo: "Tema 1234 - Direito ï¿½ greve",
+      ementa: "ï¿½ constitucional o exercï¿½cio do direito de greve...",
       data: "2023-05-15",
       numero: "ADPF-123",
     },
@@ -193,7 +193,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 import { generateEmbedding } from "@/lib/gemini-embedding-service";
 
 private async generateEmbedding(text: string): Promise<number[]> {
-  return generateEmbedding(text); // ? REAL, não mock
+  return generateEmbedding(text); // ? REAL, nï¿½o mock
 }
 ```
 
@@ -222,7 +222,7 @@ npm run dev
 
 # 3. Testar pesquisa no dashboard
 # Abrir painel de Pesquisa Jurisprudencial
-# Executar busca: "direito à greve"
+# Executar busca: "direito ï¿½ greve"
 # Verificar se retorna precedentes do Qdrant
 
 # 4. Verificar Sentry
@@ -232,31 +232,31 @@ npm run dev
 
 ---
 
-## ?? **Métricas de Sucesso**
+## ?? **Mï¿½tricas de Sucesso**
 
-| Métrica | Meta | Status Atual |
+| Mï¿½trica | Meta | Status Atual |
 |---------|------|--------------|
 | Agentes conectados ao Qdrant | ?1 | 0 ? |
 | Vetores na collection | ?100 | 0 ? |
 | Tempo de resposta | <500ms | N/A |
 | Taxa de sucesso | >95% | N/A |
-| Relevância média | >0.7 | N/A |
+| Relevï¿½ncia mï¿½dia | >0.7 | N/A |
 
 ---
 
-## ?? **Documentação Relacionada**
+## ?? **Documentaï¿½ï¿½o Relacionada**
 
 - `docs/QDRANT_SETUP_CHECKLIST.md` - Setup do cluster
-- `docs/QDRANT_CONFIG_COMPLETA.md` - Configuração final
+- `docs/QDRANT_CONFIG_COMPLETA.md` - Configuraï¿½ï¿½o final
 - `ROADMAP_IMPLEMENTACAO_HIBRIDA.md` - Fase 2 (Retrieval)
-- `src/lib/qdrant-service.ts` - Serviço TypeScript
+- `src/lib/qdrant-service.ts` - Serviï¿½o TypeScript
 - `src/agents/pesquisa-juris/pesquisa_graph_qdrant.ts` - ? **NOVO!**
 
 ---
 
 ## ? **Resumo Executivo**
 
-### **Status Atual**: ?? **Cluster OK, Agentes Não Conectados**
+### **Status Atual**: ?? **Cluster OK, Agentes Nï¿½o Conectados**
 
 - ? Cluster Qdrant configurado e funcionando
 - ? Collection `legal_docs` criada
@@ -264,16 +264,16 @@ npm run dev
 - ? Collection vazia (0 vetores)
 - ?? Agente de Pesquisa Juris usa **dados mockados**
 
-### **Próximos Passos**:
+### **Prï¿½ximos Passos**:
 
 1. ? Popular collection com dados de teste (criado script)
-2. ? Integrar Gemini Embedding Service (criado módulo)
+2. ? Integrar Gemini Embedding Service (criado mï¿½dulo)
 3. ? Conectar agente `pesquisa-juris-qdrant` (criado)
 4. ? Testar end-to-end
 5. ? Registrar no sistema de agentes
 
-**Tempo estimado**: 2-4 horas para completar integração funcional
+**Tempo estimado**: 2-4 horas para completar integraï¿½ï¿½o funcional
 
 ---
 
-**Última atualização**: 09/12/2024
+**ï¿½ltima atualizaï¿½ï¿½o**: 09/12/2024

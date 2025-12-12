@@ -33,6 +33,9 @@ jobs:
   integration-tests:
     name: Agent Flow Integration
     runs-on: ubuntu-latest
+    env:
+      DSPY_API_TOKEN: ${{ secrets.DSPY_API_TOKEN }}
+      DSPY_PORT: 8765
     timeout-minutes: 25
     permissions:
       contents: read
@@ -76,7 +79,8 @@ jobs:
           export DSPY_API_TOKEN=${DSPY_API_TOKEN:-test-token}
           export DSPY_PORT=8765
           python3 scripts/dspy_bridge.py &
-          sleep 1
+          # Allow a slightly longer startup time to ensure UVicorn is up and listening
+          sleep 3
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
@@ -94,10 +98,11 @@ jobs:
           ls -la tests/integration || true
           git ls-files tests/integration || true
 
-          # Robust glob handling with nullglob
-          shopt -s nullglob
-          files=(tests/integration/*.test.ts)
-          if [ ${#files[@]} -gt 0 ]; then
+          # Robust git-backed discovery (handles nested dirs, avoids shell glob issues in CI)
+          shopt -s nullglob globstar
+          mapfile -t files < <(git ls-files tests/integration | grep '\.test\.ts$' | grep -v '\.backup$' || true)
+
+          if [ "${#files[@]}" -gt 0 ]; then
             echo "Found integration tests: ${files[*]}"
             npx vitest run "${files[@]}" --reporter=verbose
           else

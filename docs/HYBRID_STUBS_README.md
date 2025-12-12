@@ -3,9 +3,9 @@
 This directory contains **safe, minimal stub files** for the hybrid AI agent architecture combining:
 
 - **AutoGen** - Multi-agent orchestration
-- **LangGraph** - Graph-based agent workflows  
+- **LangGraph** - Graph-based agent workflows
 - **DSPy** - Prompt optimization
-- **Haystack + Qdrant** - Vector search and RAG
+- **Qdrant** - Vector search and RAG (Haystack integration planned)
 
 ## 🔒 Security Features
 
@@ -272,5 +272,5 @@ When implementing the full versions:
 
 ---
 
-**Status**: 🟡 Safe stubs ready for testing  
+**Status**: 🟡 Safe stubs ready for testing
 **Next Action**: Test locally with Qdrant + DSPy bridge, then implement real integrations

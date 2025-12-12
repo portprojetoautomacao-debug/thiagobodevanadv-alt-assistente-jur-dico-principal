@@ -25,7 +25,7 @@ npm install
 
 ### 2. Conta Vercel
 
-- Projeto já configurado em: https://assistente-juridico-p.vercel.app/
+- Projeto já configurado em: https://assistente-juridico-github.vercel.app/
 - Acesso ao Vercel Dashboard
 
 ### 3. Serviços Externos (Opcionais)
@@ -81,7 +81,7 @@ VITE_DSPY_API_TOKEN=
 # Email Service (Opcional)
 # Deixe em branco se não for usar notificações por email
 RESEND_API_KEY=
-RESEND_FROM_EMAIL=assistente@assistente-juridico-p.vercel.app
+RESEND_FROM_EMAIL=assistente@assistente-juridico-github.vercel.app
 ```
 
 #### 🔐 Como Gerar Tokens Seguros
@@ -214,7 +214,7 @@ Se quiser usar **notificações por email**:
 #### 1. Health Check
 
 ```bash
-curl https://assistente-juridico-p.vercel.app/api/status?type=health
+curl https://assistente-juridico-github.vercel.app/api/status?type=health
 ```
 
 Resposta esperada:
@@ -229,7 +229,7 @@ Resposta esperada:
 #### 2. Testar AutoGen Orchestrator
 
 ```bash
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents/autogen_orchestrator \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents/autogen_orchestrator \
   -H "Authorization: Bearer YOUR_AUTOGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -348,7 +348,7 @@ Ou **desabilite email service** (stubs vão retornar erro, mas não quebra o sis
 
 | Recurso | URL |
 |---------|-----|
-| **App Produção** | https://assistente-juridico-p.vercel.app/ |
+| **App Produção** | https://assistente-juridico-github.vercel.app/ |
 | **Vercel Dashboard** | https://vercel.com/assistente-juridico-p |
 | **Qdrant Cloud** | https://cloud.qdrant.io/ |
 | **Resend** | https://resend.com/ |

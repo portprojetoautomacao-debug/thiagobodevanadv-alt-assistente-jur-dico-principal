@@ -48,7 +48,7 @@
 ### Vercel
 | Componente | Status | Observação |
 |------------|--------|------------|
-| 🌐 Deploy | ✅ | assistente-juridico-p.vercel.app |
+| 🌐 Deploy | ✅ | assistente-juridico-github.vercel.app |
 | ⚙️ Variáveis Env | ⏳ | Falta: DSPY_BRIDGE_URL |
 | 🔄 CI/CD | ✅ | Auto-deploy via GitHub |
 
@@ -82,7 +82,7 @@ railway status
 # Variáveis CRÍTICAS para DSPy Bridge
 railway variables set DSPY_API_TOKEN=$(openssl rand -base64 32)
 railway variables set DSPY_PORT=8765
-railway variables set ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+railway variables set ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 railway variables set GEMINI_API_KEY=your-gemini-api-key-here
 
 # Variáveis adicionais (recomendadas)
@@ -119,7 +119,7 @@ railway domain
 curl https://gentle-vision.up.railway.app/health
 
 # 2. Testar Vercel → Railway connection
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # 3. Verificar logs Railway
 railway logs --tail 100
@@ -140,7 +140,7 @@ railway logs --tail 100
 - [ ] Health check respondendo
 
 ### Vercel
-- [x] Deploy ativo (assistente-juridico-p.vercel.app)
+- [x] Deploy ativo (assistente-juridico-github.vercel.app)
 - [ ] **DSPY_BRIDGE_URL configurado** ⬅️ **AGUARDA RAILWAY**
 - [ ] **DSPY_API_TOKEN configurado** ⬅️ **AGUARDA RAILWAY**
 - [ ] Rebuild após configuração
@@ -162,7 +162,7 @@ railway logs --tail 100
 # ===== OBRIGATÓRIAS =====
 DSPY_API_TOKEN=<gerar-token-seguro-32-chars>
 DSPY_PORT=8765
-ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 GEMINI_API_KEY=<sua-api-key-gemini>
 
 # ===== RECOMENDADAS =====
@@ -222,7 +222,7 @@ railway link -p a364e7f2-c234-477b-8dac-918f00f64737
 ### ❌ "CORS error" entre Vercel e Railway
 **Solução**: Validar `ALLOWED_ORIGINS` no Railway
 ```bash
-railway variables set ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+railway variables set ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 ```
 
 ### ❌ Railway deploy falha com "No Procfile"
@@ -274,10 +274,10 @@ https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/logs
 curl https://gentle-vision.up.railway.app/health
 
 # Vercel health
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # Validar integração (deve retornar sem erros)
-curl -X POST https://assistente-juridico-p.vercel.app/api/llm-proxy \
+curl -X POST https://assistente-juridico-github.vercel.app/api/llm-proxy \
   -H "Content-Type: application/json" \
   -d '{"prompt":"teste","mode":"optimize"}'
 ```
@@ -331,10 +331,10 @@ vercel domains                   # Ver/gerenciar domínios
 # ===== TESTES =====
 # Health checks
 curl https://gentle-vision.up.railway.app/health
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # Teste de integração
-curl -X POST https://assistente-juridico-p.vercel.app/api/llm-proxy \
+curl -X POST https://assistente-juridico-github.vercel.app/api/llm-proxy \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $DSPY_API_TOKEN" \
   -d '{"prompt":"Analise processo trabalhista","mode":"optimize"}'

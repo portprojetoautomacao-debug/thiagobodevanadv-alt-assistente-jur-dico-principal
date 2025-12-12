@@ -118,7 +118,7 @@ export default function TracingDashboard({
     setIsRefreshing(false);
   }, [agentIds]);
 
-  const getStatusColor = (status: string) => {
+  const _getStatusColor = (status: string) => {
     switch (status) {
       case "ok":
         return "text-green-600 bg-green-100";

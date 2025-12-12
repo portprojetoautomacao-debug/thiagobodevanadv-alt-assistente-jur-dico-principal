@@ -83,7 +83,7 @@ if kubectl get secret assistente-juridico-secrets 2>/dev/null; then
     warn "Secrets já existem. Pulando..."
 else
     step "Criando secrets..."
-    
+
     # Obter valores do .env se existir
     if [[ -f .env ]]; then
         source .env
@@ -91,6 +91,7 @@ else
             --from-literal=app-env="${VITE_APP_ENV:-production}" \
             --from-literal=google-client-id="${VITE_GOOGLE_CLIENT_ID:-}" \
             --from-literal=google-api-key="${VITE_GOOGLE_API_KEY:-}" \
+            --from-literal=gemini-api-key="${VITE_GEMINI_API_KEY:-}" \
             --from-literal=todoist-api-key="${VITE_TODOIST_API_KEY:-}"
     else
         # Valores padrão para desenvolvimento
@@ -98,11 +99,12 @@ else
             --from-literal=app-env=development \
             --from-literal=google-client-id=YOUR_GOOGLE_CLIENT_ID \
             --from-literal=google-api-key=YOUR_GOOGLE_API_KEY \
+            --from-literal=gemini-api-key=YOUR_GEMINI_API_KEY \
             --from-literal=todoist-api-key=YOUR_TODOIST_API_KEY
-        
+
         warn "Usando valores padrão. Configure os secrets depois!"
     fi
-    
+
     success "Secrets criados"
 fi
 

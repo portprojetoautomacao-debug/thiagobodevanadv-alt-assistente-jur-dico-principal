@@ -5,7 +5,10 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useKV } from "./use-kv";
-import { validateFinancialEntry, type FinancialEntryValidated } from "@/schemas/process.schema";
+import {
+  validateFinancialEntry,
+  type FinancialEntryValidated as _FinancialEntryValidated,
+} from "@/schemas/process.schema";
 
 // Tipo FinancialEntry (compat�vel com o sistema existente)
 export interface FinancialEntry {

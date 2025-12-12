@@ -31,10 +31,10 @@
 
 ```bash
 # Verificar Vercel Status
-curl -I https://assistente-juridico-p.vercel.app/
+curl -I https://assistente-juridico-github.vercel.app/
 
 # Verificar API Health
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # Saída esperada (saudável):
 # HTTP/2 200
@@ -78,7 +78,7 @@ Se o problema for causado por agentes:
 
 ```bash
 # Via API (requer API_KEY)
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"action": "pause_all"}'
@@ -177,7 +177,7 @@ vercel --prod
 
 ```bash
 # Verificar API Health
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # Verificar Sentry (próximos 5 minutos)
 # Taxa de erro deve cair para < 1%
@@ -224,7 +224,7 @@ https://console.upstash.com/redis/
 
 ```bash
 # Limpar cache antigo (via código)
-curl -X POST https://assistente-juridico-p.vercel.app/api/cache/clear \
+curl -X POST https://assistente-juridico-github.vercel.app/api/cache/clear \
   -H "Authorization: Bearer $API_KEY"
 ```
 
@@ -275,7 +275,7 @@ export const LIMITS = {
 
 ```bash
 # Via API
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -330,7 +330,7 @@ vercel logs assistente-juridico-p --follow | grep "redacao-peticoes"
 
 ```bash
 # 1. Verificar Health do Sistema (2 min)
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 
 # Saída esperada:
 # {"status":"ok","timestamp":"...","uptime":...}
@@ -463,7 +463,7 @@ npm run verify:backups
 
 ```bash
 # UptimeRobot (recomendado)
-# Monitor: https://assistente-juridico-p.vercel.app/api/health
+# Monitor: https://assistente-juridico-github.vercel.app/api/health
 # Interval: 5 minutos
 # Alert: Email + SMS se down > 2 minutos
 

@@ -147,7 +147,7 @@ npm run test:integration
    ```
    DSPY_API_TOKEN=generate-a-secure-random-token-here
    DSPY_PORT=8765
-   ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+   ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
    DSPY_LM_MODEL=openai/gpt-3.5-turbo
    ```
 5. **Deploy:**
@@ -175,7 +175,7 @@ railway up
 
 # Adicionar env vars
 railway variables set DSPY_API_TOKEN=your-token
-railway variables set ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+railway variables set ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 ```
 
 ---
@@ -221,7 +221,7 @@ railway variables set ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
    # ========== DSPY BRIDGE ==========
    DSPY_BRIDGE_URL=https://your-app.up.railway.app
    DSPY_API_TOKEN=same-token-as-railway
-   ALLOWED_ORIGINS=https://assistente-juridico-p.vercel.app
+   ALLOWED_ORIGINS=https://assistente-juridico-github.vercel.app
 
    # ========== LANGGRAPH ==========
    LANGGRAPH_TIMEOUT=30000
@@ -268,10 +268,10 @@ curl -X POST https://your-app.up.railway.app/optimize \
 
 ```bash
 # Abrir no browser
-https://assistente-juridico-p.vercel.app
+https://assistente-juridico-github.vercel.app
 
 # Testar API
-curl https://assistente-juridico-p.vercel.app/api/health
+curl https://assistente-juridico-github.vercel.app/api/health
 ```
 
 ---

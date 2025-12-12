@@ -3,7 +3,7 @@ import { updateState } from "../base/agent_state";
 import { LangGraphAgent } from "../base/langgraph_agent";
 
 export class JustineAgent extends LangGraphAgent {
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     let current = updateState(state, { currentStep: "justine:start" });
 
     // For the stub: simulate quick analysis and extraction

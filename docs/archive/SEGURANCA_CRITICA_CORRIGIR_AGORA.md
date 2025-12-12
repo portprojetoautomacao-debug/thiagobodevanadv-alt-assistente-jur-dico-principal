@@ -55,9 +55,11 @@ No repositório GitHub, vá em **Settings** > **Secrets and variables** > **Acti
 
 ```
 VITE_GOOGLE_CLIENT_ID=<novo-client-id>
-VITE_GOOGLE_API_KEY=<nova-api-key>
+VITE_GEMINI_API_KEY=<nova-api-key>
 VITE_REDIRECT_URI=<sua-url-de-redirect>
 ```
+
+> **Nota**: `VITE_GOOGLE_API_KEY` foi substituído por `VITE_GEMINI_API_KEY`.
 
 ### 4. **Atualizar Vercel Environment Variables**
 

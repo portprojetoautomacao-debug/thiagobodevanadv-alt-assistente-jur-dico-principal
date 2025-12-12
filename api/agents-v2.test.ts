@@ -1,4 +1,4 @@
-import { beforeAll, expect, test } from "vitest";
+import { beforeAll, expect, test, vi } from "vitest";
 import handler from "./agents-v2";
 
 function makeReq(body: any, apiKey = "test-autogen-key") {
@@ -29,6 +29,16 @@ function makeRes() {
   result.end = () => result;
   return result;
 }
+
+// Mock hybrid-agents-integration para evitar erro "LangGraph agents em construção"
+vi.mock("../src/lib/hybrid-agents-integration.js", () => ({
+  hasHybridVersion: () => true,
+  executeHybridTask: vi.fn().mockResolvedValue({
+    success: true,
+    mode: "mock",
+    langGraphResult: { messages: [] },
+  }),
+}));
 
 beforeAll(() => {
   process.env.AUTOGEN_API_KEY = "test-autogen-key";

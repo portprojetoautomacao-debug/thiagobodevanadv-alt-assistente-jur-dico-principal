@@ -29,7 +29,7 @@ export async function exampleCronWithEmailNotification() {
             to: email,
             subject: "🚨 Nova Intimação Detectada no DJEN",
             message: "Uma nova intimação foi encontrada. Clique para revisar.",
-            actionUrl: "https://assistente-juridico-p.vercel.app/dashboard",
+            actionUrl: "https://assistente-juridico-github.vercel.app/dashboard",
           }),
         }
       );
@@ -237,7 +237,7 @@ export async function sendEmailWithRetry(
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const _data = await response.json();
         console.log(`✅ Email enviado com sucesso (tentativa ${attempt})`);
         return true;
       } else {

@@ -23,7 +23,7 @@ Review Apps são ambientes de teste temporários criados automaticamente para ca
 
 #### Environment Dinâmico
 - **Nome**: `review/$CI_COMMIT_REF_SLUG`
-- **URL**: `https://$CI_COMMIT_REF_SLUG-assistente-juridico-p.vercel.app`
+- **URL**: `https://$CI_COMMIT_REF_SLUG-assistente-juridico-github.vercel.app`
 - **Auto-stop**: 1 semana
 
 #### Triggers
@@ -56,7 +56,7 @@ O pipeline irá executar automaticamente e criar o Review App.
 
 ### 6. Visualizar
 - Na aba **"Environments"** do Merge Request, clique em **"View app"**
-- Ou acesse diretamente: `https://feature-minha-nova-feature-assistente-juridico-p.vercel.app`
+- Ou acesse diretamente: `https://feature-minha-nova-feature-assistente-juridico-github.vercel.app`
 
 ## 🛑 Como Parar um Review App
 

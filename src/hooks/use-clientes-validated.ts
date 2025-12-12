@@ -9,7 +9,7 @@ import {
   validateCliente,
   isValidCPF,
   isValidCNPJ,
-  type ClienteValidated,
+  type ClienteValidated as _ClienteValidated,
 } from "@/schemas/process.schema";
 
 // Tipo Cliente (compat�vel com o sistema)

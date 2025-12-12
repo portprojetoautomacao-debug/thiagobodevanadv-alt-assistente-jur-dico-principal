@@ -24,11 +24,11 @@ Configure estas variáveis no dashboard da Vercel ou via `.env`:
 
 ```bash
 # ===== LLM / IA =====
-LLM_PROXY_URL=https://assistente-juridico-p.vercel.app/api/llm-proxy
+LLM_PROXY_URL=https://assistente-juridico-github.vercel.app/api/llm-proxy
 # URL do proxy Spark LLM (já existente no projeto)
 
 # ===== Base da Aplicação =====
-APP_BASE_URL=https://assistente-juridico-p.vercel.app
+APP_BASE_URL=https://assistente-juridico-github.vercel.app
 # URL base para chamadas internas entre APIs
 
 # ===== Evolution API (WhatsApp) =====
@@ -61,7 +61,7 @@ TODOIST_API_TOKEN=token-todoist-aqui
 Use o endpoint `/api/agents-v2` para testar:
 
 ```bash
-curl -X POST https://assistente-juridico-p.vercel.app/api/agents-v2 \
+curl -X POST https://assistente-juridico-github.vercel.app/api/agents-v2 \
   -H "Content-Type: application/json" \
   -d '{
     "agentId": "justine",
@@ -240,7 +240,7 @@ Todos os agentes registram logs em `/api/kv`:
 vercel logs
 
 # Consultar logs específicos do agente
-curl https://assistente-juridico-p.vercel.app/api/kv?action=get-logs
+curl https://assistente-juridico-github.vercel.app/api/kv?action=get-logs
 ```
 
 ---

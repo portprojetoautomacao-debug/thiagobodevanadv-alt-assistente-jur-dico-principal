@@ -35,5 +35,6 @@ module.exports = {
       ]
     })
   ],
-  devtool: 'source-map'
+  // Source maps apenas em desenvolvimento (evita erro no Chrome)
+  devtool: process.env.NODE_ENV === 'production' ? false : 'source-map'
 };

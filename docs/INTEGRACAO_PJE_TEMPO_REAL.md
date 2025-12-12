@@ -137,7 +137,7 @@ function extractProcessos() {
 }
 
 async function sendToBackend(processos) {
-  await fetch('https://assistente-juridico-p.vercel.app/api/pje-sync', {
+  await fetch('https://assistente-juridico-github.vercel.app/api/pje-sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ processos, timestamp: new Date().toISOString() })

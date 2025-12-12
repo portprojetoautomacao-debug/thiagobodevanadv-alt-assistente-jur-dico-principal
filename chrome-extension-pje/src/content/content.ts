@@ -4,10 +4,14 @@
 
 import { initGlobalHandlers, reportError } from "../shared/errorHandler";
 import { SyncMessage } from "../shared/types";
+import { initCrawlerHandler } from "./crawler/crawler-handler";
 import { DocumentExtractor } from "./extractors/document-extractor";
 import { ExpedienteExtractor } from "./extractors/expediente-extractor";
 import { ProcessExtractor } from "./extractors/process-extractor";
 import { DOMObserver } from "./observers/dom-observer";
+
+// Inicializa handler do crawler para receber comandos do background
+initCrawlerHandler();
 
 class PJeContentScript {
   private processExtractor: ProcessExtractor;
@@ -58,7 +62,19 @@ class PJeContentScript {
 
   private isPJePainelPage(): boolean {
     const url = window.location.href;
-    return url.includes("pje") && (url.includes("painel") || url.includes("consulta"));
+    // Páginas válidas do PJe:
+    // - Painel do advogado
+    // - Consulta processual
+    // - Detalhes do processo (listProcessoCompletoAdvogado)
+    // - Lista de processos
+    return (
+      url.includes("pje") &&
+      (url.includes("painel") ||
+        url.includes("consulta") ||
+        url.includes("Consulta") ||
+        url.includes("Processo") ||
+        url.includes("listProcesso"))
+    );
   }
 
   private start(): void {

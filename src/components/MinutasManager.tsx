@@ -74,7 +74,7 @@ const TiptapEditorV2 = lazy(() =>
 
 // Verificar se as credenciais do Google estão configuradas
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
+const GOOGLE_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const isGoogleConfigured = !!GOOGLE_CLIENT_ID && !!GOOGLE_API_KEY;
 
 type ViewMode = "grid" | "list";
@@ -186,12 +186,29 @@ export default function MinutasManager() {
         return;
       }
 
+      // Mostrar loading toast
+      const toastId = toast.loading("Inicializando Google Docs...");
+
       try {
         await googleDocsService.initialize();
+        toast.success("Google Docs inicializado!", { id: toastId });
       } catch (initError) {
         const errorMsg =
           initError instanceof Error ? initError.message : "Erro ao inicializar Google Docs";
-        toast.error(`Falha na inicialização: ${errorMsg}`);
+
+        // Mensagens mais específicas baseadas no erro
+        let userMessage = errorMsg;
+        if (errorMsg.includes("Timeout")) {
+          userMessage = "Timeout ao carregar Google Docs. Verifique sua conexão e tente novamente.";
+        } else if (errorMsg.includes("Failed to load")) {
+          userMessage =
+            "Não foi possível carregar scripts do Google. Verifique se você está conectado à internet.";
+        } else if (errorMsg.includes("API key")) {
+          userMessage = "Credenciais do Google inválidas. Contate o suporte.";
+        }
+
+        toast.error(`Falha na inicialização: ${userMessage}`, { id: toastId });
+        console.error("[MinutasManager] Google Docs init error:", initError);
         return;
       }
 
@@ -207,6 +224,7 @@ export default function MinutasManager() {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Erro desconhecido";
       toast.error(`Erro ao autenticar: ${errorMsg}`);
+      console.error("[MinutasManager] Auth error:", error);
     }
   };
 
@@ -344,11 +362,11 @@ export default function MinutasManager() {
     toast.success("Minuta duplicada com sucesso!");
   };
 
-  const handleExportPDF = (minuta: Minuta) => {
+  const handleExportPDF = (_minuta: Minuta) => {
     toast.info("Exportação para PDF em desenvolvimento");
   };
 
-  const handleExportDOCX = (minuta: Minuta) => {
+  const handleExportDOCX = (_minuta: Minuta) => {
     toast.info("Exportação para DOCX em desenvolvimento");
   };
 
@@ -381,7 +399,7 @@ export default function MinutasManager() {
           toast.success("Documento criado e aberto no Google Docs!");
         }
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Erro ao abrir no Google Docs");
     }
   };
@@ -395,7 +413,7 @@ export default function MinutasManager() {
       if (success) {
         toast.success("Alterações importadas do Google Docs!");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Erro ao importar do Google Docs");
     } finally {
       setIsSyncing(null);

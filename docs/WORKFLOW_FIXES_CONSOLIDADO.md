@@ -61,6 +61,19 @@ npm run lint -- --max-warnings 350 || EXIT_CODE=$?
 - ✅ Permite 350 warnings (codebase atual tem ~308)
 - ✅ Remove dependência de comando inexistente
 
+**Nota sobre conversores SARIF:**
+- Os scripts `tsc:sarif` e `test:sarif` agora tentam usar bibliotecas oficiais (ex.: `@microsoft/tsc-sarif`, `vitest-sarif-reporter`) via `npx` se estiverem disponíveis no runner; caso contrário, há um fallback para os conversores locais (`scripts/tsc-to-sarif.cjs` e `scripts/vitest-to-sarif.cjs`).
+  - Isso garante que, quando pacotes oficiais estiverem publicados, o CI os use automaticamente sem necessitar de mudanças manuais.
+
+**Como ativar um conversor oficial manualmente:**
+1. Instalar como devDependency com uma versão fixa, por exemplo:
+```
+npm install -D @microsoft/tsc-sarif vitest-sarif-reporter
+```
+2. Commit e push (CI irá detectá-los e `npx` os usará).
+
+**Recomendação**: Caso usemos uma versão oficial em CI, adicionar as dependências ao `devDependencies` (pinning) é recomendado para evitar resoluções automáticas que causem inconsistências.
+
 ---
 
 ### 2. ✅ CI - Linting

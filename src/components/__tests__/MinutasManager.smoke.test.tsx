@@ -12,8 +12,8 @@ describe("MinutasManager smoke", () => {
     expect(await screen.findByText(/Editor de Minutas/i)).toBeDefined();
 
     // Default view is grid: find grid toggle buttons
-    const gridBtn = await screen.findByRole("button", { name: /grid/i });
-    const listBtn = await screen.findByRole("button", { name: /lista/i });
+    const gridBtn = await screen.findByRole("button", { name: /Visualização em grade/i });
+    const listBtn = await screen.findByRole("button", { name: /Visualização em lista/i });
 
     // Click list then grid back (visual state should not throw)
     fireEvent.click(listBtn);

@@ -6,7 +6,7 @@ O app fica **"carregando infinitamente"** em produção (Vercel) e **não abre o
 
 ### Causas Raiz
 
-1. ❌ **Código bloqueava produção** - `GoogleAuth.tsx` tratava `assistente-juridico-p.vercel.app` como ambiente de desenvolvimento
+1. ❌ **Código bloqueava produção** - `GoogleAuth.tsx` tratava `assistente-juridico-github.vercel.app` como ambiente de desenvolvimento
 2. ❌ **Variáveis de ambiente não configuradas** - `VITE_GOOGLE_CLIENT_ID` ausente no Vercel
 3. ❌ **URLs não autorizadas** - Google Cloud Console não tinha as URLs de produção autorizadas
 
@@ -19,7 +19,7 @@ O app fica **"carregando infinitamente"** em produção (Vercel) e **não abre o
 **Arquivo**: `src/components/GoogleAuth.tsx`
 
 ```typescript
-// ✅ ANTES: Bloqueava assistente-juridico-p.vercel.app
+// ✅ ANTES: Bloqueava assistente-juridico-github.vercel.app
 if (
   hostname.includes("vercel.app") &&
   hostname !== "assistente-juridico-github.vercel.app" &&
@@ -30,7 +30,7 @@ if (
 
 // ✅ DEPOIS: Permite ambas URLs de produção
 const PRODUCTION_URLS = [
-  "assistente-juridico-p.vercel.app",
+  "assistente-juridico-github.vercel.app",
   "assistente-juridico-github.vercel.app",
 ];
 
@@ -52,7 +52,7 @@ if (PRODUCTION_URLS.includes(hostname)) {
 | Variável                | Valor                                        | Ambientes                        |
 | ----------------------- | -------------------------------------------- | -------------------------------- |
 | `VITE_GOOGLE_CLIENT_ID` | `[SEU-CLIENT-ID].apps.googleusercontent.com` | Production, Preview, Development |
-| `VITE_REDIRECT_URI`     | `https://assistente-juridico-p.vercel.app`   | Production                       |
+| `VITE_REDIRECT_URI`     | `https://assistente-juridico-github.vercel.app`   | Production                       |
 | `VITE_GOOGLE_API_KEY`   | `[SUA-API-KEY]` (opcional)                   | Production, Preview, Development |
 
 3. Clique em **Save**
@@ -84,14 +84,14 @@ git push
 4. Em **Authorized JavaScript origins**, adicione:
 
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 
 5. Em **Authorized redirect URIs**, adicione:
 
    ```
-   https://assistente-juridico-p.vercel.app
+   https://assistente-juridico-github.vercel.app
    https://assistente-juridico-github.vercel.app
    ```
 
@@ -109,7 +109,7 @@ git push
 
 ### 2. Testar em Produção
 
-1. Acesse: https://assistente-juridico-p.vercel.app
+1. Acesse: https://assistente-juridico-github.vercel.app
 2. Aguarde carregar
 3. Clique no botão **"Sign in with Google"**
 4. ✅ Popup do Google deve abrir
@@ -155,7 +155,7 @@ git push
 - [ ] Variáveis configuradas no Vercel
 - [ ] URLs autorizadas no Google Cloud Console
 - [ ] Deploy realizado
-- [ ] Teste em https://assistente-juridico-p.vercel.app
+- [ ] Teste em https://assistente-juridico-github.vercel.app
 - [ ] Teste em https://assistente-juridico-github.vercel.app
 
 ---

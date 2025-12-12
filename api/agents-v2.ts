@@ -5,7 +5,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { executeHybridTask, hasHybridVersion } from "../src/lib/hybrid-agents-integration";
+import { executeHybridTask, hasHybridVersion } from "../src/lib/hybrid-agents-integration.js";
 import { requireApiKey } from "./lib/auth.js";
 import { redactPii } from "./lib/pii.js";
 import { rateLimitMiddleware } from "./lib/rate-limit.js";
@@ -91,12 +91,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Validate task shape as a final guard
   const validation = AgentTaskInputSchema.safeParse(task);
   if (!validation.success) {
-    return res
-      .status(500)
-      .json({
-        error: "Unable to create execution task",
-        details: handleValidationError(validation.error),
-      });
+    return res.status(500).json({
+      error: "Unable to create execution task",
+      details: handleValidationError(validation.error),
+    });
   }
 
   try {
@@ -106,20 +104,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         coordinationMode: config?.coordinationMode,
       });
     // Wrap in timeout and retries to avoid blocking the serverless function
-    const result = await retryWithBackoff(() => withTimeout(30000, exec()), 2, 500);
+    const rawResult = await retryWithBackoff(() => withTimeout(30000, exec()), 2, 500);
+    const result = rawResult as unknown as {
+      mode?: string;
+      langGraphResult?: { messages: unknown[] };
+      [key: string]: unknown;
+    };
 
     // Construct a minimal traces output when available
     const tracesOut = result.langGraphResult ? result.langGraphResult.messages : [];
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        agentId,
-        mode: result.mode,
-        data: result,
-        traces: traces ? tracesOut : undefined,
-      });
+    return res.status(200).json({
+      success: true,
+      agentId,
+      mode: result.mode,
+      data: result,
+      traces: traces ? tracesOut : undefined,
+    });
   } catch (err) {
     console.error("agent-v2 handler error:", err);
     return res
@@ -129,6 +130,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 export const config = {
-  runtime: "nodejs22.x",
-  maxDuration: 45,
+  runtime: "nodejs",
+  maxDuration: 300,
 };
