@@ -291,14 +291,9 @@ export default defineConfig({
             return "sample-data";
           }
 
-          // ✅ NOVO: Split DashboardCharts em sub-chunks (REDUZ 396KB → ~150KB inicial)
-          if (id.includes("recharts")) {
-            // Separar Recharts do bundle de DashboardCharts
-            return "charts-vendor";
-          }
-          if (id.includes("DashboardCharts")) {
-            return "dashboard-charts";
-          }
+          // ✅ FIX: Recharts tem dependências circulares - deixar Vite otimizar automaticamente
+          // Remover split manual para evitar TDZ (Temporal Dead Zone) no bundle
+          // O Vite já faz tree-shaking eficiente em imports nomeados de Recharts
 
           // ✅ NOVO: Split Tiptap Editor por extensões
           if (id.includes("@tiptap") && id.includes("extension-table")) {
