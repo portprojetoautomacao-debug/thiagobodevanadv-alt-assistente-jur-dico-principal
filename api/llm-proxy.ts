@@ -210,11 +210,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     },
     // 2. Google Gemini (aceita GEMINI_API_KEY ou VITE_GEMINI_API_KEY)
+    // ✅ CORREÇÃO: Prioriza VITE_GEMINI_API_KEY para funcionar em desenvolvimento local
     {
       name: "Gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
       apiKey:
-        process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.VITE_GEMINI_API_KEY,
+        process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
       headers: () => ({
         "Content-Type": "application/json",
       }),

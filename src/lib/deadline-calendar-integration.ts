@@ -178,7 +178,13 @@ function parseAndValidateDeadlineDate(endDateStr: string): string | null {
   }
 
   // Formato inválido - rejeitar silenciosamente strings como "Verificar"
-  if (import.meta.env.DEV) {
+  // ✅ CORREÇÃO: Não logar valores conhecidos de fallback (esperados quando LLM não configurado)
+  const knownFallbackValues = ["Verificar", "Pendente", "A definir", "N/A", "unknown"];
+  const isKnownFallback = knownFallbackValues.some((v) =>
+    endDateStr.toLowerCase().includes(v.toLowerCase())
+  );
+
+  if (import.meta.env.DEV && !isKnownFallback) {
     if (!loggedInvalidDeadlineFormats.has(endDateStr)) {
       loggedInvalidDeadlineFormats.add(endDateStr);
       console.log("[DeadlineIntegration] Invalid deadline date format:", endDateStr);
