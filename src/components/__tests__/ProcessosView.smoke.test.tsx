@@ -28,7 +28,7 @@ describe("ProcessosView smoke", () => {
     expect(await screen.findByText(/Ativos/i)).toBeDefined();
     expect(await screen.findByText(/Arquivados/i)).toBeDefined();
     expect(await screen.findByText(/Valor Total/i)).toBeDefined();
-    expect(await screen.findByText(/Prazos/i)).toBeDefined();
+    expect((await screen.findAllByText(/Prazos/i)).length).toBeGreaterThan(0);
 
     // Controls
     expect(await screen.findByPlaceholderText(/Buscar processos/i)).toBeDefined();

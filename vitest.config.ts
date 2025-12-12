@@ -22,14 +22,13 @@ export default defineConfig({
         singleThread: true,
         minThreads: 1,
         maxThreads: 1,
-        // Reutiliza o mesmo worker entre arquivos para reduzir churn de criação/encerramento.
-        isolate: false,
       },
     },
     // Rodar de forma sequencial para maximizar determinismo
     maxConcurrency: 1,
     fileParallelism: false,
-    isolate: false,
+    // Manter isolamento por arquivo para evitar vazamento de cache/mocks entre suites
+    isolate: true,
     // ✅ Suporte a sharding para execução paralela
     // Use --shard=1/4 --shard=2/4 etc nos comandos
     // Este config é voltado ao frontend (React + JSDOM).
