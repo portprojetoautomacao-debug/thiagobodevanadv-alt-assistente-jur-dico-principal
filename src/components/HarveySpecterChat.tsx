@@ -932,12 +932,8 @@ Regras:
 
           {tokens && !isStreaming && (
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span title="Tokens de entrada (prompt)">
-                ↗ {tokens.prompt.toLocaleString()}
-              </span>
-              <span title="Tokens de saída (resposta)">
-                ↙ {tokens.completion.toLocaleString()}
-              </span>
+              <span title="Tokens de entrada (prompt)">↗ {tokens.prompt.toLocaleString()}</span>
+              <span title="Tokens de saída (resposta)">↙ {tokens.completion.toLocaleString()}</span>
             </div>
           )}
         </div>

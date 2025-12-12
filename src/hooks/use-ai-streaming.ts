@@ -81,14 +81,14 @@ function calculateCost(tokens: { prompt?: number; completion?: number }, model: 
 
   // Pricing Gemini 2.5 Pro (por 1K tokens)
   const GEMINI_PRICING = {
-    input: 0.001875,  // $0.001875 per 1K input tokens
-    output: 0.00375,  // $0.00375 per 1K output tokens
+    input: 0.001875, // $0.001875 per 1K input tokens
+    output: 0.00375, // $0.00375 per 1K output tokens
   };
 
   // Pricing GPT-4o-mini (por 1K tokens)
   const GPT_PRICING = {
-    input: 0.00015,   // $0.00015 per 1K input tokens
-    output: 0.0006,   // $0.0006 per 1K output tokens
+    input: 0.00015, // $0.00015 per 1K input tokens
+    output: 0.0006, // $0.0006 per 1K output tokens
   };
 
   const pricing = model.includes("gpt") ? GPT_PRICING : GEMINI_PRICING;
@@ -141,7 +141,7 @@ function processStreamEvent(
         total: event.tokens.total,
         cost: calculateCost(event.tokens, model),
       };
-      
+
       tokensRef.current = metrics;
       setTokens(metrics);
       onTokens?.(metrics);
