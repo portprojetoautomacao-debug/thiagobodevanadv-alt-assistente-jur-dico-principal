@@ -43,6 +43,73 @@
 
 ---
 
+## 🚀 AI Streaming (CKEditor 5) — geração em tempo real
+
+Este projeto possui um **sistema de streaming de IA** integrado ao **CKEditor 5**, permitindo geração de texto **progressiva** (por chunks/SSE) com boa UX (“IA escrevendo…”, pausa quando o usuário digita, comandos rápidos).
+
+📌 Guia completo: **[`docs/AI_STREAMING_GUIDE.md`](docs/AI_STREAMING_GUIDE.md)**
+
+### 🧩 Peças principais (onde fica cada coisa)
+
+- **Frontend (serviço de streaming)**: `src/services/ai-stream.ts`
+  - `streamAIFromBackend()` (ReadableStream)
+  - `streamAIWithEventSource()` (SSE nativo)
+  - `executeAIQuickCommand()` (comandos rápidos)
+- **Editor (integração CKEditor)**: `src/components/editor/ProfessionalEditor.tsx`
+- **Backend (Vercel Function)**: `api/ai/stream.ts`
+  - `POST /api/ai/stream` (recomendado)
+  - `GET /api/ai/stream?prompt=...` (modo SSE)
+
+### ⚡ Uso rápido (exemplo)
+
+No editor, o streaming é conectado via callback (ver o guia para o exemplo completo):
+
+```ts
+// Exemplo conceitual (veja implementação real no guia)
+onAIStream={async (prompt, { onChunk, onComplete, onError }) => {
+  await streamAIFromBackend(prompt, { onChunk, onComplete, onError });
+}}
+```
+
+### 🔑 Variáveis de ambiente (Backend)
+
+Configure ao menos **um** provider no ambiente (Vercel/CI):
+
+- `GEMINI_API_KEY` (recomendado)
+- `OPENAI_API_KEY`
+- `ANTHROPIC_API_KEY`
+
+> Nota: o frontend não deve expor chaves. A chamada recomendada é sempre via backend (`/api/ai/stream`).
+
+### 🎛️ Providers suportados
+
+- **Gemini** (Google)
+- **OpenAI**
+- **Anthropic (Claude)**
+
+O request aceita parâmetros como `provider`, `model`, `temperature`, `maxTokens`, `systemPrompt` (ver interface `StreamRequest` no guia).
+
+### 🪄 Comandos rápidos de IA
+
+| Comando        | Descrição                            |
+| -------------- | ------------------------------------ |
+| **Continuar**  | continua escrevendo o texto          |
+| **Expandir**   | expande com mais detalhes            |
+| **Revisar**    | melhora a redação mantendo o sentido |
+| **Formalizar** | converte para linguagem jurídica     |
+| **Resumir**    | resume de forma concisa              |
+| **Traduzir**   | traduz para linguagem simples        |
+
+### 🐛 Troubleshooting (mais comum)
+
+- **“GEMINI_API_KEY not configured”** → configure a env no Vercel e redeploy.
+- **Stream não aparece no editor** → verifique bloqueio por “usuário digitando” e os callbacks `onChunk/onComplete`.
+- **Timeout em serverless** → verifique `maxDuration` do endpoint.
+
+➡️ Detalhes e checklist completo: **[`docs/AI_STREAMING_GUIDE.md`](docs/AI_STREAMING_GUIDE.md)**
+
+---
+
 ## 🔧 Últimas Correções e Melhorias (Dezembro 2025)
 
 ### 🎯 Correções da Extensão Chrome PJe Sync
