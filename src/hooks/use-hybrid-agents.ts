@@ -112,7 +112,7 @@ export function useHybridAgents(options: UseHybridAgentsOptions = {}) {
   const getHybridAgents = useCallback((): HybridAgentInfo[] => {
     const hybridList = listHybridAgents();
 
-    return hybridList.map((item) => ({
+    return hybridList.map((item: { agentId: string; type: string }) => ({
       agentId: item.agentId,
       hasHybridVersion: true,
       type: item.type,
