@@ -48,6 +48,7 @@ function createProgressInterval(
   onComplete: (() => void) | undefined
 ): () => void {
   let isCancelled = false;
+  let hasCalledComplete = false; // Prevent double-call
 
   const intervalId = globalThis.setInterval(() => {
     setProgress((prev) => {
@@ -55,7 +56,8 @@ function createProgressInterval(
 
       const { next, isComplete } = calculateNextProgress(prev, PROGRESS_STEP, 100);
 
-      if (isComplete) {
+      if (isComplete && !hasCalledComplete) {
+        hasCalledComplete = true;
         onComplete?.();
       }
 
@@ -75,6 +77,7 @@ function createInactivityInterval(
   isHumanActive: boolean
 ): () => void {
   let isCancelled = false;
+  let resumeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   const intervalId = globalThis.setInterval(() => {
     if (isCancelled) return;
@@ -90,9 +93,14 @@ function createInactivityInterval(
       // Check if agent should resume
       if (next >= INACTIVITY_LIMIT_SECONDS) {
         setPhase("agent_resuming");
-        setTimeout(() => {
-          setPhase("agent_working");
+
+        // Track timeout to clean up properly
+        resumeTimeoutId = setTimeout(() => {
+          if (!isCancelled) {
+            setPhase("agent_working");
+          }
         }, RESUME_DELAY_MS);
+
         return 0;
       }
 
@@ -103,6 +111,9 @@ function createInactivityInterval(
   return () => {
     isCancelled = true;
     globalThis.clearInterval(intervalId);
+    if (resumeTimeoutId !== null) {
+      clearTimeout(resumeTimeoutId);
+    }
   };
 }
 
@@ -118,14 +129,24 @@ export default function HumanAgentCollaboration({
 
   // Refs para controlar timers e evitar vazamentos de memória
   const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousPhaseRef = useRef(phase);
+  const onCompleteRef = useRef(onComplete);
+
+  // Manter onCompleteRef atualizado
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
     if (phase !== "agent_working") return;
 
-    return createProgressInterval(setProgress, onComplete);
-  }, [phase, onComplete]);
+    // Use ref to avoid recreating interval on onComplete change
+    return createProgressInterval(setProgress, () => {
+      onCompleteRef.current?.();
+    });
+  }, [phase]);
 
   // Timer de inatividade durante edição humana
   useEffect(() => {
@@ -153,11 +174,14 @@ export default function HumanAgentCollaboration({
     };
   }, [phase, isHumanActive]);
 
-  // Limpa timeout de atividade humana ao desmontar
+  // Limpa todos os timeouts ao desmontar
   useEffect(() => {
     return () => {
-      if (humanActivityTimeoutRef.current != null) {
+      if (humanActivityTimeoutRef.current !== null) {
         clearTimeout(humanActivityTimeoutRef.current);
+      }
+      if (resumeTimeoutRef.current !== null) {
+        clearTimeout(resumeTimeoutRef.current);
       }
     };
   }, []);
@@ -170,9 +194,10 @@ export default function HumanAgentCollaboration({
     setTimeWithoutActivity(0);
 
     // Simula uma janela de "atividade" humana por alguns segundos
-    if (humanActivityTimeoutRef.current != null) {
+    if (humanActivityTimeoutRef.current !== null) {
       clearTimeout(humanActivityTimeoutRef.current);
     }
+
     humanActivityTimeoutRef.current = setTimeout(() => {
       setIsHumanActive(false);
     }, 3000);
@@ -183,12 +208,14 @@ export default function HumanAgentCollaboration({
     setTimeWithoutActivity(0);
     setPhase("agent_resuming");
 
-    const resumeId = setTimeout(() => {
+    // Clear existing resume timeout
+    if (resumeTimeoutRef.current !== null) {
+      clearTimeout(resumeTimeoutRef.current);
+    }
+
+    resumeTimeoutRef.current = setTimeout(() => {
       setPhase("agent_working");
     }, RESUME_DELAY_MS);
-
-    // Apenas por segurança – se o componente desmontar MUITO rápido
-    humanActivityTimeoutRef.current = resumeId;
   };
 
   const getPhaseIcon = () => {
