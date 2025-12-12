@@ -414,9 +414,9 @@ jobs:
 
             console.log('Issue de segurança criada com sucesso');
 
-      - name: 🛡️  Verificação de Headers de Segurança
+      - name: 🛡️ Verificação de Headers de Segurança
         run: |
-          echo "🛡️  Verificando headers de segurança..."
+          echo "🛡️ Verificando headers de segurança..."
 
           # URL alvo
           TARGET_URL="https://assistente-juridico-github.vercel.app"

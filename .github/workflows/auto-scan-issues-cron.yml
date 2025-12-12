@@ -36,15 +36,9 @@ jobs:
         id: scan
         uses: alstr/todo-to-issue-action@v4
         with:
-          # Token do GitHub (obrigatório)
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Configurações de comportamento
-          AUTO_ASSIGN: true
+          # Configurações válidas para alstr/todo-to-issue-action@v4
           CLOSE_ISSUES: true
           AUTO_P: true
-
-          # Label para issues criadas
           LABEL: "auto-created,needs-triage,scheduled-scan"
 
       - name: 📊 Relatório de execução

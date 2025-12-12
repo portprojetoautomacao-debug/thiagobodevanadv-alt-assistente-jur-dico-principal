@@ -208,33 +208,33 @@ jobs:
               core.error('Failed to post SonarCloud comment: ' + String(err));
             }
 
-        - name: Test Comment Permission (simulate)
-          if: github.event_name == 'workflow_dispatch' && (github.event.inputs.test_comment == 'true' || github.event.inputs.test_comment == true)
-          uses: actions/github-script@v7
-          continue-on-error: true
-          with:
-            github-token: ${{ secrets.BOT_GH_TOKEN != '' && secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
-            script: |
-              try {
-                if (context.eventName !== 'pull_request' && context.payload.pull_request == null) {
-                  core.info('No PR context available; skipping test comment (requires a PR context)');
+      - name: Test Comment Permission (simulate)
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.test_comment == 'true' || github.event.inputs.test_comment == true)
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.BOT_GH_TOKEN != '' && secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              if (context.eventName !== 'pull_request' && context.payload.pull_request == null) {
+                core.info('No PR context available; skipping test comment (requires a PR context)');
+              } else {
+                const pr = context.payload.pull_request || {};
+                const repoFull = `${context.repo.owner}/${context.repo.repo}`;
+                const isFork = pr.head && pr.head.repo && pr.head.repo.full_name && pr.head.repo.full_name !== repoFull;
+                const issue_number = context.issue && context.issue.number;
+                if (!issue_number) {
+                  core.info('No PR number in context - skipping test');
+                } else if (isFork && !process.env.BOT_GH_TOKEN) {
+                  core.info('PR from fork and BOT_GH_TOKEN not set - simulation skipped');
                 } else {
-                  const pr = context.payload.pull_request || {};
-                  const repoFull = `${context.repo.owner}/${context.repo.repo}`;
-                  const isFork = pr.head && pr.head.repo && pr.head.repo.full_name && pr.head.repo.full_name !== repoFull;
-                  const issue_number = context.issue && context.issue.number;
-                  if (!issue_number) {
-                    core.info('No PR number in context - skipping test');
-                  } else if (isFork && !process.env.BOT_GH_TOKEN) {
-                    core.info('PR from fork and BOT_GH_TOKEN not set - simulation skipped');
-                  } else {
-                    // Post a temporary comment and delete it
-                    const temp = await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number, body: '🔧 Test permission: temporary comment (will be deleted)' });
-                    core.info('Test comment created: ' + temp.data.id);
-                    await github.rest.issues.deleteComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: temp.data.id });
-                    core.info('Test comment deleted');
-                  }
+                  // Post a temporary comment and delete it
+                  const temp = await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number, body: '🔧 Test permission: temporary comment (will be deleted)' });
+                  core.info('Test comment created: ' + temp.data.id);
+                  await github.rest.issues.deleteComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: temp.data.id });
+                  core.info('Test comment deleted');
                 }
-              } catch (err) {
-                core.error('Comment permission test failed: ' + String(err));
               }
+            } catch (err) {
+              core.error('Comment permission test failed: ' + String(err));
+            }
