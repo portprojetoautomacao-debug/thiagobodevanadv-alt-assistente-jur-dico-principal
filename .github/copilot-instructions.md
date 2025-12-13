@@ -75,7 +75,346 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
 - **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
-### 🌐 URLs de Produção
+### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
+
+- **Qdrant**: Não modifique collections/indices diretamente sem aprovação da equipe; prefira aplicar alterações via migrations e documente o impacto de scaling/retention.
+- **DSPy Bridge**: Qualquer atualização de imagem ou dependências deve ser testada com `dspy-bridge` em ambiente de staging; atualizações em produção requerem rollback plan e teste de latência.
+- **Email API / Email service**: Não altere os provedores de e-mail (resend) sem atualização dos testes e documentação; valide `RESEND_API_KEY` e monitore filas.
+
+
+### ⚡ Quick Start para Novos AI Agents
+
+**Ao começar em um dia/sessão:**
+1. Verifique status automático: `npm run type-check && npm run lint && npm run test:run`
+2. Se tasks automáticas falharam (terminal exit code 1), reinicie: `npm run dev`
+3. Mapa mental rápido:
+   - **Frontend**: `src/` → React components, hooks, services
+   - **API**: `api/` → Serverless functions (Vercel), 30-60s timeout
+   - **Agents**: `src/lib/agents.ts` → 15 agentes IA (9 ativos)
+   - **Data**: Upstash KV (Redis) via `useKV()` hook ou `api/kv.ts`
+   - **Tests**: Vitest (`src/**/*.test.ts`), Playwright (`tests/e2e/`)
+
+### 🗺️ Mapa de Endpoints API (Serverless)
+
+Todos em `api/*.ts`, deploy via Vercel Functions (Node.js 22.x):
+
+| Endpoint | Arquivo | Timeout | Função |
+|----------|---------|---------|--------|
+| `/api/agents` | `api/agents.ts` | 45s | Executar agentes IA, processar tarefas |
+| `/api/agents/process-task` | `api/agents/process-task.ts` | 60s | Worker de fila de tarefas de agentes |
+| `/api/pje-sync` | `api/pje-sync.ts` | 30s | Recebe processos da extensão Chrome |
+| `/api/expedientes` | `api/expedientes.ts` | 30s | CRUD de expedientes/intimações |
+| `/api/cron` | `api/cron.ts` | 60s | Jobs agendados (DJEN, backups) |
+| `/api/llm-stream` | `api/llm-stream.ts` | 60s | Proxy streaming para Gemini 2.5 |
+| `/api/notifications` | `api/notifications.ts` | 30s | Sistema de notificações |
+| `/api/health` | `api/health.ts` | 10s | Healthcheck (Upstash, Qdrant, etc) |
+| `/api/kv` | `api/kv.ts` | 30s | Acesso direto ao KV (debug) |
+
+**Importante**: Vercel Functions têm timeout máximo. LLM calls devem usar streaming (`llm-stream.ts`) para evitar timeout.
+
+---
+
+## 🔧 Troubleshooting Comum
+
+### 🚨 Tasks Automáticas Falhando (Exit Code 1)
+
+**Sintomas**: Terminais `auto-dev`, `auto-watch`, `auto-test-unit` saem com Exit Code 1
+
+**Diagnóstico Rápido**:
+```bash
+# 1. Verificar se Node.js/npm estão instalados
+node --version  # Deve ser v22.x
+npm --version
+
+# 2. Reinstalar dependências
+npm ci
+
+# 3. Verificar problemas TypeScript
+npm run type-check
+
+# 4. Verificar linting
+npm run lint
+```
+
+**Soluções Comuns**:
+- **Port já em uso (dev server)**: `npm run kill` ou matar processo na porta 5173
+- **Dependências faltando**: `npm ci` (não `npm install` - usa package-lock.json exato)
+- **Erro TypeScript**: Corrigir tipos em `src/` antes de rodar dev
+- **ESLint warnings > 150**: Executar `npm run lint:fix`
+- **Vitest travado**: Limpar cache com `npm run test:clear-cache`
+
+### 🧪 Testes Falhando
+
+**Fluxo de Diagnóstico**:
+```bash
+# 1. Rodar testes específicos
+npm run test:run -- src/path/to/file.test.ts
+
+# 2. Ver UI de testes
+npm run test:ui
+
+# 3. Atualizar snapshots (se necessário)
+npm run test:update-snapshots
+
+# 4. Testes E2E (Playwright)
+npm run test:e2e
+npm run test:e2e:headed  # Com interface gráfica
+```
+
+**Padrão de Testes**:
+- Unitários: `src/**/*.test.ts` (Vitest)
+- API: `api/**/*.test.ts` (executar com `npm run test:api`)
+- E2E: `tests/e2e/**/*.spec.ts` (Playwright)
+- Chrome Extension: `chrome-extension-pje/src/**/*.test.ts` (Jest)
+
+### 🔄 Chrome Extension Build Falhando
+
+**Passos**:
+```bash
+cd chrome-extension-pje
+
+# 1. Verificar dependências
+npm ci
+
+# 2. Compilar TypeScript
+npm run build
+
+# 3. Rodar testes
+npm test
+
+# 4. Gerar ZIP de distribuição
+npm run package
+```
+
+**Erros Comuns**:
+- **Webpack build falha**: Verificar `webpack.config.js`, atualizar target para ES2021
+- **Testes falham**: Verificar `chrome.storage` mock em `setupTests.ts`
+- **Popup não abre**: Verificar manifest.json, permissões
+
+### 🗄️ Problemas com Upstash KV
+
+**Sintomas**: Dados não persistem, erros 401/403 em `/api/kv`
+
+**Verificação**:
+```bash
+# Testar conexão via API Health
+curl https://assistente-juridico-github.vercel.app/api/health
+
+# Verificar variáveis de ambiente
+# UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN devem estar em .env.local
+```
+
+**Nota**: `useKV()` hook faz cache local + sincroniza com KV. Se dados não aparecem, verificar React DevTools → Components → procurar pelo hook.
+
+### � Serviços Opcionais Não Conectando
+
+#### 🔍 Qdrant (Pesquisa Jurisprudencial)
+
+**Sintomas**: Erros em `qdrant-service.ts`, busca vetorial não funciona
+
+**Diagnóstico**:
+```bash
+# Verificar collection
+npm run qdrant:test
+
+# População da base
+npm run qdrant:populate:dry-run --max-docs=10
+
+# Ver estatísticas
+npm run qdrant:stats
+```
+
+**Importante**: Qdrant é opcional. Sistema funciona sem ele, mas sem busca semântica de precedentes.  
+**Guia completo**: [docs/QDRANT_QUICK_START.md](../docs/QDRANT_QUICK_START.md)
+
+#### 🎯 DSPy Bridge (Otimização de Prompts)
+
+**Sintomas**: Prompts não otimizados, custo alto de API
+
+**Diagnóstico**:
+```bash
+# Testar conexão
+curl $DSPY_BRIDGE_URL/health
+
+# Railway logs
+railway logs | grep ERROR
+
+# Docker local
+docker logs dspy-bridge
+```
+
+**Importante**: DSPy é opcional. Reduz custo em 90% mas sistema funciona sem ele.  
+**Guia completo**: [docs/DSPY_BRIDGE_SETUP.md](../docs/DSPY_BRIDGE_SETUP.md)
+
+#### 📧 Email API (Notificações)
+
+**Sintomas**: Notificações não enviadas, fila travada
+
+**Diagnóstico**:
+```bash
+# Ver fila
+curl http://localhost:5173/api/emails?action=queue
+
+# Processar manualmente
+curl http://localhost:5173/api/cron?action=process-email-queue
+
+# Verificar Resend API Key
+echo $RESEND_API_KEY
+```
+
+**Importante**: Email é opcional. Agentes funcionam sem notificações automáticas.  
+**Guia completo**: [docs/EMAIL_API_WORKFLOW.md](../docs/EMAIL_API_WORKFLOW.md)
+
+### �📊 Data Flows Críticos (Não Óbvios)
+
+#### 🔄 Fluxo: DJEN → Expedientes → Agentes → Minutas
+
+```
+1. DJEN Monitor (Cron diário 12h)
+   ↓ api/cron.ts?action=djen-monitor
+   
+2. Salvar Expedientes
+   ↓ POST /api/expedientes
+   ↓ Upstash KV: expedientes:*
+   
+3. Trigger Agentes (Mrs. Justin-e)
+   ↓ useAutonomousAgents hook
+   ↓ POST /api/agents com action=process-expediente
+   
+4. Agente cria Minuta
+   ↓ redacao-peticoes (Gemini 2.5)
+   ↓ MinutasManager recebe via useAutoMinuta()
+   
+5. Usuário revisa/aprova
+   ↓ TiptapEditor.tsx
+   ↓ Google Docs sync (opcional)
+```
+
+#### 🔌 Fluxo: Chrome Extension → PJe Sync
+
+```
+1. Usuário navega no PJe
+   ↓ Content Script (content.ts)
+   ↓ Extrai processos via DOM scraping
+   
+2. Sync manual ou automático
+   ↓ Background Worker (background.ts)
+   ↓ POST /api/pje-sync com processos[]
+   
+3. Backend persiste
+   ↓ Upstash KV: processes:*
+   ↓ Incrementa contadores (expedientes, minutas)
+   
+4. Frontend atualiza
+   ↓ useProcessSync() hook
+   ↓ Dashboard mostra novos processos
+```
+
+#### 🤖 Padrão: Agent Task Queue
+
+Agentes não executam diretamente - sempre via fila:
+
+```typescript
+// ❌ ERRADO: Executar agente diretamente
+await agente.processar(tarefa);
+
+// ✅ CORRETO: Adicionar à fila
+await addTaskToQueue({
+  id: uuid(),
+  agentId: 'harvey',
+  type: 'ANALYZE_INTIMATION',
+  priority: 'high',
+  status: 'queued',
+  createdBy: 'sistema',
+  createdAt: new Date().toISOString(),
+  data: { expedienteId: '123' }
+});
+
+// Worker processa em api/agents/process-task.ts
+```
+
+**Por quê?**: Evita timeout de Vercel Functions (max 60s). Tasks longas são processadas em background.
+
+### 📚 Guias de Setup para Serviços Opcionais
+
+O sistema possui 3 serviços opcionais que aumentam performance e reduzem custos:
+
+#### 🔍 Qdrant - Pesquisa Semântica de Jurisprudências
+
+**Status**: Collection criada | População pendente  
+**Benefício**: Busca vetorial de precedentes jurídicos  
+**Guia Completo**: [docs/QDRANT_QUICK_START.md](../docs/QDRANT_QUICK_START.md)
+
+```bash
+# Setup rápido (5 min)
+npm run qdrant:init         # Criar collection
+npm run qdrant:test         # Testar conexão
+npm run qdrant:populate:dry-run --max-docs=10  # Simular população
+npm run qdrant:populate-datajud --max-docs=1000  # Popular
+
+# Variáveis necessárias:
+# QDRANT_URL=https://seu-cluster.cloud.qdrant.io:6333
+# QDRANT_API_KEY=sua-api-key
+# VITE_GEMINI_API_KEY=necessário-para-embeddings
+```
+
+**Documentação adicional**:
+- Setup: `docs/QDRANT_SETUP_CHECKLIST.md`
+- Configuração: `docs/QDRANT_CONFIG_COMPLETA.md`
+- DataJud: `docs/QDRANT_DATAJUD_AUTOMATION.md`
+- Status: `docs/QDRANT_AGENTS_STATUS.md`
+
+#### 🎯 DSPy Bridge - Otimização de Prompts
+
+**Status**: Opcional | Reduz custo em 90%  
+**Benefício**: $0.50 → $0.10 por consulta  
+**Guia Completo**: [docs/DSPY_BRIDGE_SETUP.md](../docs/DSPY_BRIDGE_SETUP.md)
+
+```bash
+# Opção 1: Railway (Produção)
+railway login
+railway init
+railway up
+railway variables set DSPY_API_TOKEN=seu-token-seguro
+
+# Opção 2: Docker Local (Dev)
+docker build -t dspy-bridge -f scripts/Dockerfile.dspy .
+docker run -d -p 8765:8765 -e DSPY_API_TOKEN=dev dspy-bridge
+
+# Opção 3: Python Direto (Debug)
+python3 scripts/dspy_bridge.py
+
+# Variáveis necessárias:
+# DSPY_BRIDGE_URL=https://seu-app.railway.app
+# DSPY_API_TOKEN=token-seguro-32-chars
+```
+
+**Quando usar**: Sistema com > 1000 consultas/mês
+
+#### 📧 Email API - Notificações Automáticas
+
+**Status**: Implementado | Provider: Resend.com  
+**Benefício**: Notificações de intimações, prazos, minutas  
+**Guia Completo**: [docs/EMAIL_API_WORKFLOW.md](../docs/EMAIL_API_WORKFLOW.md)
+
+```bash
+# Testar envio
+curl -X POST http://localhost:5173/api/emails \
+  -H "Content-Type: application/json" \
+  -d '{"to":"seu@email.com","type":"test","subject":"Teste","data":{}}'
+
+# Processar fila (executado via cron a cada 5 min)
+curl http://localhost:5173/api/cron?action=process-email-queue
+
+# Variáveis necessárias:
+# RESEND_API_KEY=re_your_api_key
+# EMAIL_FROM=noreply@yourdomain.com (ou onboarding@resend.dev para teste)
+# ADMIN_EMAIL=admin@yourdomain.com
+```
+
+**Tipos de email**: `intimation`, `daily-summary`, `deadline-alert`, `minuta-created`, `test`
+
+---
 
 - **App Principal (URL OFICIAL)**: https://assistente-juridico-github.vercel.app/
 - **App Alternativo (URL ANTIGA - DEPRECADA)**: https://assistente-juridico-github.vercel.app/
@@ -840,6 +1179,123 @@ Ao sugerir mudanças no código, o Copilot deve:
 3. **Manter estilo e convenções** do código existente
 4. **Adicionar testes** para nova lógica ou alterações relevantes
 5. **Documentar alterações** significativas
+
+---
+
+## 📊 Sistema de Tracing e Observabilidade
+
+### 🔍 OpenTelemetry Integrado
+
+O projeto possui **tracing completo com OpenTelemetry** já configurado para monitoramento de agentes de IA e operações jurídicas.
+
+#### **Arquivos de Tracing**
+
+| Arquivo | Função | Status |
+|---------|--------|--------|
+| `src/lib/otel-integration.ts` | OpenTelemetry SDK Web (frontend) | ✅ Ativo |
+| `src/lib/tracing.ts` | Sistema de tracing interno | ✅ Ativo |
+| `src/lib/agent-tracing.ts` | Tracing específico para agentes | ✅ Ativo |
+| `src/components/TracingDashboard.tsx` | Dashboard visual de traces | ✅ Ativo |
+
+#### **Como Usar o Tracing**
+
+**1. Inicialização Automática:**
+```typescript
+// main.tsx - Já configurado
+import { initializeOpenTelemetry } from './lib/otel-integration';
+
+// Inicializar PRIMEIRO (antes do React)
+initializeOpenTelemetry();
+```
+
+**2. Visualizar Traces:**
+```bash
+# Abrir AI Toolkit Trace Viewer
+Ctrl+Shift+P → "AI Toolkit: Open Trace Viewer"
+
+# Endpoint OTLP (padrão)
+http://localhost:4318/v1/traces
+```
+
+**3. Criar Spans Customizados:**
+```typescript
+import { tracingService } from '@/lib/tracing';
+
+const span = tracingService.startSpan('operacao-juridica', {
+  agente: 'harvey',
+  processo: 'CNJ-123',
+  tipo: 'analise'
+});
+
+try {
+  // Seu código aqui
+  span.addEvent('documento-analisado');
+} finally {
+  span.end();
+}
+```
+
+#### **Variáveis de Ambiente**
+
+```bash
+# .env.local
+VITE_OTLP_ENDPOINT=http://localhost:4318/v1/traces  # AI Toolkit (padrão)
+# ou
+VITE_OTLP_ENDPOINT=https://seu-collector.com/v1/traces  # Produção
+```
+
+#### **Dependências OpenTelemetry**
+
+Já instaladas no `package.json`:
+- `@opentelemetry/api`
+- `@opentelemetry/sdk-trace-web`
+- `@opentelemetry/exporter-trace-otlp-http`
+- `@opentelemetry/resources`
+- `@opentelemetry/semantic-conventions`
+
+#### **⚠️ Regras de Tracing**
+
+1. **Nunca desativar** o tracing sem justificativa - é critical para debugging de agentes
+2. **Usar spans** para operações longas (> 1s) como chamadas LLM, scraping DJEN, análise de documentos
+3. **Adicionar atributos** relevantes: `processo_id`, `agente_id`, `tipo_operacao`, `resultado`
+4. **Eventos importantes**: quando agente toma decisão, detecta prazo, gera minuta
+5. **Tracing de erros**: sempre registrar erros em spans (`span.setStatus({ code: SpanStatusCode.ERROR })`)
+
+#### **Integração com Agentes**
+
+Os 15 agentes já possuem tracing integrado via `agent-tracing.ts`:
+
+```typescript
+// Exemplo: src/lib/agents.ts
+import { createAgentSpan } from '@/lib/agent-tracing';
+
+async function executarAgente(agentId: string, task: TarefaSistema) {
+  const span = createAgentSpan(agentId, task.id, 'execucao');
+  
+  try {
+    span.addEvent('tarefa-iniciada', { prioridade: task.prioridade });
+    // ... lógica do agente
+    span.addEvent('tarefa-concluida', { status: 'sucesso' });
+  } catch (error) {
+    span.recordException(error);
+  } finally {
+    span.end();
+  }
+}
+```
+
+#### **Comandos Úteis**
+
+```bash
+# Ver traces em tempo real
+npm run dev  # Tracing ativado automaticamente
+
+# Validar configuração OpenTelemetry
+@workspace Verificar src/lib/otel-integration.ts
+
+# Ver dashboard de traces
+@workspace Abrir src/components/TracingDashboard.tsx
+```
 
 ---
 

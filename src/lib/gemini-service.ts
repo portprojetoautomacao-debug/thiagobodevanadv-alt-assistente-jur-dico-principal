@@ -17,6 +17,9 @@ import { withRetry, type RetryConfig } from "@/lib/ai-providers";
 import { getGeminiApiKey, isGeminiConfigured, validateGeminiApiKey } from "@/lib/gemini-config";
 import { instrumentGeminiCall } from "@/lib/sentry-gemini-integration";
 import { createChatSpan } from "@/lib/sentry-gemini-integration-v2";
+// 🔍 TRACING: OpenTelemetry
+import { tracingService } from "@/lib/tracing";
+import { startLLMSpan, endLLMSpan } from "@/lib/tracing";
 
 /**
  * Extract error message from unknown error type
@@ -200,110 +203,166 @@ export async function callGemini(
   prompt: string,
   config: Partial<GeminiConfig> = {}
 ): Promise<GeminiResponse> {
-  // Validação de configuração básica
-  if (!isGeminiConfigured()) {
-    return {
-      text: "",
-      error:
-        "API do Gemini não configurada. Configure VITE_GEMINI_API_KEY (ou equivalente) no ambiente do servidor.",
-    };
-  }
+  // Criar span de tracing para chamada LLM
+  const llmSpan = startLLMSpan('gemini-2.5-pro', {
+    temperature: config.temperature,
+    maxTokens: config.maxOutputTokens,
+    attributes: {
+      'llm.operation': 'generateContent',
+      'llm.prompt_length': prompt.length,
+    },
+  });
 
-  // Obtém e valida API key
-  let apiKey: string;
   try {
-    apiKey = getGeminiApiKey();
-
-    // ✅ Validar formato da API key
-    if (!validateGeminiApiKeyFormat(apiKey)) {
-      return {
+    // Validação de configuração básica
+    if (!isGeminiConfigured()) {
+      const errorResponse = {
         text: "",
-        error: "API key do Gemini em formato inválido. Deve começar com 'AIza'",
+        error:
+          "API do Gemini não configurada. Configure VITE_GEMINI_API_KEY (ou equivalente) no ambiente do servidor.",
       };
+      
+      await endLLMSpan(llmSpan, {
+        promptTokens: 0,
+        completionTokens: 0,
+        success: false,
+        error: new Error(errorResponse.error),
+      });
+      
+      return errorResponse;
     }
-  } catch (error) {
-    return {
-      text: "",
-      error: error instanceof Error ? error.message : "Erro ao obter API key do Gemini",
-    };
-  }
 
-  const finalConfig = { ...DEFAULT_CONFIG, ...config };
-  const endpoint = `${GEMINI_API_BASE}/${finalConfig.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-  const makeRequest = async (): Promise<GeminiResponse> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
-
+    // Obtém e valida API key
+    let apiKey: string;
     try {
-      // 🔍 Instrumentar chamada Gemini com Sentry
-      const geminiWrapper = instrumentGeminiCall<Response>(
-        {
-          model: finalConfig.model,
-          operation: "generate_content",
-          prompt,
-          temperature: finalConfig.temperature,
-          maxTokens: finalConfig.maxOutputTokens,
-          startTime: Date.now(),
-        },
-        {
-          includePrompts: true,
-          captureErrors: true,
-        }
-      );
+      apiKey = getGeminiApiKey();
 
-      const response = await geminiWrapper(async () =>
-        fetch(endpoint, {
-          method: "POST",
-          signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: prompt }],
-              },
-            ],
-            generationConfig: {
-              temperature: finalConfig.temperature,
-              maxOutputTokens: finalConfig.maxOutputTokens,
-            },
-          }),
-        })
-      );
-
-      if (!response.ok) {
-        let errorMessage = "Erro ao chamar API do Gemini";
-
-        try {
-          const errorBody = await response.json();
-          errorMessage =
-            errorBody.error?.message ||
-            `${errorMessage} (HTTP ${response.status}: ${response.statusText})`;
-        } catch {
-          const text = await response.text();
-          if (text) {
-            errorMessage = `${errorMessage} (HTTP ${response.status}): ${text}`;
-          } else {
-            errorMessage = `${errorMessage} (HTTP ${response.status}: ${response.statusText})`;
-          }
-        }
-
-        throw new Error(errorMessage);
+      // ✅ Validar formato da API key
+      if (!validateGeminiApiKeyFormat(apiKey)) {
+        const errorResponse = {
+          text: "",
+          error: "API key do Gemini em formato inválido. Deve começar com 'AIza'",
+        };
+        
+        await endLLMSpan(llmSpan, {
+          promptTokens: 0,
+          completionTokens: 0,
+          success: false,
+          error: new Error(errorResponse.error),
+        });
+        
+        return errorResponse;
       }
+    } catch (error) {
+      const errorResponse = {
+        text: "",
+        error: error instanceof Error ? error.message : "Erro ao obter API key do Gemini",
+      };
+      
+      await endLLMSpan(llmSpan, {
+        promptTokens: 0,
+        completionTokens: 0,
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+      
+      return errorResponse;
+    }
 
-      const data = await response.json();
-      return normalizeGeminiResponse(data, finalConfig.model);
-    } finally {
+    const finalConfig = { ...DEFAULT_CONFIG, ...config };
+    const endpoint = `${GEMINI_API_BASE}/${finalConfig.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const makeRequest = async (): Promise<GeminiResponse> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+      try {
+        // 🔍 Instrumentar chamada Gemini com Sentry
+        const geminiWrapper = instrumentGeminiCall<Response>(
+          {
+            model: finalConfig.model,
+            operation: "generate_content",
+            prompt,
+            temperature: finalConfig.temperature,
+            maxTokens: finalConfig.maxOutputTokens,
+            startTime: Date.now(),
+          },
+          {
+            includePrompts: true,
+            captureErrors: true,
+          }
+        );
+
+        const response = await geminiWrapper(async () =>
+          fetch(endpoint, {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [{ text: prompt }],
+                },
+              ],
+              generationConfig: {
+                temperature: finalConfig.temperature,
+                maxOutputTokens: finalConfig.maxOutputTokens,
+              },
+            }),
+          })
+        );
+
+        if (!response.ok) {
+          let errorMessage = "Erro ao chamar API do Gemini";
+
+          try {
+            const errorBody = await response.json();
+            errorMessage =
+              errorBody.error?.message ||
+              `${errorMessage} (HTTP ${response.status}: ${response.statusText})`;
+          } catch {
+            const text = await response.text();
+            if (text) {
+              errorMessage = `${errorMessage} (HTTP ${response.status}): ${text}`;
+            } else {
+              errorMessage = `${errorMessage} (HTTP ${response.status}: ${response.statusText})`;
+            }
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        return normalizeGeminiResponse(data, finalConfig.model);
+      } finally {
       clearTimeout(timeoutId);
     }
   };
 
   try {
-    return await withRetry(makeRequest, finalConfig.retryConfig);
+    const result = await withRetry(makeRequest, finalConfig.retryConfig);
+    
+    // Finalizar span com sucesso
+    await endLLMSpan(llmSpan, {
+      promptTokens: result.metadata?.promptTokens || 0,
+      completionTokens: result.metadata?.responseTokens || 0,
+      success: !result.error,
+      error: result.error ? new Error(result.error) : undefined,
+    });
+    
+    return result;
   } catch (error) {
+    // Finalizar span com erro
+    await endLLMSpan(llmSpan, {
+      promptTokens: 0,
+      completionTokens: 0,
+      success: false,
+      error: error instanceof Error ? error : new Error(String(error)),
+    });
+    
     return buildGeminiError(error, { endpoint, model: finalConfig.model });
   }
 }

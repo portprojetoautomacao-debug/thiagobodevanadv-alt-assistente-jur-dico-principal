@@ -4,6 +4,12 @@ import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 
+// 🔍 TRACING: Importar e inicializar OpenTelemetry (DEVE ser primeiro)
+import { initializeOpenTelemetry } from "./lib/otel-integration";
+
+// Inicializar tracing ANTES de qualquer outra coisa
+initializeOpenTelemetry();
+
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 

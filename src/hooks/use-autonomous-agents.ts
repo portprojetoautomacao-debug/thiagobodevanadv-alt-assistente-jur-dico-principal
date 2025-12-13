@@ -28,6 +28,12 @@ import {
   measurePerformance,
 } from "@/lib/azure-insights";
 
+// 📊 NOVO: Importar tracing OpenTelemetry
+import { startAgentSpan, addEvent, setAttribute, endSpan } from "@/lib/tracing";
+
+// 🔍 TRACING: Importar tracing OpenTelemetry
+import { tracingService } from "@/lib/tracing";
+
 // Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
 
@@ -531,6 +537,22 @@ export function useAutonomousAgents() {
       );
 
       try {
+        // 🔍 TRACING: Iniciar span para tarefa do agente
+        const agentSpan = startAgentSpan(agent.id, agent.name, {
+          attributes: {
+            'task.id': task.id,
+            'task.type': task.type,
+            'task.priority': task.priority,
+            'agent.status': agent.status,
+          },
+        });
+
+        // Adicionar evento de início
+        addEvent(agentSpan, 'task.started', {
+          'task.description': task.description,
+          'task.data': JSON.stringify(task.data || {}).substring(0, 200),
+        });
+
         let result;
 
         // 🔵 AZURE: Medir performance da execução da tarefa
@@ -540,14 +562,26 @@ export function useAutonomousAgents() {
             // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
             const hasHybrid = hasHybridVersion(agent.id);
 
+            // Adicionar evento sobre tipo de execução
+            addEvent(agentSpan, 'execution.mode.selected', {
+              'has_hybrid': hasHybrid,
+              'use_streaming': useStreaming,
+            });
+
             if (hasHybrid) {
               // Usar arquitetura híbrida com fallback automático
+              setAttribute(agentSpan, 'execution.mode', 'hybrid');
               const hybridResult = await executeHybridTask(agent.id, task, {
                 enableLangGraph: true,
                 enableTraditional: true,
                 coordinationMode: "fallback",
                 timeoutMs: 30000,
               });
+
+              // Adicionar métricas do resultado híbrido
+              setAttribute(agentSpan, 'hybrid.mode_used', hybridResult.mode);
+              setAttribute(agentSpan, 'hybrid.execution_time_ms', hybridResult.executionTime);
+              setAttribute(agentSpan, 'hybrid.success', hybridResult.success);
 
               // Converter resultado híbrido para formato AgentTaskResult
               const langGraphData = hybridResult.langGraphResult?.data;
@@ -610,13 +644,37 @@ export function useAutonomousAgents() {
           taskType: task.type,
         });
 
-        // 🔵 AZURE: Track tarefa concluída
+        // � TRACING: Adicionar evento de conclusão
+        addEvent(agentSpan, 'task.completed', {
+          'result.success': result.success,
+          'result.confidence': result.confidence,
+          'processing_time_ms': duration,
+          'tokens_used': result.tokensUsed,
+        });
+
+        // Finalizar span com sucesso
+        setAttribute(agentSpan, 'task.status', 'completed');
+        endSpan(agentSpan);
+
+        // �🔵 AZURE: Track tarefa concluída
         trackAgentTask(
           agent.id,
           task.type,
           'COMPLETED',
           duration
         );
+
+        // 🔍 TRACING: Finalizar span com sucesso
+        setAttribute(agentSpan, 'task.status', 'completed');
+        setAttribute(agentSpan, 'task.duration_ms', duration);
+        if (result.tokensUsed) {
+          setAttribute(agentSpan, 'task.tokens_used', result.tokensUsed);
+        }
+        addEvent(agentSpan, 'task.completed', {
+          'success': true,
+          'message': result.message || 'Task completed successfully',
+        });
+        await endSpan(agentSpan, 'ok');
 
         // Use extracted helper for completion (S2004 compliance)
         handleTaskCompletion(
@@ -659,6 +717,17 @@ export function useAutonomousAgents() {
             severity: 'error',
           }
         );
+
+        // 🔍 TRACING: Finalizar span com erro
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setAttribute(agentSpan, 'task.status', 'failed');
+        setAttribute(agentSpan, 'task.duration_ms', duration);
+        setAttribute(agentSpan, 'task.error', errorMessage);
+        addEvent(agentSpan, 'task.error', {
+          'error.message': errorMessage,
+          'error.type': err instanceof Error ? err.name : 'unknown',
+        });
+        await endSpan(agentSpan, 'error', errorMessage);
 
         // Use extracted helper for failure (S2004 compliance)
         handleTaskFailure(task, err, agent.id, setTaskQueue, logActivity);
