@@ -79,6 +79,38 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
 - **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
+### 🔌 Chrome Extension PJe Sync - Workflow de Desenvolvimento
+
+A extensão Chrome está em `chrome-extension-pje/` com seu próprio package.json e build system:
+
+**Comandos essenciais:**
+```bash
+cd chrome-extension-pje
+npm install              # Instalar dependências
+npm run dev              # Build em modo watch
+npm run build            # Build production em dist/
+npm test                 # Rodar 31 testes unitários
+npm run package          # Criar .zip para publicação
+```
+
+**Arquitetura:**
+- `src/content/` - Content Scripts (injetados em páginas PJe)
+- `src/background/` - Service Worker (sincronização com backend)
+- `src/popup/` - UI de configuração (API Key, status)
+- `src/content/inject/hook-network.ts` - Intercepta XHR/Fetch do PJe
+- `src/content/utils/document-sanitizer.ts` - Remove PII antes de enviar
+
+**Privacidade (LGPD):**
+- NUNCA enviar PDFs completos ou petições inteiras
+- Usar `document-sanitizer.ts` para redação de CPF/Email
+- Truncar textos longos (max 500 chars)
+- Enviar apenas metadados + snippets sanitizados
+
+**Integração com Backend:**
+- Endpoint: `POST /api/pje-sync` com header `X-API-Key`
+- Payload: `{ source: 'extension', processos: [...], expedientes: [...] }`
+- API Key armazenada em `chrome.storage.sync`
+
 ### 🌐 URLs de Produção
 
 - **App Principal (URL OFICIAL)**: https://assistente-juridico-github.vercel.app/
@@ -87,6 +119,36 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 
 > ⚠️ **IMPORTANTE**: A URL oficial de produção é **`assistente-juridico-github.vercel.app`**.
 > A URL antiga `assistente-juridico-github.vercel.app` está deprecada e deve ser substituída em todo o código.
+
+### 🔧 Git Workflow e Hooks
+
+**Pre-commit e Pre-push Hooks:**
+- Hooks ativos em `.git/hooks/pre-commit` e `.git/hooks/pre-push`
+- Executam: lint, type-check e testes básicos
+- **Para desativar temporariamente** (emergências):
+  ```bash
+  mv .git/hooks/pre-commit .git/hooks/pre-commit.disabled
+  mv .git/hooks/pre-push .git/hooks/pre-push.disabled
+  # Fazer commit/push
+  mv .git/hooks/pre-commit.disabled .git/hooks/pre-commit
+  mv .git/hooks/pre-push.disabled .git/hooks/pre-push
+  ```
+- **Bypass único** (não recomendado): `git push --no-verify`
+
+**Branch Strategy:**
+- `main` - Produção estável (deploy automático Vercel)
+- `feat/*` - Novas features (criar PR para main)
+- `fix/*` - Correções de bugs
+- `docs/*` - Apenas documentação
+
+**Comandos Git Comuns:**
+```bash
+git status                                    # Ver mudanças
+git add .                                     # Adicionar tudo
+git commit -m "feat: descrição"               # Commit semântico
+git push origin <branch>                      # Push para remote
+git pull --rebase origin main                 # Atualizar da main
+```
 
 ### 🎯 Objetivo Principal: Automação 100% com Supervisão Humana
 
@@ -300,6 +362,114 @@ Data: [DATA ATUAL]
 3. **Corrigir automaticamente** - Aplicar correções sem perguntar
 4. **Reportar status** - Informar usuário sobre estado do sistema
 5. **Documentar mudanças** - Atualizar documentação quando modificar automação
+
+---
+
+## ⚡ Comandos Diários Essenciais
+
+### 🚀 Desenvolvimento Local
+
+```bash
+# Iniciar projeto (primeiro uso ou após git pull)
+npm install
+npm run dev                    # Servidor Vite em http://localhost:5173
+
+# Desenvolvimento paralelo
+npm run dev &                  # Servidor em background
+npm run test                   # Testes em watch mode
+
+# Verificações rápidas
+npm run type-check             # TypeScript sem build
+npm run lint                   # ESLint
+npm run test:run               # Testes sem watch
+
+# Build e preview
+npm run build                  # Build production em dist/
+npm run preview                # Preview do build
+```
+
+### 🔍 Debugging e Troubleshooting
+
+```bash
+# Limpar cache e rebuildar
+rm -rf node_modules/.vite dist .eslintcache
+npm install
+npm run build
+
+# Ver logs de erro em produção
+vercel logs <deployment-url>   # Requer Vercel CLI
+
+# Testar endpoints API localmente
+curl http://localhost:5173/api/health
+curl -X POST http://localhost:5173/api/pje-sync \
+  -H "X-API-Key: test" \
+  -H "Content-Type: application/json" \
+  -d '{"source":"test"}'
+
+# Verificar serviços opcionais
+curl -sS "$QDRANT_URL/collections" -H "api-key: $QDRANT_API_KEY"
+curl -sS "$DSPY_BRIDGE_URL/health"
+```
+
+### 📦 Chrome Extension
+
+```bash
+cd chrome-extension-pje
+npm run build                  # Build em dist/
+
+# Instalar no Chrome:
+# 1. chrome://extensions
+# 2. Ativar "Modo do desenvolvedor"
+# 3. "Carregar sem compactação" → selecionar dist/
+```
+
+### 🧪 Testes
+
+```bash
+# Frontend
+npm run test                   # Watch mode
+npm run test:run               # Run once
+npm run test:coverage          # Com coverage
+npm run test:ui                # UI interativa
+
+# API
+npm run test:api               # Testes da API
+
+# E2E
+npm run test:e2e               # Playwright headless
+npm run test:e2e:headed        # Com browser visível
+npm run test:e2e:debug         # Com Playwright Inspector
+
+# Chrome Extension
+cd chrome-extension-pje && npm test
+```
+
+### 🚨 Troubleshooting Comum
+
+**Erro: "Port 5173 already in use"**
+```bash
+lsof -ti:5173 | xargs kill -9  # Matar processo na porta
+npm run kill                   # Script automático
+```
+
+**Erro: "Cannot find module"**
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**Build Vercel falha**
+```bash
+# Testar build localmente
+npm run build
+# Se passar, problema é em variáveis de ambiente Vercel
+```
+
+**Testes E2E falhando**
+```bash
+npx playwright install         # Reinstalar browsers
+npm run test:e2e:debug         # Debug interativo
+```
 
 ---
 
