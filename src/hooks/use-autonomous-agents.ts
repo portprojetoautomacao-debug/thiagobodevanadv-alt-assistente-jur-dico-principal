@@ -266,9 +266,9 @@ function getInitialAgents(): Agent[] {
       if (Array.isArray(parsed) && parsed.length === 15) {
         // ✅ Validar estrutura básica dos agentes
         const hasValidStructure = parsed.every(
-          (agent) => agent && typeof agent === 'object' && agent.id && agent.name
+          (agent) => agent && typeof agent === "object" && agent.id && agent.name
         );
-        
+
         if (hasValidStructure) {
           return parsed;
         }
@@ -298,7 +298,7 @@ export function useAutonomousAgents() {
       action: string;
       result: "success" | "warning" | "error";
     }>
-  >("agent-activity-log", []));
+  >("agent-activity-log", []);
 
   // Estado para logs do servidor e memória jurídica
   const [serverLogs, setServerLogs] = useState<AgentActionLog[]>([]);
@@ -309,7 +309,7 @@ export function useAutonomousAgents() {
   const [useStreaming, setUseStreaming] = useState(true); // Streaming habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set());
-  
+
   // 🔥 FIX: Flag para prevenir loop infinito
   const isInitializingRef = useRef(false);
 
@@ -317,7 +317,7 @@ export function useAutonomousAgents() {
   useEffect(() => {
     // Prevenir loop infinito
     if (isInitializingRef.current) return;
-    
+
     // Validar apenas se agents existe e não está vazio
     if (!agents || agents.length === 0) {
       console.log("[Agents] Inicializando agentes pela primeira vez");
@@ -328,7 +328,7 @@ export function useAutonomousAgents() {
       }, 100);
       return;
     }
-    
+
     // Se tiver quantidade errada, reinicializar (mas apenas uma vez)
     if (agents.length !== 15) {
       console.log(`[Agents] Quantidade incorreta (${agents.length}) → reinicializando para 15`);
@@ -540,17 +540,17 @@ export function useAutonomousAgents() {
         // 🔍 TRACING: Iniciar span para tarefa do agente
         const agentSpan = startAgentSpan(agent.id, agent.name, {
           attributes: {
-            'task.id': task.id,
-            'task.type': task.type,
-            'task.priority': task.priority,
-            'agent.status': agent.status,
+            "task.id": task.id,
+            "task.type": task.type,
+            "task.priority": task.priority,
+            "agent.status": agent.status,
           },
         });
 
         // Adicionar evento de início
-        addEvent(agentSpan, 'task.started', {
-          'task.description': task.description,
-          'task.data': JSON.stringify(task.data || {}).substring(0, 200),
+        addEvent(agentSpan, "task.started", {
+          "task.description": task.description,
+          "task.data": JSON.stringify(task.data || {}).substring(0, 200),
         });
 
         let result;
@@ -563,14 +563,14 @@ export function useAutonomousAgents() {
             const hasHybrid = hasHybridVersion(agent.id);
 
             // Adicionar evento sobre tipo de execução
-            addEvent(agentSpan, 'execution.mode.selected', {
-              'has_hybrid': hasHybrid,
-              'use_streaming': useStreaming,
+            addEvent(agentSpan, "execution.mode.selected", {
+              has_hybrid: hasHybrid,
+              use_streaming: useStreaming,
             });
 
             if (hasHybrid) {
               // Usar arquitetura híbrida com fallback automático
-              setAttribute(agentSpan, 'execution.mode', 'hybrid');
+              setAttribute(agentSpan, "execution.mode", "hybrid");
               const hybridResult = await executeHybridTask(agent.id, task, {
                 enableLangGraph: true,
                 enableTraditional: true,
@@ -579,19 +579,23 @@ export function useAutonomousAgents() {
               });
 
               // Adicionar métricas do resultado híbrido
-              setAttribute(agentSpan, 'hybrid.mode_used', hybridResult.mode);
-              setAttribute(agentSpan, 'hybrid.execution_time_ms', hybridResult.executionTime);
-              setAttribute(agentSpan, 'hybrid.success', hybridResult.success);
+              setAttribute(agentSpan, "hybrid.mode_used", hybridResult.mode);
+              setAttribute(agentSpan, "hybrid.execution_time_ms", hybridResult.executionTime);
+              setAttribute(agentSpan, "hybrid.success", hybridResult.success);
 
               // Converter resultado híbrido para formato AgentTaskResult
               const langGraphData = hybridResult.langGraphResult?.data;
               const traditionalOutput = (hybridResult.traditionalResult as any)?.output;
-              
-              const resultData: Record<string, unknown> = 
-                (langGraphData && typeof langGraphData === 'object' ? langGraphData as Record<string, unknown> : undefined) ||
-                (traditionalOutput && typeof traditionalOutput === 'object' ? traditionalOutput as Record<string, unknown> : undefined) ||
+
+              const resultData: Record<string, unknown> =
+                (langGraphData && typeof langGraphData === "object"
+                  ? (langGraphData as Record<string, unknown>)
+                  : undefined) ||
+                (traditionalOutput && typeof traditionalOutput === "object"
+                  ? (traditionalOutput as Record<string, unknown>)
+                  : undefined) ||
                 {};
-              
+
               const taskResult = {
                 success: hybridResult.success,
                 data: resultData,
@@ -604,9 +608,9 @@ export function useAutonomousAgents() {
               trackAgentTask(
                 agent.id,
                 task.type,
-                hybridResult.success ? 'COMPLETED' : 'FAILED',
+                hybridResult.success ? "COMPLETED" : "FAILED",
                 hybridResult.executionTime,
-                hybridResult.success ? undefined : 'Hybrid execution failed'
+                hybridResult.success ? undefined : "Hybrid execution failed"
               );
 
               logActivity(
@@ -645,36 +649,31 @@ export function useAutonomousAgents() {
         });
 
         // � TRACING: Adicionar evento de conclusão
-        addEvent(agentSpan, 'task.completed', {
-          'result.success': result.success,
-          'result.confidence': result.confidence,
-          'processing_time_ms': duration,
-          'tokens_used': result.tokensUsed,
+        addEvent(agentSpan, "task.completed", {
+          "result.success": result.success,
+          "result.confidence": result.confidence,
+          processing_time_ms: duration,
+          tokens_used: result.tokensUsed,
         });
 
         // Finalizar span com sucesso
-        setAttribute(agentSpan, 'task.status', 'completed');
+        setAttribute(agentSpan, "task.status", "completed");
         endSpan(agentSpan);
 
         // �🔵 AZURE: Track tarefa concluída
-        trackAgentTask(
-          agent.id,
-          task.type,
-          'COMPLETED',
-          duration
-        );
+        trackAgentTask(agent.id, task.type, "COMPLETED", duration);
 
         // 🔍 TRACING: Finalizar span com sucesso
-        setAttribute(agentSpan, 'task.status', 'completed');
-        setAttribute(agentSpan, 'task.duration_ms', duration);
+        setAttribute(agentSpan, "task.status", "completed");
+        setAttribute(agentSpan, "task.duration_ms", duration);
         if (result.tokensUsed) {
-          setAttribute(agentSpan, 'task.tokens_used', result.tokensUsed);
+          setAttribute(agentSpan, "task.tokens_used", result.tokensUsed);
         }
-        addEvent(agentSpan, 'task.completed', {
-          'success': true,
-          'message': result.message || 'Task completed successfully',
+        addEvent(agentSpan, "task.completed", {
+          success: true,
+          message: result.message || "Task completed successfully",
         });
-        await endSpan(agentSpan, 'ok');
+        await endSpan(agentSpan, "ok");
 
         // Use extracted helper for completion (S2004 compliance)
         handleTaskCompletion(
@@ -702,32 +701,29 @@ export function useAutonomousAgents() {
         trackAgentTask(
           agent.id,
           task.type,
-          'FAILED',
+          "FAILED",
           duration,
           err instanceof Error ? err.message : String(err)
         );
 
         // 🔵 AZURE: Track exceção
-        trackError(
-          err instanceof Error ? err : new Error(String(err)),
-          {
-            component: 'useAutonomousAgents',
-            agentId: agent.id,
-            taskId: task.id,
-            severity: 'error',
-          }
-        );
+        trackError(err instanceof Error ? err : new Error(String(err)), {
+          component: "useAutonomousAgents",
+          agentId: agent.id,
+          taskId: task.id,
+          severity: "error",
+        });
 
         // 🔍 TRACING: Finalizar span com erro
         const errorMessage = err instanceof Error ? err.message : String(err);
-        setAttribute(agentSpan, 'task.status', 'failed');
-        setAttribute(agentSpan, 'task.duration_ms', duration);
-        setAttribute(agentSpan, 'task.error', errorMessage);
-        addEvent(agentSpan, 'task.error', {
-          'error.message': errorMessage,
-          'error.type': err instanceof Error ? err.name : 'unknown',
+        setAttribute(agentSpan, "task.status", "failed");
+        setAttribute(agentSpan, "task.duration_ms", duration);
+        setAttribute(agentSpan, "task.error", errorMessage);
+        addEvent(agentSpan, "task.error", {
+          "error.message": errorMessage,
+          "error.type": err instanceof Error ? err.name : "unknown",
         });
-        await endSpan(agentSpan, 'error', errorMessage);
+        await endSpan(agentSpan, "error", errorMessage);
 
         // Use extracted helper for failure (S2004 compliance)
         handleTaskFailure(task, err, agent.id, setTaskQueue, logActivity);
@@ -808,13 +804,20 @@ export function useAutonomousAgents() {
         );
 
         // 🔵 AZURE: Track métricas de performance dos agentes
-        unhealthy.forEach((agent: { agentId: string; p95Latency: number; errorRate: number; successRate: number }) => {
-          trackAgentPerformance(agent.agentId, {
-            tasksCompleted: 0, // Agente degradado
-            averageProcessingTime: agent.p95Latency,
-            errorRate: agent.errorRate,
-          });
-        });
+        unhealthy.forEach(
+          (agent: {
+            agentId: string;
+            p95Latency: number;
+            errorRate: number;
+            successRate: number;
+          }) => {
+            trackAgentPerformance(agent.agentId, {
+              tasksCompleted: 0, // Agente degradado
+              averageProcessingTime: agent.p95Latency,
+              errorRate: agent.errorRate,
+            });
+          }
+        );
 
         // Notificação visual local
         toast.error(`⚠️ ${unhealthy.length} agente(s) degradado(s)`, {
