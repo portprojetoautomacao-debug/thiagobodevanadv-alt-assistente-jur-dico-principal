@@ -338,7 +338,8 @@ export async function callGemini(
         const data = await response.json();
         return normalizeGeminiResponse(data, finalConfig.model);
       } finally {
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
+      }
     }
   };
 

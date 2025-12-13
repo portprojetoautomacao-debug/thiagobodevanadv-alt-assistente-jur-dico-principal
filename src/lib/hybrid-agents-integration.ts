@@ -62,12 +62,12 @@ export function executeHybridTask(
   config?: Partial<HybridExecutionConfig>
 ): Promise<HybridExecutionResult> {
   console.warn(`[Hybrid] executeHybridTask chamado para ${agentId} mas sistema está desabilitado`);
-  
+
   return Promise.resolve({
     success: false,
     mode: "traditional",
     executionTime: 0,
-    error: "Hybrid agents desabilitados - modo manutenção"
+    error: "Hybrid agents desabilitados - modo manutenção",
   });
 }
 
@@ -78,7 +78,7 @@ export function getHybridStats(): HybridStats {
     traditionalExecutions: 0,
     hybridExecutions: 0,
     successRate: 0,
-    averageExecutionTime: 0
+    averageExecutionTime: 0,
   };
 }
 

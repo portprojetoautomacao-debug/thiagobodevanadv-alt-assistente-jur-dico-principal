@@ -1,9 +1,9 @@
 /**
  * Azure Application Insights Integration
- * 
+ *
  * Monitora performance, erros e uso dos agentes em tempo real
  * Integra com Azure Monitor para alertas e dashboards
- * 
+ *
  * Funcionalidades:
  * - Tracking automático de page views e navegação
  * - Tracking de exceções e erros
@@ -12,9 +12,9 @@
  * - User analytics e sessões
  */
 
-import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
-import { createBrowserHistory } from 'history';
+import { ApplicationInsights } from "@microsoft/applicationinsights-web";
+import { ReactPlugin } from "@microsoft/applicationinsights-react-js";
+import { createBrowserHistory } from "history";
 
 // Configuração
 const browserHistory = createBrowserHistory();
@@ -27,46 +27,44 @@ const connectionString = import.meta.env.VITE_AZURE_INSIGHTS_CONNECTION_STRING;
 // Inicializar Application Insights
 const appInsights = new ApplicationInsights({
   config: {
-    connectionString: connectionString || '',
-    
+    connectionString: connectionString || "",
+
     // Habilitar tracking automático
     enableAutoRouteTracking: true,
     enableCorsCorrelation: true,
     enableRequestHeaderTracking: true,
     enableResponseHeaderTracking: true,
-    
+
     // Configurações de performance
     maxBatchInterval: 5000,
     maxBatchSizeInBytes: 10000,
-    
+
     // Sampling (enviar 100% em dev, 50% em prod)
     samplingPercentage: import.meta.env.PROD ? 50 : 100,
-    
+
     // Configurações de cookies
     isCookieUseDisabled: false,
-    cookieDomain: import.meta.env.PROD 
-      ? 'assistente-juridico-github.vercel.app' 
-      : undefined,
-    
+    cookieDomain: import.meta.env.PROD ? "assistente-juridico-github.vercel.app" : undefined,
+
     // Integração com React
     extensions: [reactPlugin],
     extensionConfig: {
-      [reactPlugin.identifier]: { history: browserHistory }
+      [reactPlugin.identifier]: { history: browserHistory },
     },
-    
+
     // Desabilitar em desenvolvimento se não houver connection string
     disableTelemetry: !connectionString,
-  }
+  },
 });
 
 // Carregar Application Insights
 if (connectionString) {
   appInsights.loadAppInsights();
   appInsights.trackPageView(); // Track inicial page view
-  
-  console.log('✅ Azure Application Insights loaded successfully');
+
+  console.log("✅ Azure Application Insights loaded successfully");
 } else {
-  console.warn('⚠️ Azure Application Insights disabled (no connection string)');
+  console.warn("⚠️ Azure Application Insights disabled (no connection string)");
 }
 
 // ==========================================
@@ -99,17 +97,17 @@ export function trackAgentEvent(
 export function trackAgentTask(
   agentId: string,
   taskType: string,
-  status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED',
+  status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED",
   durationMs?: number,
   error?: string
 ) {
   trackAgentEvent(
     agentId,
-    'TaskExecuted',
+    "TaskExecuted",
     {
       taskType,
       status,
-      error: error || 'none',
+      error: error || "none",
     },
     {
       duration: durationMs || 0,
@@ -129,19 +127,16 @@ export function trackAgentPerformance(
   }
 ) {
   appInsights.trackMetric(
-    { name: 'Agent_TasksCompleted', average: metrics.tasksCompleted },
+    { name: "Agent_TasksCompleted", average: metrics.tasksCompleted },
     { agentId }
   );
-  
+
   appInsights.trackMetric(
-    { name: 'Agent_AverageProcessingTime', average: metrics.averageProcessingTime },
+    { name: "Agent_AverageProcessingTime", average: metrics.averageProcessingTime },
     { agentId }
   );
-  
-  appInsights.trackMetric(
-    { name: 'Agent_ErrorRate', average: metrics.errorRate },
-    { agentId }
-  );
+
+  appInsights.trackMetric({ name: "Agent_ErrorRate", average: metrics.errorRate }, { agentId });
 }
 
 // ==========================================
@@ -164,7 +159,7 @@ export function trackAPICall(
     duration: durationMs,
     resultCode: statusCode,
     success,
-    type: 'HTTP',
+    type: "HTTP",
     target: endpoint,
   });
 }
@@ -184,8 +179,8 @@ export function trackRedisCall(
     duration: durationMs,
     resultCode: success ? 200 : 500,
     success,
-    type: 'Redis',
-    target: 'Upstash Redis',
+    type: "Redis",
+    target: "Upstash Redis",
   });
 }
 
@@ -202,16 +197,16 @@ export function trackError(
     component?: string;
     agentId?: string;
     taskId?: string;
-    severity?: 'critical' | 'error' | 'warning';
+    severity?: "critical" | "error" | "warning";
   }
 ) {
   appInsights.trackException({
     exception: error,
     severityLevel: getSeverityLevel(context?.severity),
     properties: {
-      component: context?.component || 'unknown',
-      agentId: context?.agentId || 'none',
-      taskId: context?.taskId || 'none',
+      component: context?.component || "unknown",
+      agentId: context?.agentId || "none",
+      taskId: context?.taskId || "none",
       timestamp: new Date().toISOString(),
     },
   });
@@ -219,10 +214,14 @@ export function trackError(
 
 function getSeverityLevel(severity?: string): number {
   switch (severity) {
-    case 'critical': return 4; // Critical
-    case 'error': return 3; // Error
-    case 'warning': return 2; // Warning
-    default: return 3; // Error (default)
+    case "critical":
+      return 4; // Critical
+    case "error":
+      return 3; // Error
+    case "warning":
+      return 2; // Warning
+    default:
+      return 3; // Error (default)
   }
 }
 
@@ -242,17 +241,17 @@ export function identifyUser(
   }
 ) {
   appInsights.setAuthenticatedUserContext(userId, undefined, true);
-  
+
   if (properties) {
     appInsights.addTelemetryInitializer((item) => {
       item.tags = item.tags || [];
-      item.tags['ai.user.accountId'] = userId;
-      
+      item.tags["ai.user.accountId"] = userId;
+
       if (properties.name) {
         item.data = item.data || {};
         item.data.userName = properties.name;
       }
-      
+
       return true;
     });
   }
@@ -287,16 +286,16 @@ export function trackIntimacaoProcessed(
   prazoEmDias: number,
   criadoPorAgente: boolean
 ) {
-  trackUserAction('IntimacaoProcessed', {
+  trackUserAction("IntimacaoProcessed", {
     processNumber,
     tribunal,
     prazoEmDias,
     automated: criadoPorAgente,
   });
-  
+
   // Métrica: Total de intimações processadas
   appInsights.trackMetric(
-    { name: 'Intimacoes_Processed', average: 1 },
+    { name: "Intimacoes_Processed", average: 1 },
     { tribunal, automated: String(criadoPorAgente) }
   );
 }
@@ -310,18 +309,15 @@ export function trackMinutaGenerated(
   confidence: number,
   durationMs: number
 ) {
-  trackUserAction('MinutaGenerated', {
+  trackUserAction("MinutaGenerated", {
     type,
     agentId,
     confidence,
     durationMs,
   });
-  
+
   // Métrica: Confidence das minutas
-  appInsights.trackMetric(
-    { name: 'Minuta_Confidence', average: confidence },
-    { type, agentId }
-  );
+  appInsights.trackMetric({ name: "Minuta_Confidence", average: confidence }, { type, agentId });
 }
 
 /**
@@ -333,7 +329,7 @@ export function trackPrazoCalculated(
   dataVencimento: string,
   agentId: string
 ) {
-  trackUserAction('PrazoCalculated', {
+  trackUserAction("PrazoCalculated", {
     processNumber,
     prazoEmDias,
     dataVencimento,
@@ -369,16 +365,13 @@ export function trackPageView(
  */
 export function startTimer(name: string) {
   const startTime = performance.now();
-  
+
   return {
     stop: (properties?: Record<string, string | number>) => {
       const duration = performance.now() - startTime;
-      
-      appInsights.trackMetric(
-        { name: `Performance_${name}`, average: duration },
-        properties
-      );
-      
+
+      appInsights.trackMetric({ name: `Performance_${name}`, average: duration }, properties);
+
       return duration;
     },
   };
@@ -393,7 +386,7 @@ export async function measurePerformance<T>(
   properties?: Record<string, string | number>
 ): Promise<T> {
   const timer = startTimer(name);
-  
+
   try {
     const result = await fn();
     timer.stop({ ...properties, success: 1 });
