@@ -9,9 +9,45 @@ import { DocumentExtractor } from "./extractors/document-extractor";
 import { ExpedienteExtractor } from "./extractors/expediente-extractor";
 import { ProcessExtractor } from "./extractors/process-extractor";
 import { DOMObserver } from "./observers/dom-observer";
+import { sanitizeDocumentoForSync } from "./utils/document-sanitizer";
 
 // Inicializa handler do crawler para receber comandos do background
 initCrawlerHandler();
+
+// Injeta script na página para hook de network (XHR / fetch)
+(function injectNetworkHook() {
+  try {
+    const script = document.createElement("script");
+    script.async = true;
+    script.type = "text/javascript";
+    script.src = chrome.runtime.getURL("inject/hook-network.js");
+    (document.head || document.documentElement).appendChild(script);
+    script.onload = () => script.remove();
+  } catch (e) {
+    console.warn("[PJe Sync] Falha ao injetar hook de rede", e);
+  }
+})();
+
+// Escuta mensagens vindas do contexto da página (hook-network)
+window.addEventListener("message", (event) => {
+  if (event.source !== window) return;
+  const msg = event.data;
+  if (msg && msg.source === "PJE_NETWORK_HOOK") {
+    try {
+      // Encaminha metadados para o background (apenas se for PJe host)
+      // Aplicar sanitização/resumo antes de enviar
+      const data = msg.detail;
+      // Observability: logar para debug apenas se debug ativado
+      if (localStorage.getItem("PJE_SYNC_DEBUG") === "true") {
+        console.debug("[PJe Sync] Network hook event:", data);
+      }
+      // Enviar para background como evento de telemetry (sem conteúdo sensível)
+      chrome.runtime.sendMessage({ type: "NETWORK_HOOK_EVENT", data }, () => {});
+    } catch (e) {
+      console.warn("[PJe Sync] Falha ao processar evento de network hook", e);
+    }
+  }
+});
 
 class PJeContentScript {
   private processExtractor: ProcessExtractor;
@@ -137,9 +173,6 @@ class PJeContentScript {
           console.log("[PJe Sync] Documento detectado:", documento.tipo);
 
           // Sanitiza documento antes de enviar: truncar conteúdo e remover PII sensível
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          import { sanitizeDocumentoForSync } from "./utils/document-sanitizer";
-
           const sanitized = sanitizeDocumentoForSync(documento);
 
           await this.sendToBackground("SYNC_DOCUMENTO", sanitized);

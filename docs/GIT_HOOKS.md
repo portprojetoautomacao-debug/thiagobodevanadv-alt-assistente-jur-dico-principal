@@ -184,8 +184,8 @@ git commit -m "mensagem"
 ```
 
 Com `GIT_HOOKS_FAST=1`:
-- O `pre-commit` executa apenas um smoke-test (se existir) ou os testes relacionados aos arquivos staged.
-- O `pre-push` pula o build completo e executa apenas testes rápidos (smoke/shard).
+- O `pre-commit` executa uma suíte rápida (`npm run test:fast`) ou somente os testes relacionados aos arquivos staged.
+- O `pre-push` pula o build completo e executa apenas testes rápidos (`npm run test:fast`).
 
 Use o modo rápido durante desenvolvimento iterativo para ganhar produtividade, mas lembre-se de rodar a suíte completa antes de abrir PRs ou ao preparar releases.
 

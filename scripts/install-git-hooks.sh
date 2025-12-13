@@ -97,7 +97,8 @@ if [ "${GIT_HOOKS_FAST}" = "1" ]; then
     echo "${YELLOW}⚡ Modo rápido ativado (GIT_HOOKS_FAST=1) — pulando execução completa dos testes${NC}"
     # Execute uma suíte reduzida (shard) para garantir rapidez no feedback local
     tmpfile=$(mktemp)
-    if ! npm run test:shard >"$tmpfile" 2>&1; then
+    # Rodar suíte rápida (apenas testes em src) para feedback local
+    if ! npm run test:fast >"$tmpfile" 2>&1; then
         tail -n 20 "$tmpfile"
         rm -f "$tmpfile"
         echo "${RED}❌ Testes rápidos (shard) falharam! Corrija antes de commitar.${NC}"
@@ -145,9 +146,9 @@ else
         fi
         rm -f "$tmpfile"
     else
-        echo "${YELLOW}⚠️  Nenhum teste relacionado detectado - executando suíte reduzida (shard)${NC}"
+        echo "${YELLOW}⚠️  Nenhum teste relacionado detectado - executando suíte reduzida (fast)${NC}"
         tmpfile=$(mktemp)
-        if ! npm run test:shard >"$tmpfile" 2>&1; then
+        if ! npm run test:fast >"$tmpfile" 2>&1; then
             tail -n 20 "$tmpfile"
             rm -f "$tmpfile"
             echo "${RED}❌ Testes (shard) falharam! Corrija antes de commitar.${NC}"
@@ -246,9 +247,9 @@ echo ""
 echo "${YELLOW}🧪 Executando testes unitários completos...${NC}"
 if [ "${GIT_HOOKS_FAST}" = "1" ]; then
     echo "${YELLOW}⚡ Modo rápido ativado — executando apenas smoke tests${NC}"
-    echo "${YELLOW}⚠️  Executando suíte reduzida (shard) para feedback rápido${NC}"
+    echo "${YELLOW}⚠️  Executando suíte reduzida (fast) para feedback rápido${NC}"
     tmpfile=$(mktemp)
-    if ! npm run test:shard >"$tmpfile" 2>&1; then
+    if ! npm run test:fast >"$tmpfile" 2>&1; then
         tail -n 30 "$tmpfile"
         rm -f "$tmpfile"
         echo "${RED}❌ Testes (shard) falharam! Corrija antes de fazer push.${NC}"
