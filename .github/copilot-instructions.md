@@ -1017,6 +1017,152 @@ Ao sugerir mudanças no código, o Copilot deve:
 
 ---
 
+## 📚 Quick Reference - Arquivos Importantes
+
+### 🔑 Arquivos de Configuração
+- `.env.example` - Template de variáveis de ambiente
+- `vite.config.ts` - Configuração Vite (chunks, plugins)
+- `vercel.json` - Configuração Vercel (rotas, headers, crons)
+- `vitest.config.ts` - Configuração testes frontend
+- `vitest.config.api.ts` - Configuração testes API
+- `playwright.config.ts` - Configuração testes E2E
+- `tailwind.config.js` - Configuração Tailwind CSS
+- `tsconfig.json` - TypeScript compiler options
+
+### 📝 Documentação Principal
+- `README.md` - Visão geral e setup inicial
+- `docs/LGPD_COMPLIANCE.md` - Conformidade LGPD
+- `docs/FLUXO_MINUTAS_AUTOMATICAS.md` - Fluxo de geração de documentos
+- `TODOS_OS_15_AGENTES.md` - Descrição completa dos agentes
+- `chrome-extension-pje/SPARK_PROMPT.md` - Especificação da extensão
+- `AUTO_MODE_README.md` - Sistema de automação
+
+### 🎯 Arquivos Core
+- `src/types.ts` - Tipos TypeScript centralizados
+- `src/lib/agents.ts` - Configuração dos 15 agentes
+- `src/lib/gemini-service.ts` - Integração Gemini AI
+- `src/lib/config.ts` - Configurações globais
+- `api/kv.ts` - Upstash Redis/KV client
+- `api/agents.ts` - API de agentes
+- `api/pje-sync.ts` - Sync com Chrome Extension
+
+### 🧪 Arquivos de Teste
+- `tests/` - Testes frontend
+- `tests/api/` - Testes da API
+- `tests/e2e/` - Testes Playwright
+- `chrome-extension-pje/tests/` - Testes da extensão
+
+---
+
+## 🎓 Padrões de Código e Convenções
+
+### TypeScript
+```typescript
+// ✅ BOM - Componente funcional tipado
+interface ProcessListProps {
+  processes: Process[];
+  onSelect: (id: string) => void;
+}
+
+export function ProcessList({ processes, onSelect }: ProcessListProps) {
+  // Hooks no topo
+  const [selected, setSelected] = useState<string | null>(null);
+
+  // Lógica
+  const handleClick = (id: string) => {
+    setSelected(id);
+    onSelect(id);
+  };
+
+  return <div>...</div>;
+}
+
+// ❌ EVITAR - Tipos any, componentes de classe
+export class ProcessList extends React.Component<any, any> { ... }
+```
+
+### Imports
+```typescript
+// ✅ BOM - Alias @/ para src/
+import { Process } from '@/types';
+import { useProcesses } from '@/hooks/use-processes';
+import { Button } from '@/components/ui/button';
+
+// ❌ EVITAR - Paths relativos longos
+import { Process } from '../../../types';
+```
+
+### API Routes (Vercel Functions)
+```typescript
+// ✅ BOM - Validação com Zod, error handling
+import { validateProcesses } from './lib/validation';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    const validation = validateProcesses(req.body);
+    if (!validation.success) {
+      return res.status(400).json(validation.error);
+    }
+
+    // Processar...
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('[API Error]', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+```
+
+### Agentes IA
+```typescript
+// ✅ BOM - Streaming com chunks
+import { streamGeminiResponse } from '@/lib/gemini-service';
+
+async function* processIntimacao(expediente: Expediente) {
+  yield { status: 'analyzing', progress: 0.1 };
+
+  const analysis = await analyzeDocument(expediente);
+  yield { status: 'analyzing', progress: 0.5, data: analysis };
+
+  const stream = streamGeminiResponse(prompt);
+  for await (const chunk of stream) {
+    yield { status: 'generating', chunk };
+  }
+
+  yield { status: 'complete', result: minuta };
+}
+```
+
+---
+
+## ⚠️ Erros Comuns e Soluções
+
+### 1. "Module not found: Can't resolve '@/...'"
+**Causa:** Alias `@/` não configurado no tsconfig ou Vite
+**Solução:** Verificar `tsconfig.json` e `vite.config.ts` têm o alias configurado
+
+### 2. "Type 'X' is not assignable to type 'Y'"
+**Causa:** Tipos desalinhados entre frontend e API
+**Solução:** Sincronizar `src/types.ts` com `api/lib/validation.ts`
+
+### 3. Chrome Extension não sincroniza
+**Causa:** API Key inválida ou backend offline
+**Solução:** Verificar popup da extensão, reconfigurar API Key, testar `POST /api/pje-sync`
+
+### 4. Testes E2E timeout
+**Causa:** Seletores mudaram ou app lento
+**Solução:** Usar `await page.waitForLoadState('networkidle')`, atualizar seletores
+
+### 5. Build Vercel falha com "Cannot find module"
+**Causa:** Dependência em devDependencies ou import dinâmico quebrado
+**Solução:** Mover deps para dependencies, verificar imports dinâmicos
+
+### 6. Gemini API rate limit
+**Causa:** Muitas requests simultâneas
+**Solução:** Implementar retry com backoff, usar cache Redis
+
+---
+
 ## Comunicação e Idioma (Português)
 
 - Responda sempre em Português do Brasil (pt-BR) nas mensagens de resposta, instruções, comentários e planos — tanto no Copilot Chat quanto nas operações de revisão e sugestões automáticas.
