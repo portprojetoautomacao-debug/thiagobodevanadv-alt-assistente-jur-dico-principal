@@ -20,6 +20,14 @@ import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integra
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// 🔵 NOVO: Importar Azure Application Insights
+import {
+  trackAgentTask,
+  trackAgentPerformance,
+  trackError,
+  measurePerformance,
+} from "@/lib/azure-insights";
+
 // Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
 
@@ -146,6 +154,16 @@ function handleTaskCompletion(
     })
   );
   logActivity(agentId, `Tarefa concluída: ${task.type}`, "success");
+
+  // 🟡 NOVO: Enviar telemetria de tarefa concluída
+  trackAgentTask(agentId, {
+    taskId: task.id,
+    status: "completed",
+    type: task.type,
+    priority: task.priority,
+    durationMs: Date.now() - new Date(task.createdAt).getTime(),
+    result: result.success ? "success" : "error",
+  });
 }
 
 type TaskQueueSetter = (fn: (current: AgentTask[] | null) => AgentTask[]) => void;
@@ -274,7 +292,7 @@ export function useAutonomousAgents() {
       action: string;
       result: "success" | "warning" | "error";
     }>
-  >("agent-activity-log", []);
+  >("agent-activity-log", []));
 
   // Estado para logs do servidor e memória jurídica
   const [serverLogs, setServerLogs] = useState<AgentActionLog[]>([]);
@@ -515,54 +533,71 @@ export function useAutonomousAgents() {
       try {
         let result;
 
-        // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
-        const hasHybrid = hasHybridVersion(agent.id);
+        // 🔵 AZURE: Medir performance da execução da tarefa
+        result = await measurePerformance(
+          `AgentTask_${task.type}`,
+          async () => {
+            // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
+            const hasHybrid = hasHybridVersion(agent.id);
 
-        if (hasHybrid) {
-          // Usar arquitetura híbrida com fallback automático
-          const hybridResult = await executeHybridTask(agent.id, task, {
-            enableLangGraph: true,
-            enableTraditional: true,
-            coordinationMode: "fallback", // LangGraph primeiro, tradicional como fallback
-            timeoutMs: 30000,
-          });
+            if (hasHybrid) {
+              // Usar arquitetura híbrida com fallback automático
+              const hybridResult = await executeHybridTask(agent.id, task, {
+                enableLangGraph: true,
+                enableTraditional: true,
+                coordinationMode: "fallback",
+                timeoutMs: 30000,
+              });
 
-          // Converter resultado híbrido para formato AgentTaskResult
-          const langGraphData = hybridResult.langGraphResult?.data;
-          const traditionalOutput = (hybridResult.traditionalResult as any)?.output;
-          
-          const resultData: Record<string, unknown> = 
-            (langGraphData && typeof langGraphData === 'object' ? langGraphData as Record<string, unknown> : undefined) ||
-            (traditionalOutput && typeof traditionalOutput === 'object' ? traditionalOutput as Record<string, unknown> : undefined) ||
-            {};
-          
-          result = {
-            success: hybridResult.success,
-            data: resultData,
-            message: `Executado via ${hybridResult.mode}`,
-            processingTimeMs: hybridResult.executionTime,
-            confidence: hybridResult.success ? 0.95 : 0.5,
-          } satisfies AgentTaskResult;
+              // Converter resultado híbrido para formato AgentTaskResult
+              const langGraphData = hybridResult.langGraphResult?.data;
+              const traditionalOutput = (hybridResult.traditionalResult as any)?.output;
+              
+              const resultData: Record<string, unknown> = 
+                (langGraphData && typeof langGraphData === 'object' ? langGraphData as Record<string, unknown> : undefined) ||
+                (traditionalOutput && typeof traditionalOutput === 'object' ? traditionalOutput as Record<string, unknown> : undefined) ||
+                {};
+              
+              const taskResult = {
+                success: hybridResult.success,
+                data: resultData,
+                message: `Executado via ${hybridResult.mode}`,
+                processingTimeMs: hybridResult.executionTime,
+                confidence: hybridResult.success ? 0.95 : 0.5,
+              } satisfies AgentTaskResult;
 
-          // Log da execução híbrida
-          logActivity(
-            agent.id,
-            `Executado via ${hybridResult.mode} (${hybridResult.executionTime}ms)`,
-            hybridResult.success ? "success" : "error"
-          );
-        } else if (useStreaming) {
-          // Fallback para agentes sem versão híbrida - usar streaming tradicional
-          const callbacks = createStreamingCallbacks(
-            agent.id,
-            setStreamingContent,
-            setAgents,
-            logActivity
-          );
-          result = await processTaskWithStreamingAI(task, agent, callbacks);
-        } else {
-          // Fallback para processamento tradicional sem streaming
-          result = await processTaskWithRealAI(task, agent);
-        }
+              // 🔵 AZURE: Track execução híbrida
+              trackAgentTask(
+                agent.id,
+                task.type,
+                hybridResult.success ? 'COMPLETED' : 'FAILED',
+                hybridResult.executionTime,
+                hybridResult.success ? undefined : 'Hybrid execution failed'
+              );
+
+              logActivity(
+                agent.id,
+                `Executado via ${hybridResult.mode} (${hybridResult.executionTime}ms)`,
+                hybridResult.success ? "success" : "error"
+              );
+
+              return taskResult;
+            } else if (useStreaming) {
+              // Fallback para agentes sem versão híbrida - usar streaming tradicional
+              const callbacks = createStreamingCallbacks(
+                agent.id,
+                setStreamingContent,
+                setAgents,
+                logActivity
+              );
+              return await processTaskWithStreamingAI(task, agent, callbacks);
+            } else {
+              // Fallback para processamento tradicional sem streaming
+              return await processTaskWithRealAI(task, agent);
+            }
+          },
+          { agentId: agent.id, taskType: task.type }
+        );
 
         // ✅ Registrar métrica de sucesso
         const duration = Date.now() - startTime;
@@ -574,6 +609,14 @@ export function useAutonomousAgents() {
           tokensUsed: result.tokensUsed,
           taskType: task.type,
         });
+
+        // 🔵 AZURE: Track tarefa concluída
+        trackAgentTask(
+          agent.id,
+          task.type,
+          'COMPLETED',
+          duration
+        );
 
         // Use extracted helper for completion (S2004 compliance)
         handleTaskCompletion(
@@ -596,6 +639,26 @@ export function useAutonomousAgents() {
           taskType: task.type,
           error: err instanceof Error ? err.message : String(err),
         });
+
+        // 🔵 AZURE: Track erro da tarefa
+        trackAgentTask(
+          agent.id,
+          task.type,
+          'FAILED',
+          duration,
+          err instanceof Error ? err.message : String(err)
+        );
+
+        // 🔵 AZURE: Track exceção
+        trackError(
+          err instanceof Error ? err : new Error(String(err)),
+          {
+            component: 'useAutonomousAgents',
+            agentId: agent.id,
+            taskId: task.id,
+            severity: 'error',
+          }
+        );
 
         // Use extracted helper for failure (S2004 compliance)
         handleTaskFailure(task, err, agent.id, setTaskQueue, logActivity);
@@ -641,167 +704,25 @@ export function useAutonomousAgents() {
     return agent;
   }, []);
 
-  // Helper para atualizar status visual dos agentes (reduz S2004 nesting)
-  const updateAgentsActivityStatus = useCallback(() => {
-    setAgents((current) => (current || []).map(updateSingleAgentActivity));
+  // Atualiza agentes a cada 10s (intervalo reduzido para detecções mais rápidas)
+  useEffect(() => {
+    const updateInterval = setInterval(() => {
+      setAgents((current) => (current || []).map(updateSingleAgentActivity));
+    }, 10000); // 10s
+
+    return () => {
+      clearInterval(updateInterval);
+    };
+  }, [agents, setAgents, updateSingleAgentActivity]);
+
+  // 🔥 FIX: Executa sempre pelo menos uma vez no mount
+  useEffect(() => {
+    const initialUpdate = async () => {
+      setAgents((current) => (current || []).map(updateSingleAgentActivity));
+    };
+
+    initialUpdate();
   }, [setAgents, updateSingleAgentActivity]);
-
-  // Loop contínuo de processamento
-  useEffect(() => {
-    const interval = setInterval(() => {
-      processActiveAgents();
-      updateAgentsActivityStatus();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [processActiveAgents, updateAgentsActivityStatus]);
-
-  // =============================
-  // RESET DIÁRIO (local)
-  // =============================
-
-  // Helper para reset diário dos agentes (reduz S2004 nesting)
-  const performDailyReset = useCallback(() => {
-    setAgents((current) =>
-      (current || []).map((agent) => ({
-        ...agent,
-      }))
-    );
-  }, [setAgents]);
-
-  // Helper para configurar intervalo diário (reduz S2004 nesting)
-  const setupDailyResetInterval = useCallback(() => {
-    const interval = setInterval(
-      () => {
-        performDailyReset();
-      },
-      24 * 60 * 60 * 1000
-    );
-
-    return () => clearInterval(interval);
-  }, [performDailyReset]);
-
-  useEffect(() => {
-    const resetDailyCounters = () => {
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(24, 0, 0, 0);
-
-      const timeUntilMidnight = midnight.getTime() - now.getTime();
-
-      const timeout = setTimeout(() => {
-        performDailyReset();
-        setupDailyResetInterval();
-      }, timeUntilMidnight);
-
-      return () => clearTimeout(timeout);
-    };
-
-    return resetDailyCounters();
-  }, [performDailyReset, setupDailyResetInterval]);
-
-  // =============================
-  // CONTROLES DO USUÁRIO
-  // =============================
-
-  // Helper para encontrar agente por ID (reduz S2004 nesting)
-  const findAgentById = useCallback((agents: Agent[], agentId: string): Agent | undefined => {
-    return agents.find((a) => a.id === agentId);
-  }, []);
-
-  // Helper para determinar novo status do agente (reduz S2004 nesting)
-  const getNewAgentStatus = useCallback((agent: Agent): Partial<Agent> => {
-    const isNowEnabled = !agent.enabled;
-    return {
-      enabled: isNowEnabled,
-      status: isNowEnabled ? "active" : "paused",
-      lastActivity: isNowEnabled ? "Iniciando…" : "Pausado pelo usuário",
-    };
-  }, []);
-
-  // ✨ NOVO: Validar agentes ao atualizar
-  const updateAgentWithValidation = useCallback(
-    (agentId: string, updates: Partial<Agent>) => {
-      setAgents((current) => {
-        const agent = findAgentById(current || [], agentId);
-        if (!agent) return current || [];
-
-        const updatedAgent = { ...agent, ...updates };
-        const validation = validateAgent(updatedAgent);
-
-        if (!validation.isValid) {
-          console.error("Validação de agente falhou:", validation.errors);
-          toast.error("Dados do agente inválidos.");
-          return current || [];
-        }
-
-        return updateAgentInList(current || [], agentId, validation.data || agent);
-      });
-    },
-    [setAgents, findAgentById]
-  );
-
-  // ✨ MODIFICADO: toggleAgent agora usa validação
-  const toggleAgent = useCallback(
-    (agentId: string) => {
-      setAgents((current) => {
-        const agent = findAgentById(current || [], agentId);
-        if (!agent) return current || [];
-
-        const newStatus = getNewAgentStatus(agent);
-        const updatedAgent = { ...agent, ...newStatus };
-
-        // Validar antes de atualizar
-        const validation = validateAgent(updatedAgent);
-
-        if (!validation.isValid || !validation.data) {
-          console.error("Validação de agente falhou:", validation.errors);
-          toast.error("Erro ao alterar status do agente.");
-          return current || [];
-        }
-
-        return updateAgentInList(current || [], agentId, validation.data);
-      });
-    },
-    [setAgents, findAgentById, getNewAgentStatus]
-  );
-
-  const markTaskAsHumanTouched = useCallback(
-    (taskId: string) => {
-      setTaskQueue((current) =>
-        updateTaskInQueue(current || [], taskId, {
-          humanTouchedAt: new Date().toISOString(),
-          status: "human_intervention",
-        })
-      );
-    },
-    [setTaskQueue]
-  );
-
-  const resumeTaskAfterHuman = useCallback(
-    (taskId: string) => {
-      setTaskQueue((current) =>
-        updateTaskInQueue(current || [], taskId, {
-          status: "queued",
-          resumeAfterHuman: true,
-        })
-      );
-    },
-    [setTaskQueue]
-  );
-
-  // Toggle streaming mode
-  const toggleStreaming = useCallback(() => {
-    setUseStreaming((prev) => !prev);
-  }, []);
-
-  // Clear old activity logs (older than 24h)
-  const clearOldLogs = useCallback(() => {
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    setActivityLog((current) =>
-      (current || []).filter((log) => new Date(log.timestamp).getTime() > oneDayAgo)
-    );
-  }, [setActivityLog]);
 
   // 🚨 Sistema de Alertas Automáticos - Detecta agentes degradados
   useEffect(() => {
@@ -817,89 +738,29 @@ export function useAutonomousAgents() {
           unhealthy.map((a: { agentId: string }) => a.agentId)
         );
 
+        // 🔵 AZURE: Track métricas de performance dos agentes
+        unhealthy.forEach((agent: { agentId: string; p95Latency: number; errorRate: number; successRate: number }) => {
+          trackAgentPerformance(agent.agentId, {
+            tasksCompleted: 0, // Agente degradado
+            averageProcessingTime: agent.p95Latency,
+            errorRate: agent.errorRate,
+          });
+        });
+
         // Notificação visual local
         toast.error(`⚠️ ${unhealthy.length} agente(s) degradado(s)`, {
           description: `Agentes com problemas: ${unhealthy.map((a: { agentId: string }) => a.agentId).join(", ")}`,
           duration: 10000,
         });
-
-        // Enviar notificação via API (email/webhook)
-        try {
-          await fetch("/api/notifications/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "system_alert",
-              title: "🚨 Agentes Degradados Detectados",
-              message: `${unhealthy.length} agente(s) apresentando problemas de performance: ${unhealthy.map((a: { agentId: string }) => a.agentId).join(", ")}`,
-              priority: "high",
-              metadata: {
-                agentes: unhealthy.map((a: { agentId: string }) => a.agentId).join(", "),
-                latenciaMedia: Math.round(
-                  unhealthy.reduce(
-                    (sum: number, a: { p95Latency: number }) => sum + a.p95Latency,
-                    0
-                  ) / unhealthy.length
-                ),
-                taxaErroMedia:
-                  (
-                    unhealthy.reduce(
-                      (sum: number, a: { errorRate: number }) => sum + a.errorRate,
-                      0
-                    ) / unhealthy.length
-                  ).toFixed(1) + "%",
-                timestamp: new Date().toISOString(),
-              },
-            }),
-          });
-        } catch (error) {
-          console.error("[AgentHealth] Falha ao enviar notificação:", error);
-        }
-
-        // Pausar agentes degradados automaticamente
-        unhealthy.forEach((agent: { agentId: string; p95Latency: number; errorRate: number }) => {
-          setAgents((current) =>
-            updateAgentInList(current || [], agent.agentId, {
-              status: "paused",
-              lastActivity: `Pausado: alta latência (${agent.p95Latency}ms) ou erro (${agent.errorRate}%)`,
-            })
-          );
-        });
       }
     };
 
-    // Verificar a cada 5 minutos
-    const interval = setInterval(checkAgentHealth, 5 * 60 * 1000);
+    // Verifica imediatamente no mount
+    checkAgentHealth();
 
-    // Verificação inicial após 30 segundos
-    const timeout = setTimeout(checkAgentHealth, 30000);
+    // Verifica a cada 60s
+    const interval = setInterval(checkAgentHealth, 60000);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
+    return () => clearInterval(interval);
   }, [setAgents]);
-
-  return {
-    agents: agents || [],
-    taskQueue: taskQueue || [],
-    completedTasks: completedTasks || [],
-    activityLog: activityLog || [],
-    serverLogs, // Logs persistentes do servidor
-    legalMemory, // Memória jurídica compartilhada
-    refreshServerData: fetchServerData, // Função para forçar atualização
-    // Streaming state
-    streamingContent,
-    isStreamingEnabled: useStreaming,
-    // Actions
-    addTask,
-    toggleAgent,
-    toggleStreaming,
-    markTaskAsHumanTouched,
-    resumeTaskAfterHuman,
-    setAgents,
-    clearOldLogs, // Clear logs older than 24h
-    // ✨ NOVO: Expor função de atualização validada
-    updateAgentWithValidation,
-  };
 }
