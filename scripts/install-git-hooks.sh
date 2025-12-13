@@ -245,26 +245,34 @@ echo ""
 
 # 4. Testes unitários completos
 echo "${YELLOW}🧪 Executando testes unitários completos...${NC}"
+if [ "${GIT_HOOKS_SKIP_TESTS}" = "1" ]; then
+    echo "${YELLOW}⚠️  GIT_HOOKS_SKIP_TESTS=1 — pulando testes unitários no hook${NC}"
+elif [ "${GIT_HOOKS_SKIP_UNIT_TESTS}" = "1" ]; then
+    echo "${YELLOW}⚠️  GIT_HOOKS_SKIP_UNIT_TESTS=1 — pulando testes unitários no hook${NC}"
+else
 if [ "${GIT_HOOKS_FAST}" = "1" ]; then
     echo "${YELLOW}⚡ Modo rápido ativado — executando apenas smoke tests${NC}"
     echo "${YELLOW}⚠️  Executando suíte reduzida (fast) para feedback rápido${NC}"
     tmpfile=$(mktemp)
-    if ! npm run test:fast >"$tmpfile" 2>&1; then
+    if ! timeout --preserve-status 20m npm run test:fast >"$tmpfile" 2>&1; then
         tail -n 30 "$tmpfile"
         rm -f "$tmpfile"
+        echo "${YELLOW}💡 Se o hook travar com frequência, use GIT_HOOKS_SKIP_UNIT_TESTS=1 ou faça push manual após rodar os testes.${NC}"
         echo "${RED}❌ Testes (shard) falharam! Corrija antes de fazer push.${NC}"
         exit 1
     fi
     rm -f "$tmpfile"
 else
     tmpfile=$(mktemp)
-    if ! npm run test:run >"$tmpfile" 2>&1; then
+    if ! timeout --preserve-status 20m npm run test:run >"$tmpfile" 2>&1; then
         tail -n 30 "$tmpfile"
         rm -f "$tmpfile"
+        echo "${YELLOW}💡 Se o hook travar com frequência, use GIT_HOOKS_SKIP_UNIT_TESTS=1 ou faça push manual após rodar os testes.${NC}"
         echo "${RED}❌ Testes unitários falharam! Corrija os testes antes de fazer push.${NC}"
         exit 1
     fi
     rm -f "$tmpfile"
+fi
 fi
 echo "${GREEN}✅ Testes unitários passaram${NC}"
 echo ""

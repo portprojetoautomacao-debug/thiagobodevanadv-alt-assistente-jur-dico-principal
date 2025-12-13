@@ -12,6 +12,67 @@
   try {
     const allowedHostPattern = /https?:\/\/.+?pje\./i;
 
+    // Sanitização defensiva (privacidade): truncar strings e redigir PII comum (CPF/email)
+    // OBS: Este script roda no contexto da página, então não importamos utilitários do bundle.
+    function sanitizeForPostMessage(value: any, depth = 0): any {
+      const MAX_DEPTH = 4;
+      const MAX_KEYS = 50;
+      const MAX_ARRAY = 20;
+      const MAX_SNIPPET = 500;
+
+      const cpfRegex = /\d{3}\.\d{3}\.\d{3}-\d{2}/g;
+      const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+      const sanitizeString = (s: string) => {
+        const redacted = s
+          .replace(cpfRegex, "[REDACTED_CPF]")
+          .replace(emailRegex, "[REDACTED_EMAIL]");
+        return redacted.length > MAX_SNIPPET ? redacted.slice(0, MAX_SNIPPET) : redacted;
+      };
+
+      try {
+        if (value == null) return value;
+        const t = typeof value;
+
+        if (t === "string") return sanitizeString(value);
+        if (t === "number" || t === "boolean") return value;
+
+        // Evitar serialização de objetos complexos/DOM
+        if (t === "function") return undefined;
+
+        if (depth >= MAX_DEPTH) {
+          // Se for stringificável, retornar um snapshot curto; caso contrário, sinalizar truncamento
+          try {
+            return sanitizeString(JSON.stringify(value));
+          } catch (_) {
+            return "[TRUNCATED]";
+          }
+        }
+
+        if (Array.isArray(value)) {
+          const sliced = value.slice(0, MAX_ARRAY);
+          return sliced.map((v) => sanitizeForPostMessage(v, depth + 1));
+        }
+
+        if (t === "object") {
+          const out: any = {};
+          const keys = Object.keys(value).slice(0, MAX_KEYS);
+          for (const k of keys) {
+            out[k] = sanitizeForPostMessage(value[k], depth + 1);
+          }
+          if (Object.keys(value).length > MAX_KEYS) {
+            out._sanitization = { truncated: true, piiRemoved: true };
+          }
+          return out;
+        }
+
+        // Fallback
+        return sanitizeString(String(value));
+      } catch (_) {
+        return "[SANITIZATION_FAILED]";
+      }
+    }
+
     // Utilitário para enviar mensagem ao content script
     function sendToContent(detail: any) {
       window.postMessage({ source: "PJE_NETWORK_HOOK", detail }, "*");
@@ -60,7 +121,9 @@
                   status: this.status,
                   duration: Date.now() - start,
                   responseLength: responseText ? responseText.length : 0,
-                  body: body, // Enviar corpo parseado se for JSON
+                  // Enviar corpo parseado SOMENTE em forma sanitizada (truncado + PII redigida)
+                  body: body ? sanitizeForPostMessage(body) : null,
+                  bodySanitized: true,
                 });
               } catch (e) {
                 console.error("[PJe Network Hook] XHR onLoad error:", e);
@@ -108,7 +171,8 @@
                 status: response.status,
                 duration: Date.now() - start,
                 responseLength: len,
-                body: body,
+                body: body ? sanitizeForPostMessage(body) : null,
+                bodySanitized: true,
               });
 
               return response;
