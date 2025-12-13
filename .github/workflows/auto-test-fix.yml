@@ -10,6 +10,12 @@ on:
     - cron: "0 9 * * *"
   workflow_dispatch: # Permitir execução manual
 
+# Permissões globais do workflow
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
 env:
   NODE_VERSION: "22.x"
   SKIP_AUTH_SETUP: true
@@ -20,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
+      contents: read
+      actions: read
       issues: write
 
     strategy:
@@ -32,7 +40,9 @@ jobs:
       - name: 📥 Checkout código
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          persist-credentials: true
 
       - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4

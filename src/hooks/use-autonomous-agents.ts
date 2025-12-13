@@ -238,10 +238,19 @@ function getInitialAgents(): Agent[] {
     if (storedAgents) {
       const parsed = JSON.parse(storedAgents);
 
-      // Return valid stored agents
-      if (Array.isArray(parsed) && parsed.length === 15) return parsed;
+      // Return valid stored agents (verificar se é array E tem 15 elementos)
+      if (Array.isArray(parsed) && parsed.length === 15) {
+        // ✅ Validar estrutura básica dos agentes
+        const hasValidStructure = parsed.every(
+          (agent) => agent && typeof agent === 'object' && agent.id && agent.name
+        );
+        
+        if (hasValidStructure) {
+          return parsed;
+        }
+      }
 
-      console.log("[Agents] Quantidade incorreta de agentes → reinicializando…");
+      console.log("[Agents] Estrutura inválida ou quantidade incorreta → reinicializando");
       return initializeAgents();
     }
   } catch (e) {
@@ -276,14 +285,36 @@ export function useAutonomousAgents() {
   const [useStreaming, setUseStreaming] = useState(true); // Streaming habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set());
+  
+  // 🔥 FIX: Flag para prevenir loop infinito
+  const isInitializingRef = useRef(false);
 
-  // Garante sempre 15 agentes
+  // Garante sempre 15 agentes (com proteção contra loop infinito)
   useEffect(() => {
-    if (agents && agents.length !== 15) {
-      console.log("[Agents] Corrigindo → 15 agentes obrigatórios");
+    // Prevenir loop infinito
+    if (isInitializingRef.current) return;
+    
+    // Validar apenas se agents existe e não está vazio
+    if (!agents || agents.length === 0) {
+      console.log("[Agents] Inicializando agentes pela primeira vez");
+      isInitializingRef.current = true;
       setAgents(initializeAgents());
+      setTimeout(() => {
+        isInitializingRef.current = false;
+      }, 100);
+      return;
     }
-  }, [agents, setAgents]);
+    
+    // Se tiver quantidade errada, reinicializar (mas apenas uma vez)
+    if (agents.length !== 15) {
+      console.log(`[Agents] Quantidade incorreta (${agents.length}) → reinicializando para 15`);
+      isInitializingRef.current = true;
+      setAgents(initializeAgents());
+      setTimeout(() => {
+        isInitializingRef.current = false;
+      }, 100);
+    }
+  }, [agents?.length, setAgents]); // Dependência apenas do length, não do array completo
 
   // =============================
   // SYNC COM SERVIDOR (Logs e Memória)
@@ -497,12 +528,17 @@ export function useAutonomousAgents() {
           });
 
           // Converter resultado híbrido para formato AgentTaskResult
+          const langGraphData = hybridResult.langGraphResult?.data;
+          const traditionalOutput = (hybridResult.traditionalResult as any)?.output;
+          
+          const resultData: Record<string, unknown> = 
+            (langGraphData && typeof langGraphData === 'object' ? langGraphData as Record<string, unknown> : undefined) ||
+            (traditionalOutput && typeof traditionalOutput === 'object' ? traditionalOutput as Record<string, unknown> : undefined) ||
+            {};
+          
           result = {
             success: hybridResult.success,
-            data:
-              hybridResult.langGraphResult?.data ||
-              (hybridResult.traditionalResult?.output as Record<string, unknown>) ||
-              {},
+            data: resultData,
             message: `Executado via ${hybridResult.mode}`,
             processingTimeMs: hybridResult.executionTime,
             confidence: hybridResult.success ? 0.95 : 0.5,

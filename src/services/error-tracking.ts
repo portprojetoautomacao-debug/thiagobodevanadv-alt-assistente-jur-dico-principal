@@ -18,7 +18,7 @@
 
 /// <reference types="vite/client" />
 
-// DESABILITADO (modo manutenção): pii-filtering não disponível no build
+// DESABILITADO (modo manutenção): pii-filtering não disponível
 // import {
 //   createPIIFilteredBeforeSend,
 //   DEFAULT_PII_CONFIG,
@@ -33,7 +33,7 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 const APP_ENVIRONMENT = import.meta.env.MODE || "development";
 
 // DESABILITADO (modo manutenção): PII Filtering não disponível
-// const ENABLE_PII_FILTERING = import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
+const ENABLE_PII_FILTERING = false; // import.meta.env.VITE_ENABLE_PII_FILTERING === "true" || IS_PRODUCTION;
 // const PII_CONFIG: PIIFilterConfig = {
 //   ...DEFAULT_PII_CONFIG,
 //   enabled: ENABLE_PII_FILTERING,

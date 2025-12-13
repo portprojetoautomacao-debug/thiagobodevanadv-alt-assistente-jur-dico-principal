@@ -138,11 +138,14 @@ async function orchestrateAgents(
       const result = await executeHybridTask(agentId, taskForAgent, {
         timeoutMs: request.timeout || 30000,
       });
-      if (result.langGraphResult && result.langGraphResult.messages) {
-        for (const m of result.langGraphResult.messages) {
+      
+      // Tentar extrair mensagens do resultado (com type guard)
+      const langGraphResult = result.langGraphResult as any;
+      if (langGraphResult && Array.isArray(langGraphResult.messages)) {
+        for (const m of langGraphResult.messages) {
           messages.push({
-            role: `${agentId}:${m.role}`,
-            content: String(m.content),
+            role: `${agentId}:${m.role || 'agent'}`,
+            content: String(m.content || ''),
             timestamp: Date.now(),
           });
         }

@@ -217,6 +217,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔄 Executar Backup Incremental
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "🔄 Executando backup incremental..."
 
@@ -248,6 +250,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️  Backup de Configurações do Projeto
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "⚙️  Fazendo backup de configurações do projeto..."
 
@@ -308,6 +312,8 @@ jobs:
         run: npm ci
 
       - name: 📥 Baixar Último Backup
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "📥 Baixando último backup para teste..."
 
@@ -372,6 +378,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🗂️  Limpar Backups Antigos
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "🗂️  Limpando backups antigos..."
 
@@ -390,6 +398,8 @@ jobs:
           echo "✅ Limpeza de retenção concluída"
 
       - name: 📊 Relatório de Backups
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "📊 Gerando relatório de backups..."
 

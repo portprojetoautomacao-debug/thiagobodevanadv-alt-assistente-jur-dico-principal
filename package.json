@@ -54,7 +54,10 @@
     "ensure:sarif-deps": "node ./scripts/ensure-official-sarif-deps.cjs",
     "ensure:sarif-deps:apply": "node ./scripts/ensure-official-sarif-deps.cjs --apply",
     "setup:mcp": "pwsh -ExecutionPolicy Bypass -File scripts/verify-serena-setup.ps1",
-    "setup:mcp:bash": "bash scripts/verify-serena-setup.sh"
+    "setup:mcp:bash": "bash scripts/verify-serena-setup.sh",
+    "serena:verify": "bash scripts/verify-serena-setup.sh",
+    "serena:test": "npx tsx scripts/test-serena-semantic.ts",
+    "serena:check": "npm run serena:verify && npm run serena:test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -179,7 +182,7 @@
     "jsdom": "^26.0.0",
     "lodash.throttle": "^4.1.1",
     "prettier": "^3.4.2",
-    "sass-embedded": "^1.95.1",
+    "sass-embedded": "^1.96.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.49.0",
     "vite-plugin-pwa": "^1.2.0",
