@@ -22,6 +22,14 @@ Funcionalidades esperadas
      - ProcessExtractor: extrai número CNJ, classe, assunto, partes, vara, comarca, último movimento.
      - ExpedienteExtractor: extrai intimações/movimentações.
      - DocumentExtractor: extrai documento atualmente aberto (quando aplicável).
+     - **NetworkHook**: Script injetado (`inject/hook-network.ts`) que intercepta respostas XHR/Fetch (POST) do PJe para capturar dados carregados dinamicamente (AJAX).
+       - O Hook envia mensagens `window.postMessage` para o Content Script.
+       - O Content Script escuta essas mensagens, sanitiza os dados (usando `document-sanitizer.ts`) e só então envia para o Background.
+   - **Privacidade e Sanitização**:
+     - Implementar `document-sanitizer.ts` no Content Script.
+     - Antes de enviar qualquer dado ao backend, passar pelo sanitizador.
+     - Regras: Redigir CPFs (`***.***.***-**`), Emails (`[REDACTED_EMAIL]`), e truncar textos longos (> 500 chars).
+     - NUNCA enviar PDFs ou HTML completo de peças processuais.
    - Badge visual fixo no canto superior direito (status: ✓ verde, ⟳ amarelo, ✗ vermelho, ! laranja); clique no badge dispara sync.
    - Mensagens runtime para interagir com popup/background (FORCE_SYNC, PING, EXTRACT_DOCUMENT, REPORT_ERROR).
 

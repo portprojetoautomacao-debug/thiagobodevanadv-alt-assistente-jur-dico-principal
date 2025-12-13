@@ -39,7 +39,20 @@
             const onLoad = () => {
               try {
                 const responseText = this.responseText;
-                // Enviar apenas metadados e tamanho da resposta, sem conteúdo bruto
+                let body = null;
+                // Tentar capturar JSON se for um endpoint relevante ou se parecer JSON
+                // PJe usa POST para carregar detalhes, então precisamos do corpo da resposta
+                if (
+                  responseText &&
+                  (responseText.trim().startsWith("{") || responseText.trim().startsWith("["))
+                ) {
+                  try {
+                    body = JSON.parse(responseText);
+                  } catch (e) {
+                    // Não é JSON válido, ignorar corpo
+                  }
+                }
+
                 sendToContent({
                   type: "xhr",
                   url,
@@ -47,15 +60,16 @@
                   status: this.status,
                   duration: Date.now() - start,
                   responseLength: responseText ? responseText.length : 0,
+                  body: body, // Enviar corpo parseado se for JSON
                 });
               } catch (e) {
-                console.error('[PJe Network Hook] XHR onLoad error:', e);
+                console.error("[PJe Network Hook] XHR onLoad error:", e);
               }
             };
             this.addEventListener("load", onLoad);
           }
         } catch (e) {
-          console.error('[PJe Network Hook] XHR error:', e);
+          console.error("[PJe Network Hook] XHR error:", e);
         }
 
         return send.apply(this, [body]);
@@ -74,9 +88,15 @@
             return origFetch(input, init).then(async (response: Response) => {
               const cloned = response.clone();
               let len = 0;
+              let body = null;
               try {
                 const text = await cloned.text();
                 len = text?.length || 0;
+                if (text && (text.trim().startsWith("{") || text.trim().startsWith("["))) {
+                  try {
+                    body = JSON.parse(text);
+                  } catch (_) {}
+                }
               } catch (_) {
                 len = -1;
               }
@@ -88,6 +108,7 @@
                 status: response.status,
                 duration: Date.now() - start,
                 responseLength: len,
+                body: body,
               });
 
               return response;
