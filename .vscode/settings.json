@@ -222,5 +222,8 @@
   "sonarlint.connectedMode.project": {
     "connectionId": "thiagobodevanadv-alt",
     "projectKey": "thiagobodevanadv-alt_assistente-jur-dico-principal"
-  }
+  },
+  "chat.agent.maxRequests": 40,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "notebook.defaultFormatter": "esbenp.prettier-vscode"
 }

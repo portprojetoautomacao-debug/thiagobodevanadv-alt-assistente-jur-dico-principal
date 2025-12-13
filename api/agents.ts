@@ -13,11 +13,13 @@ import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 import { agentMonitor } from "../src/lib/agent-monitoring.js";
+// 🔍 TRACING: OpenTelemetry para monitoramento
 import {
-  AnalyzeIntimationInputSchema,
-  DraftPetitionInputSchema,
+    AnalyzeIntimationInputSchema,
+    DraftPetitionInputSchema,
 } from "../src/lib/agent-schemas.js";
 import { legalMemory, type LegalContextType } from "../src/lib/legal-memory.js";
+import { tracingService } from "../src/lib/tracing.js";
 import { createMinutaFromAgentTask } from "./lib/minuta-service-backend.js";
 
 // ===== Middleware de Autenticação =====
@@ -1322,28 +1324,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // 🔍 TRACING: Criar span para request da API
+    const span = tracingService.startSpan('api.agents.handler', {
+      'http.method': req.method,
+      'http.route': '/api/agents',
+      'http.action': action || 'unknown',
+    });
+
+    span.addEvent('request.received', {
+      'timestamp': Date.now(),
+      'action': action,
+    });
+
+    let result;
+    
     if (action === "process-queue" && req.method === "POST") {
-      return await handleProcessQueue(res);
+      span.setAttribute('handler', 'process-queue');
+      result = await handleProcessQueue(res);
+      span.addEvent('queue.processed');
+      span.end();
+      return result;
     }
 
     if (action === "process-task" && req.method === "POST") {
-      return await handleProcessTask(req, res);
+      span.setAttribute('handler', 'process-task');
+      result = await handleProcessTask(req, res);
+      span.addEvent('task.processed');
+      span.end();
+      return result;
     }
 
     if (action === "logs" && req.method === "GET") {
-      return await handleGetLogs(res);
+      span.setAttribute('handler', 'logs');
+      result = await handleGetLogs(res);
+      span.addEvent('logs.retrieved');
+      span.end();
+      return result;
     }
 
     if (action === "memory" && req.method === "GET") {
-      return await handleGetMemory(res);
+      span.setAttribute('handler', 'memory');
+      result = await handleGetMemory(res);
+      span.addEvent('memory.retrieved');
+      span.end();
+      return result;
     }
 
+    span.setAttribute('error', true);
+    span.setAttribute('error.message', 'Invalid action');
+    span.end();
+    
     return res.status(400).json({
       error: "Invalid action. Use: process-queue, process-task, logs, or memory",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error("Handler error", error);
+
+    // 🔍 TRACING: Registrar erro
+    if (span) {
+      span.recordException(error as Error);
+      span.setStatus({ code: 2, message: error instanceof Error ? error.message : 'Unknown error' });
+      span.end();
+    }
 
     return res.status(500).json({
       ok: false,
