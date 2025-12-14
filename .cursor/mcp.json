@@ -11,7 +11,8 @@
       "env": {
         "SONARQUBE_URL": "https://sonarcloud.io",
         "SONARQUBE_TOKEN": "${SONARQUBE_TOKEN}",
-        "SONARQUBE_ORGANIZATION": "thiagobodevan-a11y-assistente-juridico-p"
+        "SONARQUBE_ORGANIZATION": "thiagobodevanadv-alt",
+        "SONARQUBE_PROJECT_KEY": "thiagobodevanadv-alt_assistente-jur-dico-principal"
       }
     }
   }

@@ -262,8 +262,8 @@ export function validateAgentTask(data: unknown) {
 
 // Validar se CPF tem d�gitos verificadores corretos (algoritmo oficial)
 export function isValidCPF(cpf: string): boolean {
-  // Nota: replace(/\D/g) é necessário aqui pois \D (não-dígito) é uma classe de caracteres
-  const cleanCPF = cpf.replace(/\D/g, "");
+  // Nota: replaceAll com regex é mais seguro e claro que replace com flag global
+  const cleanCPF = cpf.replaceAll(/\D/g, "");
   if (cleanCPF.length !== 11 || /^(\d)\1+$/.test(cleanCPF)) return false;
 
   let sum = 0;
@@ -287,8 +287,8 @@ export function isValidCPF(cpf: string): boolean {
 
 // Validar se CNPJ tem d�gitos verificadores corretos (algoritmo oficial)
 export function isValidCNPJ(cnpj: string): boolean {
-  // Nota: replace(/\D/g) é necessário aqui pois \D (não-dígito) é uma classe de caracteres
-  const cleanCNPJ = cnpj.replace(/\D/g, "");
+  // Nota: replaceAll com regex é mais seguro e claro que replace com flag global
+  const cleanCNPJ = cnpj.replaceAll(/\D/g, "");
   if (cleanCNPJ.length !== 14 || /^(\d)\1+$/.test(cleanCNPJ)) return false;
 
   let sum = 0;

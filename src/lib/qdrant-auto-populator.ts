@@ -10,11 +10,11 @@
  * - Redis (cache e �ndice reverso)
  *
  * Fluxo:
- * 1. Verifica duplicata
- * 2. Extrai temas da intima��o
- * 3. Busca precedentes no DataJud
- * 4. Gera embedding
- * 5. Valida embedding
+ * 1. Extrai temas da intima��o
+ * 2. Busca precedentes no DataJud
+ * 3. Gera embedding
+ * 4. Valida embedding
+ * 5. Construir payload
  * 6. Insere no Qdrant
  * 7. Cria �ndice reverso no Redis
  *
@@ -187,26 +187,7 @@ export class QdrantAutoPopulator {
       console.log(`[AutoPopulator] Processando intima��o: ${intimacao.id}`);
       console.log(`[AutoPopulator] Processo: ${intimacao.numeroProcesso}`);
 
-      // 1. Verificar duplicata
-      // AÇÃO NECESSÁRIA: Atualizar @qdrant/client para v3.x e ajustar tipos de resposta
-      // Temporariamente desabilitado devido a conflitos de tipos entre Qdrant Client v2 e v3
-      // Referência: https://github.com/qdrant/qdrant-js/releases para breaking changes
-      /* if (this.config.enableCache && intimacao.numeroProcesso) {
-        const existente = await this.checkDuplicate(intimacao.numeroProcesso);
-        if (existente) {
-          console.log(`[AutoPopulator] ??  Documento j� existe: ${existente.id}`);
-          return {
-            success: true,
-            inserted: false,
-            qdrantId: existente.id,
-            temas: existente.temas,
-            precedentesEncontrados: existente.qtdPrecedentes || 0,
-            duration: Date.now() - startTime,
-          };
-        }
-      } */
-
-      // 2. Extrair temas
+      // 1. Extrair temas
       const temas = await this.temaExtractor.extractTemasFromExpediente(intimacao);
 
       if (temas.confidence < this.config.minConfidence) {
@@ -219,7 +200,7 @@ export class QdrantAutoPopulator {
         `[AutoPopulator] ? Tema extra�do: ${temas.temaPrimario} (confidence: ${temas.confidence})`
       );
 
-      // 3. Buscar precedentes no DataJud (paralelo)
+      // 2. Buscar precedentes no DataJud (paralelo)
       let precedentes: unknown[] = [];
       if (this.config.enablePrecedentSearch) {
         try {
@@ -244,7 +225,7 @@ export class QdrantAutoPopulator {
         }
       }
 
-      // 4. Gerar embedding
+      // 3. Gerar embedding
       const embeddingResult = await this.embeddings.generateDocumentEmbedding({
         numero: intimacao.numeroProcesso || "N/A",
         tribunal: intimacao.tribunal || "DESCONHECIDO",
@@ -256,7 +237,7 @@ export class QdrantAutoPopulator {
 
       console.log(`[AutoPopulator] ?? Embedding gerado: ${embeddingResult.embedding.length}d`);
 
-      // 5. Validar embedding
+      // 4. Validar embedding
       const validation = this.validateEmbedding(embeddingResult.embedding, 768);
       if (!validation.valid) {
         throw new Error(`Embedding inv�lido: ${validation.issues.join(", ")}`);
@@ -266,10 +247,10 @@ export class QdrantAutoPopulator {
         `[AutoPopulator] ? Embedding validado (confidence: ${validation.confidence.toFixed(3)})`
       );
 
-      // 6. Construir payload
+      // 5. Construir payload
       const payload = this.buildPayload(intimacao, temas, precedentes, embeddingResult);
 
-      // 7. Inserir no Qdrant
+      // 6. Inserir no Qdrant
       await this.qdrant.upsert([
         {
           id: intimacao.id,
@@ -280,7 +261,7 @@ export class QdrantAutoPopulator {
 
       console.log(`[AutoPopulator] ? Inserido no Qdrant: ${intimacao.id}`);
 
-      // 8. Cache Redis (índice reverso)
+      // 7. Cache Redis (�ndice reverso)
       if (this.config.enableCache && intimacao.numeroProcesso) {
         await this.createReverseIndex(intimacao.numeroProcesso, intimacao.id, temas.temaPrimario);
       }

@@ -205,16 +205,14 @@ export class AgentMonitor {
         { agentId, taskId, taskType }
       );
 
-      const duration =
-        (performance === undefined ? Date.now() : performance.now()) - startTime;
+      const duration = (performance === undefined ? Date.now() : performance.now()) - startTime;
       await this.logAction(agentId, `execute_task_${taskType}`, { taskId }, true, duration);
 
       sentry.trackMetric("agent_task_success", 1, { agentId, taskType });
 
       return result;
     } catch (error) {
-      const duration =
-        (performance === undefined ? Date.now() : performance.now()) - startTime;
+      const duration = (performance === undefined ? Date.now() : performance.now()) - startTime;
       await this.logAction(agentId, `execute_task_${taskType}`, { taskId, error }, false, duration);
 
       sentry.trackMetric("agent_task_failure", 1, { agentId, taskType });

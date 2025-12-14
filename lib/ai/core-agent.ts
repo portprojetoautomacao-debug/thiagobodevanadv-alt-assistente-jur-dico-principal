@@ -3,7 +3,7 @@
 // Baseado em best practices 2024/2025: LangChain, AutoGen, ReAct pattern
 // Motor reutilizável e observável para TODOS os agentes
 
-import type { GlobalToolContext } from './tools';
+import type { GlobalToolContext } from "./tools";
 
 export type Role = "system" | "user" | "assistant";
 
@@ -16,7 +16,7 @@ export interface ChatMessage {
 export interface AgentTrace {
   timestamp: string;
   step: number;
-  type: 'thought' | 'action' | 'observation' | 'final';
+  type: "thought" | "action" | "observation" | "final";
   content: string;
   toolUsed?: string;
   duration?: number;
@@ -143,47 +143,63 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     return {
       timestamp: new Date().toISOString(),
       step,
-      type: 'thought',
+      type: "thought",
       content: `Analisando: ${userInput.substring(0, 100)}...`,
     };
   }
 
-  private createErrorTrace(step: number, content: string, duration: number, error: string): AgentTrace {
+  private createErrorTrace(
+    step: number,
+    content: string,
+    duration: number,
+    error: string
+  ): AgentTrace {
     return {
       timestamp: new Date().toISOString(),
       step,
-      type: 'observation',
+      type: "observation",
       content,
       duration,
       error,
     };
   }
 
-  private tryParseJSON(rawContent: string): { parsed: Record<string, unknown> | null; error?: string } {
+  private tryParseJSON(rawContent: string): {
+    parsed: Record<string, unknown> | null;
+    error?: string;
+  } {
     try {
       return { parsed: JSON.parse(rawContent) };
     } catch {
-      return { parsed: null, error: 'JSON parsing failed' };
+      return { parsed: null, error: "JSON parsing failed" };
     }
   }
 
-  private async handleFinalAction(
-    parsed: Record<string, unknown>,
-    step: number,
-    stepDuration: number,
-    history: ChatMessage[],
-    userInput: string,
-    traces: AgentTrace[],
-    usedTools: string[],
-    startTime: number
-  ): Promise<{ answer: string; steps: number; usedTools: string[]; traces: AgentTrace[]; totalDuration: number }> {
+  private async handleFinalAction(actionData: {
+    parsed: Record<string, unknown>;
+    step: number;
+    stepDuration: number;
+    history: ChatMessage[];
+    userInput: string;
+    traces: AgentTrace[];
+    usedTools: string[];
+    startTime: number;
+  }): Promise<{
+    answer: string;
+    steps: number;
+    usedTools: string[];
+    traces: AgentTrace[];
+    totalDuration: number;
+  }> {
+    const { parsed, step, stepDuration, history, userInput, traces, usedTools, startTime } =
+      actionData;
     const answer = parsed.answer ?? "";
-    const answerContent = typeof answer === 'string' ? answer : JSON.stringify(answer);
+    const answerContent = typeof answer === "string" ? answer : JSON.stringify(answer);
 
     traces.push({
       timestamp: new Date().toISOString(),
       step,
-      type: 'final',
+      type: "final",
       content: answerContent,
       duration: stepDuration,
     });
@@ -217,7 +233,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     traces.push({
       timestamp: new Date().toISOString(),
       step,
-      type: 'action',
+      type: "action",
       content: `Executando: ${toolName}`,
       toolUsed: toolName,
     });
@@ -236,7 +252,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       traces.push({
         timestamp: new Date().toISOString(),
         step,
-        type: 'observation',
+        type: "observation",
         content: `Resultado: ${JSON.stringify(result).substring(0, 200)}...`,
         toolUsed: toolName,
         duration: Date.now() - toolStart,
@@ -249,7 +265,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       traces.push({
         timestamp: new Date().toISOString(),
         step,
-        type: 'observation',
+        type: "observation",
         content: `Erro: ${error.message}`,
         toolUsed: toolName,
         duration: Date.now() - toolStart,
@@ -270,9 +286,17 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     messages: ChatMessage[],
     traces: AgentTrace[]
   ): void {
-    traces.push(this.createErrorTrace(step, 'Resposta inválida - solicitando correção', stepDuration, error));
-    messages.push({ role: "assistant", content: rawContent });
-    messages.push({ role: "user", content: "Sua resposta não está em JSON válido. Reformule seguindo exatamente o formato especificado." });
+    traces.push(
+      this.createErrorTrace(step, "Resposta inválida - solicitando correção", stepDuration, error)
+    );
+    messages.push(
+      { role: "assistant", content: rawContent },
+      {
+        role: "user",
+        content:
+          "Sua resposta não está em JSON válido. Reformule seguindo exatamente o formato especificado.",
+      }
+    );
   }
 
   private handleToolNotFound(
@@ -283,9 +307,21 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     messages: ChatMessage[],
     traces: AgentTrace[]
   ): void {
-    traces.push(this.createErrorTrace(step, `Tool '${toolName}' não disponível`, stepDuration, `Tool not found: ${toolName}`));
-    messages.push({ role: "assistant", content: raw });
-    messages.push({ role: "user", content: `A ferramenta "${toolName}" não está disponível para este agente. Use apenas as ferramentas listadas.` });
+    traces.push(
+      this.createErrorTrace(
+        step,
+        `Tool '${toolName}' não disponível`,
+        stepDuration,
+        `Tool not found: ${toolName}`
+      )
+    );
+    messages.push(
+      { role: "assistant", content: raw },
+      {
+        role: "user",
+        content: `A ferramenta "${toolName}" não está disponível para este agente. Use apenas as ferramentas listadas.`,
+      }
+    );
   }
 
   private handleInvalidAction(
@@ -295,9 +331,22 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     messages: ChatMessage[],
     traces: AgentTrace[]
   ): void {
-    traces.push(this.createErrorTrace(step, 'Formato de resposta inválido', stepDuration, 'Invalid action format'));
-    messages.push({ role: "assistant", content: raw });
-    messages.push({ role: "user", content: 'Sua resposta JSON deve ter "action":"tool" ou "action":"final". Reformule seguindo o formato.' });
+    traces.push(
+      this.createErrorTrace(
+        step,
+        "Formato de resposta inválido",
+        stepDuration,
+        "Invalid action format"
+      )
+    );
+    messages.push(
+      { role: "assistant", content: raw },
+      {
+        role: "user",
+        content:
+          'Sua resposta JSON deve ter "action":"tool" ou "action":"final". Reformule seguindo o formato.',
+      }
+    );
   }
 
   private async handleToolAction(
@@ -309,7 +358,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     traces: AgentTrace[],
     usedTools: string[]
   ): Promise<boolean> {
-    const toolName = typeof parsed.tool === 'string' ? parsed.tool : String(parsed.tool || '');
+    const toolName = typeof parsed.tool === "string" ? parsed.tool : String(parsed.tool || "");
     const toolArgs = (parsed.args ?? {}) as Record<string, unknown>;
     const tool = this.allowedTools().find((t) => t.name === toolName);
 
@@ -319,12 +368,21 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     }
 
     const result = await this.executeTool(tool, toolArgs, toolName, step, traces, usedTools);
-    messages.push({ role: "assistant", content: raw });
-    messages.push({ role: "user", content: `Resultado da ferramenta "${toolName}": ${JSON.stringify(result)}. Agora decida o próximo passo ou finalize a resposta.` });
+    messages.push(
+      { role: "assistant", content: raw },
+      {
+        role: "user",
+        content: `Resultado da ferramenta "${toolName}": ${JSON.stringify(result)}. Agora decida o próximo passo ou finalize a resposta.`,
+      }
+    );
     return true;
   }
 
-  private buildMaxStepsResponse(usedTools: string[], traces: AgentTrace[], startTime: number): {
+  private buildMaxStepsResponse(
+    usedTools: string[],
+    traces: AgentTrace[],
+    startTime: number
+  ): {
     answer: string;
     steps: number;
     usedTools: string[];
@@ -332,7 +390,8 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
     totalDuration: number;
   } {
     return {
-      answer: "Não consegui concluir a tarefa dentro do limite de passos configurado para o agente.",
+      answer:
+        "Não consegui concluir a tarefa dentro do limite de passos configurado para o agente.",
       steps: this.maxSteps,
       usedTools,
       traces,
@@ -366,7 +425,7 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
 
       const raw = await this.opts.llm.chat(messages);
       const stepDuration = Date.now() - stepStart;
-      const rawContent = typeof raw === 'string' ? raw : JSON.stringify(raw);
+      const rawContent = typeof raw === "string" ? raw : JSON.stringify(raw);
 
       const { parsed, error } = this.tryParseJSON(rawContent);
 
@@ -376,7 +435,16 @@ Sempre responda ESTRITAMENTE em JSON válido, usando um destes formatos:
       }
 
       if (parsed.action === "final") {
-        return this.handleFinalAction(parsed, step, stepDuration, history, userInput, traces, usedTools, startTime);
+        return this.handleFinalAction({
+          parsed,
+          step,
+          stepDuration,
+          history,
+          userInput,
+          traces,
+          usedTools,
+          startTime,
+        });
       }
 
       if (parsed.action === "tool") {

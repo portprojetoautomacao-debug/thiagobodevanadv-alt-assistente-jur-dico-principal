@@ -123,9 +123,7 @@ export function useLinkHandler(props: LinkHandlerProps) {
     const { selection } = editor.state;
     const isEmpty = selection.empty;
 
-    let chain = editor.chain().focus();
-
-    chain = chain.extendMarkRange("link").setLink({ href: url });
+    let chain = editor.chain().focus().extendMarkRange("link").setLink({ href: url });
 
     if (isEmpty) {
       chain = chain.insertContent({ type: "text", text: url });
@@ -154,9 +152,9 @@ export function useLinkHandler(props: LinkHandlerProps) {
     (target: string = "_blank", features: string = "noopener,noreferrer") => {
       if (!url) return;
 
-      const safeUrl = sanitizeUrl(url, window.location.href);
+      const safeUrl = sanitizeUrl(url, globalThis.location.href);
       if (safeUrl !== "#") {
-        window.open(safeUrl, target, features);
+        globalThis.open(safeUrl, target, features);
       }
     },
     [url]

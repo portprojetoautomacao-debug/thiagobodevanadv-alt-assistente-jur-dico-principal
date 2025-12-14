@@ -49,6 +49,29 @@
   ],
 
   // ========================================
+  // 🐰 CODERABBIT - AI CODE REVIEW
+  // ========================================
+
+  // Agente IA para aplicar fixes (Native = GitHub Copilot integrado)
+  "coderabbit.agentType": "Native",
+
+  // Modo de review automático após commits
+  // "prompt" = Pergunta se quer revisar | "auto" = Revisa automaticamente | "off" = Desabilitado
+  "coderabbit.autoReviewMode": "prompt",
+
+  // ========================================
+  // 🎯 SONAR COPILOT ASSISTANT (INTEGRAÇÃO)
+  // ========================================
+
+  // SonarLint + GitHub Copilot = Sonar Copilot Assistant
+  "github.copilot.chat.codeGeneration.useCodeAnalysis": true,
+  "github.copilot.chat.localeOverride": "pt-BR",
+  "github.copilot.chat.welcomeMessage": "first",
+
+  // Copilot Instructions customizadas para SonarQube fixes
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+
+  // ========================================
   // 📝 EDITOR - AUTOMAÇÃO E FORMATAÇÃO
   // ========================================
 
@@ -179,15 +202,35 @@
   // 🔧 SONARQUBE/SONARLINT
   // ========================================
 
+  // Conexão com SonarCloud
+  // Projeto: assistente-jur-dico-principal
+  // Organization: thiagobodevanadv-alt
+  // GitHub: github.com/thiagobodevanadv-alt/assistente-jur-dico-principal
+  "sonarlint.connectedMode.connections.sonarcloud": [
+    {
+      "connectionId": "sonarcloud-assistente-juridico",
+      "organizationKey": "thiagobodevanadv-alt"
+    }
+  ],
+
+  // Análise em tempo real
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
   "sonarlint.output.showAnalyzerLogs": true,
   "sonarlint.output.showVerboseLogs": false,
+  "sonarlint.trace.server": "off",
+  "sonarlint.disableTelemetry": true,
+
+  // Code Actions: Permitir quick fixes do SonarLint
   "sonarlint.rules": {
     "typescript:S1128": {
       "level": "off"
     }
   },
+
+  // Integração com Copilot para fixes automáticos
+  "sonarlint.focusOnNewCode": true,
+  "sonarlint.testFilePattern": "**/*.{test,spec}.{ts,tsx,js,jsx}",
 
   // ========================================
   // 🎯 EXPERIENCE & UI
@@ -220,11 +263,13 @@
   "python.testing.unittestEnabled": true,
   "chat.tools.terminal.autoReplyToPrompts": true,
   "sonarlint.connectedMode.project": {
-    "connectionId": "thiagobodevanadv-alt",
+    "connectionId": "sonarcloud-assistente-juridico",
     "projectKey": "thiagobodevanadv-alt_assistente-jur-dico-principal"
   },
   "chat.agent.maxRequests": 40,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "notebook.defaultFormatter": "esbenp.prettier-vscode",
-  "sarif-viewer.connectToGithubCodeScanning": "off"
+  "sarif-viewer.connectToGithubCodeScanning": "off",
+  "git.autofetch": true,
+  "redhat.telemetry.enabled": true
 }

@@ -8,8 +8,8 @@ describe("Editor visibility and style sanity", () => {
     const { container } = render(<TiptapEditorV2 content="<p>Hello</p>" onChange={handleChange} />);
 
     await waitFor(() => {
-      const wrapper = container.querySelector(".simple-editor-wrapper") as HTMLElement | null;
-      const editorEl = container.querySelector(".tiptap.ProseMirror") as HTMLElement | null;
+      const wrapper = container.querySelector(".simple-editor-wrapper") as HTMLElement;
+      const editorEl = container.querySelector(".tiptap.ProseMirror") as HTMLElement;
       expect(wrapper).toBeTruthy();
       expect(editorEl).toBeTruthy();
 

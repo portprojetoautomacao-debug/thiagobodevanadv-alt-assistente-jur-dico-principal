@@ -1,6 +1,6 @@
 export function debugEditorStyles(selector = ".tiptap.ProseMirror") {
   if (globalThis.window === undefined) return;
-  const editor = document.querySelector(selector) as HTMLElement | null;
+  const editor = document.querySelector(selector) as HTMLElement;
   if (!editor) {
     console.warn("Editor not found for selector:", selector);
     return;

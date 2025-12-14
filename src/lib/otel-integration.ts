@@ -92,8 +92,8 @@ export function initializeOpenTelemetry(): void {
       })
     );
 
-    // Registrar provider globalmente
-    tracerProvider.register();
+    // Registrar provider globalmente (API moderna)
+    trace.setGlobalTracerProvider(tracerProvider);
 
     // Integrar com o sistema de tracing existente
     bridgeTracingService();

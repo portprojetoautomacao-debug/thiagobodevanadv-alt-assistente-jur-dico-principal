@@ -168,12 +168,12 @@
 
   "sonarlint.connectedMode.connections.sonarcloud": [
     {
-      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
-      "connectionId": "thiagobodevan-a11y-assistente-juridico-p"
+      "organizationKey": "thiagobodevanadv-alt",
+      "connectionId": "sonarcloud-assistente-juridico"
     }
   ],
   "sonarlint.connectedMode.project": {
-    "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+    "connectionId": "sonarcloud-assistente-juridico",
+    "projectKey": "thiagobodevanadv-alt_assistente-jur-dico-principal"
   }
 }

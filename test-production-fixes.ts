@@ -48,21 +48,26 @@ const jsonCompleto = `{
 
 function parseJsonResponse(text: string): Record<string, unknown> {
   // Limpar markdown e texto envoltório
-  let cleaned = text.trim();
-  cleaned = cleaned.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+  const cleaned = text
+    .trim()
+    .replace(/^```json\s*/, "")
+    .replace(/\s*```$/, "");
 
   // Tentar parse direto
   try {
     return JSON.parse(cleaned) as Record<string, unknown>;
   } catch {
     // Tentar extrair o primeiro bloco JSON completo
-    const jsonMatch = /\{[\s\S]*\}/.exec(cleaned);
+    // Nota: Regex otimizada para evitar backtracking catastrófico
+    // Usa lazy quantifier +? ao invés de greedy [µs\S]*
+    const jsonMatch = /\{.+?\}/s.exec(cleaned);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
       } catch {
         // Tentar encontrar JSON truncado e completá-lo
-        const truncatedMatch = /\{[\s\S]*/.exec(cleaned);
+        // Nota: Regex otimizada - usa lazy quantifier +? com flag s
+        const truncatedMatch = /\{.+/s.exec(cleaned);
         if (truncatedMatch) {
           const fixed = fixTruncatedJson(truncatedMatch[0]);
 
@@ -134,9 +139,8 @@ const testDates = [
 testDates.forEach((test) => {
   const result = convertBRDateToISO(test.input);
   const status = result === test.expected ? "✅" : "❌";
-  console.log(
-    `${status} ${test.desc}: "${test.input}" → ${result === null ? "null" : `"${result}"`}`
-  );
+  const resultDisplay = result === null ? "null" : `"${result}"`;
+  console.log(`${status} ${test.desc}: "${test.input}" → ${resultDisplay}`);
 });
 
 // ===== TESTE 3: Validação de Date() após conversão =====
