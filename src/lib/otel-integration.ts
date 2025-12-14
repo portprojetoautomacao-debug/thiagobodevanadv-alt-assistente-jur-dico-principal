@@ -21,7 +21,7 @@ const SERVICE_NAME = "assistente-juridico-pje";
 const SERVICE_VERSION = "1.0.1";
 
 // Endpoint do AI Toolkit (HTTP OTLP)
-const OTLP_ENDPOINT = import.meta.env.VITE_OTLP_ENDPOINT || "http://localhost:4318/v1/traces";
+const OTLP_ENDPOINT = import.meta.env.VITE_OTLP_ENDPOINT || "http://localhost:4319/v1/traces";
 
 // Provider global
 let tracerProvider: WebTracerProvider | null = null;

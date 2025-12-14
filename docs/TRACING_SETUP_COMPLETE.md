@@ -1,8 +1,9 @@
 # ✅ Tracing OpenTelemetry - Setup Completo
 
 > **Status**: Implementação concluída com sucesso  
-> **Data**: 13 de dezembro de 2025  
-> **Versão**: 1.0.0
+> **Data**: 14 de dezembro de 2025  
+> **Versão**: 1.0.1  
+> **Endpoint OTLP**: `http://localhost:4319/v1/traces` (customizado)
 
 ## 📋 Resumo da Implementação
 

@@ -26,6 +26,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
+    "test:tracing": "pwsh scripts/test-tracing-setup.ps1",
     "eval:run": "node scripts/evaluation/run-agent-evaluation.cjs",
     "eval:analyze": "py scripts/evaluation/evaluate_agents.py",
     "eval:full": "npm run eval:run && npm run eval:analyze",
